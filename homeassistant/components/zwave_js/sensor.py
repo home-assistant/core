@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 import logging
-from typing import Callable
+from typing import Callable, cast
 
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import CommandClass
+from zwave_js_server.const import CommandClass, ConfigurationValueType
+from zwave_js_server.model.value import ConfigurationValue
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_BATTERY,
@@ -49,6 +50,8 @@ async def async_setup_entry(
             entities.append(ZWaveNumericSensor(config_entry, client, info))
         elif info.platform_hint == "list_sensor":
             entities.append(ZWaveListSensor(config_entry, client, info))
+        elif info.platform_hint == "config_parameter":
+            entities.append(ZWaveConfigParameterSensor(config_entry, client, info))
         else:
             LOGGER.warning(
                 "Sensor not implemented for %s/%s",
@@ -118,6 +121,7 @@ class ZwaveSensorBase(ZWaveBaseEntity, SensorEntity):
         # We hide some of the more advanced sensors by default to not overwhelm users
         if self.info.primary_value.command_class in [
             CommandClass.BASIC,
+            CommandClass.CONFIGURATION,
             CommandClass.INDICATOR,
             CommandClass.NOTIFICATION,
         ]:
@@ -219,5 +223,50 @@ class ZWaveListSensor(ZwaveSensorBase):
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the device specific state attributes."""
+        # add the value's int value as property for multi-value (list) items
+        return {"value": self.info.primary_value.value}
+
+
+class ZWaveConfigParameterSensor(ZwaveSensorBase):
+    """Representation of a Z-Wave config parameter sensor."""
+
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        client: ZwaveClient,
+        info: ZwaveDiscoveryInfo,
+    ) -> None:
+        """Initialize a ZWaveConfigParameterSensor entity."""
+        super().__init__(config_entry, client, info)
+        self._name = self.generate_name(
+            include_value_name=True,
+            alternate_value_name=self.info.primary_value.property_name,
+            additional_info=[self.info.primary_value.property_key_name],
+            name_suffix="Config Parameter",
+        )
+        self._primary_value = cast(ConfigurationValue, self.info.primary_value)
+
+    @property
+    def state(self) -> str | None:
+        """Return state of the sensor."""
+        if self.info.primary_value.value is None:
+            return None
+        if (
+            self._primary_value.configuration_value_type == ConfigurationValueType.RANGE
+            or (
+                not str(self.info.primary_value.value)
+                in self.info.primary_value.metadata.states
+            )
+        ):
+            return str(self.info.primary_value.value)
+        return str(
+            self.info.primary_value.metadata.states[str(self.info.primary_value.value)]
+        )
+
+    @property
+    def extra_state_attributes(self) -> dict[str, str] | None:
+        """Return the device specific state attributes."""
+        if self._primary_value.configuration_value_type == ConfigurationValueType.RANGE:
+            return None
         # add the value's int value as property for multi-value (list) items
         return {"value": self.info.primary_value.value}

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Generator
+from typing import Any, Generator
 
 from zwave_js_server.const import CommandClass
 from zwave_js_server.model.device_class import DeviceClassItem
@@ -41,6 +41,12 @@ class ZWaveValueDiscoverySchema:
     endpoint: set[int] | None = None
     # [optional] the value's property must match ANY of these values
     property: set[str | int] | None = None
+    # [optional] the value's property name must match ANY of these values
+    property_name: set[str] | None = None
+    # [optional] the value's property key must match ANY of these values
+    property_key: set[str | int] | None = None
+    # [optional] the value's property key name must match ANY of these values
+    property_key_name: set[str] | None = None
     # [optional] the value's metadata_type must match ANY of these values
     type: set[str] | None = None
 
@@ -80,6 +86,34 @@ class ZWaveDiscoverySchema:
     absent_values: list[ZWaveValueDiscoverySchema] | None = None
     # [optional] bool to specify if this primary value may be discovered by multiple platforms
     allow_multi: bool = False
+
+
+def get_config_parameter_discovery_schema(
+    property_: set[str | int] | None = None,
+    property_name: set[str] | None = None,
+    property_key: set[str | int] | None = None,
+    property_key_name: set[str] | None = None,
+    **kwargs: Any,
+) -> ZWaveDiscoverySchema:
+    """
+    Return a discovery schema for a config parameter.
+
+    Supports all keyword arguments to ZWaveValueDiscoverySchema except platform, hint,
+    and primary_value.
+    """
+    return ZWaveDiscoverySchema(
+        platform="sensor",
+        hint="config_parameter",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.CONFIGURATION},
+            property=property_,
+            property_name=property_name,
+            property_key=property_key,
+            property_key_name=property_key_name,
+            type={"number"},
+        ),
+        **kwargs,
+    )
 
 
 SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA = ZWaveValueDiscoverySchema(
@@ -161,6 +195,19 @@ DISCOVERY_SCHEMAS = [
         product_id={0x000D},
         product_type={0x0003},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+    ),
+    # ====== START OF CONFIG PARAMETER SPECIFIC MAPPING SCHEMAS =======
+    # Door lock mode config parameter. Functionality equivalent to Notification CC
+    # list sensors.
+    get_config_parameter_discovery_schema(
+        property_name={"Door lock mode"},
+        device_class_generic={"Entry Control"},
+        device_class_specific={
+            "Door Lock",
+            "Advanced Door Lock",
+            "Secure Keypad Door Lock",
+            "Secure Lockbox",
+        },
     ),
     # ====== START OF GENERIC MAPPING SCHEMAS =======
     # locks
@@ -488,6 +535,24 @@ def check_value(value: ZwaveValue, schema: ZWaveValueDiscoverySchema) -> bool:
         return False
     # check property
     if schema.property is not None and value.property_ not in schema.property:
+        return False
+    # check property_name
+    if (
+        schema.property_name is not None
+        and value.property_name not in schema.property_name
+    ):
+        return False
+    # check property_key
+    if (
+        schema.property_key is not None
+        and value.property_key not in schema.property_key
+    ):
+        return False
+    # check property_key_name
+    if (
+        schema.property_key_name is not None
+        and value.property_key_name not in schema.property_key_name
+    ):
         return False
     # check metadata_type
     if schema.type is not None and value.metadata.type not in schema.type:
