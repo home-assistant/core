@@ -90,7 +90,7 @@ ABBREVIATIONS = {
     "osc_stat_t": "oscillation_state_topic",
     "osc_val_tpl": "oscillation_value_template",
     "pct_cmd_t": "percentage_command_topic",
-    "pct_cmd_tpl": "percentage_cmd_template",
+    "pct_cmd_tpl": "percentage_command_template",
     "pct_stat_t": "percentage_state_topic",
     "pct_val_tpl": "percentage_value_template",
     "pl": "payload",
