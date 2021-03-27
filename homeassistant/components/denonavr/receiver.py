@@ -1,5 +1,6 @@
 """Code to handle a DenonAVR receiver."""
 import logging
+from typing import Optional
 
 from denonavr import DenonAVR
 from denonavr.exceptions import AvrTimoutError
@@ -34,11 +35,11 @@ class ConnectDenonAVR:
             self._zones["Zone3"] = None
 
     @property
-    def receiver(self):
+    def receiver(self) -> Optional[DenonAVR]:
         """Return the class containing all connections to the receiver."""
         return self._receiver
 
-    async def async_connect_receiver(self):
+    async def async_connect_receiver(self) -> bool:
         """Connect to the DenonAVR receiver."""
         if not await self.async_init_receiver_class():
             return False
@@ -70,7 +71,7 @@ class ConnectDenonAVR:
 
         return True
 
-    async def async_init_receiver_class(self):
+    async def async_init_receiver_class(self) -> bool:
         """Initialize the DenonAVR class asynchronously."""
         self._receiver = DenonAVR(
             host=self._host,

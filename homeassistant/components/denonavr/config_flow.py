@@ -1,18 +1,16 @@
 """Config flow to configure Denon AVR receivers using their HTTP interface."""
-from functools import partial
 import logging
 from typing import Any, Dict, Optional
 from urllib.parse import urlparse
 
 import denonavr
-from getmac import get_mac_address
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_TYPE
+from homeassistant.const import CONF_HOST, CONF_TYPE
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.httpx_client import get_async_client
 
 from .receiver import ConnectDenonAVR
 
@@ -163,12 +161,11 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.show_all_sources,
             self.zone2,
             self.zone3,
+            get_async_client(self.hass),
         )
         if not await connect_denonavr.async_connect_receiver():
             return self.async_abort(reason="cannot_connect")
         receiver = connect_denonavr.receiver
-
-        mac_address = await self.async_get_mac(self.host)
 
         if not self.serial_number:
             self.serial_number = receiver.serial_number
@@ -193,7 +190,6 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             title=receiver.name,
             data={
                 CONF_HOST: self.host,
-                CONF_MAC: mac_address,
                 CONF_TYPE: receiver.receiver_type,
                 CONF_MODEL: self.model_name,
                 CONF_MANUFACTURER: receiver.manufacturer,
@@ -246,21 +242,3 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def construct_unique_id(model_name: str, serial_number: str) -> str:
         """Construct the unique id from the ssdp discovery or user_step."""
         return f"{model_name}-{serial_number}"
-
-    async def async_get_mac(self, host: str) -> Optional[str]:
-        """Get the mac address of the DenonAVR receiver."""
-        try:
-            mac_address = await self.hass.async_add_executor_job(
-                partial(get_mac_address, **{"ip": host})
-            )
-            if not mac_address:
-                mac_address = await self.hass.async_add_executor_job(
-                    partial(get_mac_address, **{"hostname": host})
-                )
-        except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.error("Unable to get mac address: %s", err)
-            mac_address = None
-
-        if mac_address is not None:
-            mac_address = format_mac(mac_address)
-        return mac_address

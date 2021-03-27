@@ -13,6 +13,7 @@ from denonavr.exceptions import (
     AvrTimoutError,
     DenonAvrError,
 )
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.media_player import MediaPlayerEntity
@@ -32,20 +33,9 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_MAC,
-    ENTITY_MATCH_ALL,
-    ENTITY_MATCH_NONE,
-    STATE_PAUSED,
-    STATE_PLAYING,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import ATTR_COMMAND, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import EntityPlatform
+from homeassistant.helpers import config_validation as cv, entity_platform
 
 from . import CONF_RECEIVER
 from .config_flow import (
@@ -79,13 +69,16 @@ SUPPORT_MEDIA_MODES = (
 )
 
 SCAN_INTERVAL = timedelta(seconds=10)
-PARALLEL_UPDATES = 2
+PARALLEL_UPDATES = 1
+
+# Services
+SERVICE_GET_COMMAND = "get_command"
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: config_entries.ConfigEntry,
-    async_add_entities: EntityPlatform.async_add_entities,
+    async_add_entities: entity_platform.EntityPlatform.async_add_entities,
 ):
     """Set up the DenonAVR receiver from a config entry."""
     entities = []
@@ -100,6 +93,15 @@ async def async_setup_entry(
     _LOGGER.debug(
         "%s receiver at host %s initialized", receiver.manufacturer, receiver.host
     )
+
+    # Register additional services
+    platform = entity_platform.current_platform.get()
+    platform.async_register_entity_service(
+        SERVICE_GET_COMMAND,
+        {vol.Required(ATTR_COMMAND): cv.string},
+        f"async_{SERVICE_GET_COMMAND}",
+    )
+
     async_add_entities(entities, update_before_add=True)
 
 
@@ -135,29 +137,30 @@ class DenonDevice(MediaPlayerEntity):
 
         @wraps(func)
         async def wrapper(self, *args, **kwargs):
+            # pylint: disable=protected-access
             available = True
             try:
                 return await func(self, *args, **kwargs)  # pylint: disable=not-callable
             except AvrTimoutError:
                 available = False
-                if self._available is True:  # pylint: disable=protected-access
+                if self._available is True:
                     _LOGGER.warning(
                         "Timeout connecting to Denon AVR receiver at host %s. Device is unavailable",
-                        self._receiver.host,  # pylint: disable=protected-access
+                        self._receiver.host,
                     )
-                    self._available = False  # pylint: disable=protected-access
+                    self._available = False
             except AvrForbiddenError:
                 available = False
-                if self._available is True:  # pylint: disable=protected-access
+                if self._available is True:
                     _LOGGER.warning(
                         "Denon AVR receiver at host %s responded with HTTP 403 error. Device is unavailable. Please consider power cycling your receiver",
-                        self._receiver.host,  # pylint: disable=protected-access
+                        self._receiver.host,
                     )
-                    self._available = False  # pylint: disable=protected-access
+                    self._available = False
             except AvrCommandError as err:
                 _LOGGER.error(
                     "Command %s failed with error: %s",
-                    func.__name__,  # pylint: disable=no-member
+                    func.__name__,
                     err,
                 )
             except DenonAvrError as err:
@@ -168,38 +171,14 @@ class DenonDevice(MediaPlayerEntity):
                     exc_info=True,
                 )
             finally:
-                if (
-                    available is True
-                    and self._available is False  # pylint: disable=protected-access
-                ):
+                if available is True and self._available is False:
                     _LOGGER.info(
                         "Denon AVR receiver at host %s is available again",
-                        self._receiver.host,  # pylint: disable=protected-access
+                        self._receiver.host,
                     )
-                    self._available = True  # pylint: disable=protected-access
+                    self._available = True
 
         return wrapper
-
-    async def async_added_to_hass(self):
-        """Register signal handler."""
-        self.async_on_remove(
-            async_dispatcher_connect(self.hass, DOMAIN, self.async_signal_handler)
-        )
-
-    async def async_signal_handler(self, data):
-        """Handle domain-specific signal by calling appropriate method."""
-        entity_ids = data[ATTR_ENTITY_ID]
-
-        if entity_ids == ENTITY_MATCH_NONE:
-            return
-
-        if entity_ids == ENTITY_MATCH_ALL or self.entity_id in entity_ids:
-            params = {
-                key: value
-                for key, value in data.items()
-                if key not in ["entity_id", "method"]
-            }
-            await getattr(self, data["method"])(**params)
 
     @async_log_errors
     async def async_update(self) -> None:
@@ -227,11 +206,8 @@ class DenonDevice(MediaPlayerEntity):
             "manufacturer": self._config_entry.data[CONF_MANUFACTURER],
             "name": self._config_entry.title,
             "model": f"{self._config_entry.data[CONF_MODEL]}-{self._config_entry.data[CONF_TYPE]}",
+            "serial_number": self._config_entry.data[CONF_SERIAL_NUMBER],
         }
-        if self._config_entry.data[CONF_MAC] is not None:
-            device_info["connections"] = {
-                (dr.CONNECTION_NETWORK_MAC, self._config_entry.data[CONF_MAC])
-            }
 
         return device_info
 
@@ -243,8 +219,6 @@ class DenonDevice(MediaPlayerEntity):
     @property
     def state(self):
         """Return the state of the device."""
-        if self._available is False:
-            return STATE_UNAVAILABLE
         if self._receiver.state is None:
             return STATE_UNKNOWN
         return self._receiver.state
@@ -455,6 +429,6 @@ class DenonDevice(MediaPlayerEntity):
         return await self._receiver.async_get_command(command)
 
     # Decorator defined before is a staticmethod
-    async_log_erros = staticmethod(  # pylint: disable=no-staticmethod-decorator
+    async_log_errors = staticmethod(  # pylint: disable=no-staticmethod-decorator
         async_log_errors
     )

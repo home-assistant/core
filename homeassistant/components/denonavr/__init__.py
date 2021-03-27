@@ -2,13 +2,10 @@
 import logging
 from typing import Dict
 
-import voluptuous as vol
-
 from homeassistant import config_entries, core
-from homeassistant.const import ATTR_COMMAND, ATTR_ENTITY_ID, CONF_HOST
+from homeassistant.const import CONF_HOST
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .config_flow import (
@@ -25,32 +22,12 @@ from .receiver import ConnectDenonAVR
 
 CONF_RECEIVER = "receiver"
 UNDO_UPDATE_LISTENER = "undo_update_listener"
-SERVICE_GET_COMMAND = "get_command"
 
 _LOGGER = logging.getLogger(__name__)
-
-CALL_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids})
-
-GET_COMMAND_SCHEMA = CALL_SCHEMA.extend({vol.Required(ATTR_COMMAND): cv.string})
-
-SERVICE_TO_METHOD = {
-    SERVICE_GET_COMMAND: {"method": "async_get_command", "schema": GET_COMMAND_SCHEMA}
-}
 
 
 async def async_setup(hass: core.HomeAssistant, config: Dict):
     """Set up the denonavr platform."""
-
-    def service_handler(service):
-        method = SERVICE_TO_METHOD.get(service.service)
-        data = service.data.copy()
-        data["method"] = method["method"]
-        async_dispatcher_send(hass, DOMAIN, data)
-
-    for service in SERVICE_TO_METHOD:
-        schema = SERVICE_TO_METHOD[service]["schema"]
-        hass.services.async_register(DOMAIN, service, service_handler, schema=schema)
-
     return True
 
 
