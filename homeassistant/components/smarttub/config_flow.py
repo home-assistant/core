@@ -7,7 +7,8 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
-from .const import CONF_CONFIG_ENTRY, DOMAIN
+# pylint complains because DOMAIN is only used in a keyword arg in the class declaration
+from .const import CONF_CONFIG_ENTRY, DOMAIN  # pylint: disable=unused-import
 from .controller import SmartTubController
 
 DATA_SCHEMA = vol.Schema(
