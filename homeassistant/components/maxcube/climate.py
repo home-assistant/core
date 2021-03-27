@@ -1,7 +1,8 @@
 """Support for MAX! Thermostats via MAX! Cube."""
+from __future__ import annotations
+
 import logging
 import socket
-from typing import Optional
 
 from maxcube.device import (
     MAX_DEVICE_MODE_AUTOMATIC,
@@ -138,7 +139,7 @@ class MaxCubeClimate(ClimateEntity):
         elif hvac_mode == HVAC_MODE_AUTO:
             self._set_target(MAX_DEVICE_MODE_AUTOMATIC, None)
 
-    def _set_target(self, mode: Optional[int], temp: Optional[float]):
+    def _set_target(self, mode: int | None, temp: float | None) -> None:
         """
         Set the mode and/or temperature of the thermostat.
 
