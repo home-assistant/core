@@ -54,7 +54,7 @@ async def validate_input(hass: core.HomeAssistant, data: dict):
         _LOGGER.info(exception)
         raise CannotConnect from exception
 
-    return {"hostname": hostname, "uuid": bridge_system["uuid"]["os"]}
+    return {"hostname": hostname, "uuid": bridge_system.uuid.os}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
