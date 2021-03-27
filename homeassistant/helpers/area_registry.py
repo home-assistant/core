@@ -134,11 +134,8 @@ class AreaRegistry:
 
         normalized_name = normalize_area_name(name)
 
-        if normalized_name != old.normalized_name:
-            if self.async_get_area_by_name(name):
-                raise ValueError(
-                    f"The name {name} ({normalized_name}) is already in use"
-                )
+        if normalized_name != old.normalized_name and self.async_get_area_by_name(name):
+            raise ValueError(f"The name {name} ({normalized_name}) is already in use")
 
         changes["name"] = name
         changes["normalized_name"] = normalized_name

@@ -315,10 +315,11 @@ async def async_prepare_setup_platform(
             log_error(f"Unable to import the component ({exc}).")
             return None
 
-        if hasattr(component, "setup") or hasattr(component, "async_setup"):
-            if not await async_setup_component(hass, integration.domain, hass_config):
-                log_error("Unable to set up component.")
-                return None
+        if (
+            hasattr(component, "setup") or hasattr(component, "async_setup")
+        ) and not await async_setup_component(hass, integration.domain, hass_config):
+            log_error("Unable to set up component.")
+            return None
 
     return platform
 
