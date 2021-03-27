@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import sys
-from types import TracebackType
 from typing import Any, Callable
 
 import httpx
@@ -47,14 +46,8 @@ class HassHttpXAsyncClient(httpx.AsyncClient):
         """Prevent an integration from reopen of the client via context manager."""
         return self
 
-    async def __aexit__(  # type: ignore
-        self,
-        exc_type: type[BaseException],
-        exc_value: BaseException,
-        traceback: TracebackType,
-    ) -> None:
+    async def __aexit__(self, *args: Any) -> None:  # pylint: disable=signature-differs
         """Prevent an integration from close of the client via context manager."""
-        pass
 
 
 @callback
