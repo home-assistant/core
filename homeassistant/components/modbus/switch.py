@@ -157,7 +157,7 @@ class ModbusBaseSwitch(SwitchEntity, RestoreEntity, ABC):
 
     @abstractmethod
     def _update(self):
-        """Please the function above (real update is in the inherited classes."""
+        """Update the entity state."""
 
     @property
     def is_on(self):
