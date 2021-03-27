@@ -959,3 +959,4 @@ async def test_dhcp_already_exists(hass):
         await hass.async_block_till_done()
 
     assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
