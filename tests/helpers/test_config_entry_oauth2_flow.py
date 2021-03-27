@@ -99,9 +99,10 @@ def test_inherit_enforces_domain_set():
             """Return logger."""
             return logging.getLogger(__name__)
 
-    with patch.dict(config_entries.HANDLERS, {TEST_DOMAIN: TestFlowHandler}):
-        with pytest.raises(TypeError):
-            TestFlowHandler()
+    with patch.dict(
+        config_entries.HANDLERS, {TEST_DOMAIN: TestFlowHandler}
+    ), pytest.raises(TypeError):
+        TestFlowHandler()
 
 
 async def test_abort_if_no_implementation(hass, flow_handler):
