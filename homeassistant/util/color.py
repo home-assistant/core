@@ -261,11 +261,10 @@ def color_xy_brightness_to_RGB(
     vX: float, vY: float, ibrightness: int, Gamut: GamutType | None = None
 ) -> tuple[int, int, int]:
     """Convert from XYZ to RGB."""
-    if Gamut:
-        if not check_point_in_lamps_reach((vX, vY), Gamut):
-            xy_closest = get_closest_point_to_point((vX, vY), Gamut)
-            vX = xy_closest[0]
-            vY = xy_closest[1]
+    if Gamut and not check_point_in_lamps_reach((vX, vY), Gamut):
+        xy_closest = get_closest_point_to_point((vX, vY), Gamut)
+        vX = xy_closest[0]
+        vY = xy_closest[1]
 
     brightness = ibrightness / 255.0
     if brightness == 0.0:
