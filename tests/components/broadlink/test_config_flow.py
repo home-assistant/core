@@ -9,6 +9,7 @@ import pytest
 from homeassistant import config_entries, setup
 from homeassistant.components.broadlink.const import DOMAIN
 from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
+from homeassistant.helpers import device_registry
 
 from . import get_device
 
@@ -837,7 +838,7 @@ async def test_dhcp_can_finish(hass):
             data={
                 HOSTNAME: "broadlink",
                 IP_ADDRESS: "1.2.3.4",
-                MAC_ADDRESS: "aa:bb:cc:dd:ee:ff",
+                MAC_ADDRESS: device_registry.format_mac(device.mac),
             },
         )
         await hass.async_block_till_done()
@@ -871,7 +872,7 @@ async def test_dhcp_fails_to_connect(hass):
             data={
                 HOSTNAME: "broadlink",
                 IP_ADDRESS: "1.2.3.4",
-                MAC_ADDRESS: "aa:bb:cc:dd:ee:ff",
+                MAC_ADDRESS: "34:ea:34:b4:3b:5a",
             },
         )
         await hass.async_block_till_done()
@@ -890,7 +891,7 @@ async def test_dhcp_unreachable(hass):
             data={
                 HOSTNAME: "broadlink",
                 IP_ADDRESS: "1.2.3.4",
-                MAC_ADDRESS: "aa:bb:cc:dd:ee:ff",
+                MAC_ADDRESS: "34:ea:34:b4:3b:5a",
             },
         )
         await hass.async_block_till_done()
@@ -909,7 +910,7 @@ async def test_dhcp_connect_einval(hass):
             data={
                 HOSTNAME: "broadlink",
                 IP_ADDRESS: "1.2.3.4",
-                MAC_ADDRESS: "aa:bb:cc:dd:ee:ff",
+                MAC_ADDRESS: "34:ea:34:b4:3b:5a",
             },
         )
         await hass.async_block_till_done()
@@ -928,7 +929,7 @@ async def test_dhcp_connect_unknown_error(hass):
             data={
                 HOSTNAME: "broadlink",
                 IP_ADDRESS: "1.2.3.4",
-                MAC_ADDRESS: "aa:bb:cc:dd:ee:ff",
+                MAC_ADDRESS: "34:ea:34:b4:3b:5a",
             },
         )
         await hass.async_block_till_done()
@@ -953,10 +954,37 @@ async def test_dhcp_already_exists(hass):
             data={
                 HOSTNAME: "broadlink",
                 IP_ADDRESS: "1.2.3.4",
-                MAC_ADDRESS: "aa:bb:cc:dd:ee:ff",
+                MAC_ADDRESS: "34:ea:34:b4:3b:5a",
             },
         )
         await hass.async_block_till_done()
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
+
+
+async def test_dhcp_updates_host(hass):
+    """Test DHCP updates host."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    device = get_device("Living Room")
+    device.host = "1.2.3.4"
+    mock_entry = device.get_mock_entry()
+    mock_entry.add_to_hass(hass)
+    mock_api = device.get_mock_api()
+
+    with patch(DEVICE_DISCOVERY, return_value=[mock_api]):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "dhcp"},
+            data={
+                HOSTNAME: "broadlink",
+                IP_ADDRESS: "4.5.6.7",
+                MAC_ADDRESS: "34:ea:34:b4:3b:5a",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+    assert mock_entry.data["host"] == "4.5.6.7"
