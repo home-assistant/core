@@ -6,7 +6,7 @@
             "addon_set_config_failed": "Mislukt om OpenZWave configuratie in te stellen.",
             "already_configured": "Apparaat is al geconfigureerd",
             "already_in_progress": "De configuratiestroom is al aan de gang",
-            "mqtt_required": "De [%%] integratie is niet ingesteld",
+            "mqtt_required": "De MQTT-integratie is niet ingesteld",
             "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
         },
         "error": {
