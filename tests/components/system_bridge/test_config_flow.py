@@ -11,6 +11,7 @@ from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from tests.common import MockConfigEntry
 
 FIXTURE_MAC_ADDRESS = "aa:bb:cc:dd:ee:ff"
+FIXTURE_UUID = "e91bf575-56f3-4c83-8f42-70ac17adcd33"
 
 FIXTURE_AUTH_INPUT = {CONF_API_KEY: "abc-123-def-456-ghi"}
 
@@ -39,6 +40,7 @@ FIXTURE_ZEROCONF = {
         "ip": "1.1.1.1",
         "mac": FIXTURE_MAC_ADDRESS,
         "port": "9170",
+        "uuid": FIXTURE_UUID,
     },
 }
 
@@ -220,7 +222,7 @@ async def test_reauth_flow(
 ) -> None:
     """Test reauth flow."""
     mock_config = MockConfigEntry(
-        domain=DOMAIN, unique_id=FIXTURE_MAC_ADDRESS, data=FIXTURE_USER_INPUT
+        domain=DOMAIN, unique_id=FIXTURE_UUID, data=FIXTURE_USER_INPUT
     )
     mock_config.add_to_hass(hass)
 

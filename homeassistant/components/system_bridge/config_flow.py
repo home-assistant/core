@@ -6,8 +6,8 @@ import async_timeout
 from systembridge import Bridge
 from systembridge.client import BridgeClient
 from systembridge.exceptions import BridgeAuthenticationException
-from systembridge.objects.network import Interface, Network
 from systembridge.objects.os import Os
+from systembridge.objects.system import System
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -44,12 +44,9 @@ async def validate_input(hass: core.HomeAssistant, data: dict):
     try:
         async with async_timeout.timeout(30):
             bridge_os: Os = await bridge.async_get_os()
-            bridge_network: Network = await bridge.async_get_network()
             if bridge_os.hostname is not None:
                 hostname = bridge_os.hostname
-            interface: Interface = bridge_network.interfaces[
-                bridge_network.interfaceDefault
-            ]
+            bridge_system: System = await bridge.async_get_system()
     except BridgeAuthenticationException as exception:
         _LOGGER.info(exception)
         raise InvalidAuth from exception
@@ -57,7 +54,7 @@ async def validate_input(hass: core.HomeAssistant, data: dict):
         _LOGGER.info(exception)
         raise CannotConnect from exception
 
-    return {"hostname": hostname, "mac": interface["mac"]}
+    return {"hostname": hostname, "uuid": bridge_system["uuid"]["os"]}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -98,7 +95,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors, info = await self._async_get_info(user_input)
         if errors is None:
             # Check if already configured
-            await self.async_set_unique_id(info["mac"])
+            await self.async_set_unique_id(info["uuid"])
             self._abort_if_unique_id_configured(updates={CONF_HOST: info["hostname"]})
 
             return self.async_create_entry(title=info["hostname"], data=user_input)
@@ -121,7 +118,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors, info = await self._async_get_info(user_input)
         if errors is None:
             # Check if already configured
-            await self.async_set_unique_id(info["mac"])
+            await self.async_set_unique_id(info["uuid"])
             self._abort_if_unique_id_configured(updates={CONF_HOST: info["hostname"]})
 
             return self.async_create_entry(title=info["hostname"], data=user_input)
@@ -136,10 +133,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType):
         """Handle zeroconf discovery."""
         host = discovery_info["properties"].get("ip", None)
-        mac = discovery_info["properties"].get("mac", None)
+        uuid = discovery_info["properties"].get("uuid", None)
 
         # Check if already configured
-        await self.async_set_unique_id(mac)
+        await self.async_set_unique_id(uuid)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
         self._name = host
@@ -169,7 +166,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors, info = await self._async_get_info(user_input)
         if errors is None:
-            existing_entry = await self.async_set_unique_id(info["mac"])
+            existing_entry = await self.async_set_unique_id(info["uuid"])
             if existing_entry:
                 self.hass.config_entries.async_update_entry(
                     existing_entry, data=user_input
