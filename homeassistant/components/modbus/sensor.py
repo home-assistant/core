@@ -197,7 +197,7 @@ async def async_setup_platform(
         )
 
     if not sensors:
-        return False
+        return
     async_add_entities(sensors)
 
 
