@@ -55,7 +55,7 @@ DHCP = [
     },
     {
         "domain": "broadlink",
-        "macaddress": "B4340D*"
+        "macaddress": "B4430D*"
     },
     {
         "domain": "flume",
