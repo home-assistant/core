@@ -220,11 +220,12 @@ class TestGraphite(unittest.TestCase):
             runs.append(1)
             return event
 
-        with mock.patch.object(self.gf, "_queue") as mock_queue:
-            with mock.patch.object(self.gf, "_report_attributes") as mock_r:
-                mock_queue.get.side_effect = fake_get
-                self.gf.run()
-                # Twice for two events, once for the stop
-                assert mock_queue.task_done.call_count == 3
-                assert mock_r.call_count == 1
-                assert mock_r.call_args == mock.call("entity", event.data["new_state"])
+        with mock.patch.object(self.gf, "_queue") as mock_queue, mock.patch.object(
+            self.gf, "_report_attributes"
+        ) as mock_r:
+            mock_queue.get.side_effect = fake_get
+            self.gf.run()
+            # Twice for two events, once for the stop
+            assert mock_queue.task_done.call_count == 3
+            assert mock_r.call_count == 1
+            assert mock_r.call_args == mock.call("entity", event.data["new_state"])
