@@ -214,13 +214,12 @@ class EmailContentSensor(SensorEntity):
         message_untyped_text = None
 
         for part in email_message.walk():
-            if (
-                part.get_content_type() == CONTENT_TYPE_TEXT_PLAIN
-                and message_text is None
-            ):
-                message_text = part.get_payload()
-            elif part.get_content_type() == "text/html" and message_html is None:
-                message_html = part.get_payload()
+            if part.get_content_type() == CONTENT_TYPE_TEXT_PLAIN:
+                if message_text is None:
+                    message_text = part.get_payload()
+            elif part.get_content_type() == "text/html":
+                if message_html is None:
+                    message_html = part.get_payload()
             elif (
                 part.get_content_type().startswith("text")
                 and message_untyped_text is None
