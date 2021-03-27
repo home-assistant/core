@@ -49,9 +49,6 @@ class SmartTubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=DATA_SCHEMA, errors=errors
             )
 
-        import pdb
-
-        pdb.set_trace()
         existing_entry = await self.async_set_unique_id(account.id)
         if self._reauth_input is not None:
             # this is a reauth attempt
