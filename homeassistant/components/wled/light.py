@@ -151,6 +151,27 @@ class WLEDMasterLight(LightEntity, WLEDDeviceEntity):
 
         await self.coordinator.wled.master(**data)
 
+    async def async_effect(
+        self,
+        effect: int | str | None = None,
+        intensity: int | None = None,
+        palette: int | str | None = None,
+        reverse: bool | None = None,
+        speed: int | None = None,
+    ) -> None:
+        """Set the effect of a WLED light."""
+        # Master light does not have an effect setting.
+
+    @wled_exception_handler
+    async def async_preset(
+        self,
+        preset: int,
+    ) -> None:
+        """Set a WLED light to a saved preset."""
+        data = {ATTR_PRESET: preset}
+
+        await self.coordinator.wled.preset(**data)
+
 
 class WLEDSegmentLight(LightEntity, WLEDDeviceEntity):
     """Defines a WLED light based on a segment."""
