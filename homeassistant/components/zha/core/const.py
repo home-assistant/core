@@ -136,6 +136,8 @@ CONF_OPTIONS_SCHEMA = vol.Schema(
     }
 )
 
+CUSTOM_CONFIGURATION = "custom_configuration"
+
 DATA_DEVICE_CONFIG = "zha_device_config"
 DATA_ZHA = "zha"
 DATA_ZHA_CONFIG = "config"
@@ -186,6 +188,8 @@ POWER_BATTERY_OR_UNKNOWN = "Battery or Unknown"
 
 PRESET_SCHEDULE = "schedule"
 PRESET_COMPLEX = "complex"
+
+ZHA_OPTIONS = "zha_options"
 
 
 class RadioType(enum.Enum):

@@ -42,6 +42,7 @@ from .core.const import (
     CLUSTER_TYPE_IN,
     CLUSTER_TYPE_OUT,
     CONF_OPTIONS_SCHEMA,
+    CUSTOM_CONFIGURATION,
     DATA_ZHA,
     DATA_ZHA_GATEWAY,
     DOMAIN,
@@ -922,7 +923,7 @@ async def websocket_update_zha_configuration(hass, connection, msg):
     """Update the ZHA configuration."""
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     options = zha_gateway.config_entry.options
-    data_to_save = {**options, **{"custom_configuration": msg["data"]}}
+    data_to_save = {**options, **{CUSTOM_CONFIGURATION: msg["data"]}}
 
     _LOGGER.info(
         "Updating ZHA custom configuration options from %s to %s",
