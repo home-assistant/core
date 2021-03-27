@@ -883,7 +883,7 @@ async def test_dhcp_fails_to_connect(hass):
 async def test_dhcp_unreachable(hass):
     """Test DHCP discovery flow that fails to connect."""
     await setup.async_setup_component(hass, "persistent_notification", {})
-    with patch(DEVICE_DISCOVERY, side_effect=OSError(errno.ENETUNREACH)):
+    with patch(DEVICE_DISCOVERY, side_effect=OSError(errno.ENETUNREACH, None)):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": "dhcp"},
@@ -896,13 +896,13 @@ async def test_dhcp_unreachable(hass):
         await hass.async_block_till_done()
 
     assert result["type"] == "abort"
-    assert result["reason"] == "invalid_host"
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_dhcp_connect_einval(hass):
     """Test DHCP discovery flow that fails to connect with EINVAL."""
     await setup.async_setup_component(hass, "persistent_notification", {})
-    with patch(DEVICE_DISCOVERY, side_effect=OSError(errno.EINVAL)):
+    with patch(DEVICE_DISCOVERY, side_effect=OSError(errno.EINVAL, None)):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": "dhcp"},
@@ -959,3 +959,4 @@ async def test_dhcp_already_exists(hass):
         await hass.async_block_till_done()
 
     assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
