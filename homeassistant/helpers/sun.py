@@ -5,11 +5,9 @@ import datetime
 from typing import TYPE_CHECKING
 
 from homeassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
-
-from .typing import HomeAssistantType
 
 if TYPE_CHECKING:
     import astral
@@ -19,7 +17,7 @@ DATA_LOCATION_CACHE = "astral_location_cache"
 
 @callback
 @bind_hass
-def get_astral_location(hass: HomeAssistantType) -> astral.Location:
+def get_astral_location(hass: HomeAssistant) -> astral.Location:
     """Get an astral location for the current Home Assistant configuration."""
     from astral import Location  # pylint: disable=import-outside-toplevel
 
@@ -42,7 +40,7 @@ def get_astral_location(hass: HomeAssistantType) -> astral.Location:
 @callback
 @bind_hass
 def get_astral_event_next(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     event: str,
     utc_point_in_time: datetime.datetime | None = None,
     offset: datetime.timedelta | None = None,
@@ -89,7 +87,7 @@ def get_location_astral_event_next(
 @callback
 @bind_hass
 def get_astral_event_date(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     event: str,
     date: datetime.date | datetime.datetime | None = None,
 ) -> datetime.datetime | None:
@@ -114,7 +112,7 @@ def get_astral_event_date(
 @callback
 @bind_hass
 def is_up(
-    hass: HomeAssistantType, utc_point_in_time: datetime.datetime | None = None
+    hass: HomeAssistant, utc_point_in_time: datetime.datetime | None = None
 ) -> bool:
     """Calculate if the sun is currently up."""
     if utc_point_in_time is None:
