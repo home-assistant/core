@@ -42,6 +42,22 @@ DHCP = [
         "macaddress": "B85F98*"
     },
     {
+        "domain": "broadlink",
+        "macaddress": "34EA34*"
+    },
+    {
+        "domain": "broadlink",
+        "macaddress": "24DFA7*"
+    },
+    {
+        "domain": "broadlink",
+        "macaddress": "A043B0*"
+    },
+    {
+        "domain": "broadlink",
+        "macaddress": "B4430D*"
+    },
+    {
         "domain": "flume",
         "hostname": "flume-gw-*",
         "macaddress": "ECFABC*"
