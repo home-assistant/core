@@ -25,18 +25,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     octoprint_api = hass.data[COMPONENT_DOMAIN][base_url]
     tools = octoprint_api.get_tools()
 
-    if "Temperatures" in monitored_conditions:
-        if not tools:
-            hass.components.persistent_notification.create(
-                "Your printer appears to be offline.<br />"
-                "If you do not want to have your printer on <br />"
-                " at all times, and you would like to monitor <br /> "
-                "temperatures, please add <br />"
-                "bed and/or number&#95;of&#95;tools to your configuration <br />"
-                "and restart.",
-                title=NOTIFICATION_TITLE,
-                notification_id=NOTIFICATION_ID,
-            )
+    if "Temperatures" in monitored_conditions and not tools:
+        hass.components.persistent_notification.create(
+            "Your printer appears to be offline.<br />"
+            "If you do not want to have your printer on <br />"
+            " at all times, and you would like to monitor <br /> "
+            "temperatures, please add <br />"
+            "bed and/or number&#95;of&#95;tools to your configuration <br />"
+            "and restart.",
+            title=NOTIFICATION_TITLE,
+            notification_id=NOTIFICATION_ID,
+        )
 
     devices = []
     types = ["actual", "target"]

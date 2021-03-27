@@ -266,9 +266,8 @@ def get_entities(onewirehub: OneWireHub, config):
     """Get a list of entities."""
     entities = []
     device_names = {}
-    if CONF_NAMES in config:
-        if isinstance(config[CONF_NAMES], dict):
-            device_names = config[CONF_NAMES]
+    if CONF_NAMES in config and isinstance(config[CONF_NAMES], dict):
+        device_names = config[CONF_NAMES]
 
     conf_type = config[CONF_TYPE]
     # We have an owserver on a remote(or local) host/port

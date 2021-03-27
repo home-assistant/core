@@ -365,17 +365,20 @@ class PlexServer:
                 PLAYER_SOURCE, source
             )
 
-            if device.machineIdentifier not in ignored_clients:
-                if self.option_ignore_plexweb_clients and device.product == "Plex Web":
-                    ignored_clients.add(device.machineIdentifier)
-                    if device.machineIdentifier not in self._known_clients:
-                        _LOGGER.debug(
-                            "Ignoring %s %s: %s",
-                            "Plex Web",
-                            source,
-                            device.machineIdentifier,
-                        )
-                    return
+            if (
+                device.machineIdentifier not in ignored_clients
+                and self.option_ignore_plexweb_clients
+                and device.product == "Plex Web"
+            ):
+                ignored_clients.add(device.machineIdentifier)
+                if device.machineIdentifier not in self._known_clients:
+                    _LOGGER.debug(
+                        "Ignoring %s %s: %s",
+                        "Plex Web",
+                        source,
+                        device.machineIdentifier,
+                    )
+                return
 
             if device.machineIdentifier not in (
                 self._created_clients | ignored_clients | new_clients

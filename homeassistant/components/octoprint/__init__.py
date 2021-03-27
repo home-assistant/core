@@ -212,14 +212,12 @@ class OctoPrintAPI:
         now = time.time()
         if endpoint == "job":
             last_time = self.job_last_reading[1]
-            if last_time is not None:
-                if now - last_time < 30.0:
-                    return self.job_last_reading[0]
+            if last_time is not None and now - last_time < 30.0:
+                return self.job_last_reading[0]
         elif endpoint == "printer":
             last_time = self.printer_last_reading[1]
-            if last_time is not None:
-                if now - last_time < 30.0:
-                    return self.printer_last_reading[0]
+            if last_time is not None and now - last_time < 30.0:
+                return self.printer_last_reading[0]
 
         url = self.api_url + endpoint
         try:
@@ -300,8 +298,7 @@ def get_value_from_json(json_dict, sensor_type, group, tool):
 
         return json_dict[group][sensor_type]
 
-    if tool is not None:
-        if sensor_type in json_dict[group][tool]:
-            return json_dict[group][tool][sensor_type]
+    if tool is not None and sensor_type in json_dict[group][tool]:
+        return json_dict[group][tool][sensor_type]
 
     return None
