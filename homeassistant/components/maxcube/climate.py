@@ -1,6 +1,7 @@
 """Support for MAX! Thermostats via MAX! Cube."""
 import logging
 import socket
+from typing import Optional
 
 from maxcube.device import (
     MAX_DEVICE_MODE_AUTOMATIC,
@@ -137,7 +138,19 @@ class MaxCubeClimate(ClimateEntity):
         elif hvac_mode == HVAC_MODE_AUTO:
             self._set_target(MAX_DEVICE_MODE_AUTOMATIC, None)
 
-    def _set_target(self, mode: int, temp: float):
+    def _set_target(self, mode: Optional[int], temp: Optional[float]):
+        """
+        Set the mode and/or temperature of the thermostat.
+
+        @param mode: this is the mode to change to.
+        @param temp: the temperature to target.
+
+        Both parameters are optional. When mode is undefined, it keeps
+        the previous mode. When temp is undefined, it fetches the
+        temperature from the weekly schedule when mode is
+        MAX_DEVICE_MODE_AUTOMATIC and keeps the previous
+        temperature otherwise.
+        """
         with self._cubehandle.mutex:
             try:
                 self._cubehandle.cube.set_temperature_mode(self._device, temp, mode)
@@ -179,7 +192,12 @@ class MaxCubeClimate(ClimateEntity):
 
     def set_temperature(self, **kwargs):
         """Set new target temperatures."""
-        self._set_target(None, kwargs.get(ATTR_TEMPERATURE))
+        temp = kwargs.get(ATTR_TEMPERATURE)
+        if temp is None:
+            raise ValueError(
+                f"No {ATTR_TEMPERATURE} parameter passed to set_temperature method."
+            )
+        self._set_target(None, temp)
 
     @property
     def preset_mode(self):
