@@ -273,6 +273,21 @@ class TemplateFan(TemplateEntity, FanEntity):
         self._preset_modes = preset_modes
 
     @property
+    def _implemented_percentage(self) -> bool:
+        """Return true if percentage has been implemented."""
+        return bool(self._set_percentage_script or self._percentage_template)
+
+    @property
+    def _implemented_preset_mode(self):
+        """Return true if preset_mode has been implemented."""
+        return bool(self._set_preset_mode_script or self._preset_mode_template)
+
+    @property
+    def _implemented_speed(self):
+        """Return true if speed has been implemented."""
+        return bool(self._set_speed_script or self._speed_template)
+
+    @property
     def name(self):
         """Return the display name of this fan."""
         return self._name
@@ -290,7 +305,7 @@ class TemplateFan(TemplateEntity, FanEntity):
     @property
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
-        return self._speed_count or super().speed_count
+        return self._speed_count or 100
 
     @property
     def speed_list(self) -> list:
