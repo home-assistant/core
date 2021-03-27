@@ -890,6 +890,10 @@ async def async_binding_operation(zha_gateway, source_ieee, target_ieee, operati
 @websocket_api.websocket_command({vol.Required(TYPE): "zha/configuration"})
 async def websocket_get_configuration(hass, connection, msg):
     """Get ZHA configuration."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    custom_configuration = zha_gateway.config_entry.options.get(
+        CUSTOM_CONFIGURATION, {"zha_options": {}}
+    )
     import voluptuous_serialize  # pylint: disable=import-outside-toplevel
 
     def custom_serializer(schema: Any) -> Any:
@@ -909,7 +913,7 @@ async def websocket_get_configuration(hass, connection, msg):
                 CONF_OPTIONS_SCHEMA, custom_serializer=custom_serializer
             )
         },
-        "data": {"zha_options": {}},
+        "data": custom_configuration,
     }
     connection.send_result(msg[ID], data)
 

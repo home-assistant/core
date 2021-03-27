@@ -132,7 +132,7 @@ CONF_ZIGPY = "zigpy_config"
 CONF_OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DEFAULT_LIGHT_TRANSITION): cv.positive_int,
-        vol.Optional(CONF_ENABLE_IDENTIFY_ON_JOIN): cv.boolean,
+        vol.Optional(CONF_ENABLE_IDENTIFY_ON_JOIN, default=True): cv.boolean,
     }
 )
 
