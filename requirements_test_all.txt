@@ -330,7 +330,7 @@ faadelays==0.0.7
 feedparser==6.0.2
 
 # homeassistant.components.flipr
-flipr-api==1.2.0
+flipr-api==1.3.0
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
