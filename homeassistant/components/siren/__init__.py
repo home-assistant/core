@@ -25,12 +25,17 @@ from homeassistant.loader import bind_hass
 from .const import (
     ATTR_ACTIVE_TONE,
     ATTR_AVAILABLE_TONES,
+    ATTR_DURATION,
     ATTR_TONE,
     ATTR_VOLUME_LEVEL,
     DOMAIN,
     SERVICE_SET_ACTIVE_TONE,
+    SERVICE_SET_DURATION,
     SERVICE_SET_VOLUME_LEVEL,
+    SUPPORT_DURATION,
     SUPPORT_TONES,
+    SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
     SUPPORT_VOLUME_SET,
 )
 
@@ -59,15 +64,25 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     await component.async_setup(config)
 
     component.async_register_entity_service(
-        SERVICE_TURN_ON, TONE_SCHEMA, "async_turn_on"
+        SERVICE_TURN_ON, TONE_SCHEMA, "async_turn_on", [SUPPORT_TURN_ON]
     )
-    component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
-    component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
+    component.async_register_entity_service(
+        SERVICE_TURN_OFF, {}, "async_turn_off", [SUPPORT_TURN_OFF]
+    )
+    component.async_register_entity_service(
+        SERVICE_TOGGLE, {}, "async_toggle", [SUPPORT_TURN_ON & SUPPORT_TURN_OFF]
+    )
     component.async_register_entity_service(
         SERVICE_SET_ACTIVE_TONE,
         TONE_SCHEMA,
         "async_set_active_tone",
         [SUPPORT_TONES],
+    )
+    component.async_register_entity_service(
+        SERVICE_SET_DURATION,
+        TONE_SCHEMA,
+        "async_set_duration",
+        [SUPPORT_DURATION],
     )
     component.async_register_entity_service(
         SERVICE_SET_VOLUME_LEVEL,
@@ -114,11 +129,19 @@ class SirenEntity(ToggleEntity):
         if supported_features & SUPPORT_TONES:
             data[ATTR_ACTIVE_TONE] = self.active_tone
 
+        if supported_features & SUPPORT_DURATION:
+            data[ATTR_DURATION] = self.duration
+
         return data
 
     @property
     def volume_level(self) -> Optional[float]:
         """Return the volume level of the device (0 - 1)."""
+        return None
+
+    @property
+    def duration(self) -> Optional[int]:
+        """Return the duration in seconds of the noise."""
         return None
 
     @property
@@ -154,3 +177,11 @@ class SirenEntity(ToggleEntity):
     async def async_set_volume_level(self, volume_level: float) -> None:
         """Set volume level."""
         await self.hass.async_add_executor_job(self.set_volume_level, volume_level)
+
+    def set_duration(self, duration: int) -> None:
+        """Set siren duration in seconds."""
+        raise NotImplementedError()
+
+    async def async_set_duration(self, duration: int) -> None:
+        """Set siren duration in seconds."""
+        await self.hass.async_add_executor_job(self.set_duration, duration)
