@@ -16,7 +16,6 @@ from homeassistant.const import (
 )
 
 from . import DOMAIN
-from .const import LOGGER
 from .deconz_event import CONF_DECONZ_EVENT, CONF_GESTURE
 
 CONF_SUBTYPE = "subtype"
@@ -414,16 +413,13 @@ async def async_validate_trigger_config(hass, config):
 
     trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
 
-    if (
-        not device
-        or device.model not in REMOTES
-        or trigger not in REMOTES[device.model]
-    ):
-        if not device:
-            raise InvalidDeviceAutomationConfig(
-                f"deCONZ trigger {trigger} device with id "
-                f"{config[CONF_DEVICE_ID]} not found"
-            )
+    if not device:
+        raise InvalidDeviceAutomationConfig(
+            f"deCONZ trigger {trigger} device with ID "
+            f"{config[CONF_DEVICE_ID]} not found"
+        )
+
+    if device.model not in REMOTES or trigger not in REMOTES[device.model]:
         raise InvalidDeviceAutomationConfig(
             f"deCONZ trigger {trigger} is not valid for device "
             f"{device} ({config[CONF_DEVICE_ID]})"
@@ -443,8 +439,9 @@ async def async_attach_trigger(hass, config, action, automation_info):
 
     deconz_event = _get_deconz_event_from_device_id(hass, device.id)
     if deconz_event is None:
-        LOGGER.error("No deconz_event tied to device %s found", device.name)
-        raise InvalidDeviceAutomationConfig
+        raise InvalidDeviceAutomationConfig(
+            f'No deconz_event tied to device "{device.name}" found'
+        )
 
     event_id = deconz_event.serial
 

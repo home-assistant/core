@@ -12,8 +12,9 @@ async def test_binary_sensor(
     hass: HomeAssistant, vera_component_factory: ComponentFactory
 ) -> None:
     """Test function."""
-    vera_device = MagicMock(spec=pv.VeraBinarySensor)  # type: pv.VeraBinarySensor
+    vera_device: pv.VeraBinarySensor = MagicMock(spec=pv.VeraBinarySensor)
     vera_device.device_id = 1
+    vera_device.comm_failure = False
     vera_device.vera_device_id = vera_device.device_id
     vera_device.name = "dev1"
     vera_device.is_tripped = False

@@ -47,4 +47,4 @@ class TestKiraSensor(unittest.TestCase):
         sensor._update_callback(codeTuple)
 
         assert sensor.state == codeName
-        assert sensor.device_state_attributes == {kira.CONF_DEVICE: deviceName}
+        assert sensor.extra_state_attributes == {kira.CONF_DEVICE: deviceName}

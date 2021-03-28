@@ -6,14 +6,19 @@
         "step": {
             "user": {
                 "data": {
-                    "latitude": "Latitude",
-                    "longitude": "Longitude",
+                    "latitude": "Breedtegraad",
+                    "longitude": "Lengtegraad",
                     "mode": "Mode",
                     "name": "Naam"
                 },
                 "description": "Instituto Portugu\u00eas do Mar e Atmosfera",
                 "title": "Locatie"
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "IPMA API-eindpunt bereikbaar"
         }
     }
 }

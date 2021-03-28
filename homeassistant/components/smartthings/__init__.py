@@ -36,8 +36,8 @@ from .const import (
     DATA_MANAGER,
     DOMAIN,
     EVENT_BUTTON,
+    PLATFORMS,
     SIGNAL_SMARTTHINGS_UPDATE,
-    SUPPORTED_PLATFORMS,
     TOKEN_REFRESH_INTERVAL,
 )
 from .smartapp import (
@@ -184,9 +184,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
             )
         return False
 
-    for component in SUPPORTED_PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
     return True
 
@@ -213,8 +213,8 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
         broker.disconnect()
 
     tasks = [
-        hass.config_entries.async_forward_entry_unload(entry, component)
-        for component in SUPPORTED_PLATFORMS
+        hass.config_entries.async_forward_entry_unload(entry, platform)
+        for platform in PLATFORMS
     ]
     return all(await asyncio.gather(*tasks))
 
@@ -293,11 +293,13 @@ class DeviceBroker:
         for device in devices:
             capabilities = device.capabilities.copy()
             slots = {}
-            for platform_name in SUPPORTED_PLATFORMS:
-                platform = importlib.import_module(f".{platform_name}", self.__module__)
-                if not hasattr(platform, "get_capabilities"):
+            for platform in PLATFORMS:
+                platform_module = importlib.import_module(
+                    f".{platform}", self.__module__
+                )
+                if not hasattr(platform_module, "get_capabilities"):
                     continue
-                assigned = platform.get_capabilities(capabilities)
+                assigned = platform_module.get_capabilities(capabilities)
                 if not assigned:
                     continue
                 # Draw-down capabilities and set slot assignment
@@ -305,7 +307,7 @@ class DeviceBroker:
                     if capability not in capabilities:
                         continue
                     capabilities.remove(capability)
-                    slots[capability] = platform_name
+                    slots[capability] = platform
             assignments[device.device_id] = slots
         return assignments
 

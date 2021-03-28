@@ -4,7 +4,8 @@
             "already_configured": "Ger\u00e4t ist bereits konfiguriert"
         },
         "error": {
-            "cannot_connect": "Verbindungsfehler",
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_access_token": "Ung\u00fcltiger Zugriffs-Token",
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "unknown": "Unerwarteter Fehler"
         },
@@ -13,7 +14,7 @@
                 "data": {
                     "2fa": "Zwei-Faktor Authentifizierungscode"
                 },
-                "description": "Geben Sie die an Ihre E-Mail gesendete Pin ein. Wenn die E-Mail keine PIN enth\u00e4lt, lassen Sie das Feld leer.",
+                "description": "Gib die an deine E-Mail gesendete Pin ein. Wenn die E-Mail keine PIN enth\u00e4lt, lass das Feld leer.",
                 "title": "Zwei-Faktor-Authentifizierung"
             },
             "user": {

@@ -2,5 +2,6 @@
   "domain": "ubus",
   "name": "OpenWrt (ubus)",
   "documentation": "https://www.home-assistant.io/integrations/ubus",
-  "codeowners": []
+  "requirements": ["openwrt-ubus-rpc==0.0.2"],
+  "codeowners": ["@noltari"]
 }

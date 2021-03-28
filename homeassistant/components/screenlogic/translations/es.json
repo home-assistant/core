@@ -1,0 +1,29 @@
+{
+    "config": {
+        "flow_title": "ScreenLogic {name}",
+        "step": {
+            "gateway_entry": {
+                "description": "Introduzca la informaci\u00f3n de su ScreenLogic Gateway.",
+                "title": "ScreenLogic"
+            },
+            "gateway_select": {
+                "data": {
+                    "selected_gateway": "Puerta de enlace"
+                },
+                "description": "Se han descubierto las siguientes puertas de enlace ScreenLogic. Seleccione una para configurarla o elija configurar manualmente una puerta de enlace ScreenLogic.",
+                "title": "ScreenLogic"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Segundos entre exploraciones"
+                },
+                "description": "Especificar la configuraci\u00f3n de {gateway_name}",
+                "title": "ScreenLogic"
+            }
+        }
+    }
+}

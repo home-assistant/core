@@ -2,6 +2,8 @@
     "device_automation": {
         "condition_type": {
             "is_battery_level": "Gjeldende {entity_name} batteriniv\u00e5",
+            "is_carbon_dioxide": "Gjeldende {entity_name} karbondioksidkonsentrasjonsniv\u00e5",
+            "is_carbon_monoxide": "Gjeldende {entity_name} karbonmonoksid konsentrasjonsniv\u00e5",
             "is_current": "Gjeldende {entity_name} str\u00f8m",
             "is_energy": "Gjeldende {entity_name} effekt",
             "is_humidity": "Gjeldende {entity_name} fuktighet",
@@ -17,6 +19,8 @@
         },
         "trigger_type": {
             "battery_level": "{entity_name} batteriniv\u00e5 endres",
+            "carbon_dioxide": "{entity_name} endringer i konsentrasjonen av karbondioksid",
+            "carbon_monoxide": "{entity_name} endringer i konsentrasjonen av karbonmonoksid",
             "current": "{entity_name} gjeldende endringer",
             "energy": "{entity_name} effektendringer",
             "humidity": "{entity_name} fuktighets endringer",

@@ -310,7 +310,7 @@ async def get_device(hass, host, port, username, password):
         return device
 
     except axis.Unauthorized as err:
-        LOGGER.warning("Connected to device at %s but not registered.", host)
+        LOGGER.warning("Connected to device at %s but not registered", host)
         raise AuthenticationRequired from err
 
     except (asyncio.TimeoutError, axis.RequestError) as err:

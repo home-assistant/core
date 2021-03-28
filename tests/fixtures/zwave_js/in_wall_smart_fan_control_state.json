@@ -6,13 +6,10 @@
     "status": 4,
     "ready": true,
     "deviceClass": {
-      "basic": "Routing Slave",
-      "generic": "Multilevel Switch",
-      "specific": "Fan Switch",
-      "mandatorySupportedCCs": [
-        "Basic",
-        "Multilevel Switch"
-      ],
+      "basic": {"key": 4, "label":"Routing Slave"},
+      "generic": {"key": 17, "label":"Multilevel Switch"},
+      "specific": {"key": 8, "label":"Fan Switch"},
+      "mandatorySupportedCCs": [],
       "mandatoryControlCCs": []
     },
     "isListening": true,
@@ -87,6 +84,7 @@
         "userIcon": 1024
       }
     ],
+    "commandClasses": [],
     "values": [
       {
         "commandClassName": "Multilevel Switch",

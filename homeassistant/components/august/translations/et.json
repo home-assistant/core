@@ -10,11 +10,27 @@
             "unknown": "Tundmatu viga"
         },
         "step": {
+            "reauth_validate": {
+                "data": {
+                    "password": "Salas\u00f5na"
+                },
+                "description": "Sisesta kasutaja {username} salas\u00f5na.",
+                "title": "Autendi Augusti konto uuesti"
+            },
             "user": {
                 "data": {
                     "login_method": "Sisselogimismeetod",
                     "password": "Salas\u00f5na",
                     "timeout": "Ajal\u00f5pp (sekundites)",
+                    "username": "Kasutajanimi"
+                },
+                "description": "Kui sisselogimismeetod on \"e-post\" on kasutajanimi e-posti aadress. Kui sisselogimismeetod on \"telefon\" on kasutajanimi telefoninumber vormingus \"+NNNNNNNNN\".",
+                "title": "Seadista Augusti sidumise konto"
+            },
+            "user_validate": {
+                "data": {
+                    "login_method": "Sisselogimismeetod",
+                    "password": "Salas\u00f5na",
                     "username": "Kasutajanimi"
                 },
                 "description": "Kui sisselogimismeetod on \"e-post\" on kasutajanimi e-posti aadress. Kui sisselogimismeetod on \"telefon\" on kasutajanimi telefoninumber vormingus \"+NNNNNNNNN\".",

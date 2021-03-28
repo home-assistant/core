@@ -6,7 +6,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 import WazeRouteCalculator
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -20,7 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import location
-from homeassistant.helpers.entity import Entity
+import homeassistant.helpers.config_validation as cv
 
 from .const import (
     ATTR_DESTINATION,
@@ -121,7 +121,7 @@ def _get_location_from_attributes(state):
     return "{},{}".format(attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE))
 
 
-class WazeTravelTime(Entity):
+class WazeTravelTime(SensorEntity):
     """Representation of a Waze travel time sensor."""
 
     def __init__(self, unique_id, name, origin, destination, waze_data):
@@ -172,7 +172,7 @@ class WazeTravelTime(Entity):
         return ICON
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the last update."""
         if self._waze_data.duration is None:
             return None

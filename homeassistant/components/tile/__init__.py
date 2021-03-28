@@ -4,7 +4,7 @@ from datetime import timedelta
 from functools import partial
 
 from pytile import async_login
-from pytile.errors import SessionExpiredError, TileError
+from pytile.errors import InvalidAuthError, SessionExpiredError, TileError
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -43,6 +43,9 @@ async def async_setup_entry(hass, entry):
             session=websession,
         )
         hass.data[DOMAIN][DATA_TILE][entry.entry_id] = await client.async_get_tiles()
+    except InvalidAuthError:
+        LOGGER.error("Invalid credentials provided")
+        return False
     except TileError as err:
         raise ConfigEntryNotReady("Error during integration setup") from err
 
@@ -71,9 +74,9 @@ async def async_setup_entry(hass, entry):
 
     await gather_with_concurrency(DEFAULT_INIT_TASK_LIMIT, *coordinator_init_tasks)
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -84,8 +87,8 @@ async def async_unload_entry(hass, entry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

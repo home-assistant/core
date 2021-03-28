@@ -19,7 +19,7 @@ LUTRON_CASETA_BUTTON_EVENT = "lutron_caseta_button_event"
 
 BRIDGE_DEVICE_ID = "1"
 
-MANUFACTURER = "Lutron"
+MANUFACTURER = "Lutron Electronics Co., Inc"
 
 ATTR_SERIAL = "serial"
 ATTR_TYPE = "type"
@@ -31,5 +31,6 @@ ATTR_ACTION = "action"
 ACTION_PRESS = "press"
 ACTION_RELEASE = "release"
 
-CONF_TYPE = "type"
 CONF_SUBTYPE = "subtype"
+
+BRIDGE_TIMEOUT = 35

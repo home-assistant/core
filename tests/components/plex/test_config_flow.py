@@ -203,7 +203,7 @@ async def test_single_available_server(hass, mock_plex_calls):
         server_id = result["data"][CONF_SERVER_IDENTIFIER]
         mock_plex_server = hass.data[DOMAIN][SERVERS][server_id]
 
-        assert result["title"] == mock_plex_server.friendly_name
+        assert result["title"] == mock_plex_server.url_in_use
         assert result["data"][CONF_SERVER] == mock_plex_server.friendly_name
         assert (
             result["data"][CONF_SERVER_IDENTIFIER]
@@ -259,7 +259,7 @@ async def test_multiple_servers_with_selection(
         server_id = result["data"][CONF_SERVER_IDENTIFIER]
         mock_plex_server = hass.data[DOMAIN][SERVERS][server_id]
 
-        assert result["title"] == mock_plex_server.friendly_name
+        assert result["title"] == mock_plex_server.url_in_use
         assert result["data"][CONF_SERVER] == mock_plex_server.friendly_name
         assert (
             result["data"][CONF_SERVER_IDENTIFIER]
@@ -317,7 +317,7 @@ async def test_adding_last_unconfigured_server(
         server_id = result["data"][CONF_SERVER_IDENTIFIER]
         mock_plex_server = hass.data[DOMAIN][SERVERS][server_id]
 
-        assert result["title"] == mock_plex_server.friendly_name
+        assert result["title"] == mock_plex_server.url_in_use
         assert result["data"][CONF_SERVER] == mock_plex_server.friendly_name
         assert (
             result["data"][CONF_SERVER_IDENTIFIER]
@@ -656,7 +656,7 @@ async def test_manual_config(hass, mock_plex_calls):
     server_id = result["data"][CONF_SERVER_IDENTIFIER]
     mock_plex_server = hass.data[DOMAIN][SERVERS][server_id]
 
-    assert result["title"] == mock_plex_server.friendly_name
+    assert result["title"] == mock_plex_server.url_in_use
     assert result["data"][CONF_SERVER] == mock_plex_server.friendly_name
     assert result["data"][CONF_SERVER_IDENTIFIER] == mock_plex_server.machine_identifier
     assert result["data"][PLEX_SERVER_CONFIG][CONF_URL] == mock_plex_server.url_in_use
@@ -692,7 +692,7 @@ async def test_manual_config_with_token(hass, mock_plex_calls):
     server_id = result["data"][CONF_SERVER_IDENTIFIER]
     mock_plex_server = hass.data[DOMAIN][SERVERS][server_id]
 
-    assert result["title"] == mock_plex_server.friendly_name
+    assert result["title"] == mock_plex_server.url_in_use
     assert result["data"][CONF_SERVER] == mock_plex_server.friendly_name
     assert result["data"][CONF_SERVER_IDENTIFIER] == mock_plex_server.machine_identifier
     assert result["data"][PLEX_SERVER_CONFIG][CONF_URL] == mock_plex_server.url_in_use

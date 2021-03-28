@@ -6,7 +6,7 @@ import math
 import voluptuous as vol
 
 from homeassistant.components import history
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_NAME,
@@ -19,7 +19,6 @@ from homeassistant.const import (
 from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.reload import setup_reload_service
 import homeassistant.util.dt as dt_util
@@ -102,7 +101,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     return True
 
 
-class HistoryStatsSensor(Entity):
+class HistoryStatsSensor(SensorEntity):
     """Representation of a HistoryStats sensor."""
 
     def __init__(
@@ -174,7 +173,7 @@ class HistoryStatsSensor(Entity):
         return self._unit_of_measurement
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         if self.value is None:
             return {}

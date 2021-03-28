@@ -4,9 +4,11 @@ HVAC channels module for Zigbee Home Automation.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/integrations/zha/
 """
+from __future__ import annotations
+
 import asyncio
 from collections import namedtuple
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 from zigpy.exceptions import ZigbeeException
 import zigpy.zcl.clusters.hvac as hvac
@@ -44,7 +46,7 @@ class FanChannel(ZigbeeChannel):
     REPORT_CONFIG = ({"attr": "fan_mode", "config": REPORT_CONFIG_OP},)
 
     @property
-    def fan_mode(self) -> Optional[int]:
+    def fan_mode(self) -> int | None:
         """Return current fan mode."""
         return self.cluster.get("fan_mode")
 
@@ -198,22 +200,22 @@ class ThermostatChannel(ZigbeeChannel):
         return self._min_heat_setpoint_limit
 
     @property
-    def local_temp(self) -> Optional[int]:
+    def local_temp(self) -> int | None:
         """Thermostat temperature."""
         return self._local_temp
 
     @property
-    def occupancy(self) -> Optional[int]:
+    def occupancy(self) -> int | None:
         """Is occupancy detected."""
         return self._occupancy
 
     @property
-    def occupied_cooling_setpoint(self) -> Optional[int]:
+    def occupied_cooling_setpoint(self) -> int | None:
         """Temperature when room is occupied."""
         return self._occupied_cooling_setpoint
 
     @property
-    def occupied_heating_setpoint(self) -> Optional[int]:
+    def occupied_heating_setpoint(self) -> int | None:
         """Temperature when room is occupied."""
         return self._occupied_heating_setpoint
 
@@ -228,27 +230,27 @@ class ThermostatChannel(ZigbeeChannel):
         return self._pi_heating_demand
 
     @property
-    def running_mode(self) -> Optional[int]:
+    def running_mode(self) -> int | None:
         """Thermostat running mode."""
         return self._running_mode
 
     @property
-    def running_state(self) -> Optional[int]:
+    def running_state(self) -> int | None:
         """Thermostat running state, state of heat, cool, fan relays."""
         return self._running_state
 
     @property
-    def system_mode(self) -> Optional[int]:
+    def system_mode(self) -> int | None:
         """System mode."""
         return self._system_mode
 
     @property
-    def unoccupied_cooling_setpoint(self) -> Optional[int]:
+    def unoccupied_cooling_setpoint(self) -> int | None:
         """Temperature when room is not occupied."""
         return self._unoccupied_cooling_setpoint
 
     @property
-    def unoccupied_heating_setpoint(self) -> Optional[int]:
+    def unoccupied_heating_setpoint(self) -> int | None:
         """Temperature when room is not occupied."""
         return self._unoccupied_heating_setpoint
 
@@ -309,7 +311,7 @@ class ThermostatChannel(ZigbeeChannel):
             chunk, rest = rest[:4], rest[4:]
 
     def _configure_reporting_status(
-        self, attrs: Dict[Union[int, str], Tuple], res: Union[List, Tuple]
+        self, attrs: dict[int | str, tuple], res: list | tuple
     ) -> None:
         """Parse configure reporting result."""
         if not isinstance(res, list):
@@ -405,7 +407,7 @@ class ThermostatChannel(ZigbeeChannel):
         self.debug("set cooling setpoint to %s", temperature)
         return True
 
-    async def get_occupancy(self) -> Optional[bool]:
+    async def get_occupancy(self) -> bool | None:
         """Get unreportable occupancy attribute."""
         try:
             res, fail = await self.cluster.read_attributes(["occupancy"])
@@ -434,7 +436,7 @@ class ThermostatChannel(ZigbeeChannel):
         if not isinstance(res, list):
             return False
 
-        return all([record.status == Status.SUCCESS for record in res[0]])
+        return all(record.status == Status.SUCCESS for record in res[0])
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(hvac.UserInterface.cluster_id)

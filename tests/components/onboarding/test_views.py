@@ -8,6 +8,7 @@ import pytest
 from homeassistant.components import onboarding
 from homeassistant.components.onboarding import const, views
 from homeassistant.const import HTTP_FORBIDDEN
+from homeassistant.helpers import area_registry as ar
 from homeassistant.setup import async_setup_component
 
 from . import mock_storage
@@ -181,7 +182,7 @@ async def test_onboarding_user(hass, hass_storage, aiohttp_client):
     )
 
     # Validate created areas
-    area_registry = await hass.helpers.area_registry.async_get_registry()
+    area_registry = ar.async_get(hass)
     assert len(area_registry.areas) == 3
     assert sorted([area.name for area in area_registry.async_list_areas()]) == [
         "Bedroom",
@@ -247,7 +248,7 @@ async def test_onboarding_user_race(hass, hass_storage, aiohttp_client):
     assert sorted([res1.status, res2.status]) == [200, HTTP_FORBIDDEN]
 
 
-async def test_onboarding_integration(hass, hass_storage, hass_client):
+async def test_onboarding_integration(hass, hass_storage, hass_client, hass_admin_user):
     """Test finishing integration step."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
 
@@ -286,6 +287,28 @@ async def test_onboarding_integration(hass, hass_storage, hass_client):
     # Onboarding refresh token and new refresh token
     for user in await hass.auth.async_get_users():
         assert len(user.refresh_tokens) == 2, user
+
+
+async def test_onboarding_integration_missing_credential(
+    hass, hass_storage, hass_client, hass_access_token
+):
+    """Test that we fail integration step if user is missing credentials."""
+    mock_storage(hass_storage, {"done": [const.STEP_USER]})
+
+    assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
+
+    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+    refresh_token.credential = None
+
+    client = await hass_client()
+
+    resp = await client.post(
+        "/api/onboarding/integration",
+        json={"client_id": CLIENT_ID, "redirect_uri": CLIENT_REDIRECT_URI},
+    )
+
+    assert resp.status == 403
 
 
 async def test_onboarding_integration_invalid_redirect_uri(

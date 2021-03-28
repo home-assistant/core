@@ -17,7 +17,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import callback
-from homeassistant.exceptions import TemplateError
+from homeassistant.exceptions import ConditionError, TemplateError
 from homeassistant.helpers import condition
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import (
@@ -340,20 +340,28 @@ class BayesianBinarySensor(BinarySensorEntity):
         """Return True if numeric condition is met."""
         entity = entity_observation["entity_id"]
 
-        return condition.async_numeric_state(
-            self.hass,
-            entity,
-            entity_observation.get("below"),
-            entity_observation.get("above"),
-            None,
-            entity_observation,
-        )
+        try:
+            return condition.async_numeric_state(
+                self.hass,
+                entity,
+                entity_observation.get("below"),
+                entity_observation.get("above"),
+                None,
+                entity_observation,
+            )
+        except ConditionError:
+            return False
 
     def _process_state(self, entity_observation):
         """Return True if state conditions are met."""
         entity = entity_observation["entity_id"]
 
-        return condition.state(self.hass, entity, entity_observation.get("to_state"))
+        try:
+            return condition.state(
+                self.hass, entity, entity_observation.get("to_state")
+            )
+        except ConditionError:
+            return False
 
     @property
     def name(self):
@@ -376,7 +384,7 @@ class BayesianBinarySensor(BinarySensorEntity):
         return self._device_class
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
 
         attr_observations_list = [

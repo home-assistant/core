@@ -1,8 +1,9 @@
 """The Twinkly light component."""
+from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from aiohttp import ClientError
 
@@ -84,7 +85,7 @@ class TwinklyLight(LightEntity):
         return self._is_available
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Id of the device."""
         return self._id
 
@@ -104,7 +105,7 @@ class TwinklyLight(LightEntity):
         return "mdi:string-lights"
 
     @property
-    def device_info(self) -> Optional[Dict[str, Any]]:
+    def device_info(self) -> dict[str, Any] | None:
         """Get device specific attributes."""
         return (
             {
@@ -123,12 +124,12 @@ class TwinklyLight(LightEntity):
         return self._is_on
 
     @property
-    def brightness(self) -> Optional[int]:
+    def brightness(self) -> int | None:
         """Return the brightness of the light."""
         return self._brightness
 
     @property
-    def state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return device specific state attributes."""
 
         attributes = self._attributes
