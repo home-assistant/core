@@ -8,7 +8,6 @@ class HaZeroconf(Zeroconf):
 
     def close(self) -> None:
         """Fake method to avoid integrations closing it."""
-        pass
 
     ha_close = Zeroconf.close
 
