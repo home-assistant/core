@@ -8,7 +8,6 @@ from aiohttp.client_exceptions import ClientConnectorError
 from async_timeout import timeout
 
 from homeassistant.const import CONF_API_KEY
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -38,10 +37,7 @@ async def async_setup_entry(hass, config_entry) -> bool:
     coordinator = AccuWeatherDataUpdateCoordinator(
         hass, websession, api_key, location_key, forecast
     )
-    await coordinator.async_refresh()
-
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
 
     undo_listener = config_entry.add_update_listener(update_listener)
 
