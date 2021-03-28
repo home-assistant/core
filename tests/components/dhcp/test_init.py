@@ -24,7 +24,7 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed, mock_coro
+from tests.common import async_fire_time_changed
 
 # connect b8:b7:f1:6d:b5:33 192.168.210.56
 RAW_DHCP_REQUEST = (
@@ -61,9 +61,7 @@ async def test_dhcp_match_hostname_and_macaddress(hass):
 
     packet = Ether(RAW_DHCP_REQUEST)
 
-    with patch.object(
-        hass.config_entries.flow, "async_init", return_value=mock_coro()
-    ) as mock_init:
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
         dhcp_watcher.handle_dhcp_packet(packet)
         # Ensure no change is ignored
         dhcp_watcher.handle_dhcp_packet(packet)
@@ -86,9 +84,7 @@ async def test_dhcp_match_hostname(hass):
 
     packet = Ether(RAW_DHCP_REQUEST)
 
-    with patch.object(
-        hass.config_entries.flow, "async_init", return_value=mock_coro()
-    ) as mock_init:
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
         dhcp_watcher.handle_dhcp_packet(packet)
 
     assert len(mock_init.mock_calls) == 1
@@ -109,9 +105,7 @@ async def test_dhcp_match_macaddress(hass):
 
     packet = Ether(RAW_DHCP_REQUEST)
 
-    with patch.object(
-        hass.config_entries.flow, "async_init", return_value=mock_coro()
-    ) as mock_init:
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
         dhcp_watcher.handle_dhcp_packet(packet)
 
     assert len(mock_init.mock_calls) == 1
@@ -132,9 +126,7 @@ async def test_dhcp_nomatch(hass):
 
     packet = Ether(RAW_DHCP_REQUEST)
 
-    with patch.object(
-        hass.config_entries.flow, "async_init", return_value=mock_coro()
-    ) as mock_init:
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
         dhcp_watcher.handle_dhcp_packet(packet)
 
     assert len(mock_init.mock_calls) == 0
@@ -148,9 +140,7 @@ async def test_dhcp_nomatch_hostname(hass):
 
     packet = Ether(RAW_DHCP_REQUEST)
 
-    with patch.object(
-        hass.config_entries.flow, "async_init", return_value=mock_coro()
-    ) as mock_init:
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
         dhcp_watcher.handle_dhcp_packet(packet)
 
     assert len(mock_init.mock_calls) == 0
@@ -164,9 +154,7 @@ async def test_dhcp_nomatch_non_dhcp_packet(hass):
 
     packet = Ether(b"")
 
-    with patch.object(
-        hass.config_entries.flow, "async_init", return_value=mock_coro()
-    ) as mock_init:
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
         dhcp_watcher.handle_dhcp_packet(packet)
 
     assert len(mock_init.mock_calls) == 0
@@ -189,9 +177,7 @@ async def test_dhcp_nomatch_non_dhcp_request_packet(hass):
         ("hostname", b"connect"),
     ]
 
-    with patch.object(
-        hass.config_entries.flow, "async_init", return_value=mock_coro()
-    ) as mock_init:
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
         dhcp_watcher.handle_dhcp_packet(packet)
 
     assert len(mock_init.mock_calls) == 0
@@ -214,9 +200,7 @@ async def test_dhcp_invalid_hostname(hass):
         ("hostname", "connect"),
     ]
 
-    with patch.object(
-        hass.config_entries.flow, "async_init", return_value=mock_coro()
-    ) as mock_init:
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
         dhcp_watcher.handle_dhcp_packet(packet)
 
     assert len(mock_init.mock_calls) == 0
@@ -239,9 +223,7 @@ async def test_dhcp_missing_hostname(hass):
         ("hostname", None),
     ]
 
-    with patch.object(
-        hass.config_entries.flow, "async_init", return_value=mock_coro()
-    ) as mock_init:
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
         dhcp_watcher.handle_dhcp_packet(packet)
 
     assert len(mock_init.mock_calls) == 0
@@ -264,9 +246,7 @@ async def test_dhcp_invalid_option(hass):
         ("hostname"),
     ]
 
-    with patch.object(
-        hass.config_entries.flow, "async_init", return_value=mock_coro()
-    ) as mock_init:
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
         dhcp_watcher.handle_dhcp_packet(packet)
 
     assert len(mock_init.mock_calls) == 0
@@ -387,9 +367,7 @@ async def test_device_tracker_hostname_and_macaddress_exists_before_start(hass):
         },
     )
 
-    with patch.object(
-        hass.config_entries.flow, "async_init", return_value=mock_coro()
-    ) as mock_init:
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
         device_tracker_watcher = dhcp.DeviceTrackerWatcher(
             hass,
             {},
@@ -413,9 +391,7 @@ async def test_device_tracker_hostname_and_macaddress_exists_before_start(hass):
 async def test_device_tracker_hostname_and_macaddress_after_start(hass):
     """Test matching based on hostname and macaddress after start."""
 
-    with patch.object(
-        hass.config_entries.flow, "async_init", return_value=mock_coro()
-    ) as mock_init:
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
         device_tracker_watcher = dhcp.DeviceTrackerWatcher(
             hass,
             {},
@@ -450,9 +426,7 @@ async def test_device_tracker_hostname_and_macaddress_after_start(hass):
 async def test_device_tracker_hostname_and_macaddress_after_start_not_home(hass):
     """Test matching based on hostname and macaddress after start but not home."""
 
-    with patch.object(
-        hass.config_entries.flow, "async_init", return_value=mock_coro()
-    ) as mock_init:
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
         device_tracker_watcher = dhcp.DeviceTrackerWatcher(
             hass,
             {},
@@ -480,9 +454,7 @@ async def test_device_tracker_hostname_and_macaddress_after_start_not_home(hass)
 async def test_device_tracker_hostname_and_macaddress_after_start_not_router(hass):
     """Test matching based on hostname and macaddress after start but not router."""
 
-    with patch.object(
-        hass.config_entries.flow, "async_init", return_value=mock_coro()
-    ) as mock_init:
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
         device_tracker_watcher = dhcp.DeviceTrackerWatcher(
             hass,
             {},
@@ -512,9 +484,7 @@ async def test_device_tracker_hostname_and_macaddress_after_start_hostname_missi
 ):
     """Test matching based on hostname and macaddress after start but missing hostname."""
 
-    with patch.object(
-        hass.config_entries.flow, "async_init", return_value=mock_coro()
-    ) as mock_init:
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
         device_tracker_watcher = dhcp.DeviceTrackerWatcher(
             hass,
             {},
@@ -551,9 +521,7 @@ async def test_device_tracker_ignore_self_assigned_ips_before_start(hass):
         },
     )
 
-    with patch.object(
-        hass.config_entries.flow, "async_init", return_value=mock_coro()
-    ) as mock_init:
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
         device_tracker_watcher = dhcp.DeviceTrackerWatcher(
             hass,
             {},
@@ -569,9 +537,7 @@ async def test_device_tracker_ignore_self_assigned_ips_before_start(hass):
 
 async def test_aiodiscover_finds_new_hosts(hass):
     """Test aiodiscover finds new host."""
-    with patch.object(
-        hass.config_entries.flow, "async_init", return_value=mock_coro()
-    ) as mock_init, patch(
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init, patch(
         "homeassistant.components.dhcp.DiscoverHosts.async_discover",
         return_value=[
             {
@@ -608,9 +574,7 @@ async def test_aiodiscover_does_not_call_again_on_shorter_hostname(hass):
     additional discovery where the hostname is longer and then
     reject shorter ones.
     """
-    with patch.object(
-        hass.config_entries.flow, "async_init", return_value=mock_coro()
-    ) as mock_init, patch(
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init, patch(
         "homeassistant.components.dhcp.DiscoverHosts.async_discover",
         return_value=[
             {
@@ -665,9 +629,7 @@ async def test_aiodiscover_does_not_call_again_on_shorter_hostname(hass):
 
 async def test_aiodiscover_finds_new_hosts_after_interval(hass):
     """Test aiodiscover finds new host after interval."""
-    with patch.object(
-        hass.config_entries.flow, "async_init", return_value=mock_coro()
-    ) as mock_init, patch(
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init, patch(
         "homeassistant.components.dhcp.DiscoverHosts.async_discover",
         return_value=[],
     ):
@@ -681,9 +643,7 @@ async def test_aiodiscover_finds_new_hosts_after_interval(hass):
 
     assert len(mock_init.mock_calls) == 0
 
-    with patch.object(
-        hass.config_entries.flow, "async_init", return_value=mock_coro()
-    ) as mock_init, patch(
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init, patch(
         "homeassistant.components.dhcp.DiscoverHosts.async_discover",
         return_value=[
             {
