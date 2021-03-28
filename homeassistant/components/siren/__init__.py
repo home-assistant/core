@@ -1,7 +1,7 @@
 """Component to interface with various sirens/chimes."""
 from datetime import timedelta
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import voluptuous as vol
 
@@ -145,7 +145,7 @@ class SirenEntity(ToggleEntity):
         return None
 
     @property
-    def active_tone(self) -> Optional[int | str]:
+    def active_tone(self) -> Optional[Union[int, str]]:
         """
         Return the active tone for the siren.
 
@@ -154,7 +154,7 @@ class SirenEntity(ToggleEntity):
         raise NotImplementedError
 
     @property
-    def available_tones(self) -> Optional[List[int] | List[str]]:
+    def available_tones(self) -> Optional[Union[List[int], List[str]]]:
         """
         Return a list of available tones.
 
@@ -162,11 +162,11 @@ class SirenEntity(ToggleEntity):
         """
         raise NotImplementedError
 
-    def set_active_tone(self, tone: int | str) -> None:
+    def set_active_tone(self, tone: Union[int, str]) -> None:
         """Set new active tone."""
         raise NotImplementedError()
 
-    async def async_set_active_tone(self, tone: int | str) -> None:
+    async def async_set_active_tone(self, tone: Union[int, str]) -> None:
         """Set new active tone."""
         await self.hass.async_add_executor_job(self.set_active_tone, tone)
 
