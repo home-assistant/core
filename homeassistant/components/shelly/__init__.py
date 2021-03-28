@@ -154,7 +154,7 @@ async def async_services_setup(
     async def async_service_ota_update(call: ServiceCall):
         """Trigger OTA update."""
         if not (call.data.get(ATTR_DEVICE_ID) or call.data.get(ATTR_AREA_ID)):
-            _LOGGER.warn("OTA update service: no device or area selected")
+            _LOGGER.warning("OTA update service: no device or area selected")
             return
 
         devices = []
@@ -185,7 +185,7 @@ async def async_services_setup(
                 continue
 
             if update_data["status"] == "updating":
-                _LOGGER.warn("OTA update already in progress for %s", device.name)
+                _LOGGER.warning("OTA update already in progress for %s", device.name)
                 continue
 
             _LOGGER.debug(
