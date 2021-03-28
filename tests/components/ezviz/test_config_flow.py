@@ -2,13 +2,22 @@
 from unittest.mock import patch
 
 from homeassistant.components.ezviz.const import (
+    ATTR_SERIAL,
+    ATTR_TYPE_CAMERA,
     CONF_FFMPEG_ARGUMENTS,
     DEFAULT_FFMPEG_ARGUMENTS,
     DEFAULT_TIMEOUT,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_DISCOVERY, SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_URL, CONF_USERNAME
+from homeassistant.const import (
+    CONF_IP_ADDRESS,
+    CONF_PASSWORD,
+    CONF_TIMEOUT,
+    CONF_TYPE,
+    CONF_URL,
+    CONF_USERNAME,
+)
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
     RESULT_TYPE_CREATE_ENTRY,
@@ -31,8 +40,8 @@ from . import (
 )
 
 
-async def test_user_form(hass, ezviz):
-    """Test we get the user initiated form."""
+async def test_user_form(hass, ezviz, ezviz_test_rtsp):
+    """Test the user initiated form. Cloud Account as well as camera account."""
     await async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
@@ -51,6 +60,34 @@ async def test_user_form(hass, ezviz):
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "test-username"
     assert result["data"] == {**USER_INPUT}
+
+    await async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] == {}
+
+    with _patch_async_setup() as mock_setup, _patch_async_setup_entry() as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                ATTR_SERIAL: "C666666",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+                CONF_IP_ADDRESS: "test-ip",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "C666666"
+    assert result["data"] == {
+        CONF_USERNAME: "test-username",
+        CONF_PASSWORD: "test-password",
+        CONF_TYPE: ATTR_TYPE_CAMERA,
+    }
 
     assert len(mock_setup.mock_calls) == 0
     assert len(mock_setup_entry.mock_calls) == 0
