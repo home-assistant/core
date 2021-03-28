@@ -1,0 +1,75 @@
+{
+    "config": {
+        "abort": {
+            "duplicate_persistence_file": "Archivo de persistencia ya en uso",
+            "duplicate_topic": "Tema ya en uso",
+            "invalid_device": "Dispositivo no v\u00e1lido",
+            "invalid_ip": "Direcci\u00f3n IP no v\u00e1lida",
+            "invalid_persistence_file": "Archivo de persistencia no v\u00e1lido",
+            "invalid_port": "N\u00famero de puerto no v\u00e1lido",
+            "invalid_publish_topic": "Tema de publicaci\u00f3n no v\u00e1lido",
+            "invalid_serial": "Puerto serie no v\u00e1lido",
+            "invalid_subscribe_topic": "Tema de suscripci\u00f3n no v\u00e1lido",
+            "invalid_version": "Versi\u00f3n inv\u00e1lida de MySensors",
+            "not_a_number": "Por favor, introduzca un n\u00famero",
+            "port_out_of_range": "El n\u00famero de puerto debe ser como m\u00ednimo 1 y como m\u00e1ximo 65535",
+            "same_topic": "Los temas de suscripci\u00f3n y publicaci\u00f3n son los mismos"
+        },
+        "error": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "cannot_connect": "No se pudo conectar",
+            "duplicate_persistence_file": "Archivo de persistencia ya en uso",
+            "duplicate_topic": "Tema ya en uso",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
+            "invalid_device": "Dispositivo no v\u00e1lido",
+            "invalid_ip": "Direcci\u00f3n IP no v\u00e1lida",
+            "invalid_persistence_file": "Archivo de persistencia no v\u00e1lido",
+            "invalid_port": "N\u00famero de puerto no v\u00e1lido",
+            "invalid_publish_topic": "Tema de publicaci\u00f3n no v\u00e1lido",
+            "invalid_serial": "Puerto serie no v\u00e1lido",
+            "invalid_subscribe_topic": "Tema de suscripci\u00f3n no v\u00e1lido",
+            "invalid_version": "Versi\u00f3n no v\u00e1lida de MySensors",
+            "not_a_number": "Por favor, introduce un n\u00famero",
+            "port_out_of_range": "El n\u00famero de puerto debe ser como m\u00ednimo 1 y como m\u00e1ximo 65535",
+            "same_topic": "Los temas de suscripci\u00f3n y publicaci\u00f3n son los mismos",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "gw_mqtt": {
+                "data": {
+                    "persistence_file": "archivo de persistencia (d\u00e9jelo vac\u00edo para que se genere autom\u00e1ticamente)",
+                    "retain": "retener mqtt",
+                    "topic_in_prefix": "prefijo para los temas de entrada (topic_in_prefix)",
+                    "topic_out_prefix": "prefijo para los temas de salida (topic_out_prefix)",
+                    "version": "Versi\u00f3n de MySensors"
+                },
+                "description": "Configuraci\u00f3n del gateway MQTT"
+            },
+            "gw_serial": {
+                "data": {
+                    "baud_rate": "tasa de baudios",
+                    "device": "Puerto serie",
+                    "persistence_file": "archivo de persistencia (d\u00e9jelo vac\u00edo para que se genere autom\u00e1ticamente)",
+                    "version": "Versi\u00f3n de MySensors"
+                },
+                "description": "Configuraci\u00f3n de la pasarela en serie"
+            },
+            "gw_tcp": {
+                "data": {
+                    "device": "Direcci\u00f3n IP de la pasarela",
+                    "persistence_file": "archivo de persistencia (d\u00e9jelo vac\u00edo para que se genere autom\u00e1ticamente)",
+                    "tcp_port": "Puerto",
+                    "version": "Versi\u00f3n de MySensores"
+                },
+                "description": "Configuraci\u00f3n de la pasarela Ethernet"
+            },
+            "user": {
+                "data": {
+                    "gateway_type": "Tipo de pasarela"
+                },
+                "description": "Elija el m\u00e9todo de conexi\u00f3n con la pasarela"
+            }
+        }
+    },
+    "title": "MySensors"
+}

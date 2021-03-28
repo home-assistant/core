@@ -1,6 +1,8 @@
 """Support for Azure DevOps."""
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from aioazuredevops.client import DevOpsClient
 import aiohttp
@@ -100,7 +102,7 @@ class AzureDevOpsEntity(Entity):
         else:
             if self._available:
                 _LOGGER.debug(
-                    "An error occurred while updating Azure DevOps sensor.",
+                    "An error occurred while updating Azure DevOps sensor",
                     exc_info=True,
                 )
             self._available = False
@@ -114,7 +116,7 @@ class AzureDevOpsDeviceEntity(AzureDevOpsEntity):
     """Defines a Azure DevOps device entity."""
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> dict[str, Any]:
         """Return device information about this Azure DevOps instance."""
         return {
             "identifiers": {

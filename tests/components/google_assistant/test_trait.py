@@ -31,6 +31,7 @@ from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
+    ATTR_MODE,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     SERVICE_TURN_OFF,
@@ -54,7 +55,7 @@ from homeassistant.util import color
 
 from . import BASIC_CONFIG, MockConfig
 
-from tests.common import async_mock_service
+from tests.common import async_capture_events, async_mock_service
 
 REQ_ID = "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
 
@@ -84,8 +85,7 @@ async def test_brightness_light(hass):
 
     assert trt.query_attributes() == {"brightness": 95}
 
-    events = []
-    hass.bus.async_listen(EVENT_CALL_SERVICE, events.append)
+    events = async_capture_events(hass, EVENT_CALL_SERVICE)
 
     calls = async_mock_service(hass, light.DOMAIN, light.SERVICE_TURN_ON)
     await trt.execute(
@@ -713,7 +713,7 @@ async def test_temperature_setting_climate_onoff(hass):
         BASIC_CONFIG,
     )
     assert trt.sync_attributes() == {
-        "availableThermostatModes": "off,cool,heat,heatcool,on",
+        "availableThermostatModes": ["off", "cool", "heat", "heatcool", "on"],
         "thermostatTemperatureUnit": "F",
     }
     assert trt.can_execute(trait.COMMAND_THERMOSTAT_SET_MODE, {})
@@ -752,7 +752,7 @@ async def test_temperature_setting_climate_no_modes(hass):
         BASIC_CONFIG,
     )
     assert trt.sync_attributes() == {
-        "availableThermostatModes": "heat",
+        "availableThermostatModes": ["heat"],
         "thermostatTemperatureUnit": "C",
     }
 
@@ -788,7 +788,7 @@ async def test_temperature_setting_climate_range(hass):
         BASIC_CONFIG,
     )
     assert trt.sync_attributes() == {
-        "availableThermostatModes": "off,cool,heat,auto,on",
+        "availableThermostatModes": ["off", "cool", "heat", "auto", "on"],
         "thermostatTemperatureUnit": "F",
     }
     assert trt.query_attributes() == {
@@ -862,7 +862,7 @@ async def test_temperature_setting_climate_setpoint(hass):
         BASIC_CONFIG,
     )
     assert trt.sync_attributes() == {
-        "availableThermostatModes": "off,cool,on",
+        "availableThermostatModes": ["off", "cool", "on"],
         "thermostatTemperatureUnit": "C",
     }
     assert trt.query_attributes() == {
@@ -920,7 +920,7 @@ async def test_temperature_setting_climate_setpoint_auto(hass):
         BASIC_CONFIG,
     )
     assert trt.sync_attributes() == {
-        "availableThermostatModes": "off,heatcool,on",
+        "availableThermostatModes": ["off", "heatcool", "on"],
         "thermostatTemperatureUnit": "C",
     }
     assert trt.query_attributes() == {
@@ -1391,6 +1391,7 @@ async def test_fan_speed(hass):
                     fan.SPEED_HIGH,
                 ],
                 "speed": "low",
+                "percentage": 33,
             },
         ),
         BASIC_CONFIG,
@@ -1438,11 +1439,13 @@ async def test_fan_speed(hass):
             ],
         },
         "reversible": False,
+        "supportsFanSpeedPercent": True,
     }
 
     assert trt.query_attributes() == {
         "currentFanSpeedSetting": "low",
         "on": True,
+        "currentFanSpeedPercent": 33,
     }
 
     assert trt.can_execute(trait.COMMAND_FANSPEED, params={"fanSpeed": "medium"})
@@ -1452,6 +1455,14 @@ async def test_fan_speed(hass):
 
     assert len(calls) == 1
     assert calls[0].data == {"entity_id": "fan.living_room_fan", "speed": "medium"}
+
+    assert trt.can_execute(trait.COMMAND_FANSPEED, params={"fanSpeedPercent": 10})
+
+    calls = async_mock_service(hass, fan.DOMAIN, fan.SERVICE_SET_PERCENTAGE)
+    await trt.execute(trait.COMMAND_FANSPEED, BASIC_DATA, {"fanSpeedPercent": 10}, {})
+
+    assert len(calls) == 1
+    assert calls[0].data == {"entity_id": "fan.living_room_fan", "percentage": 10}
 
 
 async def test_climate_fan_speed(hass):
@@ -1495,6 +1506,7 @@ async def test_climate_fan_speed(hass):
             ],
         },
         "reversible": False,
+        "supportsFanSpeedPercent": True,
     }
 
     assert trt.query_attributes() == {
@@ -1767,7 +1779,7 @@ async def test_modes_humidifier(hass):
                 humidifier.ATTR_MIN_HUMIDITY: 30,
                 humidifier.ATTR_MAX_HUMIDITY: 99,
                 humidifier.ATTR_HUMIDITY: 50,
-                humidifier.ATTR_MODE: humidifier.MODE_AUTO,
+                ATTR_MODE: humidifier.MODE_AUTO,
             },
         ),
         BASIC_CONFIG,
@@ -1921,14 +1933,18 @@ async def test_openclose_cover(hass):
     assert trt.sync_attributes() == {}
     assert trt.query_attributes() == {"openPercent": 75}
 
-    calls = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION)
+    calls_set = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION)
+    calls_open = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_OPEN_COVER)
+
     await trt.execute(trait.COMMAND_OPENCLOSE, BASIC_DATA, {"openPercent": 50}, {})
     await trt.execute(
         trait.COMMAND_OPENCLOSE_RELATIVE, BASIC_DATA, {"openRelativePercent": 50}, {}
     )
-    assert len(calls) == 2
-    assert calls[0].data == {ATTR_ENTITY_ID: "cover.bla", cover.ATTR_POSITION: 50}
-    assert calls[1].data == {ATTR_ENTITY_ID: "cover.bla", cover.ATTR_POSITION: 100}
+    assert len(calls_set) == 1
+    assert calls_set[0].data == {ATTR_ENTITY_ID: "cover.bla", cover.ATTR_POSITION: 50}
+
+    assert len(calls_open) == 1
+    assert calls_open[0].data == {ATTR_ENTITY_ID: "cover.bla"}
 
 
 async def test_openclose_cover_unknown_state(hass):
@@ -2099,6 +2115,7 @@ async def test_openclose_cover_secure(hass, device_class):
     assert trt.query_attributes() == {"openPercent": 75}
 
     calls = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION)
+    calls_close = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_CLOSE_COVER)
 
     # No challenge data
     with pytest.raises(error.ChallengeNeeded) as err:
@@ -2124,8 +2141,8 @@ async def test_openclose_cover_secure(hass, device_class):
 
     # no challenge on close
     await trt.execute(trait.COMMAND_OPENCLOSE, PIN_DATA, {"openPercent": 0}, {})
-    assert len(calls) == 2
-    assert calls[1].data == {ATTR_ENTITY_ID: "cover.bla", cover.ATTR_POSITION: 0}
+    assert len(calls_close) == 1
+    assert calls_close[0].data == {ATTR_ENTITY_ID: "cover.bla"}
 
 
 @pytest.mark.parametrize(

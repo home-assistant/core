@@ -119,7 +119,6 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update({"title_placeholders": {CONF_NAME: self._name}})
 
         try:

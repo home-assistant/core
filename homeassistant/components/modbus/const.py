@@ -13,11 +13,10 @@ CONF_REVERSE_ORDER = "reverse_order"
 CONF_SCALE = "scale"
 CONF_COUNT = "count"
 CONF_PRECISION = "precision"
-CONF_OFFSET = "offset"
 CONF_COILS = "coils"
 
 # integration names
-DEFAULT_HUB = "default"
+DEFAULT_HUB = "modbus_hub"
 MODBUS_DOMAIN = "modbus"
 
 # data types
@@ -51,7 +50,8 @@ DEFAULT_SCAN_INTERVAL = 15  # seconds
 # binary_sensor.py
 CONF_INPUTS = "inputs"
 CONF_INPUT_TYPE = "input_type"
-CONF_ADDRESS = "address"
+CONF_BINARY_SENSORS = "binary_sensors"
+CONF_BINARY_SENSOR = "binary_sensor"
 
 # sensor.py
 # CONF_DATA_TYPE = "data_type"
@@ -60,15 +60,20 @@ DEFAULT_STRUCT_FORMAT = {
     DATA_TYPE_UINT: {1: "H", 2: "I", 4: "Q"},
     DATA_TYPE_FLOAT: {1: "e", 2: "f", 4: "d"},
 }
+CONF_SENSOR = "sensor"
+CONF_SENSORS = "sensors"
 
 # switch.py
 CONF_STATE_OFF = "state_off"
 CONF_STATE_ON = "state_on"
 CONF_VERIFY_REGISTER = "verify_register"
 CONF_VERIFY_STATE = "verify_state"
+CONF_SWITCH = "switch"
+CONF_SWITCHES = "switches"
 
 # climate.py
 CONF_CLIMATES = "climates"
+CONF_CLIMATE = "climate"
 CONF_TARGET_TEMP = "target_temp_register"
 CONF_CURRENT_TEMP = "current_temp_register"
 CONF_CURRENT_TEMP_REGISTER_TYPE = "current_temp_register_type"
@@ -82,6 +87,7 @@ DEFAULT_STRUCTURE_PREFIX = ">f"
 DEFAULT_TEMP_UNIT = "C"
 
 # cover.py
+CONF_COVER = "cover"
 CONF_STATE_OPEN = "state_open"
 CONF_STATE_CLOSED = "state_closed"
 CONF_STATE_OPENING = "state_opening"

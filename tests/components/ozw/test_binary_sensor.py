@@ -5,6 +5,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.components.ozw.const import DOMAIN
 from homeassistant.const import ATTR_DEVICE_CLASS
+from homeassistant.helpers import entity_registry as er
 
 from .common import setup_ozw
 
@@ -14,7 +15,7 @@ async def test_binary_sensor(hass, generic_data, binary_sensor_msg):
     receive_msg = await setup_ozw(hass, fixture=generic_data)
 
     # Test Legacy sensor (disabled by default)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
     entity_id = "binary_sensor.trisensor_sensor"
     state = hass.states.get(entity_id)
     assert state is None
@@ -46,7 +47,7 @@ async def test_binary_sensor(hass, generic_data, binary_sensor_msg):
 async def test_sensor_enabled(hass, generic_data, binary_sensor_alt_msg):
     """Test enabling a legacy binary_sensor."""
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     entry = registry.async_get_or_create(
         BINARY_SENSOR_DOMAIN,

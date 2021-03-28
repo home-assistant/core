@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Dit Guardian-apparaat is al geconfigureerd.",
-            "already_in_progress": "De configuratie van het Guardian-apparaat is al bezig.",
+            "already_configured": "Apparaat is al geconfigureerd",
+            "already_in_progress": "De configuratiestroom is al aan de gang",
             "cannot_connect": "Kan geen verbinding maken"
         },
         "step": {

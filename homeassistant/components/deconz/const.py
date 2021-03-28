@@ -28,7 +28,7 @@ CONF_ALLOW_DECONZ_GROUPS = "allow_deconz_groups"
 CONF_ALLOW_NEW_DEVICES = "allow_new_devices"
 CONF_MASTER_GATEWAY = "master"
 
-SUPPORTED_PLATFORMS = [
+PLATFORMS = [
     BINARY_SENSOR_DOMAIN,
     CLIMATE_DOMAIN,
     COVER_DOMAIN,
@@ -46,6 +46,7 @@ NEW_SCENE = "scenes"
 NEW_SENSOR = "sensors"
 
 ATTR_DARK = "dark"
+ATTR_LOCKED = "locked"
 ATTR_OFFSET = "offset"
 ATTR_ON = "on"
 ATTR_VALVE = "valve"

@@ -1,12 +1,13 @@
 """Integration with the Rachio Iro sprinkler system controller."""
 from abc import abstractmethod
+from contextlib import suppress
 from datetime import timedelta
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_ID
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
@@ -67,7 +68,6 @@ from .webhooks import (
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DURATION = "duration"
-ATTR_ID = "id"
 ATTR_PERCENT = "percent"
 ATTR_SCHEDULE_SUMMARY = "Summary"
 ATTR_SCHEDULE_ENABLED = "Enabled"
@@ -389,7 +389,7 @@ class RachioZone(RachioSwitch):
         return self._entity_picture
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return the optional state attributes."""
         props = {ATTR_ZONE_NUMBER: self._zone_number, ATTR_ZONE_SUMMARY: self._summary}
         if self._shade_type:
@@ -495,7 +495,7 @@ class RachioSchedule(RachioSwitch):
         return "mdi:water" if self.schedule_is_enabled else "mdi:water-off"
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return the optional state attributes."""
         return {
             ATTR_SCHEDULE_SUMMARY: self._summary,
@@ -526,7 +526,7 @@ class RachioSchedule(RachioSwitch):
     def _async_handle_update(self, *args, **kwargs) -> None:
         """Handle incoming webhook schedule data."""
         # Schedule ID not passed when running individual zones, so we catch that error
-        try:
+        with suppress(KeyError):
             if args[0][KEY_SCHEDULE_ID] == self._schedule_id:
                 if args[0][KEY_SUBTYPE] in [SUBTYPE_SCHEDULE_STARTED]:
                     self._state = True
@@ -535,8 +535,6 @@ class RachioSchedule(RachioSwitch):
                     SUBTYPE_SCHEDULE_COMPLETED,
                 ]:
                     self._state = False
-        except KeyError:
-            pass
 
         self.async_write_ha_state()
 

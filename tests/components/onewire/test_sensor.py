@@ -134,7 +134,7 @@ async def test_sensors_on_owserver_coupler(owproxy, hass, device_id):
     owproxy.return_value.dir.side_effect = dir_side_effect
     owproxy.return_value.read.side_effect = read_side_effect
 
-    with patch("homeassistant.components.onewire.SUPPORTED_PLATFORMS", [SENSOR_DOMAIN]):
+    with patch("homeassistant.components.onewire.PLATFORMS", [SENSOR_DOMAIN]):
         await setup_onewire_patched_owserver_integration(hass)
         await hass.async_block_till_done()
 

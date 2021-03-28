@@ -1,12 +1,14 @@
 """Support for scripts."""
+from __future__ import annotations
+
 import asyncio
 import logging
-from typing import List
 
 import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_MODE,
     ATTR_NAME,
     CONF_ALIAS,
     CONF_ICON,
@@ -27,7 +29,6 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.script import (
     ATTR_CUR,
     ATTR_MAX,
-    ATTR_MODE,
     CONF_MAX,
     CONF_MAX_EXCEEDED,
     SCRIPT_MODE_SINGLE,
@@ -35,7 +36,10 @@ from homeassistant.helpers.script import (
     make_script_schema,
 )
 from homeassistant.helpers.service import async_set_service_schema
+from homeassistant.helpers.trace import trace_get, trace_path
 from homeassistant.loader import bind_hass
+
+from .trace import trace_script
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,7 +93,7 @@ def is_on(hass, entity_id):
 
 
 @callback
-def scripts_with_entity(hass: HomeAssistant, entity_id: str) -> List[str]:
+def scripts_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
     """Return all scripts that reference the entity."""
     if DOMAIN not in hass.data:
         return []
@@ -104,7 +108,7 @@ def scripts_with_entity(hass: HomeAssistant, entity_id: str) -> List[str]:
 
 
 @callback
-def entities_in_script(hass: HomeAssistant, entity_id: str) -> List[str]:
+def entities_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
     """Return all entities in script."""
     if DOMAIN not in hass.data:
         return []
@@ -120,7 +124,7 @@ def entities_in_script(hass: HomeAssistant, entity_id: str) -> List[str]:
 
 
 @callback
-def scripts_with_device(hass: HomeAssistant, device_id: str) -> List[str]:
+def scripts_with_device(hass: HomeAssistant, device_id: str) -> list[str]:
     """Return all scripts that reference the device."""
     if DOMAIN not in hass.data:
         return []
@@ -135,7 +139,7 @@ def scripts_with_device(hass: HomeAssistant, device_id: str) -> List[str]:
 
 
 @callback
-def devices_in_script(hass: HomeAssistant, entity_id: str) -> List[str]:
+def devices_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
     """Return all devices in script."""
     if DOMAIN not in hass.data:
         return []
@@ -181,7 +185,10 @@ async def async_setup(hass, config):
             return
 
         await asyncio.wait(
-            [script_entity.async_turn_off() for script_entity in script_entities]
+            [
+                asyncio.create_task(script_entity.async_turn_off())
+                for script_entity in script_entities
+            ]
         )
 
     async def toggle_service(service):
@@ -217,7 +224,7 @@ async def _async_process_config(hass, config, component):
         )
 
     script_entities = [
-        ScriptEntity(hass, object_id, cfg)
+        ScriptEntity(hass, object_id, cfg, cfg.raw_config)
         for object_id, cfg in config.get(DOMAIN, {}).items()
     ]
 
@@ -249,7 +256,7 @@ class ScriptEntity(ToggleEntity):
 
     icon = None
 
-    def __init__(self, hass, object_id, cfg):
+    def __init__(self, hass, object_id, cfg, raw_config):
         """Initialize the script."""
         self.object_id = object_id
         self.icon = cfg.get(CONF_ICON)
@@ -268,6 +275,7 @@ class ScriptEntity(ToggleEntity):
             variables=cfg.get(CONF_VARIABLES),
         )
         self._changed = asyncio.Event()
+        self._raw_config = raw_config
 
     @property
     def should_poll(self):
@@ -280,7 +288,7 @@ class ScriptEntity(ToggleEntity):
         return self.script.name
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {
             ATTR_LAST_TRIGGERED: self.script.last_triggered,
@@ -305,7 +313,11 @@ class ScriptEntity(ToggleEntity):
         self._changed.set()
 
     async def async_turn_on(self, **kwargs):
-        """Turn the script on."""
+        """Run the script.
+
+        Depending on the script's run mode, this may do nothing, restart the script or
+        fire an additional parallel run.
+        """
         variables = kwargs.get("variables")
         context = kwargs.get("context")
         wait = kwargs.get("wait", True)
@@ -315,7 +327,7 @@ class ScriptEntity(ToggleEntity):
             {ATTR_NAME: self.script.name, ATTR_ENTITY_ID: self.entity_id},
             context=context,
         )
-        coro = self.script.async_run(variables, context)
+        coro = self._async_run(variables, context)
         if wait:
             await coro
             return
@@ -327,8 +339,21 @@ class ScriptEntity(ToggleEntity):
         self.hass.async_create_task(coro)
         await self._changed.wait()
 
+    async def _async_run(self, variables, context):
+        with trace_script(
+            self.hass, self.object_id, self._raw_config, context
+        ) as script_trace:
+            script_trace.set_variables(variables)
+            # Prepare tracing the execution of the script's sequence
+            script_trace.set_action_trace(trace_get())
+            with trace_path("sequence"):
+                return await self.script.async_run(variables, context)
+
     async def async_turn_off(self, **kwargs):
-        """Turn script off."""
+        """Stop running the script.
+
+        If multiple runs are in progress, all will be stopped.
+        """
         await self.script.async_stop()
 
     async def async_will_remove_from_hass(self):

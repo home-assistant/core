@@ -27,7 +27,7 @@
                 "data": {
                     "forecast": "P\u0159edpov\u011b\u010f po\u010das\u00ed"
                 },
-                "description": "Kdy\u017e povol\u00edte p\u0159edpov\u011b\u010f po\u010das\u00ed, budou aktualizace dat prov\u00e1d\u011bny ka\u017ed\u00fdch 64 minut nam\u00edsto 32 minut z d\u016fvodu omezen\u00ed bezplatn\u00e9 verze AccuWeather.",
+                "description": "Kdy\u017e povol\u00edte p\u0159edpov\u011b\u010f po\u010das\u00ed, budou aktualizace dat prov\u00e1d\u011bny ka\u017ed\u00fdch 80 minut nam\u00edsto 40 minut z d\u016fvodu omezen\u00ed bezplatn\u00e9 verze AccuWeather.",
                 "title": "Mo\u017enosti AccuWeather"
             }
         }

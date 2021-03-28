@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
+        },
+        "error": {
+            "invalid_auth": "Ugyldig godkjenning",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "E-post",
+                    "password": "Passord"
+                },
+                "description": "Skriv inn din SmartTub e-postadresse og passord for \u00e5 logge p\u00e5",
+                "title": "P\u00e5logging"
+            }
+        }
+    }
+}

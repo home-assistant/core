@@ -1,8 +1,10 @@
 """Provides functionality to notify people."""
+from __future__ import annotations
+
 import asyncio
 from functools import partial
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -12,10 +14,12 @@ from homeassistant.core import ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.loader import bind_hass
+from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.util import slugify
+from homeassistant.util.yaml import load_yaml
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -40,6 +44,9 @@ SERVICE_NOTIFY = "notify"
 SERVICE_PERSISTENT_NOTIFICATION = "persistent_notification"
 
 NOTIFY_SERVICES = "notify_services"
+
+CONF_DESCRIPTION = "description"
+CONF_FIELDS = "fields"
 
 PLATFORM_SCHEMA = vol.Schema(
     {vol.Required(CONF_PLATFORM): cv.string, vol.Optional(CONF_NAME): cv.string},
@@ -109,9 +116,13 @@ def _async_integration_has_notify_services(
 class BaseNotificationService:
     """An abstract class for notification services."""
 
-    hass: Optional[HomeAssistantType] = None
+    # While not purely typed, it makes typehinting more useful for us
+    # and removes the need for constant None checks or asserts.
+    # Ignore types: https://github.com/PyCQA/pylint/issues/3167
+    hass: HomeAssistantType = None  # type: ignore
+
     # Name => target
-    registered_targets: Dict[str, str]
+    registered_targets: dict[str, str]
 
     def send_message(self, message, **kwargs):
         """Send a message.
@@ -125,7 +136,9 @@ class BaseNotificationService:
 
         kwargs can contain ATTR_TITLE to specify a title.
         """
-        await self.hass.async_add_executor_job(partial(self.send_message, message, **kwargs))  # type: ignore
+        await self.hass.async_add_executor_job(
+            partial(self.send_message, message, **kwargs)
+        )
 
     async def _async_notify_message_service(self, service: ServiceCall) -> None:
         """Handle sending notification message service calls."""
@@ -161,10 +174,15 @@ class BaseNotificationService:
         self._target_service_name_prefix = target_service_name_prefix
         self.registered_targets = {}
 
+        # Load service descriptions from notify/services.yaml
+        integration = await async_get_integration(hass, DOMAIN)
+        services_yaml = integration.file_path / "services.yaml"
+        self.services_dict = cast(
+            dict, await hass.async_add_executor_job(load_yaml, str(services_yaml))
+        )
+
     async def async_register_services(self) -> None:
         """Create or update the notify services."""
-        assert self.hass
-
         if hasattr(self, "targets"):
             stale_targets = set(self.registered_targets)
 
@@ -185,6 +203,13 @@ class BaseNotificationService:
                     self._async_notify_message_service,
                     schema=NOTIFY_SERVICE_SCHEMA,
                 )
+                # Register the service description
+                service_desc = {
+                    CONF_NAME: f"Send a notification via {target_name}",
+                    CONF_DESCRIPTION: f"Sends a notification message using the {target_name} integration.",
+                    CONF_FIELDS: self.services_dict[SERVICE_NOTIFY][CONF_FIELDS],
+                }
+                async_set_service_schema(self.hass, DOMAIN, target_name, service_desc)
 
             for stale_target_name in stale_targets:
                 del self.registered_targets[stale_target_name]
@@ -203,10 +228,16 @@ class BaseNotificationService:
             schema=NOTIFY_SERVICE_SCHEMA,
         )
 
+        # Register the service description
+        service_desc = {
+            CONF_NAME: f"Send a notification with {self._service_name}",
+            CONF_DESCRIPTION: f"Sends a notification message using the {self._service_name} service.",
+            CONF_FIELDS: self.services_dict[SERVICE_NOTIFY][CONF_FIELDS],
+        }
+        async_set_service_schema(self.hass, DOMAIN, self._service_name, service_desc)
+
     async def async_unregister_services(self) -> None:
         """Unregister the notify services."""
-        assert self.hass
-
         if self.registered_targets:
             remove_targets = set(self.registered_targets)
             for remove_target_name in remove_targets:
@@ -312,7 +343,7 @@ async def async_setup(hass, config):
     )
 
     setup_tasks = [
-        async_setup_platform(integration_name, p_config)
+        asyncio.create_task(async_setup_platform(integration_name, p_config))
         for integration_name, p_config in config_per_platform(config, DOMAIN)
     ]
 

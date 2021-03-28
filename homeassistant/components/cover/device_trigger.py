@@ -1,5 +1,5 @@
 """Provides device automations for Cover."""
-from typing import List
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -65,7 +65,7 @@ STATE_TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
 TRIGGER_SCHEMA = vol.Any(POSITION_TRIGGER_SCHEMA, STATE_TRIGGER_SCHEMA)
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device triggers for Cover devices."""
     registry = await entity_registry.async_get_registry(hass)
     triggers = []
@@ -170,8 +170,6 @@ async def async_attach_trigger(
     automation_info: dict,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    config = TRIGGER_SCHEMA(config)
-
     if config[CONF_TYPE] in STATE_TRIGGER_TYPES:
         if config[CONF_TYPE] == "opened":
             to_state = STATE_OPEN

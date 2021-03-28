@@ -5,12 +5,11 @@ import voluptuous as vol
 import yeelight
 
 from homeassistant import config_entries, exceptions
-from homeassistant.const import CONF_HOST, CONF_ID, CONF_NAME
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_ID, CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from . import (
-    CONF_DEVICE,
     CONF_MODE_MUSIC,
     CONF_MODEL,
     CONF_NIGHTLIGHT_SWITCH,
