@@ -6,44 +6,44 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
-            "invalid_auth": "Invalid authentication"
+            "invalid_auth": "Invalid authentication",
+            "invalid_host": "Invalid IP or URL"
         },
         "flow_title": "{serial}",
         "step": {
             "user": {
                 "data": {
-                    "username": "username",
-                    "password": "password",
-                    "URL": "Ezviz Server URL"
+                    "username": "Username",
+                    "password": "Password",
+                    "url": "URL"
                 },
                 "title": "Connect to Ezviz Cloud"
             },
-            "user_custom_region_url": {
+            "user_custom_url": {
                 "data": {
-                    "username": "username",
-                    "password": "password",
-                    "URL": "Ezviz Server URL"
+                    "username": "Username",
+                    "password": "Password",
+                    "url": "URL"
                 },
                 "title": "Connect to custom Ezviz URL",
                 "description": "Manually specify your region URL"
             },
             "user_camera": {
                 "data": {
-                    "username": "username",
-                    "password": "password",
-                    "serial": "serial",
-                    "ip": "ip address"
+                    "username": "Username",
+                    "password": "Password",
+                    "serial": "Serial",
+                    "ip_address": "IP Address"
                 },
                 "title": "Add Ezviz Camera"
             },
             "confirm": {
                 "data": {
-                    "username": "username",
-                    "password": "password",
-                    "serial": "serial"
+                    "username": "Username",
+                    "password": "Password"
                 },
                 "title": "Discovered Ezviz Camera",
-                "description": "Enter RTSP credentials for Ezviz camera {serial}"
+                "description": "Enter RTSP credentials for Ezviz camera {serial} with IP as {ip_address}"
             }
         }
     },

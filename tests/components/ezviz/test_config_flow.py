@@ -1,8 +1,6 @@
 """Test the Ezviz config flow."""
 from unittest.mock import patch
 
-from pyezviz.client import PyEzvizError
-
 from homeassistant.components.ezviz.const import (
     CONF_FFMPEG_ARGUMENTS,
     DEFAULT_FFMPEG_ARGUMENTS,
@@ -10,12 +8,7 @@ from homeassistant.components.ezviz.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_DISCOVERY, SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import (
-    CONF_IP_ADDRESS,
-    CONF_PASSWORD,
-    CONF_TIMEOUT,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_URL, CONF_USERNAME
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
     RESULT_TYPE_CREATE_ENTRY,
@@ -38,7 +31,7 @@ from . import (
 )
 
 
-async def test_user_form(hass, ezviz_config_flow):
+async def test_user_form(hass, ezviz):
     """Test we get the user initiated form."""
     await async_setup_component(hass, "persistent_notification", {})
 
@@ -59,28 +52,25 @@ async def test_user_form(hass, ezviz_config_flow):
     assert result["title"] == "test-username"
     assert result["data"] == {**USER_INPUT}
 
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_setup.mock_calls) == 0
+    assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test_user_form_unexpected_exception(hass, ezviz_config_flow):
+async def test_user_custom_url(hass, ezviz):
     """Test we handle unexpected exception."""
-    ezviz_config_flow.side_effect = PyEzvizError()
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        USER_INPUT_VALIDATE,
+        {CONF_USERNAME: "test-user", CONF_PASSWORD: "test-pass", CONF_URL: "customize"},
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "unknown"
+    assert result["type"] == RESULT_TYPE_FORM
 
 
-async def test_async_step_import(hass, ezviz_config_flow):
+async def test_async_step_import(hass, ezviz):
     """Test the config import flow."""
     await async_setup_component(hass, "persistent_notification", {})
 
@@ -91,7 +81,7 @@ async def test_async_step_import(hass, ezviz_config_flow):
     assert result["data"] == USER_INPUT
 
 
-async def test_async_step_import_camera(hass, ezviz_config_flow):
+async def test_async_step_import_camera(hass, ezviz):
     """Test the config import camera flow."""
     await async_setup_component(hass, "persistent_notification", {})
 
@@ -102,7 +92,7 @@ async def test_async_step_import_camera(hass, ezviz_config_flow):
     assert result["data"] == USER_INPUT_CAMERA
 
 
-async def test_async_step_import_2nd_form_returns_camera(hass, ezviz_config_flow):
+async def test_async_step_import_2nd_form_returns_camera(hass, ezviz):
     """Test we get the user initiated form."""
     await async_setup_component(hass, "persistent_notification", {})
 
@@ -122,10 +112,10 @@ async def test_async_step_import_2nd_form_returns_camera(hass, ezviz_config_flow
     assert result["data"] == USER_INPUT_CAMERA
 
     assert len(mock_setup.mock_calls) == 0
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test_async_step_import_abort(hass, ezviz_config_flow):
+async def test_async_step_import_abort(hass, ezviz):
     """Test the config import flow with invalid data."""
     await async_setup_component(hass, "persistent_notification", {})
 
@@ -135,7 +125,7 @@ async def test_async_step_import_abort(hass, ezviz_config_flow):
     assert result["type"] == RESULT_TYPE_ABORT
 
 
-async def test_async_step_discovery(hass, ezviz_config_flow):
+async def test_async_step_discovery(hass, ezviz_test_rtsp):
     """Test discovery step."""
     await async_setup_component(hass, "persistent_notification", {})
 
@@ -151,18 +141,22 @@ async def test_async_step_discovery(hass, ezviz_config_flow):
             {
                 CONF_USERNAME: "test-user",
                 CONF_PASSWORD: "test-pass",
-                CONF_IP_ADDRESS: "test-ip",
             },
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["data"] == {
+        "password": "test-pass",
+        "type": "CAMERA_ACCOUNT",
+        "username": "test-user",
+    }
 
     assert len(mock_setup.mock_calls) == 0
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test_options_flow(hass, ezviz):
+async def test_options_flow(hass):
     """Test updating options."""
     with patch("homeassistant.components.ezviz.PLATFORMS", []):
         entry = await init_integration(hass)

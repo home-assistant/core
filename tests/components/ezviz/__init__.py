@@ -14,9 +14,9 @@ from homeassistant.components.ezviz.const import (
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
-    CONF_REGION,
     CONF_TIMEOUT,
     CONF_TYPE,
+    CONF_URL,
     CONF_USERNAME,
 )
 from homeassistant.helpers.typing import HomeAssistantType
@@ -26,7 +26,7 @@ from tests.common import MockConfigEntry
 ENTRY_CONFIG = {
     CONF_USERNAME: "test-username",
     CONF_PASSWORD: "test-password",
-    CONF_REGION: "apiieu.ezvizlife.com",
+    CONF_URL: "apiieu.ezvizlife.com",
     CONF_TIMEOUT: 25,
 }
 
@@ -38,13 +38,13 @@ ENTRY_OPTIONS = {
 USER_INPUT_VALIDATE = {
     CONF_USERNAME: "test-username",
     CONF_PASSWORD: "test-password",
-    CONF_REGION: "apiieu.ezvizlife.com",
+    CONF_URL: "apiieu.ezvizlife.com",
 }
 
 USER_INPUT = {
     CONF_USERNAME: "test-username",
     CONF_PASSWORD: "test-password",
-    CONF_REGION: "apiieu.ezvizlife.com",
+    CONF_URL: "apiieu.ezvizlife.com",
     CONF_TYPE: ATTR_TYPE_CLOUD,
 }
 
@@ -63,7 +63,7 @@ USER_INPUT_CAMERA = {
 YAML_CONFIG = {
     CONF_USERNAME: "test-username",
     CONF_PASSWORD: "test-password",
-    CONF_REGION: "apiieu.ezvizlife.com",
+    CONF_URL: "apiieu.ezvizlife.com",
     ATTR_CAMERAS: {
         "C666666": {CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"}
     },

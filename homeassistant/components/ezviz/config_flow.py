@@ -1,9 +1,11 @@
 """Config flow for ezviz."""
 import logging
+from socket import gaierror
 
 from pyezviz import EzvizClient, PyEzvizError
 from pyezviz.test_cam_rtsp import AuthTestResultFailed, TestRTSPAuth
-from requests.exceptions import HTTPError
+from requests.exceptions import HTTPError, InvalidURL
+from urllib3.exceptions import MaxRetryError, NewConnectionError
 import voluptuous as vol
 
 from homeassistant import exceptions
@@ -12,13 +14,12 @@ from homeassistant.const import (
     CONF_CUSTOMIZE,
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
-    CONF_REGION,
     CONF_TIMEOUT,
     CONF_TYPE,
+    CONF_URL,
     CONF_USERNAME,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow
 
 from .const import (  # pylint: disable=unused-import
     ATTR_SERIAL,
@@ -27,10 +28,10 @@ from .const import (  # pylint: disable=unused-import
     CONF_FFMPEG_ARGUMENTS,
     DEFAULT_CAMERA_USERNAME,
     DEFAULT_FFMPEG_ARGUMENTS,
-    DEFAULT_REGION,
     DEFAULT_TIMEOUT,
     DOMAIN,
-    RUSSIA_REGION,
+    EU_URL,
+    RUSSIA_URL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,7 +51,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         client = EzvizClient(
             data[CONF_USERNAME],
             data[CONF_PASSWORD],
-            data.get(CONF_REGION, DEFAULT_REGION),
+            data.get(CONF_URL, EU_URL),
             data.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
         )
 
@@ -58,13 +59,19 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             await self.hass.async_add_executor_job(client.login)
 
-        except (PyEzvizError, HTTPError, ConnectionError) as err:
+        except PyEzvizError as err:
             raise InvalidAuth from err
+
+        except (ConnectionError, gaierror, NewConnectionError, MaxRetryError) as err:
+            raise InvalidURL from err
+
+        except HTTPError as err:
+            raise ConnectionError from err
 
         auth_data = {
             CONF_USERNAME: data[CONF_USERNAME],
             CONF_PASSWORD: data[CONF_PASSWORD],
-            CONF_REGION: data.get(CONF_REGION, DEFAULT_REGION),
+            CONF_URL: data.get(CONF_URL, EU_URL),
             CONF_TYPE: ATTR_TYPE_CLOUD,
         }
 
@@ -83,6 +90,9 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
         except AuthTestResultFailed as err:
             raise InvalidAuth from err
+
+        except gaierror as err:
+            raise InvalidHost from err
 
         return self.async_create_entry(
             title=data[ATTR_SERIAL],
@@ -112,8 +122,12 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
 
-            if user_input[CONF_REGION] == CONF_CUSTOMIZE:
-                return await self.async_step_user_custom_region_url(user_input)
+            if user_input[CONF_URL] == CONF_CUSTOMIZE:
+                self.context["data"] = {
+                    CONF_USERNAME: user_input[CONF_USERNAME],
+                    CONF_PASSWORD: user_input[CONF_PASSWORD],
+                }
+                return await self.async_step_user_custom_url()
 
             if CONF_TIMEOUT not in user_input:
                 user_input[CONF_TIMEOUT] = DEFAULT_TIMEOUT
@@ -123,6 +137,12 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
+
+            except InvalidURL:
+                errors["base"] = "invalid_host"
+
+            except HTTPError:
+                errors["base"] = "cannot_connect"
 
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
@@ -132,8 +152,8 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(CONF_USERNAME): str,
                 vol.Required(CONF_PASSWORD): str,
-                vol.Required(CONF_REGION, default=DEFAULT_REGION): vol.In(
-                    [DEFAULT_REGION, RUSSIA_REGION, CONF_CUSTOMIZE]
+                vol.Required(CONF_URL, default=EU_URL): vol.In(
+                    [EU_URL, RUSSIA_URL, CONF_CUSTOMIZE]
                 ),
             }
         )
@@ -142,12 +162,15 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=data_schema, errors=errors
         )
 
-    async def async_step_user_custom_region_url(self, user_input):
+    async def async_step_user_custom_url(self, user_input=None):
         """Handle a flow initiated by the user for custom region url."""
 
         errors = {}
 
-        if user_input[CONF_REGION] != CONF_CUSTOMIZE:
+        if user_input is not None:
+            user_input[CONF_USERNAME] = self.context["data"][CONF_USERNAME]
+            user_input[CONF_PASSWORD] = self.context["data"][CONF_PASSWORD]
+
             if CONF_TIMEOUT not in user_input:
                 user_input[CONF_TIMEOUT] = DEFAULT_TIMEOUT
 
@@ -157,20 +180,24 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
 
+            except InvalidURL:
+                errors["base"] = "invalid_host"
+
+            except HTTPError:
+                errors["base"] = "cannot_connect"
+
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
 
         data_schema_custom_url = vol.Schema(
             {
-                vol.Required(CONF_USERNAME, default=user_input[CONF_USERNAME]): str,
-                vol.Required(CONF_PASSWORD, default=user_input[CONF_PASSWORD]): str,
-                vol.Required(CONF_REGION, default=DEFAULT_REGION): str,
+                vol.Required(CONF_URL, default=EU_URL): str,
             }
         )
 
         return self.async_show_form(
-            step_id="user", data_schema=data_schema_custom_url, errors=errors
+            step_id="user_custom_url", data_schema=data_schema_custom_url, errors=errors
         )
 
     async def async_step_user_camera(self, user_input=None):
@@ -187,6 +214,9 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
+
+            except InvalidHost:
+                errors["base"] = "invalid_host"
 
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
@@ -211,10 +241,8 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(discovery_info[ATTR_SERIAL])
         self._abort_if_unique_id_configured()
 
-        self.context["title_placeholders"] = {
-            "serial": self.unique_id,
-            CONF_IP_ADDRESS: discovery_info[CONF_IP_ADDRESS],
-        }
+        self.context["title_placeholders"] = {"serial": self.unique_id}
+        self.context["data"] = {CONF_IP_ADDRESS: discovery_info[CONF_IP_ADDRESS]}
 
         return await self.async_step_confirm()
 
@@ -224,11 +252,15 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             user_input[ATTR_SERIAL] = self.unique_id
+            user_input[CONF_IP_ADDRESS] = self.context["data"][CONF_IP_ADDRESS]
             try:
                 return await self._validate_and_create_camera_rtsp(user_input)
 
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
+
+            except InvalidHost:
+                errors["base"] = "invalid_host"
 
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
@@ -238,10 +270,6 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(CONF_USERNAME, default=DEFAULT_CAMERA_USERNAME): str,
                 vol.Required(CONF_PASSWORD): str,
-                vol.Required(
-                    CONF_IP_ADDRESS,
-                    default=self.context["title_placeholders"][CONF_IP_ADDRESS],
-                ): str,
             }
         )
 
@@ -249,7 +277,10 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="confirm",
             data_schema=discovered_camera_schema,
             errors=errors,
-            description_placeholders={"serial": self.unique_id},
+            description_placeholders={
+                "serial": self.unique_id,
+                CONF_IP_ADDRESS: self.context["data"][CONF_IP_ADDRESS],
+            },
         )
 
     async def async_step_import(self, import_config):
@@ -267,9 +298,6 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         except InvalidAuth:
             _LOGGER.error("Error importing Ezviz platform config: invalid auth")
             return self.async_abort(reason="invalid_auth")
-
-        except AbortFlow:
-            raise
 
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
@@ -321,3 +349,7 @@ class EzvizOptionsFlowHandler(OptionsFlow):
 
 class InvalidAuth(exceptions.HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
+
+class InvalidHost(exceptions.HomeAssistantError):
+    """Error to indicate invalid IP."""

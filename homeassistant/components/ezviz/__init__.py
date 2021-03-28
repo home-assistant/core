@@ -8,9 +8,9 @@ from requests import ConnectTimeout, HTTPError
 
 from homeassistant.const import (
     CONF_PASSWORD,
-    CONF_REGION,
     CONF_TIMEOUT,
     CONF_TYPE,
+    CONF_URL,
     CONF_USERNAME,
 )
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -129,7 +129,7 @@ def _get_ezviz_client_instance(entry):
     ezviz_client = EzvizClient(
         entry.data[CONF_USERNAME],
         entry.data[CONF_PASSWORD],
-        entry.data[CONF_REGION],
+        entry.data[CONF_URL],
         entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
     )
     ezviz_client.login()

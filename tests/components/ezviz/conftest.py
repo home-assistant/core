@@ -2,6 +2,7 @@
 from unittest.mock import MagicMock, patch
 
 from pyezviz import EzvizClient
+from pyezviz.test_cam_rtsp import TestRTSPAuth
 from pytest import fixture
 
 
@@ -27,6 +28,23 @@ def ezviz(hass):
         instance.login = MagicMock(return_value=True)
 
         yield mock_ezviz
+
+
+@fixture
+def ezviz_test_rtsp(hass):
+    """Mock the EzvizApi for easier testing."""
+    with patch.object(TestRTSPAuth, "main", return_value=True), patch(
+        "homeassistant.components.ezviz"
+    ) as mock_ezviz_test_rtsp:
+        instance = mock_ezviz_test_rtsp.return_value = TestRTSPAuth(
+            "test-ip",
+            "test-username",
+            "test-password",
+        )
+
+        instance.main = MagicMock(return_value=True)
+
+        yield mock_ezviz_test_rtsp
 
 
 @fixture
