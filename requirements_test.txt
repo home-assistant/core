@@ -26,4 +26,3 @@ responses==0.12.0
 respx==0.16.2
 stdlib-list==0.7.0
 tqdm==4.49.0
-xknx==0.17.4
