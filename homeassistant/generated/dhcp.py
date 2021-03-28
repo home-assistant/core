@@ -17,6 +17,11 @@ DHCP = [
         "macaddress": "B8B7F1*"
     },
     {
+        "domain": "august",
+        "hostname": "august*",
+        "macaddress": "E076D0*"
+    },
+    {
         "domain": "axis",
         "hostname": "axis-00408c*",
         "macaddress": "00408C*"
@@ -32,6 +37,27 @@ DHCP = [
         "macaddress": "B8A44F*"
     },
     {
+        "domain": "blink",
+        "hostname": "blink*",
+        "macaddress": "B85F98*"
+    },
+    {
+        "domain": "broadlink",
+        "macaddress": "34EA34*"
+    },
+    {
+        "domain": "broadlink",
+        "macaddress": "24DFA7*"
+    },
+    {
+        "domain": "broadlink",
+        "macaddress": "A043B0*"
+    },
+    {
+        "domain": "broadlink",
+        "macaddress": "B4430D*"
+    },
+    {
         "domain": "flume",
         "hostname": "flume-gw-*",
         "macaddress": "ECFABC*"
@@ -40,6 +66,21 @@ DHCP = [
         "domain": "flume",
         "hostname": "flume-gw-*",
         "macaddress": "B4E62D*"
+    },
+    {
+        "domain": "lyric",
+        "hostname": "lyric-*",
+        "macaddress": "48A2E6"
+    },
+    {
+        "domain": "lyric",
+        "hostname": "lyric-*",
+        "macaddress": "B82CA0"
+    },
+    {
+        "domain": "lyric",
+        "hostname": "lyric-*",
+        "macaddress": "00D02D"
     },
     {
         "domain": "nest",
@@ -54,6 +95,10 @@ DHCP = [
         "domain": "nuheat",
         "hostname": "nuheat",
         "macaddress": "002338*"
+    },
+    {
+        "domain": "nuki",
+        "hostname": "nuki_bridge_*"
     },
     {
         "domain": "powerwall",
@@ -89,6 +134,16 @@ DHCP = [
         "domain": "roomba",
         "hostname": "irobot-*",
         "macaddress": "501479*"
+    },
+    {
+        "domain": "roomba",
+        "hostname": "roomba-*",
+        "macaddress": "80A589*"
+    },
+    {
+        "domain": "screenlogic",
+        "hostname": "pentair: *",
+        "macaddress": "00C033*"
     },
     {
         "domain": "sense",
@@ -134,5 +189,9 @@ DHCP = [
         "domain": "toon",
         "hostname": "eneco-*",
         "macaddress": "74C63B*"
+    },
+    {
+        "domain": "verisure",
+        "macaddress": "0023C1*"
     }
 ]

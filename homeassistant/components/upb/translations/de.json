@@ -1,9 +1,12 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
         "error": {
-            "cannot_connect": "Fehler beim Herstellen einer Verbindung zu UPB PIM. Versuchen Sie es erneut.",
-            "invalid_upb_file": "Fehlende oder ung\u00fcltige UPB UPStart-Exportdatei, \u00fcberpr\u00fcfen Sie den Namen und den Pfad der Datei.",
-            "unknown": "Unerwarteter Fehler."
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_upb_file": "Fehlende oder ung\u00fcltige UPB UPStart-Exportdatei, \u00fcberpr\u00fcfe  den Namen und den Pfad der Datei.",
+            "unknown": "Unerwarteter Fehler"
         },
         "step": {
             "user": {
@@ -12,7 +15,7 @@
                     "file_path": "Pfad und Name der UPStart UPB-Exportdatei.",
                     "protocol": "Protokoll"
                 },
-                "title": "Stellen Sie eine Verbindung zu UPB PIM her"
+                "title": "Stelle eine Verbindung zu UPB PIM her"
             }
         }
     }

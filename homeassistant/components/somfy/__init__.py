@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.somfy import config_flow
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_OPTIMISTIC
 from homeassistant.core import callback
 from homeassistant.helpers import (
     config_entry_oauth2_flow,
@@ -25,7 +25,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from . import api
-from .const import API, CONF_OPTIMISTIC, COORDINATOR, DOMAIN
+from .const import API, COORDINATOR, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SOMFY_COMPONENTS = ["climate", "cover", "sensor", "switch"]
+PLATFORMS = ["climate", "cover", "sensor", "switch"]
 
 
 async def async_setup(hass, config):
@@ -134,9 +134,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
             model=hub.type,
         )
 
-    for component in SOMFY_COMPONENTS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -147,8 +147,8 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     hass.data[DOMAIN].pop(API, None)
     await asyncio.gather(
         *[
-            hass.config_entries.async_forward_entry_unload(entry, component)
-            for component in SOMFY_COMPONENTS
+            hass.config_entries.async_forward_entry_unload(entry, platform)
+            for platform in PLATFORMS
         ]
     )
     return True
@@ -188,7 +188,7 @@ class SomfyEntity(CoordinatorEntity, Entity):
             "identifiers": {(DOMAIN, self.unique_id)},
             "name": self.name,
             "model": self.device.type,
-            "via_hub": (DOMAIN, self.device.parent_id),
+            "via_device": (DOMAIN, self.device.parent_id),
             # For the moment, Somfy only returns their own device.
             "manufacturer": "Somfy",
         }

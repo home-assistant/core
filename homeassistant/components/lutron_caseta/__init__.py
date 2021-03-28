@@ -1,10 +1,12 @@
 """Component for interacting with a Lutron Caseta system."""
 import asyncio
 import logging
+import ssl
 
 from aiolip import LIP
 from aiolip.data import LIPMode
 from aiolip.protocol import LIP_BUTTON_PRESS
+import async_timeout
 from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
 
@@ -29,6 +31,7 @@ from .const import (
     BRIDGE_DEVICE_ID,
     BRIDGE_LEAP,
     BRIDGE_LIP,
+    BRIDGE_TIMEOUT,
     BUTTON_DEVICES,
     CONF_CA_CERTS,
     CONF_CERTFILE,
@@ -59,12 +62,11 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-LUTRON_CASETA_COMPONENTS = ["light", "switch", "cover", "scene", "fan", "binary_sensor"]
+PLATFORMS = ["light", "switch", "cover", "scene", "fan", "binary_sensor"]
 
 
 async def async_setup(hass, base_config):
     """Set up the Lutron component."""
-
     hass.data.setdefault(DOMAIN, {})
 
     if DOMAIN in base_config:
@@ -89,20 +91,30 @@ async def async_setup(hass, base_config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up a bridge from a config entry."""
-
     host = config_entry.data[CONF_HOST]
     keyfile = hass.config.path(config_entry.data[CONF_KEYFILE])
     certfile = hass.config.path(config_entry.data[CONF_CERTFILE])
     ca_certs = hass.config.path(config_entry.data[CONF_CA_CERTS])
+    bridge = None
 
-    bridge = Smartbridge.create_tls(
-        hostname=host, keyfile=keyfile, certfile=certfile, ca_certs=ca_certs
-    )
+    try:
+        bridge = Smartbridge.create_tls(
+            hostname=host, keyfile=keyfile, certfile=certfile, ca_certs=ca_certs
+        )
+    except ssl.SSLError:
+        _LOGGER.error("Invalid certificate used to connect to bridge at %s", host)
+        return False
 
-    await bridge.connect()
-    if not bridge.is_connected():
+    timed_out = True
+    try:
+        async with async_timeout.timeout(BRIDGE_TIMEOUT):
+            await bridge.connect()
+            timed_out = False
+    except asyncio.TimeoutError:
+        _LOGGER.error("Timeout while trying to connect to bridge at %s", host)
+
+    if timed_out or not bridge.is_connected():
         await bridge.close()
-        _LOGGER.error("Unable to connect to Lutron Caseta bridge at %s", host)
         raise ConfigEntryNotReady
 
     _LOGGER.debug("Connected to Lutron Caseta bridge via LEAP at %s", host)
@@ -111,7 +123,7 @@ async def async_setup_entry(hass, config_entry):
     bridge_device = devices[BRIDGE_DEVICE_ID]
     await _async_register_bridge_device(hass, config_entry.entry_id, bridge_device)
     # Store this bridge (keyed by entry_id) so it can be retrieved by the
-    # components we're setting up.
+    # platforms we're setting up.
     hass.data[DOMAIN][config_entry.entry_id] = {
         BRIDGE_LEAP: bridge,
         BRIDGE_DEVICE: bridge_device,
@@ -125,9 +137,9 @@ async def async_setup_entry(hass, config_entry):
         # pico remotes to control other devices.
         await async_setup_lip(hass, config_entry, bridge.lip_devices)
 
-    for component in LUTRON_CASETA_COMPONENTS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
+            hass.config_entries.async_forward_entry_setup(config_entry, platform)
         )
 
     return True
@@ -144,7 +156,11 @@ async def async_setup_lip(hass, config_entry, lip_devices):
     try:
         await lip.async_connect(host)
     except asyncio.TimeoutError:
-        _LOGGER.error("Failed to connect to via LIP at %s:23", host)
+        _LOGGER.warning(
+            "Failed to connect to via LIP at %s:23, Pico and Shade remotes will not be available; "
+            "Enable Telnet Support in the Lutron app under Settings >> Advanced >> Integration",
+            host,
+        )
         return
 
     _LOGGER.debug("Connected to Lutron Caseta bridge via LIP at %s:23", host)
@@ -211,6 +227,7 @@ async def _async_register_button_devices(
 
         dr_device = device_registry.async_get_or_create(
             name=device["leap_name"],
+            suggested_area=device["leap_name"].split("_")[0],
             manufacturer=MANUFACTURER,
             config_entry_id=config_entry_id,
             identifiers={(DOMAIN, device["serial"])},
@@ -261,7 +278,6 @@ def _async_subscribe_pico_remote_events(hass, lip, button_devices_by_id):
 
 async def async_unload_entry(hass, config_entry):
     """Unload the bridge bridge from a config entry."""
-
     data = hass.data[DOMAIN][config_entry.entry_id]
     data[BRIDGE_LEAP].close()
     if data[BRIDGE_LIP]:
@@ -270,8 +286,8 @@ async def async_unload_entry(hass, config_entry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(config_entry, component)
-                for component in LUTRON_CASETA_COMPONENTS
+                hass.config_entries.async_forward_entry_unload(config_entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )
@@ -326,13 +342,14 @@ class LutronCasetaDevice(Entity):
         return {
             "identifiers": {(DOMAIN, self.serial)},
             "name": self.name,
+            "suggested_area": self._device["name"].split("_")[0],
             "manufacturer": MANUFACTURER,
             "model": f"{self._device['model']} ({self._device['type']})",
             "via_device": (DOMAIN, self._bridge_device["serial"]),
         }
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {"device_id": self.device_id, "zone_id": self._device["zone"]}
 

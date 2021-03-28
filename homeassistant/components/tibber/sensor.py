@@ -6,10 +6,9 @@ from random import randrange
 
 import aiohttp
 
-from homeassistant.components.sensor import DEVICE_CLASS_POWER
+from homeassistant.components.sensor import DEVICE_CLASS_POWER, SensorEntity
 from homeassistant.const import POWER_WATT
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle, dt as dt_util
 
 from .const import DOMAIN as TIBBER_DOMAIN, MANUFACTURER
@@ -45,7 +44,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(dev, True)
 
 
-class TibberSensor(Entity):
+class TibberSensor(SensorEntity):
     """Representation of a generic Tibber sensor."""
 
     def __init__(self, tibber_home):
@@ -54,7 +53,7 @@ class TibberSensor(Entity):
         self._last_updated = None
         self._state = None
         self._is_available = False
-        self._device_state_attributes = {}
+        self._extra_state_attributes = {}
         self._name = tibber_home.info["viewer"]["home"]["appNickname"]
         if self._name is None:
             self._name = tibber_home.info["viewer"]["home"]["address"].get(
@@ -63,9 +62,9 @@ class TibberSensor(Entity):
         self._spread_load_constant = randrange(3600)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
-        return self._device_state_attributes
+        return self._extra_state_attributes
 
     @property
     def model(self):
@@ -121,10 +120,10 @@ class TibberSensorElPrice(TibberSensor):
 
         res = self._tibber_home.current_price_data()
         self._state, price_level, self._last_updated = res
-        self._device_state_attributes["price_level"] = price_level
+        self._extra_state_attributes["price_level"] = price_level
 
         attrs = self._tibber_home.current_attributes()
-        self._device_state_attributes.update(attrs)
+        self._extra_state_attributes.update(attrs)
         self._is_available = self._state is not None
 
     @property
@@ -165,11 +164,11 @@ class TibberSensorElPrice(TibberSensor):
         except (asyncio.TimeoutError, aiohttp.ClientError):
             return
         data = self._tibber_home.info["viewer"]["home"]
-        self._device_state_attributes["app_nickname"] = data["appNickname"]
-        self._device_state_attributes["grid_company"] = data["meteringPointData"][
+        self._extra_state_attributes["app_nickname"] = data["appNickname"]
+        self._extra_state_attributes["grid_company"] = data["meteringPointData"][
             "gridCompany"
         ]
-        self._device_state_attributes["estimated_annual_consumption"] = data[
+        self._extra_state_attributes["estimated_annual_consumption"] = data[
             "meteringPointData"
         ]["estimatedAnnualConsumption"]
 
@@ -197,7 +196,7 @@ class TibberSensorRT(TibberSensor):
         for key, value in live_measurement.items():
             if value is None:
                 continue
-            self._device_state_attributes[key] = value
+            self._extra_state_attributes[key] = value
 
         self.async_write_ha_state()
 

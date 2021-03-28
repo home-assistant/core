@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Slechts \u00e9\u00e9n configuratie van ZHA is toegestaan."
+            "single_instance_allowed": "Al geconfigureerd. Slechts een enkele configuratie mogelijk."
         },
         "error": {
-            "cannot_connect": "Kan geen verbinding maken met ZHA apparaat."
+            "cannot_connect": "Kan geen verbinding maken"
         },
         "step": {
             "pick_radio": {
@@ -65,6 +65,7 @@
             "device_dropped": "Apparaat gevallen",
             "device_flipped": "Apparaat omgedraaid \"{subtype}\"",
             "device_knocked": "Apparaat klopte \"{subtype}\"",
+            "device_offline": "Apparaat offline",
             "device_rotated": "Apparaat gedraaid \" {subtype} \"",
             "device_shaken": "Apparaat geschud",
             "device_slid": "Apparaat geschoven \"{subtype}\"\".",

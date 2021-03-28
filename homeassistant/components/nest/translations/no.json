@@ -1,13 +1,13 @@
 {
     "config": {
         "abort": {
-            "authorize_url_fail": "Ukjent feil ved generering av godkjenningsadresse",
+            "authorize_url_fail": "Ukjent feil under generering av en autoriserings-URL.",
             "authorize_url_timeout": "Tidsavbrudd ved oppretting av godkjenningsadresse",
             "missing_configuration": "Komponenten er ikke konfigurert, vennligst f\u00f8lg dokumentasjonen",
             "no_url_available": "Ingen URL tilgjengelig. For informasjon om denne feilen, [sjekk hjelpseksjonen]({docs_url})",
             "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket",
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig.",
-            "unknown_authorize_url_generation": "Ukjent feil ved generering av godkjenningsadresse"
+            "unknown_authorize_url_generation": "Ukjent feil under generering av en autoriserings-URL."
         },
         "create_entry": {
             "default": "Vellykket godkjenning"
@@ -30,7 +30,7 @@
                 "data": {
                     "code": "PIN kode"
                 },
-                "description": "For \u00e5 koble din Nest-konto m\u00e5 du [bekrefte kontoen din]({url}). \n\nEtter bekreftelse, kopier og lim inn den oppgitte PIN koden nedenfor.",
+                "description": "For \u00e5 koble til Nest-kontoen din, [autoriser kontoen din] ( {url} ). \n\n Etter autorisasjon, kopier og lim inn den angitte PIN-koden nedenfor.",
                 "title": "Koble til Nest konto"
             },
             "pick_implementation": {

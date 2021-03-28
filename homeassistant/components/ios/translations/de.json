@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Es wird nur eine Konfiguration von Home Assistant iOS ben\u00f6tigt"
+            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
         },
         "step": {
             "confirm": {

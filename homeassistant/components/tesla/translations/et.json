@@ -1,5 +1,9 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Kasutaja on juba seadistatud",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
+        },
         "error": {
             "already_configured": "Konto on juba h\u00e4\u00e4lestatud",
             "cannot_connect": "\u00dchendamine nurjus",

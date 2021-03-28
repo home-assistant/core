@@ -1,8 +1,9 @@
 """UniFi Controller abstraction."""
+from __future__ import annotations
+
 import asyncio
 from datetime import datetime, timedelta
 import ssl
-from typing import Optional
 
 from aiohttp import CookieJar
 import aiounifi
@@ -29,11 +30,18 @@ from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH
-from homeassistant.const import CONF_HOST
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.dt as dt_util
 
@@ -41,7 +49,6 @@ from .const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
     CONF_BLOCK_CLIENT,
-    CONF_CONTROLLER,
     CONF_DETECTION_TIME,
     CONF_DPI_RESTRICTIONS,
     CONF_IGNORE_WIRED_BUG,
@@ -51,7 +58,6 @@ from .const import (
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
-    CONTROLLER_ID,
     DEFAULT_ALLOW_BANDWIDTH_SENSORS,
     DEFAULT_ALLOW_UPTIME_SENSORS,
     DEFAULT_DETECTION_TIME,
@@ -69,7 +75,7 @@ from .errors import AuthenticationRequired, CannotConnect
 
 RETRY_TIMER = 15
 CHECK_HEARTBEAT_INTERVAL = timedelta(seconds=1)
-SUPPORTED_PLATFORMS = [TRACKER_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
+PLATFORMS = [TRACKER_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
 
 CLIENT_CONNECTED = (
     WIRED_CLIENT_CONNECTED,
@@ -96,6 +102,7 @@ class UniFiController:
         self.wireless_clients = None
 
         self.listeners = []
+        self.site_id: str = ""
         self._site_name = None
         self._site_role = None
 
@@ -109,8 +116,9 @@ class UniFiController:
 
     def load_config_entry_options(self):
         """Store attributes to avoid property call overhead since they are called frequently."""
-        # Device tracker options
         options = self.config_entry.options
+
+        # Device tracker options
 
         # Config entry option to not track clients.
         self.option_track_clients = options.get(
@@ -158,19 +166,14 @@ class UniFiController:
         )
 
     @property
-    def controller_id(self):
-        """Return the controller ID."""
-        return CONTROLLER_ID.format(host=self.host, site=self.site)
-
-    @property
     def host(self):
         """Return the host of this controller."""
-        return self.config_entry.data[CONF_CONTROLLER][CONF_HOST]
+        return self.config_entry.data[CONF_HOST]
 
     @property
     def site(self):
         """Return the site of this config entry."""
-        return self.config_entry.data[CONF_CONTROLLER][CONF_SITE_ID]
+        return self.config_entry.data[CONF_SITE_ID]
 
     @property
     def site_name(self):
@@ -260,25 +263,25 @@ class UniFiController:
     @property
     def signal_reachable(self) -> str:
         """Integration specific event to signal a change in connection status."""
-        return f"unifi-reachable-{self.controller_id}"
+        return f"unifi-reachable-{self.config_entry.entry_id}"
 
     @property
-    def signal_update(self):
+    def signal_update(self) -> str:
         """Event specific per UniFi entry to signal new data."""
-        return f"unifi-update-{self.controller_id}"
+        return f"unifi-update-{self.config_entry.entry_id}"
 
     @property
-    def signal_remove(self):
+    def signal_remove(self) -> str:
         """Event specific per UniFi entry to signal removal of entities."""
-        return f"unifi-remove-{self.controller_id}"
+        return f"unifi-remove-{self.config_entry.entry_id}"
 
     @property
-    def signal_options_update(self):
+    def signal_options_update(self) -> str:
         """Event specific per UniFi entry to signal new options."""
-        return f"unifi-options-{self.controller_id}"
+        return f"unifi-options-{self.config_entry.entry_id}"
 
     @property
-    def signal_heartbeat_missed(self):
+    def signal_heartbeat_missed(self) -> str:
         """Event specific per UniFi device tracker to signal new heartbeat missed."""
         return "unifi-heartbeat-missed"
 
@@ -303,20 +306,18 @@ class UniFiController:
         try:
             self.api = await get_controller(
                 self.hass,
-                **self.config_entry.data[CONF_CONTROLLER],
+                host=self.config_entry.data[CONF_HOST],
+                username=self.config_entry.data[CONF_USERNAME],
+                password=self.config_entry.data[CONF_PASSWORD],
+                port=self.config_entry.data[CONF_PORT],
+                site=self.config_entry.data[CONF_SITE_ID],
+                verify_ssl=self.config_entry.data[CONF_VERIFY_SSL],
                 async_callback=self.async_unifi_signalling_callback,
             )
             await self.api.initialize()
 
             sites = await self.api.sites()
-
-            for site in sites.values():
-                if self.site == site["name"]:
-                    self._site_name = site["desc"]
-                    break
-
             description = await self.api.site_description()
-            self._site_role = description[0]["site_role"]
 
         except CannotConnect as err:
             raise ConfigEntryNotReady from err
@@ -331,20 +332,25 @@ class UniFiController:
             )
             return False
 
-        # Restore clients that is not a part of active clients list.
-        entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
-        for entity in entity_registry.entities.values():
-            if (
-                entity.config_entry_id != self.config_entry.entry_id
-                or "-" not in entity.unique_id
-            ):
-                continue
+        for site in sites.values():
+            if self.site == site["name"]:
+                self.site_id = site["_id"]
+                self._site_name = site["desc"]
+                break
 
-            mac = ""
-            if entity.domain == TRACKER_DOMAIN:
-                mac = entity.unique_id.split("-", 1)[0]
-            elif entity.domain == SWITCH_DOMAIN:
-                mac = entity.unique_id.split("-", 1)[1]
+        self._site_role = description[0]["site_role"]
+
+        # Restore clients that are not a part of active clients list.
+        entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
+        for entry in async_entries_for_config_entry(
+            entity_registry, self.config_entry.entry_id
+        ):
+            if entry.domain == TRACKER_DOMAIN:
+                mac = entry.unique_id.split("-", 1)[0]
+            elif entry.domain == SWITCH_DOMAIN:
+                mac = entry.unique_id.split("-", 1)[1]
+            else:
+                continue
 
             if mac in self.api.clients or mac not in self.api.clients_all:
                 continue
@@ -353,7 +359,7 @@ class UniFiController:
             self.api.clients.process_raw([client.raw])
             LOGGER.debug(
                 "Restore disconnected client %s (%s)",
-                entity.entity_id,
+                entry.entity_id,
                 client.mac,
             )
 
@@ -361,7 +367,7 @@ class UniFiController:
         self.wireless_clients = wireless_clients.get_data(self.config_entry)
         self.update_wireless_clients()
 
-        for platform in SUPPORTED_PLATFORMS:
+        for platform in PLATFORMS:
             self.hass.async_create_task(
                 self.hass.config_entries.async_forward_entry_setup(
                     self.config_entry, platform
@@ -380,7 +386,7 @@ class UniFiController:
 
     @callback
     def async_heartbeat(
-        self, unique_id: str, heartbeat_expire_time: Optional[datetime] = None
+        self, unique_id: str, heartbeat_expire_time: datetime | None = None
     ) -> None:
         """Signal when a device has fresh home state."""
         if heartbeat_expire_time is not None:
@@ -408,9 +414,8 @@ class UniFiController:
         If config entry is updated due to reauth flow
         the entry might already have been reset and thus is not available.
         """
-        if config_entry.entry_id not in hass.data[UNIFI_DOMAIN]:
+        if not (controller := hass.data[UNIFI_DOMAIN].get(config_entry.entry_id)):
             return
-        controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
         controller.load_config_entry_options()
         async_dispatcher_send(hass, controller.signal_options_update)
 
@@ -452,10 +457,18 @@ class UniFiController:
         """
         self.api.stop_websocket()
 
-        for platform in SUPPORTED_PLATFORMS:
-            await self.hass.config_entries.async_forward_entry_unload(
-                self.config_entry, platform
+        unload_ok = all(
+            await asyncio.gather(
+                *[
+                    self.hass.config_entries.async_forward_entry_unload(
+                        self.config_entry, platform
+                    )
+                    for platform in PLATFORMS
+                ]
             )
+        )
+        if not unload_ok:
+            return False
 
         for unsub_dispatcher in self.listeners:
             unsub_dispatcher()

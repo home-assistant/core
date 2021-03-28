@@ -61,18 +61,23 @@ from homeassistant.const import (
     STATE_STANDBY,
     STATE_UNAVAILABLE,
 )
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
-from tests.components.roku import UPNP_SERIAL, setup_integration
+from tests.components.roku import NAME_ROKUTV, UPNP_SERIAL, setup_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 MAIN_ENTITY_ID = f"{MP_DOMAIN}.my_roku_3"
 TV_ENTITY_ID = f"{MP_DOMAIN}.58_onn_roku_tv"
 
 TV_HOST = "192.168.1.161"
+TV_LOCATION = "Living room"
+TV_MANUFACTURER = "Onn"
+TV_MODEL = "100005844"
 TV_SERIAL = "YN00H5555555"
+TV_SW_VERSION = "9.2.0"
 
 
 async def test_setup(
@@ -81,7 +86,7 @@ async def test_setup(
     """Test setup with basic config."""
     await setup_integration(hass, aioclient_mock)
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
     main = entity_registry.async_get(MAIN_ENTITY_ID)
 
     assert hass.states.get(MAIN_ENTITY_ID)
@@ -113,7 +118,7 @@ async def test_tv_setup(
         unique_id=TV_SERIAL,
     )
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
     tv = entity_registry.async_get(TV_ENTITY_ID)
 
     assert hass.states.get(TV_ENTITY_ID)
@@ -302,6 +307,29 @@ async def test_tv_attributes(
     assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MEDIA_TYPE_CHANNEL
     assert state.attributes.get(ATTR_MEDIA_CHANNEL) == "getTV (14.3)"
     assert state.attributes.get(ATTR_MEDIA_TITLE) == "Airwolf"
+
+
+async def test_tv_device_registry(
+    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test device registered for Roku TV in the device registry."""
+    await setup_integration(
+        hass,
+        aioclient_mock,
+        device="rokutv",
+        app="tvinput-dtv",
+        host=TV_HOST,
+        unique_id=TV_SERIAL,
+    )
+
+    device_registry = dr.async_get(hass)
+    reg_device = device_registry.async_get_device(identifiers={(DOMAIN, TV_SERIAL)})
+
+    assert reg_device.model == TV_MODEL
+    assert reg_device.sw_version == TV_SW_VERSION
+    assert reg_device.manufacturer == TV_MANUFACTURER
+    assert reg_device.suggested_area == TV_LOCATION
+    assert reg_device.name == NAME_ROKUTV
 
 
 async def test_services(

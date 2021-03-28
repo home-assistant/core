@@ -1,16 +1,20 @@
 {
     "config": {
         "abort": {
+            "already_configured": "A szolg\u00e1ltat\u00e1s m\u00e1r konfigur\u00e1lva van",
             "authorize_url_fail": "Ismeretlen hiba t\u00f6rt\u00e9nt a hiteles\u00edt\u00e9si link gener\u00e1l\u00e1sa sor\u00e1n.",
-            "authorize_url_timeout": "Id\u0151t\u00fall\u00e9p\u00e9s az \u00e9rv\u00e9nyes\u00edt\u00e9si url gener\u00e1l\u00e1sa sor\u00e1n.",
-            "unknown": "Ismeretlen hiba t\u00f6rt\u00e9nt"
+            "authorize_url_timeout": "Id\u0151t\u00fall\u00e9p\u00e9s a hiteles\u00edt\u00e9si URL gener\u00e1l\u00e1sa sor\u00e1n.",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt",
+            "unknown_authorize_url_generation": "Ismeretlen hiba t\u00f6rt\u00e9nt a hiteles\u00edt\u00e9si link gener\u00e1l\u00e1sa sor\u00e1n."
+        },
+        "error": {
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s"
         },
         "step": {
             "user": {
                 "data": {
                     "host": "Hoszt"
                 },
-                "description": "\u00dcres",
                 "title": "V\u00e1lassz v\u00e9gpontot."
             }
         }

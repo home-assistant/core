@@ -6,7 +6,7 @@ from typing import Callable, List
 import googlemaps
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -20,7 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import location
-from homeassistant.helpers.entity import Entity
+import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -134,7 +134,7 @@ async def async_setup_platform(
     return True
 
 
-class GoogleTravelTimeSensor(Entity):
+class GoogleTravelTimeSensor(SensorEntity):
     """Representation of a Google travel time sensor."""
 
     def __init__(self, hass, unique_id, name, api_key, origin, destination, options):
@@ -200,7 +200,7 @@ class GoogleTravelTimeSensor(Entity):
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self._matrix is None:
             return None

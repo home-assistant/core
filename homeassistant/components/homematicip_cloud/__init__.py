@@ -1,6 +1,4 @@
 """Support for HomematicIP Cloud devices."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -22,8 +20,6 @@ from .const import (
 from .generic_entity import HomematicipGenericEntity  # noqa: F401
 from .hap import HomematicipAuth, HomematicipHAP  # noqa: F401
 from .services import async_setup_services, async_unload_services
-
-_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     {

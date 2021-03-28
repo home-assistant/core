@@ -1,4 +1,5 @@
 """Config flow for Minecraft Server integration."""
+from contextlib import suppress
 from functools import partial
 import ipaddress
 
@@ -40,10 +41,8 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
                 host = address_right
             else:
                 host = address_left
-                try:
+                with suppress(ValueError):
                     port = int(address_right)
-                except ValueError:
-                    pass  # 'port' is already set to default value.
 
             # Remove '[' and ']' in case of an IPv6 address.
             host = host.strip("[]")

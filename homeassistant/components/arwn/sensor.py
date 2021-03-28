@@ -3,9 +3,9 @@ import json
 import logging
 
 from homeassistant.components import mqtt
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import DEGREE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
@@ -114,7 +114,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     return True
 
 
-class ArwnSensor(Entity):
+class ArwnSensor(SensorEntity):
     """Representation of an ARWN sensor."""
 
     def __init__(self, topic, name, state_key, units, icon=None):
@@ -154,7 +154,7 @@ class ArwnSensor(Entity):
         return self._uid
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return all the state attributes."""
         return self.event
 

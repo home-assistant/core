@@ -32,7 +32,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Raspberry PI GPIO devices."""
-
     setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     pull_mode = config.get(CONF_PULL_MODE)

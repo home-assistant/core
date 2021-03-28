@@ -7,7 +7,7 @@
             "missing_configuration": "The component is not configured. Please follow the documentation.",
             "no_agreements": "This account has no Toon displays.",
             "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
-            "unknown_authorize_url_generation": "Unknown error generating an authorize url."
+            "unknown_authorize_url_generation": "Unknown error generating an authorize URL."
         },
         "step": {
             "agreement": {

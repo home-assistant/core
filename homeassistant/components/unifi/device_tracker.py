@@ -1,4 +1,4 @@
-"""Track devices using UniFi controllers."""
+"""Track both clients and devices using UniFi controllers."""
 from datetime import timedelta
 
 from aiounifi.api import SOURCE_DATA, SOURCE_EVENT
@@ -145,6 +145,7 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
 
         self.heartbeat_check = False
         self._is_connected = False
+        self._controller_connection_state_changed = False
 
         if client.last_seen:
             self._is_connected = (
@@ -175,14 +176,16 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
     @callback
     def async_signal_reachable_callback(self) -> None:
         """Call when controller connection state change."""
-        self.async_update_callback(controller_state_change=True)
+        self._controller_connection_state_changed = True
+        super().async_signal_reachable_callback()
 
-    # pylint: disable=arguments-differ
     @callback
-    def async_update_callback(self, controller_state_change: bool = False) -> None:
+    def async_update_callback(self) -> None:
         """Update the clients state."""
 
-        if controller_state_change:
+        if self._controller_connection_state_changed:
+            self._controller_connection_state_changed = False
+
             if self.controller.available:
                 self.schedule_update = True
 
@@ -202,10 +205,13 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
             elif not self.heartbeat_check:
                 self.schedule_update = True
 
-        elif not self.client.event and self.client.last_updated == SOURCE_DATA:
-            if self.is_wired == self.client.is_wired:
-                self._is_connected = True
-                self.schedule_update = True
+        elif (
+            not self.client.event
+            and self.client.last_updated == SOURCE_DATA
+            and self.is_wired == self.client.is_wired
+        ):
+            self._is_connected = True
+            self.schedule_update = True
 
         if self.schedule_update:
             self.schedule_update = False
@@ -246,7 +252,7 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         return f"{self.client.mac}-{self.controller.site}"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the client state attributes."""
         raw = self.client.raw
 
@@ -304,6 +310,7 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
 
         self.device = self._item
         self._is_connected = device.state == 1
+        self._controller_connection_state_changed = False
         self.schedule_update = False
 
     async def async_added_to_hass(self) -> None:
@@ -325,14 +332,16 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
     @callback
     def async_signal_reachable_callback(self) -> None:
         """Call when controller connection state change."""
-        self.async_update_callback(controller_state_change=True)
+        self._controller_connection_state_changed = True
+        super().async_signal_reachable_callback()
 
-    # pylint: disable=arguments-differ
     @callback
-    def async_update_callback(self, controller_state_change: bool = False) -> None:
+    def async_update_callback(self) -> None:
         """Update the devices' state."""
 
-        if controller_state_change:
+        if self._controller_connection_state_changed:
+            self._controller_connection_state_changed = False
+
             if self.controller.available:
                 if self._is_connected:
                     self.schedule_update = True
@@ -415,7 +424,7 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         if self.device.state == 0:
             return {}
