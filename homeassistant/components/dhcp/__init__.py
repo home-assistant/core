@@ -126,7 +126,11 @@ class WatcherBase:
                 self.hass.config_entries.flow.async_init(
                     entry["domain"],
                     context={"source": DOMAIN},
-                    data={IP_ADDRESS: ip_address, **data},
+                    data={
+                        IP_ADDRESS: ip_address,
+                        HOSTNAME: lowercase_hostname,
+                        MAC_ADDRESS: data[MAC_ADDRESS],
+                    },
                 )
             )
 
