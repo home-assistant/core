@@ -83,6 +83,9 @@ aioazuredevops==1.3.5
 # homeassistant.components.aws
 aiobotocore==0.11.1
 
+# homeassistant.components.dhcp
+aiodiscover==1.1.0
+
 # homeassistant.components.dnsip
 # homeassistant.components.minecraft_server
 aiodns==2.0.0
