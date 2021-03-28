@@ -25,7 +25,7 @@ def restore_logging_class():
     logging.setLoggerClass(klass)
 
 
-async def test_log_filtering(hass):
+async def test_log_filtering(hass, caplog):
     """Test logging filters."""
 
     assert await async_setup_component(
@@ -43,25 +43,29 @@ async def test_log_filtering(hass):
                         ".*shouldfilterall.*",
                         "^filterthis:.*",
                     ],
+                    "test.other_filter": [".*otherfilterer"],
                 },
             }
         },
     )
     await hass.async_block_till_done()
 
-    logger = logging.getLogger("test.filter")
+    filter_logger = logging.getLogger("test.filter")
 
-    def msg_test(msg, result, args=None):
-        record = logger.makeRecord(
-            "test.filter", logging.WARNING, "test_log_filtering", 0, msg, args, None
-        )
-        assert logger.filter(record) == result
+    def msg_test(logger, result, message, *args):
+        logger.error(message, *args)
+        formatted_message = message % args
+        assert (formatted_message in caplog.text) == result
+        caplog.clear()
 
-    msg_test("this line containing shouldfilterall should be filtered", False)
-    msg_test("this line should not be filtered filterthis:", True)
-    msg_test("filterthis: should be filtered", False)
-    msg_test("format string shouldfilter%s", False, args=("all"))
-    msg_test("format string shouldfilter%s", True, args=("none"))
+    msg_test(
+        filter_logger, False, "this line containing shouldfilterall should be filtered"
+    )
+    msg_test(filter_logger, True, "this line should not be filtered filterthis:")
+    msg_test(filter_logger, False, "filterthis: should be filtered")
+    msg_test(filter_logger, False, "format string shouldfilter%s", "all")
+    msg_test(filter_logger, True, "format string shouldfilter%s", "not")
+
     # Filtering should work even if log level is modified
     await hass.services.async_call(
         "logger",
@@ -69,8 +73,22 @@ async def test_log_filtering(hass):
         {"test.filter": "warning"},
         blocking=True,
     )
-    assert logger.getEffectiveLevel() == logging.WARNING
-    msg_test("this line containing shouldfilterall should still be filtered", False)
+    assert filter_logger.getEffectiveLevel() == logging.WARNING
+    msg_test(
+        filter_logger,
+        False,
+        "this line containing shouldfilterall should still be filtered",
+    )
+
+    # Filtering should be scoped to a service
+    msg_test(
+        filter_logger, True, "this line containing otherfilterer should not be filtered"
+    )
+    msg_test(
+        logging.getLogger("test.other_filter"),
+        False,
+        "this line containing otherfilterer SHOULD be filtered",
+    )
 
 
 async def test_setting_level(hass):
