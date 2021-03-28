@@ -6,6 +6,8 @@ from denonavr import DenonAVR
 from denonavr.exceptions import AvrNetworkError, AvrTimoutError
 import httpx
 
+from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -20,6 +22,7 @@ class ConnectDenonAVR:
         zone2: bool,
         zone3: bool,
         async_client: httpx.AsyncClient,
+        entry_state: Optional[str] = None,
     ):
         """Initialize the class."""
         self._async_client = async_client
@@ -27,6 +30,7 @@ class ConnectDenonAVR:
         self._host = host
         self._show_all_inputs = show_all_inputs
         self._timeout = timeout
+        self._entry_state = entry_state
 
         self._zones = {}
         if zone2:
@@ -84,14 +88,24 @@ class ConnectDenonAVR:
         try:
             await self._receiver.async_setup()
         except AvrTimoutError:
-            _LOGGER.error(
-                "Timeout error during setup of denonavr on host %s", self._host
-            )
+            if self._entry_state == ENTRY_STATE_SETUP_RETRY:
+                _LOGGER.debug(
+                    "Timeout error during setup of denonavr on host %s", self._host
+                )
+            else:
+                _LOGGER.error(
+                    "Timeout error during setup of denonavr on host %s", self._host
+                )
             return False
         except AvrNetworkError:
-            _LOGGER.error(
-                "Network error during setup of denonavr on host %s", self._host
-            )
+            if self._entry_state == ENTRY_STATE_SETUP_RETRY:
+                _LOGGER.debug(
+                    "Network error during setup of denonavr on host %s", self._host
+                )
+            else:
+                _LOGGER.error(
+                    "Network error during setup of denonavr on host %s", self._host
+                )
             return False
 
         return True
