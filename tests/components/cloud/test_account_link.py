@@ -108,7 +108,7 @@ async def test_get_services_error(hass):
         assert account_link.DATA_SERVICES not in hass.data
 
 
-async def test_implementation(hass, flow_handler):
+async def test_implementation(hass, flow_handler, current_request_with_host):
     """Test Cloud OAuth2 implementation."""
     hass.data["cloud"] = None
 

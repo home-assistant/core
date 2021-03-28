@@ -1,4 +1,5 @@
 """Support for MQTT JSON lights."""
+from contextlib import suppress
 import json
 import logging
 
@@ -245,10 +246,8 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                     _LOGGER.warning("Invalid color temp value received")
 
             if self._supported_features and SUPPORT_EFFECT:
-                try:
+                with suppress(KeyError):
                     self._effect = values["effect"]
-                except KeyError:
-                    pass
 
             if self._supported_features and SUPPORT_WHITE_VALUE:
                 try:

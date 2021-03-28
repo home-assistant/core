@@ -1,7 +1,9 @@
 """Support for OVO Energy."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Dict
+from typing import Any
 
 import aiohttp
 import async_timeout
@@ -148,7 +150,7 @@ class OVOEnergyDeviceEntity(OVOEnergyEntity):
     """Defines a OVO Energy device entity."""
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> dict[str, Any]:
         """Return device information about this OVO Energy instance."""
         return {
             "identifiers": {(DOMAIN, self._client.account_id)},

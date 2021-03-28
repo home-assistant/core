@@ -12,6 +12,7 @@ from homeassistant.components.cover import (
     DEVICE_CLASS_WINDOW,
 )
 from homeassistant.components.media_player import DEVICE_CLASS_TV
+from homeassistant.components.remote import SUPPORT_ACTIVITY
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
@@ -103,6 +104,7 @@ def get_accessory(hass, driver, state, aid, config):
 
     a_type = None
     name = config.get(CONF_NAME, state.name)
+    features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
     if state.domain == "alarm_control_panel":
         a_type = "SecuritySystem"
@@ -115,7 +117,6 @@ def get_accessory(hass, driver, state, aid, config):
 
     elif state.domain == "cover":
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
-        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
         if device_class in (DEVICE_CLASS_GARAGE, DEVICE_CLASS_GATE) and features & (
             cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE
@@ -178,6 +179,9 @@ def get_accessory(hass, driver, state, aid, config):
 
     elif state.domain == "vacuum":
         a_type = "Vacuum"
+
+    elif state.domain == "remote" and features & SUPPORT_ACTIVITY:
+        a_type = "ActivityRemote"
 
     elif state.domain in ("automation", "input_boolean", "remote", "scene", "script"):
         a_type = "Switch"

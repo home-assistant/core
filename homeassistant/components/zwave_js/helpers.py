@@ -1,5 +1,7 @@
 """Helper functions for Z-Wave JS integration."""
-from typing import List, Tuple, cast
+from __future__ import annotations
+
+from typing import cast
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.model.node import Node as ZwaveNode
@@ -19,13 +21,13 @@ def get_unique_id(home_id: str, value_id: str) -> str:
 
 
 @callback
-def get_device_id(client: ZwaveClient, node: ZwaveNode) -> Tuple[str, str]:
+def get_device_id(client: ZwaveClient, node: ZwaveNode) -> tuple[str, str]:
     """Get device registry identifier for Z-Wave node."""
     return (DOMAIN, f"{client.driver.controller.home_id}-{node.node_id}")
 
 
 @callback
-def get_home_and_node_id_from_device_id(device_id: Tuple[str, str]) -> List[str]:
+def get_home_and_node_id_from_device_id(device_id: tuple[str, str]) -> list[str]:
     """
     Get home ID and node ID for Z-Wave device registry entry.
 

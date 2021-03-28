@@ -1,5 +1,5 @@
 """Allows the creation of a sensor that breaks out state_attributes."""
-from typing import Optional
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -7,6 +7,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASSES_SCHEMA,
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA,
+    SensorEntity,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -23,10 +24,9 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity, async_generate_entity_id
-from homeassistant.helpers.reload import async_setup_reload_service
+from homeassistant.helpers.entity import async_generate_entity_id
 
-from .const import CONF_AVAILABILITY_TEMPLATE, DOMAIN, PLATFORMS
+from .const import CONF_AVAILABILITY_TEMPLATE
 from .template_entity import TemplateEntity
 
 CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
@@ -95,11 +95,10 @@ async def _async_create_entities(hass, config):
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the template sensors."""
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     async_add_entities(await _async_create_entities(hass, config))
 
 
-class SensorTemplate(TemplateEntity, Entity):
+class SensorTemplate(TemplateEntity, SensorEntity):
     """Representation of a Template Sensor."""
 
     def __init__(
@@ -165,7 +164,7 @@ class SensorTemplate(TemplateEntity, Entity):
         return self._state
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the device class of the sensor."""
         return self._device_class
 

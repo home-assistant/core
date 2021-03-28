@@ -34,7 +34,7 @@ async def test_config_non_unique_profile(hass: HomeAssistant) -> None:
 
 
 async def test_config_reauth_profile(
-    hass: HomeAssistant, aiohttp_client, aioclient_mock
+    hass: HomeAssistant, aiohttp_client, aioclient_mock, current_request_with_host
 ) -> None:
     """Test reauth an existing profile re-creates the config entry."""
     hass_config = {

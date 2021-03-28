@@ -10,6 +10,7 @@
             "service_unavailable": "Verbindung fehlgeschlagen",
             "unknown_client_mac": "Unter dieser MAC-Adresse ist kein Client verf\u00fcgbar."
         },
+        "flow_title": "UniFi Netzwerk {site} ({host})",
         "step": {
             "user": {
                 "data": {

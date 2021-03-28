@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant import config_entries, data_entry_flow, loader
 from homeassistant.core import callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
@@ -44,7 +44,7 @@ def mock_handlers():
 def manager(hass):
     """Fixture of a loaded config manager."""
     manager = config_entries.ConfigEntries(hass, {})
-    manager._entries = []
+    manager._entries = {}
     manager._store._async_ensure_stop_listener = lambda: None
     hass.config_entries = manager
     return manager
@@ -1221,12 +1221,11 @@ async def test_init_custom_integration(hass):
         None,
         {"name": "Hue", "dependencies": [], "requirements": [], "domain": "hue"},
     )
-    with pytest.raises(data_entry_flow.UnknownHandler):
-        with patch(
-            "homeassistant.loader.async_get_integration",
-            return_value=integration,
-        ):
-            await hass.config_entries.flow.async_init("bla")
+    with pytest.raises(data_entry_flow.UnknownHandler), patch(
+        "homeassistant.loader.async_get_integration",
+        return_value=integration,
+    ):
+        await hass.config_entries.flow.async_init("bla")
 
 
 async def test_support_entry_unload(hass):
@@ -1381,6 +1380,43 @@ async def test_unique_id_existing_entry(hass, manager):
     assert len(async_setup_entry.mock_calls) == 1
     assert len(async_unload_entry.mock_calls) == 1
     assert len(async_remove_entry.mock_calls) == 1
+
+
+async def test_entry_id_existing_entry(hass, manager):
+    """Test that we throw when the entry id collides."""
+    collide_entry_id = "collide"
+    hass.config.components.add("comp")
+    MockConfigEntry(
+        entry_id=collide_entry_id,
+        domain="comp",
+        state=config_entries.ENTRY_STATE_LOADED,
+        unique_id="mock-unique-id",
+    ).add_to_hass(hass)
+
+    mock_integration(
+        hass,
+        MockModule("comp"),
+    )
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            return self.async_create_entry(title="mock-title", data={"via": "flow"})
+
+    with pytest.raises(HomeAssistantError), patch.dict(
+        config_entries.HANDLERS, {"comp": TestFlow}
+    ), patch(
+        "homeassistant.config_entries.uuid_util.random_uuid_hex",
+        return_value=collide_entry_id,
+    ):
+        await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_USER}
+        )
 
 
 async def test_unique_id_update_existing_entry_without_reload(hass, manager):
@@ -1727,6 +1763,115 @@ async def test_manual_add_overrides_ignored_entry_singleton(hass, manager):
 
     assert p_hass is hass
     assert p_entry.data == {"token": "supersecret"}
+
+
+async def test__async_current_entries_does_not_skip_ignore_non_user(hass, manager):
+    """Test that _async_current_entries does not skip ignore by default for non user step."""
+    hass.config.components.add("comp")
+    entry = MockConfigEntry(
+        domain="comp",
+        state=config_entries.ENTRY_STATE_LOADED,
+        source=config_entries.SOURCE_IGNORE,
+    )
+    entry.add_to_hass(hass)
+
+    mock_setup_entry = AsyncMock(return_value=True)
+
+    mock_integration(hass, MockModule("comp", async_setup_entry=mock_setup_entry))
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_import(self, user_input=None):
+            """Test not the user step."""
+            if self._async_current_entries():
+                return self.async_abort(reason="single_instance_allowed")
+            return self.async_create_entry(title="title", data={"token": "supersecret"})
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow, "beer": 5}):
+        await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_IMPORT}
+        )
+        await hass.async_block_till_done()
+
+    assert len(mock_setup_entry.mock_calls) == 0
+
+
+async def test__async_current_entries_explict_skip_ignore(hass, manager):
+    """Test that _async_current_entries can explicitly include ignore."""
+    hass.config.components.add("comp")
+    entry = MockConfigEntry(
+        domain="comp",
+        state=config_entries.ENTRY_STATE_LOADED,
+        source=config_entries.SOURCE_IGNORE,
+    )
+    entry.add_to_hass(hass)
+
+    mock_setup_entry = AsyncMock(return_value=True)
+
+    mock_integration(hass, MockModule("comp", async_setup_entry=mock_setup_entry))
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_import(self, user_input=None):
+            """Test not the user step."""
+            if self._async_current_entries(include_ignore=False):
+                return self.async_abort(reason="single_instance_allowed")
+            return self.async_create_entry(title="title", data={"token": "supersecret"})
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow, "beer": 5}):
+        await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_IMPORT}
+        )
+        await hass.async_block_till_done()
+
+    assert len(mock_setup_entry.mock_calls) == 1
+    p_hass, p_entry = mock_setup_entry.mock_calls[0][1]
+
+    assert p_hass is hass
+    assert p_entry.data == {"token": "supersecret"}
+
+
+async def test__async_current_entries_explict_include_ignore(hass, manager):
+    """Test that _async_current_entries can explicitly include ignore."""
+    hass.config.components.add("comp")
+    entry = MockConfigEntry(
+        domain="comp",
+        state=config_entries.ENTRY_STATE_LOADED,
+        source=config_entries.SOURCE_IGNORE,
+    )
+    entry.add_to_hass(hass)
+
+    mock_setup_entry = AsyncMock(return_value=True)
+
+    mock_integration(hass, MockModule("comp", async_setup_entry=mock_setup_entry))
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_import(self, user_input=None):
+            """Test not the user step."""
+            if self._async_current_entries(include_ignore=True):
+                return self.async_abort(reason="single_instance_allowed")
+            return self.async_create_entry(title="title", data={"token": "supersecret"})
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow, "beer": 5}):
+        await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_IMPORT}
+        )
+        await hass.async_block_till_done()
+
+    assert len(mock_setup_entry.mock_calls) == 0
 
 
 async def test_unignore_step_form(hass, manager):

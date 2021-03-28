@@ -1,5 +1,5 @@
 """Entity for Firmata devices."""
-from typing import Type
+from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
 
@@ -32,7 +32,7 @@ class FirmataPinEntity(FirmataEntity):
 
     def __init__(
         self,
-        api: Type[FirmataBoardPin],
+        api: type[FirmataBoardPin],
         config_entry: ConfigEntry,
         name: str,
         pin: FirmataPinType,

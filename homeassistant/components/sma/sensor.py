@@ -5,7 +5,7 @@ import logging
 import pysma
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -19,7 +19,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
 _LOGGER = logging.getLogger(__name__)
@@ -169,7 +168,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_track_time_interval(hass, async_sma, interval)
 
 
-class SMAsensor(Entity):
+class SMAsensor(SensorEntity):
     """Representation of a SMA sensor."""
 
     def __init__(self, pysma_sensor, sub_sensors):

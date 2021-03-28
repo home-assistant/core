@@ -1,16 +1,17 @@
 """Class to reload platforms."""
+from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Dict, Iterable, List, Optional
+from typing import Iterable
 
 from homeassistant import config as conf_util
 from homeassistant.const import SERVICE_RELOAD
-from homeassistant.core import Event, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform
 from homeassistant.helpers.entity_platform import EntityPlatform, async_get_platforms
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 
@@ -18,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_reload_integration_platforms(
-    hass: HomeAssistantType, integration_name: str, integration_platforms: Iterable
+    hass: HomeAssistant, integration_name: str, integration_platforms: Iterable
 ) -> None:
     """Reload an integration's platforms.
 
@@ -46,7 +47,7 @@ async def async_reload_integration_platforms(
 
 
 async def _resetup_platform(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     integration_name: str,
     integration_platform: str,
     unprocessed_conf: ConfigType,
@@ -61,7 +62,7 @@ async def _resetup_platform(
     if not conf:
         return
 
-    root_config: Dict = {integration_platform: []}
+    root_config: dict = {integration_platform: []}
     # Extract only the config for template, ignore the rest.
     for p_type, p_config in config_per_platform(conf, integration_platform):
         if p_type != integration_name:
@@ -98,10 +99,10 @@ async def _resetup_platform(
 
 
 async def _async_setup_platform(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     integration_name: str,
     integration_platform: str,
-    platform_configs: List[Dict],
+    platform_configs: list[dict],
 ) -> None:
     """Platform for the first time when new configuration is added."""
     if integration_platform not in hass.data:
@@ -119,7 +120,7 @@ async def _async_setup_platform(
 
 
 async def _async_reconfig_platform(
-    platform: EntityPlatform, platform_configs: List[Dict]
+    platform: EntityPlatform, platform_configs: list[dict]
 ) -> None:
     """Reconfigure an already loaded platform."""
     await platform.async_reset()
@@ -128,8 +129,8 @@ async def _async_reconfig_platform(
 
 
 async def async_integration_yaml_config(
-    hass: HomeAssistantType, integration_name: str
-) -> Optional[ConfigType]:
+    hass: HomeAssistant, integration_name: str
+) -> ConfigType | None:
     """Fetch the latest yaml configuration for an integration."""
     integration = await async_get_integration(hass, integration_name)
 
@@ -140,8 +141,8 @@ async def async_integration_yaml_config(
 
 @callback
 def async_get_platform_without_config_entry(
-    hass: HomeAssistantType, integration_name: str, integration_platform_name: str
-) -> Optional[EntityPlatform]:
+    hass: HomeAssistant, integration_name: str, integration_platform_name: str
+) -> EntityPlatform | None:
     """Find an existing platform that is not a config entry."""
     for integration_platform in async_get_platforms(hass, integration_name):
         if integration_platform.config_entry is not None:
@@ -154,7 +155,7 @@ def async_get_platform_without_config_entry(
 
 
 async def async_setup_reload_service(
-    hass: HomeAssistantType, domain: str, platforms: Iterable
+    hass: HomeAssistant, domain: str, platforms: Iterable
 ) -> None:
     """Create the reload service for the domain."""
     if hass.services.has_service(domain, SERVICE_RELOAD):
@@ -170,9 +171,7 @@ async def async_setup_reload_service(
     )
 
 
-def setup_reload_service(
-    hass: HomeAssistantType, domain: str, platforms: Iterable
-) -> None:
+def setup_reload_service(hass: HomeAssistant, domain: str, platforms: Iterable) -> None:
     """Sync version of async_setup_reload_service."""
     asyncio.run_coroutine_threadsafe(
         async_setup_reload_service(hass, domain, platforms),

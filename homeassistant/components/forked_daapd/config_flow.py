@@ -1,4 +1,5 @@
 """Config flow to configure forked-daapd devices."""
+from contextlib import suppress
 import logging
 
 from pyforked_daapd import ForkedDaapdAPI
@@ -161,12 +162,10 @@ class ForkedDaapdFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if discovery_info.get("properties") and discovery_info["properties"].get(
             "Machine Name"
         ):
-            try:
+            with suppress(ValueError):
                 version_num = int(
                     discovery_info["properties"].get("mtd-version", "0").split(".")[0]
                 )
-            except ValueError:
-                pass
         if version_num < 27:
             return self.async_abort(reason="not_forked_daapd")
         await self.async_set_unique_id(discovery_info["properties"]["Machine Name"])

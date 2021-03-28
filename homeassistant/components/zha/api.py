@@ -60,6 +60,7 @@ from .core.helpers import (
     get_matched_clusters,
     qr_to_install_code,
 )
+from .core.typing import ZhaDeviceType, ZhaGatewayType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -892,9 +893,12 @@ def async_load_api(hass):
     async def remove(service):
         """Remove a node from the network."""
         ieee = service.data[ATTR_IEEE]
-        zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
-        zha_device = zha_gateway.get_device(ieee)
-        if zha_device is not None and zha_device.is_coordinator:
+        zha_gateway: ZhaGatewayType = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+        zha_device: ZhaDeviceType = zha_gateway.get_device(ieee)
+        if zha_device is not None and (
+            zha_device.is_coordinator
+            and zha_device.ieee == zha_gateway.application_controller.ieee
+        ):
             _LOGGER.info("Removing the coordinator (%s) is not allowed", ieee)
             return
         _LOGGER.info("Removing node %s", ieee)

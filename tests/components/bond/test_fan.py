@@ -1,6 +1,7 @@
 """Tests for the Bond fan device."""
+from __future__ import annotations
+
 from datetime import timedelta
-from typing import Optional
 
 from bond_api import Action, DeviceType, Direction
 
@@ -44,8 +45,8 @@ def ceiling_fan(name: str):
 async def turn_fan_on(
     hass: core.HomeAssistant,
     fan_id: str,
-    speed: Optional[str] = None,
-    percentage: Optional[int] = None,
+    speed: str | None = None,
+    percentage: int | None = None,
 ) -> None:
     """Turn the fan on at the specified speed."""
     service_data = {ATTR_ENTITY_ID: fan_id}

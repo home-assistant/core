@@ -1,5 +1,7 @@
 """Module that groups code required to handle state restore for component."""
-from typing import Any, Dict, Iterable, Optional
+from __future__ import annotations
+
+from typing import Any, Iterable
 
 from homeassistant.core import Context, State
 from homeassistant.helpers.state import async_reproduce_state
@@ -12,8 +14,8 @@ async def async_reproduce_states(
     hass: HomeAssistantType,
     states: Iterable[State],
     *,
-    context: Optional[Context] = None,
-    reproduce_options: Optional[Dict[str, Any]] = None,
+    context: Context | None = None,
+    reproduce_options: dict[str, Any] | None = None,
 ) -> None:
     """Reproduce component states."""
     states_copy = []

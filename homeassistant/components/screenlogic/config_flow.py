@@ -120,7 +120,7 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             mac = user_input[GATEWAY_SELECT_KEY]
             selected_gateway = self.discovered_gateways[mac]
-            await self.async_set_unique_id(mac)
+            await self.async_set_unique_id(mac, raise_on_progress=False)
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
                 title=name_for_mac(mac),
@@ -164,7 +164,7 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors[CONF_IP_ADDRESS] = "cannot_connect"
 
             if not errors:
-                await self.async_set_unique_id(mac)
+                await self.async_set_unique_id(mac, raise_on_progress=False)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=name_for_mac(mac),

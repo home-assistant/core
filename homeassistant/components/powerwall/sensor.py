@@ -3,6 +3,7 @@ import logging
 
 from tesla_powerwall import MeterType
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import DEVICE_CLASS_BATTERY, DEVICE_CLASS_POWER, PERCENTAGE
 
 from .const import (
@@ -59,7 +60,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class PowerWallChargeSensor(PowerWallEntity):
+class PowerWallChargeSensor(PowerWallEntity, SensorEntity):
     """Representation of an Powerwall charge sensor."""
 
     @property
@@ -88,7 +89,7 @@ class PowerWallChargeSensor(PowerWallEntity):
         return round(self.coordinator.data[POWERWALL_API_CHARGE])
 
 
-class PowerWallEnergySensor(PowerWallEntity):
+class PowerWallEnergySensor(PowerWallEntity, SensorEntity):
     """Representation of an Powerwall Energy sensor."""
 
     def __init__(

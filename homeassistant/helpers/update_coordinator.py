@@ -1,9 +1,11 @@
 """Helpers to help coordinate updates."""
+from __future__ import annotations
+
 import asyncio
 from datetime import datetime, timedelta
 import logging
 from time import monotonic
-from typing import Any, Awaitable, Callable, Generic, List, Optional, TypeVar
+from typing import Any, Awaitable, Callable, Generic, TypeVar
 import urllib.error
 
 import aiohttp
@@ -37,9 +39,9 @@ class DataUpdateCoordinator(Generic[T]):
         logger: logging.Logger,
         *,
         name: str,
-        update_interval: Optional[timedelta] = None,
-        update_method: Optional[Callable[[], Awaitable[T]]] = None,
-        request_refresh_debouncer: Optional[Debouncer] = None,
+        update_interval: timedelta | None = None,
+        update_method: Callable[[], Awaitable[T]] | None = None,
+        request_refresh_debouncer: Debouncer | None = None,
     ):
         """Initialize global data updater."""
         self.hass = hass
@@ -48,12 +50,12 @@ class DataUpdateCoordinator(Generic[T]):
         self.update_method = update_method
         self.update_interval = update_interval
 
-        self.data: Optional[T] = None
+        self.data: T | None = None
 
-        self._listeners: List[CALLBACK_TYPE] = []
+        self._listeners: list[CALLBACK_TYPE] = []
         self._job = HassJob(self._handle_refresh_interval)
-        self._unsub_refresh: Optional[CALLBACK_TYPE] = None
-        self._request_refresh_task: Optional[asyncio.TimerHandle] = None
+        self._unsub_refresh: CALLBACK_TYPE | None = None
+        self._request_refresh_task: asyncio.TimerHandle | None = None
         self.last_update_success = True
 
         if request_refresh_debouncer is None:
@@ -132,7 +134,7 @@ class DataUpdateCoordinator(Generic[T]):
         """
         await self._debounced_refresh.async_call()
 
-    async def _async_update_data(self) -> Optional[T]:
+    async def _async_update_data(self) -> T | None:
         """Fetch the latest data from the source."""
         if self.update_method is None:
             raise NotImplementedError("Update method not implemented")

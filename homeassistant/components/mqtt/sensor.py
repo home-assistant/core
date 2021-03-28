@@ -1,12 +1,13 @@
 """Support for MQTT sensors."""
+from __future__ import annotations
+
 from datetime import timedelta
 import functools
-from typing import Optional
 
 import voluptuous as vol
 
 from homeassistant.components import sensor
-from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA
+from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_FORCE_UPDATE,
@@ -16,7 +17,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -70,7 +70,7 @@ async def _async_setup_entity(
     async_add_entities([MqttSensor(hass, config, config_entry, discovery_data)])
 
 
-class MqttSensor(MqttEntity, Entity):
+class MqttSensor(MqttEntity, SensorEntity):
     """Representation of a sensor that can be updated using MQTT."""
 
     def __init__(self, hass, config, config_entry, discovery_data):
@@ -166,7 +166,7 @@ class MqttSensor(MqttEntity, Entity):
         return self._state
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the device class of the sensor."""
         return self._config.get(CONF_DEVICE_CLASS)
 

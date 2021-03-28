@@ -29,11 +29,12 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,12 +49,12 @@ SERVICE_REFRESH_SCHEMA = vol.Schema(
 PLATFORMS = ["sensor", "switch"]
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the AdGuard Home components."""
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up AdGuard Home from a config entry."""
     session = async_get_clientsession(hass, entry.data[CONF_VERIFY_SSL])
     adguard = AdGuardHome(
@@ -123,7 +124,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload AdGuard Home config entry."""
     hass.services.async_remove(DOMAIN, SERVICE_ADD_URL)
     hass.services.async_remove(DOMAIN, SERVICE_REMOVE_URL)

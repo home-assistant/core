@@ -6,7 +6,7 @@ from aiohttp.hdrs import USER_AGENT
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_API_KEY,
@@ -15,7 +15,6 @@ from homeassistant.const import (
     HTTP_OK,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_point_in_time
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
@@ -54,7 +53,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices)
 
 
-class HaveIBeenPwnedSensor(Entity):
+class HaveIBeenPwnedSensor(SensorEntity):
     """Implementation of a HaveIBeenPwned sensor."""
 
     def __init__(self, data, email):

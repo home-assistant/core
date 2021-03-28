@@ -1,11 +1,13 @@
 """Provide pre-made queries on top of the recorder component."""
+from __future__ import annotations
+
 from collections import defaultdict
 from datetime import datetime as dt, timedelta
 from itertools import groupby
 import json
 import logging
 import time
-from typing import Iterable, Optional, cast
+from typing import Iterable, cast
 
 from aiohttp import web
 from sqlalchemy import and_, bindparam, func, not_, or_
@@ -462,7 +464,7 @@ class HistoryPeriodView(HomeAssistantView):
         self.use_include_order = use_include_order
 
     async def get(
-        self, request: web.Request, datetime: Optional[str] = None
+        self, request: web.Request, datetime: str | None = None
     ) -> web.Response:
         """Return history over a period of time."""
         datetime_ = None

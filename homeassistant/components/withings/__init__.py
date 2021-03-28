@@ -3,8 +3,9 @@ Support for the Withings API.
 
 For more details about this platform, please refer to the documentation at
 """
+from __future__ import annotations
+
 import asyncio
-from typing import Optional
 
 from aiohttp.web import Request, Response
 import voluptuous as vol
@@ -175,7 +176,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_webhook_handler(
     hass: HomeAssistant, webhook_id: str, request: Request
-) -> Optional[Response]:
+) -> Response | None:
     """Handle webhooks calls."""
     # Handle http head calls to the path.
     # When creating a notify subscription, Withings will check that the endpoint is running by sending a HEAD request.

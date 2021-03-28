@@ -14,7 +14,8 @@
                     "host": "IP-adres",
                     "password": "Wachtwoord",
                     "username": "Gebruikersnaam"
-                }
+                },
+                "description": "Voer uw Control4-accountgegevens en het IP-adres van uw lokale controller in."
             }
         }
     },

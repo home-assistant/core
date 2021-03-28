@@ -1,7 +1,9 @@
 """The tests for the Apache Kafka component."""
+from __future__ import annotations
+
 from asyncio import AbstractEventLoop
 from dataclasses import dataclass
-from typing import Callable, Type
+from typing import Callable
 from unittest.mock import patch
 
 import pytest
@@ -31,7 +33,7 @@ class FilterTest:
 class MockKafkaClient:
     """Mock of the Apache Kafka client for testing."""
 
-    init: Callable[[Type[AbstractEventLoop], str, str], None]
+    init: Callable[[type[AbstractEventLoop], str, str], None]
     start: Callable[[], None]
     send_and_wait: Callable[[str, str], None]
 

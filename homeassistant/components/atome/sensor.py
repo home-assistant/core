@@ -5,7 +5,7 @@ import logging
 from pyatome.client import AtomeClient, PyAtomeError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -15,7 +15,6 @@ from homeassistant.const import (
     POWER_WATT,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -215,7 +214,7 @@ class AtomeData:
             _LOGGER.error("Missing last value in values: %s: %s", values, error)
 
 
-class AtomeSensor(Entity):
+class AtomeSensor(SensorEntity):
     """Representation of a sensor entity for Atome."""
 
     def __init__(self, data, name, sensor_type):

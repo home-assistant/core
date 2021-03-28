@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
             "already_in_progress": "De configuratiestroom is al aan de gang",
+            "cannot_connect": "Verbinding mislukt, probeer het opnieuw, de stroom- en ethernetkabels loskoppelen en opnieuw aansluiten kan helpen",
             "not_denonavr_manufacturer": "Geen Denon AVR Netwerk Receiver, ontdekte fabrikant komt niet overeen",
             "not_denonavr_missing": "Geen Denon AVR netwerkontvanger, zoekinformatie niet compleet"
         },

@@ -1,17 +1,19 @@
 """Support for Dutch Smart Meter (also known as Smartmeter or P1 port)."""
+from __future__ import annotations
+
 import asyncio
 from asyncio import CancelledError
+from contextlib import suppress
 from datetime import timedelta
 from functools import partial
 import logging
-from typing import Dict
 
 from dsmr_parser import obis_references as obis_ref
 from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
 import serial
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -21,7 +23,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import Throttle
 
@@ -285,7 +286,7 @@ async def async_setup_entry(
     hass.data[DOMAIN][entry.entry_id][DATA_TASK] = task
 
 
-class DSMREntity(Entity):
+class DSMREntity(SensorEntity):
     """Entity reading values from DSMR telegram."""
 
     def __init__(self, name, device_name, device_serial, obis, config, force_update):
@@ -342,10 +343,8 @@ class DSMREntity(Entity):
         if self._obis == obis_ref.ELECTRICITY_ACTIVE_TARIFF:
             return self.translate_tariff(value, self._config[CONF_DSMR_VERSION])
 
-        try:
+        with suppress(TypeError):
             value = round(float(value), self._config[CONF_PRECISION])
-        except TypeError:
-            pass
 
         if value is not None:
             return value
@@ -363,7 +362,7 @@ class DSMREntity(Entity):
         return self._unique_id
 
     @property
-    def device_info(self) -> Dict[str, any]:
+    def device_info(self) -> dict[str, any]:
         """Return the device information."""
         return {
             "identifiers": {(DOMAIN, self._device_serial)},

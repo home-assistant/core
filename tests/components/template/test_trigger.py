@@ -395,7 +395,7 @@ async def test_if_fires_on_change_with_template_advanced(hass, calls):
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].context.parent_id == context.id
-    assert "template - test.entity - hello - world - None" == calls[0].data["some"]
+    assert calls[0].data["some"] == "template - test.entity - hello - world - None"
 
 
 async def test_if_fires_on_no_change_with_template_advanced(hass, calls):
@@ -657,7 +657,7 @@ async def test_if_fires_on_change_with_for_advanced(hass, calls):
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].context.parent_id == context.id
-    assert "template - test.entity - hello - world - 0:00:05" == calls[0].data["some"]
+    assert calls[0].data["some"] == "template - test.entity - hello - world - 0:00:05"
 
 
 async def test_if_fires_on_change_with_for_0(hass, calls):

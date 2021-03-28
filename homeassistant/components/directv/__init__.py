@@ -1,7 +1,9 @@
 """The DirecTV integration."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
-from typing import Any, Dict
+from typing import Any
 
 from directv import DIRECTV, DIRECTVError
 
@@ -28,7 +30,7 @@ PLATFORMS = ["media_player", "remote"]
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
-async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the DirecTV component."""
     hass.data.setdefault(DOMAIN, {})
     return True
@@ -87,7 +89,7 @@ class DIRECTVEntity(Entity):
         return self._name
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> dict[str, Any]:
         """Return device information about this DirecTV receiver."""
         return {
             ATTR_IDENTIFIERS: {(DOMAIN, self._device_id)},

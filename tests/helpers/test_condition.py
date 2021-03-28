@@ -13,10 +13,18 @@ from homeassistant.util import dt
 def assert_element(trace_element, expected_element, path):
     """Assert a trace element is as expected.
 
-    Note: Unused variable path is passed to get helpful errors from pytest.
+    Note: Unused variable 'path' is passed to get helpful errors from pytest.
     """
-    for result_key, result in expected_element.get("result", {}).items():
+    expected_result = expected_element.get("result", {})
+    # Check that every item in expected_element is present and equal in trace_element
+    # The redundant set operation gives helpful errors from pytest
+    assert not set(expected_result) - set(trace_element._result or {})
+    for result_key, result in expected_result.items():
         assert trace_element._result[result_key] == result
+
+    # Check for unexpected items in trace_element
+    assert not set(trace_element._result or {}) - set(expected_result)
+
     if "error_type" in expected_element:
         assert isinstance(trace_element._error, expected_element["error_type"])
     else:
@@ -94,7 +102,9 @@ async def test_and_condition(hass):
         {
             "": [{"result": {"result": False}}],
             "conditions/0": [{"result": {"result": False}}],
-            "conditions/0/entity_id/0": [{"result": {"result": False}}],
+            "conditions/0/entity_id/0": [
+                {"result": {"result": False, "state": "120", "wanted_state": "100"}}
+            ],
         }
     )
 
@@ -104,7 +114,9 @@ async def test_and_condition(hass):
         {
             "": [{"result": {"result": False}}],
             "conditions/0": [{"result": {"result": False}}],
-            "conditions/0/entity_id/0": [{"result": {"result": False}}],
+            "conditions/0/entity_id/0": [
+                {"result": {"result": False, "state": "105", "wanted_state": "100"}}
+            ],
         }
     )
 
@@ -114,9 +126,11 @@ async def test_and_condition(hass):
         {
             "": [{"result": {"result": True}}],
             "conditions/0": [{"result": {"result": True}}],
-            "conditions/0/entity_id/0": [{"result": {"result": True}}],
+            "conditions/0/entity_id/0": [
+                {"result": {"result": True, "state": "100", "wanted_state": "100"}}
+            ],
             "conditions/1": [{"result": {"result": True}}],
-            "conditions/1/entity_id/0": [{"result": {"result": True}}],
+            "conditions/1/entity_id/0": [{"result": {"result": True, "state": 100.0}}],
         }
     )
 
@@ -167,7 +181,7 @@ async def test_and_condition_raises(hass):
             "conditions/0": [{"error_type": ConditionError}],
             "conditions/0/entity_id/0": [{"error_type": ConditionError}],
             "conditions/1": [{"result": {"result": True}}],
-            "conditions/1/entity_id/0": [{"result": {"result": True}}],
+            "conditions/1/entity_id/0": [{"result": {"result": True, "state": 120.0}}],
         }
     )
 
@@ -181,7 +195,15 @@ async def test_and_condition_raises(hass):
             "conditions/0": [{"error_type": ConditionError}],
             "conditions/0/entity_id/0": [{"error_type": ConditionError}],
             "conditions/1": [{"result": {"result": False}}],
-            "conditions/1/entity_id/0": [{"result": {"result": False}}],
+            "conditions/1/entity_id/0": [
+                {
+                    "result": {
+                        "result": False,
+                        "state": 90.0,
+                        "wanted_state_above": 110.0,
+                    }
+                }
+            ],
         }
     )
 
@@ -257,9 +279,19 @@ async def test_or_condition(hass):
         {
             "": [{"result": {"result": False}}],
             "conditions/0": [{"result": {"result": False}}],
-            "conditions/0/entity_id/0": [{"result": {"result": False}}],
+            "conditions/0/entity_id/0": [
+                {"result": {"result": False, "state": "120", "wanted_state": "100"}}
+            ],
             "conditions/1": [{"result": {"result": False}}],
-            "conditions/1/entity_id/0": [{"result": {"result": False}}],
+            "conditions/1/entity_id/0": [
+                {
+                    "result": {
+                        "result": False,
+                        "state": 120.0,
+                        "wanted_state_below": 110.0,
+                    }
+                }
+            ],
         }
     )
 
@@ -269,9 +301,11 @@ async def test_or_condition(hass):
         {
             "": [{"result": {"result": True}}],
             "conditions/0": [{"result": {"result": False}}],
-            "conditions/0/entity_id/0": [{"result": {"result": False}}],
+            "conditions/0/entity_id/0": [
+                {"result": {"result": False, "state": "105", "wanted_state": "100"}}
+            ],
             "conditions/1": [{"result": {"result": True}}],
-            "conditions/1/entity_id/0": [{"result": {"result": True}}],
+            "conditions/1/entity_id/0": [{"result": {"result": True, "state": 105.0}}],
         }
     )
 
@@ -281,7 +315,9 @@ async def test_or_condition(hass):
         {
             "": [{"result": {"result": True}}],
             "conditions/0": [{"result": {"result": True}}],
-            "conditions/0/entity_id/0": [{"result": {"result": True}}],
+            "conditions/0/entity_id/0": [
+                {"result": {"result": True, "state": "100", "wanted_state": "100"}}
+            ],
         }
     )
 
@@ -332,7 +368,15 @@ async def test_or_condition_raises(hass):
             "conditions/0": [{"error_type": ConditionError}],
             "conditions/0/entity_id/0": [{"error_type": ConditionError}],
             "conditions/1": [{"result": {"result": False}}],
-            "conditions/1/entity_id/0": [{"result": {"result": False}}],
+            "conditions/1/entity_id/0": [
+                {
+                    "result": {
+                        "result": False,
+                        "state": 100.0,
+                        "wanted_state_above": 110.0,
+                    }
+                }
+            ],
         }
     )
 
@@ -346,7 +390,7 @@ async def test_or_condition_raises(hass):
             "conditions/0": [{"error_type": ConditionError}],
             "conditions/0/entity_id/0": [{"error_type": ConditionError}],
             "conditions/1": [{"result": {"result": True}}],
-            "conditions/1/entity_id/0": [{"result": {"result": True}}],
+            "conditions/1/entity_id/0": [{"result": {"result": True, "state": 120.0}}],
         }
     )
 
@@ -418,9 +462,19 @@ async def test_not_condition(hass):
         {
             "": [{"result": {"result": True}}],
             "conditions/0": [{"result": {"result": False}}],
-            "conditions/0/entity_id/0": [{"result": {"result": False}}],
+            "conditions/0/entity_id/0": [
+                {"result": {"result": False, "state": "101", "wanted_state": "100"}}
+            ],
             "conditions/1": [{"result": {"result": False}}],
-            "conditions/1/entity_id/0": [{"result": {"result": False}}],
+            "conditions/1/entity_id/0": [
+                {
+                    "result": {
+                        "result": False,
+                        "state": 101.0,
+                        "wanted_state_below": 50.0,
+                    }
+                }
+            ],
         }
     )
 
@@ -430,9 +484,13 @@ async def test_not_condition(hass):
         {
             "": [{"result": {"result": True}}],
             "conditions/0": [{"result": {"result": False}}],
-            "conditions/0/entity_id/0": [{"result": {"result": False}}],
+            "conditions/0/entity_id/0": [
+                {"result": {"result": False, "state": "50", "wanted_state": "100"}}
+            ],
             "conditions/1": [{"result": {"result": False}}],
-            "conditions/1/entity_id/0": [{"result": {"result": False}}],
+            "conditions/1/entity_id/0": [
+                {"result": {"result": False, "state": 50.0, "wanted_state_below": 50.0}}
+            ],
         }
     )
 
@@ -442,9 +500,11 @@ async def test_not_condition(hass):
         {
             "": [{"result": {"result": False}}],
             "conditions/0": [{"result": {"result": False}}],
-            "conditions/0/entity_id/0": [{"result": {"result": False}}],
+            "conditions/0/entity_id/0": [
+                {"result": {"result": False, "state": "49", "wanted_state": "100"}}
+            ],
             "conditions/1": [{"result": {"result": True}}],
-            "conditions/1/entity_id/0": [{"result": {"result": True}}],
+            "conditions/1/entity_id/0": [{"result": {"result": True, "state": 49.0}}],
         }
     )
 
@@ -454,7 +514,9 @@ async def test_not_condition(hass):
         {
             "": [{"result": {"result": False}}],
             "conditions/0": [{"result": {"result": True}}],
-            "conditions/0/entity_id/0": [{"result": {"result": True}}],
+            "conditions/0/entity_id/0": [
+                {"result": {"result": True, "state": "100", "wanted_state": "100"}}
+            ],
         }
     )
 
@@ -505,7 +567,9 @@ async def test_not_condition_raises(hass):
             "conditions/0": [{"error_type": ConditionError}],
             "conditions/0/entity_id/0": [{"error_type": ConditionError}],
             "conditions/1": [{"result": {"result": False}}],
-            "conditions/1/entity_id/0": [{"result": {"result": False}}],
+            "conditions/1/entity_id/0": [
+                {"result": {"result": False, "state": 90.0, "wanted_state_below": 50.0}}
+            ],
         }
     )
 
@@ -519,7 +583,7 @@ async def test_not_condition_raises(hass):
             "conditions/0": [{"error_type": ConditionError}],
             "conditions/0/entity_id/0": [{"error_type": ConditionError}],
             "conditions/1": [{"result": {"result": True}}],
-            "conditions/1/entity_id/0": [{"result": {"result": True}}],
+            "conditions/1/entity_id/0": [{"result": {"result": True, "state": 40.0}}],
         }
     )
 

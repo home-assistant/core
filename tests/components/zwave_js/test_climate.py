@@ -72,7 +72,7 @@ async def test_thermostat_v2(
         | SUPPORT_FAN_MODE
     )
 
-    client.async_send_command_no_wait.reset_mock()
+    client.async_send_command.reset_mock()
 
     # Test setting hvac mode
     await hass.services.async_call(
@@ -85,8 +85,8 @@ async def test_thermostat_v2(
         blocking=True,
     )
 
-    assert len(client.async_send_command_no_wait.call_args_list) == 1
-    args = client.async_send_command_no_wait.call_args[0][0]
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 13
     assert args["valueId"] == {
@@ -108,7 +108,7 @@ async def test_thermostat_v2(
     }
     assert args["value"] == 2
 
-    client.async_send_command_no_wait.reset_mock()
+    client.async_send_command.reset_mock()
 
     # Test setting temperature
     await hass.services.async_call(
@@ -122,8 +122,8 @@ async def test_thermostat_v2(
         blocking=True,
     )
 
-    assert len(client.async_send_command_no_wait.call_args_list) == 2
-    args = client.async_send_command_no_wait.call_args_list[0][0][0]
+    assert len(client.async_send_command.call_args_list) == 2
+    args = client.async_send_command.call_args_list[0][0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 13
     assert args["valueId"] == {
@@ -144,7 +144,7 @@ async def test_thermostat_v2(
         "value": 1,
     }
     assert args["value"] == 2
-    args = client.async_send_command_no_wait.call_args_list[1][0][0]
+    args = client.async_send_command.call_args_list[1][0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 13
     assert args["valueId"] == {
@@ -166,7 +166,7 @@ async def test_thermostat_v2(
     }
     assert args["value"] == 77
 
-    client.async_send_command_no_wait.reset_mock()
+    client.async_send_command.reset_mock()
 
     # Test cool mode update from value updated event
     event = Event(
@@ -217,7 +217,7 @@ async def test_thermostat_v2(
     assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 22.8
     assert state.attributes[ATTR_TARGET_TEMP_LOW] == 22.2
 
-    client.async_send_command_no_wait.reset_mock()
+    client.async_send_command.reset_mock()
 
     # Test setting temperature with heat_cool
     await hass.services.async_call(
@@ -231,8 +231,8 @@ async def test_thermostat_v2(
         blocking=True,
     )
 
-    assert len(client.async_send_command_no_wait.call_args_list) == 2
-    args = client.async_send_command_no_wait.call_args_list[0][0][0]
+    assert len(client.async_send_command.call_args_list) == 2
+    args = client.async_send_command.call_args_list[0][0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 13
     assert args["valueId"] == {
@@ -254,7 +254,7 @@ async def test_thermostat_v2(
     }
     assert args["value"] == 77
 
-    args = client.async_send_command_no_wait.call_args_list[1][0][0]
+    args = client.async_send_command.call_args_list[1][0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 13
     assert args["valueId"] == {
@@ -276,7 +276,7 @@ async def test_thermostat_v2(
     }
     assert args["value"] == 86
 
-    client.async_send_command_no_wait.reset_mock()
+    client.async_send_command.reset_mock()
 
     # Test setting invalid hvac mode
     with pytest.raises(ValueError):
@@ -290,7 +290,7 @@ async def test_thermostat_v2(
             blocking=True,
         )
 
-    client.async_send_command_no_wait.reset_mock()
+    client.async_send_command.reset_mock()
 
     # Test setting fan mode
     await hass.services.async_call(
@@ -303,8 +303,8 @@ async def test_thermostat_v2(
         blocking=True,
     )
 
-    assert len(client.async_send_command_no_wait.call_args_list) == 1
-    args = client.async_send_command_no_wait.call_args[0][0]
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 13
     assert args["valueId"] == {
@@ -327,7 +327,7 @@ async def test_thermostat_v2(
     }
     assert args["value"] == 1
 
-    client.async_send_command_no_wait.reset_mock()
+    client.async_send_command.reset_mock()
 
     # Test setting invalid fan mode
     with pytest.raises(ValueError):
@@ -485,8 +485,8 @@ async def test_preset_and_no_setpoint(
         blocking=True,
     )
 
-    assert len(client.async_send_command_no_wait.call_args_list) == 1
-    args = client.async_send_command_no_wait.call_args[0][0]
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 8
     assert args["valueId"] == {
@@ -514,7 +514,7 @@ async def test_preset_and_no_setpoint(
     }
     assert args["value"] == 15
 
-    client.async_send_command_no_wait.reset_mock()
+    client.async_send_command.reset_mock()
 
     # Test Full power preset update from value updated event
     event = Event(
@@ -553,9 +553,9 @@ async def test_preset_and_no_setpoint(
             blocking=True,
         )
 
-    assert len(client.async_send_command_no_wait.call_args_list) == 0
+    assert len(client.async_send_command.call_args_list) == 0
 
-    client.async_send_command_no_wait.reset_mock()
+    client.async_send_command.reset_mock()
 
     # Restore hvac mode by setting preset None
     await hass.services.async_call(
@@ -568,8 +568,8 @@ async def test_preset_and_no_setpoint(
         blocking=True,
     )
 
-    assert len(client.async_send_command_no_wait.call_args_list) == 1
-    args = client.async_send_command_no_wait.call_args[0][0]
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 8
     assert args["valueId"]["commandClass"] == 64
@@ -577,4 +577,4 @@ async def test_preset_and_no_setpoint(
     assert args["valueId"]["property"] == "mode"
     assert args["value"] == 1
 
-    client.async_send_command_no_wait.reset_mock()
+    client.async_send_command.reset_mock()

@@ -1,5 +1,7 @@
 """Binary sensor platform for Hass.io addons."""
-from typing import Callable, List
+from __future__ import annotations
+
+from typing import Callable
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -14,7 +16,7 @@ from .entity import HassioAddonEntity, HassioOSEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
     """Binary sensor set up for Hass.io config entry."""
     coordinator = hass.data[ADDONS_COORDINATOR]

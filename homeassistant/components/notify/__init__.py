@@ -1,8 +1,10 @@
 """Provides functionality to notify people."""
+from __future__ import annotations
+
 import asyncio
 from functools import partial
 import logging
-from typing import Any, Dict, cast
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -120,7 +122,7 @@ class BaseNotificationService:
     hass: HomeAssistantType = None  # type: ignore
 
     # Name => target
-    registered_targets: Dict[str, str]
+    registered_targets: dict[str, str]
 
     def send_message(self, message, **kwargs):
         """Send a message.

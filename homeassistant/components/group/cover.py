@@ -1,5 +1,5 @@
 """This platform allows several cover to be grouped into one cover."""
-from typing import Dict, Optional, Set
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -76,18 +76,18 @@ class CoverGroup(GroupEntity, CoverEntity):
         self._is_closed = False
         self._is_closing = False
         self._is_opening = False
-        self._cover_position: Optional[int] = 100
+        self._cover_position: int | None = 100
         self._tilt_position = None
         self._supported_features = 0
         self._assumed_state = True
 
         self._entities = entities
-        self._covers: Dict[str, Set[str]] = {
+        self._covers: dict[str, set[str]] = {
             KEY_OPEN_CLOSE: set(),
             KEY_STOP: set(),
             KEY_POSITION: set(),
         }
-        self._tilts: Dict[str, Set[str]] = {
+        self._tilts: dict[str, set[str]] = {
             KEY_OPEN_CLOSE: set(),
             KEY_STOP: set(),
             KEY_POSITION: set(),
@@ -102,7 +102,7 @@ class CoverGroup(GroupEntity, CoverEntity):
     async def async_update_supported_features(
         self,
         entity_id: str,
-        new_state: Optional[State],
+        new_state: State | None,
         update_state: bool = True,
     ) -> None:
         """Update dictionaries with supported features."""
@@ -197,7 +197,7 @@ class CoverGroup(GroupEntity, CoverEntity):
         return self._is_closing
 
     @property
-    def current_cover_position(self) -> Optional[int]:
+    def current_cover_position(self) -> int | None:
         """Return current position for all covers."""
         return self._cover_position
 
