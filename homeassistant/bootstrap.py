@@ -393,7 +393,8 @@ async def _async_watch_pending_setups(hass: core.HomeAssistant) -> None:
         now = dt_util.utcnow()
         remaining = setup_started.keys()
         remaining_with_setup_started = {
-            domain: (now - setup_started[domain]).seconds for domain in setup_started
+            domain: (now - setup_started[domain]).total_seconds()
+            for domain in setup_started
         }
         _LOGGER.debug("Integration remaining: %s", remaining_with_setup_started)
         async_dispatcher_send(
