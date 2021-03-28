@@ -57,6 +57,28 @@ async def test_discovery(detect_mock, hass):
     }
 
 
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
+async def test_discovery_already_setup(detect_mock, hass):
+    """Test zeroconf flow -- radio detected."""
+    service_info = {
+        "host": "_esphomelib._tcp.local.",
+        "port": 6053,
+        "hostname": "_tube_zb_gw._tcp.local.",
+        "properties": {"name": "tube_123456"},
+    }
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    MockConfigEntry(domain=DOMAIN, data={"usb_path": "/dev/ttyUSB1"}).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        "zha", context={"source": "zeroconf"}, data=service_info
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "single_instance_allowed"
+
+
 @patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
 @patch(
     "homeassistant.components.zha.config_flow.detect_radios",
