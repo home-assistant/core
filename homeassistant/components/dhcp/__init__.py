@@ -165,7 +165,7 @@ class NetworkWatcher(WatcherBase):
         if self._unsub:
             self._unsub()
             self._unsub = None
-        if self._discover_task and not self._discover_task.done():
+        if self._discover_task:
             self._discover_task.cancel()
             self._discover_task = None
 
@@ -187,14 +187,11 @@ class NetworkWatcher(WatcherBase):
     async def async_discover(self):
         """Process discovery."""
         for host in await self._discover_hosts.async_discover():
-            ip_address = host[DISCOVERY_IP_ADDRESS]
-            hostname = host[DISCOVERY_HOSTNAME]
-            mac_address = host[DISCOVERY_MAC_ADDRESS]
-
-            if ip_address is None or hostname is None or mac_address is None:
-                continue
-
-            self.process_client(ip_address, hostname, _format_mac(mac_address))
+            self.process_client(
+                host[DISCOVERY_IP_ADDRESS],
+                host[DISCOVERY_HOSTNAME],
+                _format_mac(host[DISCOVERY_MAC_ADDRESS]),
+            )
 
     def create_task(self, task):
         """Pass a task to async_create_task since we are in async context."""
