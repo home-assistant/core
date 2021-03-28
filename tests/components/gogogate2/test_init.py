@@ -2,7 +2,6 @@
 from unittest.mock import MagicMock, patch
 
 from gogogate2_api import GogoGate2Api
-import pytest
 
 from homeassistant.components.gogogate2 import DEVICE_TYPE_GOGOGATE2, async_setup_entry
 from homeassistant.components.gogogate2.common import DeviceDataUpdateCoordinator
@@ -15,7 +14,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
 from tests.common import MockConfigEntry
 
@@ -92,5 +90,5 @@ async def test_auth_fail(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.gogogate2.get_data_update_coordinator",
         return_value=coordinator_mock,
-    ), pytest.raises(ConfigEntryNotReady):
+    ):
         await async_setup_entry(hass, config_entry)
