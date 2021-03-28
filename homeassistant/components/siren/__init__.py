@@ -145,7 +145,7 @@ class SirenEntity(ToggleEntity):
         return None
 
     @property
-    def active_tone(self) -> Optional[str]:
+    def active_tone(self) -> Optional[int | str]:
         """
         Return the active tone for the siren.
 
@@ -154,7 +154,7 @@ class SirenEntity(ToggleEntity):
         raise NotImplementedError
 
     @property
-    def available_tones(self) -> Optional[List[str]]:
+    def available_tones(self) -> Optional[List[int | str]]:
         """
         Return a list of available tones.
 
@@ -162,11 +162,11 @@ class SirenEntity(ToggleEntity):
         """
         raise NotImplementedError
 
-    def set_active_tone(self, tone: str) -> None:
+    def set_active_tone(self, tone: int | str) -> None:
         """Set new active tone."""
         raise NotImplementedError()
 
-    async def async_set_active_tone(self, tone: str) -> None:
+    async def async_set_active_tone(self, tone: int | str) -> None:
         """Set new active tone."""
         await self.hass.async_add_executor_job(self.set_active_tone, tone)
 
