@@ -51,7 +51,7 @@ def ezviz_test_rtsp(hass):
 def ezviz_test_rtsp_config_flow(hass):
     """Mock the EzvizApi for easier testing."""
     with patch.object(TestRTSPAuth, "main", return_value=True), patch(
-        "homeassistant.components.ezviz.config_flow.EzvizClient"
+        "homeassistant.components.ezviz.config_flow.TestRTSPAuth"
     ) as mock_ezviz_test_rtsp:
         instance = mock_ezviz_test_rtsp.return_value = TestRTSPAuth(
             "test-ip",

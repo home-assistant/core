@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 from pyezviz import PyEzvizError
+from pyezviz.test_cam_rtsp import AuthTestResultFailed
 
 from homeassistant.components.ezviz.const import (
     ATTR_SERIAL,
@@ -255,8 +256,9 @@ async def test_import_unexpected_exception(hass, ezviz_config_flow):
     assert result["reason"] == "unknown"
 
 
-async def test_discover_unexpected_exception(hass):
-    """Test we handle unexpected exception on discovery. Invalid ip in test."""
+async def test_discover_unexpected_exception(hass, ezviz_test_rtsp_config_flow):
+    """Test we handle unexpected exception on discovery."""
+    ezviz_test_rtsp_config_flow.side_effect = AuthTestResultFailed()
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_DISCOVERY}, data=DISCOVERY_INFO
     )

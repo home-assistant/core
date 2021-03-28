@@ -1,11 +1,10 @@
 """Config flow for ezviz."""
 import logging
-from socket import gaierror
+from socket import error as SocketConnectionRefusedError, gaierror
 
 from pyezviz import EzvizClient, PyEzvizError
 from pyezviz.test_cam_rtsp import AuthTestResultFailed, TestRTSPAuth
-from requests.exceptions import HTTPError, InvalidURL
-from urllib3.exceptions import MaxRetryError, NewConnectionError
+import requests.exceptions
 import voluptuous as vol
 
 from homeassistant import exceptions
@@ -62,11 +61,11 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         except PyEzvizError as err:
             raise InvalidAuth from err
 
-        except (ConnectionError, gaierror, NewConnectionError, MaxRetryError) as err:
-            raise InvalidURL from err
+        except requests.exceptions.ConnectionError as err:
+            raise WrongURL from err
 
-        except HTTPError as err:
-            raise ConnectionError from err
+        except requests.exceptions.HTTPError as err:
+            raise InvalidHost from err
 
         auth_data = {
             CONF_USERNAME: data[CONF_USERNAME],
@@ -91,7 +90,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         except AuthTestResultFailed as err:
             raise InvalidAuth from err
 
-        except gaierror as err:
+        except (gaierror, SocketConnectionRefusedError) as err:
             raise InvalidHost from err
 
         return self.async_create_entry(
@@ -138,10 +137,10 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
 
-            except InvalidURL:
+            except WrongURL:
                 errors["base"] = "invalid_host"
 
-            except HTTPError:
+            except InvalidHost:
                 errors["base"] = "cannot_connect"
 
             except Exception:  # pylint: disable=broad-except
@@ -180,10 +179,10 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
 
-            except InvalidURL:
+            except WrongURL:
                 errors["base"] = "invalid_host"
 
-            except HTTPError:
+            except InvalidHost:
                 errors["base"] = "cannot_connect"
 
             except Exception:  # pylint: disable=broad-except
@@ -352,4 +351,8 @@ class InvalidAuth(exceptions.HomeAssistantError):
 
 
 class InvalidHost(exceptions.HomeAssistantError):
+    """Error to indicate invalid IP."""
+
+
+class WrongURL(exceptions.HomeAssistantError):
     """Error to indicate invalid IP."""
