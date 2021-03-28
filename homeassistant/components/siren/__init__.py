@@ -154,7 +154,7 @@ class SirenEntity(ToggleEntity):
         raise NotImplementedError
 
     @property
-    def available_tones(self) -> Optional[List[int | str]]:
+    def available_tones(self) -> Optional[List[int] | List[str]]:
         """
         Return a list of available tones.
 
