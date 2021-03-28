@@ -68,7 +68,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         UNDO_UPDATE_LISTENER: entry.add_update_listener(update_listener),
     }
 
-    await hass.data[DOMAIN][entry.entry_id][COORDINATOR].async_refresh()
+    await hass.data[DOMAIN][entry.entry_id][
+        COORDINATOR
+    ].async_config_entry_first_refresh()
 
     for platform in PLATFORMS:
         hass.async_create_task(

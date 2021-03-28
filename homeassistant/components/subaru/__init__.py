@@ -86,7 +86,7 @@ async def async_setup_entry(hass, entry):
         update_interval=timedelta(seconds=FETCH_INTERVAL),
     )
 
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
     hass.data[DOMAIN][entry.entry_id] = {
         ENTRY_CONTROLLER: controller,
