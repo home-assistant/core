@@ -28,6 +28,10 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up a config entry."""
     base = Alpha2Base(entry.data["host"])
+    try:
+        await base.update_data()
+    except TimeoutError as err:
+        raise exceptions.ConfigEntryNotReady from err
     base_uh = Alpha2BaseUpdateHandler(base, 60)
     hass.data.setdefault(DOMAIN, {"connections": {}, "devices": set()})
     hass.data[DOMAIN]["connections"][entry.entry_id] = base_uh
