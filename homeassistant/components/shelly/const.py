@@ -5,6 +5,8 @@ DATA_CONFIG_ENTRY = "config_entry"
 DEVICE = "device"
 DOMAIN = "shelly"
 REST = "rest"
+SERVICE_OTA_UPDATE = "ota_update"
+SERVICES = [SERVICE_OTA_UPDATE]
 
 # Used in "_async_update_data" as timeout for polling data from devices.
 POLLING_TIMEOUT_SEC = 18

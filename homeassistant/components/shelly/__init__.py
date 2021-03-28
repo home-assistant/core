@@ -8,13 +8,14 @@ import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_AREA_ID,
     ATTR_DEVICE_ID,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry, update_coordinator
 
@@ -33,6 +34,7 @@ from .const import (
     POLLING_TIMEOUT_SEC,
     REST,
     REST_SENSORS_UPDATE_INTERVAL,
+    SERVICE_OTA_UPDATE,
     SLEEP_PERIOD_MULTIPLIER,
     UPDATE_PERIOD_MULTIPLIER,
 )
@@ -116,6 +118,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         _LOGGER.debug("Setting up offline device %s", entry.title)
         await async_device_setup(hass, entry, device)
 
+    await async_services_setup(hass, dev_reg)
+
     return True
 
 
@@ -140,6 +144,60 @@ async def async_device_setup(
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
+
+
+async def async_services_setup(
+    hass: HomeAssistant, dev_reg: device_registry.DeviceRegistry
+):
+    """Set up services."""
+
+    async def async_service_ota_update(call: ServiceCall):
+        """Trigger OTA update."""
+        if not (call.data.get(ATTR_DEVICE_ID) or call.data.get(ATTR_AREA_ID)):
+            _LOGGER.warn("OTA update service: no device or area selected")
+            return
+
+        devices = []
+        if call.data.get(ATTR_AREA_ID):
+            for area_id in call.data.get(ATTR_AREA_ID):
+                devices += [
+                    area_dev
+                    for area_dev in device_registry.async_entries_for_area(
+                        dev_reg, area_id
+                    )
+                    if DOMAIN in next(iter(area_dev.identifiers))
+                ]
+
+        if call.data.get(ATTR_DEVICE_ID):
+            for device_id in call.data.get(ATTR_DEVICE_ID):
+                device = dev_reg.async_get(device_id)
+                if not any(device.id == x.id for x in devices):
+                    devices += [device]
+
+        for device in devices:
+            entry_id = next(iter(device.config_entries))
+            entry_data = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry_id]
+            rest: ShellyDeviceRestWrapper = entry_data[REST]
+            update_data = rest.device.status["update"]
+
+            if not update_data["has_update"]:
+                _LOGGER.info("No OTA updates for %s available", device.name)
+                continue
+
+            if update_data["status"] == "updating":
+                _LOGGER.warn("OTA update already in progress for %s", device.name)
+                continue
+
+            _LOGGER.debug(
+                "OTA update service - trigger OTA update for device %s from '%s' to '%s'",
+                device.name,
+                update_data["old_version"],
+                update_data["new_version"],
+            )
+            resp = await rest.device.http_request("get", "ota", {"update": "true"})
+            _LOGGER.debug("OTA update service - response: %s", resp)
+
+    hass.services.async_register(DOMAIN, SERVICE_OTA_UPDATE, async_service_ota_update)
 
 
 class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
