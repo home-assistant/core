@@ -99,7 +99,11 @@ class WatcherBase:
 
         data = self._address_data.get(ip_address)
 
-        if data and data[MAC_ADDRESS] == mac_address and data[HOSTNAME] == hostname:
+        if (
+            data
+            and data[MAC_ADDRESS] == mac_address
+            and data[HOSTNAME].startswith(hostname)
+        ):
             # If the address data is the same no need
             # to process it
             return
@@ -198,7 +202,7 @@ class NetworkWatcher(WatcherBase):
 
     def create_task(self, task):
         """Pass a task to async_create_task since we are in async context."""
-        self.hass.async_create_task(task)
+        return self.hass.async_create_task(task)
 
 
 class DeviceTrackerWatcher(WatcherBase):
@@ -250,7 +254,7 @@ class DeviceTrackerWatcher(WatcherBase):
 
     def create_task(self, task):
         """Pass a task to async_create_task since we are in async context."""
-        self.hass.async_create_task(task)
+        return self.hass.async_create_task(task)
 
 
 class DHCPWatcher(WatcherBase):
@@ -328,7 +332,7 @@ class DHCPWatcher(WatcherBase):
 
     def create_task(self, task):
         """Pass a task to hass.add_job since we are in a thread."""
-        self.hass.add_job(task)
+        return self.hass.add_job(task)
 
 
 def _decode_dhcp_option(dhcp_options, key):
