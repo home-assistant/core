@@ -57,6 +57,10 @@ ZEROCONF = {
     "_esphomelib._tcp.local.": [
         {
             "domain": "esphome"
+        },
+        {
+            "domain": "zha",
+            "name": "tube*"
         }
     ],
     "_fbx-api._tcp.local.": [
@@ -153,11 +157,6 @@ ZEROCONF = {
     "_touch-able._tcp.local.": [
         {
             "domain": "apple_tv"
-        }
-    ],
-    "_tube_zb_gw._tcp.local.": [
-        {
-            "domain": "zha"
         }
     ],
     "_viziocast._tcp.local.": [
