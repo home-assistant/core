@@ -23,14 +23,15 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "edl21"
 CONF_SERIAL_PORT = "serial_port"
+CONF_MIN_TIME_BETWEEN_UPDATES = "min_time_between_updates"
 ICON_POWER = "mdi:flash"
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 SIGNAL_EDL21_TELEGRAM = "edl21_telegram"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_SERIAL_PORT): cv.string,
         vol.Optional(CONF_NAME, default=""): cv.string,
+        vol.Optional(CONF_MIN_TIME_BETWEEN_UPDATES, default=60): cv.positive_int,
     },
 )
 
@@ -117,6 +118,7 @@ class EDL21:
         self._hass = hass
         self._async_add_entities = async_add_entities
         self._name = config[CONF_NAME]
+        self._min_time = timedelta(seconds=config[CONF_MIN_TIME_BETWEEN_UPDATES])
         self._proto = SmlProtocol(config[CONF_SERIAL_PORT])
         self._proto.add_listener(self.event, ["SmlGetListResponse"])
 
@@ -154,7 +156,9 @@ class EDL21:
                     if self._name:
                         name = f"{self._name}: {name}"
                     new_entities.append(
-                        EDL21Entity(electricity_id, obis, name, telegram)
+                        EDL21Entity(
+                            electricity_id, obis, name, telegram, self._min_time
+                        )
                     )
                     self._registered_obis.add((electricity_id, obis))
                 elif obis not in self._OBIS_BLACKLIST:
@@ -195,14 +199,14 @@ class EDL21:
 class EDL21Entity(SensorEntity):
     """Entity reading values from EDL21 telegram."""
 
-    def __init__(self, electricity_id, obis, name, telegram):
+    def __init__(self, electricity_id, obis, name, telegram, min_time):
         """Initialize an EDL21Entity."""
         self._electricity_id = electricity_id
         self._obis = obis
         self._name = name
         self._unique_id = f"{electricity_id}_{obis}"
         self._telegram = telegram
-        self._min_time = MIN_TIME_BETWEEN_UPDATES
+        self._min_time = min_time
         self._last_update = utcnow()
         self._state_attrs = {
             "status": "status",
@@ -211,6 +215,7 @@ class EDL21Entity(SensorEntity):
             "valueSignature": "value_signature",
         }
         self._async_remove_dispatcher = None
+        logging.warn("Sensor with min time created: " + str(self._min_time))
 
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
