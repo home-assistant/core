@@ -376,7 +376,7 @@ async def test_device_tracker_hostname_and_macaddress_exists_before_start(hass):
         "device_tracker.august_connect",
         STATE_HOME,
         {
-            ATTR_HOST_NAME: "connect",
+            ATTR_HOST_NAME: "Connect",
             ATTR_IP: "192.168.210.56",
             ATTR_SOURCE_TYPE: SOURCE_TYPE_ROUTER,
             ATTR_MAC: "B8:B7:F1:6D:B5:33",
@@ -423,7 +423,7 @@ async def test_device_tracker_hostname_and_macaddress_after_start(hass):
             "device_tracker.august_connect",
             STATE_HOME,
             {
-                ATTR_HOST_NAME: "connect",
+                ATTR_HOST_NAME: "Connect",
                 ATTR_IP: "192.168.210.56",
                 ATTR_SOURCE_TYPE: SOURCE_TYPE_ROUTER,
                 ATTR_MAC: "B8:B7:F1:6D:B5:33",
