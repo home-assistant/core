@@ -156,6 +156,12 @@ class VlcDevice(MediaPlayerEntity):
                 self._media_artist = info.get(0, {}).get("artist")
                 self._media_title = info.get(0, {}).get("title")
 
+                if not self._media_title:
+                    # Fall back to filename.
+                    data_info = info.get("data")
+                    if data_info:
+                        self._media_title = data_info["filename"]
+
         except (CommandError, LuaError, ParseError) as err:
             _LOGGER.error("Command error: %s", err)
         except (ConnErr, EOFError) as err:
