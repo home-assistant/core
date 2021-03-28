@@ -25,6 +25,54 @@ def restore_logging_class():
     logging.setLoggerClass(klass)
 
 
+async def test_log_filtering(hass):
+    """Test logging filters."""
+
+    assert await async_setup_component(
+        hass,
+        "logger",
+        {
+            "logger": {
+                "default": "warning",
+                "logs": {
+                    "test.filter": "info",
+                },
+                "filters": {
+                    "test.filter": [
+                        "doesntmatchanything",
+                        ".*shouldfilterall.*",
+                        "^filterthis:.*",
+                    ],
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    logger = logging.getLogger("test.filter")
+
+    def msg_test(msg, result, args=None):
+        record = logger.makeRecord(
+            "test.filter", logging.WARNING, "test_log_filtering", 0, msg, args, None
+        )
+        assert logger.filter(record) == result
+
+    msg_test("this line containing shouldfilterall should be filtered", False)
+    msg_test("this line should not be filtered filterthis:", True)
+    msg_test("filterthis: should be filtered", False)
+    msg_test("format string shouldfilter%s", False, args=("all"))
+    msg_test("format string shouldfilter%s", True, args=("none"))
+    # Filtering should work even if log level is modified
+    await hass.services.async_call(
+        "logger",
+        "set_level",
+        {"test.filter": "warning"},
+        blocking=True,
+    )
+    assert logger.getEffectiveLevel() == logging.WARNING
+    msg_test("this line containing shouldfilterall should still be filtered", False)
+
+
 async def test_setting_level(hass):
     """Test we set log levels."""
     mocks = defaultdict(Mock)
