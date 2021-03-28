@@ -41,7 +41,6 @@ from .core.const import (
     CLUSTER_COMMANDS_SERVER,
     CLUSTER_TYPE_IN,
     CLUSTER_TYPE_OUT,
-    CONF_OPTIONS_SCHEMA,
     CUSTOM_CONFIGURATION,
     DATA_ZHA,
     DATA_ZHA_GATEWAY,
@@ -55,6 +54,7 @@ from .core.const import (
     WARNING_DEVICE_SQUAWK_MODE_ARMED,
     WARNING_DEVICE_STROBE_HIGH,
     WARNING_DEVICE_STROBE_YES,
+    ZHA_CONFIG_SCHEMAS,
 )
 from .core.group import GroupMember
 from .core.helpers import (
@@ -891,9 +891,6 @@ async def async_binding_operation(zha_gateway, source_ieee, target_ieee, operati
 async def websocket_get_configuration(hass, connection, msg):
     """Get ZHA configuration."""
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
-    custom_configuration = zha_gateway.config_entry.options.get(
-        CUSTOM_CONFIGURATION, {"zha_options": {}}
-    )
     import voluptuous_serialize  # pylint: disable=import-outside-toplevel
 
     def custom_serializer(schema: Any) -> Any:
@@ -907,21 +904,24 @@ async def websocket_get_configuration(hass, connection, msg):
 
         return cv.custom_serializer(schema)
 
-    data = {
-        "schemas": {
-            "zha_options": voluptuous_serialize.convert(
-                CONF_OPTIONS_SCHEMA, custom_serializer=custom_serializer
-            )
-        },
-        "data": custom_configuration,
-    }
+    data = {"schemas": {}, "data": {}}
+    for section, schema in ZHA_CONFIG_SCHEMAS.items():
+        data["schemas"][section] = voluptuous_serialize.convert(
+            schema, custom_serializer=custom_serializer
+        )
+        data["data"][section] = zha_gateway.config_entry.options.get(
+            CUSTOM_CONFIGURATION, {}
+        ).get(section, {})
     connection.send_result(msg[ID], data)
 
 
 @websocket_api.require_admin
 @websocket_api.async_response
 @websocket_api.websocket_command(
-    {vol.Required(TYPE): "zha/configuration/update", vol.Required("data"): object}
+    {
+        vol.Required(TYPE): "zha/configuration/update",
+        vol.Required("data"): ZHA_CONFIG_SCHEMAS,
+    }
 )
 async def websocket_update_zha_configuration(hass, connection, msg):
     """Update the ZHA configuration."""

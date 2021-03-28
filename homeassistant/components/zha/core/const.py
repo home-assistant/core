@@ -129,10 +129,10 @@ CONF_RADIO_TYPE = "radio_type"
 CONF_USB_PATH = "usb_path"
 CONF_ZIGPY = "zigpy_config"
 
-CONF_OPTIONS_SCHEMA = vol.Schema(
+CONF_ZHA_OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DEFAULT_LIGHT_TRANSITION): cv.positive_int,
-        vol.Optional(CONF_ENABLE_IDENTIFY_ON_JOIN, default=True): cv.boolean,
+        vol.Required(CONF_ENABLE_IDENTIFY_ON_JOIN, default=True): cv.boolean,
     }
 )
 
@@ -190,6 +190,7 @@ PRESET_SCHEDULE = "schedule"
 PRESET_COMPLEX = "complex"
 
 ZHA_OPTIONS = "zha_options"
+ZHA_CONFIG_SCHEMAS = {ZHA_OPTIONS: CONF_ZHA_OPTIONS_SCHEMA}
 
 
 class RadioType(enum.Enum):
