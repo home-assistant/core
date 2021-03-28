@@ -15,6 +15,7 @@ from homeassistant.components.tesla.const import (
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_WAKE_ON_START,
     DOMAIN,
+    ERROR_URL_NOT_DETECTED,
     MIN_SCAN_INTERVAL,
 )
 from homeassistant.const import (
@@ -25,6 +26,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     HTTP_NOT_FOUND,
 )
+from homeassistant.helpers.network import NoURLAvailableError
 
 from tests.common import MockConfigEntry
 
@@ -90,6 +92,32 @@ async def test_external_url(hass):
     )
     assert result["description_placeholders"] is None
     return result
+
+
+async def test_external_url_no_hass_url_exception(hass):
+    """Test we handle case with no detectable hass external url."""
+    result = await test_warning_form(hass)
+    flow_id = result["flow_id"]
+    with patch(
+        "homeassistant.components.tesla.config_flow.get_url",
+        side_effect=NoURLAvailableError,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            user_input={},
+        )
+    # "type": RESULT_TYPE_EXTERNAL_STEP,
+    # "flow_id": self.flow_id,
+    # "handler": self.handler,
+    # "step_id": step_id,
+    # "url": url,
+    # "description_placeholders": description_placeholders,
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["handler"] == DOMAIN
+    assert result["step_id"] == "user"
+    assert result["data_schema"] == vol.Schema({})
+    assert result["errors"] == {"base": ERROR_URL_NOT_DETECTED}
+    assert result["description_placeholders"] == {}
 
 
 async def test_external_url_callback(hass):

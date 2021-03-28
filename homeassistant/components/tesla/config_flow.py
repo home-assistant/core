@@ -25,7 +25,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import UnknownFlow
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import aiohttp_client, config_validation as cv
-from homeassistant.helpers.network import get_url
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 
 from .const import (
     AUTH_CALLBACK_NAME,
@@ -37,6 +37,7 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_WAKE_ON_START,
     DOMAIN,
+    ERROR_URL_NOT_DETECTED,
     MIN_SCAN_INTERVAL,
 )
 
@@ -85,19 +86,28 @@ class TeslaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
         host_url: URL = self.controller.get_oauth_url()
-        hass_proxy_url: URL = URL(get_url(self.hass, prefer_external=True)).with_path(
-            AUTH_PROXY_PATH
-        )
+        try:
+            hass_proxy_url: URL = URL(
+                get_url(self.hass, prefer_external=True)
+            ).with_path(AUTH_PROXY_PATH)
 
-        TeslaConfigFlow.proxy: TeslaProxy = TeslaProxy(
-            proxy_url=hass_proxy_url,
-            host_url=host_url,
-        )
-        TeslaConfigFlow.callback_url: URL = (
-            URL(get_url(self.hass, prefer_external=True))
-            .with_path(AUTH_CALLBACK_PATH)
-            .with_query({"flow_id": self.flow_id})
-        )
+            TeslaConfigFlow.proxy: TeslaProxy = TeslaProxy(
+                proxy_url=hass_proxy_url,
+                host_url=host_url,
+            )
+            TeslaConfigFlow.callback_url: URL = (
+                URL(get_url(self.hass, prefer_external=True))
+                .with_path(AUTH_CALLBACK_PATH)
+                .with_query({"flow_id": self.flow_id})
+            )
+        except NoURLAvailableError:
+            self.warning_shown = False
+            return self.async_show_form(
+                step_id="user",
+                data_schema=vol.Schema({}, extra=vol.ALLOW_EXTRA),
+                errors={"base": ERROR_URL_NOT_DETECTED},
+                description_placeholders={},
+            )
 
         proxy_url: URL = self.proxy.access_url().with_query(
             {"config_flow_id": self.flow_id, "callback_url": str(self.callback_url)}
