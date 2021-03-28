@@ -89,6 +89,9 @@ aiobotocore==1.2.2
 # homeassistant.components.dhcp
 aiodiscover==1.1.0
 
+# homeassistant.components.dhcp
+aiodiscover==1.1.0
+
 # homeassistant.components.dnsip
 # homeassistant.components.minecraft_server
 aiodns==2.0.0
@@ -1235,7 +1238,7 @@ zeep[async]==4.0.0
 zeroconf==0.29.0
 
 # homeassistant.components.zha
-zha-quirks==0.0.54
+zha-quirks==0.0.55
 
 # homeassistant.components.zha
 zigpy-cc==0.5.2

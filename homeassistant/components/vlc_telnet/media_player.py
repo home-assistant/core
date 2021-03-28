@@ -36,6 +36,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -141,7 +142,12 @@ class VlcDevice(MediaPlayerEntity):
 
             if self._state != STATE_IDLE:
                 self._media_duration = self._vlc.get_length()
-                self._media_position = self._vlc.get_time()
+                vlc_position = self._vlc.get_time()
+
+                # Check if current position is stale.
+                if vlc_position != self._media_position:
+                    self._media_position_updated_at = dt_util.utcnow()
+                    self._media_position = vlc_position
 
             info = self._vlc.info()
             _LOGGER.debug("Info: %s", info)
@@ -220,8 +226,7 @@ class VlcDevice(MediaPlayerEntity):
 
     def media_seek(self, position):
         """Seek the media to a specific location."""
-        track_length = self._vlc.get_length() / 1000
-        self._vlc.seek(position / track_length)
+        self._vlc.seek(int(position))
 
     def mute_volume(self, mute):
         """Mute the volume."""
