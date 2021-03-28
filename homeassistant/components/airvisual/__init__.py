@@ -192,8 +192,7 @@ async def async_setup_entry(hass, config_entry):
         cloud_api = CloudAPI(config_entry.data[CONF_API_KEY], session=websession)
 
         async def async_update_data():
-            """Get new data from the API."""
-            """Ressess the interval between 2 requests to Cloud Server."""
+            """Reassess interval for requests and get new data from the API."""
             async_sync_geo_coordinator_update_intervals(
                 hass, config_entry.data[CONF_API_KEY]
             )
