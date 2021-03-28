@@ -28,6 +28,35 @@ def com_port():
     return port
 
 
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
+async def test_discovery(detect_mock, hass):
+    """Test zeroconf flow -- radio detected."""
+    service_info = {
+        "host": "_esphomelib._tcp.local.",
+        "port": 6053,
+        "hostname": "_tube_zb_gw._tcp.local.",
+        "properties": {"name": "tube_123456"},
+    }
+    flow = await hass.config_entries.flow.async_init(
+        "zha", context={"source": "zeroconf"}, data=service_info
+    )
+    result = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], user_input={}
+    )
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "socket://_tube_zb_gw._tcp.local:6638"
+    assert result["data"] == {
+        "device": {
+            "baudrate": 115200,
+            "flow_control": None,
+            "path": "socket://_tube_zb_gw._tcp.local:6638",
+        },
+        CONF_RADIO_TYPE: "znp",
+    }
+
+
 @patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
 @patch(
     "homeassistant.components.zha.config_flow.detect_radios",
