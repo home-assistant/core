@@ -1,12 +1,10 @@
 """Test the moehlenhoff_alpha2 config flow."""
-from unittest.mock import PropertyMock
+from unittest.mock import PropertyMock, patch
 
 from moehlenhoff_alpha2 import Alpha2Base
 
 from homeassistant.components.moehlenhoff_alpha2.const import DOMAIN
 from homeassistant.helpers.typing import HomeAssistantType
-
-from tests.async_mock import patch
 
 
 async def test_duplicate_error(hass: HomeAssistantType):
