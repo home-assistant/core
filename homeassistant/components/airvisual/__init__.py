@@ -196,7 +196,6 @@ async def async_setup_entry(hass, config_entry):
             async_sync_geo_coordinator_update_intervals(
                 hass, config_entry.data[CONF_API_KEY]
             )
-
             """Get new data from the API."""
             if CONF_CITY in config_entry.data:
                 api_coro = cloud_api.air_quality.city(
