@@ -220,8 +220,7 @@ class VlcDevice(MediaPlayerEntity):
 
     def media_seek(self, position):
         """Seek the media to a specific location."""
-        track_length = self._vlc.get_length() / 1000
-        self._vlc.seek(position / track_length)
+        self._vlc.seek(int(position))
 
     def mute_volume(self, mute):
         """Mute the volume."""

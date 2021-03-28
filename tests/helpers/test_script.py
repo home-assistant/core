@@ -2059,7 +2059,7 @@ async def test_choose(hass, caplog, var, result):
             {"result": {"event": "test_event", "event_data": {"choice": "second"}}}
         ]
     if var == 3:
-        expected_trace["0/default/sequence/0"] = [
+        expected_trace["0/default/0"] = [
             {"result": {"event": "test_event", "event_data": {"choice": "default"}}}
         ]
     assert_action_trace(expected_trace)

@@ -254,14 +254,15 @@ async def test_setup_config_ssl(
     config = {"influxdb": config_base.copy()}
     config["influxdb"].update(config_ext)
 
-    with patch("os.access", return_value=True):
-        with patch("os.path.isfile", return_value=True):
-            assert await async_setup_component(hass, influxdb.DOMAIN, config)
-            await hass.async_block_till_done()
+    with patch("os.access", return_value=True), patch(
+        "os.path.isfile", return_value=True
+    ):
+        assert await async_setup_component(hass, influxdb.DOMAIN, config)
+        await hass.async_block_till_done()
 
-            assert hass.bus.listen.called
-            assert hass.bus.listen.call_args_list[0][0][0] == EVENT_STATE_CHANGED
-            assert expected_client_args.items() <= mock_client.call_args.kwargs.items()
+        assert hass.bus.listen.called
+        assert hass.bus.listen.call_args_list[0][0][0] == EVENT_STATE_CHANGED
+        assert expected_client_args.items() <= mock_client.call_args.kwargs.items()
 
 
 @pytest.mark.parametrize(

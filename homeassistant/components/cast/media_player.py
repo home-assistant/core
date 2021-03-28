@@ -706,15 +706,15 @@ class CastDevice(MediaPlayerEntity):
         support = SUPPORT_CAST
         media_status = self._media_status()[0]
 
-        if self.cast_status:
-            if self.cast_status.volume_control_type != VOLUME_CONTROL_TYPE_FIXED:
-                support |= SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET
+        if (
+            self.cast_status
+            and self.cast_status.volume_control_type != VOLUME_CONTROL_TYPE_FIXED
+        ):
+            support |= SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET
 
         if media_status:
             if media_status.supports_queue_next:
-                support |= SUPPORT_PREVIOUS_TRACK
-            if media_status.supports_queue_next:
-                support |= SUPPORT_NEXT_TRACK
+                support |= SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
             if media_status.supports_seek:
                 support |= SUPPORT_SEEK
 

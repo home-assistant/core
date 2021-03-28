@@ -2348,7 +2348,7 @@ xs1-api-client==3.0.0
 yalesmartalarmclient==0.1.6
 
 # homeassistant.components.august
-yalexs==1.1.6
+yalexs==1.1.9
 
 # homeassistant.components.yeelight
 yeelight==0.5.4
@@ -2369,7 +2369,7 @@ zengge==0.2
 zeroconf==0.29.0
 
 # homeassistant.components.zha
-zha-quirks==0.0.54
+zha-quirks==0.0.55
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9

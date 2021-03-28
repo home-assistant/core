@@ -472,6 +472,9 @@ logi_circle==0.2.2
 # homeassistant.components.luftdaten
 luftdaten==0.6.4
 
+# homeassistant.components.maxcube
+maxcube-api==0.4.1
+
 # homeassistant.components.mythicbeastsdns
 mbddns==0.1.2
 
@@ -1212,7 +1215,7 @@ xknx==0.17.4
 xmltodict==0.12.0
 
 # homeassistant.components.august
-yalexs==1.1.6
+yalexs==1.1.9
 
 # homeassistant.components.yeelight
 yeelight==0.5.4
@@ -1224,7 +1227,7 @@ zeep[async]==4.0.0
 zeroconf==0.29.0
 
 # homeassistant.components.zha
-zha-quirks==0.0.54
+zha-quirks==0.0.55
 
 # homeassistant.components.zha
 zigpy-cc==0.5.2
