@@ -24,7 +24,6 @@ UNITS_OF_MEASUREMENT = {
     sensor.DEVICE_CLASS_ENERGY: "kWh",  # energy (Wh/kWh)
     sensor.DEVICE_CLASS_POWER_FACTOR: PERCENTAGE,  # power factor (no unit, min: -1.0, max: 1.0)
     sensor.DEVICE_CLASS_VOLTAGE: "V",  # voltage (V)
-    sensor.DEVICE_CLASS_FORCE: "N",  # force (N)
     sensor.DEVICE_CLASS_MASS: "kg",  # mass (kg/lb)
 }
 
