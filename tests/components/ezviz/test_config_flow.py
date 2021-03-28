@@ -96,7 +96,7 @@ async def test_user_form(hass, ezviz, ezviz_test_rtsp):
 
 
 async def test_user_custom_url(hass, ezviz):
-    """Test we handle unexpected exception."""
+    """Test custom url step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -107,6 +107,13 @@ async def test_user_custom_url(hass, ezviz):
     )
 
     assert result["type"] == RESULT_TYPE_FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "test-user"},
+    )
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
 
 
 async def test_async_step_import(hass, ezviz):
@@ -269,3 +276,25 @@ async def test_discover_unexpected_exception(hass):
     assert result["type"] == RESULT_TYPE_ABORT
     assert len(mock_setup.mock_calls) == 0
     assert len(mock_setup_entry.mock_calls) == 0
+
+
+async def test_user_custom_url_exception(hass, ezviz_config_flow):
+    """Test we handle unexpected exception."""
+    ezviz_config_flow.side_effect = PyEzvizError()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "test-user", CONF_PASSWORD: "test-pass", CONF_URL: "customize"},
+    )
+
+    assert result["type"] == RESULT_TYPE_FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "test-user"},
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
