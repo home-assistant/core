@@ -1,4 +1,5 @@
 """Test the DHCP discovery integration."""
+import datetime
 import threading
 from unittest.mock import patch
 
@@ -21,8 +22,9 @@ from homeassistant.const import (
     STATE_NOT_HOME,
 )
 from homeassistant.setup import async_setup_component
+import homeassistant.util.dt as dt_util
 
-from tests.common import mock_coro
+from tests.common import async_fire_time_changed, mock_coro
 
 # connect b8:b7:f1:6d:b5:33 192.168.210.56
 RAW_DHCP_REQUEST = (
@@ -714,5 +716,50 @@ async def test_aiodiscover_does_not_call_again_on_shorter_hostname(hass):
     assert mock_init.mock_calls[1][2]["data"] == {
         dhcp.IP_ADDRESS: "192.168.210.56",
         dhcp.HOSTNAME: "irobot-abcdef",
+        dhcp.MAC_ADDRESS: "b8b7f16db533",
+    }
+
+
+async def test_aiodiscover_finds_new_hosts_after_interval(hass):
+    """Test aiodiscover finds new host after interval."""
+    with patch.object(
+        hass.config_entries.flow, "async_init", return_value=mock_coro()
+    ) as mock_init, patch(
+        "homeassistant.components.dhcp.DiscoverHosts.async_discover",
+        return_value=[],
+    ):
+        device_tracker_watcher = dhcp.NetworkWatcher(
+            hass,
+            {},
+            [{"domain": "mock-domain", "hostname": "connect", "macaddress": "B8B7F1*"}],
+        )
+        await device_tracker_watcher.async_start()
+        await hass.async_block_till_done()
+
+    assert len(mock_init.mock_calls) == 0
+
+    with patch.object(
+        hass.config_entries.flow, "async_init", return_value=mock_coro()
+    ) as mock_init, patch(
+        "homeassistant.components.dhcp.DiscoverHosts.async_discover",
+        return_value=[
+            {
+                dhcp.DISCOVERY_IP_ADDRESS: "192.168.210.56",
+                dhcp.DISCOVERY_HOSTNAME: "connect",
+                dhcp.DISCOVERY_MAC_ADDRESS: "b8b7f16db533",
+            }
+        ],
+    ):
+        async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=65))
+        await hass.async_block_till_done()
+        await device_tracker_watcher.async_stop()
+        await hass.async_block_till_done()
+
+    assert len(mock_init.mock_calls) == 1
+    assert mock_init.mock_calls[0][1][0] == "mock-domain"
+    assert mock_init.mock_calls[0][2]["context"] == {"source": "dhcp"}
+    assert mock_init.mock_calls[0][2]["data"] == {
+        dhcp.IP_ADDRESS: "192.168.210.56",
+        dhcp.HOSTNAME: "connect",
         dhcp.MAC_ADDRESS: "b8b7f16db533",
     }
