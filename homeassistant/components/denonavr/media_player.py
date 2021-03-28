@@ -10,6 +10,7 @@ from denonavr.const import POWER_ON
 from denonavr.exceptions import (
     AvrCommandError,
     AvrForbiddenError,
+    AvrNetworkError,
     AvrTimoutError,
     DenonAvrError,
 )
@@ -146,6 +147,14 @@ class DenonDevice(MediaPlayerEntity):
                 if self._available is True:
                     _LOGGER.warning(
                         "Timeout connecting to Denon AVR receiver at host %s. Device is unavailable",
+                        self._receiver.host,
+                    )
+                    self._available = False
+            except AvrNetworkError:
+                available = False
+                if self._available is True:
+                    _LOGGER.warning(
+                        "Network error connecting to Denon AVR receiver at host %s. Device is unavailable",
                         self._receiver.host,
                     )
                     self._available = False

@@ -3,7 +3,7 @@ import logging
 from typing import Optional
 
 from denonavr import DenonAVR
-from denonavr.exceptions import AvrTimoutError
+from denonavr.exceptions import AvrNetworkError, AvrTimoutError
 import httpx
 
 _LOGGER = logging.getLogger(__name__)
@@ -86,6 +86,11 @@ class ConnectDenonAVR:
         except AvrTimoutError:
             _LOGGER.error(
                 "Timeout error during setup of denonavr on host %s", self._host
+            )
+            return False
+        except AvrNetworkError:
+            _LOGGER.error(
+                "Network error during setup of denonavr on host %s", self._host
             )
             return False
 
