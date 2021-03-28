@@ -1219,3 +1219,144 @@ async def test_implemented_percentage(hass, speed_count, percentage_step):
     state = hass.states.get("fan.mechanical_ventilation")
     attributes = state.attributes
     assert attributes["percentage_step"] == percentage_step
+
+
+async def test_implemented_preset_mode(hass):
+    """Test a fan that implements preset_mode."""
+    await setup.async_setup_component(
+        hass,
+        "fan",
+        {
+            "fan": {
+                "platform": "template",
+                "fans": {
+                    "mechanical_ventilation": {
+                        "friendly_name": "Mechanische ventilatie",
+                        "unique_id": "a2fd2e38-674b-4b47-b5ef-cc2362211a72",
+                        "value_template": "{{ states('light.mv_snelheid') }}",
+                        "preset_mode_template": "{{ 'any' }}",
+                        "preset_modes": ["any"],
+                        "set_preset_mode": [
+                            {
+                                "service": "light.turn_on",
+                                "target": {
+                                    "entity_id": "light.mv_snelheid",
+                                },
+                                "data": {"brightness_pct": "{{ percentage }}"},
+                            }
+                        ],
+                        "turn_on": [
+                            {
+                                "service": "switch.turn_off",
+                                "target": {
+                                    "entity_id": "switch.mv_automatisch",
+                                },
+                            },
+                            {
+                                "service": "light.turn_on",
+                                "target": {
+                                    "entity_id": "light.mv_snelheid",
+                                },
+                                "data": {"brightness_pct": 40},
+                            },
+                        ],
+                        "turn_off": [
+                            {
+                                "service": "light.turn_off",
+                                "target": {
+                                    "entity_id": "light.mv_snelheid",
+                                },
+                            },
+                            {
+                                "service": "switch.turn_on",
+                                "target": {
+                                    "entity_id": "switch.mv_automatisch",
+                                },
+                            },
+                        ],
+                    },
+                },
+            },
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
+
+    state = hass.states.get("fan.mechanical_ventilation")
+    attributes = state.attributes
+    assert attributes["percentage"] is None
+
+
+async def test_implemented_speed(hass):
+    """Test a fan that implements speed."""
+    await setup.async_setup_component(
+        hass,
+        "fan",
+        {
+            "fan": {
+                "platform": "template",
+                "fans": {
+                    "mechanical_ventilation": {
+                        "friendly_name": "Mechanische ventilatie",
+                        "unique_id": "a2fd2e38-674b-4b47-b5ef-cc2362211a72",
+                        "value_template": "{{ states('light.mv_snelheid') }}",
+                        "speed_template": "{{ 'fast' }}",
+                        "speeds": ["slow", "fast"],
+                        "set_preset_mode": [
+                            {
+                                "service": "light.turn_on",
+                                "target": {
+                                    "entity_id": "light.mv_snelheid",
+                                },
+                                "data": {"brightness_pct": "{{ percentage }}"},
+                            }
+                        ],
+                        "turn_on": [
+                            {
+                                "service": "switch.turn_off",
+                                "target": {
+                                    "entity_id": "switch.mv_automatisch",
+                                },
+                            },
+                            {
+                                "service": "light.turn_on",
+                                "target": {
+                                    "entity_id": "light.mv_snelheid",
+                                },
+                                "data": {"brightness_pct": 40},
+                            },
+                        ],
+                        "turn_off": [
+                            {
+                                "service": "light.turn_off",
+                                "target": {
+                                    "entity_id": "light.mv_snelheid",
+                                },
+                            },
+                            {
+                                "service": "switch.turn_on",
+                                "target": {
+                                    "entity_id": "switch.mv_automatisch",
+                                },
+                            },
+                        ],
+                    },
+                },
+            },
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
+
+    state = hass.states.get("fan.mechanical_ventilation")
+    attributes = state.attributes
+    assert attributes["percentage"] == 100
+    assert attributes["speed"] == "fast"
