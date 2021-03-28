@@ -116,9 +116,7 @@ async def test_dhcp_renewal_match_hostname_and_macaddress(hass):
 
     packet = Ether(RAW_DHCP_RENEWAL)
 
-    with patch.object(
-        hass.config_entries.flow, "async_init", return_value=mock_coro()
-    ) as mock_init:
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
         dhcp_watcher.handle_dhcp_packet(packet)
         # Ensure no change is ignored
         dhcp_watcher.handle_dhcp_packet(packet)
@@ -128,7 +126,7 @@ async def test_dhcp_renewal_match_hostname_and_macaddress(hass):
     assert mock_init.mock_calls[0][2]["context"] == {"source": "dhcp"}
     assert mock_init.mock_calls[0][2]["data"] == {
         dhcp.IP_ADDRESS: "192.168.1.120",
-        dhcp.HOSTNAME: "iRobot-AE9EC12DD3B04885BCBFA36AFB01E1CC",
+        dhcp.HOSTNAME: "irobot-ae9ec12dd3b04885bcbfa36afb01e1cc",
         dhcp.MAC_ADDRESS: "50147903852c",
     }
 
