@@ -178,7 +178,7 @@ class NetworkWatcher(WatcherBase):
         self.async_start_discover()
 
     @callback
-    def async_start_discover(self):
+    def async_start_discover(self, *_):
         """Start a new discovery task if one is not running."""
         if self._discover_task and not self._discover_task.done():
             return
