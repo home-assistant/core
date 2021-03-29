@@ -7,7 +7,7 @@ from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN  # pylint:disable=unused-import
 
-STEP_USER_DATA_SCHEMA = vol.Schema({"api_key": str})
+STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
 
 
 class Hub:
