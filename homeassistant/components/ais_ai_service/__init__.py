@@ -2370,9 +2370,19 @@ async def async_setup(hass, config):
         # set the flag to info that the AIS start part is done - this is needed to don't say some info before this flag
         ais_global.G_AIS_START_IS_DONE = True
 
-    async def set_context(service):
+    async def async_set_context(service):
         """Set the context in app."""
         context = service.data[ATTR_TEXT]
+        # get audio types again if the was a network problem on start
+        if ais_global.G_AIS_START_IS_DONE:
+            if context == "radio":
+                types = hass.states.get("input_select.radio_type").attributes.get(
+                    "options", []
+                )
+                if len(types) < 2:
+                    await hass.services.async_call("ais_cloud", "audio_type")
+            # TODO for the rest of audio
+
         if context == "ais_tv":
             hass.states.async_set("sensor.ais_player_mode", "ais_tv")
         elif context == "ais_tv_on":
@@ -2409,6 +2419,24 @@ async def async_setup(hass, config):
             hass.states.async_set("sensor.ais_tv_activity", "settings")
             _say_it(hass, "Ustawienia aplikacji")
             await _publish_command_to_frame(hass, "goToActivity", "SettingsActivity")
+        elif context == "radio_public":
+            hass.states.async_set("sensor.ais_player_mode", "radio_player")
+            hass.states.async_set("sensor.ais_radio_origin", "public")
+            hass.states.async_set("sensor.radiolist", -1, {})
+            atrr = hass.states.get("input_select.radio_type").attributes
+            hass.states.async_set("input_select.radio_type", "", atrr)
+        elif context == "radio_private":
+            hass.states.async_set("sensor.ais_player_mode", "radio_player")
+            hass.states.async_set("sensor.ais_radio_origin", "private")
+            hass.states.async_set("sensor.radiolist", -1, {})
+            atrr = hass.states.get("input_select.radio_type").attributes
+            hass.states.async_set("input_select.radio_type", "", atrr)
+        elif context == "radio_shared":
+            hass.states.async_set("sensor.ais_player_mode", "radio_player")
+            hass.states.async_set("sensor.ais_radio_origin", "shared")
+            hass.states.async_set("sensor.radiolist", -1, {})
+            atrr = hass.states.get("input_select.radio_type").attributes
+            hass.states.async_set("input_select.radio_type", "", atrr)
         else:
             for idx, menu in enumerate(GROUP_ENTITIES, start=0):
                 context_key_words = menu["context_key_words"]
@@ -2845,7 +2873,7 @@ async def async_setup(hass, config):
     hass.services.async_register(
         DOMAIN, "on_new_iot_device_selection", on_new_iot_device_selection
     )
-    hass.services.async_register(DOMAIN, "set_context", set_context)
+    hass.services.async_register(DOMAIN, "set_context", async_set_context)
     hass.services.async_register(DOMAIN, "check_local_ip", check_local_ip)
     hass.services.async_register(DOMAIN, "switch_ui", switch_ui)
     hass.services.async_register(DOMAIN, "check_night_mode", check_night_mode)
