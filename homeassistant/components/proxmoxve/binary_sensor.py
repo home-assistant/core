@@ -15,6 +15,7 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
 
     for host_config in discovery_info["config"][DOMAIN]:
         host_name = host_config["host"]
+        host_name_coordinators = hass.data[DOMAIN][COORDINATORS][host_name]
 
         if hass.data[PROXMOX_CLIENTS][host_name] is None:
             continue
@@ -23,7 +24,7 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
             node_name = node_config["node"]
 
             for vm_id in node_config["vms"]:
-                coordinator = hass.data[DOMAIN][COORDINATORS][host_name][node_name][
+                coordinator = host_name_coordinators[node_name][
                     vm_id
                 ]
                 coordinator_data = coordinator.data
@@ -39,7 +40,7 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
                 sensors.append(vm_sensor)
 
             for container_id in node_config["containers"]:
-                coordinator = hass.data[DOMAIN][COORDINATORS][host_name][node_name][
+                coordinator = host_name_coordinators[node_name][
                     container_id
                 ]
                 coordinator_data = coordinator.data

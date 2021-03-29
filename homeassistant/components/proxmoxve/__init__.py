@@ -130,12 +130,12 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
     await hass.async_add_executor_job(build_client)
 
-    hass.data[DOMAIN][COORDINATORS] = {}
+    coordinators = hass.data[DOMAIN][COORDINATORS] = {}
 
     # Create a coordinator for each vm/container
     for host_config in config[DOMAIN]:
         host_name = host_config["host"]
-        hass.data[DOMAIN][COORDINATORS][host_name] = {}
+        coordinators[host_name] = {}
 
         proxmox_client = hass.data[PROXMOX_CLIENTS][host_name]
 
@@ -147,7 +147,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
         for node_config in host_config["nodes"]:
             node_name = node_config["node"]
-            hass.data[DOMAIN][COORDINATORS][host_name][node_name] = {}
+            coordinators[host_name][node_name] = {}
 
             for vm_id in node_config["vms"]:
                 coordinator = create_coordinator_container_vm(
@@ -157,7 +157,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
                 # Fetch initial data
                 await coordinator.async_refresh()
 
-                hass.data[DOMAIN][COORDINATORS][host_name][node_name][
+                coordinators[host_name][node_name][
                     vm_id
                 ] = coordinator
 
@@ -169,7 +169,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
                 # Fetch initial data
                 await coordinator.async_refresh()
 
-                hass.data[DOMAIN][COORDINATORS][host_name][node_name][
+                coordinators[host_name][node_name][
                     container_id
                 ] = coordinator
 
