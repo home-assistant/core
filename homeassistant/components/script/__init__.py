@@ -354,9 +354,8 @@ class ScriptEntity(ToggleEntity):
         with trace_script(
             self.hass, self.object_id, self._raw_config, context
         ) as script_trace:
-            script_trace.set_variables(variables)
             # Prepare tracing the execution of the script's sequence
-            script_trace.set_action_trace(trace_get())
+            script_trace.set_trace(trace_get())
             with trace_path("sequence"):
                 return await self.script.async_run(variables, context)
 
