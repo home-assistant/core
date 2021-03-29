@@ -86,7 +86,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     }
 
     # Fetch initial data so we have data when entities subscribe
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
     # Setup components
     hass.async_create_task(
