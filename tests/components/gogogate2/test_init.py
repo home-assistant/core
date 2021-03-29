@@ -6,7 +6,6 @@ from gogogate2_api import GogoGate2Api
 import pytest
 
 from homeassistant.components.gogogate2 import DEVICE_TYPE_GOGOGATE2, async_setup_entry
-from homeassistant.components.gogogate2.common import DeviceDataUpdateCoordinator
 from homeassistant.components.gogogate2.const import DEVICE_TYPE_ISMARTGATE, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
