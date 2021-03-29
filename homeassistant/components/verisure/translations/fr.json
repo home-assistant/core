@@ -39,7 +39,7 @@
             "init": {
                 "data": {
                     "lock_code_digits": "Nombre de chiffres du code NIP pour les serrures",
-                    "lock_default_code": "Code NIP par d\u00e9faut pour les serrures, utilis\u00e9 si aucun n'est indiqu\u00e9"
+                    "lock_default_code": "Code PIN par d\u00e9faut pour les serrures, utilis\u00e9 si aucun n'est indiqu\u00e9"
                 }
             }
         }
