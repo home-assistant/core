@@ -24,6 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dev_reg, entity_registry as ent_reg
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -209,7 +210,7 @@ async def async_setup_entry(hass, entry):
         )
         task.add_done_callback(partial(start_websocket_session, platform))
 
-    await cleanup_plex_devices(hass, entry)
+    async_cleanup_plex_devices(hass, entry)
 
     def get_plex_account(plex_server):
         try:
@@ -253,12 +254,11 @@ async def async_options_updated(hass, entry):
         hass.data[PLEX_DOMAIN][SERVERS][server_id].options = entry.options
 
 
-async def cleanup_plex_devices(hass, entry):
+@callback
+def async_cleanup_plex_devices(hass, entry):
     """Clean up old and invalid devices from the registry."""
-    device_registry, entity_registry = await asyncio.gather(
-        hass.helpers.device_registry.async_get_registry(),
-        hass.helpers.entity_registry.async_get_registry(),
-    )
+    device_registry = dev_reg.async_get(hass)
+    entity_registry = ent_reg.async_get(hass)
 
     device_entries = hass.helpers.device_registry.async_entries_for_config_entry(
         device_registry, entry.entry_id
