@@ -29,7 +29,7 @@ class Hub:
 
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate api key."""
-    hub = Hub(hass, data["api_key"])
+    hub = Hub(hass, data[CONF_API_KEY])
     result = await hub.authenticate()
     if result["state"] is False:
         if result["code"] == -201:
