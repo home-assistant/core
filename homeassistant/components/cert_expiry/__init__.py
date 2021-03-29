@@ -18,11 +18,6 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(hours=12)
 
 
-async def async_setup(hass, config):
-    """Platform setup, do nothing."""
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Load the saved entities."""
     host = entry.data[CONF_HOST]
