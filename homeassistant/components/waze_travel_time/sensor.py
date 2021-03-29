@@ -64,7 +64,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_ORIGIN): cv.string,
         vol.Required(CONF_DESTINATION): cv.string,
         vol.Required(CONF_REGION): vol.In(REGIONS),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_INCL_FILTER): cv.string,
         vol.Optional(CONF_EXCL_FILTER): cv.string,
         vol.Optional(CONF_REALTIME, default=DEFAULT_REALTIME): cv.boolean,
@@ -112,7 +112,8 @@ async def async_setup_entry(
     name = None
     if config_entry.source == SOURCE_IMPORT and not config_entry.options:
         new_data = config_entry.data.copy()
-        name = config_entry.data[CONF_NAME]
+        name = config_entry.data.get(CONF_NAME)
+        new_data.pop(CONF_NAME)
         options = {
             key: new_data.pop(key)
             for key in [
@@ -134,7 +135,7 @@ async def async_setup_entry(
     destination = config_entry.data[CONF_DESTINATION]
     origin = config_entry.data[CONF_ORIGIN]
     region = config_entry.data[CONF_REGION]
-    name = name or DEFAULT_NAME
+    name = name or f"{DEFAULT_NAME}: {origin} -> {destination}"
 
     incl_filter = config_entry.options.get(CONF_INCL_FILTER)
     excl_filter = config_entry.options.get(CONF_EXCL_FILTER)
@@ -181,7 +182,7 @@ class WazeTravelTime(SensorEntity):
         """Initialize the Waze travel time sensor."""
         self._unique_id = unique_id
         self._waze_data = waze_data
-        self._name = f"{name}: {origin} -> {destination}"
+        self._name = name
         self._state = None
         self._origin_entity_id = None
         self._destination_entity_id = None
