@@ -23,23 +23,16 @@ class AutomationTrace(ActionTrace):
         """Container for automation trace."""
         key = ("automation", item_id)
         super().__init__(key, config, context)
+        self._trigger_description: str | None = None
+
+    def set_trigger_description(self, trigger: str) -> None:
+        """Set trigger description."""
+        self._trigger_description = trigger
 
     def as_short_dict(self) -> dict[str, Any]:
         """Return a brief dictionary version of this AutomationTrace."""
-
         result = super().as_short_dict()
-
-        trigger = None
-
-        if self._trace and "trigger" in self._trace:
-            trigger = (
-                self._trace["trigger"][0]
-                ._variables.get("trigger", {})
-                .get("description")
-            )
-
-        result["trigger"] = trigger
-
+        result["trigger"] = self._trigger_description
         return result
 
 
