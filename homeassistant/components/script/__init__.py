@@ -9,8 +9,10 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
     CONF_ALIAS,
+    CONF_DESCRIPTION,
     CONF_ICON,
     CONF_MODE,
+    CONF_NAME,
     CONF_SEQUENCE,
     CONF_VARIABLES,
     SERVICE_RELOAD,
@@ -45,7 +47,6 @@ ATTR_LAST_ACTION = "last_action"
 ATTR_LAST_TRIGGERED = "last_triggered"
 ATTR_VARIABLES = "variables"
 
-CONF_DESCRIPTION = "description"
 CONF_EXAMPLE = "example"
 CONF_FIELDS = "fields"
 
@@ -241,6 +242,7 @@ async def _async_process_config(hass, config, component):
 
         # Register the service description
         service_desc = {
+            CONF_NAME: cfg.get(CONF_ALIAS, ""),
             CONF_DESCRIPTION: cfg[CONF_DESCRIPTION],
             CONF_FIELDS: cfg[CONF_FIELDS],
         }
