@@ -4073,6 +4073,17 @@ async def _async_process(hass, text, calling_client_id=None, hot_word_on=False):
                                         CURR_BUTTON_CODE = 0
                                         break
         if s is False or found_intent is None:
+            # no success - try to run automation
+            automations = {
+                state.entity_id: state.name
+                for state in hass.states.async_all()
+                if state.entity_id.startswith("automation")
+                and not state.entity_id.startswith("automation.ais_")
+            }
+            for automation in automations:
+                _LOGGER.info(str(automation))
+
+        if s is False or found_intent is None:
             # no success - try to ask the cloud
             if m is None:
                 # no message / no match
@@ -4094,7 +4105,6 @@ async def _async_process(hass, text, calling_client_id=None, hot_word_on=False):
         _say_it(hass, m, exclude_say_it=calling_client_id)
     # return response to the hass conversation
     intent_resp = intent.IntentResponse()
-    # intent_resp.async_set_card("Beer ordered", "You chose a XXX")
     intent_resp.async_set_speech(m)
     intent_resp.hass = hass
     return intent_resp
