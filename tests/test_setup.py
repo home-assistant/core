@@ -1,6 +1,7 @@
 """Test component/platform setup."""
 # pylint: disable=protected-access
 import asyncio
+import datetime
 import os
 import threading
 from unittest.mock import Mock, patch
@@ -618,3 +619,31 @@ async def test_async_get_loaded_integrations(hass):
         "myintegration",
         "device_tracker",
     }
+
+
+async def test_async_start_setup(hass):
+    """Test setup started context manager keeps track of setup times."""
+    with setup.async_start_setup(hass, ["august"]):
+        assert isinstance(
+            hass.data[setup.DATA_SETUP_STARTED]["august"], datetime.datetime
+        )
+        with setup.async_start_setup(hass, ["august"]):
+            assert isinstance(
+                hass.data[setup.DATA_SETUP_STARTED]["august_2"], datetime.datetime
+            )
+
+    assert "august" not in hass.data[setup.DATA_SETUP_STARTED]
+    assert isinstance(hass.data[setup.DATA_SETUP_TIME]["august"], datetime.timedelta)
+    assert "august_2" not in hass.data[setup.DATA_SETUP_TIME]
+
+
+async def test_async_start_setup_platforms(hass):
+    """Test setup started context manager keeps track of setup times for platforms."""
+    with setup.async_start_setup(hass, ["sensor.august"]):
+        assert isinstance(
+            hass.data[setup.DATA_SETUP_STARTED]["sensor.august"], datetime.datetime
+        )
+
+    assert "august" not in hass.data[setup.DATA_SETUP_STARTED]
+    assert isinstance(hass.data[setup.DATA_SETUP_TIME]["august"], datetime.timedelta)
+    assert "sensor" not in hass.data[setup.DATA_SETUP_TIME]
