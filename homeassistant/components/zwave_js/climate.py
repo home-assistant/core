@@ -135,7 +135,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             self._setpoint_values[enum] = self.get_zwave_value(
                 THERMOSTAT_SETPOINT_PROPERTY,
                 command_class=CommandClass.THERMOSTAT_SETPOINT,
-                value_property_key=enum.value.key,
+                value_property_key=enum.value,
                 add_to_watched_value_ids=True,
             )
             # Use the first found non N/A setpoint value to always determine the

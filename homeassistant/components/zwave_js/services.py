@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 
 import voluptuous as vol
+from zwave_js_server.const import CommandStatus
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.util.node import async_set_config_parameter
 
@@ -104,25 +105,22 @@ class ZWaveServices:
         new_value = service.data[const.ATTR_CONFIG_VALUE]
 
         for node in nodes:
-            zwave_value = await async_set_config_parameter(
+            zwave_value, cmd_status = await async_set_config_parameter(
                 node,
                 new_value,
                 property_or_property_name,
                 property_key=property_key,
             )
 
-            if zwave_value:
-                _LOGGER.info(
-                    "Set configuration parameter %s on Node %s with value %s",
-                    zwave_value,
-                    node,
-                    new_value,
-                )
+            if cmd_status == CommandStatus.ACCEPTED:
+                msg = "Set configuration parameter %s on Node %s with value %s"
             else:
-                raise ValueError(
-                    f"Unable to set configuration parameter on Node {node} with "
-                    f"value {new_value}"
+                msg = (
+                    "Added command to queue to set configuration parameter %s on Node "
+                    "%s with value %s. Parameter will be set when the device wakes up"
                 )
+
+            _LOGGER.info(msg, zwave_value, node, new_value)
 
     async def async_poll_value(self, service: ServiceCall) -> None:
         """Poll value on a node."""

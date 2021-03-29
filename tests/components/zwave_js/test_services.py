@@ -296,6 +296,52 @@ async def test_set_config_parameter(hass, client, multisensor_6, integration):
             blocking=True,
         )
 
+    # Test that when a device is awake, we call async_send_command instead of
+    # async_send_command_no_wait
+    multisensor_6.handle_wake_up(None)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_CONFIG_PARAMETER,
+        {
+            ATTR_ENTITY_ID: AIR_TEMPERATURE_SENSOR,
+            ATTR_CONFIG_PARAMETER: 102,
+            ATTR_CONFIG_PARAMETER_BITMASK: 1,
+            ATTR_CONFIG_VALUE: 1,
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 52
+    assert args["valueId"] == {
+        "commandClassName": "Configuration",
+        "commandClass": 112,
+        "endpoint": 0,
+        "property": 102,
+        "propertyName": "Group 2: Send battery reports",
+        "propertyKey": 1,
+        "metadata": {
+            "type": "number",
+            "readable": True,
+            "writeable": True,
+            "valueSize": 4,
+            "min": 0,
+            "max": 1,
+            "default": 1,
+            "format": 0,
+            "allowManualEntry": True,
+            "label": "Group 2: Send battery reports",
+            "description": "Include battery information in periodic reports to Group 2",
+            "isFromConfig": True,
+        },
+        "value": 0,
+    }
+    assert args["value"] == 1
+
+    client.async_send_command.reset_mock()
+
 
 async def test_poll_value(
     hass, client, climate_radio_thermostat_ct100_plus_different_endpoints, integration
