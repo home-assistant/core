@@ -518,6 +518,8 @@ class SpotifyData:
             )
         else:
             text = "Brak wyników na Spotify dla zapytania %s" % search_text
+
+        self.hass.states.set("sensor.ais_spotify_favorites_mode", "", {})
         self.hass.services.call("ais_ai_service", "say_it", {"text": text})
 
     def select_search_uri(self, call):
