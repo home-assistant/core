@@ -4,17 +4,17 @@ from unittest.mock import patch
 import iaqualink.exception
 import pytest
 
-from homeassistant.components.iaqualink import config_flow
+from homeassistant.components.iaqualink import DOMAIN, config_flow
+
+from . import MOCK_CONFIG_DATA
 
 from tests.common import MockConfigEntry, mock_coro
-
-DATA = {"username": "test@example.com", "password": "pass"}
 
 
 @pytest.mark.parametrize("step", ["import", "user"])
 async def test_already_configured(hass, step):
     """Test config flow when iaqualink component is already setup."""
-    MockConfigEntry(domain="iaqualink", data=DATA).add_to_hass(hass)
+    MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_DATA).add_to_hass(hass)
 
     flow = config_flow.AqualinkFlowHandler()
     flow.hass = hass
@@ -22,7 +22,7 @@ async def test_already_configured(hass, step):
 
     fname = f"async_step_{step}"
     func = getattr(flow, fname)
-    result = await func(DATA)
+    result = await func(MOCK_CONFIG_DATA)
 
     assert result["type"] == "abort"
 
@@ -55,7 +55,7 @@ async def test_with_invalid_credentials(hass, step):
         "iaqualink.client.AqualinkClient.login",
         side_effect=iaqualink.exception.AqualinkServiceUnauthorizedException,
     ):
-        result = await func(DATA)
+        result = await func(MOCK_CONFIG_DATA)
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
@@ -74,7 +74,7 @@ async def test_service_exception(hass, step):
         "iaqualink.client.AqualinkClient.login",
         side_effect=iaqualink.exception.AqualinkServiceException,
     ):
-        result = await func(DATA)
+        result = await func(MOCK_CONFIG_DATA)
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
@@ -91,8 +91,8 @@ async def test_with_existing_config(hass, step):
     fname = f"async_step_{step}"
     func = getattr(flow, fname)
     with patch("iaqualink.client.AqualinkClient.login", return_value=mock_coro(None)):
-        result = await func(DATA)
+        result = await func(MOCK_CONFIG_DATA)
 
     assert result["type"] == "create_entry"
-    assert result["title"] == DATA["username"]
-    assert result["data"] == DATA
+    assert result["title"] == MOCK_CONFIG_DATA["username"]
+    assert result["data"] == MOCK_CONFIG_DATA

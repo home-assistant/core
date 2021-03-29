@@ -93,6 +93,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
 
+    hass.data.setdefault(DOMAIN, {})
+
     # These will contain the initialized devices
     binary_sensors = hass.data[DOMAIN][BINARY_SENSOR_DOMAIN] = []
     climates = hass.data[DOMAIN][CLIMATE_DOMAIN] = []
