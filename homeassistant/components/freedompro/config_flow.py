@@ -18,7 +18,6 @@ class Hub:
         """Freedompro Hub class init."""
         self._hass = hass
         self._api_key = api_key
-        self._url = FREEDOMPRO_URL
 
     async def authenticate(self) -> bool:
         """Freedompro Hub class authenticate."""
