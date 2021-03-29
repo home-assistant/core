@@ -249,6 +249,10 @@ class VlcDevice(MediaPlayerEntity):
         self._vlc.set_volume(volume * MAX_VOLUME)
         self._volume = volume
 
+        if self._muted and self._volume > 0:
+            # This can happen if we were muted and then see a volume_up.
+            self._muted = False
+
     def media_play(self):
         """Send play command."""
         self._vlc.play()
