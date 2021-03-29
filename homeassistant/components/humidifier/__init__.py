@@ -15,6 +15,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -22,7 +23,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 from .const import (
@@ -59,7 +60,7 @@ def is_on(hass, entity_id):
     return hass.states.is_state(entity_id, STATE_ON)
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up humidifier devices."""
     component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
@@ -88,12 +89,12 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
     return await hass.data[DOMAIN].async_setup_entry(entry)
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.data[DOMAIN].async_unload_entry(entry)
 
