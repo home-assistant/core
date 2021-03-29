@@ -2423,20 +2423,38 @@ async def async_setup(hass, config):
             hass.states.async_set("sensor.ais_player_mode", "radio_player")
             hass.states.async_set("sensor.ais_radio_origin", "public")
             hass.states.async_set("sensor.radiolist", -1, {})
-            atrr = hass.states.get("input_select.radio_type").attributes
-            hass.states.async_set("input_select.radio_type", "", atrr)
+            # atrr = hass.states.get("input_select.radio_type").attributes
+            # hass.states.async_set("input_select.radio_type", "", atrr)
         elif context == "radio_private":
             hass.states.async_set("sensor.ais_player_mode", "radio_player")
             hass.states.async_set("sensor.ais_radio_origin", "private")
             hass.states.async_set("sensor.radiolist", -1, {})
-            atrr = hass.states.get("input_select.radio_type").attributes
-            hass.states.async_set("input_select.radio_type", "", atrr)
+            # atrr = hass.states.get("input_select.radio_type").attributes
+            # hass.states.async_set("input_select.radio_type", "", atrr)
         elif context == "radio_shared":
             hass.states.async_set("sensor.ais_player_mode", "radio_player")
             hass.states.async_set("sensor.ais_radio_origin", "shared")
             hass.states.async_set("sensor.radiolist", -1, {})
-            atrr = hass.states.get("input_select.radio_type").attributes
-            hass.states.async_set("input_select.radio_type", "", atrr)
+            # atrr = hass.states.get("input_select.radio_type").attributes
+            # hass.states.async_set("input_select.radio_type", "", atrr)
+        elif context == "YouTube":
+            hass.states.async_set("sensor.ais_player_mode", "music_player")
+            await hass.services.async_call(
+                "input_select",
+                "select_option",
+                {"entity_id": "input_select.ais_music_service", "option": "YouTube"},
+            )
+        elif context == "Spotify":
+            hass.states.async_set("sensor.ais_player_mode", "music_player")
+            await hass.services.async_call(
+                "input_select",
+                "select_option",
+                {"entity_id": "input_select.ais_music_service", "option": "Spotify"},
+            )
+        elif context == "Radio":
+            hass.states.async_set("sensor.ais_player_mode", "radio_player")
+        elif context == "Podcast":
+            hass.states.async_set("sensor.ais_player_mode", "podcast_player")
         else:
             for idx, menu in enumerate(GROUP_ENTITIES, start=0):
                 context_key_words = menu["context_key_words"]
@@ -2473,20 +2491,6 @@ async def async_setup(hass, config):
             ip,
             {"friendly_name": "Lokalny adres IP", "icon": "mdi:access-point-network"},
         )
-
-    async def switch_ui(service):
-        mode = service.data["mode"]
-        if mode in ("YouTube", "Spotify"):
-            hass.states.async_set("sensor.ais_player_mode", "music_player")
-            await hass.services.async_call(
-                "input_select",
-                "select_option",
-                {"entity_id": "input_select.ais_music_service", "option": mode},
-            )
-        elif mode == "Radio":
-            hass.states.async_set("sensor.ais_player_mode", "radio_player")
-        elif mode == "Podcast":
-            hass.states.async_set("sensor.ais_player_mode", "podcast_player")
 
     async def publish_command_to_frame(service):
         key = service.data["key"]
@@ -2875,7 +2879,6 @@ async def async_setup(hass, config):
     )
     hass.services.async_register(DOMAIN, "set_context", async_set_context)
     hass.services.async_register(DOMAIN, "check_local_ip", check_local_ip)
-    hass.services.async_register(DOMAIN, "switch_ui", switch_ui)
     hass.services.async_register(DOMAIN, "check_night_mode", check_night_mode)
     hass.services.async_register(DOMAIN, "mob_notify", async_mob_notify)
     hass.services.async_register(DOMAIN, "mob_request", async_mob_request)
@@ -4378,7 +4381,7 @@ class AisPlayYtMusicIntent(intent.IntentHandler):
             await hass.services.async_call("ais_yt_service", "search", {"query": item})
             # switch UI to YT
             await hass.services.async_call(
-                "ais_ai_service", "switch_ui", {"mode": "YouTube"}
+                "ais_ai_service", "set_context", {"text": "YouTube"}
             )
             #
             message = "OK, szukam na YouTube " + item
@@ -4414,7 +4417,7 @@ class AisPlaySpotifyIntent(intent.IntentHandler):
             )
             # switch UI to Spotify
             await hass.services.async_call(
-                "ais_ai_service", "switch_ui", {"mode": "Spotify"}
+                "ais_ai_service", "set_context", {"text": "Spotify"}
             )
             #
             message = "OK, szukam na Spotify " + item

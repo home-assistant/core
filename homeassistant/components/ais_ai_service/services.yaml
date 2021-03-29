@@ -160,9 +160,3 @@ set_context:
 welcome_home:
   description: 'Głosowy komunikat powitalny. Akcja wykonywana jest automatycznie podczas uruchomienia systemu.'
 
-switch_ui:
-  description: 'Przełączenie interfejsu odtwarzacza na wybrany tryb YouTube Spotify Radio Podcast'
-  fields:
-    mode:
-      description: 'Tryb do ustawienia'
-      example: 'Radio'
