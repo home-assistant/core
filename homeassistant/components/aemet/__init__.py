@@ -14,12 +14,6 @@ from .weather_update_coordinator import WeatherUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up the AEMET OpenData component."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Set up AEMET OpenData as config entry."""
     name = config_entry.data[CONF_NAME]
@@ -32,6 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
     await weather_coordinator.async_config_entry_first_refresh()
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = {
         ENTRY_NAME: name,
         ENTRY_WEATHER_COORDINATOR: weather_coordinator,
