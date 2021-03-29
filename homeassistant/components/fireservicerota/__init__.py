@@ -26,7 +26,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORTED_PLATFORMS = {SENSOR_DOMAIN, BINARYSENSOR_DOMAIN, SWITCH_DOMAIN}
+PLATFORMS = [SENSOR_DOMAIN, BINARYSENSOR_DOMAIN, SWITCH_DOMAIN]
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
@@ -64,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DATA_COORDINATOR: coordinator,
     }
 
-    for platform in SUPPORTED_PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
@@ -83,7 +83,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await asyncio.gather(
             *[
                 hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in SUPPORTED_PLATFORMS
+                for platform in PLATFORMS
             ]
         )
     )

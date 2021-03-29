@@ -71,7 +71,7 @@ class DigitalOceanSwitch(SwitchEntity):
         return self.data.status == "active"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the Digital Ocean droplet."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,

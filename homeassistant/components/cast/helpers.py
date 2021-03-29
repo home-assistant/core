@@ -7,8 +7,6 @@ import attr
 from pychromecast import dial
 from pychromecast.const import CAST_MANUFACTURERS
 
-from .const import DEFAULT_PORT
-
 
 @attr.s(slots=True, frozen=True)
 class ChromecastInfo:
@@ -17,21 +15,15 @@ class ChromecastInfo:
     This also has the same attributes as the mDNS fields by zeroconf.
     """
 
-    services: Optional[set] = attr.ib()
-    host: Optional[str] = attr.ib(default=None)
-    port: Optional[int] = attr.ib(default=0)
-    uuid: Optional[str] = attr.ib(
+    services: set | None = attr.ib()
+    uuid: str | None = attr.ib(
         converter=attr.converters.optional(str), default=None
     )  # always convert UUID to string if not None
     _manufacturer = attr.ib(type=Optional[str], default=None)
     model_name: str = attr.ib(default="")
-    friendly_name: Optional[str] = attr.ib(default=None)
+    friendly_name: str | None = attr.ib(default=None)
+    is_audio_group = attr.ib(type=Optional[bool], default=False)
     is_dynamic_group = attr.ib(type=Optional[bool], default=None)
-
-    @property
-    def is_audio_group(self) -> bool:
-        """Return if this is an audio group."""
-        return self.port != DEFAULT_PORT
 
     @property
     def is_information_complete(self) -> bool:
@@ -74,7 +66,7 @@ class ChromecastInfo:
             http_group_status = None
             if self.uuid:
                 http_group_status = dial.get_multizone_status(
-                    self.host,
+                    None,
                     services=self.services,
                     zconf=ChromeCastZeroconf.get_zeroconf(),
                 )
@@ -86,17 +78,16 @@ class ChromecastInfo:
 
             return ChromecastInfo(
                 services=self.services,
-                host=self.host,
-                port=self.port,
                 uuid=self.uuid,
                 friendly_name=self.friendly_name,
                 model_name=self.model_name,
+                is_audio_group=True,
                 is_dynamic_group=is_dynamic_group,
             )
 
         # Fill out some missing information (friendly_name, uuid) via HTTP dial.
         http_device_status = dial.get_device_status(
-            self.host, services=self.services, zconf=ChromeCastZeroconf.get_zeroconf()
+            None, services=self.services, zconf=ChromeCastZeroconf.get_zeroconf()
         )
         if http_device_status is None:
             # HTTP dial didn't give us any new information.
@@ -104,8 +95,6 @@ class ChromecastInfo:
 
         return ChromecastInfo(
             services=self.services,
-            host=self.host,
-            port=self.port,
             uuid=(self.uuid or http_device_status.uuid),
             friendly_name=(self.friendly_name or http_device_status.friendly_name),
             manufacturer=(self.manufacturer or http_device_status.manufacturer),

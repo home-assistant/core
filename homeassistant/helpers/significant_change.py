@@ -29,7 +29,7 @@ The following cases will never be passed to your function:
 from __future__ import annotations
 
 from types import MappingProxyType
-from typing import Any, Callable, Dict, Optional, Tuple, Union
+from typing import Any, Callable, Optional, Union
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State, callback
@@ -66,7 +66,7 @@ ExtraCheckTypeFunc = Callable[
 async def create_checker(
     hass: HomeAssistant,
     _domain: str,
-    extra_significant_check: Optional[ExtraCheckTypeFunc] = None,
+    extra_significant_check: ExtraCheckTypeFunc | None = None,
 ) -> SignificantlyChangedChecker:
     """Create a significantly changed checker for a domain."""
     await _initialize(hass)
@@ -90,15 +90,15 @@ async def _initialize(hass: HomeAssistant) -> None:
     await async_process_integration_platforms(hass, PLATFORM, process_platform)
 
 
-def either_one_none(val1: Optional[Any], val2: Optional[Any]) -> bool:
+def either_one_none(val1: Any | None, val2: Any | None) -> bool:
     """Test if exactly one value is None."""
     return (val1 is None and val2 is not None) or (val1 is not None and val2 is None)
 
 
 def check_numeric_changed(
-    val1: Optional[Union[int, float]],
-    val2: Optional[Union[int, float]],
-    change: Union[int, float],
+    val1: int | float | None,
+    val2: int | float | None,
+    change: int | float,
 ) -> bool:
     """Check if two numeric values have changed."""
     if val1 is None and val2 is None:
@@ -125,22 +125,22 @@ class SignificantlyChangedChecker:
     def __init__(
         self,
         hass: HomeAssistant,
-        extra_significant_check: Optional[ExtraCheckTypeFunc] = None,
+        extra_significant_check: ExtraCheckTypeFunc | None = None,
     ) -> None:
         """Test if an entity has significantly changed."""
         self.hass = hass
-        self.last_approved_entities: Dict[str, Tuple[State, Any]] = {}
+        self.last_approved_entities: dict[str, tuple[State, Any]] = {}
         self.extra_significant_check = extra_significant_check
 
     @callback
     def async_is_significant_change(
-        self, new_state: State, *, extra_arg: Optional[Any] = None
+        self, new_state: State, *, extra_arg: Any | None = None
     ) -> bool:
         """Return if this was a significant change.
 
         Extra kwargs are passed to the extra significant checker.
         """
-        old_data: Optional[Tuple[State, Any]] = self.last_approved_entities.get(
+        old_data: tuple[State, Any] | None = self.last_approved_entities.get(
             new_state.entity_id
         )
 
@@ -164,9 +164,7 @@ class SignificantlyChangedChecker:
             self.last_approved_entities[new_state.entity_id] = (new_state, extra_arg)
             return True
 
-        functions: Optional[Dict[str, CheckTypeFunc]] = self.hass.data.get(
-            DATA_FUNCTIONS
-        )
+        functions: dict[str, CheckTypeFunc] | None = self.hass.data.get(DATA_FUNCTIONS)
 
         if functions is None:
             raise RuntimeError("Significant Change not initialized")

@@ -4,6 +4,7 @@ from datetime import timedelta
 import logging
 import os
 import threading
+from typing import Deque
 from unittest.mock import patch
 
 import async_timeout
@@ -20,7 +21,8 @@ import homeassistant.util.dt as dt_util
 from tests.common import async_fire_time_changed
 from tests.components.stream.common import generate_h264_video
 
-TEST_TIMEOUT = 10
+TEST_TIMEOUT = 7.0  # Lower than 9s home assistant timeout
+MAX_ABORT_SEGMENTS = 20  # Abort test to avoid looping forever
 
 
 class SaveRecordWorkerSync:
@@ -36,23 +38,26 @@ class SaveRecordWorkerSync:
         self.reset()
         self._segments = None
 
-    def recorder_save_worker(self, file_out, segments, container_format):
+    def recorder_save_worker(self, file_out: str, segments: Deque[Segment]):
         """Mock method for patch."""
         logging.debug("recorder_save_worker thread started")
-        self._segments = segments
         assert self._save_thread is None
+        self._segments = segments
         self._save_thread = threading.current_thread()
         self._save_event.set()
 
     async def get_segments(self):
-        """Verify save worker thread was invoked and return saved segments."""
+        """Return the recorded video segments."""
         with async_timeout.timeout(TEST_TIMEOUT):
-            assert await self._save_event.wait()
-            return self._segments
+            await self._save_event.wait()
+        return self._segments
 
-    def join(self):
-        """Block until the record worker thread exist to ensure cleanup."""
-        self._save_thread.join()
+    async def join(self):
+        """Verify save worker was invoked and block on shutdown."""
+        with async_timeout.timeout(TEST_TIMEOUT):
+            await self._save_event.wait()
+        self._save_thread.join(timeout=TEST_TIMEOUT)
+        assert not self._save_thread.is_alive()
 
     def reset(self):
         """Reset callback state for reuse in tests."""
@@ -88,9 +93,15 @@ async def test_record_stream(hass, hass_client, record_worker_sync):
     with patch.object(hass.config, "is_allowed_path", return_value=True):
         await stream.async_record("/example/path")
 
+    # After stream decoding finishes, the record worker thread starts
     segments = await record_worker_sync.get_segments()
-    assert len(segments) > 1
-    record_worker_sync.join()
+    assert len(segments) >= 1
+
+    # Verify that the save worker was invoked, then block until its
+    # thread completes and is shutdown completely to avoid thread leaks.
+    await record_worker_sync.join()
+
+    stream.stop()
 
 
 async def test_record_lookback(
@@ -102,24 +113,19 @@ async def test_record_lookback(
     source = generate_h264_video()
     stream = create_stream(hass, source)
 
-    # Don't let the stream finish (and clean itself up) until the test has had
-    # a chance to perform lookback
-    stream_worker_sync.pause()
-
     # Start an HLS feed to enable lookback
-    stream.hls_output()
+    stream.add_provider("hls")
+    stream.start()
 
     with patch.object(hass.config, "is_allowed_path", return_value=True):
         await stream.async_record("/example/path", lookback=4)
 
     # This test does not need recorder cleanup since it is not fully exercised
-    stream_worker_sync.resume()
+
     stream.stop()
 
 
-async def test_recorder_timeout(
-    hass, hass_client, stream_worker_sync, record_worker_sync
-):
+async def test_recorder_timeout(hass, hass_client, stream_worker_sync):
     """
     Test recorder timeout.
 
@@ -137,8 +143,9 @@ async def test_recorder_timeout(
         stream = create_stream(hass, source)
         with patch.object(hass.config, "is_allowed_path", return_value=True):
             await stream.async_record("/example/path")
+        recorder = stream.add_provider("recorder")
 
-        assert not mock_timeout.called
+        await recorder.recv()
 
         # Wait a minute
         future = dt_util.utcnow() + timedelta(minutes=1)
@@ -148,11 +155,9 @@ async def test_recorder_timeout(
         assert mock_timeout.called
 
         stream_worker_sync.resume()
-        # Verify worker is invoked, and do clean shutdown of worker thread
-        await record_worker_sync.get_segments()
-        record_worker_sync.join()
-
         stream.stop()
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
 
 async def test_record_path_not_allowed(hass, hass_client):
@@ -175,13 +180,40 @@ async def test_recorder_save(tmpdir):
     filename = f"{tmpdir}/test.mp4"
 
     # Run
-    recorder_save_worker(filename, [Segment(1, source, 4)], "mp4")
+    recorder_save_worker(filename, [Segment(1, source, 4)])
 
     # Assert
     assert os.path.exists(filename)
 
 
-async def test_record_stream_audio(hass, hass_client, record_worker_sync):
+async def test_recorder_discontinuity(tmpdir):
+    """Test recorder save across a discontinuity."""
+    # Setup
+    source = generate_h264_video()
+    filename = f"{tmpdir}/test.mp4"
+
+    # Run
+    recorder_save_worker(filename, [Segment(1, source, 4, 0), Segment(2, source, 4, 1)])
+
+    # Assert
+    assert os.path.exists(filename)
+
+
+async def test_recorder_no_segements(tmpdir):
+    """Test recorder behavior with a stream failure which causes no segments."""
+    # Setup
+    filename = f"{tmpdir}/test.mp4"
+
+    # Run
+    recorder_save_worker("unused-file", [])
+
+    # Assert
+    assert not os.path.exists(filename)
+
+
+async def test_record_stream_audio(
+    hass, hass_client, stream_worker_sync, record_worker_sync
+):
     """
     Test treatment of different audio inputs.
 
@@ -197,6 +229,7 @@ async def test_record_stream_audio(hass, hass_client, record_worker_sync):
         (None, 0),  # no audio stream
     ):
         record_worker_sync.reset()
+        stream_worker_sync.pause()
 
         # Setup demo track
         source = generate_h264_video(
@@ -205,14 +238,32 @@ async def test_record_stream_audio(hass, hass_client, record_worker_sync):
         stream = create_stream(hass, source)
         with patch.object(hass.config, "is_allowed_path", return_value=True):
             await stream.async_record("/example/path")
+        recorder = stream.add_provider("recorder")
 
-        segments = await record_worker_sync.get_segments()
-        last_segment = segments[-1]
+        while True:
+            segment = await recorder.recv()
+            if not segment:
+                break
+            last_segment = segment
+            stream_worker_sync.resume()
 
         result = av.open(last_segment.segment, "r", format="mp4")
 
         assert len(result.streams.audio) == expected_audio_streams
         result.close()
-
         stream.stop()
-        record_worker_sync.join()
+        await hass.async_block_till_done()
+
+        # Verify that the save worker was invoked, then block until its
+        # thread completes and is shutdown completely to avoid thread leaks.
+        await record_worker_sync.join()
+
+
+async def test_recorder_log(hass, caplog):
+    """Test starting a stream to record logs the url without username and password."""
+    await async_setup_component(hass, "stream", {"stream": {}})
+    stream = create_stream(hass, "https://abcd:efgh@foo.bar")
+    with patch.object(hass.config, "is_allowed_path", return_value=True):
+        await stream.async_record("/example/path")
+    assert "https://abcd:efgh@foo.bar" not in caplog.text
+    assert "https://foo.bar" in caplog.text

@@ -50,9 +50,9 @@ async def async_setup(hass, config):
         )
 
     # Set up demo platforms
-    for component in COMPONENTS_WITH_DEMO_PLATFORM:
+    for platform in COMPONENTS_WITH_DEMO_PLATFORM:
         hass.async_create_task(
-            hass.helpers.discovery.async_load_platform(component, DOMAIN, {}, config)
+            hass.helpers.discovery.async_load_platform(platform, DOMAIN, {}, config)
         )
 
     config.setdefault(ha.DOMAIN, {})
@@ -146,9 +146,9 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, config_entry):
     """Set the config entry up."""
     # Set up demo platforms with config entry
-    for component in COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM:
+    for platform in COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
+            hass.config_entries.async_forward_entry_setup(config_entry, platform)
         )
     return True
 

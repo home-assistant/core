@@ -36,6 +36,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,17 +47,17 @@ DEFAULT_PORT = 4212
 MAX_VOLUME = 500
 
 SUPPORT_VLC = (
-    SUPPORT_PAUSE
-    | SUPPORT_SEEK
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_PREVIOUS_TRACK
+    SUPPORT_CLEAR_PLAYLIST
     | SUPPORT_NEXT_TRACK
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_STOP
-    | SUPPORT_CLEAR_PLAYLIST
+    | SUPPORT_PAUSE
     | SUPPORT_PLAY
+    | SUPPORT_PLAY_MEDIA
+    | SUPPORT_PREVIOUS_TRACK
+    | SUPPORT_SEEK
     | SUPPORT_SHUFFLE_SET
+    | SUPPORT_STOP
+    | SUPPORT_VOLUME_MUTE
+    | SUPPORT_VOLUME_SET
 )
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -141,7 +142,12 @@ class VlcDevice(MediaPlayerEntity):
 
             if self._state != STATE_IDLE:
                 self._media_duration = self._vlc.get_length()
-                self._media_position = self._vlc.get_time()
+                vlc_position = self._vlc.get_time()
+
+                # Check if current position is stale.
+                if vlc_position != self._media_position:
+                    self._media_position_updated_at = dt_util.utcnow()
+                    self._media_position = vlc_position
 
             info = self._vlc.info()
             _LOGGER.debug("Info: %s", info)
@@ -149,6 +155,12 @@ class VlcDevice(MediaPlayerEntity):
             if info:
                 self._media_artist = info.get(0, {}).get("artist")
                 self._media_title = info.get(0, {}).get("title")
+
+                if not self._media_title:
+                    # Fall back to filename.
+                    data_info = info.get("data")
+                    if data_info:
+                        self._media_title = data_info["filename"]
 
         except (CommandError, LuaError, ParseError) as err:
             _LOGGER.error("Command error: %s", err)
@@ -220,8 +232,7 @@ class VlcDevice(MediaPlayerEntity):
 
     def media_seek(self, position):
         """Seek the media to a specific location."""
-        track_length = self._vlc.get_length() / 1000
-        self._vlc.seek(position / track_length)
+        self._vlc.seek(int(position))
 
     def mute_volume(self, mute):
         """Mute the volume."""
@@ -238,6 +249,10 @@ class VlcDevice(MediaPlayerEntity):
         self._vlc.set_volume(volume * MAX_VOLUME)
         self._volume = volume
 
+        if self._muted and self._volume > 0:
+            # This can happen if we were muted and then see a volume_up.
+            self._muted = False
+
     def media_play(self):
         """Send play command."""
         self._vlc.play()
@@ -245,7 +260,11 @@ class VlcDevice(MediaPlayerEntity):
 
     def media_pause(self):
         """Send pause command."""
-        self._vlc.pause()
+        current_state = self._vlc.status().get("state")
+        if current_state != "paused":
+            # Make sure we're not already paused since VLCTelnet.pause() toggles
+            # pause.
+            self._vlc.pause()
         self._state = STATE_PAUSED
 
     def media_stop(self):

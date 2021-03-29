@@ -1,15 +1,12 @@
 """Provide functionality to stream HLS."""
-import asyncio
-from collections import deque
 import io
-from typing import Any, Callable, List
 
 from aiohttp import web
 
 from homeassistant.core import callback
 
 from .const import FORMAT_CONTENT_TYPE, MAX_SEGMENTS, NUM_PLAYLIST_SEGMENTS
-from .core import Segment, StreamOutput, StreamView
+from .core import PROVIDERS, HomeAssistant, IdleTimer, StreamOutput, StreamView
 from .fmp4utils import get_codec_string, get_init, get_m4s
 
 
@@ -50,11 +47,11 @@ class HlsMasterPlaylistView(StreamView):
 
     async def handle(self, request, stream, sequence):
         """Return m3u8 playlist."""
-        track = stream.hls_output()
+        track = stream.add_provider("hls")
+        stream.start()
         # Wait for a segment to be ready
-        if not track.segments:
-            if not await track.recv():
-                return web.HTTPNotFound()
+        if not track.segments and not await track.recv():
+            return web.HTTPNotFound()
         headers = {"Content-Type": FORMAT_CONTENT_TYPE["hls"]}
         return web.Response(body=self.render(track).encode("utf-8"), headers=headers)
 
@@ -78,21 +75,27 @@ class HlsPlaylistView(StreamView):
     @staticmethod
     def render_playlist(track):
         """Render playlist."""
-        segments = track.segments[-NUM_PLAYLIST_SEGMENTS:]
+        segments = list(track.get_segment())[-NUM_PLAYLIST_SEGMENTS:]
 
         if not segments:
             return []
 
-        playlist = ["#EXT-X-MEDIA-SEQUENCE:{}".format(segments[0])]
+        playlist = [
+            "#EXT-X-MEDIA-SEQUENCE:{}".format(segments[0].sequence),
+            "#EXT-X-DISCONTINUITY-SEQUENCE:{}".format(segments[0].stream_id),
+        ]
 
-        for sequence in segments:
-            segment = track.get_segment(sequence)
+        last_stream_id = segments[0].stream_id
+        for segment in segments:
+            if last_stream_id != segment.stream_id:
+                playlist.append("#EXT-X-DISCONTINUITY")
             playlist.extend(
                 [
                     "#EXTINF:{:.04f},".format(float(segment.duration)),
                     f"./segment/{segment.sequence}.m4s",
                 ]
             )
+            last_stream_id = segment.stream_id
 
         return playlist
 
@@ -103,11 +106,11 @@ class HlsPlaylistView(StreamView):
 
     async def handle(self, request, stream, sequence):
         """Return m3u8 playlist."""
-        track = stream.hls_output()
+        track = stream.add_provider("hls")
+        stream.start()
         # Wait for a segment to be ready
-        if not track.segments:
-            if not await track.recv():
-                return web.HTTPNotFound()
+        if not track.segments and not await track.recv():
+            return web.HTTPNotFound()
         headers = {"Content-Type": FORMAT_CONTENT_TYPE["hls"]}
         return web.Response(body=self.render(track).encode("utf-8"), headers=headers)
 
@@ -121,7 +124,7 @@ class HlsInitView(StreamView):
 
     async def handle(self, request, stream, sequence):
         """Return init.mp4."""
-        track = stream.hls_output()
+        track = stream.add_provider("hls")
         segments = track.get_segment()
         if not segments:
             return web.HTTPNotFound()
@@ -138,7 +141,7 @@ class HlsSegmentView(StreamView):
 
     async def handle(self, request, stream, sequence):
         """Return fmp4 segment."""
-        track = stream.hls_output()
+        track = stream.add_provider("hls")
         segment = track.get_segment(int(sequence))
         if not segment:
             return web.HTTPNotFound()
@@ -149,70 +152,15 @@ class HlsSegmentView(StreamView):
         )
 
 
+@PROVIDERS.register("hls")
 class HlsStreamOutput(StreamOutput):
     """Represents HLS Output formats."""
 
-    def __init__(self, hass) -> None:
-        """Initialize HlsStreamOutput."""
-        super().__init__(hass)
-        self._cursor = None
-        self._event = asyncio.Event()
-        self._segments = deque(maxlen=MAX_SEGMENTS)
+    def __init__(self, hass: HomeAssistant, idle_timer: IdleTimer) -> None:
+        """Initialize recorder output."""
+        super().__init__(hass, idle_timer, deque_maxlen=MAX_SEGMENTS)
 
     @property
-    def container_options(self) -> Callable[[int], dict]:
-        """Return Callable which takes a sequence number and returns container options."""
-        return lambda sequence: {
-            # Removed skip_sidx - see https://github.com/home-assistant/core/pull/39970
-            "movflags": "frag_custom+empty_moov+default_base_moof+frag_discont",
-            "avoid_negative_ts": "make_non_negative",
-            "fragment_index": str(sequence),
-        }
-
-    @property
-    def segments(self) -> List[int]:
-        """Return current sequence from segments."""
-        return [s.sequence for s in self._segments]
-
-    @property
-    def target_duration(self) -> int:
-        """Return the max duration of any given segment in seconds."""
-        segment_length = len(self._segments)
-        if not segment_length:
-            return 1
-        durations = [s.duration for s in self._segments]
-        return round(max(durations)) or 1
-
-    def get_segment(self, sequence: int = None) -> Any:
-        """Retrieve a specific segment, or the whole list."""
-        if not sequence:
-            return self._segments
-
-        for segment in self._segments:
-            if segment.sequence == sequence:
-                return segment
-        return None
-
-    async def recv(self) -> Segment:
-        """Wait for and retrieve the latest segment."""
-        last_segment = max(self.segments, default=0)
-        if self._cursor is None or self._cursor <= last_segment:
-            await self._event.wait()
-
-        if not self._segments:
-            return None
-
-        segment = self.get_segment()[-1]
-        self._cursor = segment.sequence
-        return segment
-
-    def _async_put(self, segment: Segment) -> None:
-        """Store output from event loop."""
-        self._segments.append(segment)
-        self._event.set()
-        self._event.clear()
-
-    def cleanup(self):
-        """Handle cleanup."""
-        self._event.set()
-        self._segments = deque(maxlen=MAX_SEGMENTS)
+    def name(self) -> str:
+        """Return provider name."""
+        return "hls"

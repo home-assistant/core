@@ -41,7 +41,9 @@ async def async_attach_trigger(
 
     # Arm at setup if the template is already false.
     try:
-        if not result_as_boolean(value_template.async_render()):
+        if not result_as_boolean(
+            value_template.async_render(automation_info["variables"])
+        ):
             armed = True
     except exceptions.TemplateError as ex:
         _LOGGER.warning(

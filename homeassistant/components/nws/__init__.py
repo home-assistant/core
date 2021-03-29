@@ -1,8 +1,10 @@
 """The National Weather Service integration."""
+from __future__ import annotations
+
 import asyncio
 import datetime
 import logging
-from typing import Awaitable, Callable, Optional
+from typing import Awaitable, Callable
 
 from pynws import SimpleNWS
 
@@ -58,8 +60,8 @@ class NwsDataUpdateCoordinator(DataUpdateCoordinator):
         name: str,
         update_interval: datetime.timedelta,
         failed_update_interval: datetime.timedelta,
-        update_method: Optional[Callable[[], Awaitable]] = None,
-        request_refresh_debouncer: Optional[debounce.Debouncer] = None,
+        update_method: Callable[[], Awaitable] | None = None,
+        request_refresh_debouncer: debounce.Debouncer | None = None,
     ):
         """Initialize NWS coordinator."""
         super().__init__(
@@ -157,9 +159,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     await coordinator_forecast.async_refresh()
     await coordinator_forecast_hourly.async_refresh()
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
     return True
 
@@ -169,8 +171,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

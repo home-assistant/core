@@ -1,9 +1,11 @@
 """Legacy device tracker classes."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import hashlib
 from types import ModuleType
-from typing import Any, Callable, Dict, List, Optional, Sequence
+from typing import Any, Callable, Sequence, final
 
 import attr
 import voluptuous as vol
@@ -205,7 +207,7 @@ class DeviceTrackerPlatform:
 
     name: str = attr.ib()
     platform: ModuleType = attr.ib()
-    config: Dict = attr.ib()
+    config: dict = attr.ib()
 
     @property
     def type(self):
@@ -219,7 +221,7 @@ class DeviceTrackerPlatform:
 
     async def async_setup_legacy(self, hass, tracker, discovery_info=None):
         """Set up a legacy platform."""
-        LOGGER.info("Setting up %s.%s", DOMAIN, self.type)
+        LOGGER.info("Setting up %s.%s", DOMAIN, self.name)
         try:
             scanner = None
             setup = None
@@ -246,6 +248,9 @@ class DeviceTrackerPlatform:
             else:
                 raise HomeAssistantError("Invalid legacy device_tracker platform.")
 
+            if setup:
+                hass.config.components.add(f"{DOMAIN}.{self.name}")
+
             if scanner:
                 async_setup_scanner_platform(
                     hass, self.config, scanner, tracker.async_see, self.type
@@ -253,11 +258,11 @@ class DeviceTrackerPlatform:
                 return
 
             if not setup:
-                LOGGER.error("Error setting up platform %s", self.type)
+                LOGGER.error("Error setting up platform %s %s", self.type, self.name)
                 return
 
         except Exception:  # pylint: disable=broad-except
-            LOGGER.exception("Error setting up platform %s", self.type)
+            LOGGER.exception("Error setting up platform %s %s", self.type, self.name)
 
 
 async def async_extract_config(hass, config):
@@ -285,7 +290,7 @@ async def async_extract_config(hass, config):
 
 async def async_create_platform_type(
     hass, config, p_type, p_config
-) -> Optional[DeviceTrackerPlatform]:
+) -> DeviceTrackerPlatform | None:
     """Determine type of platform."""
     platform = await async_prepare_setup_platform(hass, config, DOMAIN, p_type)
 
@@ -586,7 +591,7 @@ class DeviceTracker:
 
 
 class Device(RestoreEntity):
-    """Represent a tracked device."""
+    """Base class for a tracked device."""
 
     host_name: str = None
     location_name: str = None
@@ -659,6 +664,7 @@ class Device(RestoreEntity):
         """Return the picture of the device."""
         return self.config_picture
 
+    @final
     @property
     def state_attributes(self):
         """Return the device state attributes."""
@@ -675,7 +681,7 @@ class Device(RestoreEntity):
         return attributes
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device state attributes."""
         return self._attributes
 
@@ -786,7 +792,7 @@ class DeviceScanner:
 
     hass: HomeAssistantType = None
 
-    def scan_devices(self) -> List[str]:
+    def scan_devices(self) -> list[str]:
         """Scan for devices."""
         raise NotImplementedError()
 

@@ -45,7 +45,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-# pylint: disable=no-member
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Find and return switches controlled by a generic RF device via GPIO."""
     rpi_rf = importlib.import_module("rpi_rf")

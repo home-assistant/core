@@ -4,7 +4,6 @@ import logging
 import os
 
 import aiohttp
-import async_timeout
 
 from homeassistant.components.http import (
     CONF_SERVER_HOST,
@@ -52,7 +51,12 @@ def api_data(funct):
 class HassIO:
     """Small API wrapper for Hass.io."""
 
-    def __init__(self, loop, websession, ip):
+    def __init__(
+        self,
+        loop: asyncio.AbstractEventLoop,
+        websession: aiohttp.ClientSession,
+        ip: str,
+    ) -> None:
         """Initialize Hass.io API."""
         self.loop = loop
         self.websession = websession
@@ -187,20 +191,20 @@ class HassIO:
         This method is a coroutine.
         """
         try:
-            with async_timeout.timeout(timeout):
-                request = await self.websession.request(
-                    method,
-                    f"http://{self._ip}{command}",
-                    json=payload,
-                    headers={X_HASSIO: os.environ.get("HASSIO_TOKEN", "")},
-                )
+            request = await self.websession.request(
+                method,
+                f"http://{self._ip}{command}",
+                json=payload,
+                headers={X_HASSIO: os.environ.get("HASSIO_TOKEN", "")},
+                timeout=aiohttp.ClientTimeout(total=timeout),
+            )
 
-                if request.status not in (HTTP_OK, HTTP_BAD_REQUEST):
-                    _LOGGER.error("%s return code %d", command, request.status)
-                    raise HassioAPIError()
+            if request.status not in (HTTP_OK, HTTP_BAD_REQUEST):
+                _LOGGER.error("%s return code %d", command, request.status)
+                raise HassioAPIError()
 
-                answer = await request.json()
-                return answer
+            answer = await request.json()
+            return answer
 
         except asyncio.TimeoutError:
             _LOGGER.error("Timeout on %s request", command)

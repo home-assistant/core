@@ -10,7 +10,7 @@ from tests.common import (
     async_get_device_automations,
     async_mock_service,
 )
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
 @pytest.fixture
@@ -33,8 +33,12 @@ async def test_get_triggers(hass, mock_device):
     assert_lists_same(triggers, expected_triggers)
 
 
-async def test_if_fires_on_turn_on_request(hass, calls, mock_entity, mock_device):
+async def test_if_fires_on_turn_on_request(
+    hass, calls, mock_tv, mock_entity, mock_device
+):
     """Test for turn_on and turn_off triggers firing."""
+
+    mock_tv.on = False
 
     assert await async_setup_component(
         hass,

@@ -1,4 +1,6 @@
 """Selectors for Home Assistant."""
+from __future__ import annotations
+
 from typing import Any, Callable, Dict, cast
 
 import voluptuous as vol
@@ -9,7 +11,7 @@ from homeassistant.util import decorator
 SELECTORS = decorator.Registry()
 
 
-def validate_selector(config: Any) -> Dict:
+def validate_selector(config: Any) -> dict:
     """Validate a selector."""
     if not isinstance(config, dict):
         raise vol.Invalid("Expected a dictionary")
@@ -114,6 +116,13 @@ class NumberSelector(Selector):
             vol.Optional(CONF_MODE, default="slider"): vol.In(["box", "slider"]),
         }
     )
+
+
+@SELECTORS.register("addon")
+class AddonSelector(Selector):
+    """Selector of a add-on."""
+
+    CONFIG_SCHEMA = vol.Schema({})
 
 
 @SELECTORS.register("boolean")

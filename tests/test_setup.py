@@ -441,10 +441,14 @@ class TestSetup:
         """Test all init work done till start."""
         call_order = []
 
-        def component1_setup(hass, config):
+        async def component1_setup(hass, config):
             """Set up mock component."""
-            discovery.discover(hass, "test_component2", {}, "test_component2", {})
-            discovery.discover(hass, "test_component3", {}, "test_component3", {})
+            await discovery.async_discover(
+                hass, "test_component2", {}, "test_component2", {}
+            )
+            await discovery.async_discover(
+                hass, "test_component3", {}, "test_component3", {}
+            )
             return True
 
         def component_track_setup(hass, config):
@@ -453,7 +457,7 @@ class TestSetup:
             return True
 
         mock_integration(
-            self.hass, MockModule("test_component1", setup=component1_setup)
+            self.hass, MockModule("test_component1", async_setup=component1_setup)
         )
 
         mock_integration(
@@ -596,3 +600,21 @@ async def test_integration_disabled(hass, caplog):
     result = await setup.async_setup_component(hass, "test_component1", {})
     assert not result
     assert disabled_reason in caplog.text
+
+
+async def test_async_get_loaded_integrations(hass):
+    """Test we can enumerate loaded integations."""
+    hass.config.components.add("notbase")
+    hass.config.components.add("switch")
+    hass.config.components.add("notbase.switch")
+    hass.config.components.add("myintegration")
+    hass.config.components.add("device_tracker")
+    hass.config.components.add("device_tracker.other")
+    hass.config.components.add("myintegration.light")
+    assert setup.async_get_loaded_integrations(hass) == {
+        "other",
+        "switch",
+        "notbase",
+        "myintegration",
+        "device_tracker",
+    }

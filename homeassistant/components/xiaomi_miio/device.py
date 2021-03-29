@@ -78,10 +78,14 @@ class XiaomiMiioEntity(Entity):
     @property
     def device_info(self):
         """Return the device info."""
-        return {
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac)},
+        device_info = {
             "identifiers": {(DOMAIN, self._device_id)},
             "manufacturer": "Xiaomi",
             "name": self._name,
             "model": self._model,
         }
+
+        if self._mac is not None:
+            device_info["connections"] = {(dr.CONNECTION_NETWORK_MAC, self._mac)}
+
+        return device_info

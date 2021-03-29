@@ -5,7 +5,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import DOMAIN, SUPPORTED_PLATFORMS
+from .const import DOMAIN, PLATFORMS
 from .onewirehub import CannotConnect, OneWireHub
 
 
@@ -26,9 +26,9 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry):
 
     hass.data[DOMAIN][config_entry.unique_id] = onewirehub
 
-    for component in SUPPORTED_PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
+            hass.config_entries.async_forward_entry_setup(config_entry, platform)
         )
     return True
 
@@ -38,8 +38,8 @@ async def async_unload_entry(hass: HomeAssistantType, config_entry: ConfigEntry)
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(config_entry, component)
-                for component in SUPPORTED_PLATFORMS
+                hass.config_entries.async_forward_entry_unload(config_entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

@@ -15,7 +15,7 @@
                 "data": {
                     "password": "Passord"
                 },
-                "description": "Godkjenningstokener ble ugyldige, logg inn for \u00e5 gjenopprette dem"
+                "description": "Autentiseringstokener ble ugyldige, logg inn for \u00e5 gjenskape dem."
             },
             "user": {
                 "data": {

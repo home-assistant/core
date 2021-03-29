@@ -8,6 +8,7 @@ import pytest
 from homeassistant.components import onboarding
 from homeassistant.components.onboarding import const, views
 from homeassistant.const import HTTP_FORBIDDEN
+from homeassistant.helpers import area_registry as ar
 from homeassistant.setup import async_setup_component
 
 from . import mock_storage
@@ -181,7 +182,7 @@ async def test_onboarding_user(hass, hass_storage, aiohttp_client):
     )
 
     # Validate created areas
-    area_registry = await hass.helpers.area_registry.async_get_registry()
+    area_registry = ar.async_get(hass)
     assert len(area_registry.areas) == 3
     assert sorted([area.name for area in area_registry.async_list_areas()]) == [
         "Bedroom",

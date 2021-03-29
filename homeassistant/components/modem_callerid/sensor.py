@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE,
@@ -11,8 +11,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     STATE_IDLE,
 )
-from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity import Entity
+import homeassistant.helpers.config_validation as cv
 
 from .const import (
     DATA_KEY_API,
@@ -60,7 +59,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     )
 
 
-class ModemCalleridSensor(Entity):
+class ModemCalleridSensor(SensorEntity):
     """Implementation of USB modem caller ID sensor."""
 
     def __init__(self, hass, api, name, device, server_unique_id):
@@ -108,7 +107,7 @@ class ModemCalleridSensor(Entity):
         return f"{self._server_unique_id}/{self._name}"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._attributes
 

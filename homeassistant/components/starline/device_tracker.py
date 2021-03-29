@@ -26,7 +26,7 @@ class StarlineDeviceTracker(StarlineEntity, TrackerEntity, RestoreEntity):
         super().__init__(account, device, "location", "Location")
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific attributes."""
         return self._account.gps_attrs(self._device)
 

@@ -3,7 +3,7 @@
   "name": "Mazda Connected Services",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/mazda",
-  "requirements": ["pymazda==0.0.8"],
+  "requirements": ["pymazda==0.0.9"],
   "codeowners": ["@bdr99"],
   "quality_scale": "platinum"
 }

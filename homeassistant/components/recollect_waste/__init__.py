@@ -1,7 +1,8 @@
 """The ReCollect Waste integration."""
+from __future__ import annotations
+
 import asyncio
 from datetime import date, timedelta
-from typing import List
 
 from aiorecollect.client import Client, PickupEvent
 from aiorecollect.errors import RecollectError
@@ -35,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data[CONF_PLACE_ID], entry.data[CONF_SERVICE_ID], session=session
     )
 
-    async def async_get_pickup_events() -> List[PickupEvent]:
+    async def async_get_pickup_events() -> list[PickupEvent]:
         """Get the next pickup."""
         try:
             return await client.async_get_pickup_events(
@@ -61,9 +62,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id] = coordinator
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     hass.data[DOMAIN][DATA_LISTENER][entry.entry_id] = entry.add_update_listener(
@@ -83,8 +84,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

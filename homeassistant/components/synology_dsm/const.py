@@ -19,7 +19,10 @@ from homeassistant.const import (
 
 DOMAIN = "synology_dsm"
 PLATFORMS = ["binary_sensor", "camera", "sensor", "switch"]
-COORDINATOR_SURVEILLANCE = "coordinator_surveillance_station"
+COORDINATOR_CAMERAS = "coordinator_cameras"
+COORDINATOR_CENTRAL = "coordinator_central"
+COORDINATOR_SWITCHES = "coordinator_switches"
+SYSTEM_LOADED = "system_loaded"
 
 # Entry keys
 SYNO_API = "syno_api"
@@ -28,6 +31,7 @@ UNDO_UPDATE_LISTENER = "undo_update_listener"
 # Configuration
 CONF_SERIAL = "serial"
 CONF_VOLUMES = "volumes"
+CONF_DEVICE_TOKEN = "device_token"
 
 DEFAULT_USE_SSL = True
 DEFAULT_VERIFY_SSL = False
@@ -124,21 +128,21 @@ UTILISATION_SENSORS = {
         ENTITY_ENABLE: True,
     },
     f"{SynoCoreUtilization.API_KEY}:cpu_1min_load": {
-        ENTITY_NAME: "CPU Load Averarge (1 min)",
+        ENTITY_NAME: "CPU Load Average (1 min)",
         ENTITY_UNIT: ENTITY_UNIT_LOAD,
         ENTITY_ICON: "mdi:chip",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: False,
     },
     f"{SynoCoreUtilization.API_KEY}:cpu_5min_load": {
-        ENTITY_NAME: "CPU Load Averarge (5 min)",
+        ENTITY_NAME: "CPU Load Average (5 min)",
         ENTITY_UNIT: ENTITY_UNIT_LOAD,
         ENTITY_ICON: "mdi:chip",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
     },
     f"{SynoCoreUtilization.API_KEY}:cpu_15min_load": {
-        ENTITY_NAME: "CPU Load Averarge (15 min)",
+        ENTITY_NAME: "CPU Load Average (15 min)",
         ENTITY_UNIT: ENTITY_UNIT_LOAD,
         ENTITY_ICON: "mdi:chip",
         ENTITY_CLASS: None,

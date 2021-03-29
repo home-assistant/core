@@ -5,7 +5,7 @@ import logging
 
 import async_timeout
 from awesomeversion import AwesomeVersion
-from distro import linux_distribution  # pylint: disable=import-error
+from distro import linux_distribution
 import voluptuous as vol
 
 from homeassistant.const import __version__ as current_version

@@ -19,6 +19,7 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
     VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, patch
@@ -107,7 +108,7 @@ async def test_default_setup(hass, dsmr_connection_fixture):
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     entry = registry.async_get("sensor.power_consumption")
     assert entry
@@ -167,7 +168,7 @@ async def test_setup_only_energy(hass, dsmr_connection_fixture):
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     entry = registry.async_get("sensor.power_consumption")
     assert entry

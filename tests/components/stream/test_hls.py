@@ -20,6 +20,8 @@ from tests.components.stream.common import generate_h264_video
 STREAM_SOURCE = "some-stream-source"
 SEQUENCE_BYTES = io.BytesIO(b"some-bytes")
 DURATION = 10
+TEST_TIMEOUT = 5.0  # Lower than 9s home assistant timeout
+MAX_ABORT_SEGMENTS = 20  # Abort test to avoid looping forever
 
 
 class HlsClient:
@@ -45,13 +47,22 @@ def hls_stream(hass, hass_client):
 
     async def create_client_for_stream(stream):
         http_client = await hass_client()
-        parsed_url = urlparse(stream.endpoint_url())
+        parsed_url = urlparse(stream.endpoint_url("hls"))
         return HlsClient(http_client, parsed_url)
 
     return create_client_for_stream
 
 
-def playlist_response(sequence, segments):
+def make_segment(segment, discontinuity=False):
+    """Create a playlist response for a segment."""
+    response = []
+    if discontinuity:
+        response.append("#EXT-X-DISCONTINUITY")
+    response.extend(["#EXTINF:10.0000,", f"./segment/{segment}.m4s"]),
+    return "\n".join(response)
+
+
+def make_playlist(sequence, discontinuity_sequence=0, segments=[]):
     """Create a an hls playlist response for tests to assert on."""
     response = [
         "#EXTM3U",
@@ -59,14 +70,9 @@ def playlist_response(sequence, segments):
         "#EXT-X-TARGETDURATION:10",
         '#EXT-X-MAP:URI="init.mp4"',
         f"#EXT-X-MEDIA-SEQUENCE:{sequence}",
+        f"#EXT-X-DISCONTINUITY-SEQUENCE:{discontinuity_sequence}",
     ]
-    for segment in segments:
-        response.extend(
-            [
-                "#EXTINF:10.0000,",
-                f"./segment/{segment}.m4s",
-            ]
-        )
+    response.extend(segments)
     response.append("")
     return "\n".join(response)
 
@@ -87,7 +93,7 @@ async def test_hls_stream(hass, hls_stream, stream_worker_sync):
     stream = create_stream(hass, source)
 
     # Request stream
-    stream.hls_output()
+    stream.add_provider("hls")
     stream.start()
 
     hls_client = await hls_stream(stream)
@@ -128,9 +134,9 @@ async def test_stream_timeout(hass, hass_client, stream_worker_sync):
     stream = create_stream(hass, source)
 
     # Request stream
-    stream.hls_output()
+    stream.add_provider("hls")
     stream.start()
-    url = stream.endpoint_url()
+    url = stream.endpoint_url("hls")
 
     http_client = await hass_client()
 
@@ -159,8 +165,8 @@ async def test_stream_timeout(hass, hass_client, stream_worker_sync):
     assert fail_response.status == HTTP_NOT_FOUND
 
 
-async def test_stream_ended(hass, stream_worker_sync):
-    """Test hls stream packets ended."""
+async def test_stream_timeout_after_stop(hass, hass_client, stream_worker_sync):
+    """Test hls stream timeout after the stream has been stopped already."""
     await async_setup_component(hass, "stream", {"stream": {}})
 
     stream_worker_sync.pause()
@@ -170,24 +176,17 @@ async def test_stream_ended(hass, stream_worker_sync):
     stream = create_stream(hass, source)
 
     # Request stream
-    track = stream.hls_output()
+    stream.add_provider("hls")
     stream.start()
 
-    # Run it dead
-    while True:
-        segment = await track.recv()
-        if segment is None:
-            break
-        segments = segment.sequence
-        # Allow worker to finalize once enough of the stream is been consumed
-        if segments > 1:
-            stream_worker_sync.resume()
-
-    assert segments > 1
-    assert not track.get_segment()
-
-    # Stop stream, if it hasn't quit already
+    stream_worker_sync.resume()
     stream.stop()
+
+    # Wait 5 minutes and fire callback.  Stream should already have been
+    # stopped so this is a no-op.
+    future = dt_util.utcnow() + timedelta(minutes=5)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
 
 
 async def test_stream_keepalive(hass):
@@ -197,9 +196,8 @@ async def test_stream_keepalive(hass):
     # Setup demo HLS track
     source = "test_stream_keepalive_source"
     stream = create_stream(hass, source)
-    track = stream.hls_output()
+    track = stream.add_provider("hls")
     track.num_segments = 2
-    stream.start()
 
     cur_time = 0
 
@@ -228,12 +226,12 @@ async def test_stream_keepalive(hass):
     stream.stop()
 
 
-async def test_hls_playlist_view_no_output(hass, hls_stream):
+async def test_hls_playlist_view_no_output(hass, hass_client, hls_stream):
     """Test rendering the hls playlist with no output segments."""
     await async_setup_component(hass, "stream", {"stream": {}})
 
     stream = create_stream(hass, STREAM_SOURCE)
-    stream.hls_output()
+    stream.add_provider("hls")
 
     hls_client = await hls_stream(stream)
 
@@ -248,7 +246,7 @@ async def test_hls_playlist_view(hass, hls_stream, stream_worker_sync):
 
     stream = create_stream(hass, STREAM_SOURCE)
     stream_worker_sync.pause()
-    hls = stream.hls_output()
+    hls = stream.add_provider("hls")
 
     hls.put(Segment(1, SEQUENCE_BYTES, DURATION))
     await hass.async_block_till_done()
@@ -257,13 +255,15 @@ async def test_hls_playlist_view(hass, hls_stream, stream_worker_sync):
 
     resp = await hls_client.get("/playlist.m3u8")
     assert resp.status == 200
-    assert await resp.text() == playlist_response(sequence=1, segments=[1])
+    assert await resp.text() == make_playlist(sequence=1, segments=[make_segment(1)])
 
     hls.put(Segment(2, SEQUENCE_BYTES, DURATION))
     await hass.async_block_till_done()
     resp = await hls_client.get("/playlist.m3u8")
     assert resp.status == 200
-    assert await resp.text() == playlist_response(sequence=1, segments=[1, 2])
+    assert await resp.text() == make_playlist(
+        sequence=1, segments=[make_segment(1), make_segment(2)]
+    )
 
     stream_worker_sync.resume()
     stream.stop()
@@ -275,7 +275,7 @@ async def test_hls_max_segments(hass, hls_stream, stream_worker_sync):
 
     stream = create_stream(hass, STREAM_SOURCE)
     stream_worker_sync.pause()
-    hls = stream.hls_output()
+    hls = stream.add_provider("hls")
 
     hls_client = await hls_stream(stream)
 
@@ -289,8 +289,12 @@ async def test_hls_max_segments(hass, hls_stream, stream_worker_sync):
 
     # Only NUM_PLAYLIST_SEGMENTS are returned in the playlist.
     start = MAX_SEGMENTS + 2 - NUM_PLAYLIST_SEGMENTS
-    assert await resp.text() == playlist_response(
-        sequence=start, segments=range(start, MAX_SEGMENTS + 2)
+    segments = []
+    for sequence in range(start, MAX_SEGMENTS + 2):
+        segments.append(make_segment(sequence))
+    assert await resp.text() == make_playlist(
+        sequence=start,
+        segments=segments,
     )
 
     # Fetch the actual segments with a fake byte payload
@@ -305,6 +309,73 @@ async def test_hls_max_segments(hass, hls_stream, stream_worker_sync):
         for sequence in range(2, MAX_SEGMENTS + 2):
             segment_response = await hls_client.get(f"/segment/{sequence}.m4s")
             assert segment_response.status == 200
+
+    stream_worker_sync.resume()
+    stream.stop()
+
+
+async def test_hls_playlist_view_discontinuity(hass, hls_stream, stream_worker_sync):
+    """Test a discontinuity across segments in the stream with 3 segments."""
+    await async_setup_component(hass, "stream", {"stream": {}})
+
+    stream = create_stream(hass, STREAM_SOURCE)
+    stream_worker_sync.pause()
+    hls = stream.add_provider("hls")
+
+    hls.put(Segment(1, SEQUENCE_BYTES, DURATION, stream_id=0))
+    hls.put(Segment(2, SEQUENCE_BYTES, DURATION, stream_id=0))
+    hls.put(Segment(3, SEQUENCE_BYTES, DURATION, stream_id=1))
+    await hass.async_block_till_done()
+
+    hls_client = await hls_stream(stream)
+
+    resp = await hls_client.get("/playlist.m3u8")
+    assert resp.status == 200
+    assert await resp.text() == make_playlist(
+        sequence=1,
+        segments=[
+            make_segment(1),
+            make_segment(2),
+            make_segment(3, discontinuity=True),
+        ],
+    )
+
+    stream_worker_sync.resume()
+    stream.stop()
+
+
+async def test_hls_max_segments_discontinuity(hass, hls_stream, stream_worker_sync):
+    """Test a discontinuity with more segments than the segment deque can hold."""
+    await async_setup_component(hass, "stream", {"stream": {}})
+
+    stream = create_stream(hass, STREAM_SOURCE)
+    stream_worker_sync.pause()
+    hls = stream.add_provider("hls")
+
+    hls_client = await hls_stream(stream)
+
+    hls.put(Segment(1, SEQUENCE_BYTES, DURATION, stream_id=0))
+
+    # Produce enough segments to overfill the output buffer by one
+    for sequence in range(1, MAX_SEGMENTS + 2):
+        hls.put(Segment(sequence, SEQUENCE_BYTES, DURATION, stream_id=1))
+    await hass.async_block_till_done()
+
+    resp = await hls_client.get("/playlist.m3u8")
+    assert resp.status == 200
+
+    # Only NUM_PLAYLIST_SEGMENTS are returned in the playlist causing the
+    # EXT-X-DISCONTINUITY tag to be omitted and EXT-X-DISCONTINUITY-SEQUENCE
+    # returned instead.
+    start = MAX_SEGMENTS + 2 - NUM_PLAYLIST_SEGMENTS
+    segments = []
+    for sequence in range(start, MAX_SEGMENTS + 2):
+        segments.append(make_segment(sequence))
+    assert await resp.text() == make_playlist(
+        sequence=start,
+        discontinuity_sequence=1,
+        segments=segments,
+    )
 
     stream_worker_sync.resume()
     stream.stop()

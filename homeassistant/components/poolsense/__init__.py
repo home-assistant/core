@@ -56,9 +56,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -69,8 +69,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )
@@ -118,7 +118,7 @@ class PoolSenseDataUpdateCoordinator(DataUpdateCoordinator):
             try:
                 data = await self.poolsense.get_poolsense_data()
             except (PoolSenseError) as error:
-                _LOGGER.error("PoolSense query did not complete.")
+                _LOGGER.error("PoolSense query did not complete")
                 raise UpdateFailed(error) from error
 
         return data
