@@ -37,10 +37,10 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import CoreState, State
+from homeassistant.core import CoreState, HomeAssistant, State
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import color as color_util
 
 from . import GroupEntity
@@ -69,7 +69,7 @@ SUPPORT_GROUP_LIGHT = (
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
 ) -> None:
     """Initialize light.group platform."""
     async_add_entities(

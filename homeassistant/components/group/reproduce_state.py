@@ -3,15 +3,14 @@ from __future__ import annotations
 
 from typing import Any, Iterable
 
-from homeassistant.core import Context, State
+from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state
-from homeassistant.helpers.typing import HomeAssistantType
 
 from . import get_entity_ids
 
 
 async def async_reproduce_states(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     states: Iterable[State],
     *,
     context: Context | None = None,
