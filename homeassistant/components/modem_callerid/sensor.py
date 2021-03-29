@@ -11,7 +11,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     STATE_IDLE,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_platform
 
 from .const import (
     DATA_KEY_API,
