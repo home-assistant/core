@@ -221,7 +221,7 @@ class DeviceTrackerPlatform:
 
     async def async_setup_legacy(self, hass, tracker, discovery_info=None):
         """Set up a legacy platform."""
-        LOGGER.info("Setting up %s.%s", DOMAIN, self.type)
+        LOGGER.info("Setting up %s.%s", DOMAIN, self.name)
         try:
             scanner = None
             setup = None
@@ -248,6 +248,9 @@ class DeviceTrackerPlatform:
             else:
                 raise HomeAssistantError("Invalid legacy device_tracker platform.")
 
+            if setup:
+                hass.config.components.add(f"{DOMAIN}.{self.name}")
+
             if scanner:
                 async_setup_scanner_platform(
                     hass, self.config, scanner, tracker.async_see, self.type
@@ -255,11 +258,11 @@ class DeviceTrackerPlatform:
                 return
 
             if not setup:
-                LOGGER.error("Error setting up platform %s", self.type)
+                LOGGER.error("Error setting up platform %s %s", self.type, self.name)
                 return
 
         except Exception:  # pylint: disable=broad-except
-            LOGGER.exception("Error setting up platform %s", self.type)
+            LOGGER.exception("Error setting up platform %s %s", self.type, self.name)
 
 
 async def async_extract_config(hass, config):
