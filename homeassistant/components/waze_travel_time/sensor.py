@@ -53,7 +53,7 @@ SCAN_INTERVAL = timedelta(minutes=5)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(WAZE_SCHEMA)
 
 
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Waze travel time sensor platform."""
 
     await hass.config_entries.flow.async_init(
