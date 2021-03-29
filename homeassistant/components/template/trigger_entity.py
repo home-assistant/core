@@ -78,7 +78,7 @@ class TriggerEntity(update_coordinator.CoordinatorEntity):
         """Name of the entity."""
         if (
             self._rendered is not None
-            and (name := self._rendered.get(CONF_FRIENDLY_NAME_TEMPLATE))
+            and (name := self._rendered.get(CONF_FRIENDLY_NAME_TEMPLATE)) is not None
         ):
             return name
         return self._name
