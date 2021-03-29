@@ -336,14 +336,9 @@ class MqttFan(MqttEntity, FanEntity):
         if self._feature_preset_mode:
             self._supported_features |= SUPPORT_PRESET_MODE
 
-        for key, tpl in list(self._value_templates.items()):
-            if tpl is None:
-                self._value_templates[key] = lambda value: value
-            else:
-                tpl.hass = self.hass
-                self._value_templates[key] = tpl.async_render_with_possible_json_value
-
-        for key, tpl in list(self._command_templates.items()):
+        for tpl_dict in [self._command_templates, self._value_templates]
+            for key, tpl in tpl_dict.items():
+                ...
             if tpl is None:
                 self._command_templates[key] = lambda value: value
             else:
