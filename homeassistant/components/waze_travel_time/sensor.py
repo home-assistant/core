@@ -109,25 +109,34 @@ async def async_setup_entry(
     async_add_entities: Callable[[list[SensorEntity], bool], None],
 ) -> None:
     """Set up a Waze travel time sensor entry."""
+    DEFAULTS = {
+        CONF_REALTIME: DEFAULT_REALTIME,
+        CONF_VEHICLE_TYPE: DEFAULT_VEHICLE_TYPE,
+        CONF_UNITS: hass.config.units.name,
+        CONF_AVOID_FERRIES: DEFAULT_AVOID_FERRIES,
+        CONF_AVOID_SUBSCRIPTION_ROADS: DEFAULT_AVOID_SUBSCRIPTION_ROADS,
+        CONF_AVOID_TOLL_ROADS: DEFAULT_AVOID_TOLL_ROADS,
+    }
     name = None
-    if config_entry.source == SOURCE_IMPORT and not config_entry.options:
+    if not config_entry.options:
         new_data = config_entry.data.copy()
-        name = config_entry.data.get(CONF_NAME)
-        new_data.pop(CONF_NAME)
-        options = {
-            key: new_data.pop(key)
-            for key in [
-                CONF_INCL_FILTER,
-                CONF_EXCL_FILTER,
-                CONF_REALTIME,
-                CONF_VEHICLE_TYPE,
-                CONF_AVOID_TOLL_ROADS,
-                CONF_AVOID_SUBSCRIPTION_ROADS,
-                CONF_AVOID_FERRIES,
-                CONF_UNITS,
-            ]
-            if key in new_data
-        }
+        name = new_data.pop(CONF_NAME, None)
+        options = {}
+        for key in [
+            CONF_INCL_FILTER,
+            CONF_EXCL_FILTER,
+            CONF_REALTIME,
+            CONF_VEHICLE_TYPE,
+            CONF_AVOID_TOLL_ROADS,
+            CONF_AVOID_SUBSCRIPTION_ROADS,
+            CONF_AVOID_FERRIES,
+            CONF_UNITS,
+        ]:
+            if key in new_data:
+                options[key] = new_data.pop(key)
+            elif key in DEFAULTS:
+                options[key] = DEFAULTS[key]
+
         await hass.config_entries.async_update_entry(
             config_entry, data=new_data, options=options
         )
@@ -139,16 +148,12 @@ async def async_setup_entry(
 
     incl_filter = config_entry.options.get(CONF_INCL_FILTER)
     excl_filter = config_entry.options.get(CONF_EXCL_FILTER)
-    realtime = config_entry.options.get(CONF_REALTIME, DEFAULT_REALTIME)
-    vehicle_type = config_entry.options.get(CONF_VEHICLE_TYPE, DEFAULT_VEHICLE_TYPE)
-    avoid_toll_roads = config_entry.options.get(
-        CONF_AVOID_TOLL_ROADS, DEFAULT_AVOID_TOLL_ROADS
-    )
-    avoid_subscription_roads = config_entry.options.get(
-        CONF_AVOID_SUBSCRIPTION_ROADS, DEFAULT_AVOID_SUBSCRIPTION_ROADS
-    )
-    avoid_ferries = config_entry.options.get(CONF_AVOID_FERRIES, DEFAULT_AVOID_FERRIES)
-    units = config_entry.options.get(CONF_UNITS, hass.config.units.name)
+    realtime = config_entry.options[CONF_REALTIME]
+    vehicle_type = config_entry.options[CONF_VEHICLE_TYPE]
+    avoid_toll_roads = config_entry.options[CONF_AVOID_TOLL_ROADS]
+    avoid_subscription_roads = config_entry.options[CONF_AVOID_SUBSCRIPTION_ROADS]
+    avoid_ferries = config_entry.options[CONF_AVOID_FERRIES]
+    units = config_entry.options[CONF_UNITS]
 
     data = WazeTravelTimeData(
         None,

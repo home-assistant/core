@@ -80,6 +80,11 @@ async def test_options(hass: HomeAssistant):
         },
     )
     entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.waze_travel_time.sensor.WazeTravelTimeData.update"
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(entry.entry_id, data=None)
 

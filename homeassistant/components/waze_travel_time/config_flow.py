@@ -18,12 +18,7 @@ from .const import (
     CONF_REALTIME,
     CONF_UNITS,
     CONF_VEHICLE_TYPE,
-    DEFAULT_AVOID_FERRIES,
-    DEFAULT_AVOID_SUBSCRIPTION_ROADS,
-    DEFAULT_AVOID_TOLL_ROADS,
     DEFAULT_NAME,
-    DEFAULT_REALTIME,
-    DEFAULT_VEHICLE_TYPE,
     DOMAIN,
     REGIONS,
     UNITS,
@@ -49,48 +44,37 @@ class WazeOptionsFlow(config_entries.OptionsFlow):
                 {
                     vol.Optional(
                         CONF_INCL_FILTER,
-                        default=self.config_entry.options.get(CONF_INCL_FILTER, ""),
+                        default=self.config_entry.options.get(CONF_INCL_FILTER),
                     ): cv.string,
                     vol.Optional(
                         CONF_EXCL_FILTER,
-                        default=self.config_entry.options.get(CONF_EXCL_FILTER, ""),
+                        default=self.config_entry.options.get(CONF_EXCL_FILTER),
                     ): cv.string,
                     vol.Optional(
                         CONF_REALTIME,
-                        default=self.config_entry.options.get(
-                            CONF_REALTIME, DEFAULT_REALTIME
-                        ),
+                        default=self.config_entry.options[CONF_REALTIME],
                     ): cv.boolean,
                     vol.Optional(
                         CONF_VEHICLE_TYPE,
-                        default=self.config_entry.options.get(
-                            CONF_VEHICLE_TYPE, DEFAULT_VEHICLE_TYPE
-                        ),
+                        default=self.config_entry.options[CONF_VEHICLE_TYPE],
                     ): vol.In(VEHICLE_TYPES),
                     vol.Optional(
                         CONF_UNITS,
-                        default=self.config_entry.options.get(
-                            CONF_UNITS, self.hass.config.units.name
-                        ),
+                        default=self.config_entry.options[CONF_UNITS],
                     ): vol.In(UNITS),
                     vol.Optional(
                         CONF_AVOID_TOLL_ROADS,
-                        default=self.config_entry.options.get(
-                            CONF_AVOID_TOLL_ROADS, DEFAULT_AVOID_TOLL_ROADS
-                        ),
+                        default=self.config_entry.options[CONF_AVOID_TOLL_ROADS],
                     ): cv.boolean,
                     vol.Optional(
                         CONF_AVOID_SUBSCRIPTION_ROADS,
-                        default=self.config_entry.options.get(
-                            CONF_AVOID_SUBSCRIPTION_ROADS,
-                            DEFAULT_AVOID_SUBSCRIPTION_ROADS,
-                        ),
+                        default=self.config_entry.options[
+                            CONF_AVOID_SUBSCRIPTION_ROADS
+                        ],
                     ): cv.boolean,
                     vol.Optional(
                         CONF_AVOID_FERRIES,
-                        default=self.config_entry.options.get(
-                            CONF_AVOID_FERRIES, DEFAULT_AVOID_FERRIES
-                        ),
+                        default=self.config_entry.options[CONF_AVOID_FERRIES],
                     ): cv.boolean,
                 }
             ),
