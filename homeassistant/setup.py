@@ -220,9 +220,9 @@ async def _async_setup_component(
                 domain,
                 SLOW_SETUP_WARNING,
             )
+
         task = None
         result = True
-
         try:
             if hasattr(component, "async_setup"):
                 task = component.async_setup(hass, processed_config)  # type: ignore
