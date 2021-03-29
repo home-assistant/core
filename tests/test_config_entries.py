@@ -795,7 +795,9 @@ async def test_setup_raise_not_ready(hass, caplog):
     """Test a setup raising not ready."""
     entry = MockConfigEntry(title="test_title", domain="test")
 
-    mock_setup_entry = AsyncMock(side_effect=ConfigEntryNotReady)
+    mock_setup_entry = AsyncMock(
+        side_effect=ConfigEntryNotReady("The internet connection is offline")
+    )
     mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
     mock_entity_platform(hass, "config_flow.test", None)
 
@@ -803,7 +805,10 @@ async def test_setup_raise_not_ready(hass, caplog):
         await entry.async_setup(hass)
 
     assert len(mock_call.mock_calls) == 1
-    assert "Config entry 'test_title' for test integration not ready yet" in caplog.text
+    assert (
+        "Config entry 'test_title' for test integration not ready yet: The internet connection is offline"
+        in caplog.text
+    )
     p_hass, p_wait_time, p_setup = mock_call.mock_calls[0][1]
 
     assert p_hass is hass
@@ -815,6 +820,28 @@ async def test_setup_raise_not_ready(hass, caplog):
 
     await p_setup(None)
     assert entry.state == config_entries.ENTRY_STATE_LOADED
+
+
+async def test_setup_raise_not_ready_from_exception(hass, caplog):
+    """Test a setup raising not ready from another exception."""
+    entry = MockConfigEntry(title="test_title", domain="test")
+
+    original_exception = HomeAssistantError("The device dropped the connection")
+    config_entry_exception = ConfigEntryNotReady()
+    config_entry_exception.__cause__ = original_exception
+
+    mock_setup_entry = AsyncMock(side_effect=config_entry_exception)
+    mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    with patch("homeassistant.helpers.event.async_call_later") as mock_call:
+        await entry.async_setup(hass)
+
+    assert len(mock_call.mock_calls) == 1
+    assert (
+        "Config entry 'test_title' for test integration not ready yet: The device dropped the connection"
+        in caplog.text
+    )
 
 
 async def test_setup_retrying_during_unload(hass):
