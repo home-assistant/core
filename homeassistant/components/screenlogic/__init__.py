@@ -60,8 +60,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         _LOGGER.error("Error while connecting to the gateway %s: %s", connect_info, ex)
         raise ConfigEntryNotReady from ex
 
+    # The api library uses a shared socket connection and does not handle concurrent
+    # requests very well.
+    api_lock = asyncio.Lock()
+
     coordinator = ScreenlogicDataUpdateCoordinator(
-        hass, config_entry=entry, gateway=gateway
+        hass, config_entry=entry, gateway=gateway, api_lock=api_lock
     )
 
     device_data = defaultdict(list)
@@ -127,10 +131,11 @@ async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
 class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage the data update for the Screenlogic component."""
 
-    def __init__(self, hass, *, config_entry, gateway):
+    def __init__(self, hass, *, config_entry, gateway, api_lock):
         """Initialize the Screenlogic Data Update Coordinator."""
         self.config_entry = config_entry
         self.gateway = gateway
+        self.api_lock = api_lock
         self.screenlogic_data = {}
         interval = timedelta(
             seconds=config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
@@ -145,7 +150,8 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Fetch data from the Screenlogic gateway."""
         try:
-            await self.hass.async_add_executor_job(self.gateway.update)
+            async with self.api_lock:
+                await self.hass.async_add_executor_job(self.gateway.update)
         except ScreenLogicError as error:
             raise UpdateFailed(error) from error
         return self.gateway.get_data()

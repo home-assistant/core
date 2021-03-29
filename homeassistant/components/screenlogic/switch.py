@@ -44,9 +44,12 @@ class ScreenLogicSwitch(ScreenlogicEntity, SwitchEntity):
         return await self._async_set_circuit(ON_OFF.OFF)
 
     async def _async_set_circuit(self, circuit_value) -> None:
-        if await self.hass.async_add_executor_job(
-            self.gateway.set_circuit, self._data_key, circuit_value
-        ):
+        async with self.coordinator.api_lock:
+            success = await self.hass.async_add_executor_job(
+                self.gateway.set_circuit, self._data_key, circuit_value
+            )
+
+        if success:
             _LOGGER.debug("Turn %s %s", self._data_key, circuit_value)
             await self.coordinator.async_request_refresh()
         else:
