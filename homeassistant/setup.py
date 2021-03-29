@@ -234,7 +234,6 @@ async def _async_setup_component(
                 )
             elif not hasattr(component, "async_setup_entry"):
                 log_error("No setup or config entry setup function defined.")
-                hass.data[DATA_SETUP_STARTED].pop(domain)
                 return False
 
             if task:
