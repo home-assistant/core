@@ -37,7 +37,6 @@ from homeassistant.const import (
     VOLUME_LITERS,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -134,9 +133,7 @@ async def async_setup_coordinator(hass: HomeAssistant, entry: ConfigEntry):
         update_interval = timedelta(minutes=DEFAULT_SCAN_INTERVAL)
 
     coordinator = PlaatoCoordinator(hass, auth_token, device_type, update_interval)
-    await coordinator.async_refresh()
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
 
     _set_entry_data(entry, hass, coordinator, auth_token)
 

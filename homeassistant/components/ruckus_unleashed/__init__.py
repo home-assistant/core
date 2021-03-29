@@ -47,9 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = RuckusUnleashedDataUpdateCoordinator(hass, ruckus=ruckus)
 
-    await coordinator.async_refresh()
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
 
     system_info = await hass.async_add_executor_job(ruckus.system_info)
 

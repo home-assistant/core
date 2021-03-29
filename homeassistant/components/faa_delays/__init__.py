@@ -10,7 +10,6 @@ from faadelays import Airport
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -32,10 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     code = entry.data[CONF_ID]
 
     coordinator = FAADataUpdateCoordinator(hass, code)
-    await coordinator.async_refresh()
-
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
 
     hass.data[DOMAIN][entry.entry_id] = coordinator
 

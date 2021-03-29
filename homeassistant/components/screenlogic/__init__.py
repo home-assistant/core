@@ -66,7 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     device_data = defaultdict(list)
 
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
     for circuit in coordinator.data["circuits"]:
         device_data["switch"].append(circuit)

@@ -95,9 +95,7 @@ class BroadlinkDevice:
 
         update_manager = get_update_manager(self)
         coordinator = update_manager.coordinator
-        await coordinator.async_refresh()
-        if not coordinator.last_update_success:
-            raise ConfigEntryNotReady()
+        await coordinator.async_config_entry_first_refresh()
 
         self.update_manager = update_manager
         self.hass.data[DOMAIN].devices[config.entry_id] = self

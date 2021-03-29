@@ -108,7 +108,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     )
     data[COORDINATOR] = coordinator
 
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
     if all(not bool(device.states) for device in coordinator.data.values()):
         _LOGGER.debug(

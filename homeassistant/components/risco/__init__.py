@@ -47,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     scan_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     coordinator = RiscoDataUpdateCoordinator(hass, risco, scan_interval)
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
     events_coordinator = RiscoEventsDataUpdateCoordinator(
         hass, risco, entry.entry_id, 60
     )

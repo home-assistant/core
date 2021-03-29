@@ -21,7 +21,6 @@ from homeassistant.const import (
     HTTP_UNAUTHORIZED,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -178,9 +177,7 @@ async def async_setup_entry(hass, config_entry):
     }
     _LOGGER.debug("Connected to the Tesla API")
 
-    await coordinator.async_refresh()
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
 
     all_devices = controller.get_homeassistant_components()
 

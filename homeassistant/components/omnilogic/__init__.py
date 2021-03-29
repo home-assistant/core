@@ -56,10 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         name="Omnilogic",
         polling_interval=polling_interval,
     )
-    await coordinator.async_refresh()
-
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
 
     hass.data[DOMAIN][entry.entry_id] = {
         COORDINATOR: coordinator,

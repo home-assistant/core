@@ -10,7 +10,6 @@ from python_awair.exceptions import AuthError
 
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import Config, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -29,10 +28,7 @@ async def async_setup_entry(hass, config_entry) -> bool:
     session = async_get_clientsession(hass)
     coordinator = AwairDataUpdateCoordinator(hass, config_entry, session)
 
-    await coordinator.async_refresh()
-
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = coordinator

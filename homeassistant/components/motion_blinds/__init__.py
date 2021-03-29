@@ -141,7 +141,7 @@ async def async_setup_entry(
     )
 
     # Fetch initial data so we have data when entities subscribe
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
     hass.data[DOMAIN][entry.entry_id] = {
         KEY_GATEWAY: motion_gateway,

@@ -8,7 +8,6 @@ from huisbaasje import Huisbaasje, HuisbaasjeException
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -61,10 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         update_interval=timedelta(seconds=POLLING_INTERVAL),
     )
 
-    await coordinator.async_refresh()
-
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
 
     # Load the client in the data of home assistant
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {
