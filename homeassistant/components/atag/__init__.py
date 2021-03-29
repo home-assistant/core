@@ -23,11 +23,6 @@ DOMAIN = "atag"
 PLATFORMS = [CLIMATE, WATER_HEATER, SENSOR]
 
 
-async def async_setup(hass: HomeAssistant, config):
-    """Set up the Atag component."""
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Atag integration from a config entry."""
 
