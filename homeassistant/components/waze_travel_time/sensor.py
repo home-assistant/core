@@ -15,6 +15,7 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
+    CONF_NAME,
     CONF_REGION,
     CONF_UNIT_SYSTEM_IMPERIAL,
     EVENT_HOMEASSISTANT_START,
@@ -63,6 +64,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_ORIGIN): cv.string,
         vol.Required(CONF_DESTINATION): cv.string,
         vol.Required(CONF_REGION): vol.In(REGIONS),
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_INCL_FILTER): cv.string,
         vol.Optional(CONF_EXCL_FILTER): cv.string,
         vol.Optional(CONF_REALTIME, default=DEFAULT_REALTIME): cv.boolean,
@@ -107,8 +109,10 @@ async def async_setup_entry(
     async_add_entities: Callable[[list[SensorEntity], bool], None],
 ) -> None:
     """Set up a Waze travel time sensor entry."""
+    name = None
     if config_entry.source == SOURCE_IMPORT and not config_entry.options:
         new_data = config_entry.data.copy()
+        name = config_entry.data[CONF_NAME]
         options = {
             key: new_data.pop(key)
             for key in [
@@ -130,6 +134,7 @@ async def async_setup_entry(
     destination = config_entry.data[CONF_DESTINATION]
     origin = config_entry.data[CONF_ORIGIN]
     region = config_entry.data[CONF_REGION]
+    name = name or DEFAULT_NAME
 
     incl_filter = config_entry.options.get(CONF_INCL_FILTER)
     excl_filter = config_entry.options.get(CONF_EXCL_FILTER)
@@ -158,7 +163,7 @@ async def async_setup_entry(
         avoid_ferries,
     )
 
-    sensor = WazeTravelTime(config_entry.unique_id, origin, destination, data)
+    sensor = WazeTravelTime(config_entry.unique_id, name, origin, destination, data)
 
     async_add_entities([sensor], False)
 
@@ -172,11 +177,11 @@ def _get_location_from_attributes(state):
 class WazeTravelTime(SensorEntity):
     """Representation of a Waze travel time sensor."""
 
-    def __init__(self, unique_id, origin, destination, waze_data):
+    def __init__(self, unique_id, name, origin, destination, waze_data):
         """Initialize the Waze travel time sensor."""
         self._unique_id = unique_id
         self._waze_data = waze_data
-        self._name = f"{DEFAULT_NAME}: {origin} -> {destination}"
+        self._name = f"{name}: {origin} -> {destination}"
         self._state = None
         self._origin_entity_id = None
         self._destination_entity_id = None
