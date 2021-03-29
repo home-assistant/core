@@ -131,6 +131,11 @@ class CloudGoogleConfig(AbstractConfig):
         """Return Agent User Id to use for query responses."""
         return self._cloud.username
 
+    @property
+    def has_registered_user_agent(self):
+        """Return if we have a Agent User Id registered."""
+        return len(self._store.agent_user_ids) > 0
+
     def get_agent_user_id(self, context):
         """Get agent user ID making request."""
         return self.agent_user_id

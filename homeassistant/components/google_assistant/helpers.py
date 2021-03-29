@@ -269,13 +269,17 @@ class AbstractConfig(ABC):
         if webhook_id is None:
             return
 
-        webhook.async_register(
-            self.hass,
-            DOMAIN,
-            "Local Support",
-            webhook_id,
-            self._handle_local_webhook,
-        )
+        try:
+            webhook.async_register(
+                self.hass,
+                DOMAIN,
+                "Local Support",
+                webhook_id,
+                self._handle_local_webhook,
+            )
+        except ValueError:
+            _LOGGER.info("Webhook handler is already defined!")
+            return
 
         self._local_sdk_active = True
 
