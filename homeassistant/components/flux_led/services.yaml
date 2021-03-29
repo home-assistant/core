@@ -1,9 +1,10 @@
 set_custom_effect:
   description: Set a custom light effect.
+  target:
+    entity:
+      integration: flux_led
+      domain: light
   fields:
-    entity_id:
-      description: Target light entity. (Required)
-      example: 'entity_id: light.led_lights'
     colors:
       description: List of colors for the custom effect (RGB). (Required, Max 16 Colors)
       example: |

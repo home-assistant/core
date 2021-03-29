@@ -127,26 +127,19 @@ FLUX_EFFECT_LIST = sorted(list(EFFECT_MAP)) + [EFFECT_RANDOM]
 
 SERVICE_CUSTOM_EFFECT = "set_custom_effect"
 
-CUSTOM_EFFECT_SCHEMA = vol.Schema(
-    {
-        vol.Required("entity_id"): str,
-        vol.Required(CONF_COLORS): vol.All(
-            cv.ensure_list,
-            vol.Length(min=1, max=16),
-            [
-                vol.All(
-                    vol.ExactSequence((cv.byte, cv.byte, cv.byte)), vol.Coerce(tuple)
-                )
-            ],
-        ),
-        vol.Optional(CONF_SPEED_PCT, default=50): vol.All(
-            vol.Range(min=0, max=100), vol.Coerce(int)
-        ),
-        vol.Optional(CONF_TRANSITION, default=TRANSITION_GRADUAL): vol.All(
-            cv.string, vol.In([TRANSITION_GRADUAL, TRANSITION_JUMP, TRANSITION_STROBE])
-        ),
-    }
-)
+CUSTOM_EFFECT_SCHEMA = {
+    vol.Required(CONF_COLORS): vol.All(
+        cv.ensure_list,
+        vol.Length(min=1, max=16),
+        [vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte)), vol.Coerce(tuple))],
+    ),
+    vol.Optional(CONF_SPEED_PCT, default=50): vol.All(
+        vol.Range(min=0, max=100), vol.Coerce(int)
+    ),
+    vol.Optional(CONF_TRANSITION, default=TRANSITION_GRADUAL): vol.All(
+        cv.string, vol.In([TRANSITION_GRADUAL, TRANSITION_JUMP, TRANSITION_STROBE])
+    ),
+}
 
 DEVICE_SCHEMA = vol.Schema(
     {
