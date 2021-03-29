@@ -252,21 +252,27 @@ class ConfigEntry:
                     "%s.async_setup_entry did not return boolean", integration.domain
                 )
                 result = False
-        except ConfigEntryNotReady:
+        except ConfigEntryNotReady as ex:
             self.state = ENTRY_STATE_SETUP_RETRY
             wait_time = 2 ** min(tries, 4) * 5
             tries += 1
+            message = str(ex)
+            if not message and ex.__cause__:
+                message = str(ex.__cause__)
+            ready_message = f"ready yet: {message}" if message else "ready yet"
             if tries == 1:
                 _LOGGER.warning(
-                    "Config entry '%s' for %s integration not ready yet. Retrying in background",
+                    "Config entry '%s' for %s integration not %s; Retrying in background",
                     self.title,
                     self.domain,
+                    ready_message,
                 )
             else:
                 _LOGGER.debug(
-                    "Config entry '%s' for %s integration not ready yet. Retrying in %d seconds",
+                    "Config entry '%s' for %s integration not %s; Retrying in %d seconds",
                     self.title,
                     self.domain,
+                    ready_message,
                     wait_time,
                 )
 
