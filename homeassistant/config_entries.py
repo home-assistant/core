@@ -630,17 +630,18 @@ class ConfigEntries:
         EntityRegistryDisabledHandler(hass).async_setup()
 
     @callback
-    def async_domains(self) -> list[str]:
+    def async_domains(
+        self, include_ignore: bool = False, include_disabled: bool = False
+    ) -> list[str]:
         """Return domains for which we have entries."""
-        seen: set[str] = set()
-        result = []
-
-        for entry in self._entries.values():
-            if entry.domain not in seen:
-                seen.add(entry.domain)
-                result.append(entry.domain)
-
-        return result
+        return list(
+            {
+                entry.domain: None
+                for entry in self._entries.values()
+                if (include_ignore or entry.source != SOURCE_IGNORE)
+                and (include_disabled or not entry.disabled_by)
+            }
+        )
 
     @callback
     def async_get_entry(self, entry_id: str) -> ConfigEntry | None:

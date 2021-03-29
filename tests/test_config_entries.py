@@ -473,7 +473,7 @@ async def test_entries_gets_entries(manager):
     assert manager.async_entries("test2") == [entry1, entry2]
 
 
-async def test_domains_gets_uniques(manager):
+async def test_domains_gets_domains_uniques(manager):
     """Test we only return each domain once."""
     MockConfigEntry(domain="test").add_to_manager(manager)
     MockConfigEntry(domain="test2").add_to_manager(manager)
@@ -482,6 +482,46 @@ async def test_domains_gets_uniques(manager):
     MockConfigEntry(domain="test3").add_to_manager(manager)
 
     assert manager.async_domains() == ["test", "test2", "test3"]
+
+
+async def test_domains_gets_domains_excludes_ignore_and_disabled(manager):
+    """Test we only return each domain once."""
+    MockConfigEntry(domain="test").add_to_manager(manager)
+    MockConfigEntry(domain="test2").add_to_manager(manager)
+    MockConfigEntry(domain="test2").add_to_manager(manager)
+    MockConfigEntry(
+        domain="ignored", source=config_entries.SOURCE_IGNORE
+    ).add_to_manager(manager)
+    MockConfigEntry(domain="test3").add_to_manager(manager)
+    MockConfigEntry(domain="disabled", disabled_by="user").add_to_manager(manager)
+    assert manager.async_domains() == ["test", "test2", "test3"]
+    assert manager.async_domains(include_ignore=False) == ["test", "test2", "test3"]
+    assert manager.async_domains(include_disabled=False) == ["test", "test2", "test3"]
+    assert manager.async_domains(include_ignore=False, include_disabled=False) == [
+        "test",
+        "test2",
+        "test3",
+    ]
+
+    assert manager.async_domains(include_ignore=True) == [
+        "test",
+        "test2",
+        "ignored",
+        "test3",
+    ]
+    assert manager.async_domains(include_disabled=True) == [
+        "test",
+        "test2",
+        "test3",
+        "disabled",
+    ]
+    assert manager.async_domains(include_ignore=True, include_disabled=True) == [
+        "test",
+        "test2",
+        "ignored",
+        "test3",
+        "disabled",
+    ]
 
 
 async def test_saving_and_loading(hass):
