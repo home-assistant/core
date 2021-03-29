@@ -5,8 +5,7 @@ import asyncio
 from typing import Any, Iterable
 
 from homeassistant.const import ATTR_TEMPERATURE
-from homeassistant.core import Context, State
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import Context, HomeAssistant, State
 
 from .const import (
     ATTR_AUX_HEAT,
@@ -28,7 +27,7 @@ from .const import (
 
 
 async def _async_reproduce_states(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     state: State,
     *,
     context: Context | None = None,
@@ -75,7 +74,7 @@ async def _async_reproduce_states(
 
 
 async def async_reproduce_states(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     states: Iterable[State],
     *,
     context: Context | None = None,

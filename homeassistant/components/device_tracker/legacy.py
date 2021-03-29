@@ -27,7 +27,7 @@ from homeassistant.const import (
     STATE_HOME,
     STATE_NOT_HOME,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
 import homeassistant.helpers.config_validation as cv
@@ -37,7 +37,7 @@ from homeassistant.helpers.event import (
     async_track_utc_time_change,
 )
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType, GPSType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType, GPSType
 from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.util import dt as dt_util
 from homeassistant.util.yaml import dump
@@ -119,7 +119,7 @@ EVENT_NEW_DEVICE = "device_tracker_new_device"
 
 
 def see(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     mac: str = None,
     dev_id: str = None,
     host_name: str = None,
@@ -148,7 +148,7 @@ def see(
     hass.services.call(DOMAIN, SERVICE_SEE, data)
 
 
-async def async_setup_integration(hass: HomeAssistantType, config: ConfigType) -> None:
+async def async_setup_integration(hass: HomeAssistant, config: ConfigType) -> None:
     """Set up the legacy integration."""
     tracker = await get_tracker(hass, config)
 
@@ -302,7 +302,7 @@ async def async_create_platform_type(
 
 @callback
 def async_setup_scanner_platform(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config: ConfigType,
     scanner: Any,
     async_see_device: Callable,
@@ -392,7 +392,7 @@ class DeviceTracker:
 
     def __init__(
         self,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         consider_home: timedelta,
         track_new: bool,
         defaults: dict,
@@ -609,7 +609,7 @@ class Device(RestoreEntity):
 
     def __init__(
         self,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         consider_home: timedelta,
         track: bool,
         dev_id: str,
@@ -790,7 +790,7 @@ class Device(RestoreEntity):
 class DeviceScanner:
     """Device scanner object."""
 
-    hass: HomeAssistantType = None
+    hass: HomeAssistant = None
 
     def scan_devices(self) -> list[str]:
         """Scan for devices."""
@@ -817,9 +817,7 @@ class DeviceScanner:
         return await self.hass.async_add_executor_job(self.get_extra_attributes, device)
 
 
-async def async_load_config(
-    path: str, hass: HomeAssistantType, consider_home: timedelta
-):
+async def async_load_config(path: str, hass: HomeAssistant, consider_home: timedelta):
     """Load devices from YAML configuration file.
 
     This method is a coroutine.
