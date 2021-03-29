@@ -33,11 +33,6 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["sensor", "binary_sensor"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the wiffi component. config contains data from configuration.yaml."""
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Set up wiffi from a config entry, config_entry contains data from config entry database."""
     if not config_entry.update_listeners:

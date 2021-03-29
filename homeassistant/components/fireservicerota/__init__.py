@@ -29,12 +29,6 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [SENSOR_DOMAIN, BINARYSENSOR_DOMAIN, SWITCH_DOMAIN]
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up the FireServiceRota component."""
-
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up FireServiceRota from a config entry."""
 

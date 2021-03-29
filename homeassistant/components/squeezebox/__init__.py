@@ -11,11 +11,6 @@ from .const import DISCOVERY_TASK, DOMAIN, PLAYER_DISCOVERY_UNSUB
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Logitech Squeezebox component."""
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Logitech Squeezebox from a config entry."""
     hass.async_create_task(

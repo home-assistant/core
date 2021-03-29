@@ -26,11 +26,10 @@ from tests.common import MockConfigEntry
 MOCK_MAC_ADDR = "AA:BB:CC:DD:EE:FF"
 
 
-@patch("homeassistant.components.gogogate2.async_setup", return_value=True)
 @patch("homeassistant.components.gogogate2.async_setup_entry", return_value=True)
 @patch("homeassistant.components.gogogate2.common.GogoGate2Api")
 async def test_auth_fail(
-    gogogate2api_mock, async_setup_entry_mock, async_setup_mock, hass: HomeAssistant
+    gogogate2api_mock, async_setup_entry_mock, hass: HomeAssistant
 ) -> None:
     """Test authorization failures."""
     api: GogoGate2Api = MagicMock(spec=GogoGate2Api)
