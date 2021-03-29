@@ -20,7 +20,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     TIME_MINUTES,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import location
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
@@ -102,10 +102,11 @@ async def async_setup_entry(
     async_add_entities: Callable[[list[SensorEntity], bool], None],
 ) -> None:
     """Set up a Google travel time sensor entry."""
-
+    name = None
     if not config_entry.options:
         new_data = config_entry.data.copy()
         options = new_data.pop(CONF_OPTIONS, {})
+        name = new_data.pop(CONF_NAME, None)
 
         if CONF_UNITS not in options:
             options[CONF_UNITS] = hass.config.units.name
@@ -127,31 +128,20 @@ async def async_setup_entry(
             config_entry, data=new_data, options=options
         )
 
-    def run_setup(event):
-        """
-        Delay the setup until Home Assistant is fully initialized.
+    hass.data.setdefault(DATA_KEY, [])
 
-        This allows any entities to be created already
-        """
-        hass.data.setdefault(DATA_KEY, [])
+    api_key = config_entry.data.get(CONF_API_KEY)
+    origin = config_entry.data.get(CONF_ORIGIN)
+    destination = config_entry.data.get(CONF_DESTINATION)
+    name = name or f"{DEFAULT_NAME}: {origin} -> {destination}"
 
-        api_key = config_entry.data.get(CONF_API_KEY)
-        origin = config_entry.data.get(CONF_ORIGIN)
-        destination = config_entry.data.get(CONF_DESTINATION)
-        name = config_entry.data.get(
-            CONF_NAME, f"{DEFAULT_NAME}: {origin} -> {destination}"
-        )
+    sensor = GoogleTravelTimeSensor(
+        hass, config_entry, name, api_key, origin, destination
+    )
+    hass.data[DATA_KEY].append(sensor)
 
-        sensor = GoogleTravelTimeSensor(
-            hass, config_entry, name, api_key, origin, destination
-        )
-        hass.data[DATA_KEY].append(sensor)
-
-        if sensor.valid_api_connection:
-            async_add_entities([sensor], True)
-
-    # Wait until start event is sent to load this component.
-    await hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, run_setup)
+    if sensor.valid_api_connection:
+        async_add_entities([sensor], False)
 
 
 async def async_setup_platform(
@@ -205,6 +195,15 @@ class GoogleTravelTimeSensor(SensorEntity):
             _LOGGER.error(exp)
             self.valid_api_connection = False
             return
+
+    async def async_added_to_hass(self) -> None:
+        """Handle when entity is added."""
+        if self.hass.state != CoreState.running:
+            self.hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_START, lambda _: self.update
+            )
+        else:
+            self.hass.async_add_executor_job(self.update)
 
     @property
     def state(self):

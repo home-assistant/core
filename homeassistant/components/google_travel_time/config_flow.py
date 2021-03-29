@@ -118,11 +118,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return GoogleOptionsFlow(config_entry)
 
-    def __init__(self):
-        """Initialize config flow."""
-        self._data = None
-        self._options = None
-
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         if user_input is not None:
@@ -136,8 +131,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 title=user_input.get(
                     CONF_NAME,
                     (
-                        f"{DEFAULT_NAME}: {self._data[CONF_ORIGIN]} -> "
-                        f"{self._data[CONF_DESTINATION]}"
+                        f"{DEFAULT_NAME}: {user_input[CONF_ORIGIN]} -> "
+                        f"{user_input[CONF_DESTINATION]}"
                     ),
                 ),
                 data=user_input,
@@ -150,7 +145,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_API_KEY): cv.string,
                     vol.Required(CONF_DESTINATION): cv.string,
                     vol.Required(CONF_ORIGIN): cv.string,
-                    vol.Optional(CONF_NAME): cv.string,
                 }
             ),
         )
