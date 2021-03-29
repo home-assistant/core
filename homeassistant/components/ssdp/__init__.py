@@ -177,7 +177,6 @@ class Scanner:
 
     async def _fetch_description(self, xml_location):
         """Fetch an XML description."""
-        _LOGGER.warning("_fetch_description: %s", xml_location)
         session = self.hass.helpers.aiohttp_client.async_get_clientsession()
         try:
             resp = await session.get(xml_location, timeout=5)
