@@ -26,8 +26,6 @@ async def test_form(hass):
     """Test that the form is served with valid input."""
 
     with patch(
-        "homeassistant.components.aemet.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.aemet.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, requests_mock.mock() as _m:
@@ -57,7 +55,6 @@ async def test_form(hass):
         assert result["data"][CONF_LONGITUDE] == CONFIG[CONF_LONGITUDE]
         assert result["data"][CONF_API_KEY] == CONFIG[CONF_API_KEY]
 
-        assert len(mock_setup.mock_calls) == 1
         assert len(mock_setup_entry.mock_calls) == 1
 
 

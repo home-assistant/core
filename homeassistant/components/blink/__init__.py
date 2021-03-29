@@ -59,12 +59,6 @@ def _reauth_flow_wrapper(hass, data):
     )
 
 
-async def async_setup(hass, config):
-    """Set up a Blink component."""
-    hass.data[DOMAIN] = {}
-    return True
-
-
 async def async_migrate_entry(hass, entry):
     """Handle migration of a previous version config entry."""
     _LOGGER.debug("Migrating from version %s", entry.version)
@@ -81,8 +75,9 @@ async def async_migrate_entry(hass, entry):
 
 async def async_setup_entry(hass, entry):
     """Set up Blink via config entry."""
-    _async_import_options_from_data_if_missing(hass, entry)
+    hass.data.setdefault(DOMAIN, {})
 
+    _async_import_options_from_data_if_missing(hass, entry)
     hass.data[DOMAIN][entry.entry_id] = await hass.async_add_executor_job(
         _blink_startup_wrapper, hass, entry
     )

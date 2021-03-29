@@ -30,12 +30,6 @@ PLATFORMS = ["media_player", "remote"]
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up the DirecTV component."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up DirecTV from a config entry."""
     dtv = DIRECTV(entry.data[CONF_HOST], session=async_get_clientsession(hass))
@@ -45,6 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except DIRECTVError as err:
         raise ConfigEntryNotReady from err
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = dtv
 
     for platform in PLATFORMS:
