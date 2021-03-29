@@ -13,7 +13,10 @@ from homeassistant.components.zwave_js.const import (
     SERVICE_SET_CONFIG_PARAMETER,
 )
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID
-from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
+from homeassistant.helpers.device_registry import (
+    async_entries_for_config_entry,
+    async_get as async_get_dev_reg,
+)
 from homeassistant.helpers.entity_registry import async_get as async_get_ent_reg
 
 from .common import AIR_TEMPERATURE_SENSOR, CLIMATE_RADIO_THERMOSTAT_ENTITY
@@ -346,12 +349,14 @@ async def test_set_config_parameter(hass, client, multisensor_6, integration):
 
 async def test_bulk_set_config_parameters(hass, client, multisensor_6, integration):
     """Test the bulk_set_partial_config_parameters service."""
+    dev_reg = async_get_dev_reg(hass)
+    device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
     # Test setting config parameter by property and property_key
     await hass.services.async_call(
         DOMAIN,
         SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
         {
-            ATTR_ENTITY_ID: AIR_TEMPERATURE_SENSOR,
+            ATTR_DEVICE_ID: device.id,
             ATTR_CONFIG_PARAMETER: 102,
             ATTR_CONFIG_VALUE: 241,
         },
