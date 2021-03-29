@@ -24,7 +24,6 @@ from homeassistant.helpers.device_registry import (
     EVENT_DEVICE_REGISTRY_UPDATED,
     async_entries_for_config_entry,
 )
-from homeassistant.helpers.typing import HomeAssistantType
 
 from . import device_automation, discovery
 from .const import (
@@ -36,11 +35,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup(hass: HomeAssistantType, config: dict):
-    """Set up the Tasmota component."""
-    return True
 
 
 async def async_setup_entry(hass, entry):
