@@ -14,8 +14,10 @@ from homeassistant.const import CONF_ATTRIBUTE, CONF_ENTITY_ID, CONF_TYPE
 from homeassistant.setup import async_setup_component
 
 
-async def setup_knx_integration(hass, knx_mock, config={}):
+async def setup_knx_integration(hass, knx_mock, config=None):
     """Create the KNX gateway."""
+    if config is None:
+        config = {}
     with patch("homeassistant.components.knx.XKNX", return_value=knx_mock):
         await async_setup_component(
             hass, KNX_DOMAIN, KNX_CONFIG_SCHEMA({KNX_DOMAIN: config})
@@ -24,90 +26,90 @@ async def setup_knx_integration(hass, knx_mock, config={}):
 
 
 @pytest.fixture(autouse=True)
-def xknxMock():
+def xknx_mock():
     """Create a simple XKNX mock."""
-    xknxMock = Mock()
-    xknxMock.telegrams = AsyncMock()
-    xknxMock.start = AsyncMock()
-    xknxMock.stop = AsyncMock()
-    return xknxMock
+    xknx_mock = Mock()
+    xknx_mock.telegrams = AsyncMock()
+    xknx_mock.start = AsyncMock()
+    xknx_mock.stop = AsyncMock()
+    return xknx_mock
 
 
-async def test_binary_expose(hass, xknxMock):
+async def test_binary_expose(hass, xknx_mock):
     """Test that a binary expose sends only telegrams on state change."""
-    e_id = "fake.entity"
+    entity_id = "fake.entity"
     await setup_knx_integration(
         hass,
-        xknxMock,
+        xknx_mock,
         {
             CONF_KNX_EXPOSE: {
                 CONF_TYPE: "binary",
                 KNX_ADDRESS: "1/1/8",
-                CONF_ENTITY_ID: e_id,
+                CONF_ENTITY_ID: entity_id,
             }
         },
     )
-    assert len(hass.states.async_all()) == 0
+    assert not hass.states.async_all()
 
     # Change state to on
-    xknxMock.reset_mock()
-    hass.states.async_set(e_id, "on", {})
+    xknx_mock.reset_mock()
+    hass.states.async_set(entity_id, "on", {})
     await hass.async_block_till_done()
-    assert xknxMock.telegrams.put.call_count == 1, "Expected telegram for state change"
+    assert xknx_mock.telegrams.put.call_count == 1, "Expected telegram for state change"
 
     # Change attribute; keep state
-    xknxMock.reset_mock()
-    hass.states.async_set(e_id, "on", {"brightness": 180})
+    xknx_mock.reset_mock()
+    hass.states.async_set(entity_id, "on", {"brightness": 180})
     await hass.async_block_till_done()
     assert (
-        xknxMock.telegrams.put.call_count == 0
+        xknx_mock.telegrams.put.call_count == 0
     ), "Expected no telegram; state not changed"
 
     # Change attribute and state
-    xknxMock.reset_mock()
-    hass.states.async_set(e_id, "off", {"brightness": 0})
+    xknx_mock.reset_mock()
+    hass.states.async_set(entity_id, "off", {"brightness": 0})
     await hass.async_block_till_done()
-    assert xknxMock.telegrams.put.call_count == 1, "Expected telegram for state change"
+    assert xknx_mock.telegrams.put.call_count == 1, "Expected telegram for state change"
 
 
-async def test_expose_attribute(hass, xknxMock):
+async def test_expose_attribute(hass, xknx_mock):
     """Test that an expose sends only telegrams on attribute change."""
-    e_id = "fake.entity"
-    a_id = "fakeAttribute"
+    entity_id = "fake.entity"
+    attribute = "fake_attribute"
     await setup_knx_integration(
         hass,
-        xknxMock,
+        xknx_mock,
         {
             CONF_KNX_EXPOSE: {
                 CONF_TYPE: "percentU8",
                 KNX_ADDRESS: "1/1/8",
-                CONF_ENTITY_ID: e_id,
-                CONF_ATTRIBUTE: a_id,
+                CONF_ENTITY_ID: entity_id,
+                CONF_ATTRIBUTE: attribute,
             }
         },
     )
-    assert len(hass.states.async_all()) == 0
+    assert not hass.states.async_all()
 
     # Change state to on; no attribute
-    xknxMock.reset_mock()
-    hass.states.async_set(e_id, "on", {})
+    xknx_mock.reset_mock()
+    hass.states.async_set(entity_id, "on", {})
     await hass.async_block_till_done()
-    assert xknxMock.telegrams.put.call_count == 0
+    assert xknx_mock.telegrams.put.call_count == 0
 
     # Change attribute; keep state
-    xknxMock.reset_mock()
-    hass.states.async_set(e_id, "on", {a_id: 1})
+    xknx_mock.reset_mock()
+    hass.states.async_set(entity_id, "on", {attribute: 1})
     await hass.async_block_till_done()
-    assert xknxMock.telegrams.put.call_count == 1
+    assert xknx_mock.telegrams.put.call_count == 1
 
     # Change state keep attribute
-    xknxMock.reset_mock()
-    hass.states.async_set(e_id, "off", {a_id: 1})
+    xknx_mock.reset_mock()
+    hass.states.async_set(entity_id, "off", {attribute: 1})
     await hass.async_block_till_done()
-    assert xknxMock.telegrams.put.call_count == 0
+    assert xknx_mock.telegrams.put.call_count == 0
 
     # Change state and attribute
-    xknxMock.reset_mock()
-    hass.states.async_set(e_id, "on", {a_id: 0})
+    xknx_mock.reset_mock()
+    hass.states.async_set(entity_id, "on", {attribute: 0})
     await hass.async_block_till_done()
-    assert xknxMock.telegrams.put.call_count == 1
+    assert xknx_mock.telegrams.put.call_count == 1
