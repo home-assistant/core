@@ -156,7 +156,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
                 # Fetch initial data
                 await coordinator.async_refresh()
 
-                coordinators[host_name][node_name][vm_id] = coordinator
+                node_coordinators[vm_id] = coordinator
 
             for container_id in node_config["containers"]:
                 coordinator = create_coordinator_container_vm(
@@ -166,7 +166,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
                 # Fetch initial data
                 await coordinator.async_refresh()
 
-                coordinators[host_name][node_name][container_id] = coordinator
+                node_coordinators[container_id] = coordinator
 
     for component in PLATFORMS:
         await hass.async_create_task(
