@@ -2,7 +2,7 @@
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_REGION
+from homeassistant.const import CONF_NAME, CONF_REGION
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import slugify
@@ -122,7 +122,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
                 title=(
-                    f"{DEFAULT_NAME}: {user_input[CONF_ORIGIN]} -> "
+                    f"{user_input.get(CONF_NAME, DEFAULT_NAME)}: {user_input[CONF_ORIGIN]} -> "
                     f"{user_input[CONF_DESTINATION]}"
                 ),
                 data=user_input,
