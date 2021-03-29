@@ -1,8 +1,10 @@
 """Support for Waze travel time sensor."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 import re
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable
 
 import WazeRouteCalculator
 
@@ -20,7 +22,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import location
-import homeassistant.helpers.config_validation as cv
 
 from .const import (
     ATTR_DESTINATION,
@@ -62,7 +63,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         data=config,
     )
 
-    _LOGGER.info(
+    _LOGGER.warning(
         "Your Waze configuration has been imported into the UI; "
         "please remove it from configuration.yaml as support for it "
         "will be removed in a future release."
@@ -74,7 +75,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: Callable[[list[SensorEntity], bool], None],
 ) -> None:
     """Set up a Waze travel time sensor entry."""
     destination = config_entry.data[CONF_DESTINATION]
@@ -246,7 +247,7 @@ class WazeTravelTime(SensorEntity):
         self._waze_data.update()
 
     @property
-    def device_info(self) -> Optional[Dict[str, Any]]:
+    def device_info(self) -> dict[str, Any] | None:
         """Return device specific attributes."""
         return {
             "name": "Waze",
