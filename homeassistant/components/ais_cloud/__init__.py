@@ -53,8 +53,8 @@ async def async_setup(hass, config):
     async def get_radio_types(call):
         await data.async_get_radio_types(call)
 
-    async def get_radio_names(call):
-        await data.async_get_radio_names(call)
+    def get_radio_names(call):
+        data.get_radio_names(call)
 
     def play_audio(call):
         data.process_play_audio(call)
@@ -537,40 +537,46 @@ class AisCloudWS:
         web_session = aiohttp_client.async_get_clientsession(self.hass)
         headers = self.cloud_ws_header
         headers["nature"] = nature
-        with async_timeout.timeout(5):
+        with async_timeout.timeout(10):
             ws_resp = await web_session.get(self.url + "audio_type2", headers=headers)
-            _LOGGER.warning(str(ws_resp))
             return await ws_resp.json()
 
     def audio_name(self, nature, a_type):
-        rest_url = self.url + "audio_name?nature=" + nature
-        rest_url += "&type=" + a_type
-        ws_resp = requests.get(rest_url, headers=self.cloud_ws_header, timeout=5)
-        return ws_resp
-
-    async def async_audio_name(self, nature, a_type):
-        orgin = "public"
+        origin = "public"
         if a_type.startswith("Moje "):
-            orgin = "private"
+            origin = "private"
             a_type = a_type.replace("Moje ", "", 1)
         elif a_type.startswith("Udostępnione "):
-            orgin = "shared"
+            origin = "shared"
             a_type = a_type.replace("Udostępnione ", "", 1)
-        web_session = aiohttp_client.async_get_clientsession(self.hass)
         rest_url = self.url + "audio_name2"
         headers = self.cloud_ws_header
-        headers["nature"] = nature
-        headers["orgin"] = orgin
-        headers["type"] = a_type
-        with async_timeout.timeout(5):
-            ws_resp = await web_session.get(rest_url, headers=headers)
-            return await ws_resp.json()
+        headers["Anature"] = nature
+        headers["Aorigin"] = origin
+        headers["Atype"] = a_type
+        ws_resp = requests.get(rest_url, headers=headers, timeout=5)
+        return ws_resp
 
     def audio(self, item, a_type, text_input):
         rest_url = self.url + "audio?item=" + item + "&type="
         rest_url += a_type + "&text_input=" + text_input
         ws_resp = requests.get(rest_url, headers=self.cloud_ws_header, timeout=5)
         return ws_resp
+
+    def audio(self, item, a_type, text_input):
+        rest_url = self.url + "audio2"
+        payload = {
+            "item": item,
+            "type": a_type,
+            "input": text_input,
+        }
+        try:
+            ws_resp = requests.post(
+                rest_url, json=payload, headers=self.cloud_ws_header, timeout=5
+            )
+            return ws_resp
+        except Exception as e:
+            _LOGGER.error(str(e))
 
     def key(self, service):
         rest_url = self.url + "key?service=" + service
@@ -921,27 +927,30 @@ class AisColudData:
             {"entity_id": "input_select.radio_type", "options": types},
         )
 
-    async def async_get_radio_names(self, call):
+    def get_radio_names(self, call):
         """Load stations of the for the selected type."""
         if "radio_type" not in call.data:
             return []
 
         if call.data["radio_type"] == ais_global.G_FAVORITE_OPTION:
             # get radio stations from favorites
-            await self.hass.services.async_call(
+            self.hass.services.call(
                 "ais_bookmarks",
                 "get_favorites",
                 {"audio_source": ais_global.G_AN_RADIO},
             )
             return
 
-        ws_resp_json = await self.cloud.async_audio_name(
-            ais_global.G_AN_RADIO, call.data["radio_type"]
-        )
+        ws_resp = self.cloud.audio_name(ais_global.G_AN_RADIO, call.data["radio_type"])
+        try:
+            json_ws_resp = ws_resp.json()
+        except Exception as e:
+            _LOGGER.warning("get_radio_names error " + str(e))
+            return
 
         list_info = {}
         list_idx = 0
-        for item in ws_resp_json["data"]:
+        for item in json_ws_resp["data"]:
             list_info[list_idx] = {}
             list_info[list_idx]["title"] = item["NAME"]
             list_info[list_idx]["name"] = item["NAME"]
@@ -958,7 +967,7 @@ class AisColudData:
             list_idx = list_idx + 1
 
         # create lists
-        self.hass.states.async_set("sensor.radiolist", -1, list_info)
+        self.hass.states.set("sensor.radiolist", -1, list_info)
 
         # check if the change was done form remote
         import homeassistant.components.ais_ai_service as ais_ai
@@ -1407,10 +1416,18 @@ class AisColudData:
                     },
                 )
 
-                # switch UI to Radio
-                self.hass.services.call(
-                    "ais_ai_service", "switch_ui", {"mode": "Radio"}
-                )
+                # origin
+                if "origin" in call.data:
+                    self.hass.services.call(
+                        "ais_ai_service",
+                        "set_context",
+                        {"text": "radio_" + call.data["origin"]},
+                    )
+                else:
+                    # switch UI to Radio
+                    self.hass.services.call(
+                        "ais_ai_service", "set_context", {"text": "Radio"}
+                    )
 
                 #  get list
                 self.hass.services.call(
@@ -1443,7 +1460,7 @@ class AisColudData:
                 )
                 # switch UI to Podcast
                 self.hass.services.call(
-                    "ais_ai_service", "switch_ui", {"mode": "Podcast"}
+                    "ais_ai_service", "set_context", {"text": "Podcast"}
                 )
 
     def play_prev(self, call):
