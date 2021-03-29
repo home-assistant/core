@@ -8,6 +8,7 @@ from samsungtvws.exceptions import ConnectionFailure
 from websocket import WebSocketException
 
 from homeassistant.const import (
+    CONF_DESCRIPTION,
     CONF_HOST,
     CONF_ID,
     CONF_METHOD,
@@ -18,7 +19,6 @@ from homeassistant.const import (
 )
 
 from .const import (
-    CONF_DESCRIPTION,
     LOGGER,
     METHOD_LEGACY,
     RESULT_AUTH_MISSING,
