@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
+    CONF_FOR,
     CONF_PLATFORM,
     CONF_TYPE,
     CONF_VALUE_TEMPLATE,
@@ -59,6 +60,7 @@ STATE_TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In(STATE_TRIGGER_TYPES),
+        vol.Optional(CONF_FOR): cv.positive_time_period_dict,
     }
 )
 
@@ -146,8 +148,12 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
 
 async def async_get_trigger_capabilities(hass: HomeAssistant, config: dict) -> dict:
     """List trigger capabilities."""
-    if config[CONF_TYPE] not in ["position", "tilt_position"]:
-        return {}
+    if config[CONF_TYPE] not in POSITION_TRIGGER_TYPES:
+        return {
+            "extra_fields": vol.Schema(
+                {vol.Optional(CONF_FOR): cv.positive_time_period_dict}
+            )
+        }
 
     return {
         "extra_fields": vol.Schema(
@@ -185,6 +191,8 @@ async def async_attach_trigger(
             CONF_ENTITY_ID: config[CONF_ENTITY_ID],
             state_trigger.CONF_TO: to_state,
         }
+        if CONF_FOR in config:
+            state_config[CONF_FOR] = config[CONF_FOR]
         state_config = state_trigger.TRIGGER_SCHEMA(state_config)
         return await state_trigger.async_attach_trigger(
             hass, state_config, action, automation_info, platform_type="device"
