@@ -129,16 +129,19 @@ async def async_setup_entry(
 
     destination = config_entry.data[CONF_DESTINATION]
     origin = config_entry.data[CONF_ORIGIN]
-    name = f"{DEFAULT_NAME}: {origin} -> {destination}"
     region = config_entry.data[CONF_REGION]
 
     incl_filter = config_entry.options.get(CONF_INCL_FILTER)
     excl_filter = config_entry.options.get(CONF_EXCL_FILTER)
-    realtime = config_entry.options.get(CONF_REALTIME)
-    vehicle_type = config_entry.options.get(CONF_VEHICLE_TYPE)
-    avoid_toll_roads = config_entry.options.get(CONF_AVOID_TOLL_ROADS)
-    avoid_subscription_roads = config_entry.options.get(CONF_AVOID_SUBSCRIPTION_ROADS)
-    avoid_ferries = config_entry.options.get(CONF_AVOID_FERRIES)
+    realtime = config_entry.options.get(CONF_REALTIME, DEFAULT_REALTIME)
+    vehicle_type = config_entry.options.get(CONF_VEHICLE_TYPE, DEFAULT_VEHICLE_TYPE)
+    avoid_toll_roads = config_entry.options.get(
+        CONF_AVOID_TOLL_ROADS, DEFAULT_AVOID_TOLL_ROADS
+    )
+    avoid_subscription_roads = config_entry.options.get(
+        CONF_AVOID_SUBSCRIPTION_ROADS, DEFAULT_AVOID_SUBSCRIPTION_ROADS
+    )
+    avoid_ferries = config_entry.options.get(CONF_AVOID_FERRIES, DEFAULT_AVOID_FERRIES)
     units = config_entry.options.get(CONF_UNITS, hass.config.units.name)
 
     data = WazeTravelTimeData(
@@ -155,7 +158,7 @@ async def async_setup_entry(
         avoid_ferries,
     )
 
-    sensor = WazeTravelTime(config_entry.unique_id, name, origin, destination, data)
+    sensor = WazeTravelTime(config_entry.unique_id, origin, destination, data)
 
     async_add_entities([sensor], False)
 
@@ -169,11 +172,11 @@ def _get_location_from_attributes(state):
 class WazeTravelTime(SensorEntity):
     """Representation of a Waze travel time sensor."""
 
-    def __init__(self, unique_id, name, origin, destination, waze_data):
+    def __init__(self, unique_id, origin, destination, waze_data):
         """Initialize the Waze travel time sensor."""
         self._unique_id = unique_id
-        self._name = name
         self._waze_data = waze_data
+        self._name = f"{DEFAULT_NAME}: {origin} -> {destination}"
         self._state = None
         self._origin_entity_id = None
         self._destination_entity_id = None
@@ -196,11 +199,11 @@ class WazeTravelTime(SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Handle when entity is added."""
         if self.hass.state != CoreState.running:
-            await self.hass.bus.async_listen_once(
+            self.hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_START, lambda _: self.update
             )
         else:
-            self.update()
+            self.hass.async_add_executor_job(self.update)
 
     @property
     def name(self):
@@ -304,7 +307,7 @@ class WazeTravelTime(SensorEntity):
         """Return device specific attributes."""
         return {
             "name": "Waze",
-            "identifiers": {(DOMAIN)},
+            "identifiers": {(DOMAIN, DOMAIN)},
             "entry_type": "service",
         }
 

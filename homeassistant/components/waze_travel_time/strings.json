@@ -3,12 +3,23 @@
   "config": {
     "step": {
       "user": {
-        "description": "For Origin and Destination, enter the address or the GPS coordinates of the location (GPS coordinates has to be separated by a comma). You can also enter an entity id which provides this information in its state, an entity id with latitude and longitude attributes, or zone friendly name.\n\nThe `substring` inputs will allow you to force the integration to use a particular route or avoid a particular route in its time travel calculation.",
+        "description": "For Origin and Destination, enter the address or the GPS coordinates of the location (GPS coordinates has to be separated by a comma). You can also enter an entity id which provides this information in its state, an entity id with latitude and longitude attributes, or zone friendly name.",
         "data": {
           "origin": "Origin",
           "destination": "Destination",
-          "region": "Region",
-          "name": "[%key:common::config_flow::data::name%]",
+          "region": "Region"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "The `substring` inputs will allow you to force the integration to use a particular route or avoid a particular route in its time travel calculation.",
+        "data": {
           "units": "Units",
           "vehicle_type": "Vehicle Type",
           "incl_filter": "Substring in Description of Selected Route",
@@ -19,9 +30,6 @@
           "avoid_subscription_roads": "Avoid Roads Needing a Vignette / Subscription?"
         }
       }
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
     }
   }
 }

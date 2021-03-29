@@ -2,7 +2,7 @@
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_NAME, CONF_REGION
+from homeassistant.const import CONF_REGION
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import slugify
@@ -31,7 +31,7 @@ from .const import (
 )
 
 
-class OptionsFlow(config_entries.OptionsFlow):
+class WazeOptionsFlow(config_entries.OptionsFlow):
     """Handle an options flow for Waze Travel Time."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
@@ -41,7 +41,7 @@ class OptionsFlow(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Handle the initial step."""
         if user_input is not None:
-            self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_form(
             step_id="init",
@@ -49,11 +49,11 @@ class OptionsFlow(config_entries.OptionsFlow):
                 {
                     vol.Optional(
                         CONF_INCL_FILTER,
-                        default=self.config_entry.options.get(CONF_INCL_FILTER),
+                        default=self.config_entry.options.get(CONF_INCL_FILTER, ""),
                     ): cv.string,
                     vol.Optional(
                         CONF_EXCL_FILTER,
-                        default=self.config_entry.options.get(CONF_EXCL_FILTER),
+                        default=self.config_entry.options.get(CONF_EXCL_FILTER, ""),
                     ): cv.string,
                     vol.Optional(
                         CONF_REALTIME,
@@ -105,9 +105,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: config_entries.ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> WazeOptionsFlow:
         """Get the options flow for this handler."""
-        return OptionsFlow(config_entry)
+        return WazeOptionsFlow(config_entry)
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -119,12 +121,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
-                title=self.config_entry.options.get(
-                    CONF_NAME,
-                    (
-                        f"{DEFAULT_NAME}: {user_input[CONF_ORIGIN]} -> "
-                        f"{user_input[CONF_DESTINATION]}"
-                    ),
+                title=(
+                    f"{DEFAULT_NAME}: {user_input[CONF_ORIGIN]} -> "
+                    f"{user_input[CONF_DESTINATION]}"
                 ),
                 data=user_input,
             )
