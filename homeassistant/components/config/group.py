@@ -6,9 +6,8 @@ from homeassistant.components.group import (
 )
 from homeassistant.config import GROUP_CONFIG_PATH
 from homeassistant.const import SERVICE_RELOAD
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import HomeAssistant
 
 from . import EditKeyBasedConfigView
 
