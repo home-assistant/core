@@ -20,6 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_COMPONENT = "component"
 
 BASE_PLATFORMS = {
+    "air_quality",
     "alarm_control_panel",
     "binary_sensor",
     "climate",
@@ -31,6 +32,7 @@ BASE_PLATFORMS = {
     "light",
     "lock",
     "media_player",
+    "notify",
     "remote",
     "scene",
     "sensor",
