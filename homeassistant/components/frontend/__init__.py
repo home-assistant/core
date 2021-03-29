@@ -59,6 +59,13 @@ MANIFEST_JSON = {
         }
         for size in (192, 384, 512, 1024)
     ],
+    "screenshots": [
+        {
+            "src": "/static/images/screenshots/screenshot-1.png",
+            "sizes": "413×792",
+            "type": "image/png",
+        }
+    ],
     "lang": "en-US",
     "name": "Home Assistant",
     "short_name": "Assistant",
