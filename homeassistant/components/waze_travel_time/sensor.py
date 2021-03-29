@@ -99,7 +99,7 @@ async def async_setup_platform(
     _LOGGER.warning(
         "Your Waze configuration has been imported into the UI; "
         "please remove it from configuration.yaml as support for it "
-        "will be removed in a future release."
+        "will be removed in a future release"
     )
 
 
