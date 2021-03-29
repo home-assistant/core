@@ -55,7 +55,12 @@ from homeassistant.helpers.script import (
 )
 from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.service import async_register_admin_service
-from homeassistant.helpers.trace import trace_get, trace_path
+from homeassistant.helpers.trace import (
+    TraceElement,
+    trace_append_element,
+    trace_get,
+    trace_path,
+)
 from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
@@ -406,10 +411,16 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
                     return
             else:
                 variables = run_variables
-            automation_trace.set_variables(variables)
+            # Prepare tracing the automation
+            automation_trace.set_trace(trace_get())
 
-            # Prepare tracing the evaluation of the automation's conditions
-            automation_trace.set_condition_trace(trace_get())
+            # Set trigger reason
+            trigger_description = variables.get("trigger", {}).get("description")
+            automation_trace.set_trigger_description(trigger_description)
+
+            # Add initial variables as the trigger step
+            trace_element = TraceElement(variables, "trigger")
+            trace_append_element(trace_element)
 
             if (
                 not skip_condition
@@ -421,9 +432,6 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
                     trace_get(clear=False),
                 )
                 return
-
-            # Prepare tracing the execution of the automation's actions
-            automation_trace.set_action_trace(trace_get())
 
             self.async_set_context(trigger_context)
             event_data = {

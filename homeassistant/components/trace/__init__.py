@@ -50,7 +50,7 @@ class ActionTrace:
         context: Context,
     ):
         """Container for script trace."""
-        self._action_trace: dict[str, Deque[TraceElement]] | None = None
+        self._trace: dict[str, Deque[TraceElement]] | None = None
         self._config: dict[str, Any] = config
         self.context: Context = context
         self._error: Exception | None = None
@@ -59,22 +59,17 @@ class ActionTrace:
         self._timestamp_finish: dt.datetime | None = None
         self._timestamp_start: dt.datetime = dt_util.utcnow()
         self.key: tuple[str, str] = key
-        self._variables: dict[str, Any] | None = None
         if trace_id_get():
             trace_set_child_id(self.key, self.run_id)
         trace_id_set((key, self.run_id))
 
-    def set_action_trace(self, trace: dict[str, Deque[TraceElement]]) -> None:
-        """Set action trace."""
-        self._action_trace = trace
+    def set_trace(self, trace: dict[str, Deque[TraceElement]]) -> None:
+        """Set trace."""
+        self._trace = trace
 
     def set_error(self, ex: Exception) -> None:
         """Set error."""
         self._error = ex
-
-    def set_variables(self, variables: dict[str, Any]) -> None:
-        """Set variables."""
-        self._variables = variables
 
     def finished(self) -> None:
         """Set finish time."""
@@ -86,17 +81,16 @@ class ActionTrace:
 
         result = self.as_short_dict()
 
-        action_traces = {}
-        if self._action_trace:
-            for key, trace_list in self._action_trace.items():
-                action_traces[key] = [item.as_dict() for item in trace_list]
+        traces = {}
+        if self._trace:
+            for key, trace_list in self._trace.items():
+                traces[key] = [item.as_dict() for item in trace_list]
 
         result.update(
             {
-                "action_trace": action_traces,
+                "trace": traces,
                 "config": self._config,
                 "context": self.context,
-                "variables": self._variables,
             }
         )
         if self._error is not None:
@@ -106,13 +100,13 @@ class ActionTrace:
     def as_short_dict(self) -> dict[str, Any]:
         """Return a brief dictionary version of this ActionTrace."""
 
-        last_action = None
+        last_step = None
 
-        if self._action_trace:
-            last_action = list(self._action_trace)[-1]
+        if self._trace:
+            last_step = list(self._trace)[-1]
 
         result = {
-            "last_action": last_action,
+            "last_step": last_step,
             "run_id": self.run_id,
             "state": self._state,
             "timestamp": {
@@ -124,7 +118,7 @@ class ActionTrace:
         }
         if self._error is not None:
             result["error"] = str(self._error)
-        if last_action is not None:
-            result["last_action"] = last_action
+        if last_step is not None:
+            result["last_step"] = last_step
 
         return result
