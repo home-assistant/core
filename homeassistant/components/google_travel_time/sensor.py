@@ -1,7 +1,9 @@
 """Support for Google travel time sensors."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 import logging
-from typing import Callable, List
+from typing import Callable
 
 import googlemaps
 import voluptuous as vol
@@ -20,7 +22,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import location
-import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -68,7 +69,7 @@ def convert_time_to_utc(timestr):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: Callable[[list[SensorEntity], bool], None],
 ) -> None:
     """Set up a Google travel time sensor entry."""
 
@@ -116,22 +117,22 @@ async def async_setup_entry(
 
 
 async def async_setup_platform(
-    hass, config, add_entities_callback, discovery_info=None
+    hass: HomeAssistant, config, add_entities_callback, discovery_info=None
 ):
     """Set up the Google travel time platform."""
-    await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=config,
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
     )
 
-    _LOGGER.info(
+    _LOGGER.warning(
         "Your Google travel time configuration has been imported into the UI; "
         "please remove it from configuration.yaml as support for it will be "
-        "removed in a future release."
+        "removed in a future release"
     )
-
-    return True
 
 
 class GoogleTravelTimeSensor(SensorEntity):
