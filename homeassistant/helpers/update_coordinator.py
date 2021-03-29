@@ -151,7 +151,7 @@ class DataUpdateCoordinator(Generic[T]):
         fails. Additionally logging is handled by config entry setup
         to ensure that multiple retries do not cause log spam.
         """
-        await self._async_refresh(log=False)
+        await self._async_refresh(log_failures=False)
         if self.last_update_success:
             return
         ex = ConfigEntryNotReady()
@@ -160,9 +160,9 @@ class DataUpdateCoordinator(Generic[T]):
 
     async def async_refresh(self) -> None:
         """Refresh data and log errors."""
-        await self._async_refresh(log=True)
+        await self._async_refresh(log_failures=True)
 
-    async def _async_refresh(self, log: bool = True) -> None:
+    async def _async_refresh(self, log_failures: bool = True) -> None:
         """Refresh data."""
         if self._unsub_refresh:
             self._unsub_refresh()
@@ -177,28 +177,34 @@ class DataUpdateCoordinator(Generic[T]):
         except (asyncio.TimeoutError, requests.exceptions.Timeout) as err:
             self.last_exception = err
             if self.last_update_success:
-                self.logger.error("Timeout fetching %s data", self.name)
+                if log_failures:
+                    self.logger.error("Timeout fetching %s data", self.name)
                 self.last_update_success = False
 
         except (aiohttp.ClientError, requests.exceptions.RequestException) as err:
             self.last_exception = err
             if self.last_update_success:
-                self.logger.error("Error requesting %s data: %s", self.name, err)
+                if log_failures:
+                    self.logger.error("Error requesting %s data: %s", self.name, err)
                 self.last_update_success = False
 
         except urllib.error.URLError as err:
             self.last_exception = err
             if self.last_update_success:
-                if err.reason == "timed out":
-                    self.logger.error("Timeout fetching %s data", self.name)
-                else:
-                    self.logger.error("Error requesting %s data: %s", self.name, err)
+                if log_failures:
+                    if err.reason == "timed out":
+                        self.logger.error("Timeout fetching %s data", self.name)
+                    else:
+                        self.logger.error(
+                            "Error requesting %s data: %s", self.name, err
+                        )
                 self.last_update_success = False
 
         except UpdateFailed as err:
             self.last_exception = err
             if self.last_update_success:
-                self.logger.error("Error fetching %s data: %s", self.name, err)
+                if log_failures:
+                    self.logger.error("Error fetching %s data: %s", self.name, err)
                 self.last_update_success = False
 
         except NotImplementedError as err:
@@ -208,9 +214,10 @@ class DataUpdateCoordinator(Generic[T]):
         except Exception as err:  # pylint: disable=broad-except
             self.last_exception = err
             self.last_update_success = False
-            self.logger.exception(
-                "Unexpected error fetching %s data: %s", self.name, err
-            )
+            if log_failures:
+                self.logger.exception(
+                    "Unexpected error fetching %s data: %s", self.name, err
+                )
 
         else:
             if not self.last_update_success:
