@@ -8,7 +8,6 @@ from aiohttp.client_exceptions import ClientConnectorError
 from async_timeout import timeout
 
 from homeassistant.const import CONF_API_KEY
-from homeassistant.core import Config, HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -23,12 +22,6 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["sensor", "weather"]
-
-
-async def async_setup(hass: HomeAssistant, config: Config) -> bool:
-    """Set up configured AccuWeather."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
 
 
 async def async_setup_entry(hass, config_entry) -> bool:
@@ -48,7 +41,7 @@ async def async_setup_entry(hass, config_entry) -> bool:
 
     undo_listener = config_entry.add_update_listener(update_listener)
 
-    hass.data[DOMAIN][config_entry.entry_id] = {
+    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {
         COORDINATOR: coordinator,
         UNDO_UPDATE_LISTENER: undo_listener,
     }

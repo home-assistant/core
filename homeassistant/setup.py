@@ -172,7 +172,7 @@ async def _async_setup_component(
         return False
 
     if integration.disabled:
-        log_error(f"dependency is disabled - {integration.disabled}")
+        log_error(f"Dependency is disabled - {integration.disabled}")
         return False
 
     # Validate all dependencies exist and there are no circular dependencies
@@ -220,6 +220,8 @@ async def _async_setup_component(
                 domain,
                 SLOW_SETUP_WARNING,
             )
+        task = None
+        result = True
 
         try:
             if hasattr(component, "async_setup"):
@@ -230,12 +232,13 @@ async def _async_setup_component(
                 task = hass.loop.run_in_executor(
                     None, component.setup, hass, processed_config  # type: ignore
                 )
-            else:
-                log_error("No setup function defined.")
+            elif not hasattr(component, "async_setup_entry"):
+                log_error("No setup or config entry setup function defined.")
                 return False
 
-            async with hass.timeout.async_timeout(SLOW_SETUP_MAX_WAIT, domain):
-                result = await task
+            if task:
+                async with hass.timeout.async_timeout(SLOW_SETUP_MAX_WAIT, domain):
+                    result = await task
         except asyncio.TimeoutError:
             _LOGGER.error(
                 "Setup of %s is taking longer than %s seconds."
