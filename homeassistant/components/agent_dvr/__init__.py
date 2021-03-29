@@ -16,11 +16,6 @@ DEFAULT_BRAND = "Agent DVR by ispyconnect.com"
 FORWARDS = ["alarm_control_panel", "camera"]
 
 
-async def async_setup(hass, config):
-    """Old way to set up integrations."""
-    return True
-
-
 async def async_setup_entry(hass, config_entry):
     """Set up the Agent component."""
     hass.data.setdefault(AGENT_DOMAIN, {})

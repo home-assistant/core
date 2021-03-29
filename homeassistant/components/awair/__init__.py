@@ -9,18 +9,12 @@ from python_awair import Awair
 from python_awair.exceptions import AuthError
 
 from homeassistant.const import CONF_ACCESS_TOKEN
-from homeassistant.core import Config, HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import API_TIMEOUT, DOMAIN, LOGGER, UPDATE_INTERVAL, AwairResult
 
 PLATFORMS = ["sensor"]
-
-
-async def async_setup(hass: HomeAssistant, config: Config) -> bool:
-    """Set up Awair integration."""
-    return True
 
 
 async def async_setup_entry(hass, config_entry) -> bool:

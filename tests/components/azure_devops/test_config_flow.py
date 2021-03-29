@@ -228,8 +228,6 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
 async def test_full_flow_implementation(hass: HomeAssistant) -> None:
     """Test registering an integration and finishing flow works."""
     with patch(
-        "homeassistant.components.azure_devops.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.azure_devops.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
@@ -255,7 +253,6 @@ async def test_full_flow_implementation(hass: HomeAssistant) -> None:
             FIXTURE_USER_INPUT,
         )
         await hass.async_block_till_done()
-        assert len(mock_setup.mock_calls) == 1
         assert len(mock_setup_entry.mock_calls) == 1
 
         assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY

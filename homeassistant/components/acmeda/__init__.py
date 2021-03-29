@@ -11,11 +11,6 @@ CONF_HUBS = "hubs"
 PLATFORMS = ["cover", "sensor"]
 
 
-async def async_setup(hass: core.HomeAssistant, config: dict):
-    """Set up the Rollease Acmeda Automate component."""
-    return True
-
-
 async def async_setup_entry(
     hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry
 ):
