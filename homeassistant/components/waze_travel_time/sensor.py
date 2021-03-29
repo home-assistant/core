@@ -109,7 +109,7 @@ async def async_setup_entry(
     async_add_entities: Callable[[list[SensorEntity], bool], None],
 ) -> None:
     """Set up a Waze travel time sensor entry."""
-    DEFAULTS = {
+    defaults = {
         CONF_REALTIME: DEFAULT_REALTIME,
         CONF_VEHICLE_TYPE: DEFAULT_VEHICLE_TYPE,
         CONF_UNITS: hass.config.units.name,
@@ -134,8 +134,8 @@ async def async_setup_entry(
         ]:
             if key in new_data:
                 options[key] = new_data.pop(key)
-            elif key in DEFAULTS:
-                options[key] = DEFAULTS[key]
+            elif key in defaults:
+                options[key] = defaults[key]
 
         await hass.config_entries.async_update_entry(
             config_entry, data=new_data, options=options
