@@ -146,27 +146,11 @@ async def async_setup_entry(
     region = config_entry.data[CONF_REGION]
     name = name or f"{DEFAULT_NAME}: {origin} -> {destination}"
 
-    incl_filter = config_entry.options.get(CONF_INCL_FILTER)
-    excl_filter = config_entry.options.get(CONF_EXCL_FILTER)
-    realtime = config_entry.options[CONF_REALTIME]
-    vehicle_type = config_entry.options[CONF_VEHICLE_TYPE]
-    avoid_toll_roads = config_entry.options[CONF_AVOID_TOLL_ROADS]
-    avoid_subscription_roads = config_entry.options[CONF_AVOID_SUBSCRIPTION_ROADS]
-    avoid_ferries = config_entry.options[CONF_AVOID_FERRIES]
-    units = config_entry.options[CONF_UNITS]
-
     data = WazeTravelTimeData(
         None,
         None,
         region,
-        incl_filter,
-        excl_filter,
-        realtime,
-        units,
-        vehicle_type,
-        avoid_toll_roads,
-        avoid_subscription_roads,
-        avoid_ferries,
+        config_entry,
     )
 
     sensor = WazeTravelTime(config_entry.unique_id, name, origin, destination, data)
@@ -336,14 +320,7 @@ class WazeTravelTimeData:
         origin,
         destination,
         region,
-        include,
-        exclude,
-        realtime,
-        units,
-        vehicle_type,
-        avoid_toll_roads,
-        avoid_subscription_roads,
-        avoid_ferries,
+        config_entry,
     ):
         """Set up WazeRouteCalculator."""
 
@@ -352,58 +329,58 @@ class WazeTravelTimeData:
         self.origin = origin
         self.destination = destination
         self.region = region
-        self.include = include
-        self.exclude = exclude
-        self.realtime = realtime
-        self.units = units
+        self.config_entry = config_entry
         self.duration = None
         self.distance = None
         self.route = None
-        self.avoid_toll_roads = avoid_toll_roads
-        self.avoid_subscription_roads = avoid_subscription_roads
-        self.avoid_ferries = avoid_ferries
-
-        # Currently WazeRouteCalc only supports PRIVATE, TAXI, MOTORCYCLE.
-        if vehicle_type.upper() == "CAR":
-            # Empty means PRIVATE for waze which translates to car.
-            self.vehicle_type = ""
-        else:
-            self.vehicle_type = vehicle_type.upper()
 
     def update(self):
         """Update WazeRouteCalculator Sensor."""
         if self.origin is not None and self.destination is not None:
+            # Grab options on every update
+            incl_filter = self.config_entry.options.get(CONF_INCL_FILTER)
+            excl_filter = self.config_entry.options.get(CONF_EXCL_FILTER)
+            realtime = self.config_entry.options[CONF_REALTIME]
+            vehicle_type = self.config_entry.options[CONF_VEHICLE_TYPE]
+            vehicle_type = "" if vehicle_type.upper() == "CAR" else vehicle_type.upper()
+            avoid_toll_roads = self.config_entry.options[CONF_AVOID_TOLL_ROADS]
+            avoid_subscription_roads = self.config_entry.options[
+                CONF_AVOID_SUBSCRIPTION_ROADS
+            ]
+            avoid_ferries = self.config_entry.options[CONF_AVOID_FERRIES]
+            units = self.config_entry.options[CONF_UNITS]
+
             try:
                 params = self._calc.WazeRouteCalculator(
                     self.origin,
                     self.destination,
                     self.region,
-                    self.vehicle_type,
-                    self.avoid_toll_roads,
-                    self.avoid_subscription_roads,
-                    self.avoid_ferries,
+                    vehicle_type,
+                    avoid_toll_roads,
+                    avoid_subscription_roads,
+                    avoid_ferries,
                 )
-                routes = params.calc_all_routes_info(real_time=self.realtime)
+                routes = params.calc_all_routes_info(real_time=realtime)
 
-                if self.include is not None:
+                if incl_filter is not None:
                     routes = {
                         k: v
                         for k, v in routes.items()
-                        if self.include.lower() in k.lower()
+                        if incl_filter.lower() in k.lower()
                     }
 
-                if self.exclude is not None:
+                if excl_filter is not None:
                     routes = {
                         k: v
                         for k, v in routes.items()
-                        if self.exclude.lower() not in k.lower()
+                        if excl_filter.lower() not in k.lower()
                     }
 
                 route = list(routes)[0]
 
                 self.duration, distance = routes[route]
 
-                if self.units == CONF_UNIT_SYSTEM_IMPERIAL:
+                if units == CONF_UNIT_SYSTEM_IMPERIAL:
                     # Convert to miles.
                     self.distance = distance / 1.609
                 else:
