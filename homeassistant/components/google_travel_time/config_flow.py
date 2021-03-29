@@ -4,21 +4,104 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_MODE, CONF_NAME
+from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util import slugify
 
 from .const import (
+    ALL_LANGUAGES,
+    ARRIVAL_TIME,
+    AVOID,
+    CONF_ARRIVAL_TIME,
+    CONF_AVOID,
+    CONF_DEPARTURE_TIME,
     CONF_DESTINATION,
-    CONF_OPTIONS,
+    CONF_LANGUAGE,
     CONF_ORIGIN,
+    CONF_TIME,
+    CONF_TIME_TYPE,
+    CONF_TRAFFIC_MODEL,
+    CONF_TRANSIT_MODE,
+    CONF_TRANSIT_ROUTING_PREFERENCE,
+    CONF_UNITS,
     DEFAULT_NAME,
+    DEPARTURE_TIME,
     DOMAIN,
-    GOOGLE_OPTIONS_SCHEMA,
-    GOOGLE_SCHEMA,
+    TIME_TYPES,
+    TRANSIT_PREFS,
+    TRANSPORT_TYPE,
+    TRAVEL_MODE,
+    TRAVEL_MODEL,
+    UNITS,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class GoogleOptionsFlow(config_entries.OptionsFlow):
+    """Handle an options flow for Google Travel Time."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize google options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Handle the initial step."""
+        if user_input is not None:
+            time_type = user_input.pop(CONF_TIME_TYPE)
+            if time := user_input.pop(CONF_TIME, None):
+                if time_type == ARRIVAL_TIME:
+                    user_input[CONF_ARRIVAL_TIME] = time
+                else:
+                    user_input[CONF_DEPARTURE_TIME] = time
+            return self.async_create_entry(title="", data=user_input)
+
+        if CONF_ARRIVAL_TIME in self.config_entry.options:
+            default_time_type = ARRIVAL_TIME
+            default_time = self.config_entry.options[CONF_ARRIVAL_TIME]
+        else:
+            default_time_type = DEPARTURE_TIME
+            default_time = self.config_entry.options.get(CONF_ARRIVAL_TIME)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_MODE, default=self.config_entry.options[CONF_MODE]
+                    ): vol.In(TRAVEL_MODE),
+                    vol.Optional(
+                        CONF_LANGUAGE,
+                        default=self.config_entry.options.get(CONF_LANGUAGE),
+                    ): vol.In(ALL_LANGUAGES),
+                    vol.Optional(
+                        CONF_AVOID, default=self.config_entry.options.get(CONF_AVOID)
+                    ): vol.In(AVOID),
+                    vol.Optional(
+                        CONF_UNITS, default=self.config_entry.options[CONF_UNITS]
+                    ): vol.In(UNITS),
+                    vol.Optional(CONF_TIME_TYPE, default=default_time_type): vol.In(
+                        TIME_TYPES
+                    ),
+                    vol.Optional(CONF_TIME, default=default_time): cv.string,
+                    vol.Optional(
+                        CONF_TRAFFIC_MODEL,
+                        default=self.config_entry.options.get(CONF_TRAFFIC_MODEL),
+                    ): vol.In(TRAVEL_MODEL),
+                    vol.Optional(
+                        CONF_TRANSIT_MODE,
+                        default=self.config_entry.options.get(CONF_TRANSIT_MODE),
+                    ): vol.In(TRANSPORT_TYPE),
+                    vol.Optional(
+                        CONF_TRANSIT_ROUTING_PREFERENCE,
+                        default=self.config_entry.options.get(
+                            CONF_TRANSIT_ROUTING_PREFERENCE
+                        ),
+                    ): vol.In(TRANSIT_PREFS),
+                }
+            ),
+        )
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -26,6 +109,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> GoogleOptionsFlow:
+        """Get the options flow for this handler."""
+        return GoogleOptionsFlow(config_entry)
 
     def __init__(self):
         """Initialize config flow."""
@@ -41,42 +132,27 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             )
             self._abort_if_unique_id_configured()
-            self._data = user_input.copy()
-            return await self.async_step_options()
-
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(GOOGLE_SCHEMA),
-        )
-
-    async def async_step_options(self, user_input=None):
-        """Handle the options data."""
-        if user_input is not None or self.source == SOURCE_IMPORT:
-            if user_input:
-                self._data[CONF_OPTIONS] = user_input.copy()
-            elif self._options is not None:
-                self._data[CONF_OPTIONS] = self._options
-
             return self.async_create_entry(
-                title=self._data.get(
+                title=user_input.get(
                     CONF_NAME,
                     (
                         f"{DEFAULT_NAME}: {self._data[CONF_ORIGIN]} -> "
                         f"{self._data[CONF_DESTINATION]}"
                     ),
                 ),
-                data=self._data,
+                data=user_input,
             )
 
         return self.async_show_form(
-            step_id="options",
-            data_schema=vol.Schema(GOOGLE_OPTIONS_SCHEMA),
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_API_KEY): cv.string,
+                    vol.Required(CONF_DESTINATION): cv.string,
+                    vol.Required(CONF_ORIGIN): cv.string,
+                    vol.Optional(CONF_NAME): cv.string,
+                }
+            ),
         )
 
-    async def async_step_import(self, import_config=None):
-        """Handle import flow."""
-        if import_config.get(CONF_OPTIONS) is not None:
-            self._options = import_config[CONF_OPTIONS].copy()
-            import_config.pop(CONF_OPTIONS)
-
-        return await self.async_step_user(import_config)
+    async_step_import = async_step_user

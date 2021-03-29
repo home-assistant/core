@@ -22,20 +22,32 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import location
+import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
 from .const import (
+    ALL_LANGUAGES,
     ATTRIBUTION,
+    AVOID,
     CONF_ARRIVAL_TIME,
+    CONF_AVOID,
     CONF_DEPARTURE_TIME,
     CONF_DESTINATION,
+    CONF_LANGUAGE,
     CONF_OPTIONS,
     CONF_ORIGIN,
+    CONF_TRAFFIC_MODEL,
+    CONF_TRANSIT_MODE,
+    CONF_TRANSIT_ROUTING_PREFERENCE,
     CONF_TRAVEL_MODE,
+    CONF_UNITS,
     DEFAULT_NAME,
     DOMAIN,
-    GOOGLE_IMPORT_SCHEMA,
-    GOOGLE_OPTIONS_SCHEMA,
+    TRANSIT_PREFS,
+    TRANSPORT_TYPE,
+    TRAVEL_MODE,
+    TRAVEL_MODEL,
+    UNITS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,10 +56,28 @@ SCAN_INTERVAL = timedelta(minutes=5)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        **GOOGLE_IMPORT_SCHEMA,
+        vol.Required(CONF_API_KEY): cv.string,
+        vol.Required(CONF_DESTINATION): cv.string,
+        vol.Required(CONF_ORIGIN): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_TRAVEL_MODE): vol.In(TRAVEL_MODE),
         vol.Optional(CONF_OPTIONS, default={CONF_MODE: "driving"}): vol.All(
             dict,
-            vol.Schema(GOOGLE_OPTIONS_SCHEMA),
+            vol.Schema(
+                {
+                    vol.Optional(CONF_MODE, default="driving"): vol.In(TRAVEL_MODE),
+                    vol.Optional(CONF_LANGUAGE): vol.In(ALL_LANGUAGES),
+                    vol.Optional(CONF_AVOID): vol.In(AVOID),
+                    vol.Optional(CONF_UNITS): vol.In(UNITS),
+                    vol.Exclusive(CONF_ARRIVAL_TIME, "time"): cv.string,
+                    vol.Exclusive(CONF_DEPARTURE_TIME, "time"): cv.string,
+                    vol.Optional(CONF_TRAFFIC_MODEL): vol.In(TRAVEL_MODEL),
+                    vol.Optional(CONF_TRANSIT_MODE): vol.In(TRANSPORT_TYPE),
+                    vol.Optional(CONF_TRANSIT_ROUTING_PREFERENCE): vol.In(
+                        TRANSIT_PREFS
+                    ),
+                }
+            ),
         ),
     }
 )
@@ -73,6 +103,30 @@ async def async_setup_entry(
 ) -> None:
     """Set up a Google travel time sensor entry."""
 
+    if not config_entry.options:
+        new_data = config_entry.data.copy()
+        options = new_data.pop(CONF_OPTIONS, {})
+
+        if CONF_UNITS not in options:
+            options[CONF_UNITS] = hass.config.units.name
+
+        if CONF_TRAVEL_MODE in new_data:
+            wstr = (
+                "Google Travel Time: travel_mode is deprecated, please "
+                "add mode to the options dictionary instead!"
+            )
+            _LOGGER.warning(wstr)
+            travel_mode = new_data.pop(CONF_TRAVEL_MODE)
+            if CONF_MODE not in options:
+                options[CONF_MODE] = travel_mode
+
+        if CONF_MODE not in options:
+            options[CONF_MODE] = "driving"
+
+        await hass.config_entries.async_update_entry(
+            config_entry, data=new_data, options=options
+        )
+
     def run_setup(event):
         """
         Delay the setup until Home Assistant is fully initialized.
@@ -80,22 +134,6 @@ async def async_setup_entry(
         This allows any entities to be created already
         """
         hass.data.setdefault(DATA_KEY, [])
-        options = config_entry.data.get(CONF_OPTIONS)
-
-        if options.get("units") is None:
-            options["units"] = hass.config.units.name
-
-        travel_mode = config_entry.data.get(CONF_TRAVEL_MODE)
-        mode = options.get(CONF_MODE)
-
-        if travel_mode is not None:
-            wstr = (
-                "Google Travel Time: travel_mode is deprecated, please "
-                "add mode to the options dictionary instead!"
-            )
-            _LOGGER.warning(wstr)
-            if mode is None:
-                options[CONF_MODE] = travel_mode
 
         api_key = config_entry.data.get(CONF_API_KEY)
         origin = config_entry.data.get(CONF_ORIGIN)
@@ -105,7 +143,7 @@ async def async_setup_entry(
         )
 
         sensor = GoogleTravelTimeSensor(
-            hass, config_entry.unique_id, name, api_key, origin, destination, options
+            hass, config_entry, name, api_key, origin, destination
         )
         hass.data[DATA_KEY].append(sensor)
 
@@ -138,15 +176,15 @@ async def async_setup_platform(
 class GoogleTravelTimeSensor(SensorEntity):
     """Representation of a Google travel time sensor."""
 
-    def __init__(self, hass, unique_id, name, api_key, origin, destination, options):
+    def __init__(self, hass, config_entry, name, api_key, origin, destination):
         """Initialize the sensor."""
         self._hass = hass
         self._name = name
-        self._options = options
+        self._config_entry = config_entry
         self._unit_of_measurement = TIME_MINUTES
         self._matrix = None
         self._api_key = api_key
-        self._unique_id = unique_id
+        self._unique_id = config_entry.unique_id
         self.valid_api_connection = True
 
         # Check if location is a trackable entity
@@ -207,7 +245,8 @@ class GoogleTravelTimeSensor(SensorEntity):
             return None
 
         res = self._matrix.copy()
-        res.update(self._options)
+        options = self._config_entry.options.copy()
+        res.update(options)
         del res["rows"]
         _data = self._matrix["rows"][0]["elements"][0]
         if "duration_in_traffic" in _data:
@@ -228,7 +267,7 @@ class GoogleTravelTimeSensor(SensorEntity):
 
     def update(self):
         """Get the latest data from Google."""
-        options_copy = self._options.copy()
+        options_copy = self._config_entry.options.copy()
         dtime = options_copy.get(CONF_DEPARTURE_TIME)
         atime = options_copy.get(CONF_ARRIVAL_TIME)
         if dtime is not None and ":" in dtime:
