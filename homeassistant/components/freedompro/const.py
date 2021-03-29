@@ -1,5 +1,4 @@
 """Constants for the Freedompro integration."""
-from datetime import timedelta
 
 COORDINATOR = "coordinator"
 DOMAIN = "freedompro"

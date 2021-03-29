@@ -6,7 +6,6 @@ from homeassistant import config_entries, core, exceptions
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN  # pylint:disable=unused-import
-from .const import FREEDOMPRO_URL
 
 STEP_USER_DATA_SCHEMA = vol.Schema({"api_key": str})
 
