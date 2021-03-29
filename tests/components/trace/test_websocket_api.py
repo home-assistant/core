@@ -552,14 +552,24 @@ async def test_nested_traces(hass, hass_ws_client, domain, prefix):
     await hass.async_block_till_done()
 
     # List traces
-    await client.send_json({"id": next_id(), "type": "trace/list"})
+    await client.send_json({"id": next_id(), "type": "trace/list", "domain": "script"})
     response = await client.receive_json()
     assert response["success"]
-    assert len(response["result"]) == 2
-    assert len(_find_traces(response["result"], domain, "sun")) == 1
+    if domain == "automation":
+        assert len(response["result"]) == 1
+    else:
+        assert len(response["result"]) == 2
     assert len(_find_traces(response["result"], "script", "moon")) == 1
-    sun_run_id = _find_run_id(response["result"], domain, "sun")
     moon_run_id = _find_run_id(response["result"], "script", "moon")
+    if domain == "automation":
+        await client.send_json(
+            {"id": next_id(), "type": "trace/list", "domain": "automation"}
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        assert len(response["result"]) == 1
+    assert len(_find_traces(response["result"], domain, "sun")) == 1
+    sun_run_id = _find_run_id(response["result"], domain, "sun")
     assert sun_run_id != moon_run_id
 
     # Get trace
