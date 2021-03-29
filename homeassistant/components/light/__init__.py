@@ -16,7 +16,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -25,7 +25,6 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import bind_hass
 import homeassistant.util.color as color_util
 
@@ -411,7 +410,7 @@ class Profile:
 class Profiles:
     """Representation of available color profiles."""
 
-    def __init__(self, hass: HomeAssistantType):
+    def __init__(self, hass: HomeAssistant):
         """Initialize profiles."""
         self.hass = hass
         self.data: dict[str, Profile] = {}
