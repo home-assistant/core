@@ -5,18 +5,12 @@ from aiohttp.client_exceptions import ClientConnectorError
 from async_timeout import timeout
 from gios import ApiError, Gios, InvalidSensorsData, NoStationError
 
-from homeassistant.core import Config, HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_STATION_ID, DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup(hass: HomeAssistant, config: Config) -> bool:
-    """Set up configured GIOS."""
-    return True
 
 
 async def async_setup_entry(hass, config_entry):

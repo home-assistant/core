@@ -13,11 +13,6 @@ from .const import DEVICE_TYPE_GOGOGATE2
 PLATFORMS = [COVER, SENSOR]
 
 
-async def async_setup(hass: HomeAssistant, base_config: dict) -> bool:
-    """Set up for Gogogate2 controllers."""
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Do setup of Gogogate2."""
 
