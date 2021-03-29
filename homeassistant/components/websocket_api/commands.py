@@ -17,6 +17,7 @@ from homeassistant.helpers import config_validation as cv, entity, template
 from homeassistant.helpers.event import TrackTemplate, async_track_template_result
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.loader import IntegrationNotFound, async_get_integration
+from homeassistant.setup import async_get_loaded_integrations
 
 from . import const, decorators, messages
 
@@ -215,13 +216,9 @@ def handle_get_config(hass, connection, msg):
 @decorators.async_response
 async def handle_manifest_list(hass, connection, msg):
     """Handle integrations command."""
+    loaded_integrations = async_get_loaded_integrations(hass)
     integrations = await asyncio.gather(
-        *[
-            async_get_integration(hass, domain)
-            for domain in hass.config.components
-            # Filter out platforms.
-            if "." not in domain
-        ]
+        *[async_get_integration(hass, domain) for domain in loaded_integrations]
     )
     connection.send_result(
         msg["id"], [integration.manifest for integration in integrations]

@@ -16,6 +16,8 @@ class TraceElement:
 
     def __init__(self, variables: TemplateVarsType, path: str):
         """Container for trace data."""
+        self._child_key: tuple[str, str] | None = None
+        self._child_run_id: str | None = None
         self._error: Exception | None = None
         self.path: str = path
         self._result: dict | None = None
@@ -36,6 +38,11 @@ class TraceElement:
         """Container for trace data."""
         return str(self.as_dict())
 
+    def set_child_id(self, child_key: tuple[str, str], child_run_id: str) -> None:
+        """Set trace id of a nested script run."""
+        self._child_key = child_key
+        self._child_run_id = child_run_id
+
     def set_error(self, ex: Exception) -> None:
         """Set error."""
         self._error = ex
@@ -47,6 +54,12 @@ class TraceElement:
     def as_dict(self) -> dict[str, Any]:
         """Return dictionary version of this TraceElement."""
         result: dict[str, Any] = {"path": self.path, "timestamp": self._timestamp}
+        if self._child_key is not None:
+            result["child_id"] = {
+                "domain": self._child_key[0],
+                "item_id": self._child_key[1],
+                "run_id": str(self._child_run_id),
+            }
         if self._variables:
             result["changed_variables"] = self._variables
         if self._error is not None:
@@ -159,6 +172,13 @@ def trace_clear() -> None:
     trace_stack_cv.set(None)
     trace_path_stack_cv.set(None)
     variables_cv.set(None)
+
+
+def trace_set_child_id(child_key: tuple[str, str], child_run_id: str) -> None:
+    """Set child trace_id of TraceElement at the top of the stack."""
+    node = cast(TraceElement, trace_stack_top(trace_stack_cv))
+    if node:
+        node.set_child_id(child_key, child_run_id)
 
 
 def trace_set_result(**kwargs: Any) -> None:

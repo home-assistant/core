@@ -66,8 +66,6 @@ async def async_attach_trigger(
     automation_info: dict,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    config = TRIGGER_SCHEMA(config)
-
     if config[CONF_TYPE] == "turned_on":
         to_state = STATE_ON
     elif config[CONF_TYPE] == "turned_off":

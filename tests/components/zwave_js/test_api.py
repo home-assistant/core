@@ -381,7 +381,7 @@ async def test_update_log_config(hass, client, integration, hass_ws_client):
     assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "update_log_config"
-    assert args["config"] == {"level": 0}
+    assert args["config"] == {"level": "error"}
 
     client.async_send_command.reset_mock()
 
@@ -428,7 +428,7 @@ async def test_update_log_config(hass, client, integration, hass_ws_client):
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "update_log_config"
     assert args["config"] == {
-        "level": 0,
+        "level": "error",
         "logToFile": True,
         "filename": "/test",
         "forceConsole": True,
@@ -490,7 +490,7 @@ async def test_get_log_config(hass, client, integration, hass_ws_client):
         "success": True,
         "config": {
             "enabled": True,
-            "level": 0,
+            "level": "error",
             "logToFile": False,
             "filename": "/test.txt",
             "forceConsole": False,

@@ -578,3 +578,20 @@ async def test_preset_and_no_setpoint(
     assert args["value"] == 1
 
     client.async_send_command.reset_mock()
+
+
+async def test_temp_unit_fix(
+    hass,
+    client,
+    climate_radio_thermostat_ct101_multiple_temp_units,
+    climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints,
+    integration,
+):
+    """Test temperaturee unit fix."""
+    state = hass.states.get("climate.thermostat")
+    assert state
+    assert state.attributes["current_temperature"] == 18.3
+
+    state = hass.states.get("climate.z_wave_thermostat")
+    assert state
+    assert state.attributes["current_temperature"] == 21.1

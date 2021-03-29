@@ -11,8 +11,11 @@
         },
         "step": {
             "pair": {
+                "data": {
+                    "pin": "Code PIN"
+                },
                 "description": "Entrez le code PIN affich\u00e9 sur votre t\u00e9l\u00e9viseur",
-                "title": "Paire"
+                "title": "Appairer"
             },
             "user": {
                 "data": {

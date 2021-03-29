@@ -10,7 +10,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, KEY_COORDINATOR, KEY_GATEWAY
+from .const import ATTR_AVAILABLE, DOMAIN, KEY_COORDINATOR, KEY_GATEWAY
 
 ATTR_BATTERY_VOLTAGE = "battery_voltage"
 TYPE_BLIND = "blind"
@@ -70,7 +70,13 @@ class MotionBatterySensor(CoordinatorEntity, SensorEntity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return self._blind.available
+        if self.coordinator.data is None:
+            return False
+
+        if not self.coordinator.data[KEY_GATEWAY][ATTR_AVAILABLE]:
+            return False
+
+        return self.coordinator.data[self._blind.mac][ATTR_AVAILABLE]
 
     @property
     def unit_of_measurement(self):
@@ -174,7 +180,13 @@ class MotionSignalStrengthSensor(CoordinatorEntity, SensorEntity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return self._device.available
+        if self.coordinator.data is None:
+            return False
+
+        if not self.coordinator.data[KEY_GATEWAY][ATTR_AVAILABLE]:
+            return False
+
+        return self.coordinator.data[self._device.mac][ATTR_AVAILABLE]
 
     @property
     def unit_of_measurement(self):
