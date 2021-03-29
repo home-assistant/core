@@ -5,7 +5,11 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_PROBLEM,
 )
-from homeassistant.components.sensor import DEVICE_CLASS_POWER, DEVICE_CLASS_TEMPERATURE
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_TEMPERATURE,
+)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
@@ -46,7 +50,7 @@ BINARY_SENSOR_ENTITIES = {
         ATTR_MEASUREMENT: "boiler_module_connected",
         ATTR_INVERTED: False,
         ATTR_DEVICE_CLASS: DEVICE_CLASS_CONNECTIVITY,
-        ATTR_ICON: "mdi:check-network-outline",
+        ATTR_ICON: None,
         ATTR_DEFAULT_ENABLED: False,
     },
     "thermostat_info_burner_info_1": {
@@ -184,7 +188,7 @@ SENSOR_ENTITIES = {
         ATTR_MEASUREMENT: "average",
         ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
         ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
-        ATTR_ICON: "mdi:power-plug",
+        ATTR_ICON: None,
         ATTR_DEFAULT_ENABLED: False,
     },
     "power_average_daily": {
@@ -192,8 +196,8 @@ SENSOR_ENTITIES = {
         ATTR_SECTION: "power_usage",
         ATTR_MEASUREMENT: "day_average",
         ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:power-plug",
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+        ATTR_ICON: None,
         ATTR_DEFAULT_ENABLED: False,
     },
     "power_daily_cost": {
@@ -210,8 +214,8 @@ SENSOR_ENTITIES = {
         ATTR_SECTION: "power_usage",
         ATTR_MEASUREMENT: "day_usage",
         ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:power-plug",
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+        ATTR_ICON: None,
         ATTR_DEFAULT_ENABLED: True,
     },
     "power_meter_reading": {
@@ -219,8 +223,8 @@ SENSOR_ENTITIES = {
         ATTR_SECTION: "power_usage",
         ATTR_MEASUREMENT: "meter_high",
         ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:power-plug",
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+        ATTR_ICON: None,
         ATTR_DEFAULT_ENABLED: False,
     },
     "power_meter_reading_low": {
@@ -228,8 +232,8 @@ SENSOR_ENTITIES = {
         ATTR_SECTION: "power_usage",
         ATTR_MEASUREMENT: "meter_low",
         ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:power-plug",
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+        ATTR_ICON: None,
         ATTR_DEFAULT_ENABLED: False,
     },
     "power_value": {
@@ -238,7 +242,7 @@ SENSOR_ENTITIES = {
         ATTR_MEASUREMENT: "current",
         ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
         ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
-        ATTR_ICON: "mdi:power-plug",
+        ATTR_ICON: None,
         ATTR_DEFAULT_ENABLED: True,
     },
     "solar_meter_reading_produced": {
@@ -246,8 +250,8 @@ SENSOR_ENTITIES = {
         ATTR_SECTION: "power_usage",
         ATTR_MEASUREMENT: "meter_produced_high",
         ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:power-plug",
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+        ATTR_ICON: None,
         ATTR_DEFAULT_ENABLED: False,
     },
     "solar_meter_reading_low_produced": {
@@ -255,8 +259,8 @@ SENSOR_ENTITIES = {
         ATTR_SECTION: "power_usage",
         ATTR_MEASUREMENT: "meter_produced_low",
         ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:power-plug",
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+        ATTR_ICON: None,
         ATTR_DEFAULT_ENABLED: False,
     },
     "solar_value": {
@@ -265,7 +269,7 @@ SENSOR_ENTITIES = {
         ATTR_MEASUREMENT: "current_solar",
         ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
         ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
-        ATTR_ICON: "mdi:solar-power",
+        ATTR_ICON: None,
         ATTR_DEFAULT_ENABLED: True,
     },
     "solar_maximum": {
@@ -273,8 +277,8 @@ SENSOR_ENTITIES = {
         ATTR_SECTION: "power_usage",
         ATTR_MEASUREMENT: "day_max_solar",
         ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:solar-power",
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
+        ATTR_ICON: None,
         ATTR_DEFAULT_ENABLED: True,
     },
     "solar_produced": {
@@ -283,7 +287,7 @@ SENSOR_ENTITIES = {
         ATTR_MEASUREMENT: "current_produced",
         ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
         ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
-        ATTR_ICON: "mdi:solar-power",
+        ATTR_ICON: None,
         ATTR_DEFAULT_ENABLED: True,
     },
     "power_usage_day_produced_solar": {
@@ -291,8 +295,8 @@ SENSOR_ENTITIES = {
         ATTR_SECTION: "power_usage",
         ATTR_MEASUREMENT: "day_produced_solar",
         ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:solar-power",
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+        ATTR_ICON: None,
         ATTR_DEFAULT_ENABLED: True,
     },
     "power_usage_day_to_grid_usage": {
@@ -300,8 +304,8 @@ SENSOR_ENTITIES = {
         ATTR_SECTION: "power_usage",
         ATTR_MEASUREMENT: "day_to_grid_usage",
         ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:solar-power",
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+        ATTR_ICON: None,
         ATTR_DEFAULT_ENABLED: False,
     },
     "power_usage_day_from_grid_usage": {
@@ -309,8 +313,8 @@ SENSOR_ENTITIES = {
         ATTR_SECTION: "power_usage",
         ATTR_MEASUREMENT: "day_from_grid_usage",
         ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:power-plug",
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+        ATTR_ICON: None,
         ATTR_DEFAULT_ENABLED: False,
     },
     "solar_average_produced": {
@@ -319,7 +323,7 @@ SENSOR_ENTITIES = {
         ATTR_MEASUREMENT: "average_produced",
         ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
         ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
-        ATTR_ICON: "mdi:solar-power",
+        ATTR_ICON: None,
         ATTR_DEFAULT_ENABLED: False,
     },
     "thermostat_info_current_modulation_level": {
