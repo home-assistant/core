@@ -3,7 +3,7 @@
 import asyncio
 import os
 import threading
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 import voluptuous as vol
@@ -618,3 +618,29 @@ async def test_async_get_loaded_integrations(hass):
         "myintegration",
         "device_tracker",
     }
+
+
+async def test_integration_no_setup(hass, caplog):
+    """Test we fail integration setup without setup functions."""
+    mock_integration(
+        hass,
+        MockModule("test_integration_without_setup", setup=False),
+    )
+    result = await setup.async_setup_component(
+        hass, "test_integration_without_setup", {}
+    )
+    assert not result
+    assert "No setup or config entry setup function defined" in caplog.text
+
+
+async def test_integration_only_setup_entry(hass):
+    """Test we have an integration with only a setup entry method."""
+    mock_integration(
+        hass,
+        MockModule(
+            "test_integration_only_entry",
+            setup=False,
+            async_setup_entry=AsyncMock(return_value=True),
+        ),
+    )
+    assert await setup.async_setup_component(hass, "test_integration_only_entry", {})

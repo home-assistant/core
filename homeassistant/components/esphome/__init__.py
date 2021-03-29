@@ -42,7 +42,7 @@ from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import HomeAssistantType
 
 # Import config flow so that it's added to the registry
 from .entry_data import RuntimeEntryData
@@ -54,11 +54,6 @@ STORAGE_VERSION = 1
 
 # No config schema - only configuration entry
 CONFIG_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
-
-
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
-    """Stub to allow setting up this component."""
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
