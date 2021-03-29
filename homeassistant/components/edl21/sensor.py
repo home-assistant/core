@@ -215,7 +215,6 @@ class EDL21Entity(SensorEntity):
             "valueSignature": "value_signature",
         }
         self._async_remove_dispatcher = None
-        logging.warn("Sensor with min time created: " + str(self._min_time))
 
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
