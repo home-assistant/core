@@ -1,7 +1,9 @@
 """Component to interface with various sirens/chimes."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import voluptuous as vol
 
@@ -47,7 +49,7 @@ TONE_SCHEMA = {vol.Optional(ATTR_TONE): cv.string}
 
 
 @bind_hass
-def is_on(hass, entity_id):
+def is_on(hass: HomeAssistantType, entity_id: str) -> bool:
     """
     Return if the siren is on based on the state machine.
 
@@ -108,7 +110,7 @@ class SirenEntity(ToggleEntity):
     """Representation of a siren device."""
 
     @property
-    def capability_attributes(self) -> Optional[Dict[str, Any]]:
+    def capability_attributes(self) -> dict[str, Any] | None:
         """Return capability attributes."""
         supported_features = self.supported_features or 0
 
@@ -118,7 +120,7 @@ class SirenEntity(ToggleEntity):
         return None
 
     @property
-    def state_attributes(self) -> Dict[str, Any]:
+    def state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
         supported_features = self.supported_features or 0
         data = {}
@@ -135,17 +137,17 @@ class SirenEntity(ToggleEntity):
         return data
 
     @property
-    def volume_level(self) -> Optional[float]:
+    def volume_level(self) -> float | None:
         """Return the volume level of the device (0 - 1)."""
         return None
 
     @property
-    def duration(self) -> Optional[int]:
+    def duration(self) -> int | None:
         """Return the duration in seconds of the noise."""
         return None
 
     @property
-    def active_tone(self) -> Optional[Union[int, str]]:
+    def active_tone(self) -> int | str | None:
         """
         Return the active tone for the siren.
 
@@ -154,7 +156,7 @@ class SirenEntity(ToggleEntity):
         raise NotImplementedError
 
     @property
-    def available_tones(self) -> Optional[Union[List[int], List[str]]]:
+    def available_tones(self) -> list[int] | list[str] | None:
         """
         Return a list of available tones.
 
@@ -162,11 +164,11 @@ class SirenEntity(ToggleEntity):
         """
         raise NotImplementedError
 
-    def set_active_tone(self, tone: Union[int, str]) -> None:
+    def set_active_tone(self, tone: int | str) -> None:
         """Set new active tone."""
         raise NotImplementedError()
 
-    async def async_set_active_tone(self, tone: Union[int, str]) -> None:
+    async def async_set_active_tone(self, tone: int | str) -> None:
         """Set new active tone."""
         await self.hass.async_add_executor_job(self.set_active_tone, tone)
 
