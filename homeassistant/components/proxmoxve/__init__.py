@@ -100,6 +100,8 @@ async def async_setup(hass: HomeAssistant, config: dict):
             password = entry[CONF_PASSWORD]
             verify_ssl = entry[CONF_VERIFY_SSL]
 
+            hass.data[PROXMOX_CLIENTS][host] = None
+
             try:
                 # Construct an API client with the given data for the given host
                 proxmox_client = ProxmoxClient(
@@ -110,7 +112,6 @@ async def async_setup(hass: HomeAssistant, config: dict):
                 _LOGGER.warning(
                     "Invalid credentials for proxmox instance %s:%d", host, port
                 )
-                hass.data[PROXMOX_CLIENTS][host] = None
                 continue
             except SSLError:
                 _LOGGER.error(
@@ -119,11 +120,9 @@ async def async_setup(hass: HomeAssistant, config: dict):
                     host,
                     port,
                 )
-                hass.data[PROXMOX_CLIENTS][host] = None
                 continue
             except ConnectTimeout:
                 _LOGGER.warning("Connection to host %s timed out during setup", host)
-                hass.data[PROXMOX_CLIENTS][host] = None
                 continue
 
             hass.data[PROXMOX_CLIENTS][host] = proxmox_client
@@ -157,9 +156,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
                 # Fetch initial data
                 await coordinator.async_refresh()
 
-                coordinators[host_name][node_name][
-                    vm_id
-                ] = coordinator
+                coordinators[host_name][node_name][vm_id] = coordinator
 
             for container_id in node_config["containers"]:
                 coordinator = create_coordinator_container_vm(
@@ -169,9 +166,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
                 # Fetch initial data
                 await coordinator.async_refresh()
 
-                coordinators[host_name][node_name][
-                    container_id
-                ] = coordinator
+                coordinators[host_name][node_name][container_id] = coordinator
 
     for component in PLATFORMS:
         await hass.async_create_task(
