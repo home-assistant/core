@@ -70,7 +70,7 @@ class OpenThermClimate(ClimateEntity):
         self.floor_temp = options.get(CONF_FLOOR_TEMP, DEFAULT_FLOOR_TEMP)
         self.temp_read_precision = options.get(CONF_READ_PRECISION)
         self.temp_set_precision = options.get(CONF_SET_PRECISION)
-        self.temporary_ovrd_mode = options.get(CONF_TEMPORARY_OVRD_MODE)
+        self.temporary_ovrd_mode = options.get(CONF_TEMPORARY_OVRD_MODE, True)
         self._available = False
         self._current_operation = None
         self._current_temperature = None
