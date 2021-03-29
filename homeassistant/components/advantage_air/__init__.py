@@ -18,12 +18,6 @@ PLATFORMS = ["climate", "cover", "binary_sensor", "sensor", "switch"]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass, config):
-    """Set up Advantage Air integration."""
-    hass.data[DOMAIN] = {}
-    return True
-
-
 async def async_setup_entry(hass, entry):
     """Set up Advantage Air config."""
     ip_address = entry.data[CONF_IP_ADDRESS]
@@ -58,6 +52,7 @@ async def async_setup_entry(hass, entry):
 
     await coordinator.async_config_entry_first_refresh()
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         "coordinator": coordinator,
         "async_change": async_change,

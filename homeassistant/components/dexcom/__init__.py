@@ -26,12 +26,6 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=180)
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up configured Dexcom."""
-    hass.data[DOMAIN] = {}
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Dexcom from a config entry."""
     try:
@@ -57,6 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         except SessionError as error:
             raise UpdateFailed(error) from error
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         COORDINATOR: DataUpdateCoordinator(
             hass,

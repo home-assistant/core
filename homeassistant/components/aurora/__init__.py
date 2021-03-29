@@ -36,13 +36,6 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["binary_sensor", "sensor"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Aurora component."""
-    hass.data.setdefault(DOMAIN, {})
-
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Aurora from a config entry."""
 
@@ -70,6 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     await coordinator.async_config_entry_first_refresh()
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         COORDINATOR: coordinator,
         AURORA_API: api,
