@@ -7,6 +7,7 @@ import re
 from typing import Any, Callable
 
 import WazeRouteCalculator
+import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -14,14 +15,14 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
-    CONF_NAME,
     CONF_REGION,
     CONF_UNIT_SYSTEM_IMPERIAL,
     EVENT_HOMEASSISTANT_START,
     TIME_MINUTES,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Config, CoreState, HomeAssistant
 from homeassistant.helpers import location
+import homeassistant.helpers.config_validation as cv
 
 from .const import (
     ATTR_DESTINATION,
@@ -40,27 +41,57 @@ from .const import (
     CONF_REALTIME,
     CONF_UNITS,
     CONF_VEHICLE_TYPE,
+    DEFAULT_AVOID_FERRIES,
+    DEFAULT_AVOID_SUBSCRIPTION_ROADS,
+    DEFAULT_AVOID_TOLL_ROADS,
     DEFAULT_NAME,
+    DEFAULT_REALTIME,
+    DEFAULT_VEHICLE_TYPE,
     DOMAIN,
     ICON,
-    WAZE_SCHEMA,
+    REGIONS,
+    UNITS,
+    VEHICLE_TYPES,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_ORIGIN): cv.string,
+        vol.Required(CONF_DESTINATION): cv.string,
+        vol.Required(CONF_REGION): vol.In(REGIONS),
+        vol.Optional(CONF_INCL_FILTER): cv.string,
+        vol.Optional(CONF_EXCL_FILTER): cv.string,
+        vol.Optional(CONF_REALTIME, default=DEFAULT_REALTIME): cv.boolean,
+        vol.Optional(CONF_VEHICLE_TYPE, default=DEFAULT_VEHICLE_TYPE): vol.In(
+            VEHICLE_TYPES
+        ),
+        vol.Optional(CONF_UNITS): vol.In(UNITS),
+        vol.Optional(
+            CONF_AVOID_TOLL_ROADS, default=DEFAULT_AVOID_TOLL_ROADS
+        ): cv.boolean,
+        vol.Optional(
+            CONF_AVOID_SUBSCRIPTION_ROADS, default=DEFAULT_AVOID_SUBSCRIPTION_ROADS
+        ): cv.boolean,
+        vol.Optional(CONF_AVOID_FERRIES, default=DEFAULT_AVOID_FERRIES): cv.boolean,
+    }
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(WAZE_SCHEMA)
 
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant, config: Config, async_add_entities, discovery_info=None
+):
     """Set up the Waze travel time sensor platform."""
 
-    await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=config,
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
     )
 
     _LOGGER.warning(
@@ -69,8 +100,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         "will be removed in a future release."
     )
 
-    return True
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -78,21 +107,39 @@ async def async_setup_entry(
     async_add_entities: Callable[[list[SensorEntity], bool], None],
 ) -> None:
     """Set up a Waze travel time sensor entry."""
+    if config_entry.source == SOURCE_IMPORT and not config_entry.options:
+        new_data = config_entry.data.copy()
+        options = {
+            key: new_data.pop(key)
+            for key in [
+                CONF_INCL_FILTER,
+                CONF_EXCL_FILTER,
+                CONF_REALTIME,
+                CONF_VEHICLE_TYPE,
+                CONF_AVOID_TOLL_ROADS,
+                CONF_AVOID_SUBSCRIPTION_ROADS,
+                CONF_AVOID_FERRIES,
+                CONF_UNITS,
+            ]
+            if key in new_data
+        }
+        await hass.config_entries.async_update_entry(
+            config_entry, data=new_data, options=options
+        )
+
     destination = config_entry.data[CONF_DESTINATION]
     origin = config_entry.data[CONF_ORIGIN]
-    name = config_entry.data.get(
-        CONF_NAME,
-        f"{DEFAULT_NAME}: {origin} -> {destination}",
-    )
+    name = f"{DEFAULT_NAME}: {origin} -> {destination}"
     region = config_entry.data[CONF_REGION]
-    incl_filter = config_entry.data.get(CONF_INCL_FILTER)
-    excl_filter = config_entry.data.get(CONF_EXCL_FILTER)
-    realtime = config_entry.data.get(CONF_REALTIME)
-    vehicle_type = config_entry.data.get(CONF_VEHICLE_TYPE)
-    avoid_toll_roads = config_entry.data.get(CONF_AVOID_TOLL_ROADS)
-    avoid_subscription_roads = config_entry.data.get(CONF_AVOID_SUBSCRIPTION_ROADS)
-    avoid_ferries = config_entry.data.get(CONF_AVOID_FERRIES)
-    units = config_entry.data.get(CONF_UNITS, hass.config.units.name)
+
+    incl_filter = config_entry.options.get(CONF_INCL_FILTER)
+    excl_filter = config_entry.options.get(CONF_EXCL_FILTER)
+    realtime = config_entry.options.get(CONF_REALTIME)
+    vehicle_type = config_entry.options.get(CONF_VEHICLE_TYPE)
+    avoid_toll_roads = config_entry.options.get(CONF_AVOID_TOLL_ROADS)
+    avoid_subscription_roads = config_entry.options.get(CONF_AVOID_SUBSCRIPTION_ROADS)
+    avoid_ferries = config_entry.options.get(CONF_AVOID_FERRIES)
+    units = config_entry.options.get(CONF_UNITS, hass.config.units.name)
 
     data = WazeTravelTimeData(
         None,
@@ -111,9 +158,6 @@ async def async_setup_entry(
     sensor = WazeTravelTime(config_entry.unique_id, name, origin, destination, data)
 
     async_add_entities([sensor], False)
-
-    # Wait until start event is sent to load this component.
-    await hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, lambda _: sensor.update)
 
 
 def _get_location_from_attributes(state):
@@ -148,6 +192,15 @@ class WazeTravelTime(SensorEntity):
             self._destination_entity_id = destination
         else:
             self._waze_data.destination = destination
+
+    async def async_added_to_hass(self) -> None:
+        """Handle when entity is added."""
+        if self.hass.state != CoreState.running:
+            await self.hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_START, lambda _: self.update
+            )
+        else:
+            self.update()
 
     @property
     def name(self):
