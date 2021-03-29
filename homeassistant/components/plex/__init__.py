@@ -35,7 +35,6 @@ from .const import (
     DOMAIN as PLEX_DOMAIN,
     GDM_DEBOUNCER,
     GDM_SCANNER,
-    IGNORED_DEVICE_MODELS,
     PLATFORMS,
     PLATFORMS_COMPLETED,
     PLEX_SERVER_CONFIG,
@@ -266,12 +265,6 @@ async def cleanup_plex_devices(hass, entry):
     )
 
     for device_entry in device_entries:
-        if device_entry.model in IGNORED_DEVICE_MODELS:
-            _LOGGER.debug(
-                "Removing device: %s / %s", device_entry.name, device_entry.identifiers
-            )
-            device_registry.async_remove_device(device_entry.id)
-
         if (
             len(
                 hass.helpers.entity_registry.async_entries_for_device(

@@ -35,13 +35,13 @@ from .const import (
     CONF_SERVER_IDENTIFIER,
     DISPATCHERS,
     DOMAIN as PLEX_DOMAIN,
-    IGNORED_DEVICE_MODELS,
     NAME_FORMAT,
     PLEX_NEW_MP_SIGNAL,
     PLEX_UPDATE_MEDIA_PLAYER_SESSION_SIGNAL,
     PLEX_UPDATE_MEDIA_PLAYER_SIGNAL,
     PLEX_UPDATE_SENSOR_SIGNAL,
     SERVERS,
+    TRANSIENT_DEVICE_MODELS,
 )
 from .media_browser import browse_media
 
@@ -545,8 +545,14 @@ class PlexMediaPlayer(MediaPlayerEntity):
         if self.machine_identifier is None:
             return None
 
-        if self.device_product in IGNORED_DEVICE_MODELS:
-            return None
+        if self.device_product in TRANSIENT_DEVICE_MODELS:
+            return {
+                "identifiers": {(PLEX_DOMAIN, "plex.tv-clients")},
+                "name": "Plex Client Service",
+                "manufacturer": "Plex",
+                "model": "Plex Clients",
+                "entry_type": "service",
+            }
 
         return {
             "identifiers": {(PLEX_DOMAIN, self.machine_identifier)},
