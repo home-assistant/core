@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components import fan
 from homeassistant.components.fan import (
+    ATTR_OSCILLATING,
     ATTR_PERCENTAGE,
     ATTR_PRESET_MODE,
     ATTR_SPEED,
@@ -51,14 +52,17 @@ from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 
 CONF_STATE_VALUE_TEMPLATE = "state_value_template"
+CONF_COMMAND_TEMPLATE = "command_template"
 CONF_PERCENTAGE_STATE_TOPIC = "percentage_state_topic"
 CONF_PERCENTAGE_COMMAND_TOPIC = "percentage_command_topic"
 CONF_PERCENTAGE_VALUE_TEMPLATE = "percentage_value_template"
+CONF_PERCENTAGE_COMMAND_TEMPLATE = "percentage_command_template"
 CONF_SPEED_RANGE_MIN = "speed_range_min"
 CONF_SPEED_RANGE_MAX = "speed_range_max"
 CONF_PRESET_MODE_STATE_TOPIC = "preset_mode_state_topic"
 CONF_PRESET_MODE_COMMAND_TOPIC = "preset_mode_command_topic"
 CONF_PRESET_MODE_VALUE_TEMPLATE = "preset_mode_value_template"
+CONF_PRESET_MODE_COMMAND_TEMPLATE = "preset_mode_command_template"
 CONF_PRESET_MODES_LIST = "preset_modes"
 CONF_SPEED_STATE_TOPIC = "speed_state_topic"
 CONF_SPEED_COMMAND_TOPIC = "speed_command_topic"
@@ -66,6 +70,7 @@ CONF_SPEED_VALUE_TEMPLATE = "speed_value_template"
 CONF_OSCILLATION_STATE_TOPIC = "oscillation_state_topic"
 CONF_OSCILLATION_COMMAND_TOPIC = "oscillation_command_topic"
 CONF_OSCILLATION_VALUE_TEMPLATE = "oscillation_value_template"
+CONF_OSCILLATION_COMMAND_TEMPLATE = "oscillation_command_template"
 CONF_PAYLOAD_OSCILLATION_ON = "payload_oscillation_on"
 CONF_PAYLOAD_OSCILLATION_OFF = "payload_oscillation_off"
 CONF_PAYLOAD_OFF_SPEED = "payload_off_speed"
@@ -84,7 +89,6 @@ DEFAULT_SPEED_RANGE_MAX = 100
 OSCILLATE_ON_PAYLOAD = "oscillate_on"
 OSCILLATE_OFF_PAYLOAD = "oscillate_off"
 
-OSCILLATION = "oscillation"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -122,10 +126,13 @@ PLATFORM_SCHEMA = vol.All(
         {
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+            vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
             vol.Optional(CONF_OSCILLATION_COMMAND_TOPIC): mqtt.valid_publish_topic,
+            vol.Optional(CONF_OSCILLATION_COMMAND_TEMPLATE): cv.template,
             vol.Optional(CONF_OSCILLATION_STATE_TOPIC): mqtt.valid_subscribe_topic,
             vol.Optional(CONF_OSCILLATION_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_PERCENTAGE_COMMAND_TOPIC): mqtt.valid_publish_topic,
+            vol.Optional(CONF_PERCENTAGE_COMMAND_TEMPLATE): cv.template,
             vol.Optional(CONF_PERCENTAGE_STATE_TOPIC): mqtt.valid_subscribe_topic,
             vol.Optional(CONF_PERCENTAGE_VALUE_TEMPLATE): cv.template,
             # CONF_PRESET_MODE_COMMAND_TOPIC and CONF_PRESET_MODES_LIST must be used together
@@ -135,6 +142,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.Inclusive(
                 CONF_PRESET_MODES_LIST, "preset_modes", default=[]
             ): cv.ensure_list,
+            vol.Optional(CONF_PRESET_MODE_COMMAND_TEMPLATE): cv.template,
             vol.Optional(CONF_PRESET_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
             vol.Optional(CONF_PRESET_MODE_VALUE_TEMPLATE): cv.template,
             vol.Optional(
@@ -208,7 +216,8 @@ class MqttFan(MqttEntity, FanEntity):
 
         self._topic = None
         self._payload = None
-        self._templates = None
+        self._value_templates = None
+        self._command_templates = None
         self._optimistic = None
         self._optimistic_oscillation = None
         self._optimistic_percentage = None
@@ -243,13 +252,19 @@ class MqttFan(MqttEntity, FanEntity):
                 CONF_OSCILLATION_COMMAND_TOPIC,
             )
         }
-        self._templates = {
+        self._value_templates = {
             CONF_STATE: config.get(CONF_STATE_VALUE_TEMPLATE),
             ATTR_PERCENTAGE: config.get(CONF_PERCENTAGE_VALUE_TEMPLATE),
             ATTR_PRESET_MODE: config.get(CONF_PRESET_MODE_VALUE_TEMPLATE),
             # ATTR_SPEED is deprecated in the schema, support will be removed after a quarter (2021.7)
             ATTR_SPEED: config.get(CONF_SPEED_VALUE_TEMPLATE),
-            OSCILLATION: config.get(CONF_OSCILLATION_VALUE_TEMPLATE),
+            ATTR_OSCILLATING: config.get(CONF_OSCILLATION_VALUE_TEMPLATE),
+        }
+        self._command_templates = {
+            CONF_STATE: config.get(CONF_COMMAND_TEMPLATE),
+            ATTR_PERCENTAGE: config.get(CONF_PERCENTAGE_COMMAND_TEMPLATE),
+            ATTR_PRESET_MODE: config.get(CONF_PRESET_MODE_COMMAND_TEMPLATE),
+            ATTR_OSCILLATING: config.get(CONF_OSCILLATION_COMMAND_TEMPLATE),
         }
         self._payload = {
             "STATE_ON": config[CONF_PAYLOAD_ON],
@@ -321,12 +336,13 @@ class MqttFan(MqttEntity, FanEntity):
         if self._feature_preset_mode:
             self._supported_features |= SUPPORT_PRESET_MODE
 
-        for key, tpl in list(self._templates.items()):
-            if tpl is None:
-                self._templates[key] = lambda value: value
-            else:
-                tpl.hass = self.hass
-                self._templates[key] = tpl.async_render_with_possible_json_value
+        for tpl_dict in [self._command_templates, self._value_templates]:
+            for key, tpl in tpl_dict.items():
+                if tpl is None:
+                    tpl_dict[key] = lambda value: value
+                else:
+                    tpl.hass = self.hass
+                    tpl_dict[key] = tpl.async_render_with_possible_json_value
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
@@ -336,7 +352,7 @@ class MqttFan(MqttEntity, FanEntity):
         @log_messages(self.hass, self.entity_id)
         def state_received(msg):
             """Handle new received MQTT message."""
-            payload = self._templates[CONF_STATE](msg.payload)
+            payload = self._value_templates[CONF_STATE](msg.payload)
             if payload == self._payload["STATE_ON"]:
                 self._state = True
             elif payload == self._payload["STATE_OFF"]:
@@ -354,7 +370,7 @@ class MqttFan(MqttEntity, FanEntity):
         @log_messages(self.hass, self.entity_id)
         def percentage_received(msg):
             """Handle new received MQTT message for the percentage."""
-            numeric_val_str = self._templates[ATTR_PERCENTAGE](msg.payload)
+            numeric_val_str = self._value_templates[ATTR_PERCENTAGE](msg.payload)
             try:
                 percentage = ranged_value_to_percentage(
                     self._speed_range, int(numeric_val_str)
@@ -388,7 +404,7 @@ class MqttFan(MqttEntity, FanEntity):
         @log_messages(self.hass, self.entity_id)
         def preset_mode_received(msg):
             """Handle new received MQTT message for preset mode."""
-            preset_mode = self._templates[ATTR_PRESET_MODE](msg.payload)
+            preset_mode = self._value_templates[ATTR_PRESET_MODE](msg.payload)
             if preset_mode not in self.preset_modes:
                 _LOGGER.warning(
                     "'%s' received on topic %s is not a valid preset mode",
@@ -417,7 +433,7 @@ class MqttFan(MqttEntity, FanEntity):
         @log_messages(self.hass, self.entity_id)
         def speed_received(msg):
             """Handle new received MQTT message for the speed."""
-            speed_payload = self._templates[ATTR_SPEED](msg.payload)
+            speed_payload = self._value_templates[ATTR_SPEED](msg.payload)
             if speed_payload == self._payload["SPEED_LOW"]:
                 speed = SPEED_LOW
             elif speed_payload == self._payload["SPEED_MEDIUM"]:
@@ -461,7 +477,7 @@ class MqttFan(MqttEntity, FanEntity):
         @log_messages(self.hass, self.entity_id)
         def oscillation_received(msg):
             """Handle new received MQTT message for the oscillation."""
-            payload = self._templates[OSCILLATION](msg.payload)
+            payload = self._value_templates[ATTR_OSCILLATING](msg.payload)
             if payload == self._payload["OSCILLATE_ON_PAYLOAD"]:
                 self._oscillation = True
             elif payload == self._payload["OSCILLATE_OFF_PAYLOAD"]:
@@ -559,10 +575,11 @@ class MqttFan(MqttEntity, FanEntity):
 
         This method is a coroutine.
         """
+        mqtt_payload = self._command_templates[CONF_STATE](self._payload["STATE_ON"])
         mqtt.async_publish(
             self.hass,
             self._topic[CONF_COMMAND_TOPIC],
-            self._payload["STATE_ON"],
+            mqtt_payload,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
         )
@@ -582,10 +599,11 @@ class MqttFan(MqttEntity, FanEntity):
 
         This method is a coroutine.
         """
+        mqtt_payload = self._command_templates[CONF_STATE](self._payload["STATE_OFF"])
         mqtt.async_publish(
             self.hass,
             self._topic[CONF_COMMAND_TOPIC],
-            self._payload["STATE_OFF"],
+            mqtt_payload,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
         )
@@ -601,6 +619,7 @@ class MqttFan(MqttEntity, FanEntity):
         percentage_payload = int(
             percentage_to_ranged_value(self._speed_range, percentage)
         )
+        mqtt_payload = self._command_templates[ATTR_PERCENTAGE](percentage_payload)
         if self._implemented_preset_mode:
             if percentage:
                 await self.async_set_preset_mode(
@@ -629,7 +648,7 @@ class MqttFan(MqttEntity, FanEntity):
             mqtt.async_publish(
                 self.hass,
                 self._topic[CONF_PERCENTAGE_COMMAND_TOPIC],
-                percentage_payload,
+                mqtt_payload,
                 self._config[CONF_QOS],
                 self._config[CONF_RETAIN],
             )
@@ -653,7 +672,7 @@ class MqttFan(MqttEntity, FanEntity):
             self._percentage = ordered_list_item_to_percentage(
                 self.speed_list, preset_mode
             )
-        mqtt_payload = preset_mode
+        mqtt_payload = self._command_templates[ATTR_PRESET_MODE](preset_mode)
 
         mqtt.async_publish(
             self.hass,
@@ -705,15 +724,19 @@ class MqttFan(MqttEntity, FanEntity):
 
         This method is a coroutine.
         """
-        if oscillating is False:
-            payload = self._payload["OSCILLATE_OFF_PAYLOAD"]
+        if oscillating:
+            mqtt_payload = self._command_templates[ATTR_OSCILLATING](
+                self._payload["OSCILLATE_ON_PAYLOAD"]
+            )
         else:
-            payload = self._payload["OSCILLATE_ON_PAYLOAD"]
+            mqtt_payload = self._command_templates[ATTR_OSCILLATING](
+                self._payload["OSCILLATE_OFF_PAYLOAD"]
+            )
 
         mqtt.async_publish(
             self.hass,
             self._topic[CONF_OSCILLATION_COMMAND_TOPIC],
-            payload,
+            mqtt_payload,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
         )
