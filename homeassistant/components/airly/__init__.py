@@ -10,7 +10,6 @@ from airly.exceptions import AirlyError
 import async_timeout
 
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
-from homeassistant.core import Config, HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -41,11 +40,6 @@ def set_update_interval(hass, instances):
             instance.update_interval = interval
 
     return interval
-
-
-async def async_setup(hass: HomeAssistant, config: Config) -> bool:
-    """Set up configured Airly."""
-    return True
 
 
 async def async_setup_entry(hass, config_entry):
