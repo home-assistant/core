@@ -251,7 +251,7 @@ class DeviceTrackerPlatform:
                     raise HomeAssistantError("Invalid legacy device_tracker platform.")
 
                 if setup:
-                    hass.config.components.add(f"{DOMAIN}.{self.name}")
+                    hass.config.components.add(full_name)
 
                 if scanner:
                     async_setup_scanner_platform(
