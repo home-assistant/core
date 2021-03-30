@@ -17,6 +17,7 @@ from homeassistant import exceptions
 from homeassistant.components import device_automation, scene
 from homeassistant.components.logger import LOGSEVERITY
 from homeassistant.const import (
+    ATTR_AREA_ID,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
     CONF_ALIAS,
@@ -900,10 +901,10 @@ def _referenced_extract_ids(data: dict[str, Any], key: str, found: set[str]) -> 
         return
 
     if isinstance(item_ids, str):
-        item_ids = [item_ids]
-
-    for item_id in item_ids:
-        found.add(item_id)
+        found.add(item_ids)
+    else:
+        for item_id in item_ids:
+            found.add(item_id)
 
 
 class Script:
@@ -970,6 +971,7 @@ class Script:
         self._choose_data: dict[int, dict[str, Any]] = {}
         self._referenced_entities: set[str] | None = None
         self._referenced_devices: set[str] | None = None
+        self._referenced_areas: set[str] | None = None
         self.variables = variables
         self._variables_dynamic = template.is_complex(variables)
         if self._variables_dynamic:
@@ -1032,6 +1034,28 @@ class Script:
         return self.script_mode in (SCRIPT_MODE_PARALLEL, SCRIPT_MODE_QUEUED)
 
     @property
+    def referenced_areas(self):
+        """Return a set of referenced areas."""
+        if self._referenced_areas is not None:
+            return self._referenced_areas
+
+        referenced: set[str] = set()
+
+        for step in self.sequence:
+            action = cv.determine_script_action(step)
+
+            if action == cv.SCRIPT_ACTION_CALL_SERVICE:
+                for data in (
+                    step.get(CONF_TARGET),
+                    step.get(service.CONF_SERVICE_DATA),
+                    step.get(service.CONF_SERVICE_DATA_TEMPLATE),
+                ):
+                    _referenced_extract_ids(data, ATTR_AREA_ID, referenced)
+
+        self._referenced_areas = referenced
+        return referenced
+
+    @property
     def referenced_devices(self):
         """Return a set of referenced devices."""
         if self._referenced_devices is not None:
@@ -1044,7 +1068,6 @@ class Script:
 
             if action == cv.SCRIPT_ACTION_CALL_SERVICE:
                 for data in (
-                    step,
                     step.get(CONF_TARGET),
                     step.get(service.CONF_SERVICE_DATA),
                     step.get(service.CONF_SERVICE_DATA_TEMPLATE),

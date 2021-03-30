@@ -193,6 +193,10 @@ async def test_search(hass):
         },
     )
 
+    # Ensure automations set up correctly.
+    assert hass.states.get("automation.wled_entity") is not None
+    assert hass.states.get("automation.wled_device") is not None
+
     # Explore the graph from every node and make sure we find the same results
     expected = {
         "config_entry": {wled_config_entry.entry_id},
@@ -274,6 +278,64 @@ async def test_search(hass):
     ):
         searcher = search.Searcher(hass, device_reg, entity_reg)
         assert searcher.async_search(search_type, search_id) == {}
+
+
+async def test_area_lookup(hass):
+    """Test area based lookup."""
+    area_reg = ar.async_get(hass)
+    device_reg = dr.async_get(hass)
+    entity_reg = er.async_get(hass)
+
+    living_room_area = area_reg.async_create("Living Room")
+
+    await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "wled": {
+                    "sequence": [
+                        {
+                            "service": "light.turn_on",
+                            "target": {"area_id": living_room_area.id},
+                        },
+                    ]
+                },
+            }
+        },
+    )
+
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": [
+                {
+                    "alias": "area_turn_on",
+                    "trigger": {"platform": "template", "value_template": "true"},
+                    "action": [
+                        {
+                            "service": "light.turn_on",
+                            "data": {
+                                "area_id": living_room_area.id,
+                            },
+                        },
+                    ],
+                },
+            ]
+        },
+    )
+
+    searcher = search.Searcher(hass, device_reg, entity_reg)
+    assert searcher.async_search("area", living_room_area.id) == {
+        "script": {"script.wled"},
+        "automation": {"automation.area_turn_on"},
+    }
+
+    searcher = search.Searcher(hass, device_reg, entity_reg)
+    assert searcher.async_search("automation", "automation.area_turn_on") == {
+        "area": {living_room_area.id},
+    }
 
 
 async def test_ws_api(hass, hass_ws_client):
