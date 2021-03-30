@@ -41,7 +41,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         await envoy_reader.getData()
     except httpx.HTTPStatusError as err:
         raise InvalidAuth from err
-    except httpx.HTTPError as err:
+    except (AttributeError, httpx.HTTPError) as err:
         raise CannotConnect from err
 
 
@@ -74,14 +74,27 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_config):
         """Handle a flow import."""
+        host = import_config[CONF_IP_ADDRESS]
+        if host in self._async_current_hosts():
+            return self.async_abort(reason="already_configured")
+
         return await self.async_step_user(
             {
-                CONF_HOST: import_config[CONF_IP_ADDRESS],
+                CONF_HOST: host,
                 CONF_NAME: import_config[CONF_NAME],
                 CONF_USERNAME: import_config[CONF_USERNAME],
                 CONF_PASSWORD: import_config[CONF_PASSWORD],
             }
         )
+
+    @callback
+    def _async_current_hosts(self):
+        """Return a set of hosts."""
+        return {
+            entry.data[CONF_HOST]
+            for entry in self._async_current_entries(include_ignore=False)
+            if CONF_HOST in entry.data
+        }
 
     async def async_step_zeroconf(self, discovery_info):
         """Handle a flow initialized by zeroconf discovery."""

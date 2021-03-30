@@ -38,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except httpx.HTTPStatusError as err:
         _LOGGER.error("Authentication failure during setup: %s", err)
         return
-    except httpx.HTTPError as err:
+    except (AttributeError, httpx.HTTPError) as err:
         raise ConfigEntryNotReady from err
 
     async def async_update_data():
