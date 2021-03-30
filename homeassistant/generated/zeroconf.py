@@ -54,6 +54,11 @@ ZEROCONF = {
             "domain": "elgato"
         }
     ],
+    "_enphase-envoy._tcp.local.": [
+        {
+            "domain": "enphase_envoy"
+        }
+    ],
     "_esphomelib._tcp.local.": [
         {
             "domain": "esphome"
