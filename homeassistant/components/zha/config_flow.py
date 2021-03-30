@@ -9,7 +9,7 @@ import voluptuous as vol
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .core.const import (  # pylint:disable=unused-import
@@ -98,20 +98,26 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # Hostname is format: livingroom.local.
         local_name = discovery_info["hostname"][:-1]
         node_name = local_name[: -len(".local")]
+        host = discovery_info[CONF_HOST]
+        device_path = f"socket://{host}:6638"
+
+        await self.async_set_unique_id(node_name)
+        self._abort_if_unique_id_configured(
+            updates={
+                CONF_DEVICE: {CONF_DEVICE_PATH: device_path},
+            }
+        )
 
         # Check if already configured
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
-
-        await self.async_set_unique_id(node_name)
-        self._abort_if_unique_id_configured()
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
             CONF_NAME: node_name,
         }
 
-        self._device_path = f"socket://{local_name}:6638"
+        self._device_path = device_path
         self._radio_type = (
             RadioType.ezsp.name if "efr32" in local_name else RadioType.znp.name
         )
