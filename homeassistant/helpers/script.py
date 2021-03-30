@@ -187,7 +187,7 @@ async def trace_action(hass, script_run, stop, variables):
 
     try:
         yield trace_element
-    except Exception as ex:  # pylint: disable=broad-except
+    except Exception as ex:
         trace_element.set_error(ex)
         raise ex
     finally:
@@ -737,7 +737,7 @@ class _ScriptRun:
 
         if choose_data["default"]:
             trace_set_result(choice="default")
-            with trace_path(["default", "sequence"]):
+            with trace_path(["default"]):
                 await self._async_run_script(choose_data["default"])
 
     async def _async_wait_for_trigger_step(self):

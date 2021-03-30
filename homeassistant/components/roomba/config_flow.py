@@ -18,9 +18,9 @@ from .const import (
     CONF_CONTINUOUS,
     DEFAULT_CONTINUOUS,
     DEFAULT_DELAY,
+    DOMAIN,
     ROOMBA_SESSION,
 )
-from .const import DOMAIN  # pylint:disable=unused-import
 
 ROOMBA_DISCOVERY_LOCK = "roomba_discovery_lock"
 
@@ -80,7 +80,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_host_already_configured(dhcp_discovery[IP_ADDRESS]):
             return self.async_abort(reason="already_configured")
 
-        if not dhcp_discovery[HOSTNAME].startswith(("iRobot-", "Roomba-")):
+        if not dhcp_discovery[HOSTNAME].startswith(("irobot-", "roomba-")):
             return self.async_abort(reason="not_irobot_device")
 
         blid = _async_blid_from_hostname(dhcp_discovery[HOSTNAME])

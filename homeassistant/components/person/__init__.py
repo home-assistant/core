@@ -267,16 +267,15 @@ async def filter_yaml_data(hass: HomeAssistantType, persons: list[dict]) -> list
     for person_conf in persons:
         user_id = person_conf.get(CONF_USER_ID)
 
-        if user_id is not None:
-            if await hass.auth.async_get_user(user_id) is None:
-                _LOGGER.error(
-                    "Invalid user_id detected for person %s",
-                    person_conf[collection.CONF_ID],
-                )
-                person_invalid_user.append(
-                    f"- Person {person_conf[CONF_NAME]} (id: {person_conf[collection.CONF_ID]}) points at invalid user {user_id}"
-                )
-                continue
+        if user_id is not None and await hass.auth.async_get_user(user_id) is None:
+            _LOGGER.error(
+                "Invalid user_id detected for person %s",
+                person_conf[collection.CONF_ID],
+            )
+            person_invalid_user.append(
+                f"- Person {person_conf[CONF_NAME]} (id: {person_conf[collection.CONF_ID]}) points at invalid user {user_id}"
+            )
+            continue
 
         filtered.append(person_conf)
 

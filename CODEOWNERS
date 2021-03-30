@@ -36,6 +36,7 @@ homeassistant/components/alpha_vantage/* @fabaff
 homeassistant/components/ambiclimate/* @danielhiversen
 homeassistant/components/ambient_station/* @bachya
 homeassistant/components/amcrest/* @pnbruckner
+homeassistant/components/analytics/* @home-assistant/core
 homeassistant/components/androidtv/* @JeffLIrion
 homeassistant/components/apache_kafka/* @bachya
 homeassistant/components/api/* @home-assistant/core
@@ -201,7 +202,6 @@ homeassistant/components/homeassistant/* @home-assistant/core
 homeassistant/components/homekit/* @bdraco
 homeassistant/components/homekit_controller/* @Jc2k
 homeassistant/components/homematic/* @pvizeli @danielperna84
-homeassistant/components/homematicip_cloud/* @SukramJ
 homeassistant/components/http/* @home-assistant/core
 homeassistant/components/huawei_lte/* @scop @fphammerle
 homeassistant/components/huawei_router/* @abmantis

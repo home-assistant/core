@@ -11,8 +11,11 @@ from homeassistant.const import (
     ATTR_MODE,
     ATTR_NAME,
     CONF_ALIAS,
+    CONF_DEFAULT,
     CONF_ICON,
     CONF_MODE,
+    CONF_NAME,
+    CONF_SELECTOR,
     CONF_SEQUENCE,
     CONF_VARIABLES,
     SERVICE_RELOAD,
@@ -35,6 +38,7 @@ from homeassistant.helpers.script import (
     Script,
     make_script_schema,
 )
+from homeassistant.helpers.selector import validate_selector
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.trace import trace_get, trace_path
 from homeassistant.loader import bind_hass
@@ -49,9 +53,11 @@ ATTR_LAST_ACTION = "last_action"
 ATTR_LAST_TRIGGERED = "last_triggered"
 ATTR_VARIABLES = "variables"
 
+CONF_ADVANCED = "advanced"
 CONF_DESCRIPTION = "description"
 CONF_EXAMPLE = "example"
 CONF_FIELDS = "fields"
+CONF_REQUIRED = "required"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
@@ -67,8 +73,13 @@ SCRIPT_ENTRY_SCHEMA = make_script_schema(
         vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
         vol.Optional(CONF_FIELDS, default={}): {
             cv.string: {
+                vol.Optional(CONF_ADVANCED, default=False): cv.boolean,
+                vol.Optional(CONF_DEFAULT): cv.match_all,
                 vol.Optional(CONF_DESCRIPTION): cv.string,
                 vol.Optional(CONF_EXAMPLE): cv.string,
+                vol.Optional(CONF_NAME): cv.string,
+                vol.Optional(CONF_REQUIRED, default=False): cv.boolean,
+                vol.Optional(CONF_SELECTOR): validate_selector,
             }
         },
     },
@@ -343,9 +354,8 @@ class ScriptEntity(ToggleEntity):
         with trace_script(
             self.hass, self.object_id, self._raw_config, context
         ) as script_trace:
-            script_trace.set_variables(variables)
             # Prepare tracing the execution of the script's sequence
-            script_trace.set_action_trace(trace_get())
+            script_trace.set_trace(trace_get())
             with trace_path("sequence"):
                 return await self.script.async_run(variables, context)
 

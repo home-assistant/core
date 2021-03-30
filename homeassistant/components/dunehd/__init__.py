@@ -10,11 +10,6 @@ from .const import DOMAIN
 PLATFORMS = ["media_player"]
 
 
-async def async_setup(hass, config):
-    """Set up the Dune HD component."""
-    return True
-
-
 async def async_setup_entry(hass, config_entry):
     """Set up a config entry."""
     host = config_entry.data[CONF_HOST]

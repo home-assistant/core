@@ -20,8 +20,6 @@ async def test_form(hass: HomeAssistant) -> None:
         "homeassistant.components.NEW_DOMAIN.config_flow.PlaceholderHub.authenticate",
         return_value=True,
     ), patch(
-        "homeassistant.components.NEW_DOMAIN.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.NEW_DOMAIN.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -42,7 +40,6 @@ async def test_form(hass: HomeAssistant) -> None:
         "username": "test-username",
         "password": "test-password",
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 

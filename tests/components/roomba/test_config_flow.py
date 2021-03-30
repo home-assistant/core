@@ -19,12 +19,12 @@ DHCP_DISCOVERY_DEVICES = [
     {
         IP_ADDRESS: MOCK_IP,
         MAC_ADDRESS: "50:14:79:DD:EE:FF",
-        HOSTNAME: "iRobot-blid",
+        HOSTNAME: "irobot-blid",
     },
     {
         IP_ADDRESS: MOCK_IP,
         MAC_ADDRESS: "80:A5:89:DD:EE:FF",
-        HOSTNAME: "Roomba-blid",
+        HOSTNAME: "roomba-blid",
     },
 ]
 
@@ -33,12 +33,12 @@ DHCP_DISCOVERY_DEVICES_WITHOUT_MATCHING_IP = [
     {
         IP_ADDRESS: "1.1.1.1",
         MAC_ADDRESS: "50:14:79:DD:EE:FF",
-        HOSTNAME: "iRobot-blid",
+        HOSTNAME: "irobot-blid",
     },
     {
         IP_ADDRESS: "1.1.1.1",
         MAC_ADDRESS: "80:A5:89:DD:EE:FF",
-        HOSTNAME: "Roomba-blid",
+        HOSTNAME: "roomba-blid",
     },
 ]
 
@@ -58,7 +58,7 @@ def _mocked_discovery(*_):
     roomba_discovery = MagicMock()
 
     roomba = RoombaInfo(
-        hostname="iRobot-blid",
+        hostname="irobot-blid",
         robot_name="robot_name",
         ip=MOCK_IP,
         mac="mac",
@@ -751,7 +751,7 @@ async def test_dhcp_discovery_with_ignored(hass):
             data={
                 IP_ADDRESS: "1.1.1.1",
                 MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
-                HOSTNAME: "iRobot-blid",
+                HOSTNAME: "irobot-blid",
             },
         )
         await hass.async_block_till_done()
@@ -775,7 +775,7 @@ async def test_dhcp_discovery_already_configured_host(hass):
             data={
                 IP_ADDRESS: "1.1.1.1",
                 MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
-                HOSTNAME: "iRobot-blid",
+                HOSTNAME: "irobot-blid",
             },
         )
         await hass.async_block_till_done()
@@ -802,7 +802,7 @@ async def test_dhcp_discovery_already_configured_blid(hass):
             data={
                 IP_ADDRESS: "1.1.1.1",
                 MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
-                HOSTNAME: "iRobot-blid",
+                HOSTNAME: "irobot-blid",
             },
         )
         await hass.async_block_till_done()
@@ -829,7 +829,7 @@ async def test_dhcp_discovery_not_irobot(hass):
             data={
                 IP_ADDRESS: "1.1.1.1",
                 MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
-                HOSTNAME: "NotiRobot-blid",
+                HOSTNAME: "Notirobot-blid",
             },
         )
         await hass.async_block_till_done()
