@@ -1,5 +1,6 @@
 """Manifest validation."""
-from typing import Dict
+from __future__ import annotations
+
 from urllib.parse import urlparse
 
 import voluptuous as vol
@@ -145,7 +146,7 @@ def validate_manifest(integration: Integration):
         validate_version(integration)
 
 
-def validate(integrations: Dict[str, Integration], config):
+def validate(integrations: dict[str, Integration], config):
     """Handle all integrations manifests."""
     for integration in integrations.values():
         if integration.manifest:

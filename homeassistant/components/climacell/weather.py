@@ -1,6 +1,9 @@
 """Weather component that handles meteorological data for your location."""
+from __future__ import annotations
+
+from datetime import datetime
 import logging
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
@@ -21,7 +24,6 @@ from homeassistant.const import (
     LENGTH_MILES,
     PRESSURE_HPA,
     PRESSURE_INHG,
-    TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
 from homeassistant.helpers.entity import Entity
@@ -30,7 +32,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.distance import convert as distance_convert
 from homeassistant.util.pressure import convert as pressure_convert
-from homeassistant.util.temperature import convert as temp_convert
 
 from . import ClimaCellDataUpdateCoordinator, ClimaCellEntity
 from .const import (
@@ -65,9 +66,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def _translate_condition(
-    condition: Optional[str], sun_is_up: bool = True
-) -> Optional[str]:
+def _translate_condition(condition: str | None, sun_is_up: bool = True) -> str | None:
     """Translate ClimaCell condition into an HA condition."""
     if not condition:
         return None
@@ -80,22 +79,19 @@ def _translate_condition(
 
 def _forecast_dict(
     hass: HomeAssistantType,
-    time: str,
+    forecast_dt: datetime,
     use_datetime: bool,
     condition: str,
-    precipitation: Optional[float],
-    precipitation_probability: Optional[float],
-    temp: Optional[float],
-    temp_low: Optional[float],
-    wind_direction: Optional[float],
-    wind_speed: Optional[float],
-) -> Dict[str, Any]:
+    precipitation: float | None,
+    precipitation_probability: float | None,
+    temp: float | None,
+    temp_low: float | None,
+    wind_direction: float | None,
+    wind_speed: float | None,
+) -> dict[str, Any]:
     """Return formatted Forecast dict from ClimaCell forecast data."""
     if use_datetime:
-        translated_condition = _translate_condition(
-            condition,
-            is_up(hass, dt_util.as_utc(dt_util.parse_datetime(time))),
-        )
+        translated_condition = _translate_condition(condition, is_up(hass, forecast_dt))
     else:
         translated_condition = _translate_condition(condition, True)
 
@@ -104,15 +100,11 @@ def _forecast_dict(
             precipitation = (
                 distance_convert(precipitation / 12, LENGTH_FEET, LENGTH_METERS) * 1000
             )
-        if temp:
-            temp = temp_convert(temp, TEMP_FAHRENHEIT, TEMP_CELSIUS)
-        if temp_low:
-            temp_low = temp_convert(temp_low, TEMP_FAHRENHEIT, TEMP_CELSIUS)
         if wind_speed:
             wind_speed = distance_convert(wind_speed, LENGTH_MILES, LENGTH_KILOMETERS)
 
     data = {
-        ATTR_FORECAST_TIME: time,
+        ATTR_FORECAST_TIME: forecast_dt.isoformat(),
         ATTR_FORECAST_CONDITION: translated_condition,
         ATTR_FORECAST_PRECIPITATION: precipitation,
         ATTR_FORECAST_PRECIPITATION_PROBABILITY: precipitation_probability,
@@ -128,7 +120,7 @@ def _forecast_dict(
 async def async_setup_entry(
     hass: HomeAssistantType,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
     """Set up a config entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
@@ -246,7 +238,9 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
         # Set default values (in cases where keys don't exist), None will be
         # returned. Override properties per forecast type as needed
         for forecast in self.coordinator.data[FORECASTS][self.forecast_type]:
-            timestamp = self._get_cc_value(forecast, CC_ATTR_TIMESTAMP)
+            forecast_dt = dt_util.parse_datetime(
+                self._get_cc_value(forecast, CC_ATTR_TIMESTAMP)
+            )
             use_datetime = True
             condition = self._get_cc_value(forecast, CC_ATTR_CONDITION)
             precipitation = self._get_cc_value(forecast, CC_ATTR_PRECIPITATION)
@@ -260,6 +254,7 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
 
             if self.forecast_type == DAILY:
                 use_datetime = False
+                forecast_dt = dt_util.start_of_local_day(forecast_dt)
                 precipitation = self._get_cc_value(
                     forecast, CC_ATTR_PRECIPITATION_DAILY
                 )
@@ -279,18 +274,17 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
                     ),
                     temp_low,
                 )
-            elif self.forecast_type == NOWCAST:
+            elif self.forecast_type == NOWCAST and precipitation:
                 # Precipitation is forecasted in CONF_TIMESTEP increments but in a
                 # per hour rate, so value needs to be converted to an amount.
-                if precipitation:
-                    precipitation = (
-                        precipitation / 60 * self._config_entry.options[CONF_TIMESTEP]
-                    )
+                precipitation = (
+                    precipitation / 60 * self._config_entry.options[CONF_TIMESTEP]
+                )
 
             forecasts.append(
                 _forecast_dict(
                     self.hass,
-                    timestamp,
+                    forecast_dt,
                     use_datetime,
                     condition,
                     precipitation,

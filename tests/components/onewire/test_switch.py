@@ -94,7 +94,7 @@ async def test_owserver_switch(owproxy, hass, device_id):
         item["default_disabled"] = False
 
     with patch(
-        "homeassistant.components.onewire.SUPPORTED_PLATFORMS", [SWITCH_DOMAIN]
+        "homeassistant.components.onewire.PLATFORMS", [SWITCH_DOMAIN]
     ), patch.dict(
         "homeassistant.components.onewire.switch.DEVICE_SWITCHES", patch_device_switches
     ):

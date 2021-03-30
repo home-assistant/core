@@ -30,7 +30,7 @@
                 "data": {
                     "code": "PIN kood"
                 },
-                "description": "Nest-i konto linkimiseks [authorize your account] ({url}).\n\nP\u00e4rast autoriseerimist kopeeri allolev PIN kood.",
+                "description": "Nest-i konto linkimiseks [authorize your account] ({url}).\n\nP\u00e4rast autoriseerimist kopeeri ja kleebi allolev PIN kood.",
                 "title": "Lingi Nesti konto"
             },
             "pick_implementation": {

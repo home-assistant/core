@@ -9,3 +9,5 @@ reload:
 reset_accessory:
   description: Reset a HomeKit accessory
   target:
+    entity: {}
+

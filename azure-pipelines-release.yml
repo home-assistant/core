@@ -14,7 +14,7 @@ schedules:
     always: true
 variables:
   - name: versionBuilder
-    value: '2020.11.0'
+    value: '2021.02.0'
   - group: docker
   - group: github
   - group: twine

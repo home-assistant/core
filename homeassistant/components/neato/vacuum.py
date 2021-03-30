@@ -202,8 +202,8 @@ class NeatoConnectedVacuum(StateVacuumEntity):
             return
 
         mapdata = self._mapdata[self._robot_serial]["maps"][0]
-        self._clean_time_start = (mapdata["start_at"].strip("Z")).replace("T", " ")
-        self._clean_time_stop = (mapdata["end_at"].strip("Z")).replace("T", " ")
+        self._clean_time_start = mapdata["start_at"]
+        self._clean_time_stop = mapdata["end_at"]
         self._clean_area = mapdata["cleaned_area"]
         self._clean_susp_charge_count = mapdata["suspended_cleaning_charging_count"]
         self._clean_susp_time = mapdata["time_in_suspended_cleaning"]
@@ -284,7 +284,7 @@ class NeatoConnectedVacuum(StateVacuumEntity):
         return self._robot_serial
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the vacuum cleaner."""
         data = {}
 

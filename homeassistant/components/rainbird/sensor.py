@@ -3,7 +3,7 @@ import logging
 
 from pyrainbird import RainbirdController
 
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import SensorEntity
 
 from . import (
     DATA_RAINBIRD,
@@ -28,7 +28,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class RainBirdSensor(Entity):
+class RainBirdSensor(SensorEntity):
     """A sensor implementation for Rain Bird device."""
 
     def __init__(self, controller: RainbirdController, sensor_type):

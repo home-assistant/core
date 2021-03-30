@@ -14,10 +14,11 @@
             "device": {
                 "data": {
                     "host": "Indirizzo IP",
+                    "model": "Modello del dispositivo (opzionale)",
                     "name": "Nome del dispositivo",
                     "token": "Token API"
                 },
-                "description": "Avrai bisogno dei 32 caratteri Token API , vedi https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token per istruzioni. Tieni presente che questa Token API \u00e8 diversa dalla chiave utilizzata dall'integrazione Xiaomi Aqara.",
+                "description": "Avrai bisogno dei 32 caratteri della Token API, vedi https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token per istruzioni. Tieni presente che questa Token API \u00e8 diversa dalla chiave utilizzata dall'integrazione Xiaomi Aqara.",
                 "title": "Connettiti a un dispositivo Xiaomi Miio o Xiaomi Gateway"
             },
             "gateway": {

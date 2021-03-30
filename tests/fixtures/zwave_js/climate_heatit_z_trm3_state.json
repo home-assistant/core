@@ -837,6 +837,7 @@
             "commandClassName": "Thermostat Setpoint",
             "property": "setpoint",
             "propertyName": "setpoint",
+            "propertyKey": 1,
             "propertyKeyName": "Heating",
             "ccVersion": 3,
             "metadata": {

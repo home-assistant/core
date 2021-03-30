@@ -62,12 +62,11 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-LUTRON_CASETA_COMPONENTS = ["light", "switch", "cover", "scene", "fan", "binary_sensor"]
+PLATFORMS = ["light", "switch", "cover", "scene", "fan", "binary_sensor"]
 
 
 async def async_setup(hass, base_config):
     """Set up the Lutron component."""
-
     hass.data.setdefault(DOMAIN, {})
 
     if DOMAIN in base_config:
@@ -92,7 +91,6 @@ async def async_setup(hass, base_config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up a bridge from a config entry."""
-
     host = config_entry.data[CONF_HOST]
     keyfile = hass.config.path(config_entry.data[CONF_KEYFILE])
     certfile = hass.config.path(config_entry.data[CONF_CERTFILE])
@@ -125,7 +123,7 @@ async def async_setup_entry(hass, config_entry):
     bridge_device = devices[BRIDGE_DEVICE_ID]
     await _async_register_bridge_device(hass, config_entry.entry_id, bridge_device)
     # Store this bridge (keyed by entry_id) so it can be retrieved by the
-    # components we're setting up.
+    # platforms we're setting up.
     hass.data[DOMAIN][config_entry.entry_id] = {
         BRIDGE_LEAP: bridge,
         BRIDGE_DEVICE: bridge_device,
@@ -139,9 +137,9 @@ async def async_setup_entry(hass, config_entry):
         # pico remotes to control other devices.
         await async_setup_lip(hass, config_entry, bridge.lip_devices)
 
-    for component in LUTRON_CASETA_COMPONENTS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
+            hass.config_entries.async_forward_entry_setup(config_entry, platform)
         )
 
     return True
@@ -280,7 +278,6 @@ def _async_subscribe_pico_remote_events(hass, lip, button_devices_by_id):
 
 async def async_unload_entry(hass, config_entry):
     """Unload the bridge bridge from a config entry."""
-
     data = hass.data[DOMAIN][config_entry.entry_id]
     data[BRIDGE_LEAP].close()
     if data[BRIDGE_LIP]:
@@ -289,8 +286,8 @@ async def async_unload_entry(hass, config_entry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(config_entry, component)
-                for component in LUTRON_CASETA_COMPONENTS
+                hass.config_entries.async_forward_entry_unload(config_entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )
@@ -352,7 +349,7 @@ class LutronCasetaDevice(Entity):
         }
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {"device_id": self.device_id, "zone_id": self._device["zone"]}
 

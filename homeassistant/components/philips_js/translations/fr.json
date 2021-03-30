@@ -5,9 +5,18 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
+            "invalid_pin": "NIP invalide",
+            "pairing_failure": "Association impossible: {error_id}",
             "unknown": "Erreur inattendue"
         },
         "step": {
+            "pair": {
+                "data": {
+                    "pin": "Code PIN"
+                },
+                "description": "Entrez le code PIN affich\u00e9 sur votre t\u00e9l\u00e9viseur",
+                "title": "Appairer"
+            },
             "user": {
                 "data": {
                     "api_version": "Version de l'API",

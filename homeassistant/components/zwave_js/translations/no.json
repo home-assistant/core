@@ -19,7 +19,7 @@
         },
         "progress": {
             "install_addon": "Vent mens installasjonen av Z-Wave JS-tillegg er ferdig. Dette kan ta flere minutter.",
-            "start_addon": "Vent mens Z-Wave JS-tilleggsstarten er fullf\u00f8rt. Dette kan ta noen sekunder."
+            "start_addon": "Vent mens Z-Wave JS-tillegget er ferdig startet. Dette kan ta noen sekunder."
         },
         "step": {
             "configure_addon": {
@@ -48,7 +48,7 @@
                 "title": "Velg tilkoblingsmetode"
             },
             "start_addon": {
-                "title": "Z-Wave JS-tillegget starter."
+                "title": "Z-Wave JS-tillegget starter"
             },
             "user": {
                 "data": {

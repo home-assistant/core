@@ -14,6 +14,7 @@
             "device": {
                 "data": {
                     "host": "Adresse IP",
+                    "model": "Mod\u00e8le d'appareil (facultatif)",
                     "name": "Nom de l'appareil",
                     "token": "Jeton d'API"
                 },

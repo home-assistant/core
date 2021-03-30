@@ -194,7 +194,7 @@ def test_update_captured_today(captured_sensor):
 def _test_attributes(sensor_type):
     data = _get_named_tuple({"model_id": "TEST123"})
     sensor = _get_sensor("test", sensor_type, data)
-    attrs = sensor.device_state_attributes
+    attrs = sensor.extra_state_attributes
     assert attrs.get(ATTR_ATTRIBUTION) == "Data provided by arlo.netgear.com"
     assert attrs.get("brand") == "Netgear Arlo"
     assert attrs.get("model") == "TEST123"
@@ -211,7 +211,7 @@ def test_state_attributes():
 
 def test_attributes_total_cameras(cameras_sensor):
     """Test attributes for total cameras sensor type."""
-    attrs = cameras_sensor.device_state_attributes
+    attrs = cameras_sensor.extra_state_attributes
     assert attrs.get(ATTR_ATTRIBUTION) == "Data provided by arlo.netgear.com"
     assert attrs.get("brand") == "Netgear Arlo"
     assert attrs.get("model") is None

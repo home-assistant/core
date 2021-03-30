@@ -37,4 +37,17 @@ class MockLight(MockToggleEntity, LightEntity):
     """Mock light class."""
 
     brightness = None
+    supported_color_modes = None
     supported_features = 0
+
+    color_mode = None
+
+    hs_color = None
+    xy_color = None
+    rgb_color = None
+    rgbw_color = None
+    rgbww_color = None
+
+    color_temp = None
+
+    white_value = None

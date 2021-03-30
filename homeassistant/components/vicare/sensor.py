@@ -3,6 +3,7 @@ import logging
 
 import requests
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ICON,
@@ -14,7 +15,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TIME_HOURS,
 )
-from homeassistant.helpers.entity import Entity
 
 from . import (
     DOMAIN as VICARE_DOMAIN,
@@ -269,7 +269,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class ViCareSensor(Entity):
+class ViCareSensor(SensorEntity):
     """Representation of a ViCare sensor."""
 
     def __init__(self, name, api, sensor_type):

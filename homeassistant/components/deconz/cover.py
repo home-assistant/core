@@ -2,7 +2,8 @@
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    DEVICE_CLASS_WINDOW,
+    DEVICE_CLASS_DAMPER,
+    DEVICE_CLASS_SHADE,
     DOMAIN,
     SUPPORT_CLOSE,
     SUPPORT_CLOSE_TILT,
@@ -80,9 +81,9 @@ class DeconzCover(DeconzDevice, CoverEntity):
     def device_class(self):
         """Return the class of the cover."""
         if self._device.type in DAMPERS:
-            return "damper"
+            return DEVICE_CLASS_DAMPER
         if self._device.type in WINDOW_COVERS:
-            return DEVICE_CLASS_WINDOW
+            return DEVICE_CLASS_SHADE
 
     @property
     def current_cover_position(self):

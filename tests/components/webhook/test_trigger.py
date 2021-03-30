@@ -6,7 +6,7 @@ import pytest
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
 
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
 @pytest.fixture(autouse=True)

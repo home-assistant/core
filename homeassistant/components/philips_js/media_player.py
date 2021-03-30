@@ -1,5 +1,7 @@
 """Media Player component to integrate TVs exposing the Joint Space API."""
-from typing import Any, Dict, Optional
+from __future__ import annotations
+
+from typing import Any
 
 from haphilipsjs import ConnectionFailure
 import voluptuous as vol
@@ -125,7 +127,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     def __init__(
         self,
         coordinator: PhilipsTVDataUpdateCoordinator,
-        system: Dict[str, Any],
+        system: dict[str, Any],
         unique_id: str,
     ):
         """Initialize the Philips TV."""
@@ -137,10 +139,10 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         self._system = system
         self._unique_id = unique_id
         self._state = STATE_OFF
-        self._media_content_type: Optional[str] = None
-        self._media_content_id: Optional[str] = None
-        self._media_title: Optional[str] = None
-        self._media_channel: Optional[str] = None
+        self._media_content_type: str | None = None
+        self._media_content_id: str | None = None
+        self._media_title: str | None = None
+        self._media_channel: str | None = None
 
         super().__init__(coordinator)
         self._update_from_coordinator()
@@ -168,9 +170,8 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     @property
     def state(self):
         """Get the device state. An exception means OFF state."""
-        if self._tv.on:
-            if self._tv.powerstate == "On" or self._tv.powerstate is None:
-                return STATE_ON
+        if self._tv.on and (self._tv.powerstate == "On" or self._tv.powerstate is None):
+            return STATE_ON
         return STATE_OFF
 
     @property
@@ -295,8 +296,8 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     def media_image_url(self):
         """Image url of current playing media."""
         if self._media_content_id and self._media_content_type in (
-            MEDIA_CLASS_APP,
-            MEDIA_CLASS_CHANNEL,
+            MEDIA_TYPE_APP,
+            MEDIA_TYPE_CHANNEL,
         ):
             return self.get_browse_image_url(
                 self._media_content_type, self._media_content_id, media_image_id=None
@@ -370,9 +371,6 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
                     media_content_type=MEDIA_TYPE_CHANNEL,
                     can_play=True,
                     can_expand=False,
-                    thumbnail=self.get_browse_image_url(
-                        MEDIA_TYPE_APP, channel_id, media_image_id=None
-                    ),
                 )
                 for channel_id, channel in self._tv.channels.items()
             ]
@@ -384,7 +382,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             media_class=MEDIA_CLASS_DIRECTORY,
             media_content_id="channels",
             media_content_type=MEDIA_TYPE_CHANNELS,
-            children_media_class=MEDIA_TYPE_CHANNEL,
+            children_media_class=MEDIA_CLASS_CHANNEL,
             can_play=False,
             can_expand=True,
             children=children,
@@ -410,9 +408,6 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
                         media_content_type=MEDIA_TYPE_CHANNEL,
                         can_play=True,
                         can_expand=False,
-                        thumbnail=self.get_browse_image_url(
-                            MEDIA_TYPE_APP, channel, media_image_id=None
-                        ),
                     )
                     for channel in favorites
                 ]
@@ -427,7 +422,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             media_class=MEDIA_CLASS_DIRECTORY,
             media_content_id=f"favorites/{list_id}",
             media_content_type=MEDIA_TYPE_CHANNELS,
-            children_media_class=MEDIA_TYPE_CHANNEL,
+            children_media_class=MEDIA_CLASS_CHANNEL,
             can_play=False,
             can_expand=True,
             children=children,
@@ -458,7 +453,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             media_class=MEDIA_CLASS_DIRECTORY,
             media_content_id="applications",
             media_content_type=MEDIA_TYPE_APPS,
-            children_media_class=MEDIA_TYPE_APP,
+            children_media_class=MEDIA_CLASS_APP,
             can_play=False,
             can_expand=True,
             children=children,
@@ -479,7 +474,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             media_class=MEDIA_CLASS_DIRECTORY,
             media_content_id="favorite_lists",
             media_content_type=MEDIA_TYPE_CHANNELS,
-            children_media_class=MEDIA_TYPE_CHANNEL,
+            children_media_class=MEDIA_CLASS_CHANNEL,
             can_play=False,
             can_expand=True,
             children=children,

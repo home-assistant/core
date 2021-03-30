@@ -16,6 +16,7 @@ from homeassistant.components.media_player import (
     DEVICE_CLASS_TV,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
 )
+from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN, SUPPORT_ACTIVITY
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_DEVICE_CLASS,
@@ -444,10 +445,11 @@ def port_is_available(port: int) -> bool:
 
 async def async_find_next_available_port(hass: HomeAssistant, start_port: int) -> int:
     """Find the next available port not assigned to a config entry."""
-    exclude_ports = set()
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if CONF_PORT in entry.data:
-            exclude_ports.add(entry.data[CONF_PORT])
+    exclude_ports = {
+        entry.data[CONF_PORT]
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if CONF_PORT in entry.data
+    }
 
     return await hass.async_add_executor_job(
         _find_next_available_port, start_port, exclude_ports
@@ -487,8 +489,10 @@ def accessory_friendly_name(hass_name, accessory):
     see both to identify the accessory.
     """
     accessory_mdns_name = accessory.display_name
-    if hass_name.startswith(accessory_mdns_name):
+    if hass_name.casefold().startswith(accessory_mdns_name.casefold()):
         return hass_name
+    if accessory_mdns_name.casefold().startswith(hass_name.casefold()):
+        return accessory_mdns_name
     return f"{hass_name} ({accessory_mdns_name})"
 
 
@@ -497,10 +501,9 @@ def state_needs_accessory_mode(state):
     if state.domain == CAMERA_DOMAIN:
         return True
 
-    if (
+    return (
         state.domain == MEDIA_PLAYER_DOMAIN
         and state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TV
-    ):
-        return True
-
-    return False
+        or state.domain == REMOTE_DOMAIN
+        and state.attributes.get(ATTR_SUPPORTED_FEATURES) & SUPPORT_ACTIVITY
+    )

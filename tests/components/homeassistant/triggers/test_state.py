@@ -506,7 +506,7 @@ async def test_if_fires_on_entity_change_with_for(hass, calls):
     await hass.async_block_till_done()
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_fires_on_entity_change_with_for_without_to(hass, calls):

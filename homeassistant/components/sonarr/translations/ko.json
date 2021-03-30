@@ -12,7 +12,8 @@
         "flow_title": "Sonarr: {name}",
         "step": {
             "reauth_confirm": {
-                "title": "\ud1b5\ud569 \uad6c\uc131\uc694\uc18c \uc7ac\uc778\uc99d"
+                "description": "Sonarr \ud1b5\ud569 \uad6c\uc131\uc694\uc18c\ub294 {host}\uc5d0\uc11c \ud638\uc2a4\ud305\ub418\ub294 Sonarr API\ub85c \uc218\ub3d9\uc73c\ub85c \ub2e4\uc2dc \uc778\uc99d\ud574\uc57c \ud569\ub2c8\ub2e4",
+                "title": "\ud1b5\ud569 \uad6c\uc131\uc694\uc18c \uc7ac\uc778\uc99d\ud558\uae30"
             },
             "user": {
                 "data": {

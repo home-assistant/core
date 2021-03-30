@@ -14,5 +14,12 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Recollect Waste konfigur\u00e1l\u00e1sa"
+            }
+        }
     }
 }

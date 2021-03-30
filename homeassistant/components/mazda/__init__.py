@@ -32,6 +32,12 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["sensor"]
 
 
+async def with_timeout(task, timeout_seconds=10):
+    """Run an async task with a timeout."""
+    async with async_timeout.timeout(timeout_seconds):
+        return await task
+
+
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Mazda Connected Services component."""
     hass.data[DOMAIN] = {}
@@ -69,11 +75,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     async def async_update_data():
         """Fetch data from Mazda API."""
-
-        async def with_timeout(task):
-            async with async_timeout.timeout(10):
-                return await task
-
         try:
             vehicles = await with_timeout(mazda_client.get_vehicles())
 
@@ -116,14 +117,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     }
 
     # Fetch initial data so we have data when entities subscribe
-    await coordinator.async_refresh()
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
 
     # Setup components
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -134,8 +133,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

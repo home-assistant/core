@@ -23,7 +23,7 @@
                     "password": "Wachtwoord",
                     "path": "ZM-pad",
                     "path_zms": "ZMS-pad",
-                    "ssl": "Gebruik SSL voor verbindingen met ZoneMinder",
+                    "ssl": "Gebruik een SSL-certificaat",
                     "username": "Gebruikersnaam",
                     "verify_ssl": "Verifieer SSL-certificaat"
                 },

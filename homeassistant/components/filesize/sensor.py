@@ -3,12 +3,16 @@ import datetime
 import logging
 import os
 
+import voluptuous as vol
+
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_FILE_PATH,
     CONF_UNIT_OF_MEASUREMENT,
     DATA_BYTES,
     DATA_MEGABYTES,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.reload import setup_reload_service
 from homeassistant.util import slugify
@@ -53,7 +57,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(sensors, True)
 
 
-class Filesize(Entity):
+class Filesize(SensorEntity):
     """Encapsulates file size information."""
 
     def __init__(self, path, unit_of_measurement):
@@ -97,7 +101,7 @@ class Filesize(Entity):
         return ICON
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return other details about the sensor state."""
         return {
             "path": self._path,

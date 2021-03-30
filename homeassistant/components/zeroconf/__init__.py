@@ -1,4 +1,7 @@
 """Support for exposing Home Assistant via Zeroconf."""
+from __future__ import annotations
+
+from contextlib import suppress
 import fnmatch
 from functools import partial
 import ipaddress
@@ -53,7 +56,7 @@ HOMEKIT_TYPES = [
 
 CONF_DEFAULT_INTERFACE = "default_interface"
 CONF_IPV6 = "ipv6"
-DEFAULT_DEFAULT_INTERFACE = False
+DEFAULT_DEFAULT_INTERFACE = True
 DEFAULT_IPV6 = True
 
 HOMEKIT_PROPERTIES = "properties"
@@ -107,7 +110,7 @@ async def _async_get_instance(hass, **zcargs):
 class HaServiceBrowser(ServiceBrowser):
     """ServiceBrowser that only consumes DNSPointer records."""
 
-    def update_record(self, zc: "Zeroconf", now: float, record: DNSRecord) -> None:
+    def update_record(self, zc: Zeroconf, now: float, record: DNSRecord) -> None:
         """Pre-Filter update_record to DNSPointers for the configured type."""
 
         #
@@ -185,15 +188,11 @@ def _register_hass_zc_service(hass, zeroconf, uuid):
     }
 
     # Get instance URL's
-    try:
+    with suppress(NoURLAvailableError):
         params["external_url"] = get_url(hass, allow_internal=False)
-    except NoURLAvailableError:
-        pass
 
-    try:
+    with suppress(NoURLAvailableError):
         params["internal_url"] = get_url(hass, allow_external=False)
-    except NoURLAvailableError:
-        pass
 
     # Set old base URL based on external or internal
     params["base_url"] = params["external_url"] or params["internal_url"]
@@ -242,7 +241,7 @@ async def _async_start_zeroconf_browser(hass, zeroconf):
         nonlocal zeroconf_types
         nonlocal homekit_models
 
-        if state_change != ServiceStateChange.Added:
+        if state_change == ServiceStateChange.Removed:
             return
 
         try:
@@ -378,11 +377,9 @@ def info_from_service(service):
 
         properties["_raw"][key] = value
 
-        try:
+        with suppress(UnicodeDecodeError):
             if isinstance(value, bytes):
                 properties[key] = value.decode("utf-8")
-        except UnicodeDecodeError:
-            pass
 
     if not service.addresses:
         return None

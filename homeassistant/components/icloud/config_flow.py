@@ -21,10 +21,10 @@ from .const import (
     DEFAULT_GPS_ACCURACY_THRESHOLD,
     DEFAULT_MAX_INTERVAL,
     DEFAULT_WITH_FAMILY,
+    DOMAIN,
     STORAGE_KEY,
     STORAGE_VERSION,
 )
-from .const import DOMAIN  # pylint: disable=unused-import
 
 CONF_TRUSTED_DEVICE = "trusted_device"
 CONF_VERIFICATION_CODE = "verification_code"
