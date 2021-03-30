@@ -8,6 +8,7 @@
             "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
@@ -17,6 +18,5 @@
                 }
             }
         }
-    },
-    "title": "Enphase Envoy"
+    }
 }

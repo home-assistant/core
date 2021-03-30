@@ -105,7 +105,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(self.serial)
         self.ip_address = discovery_info[CONF_HOST]
         self._abort_if_unique_id_configured({CONF_HOST: self.ip_address})
-        self.context["title_placeholders"] = {CONF_SERIAL: self.serial}
         return await self.async_step_user()
 
     async def async_step_user(
@@ -135,6 +134,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     title=name, data={CONF_NAME: name, **user_input}
                 )
 
+        name = "{ENVOY} {self.serial}" if self.serial else ENVOY
+        self.context["title_placeholders"] = {CONF_NAME: name}
         return self.async_show_form(
             step_id="user",
             data_schema=self._async_generate_schema(),
