@@ -49,8 +49,8 @@ CUSTOM_WARNING = (
 )
 CUSTOM_WARNING_VERSION_MISSING = (
     "No 'version' key in the manifest file for "
-    "custom integration '%s'. With the 2021.6 release "
-    "of Home Assistant this integration will no longer be "
+    "custom integration '%s'. As of Home Assistant "
+    "2021.6, this integration will no longer be "
     "loaded. Please report this to the maintainer of '%s'"
 )
 CUSTOM_WARNING_VERSION_TYPE = (
