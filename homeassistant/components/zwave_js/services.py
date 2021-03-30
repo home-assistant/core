@@ -5,7 +5,9 @@ import logging
 
 import voluptuous as vol
 from zwave_js_server.const import CommandStatus
+from zwave_js_server.exceptions import SetValueFailed
 from zwave_js_server.model.node import Node as ZwaveNode
+from zwave_js_server.model.value import get_value_id
 from zwave_js_server.util.node import (
     async_bulk_set_partial_config_parameters,
     async_set_config_parameter,
@@ -120,6 +122,29 @@ class ZWaveServices:
             ),
         )
 
+        self._hass.services.async_register(
+            const.DOMAIN,
+            const.SERVICE_SET_VALUE,
+            self.async_set_value,
+            schema=vol.Schema(
+                {
+                    vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
+                    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+                    vol.Required(const.ATTR_COMMAND_CLASS): vol.Coerce(int),
+                    vol.Required(const.ATTR_PROPERTY): vol.Any(vol.Coerce(int), str),
+                    vol.Optional(const.ATTR_PROPERTY_KEY): vol.Any(
+                        vol.Coerce(int), str
+                    ),
+                    vol.Optional(const.ATTR_ENDPOINT): vol.Coerce(int),
+                    vol.Required(const.ATTR_VALUE): vol.Any(
+                        bool, vol.Coerce(int), vol.Coerce(float), cv.string
+                    ),
+                    vol.Optional(const.ATTR_WAIT_FOR_RESULT): vol.Coerce(bool),
+                },
+                cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
+            ),
+        )
+
     async def async_set_config_parameter(self, service: ServiceCall) -> None:
         """Set a config value on a node."""
         nodes: set[ZwaveNode] = set()
@@ -203,3 +228,43 @@ class ZWaveServices:
                 f"{const.DOMAIN}_{entry.unique_id}_poll_value",
                 service.data[const.ATTR_REFRESH_ALL_VALUES],
             )
+
+    async def async_set_value(self, service: ServiceCall) -> None:
+        """Set a value on a node."""
+        nodes: set[ZwaveNode] = set()
+        if ATTR_ENTITY_ID in service.data:
+            nodes |= {
+                async_get_node_from_entity_id(self._hass, entity_id)
+                for entity_id in service.data[ATTR_ENTITY_ID]
+            }
+        if ATTR_DEVICE_ID in service.data:
+            nodes |= {
+                async_get_node_from_device_id(self._hass, device_id)
+                for device_id in service.data[ATTR_DEVICE_ID]
+            }
+        command_class = service.data[const.ATTR_COMMAND_CLASS]
+        property_ = service.data[const.ATTR_PROPERTY]
+        property_key = service.data.get(const.ATTR_PROPERTY_KEY)
+        endpoint = service.data.get(const.ATTR_ENDPOINT)
+        new_value = service.data[const.ATTR_VALUE]
+        wait_for_result = service.data.get(const.ATTR_WAIT_FOR_RESULT)
+
+        for node in nodes:
+            success = await node.async_set_value(
+                get_value_id(
+                    node,
+                    command_class,
+                    property_,
+                    endpoint=endpoint,
+                    property_key=property_key,
+                ),
+                new_value,
+                wait_for_result=wait_for_result,
+            )
+
+            if success is False:
+                raise SetValueFailed(
+                    "Unable to set value, refer to "
+                    "https://zwave-js.github.io/node-zwave-js/#/api/node?id=setvalue "
+                    "for possible reasons"
+                )

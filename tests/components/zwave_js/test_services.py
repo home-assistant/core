@@ -1,16 +1,22 @@
 """Test the Z-Wave JS services."""
 import pytest
 import voluptuous as vol
+from zwave_js_server.exceptions import SetValueFailed
 
 from homeassistant.components.zwave_js.const import (
+    ATTR_COMMAND_CLASS,
     ATTR_CONFIG_PARAMETER,
     ATTR_CONFIG_PARAMETER_BITMASK,
     ATTR_CONFIG_VALUE,
+    ATTR_PROPERTY,
     ATTR_REFRESH_ALL_VALUES,
+    ATTR_VALUE,
+    ATTR_WAIT_FOR_RESULT,
     DOMAIN,
     SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
     SERVICE_REFRESH_VALUE,
     SERVICE_SET_CONFIG_PARAMETER,
+    SERVICE_SET_VALUE,
 )
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID
 from homeassistant.helpers.device_registry import (
@@ -19,7 +25,11 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.helpers.entity_registry import async_get as async_get_ent_reg
 
-from .common import AIR_TEMPERATURE_SENSOR, CLIMATE_RADIO_THERMOSTAT_ENTITY
+from .common import (
+    AIR_TEMPERATURE_SENSOR,
+    CLIMATE_DANFOSS_LC13_ENTITY,
+    CLIMATE_RADIO_THERMOSTAT_ENTITY,
+)
 
 from tests.common import MockConfigEntry
 
@@ -531,3 +541,84 @@ async def test_poll_value(
             {ATTR_ENTITY_ID: "sensor.fake_entity_id"},
             blocking=True,
         )
+
+
+async def test_set_value(hass, client, climate_danfoss_lc_13, integration):
+    """Test set_value service."""
+    dev_reg = async_get_dev_reg(hass)
+    device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: CLIMATE_DANFOSS_LC13_ENTITY,
+            ATTR_COMMAND_CLASS: 117,
+            ATTR_PROPERTY: "local",
+            ATTR_VALUE: 2,
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command_no_wait.call_args_list) == 1
+    args = client.async_send_command_no_wait.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 5
+    assert args["valueId"] == {
+        "commandClassName": "Protection",
+        "commandClass": 117,
+        "endpoint": 0,
+        "property": "local",
+        "propertyName": "local",
+        "ccVersion": 2,
+        "metadata": {
+            "type": "number",
+            "readable": True,
+            "writeable": True,
+            "label": "Local protection state",
+            "states": {"0": "Unprotected", "2": "NoOperationPossible"},
+        },
+        "value": 0,
+    }
+    assert args["value"] == 2
+
+    client.async_send_command_no_wait.reset_mock()
+
+    # Test that when a command fails we raise an exception
+    client.async_send_command.return_value = {"success": False}
+
+    with pytest.raises(SetValueFailed):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_DEVICE_ID: device.id,
+                ATTR_COMMAND_CLASS: 117,
+                ATTR_PROPERTY: "local",
+                ATTR_VALUE: 2,
+                ATTR_WAIT_FOR_RESULT: True,
+            },
+            blocking=True,
+        )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 5
+    assert args["valueId"] == {
+        "commandClassName": "Protection",
+        "commandClass": 117,
+        "endpoint": 0,
+        "property": "local",
+        "propertyName": "local",
+        "ccVersion": 2,
+        "metadata": {
+            "type": "number",
+            "readable": True,
+            "writeable": True,
+            "label": "Local protection state",
+            "states": {"0": "Unprotected", "2": "NoOperationPossible"},
+        },
+        "value": 0,
+    }
+    assert args["value"] == 2
