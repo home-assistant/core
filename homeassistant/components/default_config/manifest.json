@@ -3,6 +3,7 @@
   "name": "Default Config",
   "documentation": "https://www.home-assistant.io/integrations/default_config",
   "dependencies": [
+    "analytics",
     "automation",
     "cloud",
     "counter",

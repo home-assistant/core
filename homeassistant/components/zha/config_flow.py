@@ -12,7 +12,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .core.const import (  # pylint:disable=unused-import
+from .core.const import (
     CONF_BAUDRATE,
     CONF_FLOWCONTROL,
     CONF_RADIO_TYPE,

@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 
-from .const import (  # pylint: disable=unused-import
+from .const import (
     CONF_DSN,
     CONF_ENVIRONMENT,
     CONF_EVENT_CUSTOM_COMPONENTS,
