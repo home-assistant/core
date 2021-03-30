@@ -95,6 +95,29 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
+async def test_form_unknown_error(hass: HomeAssistant) -> None:
+    """Test we handle unknown error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.enphase_envoy.config_flow.EnvoyReader.getData",
+        side_effect=ValueError,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "unknown"}
+
+
 async def test_import(hass: HomeAssistant) -> None:
     """Test we can import from yaml."""
     await setup.async_setup_component(hass, "persistent_notification", {})
