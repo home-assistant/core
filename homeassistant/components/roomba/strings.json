@@ -11,7 +11,7 @@
       },
       "manual": {
         "title": "Manually connect to the device",
-        "description": "No Roomba or Braava have been discovered on your network. The BLID is the portion of the device hostname after `iRobot-`. Please follow the steps outlined in the documentation at: {auth_help_url}",
+        "description": "No Roomba or Braava have been discovered on your network. The BLID is the portion of the device hostname after `iRobot-` or `Roomba-`. Please follow the steps outlined in the documentation at: {auth_help_url}",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "blid": "BLID"
@@ -19,7 +19,7 @@
       },      
       "link": {
         "title": "Retrieve Password",
-        "description": "Press and hold the Home button on {name} until the device generates a sound (about two seconds)."
+        "description": "Press and hold the Home button on {name} until the device generates a sound (about two seconds), then submit within 30 seconds."
       },
       "link_manual": {
         "title": "Enter Password",
@@ -35,7 +35,8 @@
     "abort": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "not_irobot_device": "Discovered device is not an iRobot device"
+      "not_irobot_device": "Discovered device is not an iRobot device",
+      "short_blid": "The BLID was truncated"
     }    
   },
   "options": {
