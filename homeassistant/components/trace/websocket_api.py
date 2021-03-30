@@ -61,7 +61,14 @@ def websocket_trace_get(hass, connection, msg):
     key = (msg["domain"], msg["item_id"])
     run_id = msg["run_id"]
 
-    trace = hass.data[DATA_TRACE][key][run_id]
+    try:
+        trace = hass.data[DATA_TRACE][key][run_id]
+    except KeyError:
+        connection.send_error(
+            msg["id"], websocket_api.ERR_NOT_FOUND, "The trace could not be found"
+        )
+        return
+
     message = websocket_api.messages.result_message(msg["id"], trace)
 
     connection.send_message(json.dumps(message, cls=TraceJSONEncoder, allow_nan=False))
