@@ -73,7 +73,7 @@ async def test_get_triggers(hass, device_reg, entity_reg):
 
 
 async def test_get_trigger_capabilities(hass, device_reg, entity_reg):
-    """Test we get the expected capabilities from an alarm_control_panel."""
+    """Test we get the expected capabilities from a media player."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
     device_entry = device_reg.async_get_or_create(
