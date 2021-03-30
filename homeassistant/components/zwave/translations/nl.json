@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Z-Wave is al geconfigureerd",
+            "already_configured": "Apparaat is al geconfigureerd",
             "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
         },
         "error": {
@@ -11,9 +11,9 @@
             "user": {
                 "data": {
                     "network_key": "Netwerksleutel (laat leeg om automatisch te genereren)",
-                    "usb_path": "USB-pad"
+                    "usb_path": "USB-apparaatpad"
                 },
-                "description": "Zie https://www.home-assistant.io/docs/z-wave/installation/ voor informatie over de configuratievariabelen",
+                "description": "Deze integratie wordt niet langer onderhouden. Voor nieuwe installaties, gebruik Z-Wave JS in plaats daarvan.\n\nZie https://www.home-assistant.io/docs/z-wave/installation/ voor informatie over de configuratievariabelen",
                 "title": "Stel Z-Wave in"
             }
         }

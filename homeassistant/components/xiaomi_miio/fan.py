@@ -4,7 +4,7 @@ from enum import Enum
 from functools import partial
 import logging
 
-from miio import (  # pylint: disable=import-error
+from miio import (
     AirFresh,
     AirHumidifier,
     AirHumidifierMiot,
@@ -12,24 +12,24 @@ from miio import (  # pylint: disable=import-error
     AirPurifierMiot,
     DeviceException,
 )
-from miio.airfresh import (  # pylint: disable=import-error, import-error
+from miio.airfresh import (
     LedBrightness as AirfreshLedBrightness,
     OperationMode as AirfreshOperationMode,
 )
-from miio.airhumidifier import (  # pylint: disable=import-error, import-error
+from miio.airhumidifier import (
     LedBrightness as AirhumidifierLedBrightness,
     OperationMode as AirhumidifierOperationMode,
 )
-from miio.airhumidifier_miot import (  # pylint: disable=import-error, import-error
+from miio.airhumidifier_miot import (
     LedBrightness as AirhumidifierMiotLedBrightness,
     OperationMode as AirhumidifierMiotOperationMode,
     PressedButton as AirhumidifierPressedButton,
 )
-from miio.airpurifier import (  # pylint: disable=import-error, import-error
+from miio.airpurifier import (
     LedBrightness as AirpurifierLedBrightness,
     OperationMode as AirpurifierOperationMode,
 )
-from miio.airpurifier_miot import (  # pylint: disable=import-error, import-error
+from miio.airpurifier_miot import (
     LedBrightness as AirpurifierMiotLedBrightness,
     OperationMode as AirpurifierMiotOperationMode,
 )
@@ -47,6 +47,7 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
+    ATTR_TEMPERATURE,
     CONF_HOST,
     CONF_NAME,
     CONF_TOKEN,
@@ -61,8 +62,6 @@ from .const import (
     MODEL_AIRHUMIDIFIER_CA4,
     MODEL_AIRHUMIDIFIER_CB1,
     MODEL_AIRPURIFIER_2S,
-    MODEL_AIRPURIFIER_3,
-    MODEL_AIRPURIFIER_3H,
     MODEL_AIRPURIFIER_PRO,
     MODEL_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V3,
@@ -112,7 +111,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 ATTR_MODEL = "model"
 
 # Air Purifier
-ATTR_TEMPERATURE = "temperature"
 ATTR_HUMIDITY = "humidity"
 ATTR_AIR_QUALITY_INDEX = "aqi"
 ATTR_FILTER_HOURS_USED = "filter_hours_used"
@@ -651,7 +649,7 @@ class XiaomiGenericDevice(XiaomiMiioEntity, FanEntity):
         return self._available
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
         return self._state_attrs
 
@@ -786,7 +784,7 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_2S
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_2S
             self._speed_list = OPERATION_MODES_AIRPURIFIER_2S
-        elif self._model == MODEL_AIRPURIFIER_3 or self._model == MODEL_AIRPURIFIER_3H:
+        elif self._model in MODELS_PURIFIER_MIOT:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_3
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_3
             self._speed_list = OPERATION_MODES_AIRPURIFIER_3

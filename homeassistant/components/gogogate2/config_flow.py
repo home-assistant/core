@@ -16,8 +16,7 @@ from homeassistant.const import (
 )
 
 from .common import get_api
-from .const import DEVICE_TYPE_GOGOGATE2, DEVICE_TYPE_ISMARTGATE
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import DEVICE_TYPE_GOGOGATE2, DEVICE_TYPE_ISMARTGATE, DOMAIN
 
 
 class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):

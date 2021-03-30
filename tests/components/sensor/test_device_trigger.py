@@ -20,7 +20,7 @@ from tests.common import (
     mock_device_registry,
     mock_registry,
 )
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 from tests.testing_config.custom_components.test.sensor import DEVICE_CLASSES
 
 
@@ -77,7 +77,7 @@ async def test_get_triggers(hass, device_reg, entity_reg):
         if device_class != "none"
     ]
     triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
-    assert len(triggers) == 12
+    assert len(triggers) == 14
     assert triggers == expected_triggers
 
 

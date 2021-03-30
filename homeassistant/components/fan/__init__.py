@@ -1,9 +1,11 @@
 """Provides functionality to interact with fans."""
+from __future__ import annotations
+
 from datetime import timedelta
 import functools as ft
 import logging
 import math
-from typing import List, Optional
+from typing import final
 
 import voluptuous as vol
 
@@ -77,6 +79,7 @@ _NOT_SPEED_INTERVAL = "interval"
 _NOT_SPEED_IDLE = "idle"
 _NOT_SPEED_FAVORITE = "favorite"
 _NOT_SPEED_SLEEP = "sleep"
+_NOT_SPEED_SILENT = "silent"
 
 _NOT_SPEEDS_FILTER = {
     _NOT_SPEED_OFF,
@@ -85,6 +88,7 @@ _NOT_SPEEDS_FILTER = {
     _NOT_SPEED_SMART,
     _NOT_SPEED_INTERVAL,
     _NOT_SPEED_IDLE,
+    _NOT_SPEED_SILENT,
     _NOT_SPEED_SLEEP,
     _NOT_SPEED_FAVORITE,
 }
@@ -217,7 +221,7 @@ def _fan_native(method):
 
 
 class FanEntity(ToggleEntity):
-    """Representation of a fan."""
+    """Base class for fan entities."""
 
     @_fan_native
     def set_speed(self, speed: str) -> None:
@@ -227,7 +231,7 @@ class FanEntity(ToggleEntity):
     async def async_set_speed_deprecated(self, speed: str):
         """Set the speed of the fan."""
         _LOGGER.warning(
-            "fan.set_speed is deprecated, use fan.set_percentage or fan.set_preset_mode instead."
+            "The fan.set_speed service is deprecated, use fan.set_percentage or fan.set_preset_mode instead"
         )
         await self.async_set_speed(speed)
 
@@ -272,16 +276,16 @@ class FanEntity(ToggleEntity):
         else:
             await self.async_set_speed(self.percentage_to_speed(percentage))
 
-    async def async_increase_speed(self, percentage_step: Optional[int] = None) -> None:
+    async def async_increase_speed(self, percentage_step: int | None = None) -> None:
         """Increase the speed of the fan."""
         await self._async_adjust_speed(1, percentage_step)
 
-    async def async_decrease_speed(self, percentage_step: Optional[int] = None) -> None:
+    async def async_decrease_speed(self, percentage_step: int | None = None) -> None:
         """Decrease the speed of the fan."""
         await self._async_adjust_speed(-1, percentage_step)
 
     async def _async_adjust_speed(
-        self, modifier: int, percentage_step: Optional[int]
+        self, modifier: int, percentage_step: int | None
     ) -> None:
         """Increase or decrease the speed of the fan."""
         current_percentage = self.percentage or 0
@@ -336,20 +340,19 @@ class FanEntity(ToggleEntity):
     # pylint: disable=arguments-differ
     def turn_on(
         self,
-        speed: Optional[str] = None,
-        percentage: Optional[int] = None,
-        preset_mode: Optional[str] = None,
+        speed: str | None = None,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
         **kwargs,
     ) -> None:
         """Turn on the fan."""
         raise NotImplementedError()
 
-    # pylint: disable=arguments-differ
     async def async_turn_on_compat(
         self,
-        speed: Optional[str] = None,
-        percentage: Optional[int] = None,
-        preset_mode: Optional[str] = None,
+        speed: str | None = None,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
         **kwargs,
     ) -> None:
         """Turn on the fan.
@@ -366,7 +369,7 @@ class FanEntity(ToggleEntity):
             percentage = None
         elif speed is not None:
             _LOGGER.warning(
-                "Calling fan.turn_on with the speed argument is deprecated, use percentage or preset_mode instead."
+                "Calling fan.turn_on with the speed argument is deprecated, use percentage or preset_mode instead"
             )
             if speed in self.preset_modes:
                 preset_mode = speed
@@ -386,9 +389,9 @@ class FanEntity(ToggleEntity):
     # pylint: disable=arguments-differ
     async def async_turn_on(
         self,
-        speed: Optional[str] = None,
-        percentage: Optional[int] = None,
-        preset_mode: Optional[str] = None,
+        speed: str | None = None,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
         **kwargs,
     ) -> None:
         """Turn on the fan."""
@@ -419,28 +422,28 @@ class FanEntity(ToggleEntity):
         return self.speed not in [SPEED_OFF, None]
 
     @property
-    def _implemented_percentage(self):
+    def _implemented_percentage(self) -> bool:
         """Return true if percentage has been implemented."""
         return not hasattr(self.set_percentage, _FAN_NATIVE) or not hasattr(
             self.async_set_percentage, _FAN_NATIVE
         )
 
     @property
-    def _implemented_preset_mode(self):
+    def _implemented_preset_mode(self) -> bool:
         """Return true if preset_mode has been implemented."""
         return not hasattr(self.set_preset_mode, _FAN_NATIVE) or not hasattr(
             self.async_set_preset_mode, _FAN_NATIVE
         )
 
     @property
-    def _implemented_speed(self):
+    def _implemented_speed(self) -> bool:
         """Return true if speed has been implemented."""
         return not hasattr(self.set_speed, _FAN_NATIVE) or not hasattr(
             self.async_set_speed, _FAN_NATIVE
         )
 
     @property
-    def speed(self) -> Optional[str]:
+    def speed(self) -> str | None:
         """Return the current speed."""
         if self._implemented_preset_mode:
             preset_mode = self.preset_mode
@@ -454,11 +457,10 @@ class FanEntity(ToggleEntity):
         return None
 
     @property
-    def percentage(self) -> Optional[int]:
+    def percentage(self) -> int | None:
         """Return the current speed as a percentage."""
-        if not self._implemented_preset_mode:
-            if self.speed in self.preset_modes:
-                return None
+        if not self._implemented_preset_mode and self.speed in self.preset_modes:
+            return None
         if not self._implemented_percentage:
             return self.speed_to_percentage(self.speed)
         return 0
@@ -487,7 +489,7 @@ class FanEntity(ToggleEntity):
         return speeds
 
     @property
-    def current_direction(self) -> Optional[str]:
+    def current_direction(self) -> str | None:
         """Return the current direction of the fan."""
         return None
 
@@ -584,6 +586,7 @@ class FanEntity(ToggleEntity):
                 f"The speed_list {speed_list} does not contain any valid speeds."
             ) from ex
 
+    @final
     @property
     def state_attributes(self) -> dict:
         """Return optional state attributes."""
@@ -615,7 +618,7 @@ class FanEntity(ToggleEntity):
         return 0
 
     @property
-    def preset_mode(self) -> Optional[str]:
+    def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., auto, smart, interval, favorite.
 
         Requires SUPPORT_SET_SPEED.
@@ -626,7 +629,7 @@ class FanEntity(ToggleEntity):
         return None
 
     @property
-    def preset_modes(self) -> Optional[List[str]]:
+    def preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes.
 
         Requires SUPPORT_SET_SPEED.
@@ -634,7 +637,7 @@ class FanEntity(ToggleEntity):
         return preset_modes_from_speed_list(self.speed_list)
 
 
-def speed_list_without_preset_modes(speed_list: List):
+def speed_list_without_preset_modes(speed_list: list):
     """Filter out non-speeds from the speed list.
 
     The goal is to get the speeds in a list from lowest to
@@ -652,13 +655,13 @@ def speed_list_without_preset_modes(speed_list: List):
       output: ["1", "2", "3", "4", "5", "6", "7"]
 
       input: ["Auto", "Silent", "Favorite", "Idle", "Medium", "High", "Strong"]
-      output: ["Silent", "Medium", "High", "Strong"]
+      output: ["Medium", "High", "Strong"]
     """
 
     return [speed for speed in speed_list if speed.lower() not in _NOT_SPEEDS_FILTER]
 
 
-def preset_modes_from_speed_list(speed_list: List):
+def preset_modes_from_speed_list(speed_list: list):
     """Filter out non-preset modes from the speed list.
 
     The goal is to return only preset modes.
@@ -674,7 +677,7 @@ def preset_modes_from_speed_list(speed_list: List):
       output: ["smart"]
 
       input: ["Auto", "Silent", "Favorite", "Idle", "Medium", "High", "Strong"]
-      output: ["Auto", "Favorite", "Idle"]
+      output: ["Auto", "Silent", "Favorite", "Idle"]
     """
 
     return [

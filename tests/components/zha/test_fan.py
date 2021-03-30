@@ -50,6 +50,8 @@ from .common import (
     send_attributes_report,
 )
 
+from tests.components.zha.common import async_wait_for_updates
+
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
 IEEE_GROUPABLE_DEVICE2 = "02:2d:6f:00:0a:90:69:e8"
 
@@ -246,6 +248,10 @@ async def async_set_preset_mode(hass, entity_id, preset_mode=None):
     "zigpy.zcl.clusters.hvac.Fan.write_attributes",
     new=AsyncMock(return_value=zcl_f.WriteAttributesResponse.deserialize(b"\x00")[0]),
 )
+@patch(
+    "homeassistant.components.zha.entity.UPDATE_GROUP_FROM_CHILD_DELAY",
+    new=0,
+)
 async def test_zha_group_fan_entity(hass, device_fan_1, device_fan_2, coordinator):
     """Test the fan entity for a ZHA group."""
     zha_gateway = get_zha_gateway(hass)
@@ -283,13 +289,13 @@ async def test_zha_group_fan_entity(hass, device_fan_1, device_fan_2, coordinato
     dev2_fan_cluster = device_fan_2.device.endpoints[1].fan
 
     await async_enable_traffic(hass, [device_fan_1, device_fan_2], enabled=False)
-    await hass.async_block_till_done()
+    await async_wait_for_updates(hass)
     # test that the fans were created and that they are unavailable
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
     # allow traffic to flow through the gateway and device
     await async_enable_traffic(hass, [device_fan_1, device_fan_2])
-
+    await async_wait_for_updates(hass)
     # test that the fan group entity was created and is off
     assert hass.states.get(entity_id).state == STATE_OFF
 
@@ -338,13 +344,13 @@ async def test_zha_group_fan_entity(hass, device_fan_1, device_fan_2, coordinato
     assert hass.states.get(entity_id).state == STATE_OFF
 
     await send_attributes_report(hass, dev2_fan_cluster, {0: 2})
-    await hass.async_block_till_done()
+    await async_wait_for_updates(hass)
 
     # test that group fan is speed medium
     assert hass.states.get(entity_id).state == STATE_ON
 
     await send_attributes_report(hass, dev2_fan_cluster, {0: 0})
-    await hass.async_block_till_done()
+    await async_wait_for_updates(hass)
 
     # test that group fan is now off
     assert hass.states.get(entity_id).state == STATE_OFF
@@ -353,6 +359,10 @@ async def test_zha_group_fan_entity(hass, device_fan_1, device_fan_2, coordinato
 @patch(
     "zigpy.zcl.clusters.hvac.Fan.write_attributes",
     new=AsyncMock(side_effect=ZigbeeException),
+)
+@patch(
+    "homeassistant.components.zha.entity.UPDATE_GROUP_FROM_CHILD_DELAY",
+    new=0,
 )
 async def test_zha_group_fan_entity_failure_state(
     hass, device_fan_1, device_fan_2, coordinator, caplog
@@ -390,13 +400,13 @@ async def test_zha_group_fan_entity_failure_state(
     group_fan_cluster = zha_group.endpoint[hvac.Fan.cluster_id]
 
     await async_enable_traffic(hass, [device_fan_1, device_fan_2], enabled=False)
-    await hass.async_block_till_done()
+    await async_wait_for_updates(hass)
     # test that the fans were created and that they are unavailable
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
     # allow traffic to flow through the gateway and device
     await async_enable_traffic(hass, [device_fan_1, device_fan_2])
-
+    await async_wait_for_updates(hass)
     # test that the fan group entity was created and is off
     assert hass.states.get(entity_id).state == STATE_OFF
 

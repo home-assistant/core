@@ -1,5 +1,5 @@
 """Provides device triggers for Shelly."""
-from typing import List
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -60,7 +60,7 @@ async def async_validate_trigger_config(hass, config):
     )
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device triggers for Shelly devices."""
     triggers = []
 
@@ -92,7 +92,6 @@ async def async_attach_trigger(
     automation_info: dict,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    config = TRIGGER_SCHEMA(config)
     event_config = {
         event_trigger.CONF_PLATFORM: CONF_EVENT,
         event_trigger.CONF_EVENT_TYPE: EVENT_SHELLY_CLICK,

@@ -2,10 +2,11 @@
 from unittest.mock import patch
 
 from homeassistant.components import huisbaasje
-from homeassistant.config_entries import CONN_CLASS_CLOUD_POLL, ConfigEntry
+from homeassistant.config_entries import CONN_CLASS_CLOUD_POLL
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
+from tests.common import MockConfigEntry
 from tests.components.huisbaasje.test_data import (
     MOCK_CURRENT_MEASUREMENTS,
     MOCK_LIMITED_CURRENT_MEASUREMENTS,
@@ -24,20 +25,20 @@ async def test_setup_entry(hass: HomeAssistant):
     ) as mock_current_measurements:
 
         hass.config.components.add(huisbaasje.DOMAIN)
-        config_entry = ConfigEntry(
-            1,
-            huisbaasje.DOMAIN,
-            "userId",
-            {
+        config_entry = MockConfigEntry(
+            version=1,
+            domain=huisbaasje.DOMAIN,
+            title="userId",
+            data={
                 CONF_ID: "userId",
                 CONF_USERNAME: "username",
                 CONF_PASSWORD: "password",
             },
-            "test",
-            CONN_CLASS_CLOUD_POLL,
+            source="test",
+            connection_class=CONN_CLASS_CLOUD_POLL,
             system_options={},
         )
-        hass.config_entries._entries.append(config_entry)
+        config_entry.add_to_hass(hass)
 
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -81,20 +82,20 @@ async def test_setup_entry_absent_measurement(hass: HomeAssistant):
     ) as mock_current_measurements:
 
         hass.config.components.add(huisbaasje.DOMAIN)
-        config_entry = ConfigEntry(
-            1,
-            huisbaasje.DOMAIN,
-            "userId",
-            {
+        config_entry = MockConfigEntry(
+            version=1,
+            domain=huisbaasje.DOMAIN,
+            title="userId",
+            data={
                 CONF_ID: "userId",
                 CONF_USERNAME: "username",
                 CONF_PASSWORD: "password",
             },
-            "test",
-            CONN_CLASS_CLOUD_POLL,
+            source="test",
+            connection_class=CONN_CLASS_CLOUD_POLL,
             system_options={},
         )
-        hass.config_entries._entries.append(config_entry)
+        config_entry.add_to_hass(hass)
 
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

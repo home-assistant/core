@@ -1,7 +1,8 @@
 """Support for HomematicIP Cloud devices."""
+from __future__ import annotations
+
 import logging
 from pathlib import Path
-from typing import Optional
 
 from homematicip.aio.device import AsyncSwitchMeasuring
 from homematicip.aio.group import AsyncHeatingGroup
@@ -342,7 +343,7 @@ async def _async_reset_energy_counter(
                     await device.reset_energy_counter()
 
 
-def _get_home(hass: HomeAssistantType, hapid: str) -> Optional[AsyncHome]:
+def _get_home(hass: HomeAssistantType, hapid: str) -> AsyncHome | None:
     """Return a HmIP home."""
     hap = hass.data[HMIPC_DOMAIN].get(hapid)
     if hap:

@@ -4,6 +4,7 @@
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "cannot_connect": "Verbindung fehlgeschlagen",
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "no_uuid": "Die Kodi-Instanz hat keine eindeutige ID. Dies ist h\u00f6chstwahrscheinlich auf eine alte Kodi-Version (17.x oder niedriger) zur\u00fcckzuf\u00fchren. Du kannst die Integration manuell konfigurieren oder auf eine neuere Kodi-Version aktualisieren.",
             "unknown": "Unerwarteter Fehler"
         },
         "error": {

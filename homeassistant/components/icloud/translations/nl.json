@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Account reeds geconfigureerd",
+            "already_configured": "Account is al geconfigureerd",
             "no_device": "Op geen van uw apparaten is \"Find my iPhone\" geactiveerd",
             "reauth_successful": "Herauthenticatie was succesvol"
         },

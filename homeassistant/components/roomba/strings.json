@@ -3,7 +3,7 @@
     "flow_title": "iRobot {name} ({host})",
     "step": {
       "init": {
-        "title": "Automaticlly connect to the device",
+        "title": "Automatically connect to the device",
         "description": "Select a Roomba or Braava.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"

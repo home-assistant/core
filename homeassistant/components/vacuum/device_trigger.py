@@ -1,5 +1,5 @@
 """Provides device automations for Vacuum."""
-from typing import List
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -29,7 +29,7 @@ TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
 )
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device triggers for Vacuum devices."""
     registry = await entity_registry.async_get_registry(hass)
     triggers = []
@@ -68,8 +68,6 @@ async def async_attach_trigger(
     automation_info: dict,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    config = TRIGGER_SCHEMA(config)
-
     if config[CONF_TYPE] == "cleaning":
         to_state = STATE_CLEANING
     else:

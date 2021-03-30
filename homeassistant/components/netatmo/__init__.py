@@ -111,9 +111,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     await data_handler.async_setup()
     hass.data[DOMAIN][entry.entry_id][DATA_HANDLER] = data_handler
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     async def unregister_webhook(_):
@@ -207,15 +207,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         await hass.async_add_executor_job(
             hass.data[DOMAIN][entry.entry_id][AUTH].dropwebhook
         )
-        _LOGGER.info("Unregister Netatmo webhook.")
+        _LOGGER.info("Unregister Netatmo webhook")
 
     await hass.data[DOMAIN][entry.entry_id][DATA_HANDLER].async_cleanup()
 
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

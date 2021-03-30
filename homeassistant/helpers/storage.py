@@ -1,9 +1,12 @@
 """Helper to help store data."""
+from __future__ import annotations
+
 import asyncio
+from contextlib import suppress
 from json import JSONEncoder
 import logging
 import os
-from typing import Any, Callable, Dict, List, Optional, Type, Union
+from typing import Any, Callable
 
 from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
 from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
@@ -71,18 +74,18 @@ class Store:
         key: str,
         private: bool = False,
         *,
-        encoder: Optional[Type[JSONEncoder]] = None,
+        encoder: type[JSONEncoder] | None = None,
     ):
         """Initialize storage class."""
         self.version = version
         self.key = key
         self.hass = hass
         self._private = private
-        self._data: Optional[Dict[str, Any]] = None
-        self._unsub_delay_listener: Optional[CALLBACK_TYPE] = None
-        self._unsub_final_write_listener: Optional[CALLBACK_TYPE] = None
+        self._data: dict[str, Any] | None = None
+        self._unsub_delay_listener: CALLBACK_TYPE | None = None
+        self._unsub_final_write_listener: CALLBACK_TYPE | None = None
         self._write_lock = asyncio.Lock()
-        self._load_task: Optional[asyncio.Future] = None
+        self._load_task: asyncio.Future | None = None
         self._encoder = encoder
 
     @property
@@ -90,7 +93,7 @@ class Store:
         """Return the config path."""
         return self.hass.config.path(STORAGE_DIR, self.key)
 
-    async def async_load(self) -> Union[Dict, List, None]:
+    async def async_load(self) -> dict | list | None:
         """Load data.
 
         If the expected version does not match the given version, the migrate
@@ -140,7 +143,7 @@ class Store:
 
         return stored
 
-    async def async_save(self, data: Union[Dict, List]) -> None:
+    async def async_save(self, data: dict | list) -> None:
         """Save data."""
         self._data = {"version": self.version, "key": self.key, "data": data}
 
@@ -151,7 +154,7 @@ class Store:
         await self._async_handle_write_data()
 
     @callback
-    def async_delay_save(self, data_func: Callable[[], Dict], delay: float = 0) -> None:
+    def async_delay_save(self, data_func: Callable[[], dict], delay: float = 0) -> None:
         """Save data with an optional delay."""
         self._data = {"version": self.version, "key": self.key, "data_func": data_func}
 
@@ -224,7 +227,7 @@ class Store:
             except (json_util.SerializationError, json_util.WriteError) as err:
                 _LOGGER.error("Error writing config for %s: %s", self.key, err)
 
-    def _write_data(self, path: str, data: Dict) -> None:
+    def _write_data(self, path: str, data: dict) -> None:
         """Write the data."""
         if not os.path.isdir(os.path.dirname(path)):
             os.makedirs(os.path.dirname(path))
@@ -241,7 +244,5 @@ class Store:
         self._async_cleanup_delay_listener()
         self._async_cleanup_final_write_listener()
 
-        try:
+        with suppress(FileNotFoundError):
             await self.hass.async_add_executor_job(os.unlink, self.path)
-        except FileNotFoundError:
-            pass

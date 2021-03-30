@@ -11,6 +11,7 @@ from zigpy.types.named import EUI64
 import zigpy.zdo.types as zdo_types
 
 from homeassistant.components import websocket_api
+from homeassistant.const import ATTR_COMMAND, ATTR_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -20,14 +21,12 @@ from .core.const import (
     ATTR_ATTRIBUTE,
     ATTR_CLUSTER_ID,
     ATTR_CLUSTER_TYPE,
-    ATTR_COMMAND,
     ATTR_COMMAND_TYPE,
     ATTR_ENDPOINT_ID,
     ATTR_IEEE,
     ATTR_LEVEL,
     ATTR_MANUFACTURER,
     ATTR_MEMBERS,
-    ATTR_NAME,
     ATTR_VALUE,
     ATTR_WARNING_DEVICE_DURATION,
     ATTR_WARNING_DEVICE_MODE,
@@ -61,6 +60,7 @@ from .core.helpers import (
     get_matched_clusters,
     qr_to_install_code,
 )
+from .core.typing import ZhaDeviceType, ZhaGatewayType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -893,9 +893,12 @@ def async_load_api(hass):
     async def remove(service):
         """Remove a node from the network."""
         ieee = service.data[ATTR_IEEE]
-        zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
-        zha_device = zha_gateway.get_device(ieee)
-        if zha_device is not None and zha_device.is_coordinator:
+        zha_gateway: ZhaGatewayType = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+        zha_device: ZhaDeviceType = zha_gateway.get_device(ieee)
+        if zha_device is not None and (
+            zha_device.is_coordinator
+            and zha_device.ieee == zha_gateway.application_controller.ieee
+        ):
             _LOGGER.info("Removing the coordinator (%s) is not allowed", ieee)
             return
         _LOGGER.info("Removing node %s", ieee)

@@ -1,5 +1,5 @@
 """Config flow for ReCollect Waste integration."""
-from typing import Optional
+from __future__ import annotations
 
 from aiorecollect.client import Client
 from aiorecollect.errors import RecollectError
@@ -10,12 +10,7 @@ from homeassistant.const import CONF_FRIENDLY_NAME
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
-from .const import (  # pylint:disable=unused-import
-    CONF_PLACE_ID,
-    CONF_SERVICE_ID,
-    DOMAIN,
-    LOGGER,
-)
+from .const import CONF_PLACE_ID, CONF_SERVICE_ID, DOMAIN, LOGGER
 
 DATA_SCHEMA = vol.Schema(
     {vol.Required(CONF_PLACE_ID): str, vol.Required(CONF_SERVICE_ID): str}
@@ -83,7 +78,7 @@ class RecollectWasteOptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize."""
         self._entry = entry
 
-    async def async_step_init(self, user_input: Optional[dict] = None):
+    async def async_step_init(self, user_input: dict | None = None):
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
