@@ -398,7 +398,7 @@ class FluxLight(LightEntity):
         """Return the supported features for this light."""
         if self._mode == MODE_RGBW or self._mode == MODE_RGBCW:
             return SUPPORT_FLUX_LED | SUPPORT_WHITE_VALUE | SUPPORT_COLOR_TEMP
-        elif self._mode == MODE_RGBWW:
+        if self._mode == MODE_RGBWW:
             return SUPPORT_FLUX_LED | SUPPORT_WHITE_VALUE
         return SUPPORT_FLUX_LED
 
@@ -507,7 +507,7 @@ class FluxLight(LightEntity):
                 current_temp[1] *= white / 255
                 self._bulb.setRgbw(w=current_temp[1], w2=current_temp[0])
                 return
-            elif self._mode == MODE_RGBWW:
+            if self._mode == MODE_RGBWW:
                 self._bulb.setWarmWhite255(white)
                 return
 
