@@ -28,8 +28,8 @@ UPDATER_URL = "https://www.home-assistant.io/version.json"
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: {
-            vol.Optional(CONF_REPORTING, default=False): cv.boolean,
-            vol.Optional(CONF_COMPONENT_REPORTING, default=False): cv.boolean,
+            vol.Optional(CONF_REPORTING): cv.boolean,
+            vol.Optional(CONF_COMPONENT_REPORTING): cv.boolean,
         }
     },
     extra=vol.ALLOW_EXTRA,
