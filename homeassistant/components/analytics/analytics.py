@@ -12,7 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.system_info import async_get_system_info
-from homeassistant.loader import async_get_integration
+from homeassistant.loader import IntegrationNotFound, async_get_integration
+from homeassistant.setup import async_get_loaded_integrations
 
 from .const import (
     ANALYTICS_ENDPOINT_URL,
@@ -139,13 +140,18 @@ class Analytics:
             configured_integrations = await asyncio.gather(
                 *[
                     async_get_integration(self.hass, domain)
-                    for domain in self.hass.config.components
-                    # Filter out platforms.
-                    if "." not in domain
-                ]
+                    for domain in async_get_loaded_integrations(self.hass)
+                ],
+                return_exceptions=True,
             )
 
             for integration in configured_integrations:
+                if isinstance(integration, IntegrationNotFound):
+                    continue
+
+                if isinstance(integration, BaseException):
+                    raise integration
+
                 if integration.disabled or not integration.is_built_in:
                     continue
 
