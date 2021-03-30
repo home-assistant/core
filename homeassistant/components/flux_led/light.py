@@ -33,6 +33,7 @@ from homeassistant.const import (
     CONF_PROTOCOL,
 )
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_registry import async_entries_for_device
@@ -124,25 +125,21 @@ TRANSITION_STROBE = "strobe"
 
 FLUX_EFFECT_LIST = sorted(EFFECT_MAP) + [EFFECT_RANDOM]
 
-CUSTOM_EFFECT_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_COLORS): vol.All(
-            cv.ensure_list,
-            vol.Length(min=1, max=16),
-            [
-                vol.All(
-                    vol.ExactSequence((cv.byte, cv.byte, cv.byte)), vol.Coerce(tuple)
-                )
-            ],
-        ),
-        vol.Optional(CONF_SPEED_PCT, default=50): vol.All(
-            vol.Range(min=0, max=100), vol.Coerce(int)
-        ),
-        vol.Optional(CONF_TRANSITION, default=TRANSITION_GRADUAL): vol.All(
-            cv.string, vol.In([TRANSITION_GRADUAL, TRANSITION_JUMP, TRANSITION_STROBE])
-        ),
-    }
-)
+SERVICE_CUSTOM_EFFECT = "set_custom_effect"
+
+CUSTOM_EFFECT_SCHEMA = {
+    vol.Required(CONF_COLORS): vol.All(
+        cv.ensure_list,
+        vol.Length(min=1, max=16),
+        [vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte)), vol.Coerce(tuple))],
+    ),
+    vol.Optional(CONF_SPEED_PCT, default=50): vol.All(
+        vol.Range(min=0, max=100), vol.Coerce(int)
+    ),
+    vol.Optional(CONF_TRANSITION, default=TRANSITION_GRADUAL): vol.All(
+        cv.string, vol.In([TRANSITION_GRADUAL, TRANSITION_JUMP, TRANSITION_STROBE])
+    ),
+}
 
 DEVICE_SCHEMA = vol.Schema(
     {
@@ -224,6 +221,15 @@ async def async_setup_entry(hass, entry, async_add_entities):
     await async_new_lights(entry.data[CONF_DEVICES])
 
     async_dispatcher_connect(hass, SIGNAL_ADD_DEVICE, async_new_lights)
+
+    # register custom_effect service
+    platform = entity_platform.current_platform.get()
+
+    platform.async_register_entity_service(
+        SERVICE_CUSTOM_EFFECT,
+        CUSTOM_EFFECT_SCHEMA,
+        "set_custom_effect",
+    )
 
 
 class FluxLight(LightEntity):
@@ -493,3 +499,13 @@ class FluxLight(LightEntity):
         self._state = False
 
         self._bulb.turnOff()
+
+    def set_custom_effect(self, colors: list, speed_pct: int, transition: str):
+        """Define custom service to set a custom effect on the lights."""
+
+        if not self.is_on:
+            self.turn_on()
+
+        self._bulb.setCustomPattern(colors, speed_pct, transition)
+
+        self._state = True
