@@ -193,7 +193,7 @@ def automations_with_area(hass: HomeAssistant, area_id: str) -> list[str]:
 
 @callback
 def areas_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
-    """Return all devices in a scene."""
+    """Return all areas in an automation."""
     if DOMAIN not in hass.data:
         return []
 
