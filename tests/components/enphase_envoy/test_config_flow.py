@@ -262,3 +262,43 @@ async def test_zeroconf_serial_already_exists(hass: HomeAssistant) -> None:
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
+
+
+async def test_zeroconf_host_already_exists(hass: HomeAssistant) -> None:
+    """Test hosts already exists from zeroconf."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": "1.1.1.1",
+            "name": "Envoy",
+            "username": "test-username",
+            "password": "test-password",
+        },
+        title="Envoy",
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.enphase_envoy.config_flow.EnvoyReader.getData",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.enphase_envoy.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "zeroconf"},
+            data={
+                "properties": {"serialnum": "1234"},
+                "host": "1.1.1.1",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+
+    assert config_entry.unique_id == "1234"
+    assert config_entry.title == "Envoy 1234"
+    assert len(mock_setup_entry.mock_calls) == 1
