@@ -126,10 +126,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                if CONF_NAME in user_input:
-                    name = user_input[CONF_NAME]
+                if self.serial:
+                    name = f"{ENVOY} {self.serial}"
                 else:
-                    name = f"{ENVOY} {self.serial}" if self.serial else ENVOY
+                    name = user_input.get(CONF_NAME, ENVOY)
                 return self.async_create_entry(
                     title=name, data={CONF_NAME: name, **user_input}
                 )
