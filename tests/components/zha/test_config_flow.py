@@ -33,7 +33,7 @@ def com_port():
 async def test_discovery(detect_mock, hass):
     """Test zeroconf flow -- radio detected."""
     service_info = {
-        "host": "_esphomelib._tcp.local.",
+        "host": "192.168.1.200",
         "port": 6053,
         "hostname": "_tube_zb_gw._tcp.local.",
         "properties": {"name": "tube_123456"},
@@ -46,12 +46,12 @@ async def test_discovery(detect_mock, hass):
     )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "socket://_tube_zb_gw._tcp.local:6638"
+    assert result["title"] == "socket://192.168.1.200:6638"
     assert result["data"] == {
         "device": {
             "baudrate": 115200,
             "flow_control": None,
-            "path": "socket://_tube_zb_gw._tcp.local:6638",
+            "path": "socket://192.168.1.200:6638",
         },
         CONF_RADIO_TYPE: "znp",
     }
@@ -62,7 +62,7 @@ async def test_discovery(detect_mock, hass):
 async def test_discovery_already_setup(detect_mock, hass):
     """Test zeroconf flow -- radio detected."""
     service_info = {
-        "host": "_esphomelib._tcp.local.",
+        "host": "192.168.1.200",
         "port": 6053,
         "hostname": "_tube_zb_gw._tcp.local.",
         "properties": {"name": "tube_123456"},
