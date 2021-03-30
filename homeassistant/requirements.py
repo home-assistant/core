@@ -104,21 +104,11 @@ async def async_get_integration_with_requirements(
             ],
             return_exceptions=True,
         )
-        filtered_results = list(
-            filter(
-                lambda result: (
-                    isinstance(result, IntegrationNotFound)
-                    and result.domain not in integration.after_dependencies
-                    or (
-                        isinstance(result, BaseException)
-                        and not isinstance(result, IntegrationNotFound)
-                    )
-                ),
-                results,
-            )
-        )
-        if filtered_results:
-            raise filtered_results[0]
+        for result in results:
+            if not isinstance(result, BaseException):
+               continue
+            if not isinstance(result, IntegrationNotFound) or result.domain not in integration.after_dependencies:
+               raise result
 
     cache[domain] = integration
     event.set()
