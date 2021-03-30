@@ -473,11 +473,14 @@ class ZHAGateway:
         )
 
     @callback
-    def async_enable_debug_mode(self):
+    def async_enable_debug_mode(self, filterer=None):
         """Enable debug mode for ZHA."""
         self._log_levels[DEBUG_LEVEL_ORIGINAL] = async_capture_log_levels()
         async_set_logger_levels(DEBUG_LEVELS)
         self._log_levels[DEBUG_LEVEL_CURRENT] = async_capture_log_levels()
+
+        if filterer:
+            self._log_relay_handler.addFilter(filterer)
 
         for logger_name in DEBUG_RELAY_LOGGERS:
             logging.getLogger(logger_name).addHandler(self._log_relay_handler)
@@ -485,12 +488,14 @@ class ZHAGateway:
         self.debug_enabled = True
 
     @callback
-    def async_disable_debug_mode(self):
+    def async_disable_debug_mode(self, filterer=None):
         """Disable debug mode for ZHA."""
         async_set_logger_levels(self._log_levels[DEBUG_LEVEL_ORIGINAL])
         self._log_levels[DEBUG_LEVEL_CURRENT] = async_capture_log_levels()
         for logger_name in DEBUG_RELAY_LOGGERS:
             logging.getLogger(logger_name).removeHandler(self._log_relay_handler)
+        if filterer:
+            self._log_relay_handler.removeFilter(filterer)
         self.debug_enabled = False
 
     @callback
