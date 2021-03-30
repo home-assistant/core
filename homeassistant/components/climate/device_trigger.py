@@ -71,12 +71,16 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
         state = hass.states.get(entry.entity_id)
 
         # Add triggers for each entity that belongs to this integration
+        base_trigger = {
+            CONF_PLATFORM: "device",
+            CONF_DEVICE_ID: device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_ENTITY_ID: entry.entity_id,
+        }
+
         triggers.append(
             {
-                CONF_PLATFORM: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
+                **base_trigger,
                 CONF_TYPE: "hvac_mode_changed",
             }
         )
@@ -84,10 +88,7 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
         if state and const.ATTR_CURRENT_TEMPERATURE in state.attributes:
             triggers.append(
                 {
-                    CONF_PLATFORM: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
+                    **base_trigger,
                     CONF_TYPE: "current_temperature_changed",
                 }
             )
@@ -95,10 +96,7 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
         if state and const.ATTR_CURRENT_HUMIDITY in state.attributes:
             triggers.append(
                 {
-                    CONF_PLATFORM: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
+                    **base_trigger,
                     CONF_TYPE: "current_humidity_changed",
                 }
             )

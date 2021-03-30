@@ -39,24 +39,16 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
         if entry.domain != DOMAIN:
             continue
 
-        triggers.append(
+        triggers += [
             {
                 CONF_PLATFORM: "device",
                 CONF_DEVICE_ID: device_id,
                 CONF_DOMAIN: DOMAIN,
                 CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "cleaning",
+                CONF_TYPE: trigger,
             }
-        )
-        triggers.append(
-            {
-                CONF_PLATFORM: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "docked",
-            }
-        )
+            for trigger in TRIGGER_TYPES
+        ]
 
     return triggers
 

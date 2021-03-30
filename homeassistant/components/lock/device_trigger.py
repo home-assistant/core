@@ -42,24 +42,16 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
             continue
 
         # Add triggers for each entity that belongs to this integration
-        triggers.append(
+        triggers += [
             {
                 CONF_PLATFORM: "device",
                 CONF_DEVICE_ID: device_id,
                 CONF_DOMAIN: DOMAIN,
                 CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "locked",
+                CONF_TYPE: trigger,
             }
-        )
-        triggers.append(
-            {
-                CONF_PLATFORM: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "unlocked",
-            }
-        )
+            for trigger in TRIGGER_TYPES
+        ]
 
     return triggers
 
