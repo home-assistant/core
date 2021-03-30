@@ -332,6 +332,11 @@ async def test_area_lookup(hass):
         "automation": {"automation.area_turn_on"},
     }
 
+    searcher = search.Searcher(hass, device_reg, entity_reg)
+    assert searcher.async_search("automation", "automation.area_turn_on") == {
+        "area": {living_room_area.id},
+    }
+
 
 async def test_ws_api(hass, hass_ws_client):
     """Test WS API."""
