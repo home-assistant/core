@@ -127,6 +127,12 @@ class Searcher:
         ):
             self._add_or_resolve("entity", entity_entry.entity_id)
 
+        for entity_id in script.scripts_with_area(self.hass, area_id):
+            self._add_or_resolve("entity", entity_id)
+
+        for entity_id in automation.automations_with_area(self.hass, area_id):
+            self._add_or_resolve("entity", entity_id)
+
     @callback
     def _resolve_device(self, device_id) -> None:
         """Resolve a device."""
@@ -198,6 +204,9 @@ class Searcher:
         for device in automation.devices_in_automation(self.hass, automation_entity_id):
             self._add_or_resolve("device", device)
 
+        for area in automation.areas_in_automation(self.hass, automation_entity_id):
+            self._add_or_resolve("area", area)
+
     @callback
     def _resolve_script(self, script_entity_id) -> None:
         """Resolve a script.
@@ -209,6 +218,9 @@ class Searcher:
 
         for device in script.devices_in_script(self.hass, script_entity_id):
             self._add_or_resolve("device", device)
+
+        for area in script.areas_in_script(self.hass, script_entity_id):
+            self._add_or_resolve("area", area)
 
     @callback
     def _resolve_group(self, group_entity_id) -> None:

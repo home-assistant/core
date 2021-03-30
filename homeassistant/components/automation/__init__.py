@@ -176,6 +176,37 @@ def devices_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
     return list(automation_entity.referenced_devices)
 
 
+@callback
+def automations_with_area(hass: HomeAssistant, area_id: str) -> list[str]:
+    """Return all automations that reference the area."""
+    if DOMAIN not in hass.data:
+        return []
+
+    component = hass.data[DOMAIN]
+
+    return [
+        automation_entity.entity_id
+        for automation_entity in component.entities
+        if area_id in automation_entity.referenced_areas
+    ]
+
+
+@callback
+def areas_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Return all devices in a scene."""
+    if DOMAIN not in hass.data:
+        return []
+
+    component = hass.data[DOMAIN]
+
+    automation_entity = component.get_entity(entity_id)
+
+    if automation_entity is None:
+        return []
+
+    return list(automation_entity.referenced_areas)
+
+
 async def async_setup(hass, config):
     """Set up all automations."""
     # Local import to avoid circular import
@@ -254,6 +285,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         self._is_enabled = False
         self._referenced_entities: set[str] | None = None
         self._referenced_devices: set[str] | None = None
+        self._referenced_areas: set[str] | None = None
         self._logger = LOGGER
         self._variables: ScriptVariables = variables
         self._trigger_variables: ScriptVariables = trigger_variables
@@ -292,6 +324,17 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
     def is_on(self) -> bool:
         """Return True if entity is on."""
         return self._async_detach_triggers is not None or self._is_enabled
+
+    @property
+    def referenced_areas(self):
+        """Return a set of referenced areas."""
+        if self._referenced_areas is not None:
+            return self._referenced_areas
+
+        referenced = self.action_script.referenced_areas
+
+        self._referenced_areas = referenced
+        return referenced
 
     @property
     def referenced_devices(self):
