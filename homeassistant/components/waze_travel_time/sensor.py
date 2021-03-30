@@ -243,19 +243,23 @@ class WazeTravelTime(SensorEntity):
         _LOGGER.debug("Fetching Route for %s", self._name)
         # Get origin latitude and longitude from entity_id.
         if self._origin_entity_id is not None:
-            self._waze_data.origin = get_location_from_entity(self._origin_entity_id)
+            self._waze_data.origin = get_location_from_entity(
+                self.hass, _LOGGER, self._origin_entity_id
+            )
 
         # Get destination latitude and longitude from entity_id.
         if self._destination_entity_id is not None:
             self._waze_data.destination = get_location_from_entity(
-                self._destination_entity_id
+                self.hass, _LOGGER, self._destination_entity_id
             )
 
         # Get origin from zone name.
-        self._waze_data.origin = resolve_zone(self._waze_data.origin)
+        self._waze_data.origin = resolve_zone(self.hass, self._waze_data.origin)
 
         # Get destination from zone name.
-        self._waze_data.destination = resolve_zone(self._waze_data.destination)
+        self._waze_data.destination = resolve_zone(
+            self.hass, self._waze_data.destination
+        )
 
         self._waze_data.update()
 
