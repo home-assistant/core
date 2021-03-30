@@ -136,7 +136,9 @@ class ZWaveServices:
                         vol.Coerce(int), str
                     ),
                     vol.Optional(const.ATTR_ENDPOINT): vol.Coerce(int),
-                    vol.Required(const.ATTR_VALUE): vol.Any(float, int, bool, str),
+                    vol.Required(const.ATTR_VALUE): vol.Any(
+                        bool, vol.Coerce(int), vol.Coerce(float), cv.string
+                    ),
                     vol.Optional(const.ATTR_WAIT_FOR_RESULT): vol.Coerce(bool),
                 },
                 cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
