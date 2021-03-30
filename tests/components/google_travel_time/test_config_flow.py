@@ -1,6 +1,4 @@
 """Test the Google Maps Travel Time config flow."""
-from unittest.mock import patch
-
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.google_travel_time.const import (
     ARRIVAL_TIME,
@@ -31,7 +29,7 @@ from homeassistant.const import (
 from tests.common import MockConfigEntry
 
 
-async def test_minimum_fields(hass, validate_config_entry):
+async def test_minimum_fields(hass, validate_config_entry, bypass_setup):
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -39,20 +37,14 @@ async def test_minimum_fields(hass, validate_config_entry):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.google_travel_time.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.google_travel_time.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_API_KEY: "api_key",
-                CONF_ORIGIN: "location1",
-                CONF_DESTINATION: "location2",
-            },
-        )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: "api_key",
+            CONF_ORIGIN: "location1",
+            CONF_DESTINATION: "location2",
+        },
+    )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == f"{DEFAULT_NAME}: location1 -> location2"
@@ -61,8 +53,6 @@ async def test_minimum_fields(hass, validate_config_entry):
         CONF_ORIGIN: "location1",
         CONF_DESTINATION: "location2",
     }
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_invalid_config_entry(hass, invalidate_config_entry):
@@ -85,7 +75,7 @@ async def test_invalid_config_entry(hass, invalidate_config_entry):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_options_flow(hass):
+async def test_options_flow(hass, validate_config_entry, bypass_update):
     """Test options flow."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -101,9 +91,8 @@ async def test_options_flow(hass):
         },
     )
     entry.add_to_hass(hass)
-    with patch("homeassistant.components.google_travel_time.sensor.distance_matrix"):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(entry.entry_id, data=None)
 
@@ -149,7 +138,7 @@ async def test_options_flow(hass):
     }
 
 
-async def test_options_flow_departure_time(hass):
+async def test_options_flow_departure_time(hass, validate_config_entry, bypass_update):
     """Test options flow wiith departure time."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -160,9 +149,8 @@ async def test_options_flow_departure_time(hass):
         },
     )
     entry.add_to_hass(hass)
-    with patch("homeassistant.components.google_travel_time.sensor.distance_matrix"):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(entry.entry_id, data=None)
 
@@ -208,7 +196,7 @@ async def test_options_flow_departure_time(hass):
     }
 
 
-async def test_dupe_id(hass, validate_config_entry):
+async def test_dupe_id(hass, validate_config_entry, bypass_setup):
     """Test setting up the same entry twice fails."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -216,70 +204,61 @@ async def test_dupe_id(hass, validate_config_entry):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.google_travel_time.async_setup", return_value=True
-    ), patch(
-        "homeassistant.components.google_travel_time.async_setup_entry",
-        return_value=True,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_API_KEY: "test",
-                CONF_ORIGIN: "location1",
-                CONF_DESTINATION: "location2",
-            },
-        )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: "test",
+            CONF_ORIGIN: "location1",
+            CONF_DESTINATION: "location2",
+        },
+    )
 
-        assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {}
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {}
 
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_API_KEY: "test",
-                CONF_ORIGIN: "location1",
-                CONF_DESTINATION: "location2",
-            },
-        )
-        await hass.async_block_till_done()
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: "test",
+            CONF_ORIGIN: "location1",
+            CONF_DESTINATION: "location2",
+        },
+    )
+    await hass.async_block_till_done()
 
-        assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result2["reason"] == "already_configured"
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result2["reason"] == "already_configured"
 
 
-async def test_import_flow(hass, validate_config_entry):
+async def test_import_flow(hass, validate_config_entry, bypass_update):
     """Test import_flow."""
-    with patch(
-        "homeassistant.components.google_travel_time.sensor.GoogleTravelTimeSensor.update"
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                CONF_API_KEY: "api_key",
-                CONF_ORIGIN: "location1",
-                CONF_DESTINATION: "location2",
-                CONF_NAME: "test_name",
-                CONF_OPTIONS: {
-                    CONF_MODE: "driving",
-                    CONF_LANGUAGE: "en",
-                    CONF_AVOID: "tolls",
-                    CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
-                    CONF_ARRIVAL_TIME: "test",
-                    CONF_TRAFFIC_MODEL: "best_guess",
-                    CONF_TRANSIT_MODE: "train",
-                    CONF_TRANSIT_ROUTING_PREFERENCE: "less_walking",
-                },
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={
+            CONF_API_KEY: "api_key",
+            CONF_ORIGIN: "location1",
+            CONF_DESTINATION: "location2",
+            CONF_NAME: "test_name",
+            CONF_OPTIONS: {
+                CONF_MODE: "driving",
+                CONF_LANGUAGE: "en",
+                CONF_AVOID: "tolls",
+                CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
+                CONF_ARRIVAL_TIME: "test",
+                CONF_TRAFFIC_MODEL: "best_guess",
+                CONF_TRANSIT_MODE: "train",
+                CONF_TRANSIT_ROUTING_PREFERENCE: "less_walking",
             },
-        )
-        await hass.async_block_till_done()
+        },
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "test_name"

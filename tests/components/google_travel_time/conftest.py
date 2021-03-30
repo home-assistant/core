@@ -14,7 +14,7 @@ def skip_notifications_fixture():
         yield
 
 
-@pytest.fixture(name="validate_config_entry", autouse=True)
+@pytest.fixture(name="validate_config_entry")
 def validate_config_entry_fixture():
     """Return valid config entry."""
     with patch(
@@ -24,6 +24,25 @@ def validate_config_entry_fixture():
         "homeassistant.components.google_travel_time.helpers.distance_matrix",
         return_value=None,
     ):
+        yield
+
+
+@pytest.fixture(name="bypass_setup")
+def bypass_setup_fixture():
+    """Bypass entry setup."""
+    with patch(
+        "homeassistant.components.google_travel_time.async_setup", return_value=True
+    ), patch(
+        "homeassistant.components.google_travel_time.async_setup_entry",
+        return_value=True,
+    ):
+        yield
+
+
+@pytest.fixture(name="bypass_update")
+def bypass_update_fixture():
+    """Bypass sensor update."""
+    with patch("homeassistant.components.google_travel_time.sensor.distance_matrix"):
         yield
 
 
