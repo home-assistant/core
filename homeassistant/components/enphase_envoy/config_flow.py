@@ -134,7 +134,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     title=name, data={CONF_NAME: name, **user_input}
                 )
 
-        name = "{ENVOY} {self.serial}" if self.serial else ENVOY
+        name = f"{ENVOY} {self.serial}" if self.serial else ENVOY
         self.context["title_placeholders"] = {CONF_NAME: name}
         return self.async_show_form(
             step_id="user",
