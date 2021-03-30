@@ -26,6 +26,7 @@ import homeassistant.components.mqtt as mqtt
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
+    ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
@@ -2381,7 +2382,7 @@ async def async_setup(hass, config):
                 )
                 if len(types) < 2:
                     await hass.services.async_call("ais_cloud", "get_radio_types")
-            # TODO for the rest of audio
+                # TODO for the rest of audio
 
         if context == "ais_tv":
             hass.states.async_set("sensor.ais_player_mode", "ais_tv")
@@ -2423,20 +2424,20 @@ async def async_setup(hass, config):
             hass.states.async_set("sensor.ais_player_mode", "radio_player")
             hass.states.async_set("sensor.ais_radio_origin", "public")
             hass.states.async_set("sensor.radiolist", -1, {})
-            # atrr = hass.states.get("input_select.radio_type").attributes
-            # hass.states.async_set("input_select.radio_type", "", atrr)
+            atrr = hass.states.get("input_select.radio_type").attributes
+            hass.states.async_set("input_select.radio_type", "-", atrr)
         elif context == "radio_private":
             hass.states.async_set("sensor.ais_player_mode", "radio_player")
             hass.states.async_set("sensor.ais_radio_origin", "private")
             hass.states.async_set("sensor.radiolist", -1, {})
-            # atrr = hass.states.get("input_select.radio_type").attributes
-            # hass.states.async_set("input_select.radio_type", "", atrr)
+            atrr = hass.states.get("input_select.radio_type").attributes
+            hass.states.async_set("input_select.radio_type", "-", atrr)
         elif context == "radio_shared":
             hass.states.async_set("sensor.ais_player_mode", "radio_player")
             hass.states.async_set("sensor.ais_radio_origin", "shared")
             hass.states.async_set("sensor.radiolist", -1, {})
-            # atrr = hass.states.get("input_select.radio_type").attributes
-            # hass.states.async_set("input_select.radio_type", "", atrr)
+            atrr = hass.states.get("input_select.radio_type").attributes
+            hass.states.async_set("input_select.radio_type", "-", atrr)
         elif context == "YouTube":
             hass.states.async_set("sensor.ais_player_mode", "music_player")
             await hass.services.async_call(
@@ -4080,8 +4081,21 @@ async def _async_process(hass, text, calling_client_id=None, hot_word_on=False):
                 if state.entity_id.startswith("automation")
                 and not state.entity_id.startswith("automation.ais_")
             }
-            for automation in automations:
-                _LOGGER.info(str(automation))
+            for key, value in automations.items():
+                if value.lower().startswith("jolka:"):
+                    if (
+                        value.replace("jolka:", "", 1).lower().strip()
+                        == text.lower().strip()
+                    ):
+                        await hass.services.async_call(
+                            "automation", "trigger", {ATTR_ENTITY_ID: key}
+                        )
+                        s = True
+                        found_intent = "AUTO"
+                        m = "DO_NOT_SAY OK, uruchamiam " + value.replace(
+                            "jolka:", "", 1
+                        )
+                        break
 
         if s is False or found_intent is None:
             # no success - try to ask the cloud
@@ -4874,7 +4888,7 @@ class AisRunAutomation(intent.IntentHandler):
         if not entity:
             message = "Nie znajduję automatyzacji, o nazwie: " + name
         else:
-            # check if we can open on this device
+            # check if we can trigger the automation
             if entity.entity_id.startswith("automation."):
                 await hass.services.async_call(
                     "automation", "trigger", {ATTR_ENTITY_ID: entity.entity_id}

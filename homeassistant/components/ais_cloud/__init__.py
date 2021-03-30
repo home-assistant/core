@@ -535,10 +535,11 @@ class AisCloudWS:
 
     async def async_audio_type(self, nature):
         web_session = aiohttp_client.async_get_clientsession(self.hass)
-        headers = self.cloud_ws_header
-        headers["nature"] = nature
+        payload = {"nature": nature}
         with async_timeout.timeout(10):
-            ws_resp = await web_session.get(self.url + "audio_type2", headers=headers)
+            ws_resp = await web_session.post(
+                self.url + "audio_type2", json=payload, headers=self.cloud_ws_header
+            )
             return await ws_resp.json()
 
     def audio_name(self, nature, a_type):
@@ -550,11 +551,14 @@ class AisCloudWS:
             origin = "shared"
             a_type = a_type.replace("Udostępnione ", "", 1)
         rest_url = self.url + "audio_name2"
-        headers = self.cloud_ws_header
-        headers["Anature"] = nature
-        headers["Aorigin"] = origin
-        headers["Atype"] = a_type
-        ws_resp = requests.get(rest_url, headers=headers, timeout=5)
+        payload = {
+            "nature": nature,
+            "origin": origin,
+            "type": a_type,
+        }
+        ws_resp = requests.post(
+            rest_url, json=payload, headers=self.cloud_ws_header, timeout=5
+        )
         return ws_resp
 
     def audio(self, item, a_type, text_input):
