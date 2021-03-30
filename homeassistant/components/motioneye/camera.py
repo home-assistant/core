@@ -110,7 +110,7 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
             host, port, self._camera_id, TYPE_MOTIONEYE_MJPEG_CAMERA
         )
         self._motion_detection_enabled = camera.get(KEY_MOTION_DETECTION, False)
-        self._available = self._is_acceptable_streaming_camera(camera)
+        self._available = MotionEyeMjpegCamera._is_acceptable_streaming_camera(camera)
 
         # motionEye cameras are always streaming. If streaming is stopped on the
         # motionEye side, the camera is automatically removed from HomeAssistant.
@@ -164,7 +164,8 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
         """Return a unique id for this instance."""
         return self._unique_id
 
-    def _is_acceptable_streaming_camera(self, camera: dict[str, Any]) -> None:
+    @classmethod
+    def _is_acceptable_streaming_camera(cls, camera: dict[str, Any]) -> None:
         """Determine if a camera is streaming/usable."""
         return is_acceptable_camera(camera) and MotionEyeClient.is_camera_streaming(
             camera
@@ -181,7 +182,7 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
         available = False
         if self.coordinator.last_update_success:
             camera = get_camera_from_cameras(self._camera_id, self.coordinator.data)
-            if self._is_acceptable_streaming_camera(camera):
+            if MotionEyeMjpegCamera._is_acceptable_streaming_camera(camera):
                 self._set_mjpeg_camera_state_for_camera(camera)
                 self._motion_detection_enabled = camera.get(KEY_MOTION_DETECTION, False)
                 available = True
