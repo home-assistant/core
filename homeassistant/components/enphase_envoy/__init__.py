@@ -28,10 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     config = entry.data
     name = config[CONF_NAME]
     envoy_reader = EnvoyReader(
-        config[CONF_HOST],
-        config[CONF_USERNAME],
-        config[CONF_PASSWORD],
-        inverters=False,
+        config[CONF_HOST], config[CONF_USERNAME], config[CONF_PASSWORD]
     )
 
     try:
