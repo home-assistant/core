@@ -49,7 +49,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
                     )
                 )
             )
-    except (ConnectionError, GatewayOfflineError) as err:
+    except GatewayOfflineError as err:
         raise ConfigEntryNotReady from err
 
     for platform in PLATFORMS:
