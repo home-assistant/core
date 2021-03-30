@@ -836,3 +836,67 @@ async def test_dhcp_discovery_not_irobot(hass):
 
     assert result["type"] == "abort"
     assert result["reason"] == "not_irobot_device"
+
+
+async def test_dhcp_discovery_partial_hostname(hass):
+    """Test we abort flows when we have a partial hostname."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    with patch(
+        "homeassistant.components.roomba.config_flow.RoombaDiscovery", _mocked_discovery
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data={
+                IP_ADDRESS: "1.1.1.1",
+                MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
+                HOSTNAME: "irobot-blid",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+
+    with patch(
+        "homeassistant.components.roomba.config_flow.RoombaDiscovery", _mocked_discovery
+    ):
+        result2 = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data={
+                IP_ADDRESS: "1.1.1.1",
+                MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
+                HOSTNAME: "irobot-blidthatislonger",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "form"
+    assert result2["step_id"] == "user"
+
+    current_flows = hass.config_entries.flow.async_progress()
+    assert len(current_flows) == 1
+    assert current_flows[0]["flow_id"] == result2["flow_id"]
+
+    with patch(
+        "homeassistant.components.roomba.config_flow.RoombaDiscovery", _mocked_discovery
+    ):
+        result3 = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data={
+                IP_ADDRESS: "1.1.1.1",
+                MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
+                HOSTNAME: "irobot-blid",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] == "abort"
+    assert result3["reason"] == "short_blid"
+
+    current_flows = hass.config_entries.flow.async_progress()
+    assert len(current_flows) == 1
+    assert current_flows[0]["flow_id"] == result2["flow_id"]
