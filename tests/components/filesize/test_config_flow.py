@@ -5,12 +5,17 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.components.filesize.config_flow import InvalidPath, NotAFile
+from homeassistant.components.filesize.config_flow import NotAFile
 from homeassistant.components.filesize.const import DOMAIN
 from homeassistant.const import CONF_FILE_PATH, CONF_UNIT_OF_MEASUREMENT
 
+from tests.common import MockConfigEntry
+
 TEST_DIR = os.path.join(os.path.dirname(__file__))
 TEST_FILE = os.path.join(TEST_DIR, "mock_file_test_filesize.txt")
+
+
+TEST_DATA = {CONF_FILE_PATH: TEST_FILE, CONF_UNIT_OF_MEASUREMENT: "GB"}
 
 
 def create_file(path):
@@ -70,17 +75,13 @@ async def test_form_invalid_path(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.filesize.config_flow.validate_input",
-        side_effect=InvalidPath,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_FILE_PATH: "/dummy/invalid_test_path"},
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_FILE_PATH: "/dummy/invalid_test_path"},
+    )
 
-    assert result2["type"] == "form"
-    assert result2["errors"] == {CONF_FILE_PATH: "invalid_path"}
+    assert result["type"] == "form"
+    assert result["errors"] == {CONF_FILE_PATH: "invalid_path"}
 
 
 async def test_form_not_a_file(hass):
@@ -93,10 +94,26 @@ async def test_form_not_a_file(hass):
         "homeassistant.components.filesize.config_flow.validate_input",
         side_effect=NotAFile,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_FILE_PATH: "./not_a_file"},
         )
 
-    assert result2["type"] == "form"
-    assert result2["errors"] == {CONF_FILE_PATH: "not_a_file"}
+    assert result["type"] == "form"
+    assert result["errors"] == {CONF_FILE_PATH: "not_a_file"}
+
+
+async def test_unload(hass):
+    """Test being able to unload an entry."""
+    create_file(TEST_FILE)
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=TEST_DATA,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()

@@ -1,4 +1,8 @@
 """Config flow for filesize integration."""
+from __future__ import annotations
+
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -78,7 +82,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input=None) -> dict[str, Any]:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
