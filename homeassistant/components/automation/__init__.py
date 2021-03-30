@@ -328,13 +328,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
     @property
     def referenced_areas(self):
         """Return a set of referenced areas."""
-        if self._referenced_areas is not None:
-            return self._referenced_areas
-
-        referenced = self.action_script.referenced_areas
-
-        self._referenced_areas = referenced
-        return referenced
+        return self.action_script.referenced_areas
 
     @property
     def referenced_devices(self):

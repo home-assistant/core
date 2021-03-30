@@ -901,10 +901,10 @@ def _referenced_extract_ids(data: dict[str, Any], key: str, found: set[str]) -> 
         return
 
     if isinstance(item_ids, str):
-        item_ids = [item_ids]
-
-    for item_id in item_ids:
-        found.add(item_id)
+        found.add(item_ids)
+    else:
+        for item_id in item_ids:
+            found.add(item_id)
 
 
 class Script:
@@ -1045,8 +1045,8 @@ class Script:
             action = cv.determine_script_action(step)
 
             if action == cv.SCRIPT_ACTION_CALL_SERVICE:
+                print(step)
                 for data in (
-                    step,
                     step.get(CONF_TARGET),
                     step.get(service.CONF_SERVICE_DATA),
                     step.get(service.CONF_SERVICE_DATA_TEMPLATE),
@@ -1069,7 +1069,6 @@ class Script:
 
             if action == cv.SCRIPT_ACTION_CALL_SERVICE:
                 for data in (
-                    step,
                     step.get(CONF_TARGET),
                     step.get(service.CONF_SERVICE_DATA),
                     step.get(service.CONF_SERVICE_DATA_TEMPLATE),

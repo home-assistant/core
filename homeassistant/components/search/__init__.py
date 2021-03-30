@@ -38,12 +38,12 @@ async def async_setup(hass: HomeAssistant, config: dict):
         vol.Required("item_id"): str,
     }
 )
-async def websocket_search_related(hass, connection, msg):
+def websocket_search_related(hass, connection, msg):
     """Handle search."""
     searcher = Searcher(
         hass,
-        await device_registry.async_get_registry(hass),
-        await entity_registry.async_get_registry(hass),
+        device_registry.async_get(hass),
+        entity_registry.async_get(hass),
     )
     connection.send_result(
         msg["id"], searcher.async_search(msg["item_type"], msg["item_id"])
