@@ -5,15 +5,14 @@ from datetime import datetime, timedelta
 import logging
 from typing import Callable
 
-import googlemaps
+from googlemaps import Client
+from googlemaps.distance_matrix import distance_matrix
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     CONF_API_KEY,
     CONF_MODE,
     CONF_NAME,
@@ -21,7 +20,7 @@ from homeassistant.const import (
     TIME_MINUTES,
 )
 from homeassistant.core import CoreState, HomeAssistant
-from homeassistant.helpers import location
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
@@ -43,12 +42,14 @@ from .const import (
     CONF_UNITS,
     DEFAULT_NAME,
     DOMAIN,
+    TRACKABLE_DOMAINS,
     TRANSIT_PREFS,
     TRANSPORT_TYPE,
     TRAVEL_MODE,
     TRAVEL_MODEL,
     UNITS,
 )
+from .helpers import get_location_from_entity, is_valid_config_entry, resolve_zone
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,7 +83,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-TRACKABLE_DOMAINS = ["device_tracker", "sensor", "zone", "person"]
 DATA_KEY = "google_travel_time"
 
 
@@ -135,7 +135,10 @@ async def async_setup_entry(
     destination = config_entry.data[CONF_DESTINATION]
     name = name or f"{DEFAULT_NAME}: {origin} -> {destination}"
 
-    client = googlemaps.Client(api_key, timeout=10)
+    if not is_valid_config_entry(hass, _LOGGER, api_key, origin, destination):
+        raise ConfigEntryNotReady
+
+    client = Client(api_key, timeout=10)
 
     sensor = GoogleTravelTimeSensor(
         hass, config_entry, name, api_key, origin, destination, client
@@ -176,7 +179,7 @@ class GoogleTravelTimeSensor(SensorEntity):
         self._matrix = None
         self._api_key = api_key
         self._unique_id = config_entry.unique_id
-        self.valid_api_connection = True
+        self._client = client
 
         # Check if location is a trackable entity
         if origin.split(".", 1)[0] in TRACKABLE_DOMAINS:
@@ -189,16 +192,14 @@ class GoogleTravelTimeSensor(SensorEntity):
         else:
             self._destination = destination
 
-        self._client = client
-
     async def async_added_to_hass(self) -> None:
         """Handle when entity is added."""
         if self.hass.state != CoreState.running:
             self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_START, lambda _: self.first_update()
+                EVENT_HOMEASSISTANT_START, lambda _: self.update()
             )
         else:
-            self.hass.async_add_executor_job(self.first_update)
+            self.hass.async_add_executor_job(self.update)
 
     @property
     def state(self):
@@ -259,15 +260,6 @@ class GoogleTravelTimeSensor(SensorEntity):
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement
 
-    def first_update(self):
-        """Validate the connection on first update."""
-        try:
-            self.update()
-        except googlemaps.exceptions.ApiError as exp:
-            _LOGGER.error(exp)
-            self.valid_api_connection = False
-            return
-
     def update(self):
         """Get the latest data from Google."""
         options_copy = self._config_entry.options.copy()
@@ -287,59 +279,19 @@ class GoogleTravelTimeSensor(SensorEntity):
 
         # Convert device_trackers to google friendly location
         if hasattr(self, "_origin_entity_id"):
-            self._origin = self._get_location_from_entity(self._origin_entity_id)
+            self._origin = get_location_from_entity(
+                self._hass, _LOGGER, self._origin_entity_id
+            )
 
         if hasattr(self, "_destination_entity_id"):
-            self._destination = self._get_location_from_entity(
-                self._destination_entity_id
+            self._destination = get_location_from_entity(
+                self._hass, _LOGGER, self._destination_entity_id
             )
 
-        self._destination = self._resolve_zone(self._destination)
-        self._origin = self._resolve_zone(self._origin)
+        self._destination = resolve_zone(self._hass, self._destination)
+        self._origin = resolve_zone(self._hass, self._origin)
 
         if self._destination is not None and self._origin is not None:
-            self._matrix = self._client.distance_matrix(
-                self._origin, self._destination, **options_copy
+            self._matrix = distance_matrix(
+                self._client, self._origin, self._destination, **options_copy
             )
-
-    def _get_location_from_entity(self, entity_id):
-        """Get the location from the entity state or attributes."""
-        entity = self._hass.states.get(entity_id)
-
-        if entity is None:
-            _LOGGER.error("Unable to find entity %s", entity_id)
-            self.valid_api_connection = False
-            return None
-
-        # Check if the entity has location attributes
-        if location.has_location(entity):
-            return self._get_location_from_attributes(entity)
-
-        # Check if device is in a zone
-        zone_entity = self._hass.states.get("zone.%s" % entity.state)
-        if location.has_location(zone_entity):
-            _LOGGER.debug(
-                "%s is in %s, getting zone location", entity_id, zone_entity.entity_id
-            )
-            return self._get_location_from_attributes(zone_entity)
-
-        # If zone was not found in state then use the state as the location
-        if entity_id.startswith("sensor."):
-            return entity.state
-
-        # When everything fails just return nothing
-        return None
-
-    @staticmethod
-    def _get_location_from_attributes(entity):
-        """Get the lat/long string from an entities attributes."""
-        attr = entity.attributes
-        return f"{attr.get(ATTR_LATITUDE)},{attr.get(ATTR_LONGITUDE)}"
-
-    def _resolve_zone(self, friendly_name):
-        entities = self._hass.states.all()
-        for entity in entities:
-            if entity.domain == "zone" and entity.name == friendly_name:
-                return self._get_location_from_attributes(entity)
-
-        return friendly_name

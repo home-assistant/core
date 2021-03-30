@@ -35,6 +35,7 @@ from .const import (
     TRAVEL_MODEL,
     UNITS,
 )
+from .helpers import is_valid_config_entry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -120,24 +121,33 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
+        errors = {}
         if user_input is not None:
-
-            await self.async_set_unique_id(
-                slugify(
-                    f"{DOMAIN}_{user_input[CONF_ORIGIN]}_{user_input[CONF_DESTINATION]}"
+            if not is_valid_config_entry(
+                self.hass,
+                _LOGGER,
+                user_input[CONF_API_KEY],
+                user_input[CONF_ORIGIN],
+                user_input[CONF_DESTINATION],
+            ):
+                errors["base"] = "cannot_connect"
+            if not errors:
+                await self.async_set_unique_id(
+                    slugify(
+                        f"{DOMAIN}_{user_input[CONF_ORIGIN]}_{user_input[CONF_DESTINATION]}"
+                    )
                 )
-            )
-            self._abort_if_unique_id_configured()
-            return self.async_create_entry(
-                title=user_input.get(
-                    CONF_NAME,
-                    (
-                        f"{DEFAULT_NAME}: {user_input[CONF_ORIGIN]} -> "
-                        f"{user_input[CONF_DESTINATION]}"
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(
+                    title=user_input.get(
+                        CONF_NAME,
+                        (
+                            f"{DEFAULT_NAME}: {user_input[CONF_ORIGIN]} -> "
+                            f"{user_input[CONF_DESTINATION]}"
+                        ),
                     ),
-                ),
-                data=user_input,
-            )
+                    data=user_input,
+                )
 
         return self.async_show_form(
             step_id="user",
@@ -148,6 +158,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_ORIGIN): cv.string,
                 }
             ),
+            errors=errors,
         )
 
     async_step_import = async_step_user

@@ -1,8 +1,6 @@
 """Test the Google Maps Travel Time config flow."""
 from unittest.mock import patch
 
-import pytest
-
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.google_travel_time.const import (
     ARRIVAL_TIME,
@@ -33,22 +31,13 @@ from homeassistant.const import (
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture(name="skip_notifications", autouse=True)
-def skip_notifications_fixture():
-    """Skip notification calls."""
-    with patch("homeassistant.components.persistent_notification.async_create"), patch(
-        "homeassistant.components.persistent_notification.async_dismiss"
-    ):
-        yield
-
-
-async def test_minimum_fields(hass):
+async def test_minimum_fields(hass, validate_config_entry):
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     with patch(
         "homeassistant.components.google_travel_time.async_setup", return_value=True
@@ -74,6 +63,26 @@ async def test_minimum_fields(hass):
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_invalid_config_entry(hass, invalidate_config_entry):
+    """Test we get the form."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {}
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: "api_key",
+            CONF_ORIGIN: "location1",
+            CONF_DESTINATION: "location2",
+        },
+    )
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
 
 
 async def test_options_flow(hass):
@@ -203,13 +212,13 @@ async def test_options_flow_departure_time(hass):
     }
 
 
-async def test_dupe_id(hass):
+async def test_dupe_id(hass, validate_config_entry):
     """Test setting up the same entry twice fails."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     with patch(
         "homeassistant.components.google_travel_time.async_setup", return_value=True
@@ -233,7 +242,7 @@ async def test_dupe_id(hass):
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] is None
+        assert result["errors"] == {}
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -249,7 +258,7 @@ async def test_dupe_id(hass):
         assert result2["reason"] == "already_configured"
 
 
-async def test_import_flow(hass):
+async def test_import_flow(hass, validate_config_entry):
     """Test import_flow."""
     with patch(
         "homeassistant.components.google_travel_time.sensor.GoogleTravelTimeSensor.update"
