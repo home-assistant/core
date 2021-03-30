@@ -58,12 +58,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.serial = None
 
     @callback
-    def _async_generate_schema(self, include_ip_address=True):
+    def _async_generate_schema(self):
         """Generate schema."""
         schema = {}
 
-        if include_ip_address:
-            schema[vol.Required(CONF_HOST, default=self.ip_address)] = str
+        if self.ip_address:
+            schema[vol.Required(CONF_HOST, default=self.ip_address)] = vol.In(
+                [self.ip_address]
+            )
+        else:
+            schema[vol.Required(CONF_HOST)] = str
 
         schema.update(
             {
@@ -135,9 +139,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=self._async_generate_schema(
-                include_ip_address=not self.ip_address
-            ),
+            data_schema=self._async_generate_schema(),
             errors=errors,
         )
 
