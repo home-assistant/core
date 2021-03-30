@@ -83,8 +83,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-DATA_KEY = "google_travel_time"
-
 
 def convert_time_to_utc(timestr):
     """Take a string like 08:00:00 and convert it to a unix timestamp."""
@@ -128,8 +126,6 @@ async def async_setup_entry(
             config_entry, data=new_data, options=options
         )
 
-    hass.data.setdefault(DATA_KEY, [])
-
     api_key = config_entry.data[CONF_API_KEY]
     origin = config_entry.data[CONF_ORIGIN]
     destination = config_entry.data[CONF_DESTINATION]
@@ -143,7 +139,6 @@ async def async_setup_entry(
     sensor = GoogleTravelTimeSensor(
         hass, config_entry, name, api_key, origin, destination, client
     )
-    hass.data[DATA_KEY].append(sensor)
 
     async_add_entities([sensor], False)
 
