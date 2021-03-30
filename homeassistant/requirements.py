@@ -106,9 +106,12 @@ async def async_get_integration_with_requirements(
         )
         for result in results:
             if not isinstance(result, BaseException):
-               continue
-            if not isinstance(result, IntegrationNotFound) or result.domain not in integration.after_dependencies:
-               raise result
+                continue
+            if (
+                not isinstance(result, IntegrationNotFound)
+                or result.domain not in integration.after_dependencies
+            ):
+                raise result
 
     cache[domain] = integration
     event.set()
