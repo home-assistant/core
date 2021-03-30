@@ -3909,7 +3909,7 @@ async def _async_process(hass, text, calling_client_id=None, hot_word_on=False):
         ha_agent = hass.data["ha_conversation_agent"] = DefaultAgent(hass)
         await ha_agent.async_initialize(hass.data.get("conversation_config"))
 
-    # first check the conversation intents
+    # 1. first check the conversation intents
     conv_intents = hass.data.get("conversation", {})
     for intent_type, matchers in conv_intents.items():
         for matcher in matchers:
@@ -3924,7 +3924,7 @@ async def _async_process(hass, text, calling_client_id=None, hot_word_on=False):
             )
             return response
 
-    # check the AIS dom intents
+    # 2. check the AIS dom intents
     intents = hass.data.get(DOMAIN, {})
     try:
         for intent_type, matchers in intents.items():
@@ -3985,19 +3985,33 @@ async def _async_process(hass, text, calling_client_id=None, hot_word_on=False):
             )
             if s is False:
                 m = m_org
-        # the was no match - try again but with current context
-        if found_intent is None:
-            suffix = get_context_suffix(hass)
-            if suffix is not None:
-                if suffix == "youtube" and text != "":
-                    # in case of youtube we need to ask cloud first
-                    m = "Nie rozumiem " + text
-                    ws_resp = aisCloudWS.ask(text, m)
-                    m = ws_resp.text.split("---")[0]
-                    if m != "Nie rozumiem " + text:
-                        s = True
-                        found_intent = "YT"
 
+        # 3. search in automations
+        if s is False or found_intent is None:
+            # no success - try to run automation
+            automations = {
+                state.entity_id: state.name
+                for state in hass.states.async_all()
+                if state.entity_id.startswith("automation")
+                and not state.entity_id.startswith("automation.ais_")
+            }
+            for key, value in automations.items():
+                if value.lower().startswith("jolka:"):
+                    if (
+                        value.lower().replace("jolka:", "", 1).strip()
+                        == text.lower().strip()
+                    ):
+                        await hass.services.async_call(
+                            "automation", "trigger", {ATTR_ENTITY_ID: key}
+                        )
+                        s = True
+                        found_intent = "AUTO"
+                        m = "DO_NOT_SAY OK, uruchamiam " + value.replace(
+                            "jolka:", "", 1
+                        )
+                        break
+
+        # 4. the was no match - try again but with current context
         # only if hot word is disabled
         if found_intent is None and hot_word_on is False:
             suffix = get_context_suffix(hass)
@@ -4024,79 +4038,7 @@ async def _async_process(hass, text, calling_client_id=None, hot_word_on=False):
                             # in this case we will know if the call source
                             CURR_BUTTON_CODE = 0
                             break
-
-        # the was no match - try again but with player context
-        # we should get media player source first
-        # this is done only if the hot word is False
-        if found_intent is None and calling_client_id is None and hot_word_on is False:
-            if (
-                CURR_ENTITIE == "media_player.wbudowany_glosnik"
-                and CURR_ENTITIE_ENTERED
-            ):
-                state = hass.states.get(CURR_ENTITIE)
-                if "source" in state.attributes:
-                    suffix = ""
-                    source = state.attributes.get("source")
-                    if source == ais_global.G_AN_MUSIC:
-                        suffix = "youtube"
-                    elif source == ais_global.G_AN_RADIO:
-                        suffix = "radio"
-                    elif source == ais_global.G_AN_PODCAST:
-                        suffix = "podcast"
-                    if suffix != "":
-                        if suffix == "youtube" and text != "":
-                            # in case of youtube we need to ask cloud first
-                            m = "Nie rozumiem " + text
-                            ws_resp = aisCloudWS.ask(text, m)
-                            m = ws_resp.text.split("---")[0]
-                            if not m.startswith("Nie rozumiem "):
-                                s = True
-                                found_intent = "YT"
-                        if s is not True:
-                            for intent_type, matchers in intents.items():
-                                if found_intent is not None:
-                                    break
-                                for matcher in matchers:
-                                    match = matcher.match(suffix + " " + text)
-                                    if match:
-                                        # we have a match
-                                        found_intent = intent_type
-                                        (m, s) = await hass.helpers.intent.async_handle(
-                                            DOMAIN,
-                                            intent_type,
-                                            {
-                                                key: {"value": value}
-                                                for key, value in match.groupdict().items()
-                                            },
-                                            suffix + " " + text,
-                                        )
-                                        # reset the curr button code
-                                        CURR_BUTTON_CODE = 0
-                                        break
-        if s is False or found_intent is None:
-            # no success - try to run automation
-            automations = {
-                state.entity_id: state.name
-                for state in hass.states.async_all()
-                if state.entity_id.startswith("automation")
-                and not state.entity_id.startswith("automation.ais_")
-            }
-            for key, value in automations.items():
-                if value.lower().startswith("jolka:"):
-                    if (
-                        value.replace("jolka:", "", 1).lower().strip()
-                        == text.lower().strip()
-                    ):
-                        await hass.services.async_call(
-                            "automation", "trigger", {ATTR_ENTITY_ID: key}
-                        )
-                        s = True
-                        found_intent = "AUTO"
-                        m = "DO_NOT_SAY OK, uruchamiam " + value.replace(
-                            "jolka:", "", 1
-                        )
-                        break
-
+        # 5. ask cloud
         if s is False or found_intent is None:
             # no success - try to ask the cloud
             if m is None:
