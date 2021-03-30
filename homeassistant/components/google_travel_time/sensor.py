@@ -130,18 +130,19 @@ async def async_setup_entry(
 
     hass.data.setdefault(DATA_KEY, [])
 
-    api_key = config_entry.data.get(CONF_API_KEY)
-    origin = config_entry.data.get(CONF_ORIGIN)
-    destination = config_entry.data.get(CONF_DESTINATION)
+    api_key = config_entry.data[CONF_API_KEY]
+    origin = config_entry.data[CONF_ORIGIN]
+    destination = config_entry.data[CONF_DESTINATION]
     name = name or f"{DEFAULT_NAME}: {origin} -> {destination}"
 
+    client = googlemaps.Client(api_key, timeout=10)
+
     sensor = GoogleTravelTimeSensor(
-        hass, config_entry, name, api_key, origin, destination
+        hass, config_entry, name, api_key, origin, destination, client
     )
     hass.data[DATA_KEY].append(sensor)
 
-    if sensor.valid_api_connection:
-        async_add_entities([sensor], False)
+    async_add_entities([sensor], False)
 
 
 async def async_setup_platform(
@@ -166,7 +167,7 @@ async def async_setup_platform(
 class GoogleTravelTimeSensor(SensorEntity):
     """Representation of a Google travel time sensor."""
 
-    def __init__(self, hass, config_entry, name, api_key, origin, destination):
+    def __init__(self, hass, config_entry, name, api_key, origin, destination, client):
         """Initialize the sensor."""
         self._hass = hass
         self._name = name
@@ -188,22 +189,16 @@ class GoogleTravelTimeSensor(SensorEntity):
         else:
             self._destination = destination
 
-        self._client = googlemaps.Client(api_key, timeout=10)
-        try:
-            self.update()
-        except googlemaps.exceptions.ApiError as exp:
-            _LOGGER.error(exp)
-            self.valid_api_connection = False
-            return
+        self._client = client
 
     async def async_added_to_hass(self) -> None:
         """Handle when entity is added."""
         if self.hass.state != CoreState.running:
             self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_START, lambda _: self.update()
+                EVENT_HOMEASSISTANT_START, lambda _: self.first_update()
             )
         else:
-            self.hass.async_add_executor_job(self.update)
+            self.hass.async_add_executor_job(self.first_update)
 
     @property
     def state(self):
@@ -263,6 +258,15 @@ class GoogleTravelTimeSensor(SensorEntity):
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement
+
+    def first_update(self):
+        """Validate the connection on first update."""
+        try:
+            self.update()
+        except googlemaps.exceptions.ApiError as exp:
+            _LOGGER.error(exp)
+            self.valid_api_connection = False
+            return
 
     def update(self):
         """Get the latest data from Google."""
