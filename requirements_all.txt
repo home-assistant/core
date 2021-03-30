@@ -1476,7 +1476,7 @@ pykira==0.1.1
 pykmtronic==0.0.3
 
 # homeassistant.components.kodi
-pykodi==0.2.1
+pykodi==0.2.3
 
 # homeassistant.components.kulersky
 pykulersky==0.5.2
