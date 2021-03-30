@@ -160,6 +160,9 @@
   trigger:
     platform: state
     entity_id: input_select.radio_type
+  condition:
+    condition: template
+    value_template: "{{ states.input_select.radio_type.state != '-' }}"
   action:
     - service: ais_cloud.get_radio_names
       data_template:
