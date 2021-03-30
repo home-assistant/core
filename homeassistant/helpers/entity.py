@@ -3,11 +3,12 @@ from __future__ import annotations
 
 from abc import ABC
 import asyncio
+from collections.abc import Mapping
 from datetime import datetime, timedelta
 import functools as ft
 import logging
 from timeit import default_timer as timer
-from typing import Any, Awaitable, Iterable, Mapping
+from typing import Any, Awaitable, Iterable
 
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.const import (
