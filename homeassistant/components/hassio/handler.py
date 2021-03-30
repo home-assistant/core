@@ -185,6 +185,16 @@ class HassIO:
         """
         return self.send_command("/supervisor/options", payload={"timezone": timezone})
 
+    @_api_bool
+    def update_diagnostics(self, diagnostics: bool):
+        """Update Supervisor diagnostics setting.
+
+        This method return a coroutine.
+        """
+        return self.send_command(
+            "/supervisor/options", payload={"diagnostics": diagnostics}
+        )
+
     async def send_command(self, command, method="post", payload=None, timeout=10):
         """Send API command to Hass.io.
 
