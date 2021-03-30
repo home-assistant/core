@@ -31,10 +31,9 @@ async def async_attach_trigger(
     hass, config, action, automation_info, *, platform_type="event"
 ):
     """Listen for events based on configuration."""
-    trigger_id = None
+    trigger_id = automation_info.get("trigger_id") if automation_info else None
     variables = None
     if automation_info:
-        trigger_id = automation_info.get("trigger_id")
         variables = automation_info.get("variables")
 
     template.attach(hass, config[CONF_EVENT_TYPE])
