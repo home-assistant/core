@@ -99,4 +99,4 @@ class ProxmoxBinarySensor(ProxmoxEntity, BinarySensorEntity):
     def available(self):
         """Return sensor availability."""
 
-        return self.coordinator.data is not None
+        return super().available and self.coordinator.data is not None
