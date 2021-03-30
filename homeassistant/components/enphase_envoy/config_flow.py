@@ -54,6 +54,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize an envoy flow."""
         self.ip_address = None
+        self.name = None
         self.username = None
         self.serial = None
 
@@ -81,10 +82,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow import."""
         self.ip_address = import_config[CONF_IP_ADDRESS]
         self.username = import_config[CONF_USERNAME]
+        self.name = import_config[CONF_NAME]
         return await self.async_step_user(
             {
                 CONF_HOST: import_config[CONF_IP_ADDRESS],
-                CONF_NAME: import_config[CONF_NAME],
                 CONF_USERNAME: import_config[CONF_USERNAME],
                 CONF_PASSWORD: import_config[CONF_PASSWORD],
             }
@@ -130,7 +131,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if self.serial:
                     data[CONF_NAME] = f"{ENVOY} {self.serial}"
                 else:
-                    data[CONF_NAME] = user_input.get(CONF_NAME) or ENVOY
+                    data[CONF_NAME] = self.name or ENVOY
                 return self.async_create_entry(title=data[CONF_NAME], data=data)
 
         if self.serial:
