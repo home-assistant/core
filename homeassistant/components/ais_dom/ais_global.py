@@ -8,11 +8,9 @@ import socket
 
 import requests
 
-import homeassistant.config as config_util
-
 # LV settings
 G_EMPTY_OPTION = "-"
-G_FAVORITE_OPTION = "Ulubione"
+G_FAVORITE_OPTION = "Moje Ulubione"
 G_DRIVE_SHARED_WITH_ME = "Udostępnione dla mnie"
 
 # TTS settings
@@ -61,7 +59,7 @@ G_NAME_FOR_AUDIO_NATURE = {
     G_AN_AUDIOBOOK: "Audio książka",
     G_AN_SPOTIFY: "Spotify",
     G_AN_LOCAL: "Dysk",
-    G_AN_FAVORITE: "Ulubione",
+    G_AN_FAVORITE: "Moje Ulubione",
     G_AN_BOOKMARK: "Zakładki",
 }
 

@@ -201,7 +201,7 @@ def ais_media_library() -> BrowseMedia:
     )
     ais_library_info.children.append(
         BrowseMedia(
-            title="Ulubione",
+            title="Moje Ulubione",
             media_class="heart",
             media_content_id="ais_favorites",
             media_content_type=MEDIA_TYPE_APP,
@@ -211,7 +211,7 @@ def ais_media_library() -> BrowseMedia:
     )
     ais_library_info.children.append(
         BrowseMedia(
-            title="Zakładki",
+            title="Moje Zakładki",
             media_class="bookmark",
             media_content_id="ais_bookmarks",
             media_content_type=MEDIA_TYPE_APP,
@@ -716,7 +716,7 @@ def ais_favorites_library(hass) -> BrowseMedia:
         )
 
     root = BrowseMedia(
-        title="Ulubione",
+        title="Moje Ulubione",
         media_class=MEDIA_CLASS_DIRECTORY,
         media_content_id="ais_favorites",
         media_content_type=MEDIA_TYPE_APP,
