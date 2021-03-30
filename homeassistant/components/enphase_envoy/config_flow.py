@@ -130,7 +130,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if self.serial:
                     data[CONF_NAME] = f"{ENVOY} {self.serial}"
                 else:
-                    data[CONF_NAME] = user_input.get(CONF_NAME, ENVOY)
+                    data[CONF_NAME] = user_input.get(CONF_NAME) or ENVOY
                 return self.async_create_entry(title=data[CONF_NAME], data=data)
 
         name = f"{ENVOY} {self.serial}" if self.serial else ENVOY
