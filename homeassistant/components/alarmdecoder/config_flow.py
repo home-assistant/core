@@ -11,7 +11,7 @@ from homeassistant.components.binary_sensor import DEVICE_CLASSES
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PROTOCOL
 from homeassistant.core import callback
 
-from .const import (  # pylint: disable=unused-import
+from .const import (
     CONF_ALT_NIGHT_MODE,
     CONF_AUTO_BYPASS,
     CONF_CODE_ARM_REQUIRED,

@@ -187,7 +187,7 @@ async def trace_action(hass, script_run, stop, variables):
 
     try:
         yield trace_element
-    except Exception as ex:  # pylint: disable=broad-except
+    except Exception as ex:
         trace_element.set_error(ex)
         raise ex
     finally:

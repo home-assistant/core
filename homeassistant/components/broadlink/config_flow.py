@@ -17,12 +17,7 @@ from homeassistant.components.dhcp import IP_ADDRESS, MAC_ADDRESS
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TIMEOUT, CONF_TYPE
 from homeassistant.helpers import config_validation as cv
 
-from .const import (  # pylint: disable=unused-import
-    DEFAULT_PORT,
-    DEFAULT_TIMEOUT,
-    DOMAIN,
-    DOMAINS_AND_TYPES,
-)
+from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN, DOMAINS_AND_TYPES
 from .helpers import format_mac
 
 _LOGGER = logging.getLogger(__name__)

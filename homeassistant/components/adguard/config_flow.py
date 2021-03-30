@@ -18,7 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import DOMAIN
 
 
 class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
