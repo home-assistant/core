@@ -165,6 +165,37 @@ def devices_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
     return list(script_entity.script.referenced_devices)
 
 
+@callback
+def scripts_with_area(hass: HomeAssistant, area_id: str) -> list[str]:
+    """Return all scripts that reference the area."""
+    if DOMAIN not in hass.data:
+        return []
+
+    component = hass.data[DOMAIN]
+
+    return [
+        script_entity.entity_id
+        for script_entity in component.entities
+        if area_id in script_entity.script.referenced_areas
+    ]
+
+
+@callback
+def areas_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Return all areas in a script."""
+    if DOMAIN not in hass.data:
+        return []
+
+    component = hass.data[DOMAIN]
+
+    script_entity = component.get_entity(entity_id)
+
+    if script_entity is None:
+        return []
+
+    return list(script_entity.script.referenced_areas)
+
+
 async def async_setup(hass, config):
     """Load the scripts from the configuration."""
     hass.data[DOMAIN] = component = EntityComponent(_LOGGER, DOMAIN, hass)
