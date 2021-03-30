@@ -6,15 +6,13 @@ import logging
 import re
 from typing import Any, Callable
 
-import WazeRouteCalculator
+from WazeRouteCalculator import WazeRouteCalculator, WRCError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     CONF_NAME,
     CONF_REGION,
     CONF_UNIT_SYSTEM_IMPERIAL,
@@ -22,7 +20,7 @@ from homeassistant.const import (
     TIME_MINUTES,
 )
 from homeassistant.core import Config, CoreState, HomeAssistant
-from homeassistant.helpers import location
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -49,11 +47,13 @@ from .const import (
     DEFAULT_REALTIME,
     DEFAULT_VEHICLE_TYPE,
     DOMAIN,
+    ENTITY_ID_PATTERN,
     ICON,
     REGIONS,
     UNITS,
     VEHICLE_TYPES,
 )
+from .helpers import get_location_from_entity, is_valid_config_entry, resolve_zone
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -146,6 +146,11 @@ async def async_setup_entry(
     region = config_entry.data[CONF_REGION]
     name = name or f"{DEFAULT_NAME}: {origin} -> {destination}"
 
+    if not await hass.async_add_executor_job(
+        is_valid_config_entry, hass, _LOGGER, origin, destination, region
+    ):
+        raise ConfigEntryNotReady
+
     data = WazeTravelTimeData(
         None,
         None,
@@ -156,12 +161,6 @@ async def async_setup_entry(
     sensor = WazeTravelTime(config_entry.unique_id, name, origin, destination, data)
 
     async_add_entities([sensor], False)
-
-
-def _get_location_from_attributes(state):
-    """Get the lat/long string from an states attributes."""
-    attr = state.attributes
-    return "{},{}".format(attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE))
 
 
 class WazeTravelTime(SensorEntity):
@@ -175,17 +174,14 @@ class WazeTravelTime(SensorEntity):
         self._state = None
         self._origin_entity_id = None
         self._destination_entity_id = None
-
-        # Attempt to find entity_id without finding address with period.
-        pattern = "(?<![a-zA-Z0-9 ])[a-z_]+[.][a-zA-Z0-9_]+"
-
-        if re.fullmatch(pattern, origin):
+        cmpl_re = re.compile(ENTITY_ID_PATTERN)
+        if cmpl_re.fullmatch(origin):
             _LOGGER.debug("Found origin source entity %s", origin)
             self._origin_entity_id = origin
         else:
             self._waze_data.origin = origin
 
-        if re.fullmatch(pattern, destination):
+        if cmpl_re.fullmatch(destination):
             _LOGGER.debug("Found destination source entity %s", destination)
             self._destination_entity_id = destination
         else:
@@ -237,43 +233,6 @@ class WazeTravelTime(SensorEntity):
         res[ATTR_DESTINATION] = self._waze_data.destination
         return res
 
-    def _get_location_from_entity(self, entity_id):
-        """Get the location from the entity_id."""
-        state = self.hass.states.get(entity_id)
-
-        if state is None:
-            _LOGGER.error("Unable to find entity %s", entity_id)
-            return None
-
-        # Check if the entity has location attributes.
-        if location.has_location(state):
-            _LOGGER.debug("Getting %s location", entity_id)
-            return _get_location_from_attributes(state)
-
-        # Check if device is inside a zone.
-        zone_state = self.hass.states.get(f"zone.{state.state}")
-        if location.has_location(zone_state):
-            _LOGGER.debug(
-                "%s is in %s, getting zone location", entity_id, zone_state.entity_id
-            )
-            return _get_location_from_attributes(zone_state)
-
-        # If zone was not found in state then use the state as the location.
-        if entity_id.startswith("sensor."):
-            return state.state
-
-        # When everything fails just return nothing.
-        return None
-
-    def _resolve_zone(self, friendly_name):
-        """Get a lat/long from a zones friendly_name."""
-        states = self.hass.states.all()
-        for state in states:
-            if state.domain == "zone" and state.name == friendly_name:
-                return _get_location_from_attributes(state)
-
-        return friendly_name
-
     async def first_update(self, _=None):
         """Run first update and write state."""
         await self.hass.async_add_executor_job(self.update)
@@ -284,21 +243,19 @@ class WazeTravelTime(SensorEntity):
         _LOGGER.debug("Fetching Route for %s", self._name)
         # Get origin latitude and longitude from entity_id.
         if self._origin_entity_id is not None:
-            self._waze_data.origin = self._get_location_from_entity(
-                self._origin_entity_id
-            )
+            self._waze_data.origin = get_location_from_entity(self._origin_entity_id)
 
         # Get destination latitude and longitude from entity_id.
         if self._destination_entity_id is not None:
-            self._waze_data.destination = self._get_location_from_entity(
+            self._waze_data.destination = get_location_from_entity(
                 self._destination_entity_id
             )
 
         # Get origin from zone name.
-        self._waze_data.origin = self._resolve_zone(self._waze_data.origin)
+        self._waze_data.origin = resolve_zone(self._waze_data.origin)
 
         # Get destination from zone name.
-        self._waze_data.destination = self._resolve_zone(self._waze_data.destination)
+        self._waze_data.destination = resolve_zone(self._waze_data.destination)
 
         self._waze_data.update()
 
@@ -320,17 +277,8 @@ class WazeTravelTime(SensorEntity):
 class WazeTravelTimeData:
     """WazeTravelTime Data object."""
 
-    def __init__(
-        self,
-        origin,
-        destination,
-        region,
-        config_entry,
-    ):
+    def __init__(self, origin, destination, region, config_entry):
         """Set up WazeRouteCalculator."""
-
-        self._calc = WazeRouteCalculator
-
         self.origin = origin
         self.destination = destination
         self.region = region
@@ -356,7 +304,7 @@ class WazeTravelTimeData:
             units = self.config_entry.options[CONF_UNITS]
 
             try:
-                params = self._calc.WazeRouteCalculator(
+                params = WazeRouteCalculator(
                     self.origin,
                     self.destination,
                     self.region,
@@ -392,7 +340,7 @@ class WazeTravelTimeData:
                     self.distance = distance
 
                 self.route = route
-            except self._calc.WRCError as exp:
+            except WRCError as exp:
                 _LOGGER.warning("Error on retrieving data: %s", exp)
                 return
             except KeyError:

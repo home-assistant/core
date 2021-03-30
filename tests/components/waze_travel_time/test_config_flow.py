@@ -1,8 +1,6 @@
 """Test the Waze Travel Time config flow."""
 from unittest.mock import patch
 
-import pytest
-
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.waze_travel_time.const import (
     CONF_AVOID_FERRIES,
@@ -19,27 +17,17 @@ from homeassistant.components.waze_travel_time.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_REGION, CONF_UNIT_SYSTEM_IMPERIAL
-from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture(name="skip_notifications", autouse=True)
-def skip_notifications_fixture():
-    """Skip notification calls."""
-    with patch("homeassistant.components.persistent_notification.async_create"), patch(
-        "homeassistant.components.persistent_notification.async_dismiss"
-    ):
-        yield
-
-
-async def test_minimum_fields(hass: HomeAssistant):
+async def test_minimum_fields(hass, validate_config_entry):
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     with patch(
         "homeassistant.components.waze_travel_time.async_setup", return_value=True
@@ -68,7 +56,7 @@ async def test_minimum_fields(hass: HomeAssistant):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_options(hass: HomeAssistant):
+async def test_options(hass, validate_config_entry):
     """Test options flow."""
 
     entry = MockConfigEntry(
@@ -81,7 +69,7 @@ async def test_options(hass: HomeAssistant):
     )
     entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.waze_travel_time.sensor.WazeRouteCalculator.WazeRouteCalculator.calc_all_routes_info",
+        "homeassistant.components.waze_travel_time.sensor.WazeRouteCalculator.calc_all_routes_info",
         return_value={"My route": (150, 300)},
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -130,7 +118,7 @@ async def test_options(hass: HomeAssistant):
     }
 
 
-async def test_import(hass: HomeAssistant):
+async def test_import(hass, validate_config_entry):
     """Test import for config flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -170,13 +158,13 @@ async def test_import(hass: HomeAssistant):
     }
 
 
-async def test_dupe_id(hass):
+async def test_dupe_id(hass, validate_config_entry):
     """Test setting up the same entry twice fails."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     with patch(
         "homeassistant.components.waze_travel_time.async_setup", return_value=True
@@ -201,7 +189,7 @@ async def test_dupe_id(hass):
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] is None
+        assert result["errors"] == {}
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -215,3 +203,23 @@ async def test_dupe_id(hass):
 
         assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result2["reason"] == "already_configured"
+
+
+async def test_invalid_config_entry(hass, invalidate_config_entry):
+    """Test we get the form."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {}
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_ORIGIN: "location1",
+            CONF_DESTINATION: "location2",
+            CONF_REGION: "US",
+        },
+    )
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
