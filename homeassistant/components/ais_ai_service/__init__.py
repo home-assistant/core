@@ -2380,7 +2380,7 @@ async def async_setup(hass, config):
                     "options", []
                 )
                 if len(types) < 2:
-                    await hass.services.async_call("ais_cloud", "audio_type")
+                    await hass.services.async_call("ais_cloud", "get_radio_types")
             # TODO for the rest of audio
 
         if context == "ais_tv":
