@@ -32,14 +32,8 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
 
-TRIGGER_TYPES = {
-    "triggered",
-    "disarmed",
-    "arming",
-    "armed_home",
-    "armed_away",
-    "armed_night",
-}
+BASIC_TRIGGER_TYPES = {"triggered", "disarmed", "arming"}
+TRIGGER_TYPES = BASIC_TRIGGER_TYPES | {"armed_home", "armed_away", "armed_night"}
 
 TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
     {
@@ -69,56 +63,38 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
         supported_features = entity_state.attributes[ATTR_SUPPORTED_FEATURES]
 
         # Add triggers for each entity that belongs to this integration
+        base_trigger = {
+            CONF_PLATFORM: "device",
+            CONF_DEVICE_ID: device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_ENTITY_ID: entry.entity_id,
+        }
+
         triggers += [
             {
-                CONF_PLATFORM: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "disarmed",
-            },
-            {
-                CONF_PLATFORM: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "triggered",
-            },
-            {
-                CONF_PLATFORM: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "arming",
-            },
+                **base_trigger,
+                CONF_TYPE: trigger,
+            }
+            for trigger in BASIC_TRIGGER_TYPES
         ]
         if supported_features & SUPPORT_ALARM_ARM_HOME:
             triggers.append(
                 {
-                    CONF_PLATFORM: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
+                    **base_trigger,
                     CONF_TYPE: "armed_home",
                 }
             )
         if supported_features & SUPPORT_ALARM_ARM_AWAY:
             triggers.append(
                 {
-                    CONF_PLATFORM: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
+                    **base_trigger,
                     CONF_TYPE: "armed_away",
                 }
             )
         if supported_features & SUPPORT_ALARM_ARM_NIGHT:
             triggers.append(
                 {
-                    CONF_PLATFORM: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
+                    **base_trigger,
                     CONF_TYPE: "armed_night",
                 }
             )
