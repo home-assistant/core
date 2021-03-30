@@ -182,7 +182,7 @@ def scripts_with_area(hass: HomeAssistant, area_id: str) -> list[str]:
 
 @callback
 def areas_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
-    """Return all areas in script."""
+    """Return all areas in a script."""
     if DOMAIN not in hass.data:
         return []
 
