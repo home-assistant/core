@@ -41,7 +41,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     file_path = config.get(CONF_FILE_PATH)
     if not hass.config.is_allowed_path(file_path):
         _LOGGER.error(
-            "Path %s is not valid or allowed. Check directory whitelisting.",
+            "Path %s is not valid or allowed. Check directory whitelisting",
             file_path,
         )
     else:
