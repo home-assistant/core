@@ -125,6 +125,16 @@ publish_command_to_frame:
     key:
       description: 'Akcja do wykonania.'
       example: 'playAudio'
+      selector:
+        select:
+          options:
+            - "micOn"
+            - "micOff"
+            - "playAudio"
+            - "stopAudio"
+            - "setVolume"
+            - "goToActivity"
+            - "showCamera"
     val:
       description: 'Wiadomość / dane do akcji.'
       example: 'https://test/audio.mp3'
@@ -146,9 +156,13 @@ say_it:
     text:
       description: 'Tekst do przeczytania.'
       example: 'Cześć, jak się masz'
+      selector:
+        text:
     img:
       description: 'URL zdjęcia do wyświetlenia.'
       example: 'http://ai-speaker.com/images/logo_ais.png'
+      selector:
+        url:
 
 set_context:
   description: 'Ustawienie kontekstu w jakim jest konwersacja z asystentem'
