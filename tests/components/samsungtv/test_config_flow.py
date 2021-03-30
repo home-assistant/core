@@ -7,6 +7,7 @@ from samsungtvws.exceptions import ConnectionFailure
 from websocket import WebSocketProtocolException
 
 from homeassistant.components.samsungtv.const import (
+    ATTR_PROPERTIES,
     CONF_MANUFACTURER,
     CONF_MODEL,
     DOMAIN,
@@ -18,7 +19,6 @@ from homeassistant.components.ssdp import (
     ATTR_UPNP_MODEL_NAME,
     ATTR_UPNP_UDN,
 )
-from homeassistant.components.zeroconf import ATTR_PROPERTIES
 from homeassistant.const import (
     CONF_HOST,
     CONF_ID,
