@@ -32,6 +32,7 @@ from .const import (
     CONF_FLOOR_TEMP,
     CONF_READ_PRECISION,
     CONF_SET_PRECISION,
+    CONF_TEMPORARY_OVRD_MODE,
     DATA_GATEWAYS,
     DATA_OPENTHERM_GW,
 )
@@ -69,6 +70,7 @@ class OpenThermClimate(ClimateEntity):
         self.floor_temp = options.get(CONF_FLOOR_TEMP, DEFAULT_FLOOR_TEMP)
         self.temp_read_precision = options.get(CONF_READ_PRECISION)
         self.temp_set_precision = options.get(CONF_SET_PRECISION)
+        self.temporary_ovrd_mode = options.get(CONF_TEMPORARY_OVRD_MODE, True)
         self._available = False
         self._current_operation = None
         self._current_temperature = None
@@ -88,6 +90,7 @@ class OpenThermClimate(ClimateEntity):
         self.floor_temp = entry.options[CONF_FLOOR_TEMP]
         self.temp_read_precision = entry.options[CONF_READ_PRECISION]
         self.temp_set_precision = entry.options[CONF_SET_PRECISION]
+        self.temporary_ovrd_mode = entry.options[CONF_TEMPORARY_OVRD_MODE]
         self.async_write_ha_state()
 
     async def async_added_to_hass(self):
@@ -271,7 +274,7 @@ class OpenThermClimate(ClimateEntity):
             if temp == self.target_temperature:
                 return
             self._new_target_temperature = await self._gateway.gateway.set_target_temp(
-                temp
+                temp, self.temporary_ovrd_mode
             )
             self.async_write_ha_state()
 
