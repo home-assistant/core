@@ -24,7 +24,7 @@ from .const import DOMAIN  # pylint:disable=unused-import
 
 ROOMBA_DISCOVERY_LOCK = "roomba_discovery_lock"
 ALL_ATTEMPTS = 3
-HOST_ATTEMPTS = 10
+HOST_ATTEMPTS = ALL_ATTEMPTS * 2
 ROOMBA_WAKE_TIME = 6
 
 DEFAULT_OPTIONS = {CONF_CONTINUOUS: DEFAULT_CONTINUOUS, CONF_DELAY: DEFAULT_DELAY}
@@ -324,7 +324,7 @@ async def _async_discover_roombas(hass, host):
     discover_lock = hass.data.setdefault(ROOMBA_DISCOVERY_LOCK, asyncio.Lock())
     discover_attempts = HOST_ATTEMPTS if host else ALL_ATTEMPTS
 
-    for _ in range(discover_attempts + 1):
+    for attempt in range(discover_attempts + 1):
         async with discover_lock:
             try:
                 if host:
@@ -335,7 +335,7 @@ async def _async_discover_roombas(hass, host):
                     discovered = await hass.async_add_executor_job(discovery.get_all)
             except OSError:
                 # Socket temporarily unavailable
-                pass
+                await asyncio.sleep(ROOMBA_WAKE_TIME * attempt)
             else:
                 for device in discovered:
                     if device.ip in discovered_hosts:
