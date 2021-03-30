@@ -26,6 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Enphase Envoy from a config entry."""
 
     config = entry.data
+    name = config[CONF_NAME]
     envoy_reader = EnvoyReader(
         config[CONF_HOST],
         config[CONF_USERNAME],
@@ -75,7 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         COORDINATOR: coordinator,
-        NAME: config[CONF_NAME],
+        NAME: name,
     }
 
     for platform in PLATFORMS:
