@@ -1269,6 +1269,7 @@ class AisColudData:
                     )
                     if ais_answer.get("error", False):
                         _LOGGER.error(ais_answer["message"])
+            self.hass.services.call("ais_cloud", "get_radio_types")
             self.hass.states.async_set("sensor.radiolist", state, new_attr)
 
     def process_play_audio(self, call):
