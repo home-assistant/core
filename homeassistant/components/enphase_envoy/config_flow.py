@@ -133,8 +133,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data[CONF_NAME] = user_input.get(CONF_NAME) or ENVOY
                 return self.async_create_entry(title=data[CONF_NAME], data=data)
 
-        name = f"{ENVOY} {self.serial}" if self.serial else ENVOY
-        self.context["title_placeholders"] = {CONF_NAME: name}
+        if self.serial:
+            self.context["title_placeholders"] = {
+                CONF_SERIAL: self.serial,
+                CONF_HOST: self.ip_address,
+            }
         return self.async_show_form(
             step_id="user",
             data_schema=self._async_generate_schema(),
