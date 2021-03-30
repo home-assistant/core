@@ -59,7 +59,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def _async_generate_schema(self, include_ip_address=True):
         """Generate schema."""
-        schema = vol.Schema({})
+        schema = {}
 
         if include_ip_address:
             schema[vol.Required(CONF_HOST)] = str
@@ -70,7 +70,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Optional(CONF_PASSWORD, default=""): str,
             }
         )
-        return schema
+        return vol.Schema(schema)
 
     async def async_step_import(self, import_config):
         """Handle a flow import."""
