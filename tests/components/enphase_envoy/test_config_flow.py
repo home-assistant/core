@@ -161,6 +161,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Envoy 1234"
+    assert result2["result"].unique_id == "1234"
     assert result2["data"] == {
         "host": "1.1.1.1",
         "name": "Envoy 1234",
