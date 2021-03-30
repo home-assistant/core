@@ -147,7 +147,8 @@ async def validate_input(hass: core.HomeAssistant, data):
     """
 
     config = {}
-    websession = aiohttp_client.async_get_clientsession(hass)
+    websession = aiohttp_client.async_create_clientsession(hass)
+
     try:
         controller = TeslaAPI(
             websession,
