@@ -4,6 +4,8 @@ import logging
 LOGGER = logging.getLogger(__package__)
 DOMAIN = "samsungtv"
 
+ATTR_PROPERTIES = "properties"
+
 DEFAULT_NAME = "Samsung TV"
 
 VALUE_CONF_NAME = "HomeAssistant"
