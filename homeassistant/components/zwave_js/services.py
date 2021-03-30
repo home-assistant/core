@@ -131,8 +131,10 @@ class ZWaveServices:
                     vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
                     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
                     vol.Required(const.ATTR_COMMAND_CLASS): vol.Coerce(int),
-                    vol.Required(const.ATTR_PROPERTY): vol.Coerce(int),
-                    vol.Optional(const.ATTR_PROPERTY_KEY): vol.Coerce(int),
+                    vol.Required(const.ATTR_PROPERTY): vol.Any(vol.Coerce(int), str),
+                    vol.Optional(const.ATTR_PROPERTY_KEY): vol.Any(
+                        vol.Coerce(int), str
+                    ),
                     vol.Optional(const.ATTR_ENDPOINT): vol.Coerce(int),
                     vol.Required(const.ATTR_VALUE): vol.Any(float, int, bool, str),
                     vol.Optional(const.ATTR_WAIT_FOR_RESULT): vol.Coerce(bool),
