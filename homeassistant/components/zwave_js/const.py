@@ -52,6 +52,7 @@ ATTR_DATA_TYPE = "data_type"
 
 # service constants
 SERVICE_SET_CONFIG_PARAMETER = "set_config_parameter"
+SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS = "bulk_set_partial_config_parameters"
 
 ATTR_CONFIG_PARAMETER = "parameter"
 ATTR_CONFIG_PARAMETER_BITMASK = "bitmask"
