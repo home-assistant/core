@@ -23,8 +23,8 @@ from .const import (
 from .const import DOMAIN  # pylint:disable=unused-import
 
 ROOMBA_DISCOVERY_LOCK = "roomba_discovery_lock"
-ALL_ATTEMPTS = 3
-HOST_ATTEMPTS = ALL_ATTEMPTS * 2
+ALL_ATTEMPTS = 2
+HOST_ATTEMPTS = 6
 ROOMBA_WAKE_TIME = 6
 
 DEFAULT_OPTIONS = {CONF_CONTINUOUS: DEFAULT_CONTINUOUS, CONF_DELAY: DEFAULT_DELAY}
