@@ -23,6 +23,8 @@ from .const import (
 from .const import DOMAIN  # pylint:disable=unused-import
 
 ROOMBA_DISCOVERY_LOCK = "roomba_discovery_lock"
+MAX_DISCOVER_ATTEMPTS = 2
+ROOMBA_WAKE_TIME = 6
 
 DEFAULT_OPTIONS = {CONF_CONTINUOUS: DEFAULT_CONTINUOUS, CONF_DELAY: DEFAULT_DELAY}
 
@@ -125,10 +127,8 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self._async_start_link()
 
         already_configured = self._async_current_ids(False)
-        discovery = _async_get_roomba_discovery()
 
-        async with self.hass.data.setdefault(ROOMBA_DISCOVERY_LOCK, asyncio.Lock()):
-            devices = await self.hass.async_add_executor_job(discovery.get_all)
+        devices = await _async_discover_roombas(self.hass, self.host)
 
         if devices:
             # Find already configured hosts
@@ -209,7 +209,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             password = await self.hass.async_add_executor_job(roomba_pw.get_password)
-        except ConnectionRefusedError:
+        except (OSError, ConnectionRefusedError):
             return await self.async_step_link_manual()
 
         if not password:
@@ -314,3 +314,34 @@ def _async_get_roomba_discovery():
 def _async_blid_from_hostname(hostname):
     """Extract the blid from the hostname."""
     return hostname.split("-")[1].split(".")[0].upper()
+
+
+async def _async_discover_roombas(hass, host):
+    discovery = _async_get_roomba_discovery()
+    discovered_hosts = set()
+    devices = []
+    discover_lock = hass.data.setdefault(ROOMBA_DISCOVERY_LOCK, asyncio.Lock())
+
+    for _ in range(MAX_DISCOVER_ATTEMPTS + 1):
+        async with discover_lock:
+            try:
+                if host:
+                    discovered = [
+                        await hass.async_add_executor_job(discovery.get, host)
+                    ]
+                else:
+                    discovered = await hass.async_add_executor_job(discovery.get_all)
+            except OSError:
+                # Socket temporarily unavailable
+                pass
+            else:
+                for device in discovered:
+                    if device.host in discovered_hosts:
+                        continue
+                    discovered_hosts.add(device.host)
+                    devices.append(device)
+
+        if host and host in discovered_hosts:
+            return devices
+
+        await asyncio.sleep(ROOMBA_WAKE_TIME)
