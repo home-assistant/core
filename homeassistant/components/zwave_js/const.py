@@ -49,6 +49,7 @@ ATTR_EVENT_LABEL = "event_label"
 ATTR_EVENT_TYPE = "event_type"
 ATTR_EVENT_DATA = "event_data"
 ATTR_DATA_TYPE = "data_type"
+ATTR_WAIT_FOR_RESULT = "wait_for_result"
 
 # service constants
 SERVICE_SET_CONFIG_PARAMETER = "set_config_parameter"
@@ -61,5 +62,7 @@ ATTR_CONFIG_VALUE = "value"
 SERVICE_REFRESH_VALUE = "refresh_value"
 
 ATTR_REFRESH_ALL_VALUES = "refresh_all_values"
+
+SERVICE_SET_VALUE = "set_value"
 
 ADDON_SLUG = "core_zwave_js"
