@@ -296,10 +296,10 @@ async def _async_start_zeroconf_browser(
                 ):
                     continue
 
-            hass.async_create_task(
+            hass.add_job(
                 hass.config_entries.flow.async_init(
                     entry["domain"], context={"source": DOMAIN}, data=info
-                )
+                )  # type: ignore
             )
 
     _LOGGER.debug("Starting Zeroconf browser")
@@ -332,10 +332,10 @@ def handle_homekit(
         ):
             continue
 
-        hass.async_create_task(
+        hass.add_job(
             hass.config_entries.flow.async_init(
                 homekit_models[test_model], context={"source": "homekit"}, data=info
-            )
+            )  # type: ignore
         )
         return True
 
