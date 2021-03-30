@@ -8,11 +8,15 @@ from homeassistant.components.zwave_js.const import (
     ATTR_CONFIG_VALUE,
     ATTR_REFRESH_ALL_VALUES,
     DOMAIN,
+    SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
     SERVICE_REFRESH_VALUE,
     SERVICE_SET_CONFIG_PARAMETER,
 )
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID
-from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
+from homeassistant.helpers.device_registry import (
+    async_entries_for_config_entry,
+    async_get as async_get_dev_reg,
+)
 from homeassistant.helpers.entity_registry import async_get as async_get_ent_reg
 
 from .common import AIR_TEMPERATURE_SENSOR, CLIMATE_RADIO_THERMOSTAT_ENTITY
@@ -339,6 +343,125 @@ async def test_set_config_parameter(hass, client, multisensor_6, integration):
         "value": 0,
     }
     assert args["value"] == 1
+
+    client.async_send_command.reset_mock()
+
+
+async def test_bulk_set_config_parameters(hass, client, multisensor_6, integration):
+    """Test the bulk_set_partial_config_parameters service."""
+    dev_reg = async_get_dev_reg(hass)
+    device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
+    # Test setting config parameter by property and property_key
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
+        {
+            ATTR_DEVICE_ID: device.id,
+            ATTR_CONFIG_PARAMETER: 102,
+            ATTR_CONFIG_VALUE: 241,
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command_no_wait.call_args_list) == 1
+    args = client.async_send_command_no_wait.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 52
+    assert args["valueId"] == {
+        "commandClass": 112,
+        "property": 102,
+    }
+    assert args["value"] == 241
+
+    client.async_send_command_no_wait.reset_mock()
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
+        {
+            ATTR_ENTITY_ID: AIR_TEMPERATURE_SENSOR,
+            ATTR_CONFIG_PARAMETER: 102,
+            ATTR_CONFIG_VALUE: {
+                1: 1,
+                16: 1,
+                32: 1,
+                64: 1,
+                128: 1,
+            },
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command_no_wait.call_args_list) == 1
+    args = client.async_send_command_no_wait.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 52
+    assert args["valueId"] == {
+        "commandClass": 112,
+        "property": 102,
+    }
+    assert args["value"] == 241
+
+    client.async_send_command_no_wait.reset_mock()
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
+        {
+            ATTR_ENTITY_ID: AIR_TEMPERATURE_SENSOR,
+            ATTR_CONFIG_PARAMETER: 102,
+            ATTR_CONFIG_VALUE: {
+                "0x1": 1,
+                "0x10": 1,
+                "0x20": 1,
+                "0x40": 1,
+                "0x80": 1,
+            },
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command_no_wait.call_args_list) == 1
+    args = client.async_send_command_no_wait.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 52
+    assert args["valueId"] == {
+        "commandClass": 112,
+        "property": 102,
+    }
+    assert args["value"] == 241
+
+    client.async_send_command_no_wait.reset_mock()
+
+    # Test that when a device is awake, we call async_send_command instead of
+    # async_send_command_no_wait
+    multisensor_6.handle_wake_up(None)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
+        {
+            ATTR_ENTITY_ID: AIR_TEMPERATURE_SENSOR,
+            ATTR_CONFIG_PARAMETER: 102,
+            ATTR_CONFIG_VALUE: {
+                1: 1,
+                16: 1,
+                32: 1,
+                64: 1,
+                128: 1,
+            },
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 52
+    assert args["valueId"] == {
+        "commandClass": 112,
+        "property": 102,
+    }
+    assert args["value"] == 241
 
     client.async_send_command.reset_mock()
 

@@ -59,11 +59,37 @@ set_config_parameter:
       example: 5
       required: true
       selector:
-        object:
+        text:
     bitmask:
       name: Bitmask
       description: Target a specific bitmask (see the documentation for more information).
       advanced: true
+      selector:
+        text:
+
+bulk_set_partial_config_parameters:
+  name: Bulk set partial configuration parameters for a Z-Wave device (Advanced).
+  description: Allow for bulk setting partial parameters. Useful when multiple partial parameters have to be set at the same time.
+  target:
+    entity:
+      integration: zwave_js
+  fields:
+    parameter:
+      name: Parameter
+      description: The id of the configuration parameter you want to configure.
+      example: 9
+      required: true
+      selector:
+        text:
+    value:
+      name: Value
+      description: The new value(s) to set for this configuration parameter. Can either be a raw integer value to represent the bulk change or a mapping where the key is the bitmask (either in hex or integer form) and the value is the new value you want to set for that partial parameter.
+      example:
+        "0x1": 1
+        "0x10": 1
+        "0x20": 1
+        "0x40": 1
+      required: true
       selector:
         object:
 

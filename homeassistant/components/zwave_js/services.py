@@ -6,7 +6,10 @@ import logging
 import voluptuous as vol
 from zwave_js_server.const import CommandStatus
 from zwave_js_server.model.node import Node as ZwaveNode
-from zwave_js_server.util.node import async_set_config_parameter
+from zwave_js_server.util.node import (
+    async_bulk_set_partial_config_parameters,
+    async_set_config_parameter,
+)
 
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -37,7 +40,13 @@ def parameter_name_does_not_need_bitmask(
 # Validates that a bitmask is provided in hex form and converts it to decimal
 # int equivalent since that's what the library uses
 BITMASK_SCHEMA = vol.All(
-    cv.string, vol.Lower, vol.Match(r"^(0x)?[0-9a-f]+$"), lambda value: int(value, 16)
+    cv.string,
+    vol.Lower,
+    vol.Match(
+        r"^(0x)?[0-9a-f]+$",
+        msg="Must provide an integer (e.g. 255) or a bitmask in hex form (e.g. 0xff)",
+    ),
+    lambda value: int(value, 16),
 )
 
 
@@ -72,6 +81,30 @@ class ZWaveServices:
                 },
                 cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
                 parameter_name_does_not_need_bitmask,
+            ),
+        )
+
+        self._hass.services.async_register(
+            const.DOMAIN,
+            const.SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
+            self.async_bulk_set_partial_config_parameters,
+            schema=vol.All(
+                {
+                    vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
+                    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+                    vol.Required(const.ATTR_CONFIG_PARAMETER): vol.Any(
+                        vol.Coerce(int), cv.string
+                    ),
+                    vol.Required(const.ATTR_CONFIG_VALUE): vol.Any(
+                        vol.Coerce(int),
+                        {
+                            vol.Any(vol.Coerce(int), BITMASK_SCHEMA): vol.Any(
+                                vol.Coerce(int), cv.string
+                            )
+                        },
+                    ),
+                },
+                cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
             ),
         )
 
@@ -121,6 +154,41 @@ class ZWaveServices:
                 )
 
             _LOGGER.info(msg, zwave_value, node, new_value)
+
+    async def async_bulk_set_partial_config_parameters(
+        self, service: ServiceCall
+    ) -> None:
+        """Bulk set multiple partial config values on a node."""
+        nodes: set[ZwaveNode] = set()
+        if ATTR_ENTITY_ID in service.data:
+            nodes |= {
+                async_get_node_from_entity_id(self._hass, entity_id)
+                for entity_id in service.data[ATTR_ENTITY_ID]
+            }
+        if ATTR_DEVICE_ID in service.data:
+            nodes |= {
+                async_get_node_from_device_id(self._hass, device_id)
+                for device_id in service.data[ATTR_DEVICE_ID]
+            }
+        property_ = service.data[const.ATTR_CONFIG_PARAMETER]
+        new_value = service.data[const.ATTR_CONFIG_VALUE]
+
+        for node in nodes:
+            cmd_status = await async_bulk_set_partial_config_parameters(
+                node,
+                property_,
+                new_value,
+            )
+
+            if cmd_status == CommandStatus.ACCEPTED:
+                msg = "Bulk set partials for configuration parameter %s on Node %s"
+            else:
+                msg = (
+                    "Added command to queue to bulk set partials for configuration "
+                    "parameter %s on Node %s"
+                )
+
+            _LOGGER.info(msg, property_, node)
 
     async def async_poll_value(self, service: ServiceCall) -> None:
         """Poll value on a node."""
