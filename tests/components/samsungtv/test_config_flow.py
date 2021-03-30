@@ -50,6 +50,13 @@ MOCK_SSDP_DATA_NOPREFIX = {
     ATTR_UPNP_MODEL_NAME: "fake2_model",
     ATTR_UPNP_UDN: "fake2_uuid",
 }
+MOCK_SSDP_DATA_WRONGMODEL = {
+    ATTR_SSDP_LOCATION: "http://fake2_host:12345/test",
+    ATTR_UPNP_FRIENDLY_NAME: "fake2_name",
+    ATTR_UPNP_MANUFACTURER: "fake2_manufacturer",
+    ATTR_UPNP_MODEL_NAME: "HW-Qfake",
+    ATTR_UPNP_UDN: "fake2_uuid",
+}
 MOCK_ZEROCONF_DATA = {
     CONF_HOST: "fake_host",
     CONF_PORT: 1234,
@@ -374,6 +381,17 @@ async def test_ssdp_websocket_not_supported(hass: HomeAssistantType, remote: Moc
         )
         assert result["type"] == "abort"
         assert result["reason"] == "not_supported"
+
+
+async def test_ssd_model_not_supported(hass: HomeAssistantType, remote: Mock):
+    """Test starting a flow from discovery."""
+
+    # confirm to add the entry
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "ssdp"}, data=MOCK_SSDP_DATA_WRONGMODEL
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_supported"
 
 
 async def test_ssdp_not_successful(hass: HomeAssistantType, remote: Mock):
