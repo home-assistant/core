@@ -79,7 +79,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 )
         elif condition != "inverters":
             data = coordinator.data.get(condition)
-            if data is not None and "not available" in data:
+            if isinstance(data, str) and "not available" in data:
                 continue
 
             entity_name = f"{name} {SENSORS[condition][0]}"
