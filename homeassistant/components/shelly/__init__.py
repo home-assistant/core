@@ -75,7 +75,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     dev_reg = await device_registry.async_get_registry(hass)
     identifier = (DOMAIN, entry.unique_id)
     device_entry = dev_reg.async_get_device(identifiers={identifier}, connections=set())
-    if entry.entry_id not in device_entry.config_entries:
+    if device_entry and entry.entry_id not in device_entry.config_entries:
         device_entry = None
 
     sleep_period = entry.data.get("sleep_period")
