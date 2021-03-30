@@ -28,7 +28,8 @@ EVENT_DEVICE_ADDED_TO_REGISTRY = f"{DOMAIN}_device_added_to_registry"
 LOGGER = logging.getLogger(__package__)
 
 # constants for events
-ZWAVE_JS_EVENT = f"{DOMAIN}_event"
+ZWAVE_JS_VALUE_NOTIFICATION_EVENT = f"{DOMAIN}_value_notification"
+ZWAVE_JS_NOTIFICATION_EVENT = f"{DOMAIN}_notification"
 ATTR_NODE_ID = "node_id"
 ATTR_HOME_ID = "home_id"
 ATTR_ENDPOINT = "endpoint"
@@ -43,6 +44,11 @@ ATTR_PROPERTY_KEY_NAME = "property_key_name"
 ATTR_PROPERTY = "property"
 ATTR_PROPERTY_KEY = "property_key"
 ATTR_PARAMETERS = "parameters"
+ATTR_EVENT = "event"
+ATTR_EVENT_LABEL = "event_label"
+ATTR_EVENT_TYPE = "event_type"
+ATTR_EVENT_DATA = "event_data"
+ATTR_DATA_TYPE = "data_type"
 
 # service constants
 SERVICE_SET_CONFIG_PARAMETER = "set_config_parameter"

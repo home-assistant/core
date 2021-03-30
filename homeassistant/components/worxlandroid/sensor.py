@@ -127,9 +127,8 @@ class WorxLandroidSensor(SensorEntity):
     def get_error(obj):
         """Get the mower error."""
         for i, err in enumerate(obj["allarmi"]):
-            if i != 2:  # ignore wire bounce errors
-                if err == 1:
-                    return ERROR_STATE[i]
+            if i != 2 and err == 1:  # ignore wire bounce errors
+                return ERROR_STATE[i]
 
         return None
 

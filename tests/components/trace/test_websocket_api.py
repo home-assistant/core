@@ -9,7 +9,7 @@ from tests.common import assert_lists_same
 
 
 def _find_run_id(traces, trace_type, item_id):
-    """Find newest run_id for an automation or script."""
+    """Find newest run_id for an script or automation."""
     for trace in reversed(traces):
         if trace["domain"] == trace_type and trace["item_id"] == item_id:
             return trace["run_id"]
@@ -18,7 +18,7 @@ def _find_run_id(traces, trace_type, item_id):
 
 
 def _find_traces(traces, trace_type, item_id):
-    """Find traces for an automation or script."""
+    """Find traces for an script or automation."""
     return [
         trace
         for trace in traces
@@ -30,7 +30,7 @@ def _find_traces(traces, trace_type, item_id):
     "domain, prefix", [("automation", "action"), ("script", "sequence")]
 )
 async def test_get_trace(hass, hass_ws_client, domain, prefix):
-    """Test tracing an automation or script."""
+    """Test tracing an script or automation."""
     id = 1
 
     def next_id():
@@ -92,7 +92,7 @@ async def test_get_trace(hass, hass_ws_client, domain, prefix):
     await hass.async_block_till_done()
 
     # List traces
-    await client.send_json({"id": next_id(), "type": "trace/list"})
+    await client.send_json({"id": next_id(), "type": "trace/list", "domain": domain})
     response = await client.receive_json()
     assert response["success"]
     run_id = _find_run_id(response["result"], domain, "sun")
@@ -110,18 +110,21 @@ async def test_get_trace(hass, hass_ws_client, domain, prefix):
     response = await client.receive_json()
     assert response["success"]
     trace = response["result"]
-    assert len(trace["action_trace"]) == 1
-    assert len(trace["action_trace"][f"{prefix}/0"]) == 1
-    assert trace["action_trace"][f"{prefix}/0"][0]["error"]
-    assert trace["action_trace"][f"{prefix}/0"][0]["result"] == sun_action
+    if domain == "automation":
+        assert len(trace["trace"]) == 2
+        assert set(trace["trace"]) == {"trigger", f"{prefix}/0"}
+    else:
+        assert len(trace["trace"]) == 1
+        assert set(trace["trace"]) == {f"{prefix}/0"}
+    assert len(trace["trace"][f"{prefix}/0"]) == 1
+    assert trace["trace"][f"{prefix}/0"][0]["error"]
+    assert trace["trace"][f"{prefix}/0"][0]["result"] == sun_action
     assert trace["config"] == sun_config
     assert trace["context"]
     assert trace["error"] == "Unable to find service test.automation"
     assert trace["state"] == "stopped"
     assert trace["item_id"] == "sun"
-    assert trace["variables"] is not None
     if domain == "automation":
-        assert trace["condition_trace"] == {}
         assert trace["context"]["parent_id"] == context.id
         assert trace["trigger"] == "event 'test_event'"
     else:
@@ -140,7 +143,7 @@ async def test_get_trace(hass, hass_ws_client, domain, prefix):
     await hass.async_block_till_done()
 
     # List traces
-    await client.send_json({"id": next_id(), "type": "trace/list"})
+    await client.send_json({"id": next_id(), "type": "trace/list", "domain": domain})
     response = await client.receive_json()
     assert response["success"]
     run_id = _find_run_id(response["result"], domain, "moon")
@@ -158,21 +161,24 @@ async def test_get_trace(hass, hass_ws_client, domain, prefix):
     response = await client.receive_json()
     assert response["success"]
     trace = response["result"]
-    assert len(trace["action_trace"]) == 1
-    assert len(trace["action_trace"][f"{prefix}/0"]) == 1
-    assert "error" not in trace["action_trace"][f"{prefix}/0"][0]
-    assert trace["action_trace"][f"{prefix}/0"][0]["result"] == moon_action
+    if domain == "automation":
+        assert len(trace["trace"]) == 3
+        assert set(trace["trace"]) == {"trigger", "condition/0", f"{prefix}/0"}
+    else:
+        assert len(trace["trace"]) == 1
+        assert set(trace["trace"]) == {f"{prefix}/0"}
+    assert len(trace["trace"][f"{prefix}/0"]) == 1
+    assert "error" not in trace["trace"][f"{prefix}/0"][0]
+    assert trace["trace"][f"{prefix}/0"][0]["result"] == moon_action
     assert trace["config"] == moon_config
     assert trace["context"]
     assert "error" not in trace
     assert trace["state"] == "stopped"
     assert trace["item_id"] == "moon"
-    assert trace["variables"] is not None
 
     if domain == "automation":
-        assert len(trace["condition_trace"]) == 1
-        assert len(trace["condition_trace"]["condition/0"]) == 1
-        assert trace["condition_trace"]["condition/0"][0]["result"] == {"result": True}
+        assert len(trace["trace"]["condition/0"]) == 1
+        assert trace["trace"]["condition/0"][0]["result"] == {"result": True}
         assert trace["trigger"] == "event 'test_event2'"
     contexts[trace["context"]["id"]] = {
         "run_id": trace["run_id"],
@@ -193,7 +199,7 @@ async def test_get_trace(hass, hass_ws_client, domain, prefix):
     await hass.async_block_till_done()
 
     # List traces
-    await client.send_json({"id": next_id(), "type": "trace/list"})
+    await client.send_json({"id": next_id(), "type": "trace/list", "domain": domain})
     response = await client.receive_json()
     assert response["success"]
     run_id = _find_run_id(response["result"], "automation", "moon")
@@ -211,17 +217,20 @@ async def test_get_trace(hass, hass_ws_client, domain, prefix):
     response = await client.receive_json()
     assert response["success"]
     trace = response["result"]
-    assert len(trace["action_trace"]) == 0
-    assert len(trace["condition_trace"]) == 1
-    assert len(trace["condition_trace"]["condition/0"]) == 1
-    assert trace["condition_trace"]["condition/0"][0]["result"] == {"result": False}
+    if domain == "automation":
+        assert len(trace["trace"]) == 2
+        assert set(trace["trace"]) == {"trigger", "condition/0"}
+    else:
+        assert len(trace["trace"]) == 1
+        assert set(trace["trace"]) == {f"{prefix}/0"}
+    assert len(trace["trace"]["condition/0"]) == 1
+    assert trace["trace"]["condition/0"][0]["result"] == {"result": False}
     assert trace["config"] == moon_config
     assert trace["context"]
     assert "error" not in trace
     assert trace["state"] == "stopped"
     assert trace["trigger"] == "event 'test_event3'"
     assert trace["item_id"] == "moon"
-    assert trace["variables"]
     contexts[trace["context"]["id"]] = {
         "run_id": trace["run_id"],
         "domain": domain,
@@ -233,7 +242,7 @@ async def test_get_trace(hass, hass_ws_client, domain, prefix):
     await hass.async_block_till_done()
 
     # List traces
-    await client.send_json({"id": next_id(), "type": "trace/list"})
+    await client.send_json({"id": next_id(), "type": "trace/list", "domain": domain})
     response = await client.receive_json()
     assert response["success"]
     run_id = _find_run_id(response["result"], "automation", "moon")
@@ -251,20 +260,19 @@ async def test_get_trace(hass, hass_ws_client, domain, prefix):
     response = await client.receive_json()
     assert response["success"]
     trace = response["result"]
-    assert len(trace["action_trace"]) == 1
-    assert len(trace["action_trace"][f"{prefix}/0"]) == 1
-    assert "error" not in trace["action_trace"][f"{prefix}/0"][0]
-    assert trace["action_trace"][f"{prefix}/0"][0]["result"] == moon_action
-    assert len(trace["condition_trace"]) == 1
-    assert len(trace["condition_trace"]["condition/0"]) == 1
-    assert trace["condition_trace"]["condition/0"][0]["result"] == {"result": True}
+    assert len(trace["trace"]) == 3
+    assert set(trace["trace"]) == {"trigger", "condition/0", f"{prefix}/0"}
+    assert len(trace["trace"][f"{prefix}/0"]) == 1
+    assert "error" not in trace["trace"][f"{prefix}/0"][0]
+    assert trace["trace"][f"{prefix}/0"][0]["result"] == moon_action
+    assert len(trace["trace"]["condition/0"]) == 1
+    assert trace["trace"]["condition/0"][0]["result"] == {"result": True}
     assert trace["config"] == moon_config
     assert trace["context"]
     assert "error" not in trace
     assert trace["state"] == "stopped"
     assert trace["trigger"] == "event 'test_event2'"
     assert trace["item_id"] == "moon"
-    assert trace["variables"]
     contexts[trace["context"]["id"]] = {
         "run_id": trace["run_id"],
         "domain": domain,
@@ -280,7 +288,7 @@ async def test_get_trace(hass, hass_ws_client, domain, prefix):
 
 @pytest.mark.parametrize("domain", ["automation", "script"])
 async def test_trace_overflow(hass, hass_ws_client, domain):
-    """Test the number of stored traces per automation or script is limited."""
+    """Test the number of stored traces per script or automation is limited."""
     id = 1
 
     def next_id():
@@ -313,7 +321,7 @@ async def test_trace_overflow(hass, hass_ws_client, domain):
 
     client = await hass_ws_client()
 
-    await client.send_json({"id": next_id(), "type": "trace/list"})
+    await client.send_json({"id": next_id(), "type": "trace/list", "domain": domain})
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == []
@@ -328,7 +336,7 @@ async def test_trace_overflow(hass, hass_ws_client, domain):
     await hass.async_block_till_done()
 
     # List traces
-    await client.send_json({"id": next_id(), "type": "trace/list"})
+    await client.send_json({"id": next_id(), "type": "trace/list", "domain": domain})
     response = await client.receive_json()
     assert response["success"]
     assert len(_find_traces(response["result"], domain, "moon")) == 1
@@ -343,7 +351,7 @@ async def test_trace_overflow(hass, hass_ws_client, domain):
             await hass.services.async_call("script", "moon")
         await hass.async_block_till_done()
 
-    await client.send_json({"id": next_id(), "type": "trace/list"})
+    await client.send_json({"id": next_id(), "type": "trace/list", "domain": domain})
     response = await client.receive_json()
     assert response["success"]
     moon_traces = _find_traces(response["result"], domain, "moon")
@@ -358,7 +366,7 @@ async def test_trace_overflow(hass, hass_ws_client, domain):
     "domain, prefix", [("automation", "action"), ("script", "sequence")]
 )
 async def test_list_traces(hass, hass_ws_client, domain, prefix):
-    """Test listing automation and script traces."""
+    """Test listing script and automation traces."""
     id = 1
 
     def next_id():
@@ -398,7 +406,7 @@ async def test_list_traces(hass, hass_ws_client, domain, prefix):
 
     client = await hass_ws_client()
 
-    await client.send_json({"id": next_id(), "type": "trace/list"})
+    await client.send_json({"id": next_id(), "type": "trace/list", "domain": domain})
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == []
@@ -418,7 +426,7 @@ async def test_list_traces(hass, hass_ws_client, domain, prefix):
     await hass.async_block_till_done()
 
     # Get trace
-    await client.send_json({"id": next_id(), "type": "trace/list"})
+    await client.send_json({"id": next_id(), "type": "trace/list", "domain": domain})
     response = await client.receive_json()
     assert response["success"]
     assert len(response["result"]) == 1
@@ -461,29 +469,27 @@ async def test_list_traces(hass, hass_ws_client, domain, prefix):
     await hass.async_block_till_done()
 
     # Get trace
-    await client.send_json({"id": next_id(), "type": "trace/list"})
+    await client.send_json({"id": next_id(), "type": "trace/list", "domain": domain})
     response = await client.receive_json()
     assert response["success"]
     assert len(_find_traces(response["result"], domain, "moon")) == 3
     assert len(_find_traces(response["result"], domain, "sun")) == 1
     trace = _find_traces(response["result"], domain, "sun")[0]
-    assert trace["last_action"] == f"{prefix}/0"
+    assert trace["last_step"] == f"{prefix}/0"
     assert trace["error"] == "Unable to find service test.automation"
     assert trace["state"] == "stopped"
     assert trace["timestamp"]
     assert trace["item_id"] == "sun"
     if domain == "automation":
-        assert trace["last_condition"] is None
         assert trace["trigger"] == "event 'test_event'"
 
     trace = _find_traces(response["result"], domain, "moon")[0]
-    assert trace["last_action"] == f"{prefix}/0"
+    assert trace["last_step"] == f"{prefix}/0"
     assert "error" not in trace
     assert trace["state"] == "stopped"
     assert trace["timestamp"]
     assert trace["item_id"] == "moon"
     if domain == "automation":
-        assert trace["last_condition"] == "condition/0"
         assert trace["trigger"] == "event 'test_event2'"
 
     trace = _find_traces(response["result"], domain, "moon")[1]
@@ -492,20 +498,18 @@ async def test_list_traces(hass, hass_ws_client, domain, prefix):
     assert trace["timestamp"]
     assert trace["item_id"] == "moon"
     if domain == "automation":
-        assert trace["last_action"] is None
-        assert trace["last_condition"] == "condition/0"
+        assert trace["last_step"] == "condition/0"
         assert trace["trigger"] == "event 'test_event3'"
     else:
-        assert trace["last_action"] == f"{prefix}/0"
+        assert trace["last_step"] == f"{prefix}/0"
 
     trace = _find_traces(response["result"], domain, "moon")[2]
-    assert trace["last_action"] == f"{prefix}/0"
+    assert trace["last_step"] == f"{prefix}/0"
     assert "error" not in trace
     assert trace["state"] == "stopped"
     assert trace["timestamp"]
     assert trace["item_id"] == "moon"
     if domain == "automation":
-        assert trace["last_condition"] == "condition/0"
         assert trace["trigger"] == "event 'test_event2'"
 
 
@@ -552,14 +556,24 @@ async def test_nested_traces(hass, hass_ws_client, domain, prefix):
     await hass.async_block_till_done()
 
     # List traces
-    await client.send_json({"id": next_id(), "type": "trace/list"})
+    await client.send_json({"id": next_id(), "type": "trace/list", "domain": "script"})
     response = await client.receive_json()
     assert response["success"]
-    assert len(response["result"]) == 2
-    assert len(_find_traces(response["result"], domain, "sun")) == 1
+    if domain == "automation":
+        assert len(response["result"]) == 1
+    else:
+        assert len(response["result"]) == 2
     assert len(_find_traces(response["result"], "script", "moon")) == 1
-    sun_run_id = _find_run_id(response["result"], domain, "sun")
     moon_run_id = _find_run_id(response["result"], "script", "moon")
+    if domain == "automation":
+        await client.send_json(
+            {"id": next_id(), "type": "trace/list", "domain": "automation"}
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        assert len(response["result"]) == 1
+    assert len(_find_traces(response["result"], domain, "sun")) == 1
+    sun_run_id = _find_run_id(response["result"], domain, "sun")
     assert sun_run_id != moon_run_id
 
     # Get trace
@@ -575,9 +589,14 @@ async def test_nested_traces(hass, hass_ws_client, domain, prefix):
     response = await client.receive_json()
     assert response["success"]
     trace = response["result"]
-    assert len(trace["action_trace"]) == 1
-    assert len(trace["action_trace"][f"{prefix}/0"]) == 1
-    child_id = trace["action_trace"][f"{prefix}/0"][0]["child_id"]
+    if domain == "automation":
+        assert len(trace["trace"]) == 2
+        assert set(trace["trace"]) == {"trigger", f"{prefix}/0"}
+    else:
+        assert len(trace["trace"]) == 1
+        assert set(trace["trace"]) == {f"{prefix}/0"}
+    assert len(trace["trace"][f"{prefix}/0"]) == 1
+    child_id = trace["trace"][f"{prefix}/0"][0]["child_id"]
     assert child_id == {"domain": "script", "item_id": "moon", "run_id": moon_run_id}
 
 
@@ -585,7 +604,7 @@ async def test_nested_traces(hass, hass_ws_client, domain, prefix):
     "domain, prefix", [("automation", "action"), ("script", "sequence")]
 )
 async def test_breakpoints(hass, hass_ws_client, domain, prefix):
-    """Test automation and script breakpoints."""
+    """Test script and automation breakpoints."""
     id = 1
 
     def next_id():
@@ -593,12 +612,14 @@ async def test_breakpoints(hass, hass_ws_client, domain, prefix):
         id += 1
         return id
 
-    async def assert_last_action(item_id, expected_action, expected_state):
-        await client.send_json({"id": next_id(), "type": "trace/list"})
+    async def assert_last_step(item_id, expected_action, expected_state):
+        await client.send_json(
+            {"id": next_id(), "type": "trace/list", "domain": domain}
+        )
         response = await client.receive_json()
         assert response["success"]
         trace = _find_traces(response["result"], domain, item_id)[-1]
-        assert trace["last_action"] == expected_action
+        assert trace["last_step"] == expected_action
         assert trace["state"] == expected_state
         return trace["run_id"]
 
@@ -692,7 +713,7 @@ async def test_breakpoints(hass, hass_ws_client, domain, prefix):
         await hass.services.async_call("script", "sun")
 
     response = await client.receive_json()
-    run_id = await assert_last_action("sun", f"{prefix}/1", "running")
+    run_id = await assert_last_step("sun", f"{prefix}/1", "running")
     assert response["event"] == {
         "domain": domain,
         "item_id": "sun",
@@ -713,7 +734,7 @@ async def test_breakpoints(hass, hass_ws_client, domain, prefix):
     assert response["success"]
 
     response = await client.receive_json()
-    run_id = await assert_last_action("sun", f"{prefix}/2", "running")
+    run_id = await assert_last_step("sun", f"{prefix}/2", "running")
     assert response["event"] == {
         "domain": domain,
         "item_id": "sun",
@@ -734,7 +755,7 @@ async def test_breakpoints(hass, hass_ws_client, domain, prefix):
     assert response["success"]
 
     response = await client.receive_json()
-    run_id = await assert_last_action("sun", f"{prefix}/5", "running")
+    run_id = await assert_last_step("sun", f"{prefix}/5", "running")
     assert response["event"] == {
         "domain": domain,
         "item_id": "sun",
@@ -754,7 +775,7 @@ async def test_breakpoints(hass, hass_ws_client, domain, prefix):
     response = await client.receive_json()
     assert response["success"]
     await hass.async_block_till_done()
-    await assert_last_action("sun", f"{prefix}/5", "stopped")
+    await assert_last_step("sun", f"{prefix}/5", "stopped")
 
 
 @pytest.mark.parametrize(
@@ -769,12 +790,14 @@ async def test_breakpoints_2(hass, hass_ws_client, domain, prefix):
         id += 1
         return id
 
-    async def assert_last_action(item_id, expected_action, expected_state):
-        await client.send_json({"id": next_id(), "type": "trace/list"})
+    async def assert_last_step(item_id, expected_action, expected_state):
+        await client.send_json(
+            {"id": next_id(), "type": "trace/list", "domain": domain}
+        )
         response = await client.receive_json()
         assert response["success"]
         trace = _find_traces(response["result"], domain, item_id)[-1]
-        assert trace["last_action"] == expected_action
+        assert trace["last_step"] == expected_action
         assert trace["state"] == expected_state
         return trace["run_id"]
 
@@ -829,7 +852,7 @@ async def test_breakpoints_2(hass, hass_ws_client, domain, prefix):
         await hass.services.async_call("script", "sun")
 
     response = await client.receive_json()
-    run_id = await assert_last_action("sun", f"{prefix}/1", "running")
+    run_id = await assert_last_step("sun", f"{prefix}/1", "running")
     assert response["event"] == {
         "domain": domain,
         "item_id": "sun",
@@ -844,7 +867,7 @@ async def test_breakpoints_2(hass, hass_ws_client, domain, prefix):
     response = await client.receive_json()
     assert response["success"]
     await hass.async_block_till_done()
-    await assert_last_action("sun", f"{prefix}/8", "stopped")
+    await assert_last_step("sun", f"{prefix}/8", "stopped")
 
     # Should not be possible to set breakpoints
     await client.send_json(
@@ -866,7 +889,7 @@ async def test_breakpoints_2(hass, hass_ws_client, domain, prefix):
         await hass.services.async_call("script", "sun")
     await hass.async_block_till_done()
 
-    new_run_id = await assert_last_action("sun", f"{prefix}/8", "stopped")
+    new_run_id = await assert_last_step("sun", f"{prefix}/8", "stopped")
     assert new_run_id != run_id
 
 
@@ -882,12 +905,14 @@ async def test_breakpoints_3(hass, hass_ws_client, domain, prefix):
         id += 1
         return id
 
-    async def assert_last_action(item_id, expected_action, expected_state):
-        await client.send_json({"id": next_id(), "type": "trace/list"})
+    async def assert_last_step(item_id, expected_action, expected_state):
+        await client.send_json(
+            {"id": next_id(), "type": "trace/list", "domain": domain}
+        )
         response = await client.receive_json()
         assert response["success"]
         trace = _find_traces(response["result"], domain, item_id)[-1]
-        assert trace["last_action"] == expected_action
+        assert trace["last_step"] == expected_action
         assert trace["state"] == expected_state
         return trace["run_id"]
 
@@ -954,7 +979,7 @@ async def test_breakpoints_3(hass, hass_ws_client, domain, prefix):
         await hass.services.async_call("script", "sun")
 
     response = await client.receive_json()
-    run_id = await assert_last_action("sun", f"{prefix}/1", "running")
+    run_id = await assert_last_step("sun", f"{prefix}/1", "running")
     assert response["event"] == {
         "domain": domain,
         "item_id": "sun",
@@ -975,7 +1000,7 @@ async def test_breakpoints_3(hass, hass_ws_client, domain, prefix):
     assert response["success"]
 
     response = await client.receive_json()
-    run_id = await assert_last_action("sun", f"{prefix}/5", "running")
+    run_id = await assert_last_step("sun", f"{prefix}/5", "running")
     assert response["event"] == {
         "domain": domain,
         "item_id": "sun",
@@ -995,7 +1020,7 @@ async def test_breakpoints_3(hass, hass_ws_client, domain, prefix):
     response = await client.receive_json()
     assert response["success"]
     await hass.async_block_till_done()
-    await assert_last_action("sun", f"{prefix}/5", "stopped")
+    await assert_last_step("sun", f"{prefix}/5", "stopped")
 
     # Clear 1st breakpoint
     await client.send_json(
@@ -1017,7 +1042,7 @@ async def test_breakpoints_3(hass, hass_ws_client, domain, prefix):
         await hass.services.async_call("script", "sun")
 
     response = await client.receive_json()
-    run_id = await assert_last_action("sun", f"{prefix}/5", "running")
+    run_id = await assert_last_step("sun", f"{prefix}/5", "running")
     assert response["event"] == {
         "domain": domain,
         "item_id": "sun",

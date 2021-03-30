@@ -220,16 +220,20 @@ class SubaruSensor(SubaruEntity, SensorEntity):
                 self.hass.config.units.length(self.current_value, self.api_unit), 1
             )
 
-        if self.api_unit in PRESSURE_UNITS:
-            if self.hass.config.units == IMPERIAL_SYSTEM:
-                return round(
-                    self.hass.config.units.pressure(self.current_value, self.api_unit),
-                    1,
-                )
+        if (
+            self.api_unit in PRESSURE_UNITS
+            and self.hass.config.units == IMPERIAL_SYSTEM
+        ):
+            return round(
+                self.hass.config.units.pressure(self.current_value, self.api_unit),
+                1,
+            )
 
-        if self.api_unit in FUEL_CONSUMPTION_UNITS:
-            if self.hass.config.units == IMPERIAL_SYSTEM:
-                return round((100.0 * L_PER_GAL) / (KM_PER_MI * self.current_value), 1)
+        if (
+            self.api_unit in FUEL_CONSUMPTION_UNITS
+            and self.hass.config.units == IMPERIAL_SYSTEM
+        ):
+            return round((100.0 * L_PER_GAL) / (KM_PER_MI * self.current_value), 1)
 
         return self.current_value
 

@@ -7,8 +7,7 @@ from typing import Sequence
 import voluptuous as vol
 
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
-from homeassistant.core import State
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant, State
 from homeassistant.util import location as loc_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,7 +48,7 @@ def closest(latitude: float, longitude: float, states: Sequence[State]) -> State
 
 
 def find_coordinates(
-    hass: HomeAssistantType, entity_id: str, recursion_history: list | None = None
+    hass: HomeAssistant, entity_id: str, recursion_history: list | None = None
 ) -> str | None:
     """Find the gps coordinates of the entity in the form of '90.000,180.000'."""
     entity_state = hass.states.get(entity_id)

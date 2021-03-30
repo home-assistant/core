@@ -95,10 +95,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         raise ConfigEntryNotReady from error
 
     coordinator = CanaryDataUpdateCoordinator(hass, api=canary_api)
-    await coordinator.async_refresh()
-
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
 
     undo_listener = entry.add_update_listener(_async_update_listener)
 

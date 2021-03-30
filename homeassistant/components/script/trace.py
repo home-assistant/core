@@ -2,8 +2,24 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
+from typing import Any
 
-from homeassistant.components.trace import ScriptTrace, async_store_trace
+from homeassistant.components.trace import ActionTrace, async_store_trace
+from homeassistant.core import Context
+
+
+class ScriptTrace(ActionTrace):
+    """Container for automation trace."""
+
+    def __init__(
+        self,
+        item_id: str,
+        config: dict[str, Any],
+        context: Context,
+    ):
+        """Container for automation trace."""
+        key = ("script", item_id)
+        super().__init__(key, config, context)
 
 
 @contextmanager
