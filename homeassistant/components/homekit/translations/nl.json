@@ -37,7 +37,7 @@
         "step": {
             "advanced": {
                 "data": {
-                    "auto_start": "Autostart (uitschakelen bij gebruik van Z-Wave of een ander vertraagd startsysteem)",
+                    "auto_start": "Autostart (deactiveer als je de homekit.start service handmatig aanroept)",
                     "safe_mode": "Veilige modus (alleen inschakelen als het koppelen mislukt)"
                 },
                 "description": "Deze instellingen hoeven alleen te worden aangepast als HomeKit niet functioneert.",
