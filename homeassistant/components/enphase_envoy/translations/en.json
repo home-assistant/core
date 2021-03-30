@@ -8,7 +8,7 @@
             "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },
-        "flow_title": "{name}",
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {

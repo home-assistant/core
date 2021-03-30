@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "{name}",
+    "flow_title": "Envoy {serial} ({host})",
     "step": {
       "user": {
         "data": {
