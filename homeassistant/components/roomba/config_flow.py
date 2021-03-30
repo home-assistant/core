@@ -318,7 +318,6 @@ def _async_blid_from_hostname(hostname):
 
 
 async def _async_discover_roombas(hass, host):
-    discovery = _async_get_roomba_discovery()
     discovered_hosts = set()
     devices = []
     discover_lock = hass.data.setdefault(ROOMBA_DISCOVERY_LOCK, asyncio.Lock())
@@ -326,6 +325,7 @@ async def _async_discover_roombas(hass, host):
 
     for attempt in range(discover_attempts + 1):
         async with discover_lock:
+            discovery = _async_get_roomba_discovery()
             try:
                 if host:
                     discovered = [
@@ -343,6 +343,8 @@ async def _async_discover_roombas(hass, host):
                         continue
                     discovered_hosts.add(device.ip)
                     devices.append(device)
+            finally:
+                discovery.server_socket.close()
 
         if host and host in discovered_hosts:
             return devices
