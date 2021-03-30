@@ -19,7 +19,7 @@
                 "title": "Automatically connect to the device"
             },
             "link": {
-                "description": "Press and hold the Home button on {name} until the device generates a sound (about two seconds).",
+                "description": "Press and hold the Home button on {name} until the device generates a sound (about two seconds), then submit within 30 seconds.",
                 "title": "Retrieve Password"
             },
             "link_manual": {

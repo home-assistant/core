@@ -19,7 +19,7 @@
       },      
       "link": {
         "title": "Retrieve Password",
-        "description": "Press and hold the Home button on {name} until the device generates a sound (about two seconds)."
+        "description": "Press and hold the Home button on {name} until the device generates a sound (about two seconds), then submit within 30 seconds."
       },
       "link_manual": {
         "title": "Enter Password",
