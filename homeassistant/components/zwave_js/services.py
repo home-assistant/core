@@ -230,7 +230,7 @@ class ZWaveServices:
             )
 
     async def async_set_value(self, service: ServiceCall) -> None:
-        """Set a config value on a node."""
+        """Set a value on a node."""
         nodes: set[ZwaveNode] = set()
         if ATTR_ENTITY_ID in service.data:
             nodes |= {
