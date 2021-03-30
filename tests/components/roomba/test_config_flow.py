@@ -81,9 +81,17 @@ def _mocked_discovery(*_):
     return roomba_discovery
 
 
-def _mocked_failed_discovery(*_):
+def _mocked_no_devices_found_discovery(*_):
     roomba_discovery = MagicMock()
     roomba_discovery.get_all = MagicMock(return_value=[])
+    roomba_discovery.get = MagicMock(return_value=None)
+    return roomba_discovery
+
+
+def _mocked_failed_discovery(*_):
+    roomba_discovery = MagicMock()
+    roomba_discovery.get_all = MagicMock(side_effect=OSError)
+    roomba_discovery.get = MagicMock(side_effect=OSError)
     return roomba_discovery
 
 
@@ -187,7 +195,7 @@ async def test_form_user_discovery_skips_known(hass):
     assert result["step_id"] == "manual"
 
 
-async def test_form_user_failed_discovery_aborts_already_configured(hass):
+async def test_form_user_no_devices_found_discovery_aborts_already_configured(hass):
     """Test if we manually configure an existing host we abort."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
@@ -196,7 +204,7 @@ async def test_form_user_failed_discovery_aborts_already_configured(hass):
 
     with patch(
         "homeassistant.components.roomba.config_flow.RoombaDiscovery",
-        _mocked_failed_discovery,
+        _mocked_no_devices_found_discovery,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -286,6 +294,35 @@ async def test_form_user_discovery_manual_and_auto_password_fetch(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_form_user_discover_fails_aborts_already_configured(hass):
+    """Test if we manually configure an existing host we abort after failed discovery."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG, unique_id="BLID")
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.roomba.config_flow.RoombaDiscovery",
+        _mocked_failed_discovery,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] is None
+    assert result["step_id"] == "manual"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: MOCK_IP, CONF_BLID: "blid"},
+    )
+    await hass.async_block_till_done()
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result2["reason"] == "already_configured"
+
+
 async def test_form_user_discovery_manual_and_auto_password_fetch_but_cannot_connect(
     hass,
 ):
@@ -351,8 +388,8 @@ async def test_form_user_discovery_manual_and_auto_password_fetch_but_cannot_con
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test_form_user_discovery_fails_and_auto_password_fetch(hass):
-    """Test discovery fails and we can auto fetch the password."""
+async def test_form_user_discovery_no_devices_found_and_auto_password_fetch(hass):
+    """Test discovery finds no devices and we can auto fetch the password."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     mocked_roomba = _create_mocked_roomba(
@@ -362,7 +399,7 @@ async def test_form_user_discovery_fails_and_auto_password_fetch(hass):
 
     with patch(
         "homeassistant.components.roomba.config_flow.RoombaDiscovery",
-        _mocked_failed_discovery,
+        _mocked_no_devices_found_discovery,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -413,8 +450,8 @@ async def test_form_user_discovery_fails_and_auto_password_fetch(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_user_discovery_fails_and_password_fetch_fails(hass):
-    """Test discovery fails and password fetch fails."""
+async def test_form_user_discovery_no_devices_found_and_password_fetch_fails(hass):
+    """Test discovery finds no devices and password fetch fails."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     mocked_roomba = _create_mocked_roomba(
@@ -424,7 +461,7 @@ async def test_form_user_discovery_fails_and_password_fetch_fails(hass):
 
     with patch(
         "homeassistant.components.roomba.config_flow.RoombaDiscovery",
-        _mocked_failed_discovery,
+        _mocked_no_devices_found_discovery,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -482,10 +519,10 @@ async def test_form_user_discovery_fails_and_password_fetch_fails(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_user_discovery_fails_and_password_fetch_fails_and_cannot_connect(
+async def test_form_user_discovery_not_devices_found_and_password_fetch_fails_and_cannot_connect(
     hass,
 ):
-    """Test discovery fails and password fetch fails then we cannot connect."""
+    """Test discovery finds no devices and password fetch fails then we cannot connect."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     mocked_roomba = _create_mocked_roomba(
@@ -496,7 +533,7 @@ async def test_form_user_discovery_fails_and_password_fetch_fails_and_cannot_con
 
     with patch(
         "homeassistant.components.roomba.config_flow.RoombaDiscovery",
-        _mocked_failed_discovery,
+        _mocked_no_devices_found_discovery,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
