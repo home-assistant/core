@@ -126,7 +126,7 @@ class VlcDevice(MediaPlayerEntity):
 
             if status:
                 if "volume" in status:
-                    self._volume = int(status["volume"]) / 500.0
+                    self._volume = status["volume"] / MAX_VOLUME
                 else:
                     self._volume = None
                 if "state" in status:
