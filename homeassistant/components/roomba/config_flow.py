@@ -44,11 +44,13 @@ async def validate_input(hass: core.HomeAssistant, data):
         address=data[CONF_HOST],
         blid=data[CONF_BLID],
         password=data[CONF_PASSWORD],
-        continuous=data[CONF_CONTINUOUS],
+        continuous=False,
         delay=data[CONF_DELAY],
     )
 
     info = await async_connect_or_timeout(hass, roomba)
+    if info:
+        await async_disconnect_or_timeout(hass, roomba)
 
     return {
         ROOMBA_SESSION: info[ROOMBA_SESSION],
@@ -229,7 +231,6 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except CannotConnect:
                 return self.async_abort(reason="cannot_connect")
 
-            await async_disconnect_or_timeout(self.hass, info[ROOMBA_SESSION])
             self.name = info[CONF_NAME]
 
         return self.async_create_entry(title=self.name, data=config)
@@ -251,7 +252,6 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors = {"base": "cannot_connect"}
 
             if not errors:
-                await async_disconnect_or_timeout(self.hass, info[ROOMBA_SESSION])
                 return self.async_create_entry(title=info[CONF_NAME], data=config)
 
         return self.async_show_form(
