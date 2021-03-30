@@ -36,7 +36,7 @@ homeassistant/components/alpha_vantage/* @fabaff
 homeassistant/components/ambiclimate/* @danielhiversen
 homeassistant/components/ambient_station/* @bachya
 homeassistant/components/amcrest/* @pnbruckner
-homeassistant/components/analytics/* @home-assistant/core
+homeassistant/components/analytics/* @home-assistant/core @ludeeus
 homeassistant/components/androidtv/* @JeffLIrion
 homeassistant/components/apache_kafka/* @bachya
 homeassistant/components/api/* @home-assistant/core
