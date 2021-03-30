@@ -29,9 +29,7 @@ DEFAULT_OPTIONS = {CONF_CONTINUOUS: DEFAULT_CONTINUOUS, CONF_DELAY: DEFAULT_DELA
 MAX_NUM_DEVICES_TO_DISCOVER = 25
 
 AUTH_HELP_URL_KEY = "auth_help_url"
-AUTH_HELP_URL_VALUE = (
-    "https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials"
-)
+AUTH_HELP_URL_VALUE = "https://www.home-assistant.io/integrations/roomba/#manually-retrieving-your-credentials"
 
 
 async def validate_input(hass: core.HomeAssistant, data):
@@ -83,14 +81,23 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not dhcp_discovery[HOSTNAME].startswith(("irobot-", "roomba-")):
             return self.async_abort(reason="not_irobot_device")
 
-        blid = _async_blid_from_hostname(dhcp_discovery[HOSTNAME])
-        await self.async_set_unique_id(blid)
-        self._abort_if_unique_id_configured(
-            updates={CONF_HOST: dhcp_discovery[IP_ADDRESS]}
-        )
-
         self.host = dhcp_discovery[IP_ADDRESS]
-        self.blid = blid
+        self.blid = _async_blid_from_hostname(dhcp_discovery[HOSTNAME])
+        await self.async_set_unique_id(self.blid)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: self.host})
+
+        # Because the hostname is so long some sources may
+        # truncate the hostname since it will be longer than
+        # the valid allowed length. If we already have a flow
+        # going for a longer hostname we abort so the user
+        # does not see two flows if discovery fails.
+        for progress in self._async_in_progress():
+            flow_unique_id = progress["context"]["unique_id"]
+            if flow_unique_id.startswith(self.blid):
+                return self.async_abort(reason="short_blid")
+            if self.blid.startswith(flow_unique_id):
+                self.hass.config_entries.flow.async_abort(progress["flow_id"])
+
         self.context["title_placeholders"] = {"host": self.host, "name": self.blid}
         return await self.async_step_user()
 
@@ -130,13 +137,14 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 for device in devices
                 if device.blid not in already_configured
             }
-            if self.host and self.host in self.discovered_robots:
-                # From discovery
-                self.context["title_placeholders"] = {
-                    "host": self.host,
-                    "name": self.discovered_robots[self.host].robot_name,
-                }
-                return await self._async_start_link()
+
+        if self.host and self.host in self.discovered_robots:
+            # From discovery
+            self.context["title_placeholders"] = {
+                "host": self.host,
+                "name": self.discovered_robots[self.host].robot_name,
+            }
+            return await self._async_start_link()
 
         if not self.discovered_robots:
             return await self.async_step_manual()
@@ -180,7 +188,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="already_configured")
 
         self.host = user_input[CONF_HOST]
-        self.blid = user_input[CONF_BLID]
+        self.blid = user_input[CONF_BLID].upper()
         await self.async_set_unique_id(self.blid, raise_on_progress=False)
         self._abort_if_unique_id_configured()
         return await self.async_step_link()
@@ -197,10 +205,10 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 description_placeholders={CONF_NAME: self.name or self.blid},
             )
 
+        roomba_pw = RoombaPassword(self.host)
+
         try:
-            password = await self.hass.async_add_executor_job(
-                RoombaPassword(self.host).get_password
-            )
+            password = await self.hass.async_add_executor_job(roomba_pw.get_password)
         except ConnectionRefusedError:
             return await self.async_step_link_manual()
 
@@ -305,4 +313,4 @@ def _async_get_roomba_discovery():
 @callback
 def _async_blid_from_hostname(hostname):
     """Extract the blid from the hostname."""
-    return hostname.split("-")[1].split(".")[0]
+    return hostname.split("-")[1].split(".")[0].upper()
