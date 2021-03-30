@@ -8,11 +8,7 @@ import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
-from .const import (  # pylint:disable=unused-import
-    API_SERIAL,
-    API_SYSTEM_OVERVIEW,
-    DOMAIN,
-)
+from .const import API_SERIAL, API_SYSTEM_OVERVIEW, DOMAIN
 
 _LOGGER = logging.getLogger(__package__)
 

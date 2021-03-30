@@ -22,10 +22,10 @@ from .const import (
     DEFAULT_SENSOR_STRING,
     DEFAULT_TLS_VERSION,
     DEFAULT_VAR_SENSOR_STRING,
+    DOMAIN,
     ISY_URL_POSTFIX,
     UDN_UUID_PREFIX,
 )
-from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 

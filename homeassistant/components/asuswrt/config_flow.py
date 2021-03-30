@@ -31,12 +31,12 @@ from .const import (
     DEFAULT_INTERFACE,
     DEFAULT_SSH_PORT,
     DEFAULT_TRACK_UNKNOWN,
+    DOMAIN,
     MODE_AP,
     MODE_ROUTER,
     PROTOCOL_SSH,
     PROTOCOL_TELNET,
 )
-from .const import DOMAIN  # pylint:disable=unused-import
 from .router import get_api
 
 RESULT_CONN_ERROR = "cannot_connect"

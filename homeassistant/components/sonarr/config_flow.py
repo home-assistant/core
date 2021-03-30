@@ -29,8 +29,8 @@ from .const import (
     DEFAULT_UPCOMING_DAYS,
     DEFAULT_VERIFY_SSL,
     DEFAULT_WANTED_MAX_ITEMS,
+    DOMAIN,
 )
-from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
