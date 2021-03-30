@@ -104,7 +104,9 @@ async def test_setup_camera_without_streaming(hass: HomeAssistantType) -> None:
 
     client.async_get_cameras = AsyncMock(return_value=cameras)
     await setup_mock_motioneye_config_entry(hass, client=client)
-    assert not hass.states.get(TEST_CAMERA_ENTITY_ID)
+    entity_state = hass.states.get(TEST_CAMERA_ENTITY_ID)
+    assert entity_state
+    assert entity_state.state == "unavailable"
 
 
 async def test_setup_camera_new_data_same(hass: HomeAssistantType) -> None:
@@ -159,6 +161,22 @@ async def test_setup_camera_new_data_error(hass: HomeAssistantType) -> None:
     await setup_mock_motioneye_config_entry(hass, client=client)
     assert hass.states.get(TEST_CAMERA_ENTITY_ID)
     client.async_get_cameras = AsyncMock(side_effect=MotionEyeClientError)
+    async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)
+    await hass.async_block_till_done()
+    entity_state = hass.states.get(TEST_CAMERA_ENTITY_ID)
+    assert entity_state.state == "unavailable"
+
+
+async def test_setup_camera_new_data_without_streaming(hass: HomeAssistantType) -> None:
+    """Test a data refresh without streaming."""
+    client = create_mock_motioneye_client()
+    await setup_mock_motioneye_config_entry(hass, client=client)
+    entity_state = hass.states.get(TEST_CAMERA_ENTITY_ID)
+    assert entity_state.state == "idle"
+
+    cameras = copy.deepcopy(TEST_CAMERAS)
+    cameras[KEY_CAMERAS][0][KEY_VIDEO_STREAMING] = False
+    client.async_get_cameras = AsyncMock(return_value=cameras)
     async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)
     await hass.async_block_till_done()
     entity_state = hass.states.get(TEST_CAMERA_ENTITY_ID)
