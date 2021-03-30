@@ -78,9 +78,7 @@ async def test_get_trigger_capabilities(hass, device_reg, entity_reg):
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
-    hass.states.async_set(
-        "vacuum.test_5678", "attributes", {"supported_features": 15}
-    )
+    hass.states.async_set("vacuum.test_5678", "attributes", {"supported_features": 15})
 
     triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
     assert len(triggers) == 2
