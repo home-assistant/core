@@ -5,6 +5,7 @@ import os
 
 import voluptuous as vol
 
+from homeassistant.components.filesize.config_flow import UNIT_OF_MEASUREMENTS
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_FILE_PATH,
@@ -12,8 +13,6 @@ from homeassistant.const import (
     DATA_BYTES,
     DATA_MEGABYTES,
 )
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.reload import setup_reload_service
 from homeassistant.util import slugify
 import homeassistant.util.data_size as data_size
@@ -23,6 +22,15 @@ from .const import DOMAIN, PLATFORMS
 _LOGGER = logging.getLogger(__name__)
 
 ICON = "mdi:file"
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_FILE_PATH): str,
+        vol.Required(CONF_UNIT_OF_MEASUREMENT, default=DATA_MEGABYTES): vol.In(
+            UNIT_OF_MEASUREMENTS
+        ),
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
