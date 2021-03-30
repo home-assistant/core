@@ -63,25 +63,29 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             and coordinator.data.get("inverters_production") is not None
         ):
             for inverter in coordinator.data["inverters_production"]:
-                entity_name = f"{name}{SENSORS[condition][0]} {inverter}"
+                entity_name = f"{name} {SENSORS[condition][0]} {inverter}"
                 split_name = entity_name.split(" ")
                 serial_number = split_name[-1]
                 entities.append(
                     Envoy(
                         condition,
                         entity_name,
+                        name,
+                        config_entry.unique_id,
                         serial_number,
                         SENSORS[condition][1],
                         coordinator,
                     )
                 )
         elif condition != "inverters":
-            entity_name = f"{name}{SENSORS[condition][0]}"
+            entity_name = f"{name} {SENSORS[condition][0]}"
             entities.append(
                 Envoy(
                     condition,
                     entity_name,
+                    name,
                     config_entry.unique_id,
+                    None,
                     SENSORS[condition][1],
                     coordinator,
                 )
@@ -93,11 +97,22 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class Envoy(CoordinatorEntity, SensorEntity):
     """Envoy entity."""
 
-    def __init__(self, sensor_type, name, serial_number, unit, coordinator):
+    def __init__(
+        self,
+        sensor_type,
+        name,
+        device_name,
+        device_serial_number,
+        serial_number,
+        unit,
+        coordinator,
+    ):
         """Initialize Envoy entity."""
         self._type = sensor_type
         self._name = name
         self._serial_number = serial_number
+        self._device_name = device_name
+        self._device_serial_number = device_serial_number
         self._unit_of_measurement = unit
 
         super().__init__(coordinator)
@@ -159,11 +174,11 @@ class Envoy(CoordinatorEntity, SensorEntity):
     @property
     def device_info(self):
         """Return the device_info of the device."""
-        if not self._serial_number:
+        if not self._device_serial_number:
             return None
         return {
-            "identifiers": {(DOMAIN, str(self._serial_number))},
-            "name": self._name,
+            "identifiers": {(DOMAIN, str(self._device_serial_number))},
+            "name": self._device_name,
             "model": "Envoy",
             "manufacturer": "Enphase",
         }
