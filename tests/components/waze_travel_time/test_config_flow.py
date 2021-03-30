@@ -81,7 +81,8 @@ async def test_options(hass: HomeAssistant):
     )
     entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.waze_travel_time.sensor.WazeTravelTimeData.update"
+        "homeassistant.components.waze_travel_time.sensor.WazeRouteCalculator.WazeRouteCalculator.calc_all_routes_info",
+        return_value={"My route": (150, 300)},
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
