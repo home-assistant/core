@@ -125,9 +125,10 @@ class Envoy(CoordinatorEntity, SensorEntity):
     @property
     def unique_id(self):
         """Return the unique id of the sensor."""
-        if not self._serial_number:
-            return None
-        return f"{self._serial_number}_{self._type}"
+        if self._serial_number:
+            return self._serial_number
+        if self._device_serial_number:
+            return f"{self._device_serial_number}_{self._type}"
 
     @property
     def state(self):
