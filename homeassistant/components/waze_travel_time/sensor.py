@@ -137,7 +137,7 @@ async def async_setup_entry(
             elif key in defaults:
                 options[key] = defaults[key]
 
-        await hass.config_entries.async_update_entry(
+        hass.config_entries.async_update_entry(
             config_entry, data=new_data, options=options
         )
 
@@ -195,10 +195,10 @@ class WazeTravelTime(SensorEntity):
         """Handle when entity is added."""
         if self.hass.state != CoreState.running:
             self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_START, lambda _: self.update
+                EVENT_HOMEASSISTANT_START, self.first_update
             )
         else:
-            self.hass.async_add_executor_job(self.update)
+            await self.first_update()
 
     @property
     def name(self):
@@ -273,6 +273,11 @@ class WazeTravelTime(SensorEntity):
                 return _get_location_from_attributes(state)
 
         return friendly_name
+
+    async def first_update(self, _=None):
+        """Run first update and write state."""
+        await self.hass.async_add_executor_job(self.update)
+        self.async_write_ha_state()
 
     def update(self):
         """Fetch new state data for the sensor."""
