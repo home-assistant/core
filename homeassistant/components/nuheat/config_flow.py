@@ -13,8 +13,7 @@ from homeassistant.const import (
     HTTP_INTERNAL_SERVER_ERROR,
 )
 
-from .const import CONF_SERIAL_NUMBER
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import CONF_SERIAL_NUMBER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

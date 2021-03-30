@@ -17,12 +17,7 @@ from homeassistant.const import (
 )
 
 from . import LOGGER
-from .const import (  # pylint:disable=unused-import
-    CONF_SYSTEM,
-    CONST_APP_ID,
-    CONST_APP_NAME,
-    DOMAIN,
-)
+from .const import CONF_SYSTEM, CONST_APP_ID, CONST_APP_NAME, DOMAIN
 
 
 async def validate_input(

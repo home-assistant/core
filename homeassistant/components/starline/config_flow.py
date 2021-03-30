@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import (  # pylint: disable=unused-import
+from .const import (
     _LOGGER,
     CONF_APP_ID,
     CONF_APP_SECRET,

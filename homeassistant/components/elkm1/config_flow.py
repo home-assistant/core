@@ -21,8 +21,7 @@ from homeassistant.const import (
 from homeassistant.util import slugify
 
 from . import async_wait_for_elk_to_sync
-from .const import CONF_AUTO_CONFIGURE
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import CONF_AUTO_CONFIGURE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

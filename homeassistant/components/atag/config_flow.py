@@ -6,7 +6,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from . import DOMAIN  # pylint: disable=unused-import
+from . import DOMAIN
 
 DATA_SCHEMA = {
     vol.Required(CONF_HOST): str,

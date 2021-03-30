@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 
-from .const import (  # pylint: disable=unused-import
+from .const import (
     AUTHENTICATE_TIMEOUT,
     CONF_ROON_ID,
     DEFAULT_NAME,

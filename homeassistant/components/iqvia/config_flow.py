@@ -6,7 +6,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.helpers import aiohttp_client
 
-from .const import CONF_ZIP_CODE, DOMAIN  # pylint:disable=unused-import
+from .const import CONF_ZIP_CODE, DOMAIN
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

@@ -178,7 +178,6 @@ PRESET_COMPLEX = "complex"
 
 
 class RadioType(enum.Enum):
-    # pylint: disable=invalid-name
     """Possible options for radio type."""
 
     znp = (

@@ -10,12 +10,7 @@ from homeassistant.const import CONF_FRIENDLY_NAME
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
-from .const import (  # pylint:disable=unused-import
-    CONF_PLACE_ID,
-    CONF_SERVICE_ID,
-    DOMAIN,
-    LOGGER,
-)
+from .const import CONF_PLACE_ID, CONF_SERVICE_ID, DOMAIN, LOGGER
 
 DATA_SCHEMA = vol.Schema(
     {vol.Required(CONF_PLACE_ID): str, vol.Required(CONF_SERVICE_ID): str}

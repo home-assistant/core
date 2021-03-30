@@ -33,7 +33,6 @@ DEFAULT_HEATING_TYPE = "generic"
 
 
 class HeatingType(enum.Enum):
-    # pylint: disable=invalid-name
     """Possible options for heating type."""
 
     generic = "generic"

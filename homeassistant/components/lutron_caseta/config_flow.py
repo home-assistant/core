@@ -21,10 +21,10 @@ from .const import (
     CONF_CA_CERTS,
     CONF_CERTFILE,
     CONF_KEYFILE,
+    DOMAIN,
     ERROR_CANNOT_CONNECT,
     STEP_IMPORT_FAILED,
 )
-from .const import DOMAIN  # pylint: disable=unused-import
 
 HOSTNAME = "hostname"
 

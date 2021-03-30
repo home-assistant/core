@@ -10,11 +10,7 @@ from homeassistant import config_entries, exceptions
 from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 
-from .const import (  # pylint: disable=unused-import
-    DEFAULT_PORT,
-    DEFAULT_TIMEOUT,
-    DOMAIN,
-)
+from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

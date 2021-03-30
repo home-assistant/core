@@ -31,10 +31,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 
-from .const import CONNECTION_TIMEOUT, DEFAULT_DEVICE_NAME, DEFAULT_NOTIFY_SERVICE_NAME
-
-# see https://github.com/PyCQA/pylint/issues/3202 about the DOMAIN's pylint issue
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import (
+    CONNECTION_TIMEOUT,
+    DEFAULT_DEVICE_NAME,
+    DEFAULT_NOTIFY_SERVICE_NAME,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 

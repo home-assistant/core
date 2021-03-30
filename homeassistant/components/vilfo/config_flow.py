@@ -13,8 +13,7 @@ import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_ID, CONF_MAC
 
-from .const import DOMAIN  # pylint:disable=unused-import
-from .const import ROUTER_DEFAULT_HOST
+from .const import DOMAIN, ROUTER_DEFAULT_HOST
 
 _LOGGER = logging.getLogger(__name__)
 

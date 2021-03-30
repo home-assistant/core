@@ -10,12 +10,7 @@ from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
-from .const import (  # pylint: disable=unused-import
-    CONF_THRESHOLD,
-    DEFAULT_NAME,
-    DEFAULT_THRESHOLD,
-    DOMAIN,
-)
+from .const import CONF_THRESHOLD, DEFAULT_NAME, DEFAULT_THRESHOLD, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

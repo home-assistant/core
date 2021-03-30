@@ -10,8 +10,8 @@ jsonpickle==1.4.1
 mock-open==1.4.0
 mypy==0.812
 pre-commit==2.11.1
-pylint==2.7.2
-astroid==2.5.1
+pylint==2.7.3
+astroid==2.5.2
 pipdeptree==1.0.0
 pylint-strict-informational==0.1
 pytest-aiohttp==0.3.0

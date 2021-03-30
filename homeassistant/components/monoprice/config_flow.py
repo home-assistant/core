@@ -16,8 +16,8 @@ from .const import (
     CONF_SOURCE_5,
     CONF_SOURCE_6,
     CONF_SOURCES,
+    DOMAIN,
 )
-from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -21,7 +21,6 @@ from homeassistant.const import (
     CONF_TOKEN,
 )
 
-# pylint:disable=unused-import
 from .bridge import SamsungTVBridge
 from .const import (
     CONF_MANUFACTURER,

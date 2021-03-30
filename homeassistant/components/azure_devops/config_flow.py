@@ -4,7 +4,7 @@ import aiohttp
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.azure_devops.const import (  # pylint:disable=unused-import
+from homeassistant.components.azure_devops.const import (
     CONF_ORG,
     CONF_PAT,
     CONF_PROJECT,

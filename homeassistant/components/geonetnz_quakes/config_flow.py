@@ -12,7 +12,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 
-from .const import (  # pylint: disable=unused-import
+from .const import (
     CONF_MINIMUM_MAGNITUDE,
     CONF_MMI,
     DEFAULT_MINIMUM_MAGNITUDE,

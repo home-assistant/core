@@ -7,7 +7,7 @@ from homeassistant import config_entries, core
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import callback
 
-from .const import CONF_UID, DOMAIN, LOGGER  # pylint:disable=unused-import
+from .const import CONF_UID, DOMAIN, LOGGER
 
 DATA_SCHEMA = vol.Schema(
     {vol.Required(CONF_IP_ADDRESS): str, vol.Required(CONF_PORT, default=7777): int}

@@ -7,8 +7,7 @@ from yalexs.authenticator import ValidationResult
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import CONF_LOGIN_METHOD, LOGIN_METHODS, VERIFICATION_CODE_KEY
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import CONF_LOGIN_METHOD, DOMAIN, LOGIN_METHODS, VERIFICATION_CODE_KEY
 from .exceptions import CannotConnect, InvalidAuth, RequireValidation
 from .gateway import AugustGateway
 

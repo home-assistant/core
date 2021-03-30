@@ -20,8 +20,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import CONF_TIMESTEP, DEFAULT_NAME, DEFAULT_TIMESTEP
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import CONF_TIMESTEP, DEFAULT_NAME, DEFAULT_TIMESTEP, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

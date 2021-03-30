@@ -31,8 +31,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from . import create_hyperion_client
-
-# pylint: disable=unused-import
 from .const import (
     CONF_AUTH_ID,
     CONF_CREATE_TOKEN,

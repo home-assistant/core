@@ -6,7 +6,7 @@ migrated to the storage collection.
 """
 from homeassistant import config_entries
 
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import DOMAIN
 
 
 class ZoneConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

@@ -17,7 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN
 from .utils import BondHub
 
 _LOGGER = logging.getLogger(__name__)

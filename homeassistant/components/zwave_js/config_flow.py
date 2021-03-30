@@ -18,7 +18,7 @@ from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .addon import AddonError, AddonManager, get_addon_manager
-from .const import (  # pylint:disable=unused-import
+from .const import (
     CONF_ADDON_DEVICE,
     CONF_ADDON_NETWORK_KEY,
     CONF_INTEGRATION_CREATED_ADDON,

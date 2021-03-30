@@ -7,11 +7,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 
-from .const import (  # pylint:disable=unused-import
-    CONF_IS_TOU,
-    DEFAULT_NAME,
-    SRP_ENERGY_DOMAIN,
-)
+from .const import CONF_IS_TOU, DEFAULT_NAME, SRP_ENERGY_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

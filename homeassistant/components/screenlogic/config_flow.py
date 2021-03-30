@@ -13,8 +13,7 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import DEFAULT_SCAN_INTERVAL, MIN_SCAN_INTERVAL
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, MIN_SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 

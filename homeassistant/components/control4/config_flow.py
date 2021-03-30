@@ -19,8 +19,12 @@ from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import CONF_CONTROLLER_UNIQUE_ID, DEFAULT_SCAN_INTERVAL, MIN_SCAN_INTERVAL
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import (
+    CONF_CONTROLLER_UNIQUE_ID,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    MIN_SCAN_INTERVAL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -23,9 +23,9 @@ from .const import (
     CONF_HA_STATES_TO_RISCO,
     CONF_RISCO_STATES_TO_HA,
     DEFAULT_OPTIONS,
+    DOMAIN,
     RISCO_STATES,
 )
-from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 

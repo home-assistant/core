@@ -17,12 +17,12 @@ from .const import (
     CONF_USE_WEBHOOK,
     DEFAULT_SCAN_INTERVAL,
     DOCS_URL,
+    DOMAIN,
     PLACEHOLDER_DEVICE_NAME,
     PLACEHOLDER_DEVICE_TYPE,
     PLACEHOLDER_DOCS_URL,
     PLACEHOLDER_WEBHOOK_URL,
 )
-from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__package__)
 

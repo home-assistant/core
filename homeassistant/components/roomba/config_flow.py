@@ -18,9 +18,9 @@ from .const import (
     CONF_CONTINUOUS,
     DEFAULT_CONTINUOUS,
     DEFAULT_DELAY,
+    DOMAIN,
     ROOMBA_SESSION,
 )
-from .const import DOMAIN  # pylint:disable=unused-import
 
 ROOMBA_DISCOVERY_LOCK = "roomba_discovery_lock"
 

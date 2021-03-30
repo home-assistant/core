@@ -7,7 +7,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers import aiohttp_client
 
-from .const import CONF_APP_KEY, DOMAIN  # pylint: disable=unused-import
+from .const import CONF_APP_KEY, DOMAIN
 
 
 class AmbientStationFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):

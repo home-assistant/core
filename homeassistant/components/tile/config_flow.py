@@ -7,7 +7,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import aiohttp_client
 
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import DOMAIN
 
 
 class TileFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):

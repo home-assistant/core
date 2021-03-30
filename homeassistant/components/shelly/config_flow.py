@@ -16,8 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import aiohttp_client
 
-from .const import AIOSHELLY_DEVICE_TIMEOUT_SEC
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import AIOSHELLY_DEVICE_TIMEOUT_SEC, DOMAIN
 from .utils import get_coap_context, get_device_sleep_period
 
 _LOGGER = logging.getLogger(__name__)

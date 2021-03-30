@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, HTTP_BAD_REQUEST
 
-from .const import DEFAULT_CACHEDB, DOMAIN, LOGGER  # pylint: disable=unused-import
+from .const import DEFAULT_CACHEDB, DOMAIN, LOGGER
 
 CONF_MFA = "mfa_code"
 CONF_POLLING = "polling"

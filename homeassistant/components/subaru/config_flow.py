@@ -16,7 +16,6 @@ from homeassistant.const import CONF_DEVICE_ID, CONF_PASSWORD, CONF_PIN, CONF_US
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
-# pylint: disable=unused-import
 from .const import CONF_COUNTRY, CONF_UPDATE_ENABLED, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)

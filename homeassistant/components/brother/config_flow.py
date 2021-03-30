@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_HOST, CONF_TYPE
 
-from .const import DOMAIN, PRINTER_TYPES  # pylint:disable=unused-import
+from .const import DOMAIN, PRINTER_TYPES
 from .utils import get_snmp_engine
 
 DATA_SCHEMA = vol.Schema(

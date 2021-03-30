@@ -10,7 +10,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import (  # pylint:disable=unused-import
+from .const import (
     CONF_LIBRESPOT_JAVA_PORT,
     CONF_MAX_PLAYLISTS,
     CONF_TTS_PAUSE_TIME,

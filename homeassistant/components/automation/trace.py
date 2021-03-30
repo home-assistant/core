@@ -44,7 +44,7 @@ def trace_automation(hass, automation_id, config, context):
 
     try:
         yield trace
-    except Exception as ex:  # pylint: disable=broad-except
+    except Exception as ex:
         if automation_id:
             trace.set_error(ex)
         raise ex

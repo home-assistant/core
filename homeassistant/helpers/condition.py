@@ -103,7 +103,7 @@ def trace_condition(variables: TemplateVarsType) -> Generator:
     trace_stack_push(trace_stack_cv, trace_element)
     try:
         yield trace_element
-    except Exception as ex:  # pylint: disable=broad-except
+    except Exception as ex:
         trace_element.set_error(ex)
         raise ex
     finally:
