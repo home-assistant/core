@@ -81,7 +81,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 Envoy(
                     condition,
                     entity_name,
-                    None,
+                    config_entry.unique_id,
                     SENSORS[condition][1],
                     coordinator,
                 )
@@ -106,6 +106,13 @@ class Envoy(CoordinatorEntity, SensorEntity):
     def name(self):
         """Return the name of the sensor."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return the unique id of the sensor."""
+        if not self._serial_number:
+            return None
+        return f"{self._serial_number}_{self._type}"
 
     @property
     def state(self):
@@ -148,3 +155,15 @@ class Envoy(CoordinatorEntity, SensorEntity):
             return {"last_reported": value}
 
         return None
+
+    @property
+    def device_info(self):
+        """Return the device_info of the device."""
+        if not self._serial_number:
+            return None
+        return {
+            "identifiers": {(DOMAIN, str(self._serial_number))},
+            "name": self._name,
+            "model": "Envoy",
+            "manufacturer": "Enphase",
+        }
