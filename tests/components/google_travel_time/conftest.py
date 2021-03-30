@@ -14,13 +14,6 @@ def skip_notifications_fixture():
         yield
 
 
-@pytest.fixture(name="no_states", autouse=True)
-def no_states_fixture():
-    """Return no states."""
-    with patch("homeassistant.core.StateMachine.all", return_value=[]):
-        yield
-
-
 @pytest.fixture(name="validate_config_entry", autouse=True)
 def validate_config_entry_fixture():
     """Return valid config entry."""

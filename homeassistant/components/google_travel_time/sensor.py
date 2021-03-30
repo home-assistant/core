@@ -131,7 +131,9 @@ async def async_setup_entry(
     destination = config_entry.data[CONF_DESTINATION]
     name = name or f"{DEFAULT_NAME}: {origin} -> {destination}"
 
-    if not is_valid_config_entry(hass, _LOGGER, api_key, origin, destination):
+    if not await hass.async_add_executor_job(
+        is_valid_config_entry, hass, _LOGGER, api_key, origin, destination
+    ):
         raise ConfigEntryNotReady
 
     client = Client(api_key, timeout=10)
@@ -191,10 +193,10 @@ class GoogleTravelTimeSensor(SensorEntity):
         """Handle when entity is added."""
         if self.hass.state != CoreState.running:
             self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_START, lambda _: self.update()
+                EVENT_HOMEASSISTANT_START, self.first_update
             )
         else:
-            self.hass.async_add_executor_job(self.update)
+            await self.first_update()
 
     @property
     def state(self):
@@ -254,6 +256,11 @@ class GoogleTravelTimeSensor(SensorEntity):
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement
+
+    async def first_update(self, _=None):
+        """Run the first update and write the state."""
+        await self._hass.async_add_executor_job(self.update)
+        self.async_write_ha_state()
 
     def update(self):
         """Get the latest data from Google."""

@@ -123,7 +123,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
-            if not is_valid_config_entry(
+            if not await self.hass.async_add_executor_job(
+                is_valid_config_entry,
                 self.hass,
                 _LOGGER,
                 user_input[CONF_API_KEY],
