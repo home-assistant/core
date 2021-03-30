@@ -124,7 +124,7 @@ async def async_setup_entry(
         if CONF_MODE not in options:
             options[CONF_MODE] = "driving"
 
-        await hass.config_entries.async_update_entry(
+        hass.config_entries.async_update_entry(
             config_entry, data=new_data, options=options
         )
 
