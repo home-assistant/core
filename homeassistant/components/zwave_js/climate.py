@@ -1,10 +1,12 @@
 """Representation of Z-Wave thermostats."""
-import logging
-from typing import Any, Callable, Dict, List, Optional
+from __future__ import annotations
+
+from typing import Any, Callable, cast
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import (
     THERMOSTAT_CURRENT_TEMP_PROPERTY,
+    THERMOSTAT_MODE_PROPERTY,
     THERMOSTAT_MODE_SETPOINT_MAP,
     THERMOSTAT_MODES,
     THERMOSTAT_OPERATING_STATE_PROPERTY,
@@ -33,12 +35,18 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
     PRESET_NONE,
+    SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    PRECISION_TENTHS,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -46,12 +54,10 @@ from .const import DATA_CLIENT, DATA_UNSUBSCRIBE, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 
-_LOGGER = logging.getLogger(__name__)
-
 # Map Z-Wave HVAC Mode to Home Assistant value
 # Note: We treat "auto" as "heat_cool" as most Z-Wave devices
 # report auto_changeover as auto without schedule support.
-ZW_HVAC_MODE_MAP: Dict[int, str] = {
+ZW_HVAC_MODE_MAP: dict[int, str] = {
     ThermostatMode.OFF: HVAC_MODE_OFF,
     ThermostatMode.HEAT: HVAC_MODE_HEAT,
     ThermostatMode.COOL: HVAC_MODE_COOL,
@@ -68,7 +74,7 @@ ZW_HVAC_MODE_MAP: Dict[int, str] = {
     ThermostatMode.FULL_POWER: HVAC_MODE_HEAT,
 }
 
-HVAC_CURRENT_MAP: Dict[int, str] = {
+HVAC_CURRENT_MAP: dict[int, str] = {
     ThermostatOperatingState.IDLE: CURRENT_HVAC_IDLE,
     ThermostatOperatingState.PENDING_HEAT: CURRENT_HVAC_IDLE,
     ThermostatOperatingState.HEATING: CURRENT_HVAC_HEAT,
@@ -83,6 +89,8 @@ HVAC_CURRENT_MAP: Dict[int, str] = {
     ThermostatOperatingState.THIRD_STAGE_AUX_HEAT: CURRENT_HVAC_HEAT,
 }
 
+ATTR_FAN_STATE = "fan_state"
+
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable
@@ -93,7 +101,7 @@ async def async_setup_entry(
     @callback
     def async_add_climate(info: ZwaveDiscoveryInfo) -> None:
         """Add Z-Wave Climate."""
-        entities: List[ZWaveBaseEntity] = []
+        entities: list[ZWaveBaseEntity] = []
         entities.append(ZWaveClimate(config_entry, client, info))
 
         async_add_entities(entities)
@@ -115,21 +123,28 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     ) -> None:
         """Initialize lock."""
         super().__init__(config_entry, client, info)
-        self._hvac_modes: Dict[str, Optional[int]] = {}
-        self._hvac_presets: Dict[str, Optional[int]] = {}
-        self._unit_value: ZwaveValue = None
+        self._hvac_modes: dict[str, int | None] = {}
+        self._hvac_presets: dict[str, int | None] = {}
+        self._unit_value: ZwaveValue | None = None
 
-        self._current_mode = self.info.primary_value
-        self._setpoint_values: Dict[ThermostatSetpointType, ZwaveValue] = {}
+        self._current_mode = self.get_zwave_value(
+            THERMOSTAT_MODE_PROPERTY, command_class=CommandClass.THERMOSTAT_MODE
+        )
+        self._setpoint_values: dict[ThermostatSetpointType, ZwaveValue] = {}
         for enum in ThermostatSetpointType:
             self._setpoint_values[enum] = self.get_zwave_value(
                 THERMOSTAT_SETPOINT_PROPERTY,
                 command_class=CommandClass.THERMOSTAT_SETPOINT,
-                value_property_key_name=enum.value,
+                value_property_key=enum.value,
                 add_to_watched_value_ids=True,
             )
-            # Use the first found setpoint value to always determine the temperature unit
-            if self._setpoint_values[enum] and not self._unit_value:
+            # Use the first found non N/A setpoint value to always determine the
+            # temperature unit
+            if (
+                not self._unit_value
+                and enum != ThermostatSetpointType.NA
+                and self._setpoint_values[enum]
+            ):
                 self._unit_value = self._setpoint_values[enum]
         self._operating_state = self.get_zwave_value(
             THERMOSTAT_OPERATING_STATE_PROPERTY,
@@ -140,8 +155,38 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             THERMOSTAT_CURRENT_TEMP_PROPERTY,
             command_class=CommandClass.SENSOR_MULTILEVEL,
             add_to_watched_value_ids=True,
+            check_all_endpoints=True,
+        )
+        if not self._unit_value:
+            self._unit_value = self._current_temp
+        self._current_humidity = self.get_zwave_value(
+            "Humidity",
+            command_class=CommandClass.SENSOR_MULTILEVEL,
+            add_to_watched_value_ids=True,
+            check_all_endpoints=True,
+        )
+        self._fan_mode = self.get_zwave_value(
+            THERMOSTAT_MODE_PROPERTY,
+            CommandClass.THERMOSTAT_FAN_MODE,
+            add_to_watched_value_ids=True,
+        )
+        self._fan_state = self.get_zwave_value(
+            THERMOSTAT_OPERATING_STATE_PROPERTY,
+            CommandClass.THERMOSTAT_FAN_STATE,
+            add_to_watched_value_ids=True,
         )
         self._set_modes_and_presets()
+        self._supported_features = 0
+        if len(self._hvac_presets) > 1:
+            self._supported_features |= SUPPORT_PRESET_MODE
+        # If any setpoint value exists, we can assume temperature
+        # can be set
+        if any(self._setpoint_values.values()):
+            self._supported_features |= SUPPORT_TARGET_TEMPERATURE
+        if HVAC_MODE_HEAT_COOL in self.hvac_modes:
+            self._supported_features |= SUPPORT_TARGET_TEMPERATURE_RANGE
+        if self._fan_mode:
+            self._supported_features |= SUPPORT_FAN_MODE
 
     def _setpoint_value(self, setpoint_type: ThermostatSetpointType) -> ZwaveValue:
         """Optionally return a ZwaveValue for a setpoint."""
@@ -153,15 +198,17 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
 
     def _set_modes_and_presets(self) -> None:
         """Convert Z-Wave Thermostat modes into Home Assistant modes and presets."""
-        all_modes: Dict[str, Optional[int]] = {}
-        all_presets: Dict[str, Optional[int]] = {PRESET_NONE: None}
+        all_modes: dict[str, int | None] = {}
+        all_presets: dict[str, int | None] = {PRESET_NONE: None}
 
         # Z-Wave uses one list for both modes and presets.
         # Iterate over all Z-Wave ThermostatModes and extract the hvac modes and presets.
-        current_mode = self._current_mode
-        if not current_mode:
+        if self._current_mode is None:
+            self._hvac_modes = {
+                ZW_HVAC_MODE_MAP[ThermostatMode.HEAT]: ThermostatMode.HEAT
+            }
             return
-        for mode_id, mode_name in current_mode.metadata.states.items():
+        for mode_id, mode_name in self._current_mode.metadata.states.items():
             mode_id = int(mode_id)
             if mode_id in THERMOSTAT_MODES:
                 # treat value as hvac mode
@@ -175,16 +222,28 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         self._hvac_presets = all_presets
 
     @property
-    def _current_mode_setpoint_enums(self) -> List[Optional[ThermostatSetpointType]]:
+    def _current_mode_setpoint_enums(self) -> list[ThermostatSetpointType | None]:
         """Return the list of enums that are relevant to the current thermostat mode."""
+        if self._current_mode is None:
+            # Thermostat(valve) with no support for setting a mode is considered heating-only
+            return [ThermostatSetpointType.HEATING]
         return THERMOSTAT_MODE_SETPOINT_MAP.get(int(self._current_mode.value), [])  # type: ignore
 
     @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement used by the platform."""
-        if "f" in self._unit_value.metadata.unit.lower():
+        if (
+            self._unit_value
+            and self._unit_value.metadata.unit
+            and "f" in self._unit_value.metadata.unit.lower()
+        ):
             return TEMP_FAHRENHEIT
         return TEMP_CELSIUS
+
+    @property
+    def precision(self) -> float:
+        """Return the precision of 0.1."""
+        return PRECISION_TENTHS
 
     @property
     def hvac_mode(self) -> str:
@@ -192,71 +251,148 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         if self._current_mode is None:
             # Thermostat(valve) with no support for setting a mode is considered heating-only
             return HVAC_MODE_HEAT
+        if self._current_mode.value is None:
+            # guard missing value
+            return HVAC_MODE_HEAT
         return ZW_HVAC_MODE_MAP.get(int(self._current_mode.value), HVAC_MODE_HEAT_COOL)
 
     @property
-    def hvac_modes(self) -> List[str]:
+    def hvac_modes(self) -> list[str]:
         """Return the list of available hvac operation modes."""
         return list(self._hvac_modes)
 
     @property
-    def hvac_action(self) -> Optional[str]:
+    def hvac_action(self) -> str | None:
         """Return the current running hvac operation if supported."""
         if not self._operating_state:
+            return None
+        if self._operating_state.value is None:
+            # guard missing value
             return None
         return HVAC_CURRENT_MAP.get(int(self._operating_state.value))
 
     @property
-    def current_temperature(self) -> Optional[float]:
+    def current_humidity(self) -> int | None:
+        """Return the current humidity level."""
+        return self._current_humidity.value if self._current_humidity else None
+
+    @property
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._current_temp.value if self._current_temp else None
 
     @property
-    def target_temperature(self) -> Optional[float]:
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        temp = self._setpoint_value(self._current_mode_setpoint_enums[0])
+        if self._current_mode and self._current_mode.value is None:
+            # guard missing value
+            return None
+        try:
+            temp = self._setpoint_value(self._current_mode_setpoint_enums[0])
+        except (IndexError, ValueError):
+            return None
         return temp.value if temp else None
 
     @property
-    def target_temperature_high(self) -> Optional[float]:
+    def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
-        temp = self._setpoint_value(self._current_mode_setpoint_enums[1])
+        if self._current_mode and self._current_mode.value is None:
+            # guard missing value
+            return None
+        try:
+            temp = self._setpoint_value(self._current_mode_setpoint_enums[1])
+        except (IndexError, ValueError):
+            return None
         return temp.value if temp else None
 
     @property
-    def target_temperature_low(self) -> Optional[float]:
+    def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
-        return self.target_temperature
+        if self._current_mode and self._current_mode.value is None:
+            # guard missing value
+            return None
+        if len(self._current_mode_setpoint_enums) > 1:
+            return self.target_temperature
+        return None
 
     @property
-    def preset_mode(self) -> Optional[str]:
+    def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
+        if self._current_mode and self._current_mode.value is None:
+            # guard missing value
+            return None
         if self._current_mode and int(self._current_mode.value) not in THERMOSTAT_MODES:
             return_val: str = self._current_mode.metadata.states.get(
-                self._current_mode.value
+                str(self._current_mode.value)
             )
             return return_val
         return PRESET_NONE
 
     @property
-    def preset_modes(self) -> Optional[List[str]]:
+    def preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes."""
         return list(self._hvac_presets)
 
     @property
+    def fan_mode(self) -> str | None:
+        """Return the fan setting."""
+        if (
+            self._fan_mode
+            and self._fan_mode.value is not None
+            and str(self._fan_mode.value) in self._fan_mode.metadata.states
+        ):
+            return cast(str, self._fan_mode.metadata.states[str(self._fan_mode.value)])
+        return None
+
+    @property
+    def fan_modes(self) -> list[str] | None:
+        """Return the list of available fan modes."""
+        if self._fan_mode and self._fan_mode.metadata.states:
+            return list(self._fan_mode.metadata.states.values())
+        return None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, str] | None:
+        """Return the optional state attributes."""
+        if (
+            self._fan_state
+            and self._fan_state.value is not None
+            and str(self._fan_state.value) in self._fan_state.metadata.states
+        ):
+            return {
+                ATTR_FAN_STATE: self._fan_state.metadata.states[
+                    str(self._fan_state.value)
+                ]
+            }
+
+        return None
+
+    @property
     def supported_features(self) -> int:
         """Return the list of supported features."""
-        support = SUPPORT_PRESET_MODE
-        if len(self._current_mode_setpoint_enums) == 1:
-            support |= SUPPORT_TARGET_TEMPERATURE
-        if len(self._current_mode_setpoint_enums) > 1:
-            support |= SUPPORT_TARGET_TEMPERATURE_RANGE
-        return support
+        return self._supported_features
+
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
+        """Set new target fan mode."""
+        if not self._fan_mode:
+            return
+
+        try:
+            new_state = int(
+                next(
+                    state
+                    for state, label in self._fan_mode.metadata.states.items()
+                    if label == fan_mode
+                )
+            )
+        except StopIteration:
+            raise ValueError(f"Received an invalid fan mode: {fan_mode}") from None
+
+        await self.info.node.async_set_value(self._fan_mode, new_state)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        assert self.hass
-        hvac_mode: Optional[str] = kwargs.get(ATTR_HVAC_MODE)
+        hvac_mode: str | None = kwargs.get(ATTR_HVAC_MODE)
 
         if hvac_mode is not None:
             await self.async_set_hvac_mode(hvac_mode)
@@ -264,7 +400,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             setpoint: ZwaveValue = self._setpoint_value(
                 self._current_mode_setpoint_enums[0]
             )
-            target_temp: Optional[float] = kwargs.get(ATTR_TEMPERATURE)
+            target_temp: float | None = kwargs.get(ATTR_TEMPERATURE)
             if target_temp is not None:
                 await self.info.node.async_set_value(setpoint, target_temp)
         elif len(self._current_mode_setpoint_enums) == 2:
@@ -274,8 +410,8 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             setpoint_high: ZwaveValue = self._setpoint_value(
                 self._current_mode_setpoint_enums[1]
             )
-            target_temp_low: Optional[float] = kwargs.get(ATTR_TARGET_TEMP_LOW)
-            target_temp_high: Optional[float] = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+            target_temp_low: float | None = kwargs.get(ATTR_TARGET_TEMP_LOW)
+            target_temp_high: float | None = kwargs.get(ATTR_TARGET_TEMP_HIGH)
             if target_temp_low is not None:
                 await self.info.node.async_set_value(setpoint_low, target_temp_low)
             if target_temp_high is not None:

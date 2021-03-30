@@ -2,6 +2,7 @@
 import asyncio
 import logging
 
+import aiohttp
 import async_timeout
 
 from homeassistant.components.notify import (
@@ -104,10 +105,12 @@ class MobileAppNotificationService(BaseNotificationService):
         """Send a message to the Lambda APNS gateway."""
         data = {ATTR_MESSAGE: message}
 
-        if kwargs.get(ATTR_TITLE) is not None:
-            # Remove default title from notifications.
-            if kwargs.get(ATTR_TITLE) != ATTR_TITLE_DEFAULT:
-                data[ATTR_TITLE] = kwargs.get(ATTR_TITLE)
+        # Remove default title from notifications.
+        if (
+            kwargs.get(ATTR_TITLE) is not None
+            and kwargs.get(ATTR_TITLE) != ATTR_TITLE_DEFAULT
+        ):
+            data[ATTR_TITLE] = kwargs.get(ATTR_TITLE)
 
         targets = kwargs.get(ATTR_TARGET)
 
@@ -168,3 +171,5 @@ class MobileAppNotificationService(BaseNotificationService):
 
             except asyncio.TimeoutError:
                 _LOGGER.error("Timeout sending notification to %s", push_url)
+            except aiohttp.ClientError as err:
+                _LOGGER.error("Error sending notification to %s: %r", push_url, err)

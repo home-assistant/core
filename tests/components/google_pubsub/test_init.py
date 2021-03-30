@@ -82,7 +82,7 @@ async def test_minimal_config(hass, mock_client):
     assert await async_setup_component(hass, google_pubsub.DOMAIN, config)
     await hass.async_block_till_done()
     assert hass.bus.listen.called
-    assert EVENT_STATE_CHANGED == hass.bus.listen.call_args_list[0][0][0]
+    assert hass.bus.listen.call_args_list[0][0][0] == EVENT_STATE_CHANGED
     assert mock_client.PublisherClient.from_service_account_json.call_count == 1
     assert (
         mock_client.PublisherClient.from_service_account_json.call_args[0][0] == "path"
@@ -109,7 +109,7 @@ async def test_full_config(hass, mock_client):
     assert await async_setup_component(hass, google_pubsub.DOMAIN, config)
     await hass.async_block_till_done()
     assert hass.bus.listen.called
-    assert EVENT_STATE_CHANGED == hass.bus.listen.call_args_list[0][0][0]
+    assert hass.bus.listen.call_args_list[0][0][0] == EVENT_STATE_CHANGED
     assert mock_client.PublisherClient.from_service_account_json.call_count == 1
     assert (
         mock_client.PublisherClient.from_service_account_json.call_args[0][0] == "path"

@@ -17,9 +17,8 @@ from homeassistant.components.zwave import (
     const,
 )
 from homeassistant.components.zwave.binary_sensor import get_device
-from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.helpers.device_registry import async_get_registry as get_dev_reg
-from homeassistant.helpers.entity_registry import async_get_registry
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import async_fire_time_changed, mock_registry
 from tests.mock.zwave import MockEntityValues, MockNetwork, MockNode, MockValue
@@ -203,20 +202,17 @@ async def test_zwave_ready_wait(hass, mock_openzwave, zwave_setup):
             sleeps.append(duration)
         await asyncio_sleep(0)
 
-    with patch("homeassistant.components.zwave.dt_util.utcnow", new=utcnow):
-        with patch("asyncio.sleep", new=sleep):
-            with patch.object(zwave, "_LOGGER") as mock_logger:
-                hass.data[DATA_NETWORK].state = MockNetwork.STATE_STARTED
+    with patch("homeassistant.components.zwave.dt_util.utcnow", new=utcnow), patch(
+        "asyncio.sleep", new=sleep
+    ), patch.object(zwave, "_LOGGER") as mock_logger:
+        hass.data[DATA_NETWORK].state = MockNetwork.STATE_STARTED
 
-                await hass.async_start()
+        await hass.async_start()
 
-                assert len(sleeps) == const.NETWORK_READY_WAIT_SECS
-                assert mock_logger.warning.called
-                assert len(mock_logger.warning.mock_calls) == 1
-                assert (
-                    mock_logger.warning.mock_calls[0][1][1]
-                    == const.NETWORK_READY_WAIT_SECS
-                )
+        assert len(sleeps) == const.NETWORK_READY_WAIT_SECS
+        assert mock_logger.warning.called
+        assert len(mock_logger.warning.mock_calls) == 1
+        assert mock_logger.warning.mock_calls[0][1][1] == const.NETWORK_READY_WAIT_SECS
 
 
 async def test_device_entity(hass, mock_openzwave):
@@ -243,7 +239,7 @@ async def test_device_entity(hass, mock_openzwave):
     assert not device.should_poll
     assert device.unique_id == "10-11"
     assert device.name == "Mock Node Sensor"
-    assert device.device_state_attributes[zwave.ATTR_POWER] == 50.123
+    assert device.extra_state_attributes[zwave.ATTR_POWER] == 50.123
 
 
 async def test_node_removed(hass, mock_openzwave):
@@ -342,19 +338,19 @@ async def test_unparsed_node_discovery(hass, mock_openzwave):
             sleeps.append(duration)
         await asyncio_sleep(0)
 
-    with patch("homeassistant.components.zwave.dt_util.utcnow", new=utcnow):
-        with patch("asyncio.sleep", new=sleep):
-            with patch.object(zwave, "_LOGGER") as mock_logger:
-                await hass.async_add_executor_job(mock_receivers[0], node)
-                await hass.async_block_till_done()
+    with patch("homeassistant.components.zwave.dt_util.utcnow", new=utcnow), patch(
+        "asyncio.sleep", new=sleep
+    ), patch.object(zwave, "_LOGGER") as mock_logger:
+        await hass.async_add_executor_job(mock_receivers[0], node)
+        await hass.async_block_till_done()
 
-                assert len(sleeps) == const.NODE_READY_WAIT_SECS
-                assert mock_logger.warning.called
-                assert len(mock_logger.warning.mock_calls) == 1
-                assert mock_logger.warning.mock_calls[0][1][1:] == (
-                    14,
-                    const.NODE_READY_WAIT_SECS,
-                )
+        assert len(sleeps) == const.NODE_READY_WAIT_SECS
+        assert mock_logger.warning.called
+        assert len(mock_logger.warning.mock_calls) == 1
+        assert mock_logger.warning.mock_calls[0][1][1:] == (
+            14,
+            const.NODE_READY_WAIT_SECS,
+        )
     assert hass.states.get("zwave.unknown_node_14").state == "unknown"
 
 
@@ -472,8 +468,8 @@ async def test_value_entities(hass, mock_openzwave):
     assert hass.states.get("binary_sensor.mock_node_mock_value").state == "off"
     assert hass.states.get("binary_sensor.mock_node_mock_value_b").state == "off"
 
-    ent_reg = await async_get_registry(hass)
-    dev_reg = await get_dev_reg(hass)
+    ent_reg = er.async_get(hass)
+    dev_reg = dr.async_get(hass)
 
     entry = ent_reg.async_get("zwave.mock_node")
     assert entry is not None
@@ -506,7 +502,7 @@ async def test_value_entities(hass, mock_openzwave):
     await hass.services.async_call(
         "zwave",
         "rename_node",
-        {const.ATTR_NODE_ID: node.node_id, const.ATTR_NAME: "Demo Node"},
+        {const.ATTR_NODE_ID: node.node_id, ATTR_NAME: "Demo Node"},
     )
     await hass.async_block_till_done()
 
@@ -537,7 +533,7 @@ async def test_value_entities(hass, mock_openzwave):
         {
             const.ATTR_NODE_ID: node.node_id,
             const.ATTR_UPDATE_IDS: True,
-            const.ATTR_NAME: "New Node",
+            ATTR_NAME: "New Node",
         },
     )
     await hass.async_block_till_done()
@@ -568,7 +564,7 @@ async def test_value_entities(hass, mock_openzwave):
             const.ATTR_NODE_ID: node.node_id,
             const.ATTR_VALUE_ID: value.object_id,
             const.ATTR_UPDATE_IDS: True,
-            const.ATTR_NAME: "New Label",
+            ATTR_NAME: "New Label",
         },
     )
     await hass.async_block_till_done()
@@ -862,7 +858,7 @@ async def test_entity_discovery(
 
     assert values.primary is value_class.primary
     assert len(list(values)) == 3
-    assert sorted(list(values), key=lambda a: id(a)) == sorted(
+    assert sorted(values, key=lambda a: id(a)) == sorted(
         [value_class.primary, None, None], key=lambda a: id(a)
     )
 
@@ -886,7 +882,7 @@ async def test_entity_discovery(
 
     assert values.secondary is value_class.secondary
     assert len(list(values)) == 3
-    assert sorted(list(values), key=lambda a: id(a)) == sorted(
+    assert sorted(values, key=lambda a: id(a)) == sorted(
         [value_class.primary, value_class.secondary, None], key=lambda a: id(a)
     )
 
@@ -903,7 +899,7 @@ async def test_entity_discovery(
 
     assert values.optional is value_class.optional
     assert len(list(values)) == 3
-    assert sorted(list(values), key=lambda a: id(a)) == sorted(
+    assert sorted(values, key=lambda a: id(a)) == sorted(
         [value_class.primary, value_class.secondary, value_class.optional],
         key=lambda a: id(a),
     )
@@ -962,7 +958,7 @@ async def test_entity_existing_values(
     assert values.secondary is value_class.secondary
     assert values.optional is value_class.optional
     assert len(list(values)) == 3
-    assert sorted(list(values), key=lambda a: id(a)) == sorted(
+    assert sorted(values, key=lambda a: id(a)) == sorted(
         [value_class.primary, value_class.secondary, value_class.optional],
         key=lambda a: id(a),
     )
@@ -1360,7 +1356,7 @@ async def test_rename_node(hass, mock_openzwave, zwave_setup_ready):
     await hass.services.async_call(
         "zwave",
         "rename_node",
-        {const.ATTR_NODE_ID: 11, const.ATTR_NAME: "test_name"},
+        {const.ATTR_NODE_ID: 11, ATTR_NAME: "test_name"},
     )
     await hass.async_block_till_done()
 
@@ -1383,7 +1379,7 @@ async def test_rename_value(hass, mock_openzwave, zwave_setup_ready):
         {
             const.ATTR_NODE_ID: 11,
             const.ATTR_VALUE_ID: 123456,
-            const.ATTR_NAME: "New Label",
+            ATTR_NAME: "New Label",
         },
     )
     await hass.async_block_till_done()

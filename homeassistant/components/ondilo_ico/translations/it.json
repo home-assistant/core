@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Tempo scaduto nel generare l'URL di autorizzazione.",
+            "missing_configuration": "Il componente non \u00e8 configurato. Si prega di seguire la documentazione."
+        },
+        "create_entry": {
+            "default": "Autenticazione riuscita"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Scegli il metodo di autenticazione"
+            }
+        }
+    },
+    "title": "Ondilo ICO"
+}

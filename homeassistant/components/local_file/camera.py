@@ -10,16 +10,10 @@ from homeassistant.components.camera import (
     PLATFORM_SCHEMA,
     Camera,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME
+from homeassistant.const import ATTR_ENTITY_ID, CONF_FILE_PATH, CONF_NAME
 from homeassistant.helpers import config_validation as cv
 
-from .const import (
-    CONF_FILE_PATH,
-    DATA_LOCAL_FILE,
-    DEFAULT_NAME,
-    DOMAIN,
-    SERVICE_UPDATE_FILE_PATH,
-)
+from .const import DATA_LOCAL_FILE, DEFAULT_NAME, DOMAIN, SERVICE_UPDATE_FILE_PATH
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -111,6 +105,6 @@ class LocalFile(Camera):
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the camera state attributes."""
         return {"file_path": self._file_path}

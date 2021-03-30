@@ -1,6 +1,7 @@
 """Config flow to configure Axis devices."""
 
 from ipaddress import ip_address
+from urllib.parse import urlsplit
 
 import voluptuous as vol
 
@@ -137,7 +138,6 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
 
     async def async_step_reauth(self, device_config: dict):
         """Trigger a reauthentication flow."""
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
             CONF_NAME: device_config[CONF_NAME],
             CONF_HOST: device_config[CONF_HOST],
@@ -163,8 +163,20 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
             }
         )
 
+    async def async_step_ssdp(self, discovery_info: dict):
+        """Prepare configuration for a SSDP discovered Axis device."""
+        url = urlsplit(discovery_info["presentationURL"])
+        return await self._process_discovered_device(
+            {
+                CONF_HOST: url.hostname,
+                CONF_MAC: format_mac(discovery_info["serialNumber"]),
+                CONF_NAME: f"{discovery_info['friendlyName']}",
+                CONF_PORT: url.port,
+            }
+        )
+
     async def async_step_zeroconf(self, discovery_info: dict):
-        """Prepare configuration for a discovered Axis device."""
+        """Prepare configuration for a Zeroconf discovered Axis device."""
         return await self._process_discovered_device(
             {
                 CONF_HOST: discovery_info[CONF_HOST],
@@ -191,7 +203,6 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
             }
         )
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
             CONF_NAME: device[CONF_NAME],
             CONF_HOST: device[CONF_HOST],

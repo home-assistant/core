@@ -92,6 +92,38 @@ async def test_setup_minimum(hass):
 
 
 @respx.mock
+async def test_manual_update(hass):
+    """Test setup with minimum configuration."""
+    await async_setup_component(hass, "homeassistant", {})
+    respx.get("http://localhost").respond(status_code=200, json={"data": "first"})
+    assert await async_setup_component(
+        hass,
+        sensor.DOMAIN,
+        {
+            "sensor": {
+                "name": "mysensor",
+                "value_template": "{{ value_json.data }}",
+                "platform": "rest",
+                "resource_template": "{% set url = 'http://localhost' %}{{ url }}",
+                "method": "GET",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 1
+    assert hass.states.get("sensor.mysensor").state == "first"
+
+    respx.get("http://localhost").respond(status_code=200, json={"data": "second"})
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {ATTR_ENTITY_ID: ["sensor.mysensor"]},
+        blocking=True,
+    )
+    assert hass.states.get("sensor.mysensor").state == "second"
+
+
+@respx.mock
 async def test_setup_minimum_resource_template(hass):
     """Test setup with minimum configuration (resource_template)."""
     respx.get("http://localhost") % 200

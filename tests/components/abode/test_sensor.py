@@ -9,6 +9,7 @@ from homeassistant.const import (
     PERCENTAGE,
     TEMP_CELSIUS,
 )
+from homeassistant.helpers import entity_registry as er
 
 from .common import setup_platform
 
@@ -16,7 +17,7 @@ from .common import setup_platform
 async def test_entity_registry(hass):
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, SENSOR_DOMAIN)
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get("sensor.environment_sensor_humidity")
     assert entry.unique_id == "13545b21f4bdcd33d9abd461f8443e65-humidity"

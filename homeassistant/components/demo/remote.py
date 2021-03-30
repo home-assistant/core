@@ -49,7 +49,7 @@ class DemoRemote(RemoteEntity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device state attributes."""
         if self._last_command_sent is not None:
             return {"last_command_sent": self._last_command_sent}

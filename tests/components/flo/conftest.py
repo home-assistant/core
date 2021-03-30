@@ -43,10 +43,16 @@ def aioclient_mock_fixture(aioclient_mock):
         headers={"Content-Type": CONTENT_TYPE_JSON},
         status=200,
     )
-    # Mocks the device for flo.
+    # Mocks the devices for flo.
     aioclient_mock.get(
         "https://api-gw.meetflo.com/api/v2/devices/98765",
         text=load_fixture("flo/device_info_response.json"),
+        status=200,
+        headers={"Content-Type": CONTENT_TYPE_JSON},
+    )
+    aioclient_mock.get(
+        "https://api-gw.meetflo.com/api/v2/devices/32839",
+        text=load_fixture("flo/device_info_response_detector.json"),
         status=200,
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )

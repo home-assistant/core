@@ -1,5 +1,6 @@
 """Alexa configuration for Home Assistant Cloud."""
 import asyncio
+from contextlib import suppress
 from datetime import timedelta
 import logging
 
@@ -62,7 +63,11 @@ class AlexaConfig(alexa_config.AbstractConfig):
     @property
     def enabled(self):
         """Return if Alexa is enabled."""
-        return self._prefs.alexa_enabled
+        return (
+            self._cloud.is_logged_in
+            and not self._cloud.subscription_expired
+            and self._prefs.alexa_enabled
+        )
 
     @property
     def supports_auth(self):
@@ -318,7 +323,5 @@ class AlexaConfig(alexa_config.AbstractConfig):
             if "old_entity_id" in event.data:
                 to_remove.append(event.data["old_entity_id"])
 
-        try:
+        with suppress(alexa_errors.NoTokenAvailable):
             await self._sync_helper(to_update, to_remove)
-        except alexa_errors.NoTokenAvailable:
-            pass

@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'account \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Nome",
+                    "password": "Password",
+                    "port": "Porta",
+                    "username": "Nome utente"
+                },
+                "title": "Configurare il router Keenetic NDMS2"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "consider_home": "Considerare in casa nell'intervallo di",
+                    "include_arp": "Usa i dati ARP (ignorati se vengono utilizzati i dati dell'hotspot)",
+                    "include_associated": "Usa i dati delle associazioni WiFi AP (ignorati se si usano i dati dell'hotspot)",
+                    "interfaces": "Scegli le interfacce da scansionare",
+                    "scan_interval": "Intervallo di scansione",
+                    "try_hotspot": "Utilizza i dati \"ip hotspot\" (pi\u00f9 accurato)"
+                }
+            }
+        }
+    }
+}

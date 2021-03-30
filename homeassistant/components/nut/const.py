@@ -1,8 +1,10 @@
 """The nut component."""
 from homeassistant.components.sensor import (
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_VOLTAGE,
 )
 from homeassistant.const import (
     ELECTRICAL_CURRENT_AMPERE,
@@ -45,7 +47,7 @@ SENSOR_TYPES = {
     "ups.temperature": [
         "UPS Temperature",
         TEMP_CELSIUS,
-        "mdi:thermometer",
+        None,
         DEVICE_CLASS_TEMPERATURE,
     ],
     "ups.load": ["Load", PERCENTAGE, "mdi:gauge", None],
@@ -83,13 +85,13 @@ SENSOR_TYPES = {
     "ups.realpower": [
         "Current Real Power",
         POWER_WATT,
-        "mdi:flash",
+        None,
         DEVICE_CLASS_POWER,
     ],
     "ups.realpower.nominal": [
         "Nominal Real Power",
         POWER_WATT,
-        "mdi:flash",
+        None,
         DEVICE_CLASS_POWER,
     ],
     "ups.beeper.status": ["Beeper Status", "", "mdi:information-outline", None],
@@ -102,7 +104,7 @@ SENSOR_TYPES = {
     "battery.charge": [
         "Battery Charge",
         PERCENTAGE,
-        "mdi:gauge",
+        None,
         DEVICE_CLASS_BATTERY,
     ],
     "battery.charge.low": ["Low Battery Setpoint", PERCENTAGE, "mdi:gauge", None],
@@ -119,10 +121,15 @@ SENSOR_TYPES = {
         None,
     ],
     "battery.charger.status": ["Charging Status", "", "mdi:information-outline", None],
-    "battery.voltage": ["Battery Voltage", VOLT, "mdi:flash", None],
-    "battery.voltage.nominal": ["Nominal Battery Voltage", VOLT, "mdi:flash", None],
-    "battery.voltage.low": ["Low Battery Voltage", VOLT, "mdi:flash", None],
-    "battery.voltage.high": ["High Battery Voltage", VOLT, "mdi:flash", None],
+    "battery.voltage": ["Battery Voltage", VOLT, None, DEVICE_CLASS_VOLTAGE],
+    "battery.voltage.nominal": [
+        "Nominal Battery Voltage",
+        VOLT,
+        None,
+        DEVICE_CLASS_VOLTAGE,
+    ],
+    "battery.voltage.low": ["Low Battery Voltage", VOLT, None, DEVICE_CLASS_VOLTAGE],
+    "battery.voltage.high": ["High Battery Voltage", VOLT, None, DEVICE_CLASS_VOLTAGE],
     "battery.capacity": ["Battery Capacity", "Ah", "mdi:flash", None],
     "battery.current": [
         "Battery Current",
@@ -139,7 +146,7 @@ SENSOR_TYPES = {
     "battery.temperature": [
         "Battery Temperature",
         TEMP_CELSIUS,
-        "mdi:thermometer",
+        None,
         DEVICE_CLASS_TEMPERATURE,
     ],
     "battery.runtime": ["Battery Runtime", TIME_SECONDS, "mdi:timer-outline", None],
@@ -177,16 +184,21 @@ SENSOR_TYPES = {
         "mdi:information-outline",
         None,
     ],
-    "input.transfer.low": ["Low Voltage Transfer", VOLT, "mdi:flash", None],
-    "input.transfer.high": ["High Voltage Transfer", VOLT, "mdi:flash", None],
+    "input.transfer.low": ["Low Voltage Transfer", VOLT, None, DEVICE_CLASS_VOLTAGE],
+    "input.transfer.high": ["High Voltage Transfer", VOLT, None, DEVICE_CLASS_VOLTAGE],
     "input.transfer.reason": [
         "Voltage Transfer Reason",
         "",
         "mdi:information-outline",
         None,
     ],
-    "input.voltage": ["Input Voltage", VOLT, "mdi:flash", None],
-    "input.voltage.nominal": ["Nominal Input Voltage", VOLT, "mdi:flash", None],
+    "input.voltage": ["Input Voltage", VOLT, None, DEVICE_CLASS_VOLTAGE],
+    "input.voltage.nominal": [
+        "Nominal Input Voltage",
+        VOLT,
+        None,
+        DEVICE_CLASS_VOLTAGE,
+    ],
     "input.frequency": ["Input Line Frequency", FREQUENCY_HERTZ, "mdi:flash", None],
     "input.frequency.nominal": [
         "Nominal Input Line Frequency",
@@ -207,14 +219,31 @@ SENSOR_TYPES = {
         "mdi:flash",
         None,
     ],
-    "output.voltage": ["Output Voltage", VOLT, "mdi:flash", None],
-    "output.voltage.nominal": ["Nominal Output Voltage", VOLT, "mdi:flash", None],
+    "output.voltage": ["Output Voltage", VOLT, None, DEVICE_CLASS_VOLTAGE],
+    "output.voltage.nominal": [
+        "Nominal Output Voltage",
+        VOLT,
+        None,
+        DEVICE_CLASS_VOLTAGE,
+    ],
     "output.frequency": ["Output Frequency", FREQUENCY_HERTZ, "mdi:flash", None],
     "output.frequency.nominal": [
         "Nominal Output Frequency",
         FREQUENCY_HERTZ,
         "mdi:flash",
         None,
+    ],
+    "ambient.humidity": [
+        "Ambient Humidity",
+        PERCENTAGE,
+        None,
+        DEVICE_CLASS_HUMIDITY,
+    ],
+    "ambient.temperature": [
+        "Ambient Temperature",
+        TEMP_CELSIUS,
+        None,
+        DEVICE_CLASS_TEMPERATURE,
     ],
 }
 

@@ -42,12 +42,12 @@ class BMWDeviceTracker(BMWConnectedDriveBaseEntity, TrackerEntity):
     @property
     def latitude(self):
         """Return latitude value of the device."""
-        return self._location[0]
+        return self._location[0] if self._location else None
 
     @property
     def longitude(self):
         """Return longitude value of the device."""
-        return self._location[1]
+        return self._location[1] if self._location else None
 
     @property
     def name(self):

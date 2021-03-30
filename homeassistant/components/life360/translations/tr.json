@@ -1,11 +1,22 @@
 {
     "config": {
         "abort": {
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
             "unknown": "Beklenmedik hata"
         },
         "error": {
             "already_configured": "Hesap zaten konfig\u00fcre edilmi\u015fi durumda",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "invalid_username": "Ge\u00e7ersiz kullan\u0131c\u0131 ad\u0131",
             "unknown": "Beklenmedik hata"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Parola",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                }
+            }
         }
     }
 }

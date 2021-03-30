@@ -1,8 +1,10 @@
 """Support for Generic Modbus Thermostats."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 import struct
-from typing import Any, Dict, Optional
+from typing import Any
 
 from pymodbus.exceptions import ConnectionException, ModbusException
 from pymodbus.pdu import ExceptionResponse
@@ -15,6 +17,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_NAME,
+    CONF_OFFSET,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
     CONF_STRUCTURE,
@@ -28,7 +31,6 @@ from homeassistant.helpers.typing import (
     HomeAssistantType,
 )
 
-from . import ModbusHub
 from .const import (
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
@@ -39,7 +41,6 @@ from .const import (
     CONF_DATA_TYPE,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
-    CONF_OFFSET,
     CONF_PRECISION,
     CONF_SCALE,
     CONF_STEP,
@@ -49,6 +50,7 @@ from .const import (
     DEFAULT_STRUCT_FORMAT,
     MODBUS_DOMAIN,
 )
+from .modbus import ModbusHub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +59,7 @@ async def async_setup_platform(
     hass: HomeAssistantType,
     config: ConfigType,
     async_add_entities,
-    discovery_info: Optional[DiscoveryInfoType] = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ):
     """Read configuration and create Modbus climate."""
     if discovery_info is None:
@@ -108,12 +110,12 @@ class ModbusThermostat(ClimateEntity):
     def __init__(
         self,
         hub: ModbusHub,
-        config: Dict[str, Any],
+        config: dict[str, Any],
     ):
         """Initialize the modbus thermostat."""
         self._hub: ModbusHub = hub
         self._name = config[CONF_NAME]
-        self._slave = config[CONF_SLAVE]
+        self._slave = config.get(CONF_SLAVE)
         self._target_temperature_register = config[CONF_TARGET_TEMP]
         self._current_temperature_register = config[CONF_CURRENT_TEMP]
         self._current_temperature_register_type = config[
@@ -146,7 +148,6 @@ class ModbusThermostat(ClimateEntity):
 
         False if entity pushes its state to HA.
         """
-
         # Handle polling directly in this entity
         return False
 
@@ -233,7 +234,7 @@ class ModbusThermostat(ClimateEntity):
 
         self.schedule_update_ha_state()
 
-    def _read_register(self, register_type, register) -> Optional[float]:
+    def _read_register(self, register_type, register) -> float | None:
         """Read register using the Modbus hub slave."""
         try:
             if register_type == CALL_TYPE_REGISTER_INPUT:
@@ -275,7 +276,7 @@ class ModbusThermostat(ClimateEntity):
     def _write_register(self, register, value):
         """Write holding register using the Modbus hub slave."""
         try:
-            self._hub.write_registers(self._slave, register, [value, 0])
+            self._hub.write_registers(self._slave, register, value)
         except ConnectionException:
             self._available = False
             return

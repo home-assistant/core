@@ -1,10 +1,29 @@
 {
     "device_automation": {
         "action_type": {
+            "close": "{entity_name}: \u0437\u0430\u043a\u0440\u0438\u0442\u0438",
+            "close_tilt": "{entity_name}: \u0437\u0430\u043a\u0440\u0438\u0442\u0438 \u043b\u0430\u043c\u0435\u043b\u0456",
+            "open": "{entity_name}: \u0432\u0456\u0434\u043a\u0440\u0438\u0442\u0438",
+            "open_tilt": "{entity_name}: \u0432\u0456\u0434\u043a\u0440\u0438\u0442\u0438 \u043b\u0430\u043c\u0435\u043b\u0456",
+            "set_position": "{entity_name}: \u0432\u0441\u0442\u0430\u043d\u043e\u0432\u0438\u0442\u0438 \u043f\u043e\u043b\u043e\u0436\u0435\u043d\u043d\u044f",
+            "set_tilt_position": "{entity_name}: \u0432\u0441\u0442\u0430\u043d\u043e\u0432\u0438\u0442\u0438 \u043d\u0430\u0445\u0438\u043b \u043b\u0430\u043c\u0435\u043b\u0435\u0439",
             "stop": "\u0417\u0443\u043f\u0438\u043d\u0438\u0442\u0438 {entity_name}"
         },
+        "condition_type": {
+            "is_closed": "{entity_name} \u0432 \u0437\u0430\u043a\u0440\u0438\u0442\u043e\u043c\u0443 \u0441\u0442\u0430\u043d\u0456",
+            "is_closing": "{entity_name} \u0437\u0430\u043a\u0440\u0438\u0432\u0430\u0454\u0442\u044c\u0441\u044f",
+            "is_open": "{entity_name} \u0443 \u0432\u0456\u0434\u043a\u0440\u0438\u0442\u043e\u043c\u0443 \u0441\u0442\u0430\u043d\u0456",
+            "is_opening": "{entity_name} \u0432\u0456\u0434\u043a\u0440\u0438\u0432\u0430\u0454\u0442\u044c\u0441\u044f",
+            "is_position": "{entity_name} \u0437\u043d\u0430\u0445\u043e\u0434\u0438\u0442\u044c\u0441\u044f \u0432 \u043f\u043e\u043b\u043e\u0436\u0435\u043d\u043d\u0456",
+            "is_tilt_position": "\u041f\u0440\u0438\u0441\u0442\u0440\u0456\u0439 \"{entity_name}\" \u043c\u0430\u0454 \u043d\u0430\u0445\u0438\u043b \u043b\u0430\u043c\u0435\u043b\u0435\u0439"
+        },
         "trigger_type": {
-            "opened": "{entity_name} \u0432\u0456\u0434\u043a\u0440\u0438\u0442\u043e"
+            "closed": "{entity_name} \u0437\u0430\u043a\u0440\u0438\u0442\u043e",
+            "closing": "{entity_name} \u0437\u0430\u043a\u0440\u0438\u0432\u0430\u0454\u0442\u044c\u0441\u044f",
+            "opened": "{entity_name} \u0432\u0456\u0434\u043a\u0440\u0438\u0442\u043e",
+            "opening": "{entity_name} \u0432\u0456\u0434\u043a\u0440\u0438\u0432\u0430\u0454\u0442\u044c\u0441\u044f",
+            "position": "{entity_name} \u0437\u043c\u0456\u043d\u044e\u0454 \u043f\u043e\u043b\u043e\u0436\u0435\u043d\u043d\u044f",
+            "tilt_position": "{entity_name} \u0437\u043c\u0456\u043d\u044e\u0454 \u043d\u0430\u0445\u0438\u043b \u043b\u0430\u043c\u0435\u043b\u0435\u0439"
         }
     },
     "state": {

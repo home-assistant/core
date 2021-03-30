@@ -1,6 +1,8 @@
 """Config flow for ZHA."""
+from __future__ import annotations
+
 import os
-from typing import Any, Dict, Optional
+from typing import Any
 
 import serial.tools.list_ports
 import voluptuous as vol
@@ -8,7 +10,7 @@ from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
 from homeassistant import config_entries
 
-from .core.const import (  # pylint:disable=unused-import
+from .core.const import (
     CONF_BAUDRATE,
     CONF_FLOWCONTROL,
     CONF_RADIO_TYPE,
@@ -45,6 +47,10 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             + (f" - {p.manufacturer}" if p.manufacturer else "")
             for p in ports
         ]
+
+        if not list_of_ports:
+            return await self.async_step_pick_radio()
+
         list_of_ports.append(CONF_MANUAL_PATH)
 
         if user_input is not None:
@@ -123,7 +129,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-async def detect_radios(dev_path: str) -> Optional[Dict[str, Any]]:
+async def detect_radios(dev_path: str) -> dict[str, Any] | None:
     """Probe all radio types on the device port."""
     for radio in RadioType:
         dev_config = radio.controller.SCHEMA_DEVICE({CONF_DEVICE_PATH: dev_path})

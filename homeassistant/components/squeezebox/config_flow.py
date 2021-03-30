@@ -15,7 +15,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-# pylint: disable=unused-import
 from .const import DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -80,7 +79,7 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         return
                 self.discovery_info = {
                     CONF_HOST: server.host,
-                    CONF_PORT: server.port,
+                    CONF_PORT: int(server.port),
                     "uuid": server.uuid,
                 }
                 _LOGGER.debug("Discovered server: %s", self.discovery_info)
@@ -182,7 +181,6 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # update schema with suggested values from discovery
         self.data_schema = _base_schema(discovery_info)
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update({"title_placeholders": {"host": discovery_info[CONF_HOST]}})
 
         return await self.async_step_edit()

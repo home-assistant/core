@@ -1,19 +1,24 @@
 """Support for Xiaomi Mi Air Quality Monitor (PM2.5)."""
 import logging
 
-from miio import AirQualityMonitor, Device, DeviceException
+from miio import AirQualityMonitor, DeviceException
 import voluptuous as vol
 
 from homeassistant.components.air_quality import PLATFORM_SCHEMA, AirQualityEntity
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
-from homeassistant.exceptions import NoEntitySpecifiedError, PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
+    CONF_DEVICE,
+    CONF_FLOW_TYPE,
+    CONF_MODEL,
+    DOMAIN,
     MODEL_AIRQUALITYMONITOR_B1,
     MODEL_AIRQUALITYMONITOR_S1,
     MODEL_AIRQUALITYMONITOR_V1,
 )
+from .device import XiaomiMiioEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,52 +46,54 @@ PROP_TO_ATTR = {
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the sensor from config."""
-
-    host = config[CONF_HOST]
-    token = config[CONF_TOKEN]
-    name = config[CONF_NAME]
-
-    _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
-
-    miio_device = Device(host, token)
-
-    try:
-        device_info = await hass.async_add_executor_job(miio_device.info)
-    except DeviceException as ex:
-        raise PlatformNotReady from ex
-
-    model = device_info.model
-    unique_id = f"{model}-{device_info.mac_address}"
-    _LOGGER.debug(
-        "%s %s %s detected",
-        model,
-        device_info.firmware_version,
-        device_info.hardware_version,
+    """Import Miio configuration from YAML."""
+    _LOGGER.warning(
+        "Loading Xiaomi Miio Air Quality via platform setup is deprecated. "
+        "Please remove it from your configuration"
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
     )
 
-    device = AirQualityMonitor(host, token, model=model)
 
-    if model == MODEL_AIRQUALITYMONITOR_S1:
-        entity = AirMonitorS1(name, device, unique_id)
-    elif model == MODEL_AIRQUALITYMONITOR_B1:
-        entity = AirMonitorB1(name, device, unique_id)
-    elif model == MODEL_AIRQUALITYMONITOR_V1:
-        entity = AirMonitorV1(name, device, unique_id)
-    else:
-        raise NoEntitySpecifiedError(f"Not support for entity {unique_id}")
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Xiaomi Air Quality from a config entry."""
+    entities = []
 
-    async_add_entities([entity], update_before_add=True)
+    if config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
+        host = config_entry.data[CONF_HOST]
+        token = config_entry.data[CONF_TOKEN]
+        name = config_entry.title
+        model = config_entry.data[CONF_MODEL]
+        unique_id = config_entry.unique_id
+
+        _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
+
+        device = AirQualityMonitor(host, token, model=model)
+
+        if model == MODEL_AIRQUALITYMONITOR_S1:
+            entities.append(AirMonitorS1(name, device, config_entry, unique_id))
+        elif model == MODEL_AIRQUALITYMONITOR_B1:
+            entities.append(AirMonitorB1(name, device, config_entry, unique_id))
+        elif model == MODEL_AIRQUALITYMONITOR_V1:
+            entities.append(AirMonitorV1(name, device, config_entry, unique_id))
+        else:
+            _LOGGER.warning("AirQualityMonitor model '%s' is not yet supported", model)
+
+    async_add_entities(entities, update_before_add=True)
 
 
-class AirMonitorB1(AirQualityEntity):
+class AirMonitorB1(XiaomiMiioEntity, AirQualityEntity):
     """Air Quality class for Xiaomi cgllc.airmonitor.b1 device."""
 
-    def __init__(self, name, device, unique_id):
+    def __init__(self, name, device, entry, unique_id):
         """Initialize the entity."""
-        self._name = name
-        self._device = device
-        self._unique_id = unique_id
+        super().__init__(name, device, entry, unique_id)
+
         self._icon = "mdi:cloud"
         self._available = None
         self._air_quality_index = None
@@ -113,11 +120,6 @@ class AirMonitorB1(AirQualityEntity):
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     @property
-    def name(self):
-        """Return the name of this entity, if any."""
-        return self._name
-
-    @property
     def icon(self):
         """Return the icon to use for device if any."""
         return self._icon
@@ -126,11 +128,6 @@ class AirMonitorB1(AirQualityEntity):
     def available(self):
         """Return true when state is known."""
         return self._available
-
-    @property
-    def unique_id(self):
-        """Return the unique ID."""
-        return self._unique_id
 
     @property
     def air_quality_index(self):
@@ -168,7 +165,7 @@ class AirMonitorB1(AirQualityEntity):
         return self._humidity
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         data = {}
 

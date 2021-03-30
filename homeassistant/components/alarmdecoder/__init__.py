@@ -39,11 +39,6 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["alarm_control_panel", "sensor", "binary_sensor"]
 
 
-async def async_setup(hass, config):
-    """Set up for the AlarmDecoder devices."""
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Set up AlarmDecoder config flow."""
     undo_listener = entry.add_update_listener(_update_listener)
@@ -130,9 +125,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     await open_connection()
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
     return True
 
@@ -144,8 +139,8 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

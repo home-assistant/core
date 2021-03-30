@@ -17,8 +17,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.util.network import is_link_local
 
-from .const import CONF_EVENTS, DOORBIRD_OUI
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import CONF_EVENTS, DOMAIN, DOORBIRD_OUI
 from .util import get_mac_address_from_doorstation_info
 
 _LOGGER = logging.getLogger(__name__)
@@ -103,7 +102,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if friendly_hostname.endswith(chop_ending):
             friendly_hostname = friendly_hostname[: -len(chop_ending)]
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
             CONF_NAME: friendly_hostname,
             CONF_HOST: discovery_info[CONF_HOST],

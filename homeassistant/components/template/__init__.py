@@ -1,22 +1,80 @@
 """The template component."""
-from homeassistant.const import SERVICE_RELOAD
-from homeassistant.helpers.reload import async_reload_integration_platforms
+import logging
+from typing import Optional
 
-from .const import DOMAIN, EVENT_TEMPLATE_RELOADED, PLATFORMS
+from homeassistant.const import CONF_SENSORS, EVENT_HOMEASSISTANT_START
+from homeassistant.core import CoreState, callback
+from homeassistant.helpers import (
+    discovery,
+    trigger as trigger_helper,
+    update_coordinator,
+)
+from homeassistant.helpers.reload import async_setup_reload_service
+
+from .const import CONF_TRIGGER, DOMAIN, PLATFORMS
 
 
-async def async_setup_reload_service(hass):
-    """Create the reload service for the template domain."""
+async def async_setup(hass, config):
+    """Set up the template integration."""
+    if DOMAIN in config:
+        for conf in config[DOMAIN]:
+            coordinator = TriggerUpdateCoordinator(hass, conf)
+            await coordinator.async_setup(config)
 
-    if hass.services.has_service(DOMAIN, SERVICE_RELOAD):
-        return
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
-    async def _reload_config(call):
-        """Reload the template platform config."""
+    return True
 
-        await async_reload_integration_platforms(hass, DOMAIN, PLATFORMS)
-        hass.bus.async_fire(EVENT_TEMPLATE_RELOADED, context=call.context)
 
-    hass.helpers.service.async_register_admin_service(
-        DOMAIN, SERVICE_RELOAD, _reload_config
-    )
+class TriggerUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
+    """Class to handle incoming data."""
+
+    def __init__(self, hass, config):
+        """Instantiate trigger data."""
+        super().__init__(
+            hass, logging.getLogger(__name__), name="Trigger Update Coordinator"
+        )
+        self.config = config
+        self._unsub_trigger = None
+
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return unique ID for the entity."""
+        return self.config.get("unique_id")
+
+    async def async_setup(self, hass_config):
+        """Set up the trigger and create entities."""
+        if self.hass.state == CoreState.running:
+            await self._attach_triggers()
+        else:
+            self.hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_START, self._attach_triggers
+            )
+
+        self.hass.async_create_task(
+            discovery.async_load_platform(
+                self.hass,
+                "sensor",
+                DOMAIN,
+                {"coordinator": self, "entities": self.config[CONF_SENSORS]},
+                hass_config,
+            )
+        )
+
+    async def _attach_triggers(self, start_event=None) -> None:
+        """Attach the triggers."""
+        self._unsub_trigger = await trigger_helper.async_initialize_triggers(
+            self.hass,
+            self.config[CONF_TRIGGER],
+            self._handle_triggered,
+            DOMAIN,
+            self.name,
+            self.logger.log,
+            start_event is not None,
+        )
+
+    @callback
+    def _handle_triggered(self, run_variables, context=None):
+        self.async_set_updated_data(
+            {"run_variables": run_variables, "context": context}
+        )

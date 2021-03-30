@@ -59,17 +59,15 @@ def _reauth_flow_wrapper(hass, data):
     )
 
 
-async def async_setup(hass, config):
-    """Set up a Blink component."""
-    hass.data[DOMAIN] = {}
-    return True
-
-
 async def async_migrate_entry(hass, entry):
     """Handle migration of a previous version config entry."""
+    _LOGGER.debug("Migrating from version %s", entry.version)
     data = {**entry.data}
     if entry.version == 1:
         data.pop("login_response", None)
+        await hass.async_add_executor_job(_reauth_flow_wrapper, hass, data)
+        return False
+    if entry.version == 2:
         await hass.async_add_executor_job(_reauth_flow_wrapper, hass, data)
         return False
     return True
@@ -77,8 +75,9 @@ async def async_migrate_entry(hass, entry):
 
 async def async_setup_entry(hass, entry):
     """Set up Blink via config entry."""
-    _async_import_options_from_data_if_missing(hass, entry)
+    hass.data.setdefault(DOMAIN, {})
 
+    _async_import_options_from_data_if_missing(hass, entry)
     hass.data[DOMAIN][entry.entry_id] = await hass.async_add_executor_job(
         _blink_startup_wrapper, hass, entry
     )
@@ -86,9 +85,9 @@ async def async_setup_entry(hass, entry):
     if not hass.data[DOMAIN][entry.entry_id].available:
         raise ConfigEntryNotReady
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     def blink_refresh(event_time=None):
@@ -133,8 +132,8 @@ async def async_unload_entry(hass, entry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )
@@ -148,7 +147,7 @@ async def async_unload_entry(hass, entry):
         return True
 
     hass.services.async_remove(DOMAIN, SERVICE_REFRESH)
-    hass.services.async_remove(DOMAIN, SERVICE_SAVE_VIDEO_SCHEMA)
+    hass.services.async_remove(DOMAIN, SERVICE_SAVE_VIDEO)
     hass.services.async_remove(DOMAIN, SERVICE_SEND_PIN)
 
     return True

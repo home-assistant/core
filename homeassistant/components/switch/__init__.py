@@ -1,6 +1,7 @@
 """Component to interface with switches that can be controlled remotely."""
 from datetime import timedelta
 import logging
+from typing import final
 
 import voluptuous as vol
 
@@ -79,7 +80,7 @@ async def async_unload_entry(hass, entry):
 
 
 class SwitchEntity(ToggleEntity):
-    """Representation of a switch."""
+    """Base class for switch entities."""
 
     @property
     def current_power_w(self):
@@ -96,6 +97,7 @@ class SwitchEntity(ToggleEntity):
         """Return true if device is in standby."""
         return None
 
+    @final
     @property
     def state_attributes(self):
         """Return the optional state attributes."""

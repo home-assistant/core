@@ -6,8 +6,8 @@
         },
         "step": {
             "hassio_confirm": {
-                "description": "Vill du konfigurera Home Assistant f\u00f6r att ansluta till Almond som tillhandah\u00e5lls av Hass.io-till\u00e4gget: {addon} ?",
-                "title": "Almond via Hass.io-till\u00e4gget"
+                "description": "Vill du konfigurera Home Assistant f\u00f6r att ansluta till Almond som tillhandah\u00e5lls av Supervisor-till\u00e4gget: {addon} ?",
+                "title": "Almond via Supervisor-till\u00e4gget"
             },
             "pick_implementation": {
                 "title": "V\u00e4lj autentiseringsmetod"
