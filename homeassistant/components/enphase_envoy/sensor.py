@@ -1,55 +1,24 @@
 """Support for Enphase Envoy solar energy monitor."""
 
-from datetime import timedelta
-import logging
-
-import async_timeout
-from envoy_reader.envoy_reader import EnvoyReader
-import httpx
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
-    ENERGY_WATT_HOUR,
-    POWER_WATT,
 )
-from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-_LOGGER = logging.getLogger(__name__)
-
-SENSORS = {
-    "production": ("Envoy Current Energy Production", POWER_WATT),
-    "daily_production": ("Envoy Today's Energy Production", ENERGY_WATT_HOUR),
-    "seven_days_production": (
-        "Envoy Last Seven Days Energy Production",
-        ENERGY_WATT_HOUR,
-    ),
-    "lifetime_production": ("Envoy Lifetime Energy Production", ENERGY_WATT_HOUR),
-    "consumption": ("Envoy Current Energy Consumption", POWER_WATT),
-    "daily_consumption": ("Envoy Today's Energy Consumption", ENERGY_WATT_HOUR),
-    "seven_days_consumption": (
-        "Envoy Last Seven Days Energy Consumption",
-        ENERGY_WATT_HOUR,
-    ),
-    "lifetime_consumption": ("Envoy Lifetime Energy Consumption", ENERGY_WATT_HOUR),
-    "inverters": ("Envoy Inverter", POWER_WATT),
-}
+from .const import COORDINATOR, DOMAIN, NAME, SENSORS
 
 ICON = "mdi:flash"
 CONST_DEFAULT_HOST = "envoy"
 
-SCAN_INTERVAL = timedelta(seconds=60)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -64,65 +33,23 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(
-    homeassistant, config, async_add_entities, discovery_info=None
-):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Enphase Envoy sensor."""
-    ip_address = config[CONF_IP_ADDRESS]
-    monitored_conditions = config[CONF_MONITORED_CONDITIONS]
-    name = config[CONF_NAME]
-    username = config[CONF_USERNAME]
-    password = config[CONF_PASSWORD]
-
-    if "inverters" in monitored_conditions:
-        envoy_reader = EnvoyReader(ip_address, username, password, inverters=True)
-    else:
-        envoy_reader = EnvoyReader(ip_address, username, password)
-
-    try:
-        await envoy_reader.getData()
-    except httpx.HTTPStatusError as err:
-        _LOGGER.error("Authentication failure during setup: %s", err)
-        return
-    except httpx.HTTPError as err:
-        raise PlatformNotReady from err
-
-    async def async_update_data():
-        """Fetch data from API endpoint."""
-        data = {}
-        async with async_timeout.timeout(30):
-            try:
-                await envoy_reader.getData()
-            except httpx.HTTPError as err:
-                raise UpdateFailed(f"Error communicating with API: {err}") from err
-
-            for condition in monitored_conditions:
-                if condition != "inverters":
-                    data[condition] = await getattr(envoy_reader, condition)()
-                else:
-                    data["inverters_production"] = await getattr(
-                        envoy_reader, "inverters_production"
-                    )()
-
-            _LOGGER.debug("Retrieved data from API: %s", data)
-
-            return data
-
-    coordinator = DataUpdateCoordinator(
-        homeassistant,
-        _LOGGER,
-        name="sensor",
-        update_method=async_update_data,
-        update_interval=SCAN_INTERVAL,
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
     )
 
-    await coordinator.async_refresh()
 
-    if coordinator.data is None:
-        raise PlatformNotReady
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up envoy sensor platform."""
+    data = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = data[COORDINATOR]
+    name = data[NAME]
 
     entities = []
-    for condition in monitored_conditions:
+    for condition in SENSORS:
         entity_name = ""
         if (
             condition == "inverters"

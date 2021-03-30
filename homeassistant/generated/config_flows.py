@@ -63,6 +63,7 @@ FLOWS = [
     "emonitor",
     "emulated_roku",
     "enocean",
+    "enphase_envoy",
     "epson",
     "esphome",
     "faa_delays",
