@@ -3996,10 +3996,10 @@ async def _async_process(hass, text, calling_client_id=None, hot_word_on=False):
                 and not state.entity_id.startswith("automation.ais_")
             }
             for key, value in automations.items():
-                if value.lower().startswith("jolka:"):
+                if value.lower().startswith("jolka"):
                     if (
-                        value.lower().replace("jolka:", "", 1).strip()
-                        == text.lower().strip()
+                        value.lower().replace("jolka", "", 1).replace(":", "").strip()
+                        == text.lower().replace("jolka", "", 1).replace(":", "").strip()
                     ):
                         await hass.services.async_call(
                             "automation", "trigger", {ATTR_ENTITY_ID: key}
