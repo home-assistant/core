@@ -338,12 +338,14 @@ async def _async_discover_roombas(hass, host):
                 pass
             else:
                 for device in discovered:
-                    if device.host in discovered_hosts:
+                    if device.ip in discovered_hosts:
                         continue
-                    discovered_hosts.add(device.host)
+                    discovered_hosts.add(device.ip)
                     devices.append(device)
 
         if host and host in discovered_hosts:
             return devices
 
         await asyncio.sleep(ROOMBA_WAKE_TIME)
+
+    return devices
