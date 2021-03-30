@@ -4,6 +4,7 @@
             "already_configured": "Enheten er allerede konfigurert"
         },
         "error": {
+            "cannot_connect": "Tilkobling mislyktes",
             "connection_exception": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
             "unauthenticated_exception": "Ugyldig godkjenning",
