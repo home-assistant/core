@@ -159,7 +159,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
             )
     else:
         _LOGGER.warning(
-            "Weather alert not available: The city %s is not in metropolitan France or Andorre.",
+            "Weather alert not available: The city %s is not in metropolitan France or Andorre",
             entry.title,
         )
 
@@ -189,7 +189,7 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
         ].data.position.get("dept")
         hass.data[DOMAIN][department] = False
         _LOGGER.debug(
-            "Weather alert for depatment %s unloaded and released. It can be added now by another city.",
+            "Weather alert for depatment %s unloaded and released. It can be added now by another city",
             department,
         )
 

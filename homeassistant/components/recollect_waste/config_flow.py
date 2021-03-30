@@ -1,5 +1,5 @@
 """Config flow for ReCollect Waste integration."""
-from typing import Optional
+from __future__ import annotations
 
 from aiorecollect.client import Client
 from aiorecollect.errors import RecollectError
@@ -83,7 +83,7 @@ class RecollectWasteOptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize."""
         self._entry = entry
 
-    async def async_step_init(self, user_input: Optional[dict] = None):
+    async def async_step_init(self, user_input: dict | None = None):
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

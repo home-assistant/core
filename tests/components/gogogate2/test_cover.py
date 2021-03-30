@@ -21,6 +21,8 @@ from homeassistant.components.cover import (
     DEVICE_CLASS_GARAGE,
     DEVICE_CLASS_GATE,
     DOMAIN as COVER_DOMAIN,
+    SUPPORT_CLOSE,
+    SUPPORT_OPEN,
 )
 from homeassistant.components.gogogate2.const import (
     DEVICE_TYPE_GOGOGATE2,
@@ -319,6 +321,13 @@ async def test_open_close_update(gogogate2api_mock, hass: HomeAssistant) -> None
             wifi=Wifi(SSID="", linkquality="", signal=""),
         )
 
+    expected_attributes = {
+        "device_class": "garage",
+        "door_id": 1,
+        "friendly_name": "Door1",
+        "supported_features": SUPPORT_CLOSE | SUPPORT_OPEN,
+    }
+
     api = MagicMock(GogoGate2Api)
     api.async_activate.return_value = GogoGate2ActivateResponse(result=True)
     api.async_info.return_value = info_response(DoorStatus.OPENED)
@@ -339,6 +348,7 @@ async def test_open_close_update(gogogate2api_mock, hass: HomeAssistant) -> None
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert hass.states.get("cover.door1").state == STATE_OPEN
+    assert dict(hass.states.get("cover.door1").attributes) == expected_attributes
 
     api.async_info.return_value = info_response(DoorStatus.CLOSED)
     await hass.services.async_call(
@@ -375,6 +385,13 @@ async def test_open_close_update(gogogate2api_mock, hass: HomeAssistant) -> None
 async def test_availability(ismartgateapi_mock, hass: HomeAssistant) -> None:
     """Test availability."""
     closed_door_response = _mocked_ismartgate_closed_door_response()
+
+    expected_attributes = {
+        "device_class": "garage",
+        "door_id": 1,
+        "friendly_name": "Door1",
+        "supported_features": SUPPORT_CLOSE | SUPPORT_OPEN,
+    }
 
     api = MagicMock(ISmartGateApi)
     api.async_info.return_value = closed_door_response
@@ -416,6 +433,7 @@ async def test_availability(ismartgateapi_mock, hass: HomeAssistant) -> None:
     async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
     await hass.async_block_till_done()
     assert hass.states.get("cover.door1").state == STATE_CLOSED
+    assert dict(hass.states.get("cover.door1").attributes) == expected_attributes
 
 
 @patch("homeassistant.components.gogogate2.common.ISmartGateApi")

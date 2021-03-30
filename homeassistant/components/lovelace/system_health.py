@@ -2,9 +2,10 @@
 import asyncio
 
 from homeassistant.components import system_health
+from homeassistant.const import CONF_MODE
 from homeassistant.core import HomeAssistant, callback
 
-from .const import CONF_MODE, DOMAIN, MODE_AUTO, MODE_STORAGE, MODE_YAML
+from .const import DOMAIN, MODE_AUTO, MODE_STORAGE, MODE_YAML
 
 
 @callback

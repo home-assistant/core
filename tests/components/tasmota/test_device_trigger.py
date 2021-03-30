@@ -18,7 +18,7 @@ from tests.common import (
     async_fire_mqtt_message,
     async_get_device_automations,
 )
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
 async def test_get_triggers_btn(hass, device_reg, entity_reg, mqtt_mock, setup_tasmota):

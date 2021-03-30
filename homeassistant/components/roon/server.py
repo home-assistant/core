@@ -141,17 +141,6 @@ class RoonServer:
             async_dispatcher_send(self.hass, "roon_media_player", player_data)
             self.offline_devices.add(dev_id)
 
-    async def async_update_playlists(self):
-        """Store lists in memory with all playlists - could be used by a custom lovelace card."""
-        all_playlists = []
-        roon_playlists = self.roonapi.playlists()
-        if roon_playlists and "items" in roon_playlists:
-            all_playlists += [item["title"] for item in roon_playlists["items"]]
-        roon_playlists = self.roonapi.internet_radio()
-        if roon_playlists and "items" in roon_playlists:
-            all_playlists += [item["title"] for item in roon_playlists["items"]]
-        self.all_playlists = all_playlists
-
     async def async_create_player_data(self, zone, output):
         """Create player object dict by combining zone with output."""
         new_dict = zone.copy()

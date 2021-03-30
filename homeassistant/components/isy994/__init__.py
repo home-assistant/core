@@ -1,7 +1,8 @@
 """Support the ISY-994 controllers."""
+from __future__ import annotations
+
 import asyncio
 from functools import partial
-from typing import Optional
 from urllib.parse import urlparse
 
 from pyisy import ISY
@@ -31,7 +32,7 @@ from .const import (
     ISY994_PROGRAMS,
     ISY994_VARIABLES,
     MANUFACTURER,
-    SUPPORTED_PLATFORMS,
+    PLATFORMS,
     SUPPORTED_PROGRAM_PLATFORMS,
     UNDO_UPDATE_LISTENER,
 )
@@ -67,7 +68,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the isy994 integration from YAML."""
-    isy_config: Optional[ConfigType] = config.get(DOMAIN)
+    isy_config: ConfigType | None = config.get(DOMAIN)
     hass.data.setdefault(DOMAIN, {})
 
     if not isy_config:
@@ -111,7 +112,7 @@ async def async_setup_entry(
     hass_isy_data = hass.data[DOMAIN][entry.entry_id]
 
     hass_isy_data[ISY994_NODES] = {}
-    for platform in SUPPORTED_PLATFORMS:
+    for platform in PLATFORMS:
         hass_isy_data[ISY994_NODES][platform] = []
 
     hass_isy_data[ISY994_PROGRAMS] = {}
@@ -143,7 +144,7 @@ async def async_setup_entry(
         https = True
         port = host.port or 443
     else:
-        _LOGGER.error("isy994 host value in configuration is invalid")
+        _LOGGER.error("The isy994 host value in configuration is invalid")
         return False
 
     # Connect to ISY controller.
@@ -176,7 +177,7 @@ async def async_setup_entry(
     await _async_get_or_create_isy_device_in_registry(hass, entry, isy)
 
     # Load platforms for the devices in the ISY controller that we support.
-    for platform in SUPPORTED_PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
@@ -248,7 +249,7 @@ async def async_unload_entry(
         await asyncio.gather(
             *[
                 hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in SUPPORTED_PLATFORMS
+                for platform in PLATFORMS
             ]
         )
     )

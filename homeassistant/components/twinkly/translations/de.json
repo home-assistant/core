@@ -1,7 +1,10 @@
 {
     "config": {
+        "abort": {
+            "device_exists": "Ger\u00e4t ist bereits konfiguriert"
+        },
         "error": {
-            "cannot_connect": "Verbindungsfehler"
+            "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "step": {
             "user": {

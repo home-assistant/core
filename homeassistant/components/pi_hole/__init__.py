@@ -26,6 +26,7 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import (
     CONF_LOCATION,
+    CONF_STATISTICS_ONLY,
     DATA_KEY_API,
     DATA_KEY_COORDINATOR,
     DEFAULT_LOCATION,
@@ -83,6 +84,12 @@ async def async_setup_entry(hass, entry):
     location = entry.data[CONF_LOCATION]
     api_key = entry.data.get(CONF_API_KEY)
 
+    # For backward compatibility
+    if CONF_STATISTICS_ONLY not in entry.data:
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_STATISTICS_ONLY: not api_key}
+        )
+
     _LOGGER.debug("Setting up %s integration with host %s", DOMAIN, host)
 
     try:
@@ -105,7 +112,7 @@ async def async_setup_entry(hass, entry):
         try:
             await api.get_data()
         except HoleError as err:
-            raise UpdateFailed(f"Failed to communicating with API: {err}") from err
+            raise UpdateFailed(f"Failed to communicate with API: {err}") from err
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -146,7 +153,7 @@ async def async_unload_entry(hass, entry):
 def _async_platforms(entry):
     """Return platforms to be loaded / unloaded."""
     platforms = ["sensor"]
-    if entry.data.get(CONF_API_KEY):
+    if not entry.data[CONF_STATISTICS_ONLY]:
         platforms.append("switch")
     else:
         platforms.append("binary_sensor")

@@ -9,6 +9,7 @@ from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
+    CONF_INCLUDE,
     CONF_PASSWORD,
     CONF_USERNAME,
 )
@@ -16,8 +17,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_utc_time_change
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_INCLUDE = "include"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -44,7 +43,6 @@ class FleetGoDeviceScanner:
 
     def __init__(self, config, see):
         """Initialize FleetGoDeviceScanner."""
-
         self._include = config.get(CONF_INCLUDE)
         self._see = see
 

@@ -108,6 +108,12 @@ def library_music_sort_fixture():
     return load_fixture("plex/library_music_sort.xml")
 
 
+@pytest.fixture(name="library_movies_filtertypes", scope="session")
+def library_movies_filtertypes_fixture():
+    """Load filtertypes payload for movie library and return it."""
+    return load_fixture("plex/library_movies_filtertypes.xml")
+
+
 @pytest.fixture(name="library", scope="session")
 def library_fixture():
     """Load library payload and return it."""
@@ -168,6 +174,12 @@ def playqueue_created_fixture():
     return load_fixture("plex/playqueue_created.xml")
 
 
+@pytest.fixture(name="playqueue_1234", scope="session")
+def playqueue_1234_fixture():
+    """Load payload for playqueue 1234 and return it."""
+    return load_fixture("plex/playqueue_1234.xml")
+
+
 @pytest.fixture(name="plex_server_accounts", scope="session")
 def plex_server_accounts_fixture():
     """Load payload accounts on the Plex server and return it."""
@@ -212,6 +224,12 @@ def plextv_resources_fixture(plextv_resources_base):
     return plextv_resources_base.format(second_server_enabled=0)
 
 
+@pytest.fixture(name="plextv_shared_users", scope="session")
+def plextv_shared_users_fixture(plextv_resources_base):
+    """Load payload for plex.tv shared users and return it."""
+    return load_fixture("plex/plextv_shared_users.xml")
+
+
 @pytest.fixture(name="session_base", scope="session")
 def session_base_fixture():
     """Load the base session payload and return it."""
@@ -254,6 +272,12 @@ def show_seasons_fixture():
     return load_fixture("plex/show_seasons.xml")
 
 
+@pytest.fixture(name="sonos_resources", scope="session")
+def sonos_resources_fixture():
+    """Load Sonos resources payload and return it."""
+    return load_fixture("plex/sonos_resources.xml")
+
+
 @pytest.fixture(name="entry")
 def mock_config_entry():
     """Return the default mocked config entry."""
@@ -281,6 +305,7 @@ def mock_plex_calls(
     children_200,
     children_300,
     empty_library,
+    empty_payload,
     grandchildren_300,
     library,
     library_sections,
@@ -298,12 +323,15 @@ def mock_plex_calls(
     playlist_500,
     plextv_account,
     plextv_resources,
+    plextv_shared_users,
     plex_server_accounts,
     plex_server_clients,
     plex_server_default,
     security_token,
 ):
     """Mock Plex API calls."""
+    requests_mock.get("https://plex.tv/api/users/", text=plextv_shared_users)
+    requests_mock.get("https://plex.tv/api/invites/requested", text=empty_payload)
     requests_mock.get("https://plex.tv/users/account", text=plextv_account)
     requests_mock.get("https://plex.tv/api/resources", text=plextv_resources)
 

@@ -1,8 +1,9 @@
 """Provide functionality to STT."""
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 import asyncio
 import logging
-from typing import Dict, List, Optional
 
 from aiohttp import StreamReader, web
 from aiohttp.hdrs import istr
@@ -62,7 +63,7 @@ async def async_setup(hass: HomeAssistantType, config):
             return
 
     setup_tasks = [
-        async_setup_platform(p_type, p_config)
+        asyncio.create_task(async_setup_platform(p_type, p_config))
         for p_type, p_config in config_per_platform(config, DOMAIN)
     ]
 
@@ -96,44 +97,44 @@ class SpeechMetadata:
 class SpeechResult:
     """Result of audio Speech."""
 
-    text: Optional[str] = attr.ib()
+    text: str | None = attr.ib()
     result: SpeechResultState = attr.ib()
 
 
 class Provider(ABC):
     """Represent a single STT provider."""
 
-    hass: Optional[HomeAssistantType] = None
-    name: Optional[str] = None
+    hass: HomeAssistantType | None = None
+    name: str | None = None
 
     @property
     @abstractmethod
-    def supported_languages(self) -> List[str]:
+    def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
 
     @property
     @abstractmethod
-    def supported_formats(self) -> List[AudioFormats]:
+    def supported_formats(self) -> list[AudioFormats]:
         """Return a list of supported formats."""
 
     @property
     @abstractmethod
-    def supported_codecs(self) -> List[AudioCodecs]:
+    def supported_codecs(self) -> list[AudioCodecs]:
         """Return a list of supported codecs."""
 
     @property
     @abstractmethod
-    def supported_bit_rates(self) -> List[AudioBitRates]:
+    def supported_bit_rates(self) -> list[AudioBitRates]:
         """Return a list of supported bit rates."""
 
     @property
     @abstractmethod
-    def supported_sample_rates(self) -> List[AudioSampleRates]:
+    def supported_sample_rates(self) -> list[AudioSampleRates]:
         """Return a list of supported sample rates."""
 
     @property
     @abstractmethod
-    def supported_channels(self) -> List[AudioChannels]:
+    def supported_channels(self) -> list[AudioChannels]:
         """Return a list of supported channels."""
 
     @abstractmethod
@@ -167,12 +168,12 @@ class SpeechToTextView(HomeAssistantView):
     url = "/api/stt/{provider}"
     name = "api:stt:provider"
 
-    def __init__(self, providers: Dict[str, Provider]) -> None:
+    def __init__(self, providers: dict[str, Provider]) -> None:
         """Initialize a tts view."""
         self.providers = providers
 
     @staticmethod
-    def _metadata_from_header(request: web.Request) -> Optional[SpeechMetadata]:
+    def _metadata_from_header(request: web.Request) -> SpeechMetadata | None:
         """Extract metadata from header.
 
         X-Speech-Content: format=wav; codec=pcm; sample_rate=16000; bit_rate=16; channel=1; language=de_de

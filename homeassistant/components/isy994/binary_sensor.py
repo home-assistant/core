@@ -1,6 +1,8 @@
 """Support for ISY994 binary sensors."""
+from __future__ import annotations
+
 from datetime import timedelta
-from typing import Callable, Union
+from typing import Callable
 
 from pyisy.constants import (
     CMD_OFF,
@@ -127,7 +129,7 @@ async def async_setup_entry(
         if (
             device_class == DEVICE_CLASS_MOTION
             and device_type is not None
-            and any([device_type.startswith(t) for t in TYPE_INSTEON_MOTION])
+            and any(device_type.startswith(t) for t in TYPE_INSTEON_MOTION)
         ):
             # Special cases for Insteon Motion Sensors I & II:
             # Some subnodes never report status until activated, so
@@ -173,7 +175,7 @@ async def async_setup_entry(
     async_add_entities(devices)
 
 
-def _detect_device_type_and_class(node: Union[Group, Node]) -> (str, str):
+def _detect_device_type_and_class(node: Group | Node) -> (str, str):
     try:
         device_type = node.type
     except AttributeError:
@@ -194,10 +196,8 @@ def _detect_device_type_and_class(node: Union[Group, Node]) -> (str, str):
     # Other devices (incl Insteon.)
     for device_class in [*BINARY_SENSOR_DEVICE_TYPES_ISY]:
         if any(
-            [
-                device_type.startswith(t)
-                for t in set(BINARY_SENSOR_DEVICE_TYPES_ISY[device_class])
-            ]
+            device_type.startswith(t)
+            for t in set(BINARY_SENSOR_DEVICE_TYPES_ISY[device_class])
         ):
             return device_class, device_type
     return (None, device_type)
@@ -281,15 +281,17 @@ class ISYInsteonBinarySensorEntity(ISYBinarySensorEntity):
         """
         self._negative_node = child
 
-        if self._negative_node.status != ISY_VALUE_UNKNOWN:
-            # If the negative node has a value, it means the negative node is
-            # in use for this device. Next we need to check to see if the
-            # negative and positive nodes disagree on the state (both ON or
-            # both OFF).
-            if self._negative_node.status == self._node.status:
-                # The states disagree, therefore we cannot determine the state
-                # of the sensor until we receive our first ON event.
-                self._computed_state = None
+        # If the negative node has a value, it means the negative node is
+        # in use for this device. Next we need to check to see if the
+        # negative and positive nodes disagree on the state (both ON or
+        # both OFF).
+        if (
+            self._negative_node.status != ISY_VALUE_UNKNOWN
+            and self._negative_node.status == self._node.status
+        ):
+            # The states disagree, therefore we cannot determine the state
+            # of the sensor until we receive our first ON event.
+            self._computed_state = None
 
     def _negative_node_control_handler(self, event: object) -> None:
         """Handle an "On" control event from the "negative" node."""
@@ -457,9 +459,9 @@ class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity):
         return DEVICE_CLASS_BATTERY
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Get the state attributes for the device."""
-        attr = super().device_state_attributes
+        attr = super().extra_state_attributes
         attr["parent_entity_id"] = self._parent_device.entity_id
         return attr
 

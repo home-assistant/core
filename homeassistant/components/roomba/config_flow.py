@@ -9,15 +9,13 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core
 from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.const import CONF_DELAY, CONF_HOST, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import callback
 
 from . import CannotConnect, async_connect_or_timeout, async_disconnect_or_timeout
 from .const import (
     CONF_BLID,
     CONF_CONTINUOUS,
-    CONF_DELAY,
-    CONF_NAME,
     DEFAULT_CONTINUOUS,
     DEFAULT_DELAY,
     ROOMBA_SESSION,
@@ -82,7 +80,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_host_already_configured(dhcp_discovery[IP_ADDRESS]):
             return self.async_abort(reason="already_configured")
 
-        if not dhcp_discovery[HOSTNAME].startswith("iRobot-"):
+        if not dhcp_discovery[HOSTNAME].startswith(("irobot-", "roomba-")):
             return self.async_abort(reason="not_irobot_device")
 
         blid = _async_blid_from_hostname(dhcp_discovery[HOSTNAME])
@@ -93,7 +91,6 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self.host = dhcp_discovery[IP_ADDRESS]
         self.blid = blid
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {"host": self.host, "name": self.blid}
         return await self.async_step_user()
 
@@ -135,7 +132,6 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
             if self.host and self.host in self.discovered_robots:
                 # From discovery
-                # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
                 self.context["title_placeholders"] = {
                     "host": self.host,
                     "name": self.discovered_robots[self.host].robot_name,

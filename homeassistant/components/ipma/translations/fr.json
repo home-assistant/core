@@ -15,5 +15,10 @@
                 "title": "Emplacement"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "Point de terminaison de l'API IPMA accessible"
+        }
     }
 }

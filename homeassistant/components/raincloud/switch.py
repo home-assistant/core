@@ -83,7 +83,7 @@ class RainCloudSwitch(RainCloudEntity, SwitchEntity):
             self._state = self.data.auto_watering
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,

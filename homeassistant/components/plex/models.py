@@ -70,7 +70,7 @@ class PlexSession:
             self.media_library_title = "Live TV"
         else:
             self.media_library_title = (
-                media.section().title if media.section() is not None else ""
+                media.section().title if media.librarySectionID is not None else ""
             )
 
         if media.type == "episode":

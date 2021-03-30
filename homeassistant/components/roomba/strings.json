@@ -3,7 +3,7 @@
     "flow_title": "iRobot {name} ({host})",
     "step": {
       "init": {
-        "title": "Automaticlly connect to the device",
+        "title": "Automatically connect to the device",
         "description": "Select a Roomba or Braava.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
@@ -23,7 +23,7 @@
       },
       "link_manual": {
         "title": "Enter Password",
-        "description": "The password could not be retrivied from the device automatically. Please follow the steps outlined in the documentation at: {auth_help_url}",
+        "description": "The password could not be retrieved from the device automatically. Please follow the steps outlined in the documentation at: {auth_help_url}",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
         }

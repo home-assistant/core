@@ -819,6 +819,20 @@ async def test_thermostat_set_fan(hass, auth):
         "params": {"timerMode": "OFF"},
     }
 
+    # Turn on fan mode
+    await common.async_set_fan_mode(hass, FAN_ON)
+    await hass.async_block_till_done()
+
+    assert auth.method == "post"
+    assert auth.url == "some-device-id:executeCommand"
+    assert auth.json == {
+        "command": "sdm.devices.commands.Fan.SetTimer",
+        "params": {
+            "duration": "43200s",
+            "timerMode": "ON",
+        },
+    }
+
 
 async def test_thermostat_fan_empty(hass):
     """Test a fan trait with an empty response."""
@@ -938,7 +952,7 @@ async def test_thermostat_set_hvac_fan_only(hass, auth):
     assert url == "some-device-id:executeCommand"
     assert json == {
         "command": "sdm.devices.commands.Fan.SetTimer",
-        "params": {"timerMode": "ON"},
+        "params": {"duration": "43200s", "timerMode": "ON"},
     }
     (method, url, json, headers) = auth.captured_requests.pop(0)
     assert method == "post"

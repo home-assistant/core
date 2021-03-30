@@ -7,6 +7,8 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
+    CONF_SENSOR_TYPE,
+    CONF_SENSORS,
     CONF_TEMPERATURE_UNIT,
     EVENT_HOMEASSISTANT_STOP,
     TIME_HOURS,
@@ -27,8 +29,6 @@ CONF_NET_METERING = "net_metering"
 CONF_NUMBER = "number"
 CONF_PULSE_COUNTERS = "pulse_counters"
 CONF_SERIAL_NUMBER = "serial_number"
-CONF_SENSORS = "sensors"
-CONF_SENSOR_TYPE = "sensor_type"
 CONF_TEMPERATURE_SENSORS = "temperature_sensors"
 CONF_TIME_UNIT = "time_unit"
 CONF_VOLTAGE_SENSORS = "voltage"
@@ -119,7 +119,6 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: COMPONENT_SCHEMA}, extra=vol.ALLOW_EXTRA)
 
 async def async_setup(hass, config):
     """Set up the GreenEye Monitor component."""
-
     monitors = Monitors()
     hass.data[DATA_GREENEYE_MONITOR] = monitors
 

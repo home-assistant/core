@@ -1,15 +1,12 @@
 """Helper to handle a set of topics to subscribe to."""
 from collections import deque
 from functools import wraps
-import logging
 from typing import Any
 
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import ATTR_DISCOVERY_PAYLOAD, ATTR_DISCOVERY_TOPIC
 from .models import MessageCallbackType
-
-_LOGGER = logging.getLogger(__name__)
 
 DATA_MQTT_DEBUG_INFO = "mqtt_debug_info"
 STORED_MESSAGES = 10

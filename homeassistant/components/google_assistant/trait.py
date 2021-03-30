@@ -1,6 +1,7 @@
 """Implement the Google Smart Home traits."""
+from __future__ import annotations
+
 import logging
-from typing import List, Optional
 
 from homeassistant.components import (
     alarm_control_panel,
@@ -27,6 +28,7 @@ from homeassistant.const import (
     ATTR_CODE,
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
+    ATTR_MODE,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     CAST_APP_ID_HOMEASSISTANT,
@@ -152,7 +154,7 @@ def _google_temp_unit(units):
     return "C"
 
 
-def _next_selected(items: List[str], selected: Optional[str]) -> Optional[str]:
+def _next_selected(items: list[str], selected: str | None) -> str | None:
     """Return the next item in a item list starting at given value.
 
     If selected is missing in items, None is returned
@@ -762,7 +764,7 @@ class TemperatureSettingTrait(_Trait):
                 mode in modes for mode in ("heatcool", "heat", "cool")
             ):
                 modes.append("on")
-            response["availableThermostatModes"] = ",".join(modes)
+            response["availableThermostatModes"] = modes
 
         return response
 
@@ -1276,6 +1278,7 @@ class FanSpeedTrait(_Trait):
         return {
             "availableFanSpeeds": {"speeds": speeds, "ordered": True},
             "reversible": reversible,
+            "supportsFanSpeedPercent": True,
         }
 
     def query_attributes(self):
@@ -1289,9 +1292,11 @@ class FanSpeedTrait(_Trait):
                 response["currentFanSpeedSetting"] = speed
         if domain == fan.DOMAIN:
             speed = attrs.get(fan.ATTR_SPEED)
+            percent = attrs.get(fan.ATTR_PERCENTAGE) or 0
             if speed is not None:
                 response["on"] = speed != fan.SPEED_OFF
                 response["currentFanSpeedSetting"] = speed
+                response["currentFanSpeedPercent"] = percent
         return response
 
     async def execute(self, command, data, params, challenge):
@@ -1309,13 +1314,20 @@ class FanSpeedTrait(_Trait):
                 context=data.context,
             )
         if domain == fan.DOMAIN:
+            service_params = {
+                ATTR_ENTITY_ID: self.state.entity_id,
+            }
+            if "fanSpeedPercent" in params:
+                service = fan.SERVICE_SET_PERCENTAGE
+                service_params[fan.ATTR_PERCENTAGE] = params["fanSpeedPercent"]
+            else:
+                service = fan.SERVICE_SET_SPEED
+                service_params[fan.ATTR_SPEED] = params["fanSpeed"]
+
             await self.hass.services.async_call(
                 fan.DOMAIN,
-                fan.SERVICE_SET_SPEED,
-                {
-                    ATTR_ENTITY_ID: self.state.entity_id,
-                    fan.ATTR_SPEED: params["fanSpeed"],
-                },
+                service,
+                service_params,
                 blocking=True,
                 context=data.context,
             )
@@ -1414,11 +1426,10 @@ class ModesTrait(_Trait):
         elif self.state.domain == input_select.DOMAIN:
             mode_settings["option"] = self.state.state
         elif self.state.domain == humidifier.DOMAIN:
-            if humidifier.ATTR_MODE in attrs:
-                mode_settings["mode"] = attrs.get(humidifier.ATTR_MODE)
-        elif self.state.domain == light.DOMAIN:
-            if light.ATTR_EFFECT in attrs:
-                mode_settings["effect"] = attrs.get(light.ATTR_EFFECT)
+            if ATTR_MODE in attrs:
+                mode_settings["mode"] = attrs.get(ATTR_MODE)
+        elif self.state.domain == light.DOMAIN and light.ATTR_EFFECT in attrs:
+            mode_settings["effect"] = attrs.get(light.ATTR_EFFECT)
 
         if mode_settings:
             response["on"] = self.state.state not in (STATE_OFF, STATE_UNKNOWN)
@@ -1450,7 +1461,7 @@ class ModesTrait(_Trait):
                 humidifier.DOMAIN,
                 humidifier.SERVICE_SET_MODE,
                 {
-                    humidifier.ATTR_MODE: requested_mode,
+                    ATTR_MODE: requested_mode,
                     ATTR_ENTITY_ID: self.state.entity_id,
                 },
                 blocking=True,
@@ -1606,15 +1617,17 @@ class OpenCloseTrait(_Trait):
         if self.state.domain == binary_sensor.DOMAIN:
             response["queryOnlyOpenClose"] = True
             response["discreteOnlyOpenClose"] = True
-        elif self.state.domain == cover.DOMAIN:
-            if features & cover.SUPPORT_SET_POSITION == 0:
-                response["discreteOnlyOpenClose"] = True
+        elif (
+            self.state.domain == cover.DOMAIN
+            and features & cover.SUPPORT_SET_POSITION == 0
+        ):
+            response["discreteOnlyOpenClose"] = True
 
-                if (
-                    features & cover.SUPPORT_OPEN == 0
-                    and features & cover.SUPPORT_CLOSE == 0
-                ):
-                    response["queryOnlyOpenClose"] = True
+            if (
+                features & cover.SUPPORT_OPEN == 0
+                and features & cover.SUPPORT_CLOSE == 0
+            ):
+                response["queryOnlyOpenClose"] = True
 
         if self.state.attributes.get(ATTR_ASSUMED_STATE):
             response["commandOnlyOpenClose"] = True
@@ -1675,17 +1688,17 @@ class OpenCloseTrait(_Trait):
             else:
                 position = params["openPercent"]
 
-            if features & cover.SUPPORT_SET_POSITION:
-                service = cover.SERVICE_SET_COVER_POSITION
-                if position > 0:
-                    should_verify = True
-                svc_params[cover.ATTR_POSITION] = position
-            elif position == 0:
+            if position == 0:
                 service = cover.SERVICE_CLOSE_COVER
                 should_verify = False
             elif position == 100:
                 service = cover.SERVICE_OPEN_COVER
                 should_verify = True
+            elif features & cover.SUPPORT_SET_POSITION:
+                service = cover.SERVICE_SET_COVER_POSITION
+                if position > 0:
+                    should_verify = True
+                svc_params[cover.ATTR_POSITION] = position
             else:
                 raise SmartHomeError(
                     ERR_NOT_SUPPORTED, "No support for partial open close"
@@ -1928,12 +1941,10 @@ class TransportControlTrait(_Trait):
 
     def query_attributes(self):
         """Return the attributes of this trait for this entity."""
-
         return {}
 
     async def execute(self, command, data, params, challenge):
         """Execute a media command."""
-
         service_attrs = {ATTR_ENTITY_ID: self.state.entity_id}
 
         if command == COMMAND_MEDIA_SEEK_RELATIVE:

@@ -4,7 +4,7 @@ import voluptuous_serialize
 
 import homeassistant.components.automation as automation
 from homeassistant.components.humidifier import DOMAIN, const, device_condition
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_MODE, STATE_OFF, STATE_ON
 from homeassistant.helpers import config_validation as cv, device_registry
 from homeassistant.setup import async_setup_component
 
@@ -17,7 +17,7 @@ from tests.common import (
     mock_device_registry,
     mock_registry,
 )
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
 @pytest.fixture
@@ -51,7 +51,7 @@ async def test_get_conditions(hass, device_reg, entity_reg):
         f"{DOMAIN}.test_5678",
         STATE_ON,
         {
-            const.ATTR_MODE: const.MODE_AWAY,
+            ATTR_MODE: const.MODE_AWAY,
             const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY],
         },
     )
@@ -98,7 +98,7 @@ async def test_get_conditions_toggle_only(hass, device_reg, entity_reg):
         f"{DOMAIN}.test_5678",
         STATE_ON,
         {
-            const.ATTR_MODE: const.MODE_AWAY,
+            ATTR_MODE: const.MODE_AWAY,
             const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY],
         },
     )
@@ -127,9 +127,7 @@ async def test_get_conditions_toggle_only(hass, device_reg, entity_reg):
 
 async def test_if_state(hass, calls):
     """Test for turn_on and turn_off conditions."""
-    hass.states.async_set(
-        "humidifier.entity", STATE_ON, {const.ATTR_MODE: const.MODE_AWAY}
-    )
+    hass.states.async_set("humidifier.entity", STATE_ON, {ATTR_MODE: const.MODE_AWAY})
 
     assert await async_setup_component(
         hass,
@@ -213,9 +211,7 @@ async def test_if_state(hass, calls):
     assert len(calls) == 2
     assert calls[1].data["some"] == "is_off event - test_event2"
 
-    hass.states.async_set(
-        "humidifier.entity", STATE_ON, {const.ATTR_MODE: const.MODE_AWAY}
-    )
+    hass.states.async_set("humidifier.entity", STATE_ON, {ATTR_MODE: const.MODE_AWAY})
 
     hass.bus.async_fire("test_event3")
     await hass.async_block_till_done()
@@ -223,9 +219,7 @@ async def test_if_state(hass, calls):
     assert len(calls) == 3
     assert calls[2].data["some"] == "is_mode - event - test_event3"
 
-    hass.states.async_set(
-        "humidifier.entity", STATE_ON, {const.ATTR_MODE: const.MODE_HOME}
-    )
+    hass.states.async_set("humidifier.entity", STATE_ON, {ATTR_MODE: const.MODE_HOME})
 
     # Should not fire
     hass.bus.async_fire("test_event3")
@@ -239,7 +233,7 @@ async def test_capabilities(hass):
         "humidifier.entity",
         STATE_ON,
         {
-            const.ATTR_MODE: const.MODE_AWAY,
+            ATTR_MODE: const.MODE_AWAY,
             const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY],
         },
     )
@@ -262,7 +256,7 @@ async def test_capabilities(hass):
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
-            "name": "available_modes",
+            "name": "mode",
             "options": [("home", "home"), ("away", "away")],
             "required": True,
             "type": "select",
@@ -288,9 +282,7 @@ async def test_capabilities_no_state(hass):
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
-    ) == [
-        {"name": "available_modes", "options": [], "required": True, "type": "select"}
-    ]
+    ) == [{"name": "mode", "options": [], "required": True, "type": "select"}]
 
 
 async def test_get_condition_capabilities(hass, device_reg, entity_reg):

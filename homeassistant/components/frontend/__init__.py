@@ -1,10 +1,12 @@
 """Handle the frontend for Home Assistant."""
+from __future__ import annotations
+
 import json
 import logging
 import mimetypes
 import os
 import pathlib
-from typing import Any, Dict, Optional, Set, Tuple
+from typing import Any
 
 from aiohttp import hdrs, web, web_urldispatcher
 import jinja2
@@ -14,7 +16,7 @@ from yarl import URL
 from homeassistant.components import websocket_api
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.config import async_hass_config_yaml
-from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
+from homeassistant.const import CONF_MODE, CONF_NAME, EVENT_THEMES_UPDATED
 from homeassistant.core import callback
 from homeassistant.helpers import service
 import homeassistant.helpers.config_validation as cv
@@ -56,6 +58,13 @@ MANIFEST_JSON = {
             "purpose": "maskable any",
         }
         for size in (192, 384, 512, 1024)
+    ],
+    "screenshots": [
+        {
+            "src": "/static/images/screenshots/screenshot-1.png",
+            "sizes": "413×792",
+            "type": "image/png",
+        }
     ],
     "lang": "en-US",
     "name": "Home Assistant",
@@ -113,26 +122,25 @@ CONFIG_SCHEMA = vol.Schema(
 
 SERVICE_SET_THEME = "set_theme"
 SERVICE_RELOAD_THEMES = "reload_themes"
-CONF_MODE = "mode"
 
 
 class Panel:
     """Abstract class for panels."""
 
     # Name of the webcomponent
-    component_name: Optional[str] = None
+    component_name: str | None = None
 
     # Icon to show in the sidebar
-    sidebar_icon: Optional[str] = None
+    sidebar_icon: str | None = None
 
     # Title to show in the sidebar
-    sidebar_title: Optional[str] = None
+    sidebar_title: str | None = None
 
     # Url to show the panel in the frontend
-    frontend_url_path: Optional[str] = None
+    frontend_url_path: str | None = None
 
     # Config to pass to the webcomponent
-    config: Optional[Dict[str, Any]] = None
+    config: dict[str, Any] | None = None
 
     # If the panel should only be visible to admins
     require_admin = False
@@ -262,10 +270,10 @@ async def async_setup(hass, config):
     for path, should_cache in (
         ("service_worker.js", False),
         ("robots.txt", False),
-        ("onboarding.html", True),
-        ("static", True),
-        ("frontend_latest", True),
-        ("frontend_es5", True),
+        ("onboarding.html", not is_dev),
+        ("static", not is_dev),
+        ("frontend_latest", not is_dev),
+        ("frontend_es5", not is_dev),
     ):
         hass.http.register_static_path(f"/{path}", str(root_path / path), should_cache)
 
@@ -444,7 +452,7 @@ class IndexView(web_urldispatcher.AbstractResource):
 
     async def resolve(
         self, request: web.Request
-    ) -> Tuple[Optional[web_urldispatcher.UrlMappingMatchInfo], Set[str]]:
+    ) -> tuple[web_urldispatcher.UrlMappingMatchInfo | None, set[str]]:
         """Resolve resource.
 
         Return (UrlMappingMatchInfo, allowed_methods) pair.
