@@ -6,7 +6,7 @@ from hole.exceptions import HoleError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.pi_hole.const import (  # pylint: disable=unused-import
+from homeassistant.components.pi_hole.const import (
     CONF_LOCATION,
     CONF_STATISTICS_ONLY,
     DEFAULT_LOCATION,

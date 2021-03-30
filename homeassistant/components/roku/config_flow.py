@@ -19,7 +19,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import DOMAIN
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 

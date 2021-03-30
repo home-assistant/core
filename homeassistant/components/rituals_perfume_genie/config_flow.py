@@ -9,7 +9,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import ACCOUNT_HASH, DOMAIN  # pylint:disable=unused-import
+from .const import ACCOUNT_HASH, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

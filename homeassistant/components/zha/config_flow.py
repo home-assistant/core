@@ -10,7 +10,7 @@ from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
 from homeassistant import config_entries
 
-from .core.const import (  # pylint:disable=unused-import
+from .core.const import (
     CONF_BAUDRATE,
     CONF_FLOWCONTROL,
     CONF_RADIO_TYPE,

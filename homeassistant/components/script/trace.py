@@ -30,7 +30,7 @@ def trace_script(hass, item_id, config, context):
 
     try:
         yield trace
-    except Exception as ex:  # pylint: disable=broad-except
+    except Exception as ex:
         if item_id:
             trace.set_error(ex)
         raise ex
