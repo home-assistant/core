@@ -2,6 +2,7 @@
 from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
+import pytest
 
 from homeassistant.components.analytics.analytics import Analytics
 from homeassistant.components.analytics.const import (
@@ -13,6 +14,7 @@ from homeassistant.components.analytics.const import (
     ATTR_USAGE,
 )
 from homeassistant.const import __version__ as HA_VERSION
+from homeassistant.loader import IntegrationNotFound
 
 MOCK_HUUID = "abcdefg"
 
@@ -220,6 +222,44 @@ async def test_send_statistics(hass, caplog, aioclient_mock):
         in caplog.text
     )
     assert "'integrations':" not in caplog.text
+
+
+async def test_send_statistics_one_integration_fails(hass, caplog, aioclient_mock):
+    """Test send statistics prefrences are defined."""
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    analytics = Analytics(hass)
+    await analytics.save_preferences({ATTR_BASE: True, ATTR_STATISTICS: True})
+    assert analytics.preferences[ATTR_BASE]
+    assert analytics.preferences[ATTR_STATISTICS]
+    hass.config.components = ["default_config"]
+
+    with patch(
+        "homeassistant.components.analytics.analytics.async_get_integration",
+        side_effect=IntegrationNotFound("any"),
+    ), patch("homeassistant.helpers.instance_id.async_get", return_value=MOCK_HUUID):
+        await analytics.send_analytics()
+
+    post_call = aioclient_mock.mock_calls[0]
+    assert "huuid" in post_call[2]
+    assert post_call[2]["integration_count"] == 0
+
+
+async def test_send_statistics_async_get_integration_unknown_exception(
+    hass, caplog, aioclient_mock
+):
+    """Test send statistics prefrences are defined."""
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    analytics = Analytics(hass)
+    await analytics.save_preferences({ATTR_BASE: True, ATTR_STATISTICS: True})
+    assert analytics.preferences[ATTR_BASE]
+    assert analytics.preferences[ATTR_STATISTICS]
+    hass.config.components = ["default_config"]
+
+    with pytest.raises(ValueError), patch(
+        "homeassistant.components.analytics.analytics.async_get_integration",
+        side_effect=ValueError,
+    ), patch("homeassistant.helpers.instance_id.async_get", return_value=MOCK_HUUID):
+        await analytics.send_analytics()
 
 
 async def test_send_statistics_with_supervisor(hass, caplog, aioclient_mock):
