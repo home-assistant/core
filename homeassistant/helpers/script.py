@@ -1045,7 +1045,6 @@ class Script:
             action = cv.determine_script_action(step)
 
             if action == cv.SCRIPT_ACTION_CALL_SERVICE:
-                print(step)
                 for data in (
                     step.get(CONF_TARGET),
                     step.get(service.CONF_SERVICE_DATA),
