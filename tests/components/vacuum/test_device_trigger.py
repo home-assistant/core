@@ -70,7 +70,7 @@ async def test_get_triggers(hass, device_reg, entity_reg):
 
 
 async def test_get_trigger_capabilities(hass, device_reg, entity_reg):
-    """Test we get the expected capabilities from an alarm_control_panel."""
+    """Test we get the expected capabilities from a vacuum device."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
     device_entry = device_reg.async_get_or_create(
@@ -79,7 +79,7 @@ async def test_get_trigger_capabilities(hass, device_reg, entity_reg):
     )
     entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
     hass.states.async_set(
-        "alarm_control_panel.test_5678", "attributes", {"supported_features": 15}
+        "vacuum.test_5678", "attributes", {"supported_features": 15}
     )
 
     triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
