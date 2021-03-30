@@ -79,15 +79,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_config):
         """Handle a flow import."""
-        host = import_config[CONF_IP_ADDRESS]
-        if host in self._async_current_hosts():
-            return self.async_abort(reason="already_configured")
-
-        self.ip_address = host
+        self.ip_address = import_config[CONF_IP_ADDRESS]
         self.username = import_config[CONF_USERNAME]
         return await self.async_step_user(
             {
-                CONF_HOST: host,
+                CONF_HOST: import_config[CONF_IP_ADDRESS],
                 CONF_NAME: import_config[CONF_NAME],
                 CONF_USERNAME: import_config[CONF_USERNAME],
                 CONF_PASSWORD: import_config[CONF_PASSWORD],
@@ -119,6 +115,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
+            if user_input[CONF_HOST] in self._async_current_hosts():
+                return self.async_abort(reason="already_configured")
             try:
                 await validate_input(self.hass, user_input)
             except CannotConnect:
