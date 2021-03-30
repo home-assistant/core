@@ -23,7 +23,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "Envoy"
+ENVOY = "Envoy"
 
 CONF_SERIAL = "serial"
 
@@ -54,6 +54,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize an envoy flow."""
         self.ip_address = None
+        self.username = None
         self.serial = None
 
     @callback
@@ -62,11 +63,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         schema = {}
 
         if include_ip_address:
-            schema[vol.Required(CONF_HOST)] = str
+            schema[vol.Required(CONF_HOST, default=self.ip_address)] = str
 
         schema.update(
             {
-                vol.Optional(CONF_USERNAME, default="envoy"): str,
+                vol.Optional(CONF_USERNAME, default=self.username or "envoy"): str,
                 vol.Optional(CONF_PASSWORD, default=""): str,
             }
         )
@@ -78,6 +79,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if host in self._async_current_hosts():
             return self.async_abort(reason="already_configured")
 
+        self.ip_address = host
+        self.username = import_config[CONF_USERNAME]
         return await self.async_step_user(
             {
                 CONF_HOST: host,
@@ -125,9 +128,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if CONF_NAME in user_input:
                     name = user_input[CONF_NAME]
                 else:
-                    name = (
-                        f"{DEFAULT_NAME} {self.serial}" if self.serial else DEFAULT_NAME
-                    )
+                    name = f"{ENVOY} {self.serial}" if self.serial else ENVOY
                 return self.async_create_entry(
                     title=name, data={CONF_NAME: name, **user_input}
                 )

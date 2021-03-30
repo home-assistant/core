@@ -1,5 +1,7 @@
 """Support for Enphase Envoy solar energy monitor."""
 
+import logging
+
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
@@ -18,6 +20,7 @@ from .const import COORDINATOR, DOMAIN, NAME, SENSORS
 
 ICON = "mdi:flash"
 CONST_DEFAULT_HOST = "envoy"
+_LOGGER = logging.getLogger(__name__)
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -35,6 +38,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Enphase Envoy sensor."""
+    _LOGGER.warning(
+        "Loading enphase_envoy via platform config is deprecated; The configuration"
+        " has been migrated to a config entry and can be safely removed"
+    )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=config
