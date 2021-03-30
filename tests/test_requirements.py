@@ -1,5 +1,4 @@
 """Test requirements module."""
-from asyncio import Future
 import os
 from unittest.mock import call, patch
 
@@ -172,94 +171,6 @@ async def test_get_integration_with_missing_after_dependencies(hass):
     integration = await async_get_integration_with_requirements(hass, "test_component")
     assert integration
     assert integration.domain == "test_component"
-
-
-async def test_get_integration_with_missing_dependencies_first(hass):
-    """Check getting an integration with missing dependencies raising an exception first."""
-    hass.config.skip_pip = False
-    mock_integration(
-        hass,
-        MockModule(
-            "test_component",
-            dependencies=["test_component_dep"],
-            partial_manifest={"after_dependencies": ["test_component_after_dep"]},
-        ),
-    )
-    mock_gather = Future()
-    mock_gather.set_result(
-        [
-            loader.IntegrationNotFound("test_component_dep"),
-            mock_integration(
-                hass,
-                MockModule("test_component_after_dep"),
-            ),
-        ]
-    )
-    with patch(
-        "homeassistant.requirements.asyncio.gather",
-        return_value=mock_gather,
-    ), pytest.raises(loader.IntegrationNotFound):
-        await async_get_integration_with_requirements(hass, "test_component")
-
-
-async def test_get_integration_with_missing_after_dependencies_first(hass):
-    """Check getting an integration with missing after_dependencies raising an exception first."""
-    hass.config.skip_pip = False
-    mock_integration(
-        hass,
-        MockModule(
-            "test_component",
-            dependencies=["test_component_dep"],
-            partial_manifest={"after_dependencies": ["test_component_after_dep"]},
-        ),
-    )
-    mock_gather = Future()
-    mock_gather.set_result(
-        [
-            loader.IntegrationNotFound("test_component_after_dep"),
-            mock_integration(
-                hass,
-                MockModule("test_component_after_dep"),
-            ),
-        ]
-    )
-    with patch(
-        "homeassistant.requirements.asyncio.gather",
-        return_value=mock_gather,
-    ):
-        integration = await async_get_integration_with_requirements(
-            hass, "test_component"
-        )
-        assert integration
-        assert integration.domain == "test_component"
-
-
-async def test_get_integration_with_exception(hass):
-    """Check getting an integration with general exception is raised."""
-    hass.config.skip_pip = False
-    mock_integration(
-        hass,
-        MockModule("test_component_after_dep"),
-    )
-    mock_integration(
-        hass,
-        MockModule(
-            "test_component",
-            dependencies=["test_component_dep"],
-            partial_manifest={"after_dependencies": ["test_component_after_dep"]},
-        ),
-    )
-    mock_gather = Future()
-    mock_gather.set_result(
-        [
-            BaseException("Exception found"),
-        ]
-    )
-    with patch(
-        "homeassistant.requirements.asyncio.gather",
-        return_value=mock_gather,
-    ), pytest.raises(BaseException):
-        await async_get_integration_with_requirements(hass, "test_component")
 
 
 async def test_install_with_wheels_index(hass):
