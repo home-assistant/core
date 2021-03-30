@@ -285,7 +285,6 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         self._is_enabled = False
         self._referenced_entities: set[str] | None = None
         self._referenced_devices: set[str] | None = None
-        self._referenced_areas: set[str] | None = None
         self._logger = LOGGER
         self._variables: ScriptVariables = variables
         self._trigger_variables: ScriptVariables = trigger_variables
