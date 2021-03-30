@@ -23,7 +23,8 @@ from .const import (
 from .const import DOMAIN  # pylint:disable=unused-import
 
 ROOMBA_DISCOVERY_LOCK = "roomba_discovery_lock"
-MAX_DISCOVER_ATTEMPTS = 2
+ALL_ATTEMPTS = 3
+HOST_ATTEMPTS = 10
 ROOMBA_WAKE_TIME = 6
 
 DEFAULT_OPTIONS = {CONF_CONTINUOUS: DEFAULT_CONTINUOUS, CONF_DELAY: DEFAULT_DELAY}
@@ -321,8 +322,9 @@ async def _async_discover_roombas(hass, host):
     discovered_hosts = set()
     devices = []
     discover_lock = hass.data.setdefault(ROOMBA_DISCOVERY_LOCK, asyncio.Lock())
+    discover_attempts = HOST_ATTEMPTS if host else ALL_ATTEMPTS
 
-    for _ in range(MAX_DISCOVER_ATTEMPTS + 1):
+    for _ in range(discover_attempts + 1):
         async with discover_lock:
             try:
                 if host:
