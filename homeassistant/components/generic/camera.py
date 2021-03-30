@@ -162,7 +162,7 @@ class GenericCamera(Camera):
             return self._last_url, self._last_image
         finally:
             if response:
-                response.close()
+                await response.aclose()
         return url, image
 
     @property
