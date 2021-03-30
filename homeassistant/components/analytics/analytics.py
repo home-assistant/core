@@ -149,6 +149,9 @@ class Analytics:
                 if isinstance(integration, IntegrationNotFound):
                     continue
 
+                if isinstance(integration, BaseException):
+                    raise integration
+
                 if integration.disabled or not integration.is_built_in:
                     continue
 
