@@ -1,6 +1,4 @@
 """Test the Waze Travel Time config flow."""
-from unittest.mock import patch
-
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.waze_travel_time.const import (
     CONF_AVOID_FERRIES,
@@ -21,7 +19,7 @@ from homeassistant.const import CONF_REGION, CONF_UNIT_SYSTEM_IMPERIAL
 from tests.common import MockConfigEntry
 
 
-async def test_minimum_fields(hass, validate_config_entry):
+async def test_minimum_fields(hass, validate_config_entry, bypass_setup):
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -29,21 +27,15 @@ async def test_minimum_fields(hass, validate_config_entry):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.waze_travel_time.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.waze_travel_time.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_ORIGIN: "location1",
-                CONF_DESTINATION: "location2",
-                CONF_REGION: "US",
-            },
-        )
-        await hass.async_block_till_done()
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_ORIGIN: "location1",
+            CONF_DESTINATION: "location2",
+            CONF_REGION: "US",
+        },
+    )
+    await hass.async_block_till_done()
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == f"{DEFAULT_NAME}: location1 -> location2"
@@ -52,11 +44,9 @@ async def test_minimum_fields(hass, validate_config_entry):
         CONF_DESTINATION: "location2",
         CONF_REGION: "US",
     }
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_options(hass, validate_config_entry):
+async def test_options(hass, validate_config_entry, mock_update):
     """Test options flow."""
 
     entry = MockConfigEntry(
@@ -68,12 +58,8 @@ async def test_options(hass, validate_config_entry):
         },
     )
     entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.waze_travel_time.sensor.WazeRouteCalculator.calc_all_routes_info",
-        return_value={"My route": (150, 300)},
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(entry.entry_id, data=None)
 
@@ -118,7 +104,7 @@ async def test_options(hass, validate_config_entry):
     }
 
 
-async def test_import(hass, validate_config_entry):
+async def test_import(hass, validate_config_entry, mock_update):
     """Test import for config flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -158,7 +144,7 @@ async def test_import(hass, validate_config_entry):
     }
 
 
-async def test_dupe_id(hass, validate_config_entry):
+async def test_dupe_id(hass, validate_config_entry, bypass_setup):
     """Test setting up the same entry twice fails."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -166,43 +152,37 @@ async def test_dupe_id(hass, validate_config_entry):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.waze_travel_time.async_setup", return_value=True
-    ), patch(
-        "homeassistant.components.waze_travel_time.async_setup_entry",
-        return_value=True,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_ORIGIN: "location1",
-                CONF_DESTINATION: "location2",
-                CONF_REGION: "US",
-            },
-        )
-        await hass.async_block_till_done()
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_ORIGIN: "location1",
+            CONF_DESTINATION: "location2",
+            CONF_REGION: "US",
+        },
+    )
+    await hass.async_block_till_done()
 
-        assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {}
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {}
 
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_ORIGIN: "location1",
-                CONF_DESTINATION: "location2",
-                CONF_REGION: "US",
-            },
-        )
-        await hass.async_block_till_done()
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_ORIGIN: "location1",
+            CONF_DESTINATION: "location2",
+            CONF_REGION: "US",
+        },
+    )
+    await hass.async_block_till_done()
 
-        assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result2["reason"] == "already_configured"
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result2["reason"] == "already_configured"
 
 
 async def test_invalid_config_entry(hass, invalidate_config_entry):

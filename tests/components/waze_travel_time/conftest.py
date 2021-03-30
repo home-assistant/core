@@ -14,7 +14,7 @@ def skip_notifications_fixture():
         yield
 
 
-@pytest.fixture(name="validate_config_entry", autouse=True)
+@pytest.fixture(name="validate_config_entry")
 def validate_config_entry_fixture():
     """Return valid config entry."""
     with patch(
@@ -22,6 +22,28 @@ def validate_config_entry_fixture():
     ) as mock_wrc:
         obj = mock_wrc.return_value
         obj.calc_all_routes_info.return_value = None
+        yield
+
+
+@pytest.fixture(name="bypass_setup")
+def bypass_setup_fixture():
+    """Bypass entry setup."""
+    with patch(
+        "homeassistant.components.waze_travel_time.async_setup", return_value=True
+    ), patch(
+        "homeassistant.components.waze_travel_time.async_setup_entry",
+        return_value=True,
+    ):
+        yield
+
+
+@pytest.fixture(name="mock_update")
+def mock_update_fixture():
+    """Mock an update to the sensor."""
+    with patch(
+        "homeassistant.components.waze_travel_time.sensor.WazeRouteCalculator.calc_all_routes_info",
+        return_value={"My route": (150, 300)},
+    ):
         yield
 
 
