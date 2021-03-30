@@ -336,6 +336,7 @@ async def _async_discover_roombas(hass, host):
             except OSError:
                 # Socket temporarily unavailable
                 await asyncio.sleep(ROOMBA_WAKE_TIME * attempt)
+                continue
             else:
                 for device in discovered:
                     if device.ip in discovered_hosts:
