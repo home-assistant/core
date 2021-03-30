@@ -584,6 +584,7 @@ async def test_set_value(hass, client, climate_danfoss_lc_13, integration):
 
     client.async_send_command_no_wait.reset_mock()
 
+    # Test that when a command fails we raise an exception
     client.async_send_command.return_value = {"success": False}
 
     with pytest.raises(SetValueFailed):
