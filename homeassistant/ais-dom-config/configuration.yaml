@@ -98,4 +98,13 @@ google:
   client_id: ASK_AIS_DOM
   client_secret: ASK_AIS_DOM
 
+webhook:
 counter:
+input_boolean:
+input_datetime:
+input_number:
+input_select:
+input_text:
+tag:
+timer:
+my:
