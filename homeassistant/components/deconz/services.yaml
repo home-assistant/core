@@ -14,7 +14,6 @@ configure:
           integration: deconz
     field:
       name: Path
-      required: false
       selector:
         text:
       description: >-
