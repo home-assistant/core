@@ -256,7 +256,7 @@ async def _async_process_config(hass, config, component):
 
         # Register the service description
         service_desc = {
-            CONF_NAME: script_entity.name
+            CONF_NAME: script_entity.name,
             CONF_DESCRIPTION: cfg[CONF_DESCRIPTION],
             CONF_FIELDS: cfg[CONF_FIELDS],
         }
