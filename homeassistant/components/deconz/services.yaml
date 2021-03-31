@@ -6,7 +6,6 @@ configure:
   fields:
     entity:
       name: Entity
-      required: false
       description: Represents a specific device endpoint in deCONZ.
       example: "light.rgb_light"
       selector:
