@@ -13,7 +13,6 @@ from homeassistant.const import (
     PRESSURE_PA,
     SPEED_MILES_PER_HOUR,
 )
-from homeassistant.helpers.entity import Entity
 from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.dt import utcnow
 from homeassistant.util.pressure import convert as convert_pressure
