@@ -31,21 +31,19 @@ from homeassistant.const import (
 from .conftest import base_config_test, base_test
 
 
-@pytest.mark.parametrize("do_discovery", [False, True])
-@pytest.mark.parametrize("do_options", [False, True])
 @pytest.mark.parametrize(
-    "do_type", [CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT]
-)
-async def test_config_sensor(hass, do_discovery, do_options, do_type):
-    """Run test for sensor."""
-    sensor_name = "test_sensor"
-    config_sensor = {
-        CONF_NAME: sensor_name,
-        CONF_ADDRESS: 51,
-    }
-    if do_options:
-        config_sensor.update(
+    "do_discovery, do_config",
+    [
+        (
+            False,
             {
+                CONF_REGISTER: 51,
+            },
+        ),
+        (
+            False,
+            {
+                CONF_REGISTER: 51,
                 CONF_SLAVE: 10,
                 CONF_COUNT: 1,
                 CONF_DATA_TYPE: "int",
@@ -53,17 +51,70 @@ async def test_config_sensor(hass, do_discovery, do_options, do_type):
                 CONF_SCALE: 1,
                 CONF_REVERSE_ORDER: False,
                 CONF_OFFSET: 0,
-                CONF_INPUT_TYPE: do_type,
+                CONF_REGISTER_TYPE: CALL_TYPE_REGISTER_HOLDING,
                 CONF_DEVICE_CLASS: "battery",
-            }
-        )
-    if not do_discovery:
-        # bridge difference in configuration
-        config_sensor[CONF_REGISTER] = config_sensor[CONF_ADDRESS]
-        del config_sensor[CONF_ADDRESS]
-        if do_options:
-            config_sensor[CONF_REGISTER_TYPE] = config_sensor[CONF_INPUT_TYPE]
-            del config_sensor[CONF_INPUT_TYPE]
+            },
+        ),
+        (
+            False,
+            {
+                CONF_REGISTER: 51,
+                CONF_SLAVE: 10,
+                CONF_COUNT: 1,
+                CONF_DATA_TYPE: "int",
+                CONF_PRECISION: 0,
+                CONF_SCALE: 1,
+                CONF_REVERSE_ORDER: False,
+                CONF_OFFSET: 0,
+                CONF_REGISTER_TYPE: CALL_TYPE_REGISTER_INPUT,
+                CONF_DEVICE_CLASS: "battery",
+            },
+        ),
+        (
+            True,
+            {
+                CONF_ADDRESS: 51,
+            },
+        ),
+        (
+            True,
+            {
+                CONF_ADDRESS: 51,
+                CONF_SLAVE: 10,
+                CONF_COUNT: 1,
+                CONF_DATA_TYPE: "int",
+                CONF_PRECISION: 0,
+                CONF_SCALE: 1,
+                CONF_REVERSE_ORDER: False,
+                CONF_OFFSET: 0,
+                CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                CONF_DEVICE_CLASS: "battery",
+            },
+        ),
+        (
+            True,
+            {
+                CONF_ADDRESS: 51,
+                CONF_SLAVE: 10,
+                CONF_COUNT: 1,
+                CONF_DATA_TYPE: "int",
+                CONF_PRECISION: 0,
+                CONF_SCALE: 1,
+                CONF_REVERSE_ORDER: False,
+                CONF_OFFSET: 0,
+                CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
+                CONF_DEVICE_CLASS: "battery",
+            },
+        ),
+    ],
+)
+async def test_config_sensor(hass, do_discovery, do_config):
+    """Run test for sensor."""
+    sensor_name = "test_sensor"
+    config_sensor = {
+        CONF_NAME: sensor_name,
+        **do_config,
+    }
     await base_config_test(
         hass,
         config_sensor,
