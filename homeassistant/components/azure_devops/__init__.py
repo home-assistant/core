@@ -14,7 +14,7 @@ from homeassistant.components.azure_devops.const import (
     DATA_AZURE_DEVOPS_CLIENT,
     DOMAIN,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -36,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
                 hass.async_create_task(
                     hass.config_entries.flow.async_init(
                         DOMAIN,
-                        context={"source": "reauth"},
+                        context={"source": SOURCE_REAUTH},
                         data=entry.data,
                     )
                 )

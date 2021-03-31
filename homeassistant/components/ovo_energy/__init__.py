@@ -10,7 +10,7 @@ import async_timeout
 from ovoenergy import OVODailyUsage
 from ovoenergy.ovoenergy import OVOEnergy
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -46,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     if not authenticated:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": "reauth"}, data=entry.data
+                DOMAIN, context={"source": SOURCE_REAUTH}, data=entry.data
             )
         )
         return False
@@ -63,7 +63,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
             if not authenticated:
                 hass.async_create_task(
                     hass.config_entries.flow.async_init(
-                        DOMAIN, context={"source": "reauth"}, data=entry.data
+                        DOMAIN, context={"source": SOURCE_REAUTH}, data=entry.data
                     )
                 )
                 raise UpdateFailed("Not authenticated with OVO Energy")

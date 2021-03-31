@@ -8,6 +8,7 @@ from async_timeout import timeout
 from python_awair import Awair
 from python_awair.exceptions import AuthError
 
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -74,7 +75,7 @@ class AwairDataUpdateCoordinator(DataUpdateCoordinator):
                 return {result.device.uuid: result for result in results}
             except AuthError as err:
                 flow_context = {
-                    "source": "reauth",
+                    "source": SOURCE_REAUTH,
                     "unique_id": self._config_entry.unique_id,
                 }
 
