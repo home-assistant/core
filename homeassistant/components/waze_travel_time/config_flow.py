@@ -130,8 +130,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ),
                     data=user_input,
                 )
-            else:
-                errors["base"] = "cannot_connect"
+
+            # If we get here, it's because we couldn't connect
+            errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="user",
