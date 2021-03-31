@@ -1008,7 +1008,10 @@ class SonosEntity(MediaPlayerEntity):
             if len(fav) == 1:
                 src = fav.pop()
                 uri = src.reference.get_uri()
-                if self.soco.music_source_from_uri(uri) == MUSIC_SRC_RADIO:
+                if self.soco.music_source_from_uri(uri) in [
+                    MUSIC_SRC_RADIO,
+                    MUSIC_SRC_LINE_IN,
+                ]:
                     self.soco.play_uri(uri, title=source)
                 else:
                     self.soco.clear_queue()
