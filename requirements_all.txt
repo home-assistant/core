@@ -615,7 +615,7 @@ foobot_async==1.0.0
 fortiosapi==0.10.8
 
 # homeassistant.components.freebox
-freebox-api==0.0.9
+freebox-api==0.0.10
 
 # homeassistant.components.free_mobile
 freesms==0.1.2
@@ -933,7 +933,7 @@ messagebird==1.2.0
 meteoalertapi==0.1.6
 
 # homeassistant.components.meteo_france
-meteofrance-api==1.0.1
+meteofrance-api==1.0.2
 
 # homeassistant.components.mfi
 mficlient==0.3.0
@@ -2171,7 +2171,7 @@ swisshydrodata==0.0.3
 synology-srm==0.2.0
 
 # homeassistant.components.synology_dsm
-synologydsm-api==1.0.1
+synologydsm-api==1.0.2
 
 # homeassistant.components.tahoma
 tahoma-api==0.0.16
