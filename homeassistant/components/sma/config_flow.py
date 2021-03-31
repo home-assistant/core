@@ -142,29 +142,29 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Import a config flow from configuration."""
         device_info = await validate_input(self.hass, import_config)
         config_entry_unique_id = device_info["serial"]
+        import_config[DEVICE_INFO] = device_info
 
-        config_sensors = list(
-            set(import_config[CONF_SENSORS] + list(import_config[CONF_CUSTOM]))
-        )
+        config_sensors = import_config[CONF_SENSORS].copy()
 
         # find and replace sensors removed from pysma
-        for sensor in import_config[CONF_SENSORS].copy():
+        for sensor in config_sensors:
             if sensor in pysma.LEGACY_MAP:
                 import_config[CONF_SENSORS].remove(sensor)
                 import_config[CONF_SENSORS].append(
                     pysma.LEGACY_MAP[sensor]["new_sensor"]
                 )
 
+        # If unique is configured import was already run
+        # This means remap was already done, so we can abort
         await self.async_set_unique_id(config_entry_unique_id)
         self._abort_if_unique_id_configured(import_config)
 
-        import_config[DEVICE_INFO] = device_info
-
         entity_registry = await er.async_get_registry(self.hass)
+
         # Init all default sensors
         sensor_def = pysma.Sensors()
 
-        # Sensor from the custom config
+        # Add sensors from the custom config
         sensor_def.add(
             [
                 pysma.Sensor(
@@ -174,18 +174,23 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ]
         )
 
+        # Create list of all possible sensor names
+        possible_sensors = list(
+            set(config_sensors + [s.name for s in sensor_def] + list(pysma.LEGACY_MAP))
+        )
+
         # Find entity_id using previous format of unique ID and change to new unique ID
-        for sensor in config_sensors:
+        for sensor in possible_sensors:
             if sensor in sensor_def:
                 pysma_sensor = sensor_def[sensor]
                 original_key = pysma_sensor.key
             elif sensor in pysma.LEGACY_MAP:
-                # is sensor was removed from pysma we will remap it to the new sensor
+                # If sensor was removed from pysma we will remap it to the new sensor
                 legacy_sensor = pysma.LEGACY_MAP[sensor]
                 pysma_sensor = sensor_def[legacy_sensor["new_sensor"]]
                 original_key = legacy_sensor["old_key"]
             else:
-                _LOGGER.error(f"{sensor} does not exist")
+                _LOGGER.error("%s does not exist", sensor)
                 continue
 
             entity_id = entity_registry.async_get_entity_id(
