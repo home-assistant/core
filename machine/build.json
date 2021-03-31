@@ -10,5 +10,6 @@
     },
     "labels": {
         "io.hass.type": "core"
-    }
+    },
+    "version_tag": true
 }
