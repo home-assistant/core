@@ -10,7 +10,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
     CONF_SERVER_IDENTIFIER,
-    DISPATCHERS,
     DOMAIN as PLEX_DOMAIN,
     NAME_FORMAT,
     PLEX_UPDATE_LIBRARY_SIGNAL,
@@ -74,12 +73,13 @@ class PlexSensor(SensorEntity):
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
         server_id = self._server.machine_identifier
-        unsub = async_dispatcher_connect(
-            self.hass,
-            PLEX_UPDATE_SENSOR_SIGNAL.format(server_id),
-            self.async_refresh_sensor,
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                PLEX_UPDATE_SENSOR_SIGNAL.format(server_id),
+                self.async_refresh_sensor,
+            )
         )
-        self.hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
 
     async def _async_refresh_sensor(self):
         """Set instance object and trigger an entity state update."""
@@ -154,12 +154,13 @@ class PlexLibrarySectionSensor(SensorEntity):
 
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
-        unsub = async_dispatcher_connect(
-            self.hass,
-            PLEX_UPDATE_LIBRARY_SIGNAL.format(self.server_id),
-            self.async_refresh_sensor,
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                PLEX_UPDATE_LIBRARY_SIGNAL.format(self.server_id),
+                self.async_refresh_sensor,
+            )
         )
-        self.hass.data[PLEX_DOMAIN][DISPATCHERS][self.server_id].append(unsub)
         await self.async_refresh_sensor()
 
     async def async_refresh_sensor(self):
