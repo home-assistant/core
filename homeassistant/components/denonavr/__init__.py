@@ -1,6 +1,5 @@
 """The denonavr component."""
 import logging
-from typing import Dict
 
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_HOST
@@ -24,11 +23,6 @@ CONF_RECEIVER = "receiver"
 UNDO_UPDATE_LISTENER = "undo_update_listener"
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup(hass: core.HomeAssistant, config: Dict):
-    """Set up the denonavr platform."""
-    return True
 
 
 async def async_setup_entry(
