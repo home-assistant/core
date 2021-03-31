@@ -36,11 +36,8 @@ class KnxEntity(Entity):
 
     @property
     def unique_id(self) -> str | None:
-        """Return the unique id of the device if enabled."""
-        if self.hass.data[DOMAIN].use_unique_id:
-            return self._device.unique_id
-
-        return None
+        """Return the unique id of the device."""
+        return self._device.unique_id
 
     async def async_update(self) -> None:
         """Request a state update from KNX bus."""
