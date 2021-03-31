@@ -282,6 +282,25 @@ async def test_get_trace(hass, hass_ws_client, domain, prefix):
 
 
 @pytest.mark.parametrize("domain", ["automation", "script"])
+async def test_get_invalid_trace(hass, hass_ws_client, domain):
+    """Test getting a non-existing trace."""
+    assert await async_setup_component(hass, domain, {domain: {}})
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "trace/get",
+            "domain": domain,
+            "item_id": "sun",
+            "run_id": "invalid",
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "not_found"
+
+
+@pytest.mark.parametrize("domain", ["automation", "script"])
 async def test_trace_overflow(hass, hass_ws_client, domain):
     """Test the number of stored traces per script or automation is limited."""
     id = 1
