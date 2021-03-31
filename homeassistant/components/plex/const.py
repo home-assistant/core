@@ -26,6 +26,7 @@ PLEX_SERVER_CONFIG = "server_config"
 PLEX_NEW_MP_SIGNAL = "plex_new_mp_signal.{}"
 PLEX_UPDATE_MEDIA_PLAYER_SESSION_SIGNAL = "plex_update_session_signal.{}"
 PLEX_UPDATE_MEDIA_PLAYER_SIGNAL = "plex_update_mp_signal.{}"
+PLEX_UPDATE_LIBRARY_SIGNAL = "plex_update_libraries_signal.{}"
 PLEX_UPDATE_PLATFORMS_SIGNAL = "plex_update_platforms_signal.{}"
 PLEX_UPDATE_SENSOR_SIGNAL = "plex_update_sensor_signal.{}"
 

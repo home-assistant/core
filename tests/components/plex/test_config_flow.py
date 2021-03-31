@@ -650,6 +650,7 @@ async def test_manual_config(hass, mock_plex_calls):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MANUAL_SERVER
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == "create_entry"
 
