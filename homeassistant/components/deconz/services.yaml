@@ -29,7 +29,6 @@ configure:
       example: '{"on": true}'
     bridgeid:
       name: Bridge identifier
-      required: false
       selector:
         text:
       description: >-
