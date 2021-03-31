@@ -931,7 +931,7 @@ messagebird==1.2.0
 meteoalertapi==0.1.6
 
 # homeassistant.components.meteo_france
-meteofrance-api==1.0.1
+meteofrance-api==1.0.2
 
 # homeassistant.components.mfi
 mficlient==0.3.0
