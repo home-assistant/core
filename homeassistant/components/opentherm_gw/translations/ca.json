@@ -23,7 +23,8 @@
                     "floor_temperature": "Temperatura de la planta",
                     "precision": "Precisi\u00f3",
                     "read_precision": "Llegeix precisi\u00f3",
-                    "set_precision": "Defineix precisi\u00f3"
+                    "set_precision": "Defineix precisi\u00f3",
+                    "temporary_override_mode": "Mode de sobreescriptura temporal"
                 },
                 "description": "Opcions del la passarel\u00b7la d'enlla\u00e7 d'OpenTherm"
             }

@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3"
         },
+        "flow_title": "ZHA: {name}",
         "step": {
             "pick_radio": {
                 "data": {
