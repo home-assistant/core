@@ -17,7 +17,6 @@ from . import (
     MOCK_IMPORT,
     MOCK_SETUP_DATA,
     MOCK_USER_INPUT,
-    _patch_async_setup,
     _patch_async_setup_entry,
     _patch_validate_input,
 )
@@ -45,7 +44,7 @@ async def test_form(hass, aioclient_mock):
     assert result["step_id"] == "sensors"
     assert result["errors"] == {}
 
-    with _patch_async_setup() as mock_setup, _patch_async_setup_entry() as mock_setup_entry:
+    with _patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {},
@@ -56,7 +55,6 @@ async def test_form(hass, aioclient_mock):
     assert result["title"] == MOCK_USER_INPUT["host"]
     assert result["data"] == MOCK_SETUP_DATA
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -168,7 +166,7 @@ async def test_import(hass):
     """Test we can import."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
-    with _patch_validate_input(), _patch_async_setup() as mock_setup, _patch_async_setup_entry() as mock_setup_entry:
+    with _patch_validate_input(), _patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
@@ -179,5 +177,4 @@ async def test_import(hass):
     assert result["title"] == MOCK_USER_INPUT["host"]
     assert result["data"] == MOCK_IMPORT
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1

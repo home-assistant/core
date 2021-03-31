@@ -106,13 +106,6 @@ def _patch_validate_input(return_value=MOCK_DEVICE, side_effect=None):
     )
 
 
-def _patch_async_setup(return_value=True):
-    return patch(
-        "homeassistant.components.sma.async_setup",
-        return_value=return_value,
-    )
-
-
 def _patch_async_setup_entry(return_value=True):
     return patch(
         "homeassistant.components.sma.async_setup_entry",
