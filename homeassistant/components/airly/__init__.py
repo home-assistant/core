@@ -154,7 +154,7 @@ class AirlyDataUpdateCoordinator(DataUpdateCoordinator):
 
         # Airly API sometimes returns None for requests remaining so we update
         # update_interval only if we have valid value.
-        if self.airly.requests_remaining and self.airly.requests_remaining > 0:
+        if self.airly.requests_remaining:
             self.update_interval = set_update_interval(
                 len(self.hass.config_entries.async_entries(DOMAIN)),
                 self.airly.requests_remaining,
