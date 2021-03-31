@@ -1135,7 +1135,7 @@ sunwatcher==0.2.1
 surepy==0.4.0
 
 # homeassistant.components.synology_dsm
-synologydsm-api==1.0.1
+synologydsm-api==1.0.2
 
 # homeassistant.components.tellduslive
 tellduslive==0.10.11
