@@ -111,7 +111,7 @@ async def async_setup_platform(
         {
             vol.Required(SERVICE_SET_VICARE_MODE_ATTR_MODE): vol.In(
                 VICARE_TO_HA_HVAC_HEATING
-            ),
+            )
         },
         "set_vicare_mode",
     )
