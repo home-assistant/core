@@ -5,25 +5,30 @@ import voluptuous as vol
 from homeassistant.components.modbus import number
 
 
-async def test_number_validator():
+@pytest.mark.parametrize(
+    "value,value_type",
+    [
+        (15, int),
+        (15.1, float),
+        ("15", int),
+        ("15.1", float),
+        (-15, int),
+        (-15.1, float),
+        ("-15", int),
+        ("-15.1", float),
+    ],
+)
+async def test_number_validator(value, value_type):
     """Test number validator."""
 
-    # positive tests
-    value = number(15)
-    assert isinstance(value, int)
+    assert isinstance(number(value), value_type)
 
-    value = number(15.1)
-    assert isinstance(value, float)
 
-    value = number("15")
-    assert isinstance(value, int)
+async def test_number_exception():
+    """Test number exception."""
 
-    value = number("15.1")
-    assert isinstance(value, float)
-
-    # exception test
     try:
-        value = number("x15.1")
+        number("x15.1")
     except (vol.Invalid):
         return
 

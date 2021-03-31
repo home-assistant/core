@@ -22,22 +22,25 @@ from .conftest import base_config_test, base_test
 
 
 @pytest.mark.parametrize("do_discovery", [False, True])
-@pytest.mark.parametrize("do_options", [False, True])
+@pytest.mark.parametrize(
+    "do_options",
+    [
+        {},
+        {
+            CONF_SLAVE: 10,
+            CONF_INPUT_TYPE: CALL_TYPE_DISCRETE,
+            CONF_DEVICE_CLASS: "door",
+        },
+    ],
+)
 async def test_config_binary_sensor(hass, do_discovery, do_options):
     """Run test for binary sensor."""
     sensor_name = "test_sensor"
     config_sensor = {
         CONF_NAME: sensor_name,
         CONF_ADDRESS: 51,
+        **do_options,
     }
-    if do_options:
-        config_sensor.update(
-            {
-                CONF_SLAVE: 10,
-                CONF_INPUT_TYPE: CALL_TYPE_DISCRETE,
-                CONF_DEVICE_CLASS: "door",
-            }
-        )
     await base_config_test(
         hass,
         config_sensor,
