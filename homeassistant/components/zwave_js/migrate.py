@@ -1,6 +1,7 @@
 """Functions used to migrate unique IDs for Z-Wave JS entities."""
+from __future__ import annotations
+
 import logging
-from typing import List
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.model.value import Value as ZwaveValue
@@ -35,8 +36,8 @@ def async_migrate_entity(
         except ValueError:
             _LOGGER.debug(
                 (
-                    "Entity %s can't be migrated because the unique ID is taken. "
-                    "Cleaning it up since it is likely no longer valid."
+                    "Entity %s can't be migrated because the unique ID is taken; "
+                    "Cleaning it up since it is likely no longer valid"
                 ),
                 entity_id,
             )
@@ -85,7 +86,7 @@ def async_migrate_discovered_value(
 
 
 @callback
-def get_old_value_ids(value: ZwaveValue) -> List[str]:
+def get_old_value_ids(value: ZwaveValue) -> list[str]:
     """Get old value IDs so we can migrate entity unique ID."""
     value_ids = []
 

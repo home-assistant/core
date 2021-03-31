@@ -205,10 +205,13 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
             elif not self.heartbeat_check:
                 self.schedule_update = True
 
-        elif not self.client.event and self.client.last_updated == SOURCE_DATA:
-            if self.is_wired == self.client.is_wired:
-                self._is_connected = True
-                self.schedule_update = True
+        elif (
+            not self.client.event
+            and self.client.last_updated == SOURCE_DATA
+            and self.is_wired == self.client.is_wired
+        ):
+            self._is_connected = True
+            self.schedule_update = True
 
         if self.schedule_update:
             self.schedule_update = False
@@ -249,7 +252,7 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         return f"{self.client.mac}-{self.controller.site}"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the client state attributes."""
         raw = self.client.raw
 
@@ -421,7 +424,7 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         if self.device.state == 0:
             return {}

@@ -30,7 +30,11 @@ python3 -m pip install -e . --constraint homeassistant/package_constraints.txt
 
 hass --script ensure_config -c /data/data/pl.sviete.dom/files/home/AIS
 
+if ! grep -R "logger" config/configuration.yaml >> /dev/null;then
 echo "
 logger:
   default: info
-" >> /data/data/pl.sviete.dom/files/home/AIS/configuration.yaml
+  logs:
+    homeassistant.components.cloud: debug
+"  >> /data/data/pl.sviete.dom/files/home/AIS/configuration.yaml
+fi

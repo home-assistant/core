@@ -1,7 +1,8 @@
 """Support for Dyson Pure Cool link fan."""
+from __future__ import annotations
+
 import logging
 import math
-from typing import Optional
 
 from libpurecool.const import FanMode, FanSpeed, NightMode, Oscillation
 from libpurecool.dyson_pure_cool import DysonPureCool
@@ -200,7 +201,7 @@ class DysonFanEntity(DysonEntity, FanEntity):
         return SUPPORT_OSCILLATE | SUPPORT_SET_SPEED
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return optional state attributes."""
         return {
             ATTR_NIGHT_MODE: self.night_mode,
@@ -243,9 +244,9 @@ class DysonFanEntity(DysonEntity, FanEntity):
 
     def turn_on(
         self,
-        speed: Optional[str] = None,
-        percentage: Optional[int] = None,
-        preset_mode: Optional[str] = None,
+        speed: str | None = None,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
         **kwargs,
     ) -> None:
         """Turn on the fan."""
@@ -325,9 +326,9 @@ class DysonPureCoolEntity(DysonFanEntity):
 
     def turn_on(
         self,
-        speed: Optional[str] = None,
-        percentage: Optional[int] = None,
-        preset_mode: Optional[str] = None,
+        speed: str | None = None,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
         **kwargs,
     ) -> None:
         """Turn on the fan."""
@@ -455,10 +456,10 @@ class DysonPureCoolEntity(DysonFanEntity):
         return int(self._device.state.carbon_filter_state)
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return optional state attributes."""
         return {
-            **super().device_state_attributes,
+            **super().extra_state_attributes,
             ATTR_ANGLE_LOW: self.angle_low,
             ATTR_ANGLE_HIGH: self.angle_high,
             ATTR_FLOW_DIRECTION_FRONT: self.flow_direction_front,

@@ -1,6 +1,8 @@
 """Support for Modbus covers."""
+from __future__ import annotations
+
 from datetime import timedelta
-from typing import Any, Dict, Optional
+from typing import Any
 
 from pymodbus.exceptions import ConnectionException, ModbusException
 from pymodbus.pdu import ExceptionResponse
@@ -41,7 +43,7 @@ async def async_setup_platform(
     hass: HomeAssistantType,
     config: ConfigType,
     async_add_entities,
-    discovery_info: Optional[DiscoveryInfoType] = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ):
     """Read configuration and create Modbus cover."""
     if discovery_info is None:
@@ -61,7 +63,7 @@ class ModbusCover(CoverEntity, RestoreEntity):
     def __init__(
         self,
         hub: ModbusHub,
-        config: Dict[str, Any],
+        config: dict[str, Any],
     ):
         """Initialize the modbus cover."""
         self._hub: ModbusHub = hub
@@ -69,7 +71,7 @@ class ModbusCover(CoverEntity, RestoreEntity):
         self._device_class = config.get(CONF_DEVICE_CLASS)
         self._name = config[CONF_NAME]
         self._register = config.get(CONF_REGISTER)
-        self._slave = config[CONF_SLAVE]
+        self._slave = config.get(CONF_SLAVE)
         self._state_closed = config[CONF_STATE_CLOSED]
         self._state_closing = config[CONF_STATE_CLOSING]
         self._state_open = config[CONF_STATE_OPEN]
@@ -108,7 +110,7 @@ class ModbusCover(CoverEntity, RestoreEntity):
         )
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the device class of the sensor."""
         return self._device_class
 
@@ -178,7 +180,7 @@ class ModbusCover(CoverEntity, RestoreEntity):
 
         self.schedule_update_ha_state()
 
-    def _read_status_register(self) -> Optional[int]:
+    def _read_status_register(self) -> int | None:
         """Read status register using the Modbus hub slave."""
         try:
             if self._status_register_type == CALL_TYPE_REGISTER_INPUT:
@@ -212,7 +214,7 @@ class ModbusCover(CoverEntity, RestoreEntity):
 
         self._available = True
 
-    def _read_coil(self) -> Optional[bool]:
+    def _read_coil(self) -> bool | None:
         """Read coil using the Modbus hub slave."""
         try:
             result = self._hub.read_coils(self._slave, self._coil, 1)

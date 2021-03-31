@@ -1,6 +1,6 @@
 """Support for monitoring a Smappee energy sensor."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import DEVICE_CLASS_POWER, ENERGY_WATT_HOUR, POWER_WATT, VOLT
-from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 
@@ -239,7 +239,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class SmappeeSensor(Entity):
+class SmappeeSensor(SensorEntity):
     """Implementation of a Smappee sensor."""
 
     def __init__(self, smappee_base, service_location, sensor, attributes):

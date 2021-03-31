@@ -21,15 +21,30 @@ from homeassistant.const import (
 import homeassistant.core as ha
 from homeassistant.exceptions import HomeAssistantError, Unauthorized, UnknownUser
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.service import async_extract_referenced_entity_ids
+from homeassistant.helpers.service import (
+    async_extract_config_entry_ids,
+    async_extract_referenced_entity_ids,
+)
+
+ATTR_ENTRY_ID = "entry_id"
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = ha.DOMAIN
 SERVICE_RELOAD_CORE_CONFIG = "reload_core_config"
+SERVICE_RELOAD_CONFIG_ENTRY = "reload_config_entry"
 SERVICE_CHECK_CONFIG = "check_config"
 SERVICE_UPDATE_ENTITY = "update_entity"
 SERVICE_SET_LOCATION = "set_location"
 SCHEMA_UPDATE_ENTITY = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
+SCHEMA_RELOAD_CONFIG_ENTRY = vol.All(
+    vol.Schema(
+        {
+            vol.Optional(ATTR_ENTRY_ID): str,
+            **cv.ENTITY_SERVICE_FIELDS,
+        },
+    ),
+    cv.has_at_least_one_key(ATTR_ENTRY_ID, *cv.ENTITY_SERVICE_FIELDS),
+)
 
 
 async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
@@ -43,7 +58,8 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
         # Generic turn on/off method requires entity id
         if not all_referenced:
             _LOGGER.error(
-                "homeassistant.%s cannot be called without a target", service.service
+                "The service homeassistant.%s cannot be called without a target",
+                service.service,
             )
             return
 
@@ -217,6 +233,28 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
         SERVICE_SET_LOCATION,
         async_set_location,
         vol.Schema({ATTR_LATITUDE: cv.latitude, ATTR_LONGITUDE: cv.longitude}),
+    )
+
+    async def async_handle_reload_config_entry(call):
+        """Service handler for reloading a config entry."""
+        reload_entries = set()
+        if ATTR_ENTRY_ID in call.data:
+            reload_entries.add(call.data[ATTR_ENTRY_ID])
+        reload_entries.update(await async_extract_config_entry_ids(hass, call))
+        if not reload_entries:
+            raise ValueError("There were no matching config entries to reload")
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_reload(config_entry_id)
+                for config_entry_id in reload_entries
+            ]
+        )
+
+    hass.helpers.service.async_register_admin_service(
+        ha.DOMAIN,
+        SERVICE_RELOAD_CONFIG_ENTRY,
+        async_handle_reload_config_entry,
+        schema=SCHEMA_RELOAD_CONFIG_ENTRY,
     )
 
     return True

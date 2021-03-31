@@ -1,6 +1,9 @@
 """Network helpers."""
+from __future__ import annotations
+
+from contextlib import suppress
 from ipaddress import ip_address
-from typing import Optional, cast
+from typing import cast
 
 import yarl
 
@@ -54,7 +57,7 @@ def get_url(
     for url_type in order:
 
         if allow_internal and url_type == TYPE_URL_INTERNAL:
-            try:
+            with suppress(NoURLAvailableError):
                 return _get_internal_url(
                     hass,
                     allow_ip=allow_ip,
@@ -62,11 +65,9 @@ def get_url(
                     require_ssl=require_ssl,
                     require_standard_port=require_standard_port,
                 )
-            except NoURLAvailableError:
-                pass
 
         if allow_external and url_type == TYPE_URL_EXTERNAL:
-            try:
+            with suppress(NoURLAvailableError):
                 return _get_external_url(
                     hass,
                     allow_cloud=allow_cloud,
@@ -76,8 +77,6 @@ def get_url(
                     require_ssl=require_ssl,
                     require_standard_port=require_standard_port,
                 )
-            except NoURLAvailableError:
-                pass
 
     # For current request, we accept loopback interfaces (e.g., 127.0.0.1),
     # the Supervisor hostname and localhost transparently
@@ -117,7 +116,7 @@ def get_url(
     raise NoURLAvailableError
 
 
-def _get_request_host() -> Optional[str]:
+def _get_request_host() -> str | None:
     """Get the host address of the current request."""
     request = http.current_request.get()
     if request is None:
@@ -175,10 +174,8 @@ def _get_external_url(
 ) -> str:
     """Get external URL of this instance."""
     if prefer_cloud and allow_cloud:
-        try:
+        with suppress(NoURLAvailableError):
             return _get_cloud_url(hass)
-        except NoURLAvailableError:
-            pass
 
     if hass.config.external_url:
         external_url = yarl.URL(hass.config.external_url)
@@ -199,10 +196,9 @@ def _get_external_url(
             return normalize_url(str(external_url))
 
     if allow_cloud:
-        try:
+        with suppress(NoURLAvailableError):
             return _get_cloud_url(hass, require_current_request=require_current_request)
-        except NoURLAvailableError:
-            pass
+
     # get ais url
     remote_access = hass.states.get("input_boolean.ais_remote_access").state
     if remote_access == "on":

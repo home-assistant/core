@@ -1,7 +1,9 @@
 """Support for Sure PetCare Flaps/Pets binary sensors."""
+from __future__ import annotations
+
 from datetime import datetime
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from surepy import SureLocationID, SurepyProduct
 
@@ -71,8 +73,8 @@ class SurePetcareBinarySensor(BinarySensorEntity):
         self._device_class = device_class
 
         self._spc: SurePetcareAPI = spc
-        self._spc_data: Dict[str, Any] = self._spc.states[self._sure_type].get(self._id)
-        self._state: Dict[str, Any] = {}
+        self._spc_data: dict[str, Any] = self._spc.states[self._sure_type].get(self._id)
+        self._state: dict[str, Any] = {}
 
         # cover special case where a device has no name set
         if "name" in self._spc_data:
@@ -85,7 +87,7 @@ class SurePetcareBinarySensor(BinarySensorEntity):
         self._async_unsub_dispatcher_connect = None
 
     @property
-    def is_on(self) -> Optional[bool]:
+    def is_on(self) -> bool | None:
         """Return true if entity is on/unlocked."""
         return bool(self._state)
 
@@ -151,7 +153,7 @@ class Hub(SurePetcareBinarySensor):
         return self.available
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the device."""
         attributes = None
         if self._state:
@@ -179,7 +181,7 @@ class Pet(SurePetcareBinarySensor):
             return False
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the device."""
         attributes = None
         if self._state:
@@ -232,7 +234,7 @@ class DeviceConnectivity(SurePetcareBinarySensor):
         return self.available
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the device."""
         attributes = None
         if self._state:

@@ -47,7 +47,7 @@ class LiteJetScene(Scene):
         return f"{self._entry_id}_{self._index}"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device-specific state attributes."""
         return {ATTR_NUMBER: self._index}
 

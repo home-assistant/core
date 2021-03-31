@@ -3,7 +3,7 @@ import copy
 from datetime import timedelta
 import logging
 
-from httplib2 import ServerNotFoundError  # pylint: disable=import-error
+from httplib2 import ServerNotFoundError
 
 from homeassistant.components.calendar import (
     ENTITY_ID_FORMAT,
@@ -80,7 +80,7 @@ class GoogleCalendarEventDevice(CalendarEventDevice):
         self.entity_id = entity_id
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         return {"offset_reached": self._offset_reached}
 

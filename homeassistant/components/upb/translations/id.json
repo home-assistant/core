@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "invalid_upb_file": "File ekspor UPB UPStart tidak ada atau tidak valid, periksa nama dan jalur berkas.",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "address": "Alamat (lihat deskripsi di atas)",
+                    "file_path": "Jalur dan nama file ekspor UPStart UPB.",
+                    "protocol": "Protokol"
+                },
+                "description": "Hubungkan Universal Powerline Bus Powerline Interface Module (UPB PIM). String alamat harus dalam format 'address[:port]' untuk 'tcp'. Nilai port ini opsional dan nilai bakunya adalah 2101. Contoh: '192.168.1.42'. Untuk protokol serial, alamat harus dalam format 'tty[:baud]'. Nilai baud ini opsional dan nilai bakunya adalah 4800. Contoh: '/dev/ttyS1'.",
+                "title": "Hubungkan ke UPB PIM"
+            }
+        }
+    }
+}

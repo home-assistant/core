@@ -5,11 +5,7 @@ from pyownet.protocol import Error as ProtocolError
 import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.onewire.const import (
-    DOMAIN,
-    PRESSURE_CBAR,
-    SUPPORTED_PLATFORMS,
-)
+from homeassistant.components.onewire.const import DOMAIN, PLATFORMS, PRESSURE_CBAR
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
@@ -754,7 +750,7 @@ MOCK_DEVICE_SENSORS = {
 
 
 @pytest.mark.parametrize("device_id", MOCK_DEVICE_SENSORS.keys())
-@pytest.mark.parametrize("platform", SUPPORTED_PLATFORMS)
+@pytest.mark.parametrize("platform", PLATFORMS)
 @patch("homeassistant.components.onewire.onewirehub.protocol.proxy")
 async def test_owserver_setup_valid_device(owproxy, hass, device_id, platform):
     """Test for 1-Wire device.
@@ -782,7 +778,7 @@ async def test_owserver_setup_valid_device(owproxy, hass, device_id, platform):
     owproxy.return_value.dir.return_value = dir_return_value
     owproxy.return_value.read.side_effect = read_side_effect
 
-    with patch("homeassistant.components.onewire.SUPPORTED_PLATFORMS", [platform]):
+    with patch("homeassistant.components.onewire.PLATFORMS", [platform]):
         await setup_onewire_patched_owserver_integration(hass)
         await hass.async_block_till_done()
 

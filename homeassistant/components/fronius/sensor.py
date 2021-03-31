@@ -1,13 +1,14 @@
 """Support for Fronius devices."""
+from __future__ import annotations
+
 import copy
 from datetime import timedelta
 import logging
-from typing import Dict
 
 from pyfronius import Fronius
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_MONITORED_CONDITIONS,
@@ -17,7 +18,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
 _LOGGER = logging.getLogger(__name__)
@@ -195,7 +195,7 @@ class FroniusAdapter:
         for sensor in self._registered_sensors:
             sensor.async_schedule_update_ha_state(True)
 
-    async def _update(self) -> Dict:
+    async def _update(self) -> dict:
         """Return values of interest."""
 
     async def register(self, sensor):
@@ -251,7 +251,7 @@ class FroniusPowerFlow(FroniusAdapter):
         return await self.bridge.current_power_flow()
 
 
-class FroniusTemplateSensor(Entity):
+class FroniusTemplateSensor(SensorEntity):
     """Sensor for the single values (e.g. pv power, ac power)."""
 
     def __init__(self, parent: FroniusAdapter, name):

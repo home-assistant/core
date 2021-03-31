@@ -96,7 +96,7 @@ async def async_handle_webhook(hass, webhook_id, request):
         # Look at content to provide some context for received webhook
         # Limit to 64 chars to avoid flooding the log
         content = await request.content.read(64)
-        _LOGGER.debug("%s...", content)
+        _LOGGER.debug("%s", content)
         return Response(status=HTTP_OK)
 
     try:

@@ -28,7 +28,7 @@ CONF_ALLOW_DECONZ_GROUPS = "allow_deconz_groups"
 CONF_ALLOW_NEW_DEVICES = "allow_new_devices"
 CONF_MASTER_GATEWAY = "master"
 
-SUPPORTED_PLATFORMS = [
+PLATFORMS = [
     BINARY_SENSOR_DOMAIN,
     CLIMATE_DOMAIN,
     COVER_DOMAIN,
@@ -60,7 +60,7 @@ COVER_TYPES = DAMPERS + WINDOW_COVERS
 FANS = ["Fan"]
 
 # Locks
-LOCKS = ["Door Lock"]
+LOCKS = ["Door Lock", "ZHADoorLock"]
 LOCK_TYPES = LOCKS
 
 # Switches

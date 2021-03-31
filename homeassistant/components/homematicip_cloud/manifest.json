@@ -4,6 +4,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/homematicip_cloud",
   "requirements": ["homematicip==0.13.1"],
-  "codeowners": ["@SukramJ"],
+  "codeowners": [],
   "quality_scale": "platinum"
 }
