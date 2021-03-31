@@ -45,69 +45,6 @@ PROP_TO_ATTR = {
     "humidity": ATTR_HUM,
 }
 
-DEVICE_MAP = {
-    MODEL_AIRQUALITYMONITOR_S1: {
-        "device_class": AirQualityMonitor,
-        "entity_class": lambda *args: AirMonitorS1(*args),
-    },
-    MODEL_AIRQUALITYMONITOR_B1: {
-        "device_class": AirQualityMonitor,
-        "entity_class": lambda *args: AirMonitorB1(*args),
-    },
-    MODEL_AIRQUALITYMONITOR_V1: {
-        "device_class": AirQualityMonitor,
-        "entity_class": lambda *args: AirMonitorV1(*args),
-    },
-    MODEL_AIRQUALITYMONITOR_CGDN1: {
-        "device_class": lambda host, token, model: AirQualityMonitorCGDN1(host, token),
-        "entity_class": lambda *args: AirMonitorCGDN1(*args),
-    },
-}
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Import Miio configuration from YAML."""
-    _LOGGER.warning(
-        "Loading Xiaomi Miio Air Quality via platform setup is deprecated. "
-        "Please remove it from your configuration"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
-    )
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the Xiaomi Air Quality from a config entry."""
-    entities = []
-
-    if config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
-        host = config_entry.data[CONF_HOST]
-        token = config_entry.data[CONF_TOKEN]
-        name = config_entry.title
-        model = config_entry.data[CONF_MODEL]
-        unique_id = config_entry.unique_id
-
-        _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
-
-        if model in DEVICE_MAP:
-            device_entry = DEVICE_MAP[model]
-            entities.append(
-                device_entry["entity_class"](
-                    name,
-                    device_entry["device_class"](host, token, model=model),
-                    config_entry,
-                    unique_id,
-                )
-            )
-        else:
-            _LOGGER.warning("AirQualityMonitor model '%s' is not yet supported", model)
-
-    async_add_entities(entities, update_before_add=True)
-
 
 class AirMonitorB1(XiaomiMiioEntity, AirQualityEntity):
     """Air Quality class for Xiaomi cgllc.airmonitor.b1 device."""
@@ -290,3 +227,67 @@ class AirMonitorCGDN1(XiaomiMiioEntity, AirQualityEntity):
     def particulate_matter_10(self):
         """Return the particulate matter 10 level."""
         return self._particulate_matter_10
+
+
+DEVICE_MAP = {
+    MODEL_AIRQUALITYMONITOR_S1: {
+        "device_class": AirQualityMonitor,
+        "entity_class": AirMonitorS1,
+    },
+    MODEL_AIRQUALITYMONITOR_B1: {
+        "device_class": AirQualityMonitor,
+        "entity_class": AirMonitorB1,
+    },
+    MODEL_AIRQUALITYMONITOR_V1: {
+        "device_class": AirQualityMonitor,
+        "entity_class": AirMonitorV1,
+    },
+    MODEL_AIRQUALITYMONITOR_CGDN1: {
+        "device_class": lambda host, token, model: AirQualityMonitorCGDN1(host, token),
+        "entity_class": AirMonitorCGDN1,
+    },
+}
+
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Import Miio configuration from YAML."""
+    _LOGGER.warning(
+        "Loading Xiaomi Miio Air Quality via platform setup is deprecated. "
+        "Please remove it from your configuration"
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
+    )
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Xiaomi Air Quality from a config entry."""
+    entities = []
+
+    if config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
+        host = config_entry.data[CONF_HOST]
+        token = config_entry.data[CONF_TOKEN]
+        name = config_entry.title
+        model = config_entry.data[CONF_MODEL]
+        unique_id = config_entry.unique_id
+
+        _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
+
+        if model in DEVICE_MAP:
+            device_entry = DEVICE_MAP[model]
+            entities.append(
+                device_entry["entity_class"](
+                    name,
+                    device_entry["device_class"](host, token, model=model),
+                    config_entry,
+                    unique_id,
+                )
+            )
+        else:
+            _LOGGER.warning("AirQualityMonitor model '%s' is not yet supported", model)
+
+    async_add_entities(entities, update_before_add=True)
