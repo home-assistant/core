@@ -7,7 +7,7 @@
             "single_instance_allowed": "Al geconfigureerd. Slechts een enkele configuratie mogelijk."
         },
         "create_entry": {
-            "default": "Succesvol geauthenticeerd met Netatmo."
+            "default": "Succesvol geauthenticeerd"
         },
         "step": {
             "pick_implementation": {
@@ -48,10 +48,17 @@
                     "lon_sw": "Lengtegraad Zuidwestelijke hoek",
                     "mode": "Berekening",
                     "show_on_map": "Toon op kaart"
-                }
+                },
+                "description": "Configureer een openbare weersensor voor een gebied.",
+                "title": "Netatmo openbare weersensor"
             },
             "public_weather_areas": {
-                "description": "Configureer openbare weersensoren."
+                "data": {
+                    "new_area": "Naam van het gebied",
+                    "weather_areas": "Weersgebieden"
+                },
+                "description": "Configureer openbare weersensoren.",
+                "title": "Netatmo openbare weersensor"
             }
         }
     }

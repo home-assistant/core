@@ -34,9 +34,9 @@
         "step": {
             "init": {
                 "data": {
-                    "update_enabled": "Abilita l'interrogazione del veicolo"
+                    "update_enabled": "Abilita la verifica ciclica del veicolo"
                 },
-                "description": "Quando abilitata, l'interrogazione del veicolo invier\u00e0 un comando remoto al tuo veicolo ogni 2 ore per ottenere nuovi dati del sensore. Senza l'interrogazione del veicolo, i nuovi dati del sensore verranno ricevuti solo quando il veicolo invier\u00e0 automaticamente i dati (normalmente dopo lo spegnimento del motore).",
+                "description": "Quando abilitata, la verifica ciclica del veicolo invier\u00e0 un comando remoto d'interrogazione al tuo veicolo ogni 2 ore per ottenere nuovi dati del sensore. Senza l'interrogazione del veicolo i nuovi dati del sensore verranno ricevuti solo quando il veicolo invier\u00e0 automaticamente i dati (normalmente dopo lo spegnimento del motore).",
                 "title": "Opzioni Subaru Starlink"
             }
         }

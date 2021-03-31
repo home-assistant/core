@@ -1,7 +1,8 @@
 """Support for the Dynalite networks."""
+from __future__ import annotations
 
 import asyncio
-from typing import Any, Dict, Union
+from typing import Any
 
 import voluptuous as vol
 
@@ -47,14 +48,14 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_TEMPLATES,
     DOMAIN,
-    ENTITY_PLATFORMS,
     LOGGER,
+    PLATFORMS,
     SERVICE_REQUEST_AREA_PRESET,
     SERVICE_REQUEST_CHANNEL_LEVEL,
 )
 
 
-def num_string(value: Union[int, str]) -> str:
+def num_string(value: int | str) -> str:
     """Test if value is a string of digits, aka an integer."""
     new_value = str(value)
     if new_value.isdigit():
@@ -105,7 +106,7 @@ TEMPLATE_DATA_SCHEMA = vol.Any(TEMPLATE_ROOM_SCHEMA, TEMPLATE_TIMECOVER_SCHEMA)
 TEMPLATE_SCHEMA = vol.Schema({str: TEMPLATE_DATA_SCHEMA})
 
 
-def validate_area(config: Dict[str, Any]) -> Dict[str, Any]:
+def validate_area(config: dict[str, Any]) -> dict[str, Any]:
     """Validate that template parameters are only used if area is using the relevant template."""
     conf_set = set()
     for template in DEFAULT_TEMPLATES:
@@ -178,7 +179,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: Dict[str, Any]) -> bool:
+async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
     """Set up the Dynalite platform."""
     conf = config.get(DOMAIN)
     LOGGER.debug("Setting up dynalite component config = %s", conf)
@@ -267,14 +268,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # need to do it before the listener
     hass.data[DOMAIN][entry.entry_id] = bridge
     entry.add_update_listener(async_entry_changed)
+
     if not await bridge.async_setup():
         LOGGER.error("Could not set up bridge for entry %s", entry.data)
         hass.data[DOMAIN][entry.entry_id] = None
         raise ConfigEntryNotReady
-    for platform in ENTITY_PLATFORMS:
+
+    for platform in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
+
     return True
 
 
@@ -284,7 +288,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN].pop(entry.entry_id)
     tasks = [
         hass.config_entries.async_forward_entry_unload(entry, platform)
-        for platform in ENTITY_PLATFORMS
+        for platform in PLATFORMS
     ]
     results = await asyncio.gather(*tasks)
     return False not in results

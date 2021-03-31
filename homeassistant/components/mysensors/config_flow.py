@@ -1,7 +1,10 @@
 """Config flow for MySensors."""
+from __future__ import annotations
+
+from contextlib import suppress
 import logging
 import os
-from typing import Any, Dict, Optional
+from typing import Any
 
 from awesomeversion import (
     AwesomeVersion,
@@ -23,8 +26,6 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from . import CONF_RETAIN, CONF_VERSION, DEFAULT_VERSION
-
-# pylint: disable=unused-import
 from .const import (
     CONF_BAUD_RATE,
     CONF_GATEWAY_TYPE,
@@ -44,7 +45,7 @@ from .gateway import MQTT_COMPONENT, is_serial_port, is_socket_address, try_conn
 _LOGGER = logging.getLogger(__name__)
 
 
-def _get_schema_common(user_input: Dict[str, str]) -> dict:
+def _get_schema_common(user_input: dict[str, str]) -> dict:
     """Create a schema with options common to all gateway types."""
     schema = {
         vol.Required(
@@ -59,25 +60,24 @@ def _get_schema_common(user_input: Dict[str, str]) -> dict:
     return schema
 
 
-def _validate_version(version: str) -> Dict[str, str]:
+def _validate_version(version: str) -> dict[str, str]:
     """Validate a version string from the user."""
     version_okay = False
-    try:
+    with suppress(AwesomeVersionStrategyException):
         version_okay = bool(
             AwesomeVersion.ensure_strategy(
                 version,
                 [AwesomeVersionStrategy.SIMPLEVER, AwesomeVersionStrategy.SEMVER],
             )
         )
-    except AwesomeVersionStrategyException:
-        pass
+
     if version_okay:
         return {}
     return {CONF_VERSION: "invalid_version"}
 
 
 def _is_same_device(
-    gw_type: ConfGatewayType, user_input: Dict[str, str], entry: ConfigEntry
+    gw_type: ConfGatewayType, user_input: dict[str, str], entry: ConfigEntry
 ):
     """Check if another ConfigDevice is actually the same as user_input.
 
@@ -104,9 +104,9 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Set up config flow."""
-        self._gw_type: Optional[str] = None
+        self._gw_type: str | None = None
 
-    async def async_step_import(self, user_input: Optional[Dict[str, str]] = None):
+    async def async_step_import(self, user_input: dict[str, str] | None = None):
         """Import a config entry.
 
         This method is called by async_setup and it has already
@@ -126,12 +126,12 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 user_input[CONF_GATEWAY_TYPE] = CONF_GATEWAY_TYPE_SERIAL
 
-        result: Dict[str, Any] = await self.async_step_user(user_input=user_input)
+        result: dict[str, Any] = await self.async_step_user(user_input=user_input)
         if result["type"] == "form":
             return self.async_abort(reason=next(iter(result["errors"].values())))
         return result
 
-    async def async_step_user(self, user_input: Optional[Dict[str, str]] = None):
+    async def async_step_user(self, user_input: dict[str, str] | None = None):
         """Create a config entry from frontend user input."""
         schema = {vol.Required(CONF_GATEWAY_TYPE): vol.In(CONF_GATEWAY_TYPE_ALL)}
         schema = vol.Schema(schema)
@@ -148,7 +148,7 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="user", data_schema=schema)
 
-    async def async_step_gw_serial(self, user_input: Optional[Dict[str, str]] = None):
+    async def async_step_gw_serial(self, user_input: dict[str, str] | None = None):
         """Create config entry for a serial gateway."""
         errors = {}
         if user_input is not None:
@@ -177,7 +177,7 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="gw_serial", data_schema=schema, errors=errors
         )
 
-    async def async_step_gw_tcp(self, user_input: Optional[Dict[str, str]] = None):
+    async def async_step_gw_tcp(self, user_input: dict[str, str] | None = None):
         """Create a config entry for a tcp gateway."""
         errors = {}
         if user_input is not None:
@@ -215,7 +215,7 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return True
         return False
 
-    async def async_step_gw_mqtt(self, user_input: Optional[Dict[str, str]] = None):
+    async def async_step_gw_mqtt(self, user_input: dict[str, str] | None = None):
         """Create a config entry for a mqtt gateway."""
         errors = {}
         if user_input is not None:
@@ -271,8 +271,8 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @callback
     def _async_create_entry(
-        self, user_input: Optional[Dict[str, str]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, str] | None = None
+    ) -> dict[str, Any]:
         """Create the config entry."""
         return self.async_create_entry(
             title=f"{user_input[CONF_DEVICE]}",
@@ -285,9 +285,9 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def validate_common(
         self,
         gw_type: ConfGatewayType,
-        errors: Dict[str, str],
-        user_input: Optional[Dict[str, str]] = None,
-    ) -> Dict[str, str]:
+        errors: dict[str, str],
+        user_input: dict[str, str] | None = None,
+    ) -> dict[str, str]:
         """Validate parameters common to all gateway types."""
         if user_input is not None:
             errors.update(_validate_version(user_input.get(CONF_VERSION)))

@@ -13,5 +13,6 @@
         "action_type": {
             "notify": "Stuur een notificatie"
         }
-    }
+    },
+    "title": "Mobiele app"
 }

@@ -144,9 +144,6 @@ class CommandSwitch(SwitchEntity):
 
     def _query_state(self):
         """Query for state."""
-        if not self._command_state:
-            _LOGGER.error("No state command specified")
-            return
         if self._value_template:
             return self._query_state_value(self._command_state)
         return self._query_state_code(self._command_state)

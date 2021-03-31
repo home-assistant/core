@@ -2,15 +2,13 @@
 
 DOMAIN = "kmtronic"
 
-CONF_HOSTNAME = "host"
-CONF_USERNAME = "username"
-CONF_PASSWORD = "password"
+CONF_REVERSE = "reverse"
 
 DATA_HUB = "hub"
-DATA_HOST = "host"
 DATA_COORDINATOR = "coordinator"
 
 MANUFACTURER = "KMtronic"
 ATTR_MANUFACTURER = "manufacturer"
 ATTR_IDENTIFIERS = "identifiers"
-ATTR_NAME = "name"
+
+UPDATE_LISTENER = "update_listener"

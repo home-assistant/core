@@ -240,9 +240,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         await asyncio.gather(
             *[
                 hass.config_entries.async_forward_entry_unload(
-                    entry, component.split(".", 1)[0]
+                    entry, platform.split(".", 1)[0]
                 )
-                for component in hass.data[DOMAIN][ENTRY_IS_SETUP]
+                for platform in hass.data[DOMAIN][ENTRY_IS_SETUP]
             ]
         )
     )

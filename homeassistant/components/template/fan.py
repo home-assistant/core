@@ -36,11 +36,10 @@ from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.template import ResultWrapper
 
-from .const import CONF_AVAILABILITY_TEMPLATE, DOMAIN, PLATFORMS
+from .const import CONF_AVAILABILITY_TEMPLATE
 from .template_entity import TemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -164,7 +163,6 @@ async def _async_create_entities(hass, config):
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the template fans."""
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     async_add_entities(await _async_create_entities(hass, config))
 
 
@@ -276,6 +274,11 @@ class TemplateFan(TemplateEntity, FanEntity):
         self._preset_modes = preset_modes
 
     @property
+    def _implemented_speed(self):
+        """Return true if speed has been implemented."""
+        return bool(self._set_speed_script or self._speed_template)
+
+    @property
     def name(self):
         """Return the display name of this fan."""
         return self._name
@@ -293,7 +296,7 @@ class TemplateFan(TemplateEntity, FanEntity):
     @property
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
-        return self._speed_count or super().speed_count
+        return self._speed_count or 100
 
     @property
     def speed_list(self) -> list:

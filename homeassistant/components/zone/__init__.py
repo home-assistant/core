@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, Optional, cast
+from typing import Any, Dict, cast
 
 import voluptuous as vol
 
@@ -92,7 +92,7 @@ STORAGE_VERSION = 1
 @bind_hass
 def async_active_zone(
     hass: HomeAssistant, latitude: float, longitude: float, radius: int = 0
-) -> Optional[State]:
+) -> State | None:
     """Find the active zone for given latitude, longitude.
 
     This method must be run in the event loop.
@@ -161,22 +161,22 @@ class ZoneStorageCollection(collection.StorageCollection):
     CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
     UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
 
-    async def _process_create_data(self, data: Dict) -> Dict:
+    async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
         return cast(Dict, self.CREATE_SCHEMA(data))
 
     @callback
-    def _get_suggested_id(self, info: Dict) -> str:
+    def _get_suggested_id(self, info: dict) -> str:
         """Suggest an ID based on the config."""
         return cast(str, info[CONF_NAME])
 
-    async def _update_data(self, data: dict, update_data: Dict) -> Dict:
+    async def _update_data(self, data: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         update_data = self.UPDATE_SCHEMA(update_data)
         return {**data, **update_data}
 
 
-async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up configured zones as well as Home Assistant zone if necessary."""
     component = entity_component.EntityComponent(_LOGGER, DOMAIN, hass)
     id_manager = collection.IDManager()
@@ -242,7 +242,7 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
 
 
 @callback
-def _home_conf(hass: HomeAssistant) -> Dict:
+def _home_conf(hass: HomeAssistant) -> dict:
     """Return the home zone config."""
     return {
         CONF_NAME: hass.config.location_name,
@@ -281,15 +281,15 @@ async def async_unload_entry(
 class Zone(entity.Entity):
     """Representation of a Zone."""
 
-    def __init__(self, config: Dict):
+    def __init__(self, config: dict):
         """Initialize the zone."""
         self._config = config
         self.editable = True
-        self._attrs: Optional[Dict] = None
+        self._attrs: dict | None = None
         self._generate_attrs()
 
     @classmethod
-    def from_yaml(cls, config: Dict) -> Zone:
+    def from_yaml(cls, config: dict) -> Zone:
         """Return entity instance initialized from yaml storage."""
         zone = cls(config)
         zone.editable = False
@@ -307,17 +307,17 @@ class Zone(entity.Entity):
         return cast(str, self._config[CONF_NAME])
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return unique ID."""
         return self._config.get(CONF_ID)
 
     @property
-    def icon(self) -> Optional[str]:
+    def icon(self) -> str | None:
         """Return the icon if any."""
         return self._config.get(CONF_ICON)
 
     @property
-    def state_attributes(self) -> Optional[Dict]:
+    def extra_state_attributes(self) -> dict | None:
         """Return the state attributes of the zone."""
         return self._attrs
 
@@ -326,7 +326,7 @@ class Zone(entity.Entity):
         """Zone does not poll."""
         return False
 
-    async def async_update_config(self, config: Dict) -> None:
+    async def async_update_config(self, config: dict) -> None:
         """Handle when the config is updated."""
         if self._config == config:
             return

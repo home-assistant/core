@@ -72,7 +72,6 @@ DEFAULT_DISCOVERY = True
 DEFAULT_WEBHOOKS = False
 
 ATTR_PSEUDO = "pseudo"
-ATTR_NAME = "name"
 ATTR_EVENT_TYPE = "event_type"
 ATTR_HEATING_POWER_REQUEST = "heating_power_request"
 ATTR_HOME_ID = "home_id"
@@ -95,6 +94,7 @@ SERVICE_SET_PERSON_AWAY = "set_person_away"
 EVENT_TYPE_SET_POINT = "set_point"
 EVENT_TYPE_CANCEL_SET_POINT = "cancel_set_point"
 EVENT_TYPE_THERM_MODE = "therm_mode"
+EVENT_TYPE_SCHEDULE = "schedule"
 # Camera events
 EVENT_TYPE_LIGHT_MODE = "light_mode"
 EVENT_TYPE_CAMERA_OUTDOOR = "outdoor"

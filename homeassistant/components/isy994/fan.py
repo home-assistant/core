@@ -1,4 +1,6 @@
 """Support for ISY994 fans."""
+from __future__ import annotations
+
 import math
 from typing import Callable
 
@@ -43,7 +45,7 @@ class ISYFanEntity(ISYNodeEntity, FanEntity):
     """Representation of an ISY994 fan device."""
 
     @property
-    def percentage(self) -> str:
+    def percentage(self) -> int | None:
         """Return the current speed percentage."""
         if self._node.status == ISY_VALUE_UNKNOWN:
             return None
@@ -97,7 +99,7 @@ class ISYFanProgramEntity(ISYProgramEntity, FanEntity):
     """Representation of an ISY994 fan program."""
 
     @property
-    def percentage(self) -> str:
+    def percentage(self) -> int | None:
         """Return the current speed percentage."""
         if self._node.status == ISY_VALUE_UNKNOWN:
             return None

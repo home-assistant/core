@@ -1,11 +1,14 @@
 """Module to help with parsing and generating configuration files."""
+from __future__ import annotations
+
 from collections import OrderedDict
 import logging
 import os
+from pathlib import Path
 import re
 import shutil
 from types import ModuleType
-from typing import Any, Callable, Dict, Optional, Sequence, Set, Tuple, Union
+from typing import Any, Callable, Sequence
 
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
@@ -59,7 +62,7 @@ from homeassistant.requirements import (
 )
 from homeassistant.util.package import is_docker_env
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
-from homeassistant.util.yaml import SECRET_YAML, load_yaml
+from homeassistant.util.yaml import SECRET_YAML, Secrets, load_yaml
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -113,14 +116,14 @@ tts:
 
 
 def _no_duplicate_auth_provider(
-    configs: Sequence[Dict[str, Any]]
-) -> Sequence[Dict[str, Any]]:
+    configs: Sequence[dict[str, Any]]
+) -> Sequence[dict[str, Any]]:
     """No duplicate auth provider config allowed in a list.
 
     Each type of auth provider can only have one config without optional id.
     Unique id is required if same type of auth provider used multiple times.
     """
-    config_keys: Set[Tuple[str, Optional[str]]] = set()
+    config_keys: set[tuple[str, str | None]] = set()
     for config in configs:
         key = (config[CONF_TYPE], config.get(CONF_ID))
         if key in config_keys:
@@ -134,8 +137,8 @@ def _no_duplicate_auth_provider(
 
 
 def _no_duplicate_auth_mfa_module(
-    configs: Sequence[Dict[str, Any]]
-) -> Sequence[Dict[str, Any]]:
+    configs: Sequence[dict[str, Any]]
+) -> Sequence[dict[str, Any]]:
     """No duplicate auth mfa module item allowed in a list.
 
     Each type of mfa module can only have one config without optional id.
@@ -143,7 +146,7 @@ def _no_duplicate_auth_mfa_module(
     times.
     Note: this is different than auth provider
     """
-    config_keys: Set[str] = set()
+    config_keys: set[str] = set()
     for config in configs:
         key = config.get(CONF_ID, config[CONF_TYPE])
         if key in config_keys:
@@ -312,15 +315,23 @@ def _write_default_config(config_dir: str) -> bool:
         return False
 
 
-async def async_hass_config_yaml(hass: HomeAssistant) -> Dict:
+async def async_hass_config_yaml(hass: HomeAssistant) -> dict:
     """Load YAML from a Home Assistant configuration file.
 
     This function allow a component inside the asyncio loop to reload its
     configuration by itself. Include package merge.
     """
+    if hass.config.config_dir is None:
+        secrets = None
+    else:
+        secrets = Secrets(Path(hass.config.config_dir))
+
     # Not using async_add_executor_job because this is an internal method.
     config = await hass.loop.run_in_executor(
-        None, load_yaml_config_file, hass.config.path(YAML_CONFIG_FILE)
+        None,
+        load_yaml_config_file,
+        hass.config.path(YAML_CONFIG_FILE),
+        secrets,
     )
     ais_config = await async_ais_config_yaml(hass)
     config = await async_ais_merge_configs(ais_config, config)
@@ -361,14 +372,16 @@ async def async_ais_merge_configs(ais_config, config) -> Dict:
     return ais_config
 
 
-def load_yaml_config_file(config_path: str) -> Dict[Any, Any]:
+def load_yaml_config_file(
+    config_path: str, secrets: Secrets | None = None
+) -> dict[Any, Any]:
     """Parse a YAML configuration file.
 
     Raises FileNotFoundError or HomeAssistantError.
 
     This method needs to run in an executor.
     """
-    conf_dict = load_yaml(config_path)
+    conf_dict = load_yaml(config_path, secrets)
 
     if not isinstance(conf_dict, dict):
         msg = (
@@ -444,9 +457,9 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
 def async_log_exception(
     ex: Exception,
     domain: str,
-    config: Dict,
+    config: dict,
     hass: HomeAssistant,
-    link: Optional[str] = None,
+    link: str | None = None,
 ) -> None:
     """Log an error for configuration validation.
 
@@ -460,8 +473,8 @@ def async_log_exception(
 
 @callback
 def _format_config_error(
-    ex: Exception, domain: str, config: Dict, link: Optional[str] = None
-) -> Tuple[str, bool]:
+    ex: Exception, domain: str, config: dict, link: str | None = None
+) -> tuple[str, bool]:
     """Generate log exception for configuration validation.
 
     This method must be run in the event loop.
@@ -497,7 +510,7 @@ def _format_config_error(
     return message, is_friendly
 
 
-async def async_process_ha_core_config(hass: HomeAssistant, config: Dict) -> None:
+async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> None:
     """Process the [homeassistant] section from the configuration.
 
     This method is a coroutine.
@@ -629,7 +642,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: Dict) -> Non
         )
 
 
-def _log_pkg_error(package: str, component: str, config: Dict, message: str) -> None:
+def _log_pkg_error(package: str, component: str, config: dict, message: str) -> None:
     """Log an error while merging packages."""
     message = f"Package {package} setup failed. Integration {component} {message}"
 
@@ -642,7 +655,7 @@ def _log_pkg_error(package: str, component: str, config: Dict, message: str) -> 
     _LOGGER.error(message)
 
 
-def _identify_config_schema(module: ModuleType) -> Optional[str]:
+def _identify_config_schema(module: ModuleType) -> str | None:
     """Extract the schema and identify list or dict based."""
     if not isinstance(module.CONFIG_SCHEMA, vol.Schema):  # type: ignore
         return None
@@ -690,9 +703,9 @@ def _identify_config_schema(module: ModuleType) -> Optional[str]:
     return None
 
 
-def _recursive_merge(conf: Dict[str, Any], package: Dict[str, Any]) -> Union[bool, str]:
+def _recursive_merge(conf: dict[str, Any], package: dict[str, Any]) -> bool | str:
     """Merge package into conf, recursively."""
-    error: Union[bool, str] = False
+    error: bool | str = False
     for key, pack_conf in package.items():
         if isinstance(pack_conf, dict):
             if not pack_conf:
@@ -714,10 +727,10 @@ def _recursive_merge(conf: Dict[str, Any], package: Dict[str, Any]) -> Union[boo
 
 async def merge_packages_config(
     hass: HomeAssistant,
-    config: Dict,
-    packages: Dict[str, Any],
+    config: dict,
+    packages: dict[str, Any],
     _log_pkg_error: Callable = _log_pkg_error,
-) -> Dict:
+) -> dict:
     """Merge packages into the top-level configuration. Mutate config."""
     PACKAGES_CONFIG_SCHEMA(packages)
     for pack_name, pack_conf in packages.items():
@@ -780,7 +793,7 @@ async def merge_packages_config(
 
 async def async_process_component_config(
     hass: HomeAssistant, config: ConfigType, integration: Integration
-) -> Optional[ConfigType]:
+) -> ConfigType | None:
     """Check component configuration and return processed configuration.
 
     Returns None on error.
@@ -905,13 +918,13 @@ async def async_process_component_config(
 
 
 @callback
-def config_without_domain(config: Dict, domain: str) -> Dict:
+def config_without_domain(config: dict, domain: str) -> dict:
     """Return a config with all configuration for a domain removed."""
     filter_keys = extract_domain_configs(config, domain)
     return {key: value for key, value in config.items() if key not in filter_keys}
 
 
-async def async_check_ha_config_file(hass: HomeAssistant) -> Optional[str]:
+async def async_check_ha_config_file(hass: HomeAssistant) -> str | None:
     """Check if Home Assistant configuration file is valid.
 
     This method is a coroutine.
@@ -928,7 +941,7 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> Optional[str]:
 
 @callback
 def async_notify_setup_error(
-    hass: HomeAssistant, component: str, display_link: Optional[str] = None
+    hass: HomeAssistant, component: str, display_link: str | None = None
 ) -> None:
     """Print a persistent notification.
 

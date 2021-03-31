@@ -17,6 +17,7 @@ from homeassistant.helpers import config_validation as cv, entity, template
 from homeassistant.helpers.event import TrackTemplate, async_track_template_result
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.loader import IntegrationNotFound, async_get_integration
+from homeassistant.setup import async_get_loaded_integrations
 
 from . import const, decorators, messages
 
@@ -26,19 +27,20 @@ from . import const, decorators, messages
 @callback
 def async_register_commands(hass, async_reg):
     """Register commands."""
-    async_reg(hass, handle_subscribe_events)
-    async_reg(hass, handle_unsubscribe_events)
     async_reg(hass, handle_call_service)
-    async_reg(hass, handle_get_states)
-    async_reg(hass, handle_get_services)
+    async_reg(hass, handle_entity_source)
+    async_reg(hass, handle_execute_script)
     async_reg(hass, handle_get_config)
+    async_reg(hass, handle_get_services)
+    async_reg(hass, handle_get_states)
+    async_reg(hass, handle_manifest_get)
+    async_reg(hass, handle_manifest_list)
     async_reg(hass, handle_ping)
     async_reg(hass, handle_render_template)
-    async_reg(hass, handle_manifest_list)
-    async_reg(hass, handle_manifest_get)
-    async_reg(hass, handle_entity_source)
+    async_reg(hass, handle_subscribe_events)
     async_reg(hass, handle_subscribe_trigger)
     async_reg(hass, handle_test_condition)
+    async_reg(hass, handle_unsubscribe_events)
 
 
 def pong_message(iden):
@@ -214,13 +216,9 @@ def handle_get_config(hass, connection, msg):
 @decorators.async_response
 async def handle_manifest_list(hass, connection, msg):
     """Handle integrations command."""
+    loaded_integrations = async_get_loaded_integrations(hass)
     integrations = await asyncio.gather(
-        *[
-            async_get_integration(hass, domain)
-            for domain in hass.config.components
-            # Filter out platforms.
-            if "." not in domain
-        ]
+        *[async_get_integration(hass, domain) for domain in loaded_integrations]
     )
     connection.send_result(
         msg["id"], [integration.manifest for integration in integrations]
@@ -420,3 +418,23 @@ async def handle_test_condition(hass, connection, msg):
     connection.send_result(
         msg["id"], {"result": check_condition(hass, msg.get("variables"))}
     )
+
+
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "execute_script",
+        vol.Required("sequence"): cv.SCRIPT_SCHEMA,
+    }
+)
+@decorators.require_admin
+@decorators.async_response
+async def handle_execute_script(hass, connection, msg):
+    """Handle execute script command."""
+    # Circular dep
+    # pylint: disable=import-outside-toplevel
+    from homeassistant.helpers.script import Script
+
+    context = connection.context(msg)
+    script_obj = Script(hass, msg["sequence"], f"{const.DOMAIN} script", const.DOMAIN)
+    await script_obj.async_run(context=context)
+    connection.send_message(messages.result_message(msg["id"], {"context": context}))

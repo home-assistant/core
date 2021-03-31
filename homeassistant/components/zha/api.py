@@ -11,6 +11,7 @@ from zigpy.types.named import EUI64
 import zigpy.zdo.types as zdo_types
 
 from homeassistant.components import websocket_api
+from homeassistant.const import ATTR_COMMAND, ATTR_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -20,14 +21,12 @@ from .core.const import (
     ATTR_ATTRIBUTE,
     ATTR_CLUSTER_ID,
     ATTR_CLUSTER_TYPE,
-    ATTR_COMMAND,
     ATTR_COMMAND_TYPE,
     ATTR_ENDPOINT_ID,
     ATTR_IEEE,
     ATTR_LEVEL,
     ATTR_MANUFACTURER,
     ATTR_MEMBERS,
-    ATTR_NAME,
     ATTR_VALUE,
     ATTR_WARNING_DEVICE_DURATION,
     ATTR_WARNING_DEVICE_MODE,
@@ -61,6 +60,7 @@ from .core.helpers import (
     get_matched_clusters,
     qr_to_install_code,
 )
+from .core.typing import ZhaDeviceType, ZhaGatewayType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -462,9 +462,38 @@ async def websocket_remove_group_members(hass, connection, msg):
 )
 async def websocket_reconfigure_node(hass, connection, msg):
     """Reconfigure a ZHA nodes entities by its ieee address."""
-    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    zha_gateway: ZhaGatewayType = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     ieee = msg[ATTR_IEEE]
-    device = zha_gateway.get_device(ieee)
+    device: ZhaDeviceType = zha_gateway.get_device(ieee)
+    ieee_str = str(device.ieee)
+    nwk_str = device.nwk.__repr__()
+
+    class DeviceLogFilterer(logging.Filter):
+        """Log filterer that limits messages to the specified device."""
+
+        def filter(self, record):
+            message = record.getMessage()
+            return nwk_str in message or ieee_str in message
+
+    filterer = DeviceLogFilterer()
+
+    async def forward_messages(data):
+        """Forward events to websocket."""
+        connection.send_message(websocket_api.event_message(msg["id"], data))
+
+    remove_dispatcher_function = async_dispatcher_connect(
+        hass, "zha_gateway_message", forward_messages
+    )
+
+    @callback
+    def async_cleanup() -> None:
+        """Remove signal listener and turn off debug mode."""
+        zha_gateway.async_disable_debug_mode(filterer=filterer)
+        remove_dispatcher_function()
+
+    connection.subscriptions[msg["id"]] = async_cleanup
+    zha_gateway.async_enable_debug_mode(filterer=filterer)
+
     _LOGGER.debug("Reconfiguring node with ieee_address: %s", ieee)
     hass.async_create_task(device.async_configure())
 
@@ -893,9 +922,12 @@ def async_load_api(hass):
     async def remove(service):
         """Remove a node from the network."""
         ieee = service.data[ATTR_IEEE]
-        zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
-        zha_device = zha_gateway.get_device(ieee)
-        if zha_device is not None and zha_device.is_coordinator:
+        zha_gateway: ZhaGatewayType = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+        zha_device: ZhaDeviceType = zha_gateway.get_device(ieee)
+        if zha_device is not None and (
+            zha_device.is_coordinator
+            and zha_device.ieee == zha_gateway.application_controller.ieee
+        ):
             _LOGGER.info("Removing the coordinator (%s) is not allowed", ieee)
             return
         _LOGGER.info("Removing node %s", ieee)
