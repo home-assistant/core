@@ -94,7 +94,6 @@ def valid_color_configuration(config):
     """Test color_mode is not combined with deprecated config."""
     deprecated = {CONF_COLOR_TEMP, CONF_HS, CONF_RGB, CONF_WHITE_VALUE, CONF_XY}
     if config[CONF_COLOR_MODE] and any(config.get(key) for key in deprecated):
-        _LOGGER.error("MEEEEP %s", set(config))
         raise vol.Invalid(f"color_mode must not be combined with any of {deprecated}")
     return config
 
