@@ -1,6 +1,4 @@
 """Sensors for National Weather Service (NWS)."""
-import logging
-
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -32,8 +30,6 @@ from .const import (
     OBSERVATION_VALID_TIME,
     SENSOR_TYPES,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
