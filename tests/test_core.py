@@ -528,10 +528,16 @@ async def test_eventbus_coroutine_event_listener(hass):
 async def test_eventbus_max_length_exceeded(hass):
     """Test that an exception is raised when the max character length is exceeded."""
 
-    with pytest.raises(MaxLengthExceeded):
-        hass.bus.async_fire(
-            "this_event_exceeds_the_max_character_length_even_after_extending_the_limit"
-        )
+    long_evt_name = (
+        "this_event_exceeds_the_max_character_length_even_with_the_new_limit"
+    )
+
+    with pytest.raises(MaxLengthExceeded) as exc_info:
+        hass.bus.async_fire(long_evt_name)
+
+    assert exc_info.value.property_name == "event_type"
+    assert exc_info.value.max_length == 32
+    assert exc_info.value.value == long_evt_name
 
 
 def test_state_init():
