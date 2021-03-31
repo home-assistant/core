@@ -30,7 +30,7 @@ configure:
     bridgeid:
       name: Bridge identifier
       selector:
-        object:
+        text:
       description: >-
         Unique string for each deCONZ hardware.
         It can be found as part of the integration name.
