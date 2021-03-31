@@ -111,7 +111,7 @@ class DiffuserBatterySensor(DiffuserEntity):
         return DEVICE_CLASS_BATTERY
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the battery state attributes."""
         return {
             ATTR_BATTERY_CHARGING: self.coordinator.data[HUB][SENSORS][BATTERY][ID]
