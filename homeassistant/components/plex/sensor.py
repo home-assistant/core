@@ -168,6 +168,7 @@ class PlexLibrarySectionSensor(SensorEntity):
         _LOGGER.debug("Refreshing library sensor for '%s'", self.name)
         try:
             await self.hass.async_add_executor_job(self._update_state_and_attrs)
+            self._available = True
         except NotFound:
             self._available = False
         self.async_write_ha_state()
