@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.ais_dom import ais_global
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.const import EVENT_PLATFORM_DISCOVERED, EVENT_STATE_CHANGED
+from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.helpers import aiohttp_client
 
 DOMAIN = "ais_cloud"
@@ -144,40 +144,6 @@ async def async_setup(hass, config):
     hass.components.websocket_api.async_register_command(websocket_report_ais_problem)
 
     hass.components.websocket_api.async_register_command(websocket_add_ais_media_source)
-
-    def device_discovered(service):
-        """ Called when a device has been discovered. """
-        if ais_global.G_AIS_START_IS_DONE:
-            _LOGGER.info("Discovered a new device type: " + str(service.as_dict()))
-            try:
-                d = service.as_dict().get("data")
-                s = d.get("service")
-                p = d.get("platform")
-                if s == "load_platform.sensor" and p == "mqtt":
-                    i = d.get("discovered")
-                    uid = i.get("unique_id")
-                    if uid is not None:
-                        # search entity_id for this unique_id - add sensor to group
-                        if hass.services.has_service("group", "set"):
-                            hass.async_add_job(
-                                hass.services.async_call(
-                                    "group",
-                                    "set",
-                                    {
-                                        "object_id": "all_ais_sensors",
-                                        "add_entities": ["sensor." + uid],
-                                    },
-                                )
-                            )
-                _LOGGER.info("Discovered device prepare remote menu!")
-                # prepare menu
-                hass.async_add_job(
-                    hass.services.async_call("ais_ai_service", "prepare_remote_menu")
-                )
-            except Exception as e:
-                _LOGGER.error("device_discovered: " + str(e))
-
-    hass.bus.async_listen(EVENT_PLATFORM_DISCOVERED, device_discovered)
 
     def state_changed(state_event):
         """ Called on state change """
