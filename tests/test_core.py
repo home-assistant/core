@@ -529,7 +529,9 @@ async def test_eventbus_max_length_exceeded(hass):
     """Test that an exception is raised when the max character length is exceeded."""
 
     with pytest.raises(MaxLengthExceeded):
-        hass.bus.async_fire("this_event_exceeds_the_max_character_length")
+        hass.bus.async_fire(
+            "this_event_exceeds_the_max_character_length_even_after_extending_the_limit"
+        )
 
 
 def test_state_init():
