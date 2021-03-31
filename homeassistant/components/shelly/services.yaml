@@ -1,6 +1,7 @@
 # shelly service descriptions.
 
 ota_update:
+  name: OTA Update
   description: Trigger an over-the-air (OTA) update.
   target:
     device:
