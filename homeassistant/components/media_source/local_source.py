@@ -16,8 +16,6 @@ from homeassistant.util import raise_if_invalid_path
 from .const import DOMAIN, MEDIA_CLASS_MAP, MEDIA_MIME_TYPES
 from .models import BrowseMediaSource, MediaSource, MediaSourceItem, PlayMedia
 
-_LOGGER = logging.getLogger(__name__)
-
 
 @callback
 def async_setup(hass: HomeAssistant):
