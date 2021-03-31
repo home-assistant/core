@@ -57,6 +57,7 @@ TRIGGER_SCHEMA = vol.All(
 
 async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
+    trigger_id = automation_info.get("trigger_id") if automation_info else None
     hours = config.get(CONF_HOURS)
     minutes = config.get(CONF_MINUTES)
     seconds = config.get(CONF_SECONDS)
@@ -78,6 +79,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
                     "platform": "time_pattern",
                     "now": now,
                     "description": "time pattern",
+                    "id": trigger_id,
                 }
             },
         )
