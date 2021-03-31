@@ -14,6 +14,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.dhcp import IP_ADDRESS, MAC_ADDRESS
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TIMEOUT, CONF_TYPE
 from homeassistant.helpers import config_validation as cv
 
@@ -107,7 +108,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 device.timeout = timeout
 
-                if self.source != "reauth":
+                if self.source != SOURCE_REAUTH:
                     await self.async_set_device(device)
                     self._abort_if_unique_id_configured(
                         updates={CONF_HOST: device.host[0], CONF_TIMEOUT: timeout}
