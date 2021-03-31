@@ -889,9 +889,7 @@ async def async_setup_entry(hass, config_entry):
                 continue
             network.manager.pressButton(value.value_id)
             network.manager.releaseButton(value.value_id)
-            _LOGGER.info(
-                "Resetting meters on node %s instance %s....", node_id, instance
-            )
+            _LOGGER.info("Resetting meters on node %s instance %s", node_id, instance)
             return
         _LOGGER.info(
             "Node %s on instance %s does not have resettable meters", node_id, instance
@@ -915,7 +913,7 @@ async def async_setup_entry(hass, config_entry):
 
     def start_zwave(_service_or_event):
         """Startup Z-Wave network."""
-        _LOGGER.info("Starting Z-Wave network...")
+        _LOGGER.info("Starting Z-Wave network")
         network.start()
         hass.bus.fire(const.EVENT_NETWORK_START)
 
@@ -939,7 +937,7 @@ async def async_setup_entry(hass, config_entry):
                         "Z-Wave not ready after %d seconds, continuing anyway", waited
                     )
                     _LOGGER.info(
-                        "final network state: %d %s", network.state, network.state_str
+                        "Final network state: %d %s", network.state, network.state_str
                     )
                     break
 

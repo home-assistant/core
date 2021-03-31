@@ -29,6 +29,7 @@ from .const import (
     ATTR_API_FEELS_LIKE_TEMPERATURE,
     ATTR_API_FORECAST,
     ATTR_API_HUMIDITY,
+    ATTR_API_PRECIPITATION_KIND,
     ATTR_API_PRESSURE,
     ATTR_API_RAIN,
     ATTR_API_SNOW,
@@ -129,6 +130,9 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             ATTR_API_CLOUDS: current_weather.clouds,
             ATTR_API_RAIN: self._get_rain(current_weather.rain),
             ATTR_API_SNOW: self._get_snow(current_weather.snow),
+            ATTR_API_PRECIPITATION_KIND: self._calc_precipitation_kind(
+                current_weather.rain, current_weather.snow
+            ),
             ATTR_API_WEATHER: current_weather.detailed_status,
             ATTR_API_CONDITION: self._get_condition(current_weather.weather_code),
             ATTR_API_UV_INDEX: current_weather.uvi,
@@ -178,36 +182,45 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
     def _get_rain(rain):
         """Get rain data from weather data."""
         if "all" in rain:
-            return round(rain["all"], 0)
+            return round(rain["all"], 2)
         if "1h" in rain:
-            return round(rain["1h"], 0)
-        return "not raining"
+            return round(rain["1h"], 2)
+        return 0
 
     @staticmethod
     def _get_snow(snow):
         """Get snow data from weather data."""
         if snow:
             if "all" in snow:
-                return round(snow["all"], 0)
+                return round(snow["all"], 2)
             if "1h" in snow:
-                return round(snow["1h"], 0)
-            return "not snowing"
-        return "not snowing"
+                return round(snow["1h"], 2)
+        return 0
 
     @staticmethod
     def _calc_precipitation(rain, snow):
         """Calculate the precipitation."""
         rain_value = 0
-        if WeatherUpdateCoordinator._get_rain(rain) != "not raining":
+        if WeatherUpdateCoordinator._get_rain(rain) != 0:
             rain_value = WeatherUpdateCoordinator._get_rain(rain)
 
         snow_value = 0
-        if WeatherUpdateCoordinator._get_snow(snow) != "not snowing":
+        if WeatherUpdateCoordinator._get_snow(snow) != 0:
             snow_value = WeatherUpdateCoordinator._get_snow(snow)
 
-        if round(rain_value + snow_value, 1) == 0:
-            return None
-        return round(rain_value + snow_value, 1)
+        return round(rain_value + snow_value, 2)
+
+    @staticmethod
+    def _calc_precipitation_kind(rain, snow):
+        """Determine the precipitation kind."""
+        if WeatherUpdateCoordinator._get_rain(rain) != 0:
+            if WeatherUpdateCoordinator._get_snow(snow) != 0:
+                return "Snow and Rain"
+            return "Rain"
+
+        if WeatherUpdateCoordinator._get_snow(snow) != 0:
+            return "Snow"
+        return "None"
 
     def _get_condition(self, weather_code, timestamp=None):
         """Get weather condition from weather data."""

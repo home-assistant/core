@@ -1,4 +1,5 @@
 """Virtual gateway for Zigbee Home Automation."""
+from __future__ import annotations
 
 import asyncio
 import collections
@@ -9,7 +10,6 @@ import logging
 import os
 import time
 import traceback
-from typing import List, Optional
 
 from serial import SerialException
 from zigpy.config import CONF_DEVICE
@@ -378,12 +378,12 @@ class ZHAGateway:
         """Return ZHADevice for given ieee."""
         return self._devices.get(ieee)
 
-    def get_group(self, group_id: str) -> Optional[ZhaGroupType]:
+    def get_group(self, group_id: str) -> ZhaGroupType | None:
         """Return Group for given group id."""
         return self.groups.get(group_id)
 
     @callback
-    def async_get_group_by_name(self, group_name: str) -> Optional[ZhaGroupType]:
+    def async_get_group_by_name(self, group_name: str) -> ZhaGroupType | None:
         """Get ZHA group by name."""
         for group in self.groups.values():
             if group.name == group_name:
@@ -473,11 +473,14 @@ class ZHAGateway:
         )
 
     @callback
-    def async_enable_debug_mode(self):
+    def async_enable_debug_mode(self, filterer=None):
         """Enable debug mode for ZHA."""
         self._log_levels[DEBUG_LEVEL_ORIGINAL] = async_capture_log_levels()
         async_set_logger_levels(DEBUG_LEVELS)
         self._log_levels[DEBUG_LEVEL_CURRENT] = async_capture_log_levels()
+
+        if filterer:
+            self._log_relay_handler.addFilter(filterer)
 
         for logger_name in DEBUG_RELAY_LOGGERS:
             logging.getLogger(logger_name).addHandler(self._log_relay_handler)
@@ -485,12 +488,14 @@ class ZHAGateway:
         self.debug_enabled = True
 
     @callback
-    def async_disable_debug_mode(self):
+    def async_disable_debug_mode(self, filterer=None):
         """Disable debug mode for ZHA."""
         async_set_logger_levels(self._log_levels[DEBUG_LEVEL_ORIGINAL])
         self._log_levels[DEBUG_LEVEL_CURRENT] = async_capture_log_levels()
         for logger_name in DEBUG_RELAY_LOGGERS:
             logging.getLogger(logger_name).removeHandler(self._log_relay_handler)
+        if filterer:
+            self._log_relay_handler.removeFilter(filterer)
         self.debug_enabled = False
 
     @callback
@@ -620,7 +625,7 @@ class ZHAGateway:
         zha_device.update_available(True)
 
     async def async_create_zigpy_group(
-        self, name: str, members: List[GroupMember]
+        self, name: str, members: list[GroupMember]
     ) -> ZhaGroupType:
         """Create a new Zigpy Zigbee group."""
         # we start with two to fill any gaps from a user removing existing groups
@@ -728,9 +733,8 @@ class LogRelayHandler(logging.Handler):
     def emit(self, record):
         """Relay log message via dispatcher."""
         stack = []
-        if record.levelno >= logging.WARN:
-            if not record.exc_info:
-                stack = [f for f, _, _, _ in traceback.extract_stack()]
+        if record.levelno >= logging.WARN and not record.exc_info:
+            stack = [f for f, _, _, _ in traceback.extract_stack()]
 
         entry = LogEntry(record, stack, _figure_out_source(record, stack, self.hass))
         async_dispatcher_send(

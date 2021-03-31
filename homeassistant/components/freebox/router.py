@@ -1,9 +1,11 @@
 """Represent the Freebox router and its devices and sensors."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 import logging
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from freebox_api import Freepybox
 from freebox_api.api.wifi import Wifi
@@ -60,11 +62,11 @@ class FreeboxRouter:
         self._sw_v = None
         self._attrs = {}
 
-        self.devices: Dict[str, Dict[str, Any]] = {}
-        self.disks: Dict[int, Dict[str, Any]] = {}
-        self.sensors_temperature: Dict[str, int] = {}
-        self.sensors_connection: Dict[str, float] = {}
-        self.call_list: List[Dict[str, Any]] = []
+        self.devices: dict[str, dict[str, Any]] = {}
+        self.disks: dict[int, dict[str, Any]] = {}
+        self.sensors_temperature: dict[str, int] = {}
+        self.sensors_connection: dict[str, float] = {}
+        self.call_list: list[dict[str, Any]] = []
 
         self._unsub_dispatcher = None
         self.listeners = []
@@ -91,7 +93,7 @@ class FreeboxRouter:
             self.hass, self.update_all, SCAN_INTERVAL
         )
 
-    async def update_all(self, now: Optional[datetime] = None) -> None:
+    async def update_all(self, now: datetime | None = None) -> None:
         """Update all Freebox platforms."""
         await self.update_device_trackers()
         await self.update_sensors()
@@ -99,7 +101,7 @@ class FreeboxRouter:
     async def update_device_trackers(self) -> None:
         """Update Freebox devices."""
         new_device = False
-        fbx_devices: [Dict[str, Any]] = await self._api.lan.get_hosts_list()
+        fbx_devices: [dict[str, Any]] = await self._api.lan.get_hosts_list()
 
         # Adds the Freebox itself
         fbx_devices.append(
@@ -129,7 +131,7 @@ class FreeboxRouter:
     async def update_sensors(self) -> None:
         """Update Freebox sensors."""
         # System sensors
-        syst_datas: Dict[str, Any] = await self._api.system.get_config()
+        syst_datas: dict[str, Any] = await self._api.system.get_config()
 
         # According to the doc `syst_datas["sensors"]` is temperature sensors in celsius degree.
         # Name and id of sensors may vary under Freebox devices.
@@ -137,7 +139,7 @@ class FreeboxRouter:
             self.sensors_temperature[sensor["name"]] = sensor["value"]
 
         # Connection sensors
-        connection_datas: Dict[str, Any] = await self._api.connection.get_status()
+        connection_datas: dict[str, Any] = await self._api.connection.get_status()
         for sensor_key in CONNECTION_SENSORS:
             self.sensors_connection[sensor_key] = connection_datas[sensor_key]
 
@@ -161,7 +163,7 @@ class FreeboxRouter:
     async def _update_disks_sensors(self) -> None:
         """Update Freebox disks."""
         # None at first request
-        fbx_disks: [Dict[str, Any]] = await self._api.storage.get_disks() or []
+        fbx_disks: [dict[str, Any]] = await self._api.storage.get_disks() or []
 
         for fbx_disk in fbx_disks:
             self.disks[fbx_disk["id"]] = fbx_disk
@@ -178,7 +180,7 @@ class FreeboxRouter:
         self._api = None
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> dict[str, Any]:
         """Return the device information."""
         return {
             "connections": {(CONNECTION_NETWORK_MAC, self.mac)},
@@ -204,7 +206,7 @@ class FreeboxRouter:
         return f"{DOMAIN}-{self._host}-sensor-update"
 
     @property
-    def sensors(self) -> Dict[str, Any]:
+    def sensors(self) -> dict[str, Any]:
         """Return sensors."""
         return {**self.sensors_temperature, **self.sensors_connection}
 

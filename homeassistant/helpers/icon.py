@@ -1,9 +1,9 @@
 """Icon helper methods."""
-from typing import Optional
+from __future__ import annotations
 
 
 def icon_for_battery_level(
-    battery_level: Optional[int] = None, charging: bool = False
+    battery_level: int | None = None, charging: bool = False
 ) -> str:
     """Return a battery icon valid identifier."""
     icon = "mdi:battery"
@@ -20,7 +20,7 @@ def icon_for_battery_level(
     return icon
 
 
-def icon_for_signal_level(signal_level: Optional[int] = None) -> str:
+def icon_for_signal_level(signal_level: int | None = None) -> str:
     """Return a signal icon valid identifier."""
     if signal_level is None or signal_level == 0:
         return "mdi:signal-cellular-outline"

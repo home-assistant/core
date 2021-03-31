@@ -1,9 +1,10 @@
 """Support for Tasmota sensors."""
-from typing import Optional
+from __future__ import annotations
 
 from hatasmota import const as hc, status_sensor
 
 from homeassistant.components import sensor
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
@@ -38,7 +39,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 
 from .const import DATA_REMOVE_DISCOVER_COMPONENT
 from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW
@@ -145,7 +145,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, Entity):
+class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, SensorEntity):
     """Representation of a Tasmota sensor."""
 
     def __init__(self, **kwds):
@@ -163,7 +163,7 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, Entity):
         self.async_write_ha_state()
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the device class of the sensor."""
         class_or_icon = SENSOR_DEVICE_CLASS_ICON_MAP.get(
             self._tasmota_entity.quantity, {}

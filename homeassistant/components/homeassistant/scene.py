@@ -1,7 +1,9 @@
 """Allow users to set and activate scenes."""
+from __future__ import annotations
+
 from collections import namedtuple
 import logging
-from typing import Any, List
+from typing import Any
 
 import voluptuous as vol
 
@@ -118,7 +120,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def scenes_with_entity(hass: HomeAssistant, entity_id: str) -> List[str]:
+def scenes_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
     """Return all scenes that reference the entity."""
     if DATA_PLATFORM not in hass.data:
         return []
@@ -133,7 +135,7 @@ def scenes_with_entity(hass: HomeAssistant, entity_id: str) -> List[str]:
 
 
 @callback
-def entities_in_scene(hass: HomeAssistant, entity_id: str) -> List[str]:
+def entities_in_scene(hass: HomeAssistant, entity_id: str) -> list[str]:
     """Return all entities in a scene."""
     if DATA_PLATFORM not in hass.data:
         return []

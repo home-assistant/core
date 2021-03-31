@@ -12,9 +12,9 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "De hostnaam van het certificaat",
+                    "host": "Host",
                     "name": "De naam van het certificaat",
-                    "port": "De poort van het certificaat"
+                    "port": "Poort"
                 },
                 "title": "Het certificaat defini\u00ebren dat moet worden getest"
             }

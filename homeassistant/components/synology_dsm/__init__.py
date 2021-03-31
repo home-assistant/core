@@ -1,8 +1,9 @@
 """The Synology DSM component."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Dict
 
 import async_timeout
 from synology_dsm import SynologyDSM
@@ -71,7 +72,6 @@ from .const import (
     STORAGE_VOL_SENSORS,
     SYNO_API,
     SYSTEM_LOADED,
-    TEMP_SENSORS_KEYS,
     UNDO_UPDATE_LISTENER,
     UTILISATION_SENSORS,
 )
@@ -441,12 +441,11 @@ class SynoApi:
             )
             return
 
+        # surveillance_station is updated by own coordinator
+        self.dsm.reset(self.surveillance_station)
+
         # Determine if we should fetch an API
         self._with_system = bool(self.dsm.apis.get(SynoCoreSystem.API_KEY))
-        self._with_surveillance_station = bool(
-            self.dsm.apis.get(SynoSurveillanceStation.CAMERA_API_KEY)
-        ) or bool(self.dsm.apis.get(SynoSurveillanceStation.HOME_MODE_API_KEY))
-
         self._with_security = bool(
             self._fetching_entities.get(SynoCoreSecurity.API_KEY)
         )
@@ -496,14 +495,6 @@ class SynoApi:
             )
             self.dsm.reset(self.utilisation)
             self.utilisation = None
-
-        if not self._with_surveillance_station:
-            _LOGGER.debug(
-                "Disable surveillance_station api from being updated for '%s'",
-                self._entry.unique_id,
-            )
-            self.dsm.reset(self.surveillance_station)
-            self.surveillance_station = None
 
     def _fetch_device_configuration(self):
         """Fetch initial device config."""
@@ -599,7 +590,7 @@ class SynologyDSMBaseEntity(CoordinatorEntity):
         self,
         api: SynoApi,
         entity_type: str,
-        entity_info: Dict[str, str],
+        entity_info: dict[str, str],
         coordinator: DataUpdateCoordinator,
     ):
         """Initialize the Synology DSM entity."""
@@ -631,24 +622,17 @@ class SynologyDSMBaseEntity(CoordinatorEntity):
         return self._icon
 
     @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit the value is expressed in."""
-        if self.entity_type in TEMP_SENSORS_KEYS:
-            return self.hass.config.units.temperature_unit
-        return self._unit
-
-    @property
     def device_class(self) -> str:
         """Return the class of this device."""
         return self._class
 
     @property
-    def extra_state_attributes(self) -> Dict[str, any]:
+    def extra_state_attributes(self) -> dict[str, any]:
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
-    def device_info(self) -> Dict[str, any]:
+    def device_info(self) -> dict[str, any]:
         """Return the device information."""
         return {
             "identifiers": {(DOMAIN, self._api.information.serial)},
@@ -676,7 +660,7 @@ class SynologyDSMDeviceEntity(SynologyDSMBaseEntity):
         self,
         api: SynoApi,
         entity_type: str,
-        entity_info: Dict[str, str],
+        entity_info: dict[str, str],
         coordinator: DataUpdateCoordinator,
         device_id: str = None,
     ):
@@ -718,7 +702,7 @@ class SynologyDSMDeviceEntity(SynologyDSMBaseEntity):
         return bool(self._api.storage)
 
     @property
-    def device_info(self) -> Dict[str, any]:
+    def device_info(self) -> dict[str, any]:
         """Return the device information."""
         return {
             "identifiers": {(DOMAIN, self._api.information.serial, self._device_id)},

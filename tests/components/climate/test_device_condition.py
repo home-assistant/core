@@ -260,7 +260,7 @@ async def test_capabilities(hass):
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
-            "name": "preset_modes",
+            "name": "preset_mode",
             "options": [("home", "home"), ("away", "away")],
             "required": True,
             "type": "select",

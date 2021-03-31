@@ -1,4 +1,6 @@
 """Helpers to install PyPi packages."""
+from __future__ import annotations
+
 import asyncio
 from importlib.metadata import PackageNotFoundError, version
 import logging
@@ -6,7 +8,6 @@ import os
 from pathlib import Path
 from subprocess import PIPE, Popen
 import sys
-from typing import Optional
 from urllib.parse import urlparse
 
 import pkg_resources
@@ -59,10 +60,10 @@ def is_installed(package: str) -> bool:
 def install_package(
     package: str,
     upgrade: bool = True,
-    target: Optional[str] = None,
-    constraints: Optional[str] = None,
-    find_links: Optional[str] = None,
-    no_cache_dir: Optional[bool] = False,
+    target: str | None = None,
+    constraints: str | None = None,
+    find_links: str | None = None,
+    no_cache_dir: bool | None = False,
 ) -> bool:
     """Install a package on PyPi. Accepts pip compatible package strings.
 

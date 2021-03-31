@@ -4,7 +4,8 @@ from os import path
 from unittest.mock import patch
 
 from homeassistant import config
-from homeassistant.components.template import DOMAIN, SERVICE_RELOAD
+from homeassistant.components.template import DOMAIN
+from homeassistant.helpers.reload import SERVICE_RELOAD
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 

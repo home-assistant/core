@@ -229,7 +229,7 @@ async def test_set_config_parameter(
     entry = integration
     ws_client = await hass_ws_client(hass)
 
-    client.async_send_command.return_value = {"success": True}
+    client.async_send_command_no_wait.return_value = None
 
     await ws_client.send_json(
         {
@@ -244,10 +244,10 @@ async def test_set_config_parameter(
     )
 
     msg = await ws_client.receive_json()
-    assert msg["result"]
+    assert msg["success"]
 
-    assert len(client.async_send_command.call_args_list) == 1
-    args = client.async_send_command.call_args[0][0]
+    assert len(client.async_send_command_no_wait.call_args_list) == 1
+    args = client.async_send_command_no_wait.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 52
     assert args["valueId"] == {
@@ -275,7 +275,7 @@ async def test_set_config_parameter(
     }
     assert args["value"] == 1
 
-    client.async_send_command.reset_mock()
+    client.async_send_command_no_wait.reset_mock()
 
     with patch(
         "homeassistant.components.zwave_js.api.async_set_config_parameter",
@@ -295,7 +295,7 @@ async def test_set_config_parameter(
 
         msg = await ws_client.receive_json()
 
-        assert len(client.async_send_command.call_args_list) == 0
+        assert len(client.async_send_command_no_wait.call_args_list) == 0
         assert not msg["success"]
         assert msg["error"]["code"] == "not_supported"
         assert msg["error"]["message"] == "test"
@@ -315,7 +315,7 @@ async def test_set_config_parameter(
 
         msg = await ws_client.receive_json()
 
-        assert len(client.async_send_command.call_args_list) == 0
+        assert len(client.async_send_command_no_wait.call_args_list) == 0
         assert not msg["success"]
         assert msg["error"]["code"] == "not_found"
         assert msg["error"]["message"] == "test"
@@ -335,7 +335,7 @@ async def test_set_config_parameter(
 
         msg = await ws_client.receive_json()
 
-        assert len(client.async_send_command.call_args_list) == 0
+        assert len(client.async_send_command_no_wait.call_args_list) == 0
         assert not msg["success"]
         assert msg["error"]["code"] == "unknown_error"
         assert msg["error"]["message"] == "test"
@@ -381,7 +381,7 @@ async def test_update_log_config(hass, client, integration, hass_ws_client):
     assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "update_log_config"
-    assert args["config"] == {"level": 0}
+    assert args["config"] == {"level": "error"}
 
     client.async_send_command.reset_mock()
 
@@ -428,7 +428,7 @@ async def test_update_log_config(hass, client, integration, hass_ws_client):
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "update_log_config"
     assert args["config"] == {
-        "level": 0,
+        "level": "error",
         "logToFile": True,
         "filename": "/test",
         "forceConsole": True,
@@ -490,7 +490,7 @@ async def test_get_log_config(hass, client, integration, hass_ws_client):
         "success": True,
         "config": {
             "enabled": True,
-            "level": 0,
+            "level": "error",
             "logToFile": False,
             "filename": "/test.txt",
             "forceConsole": False,

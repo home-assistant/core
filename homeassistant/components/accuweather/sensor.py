@@ -1,4 +1,5 @@
 """Support for the AccuWeather service."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
@@ -48,7 +49,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(sensors, False)
 
 
-class AccuWeatherSensor(CoordinatorEntity):
+class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
     """Define an AccuWeather entity."""
 
     def __init__(self, name, kind, coordinator, forecast_day=None):

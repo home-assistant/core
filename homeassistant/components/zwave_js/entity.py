@@ -1,7 +1,7 @@
 """Generic Z-Wave Entity Class."""
+from __future__ import annotations
 
 import logging
-from typing import List, Optional, Union
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.model.node import NodeStatus
@@ -105,8 +105,9 @@ class ZWaveBaseEntity(Entity):
     def generate_name(
         self,
         include_value_name: bool = False,
-        alternate_value_name: Optional[str] = None,
-        additional_info: Optional[List[str]] = None,
+        alternate_value_name: str | None = None,
+        additional_info: list[str] | None = None,
+        name_suffix: str | None = None,
     ) -> str:
         """Generate entity name."""
         if additional_info is None:
@@ -116,6 +117,8 @@ class ZWaveBaseEntity(Entity):
             or self.info.node.device_config.description
             or f"Node {self.info.node.node_id}"
         )
+        if name_suffix:
+            name = f"{name} {name_suffix}"
         if include_value_name:
             value_name = (
                 alternate_value_name
@@ -188,13 +191,13 @@ class ZWaveBaseEntity(Entity):
     @callback
     def get_zwave_value(
         self,
-        value_property: Union[str, int],
-        command_class: Optional[int] = None,
-        endpoint: Optional[int] = None,
-        value_property_key: Optional[int] = None,
+        value_property: str | int,
+        command_class: int | None = None,
+        endpoint: int | None = None,
+        value_property_key: int | None = None,
         add_to_watched_value_ids: bool = True,
         check_all_endpoints: bool = False,
-    ) -> Optional[ZwaveValue]:
+    ) -> ZwaveValue | None:
         """Return specific ZwaveValue on this ZwaveNode."""
         # use commandclass and endpoint from primary value if omitted
         return_value = None

@@ -1,6 +1,7 @@
 """Support for Tado sensors for each zone."""
 import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
@@ -10,7 +11,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 
 from .const import (
     CONDITIONS_MAP,
@@ -86,7 +86,7 @@ async def async_setup_entry(
         async_add_entities(entities, True)
 
 
-class TadoHomeSensor(TadoHomeEntity, Entity):
+class TadoHomeSensor(TadoHomeEntity, SensorEntity):
     """Representation of a Tado Sensor."""
 
     def __init__(self, tado, home_variable):
@@ -191,7 +191,7 @@ class TadoHomeSensor(TadoHomeEntity, Entity):
             }
 
 
-class TadoZoneSensor(TadoZoneEntity, Entity):
+class TadoZoneSensor(TadoZoneEntity, SensorEntity):
     """Representation of a tado Sensor."""
 
     def __init__(self, tado, zone_name, zone_id, zone_variable):

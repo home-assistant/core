@@ -2,6 +2,7 @@
 from datetime import timedelta
 import functools as ft
 import logging
+from typing import final
 
 import voluptuous as vol
 
@@ -129,7 +130,7 @@ async def async_unload_entry(hass, entry):
 
 
 class WaterHeaterEntity(Entity):
-    """Representation of a water_heater device."""
+    """Base class for water heater entities."""
 
     @property
     def state(self):
@@ -162,6 +163,7 @@ class WaterHeaterEntity(Entity):
 
         return data
 
+    @final
     @property
     def state_attributes(self):
         """Return the optional state attributes."""

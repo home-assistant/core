@@ -19,12 +19,6 @@ PLATFORMS = ["cover", "fan", "light", "switch"]
 _API_TIMEOUT = SLOW_UPDATE_WARNING - 1
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up the Bond component."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Bond from a config entry."""
     host = entry.data[CONF_HOST]
@@ -41,6 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     bpup_subs = BPUPSubscriptions()
     stop_bpup = await start_bpup(host, bpup_subs)
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         HUB: hub,
         BPUP_SUBS: bpup_subs,

@@ -1,7 +1,8 @@
 """Websocket API for Z-Wave JS."""
+from __future__ import annotations
+
 import dataclasses
 import json
-from typing import Dict
 
 from aiohttp import hdrs, web, web_exceptions
 import voluptuous as vol
@@ -44,6 +45,10 @@ LOG_TO_FILE = "log_to_file"
 FILENAME = "filename"
 ENABLED = "enabled"
 FORCE_CONSOLE = "force_console"
+
+# constants for setting config parameters
+VALUE_ID = "value_id"
+STATUS = "status"
 
 
 @callback
@@ -320,7 +325,7 @@ async def websocket_set_config_parameter(
     client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
     node = client.driver.controller.nodes[node_id]
     try:
-        result = await async_set_config_parameter(
+        zwave_value, cmd_status = await async_set_config_parameter(
             node, value, property_, property_key=property_key
         )
     except (InvalidNewValue, NotFoundError, NotImplementedError, SetValueFailed) as err:
@@ -339,7 +344,10 @@ async def websocket_set_config_parameter(
 
     connection.send_result(
         msg[ID],
-        str(result),
+        {
+            VALUE_ID: zwave_value.value_id,
+            STATUS: cmd_status,
+        },
     )
 
 
@@ -394,12 +402,7 @@ def websocket_get_config_parameters(
     )
 
 
-def convert_log_level_to_enum(value: str) -> LogLevel:
-    """Convert log level string to LogLevel enum."""
-    return LogLevel[value.upper()]
-
-
-def filename_is_present_if_logging_to_file(obj: Dict) -> Dict:
+def filename_is_present_if_logging_to_file(obj: dict) -> dict:
     """Validate that filename is provided if log_to_file is True."""
     if obj.get(LOG_TO_FILE, False) and FILENAME not in obj:
         raise vol.Invalid("`filename` must be provided if logging to file")
@@ -419,8 +422,8 @@ def filename_is_present_if_logging_to_file(obj: Dict) -> Dict:
                     vol.Optional(LEVEL): vol.All(
                         cv.string,
                         vol.Lower,
-                        vol.In([log_level.name.lower() for log_level in LogLevel]),
-                        lambda val: LogLevel[val.upper()],
+                        vol.In([log_level.value for log_level in LogLevel]),
+                        lambda val: LogLevel(val),  # pylint: disable=unnecessary-lambda
                     ),
                     vol.Optional(LOG_TO_FILE): cv.boolean,
                     vol.Optional(FILENAME): cv.string,

@@ -5,10 +5,9 @@ import threading
 from pushbullet import InvalidKeyError, Listener, PushBullet
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_API_KEY, CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +51,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices)
 
 
-class PushBulletNotificationSensor(Entity):
+class PushBulletNotificationSensor(SensorEntity):
     """Representation of a Pushbullet Sensor."""
 
     def __init__(self, pb, element):

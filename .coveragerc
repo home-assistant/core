@@ -221,6 +221,7 @@ omit =
     homeassistant/components/ecobee/weather.py
     homeassistant/components/econet/__init__.py
     homeassistant/components/econet/binary_sensor.py
+    homeassistant/components/econet/climate.py
     homeassistant/components/econet/const.py
     homeassistant/components/econet/sensor.py
     homeassistant/components/econet/water_heater.py
@@ -348,6 +349,8 @@ omit =
     homeassistant/components/google/*
     homeassistant/components/google_cloud/tts.py
     homeassistant/components/google_maps/device_tracker.py
+    homeassistant/components/google_travel_time/__init__.py
+    homeassistant/components/google_travel_time/helpers.py
     homeassistant/components/google_travel_time/sensor.py
     homeassistant/components/gpmdp/media_player.py
     homeassistant/components/gpsd/sensor.py
@@ -400,6 +403,9 @@ omit =
     homeassistant/components/homematic/climate.py
     homeassistant/components/homematic/cover.py
     homeassistant/components/homematic/notify.py
+    homeassistant/components/home_plus_control/api.py
+    homeassistant/components/home_plus_control/helpers.py
+    homeassistant/components/home_plus_control/switch.py
     homeassistant/components/homeworks/*
     homeassistant/components/honeywell/climate.py
     homeassistant/components/horizon/media_player.py
@@ -559,7 +565,6 @@ omit =
     homeassistant/components/map/*
     homeassistant/components/mastodon/notify.py
     homeassistant/components/matrix/*
-    homeassistant/components/maxcube/*
     homeassistant/components/mcp23017/*
     homeassistant/components/media_extractor/*
     homeassistant/components/mediaroom/media_player.py
@@ -643,15 +648,6 @@ omit =
     homeassistant/components/nederlandse_spoorwegen/sensor.py
     homeassistant/components/nello/lock.py
     homeassistant/components/nest/legacy/*
-    homeassistant/components/netatmo/__init__.py
-    homeassistant/components/netatmo/api.py
-    homeassistant/components/netatmo/camera.py
-    homeassistant/components/netatmo/data_handler.py
-    homeassistant/components/netatmo/helper.py
-    homeassistant/components/netatmo/light.py
-    homeassistant/components/netatmo/netatmo_entity_base.py
-    homeassistant/components/netatmo/sensor.py
-    homeassistant/components/netatmo/webhook.py
     homeassistant/components/netdata/sensor.py
     homeassistant/components/netgear/device_tracker.py
     homeassistant/components/netgear_lte/*
@@ -747,6 +743,7 @@ omit =
     homeassistant/components/picotts/tts.py
     homeassistant/components/piglow/light.py
     homeassistant/components/pilight/*
+    homeassistant/components/ping/__init__.py
     homeassistant/components/ping/const.py
     homeassistant/components/ping/binary_sensor.py
     homeassistant/components/ping/device_tracker.py
@@ -842,6 +839,11 @@ omit =
     homeassistant/components/satel_integra/*
     homeassistant/components/schluter/*
     homeassistant/components/scrape/sensor.py
+    homeassistant/components/screenlogic/__init__.py
+    homeassistant/components/screenlogic/binary_sensor.py
+    homeassistant/components/screenlogic/climate.py
+    homeassistant/components/screenlogic/sensor.py
+    homeassistant/components/screenlogic/switch.py
     homeassistant/components/scsgate/*
     homeassistant/components/scsgate/cover.py
     homeassistant/components/sendgrid/notify.py

@@ -3,7 +3,7 @@
         "abort": {
             "all_configured": "Alle Philips Hue bridges zijn al geconfigureerd",
             "already_configured": "Apparaat is al geconfigureerd",
-            "already_in_progress": "De configuratiestroom voor het apparaat is al in volle gang.",
+            "already_in_progress": "De configuratiestroom is al aan de gang",
             "cannot_connect": "Kan geen verbinding maken",
             "discover_timeout": "Hue bridges kunnen niet worden gevonden",
             "no_bridges": "Geen Philips Hue bridges ontdekt",
@@ -28,7 +28,8 @@
             "manual": {
                 "data": {
                     "host": "Host"
-                }
+                },
+                "title": "Handmatig een Hue bridge configureren"
             }
         }
     },
@@ -51,6 +52,16 @@
             "remote_button_short_release": "\"{subtype}\" knop losgelaten",
             "remote_double_button_long_press": "Beide \"{subtype}\" losgelaten na lang indrukken",
             "remote_double_button_short_press": "Beide \"{subtype}\" losgelaten"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_hue_groups": "Sta Hue-groepen toe",
+                    "allow_unreachable": "Onbereikbare lampen toestaan hun status correct te melden"
+                }
+            }
         }
     }
 }

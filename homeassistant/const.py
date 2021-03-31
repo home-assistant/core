@@ -1,6 +1,6 @@
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 2021
-MINOR_VERSION = 4
+MINOR_VERSION = 5
 PATCH_VERSION = "0.dev0"
 __short_version__ = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__ = f"{__short_version__}.{PATCH_VERSION}"
@@ -73,6 +73,7 @@ CONF_CUSTOMIZE_GLOB = "customize_glob"
 CONF_DEFAULT = "default"
 CONF_DELAY = "delay"
 CONF_DELAY_TIME = "delay_time"
+CONF_DESCRIPTION = "description"
 CONF_DEVICE = "device"
 CONF_DEVICES = "devices"
 CONF_DEVICE_CLASS = "device_class"

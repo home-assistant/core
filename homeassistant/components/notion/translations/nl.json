@@ -11,7 +11,7 @@
             "user": {
                 "data": {
                     "password": "Wachtwoord",
-                    "username": "Gebruikersnaam/E-mailadres"
+                    "username": "Gebruikersnaam"
                 },
                 "title": "Vul uw gegevens informatie"
             }
