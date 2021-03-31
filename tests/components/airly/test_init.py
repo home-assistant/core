@@ -97,84 +97,84 @@ async def test_update_interval(hass, aioclient_mock):
 
     with patch("homeassistant.core.dt_util.utcnow") as mock_utcnow:
         mock_utcnow.return_value = point
-    async_fire_time_changed(hass, point)
-    await hass.async_block_till_done()
+        async_fire_time_changed(hass, point)
+        await hass.async_block_till_done()
 
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Home",
-        unique_id="123-456",
-        data={
-            "api_key": "foo",
-            "latitude": 123,
-            "longitude": 456,
-            "name": "Home",
-        },
-    )
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            title="Home",
+            unique_id="123-456",
+            data={
+                "api_key": "foo",
+                "latitude": 123,
+                "longitude": 456,
+                "name": "Home",
+            },
+        )
 
-    aioclient_mock.get(
-        API_POINT_URL,
-        text=load_fixture("airly_valid_station.json"),
-        headers=headers,
-    )
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+        aioclient_mock.get(
+            API_POINT_URL,
+            text=load_fixture("airly_valid_station.json"),
+            headers=headers,
+        )
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 1
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert entry.state == ENTRY_STATE_LOADED
+        assert aioclient_mock.call_count == 1
+        assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+        assert entry.state == ENTRY_STATE_LOADED
 
-    # We have 160 minutes to midnight, 15 remaining requests and one instance so
-    # next update will be after ceil(160 / 15 * 1) = 11 minutes
-    future = point + timedelta(minutes=11)
-    async_fire_time_changed(hass, future)
-    await hass.async_block_till_done()
+        # We have 160 minutes to midnight, 15 remaining requests and one instance so
+        # next update will be after ceil(160 / 15 * 1) = 11 minutes
+        future = point + timedelta(minutes=11)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 2
+        assert aioclient_mock.call_count == 2
 
-    # We have 160 minutes to midnight, 15 remaining requests and one instance so
-    # next update will be after ceil(160 / 15 * 1) = 11 minutes
-    future = future + timedelta(minutes=11)
-    async_fire_time_changed(hass, future)
-    await hass.async_block_till_done()
+        # We have 160 minutes to midnight, 15 remaining requests and one instance so
+        # next update will be after ceil(160 / 15 * 1) = 11 minutes
+        future = future + timedelta(minutes=11)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 3
+        assert aioclient_mock.call_count == 3
 
-    # Now we add the second Airly instance
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Work",
-        unique_id="66.66-111.11",
-        data={
-            "api_key": "foo",
-            "latitude": 66.66,
-            "longitude": 111.11,
-            "name": "Work",
-        },
-    )
+        # Now we add the second Airly instance
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            title="Work",
+            unique_id="66.66-111.11",
+            data={
+                "api_key": "foo",
+                "latitude": 66.66,
+                "longitude": 111.11,
+                "name": "Work",
+            },
+        )
 
-    aioclient_mock.get(
-        "https://airapi.airly.eu/v2/measurements/point?lat=66.660000&lng=111.110000",
-        text=load_fixture("airly_valid_station.json"),
-        headers=headers,
-    )
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+        aioclient_mock.get(
+            "https://airapi.airly.eu/v2/measurements/point?lat=66.660000&lng=111.110000",
+            text=load_fixture("airly_valid_station.json"),
+            headers=headers,
+        )
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 4
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
-    assert entry.state == ENTRY_STATE_LOADED
+        assert aioclient_mock.call_count == 4
+        assert len(hass.config_entries.async_entries(DOMAIN)) == 2
+        assert entry.state == ENTRY_STATE_LOADED
 
-    # We have 160 minutes to midnight, 15 remaining requests and two instances so
-    # next update will be after ceil(160 / 15 * 2) = 22 minutes
-    future = future + timedelta(minutes=22)
-    async_fire_time_changed(hass, future)
-    await hass.async_block_till_done()
+        # We have 160 minutes to midnight, 15 remaining requests and two instances so
+        # next update will be after ceil(160 / 15 * 2) = 22 minutes
+        future = future + timedelta(minutes=22)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
 
-    # Both instances should be updated so call_count will increase by 2
-    assert aioclient_mock.call_count == 6
+        # Both instances should be updated so call_count will increase by 2
+        assert aioclient_mock.call_count == 6
 
 
 async def test_unload_entry(hass, aioclient_mock):
