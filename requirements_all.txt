@@ -765,7 +765,7 @@ hole==0.5.1
 holidays==0.10.5.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210330.0
+home-assistant-frontend==20210331.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1424,7 +1424,7 @@ pygtfs==0.1.5
 pygti==0.9.2
 
 # homeassistant.components.version
-pyhaversion==3.4.2
+pyhaversion==21.3.0
 
 # homeassistant.components.heos
 pyheos==0.7.2
@@ -2337,7 +2337,7 @@ xbox-webapi==2.0.8
 xboxapi==2.0.1
 
 # homeassistant.components.knx
-xknx==0.17.4
+xknx==0.17.5
 
 # homeassistant.components.bluesound
 # homeassistant.components.rest

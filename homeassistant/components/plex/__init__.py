@@ -24,9 +24,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dev_reg, entity_registry as ent_reg
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 
 from .const import (
     CONF_SERVER,
@@ -38,6 +42,7 @@ from .const import (
     PLATFORMS,
     PLATFORMS_COMPLETED,
     PLEX_SERVER_CONFIG,
+    PLEX_UPDATE_LIBRARY_SIGNAL,
     PLEX_UPDATE_PLATFORMS_SIGNAL,
     SERVERS,
     WEBSOCKETS,
@@ -179,12 +184,20 @@ async def async_setup_entry(hass, entry):
 
         elif msgtype == "playing":
             hass.async_create_task(plex_server.async_update_session(data))
+        elif msgtype == "status":
+            if data["StatusNotification"][0]["title"] == "Library scan complete":
+                async_dispatcher_send(
+                    hass,
+                    PLEX_UPDATE_LIBRARY_SIGNAL.format(server_id),
+                )
 
     session = async_get_clientsession(hass)
+    subscriptions = ["playing", "status"]
     verify_ssl = server_config.get(CONF_VERIFY_SSL)
     websocket = PlexWebsocket(
         plex_server.plex_server,
         plex_websocket_callback,
+        subscriptions=subscriptions,
         session=session,
         verify_ssl=verify_ssl,
     )
@@ -208,6 +221,8 @@ async def async_setup_entry(hass, entry):
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
         task.add_done_callback(partial(start_websocket_session, platform))
+
+    async_cleanup_plex_devices(hass, entry)
 
     def get_plex_account(plex_server):
         try:
@@ -249,3 +264,30 @@ async def async_options_updated(hass, entry):
     # Guard incomplete setup during reauth flows
     if server_id in hass.data[PLEX_DOMAIN][SERVERS]:
         hass.data[PLEX_DOMAIN][SERVERS][server_id].options = entry.options
+
+
+@callback
+def async_cleanup_plex_devices(hass, entry):
+    """Clean up old and invalid devices from the registry."""
+    device_registry = dev_reg.async_get(hass)
+    entity_registry = ent_reg.async_get(hass)
+
+    device_entries = hass.helpers.device_registry.async_entries_for_config_entry(
+        device_registry, entry.entry_id
+    )
+
+    for device_entry in device_entries:
+        if (
+            len(
+                hass.helpers.entity_registry.async_entries_for_device(
+                    entity_registry, device_entry.id, include_disabled_entities=True
+                )
+            )
+            == 0
+        ):
+            _LOGGER.debug(
+                "Removing orphaned device: %s / %s",
+                device_entry.name,
+                device_entry.identifiers,
+            )
+            device_registry.async_remove_device(device_entry.id)

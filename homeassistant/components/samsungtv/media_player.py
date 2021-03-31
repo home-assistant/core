@@ -18,6 +18,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_STEP,
 )
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     CONF_HOST,
     CONF_ID,
@@ -124,7 +125,7 @@ class SamsungTVDevice(MediaPlayerEntity):
         self.hass.add_job(
             self.hass.config_entries.flow.async_init(
                 DOMAIN,
-                context={"source": "reauth"},
+                context={"source": SOURCE_REAUTH},
                 data=self._config_entry.data,
             )
         )
