@@ -5,7 +5,7 @@
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       },
       "hassio_confirm": {
-        "title": "Almond via Supervisor add-on",
+        "title": "Almond via Home Assistant add-on",
         "description": "Do you want to configure Home Assistant to connect to Almond provided by the Supervisor add-on: {addon}?"
       }
     },
