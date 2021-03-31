@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from abc import ABC
 import asyncio
+from collections.abc import Mapping
 from datetime import datetime, timedelta
 import functools as ft
 import logging
@@ -151,7 +152,7 @@ class Entity(ABC):
         return STATE_UNKNOWN
 
     @property
-    def capability_attributes(self) -> dict[str, Any] | None:
+    def capability_attributes(self) -> Mapping[str, Any] | None:
         """Return the capability attributes.
 
         Attributes that explain the capabilities of an entity.
@@ -171,7 +172,7 @@ class Entity(ABC):
         return None
 
     @property
-    def device_state_attributes(self) -> dict[str, Any] | None:
+    def device_state_attributes(self) -> Mapping[str, Any] | None:
         """Return entity specific state attributes.
 
         This method is deprecated, platform classes should implement
@@ -180,7 +181,7 @@ class Entity(ABC):
         return None
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return entity specific state attributes.
 
         Implemented by platform classes. Convention for attribute names
@@ -189,7 +190,7 @@ class Entity(ABC):
         return None
 
     @property
-    def device_info(self) -> dict[str, Any] | None:
+    def device_info(self) -> Mapping[str, Any] | None:
         """Return device specific attributes.
 
         Implemented by platform classes.
