@@ -4,7 +4,7 @@ from copy import deepcopy
 from unittest.mock import Mock, patch
 
 import pydeconz
-from pydeconz.websocket import STATE_RUNNING, STATE_STARTING
+from pydeconz.websocket import STATE_RETRYING, STATE_RUNNING
 import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -199,7 +199,7 @@ async def test_connection_status_signalling(
 
     assert hass.states.get("binary_sensor.presence").state == STATE_OFF
 
-    await mock_deconz_websocket(state=STATE_STARTING)
+    await mock_deconz_websocket(state=STATE_RETRYING)
     await hass.async_block_till_done()
 
     assert hass.states.get("binary_sensor.presence").state == STATE_UNAVAILABLE

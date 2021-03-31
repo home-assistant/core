@@ -3,6 +3,7 @@ from pydeconz.sensor import (
     Battery,
     Consumption,
     Daylight,
+    DoorLock,
     Humidity,
     LightLevel,
     Power,
@@ -103,7 +104,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             if (
                 not sensor.BINARY
                 and sensor.type
-                not in Battery.ZHATYPE + Switch.ZHATYPE + Thermostat.ZHATYPE
+                not in Battery.ZHATYPE
+                + DoorLock.ZHATYPE
+                + Switch.ZHATYPE
+                + Thermostat.ZHATYPE
                 and sensor.uniqueid not in gateway.entities[DOMAIN]
             ):
                 entities.append(DeconzSensor(sensor, gateway))

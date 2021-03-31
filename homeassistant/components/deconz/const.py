@@ -60,7 +60,7 @@ COVER_TYPES = DAMPERS + WINDOW_COVERS
 FANS = ["Fan"]
 
 # Locks
-LOCKS = ["Door Lock"]
+LOCKS = ["Door Lock", "ZHADoorLock"]
 LOCK_TYPES = LOCKS
 
 # Switches
