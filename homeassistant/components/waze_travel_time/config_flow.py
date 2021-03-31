@@ -104,7 +104,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
-            if not await self.hass.async_add_executor_job(
+            if await self.hass.async_add_executor_job(
                 is_valid_config_entry,
                 self.hass,
                 _LOGGER,
@@ -112,8 +112,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_DESTINATION],
                 user_input[CONF_REGION],
             ):
-                errors["base"] = "cannot_connect"
-            else:
                 await self.async_set_unique_id(
                     slugify(
                         f"{DOMAIN}_{user_input[CONF_ORIGIN]}_{user_input[CONF_DESTINATION]}"
@@ -132,6 +130,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ),
                     data=user_input,
                 )
+            else:
+                errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="user",
