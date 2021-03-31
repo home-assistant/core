@@ -25,7 +25,7 @@ select_tariff:
 
 calibrate:
   name: Calibrate
-  description: Calibrates an utility meter.
+  description: Calibrates a utility meter sensor.
   target:
     entity:
       domain: sensor
