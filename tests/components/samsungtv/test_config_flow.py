@@ -1,5 +1,5 @@
 """Tests for Samsung TV config flow."""
-from unittest.mock import DEFAULT as DEFAULT_MOCK, Mock, PropertyMock, call, patch
+from unittest.mock import DEFAULT as Mock, PropertyMock, call, patch
 
 import pytest
 from samsungctl.exceptions import AccessDenied, UnhandledResponse
@@ -564,38 +564,6 @@ async def test_autodetect_websocket(
         assert remotews.call_args_list == [
             call(**AUTODETECT_WEBSOCKET_SSL),
             call(**DEVICEINFO_WEBSOCKET_SSL),
-        ]
-
-
-async def _test_autodetect_websocket_ssl(
-    hass: HomeAssistantType, remote: Mock, remotews: Mock
-):
-    """Test for send key with autodetection of protocol."""
-    with patch(
-        "homeassistant.components.samsungtv.bridge.Remote",
-        side_effect=OSError("Boom"),
-    ), patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWS",
-        side_effect=[WebSocketProtocolException("Boom"), DEFAULT_MOCK],
-    ) as remotews:
-        enter = Mock()
-        type(enter).token = PropertyMock(return_value="123456789")
-        remote = Mock()
-        remote.__enter__ = Mock(return_value=enter)
-        remote.__exit__ = Mock(return_value=False)
-        remote.rest_device_info.return_value = {"device": {"type": "Samsung SmartTV"}}
-        remotews.return_value = remote
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
-        )
-        assert result["type"] == "create_entry"
-        assert result["data"][CONF_METHOD] == "websocket"
-        assert result["data"][CONF_TOKEN] == "123456789"
-        assert remotews.call_count == 2
-        assert remotews.call_args_list == [
-            call(**AUTODETECT_WEBSOCKET_SSL),
-            call(**AUTODETECT_WEBSOCKET_PLAIN),
         ]
 
 
