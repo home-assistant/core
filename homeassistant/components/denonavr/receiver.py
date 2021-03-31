@@ -1,10 +1,9 @@
 """Code to handle a DenonAVR receiver."""
 import logging
-from typing import Optional
+from typing import Callable, Optional
 
 from denonavr import DenonAVR
 from denonavr.exceptions import AvrNetworkError, AvrTimoutError
-import httpx
 
 from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY
 
@@ -21,11 +20,11 @@ class ConnectDenonAVR:
         show_all_inputs: bool,
         zone2: bool,
         zone3: bool,
-        async_client: httpx.AsyncClient,
+        async_client_getter: Callable,
         entry_state: Optional[str] = None,
     ):
         """Initialize the class."""
-        self._async_client = async_client
+        self._async_client_getter = async_client_getter
         self._receiver = None
         self._host = host
         self._show_all_inputs = show_all_inputs
@@ -77,16 +76,16 @@ class ConnectDenonAVR:
 
     async def async_init_receiver_class(self) -> bool:
         """Initialize the DenonAVR class asynchronously."""
-        self._receiver = DenonAVR(
+        receiver = DenonAVR(
             host=self._host,
             show_all_inputs=self._show_all_inputs,
             timeout=self._timeout,
             add_zones=self._zones,
         )
-        # Use httpx.AsyncClient provided by Home Assistant
-        self._receiver.set_async_client(self._async_client)
+        # Use httpx.AsyncClient getter provided by Home Assistant
+        receiver.set_async_client_getter(self._async_client_getter)
         try:
-            await self._receiver.async_setup()
+            await receiver.async_setup()
         except AvrTimoutError:
             if self._entry_state == ENTRY_STATE_SETUP_RETRY:
                 _LOGGER.debug(
@@ -107,5 +106,7 @@ class ConnectDenonAVR:
                     "Network error during setup of denonavr on host %s", self._host
                 )
             return False
+
+        self._receiver = receiver
 
         return True
