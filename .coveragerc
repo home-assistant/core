@@ -922,7 +922,11 @@ omit =
     homeassistant/components/tahoma/alarm_control_panel.py
     homeassistant/components/tahoma/binary_sensor.py
     homeassistant/components/tahoma/coordinator.py
+    homeassistant/components/tahoma/cover.py
+    homeassistant/components/tahoma/light.py
+    homeassistant/components/tahoma/lock.py
     homeassistant/components/tahoma/overkiz_executor.py
+    homeassistant/components/tahoma/scene.py
     homeassistant/components/tahoma/tahoma_entity.py
     homeassistant/components/tank_utility/sensor.py
     homeassistant/components/tankerkoenig/*
