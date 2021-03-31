@@ -101,10 +101,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(info[CONF_IDENTIFIER])
         self.target_device = info[CONF_IDENTIFIER]
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {"name": info[CONF_NAME]}
-
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["identifier"] = self.unique_id
         return await self.async_step_reconfigure()
 
@@ -170,7 +167,6 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(identifier)
         self._abort_if_unique_id_configured()
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["identifier"] = self.unique_id
         self.context["title_placeholders"] = {"name": name}
         self.target_device = identifier

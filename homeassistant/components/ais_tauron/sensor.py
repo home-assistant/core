@@ -1,9 +1,10 @@
 """Support for OpenUV sensors."""
 import logging
 
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
-from .const import CONF_METER_ID, SENSOR_TYPES
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+
 from . import TauronAmiplusSensor
+from .const import CONF_METER_ID, CONF_SHOW_GENERATION, SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,10 +19,24 @@ async def async_setup_entry(hass, entry, async_add_entities):
     user = (entry.data[CONF_USERNAME],)
     password = (entry.data[CONF_PASSWORD],)
     meter_id = (entry.data[CONF_METER_ID],)
+    show_generation_sensors = True
+    if CONF_SHOW_GENERATION in entry.data:
+        show_generation_sensors = (entry.data[CONF_SHOW_GENERATION],)
     sensors = []
     for sensor_type in SENSOR_TYPES:
-        # name, interval, unit, = SENSOR_TYPES[sensor_type]
-        sensors.append(TauronSensor(user, password, meter_id, sensor_type))
+        generation = True if "generation" == SENSOR_TYPES[sensor_type][3][0] else False
+        if generation is False or show_generation_sensors:
+            sensor_name = SENSOR_TYPES[sensor_type][4]
+            sensors.append(
+                TauronSensor(
+                    sensor_name,
+                    user,
+                    password,
+                    meter_id,
+                    generation,
+                    sensor_type,
+                )
+            )
 
     async_add_entities(sensors, True)
 
@@ -29,6 +44,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class TauronSensor(TauronAmiplusSensor):
     """Define a sensor for TAURON."""
 
-    def __init__(self, user, password, meter_id, sensor_type):
+    def __init__(self, name, user, password, meter_id, generation, sensor_type):
         """Initialize the sensor."""
-        super().__init__(user, password, meter_id, sensor_type)
+        super().__init__(name, user, password, meter_id, generation, sensor_type)

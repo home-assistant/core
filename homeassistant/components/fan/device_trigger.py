@@ -74,16 +74,13 @@ async def async_attach_trigger(
     config = TRIGGER_SCHEMA(config)
 
     if config[CONF_TYPE] == "turned_on":
-        from_state = STATE_OFF
         to_state = STATE_ON
     else:
-        from_state = STATE_ON
         to_state = STATE_OFF
 
     state_config = {
         state_trigger.CONF_PLATFORM: "state",
         CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-        state_trigger.CONF_FROM: from_state,
         state_trigger.CONF_TO: to_state,
     }
     state_config = state_trigger.TRIGGER_SCHEMA(state_config)

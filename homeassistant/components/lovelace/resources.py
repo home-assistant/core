@@ -5,14 +5,13 @@ import uuid
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_TYPE
+from homeassistant.const import CONF_RESOURCES, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection, storage
 
 from .const import (
     CONF_RESOURCE_TYPE_WS,
-    CONF_RESOURCES,
     DOMAIN,
     RESOURCE_CREATE_FIELDS,
     RESOURCE_SCHEMA,

@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "error": {
+            "invalid_place_or_service_id": "Ongeldige plaats of service-ID"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "place_id": "Plaats-ID",
+                    "service_id": "Service-ID"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Configureer Recollect Waste"
+            }
+        }
+    }
+}

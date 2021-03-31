@@ -22,7 +22,7 @@
                 "data": {
                     "host": "Vert"
                 },
-                "description": "Skriv inn ip-adressen til enheten.",
+                "description": "Skriv inn IP-adressen til enheten.",
                 "title": "Koble automatisk til broen"
             }
         }

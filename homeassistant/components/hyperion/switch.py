@@ -1,5 +1,6 @@
 """Switch platform for Hyperion."""
 
+import functools
 from typing import Any, Callable, Dict, Optional
 
 from hyperion import client
@@ -199,7 +200,7 @@ class HyperionComponentSwitch(SwitchEntity):
             async_dispatcher_connect(
                 self.hass,
                 SIGNAL_ENTITY_REMOVE.format(self._unique_id),
-                self.async_remove,
+                functools.partial(self.async_remove, force_remove=True),
             )
         )
 

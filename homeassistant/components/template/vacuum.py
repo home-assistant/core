@@ -147,7 +147,6 @@ async def _async_create_entities(hass, config):
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the template vacuums."""
-
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     async_add_entities(await _async_create_entities(hass, config))
 
@@ -337,7 +336,6 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-
         if self._template is not None:
             self.add_template_attribute(
                 "_state", self._template, None, self._update_state

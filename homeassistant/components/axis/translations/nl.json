@@ -8,7 +8,8 @@
         "error": {
             "already_configured": "Apparaat is al geconfigureerd",
             "already_in_progress": "De configuratiestroom voor het apparaat is al in volle gang.",
-            "cannot_connect": "Kan geen verbinding maken"
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie"
         },
         "flow_title": "Axis apparaat: {name} ({host})",
         "step": {

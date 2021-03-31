@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_INCLUDE,
     CONF_PASSWORD,
+    CONF_PREFIX,
     CONF_TEMPERATURE_UNIT,
     CONF_USERNAME,
     TEMP_CELSIUS,
@@ -38,7 +39,6 @@ from .const import (
     CONF_KEYPAD,
     CONF_OUTPUT,
     CONF_PLC,
-    CONF_PREFIX,
     CONF_SETTING,
     CONF_TASK,
     CONF_THERMOSTAT,
@@ -197,7 +197,6 @@ def _async_find_matching_config_entry(hass, prefix):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Elk-M1 Control from a config entry."""
-
     conf = entry.data
 
     _LOGGER.debug("Setting up elkm1 %s", conf["host"])

@@ -1,8 +1,8 @@
 """Constants used by Home Assistant components."""
 
 MAJOR_VERSION = 2021
-MINOR_VERSION = 2
-PATCH_VERSION = "4"
+MINOR_VERSION = 3
+PATCH_VERSION = "6"
 __short_version__ = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__ = f"{__short_version__}.{PATCH_VERSION}"
 REQUIRED_PYTHON_VER = (3, 8, 0)

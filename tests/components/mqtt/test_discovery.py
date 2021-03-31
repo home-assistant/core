@@ -411,6 +411,7 @@ async def test_cleanup_device(hass, device_reg, entity_reg, mqtt_mock):
 
     device_reg.async_remove_device(device_entry.id)
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     # Verify device and registry entries are cleared
     device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})

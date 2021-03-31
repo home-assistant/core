@@ -1,21 +1,52 @@
-# Describes the format for available AIS cloud services
+# Describes the format for available AIS amplifier services
+change_audio_to_mono:
+  description: Włączenie lub wyłączenie dzwięku mono
+  fields:
+    mode:
+      description: Dzwięk mono
+      example: True
+      selector:
+        boolean:
+
+get_audio_mono:
+  description: Sprawdzenie czy dzwięk jest mono czy stereo (uruchamiane automatycznie podczas startu systemu)
+
 change_work_mode:
   description: Ustawienie trybu działania wzmacniacza
   fields:
     mode:
-      description: Tryb dzialania wzmacniacza, wybór z listy ("AX", "BT")
-      example: '{"mode": "AX"}'
+      description: Tryb dzialania wzmacniacza, wybór z listy
+      example: "AX"
+      selector:
+        select:
+          options:
+            - "AX"
+            - "BT"
 
 change_sound_mode:
   description: Ustawienie trybu działania equalizera
   fields:
     mode:
-      description: Tryb dzialania equalizera, wybór z listy  ("NORMAL", "BOOST", "TREBLE", "POP", "ROCK", "CLASSIC", "JAZZ", "DANCE", "R&P")
-      example: '{"mode": "ROCK"}'
+      description: Tryb dzialania equalizera, wybór z listy
+      example: "ROCK"
+      selector:
+        select:
+          options:
+            - "NORMAL"
+            - "BOOST"
+            - "TREBLE"
+            - "POP"
+            - "ROCK"
+            - "CLASSIC"
+            - "JAZZ"
+            - "DANCE"
+            - "R&P"
 
 exec_command:
   description: Przesłanie instrukcji sterującej do wzmacniacza
   fields:
     command:
       description: Instrukcja sterująca
-      example: '{"command": "V16"}'
+      example: 'V16'
+      selector:
+        object:

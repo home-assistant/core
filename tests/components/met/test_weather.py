@@ -30,6 +30,7 @@ async def test_tracking_home(hass, mock_weather):
 
     entry = hass.config_entries.async_entries()[0]
     await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids("weather")) == 0
 
 
@@ -63,4 +64,5 @@ async def test_not_tracking_home(hass, mock_weather):
 
     entry = hass.config_entries.async_entries()[0]
     await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids("weather")) == 0

@@ -14,5 +14,13 @@
             "abort_by_error": "Discontinued due to an error:\n\n {error_info}",
             "single_instance_allowed": "You already have the integration to SUPLA MQTT set up.\n\n If you want to reconfigure, remove the current integration first."
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+              "title": "SUPLA MQTT Broker Settings",
+              "description": "**User:** {username}\n**Password:** {password}\n**Host:** {hostname}\n**Port:** {port}\n\n**Discovery ask (per day):**\n"
+          }
+        }
     }
 }

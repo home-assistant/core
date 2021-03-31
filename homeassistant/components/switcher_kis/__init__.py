@@ -8,7 +8,7 @@ from aioswitcher.bridge import SwitcherV2Bridge
 import voluptuous as vol
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_DEVICE_ID, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
@@ -20,7 +20,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "switcher_kis"
 
-CONF_DEVICE_ID = "device_id"
 CONF_DEVICE_PASSWORD = "device_password"
 CONF_PHONE_ID = "phone_id"
 
@@ -48,7 +47,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
     """Set up the switcher component."""
-
     phone_id = config[DOMAIN][CONF_PHONE_ID]
     device_id = config[DOMAIN][CONF_DEVICE_ID]
     device_password = config[DOMAIN][CONF_DEVICE_PASSWORD]

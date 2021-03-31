@@ -1,0 +1,34 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_api_key": "API \u5bc6\u9470\u7121\u6548",
+            "rate_limited": "\u9054\u5230\u9650\u5236\u983b\u7387\u3001\u8acb\u7a0d\u5019\u518d\u8a66\u3002",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API \u5bc6\u9470",
+                    "latitude": "\u7def\u5ea6",
+                    "longitude": "\u7d93\u5ea6",
+                    "name": "\u540d\u7a31"
+                },
+                "description": "\u5047\u5982\u672a\u63d0\u4f9b\u7def\u5ea6\u8207\u7d93\u5ea6\uff0c\u5c07\u6703\u4f7f\u7528 Home Assistant \u8a2d\u5b9a\u4f5c\u70ba\u9810\u8a2d\u503c\u3002\u6bcf\u4e00\u500b\u9810\u5831\u985e\u578b\u90fd\u6703\u7522\u751f\u4e00\u7d44\u5be6\u9ad4\uff0c\u6216\u8005\u9810\u8a2d\u70ba\u6240\u9078\u64c7\u555f\u7528\u7684\u9810\u5831\u3002"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "forecast_types": "\u9810\u5831\u985e\u578b",
+                    "timestep": "NowCast \u9810\u5831\u9593\u9694\u5206\u9418"
+                },
+                "description": "\u5047\u5982\u9078\u64c7\u958b\u555f `nowcast` \u9810\u5831\u5be6\u9ad4\u3001\u5c07\u53ef\u4ee5\u8a2d\u5b9a\u9810\u5831\u983b\u7387\u9593\u9694\u5206\u9418\u6578\u3002\u6839\u64da\u6240\u8f38\u5165\u7684\u9593\u9694\u6642\u9593\u5c07\u6c7a\u5b9a\u9810\u5831\u7684\u6578\u76ee\u3002",
+                "title": "\u66f4\u65b0 ClimaCell \u9078\u9805"
+            }
+        }
+    },
+    "title": "ClimaCell"
+}

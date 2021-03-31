@@ -28,6 +28,7 @@ from . import (
     subscription,
 )
 from .. import mqtt
+from .const import CONF_RETAIN
 from .debug_info import log_messages
 from .mixins import (
     MQTT_AVAILABILITY_SCHEMA,
@@ -67,7 +68,6 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up MQTT number dynamically through MQTT discovery."""
-
     setup = functools.partial(
         _async_setup_entity, async_add_entities, config_entry=config_entry
     )
@@ -110,7 +110,6 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
         @log_messages(self.hass, self.entity_id)
         def message_received(msg):
             """Handle new MQTT messages."""
-
             try:
                 if msg.payload.decode("utf-8").isnumeric():
                     self._current_number = int(msg.payload)
@@ -149,7 +148,6 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
 
     async def async_set_value(self, value: float) -> None:
         """Update the current value."""
-
         current_number = value
 
         if value.is_integer():
@@ -164,6 +162,7 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
             self._config[CONF_COMMAND_TOPIC],
             current_number,
             self._config[CONF_QOS],
+            self._config[CONF_RETAIN],
         )
 
     @property

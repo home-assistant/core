@@ -160,6 +160,8 @@ COLORS = {
     "whitesmoke": (245, 245, 245),
     "yellow": (255, 255, 0),
     "yellowgreen": (154, 205, 50),
+    # And...
+    "homeassistant": (3, 169, 244),
 }
 
 

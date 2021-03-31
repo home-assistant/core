@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Dit SimpliSafe-account is al in gebruik."
+            "already_configured": "Dit SimpliSafe-account is al in gebruik.",
+            "reauth_successful": "Herauthenticatie was succesvol"
         },
         "error": {
             "identifier_exists": "Account bestaat al",
@@ -13,7 +14,8 @@
                 "data": {
                     "password": "Wachtwoord"
                 },
-                "description": "Uw toegangstoken is verlopen of ingetrokken. Voer uw wachtwoord in om uw account opnieuw te koppelen."
+                "description": "Uw toegangstoken is verlopen of ingetrokken. Voer uw wachtwoord in om uw account opnieuw te koppelen.",
+                "title": "Verifieer de integratie opnieuw"
             },
             "user": {
                 "data": {

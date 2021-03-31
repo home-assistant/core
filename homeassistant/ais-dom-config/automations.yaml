@@ -9,9 +9,6 @@
      data:
        scheduler: noop
    - delay: '6'
-   - service: ais_files.get_db_log_settings_info
-     data:
-       on_system_start: true
    - service: ais_ai_service.publish_command_to_frame
      data:
        key: WifiConnectionInfo
@@ -24,15 +21,7 @@
      data:
        key: getTtsVoice
        val: true
-   - service: ais_ai_service.publish_command_to_frame
-     data:
-       key: relaunch
-       val: true
    - service: ais_shell_command.init_local_sdcard
-   - service: ais_ai_service.publish_command_to_frame
-     data:
-       key: setupStorageSymlinks
-       val: true
    - service: ais_shell_command.set_ais_secure_android_id_dom
    - service: ais_updater.check_version
      data:
@@ -171,6 +160,9 @@
   trigger:
     platform: state
     entity_id: input_select.radio_type
+  condition:
+    condition: template
+    value_template: "{{ states.input_select.radio_type.state != '-' }}"
   action:
     - service: ais_cloud.get_radio_names
       data_template:

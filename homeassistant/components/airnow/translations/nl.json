@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie",
+            "invalid_location": "Geen resultaten gevonden voor die locatie",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-sleutel",
+                    "latitude": "Breedtegraad",
+                    "longitude": "Lengtegraad"
+                },
+                "title": "AirNow"
+            }
+        }
+    },
+    "title": "AirNow"
+}

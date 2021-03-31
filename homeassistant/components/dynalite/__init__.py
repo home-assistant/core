@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.cover import DEVICE_CLASSES_SCHEMA
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
+from homeassistant.const import CONF_DEFAULT, CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
@@ -29,7 +29,6 @@ from .const import (
     CONF_CHANNEL,
     CONF_CHANNEL_COVER,
     CONF_CLOSE_PRESET,
-    CONF_DEFAULT,
     CONF_DEVICE_CLASS,
     CONF_DURATION,
     CONF_FADE,
@@ -181,7 +180,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: Dict[str, Any]) -> bool:
     """Set up the Dynalite platform."""
-
     conf = config.get(DOMAIN)
     LOGGER.debug("Setting up dynalite component config = %s", conf)
 

@@ -106,6 +106,7 @@ class TeslaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         for entry in self._async_current_entries():
             if entry.data.get(CONF_USERNAME) == username:
                 return entry
+        return None
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):

@@ -1,0 +1,8 @@
+{
+  "domain": "faa_delays",
+  "name": "FAA Delays",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/faadelays",
+  "requirements": ["faadelays==0.0.6"],
+  "codeowners": ["@ntilley905"]
+}

@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
+    ATTR_NAME,
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
@@ -27,7 +28,6 @@ from .const import (
     DEFAULT_USERNAME,
     DOMAIN,
     FRITZ_ACTION_GET_INFO,
-    FRITZ_ATTR_NAME,
     FRITZ_ATTR_SERIAL_NUMBER,
     FRITZ_SERVICE_DEVICE_INFO,
     SERIAL_NUMBER,
@@ -119,7 +119,7 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         phonebook_info = await self.hass.async_add_executor_job(
             self._fritzbox_phonebook.fph.phonebook_info, phonebook_id
         )
-        return phonebook_info[FRITZ_ATTR_NAME]
+        return phonebook_info[ATTR_NAME]
 
     async def _get_list_of_phonebook_names(self):
         """Return list of names for all available phonebooks."""
@@ -165,9 +165,7 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if result != RESULT_SUCCESS:
             return self.async_abort(reason=result)
 
-        if (  # pylint: disable=no-member
-            self.context["source"] == config_entries.SOURCE_IMPORT
-        ):
+        if self.context["source"] == config_entries.SOURCE_IMPORT:
             self._phonebook_id = user_input[CONF_PHONEBOOK]
             self._phonebook_name = user_input[CONF_NAME]
 

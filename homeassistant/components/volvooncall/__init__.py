@@ -8,6 +8,7 @@ from volvooncall import Connection
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
+    CONF_REGION,
     CONF_RESOURCES,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
@@ -32,7 +33,6 @@ _LOGGER = logging.getLogger(__name__)
 MIN_UPDATE_INTERVAL = timedelta(minutes=1)
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=1)
 
-CONF_REGION = "region"
 CONF_SERVICE_URL = "service_url"
 CONF_SCANDINAVIAN_MILES = "scandinavian_miles"
 CONF_MUTABLE = "mutable"

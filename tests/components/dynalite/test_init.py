@@ -7,7 +7,7 @@ import pytest
 from voluptuous import MultipleInvalid
 
 import homeassistant.components.dynalite.const as dynalite
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_ROOM
+from homeassistant.const import CONF_DEFAULT, CONF_HOST, CONF_NAME, CONF_PORT, CONF_ROOM
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -54,7 +54,7 @@ async def test_async_setup(hass):
                                     dynalite.CONF_TEMPLATE: dynalite.CONF_TIME_COVER,
                                 },
                             },
-                            dynalite.CONF_DEFAULT: {dynalite.CONF_FADE: 2.3},
+                            CONF_DEFAULT: {dynalite.CONF_FADE: 2.3},
                             dynalite.CONF_ACTIVE: dynalite.ACTIVE_INIT,
                             dynalite.CONF_PRESET: {
                                 "5": {CONF_NAME: "pres5", dynalite.CONF_FADE: 4.5}

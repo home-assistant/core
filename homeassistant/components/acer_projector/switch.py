@@ -9,6 +9,7 @@ from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import (
     CONF_FILENAME,
     CONF_NAME,
+    CONF_TIMEOUT,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
@@ -17,7 +18,6 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_TIMEOUT = "timeout"
 CONF_WRITE_TIMEOUT = "write_timeout"
 
 DEFAULT_NAME = "Acer Projector"
@@ -74,7 +74,6 @@ class AcerSwitch(SwitchEntity):
 
     def __init__(self, serial_port, name, timeout, write_timeout, **kwargs):
         """Init of the Acer projector."""
-
         self.ser = serial.Serial(
             port=serial_port, timeout=timeout, write_timeout=write_timeout, **kwargs
         )
@@ -90,7 +89,6 @@ class AcerSwitch(SwitchEntity):
 
     def _write_read(self, msg):
         """Write to the projector and read the return."""
-
         ret = ""
         # Sometimes the projector won't answer for no reason or the projector
         # was disconnected during runtime.

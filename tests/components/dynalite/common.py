@@ -2,11 +2,11 @@
 from unittest.mock import AsyncMock, Mock, call, patch
 
 from homeassistant.components import dynalite
+from homeassistant.const import ATTR_SERVICE
 from homeassistant.helpers import entity_registry
 
 from tests.common import MockConfigEntry
 
-ATTR_SERVICE = "service"
 ATTR_METHOD = "method"
 ATTR_ARGS = "args"
 

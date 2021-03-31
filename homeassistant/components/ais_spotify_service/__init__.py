@@ -112,12 +112,12 @@ async def async_setup(hass, config):
 
     data = hass.data[DOMAIN] = SpotifyData(hass, oauth)
 
-    async def async_search(call):
+    def search(call):
         _LOGGER.info("search " + str(call))
-        await data.async_process_search(call)
+        data.process_search(call)
 
-    async def async_get_favorites(call):
-        await data.async_process_get_favorites(call)
+    def get_favorites(call):
+        data.process_get_favorites(call)
 
     def select_search_uri(call):
         _LOGGER.info("select_search_uri")
@@ -131,8 +131,8 @@ async def async_setup(hass, config):
         _LOGGER.info("change_play_queue")
         data.change_play_queue(call)
 
-    hass.services.async_register(DOMAIN, "search", async_search)
-    hass.services.async_register(DOMAIN, "get_favorites", async_get_favorites)
+    hass.services.async_register(DOMAIN, "search", search)
+    hass.services.async_register(DOMAIN, "get_favorites", get_favorites)
     hass.services.async_register(DOMAIN, "select_search_uri", select_search_uri)
     hass.services.async_register(DOMAIN, "select_track_uri", select_track_uri)
     hass.services.async_register(DOMAIN, "change_play_queue", change_play_queue)
@@ -285,6 +285,7 @@ class SpotifyData:
                         "thumbnail": thumbnail,
                         "icon": icon,
                         "audio_type": ais_global.G_AN_SPOTIFY_SEARCH,
+                        "editable": True,
                     }
                     list_idx = list_idx + 1
             except Exception as e:
@@ -294,9 +295,7 @@ class SpotifyData:
 
         return list_info
 
-    async def async_get_tracks_list(
-        self, item_uri, item_type, item_owner_id, item_image_url
-    ):
+    def get_tracks_list(self, item_uri, item_type, item_owner_id, item_image_url):
         items_info = {}
         idx = 0
         if (item_type == "album") or (item_type == "user_albums"):
@@ -313,6 +312,7 @@ class SpotifyData:
                 items_info[idx]["audio_type"] = ais_global.G_AN_SPOTIFY
                 items_info[idx]["type"] = track["type"]
                 items_info[idx]["icon"] = "mdi:play"
+                items_info[idx]["editable"] = True
                 idx = idx + 1
         elif (item_type == "artist") or (item_type == "user_artists"):
             response = self._spotify.artist_top_tracks(item_uri)
@@ -328,6 +328,7 @@ class SpotifyData:
                 items_info[idx]["audio_type"] = ais_global.G_AN_SPOTIFY
                 items_info[idx]["type"] = track["type"]
                 items_info[idx]["icon"] = "mdi:play"
+                items_info[idx]["editable"] = True
                 idx = idx + 1
         elif (item_type == "playlist") or (item_type == "user_playlists"):
             response = self._spotify.user_playlist(item_owner_id, item_uri)
@@ -345,37 +346,26 @@ class SpotifyData:
                 items_info[idx]["audio_type"] = ais_global.G_AN_SPOTIFY
                 items_info[idx]["type"] = items["track"]["type"]
                 items_info[idx]["icon"] = "mdi:play"
+                items_info[idx]["editable"] = True
                 idx = idx + 1
 
         # update list
-        self.hass.states.async_set("sensor.spotifylist", 0, items_info)
+        self.hass.states.set("sensor.spotifylist", 0, items_info)
 
-        # from remote
-        # import homeassistant.components.ais_ai_service as ais_ai
-        # if ais_ai.CURR_ENTITIE == 'sensor.spotifysearchlist' and ais_ai.CURR_BUTTON_CODE == 23:
-        #     ais_ai.set_curr_entity(self.hass, 'sensor.spotifylist')
-        #     ais_ai.CURR_ENTITIE_ENTERED = True
-        #     text = "Mamy %s utworów na liście, wybierz który mam włączyć" % (str(len(items_info)))
-        #     await self.hass.services.async_call('ais_ai_service', 'say_it', {"text": text})
-        # else:
-        #     # play the first one
-        #     await self.hass.services.async_call('ais_spotify_service', 'select_track_uri', {"id": 0})
-
-    async def async_process_get_favorites(self, call):
+    def process_get_favorites(self, call):
         """Get favorites from Spotify."""
         search_type = "featured-playlists"
         if "type" in call.data:
             # featured-playlists, playlists, artists, albums, tracks
             search_type = call.data["type"]
 
+        self.hass.states.set("sensor.ais_spotify_favorites_mode", search_type, {})
         self.refresh_spotify_instance()
 
         # Don't true search when token is expired
         if self._oauth.is_token_expired(self._token_info):
             _LOGGER.warning("Spotify failed to update, token expired.")
             return
-
-        data = {}
 
         list_info = {}
         list_idx = 0
@@ -467,20 +457,21 @@ class SpotifyData:
             list_info[list_idx]["media_source"] = table_after
             list_info[list_idx]["audio_type"] = ais_global.G_AN_MUSIC
             list_info[list_idx]["icon"] = "mdi:page-next"
+            list_info[list_idx]["editable"] = True
             list_info[list_idx]["type"] = search_type
 
         # update lists
-        self.hass.states.async_set("sensor.spotifysearchlist", -1, list_info)
-        self.hass.states.async_set("sensor.spotifylist", -1, {})
+        self.hass.states.set("sensor.spotifysearchlist", -1, list_info)
+        self.hass.states.set("sensor.spotifylist", -1, {})
 
-    async def async_process_search(self, call):
+    def process_search(self, call):
         """Search album on Spotify."""
         search_text = None
         if "query" in call.data:
             search_text = call.data["query"]
         if search_text is None or len(search_text.strip()) == 0:
             # get tracks from favorites
-            await self.hass.services.async_call(
+            self.hass.services.call(
                 "ais_bookmarks",
                 "get_favorites",
                 {"audio_source": ais_global.G_AN_SPOTIFY},
@@ -515,19 +506,21 @@ class SpotifyData:
         # list_info = self.get_list_from_results(results, "featured-playlists", list_info)
 
         # update lists
-        self.hass.states.async_set("sensor.spotifysearchlist", -1, list_info)
-        self.hass.states.async_set("sensor.spotifylist", -1, {})
+        self.hass.states.set("sensor.spotifysearchlist", -1, list_info)
+        self.hass.states.set("sensor.spotifylist", -1, {})
 
         if len(list_info) > 0:
             text = "Znaleziono: {}, włączam utwory {}".format(
                 str(len(list_info)), list_info[0]["title"]
             )
-            await self.hass.services.async_call(
+            self.hass.services.call(
                 "ais_spotify_service", "select_search_uri", {"id": 0}
             )
         else:
             text = "Brak wyników na Spotify dla zapytania %s" % search_text
-        await self.hass.services.async_call("ais_ai_service", "say_it", {"text": text})
+
+        self.hass.states.set("sensor.ais_spotify_favorites_mode", "", {})
+        self.hass.services.call("ais_ai_service", "say_it", {"text": text})
 
     def select_search_uri(self, call):
         import json
@@ -559,7 +552,7 @@ class SpotifyData:
             return
 
         # update search list
-        self.hass.states.async_set("sensor.spotifysearchlist", call_id, attr)
+        self.hass.states.set("sensor.spotifysearchlist", call_id, attr)
 
         # play the uri
         _audio_info = json.dumps(
@@ -581,12 +574,9 @@ class SpotifyData:
         )
 
         # get track list
-        return asyncio.run_coroutine_threadsafe(
-            self.async_get_tracks_list(
-                track["uri"], track["type"], track["item_owner_id"], track["thumbnail"]
-            ),
-            self.hass.loop,
-        ).result()
+        self.get_tracks_list(
+            track["uri"], track["type"], track["item_owner_id"], track["thumbnail"]
+        )
 
     def select_track_uri(self, call):
         import json
@@ -599,7 +589,7 @@ class SpotifyData:
         track = attr.get(int(call_id))
 
         # update list
-        self.hass.states.async_set("sensor.spotifylist", call_id, attr)
+        self.hass.states.set("sensor.spotifylist", call_id, attr)
         # set stream url, image and title
         _audio_info = json.dumps(
             {

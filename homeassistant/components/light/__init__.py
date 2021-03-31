@@ -1,4 +1,6 @@
 """Provides functionality to interact with lights."""
+from __future__ import annotations
+
 import csv
 import dataclasses
 from datetime import timedelta
@@ -327,7 +329,7 @@ class Profile:
         )
 
     @classmethod
-    def from_csv_row(cls, csv_row: List[str]) -> "Profile":
+    def from_csv_row(cls, csv_row: List[str]) -> Profile:
         """Create profile from a CSV row tuple."""
         return cls(*cls.SCHEMA(csv_row))
 

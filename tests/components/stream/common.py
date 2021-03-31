@@ -5,9 +5,6 @@ import io
 import av
 import numpy as np
 
-from homeassistant.components.stream import Stream
-from homeassistant.components.stream.const import ATTR_STREAMS, DOMAIN
-
 AUDIO_SAMPLE_RATE = 8000
 
 
@@ -93,10 +90,3 @@ def generate_h264_video(container_format="mp4", audio_codec=None):
     output.seek(0)
 
     return output
-
-
-def preload_stream(hass, stream_source):
-    """Preload a stream for use in tests."""
-    stream = Stream(hass, stream_source)
-    hass.data[DOMAIN][ATTR_STREAMS][stream_source] = stream
-    return stream

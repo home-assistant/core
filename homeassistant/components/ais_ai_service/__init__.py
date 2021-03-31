@@ -26,6 +26,7 @@ import homeassistant.components.mqtt as mqtt
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
+    ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
@@ -2370,9 +2371,19 @@ async def async_setup(hass, config):
         # set the flag to info that the AIS start part is done - this is needed to don't say some info before this flag
         ais_global.G_AIS_START_IS_DONE = True
 
-    async def set_context(service):
+    async def async_set_context(service):
         """Set the context in app."""
         context = service.data[ATTR_TEXT]
+        # get audio types again if the was a network problem on start
+        if ais_global.G_AIS_START_IS_DONE:
+            if context == "radio":
+                types = hass.states.get("input_select.radio_type").attributes.get(
+                    "options", []
+                )
+                if len(types) < 2:
+                    await hass.services.async_call("ais_cloud", "get_radio_types")
+                # TODO for the rest of audio
+
         if context == "ais_tv":
             hass.states.async_set("sensor.ais_player_mode", "ais_tv")
         elif context == "ais_tv_on":
@@ -2409,6 +2420,42 @@ async def async_setup(hass, config):
             hass.states.async_set("sensor.ais_tv_activity", "settings")
             _say_it(hass, "Ustawienia aplikacji")
             await _publish_command_to_frame(hass, "goToActivity", "SettingsActivity")
+        elif context == "radio_public":
+            hass.states.async_set("sensor.ais_player_mode", "radio_player")
+            hass.states.async_set("sensor.ais_radio_origin", "public")
+            hass.states.async_set("sensor.radiolist", -1, {})
+            atrr = hass.states.get("input_select.radio_type").attributes
+            hass.states.async_set("input_select.radio_type", "-", atrr)
+        elif context == "radio_private":
+            hass.states.async_set("sensor.ais_player_mode", "radio_player")
+            hass.states.async_set("sensor.ais_radio_origin", "private")
+            hass.states.async_set("sensor.radiolist", -1, {})
+            atrr = hass.states.get("input_select.radio_type").attributes
+            hass.states.async_set("input_select.radio_type", "-", atrr)
+        elif context == "radio_shared":
+            hass.states.async_set("sensor.ais_player_mode", "radio_player")
+            hass.states.async_set("sensor.ais_radio_origin", "shared")
+            hass.states.async_set("sensor.radiolist", -1, {})
+            atrr = hass.states.get("input_select.radio_type").attributes
+            hass.states.async_set("input_select.radio_type", "-", atrr)
+        elif context == "YouTube":
+            hass.states.async_set("sensor.ais_player_mode", "music_player")
+            await hass.services.async_call(
+                "input_select",
+                "select_option",
+                {"entity_id": "input_select.ais_music_service", "option": "YouTube"},
+            )
+        elif context == "Spotify":
+            hass.states.async_set("sensor.ais_player_mode", "music_player")
+            await hass.services.async_call(
+                "input_select",
+                "select_option",
+                {"entity_id": "input_select.ais_music_service", "option": "Spotify"},
+            )
+        elif context == "Radio":
+            hass.states.async_set("sensor.ais_player_mode", "radio_player")
+        elif context == "Podcast":
+            hass.states.async_set("sensor.ais_player_mode", "podcast_player")
         else:
             for idx, menu in enumerate(GROUP_ENTITIES, start=0):
                 context_key_words = menu["context_key_words"]
@@ -2445,20 +2492,6 @@ async def async_setup(hass, config):
             ip,
             {"friendly_name": "Lokalny adres IP", "icon": "mdi:access-point-network"},
         )
-
-    async def switch_ui(service):
-        mode = service.data["mode"]
-        if mode in ("YouTube", "Spotify"):
-            hass.states.async_set("sensor.ais_player_mode", "music_player")
-            await hass.services.async_call(
-                "input_select",
-                "select_option",
-                {"entity_id": "input_select.ais_music_service", "option": mode},
-            )
-        elif mode == "Radio":
-            hass.states.async_set("sensor.ais_player_mode", "radio_player")
-        elif mode == "Podcast":
-            hass.states.async_set("sensor.ais_player_mode", "podcast_player")
 
     async def publish_command_to_frame(service):
         key = service.data["key"]
@@ -2616,6 +2649,9 @@ async def async_setup(hass, config):
         session = async_get_clientsession(hass)
 
         device_id = service.data["device_id"]
+        # to allow notation with _
+        device_id = device_id.replace("mobile_ais_dom_", "mobile_ais_dom-")
+
         entry_data = None
         data = {"message": service.data["message"]}
         if "title" in service.data:
@@ -2645,11 +2681,18 @@ async def async_setup(hass, config):
         else:
             data["click_action"] = ""
 
-        # entry = hass.data["mobile_app"]["config_entries"]
-        # entry = hass.config_entries.async_entries("mobile_app")[device_id]
         for entry in hass.config_entries.async_entries("mobile_app"):
             if entry.data["device_name"] == device_id:
                 entry_data = entry.data
+
+        if entry_data is None:
+            # new way - via device id
+            dev_registry = await hass.helpers.device_registry.async_get_registry()
+            device = dev_registry.async_get(device_id)
+            if device is not None:
+                for entry in hass.config_entries.async_entries("mobile_app"):
+                    if entry.data["device_name"] == device.name:
+                        entry_data = entry.data
 
         if entry_data is None:
             _LOGGER.error("No mob id from " + device_id)
@@ -2835,9 +2878,8 @@ async def async_setup(hass, config):
     hass.services.async_register(
         DOMAIN, "on_new_iot_device_selection", on_new_iot_device_selection
     )
-    hass.services.async_register(DOMAIN, "set_context", set_context)
+    hass.services.async_register(DOMAIN, "set_context", async_set_context)
     hass.services.async_register(DOMAIN, "check_local_ip", check_local_ip)
-    hass.services.async_register(DOMAIN, "switch_ui", switch_ui)
     hass.services.async_register(DOMAIN, "check_night_mode", check_night_mode)
     hass.services.async_register(DOMAIN, "mob_notify", async_mob_notify)
     hass.services.async_register(DOMAIN, "mob_request", async_mob_request)
@@ -3867,7 +3909,7 @@ async def _async_process(hass, text, calling_client_id=None, hot_word_on=False):
         ha_agent = hass.data["ha_conversation_agent"] = DefaultAgent(hass)
         await ha_agent.async_initialize(hass.data.get("conversation_config"))
 
-    # first check the conversation intents
+    # 1. first check the conversation intents
     conv_intents = hass.data.get("conversation", {})
     for intent_type, matchers in conv_intents.items():
         for matcher in matchers:
@@ -3882,7 +3924,7 @@ async def _async_process(hass, text, calling_client_id=None, hot_word_on=False):
             )
             return response
 
-    # check the AIS dom intents
+    # 2. check the AIS dom intents
     intents = hass.data.get(DOMAIN, {})
     try:
         for intent_type, matchers in intents.items():
@@ -3943,19 +3985,33 @@ async def _async_process(hass, text, calling_client_id=None, hot_word_on=False):
             )
             if s is False:
                 m = m_org
-        # the was no match - try again but with current context
-        if found_intent is None:
-            suffix = get_context_suffix(hass)
-            if suffix is not None:
-                if suffix == "youtube" and text != "":
-                    # in case of youtube we need to ask cloud first
-                    m = "Nie rozumiem " + text
-                    ws_resp = aisCloudWS.ask(text, m)
-                    m = ws_resp.text.split("---")[0]
-                    if m != "Nie rozumiem " + text:
-                        s = True
-                        found_intent = "YT"
 
+        # 3. search in automations
+        if s is False or found_intent is None:
+            # no success - try to run automation
+            automations = {
+                state.entity_id: state.name
+                for state in hass.states.async_all()
+                if state.entity_id.startswith("automation")
+                and not state.entity_id.startswith("automation.ais_")
+            }
+            for key, value in automations.items():
+                if value.lower().startswith("jolka"):
+                    if (
+                        value.lower().replace("jolka", "", 1).replace(":", "").strip()
+                        == text.lower().replace("jolka", "", 1).replace(":", "").strip()
+                    ):
+                        await hass.services.async_call(
+                            "automation", "trigger", {ATTR_ENTITY_ID: key}
+                        )
+                        s = True
+                        found_intent = "AUTO"
+                        m = "DO_NOT_SAY OK, uruchamiam " + value.replace(
+                            "jolka:", "", 1
+                        )
+                        break
+
+        # 4. the was no match - try again but with current context
         # only if hot word is disabled
         if found_intent is None and hot_word_on is False:
             suffix = get_context_suffix(hass)
@@ -3982,55 +4038,7 @@ async def _async_process(hass, text, calling_client_id=None, hot_word_on=False):
                             # in this case we will know if the call source
                             CURR_BUTTON_CODE = 0
                             break
-
-        # the was no match - try again but with player context
-        # we should get media player source first
-        # this is done only if the hot word is False
-        if found_intent is None and calling_client_id is None and hot_word_on is False:
-            if (
-                CURR_ENTITIE == "media_player.wbudowany_glosnik"
-                and CURR_ENTITIE_ENTERED
-            ):
-                state = hass.states.get(CURR_ENTITIE)
-                if "source" in state.attributes:
-                    suffix = ""
-                    source = state.attributes.get("source")
-                    if source == ais_global.G_AN_MUSIC:
-                        suffix = "youtube"
-                    elif source == ais_global.G_AN_RADIO:
-                        suffix = "radio"
-                    elif source == ais_global.G_AN_PODCAST:
-                        suffix = "podcast"
-                    if suffix != "":
-                        if suffix == "youtube" and text != "":
-                            # in case of youtube we need to ask cloud first
-                            m = "Nie rozumiem " + text
-                            ws_resp = aisCloudWS.ask(text, m)
-                            m = ws_resp.text.split("---")[0]
-                            if not m.startswith("Nie rozumiem "):
-                                s = True
-                                found_intent = "YT"
-                        if s is not True:
-                            for intent_type, matchers in intents.items():
-                                if found_intent is not None:
-                                    break
-                                for matcher in matchers:
-                                    match = matcher.match(suffix + " " + text)
-                                    if match:
-                                        # we have a match
-                                        found_intent = intent_type
-                                        (m, s) = await hass.helpers.intent.async_handle(
-                                            DOMAIN,
-                                            intent_type,
-                                            {
-                                                key: {"value": value}
-                                                for key, value in match.groupdict().items()
-                                            },
-                                            suffix + " " + text,
-                                        )
-                                        # reset the curr button code
-                                        CURR_BUTTON_CODE = 0
-                                        break
+        # 5. ask cloud
         if s is False or found_intent is None:
             # no success - try to ask the cloud
             if m is None:
@@ -4053,7 +4061,6 @@ async def _async_process(hass, text, calling_client_id=None, hot_word_on=False):
         _say_it(hass, m, exclude_say_it=calling_client_id)
     # return response to the hass conversation
     intent_resp = intent.IntentResponse()
-    # intent_resp.async_set_card("Beer ordered", "You chose a XXX")
     intent_resp.async_set_speech(m)
     intent_resp.hass = hass
     return intent_resp
@@ -4340,7 +4347,7 @@ class AisPlayYtMusicIntent(intent.IntentHandler):
             await hass.services.async_call("ais_yt_service", "search", {"query": item})
             # switch UI to YT
             await hass.services.async_call(
-                "ais_ai_service", "switch_ui", {"mode": "YouTube"}
+                "ais_ai_service", "set_context", {"text": "YouTube"}
             )
             #
             message = "OK, szukam na YouTube " + item
@@ -4376,7 +4383,7 @@ class AisPlaySpotifyIntent(intent.IntentHandler):
             )
             # switch UI to Spotify
             await hass.services.async_call(
-                "ais_ai_service", "switch_ui", {"mode": "Spotify"}
+                "ais_ai_service", "set_context", {"text": "Spotify"}
             )
             #
             message = "OK, szukam na Spotify " + item
@@ -4823,7 +4830,7 @@ class AisRunAutomation(intent.IntentHandler):
         if not entity:
             message = "Nie znajduję automatyzacji, o nazwie: " + name
         else:
-            # check if we can open on this device
+            # check if we can trigger the automation
             if entity.entity_id.startswith("automation."):
                 await hass.services.async_call(
                     "automation", "trigger", {ATTR_ENTITY_ID: entity.entity_id}

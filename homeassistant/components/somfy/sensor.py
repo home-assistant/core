@@ -13,7 +13,6 @@ SUPPORTED_CATEGORIES = {Category.HVAC.value}
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Somfy sensor platform."""
-
     domain_data = hass.data[DOMAIN]
     coordinator = domain_data[COORDINATOR]
     api = domain_data[API]

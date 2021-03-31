@@ -129,7 +129,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Prepare configuration for a discovered nut device."""
         self.discovery_info = discovery_info
         await self._async_handle_discovery_without_unique_id()
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
             CONF_PORT: discovery_info.get(CONF_PORT, DEFAULT_PORT),
             CONF_HOST: discovery_info[CONF_HOST],

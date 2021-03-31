@@ -1,12 +1,21 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4."
+            "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
         },
         "error": {
-            "cannot_connect": "\uc5f0\uacb0 \uc2e4\ud328",
-            "invalid_auth": "\uc798\ubabb\ub41c \uc778\uc99d",
-            "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc5d0\ub7ec"
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "invalid_auth": "\uc778\uc99d\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "\ube44\ubc00\ubc88\ud638",
+                    "pin": "PIN \ucf54\ub4dc",
+                    "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
+                }
+            }
         }
     },
     "options": {
@@ -23,6 +32,8 @@
             },
             "init": {
                 "data": {
+                    "code_arm_required": "\uc124\uc815\ud558\ub824\uba74 PIN \ucf54\ub4dc\uac00 \ud544\uc694\ud569\ub2c8\ub2e4",
+                    "code_disarm_required": "\ud574\uc81c\ud558\ub824\uba74 PIN \ucf54\ub4dc\uac00 \ud544\uc694\ud569\ub2c8\ub2e4",
                     "scan_interval": "Risco\ub97c \ud3f4\ub9c1\ud558\ub294 \ube48\ub3c4 (\ucd08)"
                 }
             },

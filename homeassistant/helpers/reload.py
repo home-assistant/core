@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Dict, Iterable, List, Optional
 
 from homeassistant import config as conf_util
 from homeassistant.const import SERVICE_RELOAD
@@ -10,7 +10,7 @@ from homeassistant.core import Event, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform
 from homeassistant.helpers.entity_platform import EntityPlatform, async_get_platforms
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 
@@ -49,7 +49,7 @@ async def _resetup_platform(
     hass: HomeAssistantType,
     integration_name: str,
     integration_platform: str,
-    unprocessed_conf: Dict,
+    unprocessed_conf: ConfigType,
 ) -> None:
     """Resetup a platform."""
     integration = await async_get_integration(hass, integration_platform)
@@ -129,7 +129,7 @@ async def _async_reconfig_platform(
 
 async def async_integration_yaml_config(
     hass: HomeAssistantType, integration_name: str
-) -> Optional[Dict[Any, Any]]:
+) -> Optional[ConfigType]:
     """Fetch the latest yaml configuration for an integration."""
     integration = await async_get_integration(hass, integration_name)
 
@@ -157,13 +157,11 @@ async def async_setup_reload_service(
     hass: HomeAssistantType, domain: str, platforms: Iterable
 ) -> None:
     """Create the reload service for the domain."""
-
     if hass.services.has_service(domain, SERVICE_RELOAD):
         return
 
     async def _reload_config(call: Event) -> None:
         """Reload the platforms."""
-
         await async_reload_integration_platforms(hass, domain, platforms)
         hass.bus.async_fire(f"event_{domain}_reloaded", context=call.context)
 
@@ -176,7 +174,6 @@ def setup_reload_service(
     hass: HomeAssistantType, domain: str, platforms: Iterable
 ) -> None:
     """Sync version of async_setup_reload_service."""
-
     asyncio.run_coroutine_threadsafe(
         async_setup_reload_service(hass, domain, platforms),
         hass.loop,

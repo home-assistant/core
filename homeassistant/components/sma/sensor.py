@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PATH,
     CONF_SCAN_INTERVAL,
+    CONF_SENSORS,
     CONF_SSL,
     CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
@@ -27,7 +28,6 @@ CONF_CUSTOM = "custom"
 CONF_FACTOR = "factor"
 CONF_GROUP = "group"
 CONF_KEY = "key"
-CONF_SENSORS = "sensors"
 CONF_UNIT = "unit"
 
 GROUPS = ["user", "installer"]
@@ -86,7 +86,6 @@ PLATFORM_SCHEMA = vol.All(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up SMA WebConnect sensor."""
-
     # Check config again during load - dependency available
     config = _check_sensor_schema(config)
 

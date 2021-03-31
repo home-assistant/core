@@ -7,13 +7,11 @@ from .const import DOMAIN, EVENT_TEMPLATE_RELOADED, PLATFORMS
 
 async def async_setup_reload_service(hass):
     """Create the reload service for the template domain."""
-
     if hass.services.has_service(DOMAIN, SERVICE_RELOAD):
         return
 
     async def _reload_config(call):
         """Reload the template platform config."""
-
         await async_reload_integration_platforms(hass, DOMAIN, PLATFORMS)
         hass.bus.async_fire(EVENT_TEMPLATE_RELOADED, context=call.context)
 

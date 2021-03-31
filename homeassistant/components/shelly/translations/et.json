@@ -12,7 +12,7 @@
         "flow_title": "",
         "step": {
             "confirm_discovery": {
-                "description": "Kas soovid seadistada {model} saidil {host} ?\n\n Enne seadistamist tuleb akutoitega seade \u00e4ratada vajutades seadmel nuppu."
+                "description": "Kas soovid seadistada seadet {model} saidil {host} ? \n\n Enne seadistamise j\u00e4tkamist tuleb parooliga kaitstud akutoitega seadmed \u00e4ratada.\n Patareitoitega seadmed, mis pole parooliga kaitstud, lisatakse seadme \u00e4rkamisel. N\u00fc\u00fcd saad seadme k\u00e4sitsi \u00fcles \u00e4ratada, kasutades sellel olevat nuppu v\u00f5i oodata seadme j\u00e4rgmist andmete v\u00e4rskendamist."
             },
             "credentials": {
                 "data": {

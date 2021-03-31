@@ -21,7 +21,6 @@ from homeassistant.helpers.typing import (
     HomeAssistantType,
 )
 
-from . import ModbusHub
 from .const import (
     CALL_TYPE_COIL,
     CALL_TYPE_REGISTER_HOLDING,
@@ -35,6 +34,7 @@ from .const import (
     CONF_STATUS_REGISTER_TYPE,
     MODBUS_DOMAIN,
 )
+from .modbus import ModbusHub
 
 
 async def async_setup_platform(
@@ -148,7 +148,6 @@ class ModbusCover(CoverEntity, RestoreEntity):
 
         False if entity pushes its state to HA.
         """
-
         # Handle polling directly in this entity
         return False
 

@@ -11,6 +11,19 @@ import pytest
 from homeassistant.components import tts
 from homeassistant.components.cast import media_player as cast
 from homeassistant.components.cast.media_player import ChromecastInfo
+from homeassistant.components.media_player.const import (
+    SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE,
+    SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA,
+    SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SEEK,
+    SUPPORT_STOP,
+    SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET,
+)
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import PlatformNotReady
@@ -662,6 +675,17 @@ async def test_entity_cast_status(hass: HomeAssistantType):
     assert state.state == "unknown"
     assert entity_id == reg.async_get_entity_id("media_player", "cast", full_info.uuid)
 
+    assert state.attributes.get("supported_features") == (
+        SUPPORT_PAUSE
+        | SUPPORT_PLAY
+        | SUPPORT_PLAY_MEDIA
+        | SUPPORT_STOP
+        | SUPPORT_TURN_OFF
+        | SUPPORT_TURN_ON
+        | SUPPORT_VOLUME_MUTE
+        | SUPPORT_VOLUME_SET
+    )
+
     cast_status = MagicMock()
     cast_status.volume_level = 0.5
     cast_status.volume_muted = False
@@ -679,6 +703,21 @@ async def test_entity_cast_status(hass: HomeAssistantType):
     state = hass.states.get(entity_id)
     assert state.attributes.get("volume_level") == 0.2
     assert state.attributes.get("is_volume_muted")
+
+    # Disable support for volume control
+    cast_status = MagicMock()
+    cast_status.volume_control_type = "fixed"
+    cast_status_cb(cast_status)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.attributes.get("supported_features") == (
+        SUPPORT_PAUSE
+        | SUPPORT_PLAY
+        | SUPPORT_PLAY_MEDIA
+        | SUPPORT_STOP
+        | SUPPORT_TURN_OFF
+        | SUPPORT_TURN_ON
+    )
 
 
 async def test_entity_play_media(hass: HomeAssistantType):
@@ -894,6 +933,17 @@ async def test_entity_control(hass: HomeAssistantType):
     assert state.state == "unknown"
     assert entity_id == reg.async_get_entity_id("media_player", "cast", full_info.uuid)
 
+    assert state.attributes.get("supported_features") == (
+        SUPPORT_PAUSE
+        | SUPPORT_PLAY
+        | SUPPORT_PLAY_MEDIA
+        | SUPPORT_STOP
+        | SUPPORT_TURN_OFF
+        | SUPPORT_TURN_ON
+        | SUPPORT_VOLUME_MUTE
+        | SUPPORT_VOLUME_SET
+    )
+
     # Turn on
     await common.async_turn_on(hass, entity_id)
     chromecast.play_media.assert_called_once_with(
@@ -939,6 +989,21 @@ async def test_entity_control(hass: HomeAssistantType):
     media_status.supports_seek = True
     media_status_cb(media_status)
     await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.attributes.get("supported_features") == (
+        SUPPORT_PAUSE
+        | SUPPORT_PLAY
+        | SUPPORT_PLAY_MEDIA
+        | SUPPORT_STOP
+        | SUPPORT_TURN_OFF
+        | SUPPORT_TURN_ON
+        | SUPPORT_PREVIOUS_TRACK
+        | SUPPORT_NEXT_TRACK
+        | SUPPORT_SEEK
+        | SUPPORT_VOLUME_MUTE
+        | SUPPORT_VOLUME_SET
+    )
 
     # Media previous
     await common.async_media_previous_track(hass, entity_id)

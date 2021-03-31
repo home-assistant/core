@@ -5,27 +5,51 @@ mob_notify:
      device_id:
        description: 'Identyfikator urządzenia.'
        example: 'mobile_ais_dom-'
+       selector:
+         device:
+           integration: mobile_app
+           entity:
+             domain: device_tracker
      message:
        description: 'Tekst wiadomości'
        example: 'Dzwonek do drzwi.'
+       selector:
+         text:
      title:
        description: 'Tytuł powiadomienia'
        example: 'Powiadomienie z AI-Speaker.'
+       selector:
+         text:
      image:
        description: 'URL obrazu do wyświetlenia w powiadomieniu (plik max 1MB dostępny z Internetu)'
        example: 'http://ai-speaker.com/images/doorbell.jpg'
+       selector:
+         text:
      priority:
        description: 'Priorytet wiadomości normal albo high'
        example: 'high'
+       selector:
+         select:
+           options:
+             - "normal"
+             - "high"
      say:
        description: 'Czy wiadomość po odebraniu ma być przeczytana na telefonie.'
        example: True
+       selector:
+         boolean:
      notification_id:
        description: 'Unikalny numer powiadomienia, jeśli wyślesz powiadomienie z tym samym numerem, to powiadomienie będzie nadpisywane.'
        example: '0'
+       selector:
+         number:
+           min: 0
+           max: 10000
      click_action:
        description: 'Nawigacja do widoku który mamy zdefiniowany w aplikacji np.: /lovelace/camera lub otwarcie strony internetowej o dowolnym adresie URL, np.: https://ai-speaker.com'
        example: '/lovelace/0'
+       selector:
+         text:
 
 mob_request:
    description: 'Wysłanie komendy (zapytania/żądania) do aplikacji mobilnej. Ta usługa wymaga aplikacji AIS dom w wersji 1.3.0 lub nowszej.'
@@ -33,18 +57,30 @@ mob_request:
      device_id:
        description: 'Identyfikator urządzenia.'
        example: 'mobile_ais_dom-'
+       selector:
+         device:
+           integration: mobile_app
+           entity:
+             domain: device_tracker
      request:
-       description: 'Komenda np.: locationUpdate, micOn'
+       description: 'Komenda'
        example: 'micOn'
+       selector:
+         select:
+           options:
+             - "locationUpdate"
+             - "micOn"
      data:
-       description: 'Opcjonalne dane komendy'
+       description: 'Dodatkowe dane komendy (opcjonalnie)'
        example: '{}'
+       selector:
+         object:
 
 check_local_ip:
   description: 'Sprawdzenie lokalnego IP bramki i ustawienie go jako wartość encji sensor.internal_ip_address. Ta usługa wykonaywana jest automatycznie przy starcie urządzenia.'
 
 check_night_mode:
-  description: 'Sprawdzenie czy został włączony tryb nocny jeżeli tak to zmieniamy temat w aplikacji i redukujemy głośność. Ta usługa wykonaywana jest co minutę.'
+  description: 'Sprawdzenie czy został włączony tryb nocny jeżeli tak to zmieniamy motyw aplikacji na ciemniejszy i redukujemy głośność. Ta usługa wykonaywana jest co minutę.'
 
 on_new_iot_device_selection:
   description: 'Ustalenie nazwy nowododawanego urządzenia. Ta usługa wykonaywana jest automaycznie podczas dodawania nowego urządzenia.'
@@ -62,6 +98,8 @@ process:
     text:
       description: 'Tekst pynia/komendy.'
       example: 'Włącz radio RMF'
+      selector:
+        text:
 
 process_code:
   description: 'Przetwarzanie kodu z klawiatury/pilota. Ta usługa wykonywana jest automatycznie po otrzymaniu kodu z klawiatury/pilota.'
@@ -69,6 +107,8 @@ process_code:
     text:
       description: 'Wiadomość z kodem z pilota oraz akcją (0 - down, 1 - up, 2 - hold)'
       example: '{"text": "{\"KeyCode\": 92, \"Action\": \"0\"}"} '
+      selector:
+        object:
 
 process_command_from_frame:
   description: 'Przetwarzanie wiadomości/komendy otrzymanej z systemu Android.'
@@ -76,6 +116,8 @@ process_command_from_frame:
     data:
       description: 'Przykładowy komunikat o zmianie adresu IP.'
       example: '{"topic": "ais/ip_state_change_info", "payload": "{\"ip\": \"192.168.1.1\"}"}'
+      selector:
+        object:
 
 publish_command_to_frame:
   description: 'Publikowanie komendy do systemu Android.'
@@ -83,9 +125,21 @@ publish_command_to_frame:
     key:
       description: 'Akcja do wykonania.'
       example: 'playAudio'
+      selector:
+        select:
+          options:
+            - "micOn"
+            - "micOff"
+            - "playAudio"
+            - "stopAudio"
+            - "setVolume"
+            - "goToActivity"
+            - "showCamera"
     val:
       description: 'Wiadomość / dane do akcji.'
       example: 'https://test/audio.mp3'
+      selector:
+        text:
 
 say_in_browser:
   description: 'Wysłanie tekstu do przeczytania w przeglądarce'
@@ -93,6 +147,8 @@ say_in_browser:
     text:
       description: 'Tekst do przeczytania przez przeglądarkę'
       example: 'Cześć, tu przeglądarka'
+      selector:
+        text:
 
 say_it:
   description: 'Zamiana tekstu na mowę, czytanie tekstu. Za pomocą mechanizmu TTS w systemie Android na bramce.'
@@ -100,9 +156,13 @@ say_it:
     text:
       description: 'Tekst do przeczytania.'
       example: 'Cześć, jak się masz'
+      selector:
+        text:
     img:
       description: 'URL zdjęcia do wyświetlenia.'
       example: 'http://ai-speaker.com/images/logo_ais.png'
+      selector:
+        url:
 
 set_context:
   description: 'Ustawienie kontekstu w jakim jest konwersacja z asystentem'
@@ -114,9 +174,3 @@ set_context:
 welcome_home:
   description: 'Głosowy komunikat powitalny. Akcja wykonywana jest automatycznie podczas uruchomienia systemu.'
 
-switch_ui:
-  description: 'Przełączenie interfejsu odtwarzacza na wybrany tryb YouTube Spotify Radio Podcast'
-  fields:
-    mode:
-      description: 'Tryb do ustawienia'
-      example: 'Radio'

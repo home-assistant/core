@@ -1,6 +1,4 @@
 """Support for Dyson Pure Cool Air Quality Sensors."""
-import logging
-
 from libpurecool.dyson_pure_cool import DysonPureCool
 from libpurecool.dyson_pure_state_v2 import DysonEnvironmentalSensorV2State
 
@@ -9,8 +7,6 @@ from homeassistant.components.air_quality import AirQualityEntity
 from . import DYSON_DEVICES, DysonEntity
 
 ATTRIBUTION = "Dyson purifier air quality sensor"
-
-_LOGGER = logging.getLogger(__name__)
 
 DYSON_AIQ_DEVICES = "dyson_aiq_devices"
 

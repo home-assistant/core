@@ -28,18 +28,11 @@ from .const import (
     DATA_CONFIG_ENTRY,
     DOMAIN,
     KELVIN_MAX_VALUE,
-    KELVIN_MIN_VALUE,
-    KELVIN_MIN_VALUE_SHBLB_1,
+    KELVIN_MIN_VALUE_COLOR,
+    KELVIN_MIN_VALUE_WHITE,
 )
 from .entity import ShellyBlockEntity
 from .utils import async_remove_shelly_entity
-
-
-def min_kelvin(model: str):
-    """Kelvin (min) for colorTemp."""
-    if model in ["SHBLB-1"]:
-        return KELVIN_MIN_VALUE_SHBLB_1
-    return KELVIN_MIN_VALUE
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -76,6 +69,8 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         self.control_result = None
         self.mode_result = None
         self._supported_features = 0
+        self._min_kelvin = KELVIN_MIN_VALUE_WHITE
+        self._max_kelvin = KELVIN_MAX_VALUE
 
         if hasattr(block, "brightness") or hasattr(block, "gain"):
             self._supported_features |= SUPPORT_BRIGHTNESS
@@ -85,6 +80,7 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
             self._supported_features |= SUPPORT_WHITE_VALUE
         if hasattr(block, "red") and hasattr(block, "green") and hasattr(block, "blue"):
             self._supported_features |= SUPPORT_COLOR
+            self._min_kelvin = KELVIN_MIN_VALUE_COLOR
 
     @property
     def supported_features(self) -> int:
@@ -118,7 +114,7 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         return "white"
 
     @property
-    def brightness(self) -> Optional[int]:
+    def brightness(self) -> int:
         """Brightness of light."""
         if self.mode == "color":
             if self.control_result:
@@ -133,7 +129,7 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         return int(brightness / 100 * 255)
 
     @property
-    def white_value(self) -> Optional[int]:
+    def white_value(self) -> int:
         """White value of light."""
         if self.control_result:
             white = self.control_result["white"]
@@ -142,7 +138,7 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         return int(white)
 
     @property
-    def hs_color(self) -> Optional[Tuple[float, float]]:
+    def hs_color(self) -> Tuple[float, float]:
         """Return the hue and saturation color value of light."""
         if self.mode == "white":
             return color_RGB_to_hs(255, 255, 255)
@@ -158,7 +154,7 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         return color_RGB_to_hs(red, green, blue)
 
     @property
-    def color_temp(self) -> Optional[float]:
+    def color_temp(self) -> Optional[int]:
         """Return the CT color value in mireds."""
         if self.mode == "color":
             return None
@@ -168,22 +164,19 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         else:
             color_temp = self.block.colorTemp
 
-        # If you set DUO to max mireds in Shelly app, 2700K,
-        # It reports 0 temp
-        if color_temp == 0:
-            return min_kelvin(self.wrapper.model)
+        color_temp = min(self._max_kelvin, max(self._min_kelvin, color_temp))
 
         return int(color_temperature_kelvin_to_mired(color_temp))
 
     @property
-    def min_mireds(self) -> Optional[float]:
+    def min_mireds(self) -> int:
         """Return the coldest color_temp that this light supports."""
-        return color_temperature_kelvin_to_mired(KELVIN_MAX_VALUE)
+        return int(color_temperature_kelvin_to_mired(self._max_kelvin))
 
     @property
-    def max_mireds(self) -> Optional[float]:
+    def max_mireds(self) -> int:
         """Return the warmest color_temp that this light supports."""
-        return color_temperature_kelvin_to_mired(min_kelvin(self.wrapper.model))
+        return int(color_temperature_kelvin_to_mired(self._min_kelvin))
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn on light."""
@@ -192,6 +185,7 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
             self.async_write_ha_state()
             return
 
+        set_mode = None
         params = {"turn": "on"}
         if ATTR_BRIGHTNESS in kwargs:
             tmp_brightness = int(kwargs[ATTR_BRIGHTNESS] / 255 * 100)
@@ -201,27 +195,26 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
                 params["brightness"] = tmp_brightness
         if ATTR_COLOR_TEMP in kwargs:
             color_temp = color_temperature_mired_to_kelvin(kwargs[ATTR_COLOR_TEMP])
-            color_temp = min(
-                KELVIN_MAX_VALUE, max(min_kelvin(self.wrapper.model), color_temp)
-            )
+            color_temp = min(self._max_kelvin, max(self._min_kelvin, color_temp))
             # Color temperature change - used only in white mode, switch device mode to white
-            if self.mode == "color":
-                self.mode_result = await self.wrapper.device.switch_light_mode("white")
-                params["red"] = params["green"] = params["blue"] = 255
+            set_mode = "white"
+            params["red"] = params["green"] = params["blue"] = 255
             params["temp"] = int(color_temp)
-        elif ATTR_HS_COLOR in kwargs:
+        if ATTR_HS_COLOR in kwargs:
             red, green, blue = color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
             # Color channels change - used only in color mode, switch device mode to color
-            if self.mode == "white":
-                self.mode_result = await self.wrapper.device.switch_light_mode("color")
+            set_mode = "color"
             params["red"] = red
             params["green"] = green
             params["blue"] = blue
-        elif ATTR_WHITE_VALUE in kwargs:
+        if ATTR_WHITE_VALUE in kwargs:
             # White channel change - used only in color mode, switch device mode device to color
-            if self.mode == "white":
-                self.mode_result = await self.wrapper.device.switch_light_mode("color")
+            set_mode = "color"
             params["white"] = int(kwargs[ATTR_WHITE_VALUE])
+
+        if set_mode and self.mode != set_mode:
+            self.mode_result = await self.wrapper.device.switch_light_mode(set_mode)
+
         self.control_result = await self.block.set_state(**params)
         self.async_write_ha_state()
 

@@ -3,13 +3,8 @@ import json
 import logging
 from typing import Optional
 
-from homeassistant.components.mqtt import (
-    CONF_QOS,
-    CONF_STATE_TOPIC,
-    CONF_UNIQUE_ID,
-    subscription,
-)
-from homeassistant.const import CONF_NAME
+from homeassistant.components.mqtt import CONF_QOS, CONF_STATE_TOPIC, subscription
+from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 

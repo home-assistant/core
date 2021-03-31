@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
 from homeassistant.core import callback
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -49,15 +50,17 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
 
+    await data_handler.register_data_class(
+        CAMERA_DATA_CLASS_NAME, CAMERA_DATA_CLASS_NAME, None
+    )
+
+    if CAMERA_DATA_CLASS_NAME not in data_handler.data:
+        raise PlatformNotReady
+
     async def get_entities():
         """Retrieve Netatmo entities."""
-        await data_handler.register_data_class(
-            CAMERA_DATA_CLASS_NAME, CAMERA_DATA_CLASS_NAME, None
-        )
 
-        data = data_handler.data
-
-        if not data.get(CAMERA_DATA_CLASS_NAME):
+        if not data_handler.data.get(CAMERA_DATA_CLASS_NAME):
             return []
 
         data_class = data_handler.data[CAMERA_DATA_CLASS_NAME]
@@ -94,24 +97,25 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     async_add_entities(await get_entities(), True)
 
+    await data_handler.unregister_data_class(CAMERA_DATA_CLASS_NAME, None)
+
     platform = entity_platform.current_platform.get()
 
-    if data_handler.data[CAMERA_DATA_CLASS_NAME] is not None:
-        platform.async_register_entity_service(
-            SERVICE_SET_PERSONS_HOME,
-            {vol.Required(ATTR_PERSONS): vol.All(cv.ensure_list, [cv.string])},
-            "_service_set_persons_home",
-        )
-        platform.async_register_entity_service(
-            SERVICE_SET_PERSON_AWAY,
-            {vol.Optional(ATTR_PERSON): cv.string},
-            "_service_set_person_away",
-        )
-        platform.async_register_entity_service(
-            SERVICE_SET_CAMERA_LIGHT,
-            {vol.Required(ATTR_CAMERA_LIGHT_MODE): vol.In(CAMERA_LIGHT_MODES)},
-            "_service_set_camera_light",
-        )
+    platform.async_register_entity_service(
+        SERVICE_SET_PERSONS_HOME,
+        {vol.Required(ATTR_PERSONS): vol.All(cv.ensure_list, [cv.string])},
+        "_service_set_persons_home",
+    )
+    platform.async_register_entity_service(
+        SERVICE_SET_PERSON_AWAY,
+        {vol.Optional(ATTR_PERSON): cv.string},
+        "_service_set_person_away",
+    )
+    platform.async_register_entity_service(
+        SERVICE_SET_CAMERA_LIGHT,
+        {vol.Required(ATTR_CAMERA_LIGHT_MODE): vol.In(CAMERA_LIGHT_MODES)},
+        "_service_set_camera_light",
+    )
 
 
 class NetatmoCamera(NetatmoBase, Camera):

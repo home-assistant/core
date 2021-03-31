@@ -9,6 +9,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    CONF_PIN,
     PERCENTAGE,
     TEMP_FAHRENHEIT,
 )
@@ -19,7 +20,6 @@ from homeassistant.util.temperature import celsius_to_fahrenheit
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_PIN = "pin"
 CONF_SENSOR = "sensor"
 CONF_HUMIDITY_OFFSET = "humidity_offset"
 CONF_TEMPERATURE_OFFSET = "temperature_offset"
@@ -56,7 +56,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the DHT sensor."""
-
     SENSOR_TYPES[SENSOR_TEMPERATURE][1] = hass.config.units.temperature_unit
     available_sensors = {
         "AM2302": Adafruit_DHT.AM2302,

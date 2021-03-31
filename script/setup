@@ -6,12 +6,22 @@ set -e
 
 cd "$(dirname "$0")/.."
 
+# Add default vscode settings if not existing
+SETTINGS_FILE=./.vscode/settings.json
+SETTINGS_TEMPLATE_FILE=./.vscode/settings.default.json
+if [ ! -f "$SETTINGS_FILE" ]; then
+    echo "Copy $SETTINGS_TEMPLATE_FILE to $SETTINGS_FILE."
+    cp "$SETTINGS_TEMPLATE_FILE" "$SETTINGS_FILE"
+fi
+
 mkdir -p /data/data/pl.sviete.dom/files/home/AIS/www/img
 mkdir -p /data/data/pl.sviete.dom/files/home/dom
 mkdir -p /data/data/pl.sviete.dom/dom_cloud_drives
 
-python3.9 -m venv venv
-source venv/bin/activate
+if [ ! -n "$DEVCONTAINER" ];then
+  python3.9 -m venv venv
+  source venv/bin/activate
+fi
 
 script/bootstrap
 

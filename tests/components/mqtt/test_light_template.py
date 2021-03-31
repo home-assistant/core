@@ -677,7 +677,7 @@ async def test_transition(hass, mqtt_mock):
                     "name": "test",
                     "command_topic": "test_light_rgb/set",
                     "command_on_template": "on,{{ transition }}",
-                    "command_off_template": "off,{{ transition|d }}",
+                    "command_off_template": "off,{{ transition|int|d }}",
                     "qos": 1,
                 }
             },
@@ -689,15 +689,15 @@ async def test_transition(hass, mqtt_mock):
 
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 40
 
-    await common.async_turn_on(hass, "light.test", transition=10)
+    await common.async_turn_on(hass, "light.test", transition=10.0)
     mqtt_mock.async_publish.assert_called_once_with(
-        "test_light_rgb/set", "on,10", 1, False
+        "test_light_rgb/set", "on,10.0", 1, False
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
 
-    await common.async_turn_off(hass, "light.test", transition=20)
+    await common.async_turn_off(hass, "light.test", transition=20.0)
     mqtt_mock.async_publish.assert_called_once_with(
         "test_light_rgb/set", "off,20", 1, False
     )

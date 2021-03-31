@@ -184,23 +184,34 @@ def get_forecast(ec_data, forecast_type):
 
     if forecast_type == "daily":
         half_days = ec_data.daily_forecasts
+
+        today = {
+            ATTR_FORECAST_TIME: dt.now().isoformat(),
+            ATTR_FORECAST_CONDITION: icon_code_to_condition(
+                int(half_days[0]["icon_code"])
+            ),
+            ATTR_FORECAST_PRECIPITATION_PROBABILITY: int(
+                half_days[0]["precip_probability"]
+            ),
+        }
+
         if half_days[0]["temperature_class"] == "high":
-            forecast_array.append(
+            today.update(
                 {
-                    ATTR_FORECAST_TIME: dt.now().isoformat(),
                     ATTR_FORECAST_TEMP: int(half_days[0]["temperature"]),
                     ATTR_FORECAST_TEMP_LOW: int(half_days[1]["temperature"]),
-                    ATTR_FORECAST_CONDITION: icon_code_to_condition(
-                        int(half_days[0]["icon_code"])
-                    ),
-                    ATTR_FORECAST_PRECIPITATION_PROBABILITY: int(
-                        half_days[0]["precip_probability"]
-                    ),
                 }
             )
-            half_days = half_days[2:]
         else:
-            half_days = half_days[1:]
+            today.update(
+                {
+                    ATTR_FORECAST_TEMP_LOW: int(half_days[0]["temperature"]),
+                    ATTR_FORECAST_TEMP: int(half_days[1]["temperature"]),
+                }
+            )
+
+        forecast_array.append(today)
+        half_days = half_days[2:]
 
         for day, high, low in zip(range(1, 6), range(0, 9, 2), range(1, 10, 2)):
             forecast_array.append(

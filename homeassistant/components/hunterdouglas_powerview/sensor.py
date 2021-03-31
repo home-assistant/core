@@ -9,7 +9,10 @@ from .const import (
     DEVICE_INFO,
     DOMAIN,
     PV_API,
+    PV_ROOM_DATA,
     PV_SHADE_DATA,
+    ROOM_ID_IN_SHADE,
+    ROOM_NAME_UNICODE,
     SHADE_BATTERY_LEVEL,
     SHADE_BATTERY_LEVEL_MAX,
 )
@@ -20,6 +23,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the hunter douglas shades sensors."""
 
     pv_data = hass.data[DOMAIN][entry.entry_id]
+    room_data = pv_data[PV_ROOM_DATA]
     shade_data = pv_data[PV_SHADE_DATA]
     pv_request = pv_data[PV_API]
     coordinator = pv_data[COORDINATOR]
@@ -31,9 +35,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
         if SHADE_BATTERY_LEVEL not in shade.raw_data:
             continue
         name_before_refresh = shade.name
+        room_id = shade.raw_data.get(ROOM_ID_IN_SHADE)
+        room_name = room_data.get(room_id, {}).get(ROOM_NAME_UNICODE, "")
         entities.append(
             PowerViewShadeBatterySensor(
-                coordinator, device_info, shade, name_before_refresh
+                coordinator, device_info, room_name, shade, name_before_refresh
             )
         )
     async_add_entities(entities)

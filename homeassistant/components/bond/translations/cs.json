@@ -15,7 +15,7 @@
                 "data": {
                     "access_token": "P\u0159\u00edstupov\u00fd token"
                 },
-                "description": "Chcete nastavit {bond_id} ?"
+                "description": "Chcete nastavit {name}?"
             },
             "user": {
                 "data": {

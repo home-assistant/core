@@ -14,5 +14,13 @@
             "abort_by_error": "Przerwane z powodu błędu:\n\n {error_info}",
             "single_instance_allowed": "Masz już integrację z SUPLA MQTT Broker skonfigurowaną.\n\n Jeśli chcesz zmienić konfigurację, najpierw usuń bieżącą integrację."
         }
+    },
+      "options": {
+        "step": {
+            "init": {
+              "title": "SUPLA MQTT Broker Settings",
+              "description": "**Użytkownik:** {username}\n**Hasło:** {password}\n**Host:** {hostname}\n**Port:** {port}\n\n**Pytanie o status urządzeń (ilość zapytań dziennie):**\n"
+          }
+        }
     }
 }

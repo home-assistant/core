@@ -1,6 +1,4 @@
 """Support for Dyson Pure Cool Link Sensors."""
-import logging
-
 from libpurecool.dyson_pure_cool import DysonPureCool
 from libpurecool.dyson_pure_cool_link import DysonPureCoolLink
 
@@ -57,8 +55,6 @@ SENSOR_NAMES = {
 }
 
 DYSON_SENSOR_DEVICES = "dyson_sensor_devices"
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

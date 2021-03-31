@@ -4,6 +4,8 @@
             "already_configured": "Apparaat is al geconfigureerd"
         },
         "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_access_token": "Ongeldig toegangstoken",
             "invalid_auth": "Ongeldige authenticatie",
             "unknown": "Onverwachte fout"
         },
@@ -21,6 +23,13 @@
                     "username": "Gebruikersnaam"
                 },
                 "title": "Aanmelden met Blink account"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "simple_options": {
+                "title": "Blink opties"
             }
         }
     }

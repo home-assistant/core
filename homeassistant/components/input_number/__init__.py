@@ -1,4 +1,6 @@
 """Support to set a numeric value from a slider or text box."""
+from __future__ import annotations
+
 import logging
 import typing
 
@@ -119,8 +121,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     yaml_collection = collection.YamlCollection(
         logging.getLogger(f"{__name__}.yaml_collection"), id_manager
     )
-    collection.attach_entity_component_collection(
-        component, yaml_collection, InputNumber.from_yaml
+    collection.sync_entity_lifecycle(
+        hass, DOMAIN, DOMAIN, component, yaml_collection, InputNumber.from_yaml
     )
 
     storage_collection = NumberStorageCollection(
@@ -128,8 +130,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
     )
-    collection.attach_entity_component_collection(
-        component, storage_collection, InputNumber
+    collection.sync_entity_lifecycle(
+        hass, DOMAIN, DOMAIN, component, storage_collection, InputNumber
     )
 
     await yaml_collection.async_load(
@@ -140,9 +142,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     collection.StorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
-
-    collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, yaml_collection)
-    collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, storage_collection)
 
     async def reload_service_handler(service_call: ServiceCallType) -> None:
         """Reload yaml entities."""
@@ -205,7 +204,7 @@ class InputNumber(RestoreEntity):
         self._current_value = config.get(CONF_INITIAL)
 
     @classmethod
-    def from_yaml(cls, config: typing.Dict) -> "InputNumber":
+    def from_yaml(cls, config: typing.Dict) -> InputNumber:
         """Return entity instance initialized from yaml storage."""
         input_num = cls(config)
         input_num.entity_id = f"{DOMAIN}.{config[CONF_ID]}"

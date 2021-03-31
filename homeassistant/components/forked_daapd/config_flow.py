@@ -188,6 +188,5 @@ class ForkedDaapdFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_NAME: discovery_info["properties"]["Machine Name"],
         }
         self.discovery_schema = vol.Schema(fill_in_schema_dict(zeroconf_data))
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update({"title_placeholders": zeroconf_data})
         return await self.async_step_user()

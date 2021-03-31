@@ -1,6 +1,5 @@
 """Support for Legacy MQTT vacuum."""
 import json
-import logging
 
 import voluptuous as vol
 
@@ -38,8 +37,6 @@ from ..mixins import (
     MqttEntity,
 )
 from .schema import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
-
-_LOGGER = logging.getLogger(__name__)
 
 SERVICE_TO_STRING = {
     SUPPORT_TURN_ON: "turn_on",
@@ -377,7 +374,6 @@ class MqttVacuum(MqttEntity, VacuumEntity):
 
         No need to check SUPPORT_BATTERY, this won't be called if battery_level is None.
         """
-
         return icon_for_battery_level(
             battery_level=self.battery_level, charging=self._charging
         )

@@ -50,6 +50,7 @@ class TadoZoneEntity(Entity):
             "name": self.zone_name,
             "manufacturer": DEFAULT_NAME,
             "model": TADO_ZONE,
+            "suggested_area": self.zone_name,
         }
 
     @property

@@ -70,7 +70,6 @@ def report_integration(
 
     Async friendly.
     """
-
     found_frame, integration, path = integration_frame
 
     index = found_frame.filename.index(path)

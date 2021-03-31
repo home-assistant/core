@@ -8,6 +8,7 @@
                 "data": {
                     "name": "Sensor Naam"
                 },
+                "description": "Wil je beginnen met instellen?",
                 "title": "Lokaal IP-adres"
             }
         }

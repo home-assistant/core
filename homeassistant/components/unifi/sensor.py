@@ -1,4 +1,8 @@
-"""Support for bandwidth sensors with UniFi clients."""
+"""Sensor platform for UniFi integration.
+
+Support for bandwidth sensors of network clients.
+Support for uptime sensors of network clients.
+"""
 from homeassistant.components.sensor import DEVICE_CLASS_TIMESTAMP, DOMAIN
 from homeassistant.const import DATA_MEGABYTES
 from homeassistant.core import callback

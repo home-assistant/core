@@ -8,9 +8,15 @@
         },
         "flow_title": "Samsung SyncThru Printer: {name}",
         "step": {
-            "user": {
+            "confirm": {
                 "data": {
                     "name": "Naam"
+                }
+            },
+            "user": {
+                "data": {
+                    "name": "Naam",
+                    "url": "Webinterface URL"
                 }
             }
         }

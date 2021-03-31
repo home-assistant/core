@@ -1,15 +1,19 @@
 """The Logitech Harmony Hub integration."""
 import asyncio
+import logging
 
 from homeassistant.components.remote import ATTR_ACTIVITY, ATTR_DELAY_SECS
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import entity_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DOMAIN, HARMONY_OPTIONS_UPDATE, PLATFORMS
 from .data import HarmonyData
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -40,6 +44,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.data[DOMAIN][entry.entry_id] = data
 
+    await _migrate_old_unique_ids(hass, entry.entry_id, data)
+
     entry.add_update_listener(_update_listener)
 
     for component in PLATFORMS:
@@ -48,6 +54,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
 
     return True
+
+
+async def _migrate_old_unique_ids(
+    hass: HomeAssistant, entry_id: str, data: HarmonyData
+):
+    names_to_ids = {activity["label"]: activity["id"] for activity in data.activities}
+
+    @callback
+    def _async_migrator(entity_entry: entity_registry.RegistryEntry):
+        # Old format for switches was {remote_unique_id}-{activity_name}
+        # New format is activity_{activity_id}
+        parts = entity_entry.unique_id.split("-", 1)
+        if len(parts) > 1:  # old format
+            activity_name = parts[1]
+            activity_id = names_to_ids.get(activity_name)
+
+            if activity_id is not None:
+                _LOGGER.info(
+                    "Migrating unique_id from [%s] to [%s]",
+                    entity_entry.unique_id,
+                    activity_id,
+                )
+                return {"new_unique_id": f"activity_{activity_id}"}
+
+        return None
+
+    await entity_registry.async_migrate_entries(hass, entry_id, _async_migrator)
 
 
 @callback

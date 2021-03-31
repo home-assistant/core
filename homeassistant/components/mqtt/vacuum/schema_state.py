@@ -1,6 +1,5 @@
 """Support for a State MQTT vacuum."""
 import json
-import logging
 
 import voluptuous as vol
 
@@ -42,8 +41,6 @@ from ..mixins import (
     MqttEntity,
 )
 from .schema import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
-
-_LOGGER = logging.getLogger(__name__)
 
 SERVICE_TO_STRING = {
     SUPPORT_START: "start",

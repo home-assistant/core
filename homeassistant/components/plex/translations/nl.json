@@ -4,6 +4,7 @@
             "all_configured": "Alle gekoppelde servers zijn al geconfigureerd",
             "already_configured": "Deze Plex-server is al geconfigureerd",
             "already_in_progress": "Plex wordt geconfigureerd",
+            "reauth_successful": "Herauthenticatie was succesvol",
             "token_request_timeout": "Time-out verkrijgen van token",
             "unknown": "Mislukt om onbekende reden"
         },

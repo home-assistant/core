@@ -8,11 +8,9 @@ import socket
 
 import requests
 
-import homeassistant.config as config_util
-
 # LV settings
 G_EMPTY_OPTION = "-"
-G_FAVORITE_OPTION = "Ulubione"
+G_FAVORITE_OPTION = "Moje Ulubione"
 G_DRIVE_SHARED_WITH_ME = "Udostępnione dla mnie"
 
 # TTS settings
@@ -61,7 +59,7 @@ G_NAME_FOR_AUDIO_NATURE = {
     G_AN_AUDIOBOOK: "Audio książka",
     G_AN_SPOTIFY: "Spotify",
     G_AN_LOCAL: "Dysk",
-    G_AN_FAVORITE: "Ulubione",
+    G_AN_FAVORITE: "Moje Ulubione",
     G_AN_BOOKMARK: "Zakładki",
 }
 
@@ -117,6 +115,11 @@ G_DB_SETTINGS_INFO = None
 
 #
 G_AIS_DOM_PIN = ""
+
+# files
+G_AIS_IMG_PATH = "/data/data/pl.sviete.dom/files/home/AIS/www/img/"
+G_LOG_SETTINGS_INFO_FILE = "/.dom/.ais_log_settings_info"
+G_DB_SETTINGS_INFO_FILE = "/.dom/.ais_db_settings_info"
 
 
 def set_ais_android_id_dom_file_path(path):

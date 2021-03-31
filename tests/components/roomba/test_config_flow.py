@@ -6,13 +6,8 @@ from roombapy.roomba import RoombaInfo
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
-from homeassistant.components.roomba.const import (
-    CONF_BLID,
-    CONF_CONTINUOUS,
-    CONF_DELAY,
-    DOMAIN,
-)
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.components.roomba.const import CONF_BLID, CONF_CONTINUOUS, DOMAIN
+from homeassistant.const import CONF_DELAY, CONF_HOST, CONF_PASSWORD
 
 from tests.common import MockConfigEntry
 

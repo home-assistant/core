@@ -272,7 +272,9 @@ class EntityComponent:
         if found:
             await found.async_remove_entity(entity_id)
 
-    async def async_prepare_reload(self, *, skip_reset: bool = False) -> Optional[dict]:
+    async def async_prepare_reload(
+        self, *, skip_reset: bool = False
+    ) -> Optional[ConfigType]:
         """Prepare reloading this entity component.
 
         This method must be run in the event loop.

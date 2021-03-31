@@ -18,11 +18,12 @@ from .const import (
     VS_DISCOVERY,
     VS_DISPATCHERS,
     VS_FANS,
+    VS_LIGHTS,
     VS_MANAGER,
     VS_SWITCHES,
 )
 
-PLATFORMS = ["switch", "fan"]
+PLATFORMS = ["switch", "fan", "light"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,6 +86,7 @@ async def async_setup_entry(hass, config_entry):
 
     switches = hass.data[DOMAIN][VS_SWITCHES] = []
     fans = hass.data[DOMAIN][VS_FANS] = []
+    lights = hass.data[DOMAIN][VS_LIGHTS] = []
 
     hass.data[DOMAIN][VS_DISPATCHERS] = []
 
@@ -96,15 +98,21 @@ async def async_setup_entry(hass, config_entry):
         fans.extend(device_dict[VS_FANS])
         hass.async_create_task(forward_setup(config_entry, "fan"))
 
+    if device_dict[VS_LIGHTS]:
+        lights.extend(device_dict[VS_LIGHTS])
+        hass.async_create_task(forward_setup(config_entry, "light"))
+
     async def async_new_device_discovery(service):
         """Discover if new devices should be added."""
         manager = hass.data[DOMAIN][VS_MANAGER]
         switches = hass.data[DOMAIN][VS_SWITCHES]
         fans = hass.data[DOMAIN][VS_FANS]
+        lights = hass.data[DOMAIN][VS_LIGHTS]
 
         dev_dict = await async_process_devices(hass, manager)
         switch_devs = dev_dict.get(VS_SWITCHES, [])
         fan_devs = dev_dict.get(VS_FANS, [])
+        light_devs = dev_dict.get(VS_LIGHTS, [])
 
         switch_set = set(switch_devs)
         new_switches = list(switch_set.difference(switches))
@@ -125,6 +133,16 @@ async def async_setup_entry(hass, config_entry):
         if new_fans and not fans:
             fans.extend(new_fans)
             hass.async_create_task(forward_setup(config_entry, "fan"))
+
+        light_set = set(light_devs)
+        new_lights = list(light_set.difference(lights))
+        if new_lights and lights:
+            lights.extend(new_lights)
+            async_dispatcher_send(hass, VS_DISCOVERY.format(VS_LIGHTS), new_lights)
+            return
+        if new_lights and not lights:
+            lights.extend(new_lights)
+            hass.async_create_task(forward_setup(config_entry, "light"))
 
     hass.services.async_register(
         DOMAIN, SERVICE_UPDATE_DEVS, async_new_device_discovery

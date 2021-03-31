@@ -97,7 +97,6 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(self.brother.serial.lower())
         self._abort_if_unique_id_configured()
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update(
             {
                 "title_placeholders": {
@@ -112,7 +111,6 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by zeroconf."""
         if user_input is not None:
             title = f"{self.brother.model} {self.brother.serial}"
-            # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
             return self.async_create_entry(
                 title=title,
                 data={CONF_HOST: self.host, CONF_TYPE: user_input[CONF_TYPE]},

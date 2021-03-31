@@ -44,11 +44,13 @@ SENSORS = {
 }
 
 
-async def test_get_triggers(hass):
+async def test_get_triggers(hass, aioclient_mock):
     """Test triggers work."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["sensors"] = deepcopy(SENSORS)
-    config_entry = await setup_deconz_integration(hass, get_state_response=data)
+    config_entry = await setup_deconz_integration(
+        hass, aioclient_mock, get_state_response=data
+    )
     gateway = get_gateway_from_config_entry(hass, config_entry)
     device_id = gateway.events[0].device_id
     triggers = await async_get_device_automations(hass, "trigger", device_id)
@@ -108,20 +110,22 @@ async def test_get_triggers(hass):
     assert_lists_same(triggers, expected_triggers)
 
 
-async def test_helper_successful(hass):
+async def test_helper_successful(hass, aioclient_mock):
     """Verify trigger helper."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["sensors"] = deepcopy(SENSORS)
-    config_entry = await setup_deconz_integration(hass, get_state_response=data)
+    config_entry = await setup_deconz_integration(
+        hass, aioclient_mock, get_state_response=data
+    )
     gateway = get_gateway_from_config_entry(hass, config_entry)
     device_id = gateway.events[0].device_id
     deconz_event = device_trigger._get_deconz_event_from_device_id(hass, device_id)
     assert deconz_event == gateway.events[0]
 
 
-async def test_helper_no_match(hass):
+async def test_helper_no_match(hass, aioclient_mock):
     """Verify trigger helper returns None when no event could be matched."""
-    await setup_deconz_integration(hass)
+    await setup_deconz_integration(hass, aioclient_mock)
     deconz_event = device_trigger._get_deconz_event_from_device_id(hass, "mock-id")
     assert deconz_event is None
 

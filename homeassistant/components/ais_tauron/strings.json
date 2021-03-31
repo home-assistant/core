@@ -8,7 +8,8 @@
                 "data": {
                      "username": "Username used to login at eLicznik",
                      "password": "Password used to login at eLicznik",
-                     "energy_meter_id": "ID of energy meter"
+                     "energy_meter_id": "ID of energy meter",
+                     "show_generation_sensors": "Show generation"
                 }
             },
            "confirm": {

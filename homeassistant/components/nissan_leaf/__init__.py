@@ -7,7 +7,7 @@ import sys
 from pycarwings2 import CarwingsError, Session
 import voluptuous as vol
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, HTTP_OK
+from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME, HTTP_OK
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
@@ -34,7 +34,6 @@ DATA_RANGE_AC_OFF = "range_ac_off"
 CONF_INTERVAL = "update_interval"
 CONF_CHARGING_INTERVAL = "update_interval_charging"
 CONF_CLIMATE_INTERVAL = "update_interval_climate"
-CONF_REGION = "region"
 CONF_VALID_REGIONS = ["NNA", "NE", "NCI", "NMA", "NML"]
 CONF_FORCE_MILES = "force_miles"
 
@@ -272,7 +271,6 @@ class LeafDataStore:
 
     async def async_refresh_data(self, now):
         """Refresh the leaf data and update the datastore."""
-
         if self.request_in_progress:
             _LOGGER.debug("Refresh currently in progress for %s", self.leaf.nickname)
             return
@@ -336,7 +334,6 @@ class LeafDataStore:
 
     async def async_get_battery(self):
         """Request battery update from Nissan servers."""
-
         try:
             # Request battery update from the car
             _LOGGER.debug("Requesting battery update, %s", self.leaf.vin)
@@ -388,7 +385,6 @@ class LeafDataStore:
 
     async def async_get_climate(self):
         """Request climate data from Nissan servers."""
-
         try:
             return await self.hass.async_add_executor_job(
                 self.leaf.get_latest_hvac_status

@@ -57,7 +57,6 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
         self.device = device
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
             "name": device.name,
             "model": device.model,

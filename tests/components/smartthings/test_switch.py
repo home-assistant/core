@@ -12,6 +12,7 @@ from homeassistant.components.switch import (
     ATTR_TODAY_ENERGY_KWH,
     DOMAIN as SWITCH_DOMAIN,
 )
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .conftest import setup_platform
@@ -96,4 +97,4 @@ async def test_unload_config_entry(hass, device_factory):
     # Act
     await hass.config_entries.async_forward_entry_unload(config_entry, "switch")
     # Assert
-    assert not hass.states.get("switch.switch_1")
+    assert hass.states.get("switch.switch_1").state == STATE_UNAVAILABLE

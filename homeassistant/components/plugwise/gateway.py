@@ -203,7 +203,6 @@ class SmileGateway(CoordinatorEntity):
     @property
     def device_info(self) -> Dict[str, any]:
         """Return the device information."""
-
         device_information = {
             "identifiers": {(DOMAIN, self._dev_id)},
             "name": self._entity_name,

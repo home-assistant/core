@@ -22,7 +22,7 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Enter the ip address of the device.",
+                "description": "Enter the IP address of the device.",
                 "title": "Automaticlly connect to the bridge"
             }
         }

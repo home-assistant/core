@@ -1,7 +1,30 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4."
+            "already_configured": "\uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \ud558\ub098\uc758 \uad6c\uc131\ub9cc \uac00\ub2a5\ud569\ub2c8\ub2e4.",
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "error": {
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "step": {
+            "setup_network": {
+                "data": {
+                    "host": "\ud638\uc2a4\ud2b8",
+                    "port": "\ud3ec\ud2b8"
+                }
+            },
+            "setup_serial_manual_path": {
+                "data": {
+                    "device": "USB \uc7a5\uce58 \uacbd\ub85c"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "already_configured_device": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
         }
     }
 }

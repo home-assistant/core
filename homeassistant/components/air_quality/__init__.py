@@ -2,7 +2,10 @@
 from datetime import timedelta
 import logging
 
-from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+)
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -13,7 +16,6 @@ from homeassistant.helpers.entity_component import EntityComponent
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_AQI = "air_quality_index"
-ATTR_ATTRIBUTION = "attribution"
 ATTR_CO2 = "carbon_dioxide"
 ATTR_CO = "carbon_monoxide"
 ATTR_N2O = "nitrogen_oxide"

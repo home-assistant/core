@@ -9,13 +9,13 @@
             "old_firmware": "Firmware precedente non supportato sul dispositivo Bond - si prega di aggiornare prima di continuare",
             "unknown": "Errore imprevisto"
         },
-        "flow_title": "Bond: {bond_id} ({host})",
+        "flow_title": "Bond: {name} ({host})",
         "step": {
             "confirm": {
                 "data": {
                     "access_token": "Token di accesso"
                 },
-                "description": "Vuoi configurare {bond_id}?"
+                "description": "Vuoi configurare {name}?"
             },
             "user": {
                 "data": {

@@ -27,6 +27,7 @@ from .const import (
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_SOFTWARE_VERSION,
+    ATTR_SUGGESTED_AREA,
     DOMAIN,
 )
 
@@ -161,4 +162,5 @@ class RokuEntity(CoordinatorEntity):
             ATTR_MANUFACTURER: self.coordinator.data.info.brand,
             ATTR_MODEL: self.coordinator.data.info.model_name,
             ATTR_SOFTWARE_VERSION: self.coordinator.data.info.version,
+            ATTR_SUGGESTED_AREA: self.coordinator.data.info.device_location,
         }

@@ -9,6 +9,9 @@
         },
         "step": {
             "user": {
+                "data": {
+                    "dsn": "DSN"
+                },
                 "description": "Voer uw Sentry DSN in",
                 "title": "Sentry"
             }

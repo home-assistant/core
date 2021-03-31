@@ -65,7 +65,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="already_configured")
 
         self.ip_address = dhcp_discovery[IP_ADDRESS]
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {CONF_IP_ADDRESS: self.ip_address}
         return await self.async_step_user()
 

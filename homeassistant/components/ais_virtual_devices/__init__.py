@@ -1,7 +1,9 @@
 """Set up the demo environment that mimics interaction with devices."""
 import asyncio
+import json
 import logging
 
+from homeassistant.components.ais_dom import ais_global
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.setup import async_setup_component
 
@@ -11,7 +13,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass, config):
     """Set up the ais ais environment."""
-
     # Set up ais dom devices (RF codes)
     hass.async_create_task(
         hass.helpers.discovery.async_load_platform(
@@ -26,6 +27,8 @@ async def async_setup(hass, config):
     hass.states.async_set("sensor.ais_logs_settings_info", 0, {})
     hass.states.async_set("sensor.ais_tv_mode", "", {})
     hass.states.async_set("sensor.ais_tv_activity", "", {})
+    hass.states.async_set("sensor.ais_spotify_favorites_mode", "", {})
+    hass.states.async_set("sensor.ais_radio_origin", "private", {})
     hass.states.async_set(
         "sensor.ais_secure_android_id_dom",
         "",
@@ -243,9 +246,7 @@ async def async_setup(hass, config):
         "group.day_info",
         "on",
         {
-            "entity_id": [
-                "binary_sensor.dzien_pracujacy",
-            ],
+            "entity_id": ["binary_sensor.dzien_pracujacy"],
             "order": 6,
             "control": "hidden",
             "friendly_name": "Kalendarium",
@@ -498,7 +499,6 @@ async def async_setup(hass, config):
                 "input_boolean.ais_remote_access",
                 "sensor.ais_secure_android_id_dom",
                 "script.ais_cloud_sync",
-                "script.ais_scan_network_devices",
                 "script.ais_restart_system",
                 "script.ais_stop_system",
             ],
@@ -525,5 +525,79 @@ async def async_setup(hass, config):
             "remote_group_view": "Pomoc",
         },
     )
+
+    # LOG settings
+    try:
+        with open(
+            hass.config.config_dir + ais_global.G_LOG_SETTINGS_INFO_FILE
+        ) as json_file:
+            log_settings = json.load(json_file)
+        ais_global.G_LOG_SETTINGS_INFO = log_settings
+    except Exception as e:
+        _LOGGER.info("Error get log settings info " + str(e))
+
+    if ais_global.G_LOG_SETTINGS_INFO is not None:
+        # set the logs settings info
+        hass.states.async_set(
+            "sensor.ais_logs_settings_info", "1", ais_global.G_LOG_SETTINGS_INFO
+        )
+        # re-set log level
+        hass.async_add_job(
+            hass.services.async_call(
+                "logger",
+                "set_default_level",
+                {"level": ais_global.G_LOG_SETTINGS_INFO["logLevel"]},
+            )
+        )
+
+    # DB settings
+    try:
+        with open(
+            hass.config.config_dir + ais_global.G_DB_SETTINGS_INFO_FILE
+        ) as json_file:
+            db_settings = json.load(json_file)
+        ais_global.G_DB_SETTINGS_INFO = db_settings
+        if "dbKeepDays" not in ais_global.G_DB_SETTINGS_INFO:
+            ais_global.G_DB_SETTINGS_INFO["dbKeepDays"] = 10
+        if "dbShowHistory" not in ais_global.G_DB_SETTINGS_INFO:
+            ais_global.G_DB_SETTINGS_INFO["dbShowHistory"] = False
+        if "dbShowLogbook" not in ais_global.G_DB_SETTINGS_INFO:
+            ais_global.G_DB_SETTINGS_INFO["dbShowLogbook"] = False
+    except Exception as e:
+        _LOGGER.info("Error get db settings info " + str(e))
+
+    if ais_global.G_DB_SETTINGS_INFO is not None:
+        # set the logs settings info
+        hass.states.async_set(
+            "sensor.ais_db_connection_info", "0", ais_global.G_DB_SETTINGS_INFO
+        )
+
+        if (
+            not hass.services.has_service("recorder", "purge")
+            and len(ais_global.G_DB_SETTINGS_INFO["dbEngine"]) > 1
+        ):
+            hass.async_create_task(
+                hass.helpers.discovery.async_load_platform(
+                    "recorder", "recorder", {}, config
+                )
+            )
+
+        if ais_global.G_DB_SETTINGS_INFO["dbShowLogbook"]:
+            # logbook
+            if "logbook" not in hass.data.get(hass.components.frontend.DATA_PANELS, {}):
+                hass.async_create_task(
+                    hass.helpers.discovery.async_load_platform(
+                        "logbook", "logbook", {}, config
+                    )
+                )
+
+        if ais_global.G_DB_SETTINGS_INFO["dbShowHistory"]:
+            # history
+            if "history" not in hass.data.get(hass.components.frontend.DATA_PANELS, {}):
+                hass.async_create_task(
+                    hass.helpers.discovery.async_load_platform(
+                        "history", "history", {}, config
+                    )
+                )
 
     return True

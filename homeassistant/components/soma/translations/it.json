@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_setup": "\u00c8 possibile configurare un solo account Soma.",
-            "authorize_url_timeout": "Timeout durante la generazione dell'URL di autorizzazione.",
+            "authorize_url_timeout": "Tempo scaduto nella generazione dell'URL di autorizzazione.",
             "connection_error": "Impossibile connettersi a SOMA Connect.",
             "missing_configuration": "Il componente Soma non \u00e8 configurato. Si prega di seguire la documentazione.",
             "result_error": "SOMA Connect ha risposto con stato di errore."

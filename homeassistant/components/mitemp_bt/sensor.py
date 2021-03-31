@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_MAC,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    CONF_TIMEOUT,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
@@ -34,7 +35,6 @@ CONF_ADAPTER = "adapter"
 CONF_CACHE = "cache_value"
 CONF_MEDIAN = "median"
 CONF_RETRIES = "retries"
-CONF_TIMEOUT = "timeout"
 
 DEFAULT_ADAPTER = "hci0"
 DEFAULT_UPDATE_INTERVAL = 300

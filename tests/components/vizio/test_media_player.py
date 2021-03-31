@@ -239,17 +239,6 @@ def _assert_source_list_with_apps(
     assert attr["source_list"] == list_to_test
 
 
-async def _test_setup_failure(hass: HomeAssistantType, config: str) -> None:
-    """Test generic Vizio entity setup failure."""
-    with patch(
-        "homeassistant.components.vizio.media_player.VizioAsync.can_connect_with_auth_check",
-        return_value=False,
-    ):
-        config_entry = MockConfigEntry(domain=DOMAIN, data=config, unique_id=UNIQUE_ID)
-        await _add_config_entry_to_hass(hass, config_entry)
-        assert len(hass.states.async_entity_ids(MP_DOMAIN)) == 0
-
-
 async def _test_service(
     hass: HomeAssistantType,
     domain: str,
@@ -334,18 +323,28 @@ async def test_init_tv_unavailable(
     await _test_setup_tv(hass, None)
 
 
-async def test_setup_failure_speaker(
-    hass: HomeAssistantType, vizio_connect: pytest.fixture
+async def test_setup_unavailable_speaker(
+    hass: HomeAssistantType, vizio_cant_connect: pytest.fixture
 ) -> None:
-    """Test speaker entity setup failure."""
-    await _test_setup_failure(hass, MOCK_SPEAKER_CONFIG)
+    """Test speaker entity sets up as unavailable."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_SPEAKER_CONFIG, unique_id=UNIQUE_ID
+    )
+    await _add_config_entry_to_hass(hass, config_entry)
+    assert len(hass.states.async_entity_ids(MP_DOMAIN)) == 1
+    assert hass.states.get("media_player.vizio").state == STATE_UNAVAILABLE
 
 
-async def test_setup_failure_tv(
-    hass: HomeAssistantType, vizio_connect: pytest.fixture
+async def test_setup_unavailable_tv(
+    hass: HomeAssistantType, vizio_cant_connect: pytest.fixture
 ) -> None:
-    """Test TV entity setup failure."""
-    await _test_setup_failure(hass, MOCK_USER_VALID_TV_CONFIG)
+    """Test TV entity sets up as unavailable."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_USER_VALID_TV_CONFIG, unique_id=UNIQUE_ID
+    )
+    await _add_config_entry_to_hass(hass, config_entry)
+    assert len(hass.states.async_entity_ids(MP_DOMAIN)) == 1
+    assert hass.states.get("media_player.vizio").state == STATE_UNAVAILABLE
 
 
 async def test_services(

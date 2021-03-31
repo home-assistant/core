@@ -6,15 +6,12 @@ import pywilight
 
 from homeassistant.components.fan import (
     ATTR_DIRECTION,
-    ATTR_SPEED,
+    ATTR_PERCENTAGE,
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
     DOMAIN as FAN_DOMAIN,
     SERVICE_SET_DIRECTION,
-    SERVICE_SET_SPEED,
-    SPEED_HIGH,
-    SPEED_LOW,
-    SPEED_MEDIUM,
+    SERVICE_SET_PERCENTAGE,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -102,7 +99,7 @@ async def test_on_off_fan_state(
     await hass.services.async_call(
         FAN_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_SPEED: SPEED_LOW, ATTR_ENTITY_ID: "fan.wl000000000099_2"},
+        {ATTR_PERCENTAGE: 30, ATTR_ENTITY_ID: "fan.wl000000000099_2"},
         blocking=True,
     )
 
@@ -110,7 +107,7 @@ async def test_on_off_fan_state(
     state = hass.states.get("fan.wl000000000099_2")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes.get(ATTR_SPEED) == SPEED_LOW
+    assert state.attributes.get(ATTR_PERCENTAGE) == 33
 
     # Turn off
     await hass.services.async_call(
@@ -135,41 +132,41 @@ async def test_speed_fan_state(
     # Set speed Low
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_SPEED,
-        {ATTR_SPEED: SPEED_LOW, ATTR_ENTITY_ID: "fan.wl000000000099_2"},
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_PERCENTAGE: 30, ATTR_ENTITY_ID: "fan.wl000000000099_2"},
         blocking=True,
     )
 
     await hass.async_block_till_done()
     state = hass.states.get("fan.wl000000000099_2")
     assert state
-    assert state.attributes.get(ATTR_SPEED) == SPEED_LOW
+    assert state.attributes.get(ATTR_PERCENTAGE) == 33
 
     # Set speed Medium
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_SPEED,
-        {ATTR_SPEED: SPEED_MEDIUM, ATTR_ENTITY_ID: "fan.wl000000000099_2"},
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_PERCENTAGE: 50, ATTR_ENTITY_ID: "fan.wl000000000099_2"},
         blocking=True,
     )
 
     await hass.async_block_till_done()
     state = hass.states.get("fan.wl000000000099_2")
     assert state
-    assert state.attributes.get(ATTR_SPEED) == SPEED_MEDIUM
+    assert state.attributes.get(ATTR_PERCENTAGE) == 66
 
     # Set speed High
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_SPEED,
-        {ATTR_SPEED: SPEED_HIGH, ATTR_ENTITY_ID: "fan.wl000000000099_2"},
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_PERCENTAGE: 90, ATTR_ENTITY_ID: "fan.wl000000000099_2"},
         blocking=True,
     )
 
     await hass.async_block_till_done()
     state = hass.states.get("fan.wl000000000099_2")
     assert state
-    assert state.attributes.get(ATTR_SPEED) == SPEED_HIGH
+    assert state.attributes.get(ATTR_PERCENTAGE) == 100
 
 
 async def test_direction_fan_state(

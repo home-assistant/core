@@ -3,6 +3,7 @@
 import logging
 
 import aiohttp
+import voluptuous as vol
 import yarl
 
 from homeassistant import config_entries
@@ -123,4 +124,46 @@ class SuplaMqttFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
         return self.async_create_entry(
             title="SUPLA MQTT BRIDGE", data=self.bridge_config
+        )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        return OptionsFlowHandler(config_entry)
+
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle a option flow for SUPLA MQTT."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry):
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Manage the options."""
+        mqtt_settings = self.config_entry.data
+        mqtt_options = self.config_entry.options
+        username = mqtt_settings["username"]
+        password = mqtt_settings["password"]
+        hostname = mqtt_settings["host"]
+        port = mqtt_settings["port"]
+        discovery = mqtt_options.get("discovery", 1)
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        "discovery", default=discovery, description="Discovery"
+                    ): vol.All(vol.Coerce(int), vol.Range(min=1, max=24))
+                }
+            ),
+            description_placeholders={
+                "username": username,
+                "password": password,
+                "hostname": hostname,
+                "port": port,
+            },
         )

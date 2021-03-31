@@ -1,17 +1,17 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\uc774 JuiceNet \uacc4\uc815\uc740 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4."
+            "already_configured": "\uacc4\uc815\uc774 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
         },
         "error": {
-            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4. \ub2e4\uc2dc \uc2dc\ub3c4\ud574\uc8fc\uc138\uc694.",
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
             "invalid_auth": "\uc778\uc99d\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
             "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
         },
         "step": {
             "user": {
                 "data": {
-                    "api_token": "JuiceNet API \ud1a0\ud070"
+                    "api_token": "API \ud1a0\ud070"
                 },
                 "description": "https://home.juice.net/Manage \uc758 API \ud1a0\ud070\uc774 \ud544\uc694\ud569\ub2c8\ub2e4.",
                 "title": "JuiceNet \uc5d0 \uc5f0\uacb0\ud558\uae30"

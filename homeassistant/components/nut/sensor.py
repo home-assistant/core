@@ -67,7 +67,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 )
             )
         else:
-            _LOGGER.warning(
+            _LOGGER.info(
                 "Sensor type: %s does not appear in the NUT status "
                 "output, cannot add",
                 sensor_type,

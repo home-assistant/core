@@ -1,19 +1,20 @@
 """The Netatmo integration."""
 import logging
 
-from homeassistant.core import callback
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_ID
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
     ATTR_EVENT_TYPE,
     ATTR_FACE_URL,
-    ATTR_ID,
     ATTR_IS_KNOWN,
     ATTR_NAME,
     ATTR_PERSONS,
+    DATA_DEVICE_IDS,
     DATA_PERSONS,
     DEFAULT_PERSON,
     DOMAIN,
+    EVENT_ID_MAP,
     NETATMO_EVENT,
 )
 
@@ -38,17 +39,16 @@ async def handle_webhook(hass, webhook_id, request):
     event_type = data.get(ATTR_EVENT_TYPE)
 
     if event_type in EVENT_TYPE_MAP:
-        async_send_event(hass, event_type, data)
+        await async_send_event(hass, event_type, data)
 
         for event_data in data.get(EVENT_TYPE_MAP[event_type], []):
-            async_evaluate_event(hass, event_data)
+            await async_evaluate_event(hass, event_data)
 
     else:
-        async_evaluate_event(hass, data)
+        await async_evaluate_event(hass, data)
 
 
-@callback
-def async_evaluate_event(hass, event_data):
+async def async_evaluate_event(hass, event_data):
     """Evaluate events from webhook."""
     event_type = event_data.get(ATTR_EVENT_TYPE)
 
@@ -62,21 +62,33 @@ def async_evaluate_event(hass, event_data):
             person_event_data[ATTR_IS_KNOWN] = person.get(ATTR_IS_KNOWN)
             person_event_data[ATTR_FACE_URL] = person.get(ATTR_FACE_URL)
 
-            async_send_event(hass, event_type, person_event_data)
+            await async_send_event(hass, event_type, person_event_data)
 
     else:
-        _LOGGER.debug("%s: %s", event_type, event_data)
-        async_send_event(hass, event_type, event_data)
+        await async_send_event(hass, event_type, event_data)
 
 
-@callback
-def async_send_event(hass, event_type, data):
+async def async_send_event(hass, event_type, data):
     """Send events."""
-    hass.bus.async_fire(
-        event_type=NETATMO_EVENT, event_data={"type": event_type, "data": data}
-    )
+    _LOGGER.debug("%s: %s", event_type, data)
     async_dispatcher_send(
         hass,
         f"signal-{DOMAIN}-webhook-{event_type}",
         {"type": event_type, "data": data},
+    )
+
+    event_data = {
+        "type": event_type,
+        "data": data,
+    }
+
+    if event_type in EVENT_ID_MAP:
+        data_device_id = data[EVENT_ID_MAP[event_type]]
+        event_data[ATTR_DEVICE_ID] = hass.data[DOMAIN][DATA_DEVICE_IDS].get(
+            data_device_id
+        )
+
+    hass.bus.async_fire(
+        event_type=NETATMO_EVENT,
+        event_data=event_data,
     )

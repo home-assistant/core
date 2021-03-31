@@ -1,4 +1,6 @@
 """Channels module for Zigbee Home Automation."""
+from __future__ import annotations
+
 import asyncio
 from typing import Any, Dict, List, Optional, Tuple, Union
 
@@ -47,7 +49,7 @@ class Channels:
         self._zha_device = zha_device
 
     @property
-    def pools(self) -> List["ChannelPool"]:
+    def pools(self) -> List[ChannelPool]:
         """Return channel pools list."""
         return self._pools
 
@@ -102,7 +104,7 @@ class Channels:
         }
 
     @classmethod
-    def new(cls, zha_device: zha_typing.ZhaDeviceType) -> "Channels":
+    def new(cls, zha_device: zha_typing.ZhaDeviceType) -> Channels:
         """Create new instance."""
         channels = cls(zha_device)
         for ep_id in sorted(zha_device.device.endpoints):
@@ -263,7 +265,7 @@ class ChannelPool:
         )
 
     @classmethod
-    def new(cls, channels: Channels, ep_id: int) -> "ChannelPool":
+    def new(cls, channels: Channels, ep_id: int) -> ChannelPool:
         """Create new channels for an endpoint."""
         pool = cls(channels, ep_id)
         pool.add_all_channels()

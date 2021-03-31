@@ -54,6 +54,7 @@ async def async_setup_entry(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_motion_multicast)
 
     # Connect to motion gateway
+    multicast = hass.data[DOMAIN][KEY_MULTICAST_LISTENER]
     connect_gateway_class = ConnectMotionGateway(hass, multicast)
     if not await connect_gateway_class.async_connect_gateway(host, key):
         raise ConfigEntryNotReady

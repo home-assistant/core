@@ -3,6 +3,9 @@
         "abort": {
             "single_instance_allowed": "Al geconfigureerd. Slecht \u00e9\u00e9n configuratie mogelijk."
         },
+        "error": {
+            "invalid_auth": "Ongeldige authenticatie"
+        },
         "step": {
             "user": {
                 "data": {

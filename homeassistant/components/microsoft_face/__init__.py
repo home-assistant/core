@@ -275,7 +275,9 @@ class MicrosoftFace:
             for person in persons:
                 self._store[g_id][person["name"]] = person["personId"]
 
-            tasks.append(self._entities[g_id].async_update_ha_state())
+            tasks.append(
+                asyncio.create_task(self._entities[g_id].async_update_ha_state())
+            )
 
         if tasks:
             await asyncio.wait(tasks)

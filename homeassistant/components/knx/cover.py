@@ -7,10 +7,13 @@ from homeassistant.components.cover import (
     DEVICE_CLASS_BLIND,
     DEVICE_CLASSES,
     SUPPORT_CLOSE,
+    SUPPORT_CLOSE_TILT,
     SUPPORT_OPEN,
+    SUPPORT_OPEN_TILT,
     SUPPORT_SET_POSITION,
     SUPPORT_SET_TILT_POSITION,
     SUPPORT_STOP,
+    SUPPORT_STOP_TILT,
     CoverEntity,
 )
 from homeassistant.core import callback
@@ -61,7 +64,12 @@ class KNXCover(KnxEntity, CoverEntity):
         if self._device.supports_stop:
             supported_features |= SUPPORT_STOP
         if self._device.supports_angle:
-            supported_features |= SUPPORT_SET_TILT_POSITION
+            supported_features |= (
+                SUPPORT_SET_TILT_POSITION
+                | SUPPORT_OPEN_TILT
+                | SUPPORT_CLOSE_TILT
+                | SUPPORT_STOP_TILT
+            )
         return supported_features
 
     @property
@@ -126,6 +134,19 @@ class KNXCover(KnxEntity, CoverEntity):
         """Move the cover tilt to a specific position."""
         knx_tilt_position = 100 - kwargs[ATTR_TILT_POSITION]
         await self._device.set_angle(knx_tilt_position)
+
+    async def async_open_cover_tilt(self, **kwargs):
+        """Open the cover tilt."""
+        await self._device.set_short_up()
+
+    async def async_close_cover_tilt(self, **kwargs):
+        """Close the cover tilt."""
+        await self._device.set_short_down()
+
+    async def async_stop_cover_tilt(self, **kwargs):
+        """Stop the cover tilt."""
+        await self._device.stop()
+        self.stop_auto_updater()
 
     def start_auto_updater(self):
         """Start the autoupdater to update Home Assistant while cover is moving."""

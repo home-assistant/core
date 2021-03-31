@@ -15,6 +15,7 @@ async def test_cover(
     vera_device = MagicMock(spec=pv.VeraCurtain)  # type: pv.VeraCurtain
     vera_device.device_id = 1
     vera_device.vera_device_id = vera_device.device_id
+    vera_device.comm_failure = False
     vera_device.name = "dev1"
     vera_device.category = pv.CATEGORY_CURTAIN
     vera_device.is_closed = False

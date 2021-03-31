@@ -306,14 +306,12 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
         yaml_collection,
     )
 
-    collection.attach_entity_component_collection(
-        entity_component, yaml_collection, lambda conf: Person(conf, False)
+    collection.sync_entity_lifecycle(
+        hass, DOMAIN, DOMAIN, entity_component, yaml_collection, Person
     )
-    collection.attach_entity_component_collection(
-        entity_component, storage_collection, lambda conf: Person(conf, True)
+    collection.sync_entity_lifecycle(
+        hass, DOMAIN, DOMAIN, entity_component, storage_collection, Person.from_yaml
     )
-    collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, yaml_collection)
-    collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, storage_collection)
 
     await yaml_collection.async_load(
         await filter_yaml_data(hass, config.get(DOMAIN, []))
@@ -358,16 +356,23 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 class Person(RestoreEntity):
     """Represent a tracked person."""
 
-    def __init__(self, config, editable):
+    def __init__(self, config):
         """Set up person."""
         self._config = config
-        self._editable = editable
+        self.editable = True
         self._latitude = None
         self._longitude = None
         self._gps_accuracy = None
         self._source = None
         self._state = None
         self._unsub_track_device = None
+
+    @classmethod
+    def from_yaml(cls, config):
+        """Return entity instance initialized from yaml storage."""
+        person = cls(config)
+        person.editable = False
+        return person
 
     @property
     def name(self):
@@ -395,7 +400,7 @@ class Person(RestoreEntity):
     @property
     def state_attributes(self):
         """Return the state attributes of the person."""
-        data = {ATTR_EDITABLE: self._editable, ATTR_ID: self.unique_id}
+        data = {ATTR_EDITABLE: self.editable, ATTR_ID: self.unique_id}
         if self._latitude is not None:
             data[ATTR_LATITUDE] = self._latitude
         if self._longitude is not None:

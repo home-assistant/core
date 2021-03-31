@@ -608,9 +608,13 @@ class LIFXLight(LightEntity):
             if not self.is_on:
                 if power_off:
                     await self.set_power(ack, False)
-                if hsbk:
+                # If fading on with color, set color immediately
+                if hsbk and power_on:
                     await self.set_color(ack, hsbk, kwargs)
-                if power_on:
+                    await self.set_power(ack, True, duration=fade)
+                elif hsbk:
+                    await self.set_color(ack, hsbk, kwargs, duration=fade)
+                elif power_on:
                     await self.set_power(ack, True, duration=fade)
             else:
                 if power_on:

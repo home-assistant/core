@@ -146,6 +146,9 @@ class NestCamera(Camera):
             # Next attempt to catch a url will get a new one
             self._stream = None
             return
+        # Update the stream worker with the latest valid url
+        if self.stream:
+            self.stream.update_source(self._stream.rtsp_stream_url)
         self._schedule_stream_refresh()
 
     async def async_will_remove_from_hass(self):

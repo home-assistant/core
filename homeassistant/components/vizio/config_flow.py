@@ -206,7 +206,6 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: Dict[str, Any] = None
     ) -> Dict[str, Any]:
         """Handle a flow initialized by the user."""
-        assert self.hass
         errors = {}
 
         if user_input is not None:
@@ -232,7 +231,6 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors[CONF_HOST] = "existing_config_entry_found"
 
             if not errors:
-                # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
                 if self._must_show_form and self.context["source"] == SOURCE_ZEROCONF:
                     # Discovery should always display the config form before trying to
                     # create entry so that user can update default config options
@@ -251,7 +249,6 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                     if not errors:
                         return await self._create_entry(user_input)
-                # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
                 elif self._must_show_form and self.context["source"] == SOURCE_IMPORT:
                     # Import should always display the config form if CONF_ACCESS_TOKEN
                     # wasn't included but is needed so that the user can choose to update
@@ -271,7 +268,6 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         schema = self._user_schema or _get_config_schema()
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         if errors and self.context["source"] == SOURCE_IMPORT:
             # Log an error message if import config flow fails since otherwise failure is silent
             _LOGGER.error(
@@ -346,8 +342,6 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: Optional[DiscoveryInfoType] = None
     ) -> Dict[str, Any]:
         """Handle zeroconf discovery."""
-        assert self.hass
-
         # If host already has port, no need to add it again
         if ":" not in discovery_info[CONF_HOST]:
             discovery_info[
@@ -432,7 +426,6 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._data[CONF_ACCESS_TOKEN] = pair_data.auth_token
                 self._must_show_form = True
 
-                # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
                 if self.context["source"] == SOURCE_IMPORT:
                     # If user is pairing via config import, show different message
                     return await self.async_step_pairing_complete_import()

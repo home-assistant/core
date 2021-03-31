@@ -10,9 +10,22 @@
         "step": {
             "setup_network": {
                 "data": {
+                    "host": "Host",
                     "port": "Poort"
                 },
                 "title": "Selecteer verbindingsadres"
+            },
+            "setup_serial": {
+                "data": {
+                    "device": "Selecteer apparaat"
+                },
+                "title": "Apparaat"
+            },
+            "setup_serial_manual_path": {
+                "data": {
+                    "device": "USB-apparaatpad"
+                },
+                "title": "Pad"
             },
             "user": {
                 "data": {
@@ -25,7 +38,19 @@
     "options": {
         "error": {
             "already_configured_device": "Apparaat is al geconfigureerd",
+            "invalid_event_code": "Ongeldige gebeurteniscode",
             "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "prompt_options": {
+                "data": {
+                    "automatic_add": "Schakel automatisch toevoegen in",
+                    "debug": "Foutopsporing inschakelen"
+                }
+            },
+            "set_device_options": {
+                "title": "Configureer apparaatopties"
+            }
         }
     }
 }

@@ -202,7 +202,6 @@ class Store:
 
     async def _async_handle_write_data(self, *_args):
         """Handle writing the config."""
-
         async with self._write_lock:
             self._async_cleanup_delay_listener()
             self._async_cleanup_final_write_listener()

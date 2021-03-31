@@ -50,8 +50,8 @@ async def async_setup(hass, config):
     hass.states.async_set("sensor.aisrsshelptext", "", {"text": ""})
     hass.states.async_set("sensor.aisknowledgeanswer", "", {"text": ""})
 
-    def get_radio_types(call):
-        data.get_radio_types(call)
+    async def get_radio_types(call):
+        await data.async_get_radio_types(call)
 
     def get_radio_names(call):
         data.get_radio_names(call)
@@ -142,6 +142,8 @@ async def async_setup(hass, config):
         websocket_confirm_ais_media_source
     )
     hass.components.websocket_api.async_register_command(websocket_report_ais_problem)
+
+    hass.components.websocket_api.async_register_command(websocket_add_ais_media_source)
 
     def device_discovered(service):
         """ Called when a device has been discovered. """
@@ -415,6 +417,43 @@ async def websocket_check_ais_media_source(hass, connection, msg):
     await hass.services.async_call("ais_ai_service", "say_it", {"text": info})
 
 
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "ais_cloud/add_ais_media_source",
+        vol.Required("mediaCategory"): str,
+        vol.Required("mediaName"): str,
+        vol.Required("mediaType"): str,
+        vol.Required("mediaStreamUrl"): str,
+        vol.Optional("mediaImageUrl"): str,
+        vol.Optional("mediaShare"): bool,
+    }
+)
+@websocket_api.async_response
+async def websocket_add_ais_media_source(hass, connection, msg):
+    """
+    Check the media source in AIS
+    """
+    # 1. get ORIGIN_URL from AIS
+    ws = AisCloudWS(hass)
+    ais_answer = await ws.async_add_ais_media(
+        media_category=msg["mediaCategory"],
+        name=msg["mediaName"],
+        media_type=msg["mediaType"],
+        media_url=msg["mediaStreamUrl"],
+        image_url=msg["mediaImageUrl"],
+        share=msg["mediaShare"],
+    )
+    if ais_answer.get("error", False):
+        _LOGGER.error(ais_answer["message"])
+
+    connection.send_result(msg["id"], ais_answer)
+    await hass.services.async_call(
+        "ais_ai_service", "say_it", {"text": ais_answer["message"]}
+    )
+    # sync with AIS
+    await hass.services.async_call("ais_cloud", "get_radio_types")
+
+
 class AisCloudWS:
     def __init__(self, hass):
         """Initialize the cloud WS connections."""
@@ -494,10 +533,32 @@ class AisCloudWS:
             _LOGGER.error("Can't connect to AIS WS!!! " + rest_url)
             ais_global.G_OFFLINE_MODE = True
 
+    async def async_audio_type(self, nature):
+        web_session = aiohttp_client.async_get_clientsession(self.hass)
+        payload = {"nature": nature}
+        with async_timeout.timeout(10):
+            ws_resp = await web_session.post(
+                self.url + "audio_type2", json=payload, headers=self.cloud_ws_header
+            )
+            return await ws_resp.json()
+
     def audio_name(self, nature, a_type):
-        rest_url = self.url + "audio_name?nature=" + nature
-        rest_url += "&type=" + a_type
-        ws_resp = requests.get(rest_url, headers=self.cloud_ws_header, timeout=5)
+        origin = "public"
+        if a_type.startswith("Moje "):
+            origin = "private"
+            a_type = a_type.replace("Moje ", "", 1)
+        elif a_type.startswith("Udostępnione "):
+            origin = "shared"
+            a_type = a_type.replace("Udostępnione ", "", 1)
+        rest_url = self.url + "audio_name2"
+        payload = {
+            "nature": nature,
+            "origin": origin,
+            "type": a_type,
+        }
+        ws_resp = requests.post(
+            rest_url, json=payload, headers=self.cloud_ws_header, timeout=5
+        )
         return ws_resp
 
     def audio(self, item, a_type, text_input):
@@ -505,6 +566,21 @@ class AisCloudWS:
         rest_url += a_type + "&text_input=" + text_input
         ws_resp = requests.get(rest_url, headers=self.cloud_ws_header, timeout=5)
         return ws_resp
+
+    def audio(self, item, a_type, text_input):
+        rest_url = self.url + "audio2"
+        payload = {
+            "item": item,
+            "type": a_type,
+            "input": text_input,
+        }
+        try:
+            ws_resp = requests.post(
+                rest_url, json=payload, headers=self.cloud_ws_header, timeout=5
+            )
+            return ws_resp
+        except Exception as e:
+            _LOGGER.error(str(e))
 
     def key(self, service):
         rest_url = self.url + "key?service=" + service
@@ -528,6 +604,66 @@ class AisCloudWS:
                     + " "
                     + str(e)
                 )
+
+    async def async_add_ais_media(
+        self, media_category, name, media_type, media_url, image_url, share
+    ):
+        web_session = aiohttp_client.async_get_clientsession(self.hass)
+        rest_url = self.url + "add_ais_media"
+        try:
+            with async_timeout.timeout(5):
+                payload = {
+                    "media_category": media_category,
+                    "name": name,
+                    "media_type": media_type,
+                    "media_url": media_url,
+                    "image_url": image_url,
+                    "share": share,
+                    "gate_id": ais_global.get_sercure_android_id_dom(),
+                }
+                with async_timeout.timeout(5):
+                    ws_resp = await web_session.post(
+                        rest_url, json=payload, headers=self.cloud_ws_header
+                    )
+                    return await ws_resp.json()
+        except Exception as e:
+            _LOGGER.warning("Couldn't add the: " + name + " " + str(e))
+            return {"error": True, "message": str(e)}
+
+    def remove_ais_media(self, media_category, name):
+        rest_url = self.url + "add_ais_media"
+        try:
+            payload = {
+                "media_category": media_category,
+                "name": name,
+                "gate_id": ais_global.get_sercure_android_id_dom(),
+            }
+            ws_resp = requests.delete(
+                rest_url, json=payload, headers=self.cloud_ws_header, timeout=5
+            )
+            json_resp = ws_resp.json()
+            return json_resp
+        except Exception as e:
+            _LOGGER.warning("Couldn't fetch data for: add_ais_media " + str(e))
+
+    async def async_remove_ais_media(self, media_category, name):
+        web_session = aiohttp_client.async_get_clientsession(self.hass)
+        rest_url = self.url + "add_ais_media"
+        try:
+            with async_timeout.timeout(5):
+                payload = {
+                    "media_category": media_category,
+                    "name": name,
+                    "gate_id": ais_global.get_sercure_android_id_dom(),
+                }
+                with async_timeout.timeout(5):
+                    ws_resp = await web_session.delete(
+                        rest_url, json=payload, headers=self.cloud_ws_header
+                    )
+                    return await ws_resp.json()
+        except Exception as e:
+            _LOGGER.warning("Couldn't remove the: " + name + " " + str(e))
+            return {"error": True, "message": str(e)}
 
     async def async_check_ais_media(self, name, source, current_url):
         web_session = aiohttp_client.async_get_clientsession(self.hass)
@@ -777,19 +913,19 @@ class AisColudData:
         except Exception as e:
             _LOGGER.error("NEWS WS resp " + str(ws_resp) + " " + str(e))
 
-    def get_radio_types(self, call):
-        ws_resp = self.cloud.audio_type(ais_global.G_AN_RADIO)
+    async def async_get_radio_types(self, call):
+        ws_resp_json = await self.cloud.async_audio_type(ais_global.G_AN_RADIO)
         try:
-            json_ws_resp = ws_resp.json()
             types = [ais_global.G_FAVORITE_OPTION]
-            for item in json_ws_resp["data"]:
-                types.append(item)
+            for item in ws_resp_json["data"]:
+                # TODO
+                types.append(item["name"])
         except Exception as e:
             _LOGGER.warning("get_radio_types from cache")
             types = self.cache.audio_type(ais_global.G_AN_RADIO)["data"]
 
         # populate list with all stations from selected type
-        self.hass.services.call(
+        await self.hass.services.async_call(
             "input_select",
             "set_options",
             {"entity_id": "input_select.radio_type", "options": types},
@@ -827,10 +963,15 @@ class AisColudData:
             list_info[list_idx]["mediasource"] = ais_global.G_AN_RADIO
             list_info[list_idx]["audio_type"] = ais_global.G_AN_RADIO
             list_info[list_idx]["icon"] = "mdi:play"
+            if item.get("CAN_EDIT", 0) == 1:
+                list_info[list_idx]["editable"] = True
+                list_info[list_idx]["icon_remove"] = "mdi:delete-forever"
+            else:
+                list_info[list_idx]["editable"] = False
             list_idx = list_idx + 1
 
         # create lists
-        self.hass.states.async_set("sensor.radiolist", -1, list_info)
+        self.hass.states.set("sensor.radiolist", -1, list_info)
 
         # check if the change was done form remote
         import homeassistant.components.ais_ai_service as ais_ai
@@ -1110,6 +1251,27 @@ class AisColudData:
                     new_attr[list_idx] = attr[itm]
             self.hass.states.async_set("sensor.spotifylist", state, new_attr)
 
+        if media_source == ais_global.G_AN_RADIO:
+            radio_id = int(call.data["id"])
+            state = self.hass.states.get("sensor.radiolist")
+            attr = state.attributes
+            state = state.state
+            new_attr = {}
+            list_idx = -1
+            for itm in attr:
+                if not itm == radio_id:
+                    list_idx = list_idx + 1
+                    new_attr[list_idx] = attr[itm]
+                else:
+                    ws = AisCloudWS(self.hass)
+                    ais_answer = ws.remove_ais_media(
+                        media_category="radio", name=attr[itm]["name"]
+                    )
+                    if ais_answer.get("error", False):
+                        _LOGGER.error(ais_answer["message"])
+            self.hass.services.call("ais_cloud", "get_radio_types")
+            self.hass.states.async_set("sensor.radiolist", state, new_attr)
+
     def process_play_audio(self, call):
         media_source = call.data["media_source"]
         if "id" in call.data:
@@ -1259,10 +1421,18 @@ class AisColudData:
                     },
                 )
 
-                # switch UI to Radio
-                self.hass.services.call(
-                    "ais_ai_service", "switch_ui", {"mode": "Radio"}
-                )
+                # origin
+                if "origin" in call.data:
+                    self.hass.services.call(
+                        "ais_ai_service",
+                        "set_context",
+                        {"text": "radio_" + call.data["origin"]},
+                    )
+                else:
+                    # switch UI to Radio
+                    self.hass.services.call(
+                        "ais_ai_service", "set_context", {"text": "Radio"}
+                    )
 
                 #  get list
                 self.hass.services.call(
@@ -1295,7 +1465,7 @@ class AisColudData:
                 )
                 # switch UI to Podcast
                 self.hass.services.call(
-                    "ais_ai_service", "switch_ui", {"mode": "Podcast"}
+                    "ais_ai_service", "set_context", {"text": "Podcast"}
                 )
 
     def play_prev(self, call):

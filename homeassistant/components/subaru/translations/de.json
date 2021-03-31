@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto wurde bereits konfiguriert",
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "error": {
+            "bad_pin_format": "Die PIN sollte 4-stellig sein",
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "incorrect_pin": "Falsche PIN",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "pin": {
+                "data": {
+                    "pin": "PIN"
+                }
+            },
+            "user": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                }
+            }
+        }
+    }
+}
