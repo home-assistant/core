@@ -32,6 +32,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT,
     CLOUD_NEVER_EXPOSED_ENTITIES,
+    CONF_DESCRIPTION,
     CONF_NAME,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
@@ -74,7 +75,7 @@ from .capabilities import (
     AlexaTimeHoldController,
     AlexaToggleController,
 )
-from .const import CONF_DESCRIPTION, CONF_DISPLAY_CATEGORIES
+from .const import CONF_DISPLAY_CATEGORIES
 
 if TYPE_CHECKING:
     from .config import AbstractConfig

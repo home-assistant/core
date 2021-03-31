@@ -26,6 +26,7 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_DESCRIPTION,
     CONF_NAME,
     CONF_PLATFORM,
     HTTP_BAD_REQUEST,
@@ -61,7 +62,6 @@ CONF_LANG = "language"
 CONF_SERVICE_NAME = "service_name"
 CONF_TIME_MEMORY = "time_memory"
 
-CONF_DESCRIPTION = "description"
 CONF_FIELDS = "fields"
 
 DEFAULT_CACHE = True

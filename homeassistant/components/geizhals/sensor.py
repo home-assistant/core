@@ -5,11 +5,10 @@ from geizhals import Device, Geizhals
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_DESCRIPTION, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-CONF_DESCRIPTION = "description"
 CONF_PRODUCT_ID = "product_id"
 CONF_LOCALE = "locale"
 
