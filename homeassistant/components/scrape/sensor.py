@@ -29,14 +29,26 @@ _LOGGER = logging.getLogger(__name__)
 CONF_ATTR = "attribute"
 CONF_SELECT = "select"
 CONF_INDEX = "index"
+CONF_ENTRIES = "entries"
 
 DEFAULT_NAME = "Web scrape"
 DEFAULT_VERIFY_SSL = True
+
+SCRAPE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_INDEX): cv.positive_int,
+        vol.Optional(CONF_ATTR): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    }
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_RESOURCE): cv.string,
         vol.Required(CONF_SELECT): cv.string,
+        vol.Optional(CONF_ENTRIES): vol.All(cv.ensure_list, [SCRAPE_SCHEMA]),
         vol.Optional(CONF_ATTR): cv.string,
         vol.Optional(CONF_INDEX, default=0): cv.positive_int,
         vol.Optional(CONF_AUTHENTICATION): vol.In(
@@ -62,6 +74,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     headers = config.get(CONF_HEADERS)
     verify_ssl = config.get(CONF_VERIFY_SSL)
     select = config.get(CONF_SELECT)
+    entries = config.get(CONF_ENTRIES)
     attr = config.get(CONF_ATTR)
     index = config.get(CONF_INDEX)
     unit = config.get(CONF_UNIT_OF_MEASUREMENT)
@@ -83,6 +96,24 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     if rest.data is None:
         raise PlatformNotReady
+
+    if entries is not None:
+        """ Loop over the entries and add all Sensors"""
+        for entry in entries:
+            async_add_entities(
+                [
+                    ScrapeSensor(
+                        rest,
+                        entry.get(CONF_NAME),
+                        select,
+                        entry.get(CONF_ATTR),
+                        entry.get(CONF_INDEX),
+                        entry.get(CONF_VALUE_TEMPLATE),
+                        entry.get(CONF_UNIT_OF_MEASUREMENT),
+                    )
+                ],
+                True,
+            )
 
     async_add_entities(
         [ScrapeSensor(rest, name, select, attr, index, value_template, unit)], True
