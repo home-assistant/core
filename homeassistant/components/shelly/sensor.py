@@ -128,10 +128,7 @@ SENSORS = {
     ("sensor", "concentration"): BlockAttributeDescription(
         name="Gas Concentration",
         unit=CONCENTRATION_PARTS_PER_MILLION,
-        value=lambda value: value,
         icon="mdi:gauge",
-        # "sensorOp" is "normal" when the Shelly Gas is working properly and taking measurements.
-        available=lambda block: block.sensorOp == "normal",
     ),
     ("sensor", "extTemp"): BlockAttributeDescription(
         name="External Temperature",
@@ -169,6 +166,12 @@ SENSORS = {
         unit=VOLT,
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_VOLTAGE,
+    ),
+    ("sensor", "sensorOp"): BlockAttributeDescription(
+        name="Operation",
+        icon="mdi:cog-transfer",
+        value=lambda value: value,
+        extra_state_attributes=lambda block: {"self_test": block.selfTest},
     ),
 }
 
