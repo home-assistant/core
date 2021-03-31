@@ -12,6 +12,7 @@ from homeassistant.const import (
     PRESSURE_PA,
     SPEED_MILES_PER_HOUR,
 )
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.dt import utcnow
 from homeassistant.util.pressure import convert as convert_pressure
@@ -60,17 +61,18 @@ async def async_setup_entry(hass, entry, async_add_entities):
         )
 
 
-class NWSSensor(SensorEntity):
+class NWSSensor(CoordinatorEntity, SensorEntity):
     """An NWS Sensor Entity."""
 
     def __init__(
         self, entry_data, hass_data, name, station, label, icon, device_class, unit
     ):
         """Initialise the platform with a data instance."""
+        super().__init__(hass_data[COORDINATOR_OBSERVATION])
         self._nws = hass_data[NWS_DATA]
         self._latitude = entry_data[CONF_LATITUDE]
         self._longitude = entry_data[CONF_LONGITUDE]
-        self._coordinator = hass_data[COORDINATOR_OBSERVATION]
+
         self._name = name
         self._station = station
         self._label = label
@@ -107,17 +109,6 @@ class NWSSensor(SensorEntity):
         """Return the unit the value is expressed in."""
         return self._unit
 
-    async def async_added_to_hass(self) -> None:
-        """Set up a listener and load data."""
-        self.async_on_remove(
-            self._coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    @property
-    def should_poll(self) -> bool:
-        """Entities do not individually poll."""
-        return False
-
     @property
     def device_state_attributes(self):
         """Return the attribution."""
@@ -136,21 +127,14 @@ class NWSSensor(SensorEntity):
     @property
     def available(self):
         """Return if state is available."""
-        if self._coordinator.last_update_success_time:
+        if self.coordinator.last_update_success_time:
             last_success_time = (
-                utcnow() - self._coordinator.last_update_success_time
+                utcnow() - self.coordinator.last_update_success_time
                 < OBSERVATION_VALID_TIME
             )
         else:
             last_success_time = False
-        return self._coordinator.last_update_success or last_success_time
-
-    async def async_update(self):
-        """Update the entity.
-
-        Only used by the generic entity update service.
-        """
-        await self._coordinator.async_request_refresh()
+        return self.coordinator.last_update_success or last_success_time
 
     @property
     def entity_registry_enabled_default(self) -> bool:
