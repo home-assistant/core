@@ -161,8 +161,8 @@ async def test_config_switch(hass, array_type, do_config):
 
     device_config = {
         CONF_NAME: device_name,
+        **do_config,
     }
-    device_config.update(do_config)
 
     await base_config_test(
         hass,

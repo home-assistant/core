@@ -113,8 +113,8 @@ async def test_config_sensor(hass, do_discovery, do_config):
     sensor_name = "test_sensor"
     config_sensor = {
         CONF_NAME: sensor_name,
+        **do_config,
     }
-    config_sensor.update(do_config)
     await base_config_test(
         hass,
         config_sensor,

@@ -31,8 +31,8 @@ async def test_config_climate(hass, do_options):
         CONF_TARGET_TEMP: 117,
         CONF_CURRENT_TEMP: 117,
         CONF_SLAVE: 10,
+        **do_options,
     }
-    device_config.update(do_options)
     await base_config_test(
         hass,
         device_config,

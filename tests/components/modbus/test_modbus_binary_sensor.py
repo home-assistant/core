@@ -39,9 +39,8 @@ async def test_config_binary_sensor(hass, do_discovery, do_options):
     config_sensor = {
         CONF_NAME: sensor_name,
         CONF_ADDRESS: 51,
+        **do_options,
     }
-    if do_options:
-        config_sensor.update()
     await base_config_test(
         hass,
         config_sensor,

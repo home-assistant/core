@@ -32,8 +32,8 @@ async def test_config_cover(hass, do_options, read_type):
     device_config = {
         CONF_NAME: device_name,
         read_type: 1234,
+        **do_options,
     }
-    device_config.update(do_options)
     await base_config_test(
         hass,
         device_config,
