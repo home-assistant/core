@@ -1,5 +1,5 @@
 #!/bin/sh
-echo "AIS release script starting for 21.03.15 on chanel 2" 
+echo "AIS release script starting for 21.02.19 on chanel 3" 
 apt update 
 
 apt upgrade  -y 
