@@ -4,7 +4,6 @@ import logging
 from plexapi.exceptions import NotFound
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -150,6 +149,7 @@ class PlexLibrarySectionSensor(SensorEntity):
         self._name = f"{self.server_name} Library - {plex_library_section.title}"
         self._unique_id = f"library-{self.server_id}-{plex_library_section.uuid}"
         self._state = None
+        self._available = True
         self._attributes = {}
 
     async def async_added_to_hass(self):
@@ -168,8 +168,9 @@ class PlexLibrarySectionSensor(SensorEntity):
         _LOGGER.debug("Refreshing library sensor for '%s'", self.name)
         try:
             await self.hass.async_add_executor_job(self._update_state_and_attrs)
+            self._available = True
         except NotFound:
-            self._state = STATE_UNAVAILABLE
+            self._available = False
         self.async_write_ha_state()
 
     def _update_state_and_attrs(self):
@@ -185,6 +186,11 @@ class PlexLibrarySectionSensor(SensorEntity):
             self._attributes[f"{libtype}s"] = self.library_section.totalViewSize(
                 libtype=libtype, includeCollections=False
             )
+
+    @property
+    def available(self):
+        """Return the availability of the client."""
+        return self._available
 
     @property
     def entity_registry_enabled_default(self):
