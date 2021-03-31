@@ -43,7 +43,6 @@ device_refresh:
   fields:
     bridgeid:
       name: Bridge identifier
-      required: false
       selector:
         text:
       description: >-
