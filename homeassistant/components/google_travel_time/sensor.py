@@ -139,7 +139,7 @@ async def async_setup_entry(
     client = Client(api_key, timeout=10)
 
     sensor = GoogleTravelTimeSensor(
-        hass, config_entry, name, api_key, origin, destination, client
+        config_entry, name, api_key, origin, destination, client
     )
 
     async_add_entities([sensor], False)
@@ -167,9 +167,8 @@ async def async_setup_platform(
 class GoogleTravelTimeSensor(SensorEntity):
     """Representation of a Google travel time sensor."""
 
-    def __init__(self, hass, config_entry, name, api_key, origin, destination, client):
+    def __init__(self, config_entry, name, api_key, origin, destination, client):
         """Initialize the sensor."""
-        self._hass = hass
         self._name = name
         self._config_entry = config_entry
         self._unit_of_measurement = TIME_MINUTES
@@ -259,7 +258,7 @@ class GoogleTravelTimeSensor(SensorEntity):
 
     async def first_update(self, _=None):
         """Run the first update and write the state."""
-        await self._hass.async_add_executor_job(self.update)
+        await self.hass.async_add_executor_job(self.update)
         self.async_write_ha_state()
 
     def update(self):
@@ -282,16 +281,16 @@ class GoogleTravelTimeSensor(SensorEntity):
         # Convert device_trackers to google friendly location
         if hasattr(self, "_origin_entity_id"):
             self._origin = get_location_from_entity(
-                self._hass, _LOGGER, self._origin_entity_id
+                self.hass, _LOGGER, self._origin_entity_id
             )
 
         if hasattr(self, "_destination_entity_id"):
             self._destination = get_location_from_entity(
-                self._hass, _LOGGER, self._destination_entity_id
+                self.hass, _LOGGER, self._destination_entity_id
             )
 
-        self._destination = resolve_zone(self._hass, self._destination)
-        self._origin = resolve_zone(self._hass, self._origin)
+        self._destination = resolve_zone(self.hass, self._destination)
+        self._origin = resolve_zone(self.hass, self._origin)
 
         if self._destination is not None and self._origin is not None:
             self._matrix = distance_matrix(
