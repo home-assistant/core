@@ -166,25 +166,25 @@ class PlexLibrarySectionSensor(SensorEntity):
     async def async_refresh_sensor(self):
         """Update state and attributes for the library sensor."""
         _LOGGER.debug("Refreshing library sensor for '%s'", self.name)
+        try:
+            await self.hass.async_add_executor_job(self._update_state_and_attrs)
+        except NotFound:
+            self._state = STATE_UNAVAILABLE
+        self.async_write_ha_state()
+
+    def _update_state_and_attrs(self):
+        """Update library sensor state with sync calls."""
         primary_libtype = LIBRARY_PRIMARY_LIBTYPE.get(
             self.library_type, self.library_type
         )
 
-        def query_library():
-            """Update library sensor state with sync calls."""
-            self._state = self.library_section.totalViewSize(
-                libtype=primary_libtype, includeCollections=False
+        self._state = self.library_section.totalViewSize(
+            libtype=primary_libtype, includeCollections=False
+        )
+        for libtype in LIBRARY_ATTRIBUTE_TYPES.get(self.library_type, []):
+            self._attributes[f"{libtype}s"] = self.library_section.totalViewSize(
+                libtype=libtype, includeCollections=False
             )
-            for libtype in LIBRARY_ATTRIBUTE_TYPES.get(self.library_type, []):
-                self._attributes[f"{libtype}s"] = self.library_section.totalViewSize(
-                    libtype=libtype, includeCollections=False
-                )
-
-        try:
-            await self.hass.async_add_executor_job(query_library)
-        except NotFound:
-            self._state = STATE_UNAVAILABLE
-        self.async_write_ha_state()
 
     @property
     def entity_registry_enabled_default(self):
