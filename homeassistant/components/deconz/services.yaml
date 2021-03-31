@@ -24,7 +24,7 @@ configure:
       name: Configuration payload
       required: true
       selector:
-        text:
+        object:
       description: JSON object with what data you want to alter.
       example: '{"on": true}'
     bridgeid:
