@@ -64,7 +64,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         )
 
 
-class NWSSensor(Entity):
+class NWSSensor(SensorEntity):
     """An NWS Sensor Entity."""
 
     def __init__(
