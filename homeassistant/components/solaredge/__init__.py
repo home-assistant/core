@@ -9,15 +9,18 @@ from homeassistant.helpers.typing import HomeAssistantType
 from .const import CONF_SITE_ID, DEFAULT_NAME, DOMAIN
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                vol.Required(CONF_API_KEY): cv.string,
-                vol.Required(CONF_SITE_ID): cv.string,
-            }
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                    vol.Required(CONF_API_KEY): cv.string,
+                    vol.Required(CONF_SITE_ID): cv.string,
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
