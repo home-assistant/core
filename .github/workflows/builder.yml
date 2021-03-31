@@ -117,7 +117,7 @@ jobs:
           password: ${{ secrets.GIT_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2021.03.3
+        uses: home-assistant/builder@2021.03.4
         with:
           args: |
             $BUILD_ARGS \
@@ -168,7 +168,7 @@ jobs:
           password: ${{ secrets.GIT_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2021.03.3
+        uses: home-assistant/builder@2021.03.4
         with:
           args: |
             $BUILD_ARGS \
@@ -176,10 +176,10 @@ jobs:
             --target /data/machine \
             --with-codenotary "${{ secrets.VCN_USER }}" "${{ secrets.VCN_PASSWORD }}" "${{ secrets.VCN_ORG }}" \
             --validate-from "${{ secrets.VCN_ORG }}" \
-            --homeassistant-machine "${{ needs.init.outputs.version }}=${{ matrix.machine }}""
+            --machine "${{ needs.init.outputs.version }}=${{ matrix.machine }}""
 
   publish_ha:
-    name: Publish release
+    name: Publish version files
     needs: ["init", "build_machine"]
     runs-on: ubuntu-latest
     steps:
@@ -211,7 +211,7 @@ jobs:
           channel: beta
 
   publish_container:
-    name: Publish release
+    name: Publish meta container
     needs: ["init", "build_base"]
     runs-on: ubuntu-latest
     steps:
@@ -239,37 +239,38 @@ jobs:
           export DOCKER_CLI_EXPERIMENTAL=enabled
 
           function create_manifest() {
-            local tag_l=${1}
-            local tag_r=${2}
+            local docker_reg={1}
+            local tag_l=${2}
+            local tag_r=${3}
 
-            docker manifest create homeassistant/home-assistant:${tag_l} \
-              homeassistant/amd64-homeassistant:${tag_r} \
-              homeassistant/i386-homeassistant:${tag_r} \
-              homeassistant/armhf-homeassistant:${tag_r} \
-              homeassistant/armv7-homeassistant:${tag_r} \
-              homeassistant/aarch64-homeassistant:${tag_r}
+            docker manifest create "${docker_reg}/home-assistant:${tag_l}" \
+              "${docker_reg}/amd64-homeassistant:${tag_r}" \
+              "${docker_reg}/i386-homeassistant:${tag_r}" \
+              "${docker_reg}/armhf-homeassistant:${tag_r}" \
+              "${docker_reg}/armv7-homeassistant:${tag_r}" \
+              "${docker_reg}/aarch64-homeassistant:${tag_r}"
 
-            docker manifest annotate homeassistant/home-assistant:${tag_l} \
-              homeassistant/amd64-homeassistant:${tag_r} \
+            docker manifest annotate "${docker_reg}/home-assistant:${tag_l}" \
+              "${docker_reg}/amd64-homeassistant:${tag_r}" \
               --os linux --arch amd64
 
-            docker manifest annotate homeassistant/home-assistant:${tag_l} \
-              homeassistant/i386-homeassistant:${tag_r} \
+            docker manifest annotate "${docker_reg}/home-assistant:${tag_l}" \
+              "${docker_reg}/i386-homeassistant:${tag_r}" \
               --os linux --arch 386
 
-            docker manifest annotate homeassistant/home-assistant:${tag_l} \
-              homeassistant/armhf-homeassistant:${tag_r} \
+            docker manifest annotate "${docker_reg}/home-assistant:${tag_l}" \
+              "${docker_reg}/armhf-homeassistant:${tag_r}" \
               --os linux --arch arm --variant=v6
 
-            docker manifest annotate homeassistant/home-assistant:${tag_l} \
-              homeassistant/armv7-homeassistant:${tag_r} \
+            docker manifest annotate "${docker_reg}/home-assistant:${tag_l}" \
+              "${docker_reg}/armv7-homeassistant:${tag_r}" \
               --os linux --arch arm --variant=v7
 
-            docker manifest annotate homeassistant/home-assistant:${tag_l} \
-              homeassistant/aarch64-homeassistant:${tag_r} \
+            docker manifest annotate "${docker_reg}/home-assistant:${tag_l}" \
+              "${docker_reg}/aarch64-homeassistant:${tag_r}" \
               --os linux --arch arm64 --variant=v8
 
-            docker manifest push --purge homeassistant/home-assistant:${tag_l}
+            docker manifest push --purge "${docker_reg}/home-assistant:${tag_l}"
           }
 
           function validate_image() {
@@ -281,30 +282,32 @@ jobs:
             fi
           }
 
-          docker pull homeassistant/amd64-homeassistant:${{ needs.init.outputs.version }}
-          docker pull homeassistant/i386-homeassistant:${{ needs.init.outputs.version }}
-          docker pull homeassistant/armhf-homeassistant:${{ needs.init.outputs.version }}
-          docker pull homeassistant/armv7-homeassistant:${{ needs.init.outputs.version }}
-          docker pull homeassistant/aarch64-homeassistant:${{ needs.init.outputs.version }}
+          for docker_reg in "homeassistant" "ghcr.io/home-assistant"; do
+            docker pull "${docker_reg}/amd64-homeassistant:${{ needs.init.outputs.version }}"
+            docker pull "${docker_reg}/i386-homeassistant:${{ needs.init.outputs.version }}"
+            docker pull "${docker_reg}/armhf-homeassistant:${{ needs.init.outputs.version }}"
+            docker pull "${docker_reg}/armv7-homeassistant:${{ needs.init.outputs.version }}"
+            docker pull "${docker_reg}/aarch64-homeassistant:${{ needs.init.outputs.version }}"
 
-          validate_image homeassistant/amd64-homeassistant:${{ needs.init.outputs.version }}
-          validate_image homeassistant/i386-homeassistant:${{ needs.init.outputs.version }}
-          validate_image homeassistant/armhf-homeassistant:${{ needs.init.outputs.version }}
-          validate_image homeassistant/armv7-homeassistant:${{ needs.init.outputs.version }}
-          validate_image homeassistant/aarch64-homeassistant:${{ needs.init.outputs.version }}
+            validate_image "${docker_reg}/amd64-homeassistant:${{ needs.init.outputs.version }}"
+            validate_image "${docker_reg}/i386-homeassistant:${{ needs.init.outputs.version }}"
+            validate_image "${docker_reg}/armhf-homeassistant:${{ needs.init.outputs.version }}"
+            validate_image "${docker_reg}/armv7-homeassistant:${{ needs.init.outputs.version }}"
+            validate_image "${docker_reg}/aarch64-homeassistant:${{ needs.init.outputs.version }}"
 
-          # Create version tag
-          create_manifest "${{ needs.init.outputs.version }}" "${{ needs.init.outputs.version }}"
+            # Create version tag
+            create_manifest "${docker_reg}" "${{ needs.init.outputs.version }}" "${{ needs.init.outputs.version }}"
 
-          # Create general tags
-          if [[ "${{ needs.init.outputs.version }}" =~ d ]]; then
-            create_manifest "dev" "${{ needs.init.outputs.version }}"
-          elif [[ "${{ needs.init.outputs.version }}" =~ b ]]; then
-            create_manifest "beta" "${{ needs.init.outputs.version }}"
-            create_manifest "rc" "${{ needs.init.outputs.version }}"
-          else
-            create_manifest "stable" "${{ needs.init.outputs.version }}"
-            create_manifest "latest" "${{ needs.init.outputs.version }}"
-            create_manifest "beta" "${{ needs.init.outputs.version }}"
-            create_manifest "rc" "${{ needs.init.outputs.version }}"
-          fi
+            # Create general tags
+            if [[ "${{ needs.init.outputs.version }}" =~ d ]]; then
+              create_manifest "${docker_reg}" "dev" "${{ needs.init.outputs.version }}"
+            elif [[ "${{ needs.init.outputs.version }}" =~ b ]]; then
+              create_manifest "${docker_reg}" "beta" "${{ needs.init.outputs.version }}"
+              create_manifest "${docker_reg}" "rc" "${{ needs.init.outputs.version }}"
+            else
+              create_manifest "${docker_reg}" "stable" "${{ needs.init.outputs.version }}"
+              create_manifest "${docker_reg}" "latest" "${{ needs.init.outputs.version }}"
+              create_manifest "${docker_reg}" "beta" "${{ needs.init.outputs.version }}"
+              create_manifest "${docker_reg}" "rc" "${{ needs.init.outputs.version }}"
+            fi
+          done
