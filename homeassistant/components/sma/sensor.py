@@ -5,7 +5,7 @@ import logging
 import pysma
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_HOST,
@@ -20,7 +20,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -197,7 +196,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(hass_sensors)
 
 
-class SMAsensor(CoordinatorEntity, Entity):
+class SMAsensor(CoordinatorEntity, SensorEntity):
     """Representation of a SMA sensor."""
 
     def __init__(self, coordinator, config_entry_unique_id, device_info, pysma_sensor):

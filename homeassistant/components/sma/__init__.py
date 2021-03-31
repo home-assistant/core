@@ -7,16 +7,8 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN, PLATFORMS
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up the sma component."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up sma from a config entry."""
-    hass.data[DOMAIN][entry.entry_id] = entry.data
-
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
