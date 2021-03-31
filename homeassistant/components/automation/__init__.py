@@ -455,7 +455,11 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             automation_trace.set_trigger_description(trigger_description)
 
             # Add initial variables as the trigger step
-            trace_element = TraceElement(variables, "trigger")
+            if "trigger" in variables and "id" in variables["trigger"]:
+                trigger_path = f"trigger/{variables['trigger']['id']}"
+            else:
+                trigger_path = "trigger"
+            trace_element = TraceElement(variables, trigger_path)
             trace_append_element(trace_element)
 
             if (
