@@ -13,7 +13,7 @@
         }
       },
       "hassio_confirm": {
-        "title": "AdGuard Home via Supervisor add-on",
+        "title": "AdGuard Home via Home Assistant add-on",
         "description": "Do you want to configure Home Assistant to connect to the AdGuard Home provided by the Supervisor add-on: {addon}?"
       }
     },
