@@ -4,7 +4,7 @@ reset:
   name: Reset
   description: Resets the counter of an utility meter.
   fields:
-    entity_id:
+    target:
       name: Utility Meter
       description: Name(s) of the utility meter to reset
       example: "utility_meter.energy"
@@ -17,7 +17,7 @@ next_tariff:
   name: Next Tariff
   description: Changes the tariff to the next one.
   fields:
-    entity_id:
+    target:
       description: Name(s) of entities to reset
       example: "utility_meter.energy"
       required: true
@@ -29,7 +29,7 @@ select_tariff:
   name: Select Tariff
   description: Selects the current tariff of an utility meter.
   fields:
-    entity_id:
+    target:
       name: Entity Id
       description: Name of the entity to set the tariff for
       example: "utility_meter.energy"
@@ -49,7 +49,7 @@ calibrate:
   name: Calibrate
   description: Calibrates an utility meter.
   fields:
-    entity_id:
+    target:
       name: Entity Id
       description: Name of the sensor entity belonging to an Utility Meter to calibrate
       example: "sensor.energy_offpeak"
