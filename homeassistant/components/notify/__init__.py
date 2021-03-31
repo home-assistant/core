@@ -9,7 +9,7 @@ from typing import Any, cast
 import voluptuous as vol
 
 import homeassistant.components.persistent_notification as pn
-from homeassistant.const import CONF_NAME, CONF_PLATFORM
+from homeassistant.const import CONF_DESCRIPTION, CONF_NAME, CONF_PLATFORM
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
@@ -44,7 +44,6 @@ SERVICE_PERSISTENT_NOTIFICATION = "persistent_notification"
 
 NOTIFY_SERVICES = "notify_services"
 
-CONF_DESCRIPTION = "description"
 CONF_FIELDS = "fields"
 
 PLATFORM_SCHEMA = vol.Schema(
