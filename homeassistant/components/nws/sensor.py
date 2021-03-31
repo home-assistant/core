@@ -1,6 +1,7 @@
 """Sensors for National Weather Service (NWS)."""
 import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
