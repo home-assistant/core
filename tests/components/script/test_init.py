@@ -269,6 +269,7 @@ async def test_service_descriptions(hass):
 
     descriptions = await async_get_all_descriptions(hass)
 
+    assert descriptions[DOMAIN]["test"]["name"] == "test"
     assert descriptions[DOMAIN]["test"]["description"] == "test description"
     assert not descriptions[DOMAIN]["test"]["fields"]
 
@@ -302,6 +303,27 @@ async def test_service_descriptions(hass):
         descriptions[script.DOMAIN]["test"]["fields"]["test_param"]["example"]
         == "test_param example"
     )
+
+    # Test 3: has "alias" that will be used as "name"
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        return_value={
+            "script": {
+                "test_name": {
+                    "alias": "ABC",
+                    "sequence": [{"delay": {"seconds": 5}}],
+                }
+            }
+        },
+    ):
+        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+
+    descriptions = await async_get_all_descriptions(hass)
+
+    assert descriptions[DOMAIN]["test_name"]["name"] == "ABC"
+
+    # Test 4: verify that names from YAML are taken into account as well
+    assert descriptions[DOMAIN]["turn_on"]["name"] == "Turn on"
 
 
 async def test_shared_context(hass):
