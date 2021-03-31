@@ -37,6 +37,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
+    trigger_id = automation_info.get("trigger_id") if automation_info else None
     topic = config[CONF_TOPIC]
     wanted_payload = config.get(CONF_PAYLOAD)
     value_template = config.get(CONF_VALUE_TEMPLATE)
@@ -78,6 +79,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
                 "payload": mqttmsg.payload,
                 "qos": mqttmsg.qos,
                 "description": f"mqtt topic {mqttmsg.topic}",
+                "id": trigger_id,
             }
 
             with suppress(ValueError):

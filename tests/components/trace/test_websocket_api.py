@@ -112,7 +112,7 @@ async def test_get_trace(hass, hass_ws_client, domain, prefix):
     trace = response["result"]
     if domain == "automation":
         assert len(trace["trace"]) == 2
-        assert set(trace["trace"]) == {"trigger", f"{prefix}/0"}
+        assert set(trace["trace"]) == {"trigger/0", f"{prefix}/0"}
     else:
         assert len(trace["trace"]) == 1
         assert set(trace["trace"]) == {f"{prefix}/0"}
@@ -163,7 +163,7 @@ async def test_get_trace(hass, hass_ws_client, domain, prefix):
     trace = response["result"]
     if domain == "automation":
         assert len(trace["trace"]) == 3
-        assert set(trace["trace"]) == {"trigger", "condition/0", f"{prefix}/0"}
+        assert set(trace["trace"]) == {"trigger/0", "condition/0", f"{prefix}/0"}
     else:
         assert len(trace["trace"]) == 1
         assert set(trace["trace"]) == {f"{prefix}/0"}
@@ -217,12 +217,7 @@ async def test_get_trace(hass, hass_ws_client, domain, prefix):
     response = await client.receive_json()
     assert response["success"]
     trace = response["result"]
-    if domain == "automation":
-        assert len(trace["trace"]) == 2
-        assert set(trace["trace"]) == {"trigger", "condition/0"}
-    else:
-        assert len(trace["trace"]) == 1
-        assert set(trace["trace"]) == {f"{prefix}/0"}
+    assert set(trace["trace"]) == {"trigger/1", "condition/0"}
     assert len(trace["trace"]["condition/0"]) == 1
     assert trace["trace"]["condition/0"][0]["result"] == {"result": False}
     assert trace["config"] == moon_config
@@ -261,7 +256,7 @@ async def test_get_trace(hass, hass_ws_client, domain, prefix):
     assert response["success"]
     trace = response["result"]
     assert len(trace["trace"]) == 3
-    assert set(trace["trace"]) == {"trigger", "condition/0", f"{prefix}/0"}
+    assert set(trace["trace"]) == {"trigger/0", "condition/0", f"{prefix}/0"}
     assert len(trace["trace"][f"{prefix}/0"]) == 1
     assert "error" not in trace["trace"][f"{prefix}/0"][0]
     assert trace["trace"][f"{prefix}/0"][0]["result"] == moon_action
@@ -591,7 +586,7 @@ async def test_nested_traces(hass, hass_ws_client, domain, prefix):
     trace = response["result"]
     if domain == "automation":
         assert len(trace["trace"]) == 2
-        assert set(trace["trace"]) == {"trigger", f"{prefix}/0"}
+        assert set(trace["trace"]) == {"trigger/0", f"{prefix}/0"}
     else:
         assert len(trace["trace"]) == 1
         assert set(trace["trace"]) == {f"{prefix}/0"}

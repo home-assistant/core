@@ -56,7 +56,10 @@ async def test_sunset_trigger(hass, calls, legacy_patchable_time):
             {
                 automation.DOMAIN: {
                     "trigger": {"platform": "sun", "event": SUN_EVENT_SUNSET},
-                    "action": {"service": "test.automation"},
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"id": "{{ trigger.id}}"},
+                    },
                 }
             },
         )
@@ -83,6 +86,7 @@ async def test_sunset_trigger(hass, calls, legacy_patchable_time):
     async_fire_time_changed(hass, trigger_time)
     await hass.async_block_till_done()
     assert len(calls) == 1
+    assert calls[0].data["id"] == 0
 
 
 async def test_sunrise_trigger(hass, calls, legacy_patchable_time):

@@ -39,6 +39,7 @@ TRIGGER_SCHEMA = vol.Schema(
 
 async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
+    trigger_id = automation_info.get("trigger_id") if automation_info else None
     entities = {}
     removes = []
     job = HassJob(action)
@@ -54,6 +55,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
                     "now": now,
                     "description": description,
                     "entity_id": entity_id,
+                    "id": trigger_id,
                 }
             },
         )

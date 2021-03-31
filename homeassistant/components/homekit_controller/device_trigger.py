@@ -75,11 +75,14 @@ class TriggerSource:
         automation_info: dict,
     ) -> CALLBACK_TYPE:
         """Attach a trigger."""
+        trigger_id = automation_info.get("trigger_id") if automation_info else None
 
         def event_handler(char):
             if config[CONF_SUBTYPE] != HK_TO_HA_INPUT_EVENT_VALUES[char["value"]]:
                 return
-            self._hass.async_create_task(action({"trigger": config}))
+            self._hass.async_create_task(
+                action({"trigger": {**config, "id": trigger_id}})
+            )
 
         trigger = self._triggers[config[CONF_TYPE], config[CONF_SUBTYPE]]
         iid = trigger["characteristic"]
