@@ -23,7 +23,8 @@
                     "floor_temperature": "Etasje Temperatur",
                     "precision": "Presisjon",
                     "read_precision": "Les presisjon",
-                    "set_precision": "Angi presisjon"
+                    "set_precision": "Angi presisjon",
+                    "temporary_override_mode": "Midlertidig overstyringsmodus for settpunkt"
                 },
                 "description": "Alternativer for OpenTherm Gateway"
             }

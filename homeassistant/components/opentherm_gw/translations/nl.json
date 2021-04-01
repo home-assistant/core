@@ -23,7 +23,8 @@
                     "floor_temperature": "Vloertemperatuur",
                     "precision": "Precisie",
                     "read_precision": "Lees Precisie",
-                    "set_precision": "Precisie instellen"
+                    "set_precision": "Precisie instellen",
+                    "temporary_override_mode": "Tijdelijke setpoint-overschrijvingsmodus"
                 },
                 "description": "Opties voor de OpenTherm Gateway"
             }

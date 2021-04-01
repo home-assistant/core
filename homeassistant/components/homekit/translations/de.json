@@ -23,6 +23,7 @@
             },
             "user": {
                 "data": {
+                    "auto_start": "Autostart (deaktivieren, wenn Z-Wave oder ein anderes verz\u00f6gertes Startsystem verwendet wird)",
                     "include_domains": "Einzubeziehende Domains",
                     "mode": "Modus"
                 },
@@ -34,6 +35,7 @@
         "step": {
             "advanced": {
                 "data": {
+                    "auto_start": "Autostart (deaktivieren, wenn du den homekit.start-Dienst manuell aufrufst)",
                     "safe_mode": "Abgesicherter Modus (nur aktivieren, wenn das Pairing fehlschl\u00e4gt)"
                 },
                 "description": "Diese Einstellungen m\u00fcssen nur angepasst werden, wenn HomeKit nicht funktioniert.",
@@ -43,6 +45,7 @@
                 "data": {
                     "camera_copy": "Kameras, die native H.264-Streams unterst\u00fctzen"
                 },
+                "description": "Pr\u00fcfe alle Kameras, die native H.264-Streams unterst\u00fctzen. Wenn die Kamera keinen H.264-Stream ausgibt, transkodiert das System das Video in H.264 f\u00fcr HomeKit. Die Transkodierung erfordert eine leistungsstarke CPU und wird wahrscheinlich nicht auf Einplatinencomputern funktionieren.",
                 "title": "W\u00e4hlen Sie den Kamera-Video-Codec."
             },
             "include_exclude": {

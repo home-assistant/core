@@ -25,7 +25,8 @@
             "init": {
                 "data": {
                     "max_playlists": "Maximale Anzahl der als Quellen verwendeten Wiedergabelisten",
-                    "tts_pause_time": "Sekunden bis zur Pause vor und nach der TTS"
+                    "tts_pause_time": "Sekunden bis zur Pause vor und nach der TTS",
+                    "tts_volume": "TTS-Lautst\u00e4rke (Float im Bereich [0,1])"
                 }
             }
         }

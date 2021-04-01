@@ -4,6 +4,7 @@
             "already_configured": "Ger\u00e4t ist bereits konfiguriert"
         },
         "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
             "connection_exception": "Verbindung fehlgeschlagen",
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "unauthenticated_exception": "Ung\u00fcltige Authentifizierung",
