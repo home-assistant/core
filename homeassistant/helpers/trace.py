@@ -89,8 +89,8 @@ trace_id_cv: ContextVar[tuple[str, str] | None] = ContextVar(
     "trace_id_cv", default=None
 )
 # Reason for stopped script execution
-stop_reason_cv: ContextVar[StopReason | None] = ContextVar(
-    "stop_reason_cv", default=None
+script_execution_cv: ContextVar[StopReason | None] = ContextVar(
+    "script_execution_cv", default=None
 )
 
 
@@ -176,7 +176,7 @@ def trace_clear() -> None:
     trace_stack_cv.set(None)
     trace_path_stack_cv.set(None)
     variables_cv.set(None)
-    stop_reason_cv.set(StopReason())
+    script_execution_cv.set(StopReason())
 
 
 def trace_set_child_id(child_key: tuple[str, str], child_run_id: str) -> None:
@@ -193,25 +193,25 @@ def trace_set_result(**kwargs: Any) -> None:
 
 
 class StopReason:
-    """Mutable container class for stop_reason."""
+    """Mutable container class for script_execution."""
 
-    stop_reason: str | None = None
+    script_execution: str | None = None
 
 
-def stop_reason_set(reason: str) -> None:
+def script_execution_set(reason: str) -> None:
     """Set stop reason."""
-    data = stop_reason_cv.get()
+    data = script_execution_cv.get()
     if data is None:
         return
-    data.stop_reason = reason
+    data.script_execution = reason
 
 
-def stop_reason_get() -> str | None:
+def script_execution_get() -> str | None:
     """Return the current trace."""
-    data = stop_reason_cv.get()
+    data = script_execution_cv.get()
     if data is None:
         return None
-    return data.stop_reason
+    return data.script_execution
 
 
 @contextmanager

@@ -172,7 +172,7 @@ async def test_get_trace(
     assert trace["context"]
     assert trace["error"] == "Unable to find service test.automation"
     assert trace["state"] == "stopped"
-    assert trace["stop_reason"] == "error"
+    assert trace["script_execution"] == "error"
     assert trace["item_id"] == "sun"
     assert trace["context"][context_key] == context.id
     assert trace.get("trigger", UNDEFINED) == trigger[0]
@@ -213,7 +213,7 @@ async def test_get_trace(
     assert trace["context"]
     assert "error" not in trace
     assert trace["state"] == "stopped"
-    assert trace["stop_reason"] == "finished"
+    assert trace["script_execution"] == "finished"
     assert trace["item_id"] == "moon"
 
     assert trace.get("trigger", UNDEFINED) == trigger[1]
@@ -264,7 +264,7 @@ async def test_get_trace(
     assert trace["context"]
     assert "error" not in trace
     assert trace["state"] == "stopped"
-    assert trace["stop_reason"] is None
+    assert trace["script_execution"] == "failed_conditions"
     assert trace["trigger"] == "event 'test_event3'"
     assert trace["item_id"] == "moon"
     contexts[trace["context"]["id"]] = {
@@ -306,7 +306,7 @@ async def test_get_trace(
     assert trace["context"]
     assert "error" not in trace
     assert trace["state"] == "stopped"
-    assert trace["stop_reason"] == "finished"
+    assert trace["script_execution"] == "finished"
     assert trace["trigger"] == "event 'test_event2'"
     assert trace["item_id"] == "moon"
     contexts[trace["context"]["id"]] = {
@@ -397,7 +397,7 @@ async def test_trace_overflow(hass, hass_ws_client, domain):
 
 
 @pytest.mark.parametrize(
-    "domain, prefix, trigger, last_step, stop_reason",
+    "domain, prefix, trigger, last_step, script_execution",
     [
         (
             "automation",
@@ -409,7 +409,7 @@ async def test_trace_overflow(hass, hass_ws_client, domain):
                 "event 'test_event2'",
             ],
             ["{prefix}/0", "{prefix}/0", "condition/0", "{prefix}/0"],
-            ["error", "finished", None, "finished"],
+            ["error", "finished", "failed_conditions", "finished"],
         ),
         (
             "script",
@@ -421,7 +421,7 @@ async def test_trace_overflow(hass, hass_ws_client, domain):
     ],
 )
 async def test_list_traces(
-    hass, hass_ws_client, domain, prefix, trigger, last_step, stop_reason
+    hass, hass_ws_client, domain, prefix, trigger, last_step, script_execution
 ):
     """Test listing script and automation traces."""
     id = 1
@@ -512,7 +512,7 @@ async def test_list_traces(
     assert trace["last_step"] == last_step[0].format(prefix=prefix)
     assert trace["error"] == "Unable to find service test.automation"
     assert trace["state"] == "stopped"
-    assert trace["stop_reason"] == stop_reason[0]
+    assert trace["script_execution"] == script_execution[0]
     assert trace["timestamp"]
     assert trace["item_id"] == "sun"
     assert trace.get("trigger", UNDEFINED) == trigger[0]
@@ -521,7 +521,7 @@ async def test_list_traces(
     assert trace["last_step"] == last_step[1].format(prefix=prefix)
     assert "error" not in trace
     assert trace["state"] == "stopped"
-    assert trace["stop_reason"] == stop_reason[1]
+    assert trace["script_execution"] == script_execution[1]
     assert trace["timestamp"]
     assert trace["item_id"] == "moon"
     assert trace.get("trigger", UNDEFINED) == trigger[1]
@@ -530,7 +530,7 @@ async def test_list_traces(
     assert trace["last_step"] == last_step[2].format(prefix=prefix)
     assert "error" not in trace
     assert trace["state"] == "stopped"
-    assert trace["stop_reason"] == stop_reason[2]
+    assert trace["script_execution"] == script_execution[2]
     assert trace["timestamp"]
     assert trace["item_id"] == "moon"
     assert trace.get("trigger", UNDEFINED) == trigger[2]
@@ -539,7 +539,7 @@ async def test_list_traces(
     assert trace["last_step"] == last_step[3].format(prefix=prefix)
     assert "error" not in trace
     assert trace["state"] == "stopped"
-    assert trace["stop_reason"] == stop_reason[3]
+    assert trace["script_execution"] == script_execution[3]
     assert trace["timestamp"]
     assert trace["item_id"] == "moon"
     assert trace.get("trigger", UNDEFINED) == trigger[3]
@@ -1023,10 +1023,78 @@ async def test_breakpoints_3(hass, hass_ws_client, domain, prefix):
 
 
 @pytest.mark.parametrize(
-    "script_mode,stop_reason",
+    "script_mode,max_runs,script_execution",
+    [
+        ({"mode": "single"}, 1, "failed_single"),
+        ({"mode": "parallel", "max": 2}, 2, "failed_max_runs"),
+    ],
+)
+async def test_script_mode(
+    hass, hass_ws_client, script_mode, max_runs, script_execution
+):
+    """Test overlapping runs with max_runs > 1."""
+    id = 1
+
+    def next_id():
+        nonlocal id
+        id += 1
+        return id
+
+    flag = asyncio.Event()
+
+    @callback
+    def _handle_event(_):
+        flag.set()
+
+    event = "test_event"
+    script_config = {
+        "script1": {
+            "sequence": [
+                {"event": event, "event_data": {"value": 1}},
+                {"wait_template": "{{ states.switch.test.state == 'off' }}"},
+                {"event": event, "event_data": {"value": 2}},
+            ],
+            **script_mode,
+        },
+    }
+    client = await hass_ws_client()
+    hass.bus.async_listen(event, _handle_event)
+    assert await async_setup_component(hass, "script", {"script": script_config})
+
+    for _ in range(max_runs):
+        hass.states.async_set("switch.test", "on")
+        await hass.services.async_call("script", "script1")
+        await asyncio.wait_for(flag.wait(), 1)
+
+    # List traces
+    await client.send_json({"id": next_id(), "type": "trace/list", "domain": "script"})
+    response = await client.receive_json()
+    assert response["success"]
+    traces = _find_traces(response["result"], "script", "script1")
+    assert len(traces) == max_runs
+    for trace in traces:
+        assert trace["state"] == "running"
+
+    # Start additional run of script while first runs are suspended in wait_template.
+
+    flag.clear()
+    await hass.services.async_call("script", "script1")
+
+    # List traces
+    await client.send_json({"id": next_id(), "type": "trace/list", "domain": "script"})
+    response = await client.receive_json()
+    assert response["success"]
+    traces = _find_traces(response["result"], "script", "script1")
+    assert len(traces) == max_runs + 1
+    assert traces[-1]["state"] == "stopped"
+    assert traces[-1]["script_execution"] == script_execution
+
+
+@pytest.mark.parametrize(
+    "script_mode,script_execution",
     [("restart", "cancelled"), ("parallel", "finished")],
 )
-async def test_script_mode_2(hass, hass_ws_client, script_mode, stop_reason):
+async def test_script_mode_2(hass, hass_ws_client, script_mode, script_execution):
     """Test overlapping runs with max_runs > 1."""
     id = 1
 
@@ -1090,7 +1158,7 @@ async def test_script_mode_2(hass, hass_ws_client, script_mode, stop_reason):
     assert response["success"]
     trace = _find_traces(response["result"], "script", "script1")[0]
     assert trace["state"] == "stopped"
-    assert trace["stop_reason"] == stop_reason
+    assert trace["script_execution"] == script_execution
     trace = _find_traces(response["result"], "script", "script1")[1]
     assert trace["state"] == "stopped"
-    assert trace["stop_reason"] == "finished"
+    assert trace["script_execution"] == "finished"

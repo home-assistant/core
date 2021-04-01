@@ -86,10 +86,10 @@ def assert_element(trace_element, expected_element, path):
         assert not trace_element._variables
 
 
-def assert_action_trace(expected, expected_stop_reason="finished"):
+def assert_action_trace(expected, expected_script_execution="finished"):
     """Assert a trace condition sequence is as expected."""
     action_trace = trace.trace_get(clear=False)
-    stop_reason = trace.stop_reason_get()
+    script_execution = trace.script_execution_get()
     trace.trace_clear()
     expected_trace_keys = list(expected.keys())
     assert list(action_trace.keys()) == expected_trace_keys
@@ -99,7 +99,7 @@ def assert_action_trace(expected, expected_stop_reason="finished"):
             path = f"[{trace_key_index}][{index}]"
             assert_element(action_trace[key][index], element, path)
 
-    assert stop_reason == expected_stop_reason
+    assert script_execution == expected_script_execution
 
 
 def async_watch_for_action(script_obj, message):
@@ -624,7 +624,7 @@ async def test_delay_template_invalid(hass, caplog):
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
             "1": [{"error_type": script._StopScript}],
         },
-        expected_stop_reason="aborted",
+        expected_script_execution="aborted",
     )
 
 
@@ -685,7 +685,7 @@ async def test_delay_template_complex_invalid(hass, caplog):
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
             "1": [{"error_type": script._StopScript}],
         },
-        expected_stop_reason="aborted",
+        expected_script_execution="aborted",
     )
 
 
@@ -1136,7 +1136,7 @@ async def test_wait_continue_on_timeout(
     if continue_on_timeout is False:
         expected_trace["0"][0]["result"]["timeout"] = True
         expected_trace["0"][0]["error_type"] = script._StopScript
-        expected_stop_reason = "aborted"
+        expected_script_execution = "aborted"
     else:
         expected_trace["1"] = [
             {
@@ -1144,8 +1144,8 @@ async def test_wait_continue_on_timeout(
                 "variables": variable_wait,
             }
         ]
-        expected_stop_reason = "finished"
-    assert_action_trace(expected_trace, expected_stop_reason)
+        expected_script_execution = "finished"
+    assert_action_trace(expected_trace, expected_script_execution)
 
 
 async def test_wait_template_variables_in(hass):
@@ -1412,7 +1412,7 @@ async def test_condition_warning(hass, caplog):
             "1/condition": [{"error_type": ConditionError}],
             "1/condition/entity_id/0": [{"error_type": ConditionError}],
         },
-        expected_stop_reason="aborted",
+        expected_script_execution="aborted",
     )
 
 
@@ -1465,7 +1465,7 @@ async def test_condition_basic(hass, caplog):
             "1": [{"error_type": script._StopScript, "result": {"result": False}}],
             "1/condition": [{"result": {"result": False}}],
         },
-        expected_stop_reason="aborted",
+        expected_script_execution="aborted",
     )
 
 
@@ -2150,7 +2150,7 @@ async def test_propagate_error_service_not_found(hass):
             }
         ],
     }
-    assert_action_trace(expected_trace, expected_stop_reason="error")
+    assert_action_trace(expected_trace, expected_script_execution="error")
 
 
 async def test_propagate_error_invalid_service_data(hass):
@@ -2187,7 +2187,7 @@ async def test_propagate_error_invalid_service_data(hass):
             }
         ],
     }
-    assert_action_trace(expected_trace, expected_stop_reason="error")
+    assert_action_trace(expected_trace, expected_script_execution="error")
 
 
 async def test_propagate_error_service_exception(hass):
@@ -2228,7 +2228,7 @@ async def test_propagate_error_service_exception(hass):
             }
         ],
     }
-    assert_action_trace(expected_trace, expected_stop_reason="error")
+    assert_action_trace(expected_trace, expected_script_execution="error")
 
 
 async def test_referenced_entities(hass):
