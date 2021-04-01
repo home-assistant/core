@@ -538,23 +538,23 @@ class UniversalMediaPlayer(MediaPlayerEntity):
 
     async def async_media_play(self):
         """Send play command."""
-        await self._async_call_service(SERVICE_MEDIA_PLAY)
+        await self._async_call_service(SERVICE_MEDIA_PLAY, allow_override=True)
 
     async def async_media_pause(self):
         """Send pause command."""
-        await self._async_call_service(SERVICE_MEDIA_PAUSE)
+        await self._async_call_service(SERVICE_MEDIA_PAUSE, allow_override=True)
 
     async def async_media_stop(self):
         """Send stop command."""
-        await self._async_call_service(SERVICE_MEDIA_STOP)
+        await self._async_call_service(SERVICE_MEDIA_STOP, allow_override=True)
 
     async def async_media_previous_track(self):
         """Send previous track command."""
-        await self._async_call_service(SERVICE_MEDIA_PREVIOUS_TRACK)
+        await self._async_call_service(SERVICE_MEDIA_PREVIOUS_TRACK, allow_override=True)
 
     async def async_media_next_track(self):
         """Send next track command."""
-        await self._async_call_service(SERVICE_MEDIA_NEXT_TRACK)
+        await self._async_call_service(SERVICE_MEDIA_NEXT_TRACK, allow_override=True)
 
     async def async_media_seek(self, position):
         """Send seek command."""
@@ -576,7 +576,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
 
     async def async_media_play_pause(self):
         """Play or pause the media player."""
-        await self._async_call_service(SERVICE_MEDIA_PLAY_PAUSE)
+        await self._async_call_service(SERVICE_MEDIA_PLAY_PAUSE, allow_override=True)
 
     async def async_select_sound_mode(self, sound_mode):
         """Select sound mode."""
@@ -592,7 +592,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
 
     async def async_clear_playlist(self):
         """Clear players playlist."""
-        await self._async_call_service(SERVICE_CLEAR_PLAYLIST)
+        await self._async_call_service(SERVICE_CLEAR_PLAYLIST, allow_override=True)
 
     async def async_set_shuffle(self, shuffle):
         """Enable/disable shuffling."""
