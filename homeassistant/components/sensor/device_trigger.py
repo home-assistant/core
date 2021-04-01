@@ -28,7 +28,6 @@ from homeassistant.const import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_TIMESTAMP,
     DEVICE_CLASS_VOLTAGE,
 )
 from homeassistant.helpers import config_validation as cv
@@ -52,7 +51,6 @@ CONF_POWER_FACTOR = "power_factor"
 CONF_PRESSURE = "pressure"
 CONF_SIGNAL_STRENGTH = "signal_strength"
 CONF_TEMPERATURE = "temperature"
-CONF_TIMESTAMP = "timestamp"
 CONF_VOLTAGE = "voltage"
 CONF_VALUE = "value"
 
@@ -69,7 +67,6 @@ ENTITY_TRIGGERS = {
     DEVICE_CLASS_PRESSURE: [{CONF_TYPE: CONF_PRESSURE}],
     DEVICE_CLASS_SIGNAL_STRENGTH: [{CONF_TYPE: CONF_SIGNAL_STRENGTH}],
     DEVICE_CLASS_TEMPERATURE: [{CONF_TYPE: CONF_TEMPERATURE}],
-    DEVICE_CLASS_TIMESTAMP: [{CONF_TYPE: CONF_TIMESTAMP}],
     DEVICE_CLASS_VOLTAGE: [{CONF_TYPE: CONF_VOLTAGE}],
     DEVICE_CLASS_NONE: [{CONF_TYPE: CONF_VALUE}],
 }
@@ -93,7 +90,6 @@ TRIGGER_SCHEMA = vol.All(
                     CONF_PRESSURE,
                     CONF_SIGNAL_STRENGTH,
                     CONF_TEMPERATURE,
-                    CONF_TIMESTAMP,
                     CONF_VOLTAGE,
                     CONF_VALUE,
                 ]
