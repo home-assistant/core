@@ -29,6 +29,7 @@ import async_timeout
 from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.unifi.switch import BLOCK_SWITCH, POE_SWITCH
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     CONF_HOST,
@@ -345,12 +346,12 @@ class UniFiController:
         for entry in async_entries_for_config_entry(
             entity_registry, self.config_entry.entry_id
         ):
-            if "-" not in entry.unique_id:  # DPI restriction switches
-                continue
-
             if entry.domain == TRACKER_DOMAIN:
                 mac = entry.unique_id.split("-", 1)[0]
-            elif entry.domain == SWITCH_DOMAIN:
+            elif entry.domain == SWITCH_DOMAIN and (
+                entry.unique_id.startswith(BLOCK_SWITCH)
+                or entry.unique_id.startswith(POE_SWITCH)
+            ):
                 mac = entry.unique_id.split("-", 1)[1]
             else:
                 continue
