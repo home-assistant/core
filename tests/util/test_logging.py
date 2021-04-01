@@ -85,7 +85,7 @@ async def test_async_create_catching_coro(hass, caplog):
 
 
 def test_catch_log_exception():
-    """Test it is stilll a callback after wrapping including partial."""
+    """Test it is still a callback after wrapping including partial."""
 
     async def async_meth():
         pass
