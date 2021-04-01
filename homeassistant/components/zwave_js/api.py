@@ -320,6 +320,10 @@ async def websocket_refresh_node_info(
     client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
     node = client.driver.controller.nodes.get(node_id)
 
+    if node is None:
+        connection.send_error(msg[ID], ERR_NOT_FOUND, f"Node {node_id} not found")
+        return
+
     await node.async_refresh_info()
     connection.send_result(msg[ID])
 

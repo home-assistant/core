@@ -229,7 +229,6 @@ async def test_refresh_node_info(
     entry = integration
     ws_client = await hass_ws_client(hass)
 
-    # Test we can set log level
     client.async_send_command_no_wait.return_value = None
     await ws_client.send_json(
         {
