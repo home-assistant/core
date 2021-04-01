@@ -57,6 +57,7 @@ from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.trace import (
     TraceElement,
+    script_execution_set,
     trace_append_element,
     trace_get,
     trace_path,
@@ -471,6 +472,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
                     "Conditions not met, aborting automation. Condition summary: %s",
                     trace_get(clear=False),
                 )
+                script_execution_set("failed_conditions")
                 return
 
             self.async_set_context(trigger_context)

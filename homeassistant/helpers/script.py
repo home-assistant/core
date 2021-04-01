@@ -63,6 +63,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.event import async_call_later, async_track_template
 from homeassistant.helpers.script_variables import ScriptVariables
+from homeassistant.helpers.trace import script_execution_set
 from homeassistant.helpers.trigger import (
     async_initialize_triggers,
     async_validate_trigger_config,
@@ -332,15 +333,19 @@ class _ScriptRun:
     async def async_run(self) -> None:
         """Run script."""
         try:
-            if self._stop.is_set():
-                return
             self._log("Running %s", self._script.running_description)
             for self._step, self._action in enumerate(self._script.sequence):
                 if self._stop.is_set():
+                    script_execution_set("cancelled")
                     break
                 await self._async_step(log_exceptions=False)
+            else:
+                script_execution_set("finished")
         except _StopScript:
-            pass
+            script_execution_set("aborted")
+        except Exception:
+            script_execution_set("error")
+            raise
         finally:
             self._finish()
 
@@ -1137,6 +1142,7 @@ class Script:
             if self.script_mode == SCRIPT_MODE_SINGLE:
                 if self._max_exceeded != "SILENT":
                     self._log("Already running", level=LOGSEVERITY[self._max_exceeded])
+                script_execution_set("failed_single")
                 return
             if self.script_mode == SCRIPT_MODE_RESTART:
                 self._log("Restarting")
@@ -1147,6 +1153,7 @@ class Script:
                         "Maximum number of runs exceeded",
                         level=LOGSEVERITY[self._max_exceeded],
                     )
+                script_execution_set("failed_max_runs")
                 return
 
         # If this is a top level Script then make a copy of the variables in case they
