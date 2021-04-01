@@ -53,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry):
                 )
                 == 0
             ):
-                _LOGGER.info(
+                _LOGGER.debug(
                     "Removing device `%s` because it does not have any entities",
                     device_id,
                 )
