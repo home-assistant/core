@@ -30,9 +30,6 @@ async def async_setup_entry(
     """Set up the denonavr components from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    def get_denon_async_client():
-        return get_async_client(hass)
-
     # Connect to receiver
     connect_denonavr = ConnectDenonAVR(
         entry.data[CONF_HOST],
@@ -40,7 +37,7 @@ async def async_setup_entry(
         entry.options.get(CONF_SHOW_ALL_SOURCES, DEFAULT_SHOW_SOURCES),
         entry.options.get(CONF_ZONE2, DEFAULT_ZONE2),
         entry.options.get(CONF_ZONE3, DEFAULT_ZONE3),
-        get_denon_async_client,
+        lambda: get_async_client(hass),
         entry.state,
     )
     await connect_denonavr.async_connect_receiver()

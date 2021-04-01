@@ -156,17 +156,13 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Connect to the receiver."""
-
-        def get_denon_async_client():
-            return get_async_client(self.hass)
-
         connect_denonavr = ConnectDenonAVR(
             self.host,
             self.timeout,
             self.show_all_sources,
             self.zone2,
             self.zone3,
-            get_denon_async_client,
+            lambda: get_async_client(self.hass),
         )
         if not await connect_denonavr.async_connect_receiver():
             return self.async_abort(reason="cannot_connect")
