@@ -154,12 +154,23 @@ async def test_get_integration_with_missing_dependencies(hass):
             partial_manifest={"after_dependencies": ["test_component_after_dep"]},
         ),
     )
+    mock_integration(
+        hass,
+        MockModule(
+            "test_custom_component",
+            dependencies=["test_component_dep"],
+            partial_manifest={"after_dependencies": ["test_component_after_dep"]},
+        ),
+        built_in=False,
+    )
     with pytest.raises(loader.IntegrationNotFound):
         await async_get_integration_with_requirements(hass, "test_component")
+    with pytest.raises(loader.IntegrationNotFound):
+        await async_get_integration_with_requirements(hass, "test_custom_component")
 
 
-async def test_get_integration_with_missing_after_dependencies(hass):
-    """Check getting an integration with missing after_dependencies."""
+async def test_get_built_in_integration_with_missing_after_dependencies(hass):
+    """Check getting a built_in integration with missing after_dependencies results in exception."""
     hass.config.skip_pip = False
     mock_integration(
         hass,
@@ -167,10 +178,28 @@ async def test_get_integration_with_missing_after_dependencies(hass):
             "test_component",
             partial_manifest={"after_dependencies": ["test_component_after_dep"]},
         ),
+        built_in=True,
     )
-    integration = await async_get_integration_with_requirements(hass, "test_component")
+    with pytest.raises(loader.IntegrationNotFound):
+        await async_get_integration_with_requirements(hass, "test_component")
+
+
+async def test_get_custom_integration_with_missing_after_dependencies(hass):
+    """Check getting a custom integration with missing after_dependencies."""
+    hass.config.skip_pip = False
+    mock_integration(
+        hass,
+        MockModule(
+            "test_custom_component",
+            partial_manifest={"after_dependencies": ["test_component_after_dep"]},
+        ),
+        built_in=False,
+    )
+    integration = await async_get_integration_with_requirements(
+        hass, "test_custom_component"
+    )
     assert integration
-    assert integration.domain == "test_component"
+    assert integration.domain == "test_custom_component"
 
 
 async def test_install_with_wheels_index(hass):

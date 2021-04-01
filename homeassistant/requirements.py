@@ -8,7 +8,12 @@ from typing import Any, Iterable, cast
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
-from homeassistant.loader import Integration, IntegrationNotFound, async_get_integration
+from homeassistant.loader import (
+    PACKAGE_CUSTOM_COMPONENTS,
+    Integration,
+    IntegrationNotFound,
+    async_get_integration,
+)
 import homeassistant.util.package as pkg_util
 
 # mypy: disallow-any-generics
@@ -107,9 +112,9 @@ async def async_get_integration_with_requirements(
         for result in results:
             if not isinstance(result, BaseException):
                 continue
-            if (
-                not isinstance(result, IntegrationNotFound)
-                or result.domain not in integration.after_dependencies
+            if not isinstance(result, IntegrationNotFound) or not (
+                integration.pkg_path.startswith(PACKAGE_CUSTOM_COMPONENTS)
+                and result.domain in integration.after_dependencies
             ):
                 raise result
 
