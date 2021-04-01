@@ -2,10 +2,14 @@
 import logging
 from typing import Dict
 
-from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
+import voluptuous as vol
+
+from homeassistant.components.device_tracker import PLATFORM_SCHEMA, SOURCE_TYPE_ROUTER
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
@@ -14,6 +18,22 @@ from .common import FritzBoxTools
 from .const import DATA_FRITZ_TOOLS_INSTANCE, DEFAULT_DEVICE_NAME, DOMAIN, DOMAIN_FRITZ
 
 _LOGGER = logging.getLogger(__name__)
+
+YAML_DEFAULT_HOST = "169.254.1.1"
+YAML_DEFAULT_USERNAME = "admin"
+
+PLATFORM_SCHEMA = vol.All(
+    cv.deprecated(CONF_HOST),
+    cv.deprecated(CONF_USERNAME),
+    cv.deprecated(CONF_PASSWORD),
+    PLATFORM_SCHEMA.extend(
+        {
+            vol.Optional(CONF_HOST, default=YAML_DEFAULT_HOST): cv.string,
+            vol.Optional(CONF_USERNAME, default=YAML_DEFAULT_USERNAME): cv.string,
+            vol.Optional(CONF_PASSWORD): cv.string,
+        }
+    ),
+)
 
 
 async def async_setup_entry(
