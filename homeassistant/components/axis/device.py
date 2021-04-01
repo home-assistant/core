@@ -313,9 +313,9 @@ async def get_device(hass, host, port, username, password):
         LOGGER.warning("Connected to device at %s but not registered", host)
         raise AuthenticationRequired from err
 
-    except (asyncio.TimeoutError, axis.RequestError):
+    except (asyncio.TimeoutError, axis.RequestError) as err:
         LOGGER.error("Error connecting to the Axis device at %s", host)
-        raise CannotConnect
+        raise CannotConnect from err
 
     except axis.AxisException as err:
         LOGGER.exception("Unknown Axis communication error occurred")
