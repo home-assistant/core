@@ -10,6 +10,9 @@
         },
         "flow_title": "Lutron Cas\u00e9ta {name} ({host})",
         "step": {
+            "import_failed": {
+                "title": "Import der Cas\u00e9ta-Bridge-Konfiguration fehlgeschlagen."
+            },
             "link": {
                 "title": "Mit der Bridge verbinden"
             },
