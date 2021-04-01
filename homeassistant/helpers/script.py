@@ -63,6 +63,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.event import async_call_later, async_track_template
 from homeassistant.helpers.script_variables import ScriptVariables
+from homeassistant.helpers.trace import stop_reason_set
 from homeassistant.helpers.trigger import (
     async_initialize_triggers,
     async_validate_trigger_config,
@@ -333,14 +334,19 @@ class _ScriptRun:
         """Run script."""
         try:
             if self._stop.is_set():
+                stop_reason_set("cancelled")
                 return
             self._log("Running %s", self._script.running_description)
             for self._step, self._action in enumerate(self._script.sequence):
                 if self._stop.is_set():
                     break
                 await self._async_step(log_exceptions=False)
+            stop_reason_set("finished")
         except _StopScript:
-            pass
+            stop_reason_set("aborted")
+        except Exception:
+            stop_reason_set("error")
+            raise
         finally:
             self._finish()
 

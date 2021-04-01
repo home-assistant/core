@@ -170,6 +170,7 @@ async def test_get_trace(
     assert trace["context"]
     assert trace["error"] == "Unable to find service test.automation"
     assert trace["state"] == "stopped"
+    assert trace["stop_reason"] == "error"
     assert trace["item_id"] == "sun"
     assert trace["context"][context_key] == context.id
     assert trace.get("trigger", UNDEFINED) == trigger[0]
@@ -210,6 +211,7 @@ async def test_get_trace(
     assert trace["context"]
     assert "error" not in trace
     assert trace["state"] == "stopped"
+    assert trace["stop_reason"] == "finished"
     assert trace["item_id"] == "moon"
 
     assert trace.get("trigger", UNDEFINED) == trigger[1]
@@ -260,6 +262,7 @@ async def test_get_trace(
     assert trace["context"]
     assert "error" not in trace
     assert trace["state"] == "stopped"
+    assert trace["stop_reason"] is None
     assert trace["trigger"] == "event 'test_event3'"
     assert trace["item_id"] == "moon"
     contexts[trace["context"]["id"]] = {
@@ -301,6 +304,7 @@ async def test_get_trace(
     assert trace["context"]
     assert "error" not in trace
     assert trace["state"] == "stopped"
+    assert trace["stop_reason"] == "finished"
     assert trace["trigger"] == "event 'test_event2'"
     assert trace["item_id"] == "moon"
     contexts[trace["context"]["id"]] = {
@@ -391,7 +395,7 @@ async def test_trace_overflow(hass, hass_ws_client, domain):
 
 
 @pytest.mark.parametrize(
-    "domain, prefix, trigger, last_step",
+    "domain, prefix, trigger, last_step, stop_reason",
     [
         (
             "automation",
@@ -403,16 +407,20 @@ async def test_trace_overflow(hass, hass_ws_client, domain):
                 "event 'test_event2'",
             ],
             ["{prefix}/0", "{prefix}/0", "condition/0", "{prefix}/0"],
+            ["error", "finished", None, "finished"],
         ),
         (
             "script",
             "sequence",
             [UNDEFINED, UNDEFINED, UNDEFINED, UNDEFINED],
             ["{prefix}/0", "{prefix}/0", "{prefix}/0", "{prefix}/0"],
+            ["error", "finished", "finished", "finished"],
         ),
     ],
 )
-async def test_list_traces(hass, hass_ws_client, domain, prefix, trigger, last_step):
+async def test_list_traces(
+    hass, hass_ws_client, domain, prefix, trigger, last_step, stop_reason
+):
     """Test listing script and automation traces."""
     id = 1
 
@@ -458,7 +466,7 @@ async def test_list_traces(hass, hass_ws_client, domain, prefix, trigger, last_s
     await _run_automation_or_script(hass, domain, sun_config, "test_event")
     await hass.async_block_till_done()
 
-    # Get trace
+    # List traces
     await client.send_json({"id": next_id(), "type": "trace/list", "domain": domain})
     response = await client.receive_json()
     assert response["success"]
@@ -492,7 +500,7 @@ async def test_list_traces(hass, hass_ws_client, domain, prefix, trigger, last_s
     await _run_automation_or_script(hass, domain, moon_config, "test_event2")
     await hass.async_block_till_done()
 
-    # Get trace
+    # List traces
     await client.send_json({"id": next_id(), "type": "trace/list", "domain": domain})
     response = await client.receive_json()
     assert response["success"]
@@ -502,6 +510,7 @@ async def test_list_traces(hass, hass_ws_client, domain, prefix, trigger, last_s
     assert trace["last_step"] == last_step[0].format(prefix=prefix)
     assert trace["error"] == "Unable to find service test.automation"
     assert trace["state"] == "stopped"
+    assert trace["stop_reason"] == stop_reason[0]
     assert trace["timestamp"]
     assert trace["item_id"] == "sun"
     assert trace.get("trigger", UNDEFINED) == trigger[0]
@@ -510,6 +519,7 @@ async def test_list_traces(hass, hass_ws_client, domain, prefix, trigger, last_s
     assert trace["last_step"] == last_step[1].format(prefix=prefix)
     assert "error" not in trace
     assert trace["state"] == "stopped"
+    assert trace["stop_reason"] == stop_reason[1]
     assert trace["timestamp"]
     assert trace["item_id"] == "moon"
     assert trace.get("trigger", UNDEFINED) == trigger[1]
@@ -518,6 +528,7 @@ async def test_list_traces(hass, hass_ws_client, domain, prefix, trigger, last_s
     assert trace["last_step"] == last_step[2].format(prefix=prefix)
     assert "error" not in trace
     assert trace["state"] == "stopped"
+    assert trace["stop_reason"] == stop_reason[2]
     assert trace["timestamp"]
     assert trace["item_id"] == "moon"
     assert trace.get("trigger", UNDEFINED) == trigger[2]
@@ -526,6 +537,7 @@ async def test_list_traces(hass, hass_ws_client, domain, prefix, trigger, last_s
     assert trace["last_step"] == last_step[3].format(prefix=prefix)
     assert "error" not in trace
     assert trace["state"] == "stopped"
+    assert trace["stop_reason"] == stop_reason[3]
     assert trace["timestamp"]
     assert trace["item_id"] == "moon"
     assert trace.get("trigger", UNDEFINED) == trigger[3]
