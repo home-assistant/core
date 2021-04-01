@@ -4,7 +4,7 @@
     "step": {
       "confirm": {
         "title": "Setup FRITZ!Box Tools",
-        "description": "Discovered FRITZ!Box: {name}\n\nSetup FRITZ!Box Tools to control your {name}\nDocumentation: https://github.com/mammuth/ha-fritzbox-tools",
+        "description": "Discovered FRITZ!Box: {name}\n\nSetup FRITZ!Box Tools to control your {name}",
         "data": {
           "username": "Username",
           "password": "Password"
@@ -12,7 +12,7 @@
       },
       "start_config": {
         "title": "Setup FRITZ!Box Tools - mandatory",
-        "description": "Setup FRITZ!Box Tools to control your FRITZ!Box.\nMinimum needed: username, password.\nDocumentation: https://github.com/mammuth/ha-fritzbox-tools",
+        "description": "Setup FRITZ!Box Tools to control your FRITZ!Box.\nMinimum needed: username, password.",
         "data": {
           "host": "Host",
           "port": "Port",
@@ -22,7 +22,7 @@
       },
       "reauth_confirm": {
         "title": "Updating FRITZ!Box Tools - credentials",
-        "description": "Update FRITZ!Box Tools credentials for: {host}.\n\nFRITZ!Box Tools is unable to log in to your FRITZ!Box.\nDocumentation: https://github.com/mammuth/ha-fritzbox-tools",
+        "description": "Update FRITZ!Box Tools credentials for: {host}.\n\nFRITZ!Box Tools is unable to log in to your FRITZ!Box.",
         "data": {
           "username": "Username",
           "password": "Password"
