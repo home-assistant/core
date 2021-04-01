@@ -152,13 +152,7 @@ class MeaterProbeTemperature(CoordinatorEntity):
             return False
 
         # See if the device was returned from the API. If not, it's offline
-        device = None
-
-        for dev in self.coordinator.data:
-            if dev.id == self.device_id:
-                device = dev
-
-        return device is not None
+        return any(self.device_id == device.id for device in self.coordinator.data)
 
     @property
     def unique_id(self):
