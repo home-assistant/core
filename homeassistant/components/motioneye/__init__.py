@@ -12,6 +12,7 @@ from motioneye_client.client import (
 )
 from motioneye_client.const import KEY_CAMERAS, KEY_ID, KEY_NAME
 
+from homeassistant.components.camera.const import DOMAIN as CAMERA_DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SOURCE
 from homeassistant.core import HomeAssistant, callback
@@ -38,7 +39,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["camera"]
+PLATFORMS = [CAMERA_DOMAIN]
 
 
 def create_motioneye_client(

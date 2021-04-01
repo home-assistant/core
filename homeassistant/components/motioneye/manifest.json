@@ -6,10 +6,6 @@
   "requirements": [
     "motioneye-client==0.2.0"
   ],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
   "codeowners": [
     "@dermotduffy"
   ]
