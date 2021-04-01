@@ -14,27 +14,32 @@ if TYPE_CHECKING:
 
 DATA_LOCATION_CACHE = "astral_location_cache"
 
+ELEVATION_AGNOSTIC_EVENTS = ("noon", "midnight")
+
 
 @callback
 @bind_hass
-def get_astral_location(hass: HomeAssistant) -> astral.Location:
+def get_astral_location(
+    hass: HomeAssistant,
+) -> tuple[astral.location.Location, astral.Elevation]:
     """Get an astral location for the current Home Assistant configuration."""
-    from astral import Location  # pylint: disable=import-outside-toplevel
+    from astral import LocationInfo  # pylint: disable=import-outside-toplevel
+    from astral.location import Location  # pylint: disable=import-outside-toplevel
 
     latitude = hass.config.latitude
     longitude = hass.config.longitude
     timezone = str(hass.config.time_zone)
     elevation = hass.config.elevation
-    info = ("", "", latitude, longitude, timezone, elevation)
+    info = ("", "", timezone, latitude, longitude)
 
     # Cache astral locations so they aren't recreated with the same args
     if DATA_LOCATION_CACHE not in hass.data:
         hass.data[DATA_LOCATION_CACHE] = {}
 
     if info not in hass.data[DATA_LOCATION_CACHE]:
-        hass.data[DATA_LOCATION_CACHE][info] = Location(info)
+        hass.data[DATA_LOCATION_CACHE][info] = Location(LocationInfo(*info))
 
-    return hass.data[DATA_LOCATION_CACHE][info]
+    return hass.data[DATA_LOCATION_CACHE][info], elevation
 
 
 @callback
@@ -46,25 +51,31 @@ def get_astral_event_next(
     offset: datetime.timedelta | None = None,
 ) -> datetime.datetime:
     """Calculate the next specified solar event."""
-    location = get_astral_location(hass)
-    return get_location_astral_event_next(location, event, utc_point_in_time, offset)
+    location, elevation = get_astral_location(hass)
+    return get_location_astral_event_next(
+        location, elevation, event, utc_point_in_time, offset
+    )
 
 
 @callback
 def get_location_astral_event_next(
-    location: astral.Location,
+    location: astral.location.Location,
+    elevation: astral.Elevation,
     event: str,
     utc_point_in_time: datetime.datetime | None = None,
     offset: datetime.timedelta | None = None,
 ) -> datetime.datetime:
     """Calculate the next specified solar event."""
-    from astral import AstralError  # pylint: disable=import-outside-toplevel
 
     if offset is None:
         offset = datetime.timedelta()
 
     if utc_point_in_time is None:
         utc_point_in_time = dt_util.utcnow()
+
+    kwargs = {"local": False}
+    if event not in ELEVATION_AGNOSTIC_EVENTS:
+        kwargs["observer_elevation"] = elevation
 
     mod = -1
     while True:
@@ -73,13 +84,13 @@ def get_location_astral_event_next(
                 getattr(location, event)(
                     dt_util.as_local(utc_point_in_time).date()
                     + datetime.timedelta(days=mod),
-                    local=False,
+                    **kwargs,
                 )
                 + offset
             )
             if next_dt > utc_point_in_time:
                 return next_dt
-        except AstralError:
+        except ValueError:
             pass
         mod += 1
 
@@ -92,9 +103,7 @@ def get_astral_event_date(
     date: datetime.date | datetime.datetime | None = None,
 ) -> datetime.datetime | None:
     """Calculate the astral event time for the specified date."""
-    from astral import AstralError  # pylint: disable=import-outside-toplevel
-
-    location = get_astral_location(hass)
+    location, elevation = get_astral_location(hass)
 
     if date is None:
         date = dt_util.now().date()
@@ -102,9 +111,13 @@ def get_astral_event_date(
     if isinstance(date, datetime.datetime):
         date = dt_util.as_local(date).date()
 
+    kwargs = {"local": False}
+    if event not in ELEVATION_AGNOSTIC_EVENTS:
+        kwargs["observer_elevation"] = elevation
+
     try:
-        return getattr(location, event)(date, local=False)  # type: ignore
-    except AstralError:
+        return getattr(location, event)(date, **kwargs)  # type: ignore
+    except ValueError:
         # Event never occurs for specified date.
         return None
 
