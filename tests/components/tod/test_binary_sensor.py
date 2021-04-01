@@ -643,6 +643,7 @@ async def test_norwegian_case_summer(hass):
     """Test location in Norway where the sun doesn't set in summer."""
     hass.config.latitude = 69.6
     hass.config.longitude = 18.8
+    hass.config.elevation = 10.0
 
     test_time = hass.config.time_zone.localize(datetime(2010, 6, 1)).astimezone(
         pytz.UTC
@@ -652,7 +653,7 @@ async def test_norwegian_case_summer(hass):
         get_astral_event_next(hass, "sunrise", dt_util.as_utc(test_time))
     )
     sunset = dt_util.as_local(
-        get_astral_event_next(hass, "sunset", dt_util.as_utc(test_time))
+        get_astral_event_next(hass, "sunset", dt_util.as_utc(sunrise))
     )
     config = {
         "binary_sensor": [
