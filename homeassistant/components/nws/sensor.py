@@ -8,9 +8,11 @@ from homeassistant.const import (
     LENGTH_KILOMETERS,
     LENGTH_METERS,
     LENGTH_MILES,
+    PERCENTAGE,
     PRESSURE_INHG,
     PRESSURE_PA,
     SPEED_MILES_PER_HOUR,
+    TEMP_CELSIUS,
 )
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.distance import convert as convert_distance
@@ -100,6 +102,10 @@ class NWSSensor(CoordinatorEntity, SensorEntity):
             return round(convert_distance(value, LENGTH_METERS, LENGTH_MILES))
         if self._unit == PRESSURE_INHG:
             return round(convert_pressure(value, PRESSURE_PA, PRESSURE_INHG), 2)
+        if self._unit == TEMP_CELSIUS:
+            return round(value, 1)
+        if self._unit == PERCENTAGE:
+            return round(value)
         return value
 
     @property
