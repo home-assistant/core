@@ -1,7 +1,7 @@
 """Parse prices of a device from geizhals."""
 from datetime import timedelta
 
-from geizhals import Device, Geizhals
+from geizhalscrawler import Device, Geizhals
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity

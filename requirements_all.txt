@@ -629,7 +629,7 @@ gTTS==2.2.2
 garminconnect==0.1.19
 
 # homeassistant.components.geizhals
-geizhals==0.0.9
+geizhalscrawler==0.1
 
 # homeassistant.components.geniushub
 geniushub-client==0.6.30
