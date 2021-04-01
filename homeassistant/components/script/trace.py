@@ -19,7 +19,7 @@ class ScriptTrace(ActionTrace):
     ):
         """Container for automation trace."""
         key = ("script", item_id)
-        super().__init__(key, config, context)
+        super().__init__(key, config, None, context)
 
 
 @contextmanager
