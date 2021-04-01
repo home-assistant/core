@@ -8,6 +8,7 @@ from homeassistant import data_entry_flow
 from homeassistant.components.solaredge import config_flow
 from homeassistant.components.solaredge.const import CONF_SITE_ID, DEFAULT_NAME
 from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -25,14 +26,14 @@ def mock_controller():
         yield api
 
 
-def init_config_flow(hass):
+def init_config_flow(hass: HomeAssistant) -> config_flow.SolarEdgeConfigFlow:
     """Init a configuration flow."""
     flow = config_flow.SolarEdgeConfigFlow()
     flow.hass = hass
     return flow
 
 
-async def test_user(hass, test_api):
+async def test_user(hass: HomeAssistant, test_api: Mock) -> None:
     """Test user config."""
     flow = init_config_flow(hass)
 
@@ -50,7 +51,7 @@ async def test_user(hass, test_api):
     assert result["data"][CONF_API_KEY] == API_KEY
 
 
-async def test_import(hass, test_api):
+async def test_import(hass: HomeAssistant, test_api: Mock) -> None:
     """Test import step."""
     flow = init_config_flow(hass)
 
@@ -73,7 +74,7 @@ async def test_import(hass, test_api):
     assert result["data"][CONF_API_KEY] == API_KEY
 
 
-async def test_abort_if_already_setup(hass, test_api):
+async def test_abort_if_already_setup(hass: HomeAssistant, test_api: str) -> None:
     """Test we abort if the site_id is already setup."""
     flow = init_config_flow(hass)
     MockConfigEntry(
@@ -96,7 +97,7 @@ async def test_abort_if_already_setup(hass, test_api):
     assert result["errors"] == {CONF_SITE_ID: "already_configured"}
 
 
-async def test_asserts(hass, test_api):
+async def test_asserts(hass: HomeAssistant, test_api: Mock) -> None:
     """Test the _site_in_configuration_exists method."""
     flow = init_config_flow(hass)
 
