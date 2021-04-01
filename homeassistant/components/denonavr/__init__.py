@@ -1,6 +1,5 @@
 """The denonavr component."""
 import logging
-from typing import Dict
 
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_HOST
@@ -26,16 +25,14 @@ UNDO_UPDATE_LISTENER = "undo_update_listener"
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: core.HomeAssistant, config: Dict):
-    """Set up the denonavr platform."""
-    return True
-
-
 async def async_setup_entry(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
 ):
     """Set up the denonavr components from a config entry."""
     hass.data.setdefault(DOMAIN, {})
+
+    def get_denon_async_client():
+        return get_async_client(hass)
 
     # Connect to receiver
     connect_denonavr = ConnectDenonAVR(
@@ -44,7 +41,7 @@ async def async_setup_entry(
         entry.options.get(CONF_SHOW_ALL_SOURCES, DEFAULT_SHOW_SOURCES),
         entry.options.get(CONF_ZONE2, DEFAULT_ZONE2),
         entry.options.get(CONF_ZONE3, DEFAULT_ZONE3),
-        get_async_client(hass),
+        get_denon_async_client,
         entry.state,
     )
     if not await connect_denonavr.async_connect_receiver():
