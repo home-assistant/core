@@ -5,7 +5,7 @@ from typing import Callable, Optional
 from denonavr import DenonAVR
 from denonavr.exceptions import AvrNetworkError, AvrTimoutError
 
-from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY
+from homeassistant.exceptions import ConfigEntryNotReady
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,8 +44,7 @@ class ConnectDenonAVR:
 
     async def async_connect_receiver(self) -> bool:
         """Connect to the DenonAVR receiver."""
-        if not await self.async_init_receiver_class():
-            return False
+        await self.async_init_receiver_class()
 
         if (
             self._receiver.manufacturer is None
@@ -86,27 +85,7 @@ class ConnectDenonAVR:
         receiver.set_async_client_getter(self._async_client_getter)
         try:
             await receiver.async_setup()
-        except AvrTimoutError:
-            if self._entry_state == ENTRY_STATE_SETUP_RETRY:
-                _LOGGER.debug(
-                    "Timeout error during setup of denonavr on host %s", self._host
-                )
-            else:
-                _LOGGER.error(
-                    "Timeout error during setup of denonavr on host %s", self._host
-                )
-            return False
-        except AvrNetworkError:
-            if self._entry_state == ENTRY_STATE_SETUP_RETRY:
-                _LOGGER.debug(
-                    "Network error during setup of denonavr on host %s", self._host
-                )
-            else:
-                _LOGGER.error(
-                    "Network error during setup of denonavr on host %s", self._host
-                )
-            return False
+        except (AvrNetworkError, AvrTimoutError) as ex:
+            raise ConfigEntryNotReady from ex
 
         self._receiver = receiver
-
-        return True
