@@ -146,4 +146,4 @@ class HiveWaterHeater(HiveEntity, WaterHeaterEntity):
     async def async_update(self):
         """Update all Node data from Hive."""
         await self.hive.session.updateData(self.device)
-        self.device = await self.hive.hotwater.getHotwater(self.device)
+        self.device = await self.hive.hotwater.getWaterHeater(self.device)

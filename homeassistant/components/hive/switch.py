@@ -63,7 +63,7 @@ class HiveDevicePlug(HiveEntity, SwitchEntity):
     @property
     def current_power_w(self):
         """Return the current power usage in W."""
-        return self.device["status"]["power_usage"]
+        return self.device["status"].get("power_usage")
 
     @property
     def is_on(self):
@@ -83,4 +83,4 @@ class HiveDevicePlug(HiveEntity, SwitchEntity):
     async def async_update(self):
         """Update all Node data from Hive."""
         await self.hive.session.updateData(self.device)
-        self.device = await self.hive.switch.getPlug(self.device)
+        self.device = await self.hive.switch.getSwitch(self.device)
