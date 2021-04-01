@@ -10,6 +10,7 @@ from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.const import CONF_HOST, CONF_TYPE
 from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .receiver import ConnectDenonAVR
@@ -164,7 +165,12 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.zone3,
             lambda: get_async_client(self.hass),
         )
-        if not await connect_denonavr.async_connect_receiver():
+
+        try:
+            success = await connect_denonavr.async_connect_receiver()
+        except ConfigEntryNotReady:
+            success = False
+        if not success:
             return self.async_abort(reason="cannot_connect")
         receiver = connect_denonavr.receiver
 
