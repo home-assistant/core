@@ -32,13 +32,14 @@ def printc(the_color, *args):
         return
     try:
         print(escape_codes[the_color] + msg + escape_codes["reset"])
-    except KeyError:
+    except KeyError as err:
         print(msg)
-        raise ValueError(f"Invalid color {the_color}")
+        raise ValueError(f"Invalid color {the_color}") from err
 
 
 def validate_requirements_ok():
     """Validate requirements, returns True of ok."""
+    # pylint: disable=import-error,import-outside-toplevel
     from gen_requirements_all import main as req_main
 
     return req_main(True) == 0
