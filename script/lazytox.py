@@ -231,15 +231,7 @@ async def main():
 
 
 if __name__ == "__main__":
-    LOOP = (
-        asyncio.ProactorEventLoop()
-        if sys.platform == "win32"
-        else asyncio.get_event_loop()
-    )
-
     try:
-        LOOP.run_until_complete(main())
+        asyncio.run(main())
     except (FileNotFoundError, KeyboardInterrupt):
         pass
-    finally:
-        LOOP.close()
