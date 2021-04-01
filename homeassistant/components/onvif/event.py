@@ -82,9 +82,6 @@ class EventManager:
                 "PullPointSubscription"
             )
 
-            # Renew immediately
-            await self.async_renew()
-
             # Initialize events
             pullpoint = self.device.create_pullpoint_service()
             with suppress(*SUBSCRIPTION_ERRORS):
