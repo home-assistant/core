@@ -39,7 +39,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the NWS weather platform."""
     hass_data = hass.data[DOMAIN][entry.entry_id]
     station = entry.data[CONF_STATION]
-    for sensor_name, sensor_data in SENSOR_TYPES.items():
+    for sensor_type, sensor_data in SENSOR_TYPES.items():
         if hass.config.units.is_metric:
             unit = sensor_data[ATTR_UNIT]
         else:
@@ -49,7 +49,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 NWSSensor(
                     entry.data,
                     hass_data,
-                    sensor_name,
+                    sensor_type,
                     station,
                     sensor_data[ATTR_LABEL],
                     sensor_data[ATTR_ICON],
@@ -65,15 +65,22 @@ class NWSSensor(CoordinatorEntity, SensorEntity):
     """An NWS Sensor Entity."""
 
     def __init__(
-        self, entry_data, hass_data, name, station, label, icon, device_class, unit
+        self,
+        entry_data,
+        hass_data,
+        sensor_type,
+        station,
+        label,
+        icon,
+        device_class,
+        unit,
     ):
         """Initialise the platform with a data instance."""
         super().__init__(hass_data[COORDINATOR_OBSERVATION])
         self._nws = hass_data[NWS_DATA]
         self._latitude = entry_data[CONF_LATITUDE]
         self._longitude = entry_data[CONF_LONGITUDE]
-
-        self._name = name
+        self._type = sensor_type
         self._station = station
         self._label = label
         self._icon = icon
@@ -83,7 +90,7 @@ class NWSSensor(CoordinatorEntity, SensorEntity):
     @property
     def state(self):
         """Return the state."""
-        value = self._nws.observation.get(self._name)
+        value = self._nws.observation.get(self._type)
         if value is None:
             return None
         if self._unit == SPEED_MILES_PER_HOUR:
@@ -122,7 +129,7 @@ class NWSSensor(CoordinatorEntity, SensorEntity):
     @property
     def unique_id(self):
         """Return a unique_id for this entity."""
-        return f"{base_unique_id(self._latitude, self._longitude)}_{self._name}"
+        return f"{base_unique_id(self._latitude, self._longitude)}_{self._type}"
 
     @property
     def available(self):
