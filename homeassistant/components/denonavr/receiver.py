@@ -3,9 +3,6 @@ import logging
 from typing import Callable, Optional
 
 from denonavr import DenonAVR
-from denonavr.exceptions import AvrNetworkError, AvrTimoutError
-
-from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,29 +81,7 @@ class ConnectDenonAVR:
         )
         # Use httpx.AsyncClient getter provided by Home Assistant
         receiver.set_async_client_getter(self._async_client_getter)
-        try:
-            await receiver.async_setup()
-        except AvrTimoutError:
-            if self._entry_state == ENTRY_STATE_SETUP_RETRY:
-                _LOGGER.debug(
-                    "Timeout error during setup of denonavr on host %s", self._host
-                )
-            else:
-                _LOGGER.error(
-                    "Timeout error during setup of denonavr on host %s", self._host
-                )
-            return False
-        except AvrNetworkError:
-            if self._entry_state == ENTRY_STATE_SETUP_RETRY:
-                _LOGGER.debug(
-                    "Network error during setup of denonavr on host %s", self._host
-                )
-            else:
-                _LOGGER.error(
-                    "Network error during setup of denonavr on host %s", self._host
-                )
-            return False
-
+        await receiver.async_setup()
         self._receiver = receiver
 
         return True
