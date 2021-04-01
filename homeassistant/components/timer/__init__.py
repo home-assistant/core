@@ -327,7 +327,9 @@ class Timer(RestoreEntity):
         if self._state != STATUS_ACTIVE:
             return
 
-        self._listener = None
+        if self._listener:
+            self._listener()
+            self._listener = None
         self._state = STATUS_IDLE
         self._end = None
         self._remaining = None
