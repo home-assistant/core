@@ -5,16 +5,39 @@
             "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
             "cannot_connect": "Verbindung fehlgeschlagen. Bitte versuchen Sie es noch einmal. Trennen Sie ggf. Strom- und Ethernetkabel und verbinden Sie diese erneut."
         },
+        "error": {
+            "discovery_error": "Denon AVR-Netzwerk-Receiver konnte nicht gefunden werden"
+        },
+        "flow_title": "Denon AVR-Netzwerk-Receiver: {name}",
         "step": {
+            "confirm": {
+                "description": "Bitte best\u00e4tige das Hinzuf\u00fcgen des Receivers",
+                "title": "Denon AVR-Netzwerk-Receiver"
+            },
             "select": {
                 "data": {
                     "select_host": "IP-Adresse des Empf\u00e4ngers"
-                }
+                },
+                "description": "F\u00fchre das Setup erneut aus, wenn du weitere Receiver verbinden m\u00f6chten",
+                "title": "W\u00e4hle den Receiver, den du verbinden m\u00f6chtest"
             },
             "user": {
                 "data": {
                     "host": "IP-Adresse"
-                }
+                },
+                "description": "Verbinde dich mit deinem Receiver, wenn die IP-Adresse nicht eingestellt ist, wird die automatische Erkennung verwendet",
+                "title": "Denon AVR-Netzwerk-Receiver"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_all_sources": "Alle Quellen anzeigen"
+                },
+                "description": "Optionale Einstellungen festlegen",
+                "title": "Denon AVR-Netzwerk-Receiver"
             }
         }
     }
