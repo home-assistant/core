@@ -4,7 +4,7 @@ import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.entity_registry import async_entries_for_device
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN, PLATFORMS
@@ -37,12 +37,17 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry):
             hass.helpers.entity_registry.async_get_registry(),
         )
         # Generate list of all device entries
-        registry_devices = [entry.id for entry in device_registry.devices.values()]
+        registry_devices = [
+            entry.id
+            for entry in dr.async_entries_for_config_entry(
+                device_registry, config_entry.entry_id
+            )
+        ]
         # Remove devices that don't belong to any entity
         for device_id in registry_devices:
             if (
                 len(
-                    async_entries_for_device(
+                    er.async_entries_for_device(
                         entity_registry, device_id, include_disabled_entities=True
                     )
                 )
