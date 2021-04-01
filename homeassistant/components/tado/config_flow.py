@@ -9,8 +9,7 @@ from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 
-from .const import CONF_FALLBACK, UNIQUE_ID
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import CONF_FALLBACK, DOMAIN, UNIQUE_ID
 
 _LOGGER = logging.getLogger(__name__)
 

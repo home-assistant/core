@@ -24,7 +24,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
 from . import async_get_geography_id
-from .const import (  # pylint: disable=unused-import
+from .const import (
     CONF_CITY,
     CONF_COUNTRY,
     CONF_INTEGRATION_TYPE,

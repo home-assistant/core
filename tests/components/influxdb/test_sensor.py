@@ -442,7 +442,7 @@ async def test_error_querying_influx(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, queries, set_query_mock, make_resultset",
+    "mock_client, config_ext, queries, set_query_mock, make_resultset, key",
     [
         (
             DEFAULT_API_VERSION,
@@ -459,6 +459,7 @@ async def test_error_querying_influx(
             },
             _set_query_mock_v1,
             _make_v1_resultset,
+            "where",
         ),
         (
             API_VERSION_2,
@@ -466,12 +467,13 @@ async def test_error_querying_influx(
             {"queries_flux": [{"name": "test", "query": "{{ illegal.template }}"}]},
             _set_query_mock_v2,
             _make_v2_resultset,
+            "query",
         ),
     ],
     indirect=["mock_client"],
 )
 async def test_error_rendering_template(
-    hass, caplog, mock_client, config_ext, queries, set_query_mock, make_resultset
+    hass, caplog, mock_client, config_ext, queries, set_query_mock, make_resultset, key
 ):
     """Test behavior of sensor with error rendering template."""
     set_query_mock(mock_client, return_value=make_resultset(42))
@@ -479,7 +481,15 @@ async def test_error_rendering_template(
     sensors = await _setup(hass, config_ext, queries, ["sensor.test"])
     assert sensors[0].state == STATE_UNKNOWN
     assert (
-        len([record for record in caplog.records if record.levelname == "ERROR"]) == 1
+        len(
+            [
+                record
+                for record in caplog.records
+                if record.levelname == "ERROR"
+                and f"Could not render {key} template" in record.msg
+            ]
+        )
+        == 1
     )
 
 

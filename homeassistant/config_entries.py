@@ -252,21 +252,27 @@ class ConfigEntry:
                     "%s.async_setup_entry did not return boolean", integration.domain
                 )
                 result = False
-        except ConfigEntryNotReady:
+        except ConfigEntryNotReady as ex:
             self.state = ENTRY_STATE_SETUP_RETRY
             wait_time = 2 ** min(tries, 4) * 5
             tries += 1
+            message = str(ex)
+            if not message and ex.__cause__:
+                message = str(ex.__cause__)
+            ready_message = f"ready yet: {message}" if message else "ready yet"
             if tries == 1:
                 _LOGGER.warning(
-                    "Config entry '%s' for %s integration not ready yet. Retrying in background",
+                    "Config entry '%s' for %s integration not %s; Retrying in background",
                     self.title,
                     self.domain,
+                    ready_message,
                 )
             else:
                 _LOGGER.debug(
-                    "Config entry '%s' for %s integration not ready yet. Retrying in %d seconds",
+                    "Config entry '%s' for %s integration not %s; Retrying in %d seconds",
                     self.title,
                     self.domain,
+                    ready_message,
                     wait_time,
                 )
 
@@ -619,41 +625,43 @@ class ConfigEntries:
         self.flow = ConfigEntriesFlowManager(hass, self, hass_config)
         self.options = OptionsFlowManager(hass)
         self._hass_config = hass_config
-        self._entries: list[ConfigEntry] = []
+        self._entries: dict[str, ConfigEntry] = {}
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         EntityRegistryDisabledHandler(hass).async_setup()
 
     @callback
-    def async_domains(self) -> list[str]:
+    def async_domains(
+        self, include_ignore: bool = False, include_disabled: bool = False
+    ) -> list[str]:
         """Return domains for which we have entries."""
-        seen: set[str] = set()
-        result = []
-
-        for entry in self._entries:
-            if entry.domain not in seen:
-                seen.add(entry.domain)
-                result.append(entry.domain)
-
-        return result
+        return list(
+            {
+                entry.domain: None
+                for entry in self._entries.values()
+                if (include_ignore or entry.source != SOURCE_IGNORE)
+                and (include_disabled or not entry.disabled_by)
+            }
+        )
 
     @callback
     def async_get_entry(self, entry_id: str) -> ConfigEntry | None:
         """Return entry with matching entry_id."""
-        for entry in self._entries:
-            if entry_id == entry.entry_id:
-                return entry
-        return None
+        return self._entries.get(entry_id)
 
     @callback
     def async_entries(self, domain: str | None = None) -> list[ConfigEntry]:
         """Return all entries or entries for a specific domain."""
         if domain is None:
-            return list(self._entries)
-        return [entry for entry in self._entries if entry.domain == domain]
+            return list(self._entries.values())
+        return [entry for entry in self._entries.values() if entry.domain == domain]
 
     async def async_add(self, entry: ConfigEntry) -> None:
         """Add and setup an entry."""
-        self._entries.append(entry)
+        if entry.entry_id in self._entries:
+            raise HomeAssistantError(
+                f"An entry with the id {entry.entry_id} already exists."
+            )
+        self._entries[entry.entry_id] = entry
         await self.async_setup(entry.entry_id)
         self._async_schedule_save()
 
@@ -671,7 +679,7 @@ class ConfigEntries:
 
         await entry.async_remove(self.hass)
 
-        self._entries.remove(entry)
+        del self._entries[entry.entry_id]
         self._async_schedule_save()
 
         dev_reg, ent_reg = await asyncio.gather(
@@ -707,11 +715,11 @@ class ConfigEntries:
         )
 
         if config is None:
-            self._entries = []
+            self._entries = {}
             return
 
-        self._entries = [
-            ConfigEntry(
+        self._entries = {
+            entry["entry_id"]: ConfigEntry(
                 version=entry["version"],
                 domain=entry["domain"],
                 entry_id=entry["entry_id"],
@@ -730,7 +738,7 @@ class ConfigEntries:
                 disabled_by=entry.get("disabled_by"),
             )
             for entry in config["entries"]
-        ]
+        }
 
     async def async_setup(self, entry_id: str) -> bool:
         """Set up a config entry.
@@ -920,7 +928,7 @@ class ConfigEntries:
     @callback
     def _data_to_save(self) -> dict[str, list[dict[str, Any]]]:
         """Return data to save."""
-        return {"entries": [entry.as_dict() for entry in self._entries]}
+        return {"entries": [entry.as_dict() for entry in self._entries.values()]}
 
 
 async def _old_conf_migrator(old_config: dict[str, Any]) -> dict[str, Any]:
@@ -1020,14 +1028,20 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         self.context["confirm_only"] = True
 
     @callback
-    def _async_current_entries(self, include_ignore: bool = False) -> list[ConfigEntry]:
+    def _async_current_entries(
+        self, include_ignore: bool | None = None
+    ) -> list[ConfigEntry]:
         """Return current entries.
 
         If the flow is user initiated, filter out ignored entries unless include_ignore is True.
         """
         config_entries = self.hass.config_entries.async_entries(self.handler)
 
-        if include_ignore or self.source != SOURCE_USER:
+        if (
+            include_ignore is True
+            or include_ignore is None
+            and self.source != SOURCE_USER
+        ):
             return config_entries
 
         return [entry for entry in config_entries if entry.source != SOURCE_IGNORE]
@@ -1042,11 +1056,13 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         }
 
     @callback
-    def _async_in_progress(self) -> list[dict]:
+    def _async_in_progress(self, include_uninitialized: bool = False) -> list[dict]:
         """Return other in progress flows for current domain."""
         return [
             flw
-            for flw in self.hass.config_entries.flow.async_progress()
+            for flw in self.hass.config_entries.flow.async_progress(
+                include_uninitialized=include_uninitialized
+            )
             if flw["handler"] == self.handler and flw["flow_id"] != self.flow_id
         ]
 
@@ -1086,7 +1102,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         self._abort_if_unique_id_configured()
 
         # Abort if any other flow for this handler is already in progress
-        if self._async_in_progress():
+        if self._async_in_progress(include_uninitialized=True):
             raise data_entry_flow.AbortFlow("already_in_progress")
 
     async def async_step_discovery(

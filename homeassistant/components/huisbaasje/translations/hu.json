@@ -4,6 +4,7 @@
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
         },
         "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "connection_exception": "Sikertelen csatlakoz\u00e1s",
             "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
             "unauthenticated_exception": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",

@@ -7,7 +7,7 @@ from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_SOURCE, CONF_USERNAME
 from homeassistant.core import callback
 
-from . import DOMAIN  # pylint: disable=unused-import
+from . import DOMAIN
 from .const import CONF_ALLOWED_REGIONS, CONF_READ_ONLY, CONF_USE_LOCATION
 
 DATA_SCHEMA = vol.Schema(

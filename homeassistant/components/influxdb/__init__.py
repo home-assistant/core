@@ -1,6 +1,7 @@
 """Support for sending data to an Influx database."""
 from __future__ import annotations
 
+from contextlib import suppress
 from dataclasses import dataclass
 import logging
 import math
@@ -304,11 +305,9 @@ def _generate_event_to_json(conf: dict) -> Callable[[dict], str]:
                         )
 
                 # Infinity and NaN are not valid floats in InfluxDB
-                try:
+                with suppress(KeyError, TypeError):
                     if not math.isfinite(json[INFLUX_CONF_FIELDS][key]):
                         del json[INFLUX_CONF_FIELDS][key]
-                except (KeyError, TypeError):
-                    pass
 
         json[INFLUX_CONF_TAGS].update(tags)
 
@@ -382,10 +381,8 @@ def get_influx_connection(conf, test_write=False, test_read=False):
         if test_write:
             # Try to write b"" to influx. If we can connect and creds are valid
             # Then invalid inputs is returned. Anything else is a broken config
-            try:
+            with suppress(ValueError):
                 write_v2(b"")
-            except ValueError:
-                pass
             write_api = influx.write_api(write_options=ASYNCHRONOUS)
 
         if test_read:
@@ -530,7 +527,7 @@ class InfluxThread(threading.Thread):
 
         dropped = 0
 
-        try:
+        with suppress(queue.Empty):
             while len(json) < BATCH_BUFFER_SIZE and not self.shutdown:
                 timeout = None if count == 0 else self.batch_timeout()
                 item = self.queue.get(timeout=timeout)
@@ -548,9 +545,6 @@ class InfluxThread(threading.Thread):
                             json.append(event_json)
                     else:
                         dropped += 1
-
-        except queue.Empty:
-            pass
 
         if dropped:
             _LOGGER.warning(CATCHING_UP_MESSAGE, dropped)

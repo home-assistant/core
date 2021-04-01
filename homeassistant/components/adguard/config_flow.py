@@ -18,7 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import DOMAIN
 
 
 class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -110,6 +110,7 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if not entries:
             self._hassio_discovery = discovery_info
+            await self._async_handle_discovery_without_unique_id()
             return await self.async_step_hassio_confirm()
 
         cur_entry = entries[0]

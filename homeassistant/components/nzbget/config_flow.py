@@ -26,8 +26,8 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SSL,
     DEFAULT_VERIFY_SSL,
+    DOMAIN,
 )
-from .const import DOMAIN  # pylint: disable=unused-import
 from .coordinator import NZBGetAPI, NZBGetAPIException
 
 _LOGGER = logging.getLogger(__name__)

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 import logging
 from typing import Any, Callable, cast
 
@@ -159,7 +160,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         raise ConfigEntryNotReady
     version = await hyperion_client.async_sysinfo_version()
     if version is not None:
-        try:
+        with suppress(ValueError):
             if AwesomeVersion(version) < AwesomeVersion(HYPERION_VERSION_WARN_CUTOFF):
                 _LOGGER.warning(
                     "Using a Hyperion server version < %s is not recommended -- "
@@ -168,8 +169,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                     HYPERION_VERSION_WARN_CUTOFF,
                     HYPERION_RELEASES_URL,
                 )
-        except ValueError:
-            pass
 
     # Client needs authentication, but no token provided? => Reauth.
     auth_resp = await hyperion_client.async_is_auth_required()

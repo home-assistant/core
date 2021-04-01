@@ -1,11 +1,11 @@
 """Tests for the GogoGate2 component."""
+import asyncio
 from unittest.mock import MagicMock, patch
 
 from gogogate2_api import GogoGate2Api
 import pytest
 
 from homeassistant.components.gogogate2 import DEVICE_TYPE_GOGOGATE2, async_setup_entry
-from homeassistant.components.gogogate2.common import DeviceDataUpdateCoordinator
 from homeassistant.components.gogogate2.const import DEVICE_TYPE_ISMARTGATE, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
@@ -78,19 +78,22 @@ async def test_config_no_update(ismartgateapi_mock, hass: HomeAssistant) -> None
     }
 
 
-async def test_auth_fail(hass: HomeAssistant) -> None:
-    """Test authorization failures."""
-
-    coordinator_mock: DeviceDataUpdateCoordinator = MagicMock(
-        spec=DeviceDataUpdateCoordinator
+async def test_api_failure_on_startup(hass: HomeAssistant) -> None:
+    """Test api failure on startup raises ConfigEntryNotReady."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_USER,
+        data={
+            CONF_DEVICE: DEVICE_TYPE_ISMARTGATE,
+            CONF_IP_ADDRESS: "127.0.0.1",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "password",
+        },
     )
-    coordinator_mock.last_update_success = False
-
-    config_entry = MockConfigEntry()
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.gogogate2.get_data_update_coordinator",
-        return_value=coordinator_mock,
+        "homeassistant.components.gogogate2.common.ISmartGateApi.async_info",
+        side_effect=asyncio.TimeoutError,
     ), pytest.raises(ConfigEntryNotReady):
         await async_setup_entry(hass, config_entry)

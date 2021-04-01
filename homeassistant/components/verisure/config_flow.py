@@ -20,7 +20,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import callback
 
-from .const import (  # pylint:disable=unused-import
+from .const import (
     CONF_GIID,
     CONF_LOCK_CODE_DIGITS,
     CONF_LOCK_DEFAULT_CODE,

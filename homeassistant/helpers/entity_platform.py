@@ -12,14 +12,19 @@ from homeassistant import config_entries
 from homeassistant.const import ATTR_RESTORED, DEVICE_DEFAULT_NAME
 from homeassistant.core import (
     CALLBACK_TYPE,
+    HomeAssistant,
     ServiceCall,
     callback,
     split_entity_id,
     valid_entity_id,
 )
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
-from homeassistant.helpers import config_validation as cv, service
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dev_reg,
+    entity_registry as ent_reg,
+    service,
+)
 from homeassistant.util.async_ import run_callback_threadsafe
 
 from .entity_registry import DISABLED_INTEGRATION
@@ -45,7 +50,7 @@ class EntityPlatform:
     def __init__(
         self,
         *,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         logger: Logger,
         domain: str,
         platform_name: str,
@@ -298,8 +303,8 @@ class EntityPlatform:
 
         hass = self.hass
 
-        device_registry = await hass.helpers.device_registry.async_get_registry()
-        entity_registry = await hass.helpers.entity_registry.async_get_registry()
+        device_registry = dev_reg.async_get(hass)
+        entity_registry = ent_reg.async_get(hass)
         tasks = [
             self._async_add_entity(  # type: ignore
                 entity, update_before_add, entity_registry, device_registry
@@ -628,7 +633,7 @@ current_platform: ContextVar[EntityPlatform | None] = ContextVar(
 
 @callback
 def async_get_platforms(
-    hass: HomeAssistantType, integration_name: str
+    hass: HomeAssistant, integration_name: str
 ) -> list[EntityPlatform]:
     """Find existing platforms."""
     if (

@@ -6,7 +6,7 @@ from datetime import timedelta
 import spotcrime
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
@@ -20,7 +20,6 @@ from homeassistant.const import (
     CONF_RADIUS,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
 CONF_DAYS = "days"
@@ -66,7 +65,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class SpotCrimeSensor(Entity):
+class SpotCrimeSensor(SensorEntity):
     """Representation of a Spot Crime Sensor."""
 
     def __init__(

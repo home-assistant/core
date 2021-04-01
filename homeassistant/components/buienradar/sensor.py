@@ -20,7 +20,7 @@ from buienradar.constants import (
 )
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_LATITUDE,
@@ -39,7 +39,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
 
 from .const import DEFAULT_TIMEFRAME
@@ -236,7 +235,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     await data.schedule_update(1)
 
 
-class BrSensor(Entity):
+class BrSensor(SensorEntity):
     """Representation of an Buienradar sensor."""
 
     def __init__(self, sensor_type, client_name, coordinates):

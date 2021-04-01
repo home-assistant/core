@@ -79,7 +79,7 @@ async def test_template_render_no_template(mock_call, hass):
     cmd = mock_call.mock_calls[0][1][0]
 
     assert mock_call.call_count == 1
-    assert "ls /bin" == cmd
+    assert cmd == "ls /bin"
 
 
 @patch(

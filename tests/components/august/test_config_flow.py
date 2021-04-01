@@ -1,7 +1,7 @@
 """Test the August config flow."""
 from unittest.mock import patch
 
-from august.authenticator import ValidationResult
+from yalexs.authenticator import ValidationResult
 
 from homeassistant import config_entries, setup
 from homeassistant.components.august.const import (

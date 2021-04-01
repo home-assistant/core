@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DISKS,
@@ -86,7 +87,18 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SynoDSMUtilSensor(SynologyDSMBaseEntity):
+class SynoDSMSensor(SynologyDSMBaseEntity):
+    """Mixin for sensor specific attributes."""
+
+    @property
+    def unit_of_measurement(self) -> str:
+        """Return the unit the value is expressed in."""
+        if self.entity_type in TEMP_SENSORS_KEYS:
+            return self.hass.config.units.temperature_unit
+        return self._unit
+
+
+class SynoDSMUtilSensor(SynoDSMSensor, SensorEntity):
     """Representation a Synology Utilisation sensor."""
 
     @property
@@ -118,7 +130,7 @@ class SynoDSMUtilSensor(SynologyDSMBaseEntity):
         return bool(self._api.utilisation)
 
 
-class SynoDSMStorageSensor(SynologyDSMDeviceEntity):
+class SynoDSMStorageSensor(SynologyDSMDeviceEntity, SynoDSMSensor, SensorEntity):
     """Representation a Synology Storage sensor."""
 
     @property
@@ -139,7 +151,7 @@ class SynoDSMStorageSensor(SynologyDSMDeviceEntity):
         return attr
 
 
-class SynoDSMInfoSensor(SynologyDSMBaseEntity):
+class SynoDSMInfoSensor(SynoDSMSensor, SensorEntity):
     """Representation a Synology information sensor."""
 
     def __init__(
