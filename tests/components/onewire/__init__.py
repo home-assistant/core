@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+from pyownet.protocol import ProtocolError
+
 from homeassistant.components.onewire.const import (
     CONF_MOUNT_DIR,
     CONF_NAMES,
@@ -12,6 +14,8 @@ from homeassistant.components.onewire.const import (
 )
 from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
+
+from .const import MOCK_OWPROXY_DEVICES
 
 from tests.common import MockConfigEntry
 
@@ -89,3 +93,35 @@ async def setup_onewire_patched_owserver_integration(hass):
     await hass.async_block_till_done()
 
     return config_entry
+
+
+def setup_owproxy_mock_devices(owproxy, domain, device_ids) -> None:
+    """Set up mock for owproxy."""
+    dir_return_value = []
+    main_read_side_effect = []
+    sub_read_side_effect = []
+
+    for device_id in device_ids:
+        mock_device = MOCK_OWPROXY_DEVICES[device_id]
+
+        # Setup directory listing
+        dir_return_value += [f"/{device_id}/"]
+
+        # Setup device reads
+        main_read_side_effect += [device_id[0:2].encode()]
+        if "inject_reads" in mock_device:
+            main_read_side_effect += mock_device["inject_reads"]
+
+        # Setup sub-device reads
+        device_sensors = mock_device.get(domain, [])
+        for expected_sensor in device_sensors:
+            sub_read_side_effect.append(expected_sensor["injected_value"])
+
+    # Ensure enough read side effect
+    read_side_effect = (
+        main_read_side_effect
+        + sub_read_side_effect
+        + [ProtocolError("Missing injected value")] * 20
+    )
+    owproxy.return_value.dir.return_value = dir_return_value
+    owproxy.return_value.read.side_effect = read_side_effect
