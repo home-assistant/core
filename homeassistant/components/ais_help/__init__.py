@@ -23,16 +23,4 @@ async def async_setup(hass, config):
         "aisaudio", "Audio", "mdi:play-box"
     )
 
-    # TEST
-    # hass.components.frontend.async_register_built_in_panel(
-    #     "aiszigbee",
-    #     require_admin=True,
-    #     sidebar_title="Zigbee",
-    #     sidebar_icon="mdi:zigbee",
-    # )
-
-    """Register the built-in video panel."""
-    # hass.components.frontend.async_register_built_in_panel(
-    #     "aisvideo", "Video", "mdi:youtube"
-    # )
     return True
