@@ -722,7 +722,8 @@ async def test_cancel_delay(hass):
     assert_action_trace(
         {
             "0": [{"result": {"delay": 5.0, "done": False}}],
-        }
+        },
+        expected_script_execution="cancelled",
     )
 
 
@@ -974,13 +975,15 @@ async def test_cancel_wait(hass, action_type):
         assert_action_trace(
             {
                 "0": [{"result": {"wait": {"completed": False, "remaining": None}}}],
-            }
+            },
+            expected_script_execution="cancelled",
         )
     else:
         assert_action_trace(
             {
                 "0": [{"result": {"wait": {"trigger": None, "remaining": None}}}],
-            }
+            },
+            expected_script_execution="cancelled",
         )
 
 
