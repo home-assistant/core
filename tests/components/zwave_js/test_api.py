@@ -222,6 +222,45 @@ async def test_remove_node(
     assert device is None
 
 
+async def test_refresh_node_info(
+    hass, client, integration, hass_ws_client, multisensor_6
+):
+    """Test that the refresh_node_info WS API call works."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    client.async_send_command_no_wait.return_value = None
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "zwave_js/refresh_node_info",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: 52,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    assert len(client.async_send_command_no_wait.call_args_list) == 1
+    args = client.async_send_command_no_wait.call_args[0][0]
+    assert args["command"] == "node.refresh_info"
+    assert args["nodeId"] == 52
+
+    client.async_send_command_no_wait.reset_mock()
+
+    await ws_client.send_json(
+        {
+            ID: 2,
+            TYPE: "zwave_js/refresh_node_info",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: 999,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "not_found"
+
+
 async def test_set_config_parameter(
     hass, client, hass_ws_client, multisensor_6, integration
 ):
