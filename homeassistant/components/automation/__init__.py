@@ -273,6 +273,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         variables,
         trigger_variables,
         raw_config,
+        blueprint_inputs,
     ):
         """Initialize an automation entity."""
         self._id = automation_id
@@ -290,6 +291,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         self._variables: ScriptVariables = variables
         self._trigger_variables: ScriptVariables = trigger_variables
         self._raw_config = raw_config
+        self._blueprint_inputs = blueprint_inputs
 
     @property
     def name(self):
@@ -437,7 +439,11 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         trigger_context = Context(parent_id=parent_id)
 
         with trace_automation(
-            self.hass, self.unique_id, self._raw_config, trigger_context
+            self.hass,
+            self.unique_id,
+            self._raw_config,
+            self._blueprint_inputs,
+            trigger_context,
         ) as automation_trace:
             if self._variables:
                 try:
@@ -603,10 +609,12 @@ async def _async_process_config(
         ]
 
         for list_no, config_block in enumerate(conf):
+            raw_blueprint_inputs = None
             raw_config = None
             if isinstance(config_block, blueprint.BlueprintInputs):  # type: ignore
                 blueprints_used = True
                 blueprint_inputs = config_block
+                raw_blueprint_inputs = blueprint_inputs.config_with_inputs
 
                 try:
                     raw_config = blueprint_inputs.async_substitute()
@@ -675,6 +683,7 @@ async def _async_process_config(
                 variables,
                 config_block.get(CONF_TRIGGER_VARIABLES),
                 raw_config,
+                raw_blueprint_inputs,
             )
 
             entities.append(entity)
