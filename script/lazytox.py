@@ -67,7 +67,6 @@ async def async_exec(*args, display=False):
     printc("cyan", *argsp)
     try:
         kwargs = {
-            "loop": LOOP,
             "stdout": asyncio.subprocess.PIPE,
             "stderr": asyncio.subprocess.STDOUT,
         }
