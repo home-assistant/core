@@ -91,19 +91,21 @@ def test_catch_log_exception():
         pass
 
     assert asyncio.iscoroutinefunction(
-        logging_util.catch_log_exception(partial(async_meth))
+        logging_util.catch_log_exception(partial(async_meth), lambda: None)
     )
 
     @callback
     def callback_meth():
         pass
 
-    assert is_callback(logging_util.catch_log_exception(partial(callback_meth)))
+    assert is_callback(
+        logging_util.catch_log_exception(partial(callback_meth), lambda: None)
+    )
 
     def sync_meth():
         pass
 
-    wrapped = logging_util.catch_log_exception(partial(sync_meth))
+    wrapped = logging_util.catch_log_exception(partial(sync_meth), lambda: None)
 
     assert not is_callback(wrapped)
     assert not asyncio.iscoroutinefunction(wrapped)
