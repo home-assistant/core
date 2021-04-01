@@ -39,26 +39,27 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the NWS weather platform."""
     hass_data = hass.data[DOMAIN][entry.entry_id]
     station = entry.data[CONF_STATION]
+
+    entities = []
     for sensor_type, sensor_data in SENSOR_TYPES.items():
         if hass.config.units.is_metric:
             unit = sensor_data[ATTR_UNIT]
         else:
             unit = sensor_data[ATTR_UNIT_CONVERT]
-        async_add_entities(
-            [
-                NWSSensor(
-                    entry.data,
-                    hass_data,
-                    sensor_type,
-                    station,
-                    sensor_data[ATTR_LABEL],
-                    sensor_data[ATTR_ICON],
-                    sensor_data[ATTR_DEVICE_CLASS],
-                    unit,
-                ),
-            ],
-            False,
+        entities.append(
+            NWSSensor(
+                entry.data,
+                hass_data,
+                sensor_type,
+                station,
+                sensor_data[ATTR_LABEL],
+                sensor_data[ATTR_ICON],
+                sensor_data[ATTR_DEVICE_CLASS],
+                unit,
+            ),
         )
+
+    async_add_entities(entities, False)
 
 
 class NWSSensor(CoordinatorEntity, SensorEntity):
