@@ -1,9 +1,11 @@
 """Test Trace websocket API."""
+import asyncio
+
 import pytest
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.trace.const import STORED_TRACES
-from homeassistant.core import Context
+from homeassistant.core import Context, callback
 from homeassistant.helpers.typing import UNDEFINED
 
 from tests.common import assert_lists_same
@@ -1018,3 +1020,77 @@ async def test_breakpoints_3(hass, hass_ws_client, domain, prefix):
         "node": f"{prefix}/5",
         "run_id": run_id,
     }
+
+
+@pytest.mark.parametrize(
+    "script_mode,stop_reason",
+    [("restart", "cancelled"), ("parallel", "finished")],
+)
+async def test_script_mode_2(hass, hass_ws_client, script_mode, stop_reason):
+    """Test overlapping runs with max_runs > 1."""
+    id = 1
+
+    def next_id():
+        nonlocal id
+        id += 1
+        return id
+
+    flag = asyncio.Event()
+
+    @callback
+    def _handle_event(_):
+        flag.set()
+
+    event = "test_event"
+    script_config = {
+        "script1": {
+            "sequence": [
+                {"event": event, "event_data": {"value": 1}},
+                {"wait_template": "{{ states.switch.test.state == 'off' }}"},
+                {"event": event, "event_data": {"value": 2}},
+            ],
+            "mode": script_mode,
+        }
+    }
+    client = await hass_ws_client()
+    hass.bus.async_listen(event, _handle_event)
+    assert await async_setup_component(hass, "script", {"script": script_config})
+
+    hass.states.async_set("switch.test", "on")
+    await hass.services.async_call("script", "script1")
+    await asyncio.wait_for(flag.wait(), 1)
+
+    # List traces
+    await client.send_json({"id": next_id(), "type": "trace/list", "domain": "script"})
+    response = await client.receive_json()
+    assert response["success"]
+    trace = _find_traces(response["result"], "script", "script1")[0]
+    assert trace["state"] == "running"
+
+    # Start second run of script while first run is suspended in wait_template.
+
+    flag.clear()
+    await hass.services.async_call("script", "script1")
+    await asyncio.wait_for(flag.wait(), 1)
+
+    # List traces
+    await client.send_json({"id": next_id(), "type": "trace/list", "domain": "script"})
+    response = await client.receive_json()
+    assert response["success"]
+    trace = _find_traces(response["result"], "script", "script1")[1]
+    assert trace["state"] == "running"
+
+    # Let both scripts finish
+    hass.states.async_set("switch.test", "off")
+    await hass.async_block_till_done()
+
+    # List traces
+    await client.send_json({"id": next_id(), "type": "trace/list", "domain": "script"})
+    response = await client.receive_json()
+    assert response["success"]
+    trace = _find_traces(response["result"], "script", "script1")[0]
+    assert trace["state"] == "stopped"
+    assert trace["stop_reason"] == stop_reason
+    trace = _find_traces(response["result"], "script", "script1")[1]
+    assert trace["state"] == "stopped"
+    assert trace["stop_reason"] == "finished"

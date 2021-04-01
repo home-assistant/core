@@ -333,15 +333,14 @@ class _ScriptRun:
     async def async_run(self) -> None:
         """Run script."""
         try:
-            if self._stop.is_set():
-                stop_reason_set("cancelled")
-                return
             self._log("Running %s", self._script.running_description)
             for self._step, self._action in enumerate(self._script.sequence):
                 if self._stop.is_set():
+                    stop_reason_set("cancelled")
                     break
                 await self._async_step(log_exceptions=False)
-            stop_reason_set("finished")
+            else:
+                stop_reason_set("finished")
         except _StopScript:
             stop_reason_set("aborted")
         except Exception:
