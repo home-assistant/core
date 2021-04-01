@@ -45,13 +45,8 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry):
         ]
         # Remove devices that don't belong to any entity
         for device_id in registry_devices:
-            if (
-                len(
-                    er.async_entries_for_device(
-                        entity_registry, device_id, include_disabled_entities=True
-                    )
-                )
-                == 0
+            if not er.async_entries_for_device(
+                entity_registry, device_id, include_disabled_entities=True
             ):
                 _LOGGER.debug(
                     "Removing device `%s` because it does not have any entities",
