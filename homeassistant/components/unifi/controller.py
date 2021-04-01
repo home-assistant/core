@@ -345,6 +345,9 @@ class UniFiController:
         for entry in async_entries_for_config_entry(
             entity_registry, self.config_entry.entry_id
         ):
+            if "-" not in entry.unique_id:  # DPI restriction switches
+                continue
+
             if entry.domain == TRACKER_DOMAIN:
                 mac = entry.unique_id.split("-", 1)[0]
             elif entry.domain == SWITCH_DOMAIN:
