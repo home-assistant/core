@@ -1,6 +1,7 @@
 """Config flow to configure songpal component."""
+from __future__ import annotations
+
 import logging
-from typing import Optional
 from urllib.parse import urlparse
 
 from songpal import Device, SongpalException
@@ -11,7 +12,7 @@ from homeassistant.components import ssdp
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
 
-from .const import CONF_ENDPOINT, DOMAIN  # pylint: disable=unused-import
+from .const import CONF_ENDPOINT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +35,7 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize the flow."""
-        self.conf: Optional[SongpalConfig] = None
+        self.conf: SongpalConfig | None = None
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""

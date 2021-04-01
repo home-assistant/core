@@ -1,31 +1,24 @@
 {
   "config": {
-    "flow_title": "Xiaomi Miio: {name}",
-    "step": {
-      "user": {
-        "title": "Xiaomi Miio",
-        "description": "Select to which device you want to connect.",
-        "data": {
-          "gateway": "Connect to a Xiaomi Gateway"
-        }
-      },
-      "gateway": {
-        "title": "Connect to a Xiaomi Gateway",
-        "description": "You will need the 32 character [%key:common::config_flow::data::api_token%], see https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token for instructions. Please note, that this [%key:common::config_flow::data::api_token%] is different from the key used by the Xiaomi Aqara integration.",
-        "data": {
-          "host": "[%key:common::config_flow::data::ip%]",
-          "token": "[%key:common::config_flow::data::api_token%]",
-          "name": "Name of the Gateway"
-        }
-      }
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "no_device_selected": "No device selected, please select one device."
-    },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown_device": "The device model is not known, not able to setup the device using config flow."
+    },
+    "flow_title": "Xiaomi Miio: {name}",
+    "step": {
+      "device": {
+        "data": {
+          "host": "[%key:common::config_flow::data::ip%]",
+          "model": "Device model (Optional)",
+          "token": "[%key:common::config_flow::data::api_token%]"
+        },
+        "description": "You will need the 32 character [%key:common::config_flow::data::api_token%], see https://www.home-assistant.io/integrations/xiaomi_miio#retrieving-the-access-token for instructions. Please note, that this [%key:common::config_flow::data::api_token%] is different from the key used by the Xiaomi Aqara integration.",
+        "title": "Connect to a Xiaomi Miio Device or Xiaomi Gateway"
+      }
     }
   }
 }

@@ -3,7 +3,6 @@ import asyncio
 import logging
 
 import pywemo
-import requests
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -114,7 +113,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     static_conf = config.get(CONF_STATIC, [])
     if static_conf:
-        _LOGGER.debug("Adding statically configured WeMo devices...")
+        _LOGGER.debug("Adding statically configured WeMo devices")
         for device in await asyncio.gather(
             *[
                 hass.async_add_executor_job(validate_static_config, host, port)
@@ -191,7 +190,7 @@ class WemoDiscovery:
 
     async def async_discover_and_schedule(self, *_) -> None:
         """Periodically scan the network looking for WeMo devices."""
-        _LOGGER.debug("Scanning network for WeMo devices...")
+        _LOGGER.debug("Scanning network for WeMo devices")
         try:
             for device in await self._hass.async_add_executor_job(
                 pywemo.discover_devices
@@ -229,10 +228,10 @@ def validate_static_config(host, port):
         return None
 
     try:
-        device = pywemo.discovery.device_from_description(url, None)
+        device = pywemo.discovery.device_from_description(url)
     except (
-        requests.exceptions.ConnectionError,
-        requests.exceptions.Timeout,
+        pywemo.exceptions.ActionException,
+        pywemo.exceptions.HTTPException,
     ) as err:
         _LOGGER.error("Unable to access WeMo at %s (%s)", url, err)
         return None

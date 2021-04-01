@@ -15,6 +15,7 @@ tokens are expired. Alternatively, a Stream can be configured with keepalive
 to always keep workers active.
 """
 import logging
+import re
 import secrets
 import threading
 import time
@@ -37,6 +38,8 @@ from .core import PROVIDERS, IdleTimer
 from .hls import async_setup_hls
 
 _LOGGER = logging.getLogger(__name__)
+
+STREAM_SOURCE_RE = re.compile("//(.*):(.*)@")
 
 
 def create_stream(hass, stream_source, options=None):
@@ -136,7 +139,7 @@ class Stream:
 
             @callback
             def idle_callback():
-                if not self.keepalive and fmt in self._outputs:
+                if (not self.keepalive or fmt == "recorder") and fmt in self._outputs:
                     self.remove_provider(self._outputs[fmt])
                 self.check_idle()
 
@@ -157,7 +160,7 @@ class Stream:
 
     def check_idle(self):
         """Reset access token if all providers are idle."""
-        if all([p.idle for p in self._outputs.values()]):
+        if all(p.idle for p in self._outputs.values()):
             self.access_token = None
 
     def start(self):
@@ -173,11 +176,13 @@ class Stream:
                 target=self._run_worker,
             )
             self._thread.start()
-            _LOGGER.info("Started stream: %s", self.source)
+            _LOGGER.info(
+                "Started stream: %s", STREAM_SOURCE_RE.sub("//", str(self.source))
+            )
 
     def update_source(self, new_source):
         """Restart the stream with a new stream source."""
-        _LOGGER.debug("Updating stream source %s", self.source)
+        _LOGGER.debug("Updating stream source %s", new_source)
         self.source = new_source
         self._fast_restart_once = True
         self._thread_quit.set()
@@ -186,12 +191,14 @@ class Stream:
         """Handle consuming streams and restart keepalive streams."""
         # Keep import here so that we can import stream integration without installing reqs
         # pylint: disable=import-outside-toplevel
-        from .worker import stream_worker
+        from .worker import SegmentBuffer, stream_worker
 
+        segment_buffer = SegmentBuffer(self.outputs)
         wait_timeout = 0
         while not self._thread_quit.wait(timeout=wait_timeout):
             start_time = time.time()
-            stream_worker(self.source, self.options, self.outputs, self._thread_quit)
+            stream_worker(self.source, self.options, segment_buffer, self._thread_quit)
+            segment_buffer.discontinuity()
             if not self.keepalive or self._thread_quit.is_set():
                 if self._fast_restart_once:
                     # The stream source is updated, restart without any delay.
@@ -237,7 +244,9 @@ class Stream:
             self._thread_quit.set()
             self._thread.join()
             self._thread = None
-            _LOGGER.info("Stopped stream: %s", self.source)
+            _LOGGER.info(
+                "Stopped stream: %s", STREAM_SOURCE_RE.sub("//", str(self.source))
+            )
 
     async def async_record(self, video_path, duration=30, lookback=5):
         """Make a .mp4 recording from a provided stream."""
@@ -256,6 +265,7 @@ class Stream:
         recorder.video_path = video_path
 
         self.start()
+        _LOGGER.debug("Started a stream recording of %s seconds", duration)
 
         # Take advantage of lookback
         hls = self.outputs().get("hls")

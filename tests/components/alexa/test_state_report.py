@@ -175,6 +175,22 @@ async def test_doorbell_event(hass, aioclient_mock):
     assert call_json["event"]["payload"]["cause"]["type"] == "PHYSICAL_INTERACTION"
     assert call_json["event"]["endpoint"]["endpointId"] == "binary_sensor#test_doorbell"
 
+    hass.states.async_set(
+        "binary_sensor.test_doorbell",
+        "off",
+        {"friendly_name": "Test Doorbell Sensor", "device_class": "occupancy"},
+    )
+
+    hass.states.async_set(
+        "binary_sensor.test_doorbell",
+        "on",
+        {"friendly_name": "Test Doorbell Sensor", "device_class": "occupancy"},
+    )
+
+    await hass.async_block_till_done()
+
+    assert len(aioclient_mock.mock_calls) == 2
+
 
 async def test_proactive_mode_filter_states(hass, aioclient_mock):
     """Test all the cases that filter states."""

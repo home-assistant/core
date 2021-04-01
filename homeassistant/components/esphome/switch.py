@@ -1,5 +1,5 @@
 """Support for ESPHome switches."""
-from typing import Optional
+from __future__ import annotations
 
 from aioesphomeapi import SwitchInfo, SwitchState
 
@@ -33,7 +33,7 @@ class EsphomeSwitch(EsphomeEntity, SwitchEntity):
         return super()._static_info
 
     @property
-    def _state(self) -> Optional[SwitchState]:
+    def _state(self) -> SwitchState | None:
         return super()._state
 
     @property
@@ -49,7 +49,7 @@ class EsphomeSwitch(EsphomeEntity, SwitchEntity):
     # https://github.com/PyCQA/pylint/issues/3150 for @esphome_state_property
     # pylint: disable=invalid-overridden-method
     @esphome_state_property
-    def is_on(self) -> Optional[bool]:
+    def is_on(self) -> bool | None:
         """Return true if the switch is on."""
         return self._state.state
 

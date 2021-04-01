@@ -1,8 +1,8 @@
 """Shelly helpers functions."""
+from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import List, Optional, Tuple
 
 import aioshelly
 
@@ -67,7 +67,7 @@ def get_number_of_channels(device: aioshelly.Device, block: aioshelly.Block) -> 
 def get_entity_name(
     device: aioshelly.Device,
     block: aioshelly.Block,
-    description: Optional[str] = None,
+    description: str | None = None,
 ) -> str:
     """Naming for switch and sensors."""
     channel_name = get_device_channel_name(device, block)
@@ -111,7 +111,7 @@ def get_device_channel_name(
 def is_momentary_input(settings: dict, block: aioshelly.Block) -> bool:
     """Return true if input button settings is set to a momentary type."""
     # Shelly Button type is fixed to momentary and no btn_type
-    if settings["device"]["type"] == "SHBTN-1":
+    if settings["device"]["type"] in ("SHBTN-1", "SHBTN-2"):
         return True
 
     button = settings.get("relays") or settings.get("lights") or settings.get("inputs")
@@ -143,7 +143,7 @@ def get_device_uptime(status: dict, last_uptime: str) -> str:
 
 def get_input_triggers(
     device: aioshelly.Device, block: aioshelly.Block
-) -> List[Tuple[str, str]]:
+) -> list[tuple[str, str]]:
     """Return list of input triggers for block."""
     if "inputEvent" not in block.sensor_ids or "inputEventCnt" not in block.sensor_ids:
         return []
@@ -158,7 +158,7 @@ def get_input_triggers(
     else:
         subtype = f"button{int(block.channel)+1}"
 
-    if device.settings["device"]["type"] == "SHBTN-1":
+    if device.settings["device"]["type"] in ("SHBTN-1", "SHBTN-2"):
         trigger_types = SHBTN_1_INPUTS_EVENTS_TYPES
     elif device.settings["device"]["type"] == "SHIX3-1":
         trigger_types = SHIX3_1_INPUTS_EVENTS_TYPES
@@ -177,9 +177,9 @@ def get_device_wrapper(hass: HomeAssistant, device_id: str):
         return None
 
     for config_entry in hass.data[DOMAIN][DATA_CONFIG_ENTRY]:
-        wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry][COAP]
+        wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry].get(COAP)
 
-        if wrapper.device_id == device_id:
+        if wrapper and wrapper.device_id == device_id:
             return wrapper
 
     return None

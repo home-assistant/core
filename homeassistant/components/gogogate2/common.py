@@ -1,10 +1,12 @@
 """Common code for GogoGate2 component."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import Awaitable, Callable, NamedTuple, Optional
+from typing import Awaitable, Callable, NamedTuple
 
 from gogogate2_api import AbstractGateApi, GogoGate2Api, ISmartGateApi
-from gogogate2_api.common import AbstractDoor
+from gogogate2_api.common import AbstractDoor, get_door_by_id
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -15,9 +17,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
-from .const import DATA_UPDATE_COORDINATOR, DEVICE_TYPE_ISMARTGATE, DOMAIN
+from .const import DATA_UPDATE_COORDINATOR, DEVICE_TYPE_ISMARTGATE, DOMAIN, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,8 +32,8 @@ class StateData(NamedTuple):
     """State data for a cover entity."""
 
     config_unique_id: str
-    unique_id: Optional[str]
-    door: Optional[AbstractDoor]
+    unique_id: str | None
+    door: AbstractDoor | None
 
 
 class DeviceDataUpdateCoordinator(DataUpdateCoordinator):
@@ -41,8 +47,8 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator):
         *,
         name: str,
         update_interval: timedelta,
-        update_method: Optional[Callable[[], Awaitable]] = None,
-        request_refresh_debouncer: Optional[Debouncer] = None,
+        update_method: Callable[[], Awaitable] | None = None,
+        request_refresh_debouncer: Debouncer | None = None,
     ):
         """Initialize the data update coordinator."""
         DataUpdateCoordinator.__init__(
@@ -55,6 +61,45 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator):
             request_refresh_debouncer=request_refresh_debouncer,
         )
         self.api = api
+
+
+class GoGoGate2Entity(CoordinatorEntity):
+    """Base class for gogogate2 entities."""
+
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        data_update_coordinator: DeviceDataUpdateCoordinator,
+        door: AbstractDoor,
+        unique_id: str,
+    ) -> None:
+        """Initialize gogogate2 base entity."""
+        super().__init__(data_update_coordinator)
+        self._config_entry = config_entry
+        self._door = door
+        self._unique_id = unique_id
+
+    @property
+    def unique_id(self) -> str | None:
+        """Return a unique ID."""
+        return self._unique_id
+
+    def _get_door(self) -> AbstractDoor:
+        door = get_door_by_id(self._door.door_id, self.coordinator.data)
+        self._door = door or self._door
+        return self._door
+
+    @property
+    def device_info(self):
+        """Device info for the controller."""
+        data = self.coordinator.data
+        return {
+            "identifiers": {(DOMAIN, self._config_entry.unique_id)},
+            "name": self._config_entry.title,
+            "manufacturer": MANUFACTURER,
+            "model": data.model,
+            "sw_version": data.firmwareversion,
+        }
 
 
 def get_data_update_coordinator(
@@ -93,6 +138,13 @@ def get_data_update_coordinator(
 def cover_unique_id(config_entry: ConfigEntry, door: AbstractDoor) -> str:
     """Generate a cover entity unique id."""
     return f"{config_entry.unique_id}_{door.door_id}"
+
+
+def sensor_unique_id(
+    config_entry: ConfigEntry, door: AbstractDoor, sensor_type: str
+) -> str:
+    """Generate a cover entity unique id."""
+    return f"{config_entry.unique_id}_{door.door_id}_{sensor_type}"
 
 
 def get_api(config_data: dict) -> AbstractGateApi:

@@ -76,9 +76,9 @@ class SkybellBinarySensor(SkybellDevice, BinarySensorEntity):
         return self._device_class
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
-        attrs = super().device_state_attributes
+        attrs = super().extra_state_attributes
 
         attrs["event_date"] = self._event.get("createdAt")
 

@@ -415,10 +415,11 @@ async def test_ep_channels_configure(channel):
     claimed = {ch_1.id: ch_1, ch_2.id: ch_2, ch_3.id: ch_3}
     client_chans = {ch_4.id: ch_4, ch_5.id: ch_5}
 
-    with mock.patch.dict(ep_channels.claimed_channels, claimed, clear=True):
-        with mock.patch.dict(ep_channels.client_channels, client_chans, clear=True):
-            await ep_channels.async_configure()
-            await ep_channels.async_initialize(mock.sentinel.from_cache)
+    with mock.patch.dict(
+        ep_channels.claimed_channels, claimed, clear=True
+    ), mock.patch.dict(ep_channels.client_channels, client_chans, clear=True):
+        await ep_channels.async_configure()
+        await ep_channels.async_initialize(mock.sentinel.from_cache)
 
     for ch in [*claimed.values(), *client_chans.values()]:
         assert ch.async_initialize.call_count == 1

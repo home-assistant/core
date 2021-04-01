@@ -2,6 +2,7 @@
     "config": {
         "error": {
             "already_configured": "Gateway al geconfigureerd",
+            "cannot_connect": "Kan geen verbinding maken",
             "id_exists": "Gateway id bestaat al"
         },
         "step": {
@@ -20,7 +21,10 @@
             "init": {
                 "data": {
                     "floor_temperature": "Vloertemperatuur",
-                    "precision": "Precisie"
+                    "precision": "Precisie",
+                    "read_precision": "Lees Precisie",
+                    "set_precision": "Precisie instellen",
+                    "temporary_override_mode": "Tijdelijke setpoint-overschrijvingsmodus"
                 },
                 "description": "Opties voor de OpenTherm Gateway"
             }

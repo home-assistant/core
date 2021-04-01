@@ -231,7 +231,7 @@ class MicrosoftFaceGroupEntity(Entity):
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         attr = {}
         for name, p_id in self._api.store[self._id].items():

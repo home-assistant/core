@@ -1,6 +1,7 @@
 """Alexa capabilities."""
+from __future__ import annotations
+
 import logging
-from typing import List, Optional
 
 from homeassistant.components import (
     cover,
@@ -46,7 +47,6 @@ from .const import (
     API_THERMOSTAT_MODES,
     API_THERMOSTAT_PRESETS,
     DATE_FORMAT,
-    PERCENTAGE_FAN_MAP,
     Inputs,
 )
 from .errors import UnsupportedProperty
@@ -73,7 +73,7 @@ class AlexaCapability:
 
     supported_locales = {"en-US"}
 
-    def __init__(self, entity: State, instance: Optional[str] = None):
+    def __init__(self, entity: State, instance: str | None = None):
         """Initialize an Alexa capability."""
         self.entity = entity
         self.instance = instance
@@ -83,7 +83,7 @@ class AlexaCapability:
         raise NotImplementedError
 
     @staticmethod
-    def properties_supported() -> List[dict]:
+    def properties_supported() -> list[dict]:
         """Return what properties this entity supports."""
         return []
 
@@ -668,9 +668,7 @@ class AlexaPercentageController(AlexaCapability):
             raise UnsupportedProperty(name)
 
         if self.entity.domain == fan.DOMAIN:
-            speed = self.entity.attributes.get(fan.ATTR_SPEED)
-
-            return PERCENTAGE_FAN_MAP.get(speed, 0)
+            return self.entity.attributes.get(fan.ATTR_PERCENTAGE) or 0
 
         if self.entity.domain == cover.DOMAIN:
             return self.entity.attributes.get(cover.ATTR_CURRENT_POSITION, 0)
@@ -1155,9 +1153,7 @@ class AlexaPowerLevelController(AlexaCapability):
             raise UnsupportedProperty(name)
 
         if self.entity.domain == fan.DOMAIN:
-            speed = self.entity.attributes.get(fan.ATTR_SPEED)
-
-            return PERCENTAGE_FAN_MAP.get(speed)
+            return self.entity.attributes.get(fan.ATTR_PERCENTAGE) or 0
 
         return None
 

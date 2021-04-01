@@ -34,6 +34,9 @@ CONF_LIMIT_REFETCH_TO_URL_CHANGE = "limit_refetch_to_url_change"
 CONF_STILL_IMAGE_URL = "still_image_url"
 CONF_STREAM_SOURCE = "stream_source"
 CONF_FRAMERATE = "framerate"
+CONF_RTSP_TRANSPORT = "rtsp_transport"
+FFMPEG_OPTION_MAP = {CONF_RTSP_TRANSPORT: "rtsp_transport"}
+ALLOWED_RTSP_TRANSPORT_PROTOCOLS = {"tcp", "udp", "udp_multicast", "http"}
 
 DEFAULT_NAME = "Generic Camera"
 GET_IMAGE_TIMEOUT = 10
@@ -54,6 +57,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             cv.small_float, cv.positive_int
         ),
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+        vol.Optional(CONF_RTSP_TRANSPORT): vol.In(ALLOWED_RTSP_TRANSPORT_PROTOCOLS),
     }
 )
 
@@ -85,15 +89,19 @@ class GenericCamera(Camera):
         self._supported_features = SUPPORT_STREAM if self._stream_source else 0
         self.content_type = device_info[CONF_CONTENT_TYPE]
         self.verify_ssl = device_info[CONF_VERIFY_SSL]
+        if device_info.get(CONF_RTSP_TRANSPORT):
+            self.stream_options[FFMPEG_OPTION_MAP[CONF_RTSP_TRANSPORT]] = device_info[
+                CONF_RTSP_TRANSPORT
+            ]
 
         username = device_info.get(CONF_USERNAME)
         password = device_info.get(CONF_PASSWORD)
 
         if username and password:
             if self._authentication == HTTP_DIGEST_AUTHENTICATION:
-                self._auth = httpx.DigestAuth(username, password)
+                self._auth = httpx.DigestAuth(username=username, password=password)
             else:
-                self._auth = httpx.BasicAuth(username, password=password)
+                self._auth = httpx.BasicAuth(username=username, password=password)
         else:
             self._auth = None
 
@@ -117,32 +125,45 @@ class GenericCamera(Camera):
         ).result()
 
     async def async_camera_image(self):
+        """Wrap _async_camera_image with an asyncio.shield."""
+        # Shield the request because of https://github.com/encode/httpx/issues/1461
+        try:
+            self._last_url, self._last_image = await asyncio.shield(
+                self._async_camera_image()
+            )
+        except asyncio.CancelledError as err:
+            _LOGGER.warning("Timeout getting camera image from %s", self._name)
+            raise err
+        return self._last_image
+
+    async def _async_camera_image(self):
         """Return a still image response from the camera."""
         try:
             url = self._still_image_url.async_render(parse_result=False)
         except TemplateError as err:
             _LOGGER.error("Error parsing template %s: %s", self._still_image_url, err)
-            return self._last_image
+            return self._last_url, self._last_image
 
         if url == self._last_url and self._limit_refetch:
-            return self._last_image
-
+            return self._last_url, self._last_image
+        response = None
         try:
             async_client = get_async_client(self.hass, verify_ssl=self.verify_ssl)
             response = await async_client.get(
                 url, auth=self._auth, timeout=GET_IMAGE_TIMEOUT
             )
             response.raise_for_status()
-            self._last_image = response.content
+            image = response.content
         except httpx.TimeoutException:
             _LOGGER.error("Timeout getting camera image from %s", self._name)
-            return self._last_image
+            return self._last_url, self._last_image
         except (httpx.RequestError, httpx.HTTPStatusError) as err:
             _LOGGER.error("Error getting new camera image from %s: %s", self._name, err)
-            return self._last_image
-
-        self._last_url = url
-        return self._last_image
+            return self._last_url, self._last_image
+        finally:
+            if response:
+                await response.aclose()
+        return url, image
 
     @property
     def name(self):
