@@ -48,11 +48,13 @@ class ActionTrace:
         self,
         key: tuple[str, str],
         config: dict[str, Any],
+        blueprint_inputs: dict[str, Any],
         context: Context,
     ):
         """Container for script trace."""
         self._trace: dict[str, Deque[TraceElement]] | None = None
         self._config: dict[str, Any] = config
+        self._blueprint_inputs: dict[str, Any] = blueprint_inputs
         self.context: Context = context
         self._error: Exception | None = None
         self._state: str = "running"
@@ -93,6 +95,7 @@ class ActionTrace:
             {
                 "trace": traces,
                 "config": self._config,
+                "blueprint_inputs": self._blueprint_inputs,
                 "context": self.context,
             }
         )
