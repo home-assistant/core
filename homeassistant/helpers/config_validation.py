@@ -916,7 +916,7 @@ SERVICE_SCHEMA = vol.All(
             vol.Optional("data"): vol.All(dict, template_complex),
             vol.Optional("data_template"): vol.All(dict, template_complex),
             vol.Optional(CONF_ENTITY_ID): comp_entity_ids,
-            vol.Optional(CONF_TARGET): ENTITY_SERVICE_FIELDS,
+            vol.Optional(CONF_TARGET): vol.Any(ENTITY_SERVICE_FIELDS, dynamic_template),
         }
     ),
     has_at_least_one_key(CONF_SERVICE, CONF_SERVICE_TEMPLATE),
