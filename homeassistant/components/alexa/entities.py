@@ -1,6 +1,8 @@
 """Alexa entity adapters."""
+from __future__ import annotations
+
 import logging
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 from homeassistant.components import (
     alarm_control_panel,
@@ -30,6 +32,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT,
     CLOUD_NEVER_EXPOSED_ENTITIES,
+    CONF_DESCRIPTION,
     CONF_NAME,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
@@ -72,7 +75,7 @@ from .capabilities import (
     AlexaTimeHoldController,
     AlexaToggleController,
 )
-from .const import CONF_DESCRIPTION, CONF_DISPLAY_CATEGORIES
+from .const import CONF_DISPLAY_CATEGORIES
 
 if TYPE_CHECKING:
     from .config import AbstractConfig
@@ -251,7 +254,7 @@ class AlexaEntity:
     The API handlers should manipulate entities only through this interface.
     """
 
-    def __init__(self, hass: HomeAssistant, config: "AbstractConfig", entity: State):
+    def __init__(self, hass: HomeAssistant, config: AbstractConfig, entity: State):
         """Initialize Alexa Entity."""
         self.hass = hass
         self.config = config
@@ -300,7 +303,7 @@ class AlexaEntity:
         Raises _UnsupportedInterface.
         """
 
-    def interfaces(self) -> List[AlexaCapability]:
+    def interfaces(self) -> list[AlexaCapability]:
         """Return a list of supported interfaces.
 
         Used for discovery. The list should contain AlexaInterface instances.
@@ -353,7 +356,7 @@ class AlexaEntity:
 
 
 @callback
-def async_get_entities(hass, config) -> List[AlexaEntity]:
+def async_get_entities(hass, config) -> list[AlexaEntity]:
     """Return all entities that are supported by Alexa."""
     entities = []
     for state in hass.states.async_all():

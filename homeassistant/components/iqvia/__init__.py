@@ -6,6 +6,7 @@ from functools import partial
 from pyiqvia import Client
 from pyiqvia.errors import IQVIAError
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
@@ -109,7 +110,7 @@ async def async_unload_entry(hass, entry):
     return unload_ok
 
 
-class IQVIAEntity(CoordinatorEntity):
+class IQVIAEntity(CoordinatorEntity, SensorEntity):
     """Define a base IQVIA entity."""
 
     def __init__(self, coordinator, entry, sensor_type, name, icon):

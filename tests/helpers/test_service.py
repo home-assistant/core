@@ -561,22 +561,21 @@ async def test_call_context_target_specific_no_auth(
     hass, mock_handle_entity_call, mock_entities
 ):
     """Check targeting specific entities without auth."""
-    with pytest.raises(exceptions.Unauthorized) as err:
-        with patch(
-            "homeassistant.auth.AuthManager.async_get_user",
-            return_value=Mock(permissions=PolicyPermissions({}, None)),
-        ):
-            await service.entity_service_call(
-                hass,
-                [Mock(entities=mock_entities)],
-                Mock(),
-                ha.ServiceCall(
-                    "test_domain",
-                    "test_service",
-                    {"entity_id": "light.kitchen"},
-                    context=ha.Context(user_id="mock-id"),
-                ),
-            )
+    with pytest.raises(exceptions.Unauthorized) as err, patch(
+        "homeassistant.auth.AuthManager.async_get_user",
+        return_value=Mock(permissions=PolicyPermissions({}, None)),
+    ):
+        await service.entity_service_call(
+            hass,
+            [Mock(entities=mock_entities)],
+            Mock(),
+            ha.ServiceCall(
+                "test_domain",
+                "test_service",
+                {"entity_id": "light.kitchen"},
+                context=ha.Context(user_id="mock-id"),
+            ),
+        )
 
     assert err.value.context.user_id == "mock-id"
     assert err.value.entity_id == "light.kitchen"
@@ -1015,3 +1014,28 @@ async def test_async_extract_entities_warn_referenced(hass, caplog):
         "Unable to find referenced areas non-existent-area, devices non-existent-device, entities non.existent"
         in caplog.text
     )
+
+
+async def test_async_extract_config_entry_ids(hass):
+    """Test we can find devices that have no entities."""
+
+    device_no_entities = dev_reg.DeviceEntry(
+        id="device-no-entities", config_entries={"abc"}
+    )
+
+    call = ha.ServiceCall(
+        "homeassistant",
+        "reload_config_entry",
+        {
+            "device_id": "device-no-entities",
+        },
+    )
+
+    mock_device_registry(
+        hass,
+        {
+            device_no_entities.id: device_no_entities,
+        },
+    )
+
+    assert await service.async_extract_config_entry_ids(hass, call) == {"abc"}

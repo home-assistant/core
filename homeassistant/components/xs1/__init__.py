@@ -68,7 +68,7 @@ def setup(hass, config):
         )
         return False
 
-    _LOGGER.debug("Establishing connection to XS1 gateway and retrieving data...")
+    _LOGGER.debug("Establishing connection to XS1 gateway and retrieving data")
 
     hass.data[DOMAIN] = {}
 
@@ -78,7 +78,7 @@ def setup(hass, config):
     hass.data[DOMAIN][ACTUATORS] = actuators
     hass.data[DOMAIN][SENSORS] = sensors
 
-    _LOGGER.debug("Loading platforms for XS1 integration...")
+    _LOGGER.debug("Loading platforms for XS1 integration")
     # Load platforms for supported devices
     for platform in PLATFORMS:
         discovery.load_platform(hass, platform, DOMAIN, {}, config)

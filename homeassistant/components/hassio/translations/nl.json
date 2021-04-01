@@ -1,6 +1,7 @@
 {
     "system_health": {
         "info": {
+            "board": "Bord",
             "disk_total": "Totale schijfruimte",
             "disk_used": "Gebruikte schijfruimte",
             "docker_version": "Docker versie",
@@ -14,5 +15,5 @@
             "version_api": "API Versie"
         }
     },
-    "title": "Hass.io"
+    "title": "Home Assistant Supervisor"
 }

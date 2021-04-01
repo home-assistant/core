@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "Feeler beim verbannen"
         },
+        "flow_title": "iRobot {name} ({host})",
         "step": {
             "init": {
                 "data": {

@@ -102,7 +102,7 @@ class KiwiLock(LockEntity):
         try:
             self._client.open_door(self.lock_id)
         except KiwiException:
-            _LOGGER.error("failed to open door")
+            _LOGGER.error("Failed to open door")
         else:
             self._state = STATE_UNLOCKED
             self.hass.add_job(

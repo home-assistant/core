@@ -2,6 +2,7 @@
 from libpurecool.dyson_pure_cool import DysonPureCool
 from libpurecool.dyson_pure_cool_link import DysonPureCoolLink
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
@@ -13,7 +14,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TIME_HOURS,
 )
-from homeassistant.helpers.entity import Entity
 
 from . import DYSON_DEVICES, DysonEntity
 
@@ -101,7 +101,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices)
 
 
-class DysonSensor(DysonEntity, Entity):
+class DysonSensor(DysonEntity, SensorEntity):
     """Representation of a generic Dyson sensor."""
 
     def __init__(self, device, sensor_type):

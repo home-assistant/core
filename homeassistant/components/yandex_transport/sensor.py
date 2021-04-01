@@ -6,11 +6,10 @@ import logging
 from aioymaps import YandexMapsRequester
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, DEVICE_CLASS_TIMESTAMP
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,7 +46,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([DiscoverYandexTransport(data, stop_id, routes, name)], True)
 
 
-class DiscoverYandexTransport(Entity):
+class DiscoverYandexTransport(SensorEntity):
     """Implementation of yandex_transport sensor."""
 
     def __init__(self, requester: YandexMapsRequester, stop_id, routes, name):

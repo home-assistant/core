@@ -7,7 +7,7 @@ import logging
 from math import ceil
 
 from miio import Ceil, DeviceException, PhilipsBulb, PhilipsEyecare, PhilipsMoonlight
-from miio.gateway import (
+from miio.gateway.gateway import (
     GATEWAY_MODEL_AC_V1,
     GATEWAY_MODEL_AC_V2,
     GATEWAY_MODEL_AC_V3,
@@ -36,6 +36,7 @@ from .const import (
     CONF_GATEWAY,
     CONF_MODEL,
     DOMAIN,
+    KEY_COORDINATOR,
     MODELS_LIGHT,
     MODELS_LIGHT_BULB,
     MODELS_LIGHT_CEILING,
@@ -52,6 +53,7 @@ from .const import (
     SERVICE_SET_SCENE,
 )
 from .device import XiaomiMiioEntity
+from .gateway import XiaomiGatewayDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -148,6 +150,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             entities.append(
                 XiaomiGatewayLight(gateway, config_entry.title, config_entry.unique_id)
             )
+        # Gateway sub devices
+        sub_devices = gateway.devices
+        coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
+        for sub_device in sub_devices.values():
+            if sub_device.device_type == "LightBulb":
+                entities.append(
+                    XiaomiGatewayBulb(coordinator, sub_device, config_entry)
+                )
 
     if config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
         if DATA_KEY not in hass.data:
@@ -1042,3 +1052,57 @@ class XiaomiGatewayLight(LightEntity):
             self._brightness_pct = state_dict["brightness"]
             self._rgb = state_dict["rgb"]
             self._hs = color.color_RGB_to_hs(*self._rgb)
+
+
+class XiaomiGatewayBulb(XiaomiGatewayDevice, LightEntity):
+    """Representation of Xiaomi Gateway Bulb."""
+
+    @property
+    def brightness(self):
+        """Return the brightness of the light."""
+        return round((self._sub_device.status["brightness"] * 255) / 100)
+
+    @property
+    def color_temp(self):
+        """Return current color temperature."""
+        return self._sub_device.status["color_temp"]
+
+    @property
+    def is_on(self):
+        """Return true if light is on."""
+        return self._sub_device.status["status"] == "on"
+
+    @property
+    def min_mireds(self):
+        """Return min cct."""
+        return self._sub_device.status["cct_min"]
+
+    @property
+    def max_mireds(self):
+        """Return max cct."""
+        return self._sub_device.status["cct_max"]
+
+    @property
+    def supported_features(self):
+        """Return the supported features."""
+        return SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP
+
+    async def async_turn_on(self, **kwargs):
+        """Instruct the light to turn on."""
+        await self.hass.async_add_executor_job(self._sub_device.on)
+
+        if ATTR_COLOR_TEMP in kwargs:
+            color_temp = kwargs[ATTR_COLOR_TEMP]
+            await self.hass.async_add_executor_job(
+                self._sub_device.set_color_temp, color_temp
+            )
+
+        if ATTR_BRIGHTNESS in kwargs:
+            brightness = round((kwargs[ATTR_BRIGHTNESS] * 100) / 255)
+            await self.hass.async_add_executor_job(
+                self._sub_device.set_brightness, brightness
+            )
+
+    async def async_turn_off(self, **kwargsf):
+        """Instruct the light to turn off."""
+        await self.hass.async_add_executor_job(self._sub_device.off)

@@ -1,5 +1,5 @@
 """Provide the device automations for Humidifier."""
-from typing import Dict, List
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -38,7 +38,7 @@ CONDITION_SCHEMA = vol.Any(TOGGLE_CONDITION, MODE_CONDITION)
 
 async def async_get_conditions(
     hass: HomeAssistant, device_id: str
-) -> List[Dict[str, str]]:
+) -> list[dict[str, str]]:
     """List device conditions for Humidifier devices."""
     registry = await entity_registry.async_get_registry(hass)
     conditions = await toggle_entity.async_get_conditions(hass, device_id, DOMAIN)
@@ -98,7 +98,7 @@ async def async_get_condition_capabilities(hass, config):
         else:
             modes = []
 
-        fields[vol.Required(const.ATTR_AVAILABLE_MODES)] = vol.In(modes)
+        fields[vol.Required(ATTR_MODE)] = vol.In(modes)
 
         return {"extra_fields": vol.Schema(fields)}
 

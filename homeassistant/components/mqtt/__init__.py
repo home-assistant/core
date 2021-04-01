@@ -1,4 +1,6 @@
 """Support for MQTT message handling."""
+from __future__ import annotations
+
 import asyncio
 from functools import lru_cache, partial, wraps
 import inspect
@@ -8,7 +10,7 @@ from operator import attrgetter
 import os
 import ssl
 import time
-from typing import Any, Callable, List, Optional, Union
+from typing import Any, Callable, Union
 import uuid
 
 import attr
@@ -310,7 +312,7 @@ async def async_subscribe(
     topic: str,
     msg_callback: MessageCallbackType,
     qos: int = DEFAULT_QOS,
-    encoding: Optional[str] = "utf-8",
+    encoding: str | None = "utf-8",
 ):
     """Subscribe to an MQTT topic.
 
@@ -385,7 +387,7 @@ async def _async_setup_discovery(
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Start the MQTT protocol service."""
-    conf: Optional[ConfigType] = config.get(DOMAIN)
+    conf: ConfigType | None = config.get(DOMAIN)
 
     websocket_api.async_register_command(hass, websocket_subscribe)
     websocket_api.async_register_command(hass, websocket_remove_device)
@@ -552,7 +554,7 @@ class MQTT:
         self.hass = hass
         self.config_entry = config_entry
         self.conf = conf
-        self.subscriptions: List[Subscription] = []
+        self.subscriptions: list[Subscription] = []
         self.connected = False
         self._ha_started = asyncio.Event()
         self._last_subscribe = time.time()
@@ -730,7 +732,7 @@ class MQTT:
         topic: str,
         msg_callback: MessageCallbackType,
         qos: int,
-        encoding: Optional[str] = None,
+        encoding: str | None = None,
     ) -> Callable[[], None]:
         """Set up a subscription to a topic with the provided qos.
 

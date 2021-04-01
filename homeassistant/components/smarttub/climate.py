@@ -54,7 +54,7 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
 
     def __init__(self, coordinator, spa):
         """Initialize the entity."""
-        super().__init__(coordinator, spa, "thermostat")
+        super().__init__(coordinator, spa, "Thermostat")
 
     @property
     def temperature_unit(self):
