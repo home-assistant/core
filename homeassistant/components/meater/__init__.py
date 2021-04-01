@@ -18,10 +18,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Meater Temperature Probe component."""
-    if DOMAIN not in config:
-        return True
-
-    hass.data[DOMAIN] = config[DOMAIN]
     return True
 
 
