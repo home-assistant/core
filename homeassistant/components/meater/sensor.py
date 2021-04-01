@@ -58,7 +58,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 device_registry.async_get_or_create(
                     config_entry_id=entry.entry_id,
                     identifiers={(DOMAIN, dev.id)},
-                    name="Meater Probe " + dev.id,
+                    name=f"Meater Probe {dev.id}",
                     manufacturer="Apption Labs",
                     model="Meater Probe",
                 )
@@ -100,7 +100,7 @@ class MeaterProbeTemperature(CoordinatorEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "Meater Probe " + self.temperature_reading_type.name
+        return f"Meater Probe {self.temperature_reading_type.name}"
 
     @property
     def state(self):
