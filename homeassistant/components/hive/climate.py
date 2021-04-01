@@ -192,18 +192,18 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
     async def async_set_preset_mode(self, preset_mode):
         """Set new preset mode."""
         if preset_mode == PRESET_NONE and self.preset_mode == PRESET_BOOST:
-            await self.hive.heating.turnBoostOff(self.device)
+            await self.hive.heating.setBoostOff(self.device)
         elif preset_mode == PRESET_BOOST:
             curtemp = round(self.current_temperature * 2) / 2
             temperature = curtemp + 0.5
-            await self.hive.heating.turnBoostOn(self.device, 30, temperature)
+            await self.hive.heating.setBoostOn(self.device, 30, temperature)
 
     @refresh_system
     async def async_heating_boost(self, time_period, temperature):
         """Handle boost heating service call."""
-        await self.hive.heating.turnBoostOn(self.device, time_period, temperature)
+        await self.hive.heating.setBoostOn(self.device, time_period, temperature)
 
     async def async_update(self):
         """Update all Node data from Hive."""
         await self.hive.session.updateData(self.device)
-        self.device = await self.hive.heating.getHeating(self.device)
+        self.device = await self.hive.heating.getClimate(self.device)
