@@ -1,11 +1,13 @@
 """Test Home Assistant logging util methods."""
 import asyncio
+from functools import partial
 import logging
 import queue
 from unittest.mock import patch
 
 import pytest
 
+from homeassistant.core import callback, is_callback
 import homeassistant.util.logging as logging_util
 
 
@@ -80,3 +82,30 @@ async def test_async_create_catching_coro(hass, caplog):
     await hass.async_block_till_done()
     assert "This is a bad coroutine" in caplog.text
     assert "in test_async_create_catching_coro" in caplog.text
+
+
+def test_catch_log_exception():
+    """Test it is still a callback after wrapping including partial."""
+
+    async def async_meth():
+        pass
+
+    assert asyncio.iscoroutinefunction(
+        logging_util.catch_log_exception(partial(async_meth), lambda: None)
+    )
+
+    @callback
+    def callback_meth():
+        pass
+
+    assert is_callback(
+        logging_util.catch_log_exception(partial(callback_meth), lambda: None)
+    )
+
+    def sync_meth():
+        pass
+
+    wrapped = logging_util.catch_log_exception(partial(sync_meth), lambda: None)
+
+    assert not is_callback(wrapped)
+    assert not asyncio.iscoroutinefunction(wrapped)
