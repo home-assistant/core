@@ -84,17 +84,16 @@ def log_rate_limits(hass, device_name, resp, level=logging.INFO):
 
 async def async_get_service(hass, config, discovery_info=None):
     """Get the mobile_app notification service."""
-    session = async_get_clientsession(hass)
-    service = hass.data[DOMAIN][DATA_NOTIFY] = MobileAppNotificationService(session)
+    service = hass.data[DOMAIN][DATA_NOTIFY] = MobileAppNotificationService(hass)
     return service
 
 
 class MobileAppNotificationService(BaseNotificationService):
     """Implement the notification service for mobile_app."""
 
-    def __init__(self, session):
+    def __init__(self, hass):
         """Initialize the service."""
-        self._session = session
+        self._hass = hass
 
     @property
     def targets(self):
@@ -141,7 +140,9 @@ class MobileAppNotificationService(BaseNotificationService):
 
             try:
                 with async_timeout.timeout(10):
-                    response = await self._session.post(push_url, json=data)
+                    response = await async_get_clientsession(self._hass).post(
+                        push_url, json=data
+                    )
                     result = await response.json()
 
                 if response.status in [HTTP_OK, HTTP_CREATED, HTTP_ACCEPTED]:
