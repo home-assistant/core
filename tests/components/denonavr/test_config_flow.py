@@ -14,8 +14,8 @@ from homeassistant.components.denonavr.config_flow import (
     CONF_ZONE2,
     CONF_ZONE3,
     DOMAIN,
+    AvrTimoutError,
 )
-from homeassistant.components.denonavr.receiver import AvrTimoutError
 from homeassistant.const import CONF_HOST
 
 from tests.common import MockConfigEntry

@@ -4,13 +4,13 @@ from typing import Any, Dict, Optional
 from urllib.parse import urlparse
 
 import denonavr
+from denonavr.exceptions import AvrNetworkError, AvrTimoutError
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.const import CONF_HOST, CONF_TYPE
 from homeassistant.core import callback
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .receiver import ConnectDenonAVR
@@ -168,7 +168,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             success = await connect_denonavr.async_connect_receiver()
-        except ConfigEntryNotReady:
+        except (AvrNetworkError, AvrTimoutError):
             success = False
         if not success:
             return self.async_abort(reason="cannot_connect")
