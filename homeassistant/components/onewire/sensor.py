@@ -432,7 +432,9 @@ class OneWireDirectSensor(OneWireSensor):
         attempts = 1
         while True:
             try:
-                return self._owsensor.get_temperature()
+                return await self.hass.async_add_executor_job(
+                    self._owsensor.get_temperature
+                )
             except UnsupportResponseException as ex:
                 _LOGGER.debug(
                     "Cannot read from sensor %s (retry attempt %s): %s",
