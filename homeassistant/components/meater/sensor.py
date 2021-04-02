@@ -101,6 +101,7 @@ class MeaterProbeTemperature(CoordinatorEntity):
 
     def __init__(self, coordinator, device_id, temperature_reading_type):
         """Initialise the sensor."""
+        super().__init__(coordinator)
         self.coordinator = coordinator
         self.device_id = device_id
         self.temperature_reading_type = temperature_reading_type
