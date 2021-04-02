@@ -264,7 +264,6 @@ async def _async_process_config(hass, config, component) -> bool:
             else:
                 raw_config = cast(ScriptConfig, config_block).raw_config
 
-            # config_block = await async_validate_config_item(hass, cfg)
             entities.append(
                 ScriptEntity(
                     hass, object_id, config_block, raw_config, raw_blueprint_inputs
