@@ -43,6 +43,7 @@ DEFAULT_NAME = "Onkyo Receiver"
 SUPPORTED_MAX_VOLUME = 90
 ZONES = {"zone2": "Zone 2", "zone3": "Zone 3", "zone4": "Zone 4"}
 
+KNOWN_HOSTS: list[str] = []
 DEFAULT_SOURCES = {
     "tv": "TV",
     "bd": "Bluray",
@@ -161,7 +162,7 @@ SUPPORT_ONKYO_WO_SOUND_MODE = (
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_MAX_VOLUME, default=SUPPORTED_MAX_VOLUME): vol.All(
@@ -221,7 +222,7 @@ VIDEO_INFORMATION_MAPPING = [
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up our socket to the AVR."""
 
-    host = config[CONF_HOST]
+    host = config.get(CONF_HOST)
     port = config[CONF_PORT]
     name = config[CONF_NAME]
     max_volume = config[CONF_MAX_VOLUME]
@@ -234,75 +235,120 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         "async_select_output",
     )
 
-    _LOGGER.debug("Provisioning Onkyo AVR device at %s:%d", host, port)
-
+    avrs = {}
     active_zones = {}
 
-    def async_onkyo_discover_zones_callback(zone):
+    def setup_avr(avr):
+        KNOWN_HOSTS.append(avr.host)
+
+        # Store the avr object and create a dictionary to store its active zones.
+        avrs[avr.host] = avr
+        active_zones[avr.host] = {}
+
+        # Discover what zones are available for the avr by querying the power.
+        # If we get a response for the specific zone, it means it is available.
+        for zone in ZONES:
+            avr.query_property(zone, "power")
+
+        # Add the main zone to active_zones, since it is always active
+        main_entity = OnkyoAVR(
+            avr, avr.name, avr.identifier, sources, "main", max_volume
+        )
+        active_zones[avr.host]["main"] = main_entity
+        async_add_entities([main_entity])
+
+    def async_onkyo_discover_zones_callback(avr, zone):
         """Receive the power status of the available zones on the AVR."""
         # When we receive the status for a zone, it is available on the AVR
         # So we create an entity for the zone and add it to active_zones
         if zone in ZONES:
-            _LOGGER.debug("Discovered %s on %s, add to active zones", ZONES[zone], name)
-            zone_entity = OnkyoAVR(avr, name, sources, zone, max_volume)
-            active_zones[zone] = zone_entity
+            _LOGGER.debug("Discovered %s on %s,", ZONES[zone], avr.name)
+            zone_entity = OnkyoAVR(
+                avr, avr.name, avr.identifier, sources, zone, max_volume
+            )
+            active_zones[avr.host][zone] = zone_entity
             async_add_entities([zone_entity])
 
     @callback
-    def async_onkyo_update_callback(message):
+    def async_onkyo_update_callback(message, origin=None):
         """Receive notification from transport that new data exists."""
-        _LOGGER.debug("Received update callback from AVR: %s", message)
+        _host = origin or host
+        _LOGGER.debug("Received update callback from %s: %s", avrs[_host].name, message)
 
         zone, _, _ = message
-        if zone in active_zones:
-            active_zones[zone].process_update(message)
+        if zone in active_zones[_host]:
+            active_zones[_host][zone].process_update(message)
         else:
-            async_onkyo_discover_zones_callback(zone)
+            async_onkyo_discover_zones_callback(avrs[_host], zone)
 
     @callback
     def async_onkyo_connect_callback():
         """Receiver (re)connected."""
         _LOGGER.debug("AVR (re)connected:")
-        for zone in active_zones.values():
-            zone.backfill_state()
+        for avr in active_zones.values():
+            for zone in avr.values():
+                zone.backfill_state()
 
-    try:
-        avr = await pyeiscp.Connection.create(
-            host=host,
+    @callback
+    async def async_onkyo_discovery_callback(avr):
+        """Receiver discovered, connection not yet active."""
+        if avr.host not in KNOWN_HOSTS:
+            try:
+                await avr.connect()
+            except Exception:
+                raise PlatformNotReady from Exception
+
+            setup_avr(avr)
+
+    if CONF_HOST in config and host not in KNOWN_HOSTS:
+        # If a host is specified, try to create a single connection to that host
+        try:
+            avr = await pyeiscp.Connection.create(
+                host=host,
+                port=port,
+                update_callback=async_onkyo_update_callback,
+                connect_callback=async_onkyo_connect_callback,
+            )
+        except Exception:
+            raise PlatformNotReady from Exception
+
+        # The library only automatically adds a name and identifier on discovered avrs.
+        # So manually add them here to be use for zone discovery later.
+        avr.name = name
+        avr.identifier = None
+
+        setup_avr(avr)
+
+    else:
+        # If no host is specified, create connections for all discovered receivers
+        await pyeiscp.Connection.discover(
             port=port,
             update_callback=async_onkyo_update_callback,
             connect_callback=async_onkyo_connect_callback,
+            discovery_callback=async_onkyo_discovery_callback,
         )
-    except Exception:
-        raise PlatformNotReady from Exception
-
-    # Discover what zones are available for the avr by querying the power.
-    # If we get a response for the specific zone, it means it is available.
-    for zone in ZONES:
-        avr.query_property(zone, "power")
-
-    # Add the main zone to active_zones, since it is always active
-    main_entity = OnkyoAVR(avr, name, sources, "main", max_volume)
-    active_zones["main"] = main_entity
 
     @callback
     def close_avr(_event):
-        avr.close()
+        for avr in avrs.values():
+            avr.close()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_avr)
-
-    async_add_entities([main_entity])
 
 
 class OnkyoAVR(MediaPlayerEntity):
     """Entity reading values from Onkyo AVR protocol."""
 
-    def __init__(self, avr, name, sources, zone, max_volume):
+    def __init__(self, avr, name, identifier, sources, zone, max_volume):
         """Initialize entity with transport."""
         super().__init__()
         self._avr = avr
         self._name = f"{name} {ZONES[zone] if zone != 'main' else ''}"
-        self._unique_id = None
+        if identifier is not None:
+            self._unique_id = f"{identifier}_{zone}"
+        else:
+            self._unique_id = None
+
         self._zone = zone
         self._volume = 0
         self._supports_volume = False

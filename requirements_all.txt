@@ -1361,7 +1361,7 @@ pyedimax==0.2.1
 pyeight==0.1.5
 
 # homeassistant.components.onkyo
-pyeiscp==0.0.3
+pyeiscp==0.0.4
 
 # homeassistant.components.emby
 pyemby==1.7
