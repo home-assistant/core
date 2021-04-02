@@ -11,8 +11,5 @@ CONF_POLYNOMIAL = "polynomial"
 
 DATA_COMPENSATION = "compensation_data"
 
-DEFAULT_NAME = "Compensation"
 DEFAULT_DEGREE = 1
 DEFAULT_PRECISION = 2
-
-MATCH_DATAPOINT = r"([-+]?[0-9]+\.?[0-9]*){1} -> ([-+]?[0-9]+\.?[0-9]*){1}"

@@ -8,8 +8,8 @@ import voluptuous as vol
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     CONF_ATTRIBUTE,
-    CONF_ENTITY_ID,
-    CONF_NAME,
+    CONF_SOURCE,
+    CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
 )
 from homeassistant.helpers import config_validation as cv
@@ -23,7 +23,6 @@ from .const import (
     CONF_PRECISION,
     DATA_COMPENSATION,
     DEFAULT_DEGREE,
-    DEFAULT_NAME,
     DEFAULT_PRECISION,
     DOMAIN,
 )
@@ -43,11 +42,11 @@ def datapoints_greater_than_degree(value: dict) -> dict:
 
 COMPENSATION_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
+        vol.Required(CONF_SOURCE): cv.entity_id,
         vol.Required(CONF_DATAPOINTS): [
             vol.ExactSequence([vol.Coerce(float), vol.Coerce(float)])
         ],
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_ATTRIBUTE): cv.string,
         vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): cv.positive_int,
         vol.Optional(CONF_DEGREE, default=DEFAULT_DEGREE): vol.All(
@@ -105,6 +104,14 @@ async def async_setup(hass, config):
                 k: v for k, v in conf.items() if k not in [CONF_DEGREE, CONF_DATAPOINTS]
             }
             data[CONF_POLYNOMIAL] = np.poly1d(coefficients)
+
+            unique_id = data.get(CONF_UNIQUE_ID)
+            if unique_id is None:
+                identifier = data[CONF_SOURCE]
+                attribute = data.get(CONF_ATTRIBUTE)
+                data[CONF_UNIQUE_ID] = (
+                    identifier if attribute is None else f"{identifier}.{attribute}"
+                )
 
             hass.data[DATA_COMPENSATION][compensation] = data
 

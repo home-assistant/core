@@ -17,8 +17,7 @@ async def test_linear_state(hass):
     config = {
         "compensation": {
             "test": {
-                "name": "compensation",
-                "entity_id": "sensor.uncompensated",
+                "source": "sensor.uncompensated",
                 "data_points": [
                     [1.0, 2.0],
                     [2.0, 3.0],
@@ -28,17 +27,18 @@ async def test_linear_state(hass):
             }
         }
     }
+    expected_entity_id = "sensor.compensation_sensor_uncompensated"
 
     assert await async_setup_component(hass, DOMAIN, config)
     assert await async_setup_component(hass, SENSOR_DOMAIN, config)
     await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
-    entity_id = config[DOMAIN]["test"]["entity_id"]
+    entity_id = config[DOMAIN]["test"]["source"]
     hass.states.async_set(entity_id, 4, {})
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.compensation")
+    state = hass.states.get(expected_entity_id)
     assert state is not None
 
     assert round(float(state.state), config[DOMAIN]["test"][CONF_PRECISION]) == 5.0
@@ -51,7 +51,7 @@ async def test_linear_state(hass):
     hass.states.async_set(entity_id, "foo", {})
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.compensation")
+    state = hass.states.get(expected_entity_id)
     assert state is not None
 
     assert state.state == STATE_UNKNOWN
@@ -62,8 +62,7 @@ async def test_linear_state_from_attribute(hass):
     config = {
         "compensation": {
             "test": {
-                "name": "compensation",
-                "entity_id": "sensor.uncompensated",
+                "source": "sensor.uncompensated",
                 "attribute": "value",
                 "data_points": [
                     [1.0, 2.0],
@@ -73,6 +72,7 @@ async def test_linear_state_from_attribute(hass):
             }
         }
     }
+    expected_entity_id = "sensor.compensation_sensor_uncompensated_value"
 
     assert await async_setup_component(hass, DOMAIN, config)
     assert await async_setup_component(hass, SENSOR_DOMAIN, config)
@@ -80,11 +80,11 @@ async def test_linear_state_from_attribute(hass):
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
 
-    entity_id = config[DOMAIN]["test"]["entity_id"]
+    entity_id = config[DOMAIN]["test"]["source"]
     hass.states.async_set(entity_id, 3, {"value": 4})
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.compensation")
+    state = hass.states.get(expected_entity_id)
     assert state is not None
 
     assert round(float(state.state), config[DOMAIN]["test"][CONF_PRECISION]) == 5.0
@@ -95,7 +95,7 @@ async def test_linear_state_from_attribute(hass):
     hass.states.async_set(entity_id, 3, {"value": "bar"})
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.compensation")
+    state = hass.states.get(expected_entity_id)
     assert state is not None
 
     assert state.state == STATE_UNKNOWN
@@ -106,8 +106,7 @@ async def test_quadratic_state(hass):
     config = {
         "compensation": {
             "test": {
-                "name": "compensation",
-                "entity_id": "sensor.temperature",
+                "source": "sensor.temperature",
                 "data_points": [
                     [50, 3.3],
                     [50, 2.8],
@@ -131,16 +130,15 @@ async def test_quadratic_state(hass):
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
-    assert await async_setup_component(hass, SENSOR_DOMAIN, config)
+    await hass.async_block_till_done()
+    await hass.async_start()
     await hass.async_block_till_done()
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
-
-    entity_id = config[DOMAIN]["test"]["entity_id"]
+    entity_id = config[DOMAIN]["test"]["source"]
     hass.states.async_set(entity_id, 43.2, {})
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.compensation")
+    state = hass.states.get("sensor.compensation_sensor_temperature")
 
     assert state is not None
 
@@ -152,16 +150,14 @@ async def test_numpy_errors(hass, caplog):
     config = {
         "compensation": {
             "test": {
-                "name": "compensation",
-                "entity_id": "sensor.uncompensated",
+                "source": "sensor.uncompensated",
                 "data_points": [
                     [1.0, 1.0],
                     [1.0, 1.0],
                 ],
             },
             "test2": {
-                "name": "compensation2",
-                "entity_id": "sensor.uncompensated",
+                "source": "sensor.uncompensated2",
                 "data_points": [
                     [0.0, 1.0],
                     [0.0, 1.0],
@@ -170,9 +166,9 @@ async def test_numpy_errors(hass, caplog):
         }
     }
     await async_setup_component(hass, DOMAIN, config)
-    await async_setup_component(hass, SENSOR_DOMAIN, config)
     await hass.async_block_till_done()
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_start()
+    await hass.async_block_till_done()
 
     assert "polyfit may be poorly conditioned" in caplog.text
 
@@ -184,8 +180,7 @@ async def test_datapoints_greater_than_degree(hass, caplog):
     config = {
         "compensation": {
             "test": {
-                "name": "compensation",
-                "entity_id": "sensor.uncompensated",
+                "source": "sensor.uncompensated",
                 "data_points": [
                     [1.0, 2.0],
                     [2.0, 3.0],
@@ -195,9 +190,9 @@ async def test_datapoints_greater_than_degree(hass, caplog):
         }
     }
     await async_setup_component(hass, DOMAIN, config)
-    await async_setup_component(hass, SENSOR_DOMAIN, config)
     await hass.async_block_till_done()
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_start()
+    await hass.async_block_till_done()
 
     assert "data_points must have at least 3 data_points" in caplog.text
 
@@ -207,8 +202,7 @@ async def test_new_state_is_none(hass):
     config = {
         "compensation": {
             "test": {
-                "name": "compensation",
-                "entity_id": "sensor.uncompensated",
+                "source": "sensor.uncompensated",
                 "data_points": [
                     [1.0, 2.0],
                     [2.0, 3.0],
@@ -218,14 +212,17 @@ async def test_new_state_is_none(hass):
             }
         }
     }
+    expected_entity_id = "sensor.compensation_sensor_uncompensated"
 
-    assert await async_setup_component(hass, DOMAIN, config)
+    await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+    await hass.async_start()
     await hass.async_block_till_done()
 
-    last_changed = hass.states.get("sensor.compensation").last_changed
+    last_changed = hass.states.get(expected_entity_id).last_changed
 
     hass.bus.async_fire(
         EVENT_STATE_CHANGED, event_data={"entity_id": "sensor.uncompensated"}
     )
 
-    assert last_changed == hass.states.get("sensor.compensation").last_changed
+    assert last_changed == hass.states.get(expected_entity_id).last_changed
