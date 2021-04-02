@@ -4,6 +4,7 @@ from enum import Enum
 import logging
 
 import async_timeout
+from meater import AuthenticationError, TooManyRequestsError
 
 from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
@@ -15,8 +16,6 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import DOMAIN
-
-from meater import MeaterApi, AuthenticationError, TooManyRequestsError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,6 +43,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             raise UpdateFailed(
                 "Too many requests have been made to the API, rate limiting is in place"
             ) from err
+        # pylint: disable=broad-except
         except Exception as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 

@@ -1,5 +1,5 @@
 """Config flow for Meater."""
-from meater import MeaterApi, AuthenticationError, ServiceUnavailableError
+from meater import AuthenticationError, MeaterApi, ServiceUnavailableError
 import voluptuous as vol
 
 from homeassistant import config_entries
