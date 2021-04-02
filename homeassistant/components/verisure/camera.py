@@ -3,16 +3,19 @@ from __future__ import annotations
 
 import errno
 import os
-from typing import Callable, Iterable
+from typing import Any, Callable, Iterable
+
+from verisure import Error as VerisureError
 
 from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import current_platform
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, LOGGER
+from .const import CONF_GIID, DOMAIN, LOGGER, SERVICE_CAPTURE_SMARTCAM
 from .coordinator import VerisureDataUpdateCoordinator
 
 
@@ -23,6 +26,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up Verisure sensors based on a config entry."""
     coordinator: VerisureDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+
+    platform = current_platform.get()
+    platform.async_register_entity_service(
+        SERVICE_CAPTURE_SMARTCAM,
+        {},
+        VerisureSmartcam.capture_smartcam.__name__,
+    )
 
     assert hass.config.config_dir
     async_add_entities(
@@ -51,6 +61,29 @@ class VerisureSmartcam(CoordinatorEntity, Camera):
         self._image = None
         self._image_id = None
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, self.delete_image)
+
+    @property
+    def name(self) -> str:
+        """Return the name of this entity."""
+        return self.coordinator.data["cameras"][self.serial_number]["area"]
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique ID for this entity."""
+        return self.serial_number
+
+    @property
+    def device_info(self) -> dict[str, Any]:
+        """Return device information about this entity."""
+        area = self.coordinator.data["cameras"][self.serial_number]["area"]
+        return {
+            "name": area,
+            "suggested_area": area,
+            "manufacturer": "Verisure",
+            "model": "SmartCam",
+            "identifiers": {(DOMAIN, self.serial_number)},
+            "via_device": (DOMAIN, self.coordinator.entry.data[CONF_GIID]),
+        }
 
     def camera_image(self) -> bytes | None:
         """Return image response."""
@@ -105,12 +138,10 @@ class VerisureSmartcam(CoordinatorEntity, Camera):
             if error.errno != errno.ENOENT:
                 raise
 
-    @property
-    def name(self) -> str:
-        """Return the name of this camera."""
-        return self.coordinator.data["cameras"][self.serial_number]["area"]
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this camera."""
-        return self.serial_number
+    def capture_smartcam(self) -> None:
+        """Capture a new picture from a smartcam."""
+        try:
+            self.coordinator.smartcam_capture(self.serial_number)
+            LOGGER.debug("Capturing new image from %s", self.serial_number)
+        except VerisureError as ex:
+            LOGGER.error("Could not capture image, %s", ex)

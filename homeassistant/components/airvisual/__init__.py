@@ -23,7 +23,6 @@ from homeassistant.const import (
     CONF_STATE,
 )
 from homeassistant.core import callback
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -243,10 +242,6 @@ async def async_setup_entry(hass, config_entry):
             update_method=async_update_data,
         )
 
-        async_sync_geo_coordinator_update_intervals(
-            hass, config_entry.data[CONF_API_KEY]
-        )
-
         # Only geography-based entries have options:
         hass.data[DOMAIN][DATA_LISTENER][
             config_entry.entry_id
@@ -272,11 +267,15 @@ async def async_setup_entry(hass, config_entry):
             update_method=async_update_data,
         )
 
-    await coordinator.async_refresh()
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
 
     hass.data[DOMAIN][DATA_COORDINATOR][config_entry.entry_id] = coordinator
+
+    # Reassess the interval between 2 server requests
+    if CONF_API_KEY in config_entry.data:
+        async_sync_geo_coordinator_update_intervals(
+            hass, config_entry.data[CONF_API_KEY]
+        )
 
     for platform in PLATFORMS:
         hass.async_create_task(
@@ -343,10 +342,7 @@ async def async_unload_entry(hass, config_entry):
         remove_listener = hass.data[DOMAIN][DATA_LISTENER].pop(config_entry.entry_id)
         remove_listener()
 
-        if (
-            config_entry.data[CONF_INTEGRATION_TYPE]
-            == INTEGRATION_TYPE_GEOGRAPHY_COORDS
-        ):
+        if CONF_API_KEY in config_entry.data:
             # Re-calculate the update interval period for any remaining consumers of
             # this API key:
             async_sync_geo_coordinator_update_intervals(

@@ -55,7 +55,7 @@
                     "entities": "Olemid",
                     "mode": "Re\u017eiim"
                 },
-                "description": "Vali kaasatavad olemid. Tarvikute re\u017eiimis on kaasatav ainult \u00fcks olem. Silla re\u017eiimis, kuvatakse k\u00f5ik domeeni olemid, v\u00e4lja arvatud juhul, kui valitud on kindlad olemid. Silla v\u00e4listamisre\u017eiimis kaasatakse k\u00f5ik domeeni olemid, v\u00e4lja arvatud v\u00e4listatud olemid. Parima kasutuskogemuse jaoks on eraldi HomeKit seadmed iga meediumim\u00e4ngija ja kaamera jaoks.",
+                "description": "Vali kaasatavad olemid. Tarvikute re\u017eiimis on kaasatav ainult \u00fcks olem. Silla re\u017eiimis kaasatakse k\u00f5ik domeeni olemid, v\u00e4lja arvatud juhul, kui valitud on kindlad olemid. Silla v\u00e4listamisre\u017eiimis kaasatakse k\u00f5ik domeeni olemid, v\u00e4lja arvatud v\u00e4listatud olemid. Parima kasutuskogemuse jaoks on eraldi HomeKit seadmed iga TV meediumim\u00e4ngija, luku, juhtpuldi ja kaamera jaoks.",
                 "title": "Vali kaasatavd olemid"
             },
             "init": {

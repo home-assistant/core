@@ -1,7 +1,8 @@
 """Tests for the HomeKit component."""
+from __future__ import annotations
+
 import asyncio
 import os
-from typing import Dict
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
 
 from pyhap.accessory import Accessory
@@ -863,7 +864,7 @@ async def test_homekit_uses_system_zeroconf(hass, hk_driver, mock_zeroconf):
         await hass.async_block_till_done()
 
 
-def _write_data(path: str, data: Dict) -> None:
+def _write_data(path: str, data: dict) -> None:
     """Write the data."""
     if not os.path.isdir(os.path.dirname(path)):
         os.makedirs(os.path.dirname(path))

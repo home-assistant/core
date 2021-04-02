@@ -7,14 +7,21 @@ import pyzerproc
 from homeassistant import setup
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_MODE,
     ATTR_HS_COLOR,
     ATTR_RGB_COLOR,
+    ATTR_SUPPORTED_COLOR_MODES,
     ATTR_XY_COLOR,
+    COLOR_MODE_HS,
     SCAN_INTERVAL,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
 )
-from homeassistant.components.zerproc.light import DOMAIN
+from homeassistant.components.zerproc.const import (
+    DATA_ADDRESSES,
+    DATA_DISCOVERY_SUBSCRIPTION,
+    DOMAIN,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
@@ -96,6 +103,7 @@ async def test_init(hass, mock_entry):
     assert state.state == STATE_OFF
     assert state.attributes == {
         ATTR_FRIENDLY_NAME: "LEDBlue-CCDDEEFF",
+        ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_HS],
         ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
         ATTR_ICON: "mdi:string-lights",
     }
@@ -104,8 +112,10 @@ async def test_init(hass, mock_entry):
     assert state.state == STATE_ON
     assert state.attributes == {
         ATTR_FRIENDLY_NAME: "LEDBlue-33445566",
+        ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_HS],
         ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
         ATTR_ICON: "mdi:string-lights",
+        ATTR_COLOR_MODE: COLOR_MODE_HS,
         ATTR_BRIGHTNESS: 255,
         ATTR_HS_COLOR: (221.176, 100.0),
         ATTR_RGB_COLOR: (0, 80, 255),
@@ -140,7 +150,8 @@ async def test_discovery_exception(hass, mock_entry):
 
 async def test_remove_entry(hass, mock_light, mock_entry):
     """Test platform setup."""
-    assert hass.data[DOMAIN]["addresses"] == {"AA:BB:CC:DD:EE:FF"}
+    assert hass.data[DOMAIN][DATA_ADDRESSES] == {"AA:BB:CC:DD:EE:FF"}
+    assert DATA_DISCOVERY_SUBSCRIPTION in hass.data[DOMAIN]
 
     with patch.object(mock_light, "disconnect") as mock_disconnect:
         await hass.config_entries.async_remove(mock_entry.entry_id)
@@ -272,6 +283,7 @@ async def test_light_update(hass, mock_light):
     assert state.state == STATE_OFF
     assert state.attributes == {
         ATTR_FRIENDLY_NAME: "LEDBlue-CCDDEEFF",
+        ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_HS],
         ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
         ATTR_ICON: "mdi:string-lights",
     }
@@ -290,6 +302,7 @@ async def test_light_update(hass, mock_light):
         assert state.state == STATE_UNAVAILABLE
         assert state.attributes == {
             ATTR_FRIENDLY_NAME: "LEDBlue-CCDDEEFF",
+            ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_HS],
             ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
             ATTR_ICON: "mdi:string-lights",
         }
@@ -307,6 +320,7 @@ async def test_light_update(hass, mock_light):
         assert state.state == STATE_OFF
         assert state.attributes == {
             ATTR_FRIENDLY_NAME: "LEDBlue-CCDDEEFF",
+            ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_HS],
             ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
             ATTR_ICON: "mdi:string-lights",
         }
@@ -324,8 +338,10 @@ async def test_light_update(hass, mock_light):
         assert state.state == STATE_ON
         assert state.attributes == {
             ATTR_FRIENDLY_NAME: "LEDBlue-CCDDEEFF",
+            ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_HS],
             ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
             ATTR_ICON: "mdi:string-lights",
+            ATTR_COLOR_MODE: COLOR_MODE_HS,
             ATTR_BRIGHTNESS: 220,
             ATTR_HS_COLOR: (261.429, 31.818),
             ATTR_RGB_COLOR: (202, 173, 255),

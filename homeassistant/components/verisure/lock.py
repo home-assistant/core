@@ -2,21 +2,27 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Callable, Iterable
+from typing import Any, Callable, Iterable
+
+from verisure import Error as VerisureError
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CODE, STATE_LOCKED, STATE_UNLOCKED
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import current_platform
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
+    CONF_GIID,
     CONF_LOCK_CODE_DIGITS,
     CONF_LOCK_DEFAULT_CODE,
     DEFAULT_LOCK_CODE_DIGITS,
     DOMAIN,
     LOGGER,
+    SERVICE_DISABLE_AUTOLOCK,
+    SERVICE_ENABLE_AUTOLOCK,
 )
 from .coordinator import VerisureDataUpdateCoordinator
 
@@ -28,6 +34,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up Verisure alarm control panel from a config entry."""
     coordinator: VerisureDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+
+    platform = current_platform.get()
+    platform.async_register_entity_service(
+        SERVICE_DISABLE_AUTOLOCK,
+        {},
+        VerisureDoorlock.disable_autolock.__name__,
+    )
+    platform.async_register_entity_service(
+        SERVICE_ENABLE_AUTOLOCK,
+        {},
+        VerisureDoorlock.enable_autolock.__name__,
+    )
+
     async_add_entities(
         VerisureDoorlock(coordinator, serial_number)
         for serial_number in coordinator.data["locks"]
@@ -52,8 +71,26 @@ class VerisureDoorlock(CoordinatorEntity, LockEntity):
 
     @property
     def name(self) -> str:
-        """Return the name of the lock."""
+        """Return the name of this entity."""
         return self.coordinator.data["locks"][self.serial_number]["area"]
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique ID for this entity."""
+        return self.serial_number
+
+    @property
+    def device_info(self) -> dict[str, Any]:
+        """Return device information about this entity."""
+        area = self.coordinator.data["locks"][self.serial_number]["area"]
+        return {
+            "name": area,
+            "suggested_area": area,
+            "manufacturer": "Verisure",
+            "model": "Lockguard Smartlock",
+            "identifiers": {(DOMAIN, self.serial_number)},
+            "via_device": (DOMAIN, self.coordinator.entry.data[CONF_GIID]),
+        }
 
     @property
     def available(self) -> bool:
@@ -127,3 +164,23 @@ class VerisureDoorlock(CoordinatorEntity, LockEntity):
                 await asyncio.sleep(0.5)
         if transaction["result"] == "OK":
             self._state = state
+
+    def disable_autolock(self) -> None:
+        """Disable autolock on a doorlock."""
+        try:
+            self.coordinator.verisure.set_lock_config(
+                self.serial_number, auto_lock_enabled=False
+            )
+            LOGGER.debug("Disabling autolock on %s", self.serial_number)
+        except VerisureError as ex:
+            LOGGER.error("Could not disable autolock, %s", ex)
+
+    def enable_autolock(self) -> None:
+        """Enable autolock on a doorlock."""
+        try:
+            self.coordinator.verisure.set_lock_config(
+                self.serial_number, auto_lock_enabled=True
+            )
+            LOGGER.debug("Enabling autolock on %s", self.serial_number)
+        except VerisureError as ex:
+            LOGGER.error("Could not enable autolock, %s", ex)

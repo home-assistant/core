@@ -1,8 +1,10 @@
 """Allow users to set and activate scenes."""
+from __future__ import annotations
+
 import functools as ft
 import importlib
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import voluptuous as vol
 
@@ -94,7 +96,7 @@ class Scene(Entity):
         return False
 
     @property
-    def state(self) -> Optional[str]:
+    def state(self) -> str | None:
         """Return the state of the scene."""
         return STATE
 

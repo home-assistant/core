@@ -9,12 +9,23 @@
             "invalid_auth": "Ongeldige authenticatie",
             "project_error": "Kon geen projectinformatie ophalen."
         },
+        "flow_title": "Azure DevOps: {project_url}",
         "step": {
+            "reauth": {
+                "data": {
+                    "personal_access_token": "Persoonlijk toegangstoken (PAT)"
+                },
+                "description": "Authenticatie mislukt voor {project_url}. Voer uw huidige inloggegevens in.",
+                "title": "Herauthenticatie"
+            },
             "user": {
                 "data": {
                     "organization": "Organisatie",
+                    "personal_access_token": "Persoonlijk toegangstoken (PAT)",
                     "project": "Project"
-                }
+                },
+                "description": "Stel een Azure DevOps instantie in om toegang te krijgen tot uw project. Een persoonlijke toegangstoken is alleen nodig voor een priv\u00e9project.",
+                "title": "Azure DevOps-project toevoegen"
             }
         }
     }

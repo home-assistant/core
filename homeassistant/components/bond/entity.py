@@ -1,9 +1,11 @@
 """An abstract class common to all Bond entities."""
+from __future__ import annotations
+
 from abc import abstractmethod
 from asyncio import Lock, TimeoutError as AsyncIOTimeoutError
 from datetime import timedelta
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from aiohttp import ClientError
 from bond_api import BPUPSubscriptions
@@ -29,7 +31,7 @@ class BondEntity(Entity):
         hub: BondHub,
         device: BondDevice,
         bpup_subs: BPUPSubscriptions,
-        sub_device: Optional[str] = None,
+        sub_device: str | None = None,
     ):
         """Initialize entity with API and device info."""
         self._hub = hub
@@ -38,11 +40,11 @@ class BondEntity(Entity):
         self._sub_device = sub_device
         self._available = True
         self._bpup_subs = bpup_subs
-        self._update_lock: Optional[Lock] = None
+        self._update_lock: Lock | None = None
         self._initialized = False
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Get unique ID for the entity."""
         hub_id = self._hub.bond_id
         device_id = self._device_id
@@ -50,7 +52,7 @@ class BondEntity(Entity):
         return f"{hub_id}_{device_id}{sub_device_id}"
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str | None:
         """Get entity name."""
         if self._sub_device:
             sub_device_name = self._sub_device.replace("_", " ").title()
@@ -63,7 +65,7 @@ class BondEntity(Entity):
         return False
 
     @property
-    def device_info(self) -> Optional[Dict[str, Any]]:
+    def device_info(self) -> dict[str, Any] | None:
         """Get a an HA device representing this Bond controlled device."""
         device_info = {
             ATTR_NAME: self.name,

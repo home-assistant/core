@@ -4,6 +4,7 @@
             "already_configured": "Apparaat is al geconfigureerd",
             "cannot_connect": "Kon niet verbinden",
             "invalid_auth": "Ongeldige authenticatie",
+            "no_uuid": "Kodi-instantie heeft geen unieke ID. Dit komt waarschijnlijk door een oude Kodi-versie (17.x of lager). U kunt de integratie handmatig configureren of upgraden naar een recentere Kodi-versie.",
             "unknown": "Onverwachte fout"
         },
         "error": {
@@ -38,6 +39,12 @@
                 },
                 "description": "De WebSocket-poort (ook wel TCP-poort genoemd in Kodi). Om verbinding te maken via WebSocket, moet u \"Programma's toestaan ... om Kodi te besturen\" inschakelen in Systeem / Instellingen / Netwerk / Services. Als WebSocket niet is ingeschakeld, verwijdert u de poort en laat u deze leeg."
             }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_off": "{entity_name} werd gevraagd om uit te schakelen",
+            "turn_on": "{entity_name} is gevraagd om in te schakelen"
         }
     }
 }

@@ -1,5 +1,5 @@
 """Provides device automations for control of device."""
-from typing import List, Optional
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -23,7 +23,7 @@ TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
 )
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device triggers for device."""
     triggers = []
     triggers.append(
@@ -43,8 +43,9 @@ async def async_attach_trigger(
     config: ConfigType,
     action: AutomationActionType,
     automation_info: dict,
-) -> Optional[CALLBACK_TYPE]:
+) -> CALLBACK_TYPE | None:
     """Attach a trigger."""
+    trigger_id = automation_info.get("trigger_id") if automation_info else None
     registry: DeviceRegistry = await async_get_registry(hass)
     if config[CONF_TYPE] == TRIGGER_TYPE_TURN_ON:
         variables = {
@@ -53,6 +54,7 @@ async def async_attach_trigger(
                 "domain": DOMAIN,
                 "device_id": config[CONF_DEVICE_ID],
                 "description": f"philips_js '{config[CONF_TYPE]}' event",
+                "id": trigger_id,
             }
         }
 

@@ -7,7 +7,7 @@ import bme680  # pylint: disable=import-error
 from smbus import SMBus
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
@@ -15,7 +15,6 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util.temperature import celsius_to_fahrenheit
 
 _LOGGER = logging.getLogger(__name__)
@@ -316,7 +315,7 @@ class BME680Handler:
         return hum_score + gas_score
 
 
-class BME680Sensor(Entity):
+class BME680Sensor(SensorEntity):
     """Implementation of the BME680 sensor."""
 
     def __init__(self, bme680_client, sensor_type, temp_unit, name):

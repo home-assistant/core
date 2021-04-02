@@ -2,10 +2,10 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 import os
 from typing import Any
 
-from verisure import Error as VerisureError
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
@@ -16,7 +16,7 @@ from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import (
     CONF_EMAIL,
     CONF_PASSWORD,
@@ -24,12 +24,10 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import (
-    ATTR_DEVICE_SERIAL,
     CONF_CODE_DIGITS,
     CONF_DEFAULT_LOCK_CODE,
     CONF_GIID,
@@ -37,10 +35,6 @@ from .const import (
     CONF_LOCK_DEFAULT_CODE,
     DEFAULT_LOCK_CODE_DIGITS,
     DOMAIN,
-    LOGGER,
-    SERVICE_CAPTURE_SMARTCAM,
-    SERVICE_DISABLE_AUTOLOCK,
-    SERVICE_ENABLE_AUTOLOCK,
 )
 from .coordinator import VerisureDataUpdateCoordinator
 
@@ -71,9 +65,6 @@ CONFIG_SCHEMA = vol.Schema(
     ),
     extra=vol.ALLOW_EXTRA,
 )
-
-
-DEVICE_SERIAL_SCHEMA = vol.Schema({vol.Required(ATTR_DEVICE_SERIAL): cv.string})
 
 
 async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
@@ -133,14 +124,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = VerisureDataUpdateCoordinator(hass, entry=entry)
 
     if not await coordinator.async_login():
-        LOGGER.error("Could not login to Verisure, aborting setting up integration")
+        await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_REAUTH},
+            data={"entry": entry},
+        )
         return False
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, coordinator.async_logout)
 
-    await coordinator.async_refresh()
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
@@ -151,44 +144,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
-    async def capture_smartcam(service):
-        """Capture a new picture from a smartcam."""
-        device_id = service.data[ATTR_DEVICE_SERIAL]
-        try:
-            await hass.async_add_executor_job(coordinator.smartcam_capture, device_id)
-            LOGGER.debug("Capturing new image from %s", ATTR_DEVICE_SERIAL)
-        except VerisureError as ex:
-            LOGGER.error("Could not capture image, %s", ex)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_CAPTURE_SMARTCAM, capture_smartcam, schema=DEVICE_SERIAL_SCHEMA
-    )
-
-    async def disable_autolock(service):
-        """Disable autolock on a doorlock."""
-        device_id = service.data[ATTR_DEVICE_SERIAL]
-        try:
-            await hass.async_add_executor_job(coordinator.disable_autolock, device_id)
-            LOGGER.debug("Disabling autolock on%s", ATTR_DEVICE_SERIAL)
-        except VerisureError as ex:
-            LOGGER.error("Could not disable autolock, %s", ex)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_DISABLE_AUTOLOCK, disable_autolock, schema=DEVICE_SERIAL_SCHEMA
-    )
-
-    async def enable_autolock(service):
-        """Enable autolock on a doorlock."""
-        device_id = service.data[ATTR_DEVICE_SERIAL]
-        try:
-            await hass.async_add_executor_job(coordinator.enable_autolock, device_id)
-            LOGGER.debug("Enabling autolock on %s", ATTR_DEVICE_SERIAL)
-        except VerisureError as ex:
-            LOGGER.error("Could not enable autolock, %s", ex)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_ENABLE_AUTOLOCK, enable_autolock, schema=DEVICE_SERIAL_SCHEMA
-    )
     return True
 
 
@@ -207,10 +162,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
 
     cookie_file = hass.config.path(STORAGE_DIR, f"verisure_{entry.entry_id}")
-    try:
+    with suppress(FileNotFoundError):
         await hass.async_add_executor_job(os.unlink, cookie_file)
-    except FileNotFoundError:
-        pass
 
     del hass.data[DOMAIN][entry.entry_id]
 

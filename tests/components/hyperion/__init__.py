@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from types import TracebackType
-from typing import Any, Dict, Optional, Type
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from hyperion import const
@@ -30,25 +30,25 @@ TEST_TITLE = f"{TEST_HOST}:{TEST_PORT}"
 
 TEST_TOKEN = "sekr1t"
 TEST_CONFIG_ENTRY_ID = "74565ad414754616000674c87bdc876c"
-TEST_CONFIG_ENTRY_OPTIONS: Dict[str, Any] = {CONF_PRIORITY: TEST_PRIORITY}
+TEST_CONFIG_ENTRY_OPTIONS: dict[str, Any] = {CONF_PRIORITY: TEST_PRIORITY}
 
-TEST_INSTANCE_1: Dict[str, Any] = {
+TEST_INSTANCE_1: dict[str, Any] = {
     "friendly_name": "Test instance 1",
     "instance": 1,
     "running": True,
 }
-TEST_INSTANCE_2: Dict[str, Any] = {
+TEST_INSTANCE_2: dict[str, Any] = {
     "friendly_name": "Test instance 2",
     "instance": 2,
     "running": True,
 }
-TEST_INSTANCE_3: Dict[str, Any] = {
+TEST_INSTANCE_3: dict[str, Any] = {
     "friendly_name": "Test instance 3",
     "instance": 3,
     "running": True,
 }
 
-TEST_AUTH_REQUIRED_RESP: Dict[str, Any] = {
+TEST_AUTH_REQUIRED_RESP: dict[str, Any] = {
     "command": "authorize-tokenRequired",
     "info": {
         "required": True,
@@ -66,16 +66,16 @@ TEST_AUTH_NOT_REQUIRED_RESP = {
 class AsyncContextManagerMock(Mock):
     """An async context manager mock for Hyperion."""
 
-    async def __aenter__(self) -> Optional[AsyncContextManagerMock]:
+    async def __aenter__(self) -> AsyncContextManagerMock | None:
         """Enter context manager and connect the client."""
         result = await self.async_client_connect()
         return self if result else None
 
     async def __aexit__(
         self,
-        exc_type: Optional[Type[BaseException]],
-        exc: Optional[BaseException],
-        traceback: Optional[TracebackType],
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        traceback: TracebackType | None,
     ) -> None:
         """Leave context manager and disconnect the client."""
         await self.async_client_disconnect()
@@ -118,7 +118,9 @@ def create_mock_client() -> Mock:
 
 
 def add_test_config_entry(
-    hass: HomeAssistantType, data: Optional[Dict[str, Any]] = None
+    hass: HomeAssistantType,
+    data: dict[str, Any] | None = None,
+    options: dict[str, Any] | None = None,
 ) -> ConfigEntry:
     """Add a test config entry."""
     config_entry: MockConfigEntry = MockConfigEntry(  # type: ignore[no-untyped-call]
@@ -131,7 +133,7 @@ def add_test_config_entry(
         },
         title=f"Hyperion {TEST_SYSINFO_ID}",
         unique_id=TEST_SYSINFO_ID,
-        options=TEST_CONFIG_ENTRY_OPTIONS,
+        options=options or TEST_CONFIG_ENTRY_OPTIONS,
     )
     config_entry.add_to_hass(hass)  # type: ignore[no-untyped-call]
     return config_entry
@@ -139,11 +141,12 @@ def add_test_config_entry(
 
 async def setup_test_config_entry(
     hass: HomeAssistantType,
-    config_entry: Optional[ConfigEntry] = None,
-    hyperion_client: Optional[Mock] = None,
+    config_entry: ConfigEntry | None = None,
+    hyperion_client: Mock | None = None,
+    options: dict[str, Any] | None = None,
 ) -> ConfigEntry:
     """Add a test Hyperion entity to hass."""
-    config_entry = config_entry or add_test_config_entry(hass)
+    config_entry = config_entry or add_test_config_entry(hass, options=options)
 
     hyperion_client = hyperion_client or create_mock_client()
     # pylint: disable=attribute-defined-outside-init

@@ -1,6 +1,14 @@
 {
     "config": {
+        "error": {
+            "invalid_pin": "PIN no v\u00e1lido",
+            "pairing_failure": "No se ha podido emparejar: {error_id}"
+        },
         "step": {
+            "pair": {
+                "description": "Introduzca el PIN que se muestra en el televisor",
+                "title": "Par"
+            },
             "user": {
                 "data": {
                     "api_version": "Versi\u00f3n del API",

@@ -6,11 +6,10 @@ from time import mktime
 import steam
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.util.dt import utc_from_timestamp
 
@@ -71,7 +70,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     track_time_interval(hass, do_update, BASE_INTERVAL)
 
 
-class SteamSensor(Entity):
+class SteamSensor(SensorEntity):
     """A class for the Steam account."""
 
     def __init__(self, account, steamod):

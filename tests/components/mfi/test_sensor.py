@@ -132,7 +132,7 @@ async def test_name(port, sensor):
 async def test_uom_temp(port, sensor):
     """Test the UOM temperature."""
     port.tag = "temperature"
-    assert TEMP_CELSIUS == sensor.unit_of_measurement
+    assert sensor.unit_of_measurement == TEMP_CELSIUS
 
 
 async def test_uom_power(port, sensor):

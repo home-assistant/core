@@ -1,6 +1,7 @@
 """Support for Xiaomi Aqara sensors."""
 import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     DEVICE_CLASS_BATTERY,
@@ -107,7 +108,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
 
-class XiaomiSensor(XiaomiDevice):
+class XiaomiSensor(XiaomiDevice, SensorEntity):
     """Representation of a XiaomiSensor."""
 
     def __init__(self, device, name, data_key, xiaomi_hub, config_entry):
@@ -171,7 +172,7 @@ class XiaomiSensor(XiaomiDevice):
         return True
 
 
-class XiaomiBatterySensor(XiaomiDevice):
+class XiaomiBatterySensor(XiaomiDevice, SensorEntity):
     """Representation of a XiaomiSensor."""
 
     @property

@@ -1,10 +1,11 @@
 """The Picture integration."""
+from __future__ import annotations
+
 import asyncio
 import logging
 import pathlib
 import secrets
 import shutil
-import typing
 
 from PIL import Image, ImageOps, UnidentifiedImageError
 from aiohttp import hdrs, web
@@ -69,7 +70,7 @@ class ImageStorageCollection(collection.StorageCollection):
         self.async_add_listener(self._change_listener)
         self.image_dir = image_dir
 
-    async def _process_create_data(self, data: typing.Dict) -> typing.Dict:
+    async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
         data = self.CREATE_SCHEMA(dict(data))
         uploaded_file: FileField = data["file"]
@@ -117,11 +118,11 @@ class ImageStorageCollection(collection.StorageCollection):
         return media_file.stat().st_size
 
     @callback
-    def _get_suggested_id(self, info: typing.Dict) -> str:
+    def _get_suggested_id(self, info: dict) -> str:
         """Suggest an ID based on the config."""
         return info[CONF_ID]
 
-    async def _update_data(self, data: dict, update_data: typing.Dict) -> typing.Dict:
+    async def _update_data(self, data: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         return {**data, **self.UPDATE_SCHEMA(update_data)}
 

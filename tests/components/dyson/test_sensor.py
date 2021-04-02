@@ -1,5 +1,6 @@
 """Test the Dyson sensor(s) component."""
-from typing import List, Type
+from __future__ import annotations
+
 from unittest.mock import patch
 
 from libpurecool.dyson_pure_cool import DysonPureCool
@@ -79,7 +80,7 @@ def _async_assign_values(
 
 
 @callback
-def async_get_device(spec: Type[DysonPureCoolLink], combi=False) -> DysonPureCoolLink:
+def async_get_device(spec: type[DysonPureCoolLink], combi=False) -> DysonPureCoolLink:
     """Return a device of the given type."""
     device = async_get_basic_device(spec)
     _async_assign_values(device, combi=combi)
@@ -113,7 +114,7 @@ def _async_get_entity_id(sensor_type: str) -> str:
     indirect=["device"],
 )
 async def test_sensors(
-    hass: HomeAssistant, device: DysonPureCoolLink, sensors: List[str]
+    hass: HomeAssistant, device: DysonPureCoolLink, sensors: list[str]
 ) -> None:
     """Test the sensors."""
     # Temperature is given by the device in kelvin

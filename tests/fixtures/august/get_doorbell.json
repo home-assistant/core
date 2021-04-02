@@ -55,7 +55,7 @@
       "reconnect"
    ],
    "doorbellID" : "K98GiDT45GUL",
-   "HouseID" : "3dd2accaea08",
+   "HouseID" : "mockhouseid1",
    "telemetry" : {
       "signal_level" : -56,
       "date" : "2017-12-10 08:05:12",

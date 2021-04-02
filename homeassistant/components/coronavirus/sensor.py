@@ -1,4 +1,5 @@
 """Sensor platform for the Corona virus."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -23,7 +24,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class CoronavirusSensor(CoordinatorEntity):
+class CoronavirusSensor(CoordinatorEntity, SensorEntity):
     """Sensor representing corona virus data."""
 
     name = None
