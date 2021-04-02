@@ -15,7 +15,7 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 
-from .const import CONF_API_SECRET, CONF_BALANCES, CONF_MARKETS
+from .const import CONF_API_SECRET, CONF_MARKETS
 from .const import DOMAIN  # pylint:disable=unused-import
 from .errors import CannotConnect, InvalidAuth, InvalidResponse
 
@@ -39,16 +39,6 @@ def _markets_schema(markets: Optional[List] = None):
     return vol.Schema({vol.Required(CONF_MARKETS): cv.multi_select(markets_dict)})
 
 
-def _balances_schema(balances: Optional[List] = None):
-    """Balances selection schema."""
-    balances_dict = {}
-
-    if balances:
-        balances_dict = {name: name for name in balances}
-
-    return vol.Schema({vol.Optional(CONF_BALANCES): cv.multi_select(balances_dict)})
-
-
 async def validate_input(hass: HomeAssistant, data: Dict):
     """Validate the user input allows us to connect.
 
@@ -68,10 +58,13 @@ async def validate_input(hass: HomeAssistant, data: Dict):
         markets = await bittrex.get_markets()
         for market in markets:
             markets_list.append(market["symbol"])
+        markets_list.sort()
 
         balances = await bittrex.get_balances()
         for balance in balances:
-            balances_list.append(balance)
+            if balances[balance]["total"] > "0.00000000":
+                balances_list.append(balances[balance]["currencySymbol"])
+        balances_list.sort()
     except BittrexInvalidAuthentication as error:
         raise InvalidAuth from error
     except BittrexApiError as error:
@@ -126,41 +119,17 @@ class BittrexConfigFlow(ConfigFlow, domain=DOMAIN):
             self.bittrex_config.update(user_input)
             info, errors = await self._async_validate_or_error(self.bittrex_config)
 
+            title = "Markets: " + ", ".join(self.bittrex_config[CONF_MARKETS])
+
             if not errors:
                 await self.async_set_unique_id(user_input[CONF_MARKETS])
                 self.balances = info["balances"]
 
-                return await self.async_step_balances()
+                return self.async_create_entry(title=title, data=self.bittrex_config)
 
         return self.async_show_form(
             step_id="markets",
             data_schema=_markets_schema(self.markets),
-            errors=errors,
-        )
-
-    async def async_step_balances(self, user_input: Optional[Dict] = None):
-        """Handle the picking of the balances."""
-        errors = {}
-
-        if user_input is not None:
-            self.bittrex_config.update(user_input)
-            title = "Markets: " + ", ".join(self.bittrex_config[CONF_MARKETS])
-
-            if CONF_BALANCES in self.bittrex_config:
-                await self.async_set_unique_id(user_input[CONF_BALANCES])
-
-                title = (
-                    title
-                    + " - "
-                    + "Balances: "
-                    + ", ".join(self.bittrex_config[CONF_BALANCES])
-                )
-
-            return self.async_create_entry(title=title, data=self.bittrex_config)
-
-        return self.async_show_form(
-            step_id="balances",
-            data_schema=_balances_schema(self.balances),
             errors=errors,
         )
 

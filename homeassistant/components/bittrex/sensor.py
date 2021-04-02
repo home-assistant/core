@@ -4,6 +4,9 @@ import logging
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
+    ASSET_VALUE_BASE,
+    ASSET_VALUE_CURRENCIES,
+    CONF_ASSET_TICKERS,
     CONF_BALANCES,
     CONF_CLOSED_ORDERS,
     CONF_OPEN_ORDERS,
@@ -26,7 +29,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     if CONF_BALANCES in coordinator.data:
         for balance in coordinator.data[CONF_BALANCES]:
-            entities.append(Balance(coordinator, balance))
+            if coordinator.data[CONF_BALANCES][balance]["total"] > "0.00000000":
+                entities.append(Balance(coordinator, balance))
+
+        for currency in ASSET_VALUE_CURRENCIES:
+            entities.append(TotalAssetValue(coordinator, currency))
 
     if CONF_OPEN_ORDERS in coordinator.data:
         entities.append(OpenOrder(coordinator, coordinator.data[CONF_OPEN_ORDERS]))
@@ -62,7 +69,7 @@ class Ticker(CoordinatorEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._get_data_property("lastTradeRate")
+        return round(float(self._get_data_property("lastTradeRate")), 4)
 
     @property
     def unique_id(self):
@@ -84,11 +91,11 @@ class Ticker(CoordinatorEntity):
         """Return additional sensor state attributes."""
         return {
             "symbol": self._symbol,
-            "last_trade_rate": self._get_data_property("lastTradeRate"),
-            "bid_rate": self._get_data_property("bidRate"),
-            "ask_rate": self._get_data_property("askRate"),
+            "last_trade_rate": float(self._get_data_property("lastTradeRate")),
+            "bid_rate": float(self._get_data_property("bidRate")),
+            "ask_rate": float(self._get_data_property("askRate")),
             "currency": self._currency,
-            "unit_of_measurement": self._unit_of_measurement,
+            "unit_of_measurement": self.unit_of_measurement,
             "source": "Bittrex",
         }
 
@@ -116,7 +123,7 @@ class Balance(CoordinatorEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._get_data_property("total")
+        return round(float(self._get_data_property("total")), 4)
 
     @property
     def unique_id(self):
@@ -143,7 +150,7 @@ class Balance(CoordinatorEntity):
             "currency_symbol": self._get_data_property("currencySymbol"),
             "available": self._get_data_property("available"),
             "updated_at": self._get_data_property("updatedAt"),
-            "unit_of_measurement": self._get_data_property("currencySymbol"),
+            "unit_of_measurement": self.unit_of_measurement,
             "source": "Bittrex",
         }
 
@@ -168,6 +175,11 @@ class Order(CoordinatorEntity):
         return {
             "source": "Bittrex",
         }
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        return "Orders"
 
 
 class OpenOrder(Order):
@@ -228,3 +240,77 @@ class ClosedOrder(Order):
     def unique_id(self):
         """Return a unique id for the sensor."""
         return self._unique_id
+
+
+class TotalAssetValue(CoordinatorEntity):
+    """Implementation of the total asset value sensor."""
+
+    def __init__(self, coordinator, currency):
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._currency = currency
+
+        self._name = f"BTX Total Asset Value - {self._currency.upper()}"
+        self._unique_id = f"btx_total_asset_value_{self._currency.lower()}"
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        total_base_asset_value = 0.0
+
+        for i in self.coordinator.data[CONF_BALANCES].keys():
+            try:
+                asset_value = self.coordinator.data[CONF_BALANCES][i][
+                    "asset_value_in_base_asset"
+                ]
+
+                total_base_asset_value += float(asset_value)
+            except KeyError:
+                continue
+
+        if self._currency == ASSET_VALUE_BASE:
+            total_asset_value = total_base_asset_value
+        else:
+            asset_value_pair_name = f"{self._currency}-{ASSET_VALUE_BASE}".upper()
+
+            # Flip currency format as it differs from other currencies
+            if asset_value_pair_name == "EUR-USDT":
+                asset_value_pair_name = "USDT-EUR"
+
+            last_price = float(
+                self.coordinator.data[CONF_ASSET_TICKERS][asset_value_pair_name][
+                    "lastTradeRate"
+                ]
+            )
+
+            total_asset_value = total_base_asset_value / last_price
+
+        return round(total_asset_value, 4)
+
+    @property
+    def unique_id(self):
+        """Return a unique id for the sensor."""
+        return self._unique_id
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        return self._currency
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend."""
+        return CURRENCY_ICONS.get(self.unit_of_measurement, DEFAULT_COIN_ICON)
+
+    @property
+    def device_state_attributes(self):
+        """Return additional sensor state attributes."""
+        return {
+            "note": f"Value is based on the last {self._currency.upper()}-{ASSET_VALUE_BASE} price of every coin in balance",
+            "source": "Bittrex",
+        }
