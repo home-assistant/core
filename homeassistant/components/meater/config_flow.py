@@ -51,8 +51,7 @@ class MeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ),
                 errors={"base": "service_unavailable_error"},
             )
-        # pylint: disable=broad-except
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             return self.async_show_form(
                 step_id="user",
                 data_schema=vol.Schema(

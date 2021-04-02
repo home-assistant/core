@@ -43,8 +43,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             raise UpdateFailed(
                 "Too many requests have been made to the API, rate limiting is in place"
             ) from err
-        # pylint: disable=broad-except
-        except Exception as err:
+        except Exception as err:  # pylint: disable=broad-except
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
         # Populate the entities
