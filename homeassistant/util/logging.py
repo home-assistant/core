@@ -11,7 +11,7 @@ import traceback
 from typing import Any, Awaitable, Callable, Coroutine, cast, overload
 
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback, is_callback
 
 
 class HideSensitiveDataFilter(logging.Filter):
@@ -138,6 +138,7 @@ def catch_log_exception(
                 log_exception(format_err, *args)
 
         wrapper_func = async_wrapper
+
     else:
 
         @wraps(func)
@@ -147,6 +148,9 @@ def catch_log_exception(
                 func(*args)
             except Exception:  # pylint: disable=broad-except
                 log_exception(format_err, *args)
+
+        if is_callback(check_func):
+            wrapper = callback(wrapper)
 
         wrapper_func = wrapper
     return wrapper_func
