@@ -16,6 +16,8 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import DOMAIN
 
+from meater import MeaterApi, AuthenticationError, TooManyRequestsError
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -36,6 +38,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
             # handled by the data update coordinator.
             async with async_timeout.timeout(10):
                 devices = await api.get_all_devices()
+        except AuthenticationError as err:
+            raise UpdateFailed("The API call wasn't authenticated") from err
+        except TooManyRequestsError as err:
+            raise UpdateFailed(
+                "Too many requests have been made to the API, rate limiting is in place"
+            ) from err
         except Exception as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 

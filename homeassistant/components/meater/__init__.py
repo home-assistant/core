@@ -2,12 +2,19 @@
 import asyncio
 import logging
 
-from meater import MeaterApi
+from meater import (
+    MeaterApi,
+    AuthenticationError,
+    ServiceUnavailableError,
+    TooManyRequestsError,
+    UnknownDeviceError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
 
@@ -33,9 +40,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         await meater_api.authenticate(
             entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
         )
-    # pylint: disable=broad-except
-    except Exception as err:
+    except (ServiceUnavailableError, TooManyRequestsError) as err:
+        raise ConfigEntryNotReady from err
+    except AuthenticationError as err:
         _LOGGER.error("Unable to authenticate with the Meater API: %s", err)
+        return False
+    except Exception as err:
+        _LOGGER.error(
+            "An unknown error occurred when communicating with the Meater API: %s", err
+        )
         return False
 
     if DOMAIN not in hass.data:
