@@ -577,16 +577,16 @@ class SonosEntity(MediaPlayerEntity):
                 # Skip unknown types
                 _LOGGER.error("Unhandled favorite '%s': %s", fav.title, ex)
 
+    def _attach_player(self):
+        """Get basic information and add event subscriptions."""
+        self._play_mode = self.soco.play_mode
+        self.update_volume()
+        self._set_favorites()
+
     async def _async_attach_player(self):
         """Get basic information and add event subscriptions."""
         try:
-            self._play_mode = self.soco.play_mode
-
-            def _updates():
-                self.update_volume()
-                self._set_favorites()
-
-            await self.hass.async_add_executor_job(_updates)
+            await self.hass.async_add_executor_job(self._attach_player)
 
             player = self.soco
 
