@@ -157,6 +157,10 @@ ZEROCONF = {
         {
             "domain": "smappee",
             "name": "smappee2*"
+        },
+        {
+            "domain": "smappee",
+            "name": "smappee50*"
         }
     ],
     "_touch-able._tcp.local.": [
