@@ -595,25 +595,21 @@ class SonosEntity(MediaPlayerEntity):
                 self._subscriptions,
             )
 
-            await player.avTransport.subscribe(
-                auto_renew=True, callback=self.async_update_media
-            )
-            self._subscriptions.append(player.avTransport)
+            subscription = await player.avTransport.subscribe(auto_renew=True)
+            subscription.callback = self.async_update_media
+            self._subscriptions.append(subscription)
 
-            await player.renderingControl.subscribe(
-                auto_renew=True, callback=self.async_update_volume
-            )
-            self._subscriptions.append(player.renderingControl)
+            subscription = await player.renderingControl.subscribe(auto_renew=True)
+            subscription.callback = self.async_update_volume
+            self._subscriptions.append(subscription)
 
-            await player.zoneGroupTopology.subscribe(
-                auto_renew=True, callback=self.async_update_groups
-            )
-            self._subscriptions.append(player.zoneGroupTopology)
+            subscription = await player.zoneGroupTopology.subscribe(auto_renew=True)
+            subscription.callback = self.async_update_groups
+            self._subscriptions.append(subscription)
 
-            await player.contentDirectory.subscribe(
-                auto_renew=True, callback=self.async_update_content
-            )
-            self._subscriptions.append(player.contentDirectory)
+            subscription = await player.contentDirectory.subscribe(auto_renew=True)
+            subscription.callback == self.async_update_content
+            self._subscriptions.append(subscription)
             return True
         except SoCoException as ex:
             _LOGGER.warning("Could not connect %s: %s", self.entity_id, ex)
