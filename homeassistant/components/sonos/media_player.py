@@ -534,12 +534,11 @@ class SonosEntity(MediaPlayerEntity):
         done = await self._async_attach_player()
         if not done:
             self._seen_timer()
-            self.async_unseen()
+            await self.async_unseen()
 
         self.async_write_ha_state()
 
-    @callback
-    def async_unseen(self, now=None):
+    async def async_unseen(self, now=None):
         """Make this player unavailable when it was not seen recently."""
         self._seen_timer = None
 
@@ -548,7 +547,7 @@ class SonosEntity(MediaPlayerEntity):
             self._poll_timer = None
 
         for subscription in self._subscriptions:
-            subscription.unsubscribe()
+            await subscription.unsubscribe()
 
         self._subscriptions = []
 
@@ -596,22 +595,22 @@ class SonosEntity(MediaPlayerEntity):
                 self._subscriptions,
             )
 
-            player.avTransport.subscribe(
+            await player.avTransport.subscribe(
                 auto_renew=True, callback=self.async_update_media
             )
             self._subscriptions.append(player.avTransport)
 
-            player.renderingControl.subscribe(
+            await player.renderingControl.subscribe(
                 auto_renew=True, callback=self.async_update_volume
             )
             self._subscriptions.append(player.renderingControl)
 
-            player.zoneGroupTopology.subscribe(
+            await player.zoneGroupTopology.subscribe(
                 auto_renew=True, callback=self.async_update_groups
             )
             self._subscriptions.append(player.zoneGroupTopology)
 
-            player.contentDirectory.subscribe(
+            await player.contentDirectory.subscribe(
                 auto_renew=True, callback=self.async_update_content
             )
             self._subscriptions.append(player.contentDirectory)
