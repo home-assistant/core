@@ -20,7 +20,12 @@ from homeassistant.components.weather import (
     ENTITY_ID_FORMAT,
     WeatherEntity,
 )
-from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_UNIQUE_ID,
+    LENGTH_KILOMETERS,
+    PRESSURE_HPA,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import async_generate_entity_id
@@ -183,32 +188,39 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
     @property
     def humidity(self):
         """Return the humidity."""
+        # unit from template: %
         return self._humidity
 
     @property
     def wind_speed(self):
         """Return the wind speed."""
-        return self._wind_speed
+        # unit from template: m/s
+        wind_speed_in_kmh = self._wind_speed * 3.6
+        return self.hass.config.units.length(wind_speed_in_kmh, LENGTH_KILOMETERS)
 
     @property
     def wind_bearing(self):
         """Return the wind bearing."""
+        # unit from template: °
         return self._wind_bearing
 
     @property
     def ozone(self):
         """Return the ozone level."""
+        # unit from template: ppm (parts per million)
         return self._ozone
 
     @property
     def visibility(self):
         """Return the visibility."""
-        return self._visibility
+        # unit from template: km
+        return self.hass.config.units.length(self._visibility, LENGTH_KILOMETERS)
 
     @property
     def pressure(self):
         """Return the air pressure."""
-        return self._pressure
+        # unit from template: hPa
+        return self.hass.config.units.pressure(self._pressure, PRESSURE_HPA)
 
     @property
     def forecast(self):
