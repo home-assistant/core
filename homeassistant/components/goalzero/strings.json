@@ -1,6 +1,5 @@
 {
   "config": {
-    "flow_title": "Goal Zero Yeti ({ip_address})",
     "step": {
       "user": {
         "title": "Goal Zero Yeti",

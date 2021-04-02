@@ -7,10 +7,6 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_POWER,
 )
 
-CONF_IDENTIFIERS = "identifiers"
-CONF_MANUFACTURER = "manufacturer"
-CONF_MODEL = "model"
-CONF_SW_VERSION = "sw_version"
 DATA_KEY_COORDINATOR = "coordinator"
 DOMAIN = "goalzero"
 DEFAULT_NAME = "Yeti"
@@ -30,7 +26,7 @@ BINARY_SENSOR_DICT = {
 }
 
 SWITCH_DICT = {
-    "v12PortStatus": ["12V Port Status", DEVICE_CLASS_POWER, None],
-    "usbPortStatus": ["USB Port Status", DEVICE_CLASS_POWER, None],
-    "acPortStatus": ["AC Port Status", DEVICE_CLASS_POWER, None],
+    "v12PortStatus": ["12V Port Status", DEVICE_CLASS_POWER],
+    "usbPortStatus": ["USB Port Status", DEVICE_CLASS_POWER],
+    "acPortStatus": ["AC Port Status", DEVICE_CLASS_POWER],
 }

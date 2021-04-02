@@ -1,6 +1,6 @@
 """The Goal Zero Yeti integration."""
 import asyncio
-from logging import getLogger
+import logging
 
 from goalzero import Yeti, exceptions
 
@@ -17,18 +17,9 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import (
-    CONF_IDENTIFIERS,
-    CONF_MANUFACTURER,
-    CONF_MODEL,
-    CONF_SW_VERSION,
-    DATA_KEY_API,
-    DATA_KEY_COORDINATOR,
-    DOMAIN,
-    MIN_TIME_BETWEEN_UPDATES,
-)
+from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN, MIN_TIME_BETWEEN_UPDATES
 
-_LOGGER = getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 PLATFORMS = [DOMAIN_BINARY_SENSOR, DOMAIN_SWITCH]
@@ -104,22 +95,22 @@ class YetiEntity(CoordinatorEntity):
         self._name = name
         self._server_unique_id = server_unique_id
         self._device_class = None
-        self.sw_version = None
-        self.model = None
+        self._model = None
+        self._sw_version = None
 
     @property
     def device_info(self):
         """Return the device information of the entity."""
         if self.api.data:
-            self.sw_version = self.api.data["firmwareVersion"]
+            self._sw_version = self.api.data["firmwareVersion"]
         if self.api.sysdata:
-            self.model = self.api.sysdata["model"]
+            self._model = self.api.sysdata["model"]
         return {
-            CONF_IDENTIFIERS: {(DOMAIN, self._server_unique_id)},
-            CONF_MANUFACTURER: "Goal Zero",
-            CONF_MODEL: self.model,
-            CONF_NAME: self._name,
-            CONF_SW_VERSION: self.sw_version,
+            "identifiers": {(DOMAIN, self._server_unique_id)},
+            "manufacturer": "Goal Zero",
+            "model": self._model,
+            "name": self._name,
+            "sw_version": self._sw_version,
         }
 
     @property

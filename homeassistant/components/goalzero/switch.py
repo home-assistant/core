@@ -34,7 +34,6 @@ class YetiSwitch(YetiEntity, SwitchEntity):
 
         variable_info = SWITCH_DICT[switch_name]
         self._condition_name = variable_info[0]
-        self._icon = variable_info[2]
         self._device_class = variable_info[1]
 
     @property
@@ -52,15 +51,16 @@ class YetiSwitch(YetiEntity, SwitchEntity):
         """Return state of the switch."""
         if self.api.data:
             return self.api.data[self._condition]
+        return None
 
     async def async_turn_off(self, **kwargs):
         """Turn off the switch."""
-        _payload = {self._condition: 0}
-        await self.api.post_state(payload=_payload)
-        self.coordinator.async_set_updated_data(data=_payload)
+        payload = {self._condition: 0}
+        await self.api.post_state(payload=payload)
+        self.coordinator.async_set_updated_data(data=payload)
 
     async def async_turn_on(self, **kwargs):
         """Turn on the switch."""
-        _payload = {self._condition: 1}
-        await self.api.post_state(payload=_payload)
-        self.coordinator.async_set_updated_data(data=_payload)
+        payload = {self._condition: 1}
+        await self.api.post_state(payload=payload)
+        self.coordinator.async_set_updated_data(data=payload)

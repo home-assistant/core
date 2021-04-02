@@ -8,7 +8,6 @@
             "invalid_host": "Invalid hostname or IP address",
             "unknown": "Unexpected error"
         },
-        "flow_title": "Goal Zero Yeti ({ip_address})",
         "step": {
             "user": {
                 "data": {
