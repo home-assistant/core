@@ -4,8 +4,12 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/smappee",
   "dependencies": ["http"],
-  "requirements": ["pysmappee==0.2.17"],
-  "codeowners": ["@bsmappee"],
+  "requirements": [
+    "pysmappee==0.2.24"
+  ],
+  "codeowners": [
+    "@bsmappee"
+  ],
   "zeroconf": [
     {
       "type": "_ssh._tcp.local.",
