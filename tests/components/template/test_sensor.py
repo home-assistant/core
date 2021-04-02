@@ -998,7 +998,7 @@ async def test_trigger_entity(hass):
         {
             "template": [
                 {"invalid": "config"},
-                # This one should still be set up
+                # Config after invalid should still be set up
                 {
                     "unique_id": "listening-test-event",
                     "trigger": {"platform": "event", "event_type": "test_event"},
@@ -1016,6 +1016,12 @@ async def test_trigger_entity(hass):
                             },
                         },
                     },
+                    "sensor": [
+                        {
+                            "friendly_name": "via list",
+                            "value_template": "{{ trigger.event.data.beer + 1}}",
+                        }
+                    ],
                 },
                 {
                     "trigger": [],
@@ -1031,7 +1037,7 @@ async def test_trigger_entity(hass):
 
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.hello")
+    state = hass.states.get("sensor.hello_name")
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
@@ -1043,7 +1049,7 @@ async def test_trigger_entity(hass):
     hass.bus.async_fire("test_event", {"beer": 2}, context=context)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.hello")
+    state = hass.states.get("sensor.hello_name")
     assert state.state == "2"
     assert state.attributes.get("device_class") == "battery"
     assert state.attributes.get("icon") == "mdi:pirate"
@@ -1055,8 +1061,12 @@ async def test_trigger_entity(hass):
     ent_reg = entity_registry.async_get(hass)
     assert len(ent_reg.entities) == 1
     assert (
-        ent_reg.entities["sensor.hello"].unique_id == "listening-test-event-just_a_test"
+        ent_reg.entities["sensor.hello_name"].unique_id
+        == "listening-test-event-just_a_test"
     )
+
+    state = hass.states.get("sensor.via_list")
+    assert state.state == "3"
 
 
 async def test_trigger_entity_render_error(hass):

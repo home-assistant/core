@@ -118,8 +118,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         async_add_entities(_async_create_template_tracking_entities(hass, config))
     else:
         async_add_entities(
-            TriggerSensorEntity(hass, discovery_info["coordinator"], device_id, config)
-            for device_id, config in discovery_info["entities"].items()
+            TriggerSensorEntity(hass, discovery_info["coordinator"], config)
+            for config in discovery_info["entities"]
         )
 
 
