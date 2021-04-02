@@ -41,7 +41,7 @@ class SmappeeFlowHandler(
         """Handle zeroconf discovery."""
 
         if not discovery_info[CONF_HOSTNAME].startswith(SUPPORTED_LOCAL_DEVICES):
-            # We currently only support Energy and Solar models (legacy)
+            # We only support Energy, Solar, Plus, Pro and Genius models
             return self.async_abort(reason="invalid_mdns")
 
         serial_number = (
@@ -86,10 +86,18 @@ class SmappeeFlowHandler(
         serial_number = self.context.get(CONF_SERIALNUMBER)
 
         # Attempt to make a connection to the local device
-        smappee_api = api.api.SmappeeLocalApi(ip=ip_address)
-        logon = await self.hass.async_add_executor_job(smappee_api.logon)
-        if logon is None:
-            return self.async_abort(reason="cannot_connect")
+        if serial_number.startswith("50"):
+            # next generation device, attempt connect to the local mqtt broker
+            smappee_mqtt = api.mqtt.SmappeeLocalMqtt(serial_number=serial_number)
+            connect = smappee_mqtt.start_attempt()
+            if not connect:
+                return self.async_abort(reason="cannot_connect")
+        else:
+            # legacy devices, without local mqtt broker, try api access
+            smappee_api = api.api.SmappeeLocalApi(ip=ip_address)
+            logon = await self.hass.async_add_executor_job(smappee_api.logon)
+            if logon is None:
+                return self.async_abort(reason="cannot_connect")
 
         return self.async_create_entry(
             title=f"{DOMAIN}{serial_number}",

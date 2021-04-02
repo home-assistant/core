@@ -75,8 +75,20 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Smappee from a zeroconf or config entry."""
     if CONF_IP_ADDRESS in entry.data:
-        smappee_api = api.api.SmappeeLocalApi(ip=entry.data[CONF_IP_ADDRESS])
-        smappee = Smappee(api=smappee_api, serialnumber=entry.data[CONF_SERIALNUMBER])
+        if entry.data[CONF_SERIALNUMBER].startswith("50"):
+            smappee_mqtt = api.mqtt.SmappeeLocalMqtt(
+                serial_number=entry.data[CONF_SERIALNUMBER]
+            )
+            smappee_mqtt.start()
+            await hass.async_add_executor_job(smappee_mqtt.is_config_ready)
+            smappee = Smappee(
+                api=smappee_mqtt, serialnumber=entry.data[CONF_SERIALNUMBER]
+            )
+        else:
+            smappee_api = api.api.SmappeeLocalApi(ip=entry.data[CONF_IP_ADDRESS])
+            smappee = Smappee(
+                api=smappee_api, serialnumber=entry.data[CONF_SERIALNUMBER]
+            )
         await hass.async_add_executor_job(smappee.load_local_service_location)
     else:
         implementation = (
