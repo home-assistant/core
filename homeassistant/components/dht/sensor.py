@@ -183,15 +183,16 @@ class DHTClient:
         """Get the latest data the DHT sensor."""
         dht = self.sensor(self.pin)
         try:
-            humidity = dht.humidity
             temperature = dht.temperature
-            if temperature:
-                self.data[SENSOR_TEMPERATURE] = temperature
-            if humidity:
-                self.data[SENSOR_HUMIDITY] = humidity
+            humidity = dht.humidity
         except RuntimeError:
             _LOGGER.debug("Unexpected value from DHT sensor: %s", self.name)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Error updating DHT sensor: %s", self.name)
+        else:
+            if temperature:
+                self.data[SENSOR_TEMPERATURE] = temperature
+            if humidity:
+                self.data[SENSOR_HUMIDITY] = humidity
         finally:
             dht.exit()
