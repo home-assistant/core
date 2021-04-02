@@ -38,7 +38,7 @@ def patch_blueprint(blueprint_path: str, data_path: str) -> Iterator[None]:
 
 
 async def test_random_color(hass: HomeAssistant) -> None:
-    """Test motion light blueprint."""
+    """Test random color blueprint."""
     with patch_blueprint(
         "random_color.yaml",
         BUILTIN_BLUEPRINT_FOLDER / "random_color.yaml",
