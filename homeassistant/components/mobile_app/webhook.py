@@ -472,6 +472,7 @@ async def webhook_update_sensor_states(hass, config_entry, data):
 
     device_name = config_entry.data[ATTR_DEVICE_NAME]
     resp = {}
+
     for sensor in data:
         entity_type = sensor[ATTR_SENSOR_TYPE]
 
@@ -495,8 +496,6 @@ async def webhook_update_sensor_states(hass, config_entry, data):
             }
             continue
 
-        entry = {CONF_WEBHOOK_ID: config_entry.data[CONF_WEBHOOK_ID]}
-
         try:
             sensor = sensor_schema_full(sensor)
         except vol.Invalid as err:
@@ -513,9 +512,8 @@ async def webhook_update_sensor_states(hass, config_entry, data):
             }
             continue
 
-        new_state = {**entry, **sensor}
-
-        async_dispatcher_send(hass, SIGNAL_SENSOR_UPDATE, new_state)
+        sensor[CONF_WEBHOOK_ID] = config_entry.data[CONF_WEBHOOK_ID]
+        async_dispatcher_send(hass, SIGNAL_SENSOR_UPDATE, sensor)
 
         resp[unique_id] = {"success": True}
 

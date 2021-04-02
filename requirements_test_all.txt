@@ -193,7 +193,7 @@ auroranoaa==0.0.2
 av==8.0.3
 
 # homeassistant.components.axis
-axis==43
+axis==44
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.1.0
@@ -423,7 +423,7 @@ hole==0.5.1
 holidays==0.10.5.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210331.0
+home-assistant-frontend==20210402.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -542,7 +542,7 @@ numato-gpio==0.10.0
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.19.2
+numpy==1.20.2
 
 # homeassistant.components.google
 oauth2client==4.0.0
@@ -765,7 +765,7 @@ pyhaversion==21.3.0
 pyheos==0.7.2
 
 # homeassistant.components.hive
-pyhiveapi==0.3.9
+pyhiveapi==0.4.1
 
 # homeassistant.components.homematic
 pyhomematic==0.1.72

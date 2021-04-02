@@ -447,7 +447,6 @@ class SonosEntity(MediaPlayerEntity):
 
         self.hass.data[DATA_SONOS].entities.append(self)
 
-        """Build the current group topology."""
         for entity in self.hass.data[DATA_SONOS].entities:
             await entity.async_update_groups_coro()
 
@@ -595,25 +594,26 @@ class SonosEntity(MediaPlayerEntity):
                 self._subscriptions,
             )
 
-            subscription = await player.avTransport.subscribe(auto_renew=True)
-            subscription.callback = self.async_update_media
-            self._subscriptions.append(subscription)
-
-            subscription = await player.renderingControl.subscribe(auto_renew=True)
-            subscription.callback = self.async_update_volume
-            self._subscriptions.append(subscription)
-
-            subscription = await player.zoneGroupTopology.subscribe(auto_renew=True)
-            subscription.callback = self.async_update_groups
-            self._subscriptions.append(subscription)
-
-            subscription = await player.contentDirectory.subscribe(auto_renew=True)
-            subscription.callback == self.async_update_content
-            self._subscriptions.append(subscription)
+            await self._async_subscribe(player.avTransport, self.async_update_media)
+            await self._async_subscribe(
+                player.renderingControl, self.async_update_volume
+            )
+            await self._async_subscribe(
+                player.zoneGroupTopology, self.async_update_groups
+            )
+            await self._async_subscribe(
+                player.contentDirectory, self.async_update_content
+            )
             return True
         except SoCoException as ex:
             _LOGGER.warning("Could not connect %s: %s", self.entity_id, ex)
             return False
+
+    async def _async_subscribe(self, player_prop, callback):
+        """Create a sonos subscription."""
+        subscription = await player_prop.subscribe(auto_renew=True)
+        subscription.callback = callback
+        self._subscriptions.append(subscription)
 
     @property
     def should_poll(self):
@@ -777,7 +777,7 @@ class SonosEntity(MediaPlayerEntity):
             self._queue_position = playlist_position - 1
 
     @callback
-    def async_update_volume(self, event=None):
+    def async_update_volume(self, event):
         """Update information about currently volume settings."""
         variables = event.variables
 
