@@ -3,21 +3,22 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from typing import Any, cast
 
 import voluptuous as vol
+from voluptuous.humanize import humanize_error
 
 from homeassistant.components.trace import TRACE_CONFIG_SCHEMA
+from homeassistant.components.blueprint import BlueprintInputs
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
     ATTR_NAME,
     CONF_ALIAS,
-    CONF_DEFAULT,
     CONF_DESCRIPTION,
     CONF_ICON,
     CONF_MODE,
     CONF_NAME,
-    CONF_SELECTOR,
     CONF_SEQUENCE,
     CONF_VARIABLES,
     SERVICE_RELOAD,
@@ -27,6 +28,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import extract_domain_configs
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import ToggleEntity
@@ -36,62 +38,25 @@ from homeassistant.helpers.script import (
     ATTR_MAX,
     CONF_MAX,
     CONF_MAX_EXCEEDED,
-    SCRIPT_MODE_SINGLE,
     Script,
-    make_script_schema,
 )
-from homeassistant.helpers.selector import validate_selector
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.trace import trace_get, trace_path
 from homeassistant.loader import bind_hass
 
+from .config import ScriptConfig, async_validate_config_item
+from .const import (
+    ATTR_LAST_ACTION,
+    ATTR_LAST_TRIGGERED,
+    ATTR_VARIABLES,
+    CONF_FIELDS,
+    DOMAIN,
+    ENTITY_ID_FORMAT,
+    EVENT_SCRIPT_STARTED,
+    LOGGER,
+)
+from .helpers import async_get_blueprints
 from .trace import trace_script
-
-_LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "script"
-
-ATTR_LAST_ACTION = "last_action"
-ATTR_LAST_TRIGGERED = "last_triggered"
-ATTR_VARIABLES = "variables"
-
-CONF_ADVANCED = "advanced"
-CONF_EXAMPLE = "example"
-CONF_FIELDS = "fields"
-CONF_REQUIRED = "required"
-CONF_TRACE = "trace"
-
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
-
-EVENT_SCRIPT_STARTED = "script_started"
-
-
-SCRIPT_ENTRY_SCHEMA = make_script_schema(
-    {
-        vol.Optional(CONF_ALIAS): cv.string,
-        vol.Optional(CONF_TRACE, default={}): TRACE_CONFIG_SCHEMA,
-        vol.Optional(CONF_ICON): cv.icon,
-        vol.Required(CONF_SEQUENCE): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_DESCRIPTION, default=""): cv.string,
-        vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
-        vol.Optional(CONF_FIELDS, default={}): {
-            cv.string: {
-                vol.Optional(CONF_ADVANCED, default=False): cv.boolean,
-                vol.Optional(CONF_DEFAULT): cv.match_all,
-                vol.Optional(CONF_DESCRIPTION): cv.string,
-                vol.Optional(CONF_EXAMPLE): cv.string,
-                vol.Optional(CONF_NAME): cv.string,
-                vol.Optional(CONF_REQUIRED, default=False): cv.boolean,
-                vol.Optional(CONF_SELECTOR): validate_selector,
-            }
-        },
-    },
-    SCRIPT_MODE_SINGLE,
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: cv.schema_with_slug_keys(SCRIPT_ENTRY_SCHEMA)}, extra=vol.ALLOW_EXTRA
-)
 
 SCRIPT_SERVICE_SCHEMA = vol.Schema(dict)
 SCRIPT_TURN_ONOFF_SCHEMA = make_entity_service_schema(
@@ -201,9 +166,13 @@ def areas_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
 
 async def async_setup(hass, config):
     """Load the scripts from the configuration."""
-    hass.data[DOMAIN] = component = EntityComponent(_LOGGER, DOMAIN, hass)
+    hass.data[DOMAIN] = component = EntityComponent(LOGGER, DOMAIN, hass)
 
-    await _async_process_config(hass, config, component)
+    # To register scripts as valid domain for Blueprint
+    async_get_blueprints(hass)
+
+    if not await _async_process_config(hass, config, component):
+        await async_get_blueprints(hass).async_populate()
 
     async def reload_service(service):
         """Call a service to reload scripts."""
@@ -257,8 +226,52 @@ async def async_setup(hass, config):
     return True
 
 
-async def _async_process_config(hass, config, component):
-    """Process script configuration."""
+async def _async_process_config(hass, config, component) -> bool:
+    """Process script configuration.
+
+    Return true, if Blueprints were used.
+    """
+    entities = []
+    blueprints_used = False
+
+    for config_key in extract_domain_configs(config, DOMAIN):
+        LOGGER.error(config_key)
+        conf: dict[str, dict[str, Any] | BlueprintInputs] = config[config_key]
+
+        for object_id, config_block in conf.items():
+            raw_blueprint_inputs = None
+            raw_config = None
+
+            if isinstance(config_block, BlueprintInputs):
+                blueprints_used = True
+                blueprint_inputs = config_block
+                raw_blueprint_inputs = blueprint_inputs.config_with_inputs
+
+                try:
+                    raw_config = blueprint_inputs.async_substitute()
+                    config_block = cast(
+                        dict[str, Any],
+                        await async_validate_config_item(hass, raw_config),
+                    )
+                except vol.Invalid as err:
+                    LOGGER.error(
+                        "Blueprint %s generated invalid script with input %s: %s",
+                        blueprint_inputs.blueprint.name,
+                        blueprint_inputs.inputs,
+                        humanize_error(config_block, err),
+                    )
+                    continue
+            else:
+                raw_config = cast(ScriptConfig, config_block).raw_config
+
+            # config_block = await async_validate_config_item(hass, cfg)
+            entities.append(
+                ScriptEntity(
+                    hass, object_id, config_block, raw_config, raw_blueprint_inputs
+                )
+            )
+
+    await component.async_add_entities(entities)
 
     async def service_handler(service):
         """Execute a service call to script.<script name>."""
@@ -268,33 +281,21 @@ async def _async_process_config(hass, config, component):
             variables=service.data, context=service.context
         )
 
-    script_entities = [
-        ScriptEntity(hass, object_id, cfg, cfg.raw_config)
-        for object_id, cfg in config.get(DOMAIN, {}).items()
-    ]
-
-    await component.async_add_entities(script_entities)
-
     # Register services for all entities that were created successfully.
-    for script_entity in script_entities:
-        object_id = script_entity.object_id
-        if component.get_entity(script_entity.entity_id) is None:
-            _LOGGER.error("Couldn't load script %s", object_id)
-            continue
-
-        cfg = config[DOMAIN][object_id]
-
+    for entity in entities:
         hass.services.async_register(
-            DOMAIN, object_id, service_handler, schema=SCRIPT_SERVICE_SCHEMA
+            DOMAIN, entity.object_id, service_handler, schema=SCRIPT_SERVICE_SCHEMA
         )
 
         # Register the service description
         service_desc = {
-            CONF_NAME: script_entity.name,
-            CONF_DESCRIPTION: cfg[CONF_DESCRIPTION],
-            CONF_FIELDS: cfg[CONF_FIELDS],
+            CONF_NAME: entity.name,
+            CONF_DESCRIPTION: entity.description,
+            CONF_FIELDS: entity.fields,
         }
-        async_set_service_schema(hass, DOMAIN, object_id, service_desc)
+        async_set_service_schema(hass, DOMAIN, entity.object_id, service_desc)
+
+    return blueprints_used
 
 
 class ScriptEntity(ToggleEntity):
@@ -302,10 +303,13 @@ class ScriptEntity(ToggleEntity):
 
     icon = None
 
-    def __init__(self, hass, object_id, cfg, raw_config):
+    def __init__(self, hass, object_id, cfg, raw_config, blueprint_inputs):
         """Initialize the script."""
         self.object_id = object_id
         self.icon = cfg.get(CONF_ICON)
+        self.description = cfg[CONF_DESCRIPTION]
+        self.fields = cfg[CONF_FIELDS]
+
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self.script = Script(
             hass,
@@ -323,6 +327,7 @@ class ScriptEntity(ToggleEntity):
         self._changed = asyncio.Event()
         self._raw_config = raw_config
         self._trace_config = cfg[CONF_TRACE]
+        self._blueprint_inputs = blueprint_inputs
 
     @property
     def should_poll(self):
