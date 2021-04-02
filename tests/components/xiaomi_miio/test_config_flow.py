@@ -4,7 +4,6 @@ from unittest.mock import Mock, patch
 from miio import DeviceException
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components import zeroconf
 from homeassistant.components.xiaomi_miio import const
 from homeassistant.components.xiaomi_miio.config_flow import DEFAULT_GATEWAY_NAME
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
@@ -111,7 +110,7 @@ async def test_zeroconf_gateway_success(hass):
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data={
-            zeroconf.ATTR_HOST: TEST_HOST,
+            CONF_HOST: TEST_HOST,
             ZEROCONF_NAME: TEST_ZEROCONF_NAME,
             ZEROCONF_PROP: {ZEROCONF_MAC: TEST_MAC},
         },
@@ -151,7 +150,7 @@ async def test_zeroconf_unknown_device(hass):
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data={
-            zeroconf.ATTR_HOST: TEST_HOST,
+            CONF_HOST: TEST_HOST,
             ZEROCONF_NAME: "not-a-xiaomi-miio-device",
             ZEROCONF_PROP: {ZEROCONF_MAC: TEST_MAC},
         },
@@ -176,7 +175,7 @@ async def test_zeroconf_missing_data(hass):
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={zeroconf.ATTR_HOST: TEST_HOST, ZEROCONF_NAME: TEST_ZEROCONF_NAME},
+        data={CONF_HOST: TEST_HOST, ZEROCONF_NAME: TEST_ZEROCONF_NAME},
     )
 
     assert result["type"] == "abort"
@@ -347,7 +346,7 @@ async def zeroconf_device_success(hass, zeroconf_name_to_test, model_to_test):
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data={
-            zeroconf.ATTR_HOST: TEST_HOST,
+            CONF_HOST: TEST_HOST,
             ZEROCONF_NAME: zeroconf_name_to_test,
             ZEROCONF_PROP: {"poch": f"0:mac={TEST_MAC_DEVICE}\x00"},
         },

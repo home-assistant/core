@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, const, core, exceptions
 
-from . import DOMAIN  # pylint: disable=unused-import
+from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

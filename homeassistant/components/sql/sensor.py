@@ -8,10 +8,9 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 import voluptuous as vol
 
 from homeassistant.components.recorder import CONF_DB_URL, DEFAULT_DB_FILE, DEFAULT_URL
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,7 +89,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(queries, True)
 
 
-class SQLSensor(Entity):
+class SQLSensor(SensorEntity):
     """Representation of an SQL sensor."""
 
     def __init__(self, name, sessmaker, query, column, unit, value_template):

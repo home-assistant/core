@@ -1,0 +1,14 @@
+{
+    "config": {
+        "error": {
+            "invalid_pin": "PIN inv\u00e1lido"
+        },
+        "step": {
+            "pair": {
+                "data": {
+                    "pin": "C\u00f3digo PIN"
+                }
+            }
+        }
+    }
+}

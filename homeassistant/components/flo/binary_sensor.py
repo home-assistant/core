@@ -1,6 +1,5 @@
 """Support for Flo Water Monitor binary sensors."""
-
-from typing import List
+from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_PROBLEM,
@@ -14,7 +13,7 @@ from .entity import FloEntity
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Flo sensors from config entry."""
-    devices: List[FloDeviceDataUpdateCoordinator] = hass.data[FLO_DOMAIN][
+    devices: list[FloDeviceDataUpdateCoordinator] = hass.data[FLO_DOMAIN][
         config_entry.entry_id
     ]["devices"]
     entities = []

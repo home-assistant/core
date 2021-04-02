@@ -1,7 +1,8 @@
 """Support for the Dynalite networks."""
+from __future__ import annotations
 
 import asyncio
-from typing import Any, Dict, Union
+from typing import Any
 
 import voluptuous as vol
 
@@ -54,7 +55,7 @@ from .const import (
 )
 
 
-def num_string(value: Union[int, str]) -> str:
+def num_string(value: int | str) -> str:
     """Test if value is a string of digits, aka an integer."""
     new_value = str(value)
     if new_value.isdigit():
@@ -105,7 +106,7 @@ TEMPLATE_DATA_SCHEMA = vol.Any(TEMPLATE_ROOM_SCHEMA, TEMPLATE_TIMECOVER_SCHEMA)
 TEMPLATE_SCHEMA = vol.Schema({str: TEMPLATE_DATA_SCHEMA})
 
 
-def validate_area(config: Dict[str, Any]) -> Dict[str, Any]:
+def validate_area(config: dict[str, Any]) -> dict[str, Any]:
     """Validate that template parameters are only used if area is using the relevant template."""
     conf_set = set()
     for template in DEFAULT_TEMPLATES:
@@ -178,7 +179,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: Dict[str, Any]) -> bool:
+async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
     """Set up the Dynalite platform."""
     conf = config.get(DOMAIN)
     LOGGER.debug("Setting up dynalite component config = %s", conf)

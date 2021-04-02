@@ -6,8 +6,8 @@
         },
         "step": {
             "hassio_confirm": {
-                "description": "\u00bfDesea configurar Home Assistant para conectarse a la p\u00e1gina principal de AdGuard proporcionada por el complemento Hass.io: {addon}?",
-                "title": "AdGuard Home a trav\u00e9s del complemento Hass.io"
+                "description": "\u00bfDesea configurar Home Assistant para conectarse a la p\u00e1gina principal de AdGuard proporcionada por el complemento Supervisor: {addon}?",
+                "title": "AdGuard Home a trav\u00e9s del complemento Supervisor"
             },
             "user": {
                 "data": {

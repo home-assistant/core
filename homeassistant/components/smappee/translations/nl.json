@@ -9,7 +9,14 @@
             "missing_configuration": "De Netatmo-component is niet geconfigureerd. Gelieve de documentatie volgen.",
             "no_url_available": "Geen URL beschikbaar. Voor informatie over deze fout, [check de helpsectie]({docs_url})"
         },
+        "flow_title": "Smappee: {name}",
         "step": {
+            "environment": {
+                "data": {
+                    "environment": "Omgeving"
+                },
+                "description": "Stel uw Smappee in om te integreren met Home Assistant."
+            },
             "local": {
                 "data": {
                     "host": "Host"
@@ -18,6 +25,10 @@
             },
             "pick_implementation": {
                 "title": "Kies een authenticatie methode"
+            },
+            "zeroconf_confirm": {
+                "description": "Wilt u het Smappee apparaat met serienummer `{serialnumber}` toevoegen aan Home Assistant?",
+                "title": "Ontdekt Smappee apparaat"
             }
         }
     }

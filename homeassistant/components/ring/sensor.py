@@ -1,7 +1,11 @@
 """This component provides HA sensor support for Ring Door Bell/Chimes."""
-from homeassistant.const import PERCENTAGE, SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import (
+    DEVICE_CLASS_TIMESTAMP,
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+)
 from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 
 from . import DOMAIN
@@ -32,7 +36,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(sensors)
 
 
-class RingSensor(RingEntityMixin, Entity):
+class RingSensor(RingEntityMixin, SensorEntity):
     """A sensor implementation for Ring device."""
 
     def __init__(self, config_entry_id, device, sensor_type):
@@ -210,7 +214,7 @@ SENSOR_TYPES = {
         None,
         "history",
         None,
-        "timestamp",
+        DEVICE_CLASS_TIMESTAMP,
         HistoryRingSensor,
     ],
     "last_ding": [
@@ -219,7 +223,7 @@ SENSOR_TYPES = {
         None,
         "history",
         "ding",
-        "timestamp",
+        DEVICE_CLASS_TIMESTAMP,
         HistoryRingSensor,
     ],
     "last_motion": [
@@ -228,7 +232,7 @@ SENSOR_TYPES = {
         None,
         "history",
         "motion",
-        "timestamp",
+        DEVICE_CLASS_TIMESTAMP,
         HistoryRingSensor,
     ],
     "volume": [

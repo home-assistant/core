@@ -4,7 +4,7 @@ from datetime import timedelta
 from TransportNSW import TransportNSW
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_MODE,
@@ -13,7 +13,6 @@ from homeassistant.const import (
     TIME_MINUTES,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 ATTR_STOP_ID = "stop_id"
 ATTR_ROUTE = "route"
@@ -65,7 +64,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([TransportNSWSensor(data, stop_id, name)], True)
 
 
-class TransportNSWSensor(Entity):
+class TransportNSWSensor(SensorEntity):
     """Implementation of an Transport NSW sensor."""
 
     def __init__(self, data, stop_id, name):

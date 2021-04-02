@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_API_KEY, CONF_URL
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN
 from .utils import hash_from_url
 
 _LOGGER = logging.getLogger(__name__)

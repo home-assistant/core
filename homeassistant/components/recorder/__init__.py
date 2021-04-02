@@ -1,4 +1,6 @@
 """Support for recording details."""
+from __future__ import annotations
+
 import asyncio
 import concurrent.futures
 from datetime import datetime
@@ -7,7 +9,7 @@ import queue
 import sqlite3
 import threading
 import time
-from typing import Any, Callable, List, NamedTuple, Optional
+from typing import Any, Callable, NamedTuple
 
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -125,7 +127,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def run_information(hass, point_in_time: Optional[datetime] = None):
+def run_information(hass, point_in_time: datetime | None = None):
     """Return information about current run.
 
     There is also the run that covers point_in_time.
@@ -138,7 +140,7 @@ def run_information(hass, point_in_time: Optional[datetime] = None):
         return run_information_with_session(session, point_in_time)
 
 
-def run_information_from_instance(hass, point_in_time: Optional[datetime] = None):
+def run_information_from_instance(hass, point_in_time: datetime | None = None):
     """Return information about current run from the existing instance.
 
     Does not query the database for older runs.
@@ -149,7 +151,7 @@ def run_information_from_instance(hass, point_in_time: Optional[datetime] = None
         return ins.run_info
 
 
-def run_information_with_session(session, point_in_time: Optional[datetime] = None):
+def run_information_with_session(session, point_in_time: datetime | None = None):
     """Return information about current run from the database."""
     recorder_runs = RecorderRuns
 
@@ -249,7 +251,7 @@ class Recorder(threading.Thread):
         db_max_retries: int,
         db_retry_wait: int,
         entity_filter: Callable[[str], bool],
-        exclude_t: List[str],
+        exclude_t: list[str],
         db_integrity_check: bool,
     ) -> None:
         """Initialize the recorder."""
@@ -302,11 +304,7 @@ class Recorder(threading.Thread):
             return False
 
         entity_id = event.data.get(ATTR_ENTITY_ID)
-        if entity_id is not None:
-            if not self.entity_filter(entity_id):
-                return False
-
-        return True
+        return bool(entity_id is None or self.entity_filter(entity_id))
 
     def do_adhoc_purge(self, **kwargs):
         """Trigger an adhoc purge retaining keep_days worth of data."""

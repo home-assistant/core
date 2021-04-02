@@ -9,7 +9,6 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
 
-# pylint: disable=unused-import
 from .const import (
     CONF_CLOUD_COUNTRY,
     CONF_CLOUD_PASSWORD,
@@ -97,6 +96,8 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, conf: dict):
         """Import a configuration from config.yaml."""
+        host = conf[CONF_HOST]
+        self.context.update({"title_placeholders": {"name": f"YAML import {host}"}})
         return await self.async_step_device(user_input=conf)
 
     async def async_step_user(self, user_input=None):
