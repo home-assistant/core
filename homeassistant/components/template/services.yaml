@@ -1,3 +1,16 @@
 reload:
   description: Reload all template entities.
 
+trigger:
+  name: "Trigger updating an entity"
+  description: Trigger an update of a template entity. If the entity updates based on a trigger, the whole section that configured this entity will be updated.
+  target:
+    entity:
+      integration: template
+  fields:
+    variables:
+      name: Variables
+      description: Variables to make available to the trigger-based entity.
+      required: false
+      selector:
+        object:
