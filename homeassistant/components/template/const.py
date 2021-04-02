@@ -20,3 +20,7 @@ PLATFORMS = [
     "vacuum",
     "weather",
 ]
+
+CONF_AVAILABILITY = "availability"
+CONF_ATTRIBUTES = "attributes"
+CONF_PICTURE = "picture"
