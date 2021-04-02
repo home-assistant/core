@@ -25,6 +25,7 @@ from .const import (
     DATA_KEY_API,
     DATA_KEY_COORDINATOR,
     DOMAIN,
+    MIN_TIME_BETWEEN_UPDATES,
 )
 
 _LOGGER = getLogger(__name__)
@@ -65,6 +66,7 @@ async def async_setup_entry(hass, entry):
         _LOGGER,
         name=name,
         update_method=async_update_data,
+        update_interval=MIN_TIME_BETWEEN_UPDATES,
     )
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_KEY_API: api,
