@@ -85,7 +85,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 api=smappee_mqtt, serialnumber=entry.data[CONF_SERIALNUMBER]
             )
         else:
-            # legacy devices through local api
             smappee_api = api.api.SmappeeLocalApi(ip=entry.data[CONF_IP_ADDRESS])
             smappee = Smappee(
                 api=smappee_api, serialnumber=entry.data[CONF_SERIALNUMBER]
