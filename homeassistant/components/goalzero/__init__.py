@@ -1,9 +1,11 @@
 """The Goal Zero Yeti integration."""
 import asyncio
-import logging
+from logging import getLogger
 
 from goalzero import Yeti, exceptions
 
+from homeassistant.components.binary_sensor import DOMAIN as DOMAIN_BINARY_SENSOR
+from homeassistant.components.switch import DOMAIN as DOMAIN_SWITCH
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -15,17 +17,24 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN, MIN_TIME_BETWEEN_UPDATES
+from .const import (
+    CONF_IDENTIFIERS,
+    CONF_MANUFACTURER,
+    CONF_MODEL,
+    CONF_SW_VERSION,
+    DATA_KEY_API,
+    DATA_KEY_COORDINATOR,
+    DOMAIN,
+)
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = getLogger(__name__)
 
 
-PLATFORMS = ["binary_sensor"]
+PLATFORMS = [DOMAIN_BINARY_SENSOR, DOMAIN_SWITCH]
 
 
 async def async_setup(hass: HomeAssistant, config):
     """Set up the Goal Zero Yeti component."""
-
     hass.data[DOMAIN] = {}
 
     return True
@@ -39,7 +48,7 @@ async def async_setup_entry(hass, entry):
     session = async_get_clientsession(hass)
     api = Yeti(host, hass.loop, session)
     try:
-        await api.get_state()
+        await api.init_connect()
     except exceptions.ConnectError as ex:
         _LOGGER.warning("Failed to connect: %s", ex)
         raise ConfigEntryNotReady from ex
@@ -56,18 +65,15 @@ async def async_setup_entry(hass, entry):
         _LOGGER,
         name=name,
         update_method=async_update_data,
-        update_interval=MIN_TIME_BETWEEN_UPDATES,
     )
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_KEY_API: api,
         DATA_KEY_COORDINATOR: coordinator,
     }
-
     for platform in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
-
     return True
 
 
@@ -96,14 +102,22 @@ class YetiEntity(CoordinatorEntity):
         self._name = name
         self._server_unique_id = server_unique_id
         self._device_class = None
+        self.sw_version = None
+        self.model = None
 
     @property
     def device_info(self):
         """Return the device information of the entity."""
+        if self.api.data:
+            self.sw_version = self.api.data["firmwareVersion"]
+        if self.api.sysdata:
+            self.model = self.api.sysdata["model"]
         return {
-            "identifiers": {(DOMAIN, self._server_unique_id)},
-            "name": self._name,
-            "manufacturer": "Goal Zero",
+            CONF_IDENTIFIERS: {(DOMAIN, self._server_unique_id)},
+            CONF_MANUFACTURER: "Goal Zero",
+            CONF_MODEL: self.model,
+            CONF_NAME: self._name,
+            CONF_SW_VERSION: self.sw_version,
         }
 
     @property
