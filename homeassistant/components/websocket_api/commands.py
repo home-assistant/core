@@ -424,6 +424,7 @@ async def handle_test_condition(hass, connection, msg):
     {
         vol.Required("type"): "execute_script",
         vol.Required("sequence"): cv.SCRIPT_SCHEMA,
+        vol.Optional("variables"): dict,
     }
 )
 @decorators.require_admin
@@ -436,5 +437,5 @@ async def handle_execute_script(hass, connection, msg):
 
     context = connection.context(msg)
     script_obj = Script(hass, msg["sequence"], f"{const.DOMAIN} script", const.DOMAIN)
-    await script_obj.async_run(context=context)
+    await script_obj.async_run(msg.get("variables"), context=context)
     connection.send_message(messages.result_message(msg["id"], {"context": context}))
