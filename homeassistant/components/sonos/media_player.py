@@ -515,6 +515,7 @@ class SonosEntity(MediaPlayerEntity):
     async def async_seen(self, player):
         """Record that this player was seen right now."""
         was_available = self.available
+        _LOGGER.warning("Async seen: %s, was_available: %s", player, was_available)
 
         self._player = player
 
@@ -589,9 +590,11 @@ class SonosEntity(MediaPlayerEntity):
 
             player = self.soco
 
-            # If already subscribed, do not do it again
-            if self._subscriptions:
-                return
+            _LOGGER.warning(
+                "Attach Player: %s, existing subscriptions: %s",
+                player,
+                self._subscriptions,
+            )
 
             def subscribe(sonos_service, action):
                 """Add a subscription to a pysonos service."""
