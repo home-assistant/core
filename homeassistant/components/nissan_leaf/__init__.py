@@ -380,7 +380,9 @@ class LeafDataStore:
                     server_info = await self.hass.async_add_executor_job(
                         self.leaf.get_latest_battery_status
                     )
-                    if not start_date or start_date != _extract_start_date(server_info):
+                    if not start_date or (
+                        server_info and start_date != _extract_start_date(server_info)
+                    ):
                         return server_info
                     # get_status_from_update returned {"resultFlag": "1"}
                     # but the data didn't change, make a fresh request.
@@ -405,7 +407,7 @@ class LeafDataStore:
         except CarwingsError:
             _LOGGER.error("An error occurred getting battery status")
             return None
-        except KeyError:
+        except (KeyError, TypeError):
             _LOGGER.error("An error occurred parsing response from server")
             return None
 
