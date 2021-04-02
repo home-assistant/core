@@ -476,7 +476,7 @@ defusedxml==0.6.0
 deluge-client==1.7.1
 
 # homeassistant.components.denonavr
-denonavr==0.9.10
+denonavr==0.10.5
 
 # homeassistant.components.devolo_home_control
 devolo-home-control-api==0.17.1
@@ -647,7 +647,6 @@ georss_ign_sismologia_client==0.2
 # homeassistant.components.qld_bushfire
 georss_qld_bushfire_alert_client==0.3
 
-# homeassistant.components.denonavr
 # homeassistant.components.huawei_lte
 # homeassistant.components.kef
 # homeassistant.components.minecraft_server
