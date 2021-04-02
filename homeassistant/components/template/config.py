@@ -88,28 +88,33 @@ async def async_validate_config(hass, config):
             async_log_exception(err, DOMAIN, cfg, hass)
             continue
 
-        if CONF_SENSORS in cfg:
-            logging.getLogger(__name__).warning(
-                "The entity definition format under template: differs from the platform configuration format. See https://www.home-assistant.io/integrations/template#configuration-for-trigger-based-template-sensors"
-            )
-            sensor = list(cfg[SENSOR_DOMAIN]) if SENSOR_DOMAIN in cfg else []
+        if CONF_SENSORS not in cfg:
+            trigger_entity_configs.append(cfg)
+            continue
 
-            for device_id, entity_cfg in cfg[CONF_SENSORS].items():
-                entity_cfg = {**entity_cfg}
+        logging.getLogger(__name__).warning(
+            "The entity definition format under template: differs from the platform configuration format. See https://www.home-assistant.io/integrations/template#configuration-for-trigger-based-template-sensors"
+        )
+        sensor = list(cfg[SENSOR_DOMAIN]) if SENSOR_DOMAIN in cfg else []
 
-                for from_key, to_key in CONVERSION_PLATFORM.items():
-                    if from_key in entity_cfg and to_key not in entity_cfg:
-                        val = entity_cfg.pop(from_key)
-                        if isinstance(val, str):
-                            val = template.Template(val)
-                        entity_cfg[to_key] = val
+        for device_id, entity_cfg in cfg[CONF_SENSORS].items():
+            entity_cfg = {**entity_cfg}
 
-                if CONF_NAME not in entity_cfg:
-                    entity_cfg[CONF_NAME] = template.Template(device_id)
+            for from_key, to_key in CONVERSION_PLATFORM.items():
+                if from_key not in entity_cfg or to_key in entity_cfg:
+                    continue
 
-                sensor.append(entity_cfg)
+                val = entity_cfg.pop(from_key)
+                if isinstance(val, str):
+                    val = template.Template(val)
+                entity_cfg[to_key] = val
 
-            cfg = {**cfg, "sensor": sensor}
+            if CONF_NAME not in entity_cfg:
+                entity_cfg[CONF_NAME] = template.Template(device_id)
+
+            sensor.append(entity_cfg)
+
+        cfg = {**cfg, "sensor": sensor}
 
         trigger_entity_configs.append(cfg)
 
