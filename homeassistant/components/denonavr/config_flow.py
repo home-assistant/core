@@ -4,6 +4,7 @@ from typing import Any, Dict, Optional
 from urllib.parse import urlparse
 
 import denonavr
+from denonavr.exceptions import AvrNetworkError, AvrTimoutError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -164,7 +165,12 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.zone3,
             lambda: get_async_client(self.hass),
         )
-        if not await connect_denonavr.async_connect_receiver():
+
+        try:
+            success = await connect_denonavr.async_connect_receiver()
+        except (AvrNetworkError, AvrTimoutError):
+            success = False
+        if not success:
             return self.async_abort(reason="cannot_connect")
         receiver = connect_denonavr.receiver
 

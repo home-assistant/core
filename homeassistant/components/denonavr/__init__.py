@@ -1,8 +1,11 @@
 """The denonavr component."""
 import logging
 
+from denonavr.exceptions import AvrNetworkError, AvrTimoutError
+
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_HOST
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.httpx_client import get_async_client
 
@@ -40,7 +43,10 @@ async def async_setup_entry(
         lambda: get_async_client(hass),
         entry.state,
     )
-    await connect_denonavr.async_connect_receiver()
+    try:
+        await connect_denonavr.async_connect_receiver()
+    except (AvrNetworkError, AvrTimoutError) as ex:
+        raise ConfigEntryNotReady from ex
     receiver = connect_denonavr.receiver
 
     undo_listener = entry.add_update_listener(update_listener)
