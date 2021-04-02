@@ -27,7 +27,7 @@ MOCK_IMPORT = {
     "verify_ssl": False,
     "group": "user",
     "password": "password",
-    "sensors": ["pv_power", "daily_yield", "total_yield"],
+    "sensors": ["pv_power", "daily_yield", "total_yield", "not_existing_sensors"],
     "custom": {
         "yesterday_consumption": {
             "factor": 1000.0,
@@ -93,7 +93,10 @@ async def init_integration(hass):
     )
     entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(entry.entry_id)
+    with patch(
+        "homeassistant.helpers.update_coordinator.DataUpdateCoordinator.async_config_entry_first_refresh"
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     return entry
 

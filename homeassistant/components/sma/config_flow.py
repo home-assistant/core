@@ -159,7 +159,7 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(config_entry_unique_id)
         self._abort_if_unique_id_configured(import_config)
 
-        entity_registry = await er.async_get_registry(self.hass)
+        entity_registry = er.async_get(self.hass)
 
         # Init all default sensors
         sensor_def = pysma.Sensors()

@@ -2,6 +2,10 @@
 
 DOMAIN = "sma"
 
+PYSMA_OBJECT = "pysma"
+PYSMA_COORDINATOR = "coordinator"
+PYSMA_SENSORS = "pysma_sensors"
+
 PLATFORMS = ["sensor"]
 
 CONF_CUSTOM = "custom"
