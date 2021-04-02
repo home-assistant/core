@@ -550,7 +550,9 @@ class UniversalMediaPlayer(MediaPlayerEntity):
 
     async def async_media_previous_track(self):
         """Send previous track command."""
-        await self._async_call_service(SERVICE_MEDIA_PREVIOUS_TRACK, allow_override=True)
+        await self._async_call_service(
+            SERVICE_MEDIA_PREVIOUS_TRACK, allow_override=True
+        )
 
     async def async_media_next_track(self):
         """Send next track command."""
