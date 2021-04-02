@@ -778,7 +778,7 @@ MOCK_OWPROXY_DEVICES = {
 }
 
 MOCK_SYSBUS_DEVICES = {
-    "00-111111111111": {"sensors": []},
+    "00-111111111111": {SENSOR_DOMAIN: []},
     "10-111111111111": {
         "device_info": {
             "identifiers": {(DOMAIN, "10-111111111111")},
@@ -786,7 +786,7 @@ MOCK_SYSBUS_DEVICES = {
             "model": "10",
             "name": "10-111111111111",
         },
-        "sensors": [
+        SENSOR_DOMAIN: [
             {
                 "entity_id": "sensor.my_ds18b20_temperature",
                 "unique_id": "/sys/bus/w1/devices/10-111111111111/w1_slave",
@@ -797,8 +797,8 @@ MOCK_SYSBUS_DEVICES = {
             },
         ],
     },
-    "12-111111111111": {"sensors": []},
-    "1D-111111111111": {"sensors": []},
+    "12-111111111111": {SENSOR_DOMAIN: []},
+    "1D-111111111111": {SENSOR_DOMAIN: []},
     "22-111111111111": {
         "device_info": {
             "identifiers": {(DOMAIN, "22-111111111111")},
@@ -806,7 +806,7 @@ MOCK_SYSBUS_DEVICES = {
             "model": "22",
             "name": "22-111111111111",
         },
-        "sensors": [
+        "sensor": [
             {
                 "entity_id": "sensor.22_111111111111_temperature",
                 "unique_id": "/sys/bus/w1/devices/22-111111111111/w1_slave",
@@ -817,7 +817,7 @@ MOCK_SYSBUS_DEVICES = {
             },
         ],
     },
-    "26-111111111111": {"sensors": []},
+    "26-111111111111": {SENSOR_DOMAIN: []},
     "28-111111111111": {
         "device_info": {
             "identifiers": {(DOMAIN, "28-111111111111")},
@@ -825,7 +825,7 @@ MOCK_SYSBUS_DEVICES = {
             "model": "28",
             "name": "28-111111111111",
         },
-        "sensors": [
+        SENSOR_DOMAIN: [
             {
                 "entity_id": "sensor.28_111111111111_temperature",
                 "unique_id": "/sys/bus/w1/devices/28-111111111111/w1_slave",
@@ -836,7 +836,7 @@ MOCK_SYSBUS_DEVICES = {
             },
         ],
     },
-    "29-111111111111": {"sensors": []},
+    "29-111111111111": {SENSOR_DOMAIN: []},
     "3B-111111111111": {
         "device_info": {
             "identifiers": {(DOMAIN, "3B-111111111111")},
@@ -844,7 +844,7 @@ MOCK_SYSBUS_DEVICES = {
             "model": "3B",
             "name": "3B-111111111111",
         },
-        "sensors": [
+        SENSOR_DOMAIN: [
             {
                 "entity_id": "sensor.3b_111111111111_temperature",
                 "unique_id": "/sys/bus/w1/devices/3B-111111111111/w1_slave",
@@ -862,7 +862,7 @@ MOCK_SYSBUS_DEVICES = {
             "model": "42",
             "name": "42-111111111111",
         },
-        "sensors": [
+        SENSOR_DOMAIN: [
             {
                 "entity_id": "sensor.42_111111111111_temperature",
                 "unique_id": "/sys/bus/w1/devices/42-111111111111/w1_slave",
@@ -873,10 +873,46 @@ MOCK_SYSBUS_DEVICES = {
             },
         ],
     },
+    "42-111111111112": {
+        "device_info": {
+            "identifiers": {(DOMAIN, "42-111111111112")},
+            "manufacturer": "Maxim Integrated",
+            "model": "42",
+            "name": "42-111111111112",
+        },
+        SENSOR_DOMAIN: [
+            {
+                "entity_id": "sensor.42_111111111112_temperature",
+                "unique_id": "/sys/bus/w1/devices/42-111111111112/w1_slave",
+                "injected_value": [UnsupportResponseException] * 9 + ["27.993"],
+                "result": "28.0",
+                "unit": TEMP_CELSIUS,
+                "class": DEVICE_CLASS_TEMPERATURE,
+            },
+        ],
+    },
+    "42-111111111113": {
+        "device_info": {
+            "identifiers": {(DOMAIN, "42-111111111113")},
+            "manufacturer": "Maxim Integrated",
+            "model": "42",
+            "name": "42-111111111113",
+        },
+        SENSOR_DOMAIN: [
+            {
+                "entity_id": "sensor.42_111111111113_temperature",
+                "unique_id": "/sys/bus/w1/devices/42-111111111113/w1_slave",
+                "injected_value": [UnsupportResponseException] * 10 + ["27.993"],
+                "result": "unknown",
+                "unit": TEMP_CELSIUS,
+                "class": DEVICE_CLASS_TEMPERATURE,
+            },
+        ],
+    },
     "EF-111111111111": {
-        "sensors": [],
+        SENSOR_DOMAIN: [],
     },
     "EF-111111111112": {
-        "sensors": [],
+        SENSOR_DOMAIN: [],
     },
 }
