@@ -5,6 +5,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     DEVICE_CLASSES_SCHEMA,
+    DOMAIN as SENSOR_DOMAIN,
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA,
     SensorEntity,
@@ -201,6 +202,7 @@ class SensorTemplate(TemplateEntity, SensorEntity):
 class TriggerSensorEntity(TriggerEntity, SensorEntity):
     """Sensor entity based on trigger data."""
 
+    domain = SENSOR_DOMAIN
     extra_template_keys = (CONF_VALUE_TEMPLATE,)
 
     @property
