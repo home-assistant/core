@@ -11,7 +11,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
-    CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import template, update_coordinator
@@ -48,10 +47,9 @@ class TriggerEntity(update_coordinator.CoordinatorEntity):
         self._to_render = []
 
         for itm in (
-            CONF_VALUE_TEMPLATE,
+            CONF_NAME,
             CONF_ICON_TEMPLATE,
             CONF_ENTITY_PICTURE_TEMPLATE,
-            CONF_NAME,
             CONF_AVAILABILITY_TEMPLATE,
         ):
             if itm not in config:

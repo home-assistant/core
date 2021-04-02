@@ -36,9 +36,7 @@ SENSOR_BASE_SCHEMA = {
     vol.Optional(CONF_ICON_TEMPLATE): cv.template,
     vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
     vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
-    vol.Optional(CONF_ATTRIBUTE_TEMPLATES, default={}): vol.Schema(
-        {cv.string: cv.template}
-    ),
+    vol.Optional(CONF_ATTRIBUTE_TEMPLATES): vol.Schema({cv.string: cv.template}),
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
     vol.Optional(CONF_UNIQUE_ID): cv.string,
@@ -93,7 +91,7 @@ def _async_create_template_tracking_entities(hass, config):
         friendly_name_template = device_config.get(CONF_FRIENDLY_NAME_TEMPLATE)
         unit_of_measurement = device_config.get(CONF_UNIT_OF_MEASUREMENT)
         device_class = device_config.get(CONF_DEVICE_CLASS)
-        attribute_templates = device_config[CONF_ATTRIBUTE_TEMPLATES]
+        attribute_templates = device_config.get(CONF_ATTRIBUTE_TEMPLATES, {})
         unique_id = device_config.get(CONF_UNIQUE_ID)
 
         sensors.append(
