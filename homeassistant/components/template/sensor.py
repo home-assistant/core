@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_FRIENDLY_NAME_TEMPLATE,
     CONF_ICON_TEMPLATE,
     CONF_SENSORS,
+    CONF_STATE,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
@@ -31,25 +32,24 @@ from .const import CONF_ATTRIBUTE_TEMPLATES, CONF_AVAILABILITY_TEMPLATE, CONF_TR
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
-SENSOR_BASE_SCHEMA = {
-    vol.Required(CONF_VALUE_TEMPLATE): cv.template,
-    vol.Optional(CONF_ICON_TEMPLATE): cv.template,
-    vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
-    vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
-    vol.Optional(CONF_ATTRIBUTE_TEMPLATES): vol.Schema({cv.string: cv.template}),
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-    vol.Optional(CONF_UNIQUE_ID): cv.string,
-}
-
 SENSOR_SCHEMA = vol.All(
     cv.deprecated(ATTR_ENTITY_ID),
     vol.Schema(
         {
-            **SENSOR_BASE_SCHEMA,
-            vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+            vol.Required(CONF_VALUE_TEMPLATE): cv.template,
+            vol.Optional(CONF_ICON_TEMPLATE): cv.template,
+            vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
             vol.Optional(CONF_FRIENDLY_NAME_TEMPLATE): cv.template,
+            vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
+            vol.Optional(CONF_ATTRIBUTE_TEMPLATES, default={}): vol.Schema(
+                {cv.string: cv.template}
+            ),
+            vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+            vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
             vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+            vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
         }
     ),
 )
@@ -205,9 +205,9 @@ class TriggerSensorEntity(TriggerEntity, SensorEntity):
     """Sensor entity based on trigger data."""
 
     domain = SENSOR_DOMAIN
-    extra_template_keys = (CONF_VALUE_TEMPLATE,)
+    extra_template_keys = (CONF_STATE,)
 
     @property
     def state(self) -> str | None:
         """Return state of the sensor."""
-        return self._rendered.get(CONF_VALUE_TEMPLATE)
+        return self._rendered.get(CONF_STATE)

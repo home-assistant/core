@@ -6,8 +6,7 @@ from typing import Any
 
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
-    CONF_ENTITY_PICTURE_TEMPLATE,
-    CONF_ICON_TEMPLATE,
+    CONF_ICON,
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
@@ -16,7 +15,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import template, update_coordinator
 
 from . import TriggerUpdateCoordinator
-from .const import CONF_ATTRIBUTE_TEMPLATES, CONF_AVAILABILITY_TEMPLATE
+from .const import CONF_ATTRIBUTES, CONF_AVAILABILITY, CONF_PICTURE
 
 
 class TriggerEntity(update_coordinator.CoordinatorEntity):
@@ -48,9 +47,9 @@ class TriggerEntity(update_coordinator.CoordinatorEntity):
 
         for itm in (
             CONF_NAME,
-            CONF_ICON_TEMPLATE,
-            CONF_ENTITY_PICTURE_TEMPLATE,
-            CONF_AVAILABILITY_TEMPLATE,
+            CONF_ICON,
+            CONF_PICTURE,
+            CONF_AVAILABILITY,
         ):
             if itm not in config:
                 continue
@@ -89,12 +88,12 @@ class TriggerEntity(update_coordinator.CoordinatorEntity):
     @property
     def icon(self) -> str | None:
         """Return icon."""
-        return self._rendered.get(CONF_ICON_TEMPLATE)
+        return self._rendered.get(CONF_ICON)
 
     @property
     def entity_picture(self) -> str | None:
         """Return entity picture."""
-        return self._rendered.get(CONF_ENTITY_PICTURE_TEMPLATE)
+        return self._rendered.get(CONF_PICTURE)
 
     @property
     def available(self):
@@ -103,13 +102,13 @@ class TriggerEntity(update_coordinator.CoordinatorEntity):
             self._rendered is not self._static_rendered
             and
             # Check against False so `None` is ok
-            self._rendered.get(CONF_AVAILABILITY_TEMPLATE) is not False
+            self._rendered.get(CONF_AVAILABILITY) is not False
         )
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return extra attributes."""
-        return self._rendered.get(CONF_ATTRIBUTE_TEMPLATES)
+        return self._rendered.get(CONF_ATTRIBUTES)
 
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
@@ -129,9 +128,9 @@ class TriggerEntity(update_coordinator.CoordinatorEntity):
                     self.coordinator.data["run_variables"], parse_result=False
                 )
 
-            if CONF_ATTRIBUTE_TEMPLATES in self._config:
-                rendered[CONF_ATTRIBUTE_TEMPLATES] = template.render_complex(
-                    self._config[CONF_ATTRIBUTE_TEMPLATES],
+            if CONF_ATTRIBUTES in self._config:
+                rendered[CONF_ATTRIBUTES] = template.render_complex(
+                    self._config[CONF_ATTRIBUTES],
                     self.coordinator.data["run_variables"],
                 )
 

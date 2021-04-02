@@ -1005,7 +1005,7 @@ async def test_trigger_entity(hass):
                     "sensors": {
                         "hello": {
                             "friendly_name": "Hello Name",
-                            "unique_id": "just_a_test",
+                            "unique_id": "hello_name-id",
                             "device_class": "battery",
                             "unit_of_measurement": "%",
                             "value_template": "{{ trigger.event.data.beer }}",
@@ -1019,7 +1019,15 @@ async def test_trigger_entity(hass):
                     "sensor": [
                         {
                             "name": "via list",
-                            "value_template": "{{ trigger.event.data.beer + 1}}",
+                            "unique_id": "via_list-id",
+                            "device_class": "battery",
+                            "unit_of_measurement": "%",
+                            "state": "{{ trigger.event.data.beer + 1 }}",
+                            "picture": "{{ '/local/dogs.png' }}",
+                            "icon": "{{ 'mdi:pirate' }}",
+                            "attributes": {
+                                "plus_one": "{{ trigger.event.data.beer + 1 }}"
+                            },
                         }
                     ],
                 },
@@ -1059,14 +1067,24 @@ async def test_trigger_entity(hass):
     assert state.context is context
 
     ent_reg = entity_registry.async_get(hass)
-    assert len(ent_reg.entities) == 1
+    assert len(ent_reg.entities) == 2
     assert (
         ent_reg.entities["sensor.hello_name"].unique_id
-        == "listening-test-event-just_a_test"
+        == "listening-test-event-hello_name-id"
+    )
+    assert (
+        ent_reg.entities["sensor.via_list"].unique_id
+        == "listening-test-event-via_list-id"
     )
 
     state = hass.states.get("sensor.via_list")
     assert state.state == "3"
+    assert state.attributes.get("device_class") == "battery"
+    assert state.attributes.get("icon") == "mdi:pirate"
+    assert state.attributes.get("entity_picture") == "/local/dogs.png"
+    assert state.attributes.get("plus_one") == 3
+    assert state.attributes.get("unit_of_measurement") == "%"
+    assert state.context is context
 
 
 async def test_trigger_entity_render_error(hass):
