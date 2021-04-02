@@ -565,7 +565,6 @@ class SonosEntity(MediaPlayerEntity):
     def _set_favorites(self):
         """Set available favorites."""
         self._favorites = []
-        # TODO: run in executor
         for fav in self.soco.music_library.get_sonos_favorites():
             try:
                 # Exclude non-playable favorites with no linked resources
