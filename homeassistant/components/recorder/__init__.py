@@ -195,7 +195,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 hass.config.config_dir + ais_global.G_DB_SETTINGS_INFO_FILE
             ) as json_file:
                 ais_global.G_DB_SETTINGS_INFO = json.load(json_file)
-            db_url = ais_global.G_DB_SETTINGS_INFO["dbUrl"]
+        db_url = ais_global.G_DB_SETTINGS_INFO["dbUrl"]
         if db_url == "sqlite:///:memory:":
             keep_days = 2
         else:
@@ -214,8 +214,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     keep_days = 10
                     if "dbKeepDays" in ais_global.G_DB_SETTINGS_INFO:
                         keep_days = int(ais_global.G_DB_SETTINGS_INFO["dbKeepDays"])
-    except Exception:
+    except Exception as e:
         # enable recorder in memory
+        _LOGGER.error(
+            "Get recorder config from file error, enable recorder in memory " + str(e)
+        )
         db_url = "sqlite:///:memory:"
         keep_days = 1
 
