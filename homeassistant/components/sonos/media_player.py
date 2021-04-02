@@ -609,10 +609,10 @@ class SonosEntity(MediaPlayerEntity):
             _LOGGER.warning("Could not connect %s: %s", self.entity_id, ex)
             return False
 
-    async def _async_subscribe(self, player_prop, callback):
+    async def _async_subscribe(self, player_prop, sub_callback):
         """Create a sonos subscription."""
         subscription = await player_prop.subscribe(auto_renew=True)
-        subscription.callback = callback
+        subscription.callback = sub_callback
         self._subscriptions.append(subscription)
 
     @property
