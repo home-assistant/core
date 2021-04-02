@@ -3,8 +3,12 @@ from datetime import timedelta
 from os import path
 from unittest.mock import patch
 
+import pytest
+import voluptuous as vol
+
 from homeassistant import config
 from homeassistant.components.template import DOMAIN
+from homeassistant.core import Context
 from homeassistant.helpers.reload import SERVICE_RELOAD
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -305,3 +309,68 @@ async def test_reload_sensors_that_reference_other_template_sensors(hass):
 
 def _get_fixtures_base_path():
     return path.dirname(path.dirname(path.dirname(__file__)))
+
+
+async def test_manual_trigger_entity(hass):
+    """Test manually triggering an entity."""
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": {
+                "trigger": [],
+                "sensors": {
+                    "trigger_based": {
+                        "value_template": "{{ my_var.count }}",
+                    }
+                },
+            },
+            "sensor": {
+                "platform": "template",
+                "sensors": {
+                    "state_based": {
+                        "value_template": "{{ now() }}",
+                    }
+                },
+            },
+        },
+    )
+    await hass.async_block_till_done()
+
+    orig_state_sensor = hass.states.get("sensor.state_based")
+
+    # Update trigger one
+    context = Context()
+    await hass.services.async_call(
+        "template",
+        "trigger",
+        {"entity_id": "sensor.trigger_based", "variables": {"my_var": {"count": 5}}},
+        context=context,
+        blocking=True,
+    )
+
+    state = hass.states.get("sensor.trigger_based")
+    assert state is not None
+    assert state.state == "5"
+    assert state.context is context
+
+    # Update state machine one
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            "template",
+            "trigger",
+            {"entity_id": "sensor.state_based", "variables": {}},
+            context=context,
+            blocking=True,
+        )
+
+    await hass.services.async_call(
+        "template",
+        "trigger",
+        {"entity_id": "sensor.state_based"},
+        context=context,
+        blocking=True,
+    )
+
+    state = hass.states.get("sensor.state_based")
+    assert state.state != orig_state_sensor.state
