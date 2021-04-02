@@ -225,6 +225,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 interval=DISCOVERY_INTERVAL,
                 interface_addr=config.get(CONF_INTERFACE_ADDR),
             )
+            hass.data[DATA_SONOS].discovery_thread.name = "Sonos-Discovery"
 
     _LOGGER.debug("Adding discovery job")
     hass.async_add_executor_job(_discovery)
