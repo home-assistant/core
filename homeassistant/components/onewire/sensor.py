@@ -4,6 +4,7 @@ from __future__ import annotations
 from glob import glob
 import logging
 import os
+import time
 
 from pi1wire import InvalidCRCException, UnsupportResponseException
 import voluptuous as vol
@@ -426,11 +427,29 @@ class OneWireDirectSensor(OneWireSensor):
         """Return the state of the entity."""
         return self._state
 
+    def get_temperature(self):
+        """Get the latest data from the device."""
+        attempts = 1
+        while True:
+            try:
+                return self._owsensor.get_temperature()
+            except UnsupportResponseException as ex:
+                _LOGGER.debug(
+                    "Cannot read from sensor %s (retry attempt %s): %s",
+                    self._device_file,
+                    attempts,
+                    ex,
+                )
+                time.sleep(0.2)
+                attempts += 1
+                if attempts > 10:
+                    raise
+
     def update(self):
         """Get the latest data from the device."""
         value = None
         try:
-            self._value_raw = self._owsensor.get_temperature()
+            self._value_raw = self.get_temperature()
             value = round(float(self._value_raw), 1)
         except (
             FileNotFoundError,
