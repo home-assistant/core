@@ -1,6 +1,7 @@
 """Define tests for the Meater config flow."""
 from unittest.mock import AsyncMock, patch
 
+from meater import AuthenticationError, ServiceUnavailableError
 import pytest
 
 from homeassistant import data_entry_flow
@@ -42,7 +43,7 @@ async def test_duplicate_error(hass):
 
 
 @pytest.mark.parametrize("mock_client", [AsyncMock(side_effect=Exception)])
-async def test_invalid_credentials(hass, mock_meater):
+async def test_unknown_auth_error(hass, mock_meater):
     """Test that an invalid API/App Key throws an error."""
     conf = {CONF_USERNAME: "user@host.com", CONF_PASSWORD: "password123"}
 
@@ -52,6 +53,34 @@ async def test_invalid_credentials(hass, mock_meater):
 
     result = await flow.async_step_user(user_input=conf)
     assert result["errors"] == {"base": "unknown_auth_error"}
+
+
+@pytest.mark.parametrize("mock_client", [AsyncMock(side_effect=AuthenticationError)])
+async def test_invalid_credentials(hass, mock_meater):
+    """Test that an invalid API/App Key throws an error."""
+    conf = {CONF_USERNAME: "user@host.com", CONF_PASSWORD: "password123"}
+
+    flow = config_flow.MeaterConfigFlow()
+    flow.hass = hass
+    flow.context = {"source": SOURCE_USER}
+
+    result = await flow.async_step_user(user_input=conf)
+    assert result["errors"] == {"base": "invalid_auth"}
+
+
+@pytest.mark.parametrize(
+    "mock_client", [AsyncMock(side_effect=ServiceUnavailableError)]
+)
+async def test_service_unavailable(hass, mock_meater):
+    """Test that an invalid API/App Key throws an error."""
+    conf = {CONF_USERNAME: "user@host.com", CONF_PASSWORD: "password123"}
+
+    flow = config_flow.MeaterConfigFlow()
+    flow.hass = hass
+    flow.context = {"source": SOURCE_USER}
+
+    result = await flow.async_step_user(user_input=conf)
+    assert result["errors"] == {"base": "service_unavailable_error"}
 
 
 async def test_show_form(hass):
