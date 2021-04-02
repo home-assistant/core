@@ -187,7 +187,7 @@ auroranoaa==0.0.2
 av==8.0.3
 
 # homeassistant.components.axis
-axis==43
+axis==44
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.1.0
@@ -531,7 +531,7 @@ numato-gpio==0.10.0
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.19.2
+numpy==1.20.2
 
 # homeassistant.components.google
 oauth2client==4.0.0

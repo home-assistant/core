@@ -1,11 +1,10 @@
-"""Tests for 1-Wire devices connected on OWServer."""
-from unittest.mock import patch
+"""Constants for 1-Wire integration."""
 
+from pi1wire import InvalidCRCException, UnsupportResponseException
 from pyownet.protocol import Error as ProtocolError
-import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.onewire.const import DOMAIN, PLATFORMS, PRESSURE_CBAR
+from homeassistant.components.onewire.const import DOMAIN, PRESSURE_CBAR
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
@@ -24,13 +23,8 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     VOLT,
 )
-from homeassistant.setup import async_setup_component
 
-from . import setup_onewire_patched_owserver_integration
-
-from tests.common import mock_device_registry, mock_registry
-
-MOCK_DEVICE_SENSORS = {
+MOCK_OWPROXY_DEVICES = {
     "00.111111111111": {
         "inject_reads": [
             b"",  # read device type
@@ -186,7 +180,42 @@ MOCK_DEVICE_SENSORS = {
             "model": "DS2409",
             "name": "1F.111111111111",
         },
-        SENSOR_DOMAIN: [],
+        "branches": {
+            "aux": {},
+            "main": {
+                "1D.111111111111": {
+                    "inject_reads": [
+                        b"DS2423",  # read device type
+                    ],
+                    "device_info": {
+                        "identifiers": {(DOMAIN, "1D.111111111111")},
+                        "manufacturer": "Maxim Integrated",
+                        "model": "DS2423",
+                        "name": "1D.111111111111",
+                    },
+                    SENSOR_DOMAIN: [
+                        {
+                            "entity_id": "sensor.1d_111111111111_counter_a",
+                            "device_file": "/1F.111111111111/main/1D.111111111111/counter.A",
+                            "unique_id": "/1D.111111111111/counter.A",
+                            "injected_value": b"    251123",
+                            "result": "251123",
+                            "unit": "count",
+                            "class": None,
+                        },
+                        {
+                            "entity_id": "sensor.1d_111111111111_counter_b",
+                            "device_file": "/1F.111111111111/main/1D.111111111111/counter.B",
+                            "unique_id": "/1D.111111111111/counter.B",
+                            "injected_value": b"    248125",
+                            "result": "248125",
+                            "unit": "count",
+                            "class": None,
+                        },
+                    ],
+                },
+            },
+        },
     },
     "22.111111111111": {
         "inject_reads": [
@@ -748,65 +777,106 @@ MOCK_DEVICE_SENSORS = {
     },
 }
 
-
-@pytest.mark.parametrize("device_id", MOCK_DEVICE_SENSORS.keys())
-@pytest.mark.parametrize("platform", PLATFORMS)
-@patch("homeassistant.components.onewire.onewirehub.protocol.proxy")
-async def test_owserver_setup_valid_device(owproxy, hass, device_id, platform):
-    """Test for 1-Wire device.
-
-    As they would be on a clean setup: all binary-sensors and switches disabled.
-    """
-    await async_setup_component(hass, "persistent_notification", {})
-    entity_registry = mock_registry(hass)
-    device_registry = mock_device_registry(hass)
-
-    mock_device_sensor = MOCK_DEVICE_SENSORS[device_id]
-
-    device_family = device_id[0:2]
-    dir_return_value = [f"/{device_id}/"]
-    read_side_effect = [device_family.encode()]
-    if "inject_reads" in mock_device_sensor:
-        read_side_effect += mock_device_sensor["inject_reads"]
-
-    expected_sensors = mock_device_sensor.get(platform, [])
-    for expected_sensor in expected_sensors:
-        read_side_effect.append(expected_sensor["injected_value"])
-
-    # Ensure enough read side effect
-    read_side_effect.extend([ProtocolError("Missing injected value")] * 20)
-    owproxy.return_value.dir.return_value = dir_return_value
-    owproxy.return_value.read.side_effect = read_side_effect
-
-    with patch("homeassistant.components.onewire.PLATFORMS", [platform]):
-        await setup_onewire_patched_owserver_integration(hass)
-        await hass.async_block_till_done()
-
-    assert len(entity_registry.entities) == len(expected_sensors)
-
-    if len(expected_sensors) > 0:
-        device_info = mock_device_sensor["device_info"]
-        assert len(device_registry.devices) == 1
-        registry_entry = device_registry.async_get_device({(DOMAIN, device_id)})
-        assert registry_entry is not None
-        assert registry_entry.identifiers == {(DOMAIN, device_id)}
-        assert registry_entry.manufacturer == device_info["manufacturer"]
-        assert registry_entry.name == device_info["name"]
-        assert registry_entry.model == device_info["model"]
-
-    for expected_sensor in expected_sensors:
-        entity_id = expected_sensor["entity_id"]
-        registry_entry = entity_registry.entities.get(entity_id)
-        assert registry_entry is not None
-        assert registry_entry.unique_id == expected_sensor["unique_id"]
-        assert registry_entry.unit_of_measurement == expected_sensor["unit"]
-        assert registry_entry.device_class == expected_sensor["class"]
-        assert registry_entry.disabled == expected_sensor.get("disabled", False)
-        state = hass.states.get(entity_id)
-        if registry_entry.disabled:
-            assert state is None
-        else:
-            assert state.state == expected_sensor["result"]
-            assert state.attributes["device_file"] == expected_sensor.get(
-                "device_file", registry_entry.unique_id
-            )
+MOCK_SYSBUS_DEVICES = {
+    "00-111111111111": {"sensors": []},
+    "10-111111111111": {
+        "device_info": {
+            "identifiers": {(DOMAIN, "10-111111111111")},
+            "manufacturer": "Maxim Integrated",
+            "model": "10",
+            "name": "10-111111111111",
+        },
+        "sensors": [
+            {
+                "entity_id": "sensor.my_ds18b20_temperature",
+                "unique_id": "/sys/bus/w1/devices/10-111111111111/w1_slave",
+                "injected_value": 25.123,
+                "result": "25.1",
+                "unit": TEMP_CELSIUS,
+                "class": DEVICE_CLASS_TEMPERATURE,
+            },
+        ],
+    },
+    "12-111111111111": {"sensors": []},
+    "1D-111111111111": {"sensors": []},
+    "22-111111111111": {
+        "device_info": {
+            "identifiers": {(DOMAIN, "22-111111111111")},
+            "manufacturer": "Maxim Integrated",
+            "model": "22",
+            "name": "22-111111111111",
+        },
+        "sensors": [
+            {
+                "entity_id": "sensor.22_111111111111_temperature",
+                "unique_id": "/sys/bus/w1/devices/22-111111111111/w1_slave",
+                "injected_value": FileNotFoundError,
+                "result": "unknown",
+                "unit": TEMP_CELSIUS,
+                "class": DEVICE_CLASS_TEMPERATURE,
+            },
+        ],
+    },
+    "26-111111111111": {"sensors": []},
+    "28-111111111111": {
+        "device_info": {
+            "identifiers": {(DOMAIN, "28-111111111111")},
+            "manufacturer": "Maxim Integrated",
+            "model": "28",
+            "name": "28-111111111111",
+        },
+        "sensors": [
+            {
+                "entity_id": "sensor.28_111111111111_temperature",
+                "unique_id": "/sys/bus/w1/devices/28-111111111111/w1_slave",
+                "injected_value": InvalidCRCException,
+                "result": "unknown",
+                "unit": TEMP_CELSIUS,
+                "class": DEVICE_CLASS_TEMPERATURE,
+            },
+        ],
+    },
+    "29-111111111111": {"sensors": []},
+    "3B-111111111111": {
+        "device_info": {
+            "identifiers": {(DOMAIN, "3B-111111111111")},
+            "manufacturer": "Maxim Integrated",
+            "model": "3B",
+            "name": "3B-111111111111",
+        },
+        "sensors": [
+            {
+                "entity_id": "sensor.3b_111111111111_temperature",
+                "unique_id": "/sys/bus/w1/devices/3B-111111111111/w1_slave",
+                "injected_value": 29.993,
+                "result": "30.0",
+                "unit": TEMP_CELSIUS,
+                "class": DEVICE_CLASS_TEMPERATURE,
+            },
+        ],
+    },
+    "42-111111111111": {
+        "device_info": {
+            "identifiers": {(DOMAIN, "42-111111111111")},
+            "manufacturer": "Maxim Integrated",
+            "model": "42",
+            "name": "42-111111111111",
+        },
+        "sensors": [
+            {
+                "entity_id": "sensor.42_111111111111_temperature",
+                "unique_id": "/sys/bus/w1/devices/42-111111111111/w1_slave",
+                "injected_value": UnsupportResponseException,
+                "result": "unknown",
+                "unit": TEMP_CELSIUS,
+                "class": DEVICE_CLASS_TEMPERATURE,
+            },
+        ],
+    },
+    "EF-111111111111": {
+        "sensors": [],
+    },
+    "EF-111111111112": {
+        "sensors": [],
+    },
+}
