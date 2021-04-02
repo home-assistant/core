@@ -1,4 +1,6 @@
 """The tests for the Template Weather platform."""
+from pytest import approx
+
 from homeassistant.components.weather import (
     ATTR_WEATHER_ATTRIBUTION,
     ATTR_WEATHER_HUMIDITY,
@@ -11,10 +13,20 @@ from homeassistant.components.weather import (
     DOMAIN,
 )
 from homeassistant.setup import async_setup_component
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
 
 
-async def test_template_state_text(hass):
-    """Test the state text of a template."""
+async def test_template_state_text_metric(hass):
+    """Test the state text of a template with metric unit system."""
+    await _test_template_state_text(hass, METRIC_SYSTEM)
+
+
+async def test_template_state_text_imperial(hass):
+    """Test the state text of a template with imperial unit system."""
+    await _test_template_state_text(hass, IMPERIAL_SYSTEM)
+
+
+async def _test_template_state_text(hass, unit_system: UnitSystem):
     await async_setup_component(
         hass,
         DOMAIN,
@@ -43,21 +55,26 @@ async def test_template_state_text(hass):
     await hass.async_start()
     await hass.async_block_till_done()
 
+    hass.config.units = unit_system
+    await hass.async_block_till_done()
+
     hass.states.async_set("sensor.attribution", "The custom attribution")
     await hass.async_block_till_done()
-    hass.states.async_set("sensor.temperature", 22.3)
+    # all temperature sensors are automatically converted into hass.config.units.temperature
+    # therefore, value will be interpreted as-is
+    hass.states.async_set("sensor.temperature", 22.3)  # in °C or °F
     await hass.async_block_till_done()
-    hass.states.async_set("sensor.humidity", 60)
+    hass.states.async_set("sensor.humidity", 60)  # in %
     await hass.async_block_till_done()
-    hass.states.async_set("sensor.pressure", 1000)
+    hass.states.async_set("sensor.pressure", 1002.3)  # in hPa
     await hass.async_block_till_done()
-    hass.states.async_set("sensor.windspeed", 20)
+    hass.states.async_set("sensor.windspeed", 10)  # in m/s
     await hass.async_block_till_done()
-    hass.states.async_set("sensor.windbearing", 180)
+    hass.states.async_set("sensor.windbearing", 180)  # in °
     await hass.async_block_till_done()
-    hass.states.async_set("sensor.ozone", 25)
+    hass.states.async_set("sensor.ozone", 25)  # in ppm
     await hass.async_block_till_done()
-    hass.states.async_set("sensor.visibility", 4.6)
+    hass.states.async_set("sensor.visibility", 4.6)  # in km
     await hass.async_block_till_done()
 
     state = hass.states.get("weather.test")
@@ -67,10 +84,17 @@ async def test_template_state_text(hass):
 
     data = state.attributes
     assert data.get(ATTR_WEATHER_ATTRIBUTION) == "The custom attribution"
-    assert data.get(ATTR_WEATHER_TEMPERATURE) == 22.3
-    assert data.get(ATTR_WEATHER_HUMIDITY) == 60
-    assert data.get(ATTR_WEATHER_PRESSURE) == 1000
-    assert data.get(ATTR_WEATHER_WIND_SPEED) == 20
-    assert data.get(ATTR_WEATHER_WIND_BEARING) == 180
-    assert data.get(ATTR_WEATHER_OZONE) == 25
-    assert data.get(ATTR_WEATHER_VISIBILITY) == 4.6
+    assert data.get(ATTR_WEATHER_HUMIDITY) == 60  # in %
+    assert data.get(ATTR_WEATHER_WIND_BEARING) == 180  # in °
+    assert data.get(ATTR_WEATHER_OZONE) == 25  # in ppm
+
+    if unit_system is METRIC_SYSTEM:
+        assert data.get(ATTR_WEATHER_TEMPERATURE) == approx(22.3)  # in °C
+        assert data.get(ATTR_WEATHER_PRESSURE) == approx(1002.3)  # in hpa
+        assert data.get(ATTR_WEATHER_WIND_SPEED) == approx(36)  # in km/h
+        assert data.get(ATTR_WEATHER_VISIBILITY) == approx(4.6)  # in km
+    else:
+        assert data.get(ATTR_WEATHER_TEMPERATURE) == approx(22)  # in °F (rounded)
+        assert data.get(ATTR_WEATHER_PRESSURE) == approx(29.597899)  # in inhg
+        assert data.get(ATTR_WEATHER_WIND_SPEED) == approx(22.369356)  # in mph
+        assert data.get(ATTR_WEATHER_VISIBILITY) == approx(2.858306)  # in mi

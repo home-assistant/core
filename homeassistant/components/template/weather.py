@@ -1,4 +1,6 @@
 """Template platform that aggregates meteorological data."""
+import logging
+
 import voluptuous as vol
 
 from homeassistant.components.weather import (
@@ -25,10 +27,13 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     LENGTH_KILOMETERS,
     PRESSURE_HPA,
+    PRESSURE_INHG,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.util.pressure import convert as convert_pressure
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .template_entity import TemplateEntity
 
@@ -78,6 +83,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -195,8 +202,18 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
     def wind_speed(self):
         """Return the wind speed."""
         # unit from template: m/s
-        wind_speed_in_kmh = self._wind_speed * 3.6
-        return self.hass.config.units.length(wind_speed_in_kmh, LENGTH_KILOMETERS)
+
+        if self._wind_speed is None or self._wind_speed == "":
+            return None
+
+        try:
+            wind_speed_in_kmh = float(self._wind_speed) * 3.6
+            return self.hass.config.units.length(wind_speed_in_kmh, LENGTH_KILOMETERS)
+        except ValueError:
+            _LOGGER.warning(
+                f"Weather template '{self.entity_id}': wind_speed_template must expand to a number, but results in '{self._wind_speed}'"
+            )
+            return None
 
     @property
     def wind_bearing(self):
@@ -214,13 +231,37 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
     def visibility(self):
         """Return the visibility."""
         # unit from template: km
-        return self.hass.config.units.length(self._visibility, LENGTH_KILOMETERS)
+
+        if self._visibility is None or self._visibility == "":
+            return None
+
+        try:
+            return self.hass.config.units.length(
+                float(self._visibility), LENGTH_KILOMETERS
+            )
+        except ValueError:
+            _LOGGER.warning(
+                f"Weather template '{self.entity_id}': visibility_template must expand to a number, but results in '{self._visibility}'"
+            )
+            return None
 
     @property
     def pressure(self):
         """Return the air pressure."""
         # unit from template: hPa
-        return self.hass.config.units.pressure(self._pressure, PRESSURE_HPA)
+
+        if self._pressure is None or self._pressure == "":
+            return None
+
+        try:
+            if self.hass.config.units == METRIC_SYSTEM:
+                return float(self._pressure)
+            return convert_pressure(float(self._pressure), PRESSURE_HPA, PRESSURE_INHG)
+        except ValueError:
+            _LOGGER.warning(
+                f"Weather template '{self.entity_id}': pressure_template must expand to a number, but results in '{self._pressure}'"
+            )
+            return None
 
     @property
     def forecast(self):
