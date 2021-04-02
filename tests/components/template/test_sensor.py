@@ -1014,7 +1014,15 @@ async def test_trigger_entity(hass):
                             "attribute_templates": {
                                 "plus_one": "{{ trigger.event.data.beer + 1 }}"
                             },
-                        }
+                        },
+                    },
+                },
+                {
+                    "trigger": [],
+                    "sensors": {
+                        "bare_minimum": {
+                            "value_template": "{{ trigger.event.data.beer }}"
+                        },
                     },
                 },
             ],
@@ -1024,6 +1032,10 @@ async def test_trigger_entity(hass):
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.hello")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    state = hass.states.get("sensor.bare_minimum")
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
