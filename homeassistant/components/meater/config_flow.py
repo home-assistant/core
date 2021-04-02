@@ -1,5 +1,5 @@
 """Config flow for Meater."""
-from meater import MeaterApi
+from meater import MeaterApi, AuthenticationError, ServiceUnavailableError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -35,13 +35,29 @@ class MeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             await api.authenticate(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
-        except Exception:  # pylint: disable=broad-except
+        except AuthenticationError:
             return self.async_show_form(
                 step_id="user",
                 data_schema=vol.Schema(
                     {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
                 ),
                 errors={"base": "invalid_auth"},
+            )
+        except ServiceUnavailableError:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=vol.Schema(
+                    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+                ),
+                errors={"base": "service_unavailable_error"},
+            )
+        except Exception:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=vol.Schema(
+                    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+                ),
+                errors={"base": "unknown_auth_error"},
             )
 
         return self.async_create_entry(
