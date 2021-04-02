@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_FRIENDLY_NAME_TEMPLATE,
     CONF_ICON_TEMPLATE,
     CONF_SENSORS,
+    CONF_STATE,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
@@ -89,7 +90,7 @@ def _async_create_template_tracking_entities(hass, config):
         friendly_name_template = device_config.get(CONF_FRIENDLY_NAME_TEMPLATE)
         unit_of_measurement = device_config.get(CONF_UNIT_OF_MEASUREMENT)
         device_class = device_config.get(CONF_DEVICE_CLASS)
-        attribute_templates = device_config[CONF_ATTRIBUTE_TEMPLATES]
+        attribute_templates = device_config.get(CONF_ATTRIBUTE_TEMPLATES, {})
         unique_id = device_config.get(CONF_UNIQUE_ID)
 
         sensors.append(
@@ -118,8 +119,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         async_add_entities(_async_create_template_tracking_entities(hass, config))
     else:
         async_add_entities(
-            TriggerSensorEntity(hass, discovery_info["coordinator"], device_id, config)
-            for device_id, config in discovery_info["entities"].items()
+            TriggerSensorEntity(hass, discovery_info["coordinator"], config)
+            for config in discovery_info["entities"]
         )
 
 
@@ -203,9 +204,9 @@ class TriggerSensorEntity(TriggerEntity, SensorEntity):
     """Sensor entity based on trigger data."""
 
     domain = SENSOR_DOMAIN
-    extra_template_keys = (CONF_VALUE_TEMPLATE,)
+    extra_template_keys = (CONF_STATE,)
 
     @property
     def state(self) -> str | None:
         """Return state of the sensor."""
-        return self._rendered.get(CONF_VALUE_TEMPLATE)
+        return self._rendered.get(CONF_STATE)
