@@ -2,7 +2,8 @@
 import logging
 from typing import Optional
 
-from homeassistant.const import CONF_SENSORS, EVENT_HOMEASSISTANT_START
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import CoreState, callback
 from homeassistant.helpers import (
     discovery,
@@ -51,15 +52,16 @@ class TriggerUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
                 EVENT_HOMEASSISTANT_START, self._attach_triggers
             )
 
-        self.hass.async_create_task(
-            discovery.async_load_platform(
-                self.hass,
-                "sensor",
-                DOMAIN,
-                {"coordinator": self, "entities": self.config[CONF_SENSORS]},
-                hass_config,
+        for platform_domain in (SENSOR_DOMAIN,):
+            self.hass.async_create_task(
+                discovery.async_load_platform(
+                    self.hass,
+                    platform_domain,
+                    DOMAIN,
+                    {"coordinator": self, "entities": self.config[platform_domain]},
+                    hass_config,
+                )
             )
-        )
 
     async def _attach_triggers(self, start_event=None) -> None:
         """Attach the triggers."""
