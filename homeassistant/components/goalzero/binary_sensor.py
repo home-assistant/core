@@ -28,9 +28,17 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class YetiBinarySensor(YetiEntity, BinarySensorEntity):
     """Representation of a Goal Zero Yeti sensor."""
 
-    def __init__(self, api, coordinator, name, sensor_name, server_unique_id):
+    def __init__(
+        self,
+        api,
+        coordinator,
+        name,
+        sensor_name,
+        server_unique_id,
+        device_class: str = None,
+    ):
         """Initialize a Goal Zero Yeti sensor."""
-        super().__init__(api, coordinator, name, server_unique_id)
+        super().__init__(api, coordinator, name, server_unique_id, device_class)
 
         self._condition = sensor_name
 

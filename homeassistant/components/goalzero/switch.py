@@ -26,15 +26,23 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class YetiSwitch(YetiEntity, SwitchEntity):
     """Representation of a Goal Zero Yeti switch."""
 
-    def __init__(self, api, coordinator, name, switch_name, server_unique_id):
+    def __init__(
+        self,
+        api,
+        coordinator,
+        name,
+        switch_name,
+        server_unique_id,
+        device_class: str = None,
+    ):
         """Initialize a Goal Zero Yeti switch."""
-        super().__init__(api, coordinator, name, server_unique_id)
+        super().__init__(api, coordinator, name, server_unique_id, device_class)
 
         self._condition = switch_name
 
         variable_info = SWITCH_DICT[switch_name]
         self._condition_name = variable_info[0]
-        self._device_class = variable_info[1]
+        device_class = variable_info[1]
 
     @property
     def name(self):

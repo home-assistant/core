@@ -88,7 +88,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 class YetiEntity(CoordinatorEntity):
     """Representation of a Goal Zero Yeti entity."""
 
-    def __init__(self, api, coordinator, name, server_unique_id):
+    def __init__(self, api, coordinator, name, server_unique_id, device_class):
         """Initialize a Goal Zero Yeti entity."""
         super().__init__(coordinator)
         self.api = api
@@ -96,13 +96,14 @@ class YetiEntity(CoordinatorEntity):
         self._server_unique_id = server_unique_id
         self._device_class = None
         self._model = None
-        self._sw_version = None
 
     @property
     def device_info(self):
         """Return the device information of the entity."""
         if self.api.data:
-            self._sw_version = self.api.data["firmwareVersion"]
+            sw_version = self.api.data["firmwareVersion"]
+        else:
+            sw_version = None
         if self.api.sysdata:
             self._model = self.api.sysdata["model"]
         return {
@@ -110,7 +111,7 @@ class YetiEntity(CoordinatorEntity):
             "manufacturer": "Goal Zero",
             "model": self._model,
             "name": self._name,
-            "sw_version": self._sw_version,
+            "sw_version": sw_version,
         }
 
     @property
