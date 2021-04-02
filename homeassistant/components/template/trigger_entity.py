@@ -7,9 +7,8 @@ from typing import Any
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ENTITY_PICTURE_TEMPLATE,
-    CONF_FRIENDLY_NAME,
-    CONF_FRIENDLY_NAME_TEMPLATE,
     CONF_ICON_TEMPLATE,
+    CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
@@ -45,32 +44,34 @@ class TriggerEntity(update_coordinator.CoordinatorEntity):
 
         self._config = config
 
-        self._to_render = [
-            itm
-            for itm in (
-                CONF_VALUE_TEMPLATE,
-                CONF_ICON_TEMPLATE,
-                CONF_ENTITY_PICTURE_TEMPLATE,
-                CONF_FRIENDLY_NAME_TEMPLATE,
-                CONF_AVAILABILITY_TEMPLATE,
-            )
-            if itm in config
-        ]
+        self._static_rendered = {}
+        self._to_render = []
+
+        for itm in (
+            CONF_VALUE_TEMPLATE,
+            CONF_ICON_TEMPLATE,
+            CONF_ENTITY_PICTURE_TEMPLATE,
+            CONF_NAME,
+            CONF_AVAILABILITY_TEMPLATE,
+        ):
+            if itm not in config:
+                continue
+
+            if config[itm].is_static:
+                self._static_rendered[itm] = config[itm].template
+            else:
+                self._to_render.append(itm)
 
         if self.extra_template_keys is not None:
             self._to_render.extend(self.extra_template_keys)
 
-        self._rendered = {}
+        # We make a copy so our initial render is 'unknown' and not 'unavailable'
+        self._rendered = dict(self._static_rendered)
 
     @property
     def name(self):
         """Name of the entity."""
-        if (
-            self._rendered is not None
-            and (name := self._rendered.get(CONF_FRIENDLY_NAME_TEMPLATE)) is not None
-        ):
-            return name
-        return self._config.get(CONF_FRIENDLY_NAME)
+        return self._rendered.get(CONF_NAME)
 
     @property
     def unique_id(self):
@@ -90,20 +91,18 @@ class TriggerEntity(update_coordinator.CoordinatorEntity):
     @property
     def icon(self) -> str | None:
         """Return icon."""
-        return self._rendered is not None and self._rendered.get(CONF_ICON_TEMPLATE)
+        return self._rendered.get(CONF_ICON_TEMPLATE)
 
     @property
     def entity_picture(self) -> str | None:
         """Return entity picture."""
-        return self._rendered is not None and self._rendered.get(
-            CONF_ENTITY_PICTURE_TEMPLATE
-        )
+        return self._rendered.get(CONF_ENTITY_PICTURE_TEMPLATE)
 
     @property
     def available(self):
         """Return availability of the entity."""
         return (
-            self._rendered is not None
+            self._rendered is not self._static_rendered
             and
             # Check against False so `None` is ok
             self._rendered.get(CONF_AVAILABILITY_TEMPLATE) is not False
@@ -125,7 +124,7 @@ class TriggerEntity(update_coordinator.CoordinatorEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         try:
-            rendered = {}
+            rendered = dict(self._static_rendered)
 
             for key in self._to_render:
                 rendered[key] = self._config[key].async_render(
@@ -143,7 +142,7 @@ class TriggerEntity(update_coordinator.CoordinatorEntity):
             logging.getLogger(f"{__package__}.{self.entity_id.split('.')[0]}").error(
                 "Error rendering %s template for %s: %s", key, self.entity_id, err
             )
-            self._rendered = None
+            self._rendered = self._static_rendered
 
         self.async_set_context(self.coordinator.data["context"])
         self.async_write_ha_state()

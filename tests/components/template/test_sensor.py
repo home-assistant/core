@@ -1018,7 +1018,7 @@ async def test_trigger_entity(hass):
                     },
                     "sensor": [
                         {
-                            "friendly_name": "via list",
+                            "name": "via list",
                             "value_template": "{{ trigger.event.data.beer + 1}}",
                         }
                     ],

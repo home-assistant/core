@@ -5,22 +5,35 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config import async_log_exception, config_without_domain
-from homeassistant.const import CONF_FRIENDLY_NAME, CONF_SENSORS, CONF_UNIQUE_ID
-from homeassistant.helpers import config_validation as cv
+from homeassistant.const import (
+    CONF_FRIENDLY_NAME,
+    CONF_FRIENDLY_NAME_TEMPLATE,
+    CONF_NAME,
+    CONF_SENSORS,
+    CONF_UNIQUE_ID,
+)
+from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.trigger import async_validate_trigger_config
 
 from .const import CONF_TRIGGER, DOMAIN
-from .sensor import SENSOR_SCHEMA
+from .sensor import SENSOR_BASE_SCHEMA, SENSOR_SCHEMA as PLATFORM_SENSOR_SCHEMA
 
 CONF_STATE = "state"
 
+
+SENSOR_SCHEMA = vol.Schema(
+    {
+        **SENSOR_BASE_SCHEMA,
+        vol.Optional(CONF_NAME): cv.template,
+    }
+)
 
 TRIGGER_ENTITY_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Required(CONF_TRIGGER): cv.TRIGGER_SCHEMA,
         vol.Optional(SENSOR_DOMAIN): vol.All(cv.ensure_list, [SENSOR_SCHEMA]),
-        vol.Optional(CONF_SENSORS): cv.schema_with_slug_keys(SENSOR_SCHEMA),
+        vol.Optional(CONF_SENSORS): cv.schema_with_slug_keys(PLATFORM_SENSOR_SCHEMA),
     }
 )
 
@@ -48,10 +61,26 @@ async def async_validate_config(hass, config):
             )
             sensor = list(cfg[SENSOR_DOMAIN]) if SENSOR_DOMAIN in cfg else []
 
-            for device_id, config in cfg[CONF_SENSORS].items():
-                if CONF_FRIENDLY_NAME not in config:
-                    config = {**config, CONF_FRIENDLY_NAME: device_id}
-                sensor.append(config)
+            for device_id, entity_cfg in cfg[CONF_SENSORS].items():
+                if CONF_NAME not in entity_cfg:
+                    for name in (
+                        entity_cfg.get(CONF_FRIENDLY_NAME_TEMPLATE),
+                        entity_cfg.get(CONF_FRIENDLY_NAME),
+                        device_id,
+                    ):
+                        if name is None:
+                            continue
+
+                        if not isinstance(name, template.Template):
+                            name = template.Template(name)
+
+                        entity_cfg = {
+                            **entity_cfg,
+                            CONF_NAME: name,
+                        }
+                        break
+
+                sensor.append(entity_cfg)
 
             cfg = {**cfg, "sensor": sensor}
 

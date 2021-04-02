@@ -31,23 +31,27 @@ from .const import CONF_ATTRIBUTE_TEMPLATES, CONF_AVAILABILITY_TEMPLATE, CONF_TR
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
+SENSOR_BASE_SCHEMA = {
+    vol.Required(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_ICON_TEMPLATE): cv.template,
+    vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
+    vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
+    vol.Optional(CONF_ATTRIBUTE_TEMPLATES, default={}): vol.Schema(
+        {cv.string: cv.template}
+    ),
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+    vol.Optional(CONF_UNIQUE_ID): cv.string,
+}
+
 SENSOR_SCHEMA = vol.All(
     cv.deprecated(ATTR_ENTITY_ID),
     vol.Schema(
         {
-            vol.Required(CONF_VALUE_TEMPLATE): cv.template,
-            vol.Optional(CONF_ICON_TEMPLATE): cv.template,
-            vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
-            vol.Optional(CONF_FRIENDLY_NAME_TEMPLATE): cv.template,
-            vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
-            vol.Optional(CONF_ATTRIBUTE_TEMPLATES, default={}): vol.Schema(
-                {cv.string: cv.template}
-            ),
+            **SENSOR_BASE_SCHEMA,
             vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-            vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+            vol.Optional(CONF_FRIENDLY_NAME_TEMPLATE): cv.template,
             vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
         }
     ),
 )
