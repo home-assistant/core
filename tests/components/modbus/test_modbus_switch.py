@@ -44,12 +44,6 @@ from .conftest import base_config_test, base_test
             None,
             {
                 CONF_ADDRESS: 1234,
-            },
-        ),
-        (
-            None,
-            {
-                CONF_ADDRESS: 1234,
                 CONF_INPUT_TYPE: CALL_TYPE_COIL,
             },
         ),
