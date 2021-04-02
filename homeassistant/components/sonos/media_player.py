@@ -776,7 +776,7 @@ class SonosEntity(MediaPlayerEntity):
             self._queue_position = playlist_position - 1
 
     @callback
-    def async_update_volume(self, event=None):
+    def async_update_volume(self, event):
         """Update information about currently volume settings."""
         variables = event.variables
 
