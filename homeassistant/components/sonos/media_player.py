@@ -588,30 +588,24 @@ class SonosEntity(MediaPlayerEntity):
 
             player = self.soco
 
-            _LOGGER.warning(
-                "Attach Player: %s, existing subscriptions: %s",
-                player,
-                self._subscriptions,
-            )
+            if self._subscriptions:
+                raise RuntimeError(
+                    f"Attempted to attach subscriptions to player: {player} "
+                    f"when existing subscriptions exist: {self._subscriptions}"
+                )
 
-            await self._async_subscribe(player.avTransport, self.async_update_media)
-            await self._async_subscribe(
-                player.renderingControl, self.async_update_volume
-            )
-            await self._async_subscribe(
-                player.zoneGroupTopology, self.async_update_groups
-            )
-            await self._async_subscribe(
-                player.contentDirectory, self.async_update_content
-            )
+            await self._subscribe(player.avTransport, self.async_update_media)
+            await self._subscribe(player.renderingControl, self.async_update_volume)
+            await self._subscribe(player.zoneGroupTopology, self.async_update_groups)
+            await self._subscribe(player.contentDirectory, self.async_update_content)
             return True
         except SoCoException as ex:
             _LOGGER.warning("Could not connect %s: %s", self.entity_id, ex)
             return False
 
-    async def _async_subscribe(self, player_prop, sub_callback):
+    async def _subscribe(self, target, sub_callback):
         """Create a sonos subscription."""
-        subscription = await player_prop.subscribe(auto_renew=True)
+        subscription = await target.subscribe(auto_renew=True)
         subscription.callback = sub_callback
         self._subscriptions.append(subscription)
 
