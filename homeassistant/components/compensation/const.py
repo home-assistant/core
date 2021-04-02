@@ -12,4 +12,5 @@ CONF_POLYNOMIAL = "polynomial"
 DATA_COMPENSATION = "compensation_data"
 
 DEFAULT_DEGREE = 1
+DEFAULT_NAME = "Compensation"
 DEFAULT_PRECISION = 2

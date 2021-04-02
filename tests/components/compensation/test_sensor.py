@@ -27,7 +27,7 @@ async def test_linear_state(hass):
             }
         }
     }
-    expected_entity_id = "sensor.compensation_sensor_uncompensated"
+    expected_entity_id = "sensor.compensation"
 
     assert await async_setup_component(hass, DOMAIN, config)
     assert await async_setup_component(hass, SENSOR_DOMAIN, config)
@@ -72,7 +72,7 @@ async def test_linear_state_from_attribute(hass):
             }
         }
     }
-    expected_entity_id = "sensor.compensation_sensor_uncompensated_value"
+    expected_entity_id = "sensor.compensation"
 
     assert await async_setup_component(hass, DOMAIN, config)
     assert await async_setup_component(hass, SENSOR_DOMAIN, config)
@@ -138,7 +138,7 @@ async def test_quadratic_state(hass):
     hass.states.async_set(entity_id, 43.2, {})
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.compensation_sensor_temperature")
+    state = hass.states.get("sensor.compensation")
 
     assert state is not None
 
@@ -212,7 +212,7 @@ async def test_new_state_is_none(hass):
             }
         }
     }
-    expected_entity_id = "sensor.compensation_sensor_uncompensated"
+    expected_entity_id = "sensor.compensation"
 
     await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()

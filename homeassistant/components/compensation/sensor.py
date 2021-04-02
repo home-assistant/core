@@ -5,6 +5,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_ATTRIBUTE,
+    CONF_NAME,
     CONF_SOURCE,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
@@ -33,8 +34,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(
         [
             CompensationSensor(
-                conf[CONF_SOURCE],
                 conf.get(CONF_UNIQUE_ID),
+                conf[CONF_NAME],
+                conf[CONF_SOURCE],
                 conf.get(CONF_ATTRIBUTE),
                 conf[CONF_PRECISION],
                 conf[CONF_POLYNOMIAL],
@@ -49,8 +51,9 @@ class CompensationSensor(SensorEntity):
 
     def __init__(
         self,
-        source,
         unique_id,
+        name,
+        source,
         attribute,
         precision,
         polynomial,
@@ -65,6 +68,7 @@ class CompensationSensor(SensorEntity):
         self._coefficients = polynomial.coefficients.tolist()
         self._state = None
         self._unique_id = unique_id
+        self._name = name
 
     async def async_added_to_hass(self):
         """Handle added to Hass."""
@@ -80,6 +84,11 @@ class CompensationSensor(SensorEntity):
     def unique_id(self):
         """Return the unique id of this sensor."""
         return self._unique_id
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
 
     @property
     def should_poll(self):
