@@ -1086,21 +1086,41 @@ async def test_execute_script(hass, websocket_client):
         }
     )
 
+    msg_no_var = await websocket_client.receive_json()
+    assert msg_no_var["id"] == 5
+    assert msg_no_var["type"] == const.TYPE_RESULT
+    assert msg_no_var["success"]
+
+    await websocket_client.send_json(
+        {
+            "id": 6,
+            "type": "execute_script",
+            "sequence": {
+                "service": "domain_test.test_service",
+                "data": {"hello": "{{ name }}"},
+            },
+            "variables": {"name": "From variable"},
+        }
+    )
+
+    msg_var = await websocket_client.receive_json()
+    assert msg_var["id"] == 6
+    assert msg_var["type"] == const.TYPE_RESULT
+    assert msg_var["success"]
+
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
-    msg = await websocket_client.receive_json()
-    assert msg["id"] == 5
-    assert msg["type"] == const.TYPE_RESULT
-    assert msg["success"]
+    assert len(calls) == 2
 
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
-
-    assert len(calls) == 1
     call = calls[0]
-
     assert call.domain == "domain_test"
     assert call.service == "test_service"
     assert call.data == {"hello": "world"}
-    assert call.context.as_dict() == msg["result"]["context"]
+    assert call.context.as_dict() == msg_no_var["result"]["context"]
+
+    call = calls[1]
+    assert call.domain == "domain_test"
+    assert call.service == "test_service"
+    assert call.data == {"hello": "From variable"}
+    assert call.context.as_dict() == msg_var["result"]["context"]
