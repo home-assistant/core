@@ -574,3 +574,4 @@ async def _async_set_up_integrations(
             await hass.async_block_till_done()
     except asyncio.TimeoutError:
         _LOGGER.warning("Setup timed out for bootstrap - moving forward")
+    _LOGGER.debug("Wrap up complete")
