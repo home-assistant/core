@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from contextvars import ContextVar
 from datetime import datetime, timedelta
+import logging
 from logging import Logger
 from types import ModuleType
 from typing import TYPE_CHECKING, Callable, Coroutine, Iterable
@@ -43,6 +44,8 @@ SLOW_ADD_MIN_TIMEOUT = 500
 PLATFORM_NOT_READY_RETRIES = 10
 DATA_ENTITY_PLATFORM = "entity_platform"
 PLATFORM_NOT_READY_BASE_WAIT_TIME = 30  # seconds
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class EntityPlatform:
@@ -621,6 +624,7 @@ class EntityPlatform:
             for entity in self.entities.values():
                 if not entity.should_poll:
                     continue
+                _LOGGER.debug("Entity: %s is using polling", entity.entity_id)
                 tasks.append(entity.async_update_ha_state(True))
 
             if tasks:
