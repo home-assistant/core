@@ -11,10 +11,12 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_CREATE_ENTRY,
     RESULT_TYPE_FORM,
 )
+from homeassistant.helpers import entity_registry as er
 
 from . import (
     MOCK_DEVICE,
     MOCK_IMPORT,
+    MOCK_LEGACY_ENTRY,
     MOCK_SETUP_DATA,
     MOCK_USER_INPUT,
     _patch_async_setup_entry,
@@ -164,6 +166,9 @@ async def test_form_already_configured(hass):
 
 async def test_import(hass):
     """Test we can import."""
+    entity_registry = er.async_get(hass)
+    entity_registry._register_entry(MOCK_LEGACY_ENTRY)
+
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     with _patch_validate_input(), _patch_async_setup_entry() as mock_setup_entry:
@@ -176,5 +181,11 @@ async def test_import(hass):
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == MOCK_USER_INPUT["host"]
     assert result["data"] == MOCK_IMPORT
+
+    assert MOCK_LEGACY_ENTRY.original_name not in result["data"]["sensors"]
+    assert "pv_power_a" in result["data"]["sensors"]
+
+    entity = entity_registry.async_get(MOCK_LEGACY_ENTRY.entity_id)
+    assert entity.unique_id == f"{MOCK_DEVICE['serial']}-6380_40251E00_0"
 
     assert len(mock_setup_entry.mock_calls) == 1

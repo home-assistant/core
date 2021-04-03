@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 from homeassistant.components.sma.const import DOMAIN
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -80,6 +81,14 @@ MOCK_CUSTOM_SETUP_DATA = dict(
         "sensors": [],
     },
     **MOCK_USER_INPUT,
+)
+
+MOCK_LEGACY_ENTRY = er.RegistryEntry(
+    entity_id="sensor.pv_power",
+    unique_id="sma-6100_0046C200-pv_power",
+    platform="sma",
+    unit_of_measurement="W",
+    original_name="pv_power",
 )
 
 
