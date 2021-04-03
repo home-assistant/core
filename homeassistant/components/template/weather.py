@@ -211,7 +211,9 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
             return self.hass.config.units.length(wind_speed_in_kmh, LENGTH_KILOMETERS)
         except ValueError:
             _LOGGER.warning(
-                f"Weather template '{self.entity_id}': wind_speed_template must expand to a number, but results in '{self._wind_speed}'"
+                "Weather template '%s': wind_speed_template must expand to a number, but results in '%s'",
+                self.entity_id,
+                self._wind_speed,
             )
             return None
 
@@ -241,7 +243,9 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
             )
         except ValueError:
             _LOGGER.warning(
-                f"Weather template '{self.entity_id}': visibility_template must expand to a number, but results in '{self._visibility}'"
+                "Weather template '%s': visibility_template must expand to a number, but results in '%s'",
+                self.entity_id,
+                self._visibility,
             )
             return None
 
@@ -259,7 +263,9 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
             return convert_pressure(float(self._pressure), PRESSURE_HPA, PRESSURE_INHG)
         except ValueError:
             _LOGGER.warning(
-                f"Weather template '{self.entity_id}': pressure_template must expand to a number, but results in '{self._pressure}'"
+                "Weather template '%s': pressure_template must expand to a number, but results in '%s'",
+                self.entity_id,
+                self._pressure,
             )
             return None
 
