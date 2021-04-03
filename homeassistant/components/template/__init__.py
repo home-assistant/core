@@ -5,7 +5,7 @@ from typing import Optional
 import voluptuous as vol
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import EVENT_HOMEASSISTANT_START
+from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START
 from homeassistant.core import CoreState, callback
 from homeassistant.helpers import (
     config_validation as cv,
