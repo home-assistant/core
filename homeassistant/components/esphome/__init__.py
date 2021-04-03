@@ -272,6 +272,7 @@ class ReconnectLogic(RecordUpdateListener):
         self._entry_data.disconnect_callbacks = []
         self._entry_data.available = False
         self._entry_data.async_update_device_state(self._hass)
+        await self._start_zc_listen()
 
         # Reset tries
         async with self._tries_lock:
@@ -295,7 +296,6 @@ class ReconnectLogic(RecordUpdateListener):
         if tries == 1:
             _LOGGER.info("Trying to reconnect to %s in the background", self._host)
         _LOGGER.debug("Retrying %s in %d seconds", self._host, wait_time)
-        await self._start_zc_listen()
         await asyncio.sleep(wait_time)
         async with self._wait_task_lock:
             self._wait_task = None
@@ -318,6 +318,7 @@ class ReconnectLogic(RecordUpdateListener):
                 self._host,
                 error,
             )
+            await self._start_zc_listen()
             # Schedule re-connect in event loop in order not to delay HA
             # startup. First connect is scheduled in tracked tasks.
             async with self._wait_task_lock:
