@@ -78,6 +78,7 @@ from .const import (
     CONF_TARGET_TEMP,
     CONF_UNIT,
     CONF_VERIFY_REGISTER,
+    CONF_VERIFY_STATE,
     DATA_TYPE_CUSTOM,
     DATA_TYPE_FLOAT,
     DATA_TYPE_INT,
@@ -178,6 +179,7 @@ SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         vol.Optional(CONF_STATE_OFF): cv.positive_int,
         vol.Optional(CONF_STATE_ON): cv.positive_int,
         vol.Optional(CONF_VERIFY_REGISTER): cv.positive_int,
+        vol.Optional(CONF_VERIFY_STATE, default=True): cv.boolean,
     }
 )
 
