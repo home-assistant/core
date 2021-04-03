@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
     CONF_SWITCHES,
+    STATE_OFF,
     STATE_ON,
 )
 from homeassistant.helpers import config_validation as cv
@@ -36,8 +37,6 @@ from .const import (
     CONF_REGISTER,
     CONF_REGISTER_TYPE,
     CONF_REGISTERS,
-    CONF_STATE_OFF,
-    CONF_STATE_ON,
     CONF_VERIFY_REGISTER,
     CONF_VERIFY_STATE,
     DEFAULT_HUB,
@@ -60,8 +59,8 @@ REGISTERS_SCHEMA = vol.Schema(
             [CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT]
         ),
         vol.Optional(CONF_SLAVE): cv.positive_int,
-        vol.Optional(CONF_STATE_OFF): cv.positive_int,
-        vol.Optional(CONF_STATE_ON): cv.positive_int,
+        vol.Optional(STATE_OFF): cv.positive_int,
+        vol.Optional(STATE_ON): cv.positive_int,
         vol.Optional(CONF_VERIFY_REGISTER): cv.positive_int,
         vol.Optional(CONF_VERIFY_STATE, default=True): cv.boolean,
     }
@@ -248,8 +247,8 @@ class ModbusRegisterSwitch(ModbusBaseSwitch, SwitchEntity):
         self._register = config[CONF_ADDRESS]
         self._command_on = config[CONF_COMMAND_ON]
         self._command_off = config[CONF_COMMAND_OFF]
-        self._state_on = config.get(CONF_STATE_ON, self._command_on)
-        self._state_off = config.get(CONF_STATE_OFF, self._command_off)
+        self._state_on = config.get(STATE_ON, self._command_on)
+        self._state_off = config.get(STATE_OFF, self._command_off)
         self._verify_state = config[CONF_VERIFY_STATE]
         self._verify_register = config.get(CONF_VERIFY_REGISTER, self._register)
         self._register_type = config[CONF_INPUT_TYPE]

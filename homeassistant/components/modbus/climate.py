@@ -11,6 +11,8 @@ from pymodbus.pdu import ExceptionResponse
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
+    ATTR_MAX_TEMP,
+    ATTR_MIN_TEMP,
     HVAC_MODE_AUTO,
     SUPPORT_TARGET_TEMPERATURE,
 )
@@ -21,6 +23,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
     CONF_STRUCTURE,
+    CONF_TEMPERATURE_UNIT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
@@ -39,13 +42,10 @@ from .const import (
     CONF_CURRENT_TEMP_REGISTER_TYPE,
     CONF_DATA_COUNT,
     CONF_DATA_TYPE,
-    CONF_MAX_TEMP,
-    CONF_MIN_TEMP,
     CONF_PRECISION,
     CONF_SCALE,
     CONF_STEP,
     CONF_TARGET_TEMP,
-    CONF_UNIT,
     DATA_TYPE_CUSTOM,
     DEFAULT_STRUCT_FORMAT,
     MODBUS_DOMAIN,
@@ -130,9 +130,9 @@ class ModbusThermostat(ClimateEntity):
         self._scale = config[CONF_SCALE]
         self._scan_interval = timedelta(seconds=config[CONF_SCAN_INTERVAL])
         self._offset = config[CONF_OFFSET]
-        self._unit = config[CONF_UNIT]
-        self._max_temp = config[CONF_MAX_TEMP]
-        self._min_temp = config[CONF_MIN_TEMP]
+        self._unit = config[CONF_TEMPERATURE_UNIT]
+        self._max_temp = config[ATTR_MAX_TEMP]
+        self._min_temp = config[ATTR_MIN_TEMP]
         self._temp_step = config[CONF_STEP]
         self._available = True
 

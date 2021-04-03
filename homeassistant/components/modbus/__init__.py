@@ -6,6 +6,7 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
 )
+from homeassistant.components.climate.const import ATTR_MAX_TEMP, ATTR_MIN_TEMP
 from homeassistant.components.cover import (
     DEVICE_CLASSES_SCHEMA as COVER_DEVICE_CLASSES_SCHEMA,
 )
@@ -18,8 +19,10 @@ from homeassistant.components.switch import (
 from homeassistant.const import (
     ATTR_STATE,
     CONF_ADDRESS,
+    CONF_BINARY_SENSORS,
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
+    CONF_COUNT,
     CONF_COVERS,
     CONF_DELAY,
     CONF_DEVICE_CLASS,
@@ -29,54 +32,49 @@ from homeassistant.const import (
     CONF_OFFSET,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
+    CONF_SENSORS,
     CONF_SLAVE,
     CONF_STRUCTURE,
+    CONF_SWITCHES,
+    CONF_TEMPERATURE_UNIT,
     CONF_TIMEOUT,
     CONF_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
+    STATE_OFF,
+    STATE_ON,
 )
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
-    ATTR_ADDRESS,
-    ATTR_HUB,
-    ATTR_UNIT,
-    ATTR_VALUE,
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
     CONF_BAUDRATE,
-    CONF_BINARY_SENSORS,
     CONF_BYTESIZE,
     CONF_CLIMATES,
-    CONF_COUNT,
     CONF_CURRENT_TEMP,
     CONF_CURRENT_TEMP_REGISTER_TYPE,
     CONF_DATA_COUNT,
     CONF_DATA_TYPE,
+    CONF_HUB,
     CONF_INPUT_TYPE,
-    CONF_MAX_TEMP,
-    CONF_MIN_TEMP,
     CONF_PARITY,
     CONF_PRECISION,
     CONF_REGISTER,
     CONF_REVERSE_ORDER,
     CONF_SCALE,
-    CONF_SENSORS,
     CONF_STATE_CLOSED,
     CONF_STATE_CLOSING,
-    CONF_STATE_OFF,
-    CONF_STATE_ON,
     CONF_STATE_OPEN,
     CONF_STATE_OPENING,
     CONF_STATUS_REGISTER,
     CONF_STATUS_REGISTER_TYPE,
     CONF_STEP,
     CONF_STOPBITS,
-    CONF_SWITCHES,
     CONF_TARGET_TEMP,
     CONF_UNIT,
+    CONF_VALUE,
     CONF_VERIFY_REGISTER,
     CONF_VERIFY_STATE,
     DATA_TYPE_CUSTOM,
@@ -139,11 +137,11 @@ CLIMATE_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         vol.Optional(CONF_PRECISION, default=1): cv.positive_int,
         vol.Optional(CONF_SCALE, default=1): vol.Coerce(float),
         vol.Optional(CONF_OFFSET, default=0): vol.Coerce(float),
-        vol.Optional(CONF_MAX_TEMP, default=35): cv.positive_int,
-        vol.Optional(CONF_MIN_TEMP, default=5): cv.positive_int,
+        vol.Optional(ATTR_MAX_TEMP, default=35): cv.positive_int,
+        vol.Optional(ATTR_MIN_TEMP, default=5): cv.positive_int,
         vol.Optional(CONF_STEP, default=0.5): vol.Coerce(float),
         vol.Optional(CONF_STRUCTURE, default=DEFAULT_STRUCTURE_PREFIX): cv.string,
-        vol.Optional(CONF_UNIT, default=DEFAULT_TEMP_UNIT): cv.string,
+        vol.Optional(CONF_TEMPERATURE_UNIT, default=DEFAULT_TEMP_UNIT): cv.string,
     }
 )
 
@@ -176,8 +174,8 @@ SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         ),
         vol.Optional(CONF_COMMAND_OFF, default=0x00): cv.positive_int,
         vol.Optional(CONF_COMMAND_ON, default=0x01): cv.positive_int,
-        vol.Optional(CONF_STATE_OFF): cv.positive_int,
-        vol.Optional(CONF_STATE_ON): cv.positive_int,
+        vol.Optional(STATE_OFF): cv.positive_int,
+        vol.Optional(STATE_ON): cv.positive_int,
         vol.Optional(CONF_VERIFY_REGISTER): cv.positive_int,
         vol.Optional(CONF_VERIFY_STATE, default=True): cv.boolean,
     }
@@ -268,10 +266,10 @@ CONFIG_SCHEMA = vol.Schema(
 
 SERVICE_WRITE_REGISTER_SCHEMA = vol.Schema(
     {
-        vol.Optional(ATTR_HUB, default=DEFAULT_HUB): cv.string,
-        vol.Required(ATTR_UNIT): cv.positive_int,
-        vol.Required(ATTR_ADDRESS): cv.positive_int,
-        vol.Required(ATTR_VALUE): vol.Any(
+        vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
+        vol.Required(CONF_UNIT): cv.positive_int,
+        vol.Required(CONF_ADDRESS): cv.positive_int,
+        vol.Required(CONF_VALUE): vol.Any(
             cv.positive_int, vol.All(cv.ensure_list, [cv.positive_int])
         ),
     }
@@ -279,9 +277,9 @@ SERVICE_WRITE_REGISTER_SCHEMA = vol.Schema(
 
 SERVICE_WRITE_COIL_SCHEMA = vol.Schema(
     {
-        vol.Optional(ATTR_HUB, default=DEFAULT_HUB): cv.string,
-        vol.Required(ATTR_UNIT): cv.positive_int,
-        vol.Required(ATTR_ADDRESS): cv.positive_int,
+        vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
+        vol.Required(CONF_UNIT): cv.positive_int,
+        vol.Required(CONF_ADDRESS): cv.positive_int,
         vol.Required(ATTR_STATE): vol.Any(
             cv.boolean, vol.All(cv.ensure_list, [cv.boolean])
         ),

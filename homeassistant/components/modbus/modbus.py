@@ -7,12 +7,16 @@ from pymodbus.transaction import ModbusRtuFramer
 
 from homeassistant.const import (
     ATTR_STATE,
+    CONF_ADDRESS,
+    CONF_BINARY_SENSORS,
     CONF_COVERS,
     CONF_DELAY,
     CONF_HOST,
     CONF_METHOD,
     CONF_NAME,
     CONF_PORT,
+    CONF_SENSORS,
+    CONF_SWITCHES,
     CONF_TIMEOUT,
     CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
@@ -20,23 +24,19 @@ from homeassistant.const import (
 from homeassistant.helpers.discovery import load_platform
 
 from .const import (
-    ATTR_ADDRESS,
-    ATTR_HUB,
-    ATTR_UNIT,
-    ATTR_VALUE,
     CONF_BAUDRATE,
     CONF_BINARY_SENSOR,
-    CONF_BINARY_SENSORS,
     CONF_BYTESIZE,
     CONF_CLIMATE,
     CONF_CLIMATES,
     CONF_COVER,
+    CONF_HUB,
     CONF_PARITY,
     CONF_SENSOR,
-    CONF_SENSORS,
     CONF_STOPBITS,
     CONF_SWITCH,
-    CONF_SWITCHES,
+    CONF_UNIT,
+    CONF_VALUE,
     MODBUS_DOMAIN as DOMAIN,
     SERVICE_WRITE_COIL,
     SERVICE_WRITE_REGISTER,
@@ -76,10 +76,10 @@ def modbus_setup(
 
     def write_register(service):
         """Write Modbus registers."""
-        unit = int(float(service.data[ATTR_UNIT]))
-        address = int(float(service.data[ATTR_ADDRESS]))
-        value = service.data[ATTR_VALUE]
-        client_name = service.data[ATTR_HUB]
+        unit = int(float(service.data[CONF_UNIT]))
+        address = int(float(service.data[CONF_ADDRESS]))
+        value = service.data[CONF_VALUE]
+        client_name = service.data[CONF_HUB]
         if isinstance(value, list):
             hub_collect[client_name].write_registers(
                 unit, address, [int(float(i)) for i in value]
@@ -89,10 +89,10 @@ def modbus_setup(
 
     def write_coil(service):
         """Write Modbus coil."""
-        unit = service.data[ATTR_UNIT]
-        address = service.data[ATTR_ADDRESS]
+        unit = service.data[CONF_UNIT]
+        address = service.data[CONF_ADDRESS]
         state = service.data[ATTR_STATE]
-        client_name = service.data[ATTR_HUB]
+        client_name = service.data[CONF_HUB]
         if isinstance(state, list):
             hub_collect[client_name].write_coils(unit, address, state)
         else:
