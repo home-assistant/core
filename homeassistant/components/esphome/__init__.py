@@ -402,8 +402,11 @@ class ReconnectLogic(RecordUpdateListener):
         received mDNS record indicates the node is up again.
         """
         async with self._zc_lock:
-            await self._hass.async_add_executor_job(self._zc.add_listener, self, None)
-            self._zc_listening = True
+            if not self._zc_listening:
+                await self._hass.async_add_executor_job(
+                    self._zc.add_listener, self, None
+                )
+                self._zc_listening = True
 
     async def _stop_zc_listen(self):
         """Stop listening for zeroconf updates."""
