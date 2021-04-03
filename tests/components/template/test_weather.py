@@ -98,3 +98,49 @@ async def _test_template_state_text(hass, unit_system: UnitSystem):
         assert data.get(ATTR_WEATHER_PRESSURE) == approx(29.597899)  # in inhg
         assert data.get(ATTR_WEATHER_WIND_SPEED) == approx(22.369356)  # in mph
         assert data.get(ATTR_WEATHER_VISIBILITY) == approx(2.858306)  # in mi
+
+
+async def test_template_state_text_empty_sensor_values(hass):
+    """Test the state text of a template if sensors report empty values."""
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "weather": [
+                {"weather": {"platform": "demo"}},
+                {
+                    "platform": "template",
+                    "name": "test",
+                    "attribution_template": "{{ states('sensor.attribution') }}",
+                    "condition_template": "sunny",
+                    "forecast_template": "{{ states.weather.demo.attributes.forecast }}",
+                    "temperature_template": "{{ states('sensor.temperature') | float }}",
+                    "humidity_template": "{{ states('sensor.humidity') | int }}",
+                    "pressure_template": "{{ states('sensor.pressure') }}",
+                    "wind_speed_template": "{{ states('sensor.windspeed') }}",
+                    "wind_bearing_template": "{{ states('sensor.windbearing') }}",
+                    "ozone_template": "{{ states('sensor.ozone') }}",
+                    "visibility_template": "{{ states('sensor.visibility') }}",
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.pressure", "")
+    await hass.async_block_till_done()
+    hass.states.async_set("sensor.windspeed", "")
+    await hass.async_block_till_done()
+    hass.states.async_set("sensor.visibility", "")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("weather.test")
+    assert state is not None
+
+    data = state.attributes
+    assert data.get(ATTR_WEATHER_PRESSURE) is None
+    assert data.get(ATTR_WEATHER_WIND_SPEED) is None
+    assert data.get(ATTR_WEATHER_VISIBILITY) is None
