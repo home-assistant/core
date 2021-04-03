@@ -224,7 +224,7 @@ aiopylgtv==0.4.0
 aiorecollect==1.0.1
 
 # homeassistant.components.shelly
-aioshelly==0.6.1
+aioshelly==0.6.2
 
 # homeassistant.components.switcher_kis
 aioswitcher==1.2.1
@@ -313,7 +313,7 @@ av==8.0.3
 # avion==0.10
 
 # homeassistant.components.axis
-axis==43
+axis==44
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.1.0
@@ -1019,7 +1019,7 @@ numato-gpio==0.10.0
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.19.2
+numpy==1.20.2
 
 # homeassistant.components.oasa_telematics
 oasatelematics==0.3

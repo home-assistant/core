@@ -336,7 +336,7 @@ class Template:
         If limited is True, the template is not allowed to access any function or filter depending on hass or the state machine.
         """
         if self.is_static:
-            if self.hass.config.legacy_templates or not parse_result:
+            if not parse_result or self.hass.config.legacy_templates:
                 return self.template
             return self._parse_result(self.template)
 
@@ -360,7 +360,7 @@ class Template:
         If limited is True, the template is not allowed to access any function or filter depending on hass or the state machine.
         """
         if self.is_static:
-            if self.hass.config.legacy_templates or not parse_result:
+            if not parse_result or self.hass.config.legacy_templates:
                 return self.template
             return self._parse_result(self.template)
 
