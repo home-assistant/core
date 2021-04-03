@@ -283,7 +283,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         temperature_feeling = None
         town_id = None
         town_name = None
-        town_timestamp = dt_util.as_utc(elaborated)
+        town_timestamp = dt_util.as_utc(elaborated).isoformat()
         wind_bearing = None
         wind_max_speed = None
         wind_speed = None
