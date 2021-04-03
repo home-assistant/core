@@ -28,15 +28,6 @@
                 "title": "Connect to custom Ezviz URL",
                 "description": "Manually specify your region URL"
             },
-            "user_camera": {
-                "data": {
-                    "username": "Username",
-                    "password": "Password",
-                    "serial": "Serial",
-                    "ip_address": "IP Address"
-                },
-                "title": "Add Ezviz Camera"
-            },
             "confirm": {
                 "data": {
                     "username": "Username",

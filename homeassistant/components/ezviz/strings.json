@@ -19,15 +19,6 @@
           "url": "[%key:common::config_flow::data::url%]"
         }
       },
-      "user_camera": {
-        "title": "Add Ezviz Camera",
-        "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "serial": "Camera serial number",
-          "ip_address": "[%key:common::config_flow::data::ip%]"
-        }
-      },
       "confirm": {
         "title": "Discovered Ezviz Camera",
         "description": "Enter RTSP credentials for Ezviz camera {serial} with IP {ip_address}",

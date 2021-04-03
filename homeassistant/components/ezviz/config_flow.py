@@ -25,6 +25,7 @@ from .const import (  # pylint: disable=unused-import
     ATTR_TYPE_CAMERA,
     ATTR_TYPE_CLOUD,
     CONF_FFMPEG_ARGUMENTS,
+    DATA_COORDINATOR,
     DEFAULT_CAMERA_USERNAME,
     DEFAULT_FFMPEG_ARGUMENTS,
     DEFAULT_TIMEOUT,
@@ -76,12 +77,26 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=data[CONF_USERNAME], data=auth_data)
 
+    def _wake_camera(self, serial):
+        """Wake a hybernating camera."""
+        if self.hass.data.get(DOMAIN):
+            for item in self.hass.data.get(DOMAIN):
+                coordinator = self.hass.data[DOMAIN][item][
+                    DATA_COORDINATOR
+                ].ezviz_client
+
+        # Wake hybernating cameras.
+        coordinator.get_detection_sensibility(serial)
+
     async def _validate_and_create_camera_rtsp(self, data):
         """Try DESCRIBE on RTSP camera with credentials."""
 
         camera_rtsp_test = TestRTSPAuth(
             data[CONF_IP_ADDRESS], data[CONF_USERNAME], data[CONF_PASSWORD]
         )
+
+        # Wake hybernating cameras.
+        await self.hass.async_add_executor_job(self._wake_camera, data[ATTR_SERIAL])
 
         # Attempts a authenticated RTSP DESCRIBE request.
         try:
@@ -111,11 +126,11 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
 
-        # Check if ezviz cloud account is present in entry config.
-        # Return camera user flow if present.
+        # Check if ezviz cloud account is present in entry config,
+        # abort if already configured.
         for item in self._async_current_entries():
             if item.data.get(CONF_TYPE) == ATTR_TYPE_CLOUD:
-                return await self.async_step_user_camera()
+                return self.async_abort(reason="Already configured")
 
         errors = {}
 
@@ -197,41 +212,6 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user_custom_url", data_schema=data_schema_custom_url, errors=errors
-        )
-
-    async def async_step_user_camera(self, user_input=None):
-        """Handle a flow initiated by the user."""
-
-        errors = {}
-
-        if user_input is not None:
-            await self.async_set_unique_id(user_input[ATTR_SERIAL])
-            self._abort_if_unique_id_configured()
-
-            try:
-                return await self._validate_and_create_camera_rtsp(user_input)
-
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-
-            except InvalidHost:
-                errors["base"] = "invalid_host"
-
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                return self.async_abort(reason="unknown")
-
-        camera_schema = vol.Schema(
-            {
-                vol.Required(CONF_USERNAME, default=DEFAULT_CAMERA_USERNAME): str,
-                vol.Required(CONF_PASSWORD): str,
-                vol.Required(ATTR_SERIAL): str,
-                vol.Required(CONF_IP_ADDRESS): str,
-            }
-        )
-
-        return self.async_show_form(
-            step_id="user_camera", data_schema=camera_schema, errors=errors
         )
 
     async def async_step_discovery(self, discovery_info):
