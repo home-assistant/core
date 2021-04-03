@@ -28,7 +28,7 @@
                     "include_domains": "Domeinen om op te nemen",
                     "mode": "Mode"
                 },
-                "description": "De HomeKit-integratie geeft u toegang tot uw Home Assistant-entiteiten in HomeKit. In bridge-modus zijn HomeKit-bruggen beperkt tot 150 accessoires per exemplaar, inclusief de brug zelf. Als u meer dan het maximale aantal accessoires wilt overbruggen, is het aan te raden om meerdere HomeKit-bridges voor verschillende domeinen te gebruiken. Gedetailleerde entiteitsconfiguratie is alleen beschikbaar via YAML voor de primaire bridge.",
+                "description": "Kies de domeinen die moeten worden opgenomen. Alle ondersteunde entiteiten in het domein zullen worden opgenomen. Voor elke tv-mediaspeler en camera wordt een afzonderlijke HomeKit-instantie in accessoiremodus aangemaakt.",
                 "title": "Selecteer domeinen die u wilt opnemen"
             }
         }
