@@ -12,7 +12,11 @@ from homeassistant.components.onewire.const import (
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.setup import async_setup_component
 
-from . import setup_onewire_patched_owserver_integration, setup_owproxy_mock_devices
+from . import (
+    setup_onewire_patched_owserver_integration,
+    setup_owproxy_mock_devices,
+    setup_sysbus_mock_devices,
+)
 from .const import MOCK_OWPROXY_DEVICES, MOCK_SYSBUS_DEVICES
 
 from tests.common import assert_setup_component, mock_device_registry, mock_registry
@@ -185,19 +189,16 @@ async def test_owserver_setup_valid_device(owproxy, hass, device_id, platform):
 @pytest.mark.parametrize("device_id", MOCK_SYSBUS_DEVICES.keys())
 async def test_onewiredirect_setup_valid_device(hass, device_id):
     """Test that sysbus config entry works correctly."""
+    await async_setup_component(hass, "persistent_notification", {})
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
 
-    mock_device_sensor = MOCK_SYSBUS_DEVICES[device_id]
+    glob_result, read_side_effect = setup_sysbus_mock_devices(
+        SENSOR_DOMAIN, [device_id]
+    )
 
-    glob_result = [f"/{DEFAULT_SYSBUS_MOUNT_DIR}/{device_id}"]
-    read_side_effect = []
-    expected_sensors = mock_device_sensor["sensors"]
-    for expected_sensor in expected_sensors:
-        read_side_effect.append(expected_sensor["injected_value"])
-
-    # Ensure enough read side effect
-    read_side_effect.extend([FileNotFoundError("Missing injected value")] * 20)
+    mock_device = MOCK_SYSBUS_DEVICES[device_id]
+    expected_entities = mock_device.get(SENSOR_DOMAIN, [])
 
     with patch(
         "homeassistant.components.onewire.onewirehub.os.path.isdir", return_value=True
@@ -208,10 +209,10 @@ async def test_onewiredirect_setup_valid_device(hass, device_id):
         assert await async_setup_component(hass, SENSOR_DOMAIN, MOCK_SYSBUS_CONFIG)
         await hass.async_block_till_done()
 
-    assert len(entity_registry.entities) == len(expected_sensors)
+    assert len(entity_registry.entities) == len(expected_entities)
 
-    if len(expected_sensors) > 0:
-        device_info = mock_device_sensor["device_info"]
+    if len(expected_entities) > 0:
+        device_info = mock_device["device_info"]
         assert len(device_registry.devices) == 1
         registry_entry = device_registry.async_get_device({(DOMAIN, device_id)})
         assert registry_entry is not None
@@ -220,7 +221,7 @@ async def test_onewiredirect_setup_valid_device(hass, device_id):
         assert registry_entry.name == device_info["name"]
         assert registry_entry.model == device_info["model"]
 
-    for expected_sensor in expected_sensors:
+    for expected_sensor in expected_entities:
         entity_id = expected_sensor["entity_id"]
         registry_entry = entity_registry.entities.get(entity_id)
         assert registry_entry is not None
