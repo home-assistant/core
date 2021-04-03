@@ -5,7 +5,6 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_ATTRIBUTE,
-    CONF_NAME,
     CONF_SOURCE,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
@@ -14,7 +13,13 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_state_change_event
 
-from .const import CONF_COMPENSATION, CONF_POLYNOMIAL, CONF_PRECISION, DATA_COMPENSATION
+from .const import (
+    CONF_COMPENSATION,
+    CONF_POLYNOMIAL,
+    CONF_PRECISION,
+    DATA_COMPENSATION,
+    DEFAULT_NAME,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,13 +36,19 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     compensation = discovery_info[CONF_COMPENSATION]
     conf = hass.data[DATA_COMPENSATION][compensation]
 
+    source = conf[CONF_SOURCE]
+    attribute = conf.get(CONF_ATTRIBUTE)
+    name = f"{DEFAULT_NAME} {source}"
+    if attribute is not None:
+        name = f"{name} {attribute}"
+
     async_add_entities(
         [
             CompensationSensor(
                 conf.get(CONF_UNIQUE_ID),
-                conf[CONF_NAME],
-                conf[CONF_SOURCE],
-                conf.get(CONF_ATTRIBUTE),
+                name,
+                source,
+                attribute,
                 conf[CONF_PRECISION],
                 conf[CONF_POLYNOMIAL],
                 conf.get(CONF_UNIT_OF_MEASUREMENT),

@@ -8,7 +8,6 @@ import voluptuous as vol
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     CONF_ATTRIBUTE,
-    CONF_NAME,
     CONF_SOURCE,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
@@ -24,7 +23,6 @@ from .const import (
     CONF_PRECISION,
     DATA_COMPENSATION,
     DEFAULT_DEGREE,
-    DEFAULT_NAME,
     DEFAULT_PRECISION,
     DOMAIN,
 )
@@ -48,7 +46,6 @@ COMPENSATION_SCHEMA = vol.Schema(
         vol.Required(CONF_DATAPOINTS): [
             vol.ExactSequence([vol.Coerce(float), vol.Coerce(float)])
         ],
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_ATTRIBUTE): cv.string,
         vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): cv.positive_int,
