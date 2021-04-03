@@ -82,7 +82,7 @@ class TcpSensor(Entity):
 
         if config[CONF_SSL]:
             self._ssl_context = ssl.create_default_context()
-            if not config.get(CONF_VERIFY_SSL):
+            if not config[CONF_VERIFY_SSL]:
                 self._ssl_context.check_hostname = False
                 self._ssl_context.verify_mode = ssl.CERT_NONE
         else:
