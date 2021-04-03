@@ -111,9 +111,7 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Optional(CONF_GROUP, default=self._data[CONF_GROUP]): vol.In(
                         GROUPS
                     ),
-                    vol.Required(
-                        CONF_PASSWORD, default=self._data[CONF_PASSWORD]
-                    ): cv.string,
+                    vol.Required(CONF_PASSWORD): cv.string,
                 }
             ),
             errors=errors,
