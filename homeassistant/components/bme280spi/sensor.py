@@ -52,7 +52,7 @@ DEFAULT_MONITORED = [SENSOR_TEMP, SENSOR_HUMID, SENSOR_PRESS]
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_SPI_DEV, default=DEFAULT_SPI_DEV): cv.string,
+        vol.Optional(CONF_SPI_DEV, default=DEFAULT_SPI_DEV): vol.Coerce(int),
         vol.Optional(CONF_MONITORED_CONDITIONS, default=DEFAULT_MONITORED): vol.All(
             cv.ensure_list, [vol.In(SENSOR_TYPES)]
         ),
@@ -83,13 +83,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     sensor = await hass.async_add_executor_job(
         partial(
             BME280,
-            t_mode=config.get(CONF_OVERSAMPLING_TEMP),
-            p_mode=config.get(CONF_OVERSAMPLING_PRES),
-            h_mode=config.get(CONF_OVERSAMPLING_HUM),
-            standby=config.get(CONF_T_STANDBY),
-            filter=config.get(CONF_FILTER_MODE),
-            spi_bus=config.get(CONF_SPI_BUS),
-            spi_dev=config.get(CONF_SPI_DEV),
+            t_mode=config[CONF_OVERSAMPLING_TEMP],
+            p_mode=config[CONF_OVERSAMPLING_PRES],
+            h_mode=config[CONF_OVERSAMPLING_HUM],
+            standby=config[CONF_T_STANDBY],
+            filter=config[CONF_FILTER_MODE],
+            spi_bus=config[CONF_SPI_BUS],
+            spi_dev=config[CONF_SPI_DEV],
         )
     )
     if not sensor.sample_ok:
