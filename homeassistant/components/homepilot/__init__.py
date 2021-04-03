@@ -21,7 +21,7 @@ PLATFORMS = ["cover"]
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Rademacher HomePilot component."""
-    hass.data[DOMAIN] = {}
+    hass.data.setdefault(DOMAIN, {})
 
     return True
 
