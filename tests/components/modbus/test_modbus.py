@@ -1,4 +1,6 @@
 """The tests for the Modbus sensor component."""
+from unittest import mock
+
 import pytest
 
 from homeassistant.components.modbus.const import (
@@ -6,6 +8,7 @@ from homeassistant.components.modbus.const import (
     CONF_BYTESIZE,
     CONF_PARITY,
     CONF_STOPBITS,
+    DEFAULT_HUB,
     MODBUS_DOMAIN as DOMAIN,
 )
 from homeassistant.const import (
@@ -17,56 +20,227 @@ from homeassistant.const import (
     CONF_TIMEOUT,
     CONF_TYPE,
 )
+from homeassistant.setup import async_setup_component
 
-from .conftest import base_config_test
 
-
-@pytest.mark.parametrize("do_discovery", [False, True])
-@pytest.mark.parametrize(
-    "do_options",
-    [
-        {},
-        {
-            CONF_NAME: "modbusTest",
-            CONF_TIMEOUT: 30,
-            CONF_DELAY: 10,
-        },
-    ],
-)
 @pytest.mark.parametrize(
     "do_config",
     [
         {
-            CONF_TYPE: "tcp",
-            CONF_HOST: "modbusTestHost",
-            CONF_PORT: 5501,
+            DOMAIN: [
+                {
+                    CONF_TYPE: "tcp",
+                    CONF_HOST: "modbusTestHost",
+                    CONF_PORT: 5501,
+                }
+            ]
         },
         {
-            CONF_TYPE: "serial",
-            CONF_BAUDRATE: 9600,
-            CONF_BYTESIZE: 8,
-            CONF_METHOD: "rtu",
-            CONF_PORT: "usb01",
-            CONF_PARITY: "E",
-            CONF_STOPBITS: 1,
+            DOMAIN: [
+                {
+                    CONF_TYPE: "tcp",
+                    CONF_HOST: "modbusTestHost",
+                    CONF_PORT: 5501,
+                    CONF_NAME: "modbusTest",
+                    CONF_TIMEOUT: 30,
+                    CONF_DELAY: 10,
+                }
+            ]
+        },
+        {
+            DOMAIN: [
+                {
+                    CONF_TYPE: "udp",
+                    CONF_HOST: "modbusTestHost",
+                    CONF_PORT: 5501,
+                }
+            ]
+        },
+        {
+            DOMAIN: [
+                {
+                    CONF_TYPE: "udp",
+                    CONF_HOST: "modbusTestHost",
+                    CONF_PORT: 5501,
+                    CONF_NAME: "modbusTest",
+                    CONF_TIMEOUT: 30,
+                    CONF_DELAY: 10,
+                }
+            ]
+        },
+        {
+            DOMAIN: [
+                {
+                    CONF_TYPE: "rtuovertcp",
+                    CONF_HOST: "modbusTestHost",
+                    CONF_PORT: 5501,
+                }
+            ]
+        },
+        {
+            DOMAIN: [
+                {
+                    CONF_TYPE: "rtuovertcp",
+                    CONF_HOST: "modbusTestHost",
+                    CONF_PORT: 5501,
+                    CONF_NAME: "modbusTest",
+                    CONF_TIMEOUT: 30,
+                    CONF_DELAY: 10,
+                }
+            ]
+        },
+        {
+            DOMAIN: [
+                {
+                    CONF_TYPE: "serial",
+                    CONF_BAUDRATE: 9600,
+                    CONF_BYTESIZE: 8,
+                    CONF_METHOD: "rtu",
+                    CONF_PORT: "usb01",
+                    CONF_PARITY: "E",
+                    CONF_STOPBITS: 1,
+                }
+            ]
+        },
+        {
+            DOMAIN: [
+                {
+                    CONF_TYPE: "serial",
+                    CONF_BAUDRATE: 9600,
+                    CONF_BYTESIZE: 8,
+                    CONF_METHOD: "rtu",
+                    CONF_PORT: "usb01",
+                    CONF_PARITY: "E",
+                    CONF_STOPBITS: 1,
+                    CONF_NAME: "modbusTest",
+                    CONF_TIMEOUT: 30,
+                    CONF_DELAY: 10,
+                }
+            ]
         },
     ],
 )
-async def test_config_modbus(hass, do_discovery, do_options, do_config):
+async def test_config_modbus(hass, do_config):
     """Run test for modbus."""
-    config = {
-        DOMAIN: {
-            **do_config,
-            **do_options,
-        }
-    }
-    await base_config_test(
-        hass,
-        None,
-        "",
-        DOMAIN,
-        None,
-        None,
-        method_discovery=do_discovery,
-        config_modbus=config,
-    )
+
+    mock_sync = mock.MagicMock()
+    with mock.patch(
+        "homeassistant.components.modbus.modbus.ModbusTcpClient", return_value=mock_sync
+    ), mock.patch(
+        "homeassistant.components.modbus.modbus.ModbusSerialClient",
+        return_value=mock_sync,
+    ), mock.patch(
+        "homeassistant.components.modbus.modbus.ModbusUdpClient", return_value=mock_sync
+    ):
+        # mocking is needed to secure the pymodbus library is not called!
+        assert await async_setup_component(hass, DOMAIN, do_config)
+        await hass.async_block_till_done()
+        assert DOMAIN in hass.data
+
+        # the "if" should really be in the do_config above, but
+        # there are no easy way to have vol add default.
+        if CONF_NAME not in do_config[DOMAIN][0]:
+            do_config[DOMAIN][0][CONF_NAME] = DEFAULT_HUB
+        assert do_config[DOMAIN][0][CONF_NAME] in hass.data[DOMAIN]
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            DOMAIN: [
+                {
+                    CONF_TYPE: "tcp",
+                    CONF_HOST: "modbusTestHost",
+                    CONF_PORT: 5501,
+                    CONF_NAME: "modbusTest1",
+                    CONF_TIMEOUT: 30,
+                    CONF_DELAY: 10,
+                },
+                {
+                    CONF_TYPE: "tcp",
+                    CONF_HOST: "modbusTestHost",
+                    CONF_PORT: 5501,
+                    CONF_NAME: "modbusTest2",
+                    CONF_TIMEOUT: 30,
+                    CONF_DELAY: 10,
+                },
+            ]
+        },
+        {
+            DOMAIN: [
+                {
+                    CONF_TYPE: "tcp",
+                    CONF_HOST: "modbusTestHost",
+                    CONF_PORT: 5501,
+                    CONF_NAME: "modbusTest1",
+                    CONF_TIMEOUT: 30,
+                    CONF_DELAY: 10,
+                },
+                {
+                    CONF_TYPE: "udp",
+                    CONF_HOST: "modbusTestHost",
+                    CONF_PORT: 5501,
+                    CONF_NAME: "modbusTest2",
+                    CONF_TIMEOUT: 30,
+                    CONF_DELAY: 10,
+                },
+            ]
+        },
+        {
+            DOMAIN: [
+                {
+                    CONF_TYPE: "tcp",
+                    CONF_HOST: "modbusTestHost",
+                    CONF_PORT: 5501,
+                    CONF_NAME: "modbusTest1",
+                    CONF_TIMEOUT: 30,
+                    CONF_DELAY: 10,
+                },
+                {
+                    CONF_TYPE: "serial",
+                    CONF_BAUDRATE: 9600,
+                    CONF_BYTESIZE: 8,
+                    CONF_METHOD: "rtu",
+                    CONF_PORT: "usb01",
+                    CONF_PARITY: "E",
+                    CONF_STOPBITS: 1,
+                    CONF_NAME: "modbusTest2",
+                },
+            ]
+        },
+    ],
+)
+async def test_multiple_config_modbus(hass, do_config):
+    """Run test for modbus."""
+
+    mock_sync = mock.MagicMock()
+    with mock.patch(
+        "homeassistant.components.modbus.modbus.ModbusTcpClient", return_value=mock_sync
+    ), mock.patch(
+        "homeassistant.components.modbus.modbus.ModbusSerialClient",
+        return_value=mock_sync,
+    ), mock.patch(
+        "homeassistant.components.modbus.modbus.ModbusUdpClient", return_value=mock_sync
+    ):
+        # mocking is needed to secure the pymodbus library is not called!
+        assert await async_setup_component(hass, DOMAIN, do_config)
+        await hass.async_block_till_done()
+        assert DOMAIN in hass.data
+
+        # the "if" should really be in the do_config above, but
+        # there are no easy way to have vol add default.
+        assert do_config[DOMAIN][0][CONF_NAME] in hass.data[DOMAIN]
+        assert do_config[DOMAIN][1][CONF_NAME] in hass.data[DOMAIN]
+
+
+async def test_pymodbus_read(hass):
+    """Run test for modbus."""
+
+
+async def test_pymodbus_write(hass):
+    """Run test for modbus."""
+
+
+async def test_user_write(hass):
+    """Run test for modbus."""
