@@ -195,8 +195,6 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat):
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "compCool1",
-        "humidifier_modes": ["off", "auto", "manual"],
-        "humidifier_mode": "off",
     } == thermostat.extra_state_attributes
     ecobee_fixture["equipmentStatus"] = ""
     assert {
@@ -204,8 +202,6 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat):
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "",
-        "humidifier_modes": ["off", "auto", "manual"],
-        "humidifier_mode": "off",
     } == thermostat.extra_state_attributes
 
     ecobee_fixture["equipmentStatus"] = "Unknown"
@@ -214,8 +210,6 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat):
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "Unknown",
-        "humidifier_modes": ["off", "auto", "manual"],
-        "humidifier_mode": "off",
     } == thermostat.extra_state_attributes
 
     ecobee_fixture["program"]["currentClimateRef"] = "c2"
@@ -224,8 +218,6 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat):
         "climate_mode": "Climate2",
         "fan_min_on_time": 10,
         "equipment_running": "Unknown",
-        "humidifier_modes": ["off", "auto", "manual"],
-        "humidifier_mode": "off",
     } == thermostat.extra_state_attributes
 
 
