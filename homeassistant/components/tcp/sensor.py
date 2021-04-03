@@ -80,7 +80,7 @@ class TcpSensor(Entity):
             CONF_BUFFER_SIZE: config.get(CONF_BUFFER_SIZE),
         }
 
-        if config.get(CONF_SSL):
+        if config[CONF_SSL]:
             self._ssl_context = ssl.create_default_context()
             if not config.get(CONF_VERIFY_SSL):
                 self._ssl_context.check_hostname = False
