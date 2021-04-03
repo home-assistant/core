@@ -195,6 +195,9 @@ class AsusWrtRouter:
         self._api: AsusWrt = None
         self._protocol = entry.data[CONF_PROTOCOL]
         self._host = entry.data[CONF_HOST]
+        self._model = "Asus Router"
+        self._mac = None
+        self._sw_v = None
 
         self._devices: dict[str, Any] = {}
         self._connected_devices = 0
@@ -223,6 +226,15 @@ class AsusWrtRouter:
 
         if not self._api.is_connected:
             raise ConfigEntryNotReady
+
+        # System
+        model = await _get_nvram_info(self._api, "MODEL")
+        if model:
+            self._model = model["model"]
+        firmware = await _get_nvram_info(self._api, "FIRMWARE")
+        if firmware:
+            self._sw_v = f"{firmware['firmver']} (build {firmware['buildno']})"
+        self._mac = await get_mac_address(self._api)
 
         # Load tracked entities from registry
         entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
@@ -276,13 +288,19 @@ class AsusWrtRouter:
         )
         track_unknown = self._options.get(CONF_TRACK_UNKNOWN, DEFAULT_TRACK_UNKNOWN)
 
+        self._connected_devices = len(wrt_devices)
+        await self._update_unpolled_sensors()
+
         for device_mac in self._devices:
-            dev_info = wrt_devices.get(device_mac)
+            dev_info = wrt_devices.pop(device_mac, None)
             self._devices[device_mac].update(dev_info, consider_home)
 
+        async_dispatcher_send(self.hass, self.signal_device_update)
+
+        if not wrt_devices:
+            return
+
         for device_mac, dev_info in wrt_devices.items():
-            if device_mac in self._devices:
-                continue
             if not track_unknown and not dev_info.name:
                 continue
             new_device = True
@@ -290,12 +308,8 @@ class AsusWrtRouter:
             device.update(dev_info)
             self._devices[device_mac] = device
 
-        async_dispatcher_send(self.hass, self.signal_device_update)
         if new_device:
             async_dispatcher_send(self.hass, self.signal_device_new)
-
-        self._connected_devices = len(wrt_devices)
-        await self._update_unpolled_sensors()
 
     async def init_sensors_coordinator(self) -> None:
         """Init AsusWrt sensors coordinators."""
@@ -371,10 +385,11 @@ class AsusWrtRouter:
     def device_info(self) -> dict[str, Any]:
         """Return the device information."""
         return {
-            "identifiers": {(DOMAIN, "AsusWRT")},
+            "identifiers": {(DOMAIN, self._mac or "AsusWRT")},
             "name": self._host,
-            "model": "Asus Router",
+            "model": self._model,
             "manufacturer": "Asus",
+            "sw_version": self._sw_v,
         }
 
     @property
@@ -406,6 +421,23 @@ class AsusWrtRouter:
     def api(self) -> AsusWrt:
         """Return router API."""
         return self._api
+
+
+async def _get_nvram_info(api: AsusWrt, info_type):
+    """Get AsusWrt router info from nvram."""
+    info = {}
+    try:
+        info = await api.async_get_nvram(info_type)
+    except OSError as exc:
+        _LOGGER.warning("Error calling method async_get_nvram(%s): %s", info_type, exc)
+
+    return info
+
+
+async def get_mac_address(api: AsusWrt):
+    """Get AsusWrt router mac address."""
+    mac = await _get_nvram_info(api, "LABEL_MAC")
+    return mac.get("label_mac")
 
 
 def get_api(conf: dict, options: dict | None = None) -> AsusWrt:
