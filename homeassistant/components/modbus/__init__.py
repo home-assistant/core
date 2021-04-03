@@ -282,7 +282,9 @@ SERVICE_WRITE_COIL_SCHEMA = vol.Schema(
         vol.Optional(ATTR_HUB, default=DEFAULT_HUB): cv.string,
         vol.Required(ATTR_UNIT): cv.positive_int,
         vol.Required(ATTR_ADDRESS): cv.positive_int,
-        vol.Required(ATTR_STATE): cv.boolean,
+        vol.Required(ATTR_STATE): vol.Any(
+            cv.boolean, vol.All(cv.ensure_list, [cv.boolean])
+        ),
     }
 )
 

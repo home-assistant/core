@@ -93,7 +93,10 @@ def modbus_setup(
         address = service.data[ATTR_ADDRESS]
         state = service.data[ATTR_STATE]
         client_name = service.data[ATTR_HUB]
-        hub_collect[client_name].write_coil(unit, address, state)
+        if isinstance(state, list):
+            hub_collect[client_name].write_coils(unit, address, state)
+        else:
+            hub_collect[client_name].write_coil(unit, address, state)
 
     # register function to gracefully stop modbus
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_modbus)
