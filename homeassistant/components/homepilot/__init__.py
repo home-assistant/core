@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,14 +41,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         try:
             return {device.uid: device for device in await api.async_get_all_devices()}
         except Exception as err:
-            raise UpdateFailed(f"Error communicating with API: {err}")
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
 
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
         name="homepilot",
         update_method=async_update_data,
-        update_interval=timedelta(seconds=30),
+        update_interval=timedelta(seconds=SCAN_INTERVAL),
     )
 
     # Fetch initial data

@@ -1,7 +1,10 @@
 """Test the Rademacher HomePilot config flow."""
 from unittest.mock import patch
 
-from pyhomepilot.auth import AuthError, ConnectionError
+from pyhomepilot.auth import (  # pylint:disable=redefined-builtin
+    AuthError,
+    ConnectionError,
+)
 from pytest import raises
 
 from homeassistant import config_entries, setup

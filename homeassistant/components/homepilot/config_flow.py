@@ -4,12 +4,16 @@ import logging
 
 import aiohttp
 from pyhomepilot import HomePilotAPI
-from pyhomepilot.auth import Auth, AuthError, ConnectionError
+from pyhomepilot.auth import (  # pylint:disable=redefined-builtin
+    Auth,
+    AuthError,
+    ConnectionError,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,10 +33,10 @@ async def validate_input(hass: core.HomeAssistant, data):
                 await auth.async_login()
 
             name = await api.async_get_system_name()
-        except ConnectionError:
-            raise CannotConnect
-        except AuthError:
-            raise InvalidAuth
+        except ConnectionError as err:
+            raise CannotConnect from err
+        except AuthError as err:
+            raise InvalidAuth from err
         else:
             return {"title": name}
 

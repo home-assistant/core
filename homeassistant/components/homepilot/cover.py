@@ -15,7 +15,7 @@ from homeassistant.components.cover import (
     CoverEntity,
 )
 
-from .const import DOMAIN
+from .const import DOMAIN, STOP_UPDATE_DELAY
 from .entity import HomePilotEntity
 
 # supported device classes based on selected icon set
@@ -42,7 +42,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     entities = []
     for uid, device in instance["coordinator"].data.items():
-        if type(device) is Blind:
+        if isinstance(device, Blind):
             entities.append(HomePilotCoverEntity(instance, uid))
 
     async_add_entities(entities)
@@ -68,12 +68,12 @@ class HomePilotCoverEntity(HomePilotEntity, CoverEntity):
         """Return the position of the cover from 0 to 100."""
         return reverse_percentage(self._device.position)
 
-    async def async_open_cover(self):
+    async def async_open_cover(self, **kwargs):
         """Open the cover."""
         await self._device.async_move_up()
         await self.coordinator.async_refresh()
 
-    async def async_close_cover(self):
+    async def async_close_cover(self, **kwargs):
         """Close cover."""
         await self._device.async_move_down()
         await self.coordinator.async_refresh()
@@ -87,6 +87,5 @@ class HomePilotCoverEntity(HomePilotEntity, CoverEntity):
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
         await self._device.async_stop()
-        # the HomePilot bridge takes 3 to 5 seconds to update its state after sending a stop command
-        await asyncio.sleep(5)
+        await asyncio.sleep(STOP_UPDATE_DELAY)
         await self.coordinator.async_refresh()
