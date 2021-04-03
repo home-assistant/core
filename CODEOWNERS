@@ -89,6 +89,7 @@ homeassistant/components/cloud/* @home-assistant/cloud
 homeassistant/components/cloudflare/* @ludeeus @ctalkington
 homeassistant/components/color_extractor/* @GenericStudent
 homeassistant/components/comfoconnect/* @michaelarnauts
+homeassistant/components/compensation/* @Petro31
 homeassistant/components/config/* @home-assistant/core
 homeassistant/components/configurator/* @home-assistant/core
 homeassistant/components/control4/* @lawtancool

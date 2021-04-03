@@ -529,6 +529,7 @@ nuheat==0.3.0
 # homeassistant.components.numato
 numato-gpio==0.10.0
 
+# homeassistant.components.compensation
 # homeassistant.components.iqvia
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
