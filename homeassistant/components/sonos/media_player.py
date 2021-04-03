@@ -513,7 +513,7 @@ class SonosEntity(MediaPlayerEntity):
     async def async_seen(self, player):
         """Record that this player was seen right now."""
         was_available = self.available
-        _LOGGER.warning("Async seen: %s, was_available: %s", player, was_available)
+        _LOGGER.debug("Async seen: %s, was_available: %s", player, was_available)
 
         self._player = player
 
