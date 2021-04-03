@@ -78,6 +78,7 @@ from .const import (
     CONF_TARGET_TEMP,
     CONF_UNIT,
     CONF_VERIFY_REGISTER,
+    CONF_VERIFY_STATE,
     DATA_TYPE_CUSTOM,
     DATA_TYPE_FLOAT,
     DATA_TYPE_INT,
@@ -178,6 +179,7 @@ SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         vol.Optional(CONF_STATE_OFF): cv.positive_int,
         vol.Optional(CONF_STATE_ON): cv.positive_int,
         vol.Optional(CONF_VERIFY_REGISTER): cv.positive_int,
+        vol.Optional(CONF_VERIFY_STATE, default=True): cv.boolean,
     }
 )
 
@@ -280,7 +282,9 @@ SERVICE_WRITE_COIL_SCHEMA = vol.Schema(
         vol.Optional(ATTR_HUB, default=DEFAULT_HUB): cv.string,
         vol.Required(ATTR_UNIT): cv.positive_int,
         vol.Required(ATTR_ADDRESS): cv.positive_int,
-        vol.Required(ATTR_STATE): cv.boolean,
+        vol.Required(ATTR_STATE): vol.Any(
+            cv.boolean, vol.All(cv.ensure_list, [cv.boolean])
+        ),
     }
 )
 
