@@ -1,5 +1,7 @@
 """Support for HomePilot Covers."""
 
+import asyncio
+
 from pyhomepilot.devices import Blind
 from pyhomepilot.utils import reverse_percentage
 
@@ -85,4 +87,6 @@ class HomePilotCoverEntity(HomePilotEntity, CoverEntity):
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
         await self._device.async_stop()
+        # the HomePilot bridge takes 3 to 5 seconds to update its state after sending a stop command
+        await asyncio.sleep(5)
         await self.coordinator.async_refresh()
