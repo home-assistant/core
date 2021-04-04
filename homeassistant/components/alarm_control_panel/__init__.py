@@ -163,6 +163,10 @@ class AlarmControlPanelEntity(Entity):
         """Send arm vacation command."""
         raise NotImplementedError()
 
+    async def async_alarm_arm_vacation(self, code=None):
+        """Send arm vacation command."""
+        await self.hass.async_add_executor_job(self.alarm_arm_vacation, code)
+
     def alarm_trigger(self, code=None):
         """Send alarm trigger command."""
         raise NotImplementedError()

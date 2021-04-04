@@ -185,7 +185,7 @@ async def test_websocket_get_action_capabilities(
         "alarm_control_panel", "test", "5678", device_id=device_entry.id
     )
     hass.states.async_set(
-        "alarm_control_panel.test_5678", "attributes", {"supported_features": 15}
+        "alarm_control_panel.test_5678", "attributes", {"supported_features": 47}
     )
     expected_capabilities = {
         "arm_away": {"extra_fields": []},
@@ -210,7 +210,7 @@ async def test_websocket_get_action_capabilities(
     actions = msg["result"]
 
     id = 2
-    assert len(actions) == 5
+    assert len(actions) == 6
     for action in actions:
         await client.send_json(
             {
