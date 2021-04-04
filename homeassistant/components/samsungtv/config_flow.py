@@ -78,7 +78,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data=data,
         )
 
-    async def _abort_if_already_configured(self):
+    async def _async_abort_if_already_configured(self):
         device_ip = await self.hass.async_add_executor_job(gethostbyname, self._host)
         for entry in self._async_current_entries():
 
