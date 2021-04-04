@@ -1,4 +1,5 @@
 """Config flow for Samsung TV."""
+import socket
 from socket import gethostbyname
 from urllib.parse import urlparse
 
@@ -151,12 +152,14 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         if user_input is not None:
-            self._host = user_input[CONF_HOST]
+            self._host = await self.hass.async_add_executor_job(
+                socket.gethostbyname, user_input[CONF_HOST]
+            )
             self._name = user_input[CONF_NAME]
             self._title = self._name
 
             await self.hass.async_add_executor_job(self._try_connect)
-            await self._get_and_check_device_info()
+            await self._async_get_and_check_device_info()
 
             await self.async_set_unique_id(self._id)
             await self._abort_if_unique_id_configured()
@@ -177,9 +180,9 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._id = self._id[5:]
 
         await self.async_set_unique_id(self._id)
-        await self._abort_if_already_configured()
+        await self._async_abort_if_already_configured()
 
-        await self._get_and_check_device_info()
+        await self._async_get_and_check_device_info()
 
         self._manufacturer = user_input.get(ATTR_UPNP_MANUFACTURER)
         if not self._model:
@@ -201,9 +204,9 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if self._id:
             await self.async_set_unique_id(self._id)
-            await self._abort_if_already_configured()
+            await self._async_abort_if_already_configured()
 
-        await self._get_and_check_device_info()
+        await self._async_get_and_check_device_info()
 
         self._mac = user_input[ATTR_PROPERTIES].get("deviceid")
         self._manufacturer = user_input[ATTR_PROPERTIES].get("manufacturer")
@@ -221,8 +224,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             return self._get_entry()
 
-    await self.hass.async_add_executor_job(self._try_connect)
-    self._set_confirm_only()
+        await self.hass.async_add_executor_job(self._try_connect)
+        self._set_confirm_only()
         return self.async_show_form(
             step_id="confirm", description_placeholders={"model": self._model}
         )
