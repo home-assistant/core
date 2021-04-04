@@ -175,7 +175,7 @@ class SensorData(TypedDict):
     state: str | None
     value: Any | None
     update_time: datetime.datetime | None
-    available: bool
+    last_exception: BaseException | None
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -209,7 +209,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 "state": None,
                 "value": None,
                 "update_time": None,
-                "available": False,
+                "last_exception": None,
             }
         )
         entities.append(SystemMonitorSensor(sensor_registry, type_, argument))
@@ -232,12 +232,13 @@ async def async_setup_sensor_registry_updates(hass, sensor_registry, scan_interv
                 state, value, update_time = _update(
                     type_, data.argument, data.state, data.value, data.update_time
                 )
-            except Exception:  # pylint: disable=broad-except
-                data.available = False
+            except Exception as ex:  # pylint: disable=broad-except
+                data.last_exception = ex
             else:
                 data.state = state
                 data.value = value
                 data.update_time = update_time
+                data.last_exception = None
 
     async def async_update_data():
         """Update all sensors in one executor jump."""
@@ -265,11 +266,11 @@ async def async_setup_sensor_registry_updates(hass, sensor_registry, scan_interv
 class SystemMonitorSensor(SensorEntity):
     """Implementation of a system monitor sensor."""
 
-    def __init__(self, sensor_type, argument=""):
+    def __init__(self, sensor_registry, sensor_type, argument=""):
         """Initialize the sensor."""
         self._name = "{} {}".format(SENSOR_TYPES[sensor_type][0], argument)
         self._unique_id = slugify(f"{sensor_type}_{argument}")
-        argument = argument
+        self._sensor_registry = sensor_registry
         self._type = sensor_type
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
 
@@ -306,12 +307,12 @@ class SystemMonitorSensor(SensorEntity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return self.data.available
+        return self.data.last_exception is None
 
     @property
     def data(self):
         """Return registry entry for the data."""
-        return self.coordinator.data[self._type]
+        return self._sensor_registry[self._type]
 
 
 def _update(type_, argument, last_state, last_value, last_update_time):
