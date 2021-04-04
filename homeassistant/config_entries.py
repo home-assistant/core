@@ -11,7 +11,8 @@ import weakref
 import attr
 
 from homeassistant import data_entry_flow, loader
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.event import Event
@@ -276,14 +277,19 @@ class ConfigEntry:
                     wait_time,
                 )
 
-            async def setup_again(now: Any) -> None:
+            async def setup_again(*_: Any) -> None:
                 """Run setup again."""
                 self._async_cancel_retry_setup = None
                 await self.async_setup(hass, integration=integration, tries=tries)
 
-            self._async_cancel_retry_setup = hass.helpers.event.async_call_later(
-                wait_time, setup_again
-            )
+            if hass.state == CoreState.running:
+                self._async_cancel_retry_setup = hass.helpers.event.async_call_later(
+                    wait_time, setup_again
+                )
+            else:
+                self._async_cancel_retry_setup = hass.bus.async_listen_once(
+                    EVENT_HOMEASSISTANT_STARTED, setup_again
+                )
             return
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
