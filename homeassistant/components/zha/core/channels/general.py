@@ -424,7 +424,7 @@ class PollControl(ZigbeeChannel):
 
     @callback
     def skip_manufacturer_id(self, manufacturer_code: int) -> None:
-        """Black list a specific manufacturer id from changing default polling."""
+        """Block a specific manufacturer id from changing default polling."""
         self._IGNORED_MANUFACTURER_ID.add(manufacturer_code)
 
 
