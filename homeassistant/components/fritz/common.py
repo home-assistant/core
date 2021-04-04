@@ -110,9 +110,10 @@ class FritzBoxTools:
             )
 
             self.fritzstatus = FritzStatus(fc=self.connection)
-            self._unique_id = self.connection.call_action("DeviceInfo:1", "GetInfo")[
-                "NewSerialNumber"
-            ]
+            if self._unique_id is None:
+                self._unique_id = self.connection.call_action(
+                    "DeviceInfo:1", "GetInfo"
+                )["NewSerialNumber"]
             self.fritzhosts = FritzHosts(fc=self.connection)
             self._device_info = self._fetch_device_info()
             self.success = True
