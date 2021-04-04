@@ -31,6 +31,10 @@ def soco_fixture(music_library, speaker_info, dummy_soco_service):
         mock_soco.renderingControl = dummy_soco_service
         mock_soco.zoneGroupTopology = dummy_soco_service
         mock_soco.contentDirectory = dummy_soco_service
+        mock_soco.mute = False
+        mock_soco.night_mode = True
+        mock_soco.dialog_mode = True
+        mock_soco.volume = 19
 
         yield mock_soco
 
