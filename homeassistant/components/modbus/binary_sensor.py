@@ -15,6 +15,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import (
     CONF_ADDRESS,
+    CONF_BINARY_SENSORS,
     CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
@@ -31,7 +32,6 @@ from homeassistant.helpers.typing import (
 from .const import (
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
-    CONF_BINARY_SENSORS,
     CONF_COILS,
     CONF_HUB,
     CONF_INPUT_TYPE,

@@ -17,10 +17,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     CONF_ADDRESS,
+    CONF_COUNT,
     CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_OFFSET,
     CONF_SCAN_INTERVAL,
+    CONF_SENSORS,
     CONF_SLAVE,
     CONF_STRUCTURE,
     CONF_UNIT_OF_MEASUREMENT,
@@ -37,7 +39,6 @@ from homeassistant.helpers.typing import (
 from .const import (
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
-    CONF_COUNT,
     CONF_DATA_TYPE,
     CONF_HUB,
     CONF_INPUT_TYPE,
@@ -47,7 +48,6 @@ from .const import (
     CONF_REGISTERS,
     CONF_REVERSE_ORDER,
     CONF_SCALE,
-    CONF_SENSORS,
     DATA_TYPE_CUSTOM,
     DATA_TYPE_FLOAT,
     DATA_TYPE_INT,
