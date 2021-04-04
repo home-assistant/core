@@ -108,8 +108,9 @@ async def test_hue_activate_scene_zero_responds(
 
 async def setup_bridge(hass, mock_bridge, config_entry):
     """Load the Hue light platform with the provided bridge."""
+    hue._register_services(hass)
     mock_bridge.config_entry = config_entry
-    hass.data[hue.DOMAIN][config_entry.entry_id] = mock_bridge
+    hass.data.setdefault(hue.DOMAIN, {})[config_entry.entry_id] = mock_bridge
     await hass.config_entries.async_forward_entry_setup(config_entry, "light")
     # To flush out the service call to update the group
     await hass.async_block_till_done()
