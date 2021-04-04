@@ -9,7 +9,7 @@ import urllib.parse
 
 import async_timeout
 import pysonos
-from pysonos import alarms
+from pysonos import alarms, events_asyncio
 from pysonos.core import (
     MUSIC_SRC_LINE_IN,
     MUSIC_SRC_RADIO,
@@ -162,6 +162,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     config = hass.data[SONOS_DOMAIN].get("media_player", {})
     _LOGGER.debug("Reached async_setup_entry, config=%s", config)
+    pysonos.config.EVENTS_MODULE = events_asyncio
 
     advertise_addr = config.get(CONF_ADVERTISE_ADDR)
     if advertise_addr:
@@ -224,6 +225,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 interval=DISCOVERY_INTERVAL,
                 interface_addr=config.get(CONF_INTERFACE_ADDR),
             )
+            hass.data[DATA_SONOS].discovery_thread.name = "Sonos-Discovery"
 
     _LOGGER.debug("Adding discovery job")
     hass.async_add_executor_job(_discovery)
@@ -446,12 +448,8 @@ class SonosEntity(MediaPlayerEntity):
 
         self.hass.data[DATA_SONOS].entities.append(self)
 
-        def _rebuild_groups():
-            """Build the current group topology."""
-            for entity in self.hass.data[DATA_SONOS].entities:
-                entity.update_groups()
-
-        self.hass.async_add_executor_job(_rebuild_groups)
+        for entity in self.hass.data[DATA_SONOS].entities:
+            await entity.async_update_groups_coro()
 
     @property
     def unique_id(self):
@@ -515,6 +513,7 @@ class SonosEntity(MediaPlayerEntity):
     async def async_seen(self, player):
         """Record that this player was seen right now."""
         was_available = self.available
+        _LOGGER.debug("Async seen: %s, was_available: %s", player, was_available)
 
         self._player = player
 
@@ -532,15 +531,14 @@ class SonosEntity(MediaPlayerEntity):
             self.update, datetime.timedelta(seconds=SCAN_INTERVAL)
         )
 
-        done = await self.hass.async_add_executor_job(self._attach_player)
+        done = await self._async_attach_player()
         if not done:
             self._seen_timer()
-            self.async_unseen()
+            await self.async_unseen()
 
         self.async_write_ha_state()
 
-    @callback
-    def async_unseen(self, now=None):
+    async def async_unseen(self, now=None):
         """Make this player unavailable when it was not seen recently."""
         self._seen_timer = None
 
@@ -548,11 +546,8 @@ class SonosEntity(MediaPlayerEntity):
             self._poll_timer()
             self._poll_timer = None
 
-        def _unsub(subscriptions):
-            for subscription in subscriptions:
-                subscription.unsubscribe()
-
-        self.hass.async_add_executor_job(_unsub, self._subscriptions)
+        for subscription in self._subscriptions:
+            await subscription.unsubscribe()
 
         self._subscriptions = []
 
@@ -582,27 +577,37 @@ class SonosEntity(MediaPlayerEntity):
 
     def _attach_player(self):
         """Get basic information and add event subscriptions."""
+        self._play_mode = self.soco.play_mode
+        self.update_volume()
+        self._set_favorites()
+
+    async def _async_attach_player(self):
+        """Get basic information and add event subscriptions."""
         try:
-            self._play_mode = self.soco.play_mode
-            self.update_volume()
-            self._set_favorites()
+            await self.hass.async_add_executor_job(self._attach_player)
 
             player = self.soco
 
-            def subscribe(sonos_service, action):
-                """Add a subscription to a pysonos service."""
-                queue = _ProcessSonosEventQueue(action)
-                sub = sonos_service.subscribe(auto_renew=True, event_queue=queue)
-                self._subscriptions.append(sub)
+            if self._subscriptions:
+                raise RuntimeError(
+                    f"Attempted to attach subscriptions to player: {player} "
+                    f"when existing subscriptions exist: {self._subscriptions}"
+                )
 
-            subscribe(player.avTransport, self.update_media)
-            subscribe(player.renderingControl, self.update_volume)
-            subscribe(player.zoneGroupTopology, self.update_groups)
-            subscribe(player.contentDirectory, self.update_content)
+            await self._subscribe(player.avTransport, self.async_update_media)
+            await self._subscribe(player.renderingControl, self.async_update_volume)
+            await self._subscribe(player.zoneGroupTopology, self.async_update_groups)
+            await self._subscribe(player.contentDirectory, self.async_update_content)
             return True
         except SoCoException as ex:
             _LOGGER.warning("Could not connect %s: %s", self.entity_id, ex)
             return False
+
+    async def _subscribe(self, target, sub_callback):
+        """Create a sonos subscription."""
+        subscription = await target.subscribe(auto_renew=True)
+        subscription.callback = sub_callback
+        self._subscriptions.append(subscription)
 
     @property
     def should_poll(self):
@@ -618,6 +623,11 @@ class SonosEntity(MediaPlayerEntity):
                 self.update_media()
         except SoCoException:
             pass
+
+    @callback
+    def async_update_media(self, event=None):
+        """Update information about currently playing media."""
+        self.hass.async_add_job(self.update_media, event)
 
     def update_media(self, event=None):
         """Update information about currently playing media."""
@@ -759,31 +769,46 @@ class SonosEntity(MediaPlayerEntity):
         if playlist_position > 0:
             self._queue_position = playlist_position - 1
 
-    def update_volume(self, event=None):
+    @callback
+    def async_update_volume(self, event):
         """Update information about currently volume settings."""
-        if event:
-            variables = event.variables
+        variables = event.variables
 
-            if "volume" in variables:
-                self._player_volume = int(variables["volume"]["Master"])
+        if "volume" in variables:
+            self._player_volume = int(variables["volume"]["Master"])
 
-            if "mute" in variables:
-                self._player_muted = variables["mute"]["Master"] == "1"
+        if "mute" in variables:
+            self._player_muted = variables["mute"]["Master"] == "1"
 
-            if "night_mode" in variables:
-                self._night_sound = variables["night_mode"] == "1"
+        if "night_mode" in variables:
+            self._night_sound = variables["night_mode"] == "1"
 
-            if "dialog_level" in variables:
-                self._speech_enhance = variables["dialog_level"] == "1"
+        if "dialog_level" in variables:
+            self._speech_enhance = variables["dialog_level"] == "1"
 
-            self.schedule_update_ha_state()
-        else:
-            self._player_volume = self.soco.volume
-            self._player_muted = self.soco.mute
-            self._night_sound = self.soco.night_mode
-            self._speech_enhance = self.soco.dialog_mode
+        self.async_write_ha_state()
+
+    def update_volume(self):
+        """Update information about currently volume settings."""
+        self._player_volume = self.soco.volume
+        self._player_muted = self.soco.mute
+        self._night_sound = self.soco.night_mode
+        self._speech_enhance = self.soco.dialog_mode
 
     def update_groups(self, event=None):
+        """Handle callback for topology change event."""
+        coro = self.async_update_groups_coro(event)
+        if coro:
+            self.hass.add_job(coro)
+
+    @callback
+    def async_update_groups(self, event=None):
+        """Handle callback for topology change event."""
+        coro = self.async_update_groups_coro(event)
+        if coro:
+            self.hass.async_add_job(coro)
+
+    def async_update_groups_coro(self, event=None):
         """Handle callback for topology change event."""
 
         def _get_soco_group():
@@ -849,13 +874,13 @@ class SonosEntity(MediaPlayerEntity):
         if event and not hasattr(event, "zone_player_uui_ds_in_group"):
             return
 
-        self.hass.add_job(_async_handle_group_event(event))
+        return _async_handle_group_event(event)
 
-    def update_content(self, event=None):
+    def async_update_content(self, event=None):
         """Update information about available content."""
         if event and "favorites_update_id" in event.variables:
-            self._set_favorites()
-            self.schedule_update_ha_state()
+            self.hass.async_add_job(self._set_favorites)
+            self.async_write_ha_state()
 
     @property
     def volume_level(self):
