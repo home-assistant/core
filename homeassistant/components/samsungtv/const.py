@@ -19,7 +19,7 @@ CONF_SERIALNO = "serial_number"
 
 RESULT_AUTH_MISSING = "auth_missing"
 RESULT_SUCCESS = "success"
-RESULT_NOT_SUCCESSFUL = "not_successful"
+RESULT_NOT_SUCCESSFUL = "cannot_connect"
 RESULT_NOT_SUPPORTED = "not_supported"
 
 METHOD_LEGACY = "legacy"
