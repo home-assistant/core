@@ -1,5 +1,5 @@
 """Configuration for Sonos tests."""
-from unittest.mock import Mock, patch as patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch as patch
 
 import pytest
 
@@ -41,6 +41,7 @@ def discover_fixture(soco):
 
     def do_callback(callback, **kwargs):
         callback(soco)
+        return MagicMock()
 
     with patch("pysonos.discover_thread", side_effect=do_callback) as mock:
         yield mock
@@ -56,7 +57,7 @@ def config_fixture():
 def dummy_soco_service_fixture():
     """Create dummy_soco_service fixture."""
     service = Mock()
-    service.subscribe = Mock()
+    service.subscribe = AsyncMock()
     return service
 
 
