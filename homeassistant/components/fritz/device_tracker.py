@@ -128,7 +128,7 @@ class FritzBoxTracker(ScannerEntity):
         return self._icon
 
     @callback
-    def async_update_state(self) -> None:
+    def async_process_update(self) -> None:
         """Update device."""
 
         device = self._router.devices[self._mac]
@@ -146,12 +146,12 @@ class FritzBoxTracker(ScannerEntity):
     @callback
     def async_on_demand_update(self):
         """Update state."""
-        self.async_update_state()
+        self.async_process_update()
         self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Register state update callback."""
-        self.async_update_state()
+        self.async_process_update()
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,

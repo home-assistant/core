@@ -45,17 +45,18 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     username = entry.data.get(CONF_USERNAME)
     password = entry.data.get(CONF_PASSWORD)
 
-    fritz_tools = await hass.async_add_executor_job(
-        lambda: FritzBoxTools(
-            hass=hass,
-            host=host,
-            port=port,
-            username=username,
-            password=password,
-        )
+    fritz_tools = FritzBoxTools(
+        hass=hass,
+        host=host,
+        port=port,
+        username=username,
+        password=password,
     )
 
-    success, error = await hass.async_add_executor_job(fritz_tools.is_ok)
+    success, error = await hass.async_add_executor_job(
+        lambda: fritz_tools.async_setup()
+    )
+
     if not success and error is ERROR_CONNECTION_ERROR:
         _LOGGER.error("Unable to setup FRITZ!Box Tools component")
         hass.async_create_task(

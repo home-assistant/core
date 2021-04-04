@@ -89,11 +89,31 @@ class FritzBoxTools:
         port=DEFAULT_PORT,
     ):
         """Initialize FritzboxTools class."""
-        # general timeout for all requests to the router. Some calls need quite some time.
+        self._device_info = None
+        self._devices: Dict[str, Any] = {}
+        self._unique_id = None
+        self.connection = None
+        self.error = None
+        self.fritzhosts = None
+        self.fritzstatus = None
+        self.ha_ip = None
+        self.hass = hass
+        self.host = host
+        self.password = password
+        self.port = port
+        self.success = None
+        self.username = username
+
+    def async_setup(self):
+        """Set up FritzboxTools class."""
 
         try:
             self.connection = FritzConnection(
-                address=host, port=port, user=username, password=password, timeout=60.0
+                address=self.host,
+                port=self.port,
+                user=self.username,
+                password=self.password,
+                timeout=60.0,
             )
 
             self.fritzstatus = FritzStatus(fc=self.connection)
@@ -108,23 +128,14 @@ class FritzBoxTools:
             self.success = False
             self.error = ERROR_CONNECTION_ERROR
 
-        self.hass = hass
         self.ha_ip = get_local_ip()
 
-        self.username = username
-        self.password = password
-        self.port = port
-        self.host = host
-
-        self._devices: Dict[str, Any] = {}
         self.scan_devices()
 
         async_track_time_interval(
             self.hass, self.scan_devices, timedelta(seconds=TRACKER_SCAN_INTERVAL)
         )
 
-    def is_ok(self):
-        """Return status."""
         return self.success, self.error
 
     @property
@@ -184,7 +195,7 @@ class FritzBoxTools:
             if dev_mac in self._devices:
                 self._devices[dev_mac].update(dev_info, dev_home)
             else:
-                device = FritzScannerEntity(dev_mac)
+                device = FritzDevice(dev_mac)
                 device.update(dev_info, dev_home)
                 self._devices[dev_mac] = device
                 new_device = True
@@ -208,7 +219,7 @@ class FritzBoxTools:
         }
 
 
-class FritzScannerEntity:
+class FritzDevice:
     """FritzScanner device."""
 
     def __init__(self, mac, name=None):

@@ -37,6 +37,21 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
         self.import_schema = None
         self.fritz_tools = None
 
+    async def fritz_tools_init(self):
+        """Initialize FRITZ!Box Tools class."""
+        self.fritz_tools = FritzBoxTools(
+            hass=self.hass,
+            host=self._host,
+            port=self._port,
+            username=self._username,
+            password=self._password,
+        )
+
+        success, error = await self.hass.async_add_executor_job(
+            lambda: self.fritz_tools.async_setup()
+        )
+        return success, error
+
     async def async_step_ssdp(self, discovery_info):
         """Handle a flow initialized by discovery."""
         ssdp_location = urlparse(discovery_info[ATTR_SSDP_LOCATION])
@@ -75,21 +90,10 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
 
         errors = {}
 
-        host = self._host
-        port = self._port
-        username = user_input.get(CONF_USERNAME)
-        password = user_input.get(CONF_PASSWORD)
+        self._username = user_input.get(CONF_USERNAME)
+        self._password = user_input.get(CONF_PASSWORD)
 
-        self.fritz_tools = await self.hass.async_add_executor_job(
-            lambda: FritzBoxTools(
-                hass=self.hass,
-                host=host,
-                port=port,
-                username=username,
-                password=password,
-            )
-        )
-        success, error = await self.hass.async_add_executor_job(self.fritz_tools.is_ok)
+        success, error = await self.fritz_tools_init()
 
         if not success:
             errors["base"] = error
@@ -145,26 +149,17 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
 
         errors = {}
 
-        host = user_input.get(CONF_HOST, DEFAULT_HOST)
-        port = user_input.get(CONF_PORT, DEFAULT_PORT)
-        username = user_input.get(CONF_USERNAME)
-        password = user_input.get(CONF_PASSWORD)
+        self._host = user_input.get(CONF_HOST, DEFAULT_HOST)
+        self._port = user_input.get(CONF_PORT, DEFAULT_PORT)
+        self._username = user_input.get(CONF_USERNAME)
+        self._password = user_input.get(CONF_PASSWORD)
 
-        self.fritz_tools = await self.hass.async_add_executor_job(
-            lambda: FritzBoxTools(
-                hass=self.hass,
-                host=host,
-                port=port,
-                username=username,
-                password=password,
-            )
-        )
+        success, error = await self.fritz_tools_init()
 
-        success, error = await self.hass.async_add_executor_job(self.fritz_tools.is_ok)
         self._name = self.fritz_tools.device_info["model"]
 
         for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if entry.data[CONF_HOST] == host:
+            if entry.data[CONF_HOST] == self._host:
                 success = False
                 error = "already_configured"
 
@@ -194,25 +189,17 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
         _LOGGER.debug("start step import_config")
         self.import_schema = CONFIG_SCHEMA
 
-        host = import_config.get(CONF_HOST, DEFAULT_HOST)
-        port = import_config.get(CONF_PORT, DEFAULT_PORT)
-        username = import_config.get(CONF_USERNAME)
-        password = import_config.get(CONF_PASSWORD)
+        self._host = import_config.get(CONF_HOST, DEFAULT_HOST)
+        self._port = import_config.get(CONF_PORT, DEFAULT_PORT)
+        self._username = import_config.get(CONF_USERNAME)
+        self._password = import_config.get(CONF_PASSWORD)
 
-        fritz_tools = await self.hass.async_add_executor_job(
-            lambda: FritzBoxTools(
-                hass=self.hass,
-                host=host,
-                port=port,
-                username=username,
-                password=password,
-            )
-        )
-        success, error = await self.hass.async_add_executor_job(fritz_tools.is_ok)
-        self._name = fritz_tools.device_info["model"]
+        success, error = await self.fritz_tools_init()
+
+        self._name = self.fritz_tools.device_info["model"]
 
         for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if entry.data[CONF_HOST] == host:
+            if entry.data[CONF_HOST] == self.host:
                 return self.async_abort(reason="ready")
 
         if not success:
@@ -223,10 +210,10 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
         return self.async_create_entry(
             title=self._name,
             data={
-                CONF_HOST: host,
-                CONF_PASSWORD: password,
-                CONF_PORT: port,
-                CONF_USERNAME: username,
+                CONF_HOST: self._host,
+                CONF_PASSWORD: self._password,
+                CONF_PORT: self._port,
+                CONF_USERNAME: self._username,
             },
         )
 
@@ -264,22 +251,11 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
 
         errors = {}
 
-        host = self._host
-        port = self._port
-        username = user_input.get(CONF_USERNAME)
-        password = user_input.get(CONF_PASSWORD)
+        self._username = user_input.get(CONF_USERNAME)
+        self._password = user_input.get(CONF_PASSWORD)
 
-        self.fritz_tools = await self.hass.async_add_executor_job(
-            lambda: FritzBoxTools(
-                hass=self.hass,
-                host=host,
-                port=port,
-                username=username,
-                password=password,
-            )
-        )
+        success, error = await self.fritz_tools_init()
 
-        success, error = await self.hass.async_add_executor_job(self.fritz_tools.is_ok)
         if not success:
             errors["base"] = error
             return self._show_setup_form_reauth_confirm(
@@ -289,10 +265,10 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
         self.hass.config_entries.async_update_entry(
             self._entry,
             data={
-                CONF_HOST: host,
-                CONF_PASSWORD: password,
-                CONF_PORT: port,
-                CONF_USERNAME: username,
+                CONF_HOST: self._host,
+                CONF_PASSWORD: self._password,
+                CONF_PORT: self._port,
+                CONF_USERNAME: self._username,
             },
         )
         await self.hass.config_entries.async_reload(self._entry.entry_id)
