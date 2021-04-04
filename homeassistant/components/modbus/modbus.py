@@ -182,8 +182,6 @@ class ModbusHub:
                 port=self._config_port,
                 timeout=self._config_timeout,
             )
-        else:
-            assert False
 
         # Connect device
         self.connect()
@@ -227,6 +225,12 @@ class ModbusHub:
         with self._lock:
             kwargs = {"unit": unit} if unit else {}
             self._client.write_coil(address, value, **kwargs)
+
+    def write_coils(self, unit, address, value):
+        """Write coil."""
+        with self._lock:
+            kwargs = {"unit": unit} if unit else {}
+            self._client.write_coils(address, value, **kwargs)
 
     def write_register(self, unit, address, value):
         """Write register."""
