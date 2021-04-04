@@ -20,6 +20,7 @@ from homeassistant.components import http
 from homeassistant.const import REQUIRED_NEXT_PYTHON_DATE, REQUIRED_NEXT_PYTHON_VER
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import area_registry, device_registry, entity_registry
+from homeassistant.helpers.aiohttp_client import install_clientsession_catcher
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import (
@@ -235,6 +236,8 @@ async def async_from_config_dict(
             "Further initialization aborted"
         )
         return None
+
+    install_clientsession_catcher()
 
     await _async_set_up_integrations(hass, config)
 
