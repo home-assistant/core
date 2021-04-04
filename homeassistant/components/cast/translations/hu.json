@@ -27,7 +27,8 @@
         "step": {
             "options": {
                 "data": {
-                    "known_hosts": "Opcion\u00e1lis lista az ismert hosztokr\u00f3l, ha az mDNS felder\u00edt\u00e9s nem m\u0171k\u00f6dik."
+                    "known_hosts": "Opcion\u00e1lis lista az ismert hosztokr\u00f3l, ha az mDNS felder\u00edt\u00e9s nem m\u0171k\u00f6dik.",
+                    "uuid": "Az UUID-k opcion\u00e1lis list\u00e1ja. A felsorol\u00e1sban nem szerepl\u0151 szerepl\u0151g\u00e1rd\u00e1k nem ker\u00fclnek hozz\u00e1ad\u00e1sra."
                 },
                 "description": "K\u00e9rj\u00fck, add meg a Google Cast konfigur\u00e1ci\u00f3t."
             }
