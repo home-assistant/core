@@ -63,7 +63,7 @@ async def test_device_registry(hass, config_entry, config, soco):
 
 
 async def test_entity_basic(hass, config_entry, discover):
-    """Test discovery setup."""
+    """Test basic state and attributes."""
     await setup_platform(hass, config_entry, {})
 
     state = hass.states.get("media_player.zone_a")
