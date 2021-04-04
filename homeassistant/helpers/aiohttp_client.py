@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import suppress
+import logging
 from ssl import SSLContext
 import sys
 from typing import Any, Awaitable, cast
@@ -15,7 +16,12 @@ import async_timeout
 
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, __version__
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers.frame import warn_use
+from homeassistant.helpers.frame import (
+    MissingIntegrationFrame,
+    get_integration_frame,
+    report_integration,
+    warn_use,
+)
 from homeassistant.loader import bind_hass
 from homeassistant.util import ssl as ssl_util
 
@@ -26,6 +32,41 @@ DATA_CLIENTSESSION_NOTVERIFY = "aiohttp_clientsession_notverify"
 SERVER_SOFTWARE = "HomeAssistant/{0} aiohttp/{1} Python/{2[0]}.{2[1]}".format(
     __version__, aiohttp.__version__, sys.version_info
 )
+
+
+_LOGGER = logging.getLogger(__name__)
+
+
+def _report(what: str) -> None:
+    """Report incorrect usage.
+
+    Async friendly.
+    """
+    integration_frame = None
+
+    with suppress(MissingIntegrationFrame):
+        integration_frame = get_integration_frame()
+
+    if not integration_frame:
+        return
+
+    report_integration(what, integration_frame)
+
+
+def install_clientsession_catcher() -> None:
+    """Warn when aiohttp.ClientSession is created by an integration."""
+
+    _original_init = aiohttp.ClientSession.__init__
+
+    def new_client_session_init(
+        self: aiohttp.ClientSession, *k: Any, **kw: Any
+    ) -> None:
+        _report(
+            "created another aiohttp.ClientSession instance. Please use the shared aiohttp.ClientSession via await homeassistant.helpers.aiohttp_client.async_get_clientsession(hass)",
+        )
+        _original_init(self, *k, **kw)
+
+    aiohttp.ClientSession.__init__ = new_client_session_init  # type: ignore
 
 
 @callback
