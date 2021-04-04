@@ -15,6 +15,8 @@ from homeassistant.const import (
     CONF_NAME,
     HTTP_UNAUTHORIZED,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DOMAIN
@@ -30,10 +32,12 @@ DISCOVERY_SCHEMA = vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str})
 TOKEN_SCHEMA = vol.Schema({})
 
 
-async def _validate_input(data: dict[str, Any]) -> tuple[str, str]:
+async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> tuple[str, str]:
     """Validate the user input allows us to connect."""
 
-    bond = Bond(data[CONF_HOST], data[CONF_ACCESS_TOKEN])
+    bond = Bond(
+        data[CONF_HOST], data[CONF_ACCESS_TOKEN], session=async_get_clientsession(hass)
+    )
     try:
         hub = BondHub(bond)
         await hub.setup(max_devices=1)
@@ -71,7 +75,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         online longer then the allowed setup period, and we will
         instead ask them to manually enter the token.
         """
-        bond = Bond(self._discovered[CONF_HOST], "")
+        bond = Bond(
+            self._discovered[CONF_HOST], "", session=async_get_clientsession(self.hass)
+        )
         try:
             response = await bond.token()
         except ClientConnectionError:
@@ -82,7 +88,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return
 
         self._discovered[CONF_ACCESS_TOKEN] = token
-        _, hub_name = await _validate_input(self._discovered)
+        _, hub_name = await _validate_input(self.hass, self._discovered)
         self._discovered[CONF_NAME] = hub_name
 
     async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType) -> dict[str, Any]:  # type: ignore
@@ -127,7 +133,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_HOST: self._discovered[CONF_HOST],
             }
             try:
-                _, hub_name = await _validate_input(data)
+                _, hub_name = await _validate_input(self.hass, data)
             except InputValidationError as error:
                 errors["base"] = error.base
             else:
@@ -155,7 +161,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                bond_id, hub_name = await _validate_input(user_input)
+                bond_id, hub_name = await _validate_input(self.hass, user_input)
             except InputValidationError as error:
                 errors["base"] = error.base
             else:

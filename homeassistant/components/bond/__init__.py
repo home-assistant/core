@@ -10,6 +10,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import SLOW_UPDATE_WARNING
 
 from .const import BPUP_STOP, BPUP_SUBS, BRIDGE_MAKE, DOMAIN, HUB
@@ -25,7 +26,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     token = entry.data[CONF_ACCESS_TOKEN]
     config_entry_id = entry.entry_id
 
-    bond = Bond(host=host, token=token, timeout=ClientTimeout(total=_API_TIMEOUT))
+    bond = Bond(
+        host=host,
+        token=token,
+        timeout=ClientTimeout(total=_API_TIMEOUT),
+        session=async_get_clientsession(hass),
+    )
     hub = BondHub(bond)
     try:
         await hub.setup()
