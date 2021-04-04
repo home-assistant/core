@@ -152,7 +152,7 @@ async def test_import(hass):
 
     await setup.async_setup_component(hass, "persistent_notification", {})
 
-    with _patch_validate_input(), _patch_async_setup_entry() as mock_setup_entry:
+    with _patch_validate_input():
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
@@ -168,5 +168,3 @@ async def test_import(hass):
 
     entity = entity_registry.async_get(MOCK_LEGACY_ENTRY.entity_id)
     assert entity.unique_id == f"{MOCK_DEVICE['serial']}-6380_40251E00_0"
-
-    assert len(mock_setup_entry.mock_calls) == 1

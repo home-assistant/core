@@ -99,6 +99,7 @@ async def init_integration(hass):
         title=MOCK_DEVICE["name"],
         unique_id=MOCK_DEVICE["serial"],
         data=MOCK_CUSTOM_SETUP_DATA,
+        source="import",
     )
     entry.add_to_hass(hass)
 
