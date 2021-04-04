@@ -217,6 +217,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     scan_interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     await async_setup_sensor_registry_updates(hass, sensor_registry, scan_interval)
 
+    _LOGGER.warning("sensor_registry: %s", sensor_registry)
+
     async_add_entities(entities)
 
 
