@@ -1,5 +1,6 @@
 """samsungctl and samsungtvws bridge classes."""
 from abc import ABC, abstractmethod
+import contextlib
 
 from samsungctl import Remote
 from samsungctl.exceptions import AccessDenied, ConnectionClosed, UnhandledResponse
@@ -246,13 +247,10 @@ class SamsungTVWSBridge(SamsungTVBridge):
     def device_info(self):
         """Try to gather infos of this TV."""
         remote = self._get_remote()
-        if remote:
-            try:
-                return remote.rest_device_info()
-            except HttpApiError:
-                # unable to get, ignore
-                pass
-        return None
+        if not remote:
+            return None
+        with contextlib.suppress(HttpApiError):
+            return remote.rest_device_info()
 
     def _send_key(self, key):
         """Send the key using websocket protocol."""
