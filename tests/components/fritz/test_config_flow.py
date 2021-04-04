@@ -1,10 +1,9 @@
 """Tests for AVM Fritz!Box config flow."""
-from unittest.mock import Mock, PropertyMock, patch
+from unittest.mock import Mock, patch
 
-import pytest
 from requests.exceptions import HTTPError
 
-from homeassistant.components.fritz.const import DOMAIN
+from homeassistant.components.fritz.const import ATTR_HOST, DOMAIN
 from homeassistant.components.ssdp import (
     ATTR_SSDP_LOCATION,
     ATTR_UPNP_FRIENDLY_NAME,
@@ -23,7 +22,17 @@ from . import MOCK_CONFIG
 
 from tests.common import MockConfigEntry
 
+ATTR_NEW_SERIAL_NUMBER = "NewSerialNumber"
+
+MOCK_HOST = "fake_host"
+MOCK_SERIAL_NUMBER = "fake_serial_number"
+
+
 MOCK_USER_DATA = MOCK_CONFIG[DOMAIN][CONF_DEVICES][0]
+MOCK_DEVICE_INFO = {
+    ATTR_HOST: MOCK_HOST,
+    ATTR_NEW_SERIAL_NUMBER: MOCK_SERIAL_NUMBER,
+}
 MOCK_SSDP_DATA = {
     ATTR_SSDP_LOCATION: "https://fake_host:12345/test",
     ATTR_UPNP_FRIENDLY_NAME: "fake_name",
@@ -31,22 +40,16 @@ MOCK_SSDP_DATA = {
 }
 
 
-@pytest.fixture(name="fritz")
-def fritz_fixture() -> Mock:
-    """Patch libraries."""
-    with patch("homeassistant.components.fritz.common.FritzConnection") as fritz:
-        yield fritz
-
-
-async def test_user_123(hass: HomeAssistantType):
+async def test_user(hass: HomeAssistantType):
     """Test starting a flow by user."""
     with patch(
         "homeassistant.components.fritz.common.FritzConnection.__init__",
         return_value=None,
+    ), patch("homeassistant.components.fritz.common.FritzStatus"), patch(
+        "homeassistant.components.fritz.common.FritzHosts"
     ), patch(
-        "homeassistant.components.fritz.common.FritzConnection.device_manager",
-        new_callable=PropertyMock,
-        return_value="test_dev",
+        "homeassistant.components.fritz.common.FritzConnection.call_action",
+        return_value=MOCK_DEVICE_INFO,
     ):
 
         result = await hass.config_entries.flow.async_init(
@@ -59,7 +62,6 @@ async def test_user_123(hass: HomeAssistantType):
             result["flow_id"], user_input=MOCK_USER_DATA
         )
         assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == "fake_host"
         assert result["data"][CONF_HOST] == "fake_host"
         assert result["data"][CONF_PASSWORD] == "fake_pass"
         assert result["data"][CONF_USERNAME] == "fake_user"
