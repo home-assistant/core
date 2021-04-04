@@ -222,6 +222,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             return self._get_entry()
 
+    await self.hass.async_add_executor_job(self._try_connect)
+    self._set_confirm_only()
         return self.async_show_form(
             step_id="confirm", description_placeholders={"model": self._model}
         )
