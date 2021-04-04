@@ -42,7 +42,9 @@ EVENT_SHELLY_CLICK = "shelly.click"
 ATTR_CLICK_TYPE = "click_type"
 ATTR_CHANNEL = "channel"
 ATTR_DEVICE = "device"
+CONF_COAP_PORT = "coap_port"
 CONF_SUBTYPE = "subtype"
+DEFAULT_COAP_PORT = 5683
 
 BASIC_INPUTS_EVENTS_TYPES = {
     "single",
