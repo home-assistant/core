@@ -32,19 +32,21 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_SENSORS,
     CONF_SLAVE,
-    CONF_STATE,
     CONF_STRUCTURE,
     CONF_SWITCHES,
     CONF_TEMPERATURE_UNIT,
     CONF_TIMEOUT,
     CONF_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
-    STATE_OFF,
-    STATE_ON,
 )
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
+    ATTR_ADDRESS,
+    ATTR_HUB,
+    ATTR_STATE,
+    ATTR_UNIT,
+    ATTR_VALUE,
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
@@ -56,7 +58,6 @@ from .const import (
     CONF_CURRENT_TEMP_REGISTER_TYPE,
     CONF_DATA_COUNT,
     CONF_DATA_TYPE,
-    CONF_HUB,
     CONF_INPUT_TYPE,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
@@ -67,6 +68,8 @@ from .const import (
     CONF_SCALE,
     CONF_STATE_CLOSED,
     CONF_STATE_CLOSING,
+    CONF_STATE_OFF,
+    CONF_STATE_ON,
     CONF_STATE_OPEN,
     CONF_STATE_OPENING,
     CONF_STATUS_REGISTER,
@@ -74,8 +77,6 @@ from .const import (
     CONF_STEP,
     CONF_STOPBITS,
     CONF_TARGET_TEMP,
-    CONF_UNIT,
-    CONF_VALUE,
     CONF_VERIFY_REGISTER,
     CONF_VERIFY_STATE,
     DATA_TYPE_CUSTOM,
@@ -175,8 +176,8 @@ SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         ),
         vol.Optional(CONF_COMMAND_OFF, default=0x00): cv.positive_int,
         vol.Optional(CONF_COMMAND_ON, default=0x01): cv.positive_int,
-        vol.Optional(STATE_OFF): cv.positive_int,
-        vol.Optional(STATE_ON): cv.positive_int,
+        vol.Optional(CONF_STATE_OFF): cv.positive_int,
+        vol.Optional(CONF_STATE_ON): cv.positive_int,
         vol.Optional(CONF_VERIFY_REGISTER): cv.positive_int,
         vol.Optional(CONF_VERIFY_STATE, default=True): cv.boolean,
     }
@@ -267,10 +268,10 @@ CONFIG_SCHEMA = vol.Schema(
 
 SERVICE_WRITE_REGISTER_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
-        vol.Required(CONF_UNIT): cv.positive_int,
-        vol.Required(CONF_ADDRESS): cv.positive_int,
-        vol.Required(CONF_VALUE): vol.Any(
+        vol.Optional(ATTR_HUB, default=DEFAULT_HUB): cv.string,
+        vol.Required(ATTR_UNIT): cv.positive_int,
+        vol.Required(ATTR_ADDRESS): cv.positive_int,
+        vol.Required(ATTR_VALUE): vol.Any(
             cv.positive_int, vol.All(cv.ensure_list, [cv.positive_int])
         ),
     }
@@ -278,10 +279,10 @@ SERVICE_WRITE_REGISTER_SCHEMA = vol.Schema(
 
 SERVICE_WRITE_COIL_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
-        vol.Required(CONF_UNIT): cv.positive_int,
-        vol.Required(CONF_ADDRESS): cv.positive_int,
-        vol.Required(CONF_STATE): vol.Any(
+        vol.Optional(ATTR_HUB, default=DEFAULT_HUB): cv.string,
+        vol.Required(ATTR_UNIT): cv.positive_int,
+        vol.Required(ATTR_ADDRESS): cv.positive_int,
+        vol.Required(ATTR_STATE): vol.Any(
             cv.boolean, vol.All(cv.ensure_list, [cv.boolean])
         ),
     }
