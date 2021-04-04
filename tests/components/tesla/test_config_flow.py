@@ -1,12 +1,17 @@
 """Test the Tesla config flow."""
 import datetime
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
+from aiohttp import web
 from teslajsonpy import TeslaException
 import voluptuous as vol
 from yarl import URL
 
 from homeassistant import config_entries, data_entry_flow
+from homeassistant.components.tesla.config_flow import (
+    TeslaAuthorizationCallbackView,
+    TeslaAuthorizationProxyView,
+)
 from homeassistant.components.tesla.const import (
     AUTH_CALLBACK_PATH,
     AUTH_PROXY_PATH,
@@ -26,7 +31,9 @@ from homeassistant.const import (
     CONF_USERNAME,
     HTTP_NOT_FOUND,
 )
+from homeassistant.data_entry_flow import UnknownFlow
 from homeassistant.helpers.network import NoURLAvailableError
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -392,3 +399,146 @@ async def test_option_flow_input_floor(hass):
         CONF_SCAN_INTERVAL: MIN_SCAN_INTERVAL,
         CONF_WAKE_ON_START: DEFAULT_WAKE_ON_START,
     }
+
+
+async def test_callback_view_invalid_query(hass, aiohttp_client):
+    """Test callback view with invalid query."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_start()
+
+    hass.http.register_view(TeslaAuthorizationCallbackView)
+
+    client = await aiohttp_client(hass.http.app)
+
+    resp = await client.get(AUTH_CALLBACK_PATH)
+    assert resp.status == 400
+
+    resp = await client.get(
+        AUTH_CALLBACK_PATH, params={"api_password": "test-password"}
+    )
+    assert resp.status == 400
+
+    # https://alandtse-test.duckdns.org/auth/tesla/callback?flow_id=7c0bdd32efca42c9bc8ce9c27f431f12&code=67443912fda4a307767a47081c55085650db40069aabd293da57185719c2&username=alandtse@gmail.com&domain=auth.tesla.com
+    resp = await client.get(AUTH_CALLBACK_PATH, params={"flow_id": 1234})
+    assert resp.status == 400
+
+    with patch(
+        "homeassistant.components.tesla.async_setup_entry", side_effect=KeyError
+    ):
+        resp = await client.get(AUTH_CALLBACK_PATH, params={"flow_id": 1234})
+        assert resp.status == 400
+
+
+async def test_callback_view_keyerror(hass, aiohttp_client):
+    """Test callback view with keyerror."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_start()
+
+    hass.http.register_view(TeslaAuthorizationCallbackView)
+
+    client = await aiohttp_client(hass.http.app)
+
+    with patch(
+        "homeassistant.components.tesla.async_setup_entry", side_effect=KeyError
+    ):
+        resp = await client.get(AUTH_CALLBACK_PATH, params={"flow_id": 1234})
+        assert resp.status == 400
+
+
+async def test_callback_view_unknownflow(hass, aiohttp_client):
+    """Test callback view with unknownflow."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_start()
+
+    hass.http.register_view(TeslaAuthorizationCallbackView)
+
+    client = await aiohttp_client(hass.http.app)
+
+    with patch(
+        "homeassistant.components.tesla.async_setup_entry", side_effect=UnknownFlow
+    ):
+        resp = await client.get(AUTH_CALLBACK_PATH, params={"flow_id": 1234})
+        assert resp.status == 400
+
+
+async def test_callback_view_success(hass, aiohttp_client):
+    """Test callback view with success response."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_start()
+
+    hass.http.register_view(TeslaAuthorizationCallbackView)
+
+    result = await test_external_url(hass)
+    flow_id = result["flow_id"]
+
+    client = await aiohttp_client(hass.http.app)
+
+    with patch("homeassistant.components.tesla.async_setup_entry", return_value=True):
+        resp = await client.get(AUTH_CALLBACK_PATH, params={"flow_id": flow_id})
+        assert resp.status == 200
+        assert (
+            "<script>window.close()</script>Success! This window can be closed"
+            in await resp.text()
+        )
+
+
+async def test_proxy_view_invalid_auth(hass, aiohttp_client):
+    """Test proxy view request results in auth error."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_start()
+
+    mock_handler = AsyncMock(return_value=web.Response(text="Success"))
+    proxy_view = TeslaAuthorizationProxyView(mock_handler)
+    hass.http.register_view(proxy_view)
+
+    client = await aiohttp_client(hass.http.app)
+
+    for method in ("get", "post", "delete", "put", "patch", "head", "options"):
+        resp = await getattr(client, method)(AUTH_PROXY_PATH)
+        assert resp.status in [403, 401]
+
+
+async def test_proxy_view_valid_auth(hass, aiohttp_client):
+    """Test proxy view request results in valid response."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_start()
+
+    mock_handler = AsyncMock(return_value=web.Response(text="Success"))
+    proxy_view = TeslaAuthorizationProxyView(mock_handler)
+    hass.http.register_view(proxy_view)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    flow_id = result["flow_id"]
+
+    client = await aiohttp_client(hass.http.app)
+
+    for method in ("get", "post", "delete", "put", "patch", "head", "options"):
+        resp = await getattr(client, method)(
+            AUTH_PROXY_PATH, params={"config_flow_id": flow_id}
+        )
+        assert resp.status == 200
+
+
+async def test_proxy_view_invalid_auth_after_reset(hass, aiohttp_client):
+    """Test proxy view request results in error after flow aborted."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_start()
+
+    mock_handler = AsyncMock(return_value=web.Response(text="Success"))
+    proxy_view = TeslaAuthorizationProxyView(mock_handler)
+    hass.http.register_view(proxy_view)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    flow_id = result["flow_id"]
+
+    client = await aiohttp_client(hass.http.app)
+
+    resp = await client.get(AUTH_PROXY_PATH, params={"config_flow_id": flow_id})
+    assert resp.status == 200
+
+    proxy_view.reset()
+    hass.config_entries.flow.async_abort(flow_id)
+    resp = await client.get(AUTH_PROXY_PATH, params={"config_flow_id": flow_id})
+    assert resp.status == 401
