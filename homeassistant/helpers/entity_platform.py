@@ -647,7 +647,6 @@ class EntityPlatform:
             for entity in self.entities.values():
                 if not entity.should_poll:
                     continue
-                _LOGGER.debug("Entity: %s is using polling", entity.entity_id)
                 tasks.append(entity.async_update_ha_state(True))
 
             if tasks:
