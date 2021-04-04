@@ -4,8 +4,9 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import asyncio
 from dataclasses import dataclass
+from itertools import groupby
 import logging
-from typing import Any, Awaitable, Callable, Iterable, Optional, cast
+from typing import Any, Awaitable, Callable, Coroutine, Iterable, Optional, cast
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -346,7 +347,9 @@ def sync_entity_lifecycle(
     async def _update_entity(change_set: CollectionChangeSet) -> None:
         await entities[change_set.item_id].async_update_config(change_set.item)  # type: ignore
 
-    _func_map = {
+    _func_map: dict[
+        str, Callable[[CollectionChangeSet], Coroutine[Any, Any, Entity | None]]
+    ] = {
         CHANGE_ADDED: _add_entity,
         CHANGE_REMOVED: _remove_entity,
         CHANGE_UPDATED: _update_entity,
@@ -357,17 +360,17 @@ def sync_entity_lifecycle(
         # Create a new bucket every time we have a different change type
         # to ensure operations happen in order. We only group
         # the same change type.
-        task_buckets: list = []
-        previous_change_type = None
-        for change_set in change_sets:
-            if previous_change_type != change_set.change_type:
-                task_buckets.append([])
-            task_buckets[-1].append(_func_map[change_set.change_type](change_set))
-
-        for task_bucket in task_buckets:
+        for _, grouped in groupby(
+            change_sets, lambda change_set: change_set.change_type
+        ):
             new_entities = [
                 entity
-                for entity in await asyncio.gather(*task_bucket)
+                for entity in await asyncio.gather(
+                    *[
+                        _func_map[change_set.change_type](change_set)
+                        for change_set in grouped
+                    ]
+                )
                 if entity is not None
             ]
             if new_entities:
