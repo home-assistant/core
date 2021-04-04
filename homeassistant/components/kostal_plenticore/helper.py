@@ -9,7 +9,7 @@ from aiohttp.client_exceptions import ClientError
 from kostal.plenticore import PlenticoreApiClient, PlenticoreAuthenticationException
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_call_later
@@ -51,8 +51,6 @@ class Plenticore:
         )
         try:
             await self._client.login(self.config_entry.data[CONF_PASSWORD])
-            self._login = True
-            _LOGGER.debug("Log-in successfully to %s", self.host)
         except PlenticoreAuthenticationException as err:
             _LOGGER.error(
                 "Authentication exception connecting to %s: %s", self.host, err
@@ -61,6 +59,9 @@ class Plenticore:
         except (ClientError, asyncio.TimeoutError) as err:
             _LOGGER.error("Error connecting to %s", self.host)
             raise ConfigEntryNotReady from err
+        else:
+            self._login = True
+            _LOGGER.debug("Log-in successfully to %s", self.host)
 
         self._shutdown_remove_listener = self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STOP, self._async_shutdown
@@ -95,7 +96,6 @@ class Plenticore:
 
         return True
 
-    @callback
     async def _async_shutdown(self, event):
         """Call from Homeassistant shutdown event."""
         # unset remove listener otherwise calling it would raise an exception
@@ -133,15 +133,10 @@ class PlenticoreUpdateCoordinator(DataUpdateCoordinator):
             update_interval=update_inverval,
             update_method=self._fetch_data,
         )
-
-        self.hass = hass
-
         # cache for the fetched data
         self._data = {}
-
         # data ids to poll
         self._fetch = defaultdict(list)
-
         self._plenticore = plenticore
 
     def start_fetch_data(self, module_id: str, data_id: str) -> None:
@@ -192,7 +187,7 @@ class SettingDataUpdateCoordinator(PlenticoreUpdateCoordinator):
     async def _fetch_data(self) -> Dict[str, Dict[str, str]]:
         client = self._plenticore.client
 
-        if len(self._fetch) == 0 or client is None:
+        if not self._fetch or client is None:
             return {}
 
         _LOGGER.debug("Fetching %s for %s", self.name, self._fetch)
@@ -263,7 +258,7 @@ class PlenticoreDataFormatter:
         except (TypeError, ValueError):
             return state
 
-        return PlenticoreDataFormatter.INVERTER_STATES.get(value, "Unknown")
+        return PlenticoreDataFormatter.INVERTER_STATES.get(value)
 
     @staticmethod
     def format_em_manager_state(state: str) -> str:
@@ -273,4 +268,4 @@ class PlenticoreDataFormatter:
         except (TypeError, ValueError):
             return state
 
-        return PlenticoreDataFormatter.EM_STATES.get(value, "Unknown")
+        return PlenticoreDataFormatter.EM_STATES.get(value)
