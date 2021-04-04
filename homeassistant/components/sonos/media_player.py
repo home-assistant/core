@@ -444,7 +444,7 @@ class SonosEntity(MediaPlayerEntity):
         self.hass.data[DATA_SONOS].entities.append(self)
 
         for entity in self.hass.data[DATA_SONOS].entities:
-            await entity.update_groups_coro()
+            await entity.create_update_groups_coro()
 
     @property
     def unique_id(self) -> str:
@@ -725,7 +725,6 @@ class SonosEntity(MediaPlayerEntity):
         except (TypeError, KeyError, AttributeError):
             pass
 
-        # TODO: run in executor if needed
         media_info = self.soco.get_current_media_info()
 
         self._media_channel = media_info["channel"]
@@ -798,18 +797,18 @@ class SonosEntity(MediaPlayerEntity):
 
     def update_groups(self, event: Event | None = None) -> None:
         """Handle callback for topology change event."""
-        coro = self.update_groups_coro(event)
+        coro = self.create_update_groups_coro(event)
         if coro:
             self.hass.add_job(coro)  # type: ignore
 
     @callback
     def async_update_groups(self, event: Event | None = None) -> None:
         """Handle callback for topology change event."""
-        coro = self.update_groups_coro(event)
+        coro = self.create_update_groups_coro(event)
         if coro:
             self.hass.async_add_job(coro)  # type: ignore
 
-    def update_groups_coro(self, event: Event | None = None) -> Coroutine | None:
+    def create_update_groups_coro(self, event: Event | None = None) -> Coroutine | None:
         """Handle callback for topology change event."""
 
         def _get_soco_group() -> list[str]:
@@ -886,9 +885,9 @@ class SonosEntity(MediaPlayerEntity):
             self.async_write_ha_state()
 
     @property
-    def volume_level(self) -> int | None:
+    def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
-        return self._player_volume and int(self._player_volume / 100)
+        return self._player_volume and self._player_volume / 100
 
     @property
     def is_volume_muted(self) -> bool | None:
