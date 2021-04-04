@@ -118,7 +118,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         LOGGER.debug("No working config found")
         raise data_entry_flow.AbortFlow(RESULT_NOT_SUCCESSFUL)
 
-    async def _get_and_check_device_info(self):
+    async def _async_get_and_check_device_info(self):
         """Try to get the device info."""
         if self._bridge:
             self._device_info = await self.hass.async_add_executor_job(
