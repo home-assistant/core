@@ -218,7 +218,6 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_confirm(self, user_input=None):
         """Handle user-confirmation of discovered node."""
         if user_input is not None:
-            await self.hass.async_add_executor_job(self._try_connect)
 
             return self._get_entry()
 
