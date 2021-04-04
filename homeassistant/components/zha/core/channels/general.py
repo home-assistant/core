@@ -391,7 +391,7 @@ class PollControl(ZigbeeChannel):
     CHECKIN_INTERVAL = 55 * 60 * 4  # 55min
     CHECKIN_FAST_POLL_TIMEOUT = 2 * 4  # 2s
     LONG_POLL = 6 * 4  # 6s
-    _BLACK_LIST = {
+    _IGNORED_MANUFACTURER_ID = {
         4476,
     }  # IKEA
 
@@ -419,13 +419,13 @@ class PollControl(ZigbeeChannel):
     async def check_in_response(self, tsn: int) -> None:
         """Respond to checkin command."""
         await self.checkin_response(True, self.CHECKIN_FAST_POLL_TIMEOUT, tsn=tsn)
-        if self._ch_pool.manufacturer_code not in self._BLACK_LIST:
+        if self._ch_pool.manufacturer_code not in self._IGNORED_MANUFACTURER_ID:
             await self.set_long_poll_interval(self.LONG_POLL)
 
     @callback
-    def black_list_manufacturer(self, manufacturer_code: int) -> None:
+    def skip_manufacturer_id(self, manufacturer_code: int) -> None:
         """Black list a specific manufacturer id from changing default polling."""
-        self._BLACK_LIST.add(manufacturer_code)
+        self._IGNORED_MANUFACTURER_ID.add(manufacturer_code)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.PowerConfiguration.cluster_id)

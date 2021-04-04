@@ -492,8 +492,8 @@ async def test_poll_control_cluster_command(hass, poll_control_device):
     assert data["device_id"] == poll_control_device.device_id
 
 
-async def test_poll_control_blacklist(hass, poll_control_device):
-    """Test poll control channel blacklisting."""
+async def test_poll_control_ignore_list(hass, poll_control_device):
+    """Test poll control channel ignore list."""
     set_long_poll_mock = AsyncMock()
     poll_control_ch = poll_control_device.channels.pools[0].all_channels["1:0x0020"]
     cluster = poll_control_ch.cluster
@@ -504,7 +504,7 @@ async def test_poll_control_blacklist(hass, poll_control_device):
     assert set_long_poll_mock.call_count == 1
 
     set_long_poll_mock.reset_mock()
-    poll_control_ch.black_list_manufacturer(4151)
+    poll_control_ch.skip_manufacturer_id(4151)
     with mock.patch.object(cluster, "set_long_poll_interval", set_long_poll_mock):
         await poll_control_ch.check_in_response(33)
 
@@ -512,7 +512,7 @@ async def test_poll_control_blacklist(hass, poll_control_device):
 
 
 async def test_poll_control_ikea(hass, poll_control_device):
-    """Test poll control channel blacklisting for ikea."""
+    """Test poll control channel ignore list for ikea."""
     set_long_poll_mock = AsyncMock()
     poll_control_ch = poll_control_device.channels.pools[0].all_channels["1:0x0020"]
     cluster = poll_control_ch.cluster
