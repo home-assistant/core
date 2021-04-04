@@ -31,6 +31,24 @@ def ezviz(hass):
 
 
 @fixture
+def ezviz_get_detection_sensibility(hass):
+    """Mock the EzvizApi for easier testing."""
+    with patch.object(
+        EzvizClient, "get_detection_sensibility", return_value=True
+    ), patch("homeassistant.components.ezviz.coordinator") as mock_ezviz:
+        instance = mock_ezviz.return_value = EzvizClient(
+            "test-username",
+            "test-password",
+            "test-region",
+            "test-timeout",
+        )
+
+        instance.get_detection_sensibility = MagicMock(return_value=True)
+
+        yield mock_ezviz
+
+
+@fixture
 def ezviz_test_rtsp(hass):
     """Mock the EzvizApi for easier testing."""
     with patch.object(TestRTSPAuth, "main", return_value=True), patch(

@@ -25,7 +25,6 @@ from .const import (  # pylint: disable=unused-import
     ATTR_TYPE_CAMERA,
     ATTR_TYPE_CLOUD,
     CONF_FFMPEG_ARGUMENTS,
-    DATA_COORDINATOR,
     DEFAULT_CAMERA_USERNAME,
     DEFAULT_FFMPEG_ARGUMENTS,
     DEFAULT_TIMEOUT,
@@ -35,6 +34,30 @@ from .const import (  # pylint: disable=unused-import
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _get_ezviz_client_instance(data):
+    """Initialize a new instance of EzvizClientApi."""
+
+    ezviz_client = EzvizClient(
+        data[CONF_USERNAME],
+        data[CONF_PASSWORD],
+        data.get(CONF_URL, EU_URL),
+        data.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
+    )
+
+    ezviz_client.login()
+    return ezviz_client
+
+
+def _test_camera_rtsp_creds(data):
+    """Try DESCRIBE on RTSP camera with credentials."""
+
+    test_rtsp = TestRTSPAuth(
+        data[CONF_IP_ADDRESS], data[CONF_USERNAME], data[CONF_PASSWORD]
+    )
+
+    test_rtsp.main()
 
 
 class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -48,16 +71,9 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(data[CONF_USERNAME])
         self._abort_if_unique_id_configured()
 
-        client = EzvizClient(
-            data[CONF_USERNAME],
-            data[CONF_PASSWORD],
-            data.get(CONF_URL, EU_URL),
-            data.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
-        )
-
-        # Attempts a login request.
+        # Verify cloud credentials by attempting a login request.
         try:
-            await self.hass.async_add_executor_job(client.login)
+            await self.hass.async_add_executor_job(_get_ezviz_client_instance, data)
 
         except PyEzvizError as err:
             raise InvalidAuth from err
@@ -77,30 +93,52 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=data[CONF_USERNAME], data=auth_data)
 
-    def _wake_camera(self, serial):
-        """Wake a hybernating camera."""
-        if self.hass.data.get(DOMAIN):
-            for item in self.hass.data.get(DOMAIN):
-                coordinator = self.hass.data[DOMAIN][item][
-                    DATA_COORDINATOR
-                ].ezviz_client
-
-        # Wake hybernating cameras.
-        coordinator.get_detection_sensibility(serial)
-
     async def _validate_and_create_camera_rtsp(self, data):
         """Try DESCRIBE on RTSP camera with credentials."""
 
-        camera_rtsp_test = TestRTSPAuth(
-            data[CONF_IP_ADDRESS], data[CONF_USERNAME], data[CONF_PASSWORD]
-        )
+        # Get Ezviz cloud credentials from config entry
+        for item in self._async_current_entries():
+            if item.data.get(CONF_TYPE) == ATTR_TYPE_CLOUD:
+                ezviz_client_creds = {
+                    CONF_USERNAME: item.data.get(CONF_USERNAME),
+                    CONF_PASSWORD: item.data.get(CONF_PASSWORD),
+                    CONF_URL: item.data.get(CONF_URL),
+                }
 
-        # Wake hybernating cameras.
-        await self.hass.async_add_executor_job(self._wake_camera, data[ATTR_SERIAL])
-
-        # Attempts a authenticated RTSP DESCRIBE request.
+        # We need to wake hibernating cameras.
+        # First create EZVIZ API instance.
         try:
-            await self.hass.async_add_executor_job(camera_rtsp_test.main)
+            ezviz_client = await self.hass.async_add_executor_job(
+                _get_ezviz_client_instance, ezviz_client_creds
+            )
+
+        except PyEzvizError as err:
+            raise InvalidAuth from err
+
+        except requests.exceptions.ConnectionError as err:
+            raise WrongURL from err
+
+        except requests.exceptions.HTTPError as err:
+            raise InvalidHost from err
+
+        # Secondly try to wake hybernating camera.
+        try:
+            await self.hass.async_add_executor_job(
+                ezviz_client.get_detection_sensibility, data[ATTR_SERIAL]
+            )
+
+        except PyEzvizError as err:
+            raise InvalidAuth from err
+
+        except requests.exceptions.ConnectionError as err:
+            raise WrongURL from err
+
+        except requests.exceptions.HTTPError as err:
+            raise InvalidHost from err
+
+        # Thirdly attempts an authenticated RTSP DESCRIBE request.
+        try:
+            await self.hass.async_add_executor_job(_test_camera_rtsp_creds, data)
 
         except AuthTestResultFailed as err:
             raise InvalidAuth from err
@@ -130,7 +168,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         # abort if already configured.
         for item in self._async_current_entries():
             if item.data.get(CONF_TYPE) == ATTR_TYPE_CLOUD:
-                return self.async_abort(reason="Already configured")
+                return self.async_abort(reason="single_instance_allowed")
 
         errors = {}
 
@@ -277,6 +315,14 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         except InvalidAuth:
             _LOGGER.error("Error importing Ezviz platform config: invalid auth")
             return self.async_abort(reason="invalid_auth")
+
+        except WrongURL:
+            _LOGGER.error("Error importing Ezviz platform config: invalid host")
+            return self.async_abort(reason="invalid_host")
+
+        except InvalidHost:
+            _LOGGER.error("Error importing Ezviz platform config: cannot connect")
+            return self.async_abort(reason="cannot_connect")
 
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(

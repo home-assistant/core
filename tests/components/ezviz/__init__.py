@@ -27,7 +27,7 @@ ENTRY_CONFIG = {
     CONF_USERNAME: "test-username",
     CONF_PASSWORD: "test-password",
     CONF_URL: "apiieu.ezvizlife.com",
-    CONF_TIMEOUT: 25,
+    CONF_TYPE: ATTR_TYPE_CLOUD,
 }
 
 ENTRY_OPTIONS = {
