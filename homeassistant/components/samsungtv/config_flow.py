@@ -1,4 +1,5 @@
 """Config flow for Samsung TV."""
+import socket
 from socket import gethostbyname
 from urllib.parse import urlparse
 
