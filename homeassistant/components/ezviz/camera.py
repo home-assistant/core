@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
 from homeassistant.components.ffmpeg import DATA_FFMPEG
-from homeassistant.config_entries import SOURCE_DISCOVERY, SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_DISCOVERY, SOURCE_IGNORE, SOURCE_IMPORT
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -103,6 +103,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
         if camera_rtsp_entry:
             conf_cameras = camera_rtsp_entry[0]
+
+            # Skip ignored entities.
+            if conf_cameras.source == SOURCE_IGNORE:
+                continue
+
             ffmpeg_arguments = conf_cameras.options.get(
                 CONF_FFMPEG_ARGUMENTS, DEFAULT_FFMPEG_ARGUMENTS
             )
