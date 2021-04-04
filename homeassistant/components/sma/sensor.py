@@ -151,11 +151,6 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
         return self._sensor.unit
 
     @property
-    def poll(self):
-        """SMA sensors are updated & don't poll."""
-        return False
-
-    @property
     def unique_id(self):
         """Return a unique identifier for this sensor."""
         return (
