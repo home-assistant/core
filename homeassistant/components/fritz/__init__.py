@@ -1,6 +1,8 @@
 """Support for AVM Fritz!Box functions."""
 import logging
 
+from fritzconnection.core.exceptions import FritzConnectionException
+
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import (
     CONF_DEVICES,
@@ -28,12 +30,13 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up FRITZ!Box Tools component."""
     if DOMAIN not in config:
         return True
-        for entry_config in config[DOMAIN][CONF_DEVICES]:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=entry_config
-                )
+
+    for entry_config in config[DOMAIN][CONF_DEVICES]:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=entry_config
             )
+        )
 
     return True
 
@@ -54,9 +57,13 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         password=password,
     )
 
-    success, error = await fritz_tools.async_setup()
+    error = False
+    try:
+        await fritz_tools.async_setup()
+    except FritzConnectionException:
+        error = ERROR_CONNECTION_ERROR
 
-    if not success and error is ERROR_CONNECTION_ERROR:
+    if error:
         _LOGGER.error("Unable to setup FRITZ!Box Tools component")
         hass.async_create_task(
             hass.config_entries.flow.async_init(

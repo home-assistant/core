@@ -2,6 +2,7 @@
 import logging
 from urllib.parse import urlparse
 
+from fritzconnection.core.exceptions import FritzConnectionException
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -14,7 +15,7 @@ from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 
 from .common import CONFIG_SCHEMA, FritzBoxTools
-from .const import DEFAULT_HOST, DEFAULT_PORT, DOMAIN
+from .const import DEFAULT_HOST, DEFAULT_PORT, DOMAIN, ERROR_CONNECTION_ERROR
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +48,12 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
             password=self._password,
         )
 
-        return await self.fritz_tools.async_setup()
+        try:
+            await self.fritz_tools.async_setup()
+        except FritzConnectionException:
+            return ERROR_CONNECTION_ERROR
+
+        return False
 
     async def async_step_ssdp(self, discovery_info):
         """Handle a flow initialized by discovery."""
@@ -90,9 +96,9 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
         self._username = user_input.get(CONF_USERNAME)
         self._password = user_input.get(CONF_PASSWORD)
 
-        success, error = await self.fritz_tools_init()
+        error = await self.fritz_tools_init()
 
-        if not success:
+        if error:
             errors["base"] = error
             return self._show_setup_form_confirm(errors)
 
@@ -151,16 +157,15 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
         self._username = user_input.get(CONF_USERNAME)
         self._password = user_input.get(CONF_PASSWORD)
 
-        success, error = await self.fritz_tools_init()
+        error = await self.fritz_tools_init()
 
         self._name = self.fritz_tools.device_info["model"]
 
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             if entry.data[CONF_HOST] == self._host:
-                success = False
                 error = "already_configured"
 
-        if not success:
+        if error:
             errors["base"] = error
             return self._show_setup_form_init(errors)
 
@@ -191,7 +196,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
         self._username = import_config.get(CONF_USERNAME)
         self._password = import_config.get(CONF_PASSWORD)
 
-        success, error = await self.fritz_tools_init()
+        error = await self.fritz_tools_init()
 
         self._name = self.fritz_tools.device_info["model"]
 
@@ -199,7 +204,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
             if entry.data[CONF_HOST] == self._host:
                 return self.async_abort(reason="ready")
 
-        if not success:
+        if error:
             _LOGGER.error(
                 "Import of config failed. Check your fritzbox credentials: %s", error
             )
@@ -251,9 +256,9 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
         self._username = user_input.get(CONF_USERNAME)
         self._password = user_input.get(CONF_PASSWORD)
 
-        success, error = await self.fritz_tools_init()
+        error = await self.fritz_tools_init()
 
-        if not success:
+        if error:
             errors["base"] = error
             return self._show_setup_form_reauth_confirm(
                 user_input=user_input, errors=errors

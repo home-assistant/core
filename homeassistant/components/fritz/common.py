@@ -6,7 +6,6 @@ from typing import Any, Dict, Optional
 
 # pylint: disable=import-error
 from fritzconnection import FritzConnection
-from fritzconnection.core.exceptions import FritzConnectionException
 from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import FritzStatus
 import voluptuous as vol
@@ -29,7 +28,6 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_USERNAME,
     DOMAIN,
-    ERROR_CONNECTION_ERROR,
     TRACKER_SCAN_INTERVAL,
 )
 
@@ -91,7 +89,6 @@ class FritzBoxTools:
         self.host = host
         self.password = password
         self.port = port
-        self.success = None
         self.username = username
 
     async def async_setup(self):
@@ -100,35 +97,28 @@ class FritzBoxTools:
 
     def setup(self):
         """Set up FritzboxTools class."""
-        try:
-            self.connection = FritzConnection(
-                address=self.host,
-                port=self.port,
-                user=self.username,
-                password=self.password,
-                timeout=60.0,
-            )
 
-            self.fritzstatus = FritzStatus(fc=self.connection)
-            if self._unique_id is None:
-                self._unique_id = self.connection.call_action(
-                    "DeviceInfo:1", "GetInfo"
-                )["NewSerialNumber"]
-            self.fritzhosts = FritzHosts(fc=self.connection)
-            self._device_info = self._fetch_device_info()
-            self.success = True
-            self.error = False
-        except FritzConnectionException:
-            self.success = False
-            self.error = ERROR_CONNECTION_ERROR
+        self.connection = FritzConnection(
+            address=self.host,
+            port=self.port,
+            user=self.username,
+            password=self.password,
+            timeout=60.0,
+        )
+
+        self.fritzstatus = FritzStatus(fc=self.connection)
+        if self._unique_id is None:
+            self._unique_id = self.connection.call_action("DeviceInfo:1", "GetInfo")[
+                "NewSerialNumber"
+            ]
+        self.fritzhosts = FritzHosts(fc=self.connection)
+        self._device_info = self._fetch_device_info()
 
         self.scan_devices()
 
         self._cancel_scan = async_track_time_interval(
             self.hass, self.scan_devices, timedelta(seconds=TRACKER_SCAN_INTERVAL)
         )
-
-        return self.success, self.error
 
     def unload(self):
         """Unload FritzboxTools class."""
@@ -169,7 +159,7 @@ class FritzBoxTools:
 
     def _update_info(self):
         """Retrieve latest information from the FRITZ!Box."""
-        if not self.success:
+        if self.error:
             return None
 
         return self.fritzhosts.get_hosts_info()
