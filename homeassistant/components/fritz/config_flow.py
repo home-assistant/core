@@ -47,10 +47,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
             password=self._password,
         )
 
-        success, error = await self.hass.async_add_executor_job(
-            lambda: self.fritz_tools.async_setup()
-        )
-        return success, error
+        return await self.fritz_tools.async_setup()
 
     async def async_step_ssdp(self, discovery_info):
         """Handle a flow initialized by discovery."""
@@ -199,7 +196,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
         self._name = self.fritz_tools.device_info["model"]
 
         for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if entry.data[CONF_HOST] == self.host:
+            if entry.data[CONF_HOST] == self._host:
                 return self.async_abort(reason="ready")
 
         if not success:

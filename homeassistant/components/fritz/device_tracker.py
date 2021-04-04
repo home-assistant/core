@@ -76,8 +76,8 @@ class FritzBoxTracker(ScannerEntity):
     def __init__(self, router: FritzBoxTools, device):
         """Initialize a Fritzbox device."""
         self._router = router
-        self._mac = device.mac
-        self._name = device.name or DEFAULT_DEVICE_NAME
+        self._mac = device.mac_address
+        self._name = device.hostname or DEFAULT_DEVICE_NAME
         self._active = False
         self._attrs = {}
         self._icon = device.icon
@@ -135,7 +135,7 @@ class FritzBoxTracker(ScannerEntity):
         self._active = device.is_connected
 
         self._attrs = {
-            "mac": device.mac,
+            "mac_address": device.mac_address,
             "ip_address": device.ip_address,
         }
         if device.last_activity:

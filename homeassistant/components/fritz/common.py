@@ -2,7 +2,6 @@
 from collections import namedtuple
 from datetime import datetime, timedelta
 import logging
-import socket
 from typing import Any, Dict, Optional
 
 # pylint: disable=import-error
@@ -39,14 +38,6 @@ _LOGGER = logging.getLogger(__name__)
 Device = namedtuple("Device", ["mac", "ip", "name"])
 
 
-def ensure_unique_hosts(value):
-    """Validate that all configs have a unique host."""
-    vol.Schema(vol.Unique("duplicate host entries found"))(
-        [socket.gethostbyname(entry[CONF_HOST]) for entry in value]
-    )
-    return value
-
-
 CONFIG_SCHEMA = vol.Schema(
     vol.All(
         cv.deprecated(DOMAIN),
@@ -65,7 +56,6 @@ CONFIG_SCHEMA = vol.Schema(
                                 }
                             )
                         ],
-                        ensure_unique_hosts,
                     )
                 }
             )
@@ -104,9 +94,12 @@ class FritzBoxTools:
         self.success = None
         self.username = username
 
-    def async_setup(self):
-        """Set up FritzboxTools class."""
+    async def async_setup(self):
+        """Wrap up FritzboxTools class setup."""
+        return await self.hass.async_add_executor_job(self.setup)
 
+    def setup(self):
+        """Set up FritzboxTools class."""
         try:
             self.connection = FritzConnection(
                 address=self.host,
@@ -252,12 +245,12 @@ class FritzDevice:
         return self._connected
 
     @property
-    def mac(self):
+    def mac_address(self):
         """Get MAC address."""
         return self._mac
 
     @property
-    def name(self):
+    def hostname(self):
         """Get Name."""
         return self._name
 
