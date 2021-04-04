@@ -39,13 +39,11 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up sma from a config entry."""
-    used_sensors = []
-
     # Init all default sensors
     sensor_def = pysma.Sensors()
 
     # Add sensors from the custom config
-    # Supports deprecated custom sensors from platform setup
+    # Supports deprecated yaml config from platform setup
     sensor_def.add(
         [
             pysma.Sensor(o[CONF_KEY], n, o[CONF_UNIT], o[CONF_FACTOR], o.get(CONF_PATH))
@@ -53,15 +51,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ]
     )
 
+    # When CONF_SENSORS is set, only enable sensors in config
+    # Supports deprecated yaml config from platform setup
     config_sensors = entry.data.get(CONF_SENSORS)
-    config_custom_sensors = entry.data.get(CONF_CUSTOM)
-
-    # Use all sensors by default if none is configured
-    if not config_sensors:
-        config_sensors = [s.name for s in sensor_def]
-
-    used_sensor_names = set(config_sensors + list(config_custom_sensors))
-    used_sensors = [sensor_def[s] for s in used_sensor_names]
+    if config_sensors:
+        for s in sensor_def:
+            s.enabled = s.name in config_sensors
 
     # Init the SMA interface
     protocol = "https" if entry.data.get(CONF_SSL) else "http"
@@ -82,7 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_update_data():
         """Update the used SMA sensors."""
-        values = await sma.read(used_sensors)
+        values = await sma.read(sensor_def)
         if not values:
             raise UpdateFailed
 
@@ -102,7 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = {
         PYSMA_OBJECT: sma,
         PYSMA_COORDINATOR: coordinator,
-        PYSMA_SENSORS: used_sensors,
+        PYSMA_SENSORS: sensor_def,
     }
 
     await coordinator.async_config_entry_first_refresh()
@@ -126,7 +121,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
     if unload_ok:
-        entry[PYSMA_OBJECT].close_session()
+        sma = hass.data[DOMAIN][entry.entry_id][PYSMA_OBJECT]
+        await sma.close_session()
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok

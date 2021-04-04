@@ -97,7 +97,9 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not errors:
                 await self.async_set_unique_id(self._data[DEVICE_INFO]["serial"])
                 self._abort_if_unique_id_configured()
-                return await self.async_step_sensors()
+                return self.async_create_entry(
+                    title=self._data[CONF_HOST], data=self._data
+                )
 
         return self.async_show_form(
             step_id="user",
@@ -112,25 +114,6 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         GROUPS
                     ),
                     vol.Required(CONF_PASSWORD): cv.string,
-                }
-            ),
-            errors=errors,
-        )
-
-    async def async_step_sensors(self, user_input=None):
-        """Second step in config flow to select sensors to create."""
-        errors = {}
-        if user_input is not None:
-            self._data[CONF_SENSORS] = user_input[CONF_SENSORS]
-            return self.async_create_entry(title=self._data[CONF_HOST], data=self._data)
-
-        return self.async_show_form(
-            step_id="sensors",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_SENSORS, default=self._data[CONF_SENSORS]
-                    ): cv.multi_select({s.name: s.name for s in pysma.Sensors()})
                 }
             ),
             errors=errors,

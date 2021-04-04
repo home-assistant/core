@@ -35,21 +35,10 @@ async def test_form(hass, aioclient_mock):
 
     with patch("pysma.SMA.new_session", return_value=True), patch(
         "pysma.SMA.device_info", return_value=MOCK_DEVICE
-    ):
+    ), _patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             MOCK_USER_INPUT,
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "sensors"
-    assert result["errors"] == {}
-
-    with _patch_async_setup_entry() as mock_setup_entry:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {},
         )
         await hass.async_block_till_done()
 
@@ -139,14 +128,6 @@ async def test_form_already_configured(hass):
             MOCK_USER_INPUT,
         )
 
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "sensors"
-    assert result["errors"] == {}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {},
-    )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["result"].unique_id == MOCK_DEVICE["serial"]
 
