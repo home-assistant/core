@@ -6,7 +6,6 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
 )
-from homeassistant.components.climate.const import ATTR_MAX_TEMP, ATTR_MIN_TEMP
 from homeassistant.components.cover import (
     DEVICE_CLASSES_SCHEMA as COVER_DEVICE_CLASSES_SCHEMA,
 )
@@ -17,7 +16,6 @@ from homeassistant.components.switch import (
     DEVICE_CLASSES_SCHEMA as SWITCH_DEVICE_CLASSES_SCHEMA,
 )
 from homeassistant.const import (
-    ATTR_STATE,
     CONF_ADDRESS,
     CONF_BINARY_SENSORS,
     CONF_COMMAND_OFF,
@@ -34,6 +32,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_SENSORS,
     CONF_SLAVE,
+    CONF_STATE,
     CONF_STRUCTURE,
     CONF_SWITCHES,
     CONF_TEMPERATURE_UNIT,
@@ -59,6 +58,8 @@ from .const import (
     CONF_DATA_TYPE,
     CONF_HUB,
     CONF_INPUT_TYPE,
+    CONF_MAX_TEMP,
+    CONF_MIN_TEMP,
     CONF_PARITY,
     CONF_PRECISION,
     CONF_REGISTER,
@@ -137,8 +138,8 @@ CLIMATE_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         vol.Optional(CONF_PRECISION, default=1): cv.positive_int,
         vol.Optional(CONF_SCALE, default=1): vol.Coerce(float),
         vol.Optional(CONF_OFFSET, default=0): vol.Coerce(float),
-        vol.Optional(ATTR_MAX_TEMP, default=35): cv.positive_int,
-        vol.Optional(ATTR_MIN_TEMP, default=5): cv.positive_int,
+        vol.Optional(CONF_MAX_TEMP, default=35): cv.positive_int,
+        vol.Optional(CONF_MIN_TEMP, default=5): cv.positive_int,
         vol.Optional(CONF_STEP, default=0.5): vol.Coerce(float),
         vol.Optional(CONF_STRUCTURE, default=DEFAULT_STRUCTURE_PREFIX): cv.string,
         vol.Optional(CONF_TEMPERATURE_UNIT, default=DEFAULT_TEMP_UNIT): cv.string,
@@ -280,7 +281,7 @@ SERVICE_WRITE_COIL_SCHEMA = vol.Schema(
         vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
         vol.Required(CONF_UNIT): cv.positive_int,
         vol.Required(CONF_ADDRESS): cv.positive_int,
-        vol.Required(ATTR_STATE): vol.Any(
+        vol.Required(CONF_STATE): vol.Any(
             cv.boolean, vol.All(cv.ensure_list, [cv.boolean])
         ),
     }

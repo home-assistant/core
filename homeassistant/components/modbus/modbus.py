@@ -6,7 +6,6 @@ from pymodbus.client.sync import ModbusSerialClient, ModbusTcpClient, ModbusUdpC
 from pymodbus.transaction import ModbusRtuFramer
 
 from homeassistant.const import (
-    ATTR_STATE,
     CONF_ADDRESS,
     CONF_BINARY_SENSORS,
     CONF_COVERS,
@@ -16,6 +15,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     CONF_SENSORS,
+    CONF_STATE,
     CONF_SWITCHES,
     CONF_TIMEOUT,
     CONF_TYPE,
@@ -91,7 +91,7 @@ def modbus_setup(
         """Write Modbus coil."""
         unit = service.data[CONF_UNIT]
         address = service.data[CONF_ADDRESS]
-        state = service.data[ATTR_STATE]
+        state = service.data[CONF_STATE]
         client_name = service.data[CONF_HUB]
         if isinstance(state, list):
             hub_collect[client_name].write_coils(unit, address, state)
