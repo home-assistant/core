@@ -3,6 +3,7 @@ import datetime
 from unittest.mock import AsyncMock, patch
 
 from aiohttp import web
+import pytest
 from teslajsonpy import TeslaException
 import voluptuous as vol
 from yarl import URL
@@ -30,6 +31,7 @@ from homeassistant.const import (
     CONF_TOKEN,
     CONF_USERNAME,
     HTTP_NOT_FOUND,
+    HTTP_UNAUTHORIZED,
 )
 from homeassistant.data_entry_flow import UnknownFlow
 from homeassistant.helpers.network import NoURLAvailableError
@@ -49,6 +51,28 @@ async def test_warning_form(hass):
     """Test we get the warning form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    # "type": RESULT_TYPE_FORM,
+    # "flow_id": self.flow_id,
+    # "handler": self.handler,
+    # "step_id": step_id,
+    # "data_schema": data_schema,
+    # "errors": errors,
+    # "description_placeholders": description_placeholders,
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["handler"] == DOMAIN
+    assert result["step_id"] == "user"
+    assert result["data_schema"] == vol.Schema({})
+    assert result["errors"] == {}
+    assert result["description_placeholders"] == {}
+    return result
+
+
+async def test_reauth_warning_form(hass):
+    """Test we get the warning form on reauth."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}
     )
     # "type": RESULT_TYPE_FORM,
     # "flow_id": self.flow_id,
@@ -190,6 +214,54 @@ async def test_finish_oauth(hass):
     return result
 
 
+async def test_form_invalid_auth(hass):
+    """Test we handle invalid auth error."""
+    result = await test_external_url_callback(hass)
+    flow_id = result["flow_id"]
+    with patch(
+        "homeassistant.components.tesla.config_flow.TeslaAPI.connect",
+        side_effect=TeslaException(code=HTTP_UNAUTHORIZED),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id=flow_id,
+            user_input={},
+        )
+        # "type": RESULT_TYPE_ABORT,
+        # "flow_id": flow_id,
+        # "handler": handler,
+        # "reason": reason,
+        # "description_placeholders": description_placeholders,
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["flow_id"] == flow_id
+    assert result["handler"] == DOMAIN
+    assert result["reason"] == "invalid_auth"
+    assert result["description_placeholders"] is None
+
+
+async def test_form_login_failed(hass):
+    """Test we handle invalid auth error."""
+    result = await test_external_url_callback(hass)
+    flow_id = result["flow_id"]
+    with patch(
+        "homeassistant.components.tesla.config_flow.TeslaAPI.connect",
+        return_value={},
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id=flow_id,
+            user_input={},
+        )
+        # "type": RESULT_TYPE_ABORT,
+        # "flow_id": flow_id,
+        # "handler": handler,
+        # "reason": reason,
+        # "description_placeholders": description_placeholders,
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["flow_id"] == flow_id
+    assert result["handler"] == DOMAIN
+    assert result["reason"] == "login_failed"
+    assert result["description_placeholders"] is None
+
+
 async def test_form_cannot_connect(hass):
     """Test we handle cannot connect error."""
     result = await test_external_url_callback(hass)
@@ -210,7 +282,7 @@ async def test_form_cannot_connect(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["flow_id"] == flow_id
     assert result["handler"] == DOMAIN
-    assert result["reason"] == "login_failed"
+    assert result["reason"] == "cannot_connect"
     assert result["description_placeholders"] is None
 
 
@@ -482,14 +554,30 @@ async def test_callback_view_success(hass, aiohttp_client):
         )
 
 
-async def test_proxy_view_invalid_auth(hass, aiohttp_client):
-    """Test proxy view request results in auth error."""
-    assert await async_setup_component(hass, DOMAIN, {})
+@pytest.fixture
+async def proxy_view(hass):
+    """Generate registered proxy_view fixture."""
+    await async_setup_component(hass, DOMAIN, {})
     await hass.async_start()
 
     mock_handler = AsyncMock(return_value=web.Response(text="Success"))
     proxy_view = TeslaAuthorizationProxyView(mock_handler)
     hass.http.register_view(proxy_view)
+    return proxy_view
+
+
+@pytest.fixture
+async def proxy_view_with_flow(hass, proxy_view):
+    """Generate registered proxy_view fixture with running flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    flow_id = result["flow_id"]
+    return flow_id
+
+
+async def test_proxy_view_invalid_auth(hass, aiohttp_client, proxy_view):
+    """Test proxy view request results in auth error."""
 
     client = await aiohttp_client(hass.http.app)
 
@@ -498,18 +586,9 @@ async def test_proxy_view_invalid_auth(hass, aiohttp_client):
         assert resp.status in [403, 401]
 
 
-async def test_proxy_view_valid_auth(hass, aiohttp_client):
-    """Test proxy view request results in valid response."""
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_start()
-
-    mock_handler = AsyncMock(return_value=web.Response(text="Success"))
-    proxy_view = TeslaAuthorizationProxyView(mock_handler)
-    hass.http.register_view(proxy_view)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    flow_id = result["flow_id"]
+async def test_proxy_view_valid_auth_get(hass, aiohttp_client, proxy_view_with_flow):
+    """Test proxy view get request results in valid response."""
+    flow_id = proxy_view_with_flow
 
     client = await aiohttp_client(hass.http.app)
 
@@ -517,19 +596,69 @@ async def test_proxy_view_valid_auth(hass, aiohttp_client):
     assert resp.status == 200
 
 
-async def test_proxy_view_invalid_auth_after_reset(hass, aiohttp_client):
-    """Test proxy view request results in error after flow aborted."""
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_start()
+async def test_proxy_view_valid_auth_post(hass, aiohttp_client, proxy_view_with_flow):
+    """Test proxy view post request results in valid response."""
+    flow_id = proxy_view_with_flow
 
-    mock_handler = AsyncMock(return_value=web.Response(text="Success"))
-    proxy_view = TeslaAuthorizationProxyView(mock_handler)
-    hass.http.register_view(proxy_view)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    flow_id = result["flow_id"]
+    client = await aiohttp_client(hass.http.app)
 
+    resp = await client.post(AUTH_PROXY_PATH, params={"config_flow_id": flow_id})
+    assert resp.status == 200
+
+
+async def test_proxy_view_valid_auth_delete(hass, aiohttp_client, proxy_view_with_flow):
+    """Test proxy view delete request results in valid response."""
+    flow_id = proxy_view_with_flow
+
+    client = await aiohttp_client(hass.http.app)
+
+    resp = await client.delete(AUTH_PROXY_PATH, params={"config_flow_id": flow_id})
+    assert resp.status == 200
+
+
+async def test_proxy_view_valid_auth_put(hass, aiohttp_client, proxy_view_with_flow):
+    """Test proxy view put request results in valid response."""
+    flow_id = proxy_view_with_flow
+    client = await aiohttp_client(hass.http.app)
+
+    resp = await client.put(AUTH_PROXY_PATH, params={"config_flow_id": flow_id})
+    assert resp.status == 200
+
+
+async def test_proxy_view_valid_auth_patch(hass, aiohttp_client, proxy_view_with_flow):
+    """Test proxy view patch request results in valid response."""
+    flow_id = proxy_view_with_flow
+    client = await aiohttp_client(hass.http.app)
+
+    resp = await client.patch(AUTH_PROXY_PATH, params={"config_flow_id": flow_id})
+    assert resp.status == 200
+
+
+async def test_proxy_view_valid_auth_head(hass, aiohttp_client, proxy_view_with_flow):
+    """Test proxy view head request results in valid response."""
+    flow_id = proxy_view_with_flow
+    client = await aiohttp_client(hass.http.app)
+
+    resp = await client.head(AUTH_PROXY_PATH, params={"config_flow_id": flow_id})
+    assert resp.status == 200
+
+
+async def test_proxy_view_valid_auth_options(
+    hass, aiohttp_client, proxy_view_with_flow
+):
+    """Test proxy view options request results in valid response."""
+    flow_id = proxy_view_with_flow
+    client = await aiohttp_client(hass.http.app)
+
+    resp = await client.options(AUTH_PROXY_PATH, params={"config_flow_id": flow_id})
+    assert resp.status == 403
+
+
+async def test_proxy_view_invalid_auth_after_reset(
+    hass, aiohttp_client, proxy_view, proxy_view_with_flow
+):
+    """Test proxy view request results in invalid auth response after reset."""
+    flow_id = proxy_view_with_flow
     client = await aiohttp_client(hass.http.app)
 
     resp = await client.get(AUTH_PROXY_PATH, params={"config_flow_id": flow_id})
@@ -539,3 +668,21 @@ async def test_proxy_view_invalid_auth_after_reset(hass, aiohttp_client):
     hass.config_entries.flow.async_abort(flow_id)
     resp = await client.get(AUTH_PROXY_PATH, params={"config_flow_id": flow_id})
     assert resp.status == 401
+
+    resp = await client.post(AUTH_PROXY_PATH, params={"config_flow_id": flow_id})
+    assert resp.status == 401
+
+    resp = await client.delete(AUTH_PROXY_PATH, params={"config_flow_id": flow_id})
+    assert resp.status == 401
+
+    resp = await client.put(AUTH_PROXY_PATH, params={"config_flow_id": flow_id})
+    assert resp.status == 401
+
+    resp = await client.patch(AUTH_PROXY_PATH, params={"config_flow_id": flow_id})
+    assert resp.status == 401
+
+    resp = await client.head(AUTH_PROXY_PATH, params={"config_flow_id": flow_id})
+    assert resp.status == 401
+
+    resp = await client.options(AUTH_PROXY_PATH, params={"config_flow_id": flow_id})
+    assert resp.status == 403

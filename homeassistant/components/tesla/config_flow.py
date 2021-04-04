@@ -137,8 +137,10 @@ class TeslaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, info, self.controller)
         except CannotConnect:
             errors["base"] = "cannot_connect"
+            return self.async_abort(reason="cannot_connect")
         except InvalidAuth:
             errors["base"] = "invalid_auth"
+            return self.async_abort(reason="invalid_auth")
         # convert from teslajsonpy to HA keys
         if info:
             info = {
