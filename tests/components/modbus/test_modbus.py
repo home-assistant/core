@@ -11,6 +11,7 @@ from homeassistant.components.modbus.const import (
     DEFAULT_HUB,
     MODBUS_DOMAIN as DOMAIN,
 )
+from homeassistant.components.modbus.modbus import ModbusHub
 from homeassistant.const import (
     CONF_DELAY,
     CONF_HOST,
@@ -138,7 +139,7 @@ async def test_config_modbus(hass, do_config):
         assert DOMAIN in hass.data
 
         # the "if" should really be in the do_config above, but
-        # there are no easy way to have vol add default.
+        # there are no easy way to have vol add default in a test setup
         if CONF_NAME not in do_config[DOMAIN][0]:
             do_config[DOMAIN][0][CONF_NAME] = DEFAULT_HUB
         assert do_config[DOMAIN][0][CONF_NAME] in hass.data[DOMAIN]
@@ -234,11 +235,49 @@ async def test_multiple_config_modbus(hass, do_config):
         assert do_config[DOMAIN][1][CONF_NAME] in hass.data[DOMAIN]
 
 
-async def test_pymodbus_read(hass):
+@pytest.mark.parametrize(
+    "do_read_type",
+    [
+        "read_coils",
+        "read_discrete_inputs",
+        "read_input_registers",
+        "read_holding_registers",
+    ],
+)
+async def test_pymodbus_read(hass, do_read_type):
     """Run test for modbus."""
 
+    # dummy config
+    config_hub = {
+        CONF_NAME: DEFAULT_HUB,
+        CONF_TYPE: "tcp",
+        CONF_HOST: "modbusTest",
+        CONF_PORT: 5001,
+        CONF_DELAY: 1,
+        CONF_TIMEOUT: 1,
+    }
 
-async def test_pymodbus_write(hass):
+    mock_sync = mock.MagicMock()
+    with mock.patch(
+        "homeassistant.components.modbus.modbus.ModbusTcpClient", return_value=mock_sync
+    ), mock.patch(
+        "homeassistant.components.modbus.modbus.ModbusSerialClient",
+        return_value=mock_sync,
+    ), mock.patch(
+        "homeassistant.components.modbus.modbus.ModbusUdpClient", return_value=mock_sync
+    ):
+        # mocking is needed to secure the pymodbus library is not called!
+        # simulate read_* functions in pymodbus library
+
+        hub = ModbusHub(config_hub)
+        print(hub)
+
+
+@pytest.mark.parametrize(
+    "do_write_type",
+    [],
+)
+async def test_pymodbus_write(hass, do_write_type):
     """Run test for modbus."""
 
 
