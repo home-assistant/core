@@ -11,26 +11,6 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "custom_sensor": {
-        "data": {
-          "add_another": "Add another",
-          "factor": "Factor",
-          "key": "Key",
-          "name": "[%key:common::config_flow::data::name%]",
-          "path": "Path",
-          "unit": "Unit"
-        },
-        "description": "Add a custom sensor",
-        "title": "Set up SMA Solar"
-      },
-      "sensors": {
-        "data": {
-          "add_custom": "Add a custom sensor",
-          "sensors": "Select Sensors"
-        },
-        "description": "Select sensors to create. If none is selected, all sensors will be created.",
-        "title": "Set up SMA Solar"
-      },
       "user": {
         "data": {
           "group": "Group",
