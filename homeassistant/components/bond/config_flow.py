@@ -5,6 +5,7 @@ import logging
 from typing import Any
 
 from aiohttp import ClientConnectionError, ClientResponseError
+from bond_api import Bond
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
@@ -19,7 +20,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DOMAIN
-from .utils import BondHub, SessionAwareBond
+from .utils import BondHub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +35,7 @@ TOKEN_SCHEMA = vol.Schema({})
 async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> tuple[str, str]:
     """Validate the user input allows us to connect."""
 
-    bond = SessionAwareBond(
+    bond = Bond(
         data[CONF_HOST], data[CONF_ACCESS_TOKEN], session=async_get_clientsession(hass)
     )
     try:
@@ -74,7 +75,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         online longer then the allowed setup period, and we will
         instead ask them to manually enter the token.
         """
-        bond = SessionAwareBond(
+        bond = Bond(
             self._discovered[CONF_HOST], "", session=async_get_clientsession(self.hass)
         )
         try:

@@ -7,7 +7,7 @@
         "data": {
           "access_token": "[%key:common::config_flow::data::access_token%]"
         }
-      },  
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
