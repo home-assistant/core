@@ -12,6 +12,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.tesla.config_flow import (
     TeslaAuthorizationCallbackView,
     TeslaAuthorizationProxyView,
+    validate_input,
 )
 from homeassistant.components.tesla.const import (
     AUTH_CALLBACK_PATH,
@@ -473,13 +474,18 @@ async def test_option_flow_input_floor(hass):
     }
 
 
-async def test_callback_view_invalid_query(hass, aiohttp_client):
-    """Test callback view with invalid query."""
-    assert await async_setup_component(hass, DOMAIN, {})
+@pytest.fixture
+async def callback_view(hass):
+    """Generate registered callback_view fixture."""
+    await async_setup_component(hass, DOMAIN, {})
     await hass.async_start()
 
     hass.http.register_view(TeslaAuthorizationCallbackView)
+    return proxy_view
 
+
+async def test_callback_view_invalid_query(hass, aiohttp_client, callback_view):
+    """Test callback view with invalid query."""
     client = await aiohttp_client(hass.http.app)
 
     resp = await client.get(AUTH_CALLBACK_PATH)
@@ -501,13 +507,8 @@ async def test_callback_view_invalid_query(hass, aiohttp_client):
         assert resp.status == 400
 
 
-async def test_callback_view_keyerror(hass, aiohttp_client):
+async def test_callback_view_keyerror(hass, aiohttp_client, callback_view):
     """Test callback view with keyerror."""
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_start()
-
-    hass.http.register_view(TeslaAuthorizationCallbackView)
-
     client = await aiohttp_client(hass.http.app)
 
     with patch(
@@ -517,13 +518,8 @@ async def test_callback_view_keyerror(hass, aiohttp_client):
         assert resp.status == 400
 
 
-async def test_callback_view_unknownflow(hass, aiohttp_client):
+async def test_callback_view_unknownflow(hass, aiohttp_client, callback_view):
     """Test callback view with unknownflow."""
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_start()
-
-    hass.http.register_view(TeslaAuthorizationCallbackView)
-
     client = await aiohttp_client(hass.http.app)
 
     with patch(
@@ -533,13 +529,8 @@ async def test_callback_view_unknownflow(hass, aiohttp_client):
         assert resp.status == 400
 
 
-async def test_callback_view_success(hass, aiohttp_client):
+async def test_callback_view_success(hass, aiohttp_client, callback_view):
     """Test callback view with success response."""
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_start()
-
-    hass.http.register_view(TeslaAuthorizationCallbackView)
-
     result = await test_external_url(hass)
     flow_id = result["flow_id"]
 
@@ -686,3 +677,28 @@ async def test_proxy_view_invalid_auth_after_reset(
 
     resp = await client.options(AUTH_PROXY_PATH, params={"config_flow_id": flow_id})
     assert resp.status == 403
+
+
+async def test_validate_input_no_controller(
+    hass,
+):
+    """Test validate input."""
+    user_input = {
+        CONF_USERNAME: TEST_USERNAME,
+        CONF_TOKEN: TEST_TOKEN,
+        CONF_ACCESS_TOKEN: TEST_ACCESS_TOKEN,
+        CONF_EXPIRATION: TEST_VALID_EXPIRATION,
+    }
+    with patch(
+        "homeassistant.components.tesla.config_flow.TeslaAPI.connect",
+        return_value={
+            "refresh_token": TEST_TOKEN,
+            CONF_ACCESS_TOKEN: TEST_ACCESS_TOKEN,
+            CONF_EXPIRATION: TEST_VALID_EXPIRATION,
+        },
+    ):
+        assert await validate_input(hass, user_input) == {
+            "refresh_token": TEST_TOKEN,
+            CONF_ACCESS_TOKEN: TEST_ACCESS_TOKEN,
+            CONF_EXPIRATION: TEST_VALID_EXPIRATION,
+        }
