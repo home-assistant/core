@@ -513,11 +513,8 @@ async def test_proxy_view_valid_auth(hass, aiohttp_client):
 
     client = await aiohttp_client(hass.http.app)
 
-    for method in ("get", "post", "delete", "put", "patch", "head", "options"):
-        resp = await getattr(client, method)(
-            AUTH_PROXY_PATH, params={"config_flow_id": flow_id}
-        )
-        assert resp.status == 200
+    resp = await client.get(AUTH_PROXY_PATH, params={"config_flow_id": flow_id})
+    assert resp.status == 200
 
 
 async def test_proxy_view_invalid_auth_after_reset(hass, aiohttp_client):
