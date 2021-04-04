@@ -80,7 +80,7 @@ class FritzBoxTracker(ScannerEntity):
         self._name = device.hostname or DEFAULT_DEVICE_NAME
         self._active = False
         self._attrs = {}
-        self._icon = device.icon
+        self._icon = None
 
     @property
     def is_connected(self):
@@ -98,9 +98,19 @@ class FritzBoxTracker(ScannerEntity):
         return self._mac
 
     @property
-    def extra_state_attributes(self) -> Dict[str, any]:
-        """Return the attributes."""
-        return self._attrs
+    def ip_address(self) -> str:
+        """Return the primary ip address of the device."""
+        return self._router.devices[self._mac].ip_address
+
+    @property
+    def mac_address(self) -> str:
+        """Return the mac address of the device."""
+        return self._mac
+
+    @property
+    def hostname(self) -> str:
+        """Return hostname of the device."""
+        return self._router.devices[self._mac].hostname
 
     @property
     def source_type(self) -> str:
@@ -125,7 +135,9 @@ class FritzBoxTracker(ScannerEntity):
     @property
     def icon(self):
         """Return device icon."""
-        return self._icon
+        if self.is_connected:
+            return "mdi:lan-connect"
+        return "mdi:lan-disconnect"
 
     @callback
     def async_process_update(self) -> None:
@@ -134,10 +146,6 @@ class FritzBoxTracker(ScannerEntity):
         device = self._router.devices[self._mac]
         self._active = device.is_connected
 
-        self._attrs = {
-            "mac_address": device.mac_address,
-            "ip_address": device.ip_address,
-        }
         if device.last_activity:
             self._attrs["last_time_reachable"] = device.last_activity.isoformat(
                 timespec="seconds"

@@ -222,7 +222,6 @@ class FritzDevice:
         self._ip_address = None
         self._last_activity = None
         self._connected = False
-        self._icon = None
 
     def update(self, dev_info, dev_home):
         """Update device info."""
@@ -233,11 +232,9 @@ class FritzDevice:
 
         if not self._connected:
             self._ip_address = None
-            self._icon = "mdi:lan-disconnect"
         else:
             self._last_activity = utc_point_in_time
             self._ip_address = dev_info.ip
-            self._icon = "mdi:lan-connect"
 
     @property
     def is_connected(self):
@@ -263,8 +260,3 @@ class FritzDevice:
     def last_activity(self):
         """Return device last activity."""
         return self._last_activity
-
-    @property
-    def icon(self):
-        """Return device icon."""
-        return self._icon
