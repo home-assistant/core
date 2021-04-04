@@ -32,6 +32,7 @@ from homeassistant.helpers.typing import (
 )
 
 from .const import (
+    ATTR_TEMPERATURE,
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
     CONF_CLIMATES,
@@ -45,7 +46,6 @@ from .const import (
     CONF_SCALE,
     CONF_STEP,
     CONF_TARGET_TEMP,
-    CONF_TEMPERATURE,
     DATA_TYPE_CUSTOM,
     DEFAULT_STRUCT_FORMAT,
     MODBUS_DOMAIN,
@@ -209,7 +209,7 @@ class ModbusThermostat(ClimateEntity):
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
         target_temperature = int(
-            (kwargs.get(CONF_TEMPERATURE) - self._offset) / self._scale
+            (kwargs.get(ATTR_TEMPERATURE) - self._offset) / self._scale
         )
         if target_temperature is None:
             return
