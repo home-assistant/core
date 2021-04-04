@@ -9,9 +9,14 @@ from types import ModuleType
 from typing import TYPE_CHECKING, Callable, Coroutine, Iterable
 
 from homeassistant import config_entries
-from homeassistant.const import ATTR_RESTORED, DEVICE_DEFAULT_NAME
+from homeassistant.const import (
+    ATTR_RESTORED,
+    DEVICE_DEFAULT_NAME,
+    EVENT_HOMEASSISTANT_STARTED,
+)
 from homeassistant.core import (
     CALLBACK_TYPE,
+    CoreState,
     HomeAssistant,
     ServiceCall,
     callback,
@@ -215,23 +220,41 @@ class EntityPlatform:
             hass.config.components.add(full_name)
             self._setup_complete = True
             return True
-        except PlatformNotReady:
+        except PlatformNotReady as ex:
             tries += 1
             wait_time = min(tries, 6) * PLATFORM_NOT_READY_BASE_WAIT_TIME
-            logger.warning(
-                "Platform %s not ready yet. Retrying in %d seconds.",
-                self.platform_name,
-                wait_time,
-            )
+            message = str(ex)
+            if not message and ex.__cause__:
+                message = str(ex.__cause__)
+            ready_message = f"ready yet: {message}" if message else "ready yet"
+            if tries == 1:
+                logger.warning(
+                    "Platform %s not %s; Retrying in background in %d seconds",
+                    self.platform_name,
+                    ready_message,
+                    wait_time,
+                )
+            else:
+                logger.debug(
+                    "Platform %s not %s; Retrying in %d seconds",
+                    self.platform_name,
+                    ready_message,
+                    wait_time,
+                )
 
-            async def setup_again(now):  # type: ignore[no-untyped-def]
+            async def setup_again(*_):  # type: ignore[no-untyped-def]
                 """Run setup again."""
                 self._async_cancel_retry_setup = None
                 await self._async_setup_platform(async_create_setup_task, tries)
 
-            self._async_cancel_retry_setup = async_call_later(
-                hass, wait_time, setup_again
-            )
+            if hass.state == CoreState.running:
+                self._async_cancel_retry_setup = async_call_later(
+                    hass, wait_time, setup_again
+                )
+            else:
+                self._async_cancel_retry_setup = hass.bus.async_listen_once(
+                    EVENT_HOMEASSISTANT_STARTED, setup_again
+                )
             return False
         except asyncio.TimeoutError:
             logger.error(
