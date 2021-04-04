@@ -1,4 +1,6 @@
 """Test Home Assistant remote methods and classes."""
+from datetime import timedelta
+
 import pytest
 
 from homeassistant import core
@@ -14,6 +16,14 @@ def test_json_encoder(hass):
     # Test serializing a datetime
     now = dt_util.utcnow()
     assert ha_json_enc.default(now) == now.isoformat()
+
+    # Test serializing a timedelta
+    delta = timedelta(
+        seconds=3,
+        minutes=2,
+        hours=1,
+    )
+    assert ha_json_enc.default(delta) == delta.total_seconds()
 
     # Test serializing a set()
     data = {"milk", "beer"}
