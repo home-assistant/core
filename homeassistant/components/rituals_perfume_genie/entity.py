@@ -25,12 +25,12 @@ class DiffuserEntity(CoordinatorEntity):
     @property
     def unique_id(self):
         """Return the unique ID of the entity."""
-        return self._hublot + self._entity_suffix
+        return f"{self._hublot}{self._entity_suffix}"
 
     @property
     def name(self):
         """Return the name of the entity."""
-        return self._hubname + self._entity_suffix
+        return f"{self._hubname}{self._entity_suffix}"
 
     @property
     def device_info(self):
