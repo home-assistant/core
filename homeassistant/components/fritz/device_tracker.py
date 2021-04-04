@@ -47,7 +47,7 @@ async def async_setup_entry(
     @callback
     def update_router():
         """Update the values of the router."""
-        add_entities(router, async_add_entities, tracked)
+        _async_add_entities(router, async_add_entities, tracked)
 
     async_dispatcher_connect(hass, router.signal_device_new, update_router)
 

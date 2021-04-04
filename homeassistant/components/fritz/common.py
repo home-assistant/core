@@ -21,7 +21,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.util import dt as dt_util, get_local_ip
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_HOST,
@@ -87,7 +87,6 @@ class FritzBoxTools:
         self.error = None
         self.fritzhosts = None
         self.fritzstatus = None
-        self.ha_ip = None
         self.hass = hass
         self.host = host
         self.password = password
@@ -121,8 +120,6 @@ class FritzBoxTools:
         except FritzConnectionException:
             self.success = False
             self.error = ERROR_CONNECTION_ERROR
-
-        self.ha_ip = get_local_ip()
 
         self.scan_devices()
 
