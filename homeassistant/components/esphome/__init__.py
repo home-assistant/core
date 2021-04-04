@@ -239,6 +239,8 @@ class ReconnectLogic(RecordUpdateListener):
         # Flag to check if the device is connected
         self._connected = True
         self._connected_lock = asyncio.Lock()
+        self._zc_lock = asyncio.Lock()
+        self._zc_listening = False
         # Event the different strategies use for issuing a reconnect attempt.
         self._reconnect_event = asyncio.Event()
         # The task containing the infinite reconnect loop while running
@@ -270,6 +272,7 @@ class ReconnectLogic(RecordUpdateListener):
         self._entry_data.disconnect_callbacks = []
         self._entry_data.available = False
         self._entry_data.async_update_device_state(self._hass)
+        await self._start_zc_listen()
 
         # Reset tries
         async with self._tries_lock:
@@ -315,6 +318,7 @@ class ReconnectLogic(RecordUpdateListener):
                 self._host,
                 error,
             )
+            await self._start_zc_listen()
             # Schedule re-connect in event loop in order not to delay HA
             # startup. First connect is scheduled in tracked tasks.
             async with self._wait_task_lock:
@@ -332,6 +336,7 @@ class ReconnectLogic(RecordUpdateListener):
                 self._tries = 0
             async with self._connected_lock:
                 self._connected = True
+            await self._stop_zc_listen()
             self._hass.async_create_task(self._on_login())
 
     async def _reconnect_once(self):
@@ -375,9 +380,6 @@ class ReconnectLogic(RecordUpdateListener):
         # Create reconnection loop outside of HA's tracked tasks in order
         # not to delay startup.
         self._loop_task = self._hass.loop.create_task(self._reconnect_loop())
-        # Listen for mDNS records so we can reconnect directly if a received mDNS record
-        # indicates the node is up again
-        await self._hass.async_add_executor_job(self._zc.add_listener, self, None)
 
         async with self._connected_lock:
             self._connected = False
@@ -388,11 +390,31 @@ class ReconnectLogic(RecordUpdateListener):
         if self._loop_task is not None:
             self._loop_task.cancel()
             self._loop_task = None
-        await self._hass.async_add_executor_job(self._zc.remove_listener, self)
         async with self._wait_task_lock:
             if self._wait_task is not None:
                 self._wait_task.cancel()
             self._wait_task = None
+        await self._stop_zc_listen()
+
+    async def _start_zc_listen(self):
+        """Listen for mDNS records.
+
+        This listener allows us to schedule a reconnect as soon as a
+        received mDNS record indicates the node is up again.
+        """
+        async with self._zc_lock:
+            if not self._zc_listening:
+                await self._hass.async_add_executor_job(
+                    self._zc.add_listener, self, None
+                )
+                self._zc_listening = True
+
+    async def _stop_zc_listen(self):
+        """Stop listening for zeroconf updates."""
+        async with self._zc_lock:
+            if self._zc_listening:
+                await self._hass.async_add_executor_job(self._zc.remove_listener, self)
+                self._zc_listening = False
 
     @callback
     def stop_callback(self):
