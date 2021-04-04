@@ -153,7 +153,7 @@ class PlenticoreDataSensor(CoordinatorEntity):
     @property
     def unique_id(self) -> str:
         """Return the unique id of this Sensor Entity."""
-        return f"{self.entry_id}_{self._sensor_name}"
+        return f"{self.entry_id}_{self.data_id}"
 
     @property
     def name(self) -> str:
