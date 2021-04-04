@@ -33,7 +33,7 @@ class TeslaDevice(CoordinatorEntity):
                 if isinstance(args[0], TeslaDevice):
                     self_object = args[0]
                 try:
-                    await func(*args)
+                    result = await func(*args)
                 except IncompleteCredentials:
                     if self_object and self_object.config_entry_id:
                         _LOGGER.debug(
