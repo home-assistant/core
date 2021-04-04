@@ -204,5 +204,6 @@ class SessionAwareBond(Bond):  # type: ignore
         """Wrap __call to retry on ServerDisconnectedError."""
         try:
             return await super().__call(handler)
-        except ServerDisconnectedError:
+        except ServerDisconnectedError as ex:
+            _LOGGER.warning("Retry on ServerDisconnectedError: %s", ex)
             return await super().__call(handler)
