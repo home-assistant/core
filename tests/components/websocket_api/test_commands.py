@@ -1039,9 +1039,14 @@ async def test_subscribe_trigger(hass, websocket_client):
     assert sum(hass.bus.async_listeners().values()) == init_count + 1
 
     context = Context()
+    delta = timedelta(
+        days=1,
+        hours=2,
+        minutes=3,
+    )
 
     hass.bus.async_fire("ignore_event")
-    hass.bus.async_fire("test_event", {"hello": "world"}, context=context)
+    hass.bus.async_fire("test_event", {"hello": "world", "for": delta}, context=context)
     hass.bus.async_fire("ignore_event")
 
     with timeout(3):
@@ -1055,7 +1060,9 @@ async def test_subscribe_trigger(hass, websocket_client):
     event = msg["event"]["variables"]["trigger"]["event"]
 
     assert event["event_type"] == "test_event"
-    assert event["data"] == {"hello": "world"}
+    assert event["data"]["hello"] == "world"
+    assert event["data"]["for"] == delta.total_seconds()
+
     assert event["origin"] == "LOCAL"
 
     await websocket_client.send_json(

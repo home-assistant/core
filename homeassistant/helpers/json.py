@@ -1,5 +1,5 @@
 """Helpers to help with encoding Home Assistant objects in JSON."""
-from datetime import datetime, timedelta
+from datetime import datetime
 import json
 from typing import Any
 
@@ -16,8 +16,6 @@ class JSONEncoder(json.JSONEncoder):
             return o.isoformat()
         if isinstance(o, set):
             return list(o)
-        if isinstance(o, timedelta):
-            return o.total_seconds()
         if hasattr(o, "as_dict"):
             return o.as_dict()
 

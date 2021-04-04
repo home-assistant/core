@@ -1,11 +1,13 @@
 """Commands part of Websocket API."""
 import asyncio
+import json
 
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_READ
 from homeassistant.bootstrap import SIGNAL_BOOTSTRAP_INTEGRATONS
 from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
+from homeassistant.components.websocket_api.utils import SubscribeTriggerJSONEncoder
 from homeassistant.const import EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL
 from homeassistant.core import DOMAIN as HASS_DOMAIN, callback
 from homeassistant.exceptions import (
@@ -417,10 +419,11 @@ async def handle_subscribe_trigger(hass, connection, msg):
     @callback
     def forward_triggers(variables, context=None):
         """Forward events to websocket."""
+        message = messages.event_message(
+            msg["id"], {"variables": variables, "context": context}
+        )
         connection.send_message(
-            messages.event_message(
-                msg["id"], {"variables": variables, "context": context}
-            )
+            json.dumps(message, cls=SubscribeTriggerJSONEncoder, allow_nan=False)
         )
 
     connection.subscriptions[msg["id"]] = (
