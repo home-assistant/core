@@ -12,7 +12,6 @@ from homeassistant.components.modbus.const import (
     CONF_REGISTERS,
     CONF_STATE_OFF,
     CONF_STATE_ON,
-    CONF_SWITCHES,
     CONF_VERIFY_REGISTER,
     CONF_VERIFY_STATE,
 )
@@ -24,6 +23,7 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_SLAVE,
+    CONF_SWITCHES,
     STATE_OFF,
     STATE_ON,
 )

@@ -5,12 +5,12 @@ from homeassistant.components.binary_sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.modbus.const import (
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
-    CONF_BINARY_SENSORS,
     CONF_INPUT_TYPE,
     CONF_INPUTS,
 )
 from homeassistant.const import (
     CONF_ADDRESS,
+    CONF_BINARY_SENSORS,
     CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_SLAVE,

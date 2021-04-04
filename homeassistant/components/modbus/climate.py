@@ -15,12 +15,12 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import (
-    ATTR_TEMPERATURE,
     CONF_NAME,
     CONF_OFFSET,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
     CONF_STRUCTURE,
+    CONF_TEMPERATURE_UNIT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
@@ -32,6 +32,7 @@ from homeassistant.helpers.typing import (
 )
 
 from .const import (
+    ATTR_TEMPERATURE,
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
     CONF_CLIMATES,
@@ -45,7 +46,6 @@ from .const import (
     CONF_SCALE,
     CONF_STEP,
     CONF_TARGET_TEMP,
-    CONF_UNIT,
     DATA_TYPE_CUSTOM,
     DEFAULT_STRUCT_FORMAT,
     MODBUS_DOMAIN,
@@ -130,7 +130,7 @@ class ModbusThermostat(ClimateEntity):
         self._scale = config[CONF_SCALE]
         self._scan_interval = timedelta(seconds=config[CONF_SCAN_INTERVAL])
         self._offset = config[CONF_OFFSET]
-        self._unit = config[CONF_UNIT]
+        self._unit = config[CONF_TEMPERATURE_UNIT]
         self._max_temp = config[CONF_MAX_TEMP]
         self._min_temp = config[CONF_MIN_TEMP]
         self._temp_step = config[CONF_STEP]
@@ -208,11 +208,11 @@ class ModbusThermostat(ClimateEntity):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
+        if ATTR_TEMPERATURE not in kwargs:
+            return
         target_temperature = int(
             (kwargs.get(ATTR_TEMPERATURE) - self._offset) / self._scale
         )
-        if target_temperature is None:
-            return
         byte_string = struct.pack(self._structure, target_temperature)
         register_value = struct.unpack(">h", byte_string[0:2])[0]
         self._write_register(self._target_temperature_register, register_value)
