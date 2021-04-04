@@ -79,6 +79,7 @@ class FritzBoxTools:
         port=DEFAULT_PORT,
     ):
         """Initialize FritzboxTools class."""
+        self._cancel_scan = None
         self._device_info = None
         self._devices: Dict[str, Any] = {}
         self._unique_id = None
@@ -125,11 +126,18 @@ class FritzBoxTools:
 
         self.scan_devices()
 
-        async_track_time_interval(
+        self._cancel_scan = async_track_time_interval(
             self.hass, self.scan_devices, timedelta(seconds=TRACKER_SCAN_INTERVAL)
         )
 
         return self.success, self.error
+
+    def unload(self):
+        """Unload FritzboxTools class."""
+        _LOGGER.debug("Unloading Fritz!Box router integration")
+        if self._cancel_scan is not None:
+            self._cancel_scan()
+            self._cancel_scan = None
 
     @property
     def unique_id(self):
@@ -154,12 +162,12 @@ class FritzBoxTools:
     @property
     def signal_device_new(self) -> str:
         """Event specific per Fritzbox entry to signal new device."""
-        return f"{DOMAIN}-device-new"
+        return f"{DOMAIN}-device-new-{self._unique_id}"
 
     @property
     def signal_device_update(self) -> str:
         """Event specific per Fritzbox entry to signal updates in devices."""
-        return f"{DOMAIN}-device-update"
+        return f"{DOMAIN}-device-update-{self._unique_id}"
 
     def _update_info(self):
         """Retrieve latest information from the FRITZ!Box."""
