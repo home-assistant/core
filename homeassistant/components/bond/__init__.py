@@ -3,7 +3,7 @@ import asyncio
 from asyncio import TimeoutError as AsyncIOTimeoutError
 
 from aiohttp import ClientError, ClientTimeout
-from bond_api import Bond, BPUPSubscriptions, start_bpup
+from bond_api import BPUPSubscriptions, start_bpup
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
@@ -14,7 +14,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import SLOW_UPDATE_WARNING
 
 from .const import BPUP_STOP, BPUP_SUBS, BRIDGE_MAKE, DOMAIN, HUB
-from .utils import BondHub
+from .utils import BondHub, SessionAwareBond
 
 PLATFORMS = ["cover", "fan", "light", "switch"]
 _API_TIMEOUT = SLOW_UPDATE_WARNING - 1
@@ -26,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     token = entry.data[CONF_ACCESS_TOKEN]
     config_entry_id = entry.entry_id
 
-    bond = Bond(
+    bond = SessionAwareBond(
         host=host,
         token=token,
         timeout=ClientTimeout(total=_API_TIMEOUT),

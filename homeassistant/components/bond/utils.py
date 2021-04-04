@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
+from typing import Any, Callable, cast
 
-from aiohttp import ClientResponseError
+from aiohttp import ClientResponseError, ClientSession
+from aiohttp.client_exceptions import ServerDisconnectedError
 from bond_api import Action, Bond
 
 from homeassistant.util.async_ import gather_with_concurrency
@@ -194,3 +195,14 @@ class BondHub:
     def is_bridge(self) -> bool:
         """Return if the Bond is a Bond Bridge."""
         return bool(self._bridge)
+
+
+class SessionAwareBond(Bond):  # type: ignore
+    """A wrapper around Bond that can handle ServerDisconnectedError."""
+
+    async def __call(self, handler: Callable[[ClientSession], Any]) -> Any:
+        """Wrap __call to retry on ServerDisconnectedError."""
+        try:
+            return await super().__call(handler)
+        except ServerDisconnectedError:
+            return await super().__call(handler)
