@@ -234,7 +234,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._name = user_input.get(CONF_NAME)
         self._title = self._model or self._name
 
-        await self.async_set_unique_id(self.unique_id)
+        await self.async_set_unique_id(self._id)
         self.context["title_placeholders"] = {"model": self._title}
 
         return await self.async_step_confirm()
