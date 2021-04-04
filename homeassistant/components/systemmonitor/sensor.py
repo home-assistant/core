@@ -242,7 +242,7 @@ async def async_setup_sensor_registry_updates(hass, sensor_registry, scan_interv
                 data.update_time = update_time
                 data.last_exception = None
 
-    async def async_update_data():
+    async def async_update_data(*_):
         """Update all sensors in one executor jump."""
         if _update_lock.locked():
             _LOGGER.warning(
