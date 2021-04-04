@@ -185,7 +185,10 @@ class EzvizCamera(CoordinatorEntity, Camera, RestoreEntity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return self.coordinator.data[self._idx]["status"]
+        if self.coordinator.data[self._idx]["status"] == 2:
+            return False
+
+        return True
 
     @property
     def supported_features(self):
