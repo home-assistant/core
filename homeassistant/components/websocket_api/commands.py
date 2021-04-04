@@ -133,7 +133,7 @@ def handle_unsubscribe_bootstrap_integrations(hass, connection, msg):
     # Currently these are the same as events so we pass on the request
     # This api call only exists in case we change the implementation
     # details.
-    return handle_unsubscribe_events(hass, connection, msg)
+    handle_unsubscribe_events(hass, connection, msg)
 
 
 @callback
