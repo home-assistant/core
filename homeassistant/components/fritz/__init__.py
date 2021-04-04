@@ -26,7 +26,8 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up FRITZ!Box Tools component."""
-    if DOMAIN in config:
+    if DOMAIN not in config:
+        return True
         for entry_config in config[DOMAIN][CONF_DEVICES]:
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
