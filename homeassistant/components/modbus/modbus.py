@@ -182,8 +182,6 @@ class ModbusHub:
                 port=self._config_port,
                 timeout=self._config_timeout,
             )
-        else:
-            assert False
 
         # Connect device
         self.connect()
