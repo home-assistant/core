@@ -55,7 +55,7 @@ async def async_setup_entry(
 
 
 @callback
-def add_entities(router, async_add_entities, tracked):
+def _async_add_entities(router, async_add_entities, tracked):
     """Add new tracker entities from the router."""
     new_tracked = []
 
