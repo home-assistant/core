@@ -30,7 +30,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_TOKEN,
 )
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -139,7 +139,7 @@ def remotews_fixture():
         yield remotews
 
 
-async def test_user_legacy(hass: HomeAssistantType, remote: Mock):
+async def test_user_legacy(hass: HomeAssistant, remote: Mock):
     """Test starting a flow by user."""
     # show form
     result = await hass.config_entries.flow.async_init(
@@ -163,7 +163,7 @@ async def test_user_legacy(hass: HomeAssistantType, remote: Mock):
     assert result["result"].unique_id is None
 
 
-async def test_user_websocket(hass: HomeAssistantType, remotews: Mock):
+async def test_user_websocket(hass: HomeAssistant, remotews: Mock):
     """Test starting a flow by user."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError("Boom")
@@ -190,7 +190,7 @@ async def test_user_websocket(hass: HomeAssistantType, remotews: Mock):
         assert result["result"].unique_id is None
 
 
-async def test_user_legacy_missing_auth(hass: HomeAssistantType, remote: Mock):
+async def test_user_legacy_missing_auth(hass: HomeAssistant, remote: Mock):
     """Test starting a flow by user with authentication."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -204,7 +204,7 @@ async def test_user_legacy_missing_auth(hass: HomeAssistantType, remote: Mock):
         assert result["reason"] == "auth_missing"
 
 
-async def test_user_legacy_not_supported(hass: HomeAssistantType, remote: Mock):
+async def test_user_legacy_not_supported(hass: HomeAssistant, remote: Mock):
     """Test starting a flow by user for not supported device."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -218,7 +218,7 @@ async def test_user_legacy_not_supported(hass: HomeAssistantType, remote: Mock):
         assert result["reason"] == "not_supported"
 
 
-async def test_user_websocket_not_supported(hass: HomeAssistantType, remotews: Mock):
+async def test_user_websocket_not_supported(hass: HomeAssistant, remotews: Mock):
     """Test starting a flow by user for not supported device."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -235,7 +235,7 @@ async def test_user_websocket_not_supported(hass: HomeAssistantType, remotews: M
         assert result["reason"] == "not_supported"
 
 
-async def test_user_not_successful(hass: HomeAssistantType, remotews: Mock):
+async def test_user_not_successful(hass: HomeAssistant, remotews: Mock):
     """Test starting a flow by user but no connection found."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -251,7 +251,7 @@ async def test_user_not_successful(hass: HomeAssistantType, remotews: Mock):
         assert result["reason"] == "not_successful"
 
 
-async def test_user_not_successful_2(hass: HomeAssistantType, remotews: Mock):
+async def test_user_not_successful_2(hass: HomeAssistant, remotews: Mock):
     """Test starting a flow by user but no connection found."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -267,7 +267,7 @@ async def test_user_not_successful_2(hass: HomeAssistantType, remotews: Mock):
         assert result["reason"] == "not_successful"
 
 
-async def test_ssdp(hass: HomeAssistantType, remote: Mock):
+async def test_ssdp(hass: HomeAssistant, remote: Mock):
     """Test starting a flow from discovery."""
 
     # confirm to add the entry
@@ -290,7 +290,7 @@ async def test_ssdp(hass: HomeAssistantType, remote: Mock):
     assert result["result"].unique_id == "fake_uuid"
 
 
-async def test_ssdp_noprefix(hass: HomeAssistantType, remote: Mock):
+async def test_ssdp_noprefix(hass: HomeAssistant, remote: Mock):
     """Test starting a flow from discovery without prefixes."""
 
     # confirm to add the entry
@@ -315,7 +315,7 @@ async def test_ssdp_noprefix(hass: HomeAssistantType, remote: Mock):
     assert result["result"].unique_id == "fake2_uuid"
 
 
-async def test_ssdp_legacy_missing_auth(hass: HomeAssistantType, remote: Mock):
+async def test_ssdp_legacy_missing_auth(hass: HomeAssistant, remote: Mock):
     """Test starting a flow from discovery with authentication."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -337,7 +337,7 @@ async def test_ssdp_legacy_missing_auth(hass: HomeAssistantType, remote: Mock):
         assert result["reason"] == "auth_missing"
 
 
-async def test_ssdp_legacy_not_supported(hass: HomeAssistantType, remote: Mock):
+async def test_ssdp_legacy_not_supported(hass: HomeAssistant, remote: Mock):
     """Test starting a flow from discovery for not supported device."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -359,7 +359,7 @@ async def test_ssdp_legacy_not_supported(hass: HomeAssistantType, remote: Mock):
         assert result["reason"] == "not_supported"
 
 
-async def test_ssdp_websocket_not_supported(hass: HomeAssistantType, remote: Mock):
+async def test_ssdp_websocket_not_supported(hass: HomeAssistant, remote: Mock):
     """Test starting a flow from discovery for not supported device."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -383,7 +383,7 @@ async def test_ssdp_websocket_not_supported(hass: HomeAssistantType, remote: Moc
         assert result["reason"] == "not_supported"
 
 
-async def test_ssd_model_not_supported(hass: HomeAssistantType, remote: Mock):
+async def test_ssd_model_not_supported(hass: HomeAssistant, remote: Mock):
     """Test starting a flow from discovery."""
 
     # confirm to add the entry
@@ -394,7 +394,7 @@ async def test_ssd_model_not_supported(hass: HomeAssistantType, remote: Mock):
     assert result["reason"] == "not_supported"
 
 
-async def test_ssdp_not_successful(hass: HomeAssistantType, remote: Mock):
+async def test_ssdp_not_successful(hass: HomeAssistant, remote: Mock):
     """Test starting a flow from discovery but no device found."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -419,7 +419,7 @@ async def test_ssdp_not_successful(hass: HomeAssistantType, remote: Mock):
         assert result["reason"] == "not_successful"
 
 
-async def test_ssdp_not_successful_2(hass: HomeAssistantType, remote: Mock):
+async def test_ssdp_not_successful_2(hass: HomeAssistant, remote: Mock):
     """Test starting a flow from discovery but no device found."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -444,7 +444,7 @@ async def test_ssdp_not_successful_2(hass: HomeAssistantType, remote: Mock):
         assert result["reason"] == "not_successful"
 
 
-async def test_ssdp_already_in_progress(hass: HomeAssistantType, remote: Mock):
+async def test_ssdp_already_in_progress(hass: HomeAssistant, remote: Mock):
     """Test starting a flow from discovery twice."""
 
     # confirm to add the entry
@@ -462,7 +462,7 @@ async def test_ssdp_already_in_progress(hass: HomeAssistantType, remote: Mock):
     assert result["reason"] == "already_in_progress"
 
 
-async def test_ssdp_already_configured(hass: HomeAssistantType, remote: Mock):
+async def test_ssdp_already_configured(hass: HomeAssistant, remote: Mock):
     """Test starting a flow from discovery when already configured."""
 
     # entry was added
@@ -486,7 +486,7 @@ async def test_ssdp_already_configured(hass: HomeAssistantType, remote: Mock):
     assert entry.unique_id == "fake_uuid"
 
 
-async def test_zeroconf(hass: HomeAssistantType, remote: Mock):
+async def test_zeroconf(hass: HomeAssistant, remote: Mock):
     """Test starting a flow from discovery."""
 
     # confirm to add the entry
@@ -510,7 +510,7 @@ async def test_zeroconf(hass: HomeAssistantType, remote: Mock):
     assert result["result"].unique_id == "fake_serial"
 
 
-async def test_zeroconf_device_info(hass: HomeAssistantType, remote: Mock):
+async def test_zeroconf_device_info(hass: HomeAssistant, remote: Mock):
     """Test starting a flow from discovery."""
     with patch("homeassistant.components.samsungtv.bridge.SamsungTVWS") as remote:
         remote().rest_device_info.return_value = {
@@ -538,9 +538,7 @@ async def test_zeroconf_device_info(hass: HomeAssistantType, remote: Mock):
         assert result["result"].unique_id == "fake_serial"
 
 
-async def test_autodetect_websocket(
-    hass: HomeAssistantType, remote: Mock, remotews: Mock
-):
+async def test_autodetect_websocket(hass: HomeAssistant, remote: Mock, remotews: Mock):
     """Test for send key with autodetection of protocol."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -567,7 +565,7 @@ async def test_autodetect_websocket(
         ]
 
 
-async def test_autodetect_auth_missing(hass: HomeAssistantType, remote: Mock):
+async def test_autodetect_auth_missing(hass: HomeAssistant, remote: Mock):
     """Test for send key with autodetection of protocol."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -582,7 +580,7 @@ async def test_autodetect_auth_missing(hass: HomeAssistantType, remote: Mock):
         assert remote.call_args_list == [call(AUTODETECT_LEGACY)]
 
 
-async def test_autodetect_not_supported(hass: HomeAssistantType, remote: Mock):
+async def test_autodetect_not_supported(hass: HomeAssistant, remote: Mock):
     """Test for send key with autodetection of protocol."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -597,7 +595,7 @@ async def test_autodetect_not_supported(hass: HomeAssistantType, remote: Mock):
         assert remote.call_args_list == [call(AUTODETECT_LEGACY)]
 
 
-async def test_autodetect_legacy(hass: HomeAssistantType, remote: Mock):
+async def test_autodetect_legacy(hass: HomeAssistant, remote: Mock):
     """Test for send key with autodetection of protocol."""
     with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
         result = await hass.config_entries.flow.async_init(
@@ -610,7 +608,7 @@ async def test_autodetect_legacy(hass: HomeAssistantType, remote: Mock):
         assert remote.call_args_list == [call(AUTODETECT_LEGACY)]
 
 
-async def test_autodetect_none(hass: HomeAssistantType, remote: Mock, remotews: Mock):
+async def test_autodetect_none(hass: HomeAssistant, remote: Mock, remotews: Mock):
     """Test for send key with autodetection of protocol."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -635,7 +633,7 @@ async def test_autodetect_none(hass: HomeAssistantType, remote: Mock, remotews: 
         ]
 
 
-async def test_update_old_entry(hass: HomeAssistantType, remote: Mock):
+async def test_update_old_entry(hass: HomeAssistant, remote: Mock):
     """Test update of old entry."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_OLD_ENTRY)
     entry.add_to_hass(hass)
