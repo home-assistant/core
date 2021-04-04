@@ -49,8 +49,6 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
-    # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-
     def __init__(self):
         """Initialize flow."""
         self._host = None
@@ -161,6 +159,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self._get_and_check_device_info()
 
             await self.async_set_unique_id(self._id)
+            await self._abort_if_unique_id_configured()
 
             return self._get_entry()
 
