@@ -287,6 +287,74 @@ async def test_import_exception(hass, ezviz_config_flow):
     assert result["reason"] == "unknown"
 
 
+async def test_discover_exception_step1(
+    hass,
+    ezviz_config_flow,
+):
+    """Test we handle unexpected exception on discovery."""
+
+    await async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DISCOVERY},
+        data={ATTR_SERIAL: "C66666", CONF_IP_ADDRESS: "test-ip"},
+    )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] == {}
+
+    await async_setup_component(hass, "persistent_notification", {})
+
+    # Test Step 1
+    ezviz_config_flow.side_effect = PyEzvizError
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "test-user",
+            CONF_PASSWORD: "test-pass",
+        },
+    )
+
+    assert result["type"] == RESULT_TYPE_FORM
+
+    ezviz_config_flow.side_effect = requests.exceptions.ConnectionError
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "test-user",
+            CONF_PASSWORD: "test-pass",
+        },
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+
+    await async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DISCOVERY},
+        data={ATTR_SERIAL: "C66666", CONF_IP_ADDRESS: "test-ip"},
+    )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] == {}
+
+    await async_setup_component(hass, "persistent_notification", {})
+
+    ezviz_config_flow.side_effect = requests.exceptions.HTTPError
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "test-user",
+            CONF_PASSWORD: "test-pass",
+        },
+    )
+
+    assert result["type"] == RESULT_TYPE_FORM
+
+
 async def test_discover_exception_step3(
     hass,
     ezviz_config_flow,
