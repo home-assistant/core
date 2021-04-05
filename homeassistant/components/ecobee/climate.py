@@ -32,6 +32,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
+    PRECISION_TENTHS,
     STATE_ON,
     TEMP_FAHRENHEIT,
 )
@@ -378,6 +379,11 @@ class Thermostat(ClimateEntity):
     def temperature_unit(self):
         """Return the unit of measurement."""
         return TEMP_FAHRENHEIT
+
+    @property
+    def precision(self) -> float:
+        """Return the precision of the system."""
+        return PRECISION_TENTHS
 
     @property
     def current_temperature(self):
