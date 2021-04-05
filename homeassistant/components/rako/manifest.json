@@ -1,0 +1,11 @@
+{
+  "domain": "rako",
+  "name": "Rako",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/rako",
+  "requirements": ["python_rako==0.0.9"],
+  "codeowners": [
+    "@marengaz"
+  ],
+  "iot_class": "local_push"
+}

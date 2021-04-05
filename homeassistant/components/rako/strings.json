@@ -1,0 +1,19 @@
+{
+    "title": "Rako",
+    "config": {
+        "error": {
+            "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+        },
+        "step": {
+            "user": {
+                "title": "Rako Bridge Configuration",
+                "description": "If pre-populated, Bridge was auto-discovered!",
+                "data": {
+                    "host": "[%key:common::config_flow::data::ip%]",
+                    "port": "[%key:common::config_flow::data::port%]"
+                }
+            }
+        }
+    }
+}

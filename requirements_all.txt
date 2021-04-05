@@ -1954,6 +1954,9 @@ python_awair==0.2.1
 # homeassistant.components.swiss_public_transport
 python_opendata_transport==0.2.1
 
+# homeassistant.components.rako
+python_rako==0.0.9
+
 # homeassistant.components.egardia
 pythonegardia==1.0.40
 

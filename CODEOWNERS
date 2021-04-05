@@ -423,6 +423,7 @@ homeassistant/components/rainbird/* @konikvranik
 homeassistant/components/raincloud/* @vanstinator
 homeassistant/components/rainforest_eagle/* @gtdiehl @jcalbert
 homeassistant/components/rainmachine/* @bachya
+homeassistant/components/rako/* @marengaz
 homeassistant/components/random/* @fabaff
 homeassistant/components/recollect_waste/* @bachya
 homeassistant/components/recorder/* @home-assistant/core
