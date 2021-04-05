@@ -13,7 +13,6 @@ from typing import Any, Callable, cast
 import psutil
 import voluptuous as vol
 
-from homeassistant.helpers.dispatcher import async_dispatcher_connect, async_dispatcher_send
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_RESOURCES,
@@ -31,6 +30,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
@@ -344,7 +347,9 @@ class SystemMonitorSensor(SensorEntity):
         """When entity is added to hass."""
         await super().async_added_to_hass()
         self.async_on_remove(
-            async_dispatcher_connect(self.hass, SIGNAL_SYSTEMMONITOR_UPDATE, self.async_write_ha_state)
+            async_dispatcher_connect(
+                self.hass, SIGNAL_SYSTEMMONITOR_UPDATE, self.async_write_ha_state
+            )
         )
 
 
@@ -437,6 +442,8 @@ def _update(
             state = dt_util.as_local(
                 dt_util.utc_from_timestamp(psutil.boot_time())
             ).isoformat()
+        else:
+            state = data.state
     elif type_ == "load_1m":
         state = round(os.getloadavg()[0], 2)
     elif type_ == "load_5m":
