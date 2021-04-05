@@ -1,5 +1,5 @@
-"""Support for AVM Fritz!Box classes."""
-from collections import namedtuple
+"""Support for AVM FRITZ!Box classes."""
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 from typing import Any, Dict, Optional
@@ -33,7 +33,14 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-Device = namedtuple("Device", ["mac", "ip", "name"])
+
+@dataclass
+class Device:
+    """FRITZ!Box device class."""
+
+    mac: str
+    ip: str
+    name: str
 
 
 CONFIG_SCHEMA = vol.Schema(
@@ -122,7 +129,7 @@ class FritzBoxTools:
 
     def unload(self):
         """Unload FritzboxTools class."""
-        _LOGGER.debug("Unloading Fritz!Box router integration")
+        _LOGGER.debug("Unloading FRITZ!Box router integration")
         if self._cancel_scan is not None:
             self._cancel_scan()
             self._cancel_scan = None
@@ -149,12 +156,12 @@ class FritzBoxTools:
 
     @property
     def signal_device_new(self) -> str:
-        """Event specific per Fritzbox entry to signal new device."""
+        """Event specific per FRITZ!Box entry to signal new device."""
         return f"{DOMAIN}-device-new-{self._unique_id}"
 
     @property
     def signal_device_update(self) -> str:
-        """Event specific per Fritzbox entry to signal updates in devices."""
+        """Event specific per FRITZ!Box entry to signal updates in devices."""
         return f"{DOMAIN}-device-update-{self._unique_id}"
 
     def _update_info(self):
@@ -167,7 +174,7 @@ class FritzBoxTools:
     def scan_devices(self, now: Optional[datetime] = None) -> None:
         """Scan for new devices and return a list of found device ids."""
 
-        _LOGGER.debug("Checking devices for Fritz!Box router %s", self.host)
+        _LOGGER.debug("Checking devices for FRITZ!Box router %s", self.host)
 
         new_device = False
         for known_host in self._update_info():

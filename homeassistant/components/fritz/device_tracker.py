@@ -39,8 +39,8 @@ PLATFORM_SCHEMA = vol.All(
 async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
-    """Set up device tracker for Fritzbox component."""
-    _LOGGER.debug("Starting Fritzbox device tracker")
+    """Set up device tracker for FRITZ!Box component."""
+    _LOGGER.debug("Starting FRITZ!Box device tracker")
     router = hass.data[DOMAIN][entry.entry_id]
     tracked = set()
 
@@ -124,7 +124,7 @@ class FritzBoxTracker(ScannerEntity):
             "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
             "identifiers": {(DOMAIN, self.unique_id)},
             "name": self.name,
-            "manufacturer": "Frtiz!Box Tracked device",
+            "manufacturer": "FRITZ!Box Tracked device",
         }
 
     @property
