@@ -2,14 +2,9 @@
 import asyncio
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import Config, HomeAssistant
+from homeassistant.core import HomeAssistant
 
 PLATFORMS = ["sensor"]
-
-
-async def async_setup(hass: HomeAssistant, config: Config) -> bool:
-    """Component setup."""
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
