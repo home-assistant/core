@@ -118,11 +118,6 @@ def check_required_arg(value: Any) -> Any:
     for sensor in value:
         sensor_type = sensor[CONF_TYPE]
         sensor_arg = sensor.get(CONF_ARG)
-        _LOGGER.warning(
-            "check_required_arg: sensor_type=%s, data=%s",
-            sensor_type,
-            SENSOR_TYPES[sensor_type],
-        )
 
         if sensor_arg is None and SENSOR_TYPES[sensor_type][SENSOR_TYPE_MANDATORY_ARG]:  # type: ignore[index]
             raise vol.RequiredFieldInvalid(
