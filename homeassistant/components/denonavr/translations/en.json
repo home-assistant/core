@@ -38,7 +38,8 @@
                 "data": {
                     "show_all_sources": "Show all sources",
                     "zone2": "Set up Zone 2",
-                    "zone3": "Set up Zone 3"
+                    "zone3": "Set up Zone 3",
+                    "update_audyssey": "Update Audyssey settings"
                 },
                 "description": "Specify optional settings",
                 "title": "Denon AVR Network Receivers"
