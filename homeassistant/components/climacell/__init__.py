@@ -106,14 +106,35 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
     """Set up ClimaCell API from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
+    params = {}
     # If config entry options not set up, set them up
     if not config_entry.options:
-        hass.config_entries.async_update_entry(
-            config_entry,
-            options={
-                CONF_TIMESTEP: DEFAULT_TIMESTEP,
-            },
-        )
+        params["options"] = {
+            CONF_TIMESTEP: DEFAULT_TIMESTEP,
+        }
+    else:
+        # Use valid timestep if it's invalid
+        timestep = config_entry.options[CONF_TIMESTEP]
+        if timestep not in (1, 5, 15, 30):
+            if timestep <= 2:
+                timestep = 1
+            elif timestep <= 7:
+                timestep = 5
+            elif timestep <= 20:
+                timestep = 15
+            else:
+                timestep = 30
+            new_options = config_entry.options.copy()
+            new_options[CONF_TIMESTEP] = timestep
+            params["options"] = new_options
+    # Add API version if not found
+    if CONF_API_VERSION not in config_entry.data:
+        new_data = config_entry.data.copy()
+        new_data[CONF_API_VERSION] = 3
+        params["data"] = new_data
+
+    if params:
+        hass.config_entries.async_update_entry(config_entry, **params)
 
     api_class = ClimaCellV3 if config_entry.data[CONF_API_VERSION] == 3 else ClimaCellV4
     api = api_class(
@@ -160,47 +181,6 @@ async def async_unload_entry(
         hass.data.pop(DOMAIN)
 
     return unload_ok
-
-
-async def async_migrate_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry
-) -> bool:
-    """Migrate old entry."""
-    version = config_entry.version
-
-    _LOGGER.debug("Migrating from version %s", version)
-
-    # 1 -> 2: Added new config key to support multiple API versions and limited nowcast timesteps
-    if version == 1:
-        params = {}
-
-        # Add API version if not found
-        if CONF_API_VERSION not in config_entry.data:
-            new_data = config_entry.data.copy()
-            new_data[CONF_API_VERSION] = 3
-            params["data"] = new_data
-
-        # Use valid timestep if it's invalid
-        timestep = config_entry.options[CONF_TIMESTEP]
-        if timestep not in (1, 5, 15, 30):
-            if timestep <= 2:
-                timestep = 1
-            elif timestep <= 7:
-                timestep = 5
-            elif timestep <= 20:
-                timestep = 15
-            else:
-                timestep = 30
-            new_options = config_entry.options.copy()
-            new_options[CONF_TIMESTEP] = timestep
-            params["options"] = new_options
-
-        version = config_entry.version = 2
-        hass.config_entries.async_update_entry(config_entry, **params)
-
-    _LOGGER.info("Migration to version %s successful", version)
-
-    return True
 
 
 class ClimaCellDataUpdateCoordinator(DataUpdateCoordinator):

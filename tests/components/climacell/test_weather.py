@@ -69,7 +69,7 @@ async def _setup(hass: HomeAssistantType, config: Dict[str, Any]) -> State:
             domain=DOMAIN,
             data=data,
             unique_id=_get_unique_id(hass, data),
-            version=2,
+            version=1,
         )
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)

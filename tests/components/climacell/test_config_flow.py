@@ -177,7 +177,7 @@ async def test_options_flow(hass: HomeAssistantType) -> None:
         data=user_config,
         source=SOURCE_USER,
         unique_id=_get_unique_id(hass, user_config),
-        version=2,
+        version=1,
     )
     entry.add_to_hass(hass)
 

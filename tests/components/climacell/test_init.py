@@ -29,7 +29,7 @@ async def test_load_and_unload(
         domain=DOMAIN,
         data=data,
         unique_id=_get_unique_id(hass, data),
-        version=2,
+        version=1,
     )
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -51,7 +51,7 @@ async def test_v3_load_and_unload(
         domain=DOMAIN,
         data=data,
         unique_id=_get_unique_id(hass, data),
-        version=2,
+        version=1,
     )
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -78,7 +78,7 @@ async def test_migrate_timestep_1(
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert config_entry.version == 2
+    assert config_entry.version == 1
     assert (
         CONF_API_VERSION in config_entry.data
         and config_entry.data[CONF_API_VERSION] == 3
@@ -101,7 +101,7 @@ async def test_migrate_timestep_5(
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert config_entry.version == 2
+    assert config_entry.version == 1
     assert (
         CONF_API_VERSION in config_entry.data
         and config_entry.data[CONF_API_VERSION] == 3
@@ -124,7 +124,7 @@ async def test_migrate_timestep_15(
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert config_entry.version == 2
+    assert config_entry.version == 1
     assert (
         CONF_API_VERSION in config_entry.data
         and config_entry.data[CONF_API_VERSION] == 3
@@ -147,7 +147,7 @@ async def test_migrate_timestep_30(
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert config_entry.version == 2
+    assert config_entry.version == 1
     assert (
         CONF_API_VERSION in config_entry.data
         and config_entry.data[CONF_API_VERSION] == 3
