@@ -1,0 +1,23 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "Met Éireann",
+                "description": "Enter your location to use weather data from the Met Éireann Public Weather Forecast API",
+                "data": {
+                    "name": "Name",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "elevation": "Elevation (in meters)"
+                }
+            }
+        },
+        "error": {
+            "name_exists": "Location already exists"
+        },
+        "abort": {
+            "already_configured": "Location is already configured",
+            "unknown": "Unexpected error"
+        }
+    }
+}
