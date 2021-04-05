@@ -1,13 +1,21 @@
 """Support for Met Éireann weather service."""
 import logging
 
-from homeassistant.components.weather import WeatherEntity
+from homeassistant.components.weather import (
+    ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_PRECIPITATION,
+    ATTR_FORECAST_TEMP,
+    ATTR_FORECAST_TIME,
+    WeatherEntity,
+)
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
+    LENGTH_INCHES,
     LENGTH_METERS,
     LENGTH_MILES,
+    LENGTH_MILLIMETERS,
     PRESSURE_HPA,
     PRESSURE_INHG,
     TEMP_CELSIUS,
@@ -16,7 +24,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.pressure import convert as convert_pressure
 
-from .const import ATTRIBUTION, CONDITION_MAP, DEFAULT_NAME, DOMAIN
+from .const import ATTRIBUTION, CONDITION_MAP, DEFAULT_NAME, DOMAIN, FORECAST_MAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -127,16 +135,32 @@ class MetEireannWeather(CoordinatorEntity, WeatherEntity):
     def forecast(self):
         """Return the forecast array."""
         if self._hourly:
-            # Format the condition for hourly forecast items
-            for item in self.coordinator.data.hourly_forecast:
-                if "condition" in item:
-                    item["condition"] = format_condition(item["condition"])
-            return self.coordinator.data.hourly_forecast
-        # Format the condition for daily forecast items
-        for item in self.coordinator.data.daily_forecast:
-            if "condition" in item:
-                item["condition"] = format_condition(item["condition"])
-        return self.coordinator.data.daily_forecast
+            me_forecast = self.coordinator.data.hourly_forecast
+        else:
+            me_forecast = self.coordinator.data.daily_forecast
+        required_keys = {ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME}
+
+        ha_forecast = []
+
+        for item in me_forecast:
+            if not set(item).issuperset(required_keys):
+                continue
+            ha_item = {
+                k: item[v] for k, v in FORECAST_MAP.items() if item.get(v) is not None
+            }
+            if not self._is_metric and ATTR_FORECAST_PRECIPITATION in ha_item:
+                precip_inches = convert_distance(
+                    ha_item[ATTR_FORECAST_PRECIPITATION],
+                    LENGTH_MILLIMETERS,
+                    LENGTH_INCHES,
+                )
+                ha_item[ATTR_FORECAST_PRECIPITATION] = round(precip_inches, 2)
+            if ha_item.get(ATTR_FORECAST_CONDITION):
+                ha_item[ATTR_FORECAST_CONDITION] = format_condition(
+                    ha_item[ATTR_FORECAST_CONDITION]
+                )
+            ha_forecast.append(ha_item)
+        return ha_forecast
 
     @property
     def device_info(self):
