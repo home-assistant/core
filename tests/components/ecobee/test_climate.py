@@ -34,8 +34,6 @@ def ecobee_fixture():
             "fanMinOnTime": 10,
             "heatCoolMinDelta": 50,
             "holdAction": "nextTransition",
-            "hasHumidifier": True,
-            "humidifierMode": "off",
         },
         "equipmentStatus": "fan",
         "events": [
@@ -157,31 +155,9 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat):
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "heatPump2",
-        "humidifier_modes": ["off", "auto", "manual"],
-        "humidifier_mode": "off",
     } == thermostat.extra_state_attributes
 
     ecobee_fixture["equipmentStatus"] = "auxHeat2"
-    assert {
-        "fan": "off",
-        "climate_mode": "Climate1",
-        "fan_min_on_time": 10,
-        "equipment_running": "auxHeat2",
-        "humidifier_modes": ["off", "auto", "manual"],
-        "humidifier_mode": "off",
-    } == thermostat.extra_state_attributes
-
-    ecobee_fixture["settings"]["humidifierMode"] = "auto"
-    assert {
-        "fan": "off",
-        "climate_mode": "Climate1",
-        "fan_min_on_time": 10,
-        "equipment_running": "auxHeat2",
-        "humidifier_modes": ["off", "auto", "manual"],
-        "humidifier_mode": "auto",
-    } == thermostat.extra_state_attributes
-
-    ecobee_fixture["settings"]["hasHumidifier"] = False
     assert {
         "fan": "off",
         "climate_mode": "Climate1",
@@ -285,19 +261,6 @@ async def test_set_fan_min_on_time(thermostat, data):
     data.reset_mock()
     thermostat.set_fan_min_on_time(20)
     data.ecobee.set_fan_min_on_time.assert_has_calls([mock.call(1, 20)])
-
-
-async def test_set_humidifier_mode(thermostat, data):
-    """Test set humidifier mode setter."""
-    data.reset_mock()
-    thermostat.set_humidifier_mode("auto")
-    data.ecobee.set_humidifier_mode.assert_has_calls([mock.call(1, "auto")])
-    data.reset_mock()
-    thermostat.set_humidifier_mode("manual")
-    data.ecobee.set_humidifier_mode.assert_has_calls([mock.call(1, "manual")])
-    data.reset_mock()
-    thermostat.set_humidifier_mode("off")
-    data.ecobee.set_humidifier_mode.assert_has_calls([mock.call(1, "off")])
 
 
 async def test_resume_program(thermostat, data):
