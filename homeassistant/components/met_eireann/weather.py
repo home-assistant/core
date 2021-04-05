@@ -80,6 +80,11 @@ class MetEireannWeather(CoordinatorEntity, WeatherEntity):
         return f"{DEFAULT_NAME}{self._name_appendix}"
 
     @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return not self._hourly
+
+    @property
     def condition(self):
         """Return the current condition."""
         return format_condition(

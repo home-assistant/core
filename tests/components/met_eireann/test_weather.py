@@ -11,7 +11,7 @@ async def test_weather(hass, mock_weather):
         data={"name": "Somewhere", "latitude": 10, "longitude": 20, "elevation": 0},
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_entity_ids("weather")) == 2
+    assert len(hass.states.async_entity_ids("weather")) == 1
     assert len(mock_weather.mock_calls) == 4
 
     # Test we do not track config
