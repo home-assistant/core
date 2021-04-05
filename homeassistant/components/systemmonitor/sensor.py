@@ -249,7 +249,7 @@ async def async_setup_sensor_registry_updates(
                 data.update_time = update_time
                 data.last_exception = None
 
-    async def async_update_data(*_: Any) -> None:
+    async def _async_update_data(*_: Any) -> None:
         """Update all sensors in one executor jump."""
         if _update_lock.locked():
             _LOGGER.warning(
@@ -261,15 +261,15 @@ async def async_setup_sensor_registry_updates(
         async with _update_lock:
             await hass.async_add_executor_job(_update_sensors)
 
-    polling_interval_remover = async_track_time_interval(
-        hass, async_update_data, scan_interval
-    )
+    polling_remover = async_track_time_interval(hass, _async_update_data, scan_interval)
 
     @callback
     def _async_stop_polling(*_: Any) -> None:
-        polling_interval_remover()
+        polling_remover()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_polling)
+
+    await _async_update_data()
 
 
 class SystemMonitorSensor(SensorEntity):
@@ -321,6 +321,11 @@ class SystemMonitorSensor(SensorEntity):
     def available(self) -> bool:
         """Return True if entity is available."""
         return self.data.last_exception is None
+
+    @property
+    def should_poll(self) -> bool:
+        """Entity does not poll."""
+        return False
 
     @property
     def sensor_type(self) -> list:
