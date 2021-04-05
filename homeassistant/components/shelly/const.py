@@ -6,6 +6,9 @@ DEVICE = "device"
 DOMAIN = "shelly"
 REST = "rest"
 
+CONF_COAP_PORT = "coap_port"
+DEFAULT_COAP_PORT = 5683
+
 # Used in "_async_update_data" as timeout for polling data from devices.
 POLLING_TIMEOUT_SEC = 18
 
@@ -42,9 +45,8 @@ EVENT_SHELLY_CLICK = "shelly.click"
 ATTR_CLICK_TYPE = "click_type"
 ATTR_CHANNEL = "channel"
 ATTR_DEVICE = "device"
-CONF_COAP_PORT = "coap_port"
+
 CONF_SUBTYPE = "subtype"
-DEFAULT_COAP_PORT = 5683
 
 BASIC_INPUTS_EVENTS_TYPES = {
     "single",
