@@ -4,16 +4,9 @@ import logging
 
 import meteireann
 
-from homeassistant.const import (
-    CONF_ELEVATION,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    LENGTH_FEET,
-    LENGTH_METERS,
-)
+from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util.distance import convert as convert_distance
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
@@ -27,18 +20,11 @@ async def async_setup_entry(hass, config_entry):
     """Set up Met Éireann as config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    elevation = config_entry.data[CONF_ELEVATION]
-
-    if not hass.config.units.is_metric:
-        elevation = int(
-            round(convert_distance(elevation, LENGTH_FEET, LENGTH_METERS))
-        )  # pragma: no cover
-
     raw_weather_data = meteireann.WeatherData(
         async_get_clientsession(hass),
         latitude=config_entry.data[CONF_LATITUDE],
         longitude=config_entry.data[CONF_LONGITUDE],
-        altitude=elevation,
+        altitude=config_entry.data[CONF_ELEVATION],
     )
 
     weather_data = MetEireannWeatherData(hass, config_entry.data, raw_weather_data)
