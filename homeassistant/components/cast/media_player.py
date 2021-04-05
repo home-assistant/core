@@ -858,7 +858,19 @@ class DynamicCastGroup:
         self.mz_mgr = self.hass.data[CAST_MULTIZONE_MANAGER_KEY]
 
         self._status_listener = CastStatusListener(self, chromecast, self.mz_mgr, True)
+        _LOGGER.debug(
+            "[%s %s] ABOUT TO START Connecting to cast device by service %s",
+            "Dynamic group",
+            self._cast_info.friendly_name,
+            self.services,
+        )
         self._chromecast.start()
+        _LOGGER.debug(
+            "[%s %s] FINISHED START Connecting to cast device by service %s",
+            "Dynamic group",
+            self._cast_info.friendly_name,
+            self.services,
+        )
 
     async def _async_disconnect(self):
         """Disconnect Chromecast object if it is set."""
