@@ -343,9 +343,13 @@ def _update(
 ) -> tuple[str | None, str | None, datetime.datetime | None]:
     """Get the latest system information."""
     argument = data.argument
+
     last_state = data.state
     last_value = data.value
     last_update_time = data.update_time
+
+    value = None
+    last_update_time = None
 
     if type_ == "disk_use_percent":
         state = psutil.disk_usage(argument).percent
