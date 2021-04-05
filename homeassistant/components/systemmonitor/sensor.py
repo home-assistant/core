@@ -13,6 +13,7 @@ from typing import Any, Callable, cast
 import psutil
 import voluptuous as vol
 
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, async_dispatcher_send
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_RESOURCES,
@@ -51,6 +52,7 @@ SENSOR_TYPE_ICON = 2
 SENSOR_TYPE_DEVICE_CLASS = 3
 SENSOR_TYPE_MANDATORY_ARG = 4
 
+SIGNAL_SYSTEMMONITOR_UPDATE = "systemmonitor_update"
 
 # Schema: [name, unit of measurement, icon, device class, flag if mandatory arg]
 SENSOR_TYPES = {
@@ -267,6 +269,7 @@ async def async_setup_sensor_registry_updates(
 
         async with _update_lock:
             await hass.async_add_executor_job(_update_sensors)
+            async_dispatcher_send(hass, SIGNAL_SYSTEMMONITOR_UPDATE)
 
     polling_remover = async_track_time_interval(hass, _async_update_data, scan_interval)
 
@@ -343,6 +346,13 @@ class SystemMonitorSensor(SensorEntity):
     def data(self) -> SensorData:
         """Return registry entry for the data."""
         return self._sensor_registry[self._type]
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, SIGNAL_SYSTEMMONITOR_UPDATE, self.async_write_ha_state)
+        )
 
 
 def _update(
