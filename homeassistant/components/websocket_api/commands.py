@@ -279,7 +279,7 @@ async def handle_manifest_get(hass, connection, msg):
         connection.send_error(msg["id"], const.ERR_NOT_FOUND, "Integration not found")
 
 
-@decorators.websocket_command({vol.Required("type"): "integration/setup"})
+@decorators.websocket_command({vol.Required("type"): "integration/setup_info"})
 @decorators.async_response
 async def handle_integration_setup(hass, connection, msg):
     """Handle integrations command."""
