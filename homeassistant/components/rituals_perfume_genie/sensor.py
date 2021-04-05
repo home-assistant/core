@@ -1,9 +1,12 @@
 """Support for Rituals Perfume Genie sensors."""
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
+    ATTR_BATTERY_LEVEL,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_SIGNAL_STRENGTH,
+    PERCENTAGE,
 )
+from homeassistant.helpers.icon import icon_for_battery_level
 
 from .const import COORDINATORS, DEVICES, DOMAIN, HUB
 from .entity import SENSORS, DiffuserEntity
@@ -92,18 +95,27 @@ class DiffuserBatterySensor(DiffuserEntity):
     @property
     def icon(self):
         """Return the battery sensor icon."""
-        return {
-            "battery-charge.png": "mdi:battery-charging",
-            "battery-full.png": "mdi:battery",
-            "battery-75.png": "mdi:battery-50",
-            "battery-50.png": "mdi:battery-20",
-            "battery-low.png": "mdi:battery-alert",
-        }[self.coordinator.data[HUB][SENSORS][BATTERY][ICON]]
+        return icon_for_battery_level(battery_level=self.state, charging=self._charging)
 
     @property
     def state(self):
         """Return the state of the battery sensor."""
-        return self.coordinator.data[HUB][SENSORS][BATTERY][TITLE]
+        # Use ICON because TITLE may change in the future.
+        # ICON filename does not match the image.
+        return {
+            "battery-charge.png": 100,
+            "battery-full.png": 100,
+            "battery-75.png": 50,
+            "battery-50.png": 25,
+            "battery-low.png": 10,
+        }[self.coordinator.data[HUB][SENSORS][BATTERY][ICON]]
+
+    @property
+    def _charging(self):
+        """Return battery charging state."""
+        return bool(
+            self.coordinator.data[HUB][SENSORS][BATTERY][ID] == BATTERY_CHARGING_ID
+        )
 
     @property
     def device_class(self):
@@ -114,9 +126,14 @@ class DiffuserBatterySensor(DiffuserEntity):
     def extra_state_attributes(self):
         """Return the battery state attributes."""
         return {
-            ATTR_BATTERY_CHARGING: self.coordinator.data[HUB][SENSORS][BATTERY][ID]
-            == BATTERY_CHARGING_ID
+            ATTR_BATTERY_LEVEL: self.coordinator.data[HUB][SENSORS][BATTERY][TITLE],
+            ATTR_BATTERY_CHARGING: self._charging,
         }
+
+    @property
+    def unit_of_measurement(self):
+        """Return the battery unit of measurement."""
+        return PERCENTAGE
 
 
 class DiffuserWifiSensor(DiffuserEntity):
