@@ -72,7 +72,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         return False
 
     hass.data.setdefault(DOMAIN, {DATA_FRITZ_TOOLS_INSTANCE: {}, CONF_DEVICES: set()})
-    hass.data[DOMAIN][DATA_FRITZ_TOOLS_INSTANCE][entry.entry_id] = fritz_tools
+    hass.data[DOMAIN][entry.entry_id] = fritz_tools
 
     # Load the other platforms like switch
     for domain in SUPPORTED_DOMAINS:
