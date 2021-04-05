@@ -131,10 +131,7 @@ class PlenticoreUpdateCoordinator(DataUpdateCoordinator):
             logger=logger,
             name=name,
             update_interval=update_inverval,
-            update_method=self._fetch_data,
         )
-        # cache for the fetched data
-        self._data = {}
         # data ids to poll
         self._fetch = defaultdict(list)
         self._plenticore = plenticore
@@ -154,14 +151,11 @@ class PlenticoreUpdateCoordinator(DataUpdateCoordinator):
         """Stop fetching the given data (module-id and data-id)."""
         self._fetch[module_id].remove(data_id)
 
-    async def _fetch_data(self) -> Dict[str, Dict[str, str]]:
-        raise NotImplementedError()
-
 
 class ProcessDataUpdateCoordinator(PlenticoreUpdateCoordinator):
     """Implementation of PlenticoreUpdateCoordinator for process data."""
 
-    async def _fetch_data(self) -> Dict[str, Dict[str, str]]:
+    async def _async_update_data(self) -> Dict[str, Dict[str, str]]:
         client = self._plenticore.client
 
         if not self._fetch or client is None:
@@ -184,7 +178,7 @@ class ProcessDataUpdateCoordinator(PlenticoreUpdateCoordinator):
 class SettingDataUpdateCoordinator(PlenticoreUpdateCoordinator):
     """Implementation of PlenticoreUpdateCoordinator for settings data."""
 
-    async def _fetch_data(self) -> Dict[str, Dict[str, str]]:
+    async def _async_update_data(self) -> Dict[str, Dict[str, str]]:
         client = self._plenticore.client
 
         if not self._fetch or client is None:

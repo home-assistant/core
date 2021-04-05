@@ -3,6 +3,7 @@ from datetime import timedelta
 import logging
 from typing import Any, Callable, Dict, Optional
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
@@ -97,7 +98,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class PlenticoreDataSensor(CoordinatorEntity):
+class PlenticoreDataSensor(CoordinatorEntity, SensorEntity):
     """Representation of a Plenticore data Sensor."""
 
     def __init__(
@@ -153,7 +154,7 @@ class PlenticoreDataSensor(CoordinatorEntity):
     @property
     def unique_id(self) -> str:
         """Return the unique id of this Sensor Entity."""
-        return f"{self.entry_id}_{self.data_id}"
+        return f"{self.entry_id}_{self.module_id}_{self.data_id}"
 
     @property
     def name(self) -> str:
