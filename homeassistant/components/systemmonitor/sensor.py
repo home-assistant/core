@@ -442,6 +442,8 @@ def _update(
             state = dt_util.as_local(
                 dt_util.utc_from_timestamp(psutil.boot_time())
             ).isoformat()
+        else:
+            state = data.state
     elif type_ == "load_1m":
         state = round(os.getloadavg()[0], 2)
     elif type_ == "load_5m":
