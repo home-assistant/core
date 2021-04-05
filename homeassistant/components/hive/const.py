@@ -6,8 +6,17 @@ CONF_CODE = "2fa"
 CONFIG_ENTRY_VERSION = 1
 DEFAULT_NAME = "Hive"
 DOMAIN = "hive"
-PLATFORMS = ["binary_sensor", "climate", "light", "sensor", "switch", "water_heater"]
+PLATFORMS = [
+    "alarm_control_panel",
+    "binary_sensor",
+    "climate",
+    "light",
+    "sensor",
+    "switch",
+    "water_heater",
+]
 PLATFORM_LOOKUP = {
+    "alarm_control_panel": "alarm_control_panel",
     "binary_sensor": "binary_sensor",
     "climate": "climate",
     "light": "light",
