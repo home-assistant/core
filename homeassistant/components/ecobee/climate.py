@@ -394,14 +394,14 @@ class Thermostat(ClimateEntity):
     def target_temperature_low(self):
         """Return the lower bound temperature we try to reach."""
         if self.hvac_mode == HVAC_MODE_HEAT_COOL:
-            return self.thermostat["runtime"]["desiredHeat"] / 10.0
+            return round(self.thermostat["runtime"]["desiredHeat"] / 10.0)
         return None
 
     @property
     def target_temperature_high(self):
         """Return the upper bound temperature we try to reach."""
         if self.hvac_mode == HVAC_MODE_HEAT_COOL:
-            return self.thermostat["runtime"]["desiredCool"] / 10.0
+            return round(self.thermostat["runtime"]["desiredCool"] / 10.0)
         return None
 
     @property
@@ -435,9 +435,9 @@ class Thermostat(ClimateEntity):
         if self.hvac_mode == HVAC_MODE_HEAT_COOL:
             return None
         if self.hvac_mode == HVAC_MODE_HEAT:
-            return self.thermostat["runtime"]["desiredHeat"] / 10.0
+            return round(self.thermostat["runtime"]["desiredHeat"] / 10.0)
         if self.hvac_mode == HVAC_MODE_COOL:
-            return self.thermostat["runtime"]["desiredCool"] / 10.0
+            return round(self.thermostat["runtime"]["desiredCool"] / 10.0)
         return None
 
     @property
