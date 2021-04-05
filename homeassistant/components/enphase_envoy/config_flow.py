@@ -67,12 +67,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             schema[vol.Required(CONF_HOST)] = str
 
-        schema.update(
-            {
-                vol.Optional(CONF_USERNAME, default=self.username or "envoy"): str,
-                vol.Optional(CONF_PASSWORD, default=""): str,
-            }
-        )
+        schema[vol.Optional(CONF_USERNAME, default=self.username or "envoy")] = str
+        schema[vol.Optional(CONF_PASSWORD, default="")] = str
         return vol.Schema(schema)
 
     async def async_step_import(self, import_config):
