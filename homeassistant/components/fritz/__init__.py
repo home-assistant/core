@@ -85,7 +85,10 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigType) -> bool:
     """Unload FRITZ!Box Tools config entry."""
-    hass.data[DOMAIN][DATA_FRITZ_TOOLS_INSTANCE].pop(entry.entry_id)
+    fritzbox: FritzBoxTools = hass.data[DOMAIN][entry.entry_id]
+    fritzbox.unload()
+    
+    hass.data[DOMAIN].pop(entry.entry_id)
 
     for domain in SUPPORTED_DOMAINS:
         await hass.config_entries.async_forward_entry_unload(entry, domain)
