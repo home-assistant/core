@@ -21,6 +21,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.pressure import convert as convert_pressure
 
@@ -170,6 +171,11 @@ class MetEireannWeather(CoordinatorEntity, WeatherEntity):
                 ha_item[ATTR_FORECAST_CONDITION] = format_condition(
                     ha_item[ATTR_FORECAST_CONDITION]
                 )
+            # Convert timestamp to UTC
+            if ha_item.get(ATTR_FORECAST_TIME):
+                ha_item[ATTR_FORECAST_TIME] = dt_util.as_utc(
+                    ha_item.get(ATTR_FORECAST_TIME)
+                ).isoformat()
             ha_forecast.append(ha_item)
         return ha_forecast
 
