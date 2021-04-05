@@ -60,6 +60,7 @@ FLOWS = [
     "econet",
     "elgato",
     "elkm1",
+    "emonitor",
     "emulated_roku",
     "enocean",
     "enphase_envoy",
