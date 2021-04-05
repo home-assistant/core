@@ -18,7 +18,8 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "auth_missing": "Home Assistant is not authorized to connect to this Samsung TV. Please check your TV's settings to authorize Home Assistant.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "not_supported": "This Samsung TV device is currently not supported."
+      "not_supported": "This Samsung TV device is currently not supported.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   }
 }

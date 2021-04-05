@@ -37,6 +37,7 @@ from .const import (
     RESULT_NOT_SUCCESSFUL,
     RESULT_NOT_SUPPORTED,
     RESULT_SUCCESS,
+    RESULT_UNKNOWN_HOST,
     WEBSOCKET_PORTS,
 )
 
@@ -152,9 +153,12 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         if user_input is not None:
-            self._host = await self.hass.async_add_executor_job(
-                socket.gethostbyname, user_input[CONF_HOST]
-            )
+            try:
+                self._host = await self.hass.async_add_executor_job(
+                    socket.gethostbyname, user_input[CONF_HOST]
+                )
+            except socket.gaierror:
+                raise data_entry_flow.AbortFlow(RESULT_UNKNOWN_HOST)
             self._name = user_input[CONF_NAME]
             self._title = self._name
 
