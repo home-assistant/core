@@ -2,7 +2,7 @@
 
 DOMAIN = "fritz"
 DOMAIN_FRITZ = "fritz"
-DATA_FRITZ_TOOLS_INSTANCE = "fritzbox_tools_instance"
+
 SUPPORTED_DOMAINS = ["device_tracker"]
 
 ATTR_HOST = "host"

@@ -53,7 +53,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
         except FritzConnectionException:
             return ERROR_CONNECTION_ERROR
 
-        return False
+        return None
 
     async def async_step_ssdp(self, discovery_info):
         """Handle a flow initialized by discovery."""

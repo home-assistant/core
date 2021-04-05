@@ -14,14 +14,7 @@ from homeassistant.const import (
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .common import FritzBoxTools
-from .const import (
-    DATA_FRITZ_TOOLS_INSTANCE,
-    DEFAULT_HOST,
-    DEFAULT_PORT,
-    DOMAIN,
-    ERROR_CONNECTION_ERROR,
-    SUPPORTED_DOMAINS,
-)
+from .const import DEFAULT_HOST, DEFAULT_PORT, DOMAIN, SUPPORTED_DOMAINS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +50,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         password=password,
     )
 
-    error = False
     try:
         await fritz_tools.async_setup()
     except FritzConnectionException:
@@ -71,7 +63,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         )
         return False
 
-    hass.data.setdefault(DOMAIN, {DATA_FRITZ_TOOLS_INSTANCE: {}, CONF_DEVICES: set()})
+    hass.data.setdefault(DOMAIN, {CONF_DEVICES: set()})
     hass.data[DOMAIN][entry.entry_id] = fritz_tools
 
     # Load the other platforms like switch
@@ -87,7 +79,7 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigType) -> bool
     """Unload FRITZ!Box Tools config entry."""
     fritzbox: FritzBoxTools = hass.data[DOMAIN][entry.entry_id]
     fritzbox.unload()
-    
+
     hass.data[DOMAIN].pop(entry.entry_id)
 
     for domain in SUPPORTED_DOMAINS:

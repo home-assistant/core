@@ -15,7 +15,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .common import FritzBoxTools
-from .const import DATA_FRITZ_TOOLS_INSTANCE, DEFAULT_DEVICE_NAME, DOMAIN, DOMAIN_FRITZ
+from .const import DEFAULT_DEVICE_NAME, DOMAIN, DOMAIN_FRITZ
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up device tracker for Fritzbox component."""
     _LOGGER.debug("Starting Fritzbox device tracker")
-    router = hass.data[DOMAIN_FRITZ][DATA_FRITZ_TOOLS_INSTANCE][entry.entry_id]
+    router = hass.data[DOMAIN_FRITZ][entry.entry_id]
     tracked = set()
 
     @callback
