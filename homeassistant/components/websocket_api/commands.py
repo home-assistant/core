@@ -4,6 +4,7 @@ import asyncio
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_READ
+from homeassistant.bootstrap import SIGNAL_BOOTSTRAP_INTEGRATONS
 from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
 from homeassistant.const import EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL
 from homeassistant.core import DOMAIN as HASS_DOMAIN, callback
@@ -14,10 +15,11 @@ from homeassistant.exceptions import (
     Unauthorized,
 )
 from homeassistant.helpers import config_validation as cv, entity, template
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import TrackTemplate, async_track_template_result
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.loader import IntegrationNotFound, async_get_integration
-from homeassistant.setup import async_get_loaded_integrations
+from homeassistant.setup import DATA_SETUP_TIME, async_get_loaded_integrations
 
 from . import const, decorators, messages
 
@@ -34,9 +36,11 @@ def async_register_commands(hass, async_reg):
     async_reg(hass, handle_get_services)
     async_reg(hass, handle_get_states)
     async_reg(hass, handle_manifest_get)
+    async_reg(hass, handle_integration_setup_info)
     async_reg(hass, handle_manifest_list)
     async_reg(hass, handle_ping)
     async_reg(hass, handle_render_template)
+    async_reg(hass, handle_subscribe_bootstrap_integrations)
     async_reg(hass, handle_subscribe_events)
     async_reg(hass, handle_subscribe_trigger)
     async_reg(hass, handle_test_condition)
@@ -90,6 +94,27 @@ def handle_subscribe_events(hass, connection, msg):
 
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
         event_type, forward_events
+    )
+
+    connection.send_message(messages.result_message(msg["id"]))
+
+
+@callback
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "subscribe_bootstrap_integrations",
+    }
+)
+def handle_subscribe_bootstrap_integrations(hass, connection, msg):
+    """Handle subscribe bootstrap integrations command."""
+
+    @callback
+    def forward_bootstrap_integrations(message):
+        """Forward bootstrap integrations to websocket."""
+        connection.send_message(messages.result_message(msg["id"], message))
+
+    connection.subscriptions[msg["id"]] = async_dispatcher_connect(
+        hass, SIGNAL_BOOTSTRAP_INTEGRATONS, forward_bootstrap_integrations
     )
 
     connection.send_message(messages.result_message(msg["id"]))
@@ -236,6 +261,19 @@ async def handle_manifest_get(hass, connection, msg):
         connection.send_result(msg["id"], integration.manifest)
     except IntegrationNotFound:
         connection.send_error(msg["id"], const.ERR_NOT_FOUND, "Integration not found")
+
+
+@decorators.websocket_command({vol.Required("type"): "integration/setup_info"})
+@decorators.async_response
+async def handle_integration_setup_info(hass, connection, msg):
+    """Handle integrations command."""
+    connection.send_result(
+        msg["id"],
+        [
+            {"domain": integration, "seconds": timedelta.total_seconds()}
+            for integration, timedelta in hass.data[DATA_SETUP_TIME].items()
+        ],
+    )
 
 
 @callback
