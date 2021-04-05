@@ -29,8 +29,6 @@ def validate_config_entry_fixture():
 def bypass_setup_fixture():
     """Bypass entry setup."""
     with patch(
-        "homeassistant.components.waze_travel_time.async_setup", return_value=True
-    ), patch(
         "homeassistant.components.waze_travel_time.async_setup_entry",
         return_value=True,
     ):
