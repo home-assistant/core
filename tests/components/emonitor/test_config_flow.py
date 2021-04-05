@@ -31,8 +31,6 @@ async def test_form(hass):
         "homeassistant.components.emonitor.config_flow.Emonitor.async_get_status",
         return_value=_mock_emonitor(),
     ), patch(
-        "homeassistant.components.emonitor.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.emonitor.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -49,7 +47,6 @@ async def test_form(hass):
     assert result2["data"] == {
         "host": "1.2.3.4",
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -122,8 +119,6 @@ async def test_dhcp_can_confirm(hass):
     }
 
     with patch(
-        "homeassistant.components.emonitor.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.emonitor.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -138,7 +133,6 @@ async def test_dhcp_can_confirm(hass):
     assert result2["data"] == {
         "host": "1.2.3.4",
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
