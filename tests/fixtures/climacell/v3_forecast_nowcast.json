@@ -1,0 +1,782 @@
+[
+  {
+    "lat": 38.90694,
+    "lon": -77.03012,
+    "temp": {
+      "value": 44.14,
+      "units": "F"
+    },
+    "wind_speed": {
+      "value": 9.58,
+      "units": "mph"
+    },
+    "precipitation": {
+      "value": 0,
+      "units": "in/hr"
+    },
+    "wind_direction": {
+      "value": 320.22,
+      "units": "degrees"
+    },
+    "observation_time": {
+      "value": "2021-03-07T18:54:06.493Z"
+    },
+    "weather_code": {
+      "value": "clear"
+    }
+  },
+  {
+    "lat": 38.90694,
+    "lon": -77.03012,
+    "temp": {
+      "value": 44.17,
+      "units": "F"
+    },
+    "wind_speed": {
+      "value": 9.59,
+      "units": "mph"
+    },
+    "precipitation": {
+      "value": 0,
+      "units": "in/hr"
+    },
+    "wind_direction": {
+      "value": 320.22,
+      "units": "degrees"
+    },
+    "observation_time": {
+      "value": "2021-03-07T18:55:06.493Z"
+    },
+    "weather_code": {
+      "value": "clear"
+    }
+  },
+  {
+    "lat": 38.90694,
+    "lon": -77.03012,
+    "temp": {
+      "value": 44.19,
+      "units": "F"
+    },
+    "wind_speed": {
+      "value": 9.6,
+      "units": "mph"
+    },
+    "precipitation": {
+      "value": 0,
+      "units": "in/hr"
+    },
+    "wind_direction": {
+      "value": 320.22,
+      "units": "degrees"
+    },
+    "observation_time": {
+      "value": "2021-03-07T18:56:06.493Z"
+    },
+    "weather_code": {
+      "value": "clear"
+    }
+  },
+  {
+    "lat": 38.90694,
+    "lon": -77.03012,
+    "temp": {
+      "value": 44.22,
+      "units": "F"
+    },
+    "wind_speed": {
+      "value": 9.61,
+      "units": "mph"
+    },
+    "precipitation": {
+      "value": 0,
+      "units": "in/hr"
+    },
+    "wind_direction": {
+      "value": 320.22,
+      "units": "degrees"
+    },
+    "observation_time": {
+      "value": "2021-03-07T18:57:06.493Z"
+    },
+    "weather_code": {
+      "value": "clear"
+    }
+  },
+  {
+    "lat": 38.90694,
+    "lon": -77.03012,
+    "temp": {
+      "value": 44.24,
+      "units": "F"
+    },
+    "wind_speed": {
+      "value": 9.62,
+      "units": "mph"
+    },
+    "precipitation": {
+      "value": 0,
+      "units": "in/hr"
+    },
+    "wind_direction": {
+      "value": 320.22,
+      "units": "degrees"
+    },
+    "observation_time": {
+      "value": "2021-03-07T18:58:06.493Z"
+    },
+    "weather_code": {
+      "value": "clear"
+    }
+  },
+  {
+    "lat": 38.90694,
+    "lon": -77.03012,
+    "temp": {
+      "value": 44.27,
+      "units": "F"
+    },
+    "wind_speed": {
+      "value": 9.64,
+      "units": "mph"
+    },
+    "precipitation": {
+      "value": 0,
+      "units": "in/hr"
+    },
+    "wind_direction": {
+      "value": 320.22,
+      "units": "degrees"
+    },
+    "observation_time": {
+      "value": "2021-03-07T18:59:06.493Z"
+    },
+    "weather_code": {
+      "value": "clear"
+    }
+  },
+  {
+    "lat": 38.90694,
+    "lon": -77.03012,
+    "temp": {
+      "value": 44.29,
+      "units": "F"
+    },
+    "wind_speed": {
+      "value": 9.65,
+      "units": "mph"
+    },
+    "precipitation": {
+      "value": 0,
+      "units": "in/hr"
+    },
+    "wind_direction": {
+      "value": 326.14,
+      "units": "degrees"
+    },
+    "observation_time": {
+      "value": "2021-03-07T19:00:06.493Z"
+    },
+    "weather_code": {
+      "value": "clear"
+    }
+  },
+  {
+    "lat": 38.90694,
+    "lon": -77.03012,
+    "temp": {
+      "value": 44.31,
+      "units": "F"
+    },
+    "wind_speed": {
+      "value": 9.64,
+      "units": "mph"
+    },
+    "precipitation": {
+      "value": 0,
+      "units": "in/hr"
+    },
+    "wind_direction": {
+      "value": 326.14,
+      "units": "degrees"
+    },
+    "observation_time": {
+      "value": "2021-03-07T19:01:06.493Z"
+    },
+    "weather_code": {
+      "value": "clear"
+    }
+  },
+  {
+    "lat": 38.90694,
+    "lon": -77.03012,
+    "temp": {
+      "value": 44.33,
+      "units": "F"
+    },
+    "wind_speed": {
+      "value": 9.63,
+      "units": "mph"
+    },
+    "precipitation": {
+      "value": 0,
+      "units": "in/hr"
+    },
+    "wind_direction": {
+      "value": 326.14,
+      "units": "degrees"
+    },
+    "observation_time": {
+      "value": "2021-03-07T19:02:06.493Z"
+    },
+    "weather_code": {
+      "value": "clear"
+    }
+  },
+  {
+    "lat": 38.90694,
+    "lon": -77.03012,
+    "temp": {
+      "value": 44.34,
+      "units": "F"
+    },
+    "wind_speed": {
+      "value": 9.63,
+      "units": "mph"
+    },
+    "precipitation": {
+      "value": 0,
+      "units": "in/hr"
+    },
+    "wind_direction": {
+      "value": 326.14,
+      "units": "degrees"
+    },
+    "observation_time": {
+      "value": "2021-03-07T19:03:06.493Z"
+    },
+    "weather_code": {
+      "value": "clear"
+    }
+  },
+  {
+    "lat": 38.90694,
+    "lon": -77.03012,
+    "temp": {
+      "value": 44.36,
+      "units": "F"
+    },
+    "wind_speed": {
+      "value": 9.62,
+      "units": "mph"
+    },
+    "precipitation": {
+      "value": 0,
+      "units": "in/hr"
+    },
+    "wind_direction": {
+      "value": 326.14,
+      "units": "degrees"
+    },
+    "observation_time": {
+      "value": "2021-03-07T19:04:06.493Z"
+    },
+    "weather_code": {
+      "value": "clear"
+    }
+  },
+  {
+    "lat": 38.90694,
+    "lon": -77.03012,
+    "temp": {
+      "value": 44.38,
+      "units": "F"
+    },
+    "wind_speed": {
+      "value": 9.61,
+      "units": "mph"
+    },
+    "precipitation": {
+      "value": 0,
+      "units": "in/hr"
+    },
+    "wind_direction": {
+      "value": 326.14,
+      "units": "degrees"
+    },
+    "observation_time": {
+      "value": "2021-03-07T19:05:06.493Z"
+    },
+    "weather_code": {
+      "value": "clear"
+    }
+  },
+  {
+    "lat": 38.90694,
+    "lon": -77.03012,
+    "temp": {
+      "value": 44.4,
+      "units": "F"
+    },
+    "wind_speed": {
+      "value": 9.61,
+      "units": "mph"
+    },
+    "precipitation": {
+      "value": 0,
+      "units": "in/hr"
+    },
+    "wind_direction": {
+      "value": 326.14,
+      "units": "degrees"
+    },
+    "observation_time": {
+      "value": "2021-03-07T19:06:06.493Z"
+    },
+    "weather_code": {
+      "value": "clear"
+    }
+  },
+  {
+    "lat": 38.90694,
+    "lon": -77.03012,
+    "temp": {
+      "value": 44.41,
+      "units": "F"
+    },
+    "wind_speed": {
+      "value": 9.6,
+      "units": "mph"
+    },
+    "precipitation": {
+      "value": 0,
+      "units": "in/hr"
+    },
+    "wind_direction": {
+      "value": 326.14,
+      "units": "degrees"
+    },
+    "observation_time": {
+      "value": "2021-03-07T19:07:06.493Z"
+    },
+    "weather_code": {
+      "value": "clear"
+    }
+  },
+  {
+    "lat": 38.90694,
+    "lon": -77.03012,
+    "temp": {
+      "value": 44.43,
+      "units": "F"
+    },
+    "wind_speed": {
+      "value": 9.6,
+      "units": "mph"
+    },
+    "precipitation": {
+      "value": 0,
+      "units": "in/hr"
+    },
+    "wind_direction": {
+      "value": 326.14,
+      "units": "degrees"
+    },
+    "observation_time": {
+      "value": "2021-03-07T19:08:06.493Z"
+    },
+    "weather_code": {
+      "value": "clear"
+    }
+  },
+  {
+    "lat": 38.90694,
+    "lon": -77.03012,
+    "temp": {
+      "value": 44.45,
+      "units": "F"
+    },
+    "wind_speed": {
+      "value": 9.59,
+      "units": "mph"
+    },
+    "precipitation": {
+      "value": 0,
+      "units": "in/hr"
+    },
+    "wind_direction": {
+      "value": 326.14,
+      "units": "degrees"
+    },
+    "observation_time": {
+      "value": "2021-03-07T19:09:06.493Z"
+    },
+    "weather_code": {
+      "value": "clear"
+    }
+  },
+  {
+    "lat": 38.90694,
+    "lon": -77.03012,
+    "temp": {
+      "value": 44.46,
+      "units": "F"
+    },
+    "wind_speed": {
+      "value": 9.58,
+      "units": "mph"
+    },
+    "precipitation": {
+      "value": 0,
+      "units": "in/hr"
+    },
+    "wind_direction": {
+      "value": 326.14,
+      "units": "degrees"
+    },
+    "observation_time": {
+      "value": "2021-03-07T19:10:06.493Z"
+    },
+    "weather_code": {
+      "value": "clear"
+    }
+  },
+  {
+    "lat": 38.90694,
+    "lon": -77.03012,
+    "temp": {
+      "value": 44.48,
+      "units": "F"
+    },
+    "wind_speed": {
+      "value": 9.58,
+      "units": "mph"
+    },
+    "precipitation": {
+      "value": 0,
+      "units": "in/hr"
+    },
+    "wind_direction": {
+      "value": 326.14,
+      "units": "degrees"
+    },
+    "observation_time": {
+      "value": "2021-03-07T19:11:06.493Z"
+    },
+    "weather_code": {
+      "value": "clear"
+    }
+  },
+  {
+    "lat": 38.90694,
+    "lon": -77.03012,
+    "temp": {
+      "value": 44.5,
+      "units": "F"
+    },
+    "wind_speed": {
+      "value": 9.57,
+      "units": "mph"
+    },
+    "precipitation": {
+      "value": 0,
+      "units": "in/hr"
+    },
+    "wind_direction": {
+      "value": 326.14,
+      "units": "degrees"
+    },
+    "observation_time": {
+      "value": "2021-03-07T19:12:06.493Z"
+    },
+    "weather_code": {
+      "value": "clear"
+    }
+  },
+  {
+    "lat": 38.90694,
+    "lon": -77.03012,
+    "temp": {
+      "value": 44.51,
+      "units": "F"
+    },
+    "wind_speed": {
+      "value": 9.57,
+      "units": "mph"
+    },
+    "precipitation": {
+      "value": 0,
+      "units": "in/hr"
+    },
+    "wind_direction": {
+      "value": 326.14,
+      "units": "degrees"
+    },
+    "observation_time": {
+      "value": "2021-03-07T19:13:06.493Z"
+    },
+    "weather_code": {
+      "value": "clear"
+    }
+  },
+  {
+    "lat": 38.90694,
+    "lon": -77.03012,
+    "temp": {
+      "value": 44.53,
+      "units": "F"
+    },
+    "wind_speed": {
+      "value": 9.56,
+      "units": "mph"
+    },
+    "precipitation": {
+      "value": 0,
+      "units": "in/hr"
+    },
+    "wind_direction": {
+      "value": 326.14,
+      "units": "degrees"
+    },
+    "observation_time": {
+      "value": "2021-03-07T19:14:06.493Z"
+    },
+    "weather_code": {
+      "value": "clear"
+    }
+  },
+  {
+    "lat": 38.90694,
+    "lon": -77.03012,
+    "temp": {
+      "value": 44.55,
+      "units": "F"
+    },
+    "wind_speed": {
+      "value": 9.55,
+      "units": "mph"
+    },
+    "precipitation": {
+      "value": 0,
+      "units": "in/hr"
+    },
+    "wind_direction": {
+      "value": 326.14,
+      "units": "degrees"
+    },
+    "observation_time": {
+      "value": "2021-03-07T19:15:06.493Z"
+    },
+    "weather_code": {
+      "value": "clear"
+    }
+  },
+  {
+    "lat": 38.90694,
+    "lon": -77.03012,
+    "temp": {
+      "value": 44.56,
+      "units": "F"
+    },
+    "wind_speed": {
+      "value": 9.55,
+      "units": "mph"
+    },
+    "precipitation": {
+      "value": 0,
+      "units": "in/hr"
+    },
+    "wind_direction": {
+      "value": 326.14,
+      "units": "degrees"
+    },
+    "observation_time": {
+      "value": "2021-03-07T19:16:06.493Z"
+    },
+    "weather_code": {
+      "value": "clear"
+    }
+  },
+  {
+    "lat": 38.90694,
+    "lon": -77.03012,
+    "temp": {
+      "value": 44.58,
+      "units": "F"
+    },
+    "wind_speed": {
+      "value": 9.54,
+      "units": "mph"
+    },
+    "precipitation": {
+      "value": 0,
+      "units": "in/hr"
+    },
+    "wind_direction": {
+      "value": 326.14,
+      "units": "degrees"
+    },
+    "observation_time": {
+      "value": "2021-03-07T19:17:06.493Z"
+    },
+    "weather_code": {
+      "value": "clear"
+    }
+  },
+  {
+    "lat": 38.90694,
+    "lon": -77.03012,
+    "temp": {
+      "value": 44.6,
+      "units": "F"
+    },
+    "wind_speed": {
+      "value": 9.54,
+      "units": "mph"
+    },
+    "precipitation": {
+      "value": 0,
+      "units": "in/hr"
+    },
+    "wind_direction": {
+      "value": 326.14,
+      "units": "degrees"
+    },
+    "observation_time": {
+      "value": "2021-03-07T19:18:06.493Z"
+    },
+    "weather_code": {
+      "value": "clear"
+    }
+  },
+  {
+    "lat": 38.90694,
+    "lon": -77.03012,
+    "temp": {
+      "value": 44.61,
+      "units": "F"
+    },
+    "wind_speed": {
+      "value": 9.53,
+      "units": "mph"
+    },
+    "precipitation": {
+      "value": 0,
+      "units": "in/hr"
+    },
+    "wind_direction": {
+      "value": 326.14,
+      "units": "degrees"
+    },
+    "observation_time": {
+      "value": "2021-03-07T19:19:06.493Z"
+    },
+    "weather_code": {
+      "value": "clear"
+    }
+  },
+  {
+    "lat": 38.90694,
+    "lon": -77.03012,
+    "temp": {
+      "value": 44.63,
+      "units": "F"
+    },
+    "wind_speed": {
+      "value": 9.52,
+      "units": "mph"
+    },
+    "precipitation": {
+      "value": 0,
+      "units": "in/hr"
+    },
+    "wind_direction": {
+      "value": 326.14,
+      "units": "degrees"
+    },
+    "observation_time": {
+      "value": "2021-03-07T19:20:06.493Z"
+    },
+    "weather_code": {
+      "value": "clear"
+    }
+  },
+  {
+    "lat": 38.90694,
+    "lon": -77.03012,
+    "temp": {
+      "value": 44.65,
+      "units": "F"
+    },
+    "wind_speed": {
+      "value": 9.52,
+      "units": "mph"
+    },
+    "precipitation": {
+      "value": 0,
+      "units": "in/hr"
+    },
+    "wind_direction": {
+      "value": 326.14,
+      "units": "degrees"
+    },
+    "observation_time": {
+      "value": "2021-03-07T19:21:06.493Z"
+    },
+    "weather_code": {
+      "value": "clear"
+    }
+  },
+  {
+    "lat": 38.90694,
+    "lon": -77.03012,
+    "temp": {
+      "value": 44.66,
+      "units": "F"
+    },
+    "wind_speed": {
+      "value": 9.51,
+      "units": "mph"
+    },
+    "precipitation": {
+      "value": 0,
+      "units": "in/hr"
+    },
+    "wind_direction": {
+      "value": 326.14,
+      "units": "degrees"
+    },
+    "observation_time": {
+      "value": "2021-03-07T19:22:06.493Z"
+    },
+    "weather_code": {
+      "value": "clear"
+    }
+  },
+  {
+    "lat": 38.90694,
+    "lon": -77.03012,
+    "temp": {
+      "value": 44.68,
+      "units": "F"
+    },
+    "wind_speed": {
+      "value": 9.51,
+      "units": "mph"
+    },
+    "precipitation": {
+      "value": 0,
+      "units": "in/hr"
+    },
+    "wind_direction": {
+      "value": 326.14,
+      "units": "degrees"
+    },
+    "observation_time": {
+      "value": "2021-03-07T19:23:06.493Z"
+    },
+    "weather_code": {
+      "value": "clear"
+    }
+  }
+]
