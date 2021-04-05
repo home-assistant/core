@@ -63,7 +63,7 @@ async def test_device_registry(hass, config_entry, config, soco):
 
 
 async def test_entity_basic(hass, config_entry, discover):
-    """Test discovery setup."""
+    """Test basic state and attributes."""
     await setup_platform(hass, config_entry, {})
 
     state = hass.states.get("media_player.zone_a")
@@ -72,5 +72,5 @@ async def test_entity_basic(hass, config_entry, discover):
     assert attributes["friendly_name"] == "Zone A"
     assert attributes["is_volume_muted"] is False
     assert attributes["night_sound"] is True
-    assert attributes["speech_enhance"] is False
+    assert attributes["speech_enhance"] is True
     assert attributes["volume_level"] == 0.19
