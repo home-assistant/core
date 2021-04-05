@@ -139,6 +139,7 @@ FLOWS = [
     "mazda",
     "melcloud",
     "met",
+    "met_eireann",
     "meteo_france",
     "metoffice",
     "mikrotik",
