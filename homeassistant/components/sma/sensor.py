@@ -1,11 +1,14 @@
 """SMA Solar Webconnect interface."""
+from __future__ import annotations
+
 import logging
+from typing import Any, Callable, Coroutine
 
 import pysma
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -14,8 +17,13 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import (
     CONF_CUSTOM,
@@ -33,7 +41,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def _check_sensor_schema(conf):
+def _check_sensor_schema(conf: dict[str, Any]) -> dict[str, Any]:
     """Check sensors and attributes are valid."""
     try:
         valid = [s.name for s in pysma.Sensors()]
@@ -85,7 +93,12 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigEntry,
+    async_add_entities: Callable[[], Coroutine],
+    discovery_info=None,
+) -> None:
     """Import the platform into a config entry."""
     _LOGGER.warning(
         "Loading SMA via platform setup is deprecated. "
@@ -99,7 +112,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: Callable[[], Coroutine],
+) -> None:
     """Set up SMA sensors."""
     sma_data = hass.data[DOMAIN][config_entry.entry_id]
 
@@ -123,7 +140,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class SMAsensor(CoordinatorEntity, SensorEntity):
     """Representation of a SMA sensor."""
 
-    def __init__(self, coordinator, config_entry_unique_id, device_info, pysma_sensor):
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        config_entry_unique_id: str,
+        device_info: dict[str, Any],
+        pysma_sensor: pysma.Sensor,
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._sensor = pysma_sensor
@@ -136,29 +159,29 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
         self._sensor.enabled = False
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor."""
         return self._sensor.name
 
     @property
-    def state(self):
+    def state(self) -> StateType:
         """Return the state of the sensor."""
         return self._sensor.value
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
         return self._sensor.unit
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return a unique identifier for this sensor."""
         return (
             f"{self._config_entry_unique_id}-{self._sensor.key}_{self._sensor.key_idx}"
         )
 
     @property
-    def device_info(self):
+    def device_info(self) -> dict[str, Any]:
         """Return the device information."""
         return {
             "identifiers": {(DOMAIN, self._config_entry_unique_id)},
@@ -168,16 +191,16 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
         }
 
     @property
-    def entity_registry_enabled_default(self):
+    def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return self._enabled_default
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
         self._sensor.enabled = True
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         await super().async_will_remove_from_hass()
         self._sensor.enabled = False

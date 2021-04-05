@@ -1,5 +1,8 @@
 """Config flow for the sma integration."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 import aiohttp
 import pysma
@@ -22,7 +25,9 @@ from .const import DOMAIN  # pylint: disable=unused-import
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_input(hass: core.HomeAssistant, data: dict):
+async def validate_input(
+    hass: core.HomeAssistant, data: dict[str, Any]
+) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
     session = async_get_clientsession(hass, verify_ssl=data[CONF_VERIFY_SSL])
 
@@ -49,7 +54,7 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize."""
         self._data = {
             CONF_HOST: vol.UNDEFINED,
@@ -62,7 +67,9 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             DEVICE_INFO: {},
         }
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """First step in config flow."""
         errors = {}
         if user_input is not None:
@@ -109,7 +116,9 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_config=None):
+    async def async_step_import(
+        self, import_config: dict[str, Any] | None
+    ) -> dict[str, Any]:
         """Import a config flow from configuration."""
         device_info = await validate_input(self.hass, import_config)
         config_entry_unique_id = device_info["serial"]

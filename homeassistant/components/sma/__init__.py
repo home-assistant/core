@@ -39,7 +39,8 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def _parse_legacy_options(entry, sensor_def):
+async def _parse_legacy_options(entry: ConfigEntry, sensor_def: pysma.Sensors) -> None:
+    """Parse the legacy CONF_SENSORS and CONF_CUSTOM configuration options."""
     # Add sensors from the custom config
     # Supports deprecated yaml config from platform setup
     sensor_def.add(
@@ -65,7 +66,10 @@ async def _parse_legacy_options(entry, sensor_def):
             s.enabled = s.name in config_sensors
 
 
-async def _migrate_old_unique_ids(hass, entry, sensor_def):
+async def _migrate_old_unique_ids(
+    hass: HomeAssistant, entry: ConfigEntry, sensor_def: pysma.Sensors
+) -> None:
+    """Migrate legacy sensor entity_id format to new format."""
     entity_registry = er.async_get(hass)
 
     # Create list of all possible sensor names
@@ -168,7 +172,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = all(
         await asyncio.gather(
