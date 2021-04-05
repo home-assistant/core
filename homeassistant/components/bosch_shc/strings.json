@@ -3,7 +3,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Set up your Bosch SHC instance to allow monitoring and control.",
+        "description": "Set up your Bosch Smart Home Controller to allow monitoring and control with Home Assistant.",
         "title": "SHC authentication parameters",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
@@ -11,12 +11,11 @@
       },
       "credentials": {
         "data": {
-          "ssl_certificate": "SSL certificate public key",
-          "ssl_key": "SSL certificate private key"
+          "password": "Password of the Smart Home Controller"
         }
       },
       "confirm_discovery": {
-        "description": "Do you want to set up the {model} at {host}?"
+        "description": "Please press the Bosch Smart Home Controller's front-side button until LED starts flashing.\nReady to continue to set up {model} @ {host} with Home Assistant?"
       }
     },
     "error": {

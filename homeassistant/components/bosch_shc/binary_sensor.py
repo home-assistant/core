@@ -45,9 +45,9 @@ class ShutterContactSensor(SHCEntity, BinarySensorEntity):
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
         switcher = {
-            SHCShutterContact.DeviceClass.ENTRANCE_DOOR: DEVICE_CLASS_DOOR,
-            SHCShutterContact.DeviceClass.REGULAR_WINDOW: DEVICE_CLASS_WINDOW,
-            SHCShutterContact.DeviceClass.FRENCH_WINDOW: DEVICE_CLASS_DOOR,
-            SHCShutterContact.DeviceClass.GENERIC: DEVICE_CLASS_WINDOW,
+            "ENTRANCE_DOOR": DEVICE_CLASS_DOOR,
+            "REGULAR_WINDOW": DEVICE_CLASS_WINDOW,
+            "FRENCH_WINDOW": DEVICE_CLASS_DOOR,
+            "GENERIC": DEVICE_CLASS_WINDOW,
         }
         return switcher.get(self._device.device_class, DEVICE_CLASS_WINDOW)

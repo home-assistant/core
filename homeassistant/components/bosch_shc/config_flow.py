@@ -1,19 +1,28 @@
 """Config flow for Bosch Smart Home Controller integration."""
 import logging
+from os import makedirs
 
-from boschshcpy import SHCSession
+from boschshcpy import SHCRegisterClient, SHCSession
 from boschshcpy.exceptions import (
     SHCAuthenticationError,
     SHCConnectionError,
     SHCmDNSError,
+    SHCRegistrationError,
+    SHCSessionError,
 )
 import voluptuous as vol
 
 from homeassistant import config_entries, core
 from homeassistant.components.zeroconf import async_get_instance
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TOKEN
 
-from .const import CONF_SSL_CERTIFICATE, CONF_SSL_KEY
+from .const import (
+    CONF_HOSTNAME,
+    CONF_SHC_CERT,
+    CONF_SHC_KEY,
+    CONF_SSL_CERTIFICATE,
+    CONF_SSL_KEY,
+)
 from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +34,7 @@ HOST_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: core.HomeAssistant, host, data):
+async def validate_input(hass: core.HomeAssistant, host, cert, key):
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -36,8 +45,8 @@ async def validate_input(hass: core.HomeAssistant, host, data):
     session = await hass.async_add_executor_job(
         SHCSession,
         host,
-        data[CONF_SSL_CERTIFICATE],
-        data[CONF_SSL_KEY],
+        cert,
+        key,
         True,
         zeroconf,
     )
@@ -52,6 +61,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
     info = None
     host = None
+    hostname = None
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -69,7 +79,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(info["mac"])
+                await self.async_set_unique_id(info["unique_id"])
                 self._abort_if_unique_id_configured({CONF_HOST: host})
                 self.host = host
                 return await self.async_step_credentials()
@@ -83,7 +93,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                await validate_input(self.hass, self.host, user_input)
+                helper = await self.hass.async_add_executor_job(
+                    SHCRegisterClient, self.host, user_input[CONF_PASSWORD]
+                )
+                result = await self.hass.async_add_executor_job(
+                    helper.register, self.host, "HomeAssistant"
+                )
+                if "token" in result:
+                    self.hostname = result["token"].split(":", 1)[1]
+
+                await self.hass.async_add_executor_job(self._write_tls_assets, result)
+                await validate_input(
+                    self.hass,
+                    self.host,
+                    self.hass.config.path(DOMAIN, CONF_SHC_CERT),
+                    self.hass.config.path(DOMAIN, CONF_SHC_KEY),
+                )
             except SHCAuthenticationError:
                 errors["base"] = "invalid_auth"
             except SHCConnectionError:
@@ -91,23 +116,36 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except SHCmDNSError:
                 _LOGGER.warning("Error looking up mDNS entry")
                 errors["base"] = "cannot_connect"
+            except SHCSessionError:
+                _LOGGER.warning("API call returned non-OK result. Wrong password?")
+                errors["base"] = "unknown"
+            except SHCRegistrationError:
+                _LOGGER.warning(
+                    "SHC not in pairing mode! Please press the Bosch Smart Home Controller button until LED starts blinking"
+                )
+                errors["base"] = "unknown"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
                     title=self.info["title"],
-                    data={**user_input, CONF_HOST: self.host},
+                    data={
+                        CONF_SSL_CERTIFICATE: self.hass.config.path(
+                            DOMAIN, CONF_SHC_CERT
+                        ),
+                        CONF_SSL_KEY: self.hass.config.path(DOMAIN, CONF_SHC_KEY),
+                        CONF_HOST: self.host,
+                        CONF_TOKEN: result["token"],
+                        CONF_HOSTNAME: self.hostname,
+                    },
                 )
         else:
             user_input = {}
 
         schema = vol.Schema(
             {
-                vol.Required(
-                    CONF_SSL_CERTIFICATE, default=user_input.get(CONF_SSL_CERTIFICATE)
-                ): str,
-                vol.Required(CONF_SSL_KEY, default=user_input.get(CONF_SSL_KEY)): str,
+                vol.Required(CONF_PASSWORD, default=user_input.get(CONF_PASSWORD)): str,
             }
         )
 
@@ -131,7 +169,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         local_name = zeroconf_info["hostname"][:-1]
         node_name = local_name[: -len(".local")]
 
-        await self.async_set_unique_id(info["mac"])
+        await self.async_set_unique_id(info["unique_id"])
         self._abort_if_unique_id_configured({CONF_HOST: zeroconf_info["host"]})
         self.host = zeroconf_info["host"]
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
@@ -167,4 +205,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         information = await self.hass.async_add_executor_job(session.mdns_info)
-        return {"title": information.name, "mac": information.mac_address}
+        return {"title": information.name, "unique_id": information.unique_id}
+
+    def _write_tls_assets(self, assets):
+        """Write the tls assets to disk."""
+        makedirs(self.hass.config.path(DOMAIN), exist_ok=True)
+        with open(self.hass.config.path(DOMAIN, CONF_SHC_CERT), "w") as file_handle:
+            file_handle.write(assets["cert"].decode("utf-8"))
+        with open(self.hass.config.path(DOMAIN, CONF_SHC_KEY), "w") as file_handle:
+            file_handle.write(assets["key"].decode("utf-8"))

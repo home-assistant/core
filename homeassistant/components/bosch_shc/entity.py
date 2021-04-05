@@ -8,18 +8,28 @@ from homeassistant.helpers.entity_registry import async_get_registry as get_ent_
 from .const import DOMAIN
 
 
+async def get_device_id(hass, device_id):
+    """Get device id from device registry."""
+    dev_registry = await get_dev_reg(hass)
+    device = dev_registry.async_get_device(
+        identifiers={(DOMAIN, device_id)}, connections=set()
+    )
+    if device is None:
+        return None
+    return device.id
+
+
 async def remove_devices(hass, entity, entry_id):
     """Get item that is removed from session."""
     await entity.async_remove()
     ent_registry = await get_ent_reg(hass)
     if entity.entity_id in ent_registry.entities:
         ent_registry.async_remove(entity.entity_id)
+
     dev_registry = await get_dev_reg(hass)
-    device = dev_registry.async_get_device(
-        identifiers={(DOMAIN, entity.device_id)}, connections=set()
-    )
-    if device is not None:
-        dev_registry.async_update_device(device.id, remove_config_entry_id=entry_id)
+    device_id = get_device_id(hass, entity.device_id)
+    if device_id is not None:
+        dev_registry.async_update_device(device_id, remove_config_entry_id=entry_id)
 
 
 class SHCEntity(Entity):
@@ -64,6 +74,11 @@ class SHCEntity(Entity):
 
     @property
     def name(self):
+        """Name of the entity."""
+        return self.device_name
+
+    @property
+    def device_name(self):
         """Name of the device."""
         return self._device.name
 
@@ -77,7 +92,7 @@ class SHCEntity(Entity):
         """Return the device info."""
         return {
             "identifiers": {(DOMAIN, self._device.id)},
-            "name": self.name,
+            "name": self.device_name,
             "manufacturer": self._device.manufacturer,
             "model": self._device.device_model,
             "via_device": (

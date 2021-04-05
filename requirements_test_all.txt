@@ -220,7 +220,7 @@ blinkpy==0.17.0
 bond-api==0.1.12
 
 # homeassistant.components.bosch_shc
-boschshcpy==0.1.19
+boschshcpy==0.2.9
 
 # homeassistant.components.braviatv
 bravia-tv==1.0.8
@@ -359,7 +359,6 @@ georss_ign_sismologia_client==0.2
 # homeassistant.components.qld_bushfire
 georss_qld_bushfire_alert_client==0.3
 
-# homeassistant.components.denonavr
 # homeassistant.components.huawei_lte
 # homeassistant.components.kef
 # homeassistant.components.minecraft_server
