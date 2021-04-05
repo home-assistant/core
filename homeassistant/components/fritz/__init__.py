@@ -61,9 +61,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     try:
         await fritz_tools.async_setup()
     except FritzConnectionException:
-        error = ERROR_CONNECTION_ERROR
-
-    if error:
         _LOGGER.error("Unable to setup FRITZ!Box Tools component")
         hass.async_create_task(
             hass.config_entries.flow.async_init(
