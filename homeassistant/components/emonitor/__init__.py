@@ -20,12 +20,6 @@ DEFAULT_UPDATE_RATE = 60
 PLATFORMS = ["sensor"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the SiteSage Emonitor component."""
-    hass.data[DOMAIN] = {}
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up SiteSage Emonitor from a config entry."""
 
