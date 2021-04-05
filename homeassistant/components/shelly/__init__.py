@@ -26,6 +26,7 @@ from .const import (
     ATTR_DEVICE,
     BATTERY_DEVICES_WITH_PERMANENT_CONNECTION,
     COAP,
+    CONF_SLEEP_PERIOD,
     DATA_CONFIG_ENTRY,
     DEVICE,
     DOMAIN,
@@ -80,7 +81,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if device_entry and entry.entry_id not in device_entry.config_entries:
         device_entry = None
 
-    sleep_period = entry.data.get("sleep_period")
+    sleep_period = entry.data.get(CONF_SLEEP_PERIOD)
 
     @callback
     def _async_device_online(_):
@@ -89,7 +90,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
         if sleep_period is None:
             data = {**entry.data}
-            data["sleep_period"] = get_device_sleep_period(device.settings)
+            data[CONF_SLEEP_PERIOD] = get_device_sleep_period(device.settings)
             data["model"] = device.settings["device"]["type"]
             hass.config_entries.async_update_entry(entry, data=data)
 
@@ -134,7 +135,7 @@ async def async_device_setup(
 
     platforms = SLEEPING_PLATFORMS
 
-    if not entry.data.get("sleep_period"):
+    if not entry.data.get(CONF_SLEEP_PERIOD):
         hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][
             REST
         ] = ShellyDeviceRestWrapper(hass, device)
@@ -177,25 +178,19 @@ async def async_services_setup(
         for device in devices:
             entry_id = next(iter(device.config_entries))
             entry_data = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry_id]
-            rest: ShellyDeviceRestWrapper = entry_data[REST]
-            update_data = rest.device.status["update"]
-
-            if not update_data["has_update"]:
-                _LOGGER.info("No OTA updates for %s available", device.name)
+            device_wrapper: ShellyDeviceWrapper = entry_data[COAP]
+            if device_wrapper.is_ota_pending:
+                _LOGGER.warning(
+                    "There is already an ota update scheduled for device %s",
+                    device.name,
+                )
                 continue
 
-            if update_data["status"] == "updating":
-                _LOGGER.warning("OTA update already in progress for %s", device.name)
-                continue
-
-            _LOGGER.debug(
-                "OTA update service - trigger OTA update for device %s from '%s' to '%s'",
-                device.name,
-                update_data["old_version"],
-                update_data["new_version"],
+            await device_wrapper.async_trigger_ota_update(
+                beta=call.data.get("beta"),
+                url=call.data.get("url"),
+                force=call.data.get("force"),
             )
-            resp = await rest.device.http_request("get", "ota", {"update": "true"})
-            _LOGGER.debug("OTA update service - response: %s", resp)
 
     hass.services.async_register(DOMAIN, SERVICE_OTA_UPDATE, async_service_ota_update)
 
@@ -206,7 +201,7 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
     def __init__(self, hass, entry, device: aioshelly.Device):
         """Initialize the Shelly device wrapper."""
         self.device_id = None
-        sleep_period = entry.data["sleep_period"]
+        sleep_period = entry.data[CONF_SLEEP_PERIOD]
 
         if sleep_period:
             update_interval = SLEEP_PERIOD_MULTIPLIER * sleep_period
@@ -230,6 +225,8 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             self._async_device_updates_handler
         )
         self._last_input_events_count = {}
+        self._ota_update_pending = False
+        self._ota_update_params = {}
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
 
@@ -238,6 +235,9 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         """Handle device updates."""
         if not self.device.initialized:
             return
+
+        if self._ota_update_pending:
+            self.async_trigger_ota_update()
 
         # Check for input events
         for block in self.device.blocks:
@@ -278,7 +278,7 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 
     async def _async_update_data(self):
         """Fetch data."""
-        if self.entry.data.get("sleep_period"):
+        if self.entry.data.get(CONF_SLEEP_PERIOD):
             # Sleeping device, no point polling it, just mark it unavailable
             raise update_coordinator.UpdateFailed("Sleeping device did not update")
 
@@ -299,6 +299,11 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         """Mac address of the device."""
         return self.entry.unique_id
 
+    @property
+    def is_ota_pending(self):
+        """Return if ota update is scheduled for device."""
+        return self._ota_update_pending
+
     async def async_setup(self):
         """Set up the wrapper."""
         dev_reg = await device_registry.async_get_registry(self.hass)
@@ -315,6 +320,81 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         )
         self.device_id = entry.id
         self.device.subscribe_updates(self.async_set_updated_data)
+
+    async def async_trigger_ota_update(self, beta=False, url=None, force=False):
+        """Trigger an ota update."""
+        if self.entry.data.get(CONF_SLEEP_PERIOD) and not self._ota_update_pending:
+            self._ota_update_pending = True
+            self._ota_update_params = {
+                "beta": beta,
+                "force": force,
+                "url": url,
+            }
+            _LOGGER.info("OTA update scheduled for sleeping device %s", self.name)
+            return
+
+        def _reset_pending_ota():
+            """Reset OTA update scheduler for sleeping device."""
+            if self._ota_update_pending:
+                _LOGGER.debug(
+                    "Reset OTA update scheduler for sleeping device %s", self.name
+                )
+                self._ota_update_pending = False
+                self._ota_update_params = {}
+
+        if not self._ota_update_pending:
+            await self.async_refresh()
+        else:
+            beta = self._ota_update_params["beta"]
+            force = self._ota_update_params["force"]
+            url = self._ota_update_params["url"]
+
+        update_data = self.device.status["update"]
+        _LOGGER.debug("OTA update service - update_data: %s", update_data)
+
+        if not update_data["has_update"] and not beta and not url and not force:
+            _LOGGER.info("No OTA update for %s available", self.name)
+            _reset_pending_ota()
+            return
+
+        if beta and not update_data.get("beta_version"):
+            _LOGGER.info("No beta OTA update for %s available", self.name)
+            _reset_pending_ota()
+            return
+
+        if update_data["status"] == "updating":
+            _LOGGER.warning("OTA update already in progress for %s", self.name)
+            _reset_pending_ota()
+            return
+
+        new_version = update_data["new_version"]
+        if beta:
+            new_version = update_data["beta_version"]
+        if url:
+            new_version = url
+
+        _LOGGER.info(
+            "Trigger OTA update for device %s from '%s' to '%s'",
+            self.name,
+            update_data["old_version"],
+            new_version,
+        )
+
+        resp = None
+        try:
+            async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
+                resp = await self.device.trigger_ota_update(
+                    beta=beta,
+                    url=url,
+                )
+        except OSError as err:
+            _LOGGER.exception("Error while trigger ota update: %s", err)
+        except Exception as err:
+            _LOGGER.exception("Error while ota update: %s", err)
+
+        _LOGGER.debug("OTA update response: %s", resp)
+        _reset_pending_ota()
+        return
 
     def shutdown(self):
         """Shutdown the wrapper."""
@@ -376,7 +456,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     platforms = SLEEPING_PLATFORMS
 
-    if not entry.data.get("sleep_period"):
+    if not entry.data.get(CONF_SLEEP_PERIOD):
         hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][REST] = None
         platforms = PLATFORMS
 

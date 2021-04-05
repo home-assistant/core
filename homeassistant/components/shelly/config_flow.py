@@ -16,7 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import aiohttp_client
 
-from .const import AIOSHELLY_DEVICE_TIMEOUT_SEC, DOMAIN
+from .const import AIOSHELLY_DEVICE_TIMEOUT_SEC, CONF_SLEEP_PERIOD, DOMAIN
 from .utils import get_coap_context, get_device_sleep_period
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ async def validate_input(hass: core.HomeAssistant, host, data):
     return {
         "title": device.settings["name"],
         "hostname": device.settings["device"]["hostname"],
-        "sleep_period": get_device_sleep_period(device.settings),
+        CONF_SLEEP_PERIOD: get_device_sleep_period(device.settings),
         "model": device.settings["device"]["type"],
     }
 
@@ -97,7 +97,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         title=device_info["title"] or device_info["hostname"],
                         data={
                             **user_input,
-                            "sleep_period": device_info["sleep_period"],
+                            CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
                             "model": device_info["model"],
                         },
                     )
@@ -128,7 +128,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data={
                         **user_input,
                         CONF_HOST: self.host,
-                        "sleep_period": device_info["sleep_period"],
+                        CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
                         "model": device_info["model"],
                     },
                 )
@@ -180,8 +180,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(
                 title=self.device_info["title"] or self.device_info["hostname"],
                 data={
-                    "host": self.host,
-                    "sleep_period": self.device_info["sleep_period"],
+                    CONF_HOST: self.host,
+                    CONF_SLEEP_PERIOD: self.device_info[CONF_SLEEP_PERIOD],
                     "model": self.device_info["model"],
                 },
             )

@@ -8,3 +8,28 @@ ota_update:
       integration: shelly
     entity:
       integration: none
+  fields:
+    url:
+      name: Firmware url
+      description: Run firmware update from specified URL
+      required: false
+      example: http://api.shelly.cloud/firmware/rc/SHPLG-S.zip
+      advanced: true
+      selector:
+        text:
+    beta:
+      name: Beta
+      description: Run firmware update from beta URL (if available)
+      required: false
+      default: false
+      example: true
+      selector:
+        boolean:
+    force:
+      name: Force
+      description: Force firmware update
+      required: false
+      default: false
+      example: true
+      selector:
+        boolean:

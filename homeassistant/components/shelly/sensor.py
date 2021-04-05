@@ -13,7 +13,7 @@ from homeassistant.const import (
     VOLT,
 )
 
-from .const import SHAIR_MAX_WORK_HOURS
+from .const import CONF_SLEEP_PERIOD, SHAIR_MAX_WORK_HOURS
 from .entity import (
     BlockAttributeDescription,
     RestAttributeDescription,
@@ -194,7 +194,7 @@ REST_SENSORS = {
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up sensors for device."""
-    if config_entry.data["sleep_period"]:
+    if config_entry.data[CONF_SLEEP_PERIOD]:
         await async_setup_entry_attribute_entities(
             hass, config_entry, async_add_entities, SENSORS, ShellySleepingSensor
         )
