@@ -35,11 +35,11 @@ async def validate_input(hass: core.HomeAssistant, data: dict):
         raise InvalidAuth
 
     device_info = await sma.device_info()
+    await sma.close_session()
 
     if not device_info:
         raise CannotRetrieveDeviceInfo
 
-    await sma.close_session()
     return device_info
 
 
