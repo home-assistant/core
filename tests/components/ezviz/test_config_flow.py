@@ -1,5 +1,6 @@
 """Test the Ezviz config flow."""
 
+from socket import error as SocketConnectionRefusedError, gaierror
 from unittest.mock import patch
 
 from pyezviz import PyEzvizError
@@ -43,7 +44,7 @@ from . import (
 )
 
 
-async def test_user_form(hass, ezviz):
+async def test_user_form(hass, ezviz_config_flow):
     """Test the user initiated form."""
     await async_setup_component(hass, "persistent_notification", {})
 
@@ -72,7 +73,7 @@ async def test_user_form(hass, ezviz):
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_user_custom_url(hass, ezviz):
+async def test_user_custom_url(hass, ezviz_config_flow):
     """Test custom url step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -93,7 +94,7 @@ async def test_user_custom_url(hass, ezviz):
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
 
 
-async def test_async_step_import(hass, ezviz):
+async def test_async_step_import(hass, ezviz_config_flow):
     """Test the config import flow."""
     await async_setup_component(hass, "persistent_notification", {})
 
@@ -104,7 +105,7 @@ async def test_async_step_import(hass, ezviz):
     assert result["data"] == USER_INPUT
 
 
-async def test_async_step_import_camera(hass, ezviz):
+async def test_async_step_import_camera(hass, ezviz_config_flow):
     """Test the config import camera flow."""
     await async_setup_component(hass, "persistent_notification", {})
 
@@ -115,7 +116,7 @@ async def test_async_step_import_camera(hass, ezviz):
     assert result["data"] == USER_INPUT_CAMERA
 
 
-async def test_async_step_import_2nd_form_returns_camera(hass, ezviz):
+async def test_async_step_import_2nd_form_returns_camera(hass, ezviz_config_flow):
     """Test we get the user initiated form."""
     await async_setup_component(hass, "persistent_notification", {})
 
@@ -135,10 +136,10 @@ async def test_async_step_import_2nd_form_returns_camera(hass, ezviz):
     assert result["data"] == USER_INPUT_CAMERA
 
     assert len(mock_setup.mock_calls) == 0
-    assert len(mock_setup_entry.mock_calls) == 0
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_async_step_import_abort(hass, ezviz):
+async def test_async_step_import_abort(hass, ezviz_config_flow):
     """Test the config import flow with invalid data."""
     await async_setup_component(hass, "persistent_notification", {})
 
@@ -149,7 +150,7 @@ async def test_async_step_import_abort(hass, ezviz):
 
 
 async def test_async_step_discovery(
-    hass, ezviz, ezviz_test_rtsp, ezviz_get_detection_sensibility
+    hass, ezviz_config_flow, ezviz_test_rtsp_config_flow
 ):
     """Test discovery step."""
     await async_setup_component(hass, "persistent_notification", {})
@@ -204,8 +205,8 @@ async def test_options_flow(hass):
     assert result["data"][CONF_TIMEOUT] == 25
 
 
-async def test_user_form_unexpected_exception(hass, ezviz_config_flow):
-    """Test we handle unexpected exception on user form."""
+async def test_user_form_exception(hass, ezviz_config_flow):
+    """Test we handle exception on user form."""
     ezviz_config_flow.side_effect = PyEzvizError
 
     result = await hass.config_entries.flow.async_init(
@@ -247,7 +248,7 @@ async def test_user_form_unexpected_exception(hass, ezviz_config_flow):
     assert result["type"] == RESULT_TYPE_ABORT
 
 
-async def test_import_unexpected_exception(hass, ezviz_config_flow):
+async def test_import_exception(hass, ezviz_config_flow):
     """Test we handle unexpected exception on import."""
     ezviz_config_flow.side_effect = PyEzvizError
 
@@ -286,18 +287,12 @@ async def test_import_unexpected_exception(hass, ezviz_config_flow):
     assert result["reason"] == "unknown"
 
 
-async def test_discover_unexpected_exception(
+async def test_discover_exception_step3(
     hass,
     ezviz_config_flow,
-    # ezviz_get_detection_sensibility,
     ezviz_test_rtsp_config_flow,
 ):
     """Test we handle unexpected exception on discovery."""
-    ezviz_test_rtsp_config_flow.side_effect = AuthTestResultFailed
-    with patch("homeassistant.components.ezviz.PLATFORMS", []):
-        await init_integration(hass)
-
-    await hass.async_block_till_done()
 
     await async_setup_component(hass, "persistent_notification", {})
 
@@ -311,6 +306,45 @@ async def test_discover_unexpected_exception(
 
     await async_setup_component(hass, "persistent_notification", {})
 
+    # Test Step 3
+    ezviz_test_rtsp_config_flow.side_effect = AuthTestResultFailed
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "test-user",
+            CONF_PASSWORD: "test-pass",
+        },
+    )
+
+    assert result["type"] == RESULT_TYPE_FORM
+
+    ezviz_test_rtsp_config_flow.side_effect = SocketConnectionRefusedError
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "test-user",
+            CONF_PASSWORD: "test-pass",
+        },
+    )
+
+    assert result["type"] == RESULT_TYPE_FORM
+
+    ezviz_test_rtsp_config_flow.side_effect = gaierror
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "test-user",
+            CONF_PASSWORD: "test-pass",
+        },
+    )
+
+    assert result["type"] == RESULT_TYPE_FORM
+
+    ezviz_test_rtsp_config_flow.side_effect = Exception
+
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -320,7 +354,6 @@ async def test_discover_unexpected_exception(
     )
 
     assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "unknown"
 
 
 async def test_user_custom_url_exception(hass, ezviz_config_flow):

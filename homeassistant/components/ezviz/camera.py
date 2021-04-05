@@ -232,22 +232,6 @@ class EzvizCamera(CoordinatorEntity, Camera, RestoreEntity):
         """Camera Motion Detection Status."""
         return self.coordinator.data[self._idx]["alarm_notify"]
 
-    def enable_motion_detection(self):
-        """Enable motion detection in camera."""
-        try:
-            self.coordinator.ezviz_client.data_report(self._serial, 1)
-
-        except TypeError:
-            _LOGGER.debug("Communication problem")
-
-    def disable_motion_detection(self):
-        """Disable motion detection."""
-        try:
-            self.coordinator.ezviz_client.data_report(self._serial, 0)
-
-        except TypeError:
-            _LOGGER.debug("Communication problem")
-
     @property
     def unique_id(self):
         """Return the name of this camera."""

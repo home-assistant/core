@@ -97,6 +97,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         """Try DESCRIBE on RTSP camera with credentials."""
 
         # Get Ezviz cloud credentials from config entry
+        ezviz_client_creds = {CONF_USERNAME: None, CONF_PASSWORD: None, CONF_URL: None}
         for item in self._async_current_entries():
             if item.data.get(CONF_TYPE) == ATTR_TYPE_CLOUD:
                 ezviz_client_creds = {
