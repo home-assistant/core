@@ -11,7 +11,6 @@ from homeassistant.const import (
     LENGTH_FEET,
     LENGTH_METERS,
 )
-from homeassistant.core import Config, HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.distance import convert as convert_distance
@@ -24,19 +23,23 @@ _LOGGER = logging.getLogger(__name__)
 UPDATE_INTERVAL = timedelta(minutes=60)
 
 
-async def async_setup(hass: HomeAssistant, config: Config) -> bool:
-    """Set up configured Met Éireann."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
-
-
 async def async_setup_entry(hass, config_entry):
     """Set up Met Éireann as config entry."""
+    hass.data.setdefault(DOMAIN, {})
 
-    weather_data = MetEireannWeatherData(
-        hass, config_entry.data, hass.config.units.is_metric
+    elevation = config_entry.data[CONF_ELEVATION]
+
+    if not hass.config.units.is_metric:
+        elevation = int(round(convert_distance(elevation, LENGTH_FEET, LENGTH_METERS)))
+
+    raw_weather_data = meteireann.WeatherData(
+        async_get_clientsession(hass),
+        latitude=config_entry.data[CONF_LATITUDE],
+        longitude=config_entry.data[CONF_LONGITUDE],
+        altitude=elevation,
     )
-    weather_data.init_data()
+
+    weather_data = MetEireannWeatherData(hass, config_entry.data, raw_weather_data)
 
     async def _async_update_data():
         """Fetch data from Met Éireann."""
@@ -74,33 +77,14 @@ async def async_unload_entry(hass, config_entry):
 class MetEireannWeatherData:
     """Keep data for Met Éireann weather entities."""
 
-    def __init__(self, hass, config, is_metric):
+    def __init__(self, hass, config, weather_data):
         """Initialise the weather entity data."""
         self.hass = hass
         self._config = config
-        self._is_metric = is_metric
-        self._weather_data = None
+        self._weather_data = weather_data
         self.current_weather_data = {}
         self.daily_forecast = None
         self.hourly_forecast = None
-
-    def init_data(self):
-        """Weather data inialization - get the coordinates."""
-        latitude = self._config[CONF_LATITUDE]
-        longitude = self._config[CONF_LONGITUDE]
-        elevation = self._config[CONF_ELEVATION]
-
-        if not self._is_metric:
-            elevation = int(
-                round(convert_distance(elevation, LENGTH_FEET, LENGTH_METERS))
-            )
-
-        self._weather_data = meteireann.WeatherData(
-            async_get_clientsession(self.hass),
-            latitude=latitude,
-            longitude=longitude,
-            altitude=elevation,
-        )
 
     async def fetch_data(self):
         """Fetch data from API - (current weather and forecast)."""
