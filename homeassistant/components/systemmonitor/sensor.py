@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 import datetime
+from functools import lru_cache
 import logging
 import os
 import socket
@@ -246,13 +247,21 @@ async def async_setup_sensor_registry_updates(
             try:
                 state, value, update_time = _update(type_, data)
             except Exception as ex:  # pylint: disable=broad-except
-                _LOGGER.exception("Error updating sensor: %s", type_, exc_info=ex)
+                _LOGGER.exception("Error updating sensor: %s", type_)
                 data.last_exception = ex
             else:
                 data.state = state
                 data.value = value
                 data.update_time = update_time
                 data.last_exception = None
+
+        # Only fetch these once per iteration as we use the same
+        # data source multiple times in _update
+        _disk_usage.cache_clear()
+        _swap_memory.cache_clear()
+        _virtual_memory.cache_clear()
+        _net_io_counters.cache_clear()
+        _getloadavg.cache_clear()
 
     async def _async_update_data(*_: Any) -> None:
         """Update all sensors in one executor jump."""
@@ -289,14 +298,14 @@ class SystemMonitorSensor(SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         self._type: str = sensor_type
-        self._name: str = "{} {}".format(self.sensor_type[SENSOR_TYPE_NAME], argument)
+        self._name: str = f"{self.sensor_type[SENSOR_TYPE_NAME]} {argument}".rstrip()
         self._unique_id: str = slugify(f"{sensor_type}_{argument}")
         self._sensor_registry = sensor_registry
 
     @property
     def name(self) -> str:
         """Return the name of the sensor."""
-        return self._name.rstrip()
+        return self._name
 
     @property
     def unique_id(self) -> str:
@@ -362,24 +371,24 @@ def _update(
     update_time = None
 
     if type_ == "disk_use_percent":
-        state = psutil.disk_usage(data.argument).percent
+        state = _disk_usage(data.argument).percent
     elif type_ == "disk_use":
-        state = round(psutil.disk_usage(data.argument).used / 1024 ** 3, 1)
+        state = round(_disk_usage(data.argument).used / 1024 ** 3, 1)
     elif type_ == "disk_free":
-        state = round(psutil.disk_usage(data.argument).free / 1024 ** 3, 1)
+        state = round(_disk_usage(data.argument).free / 1024 ** 3, 1)
     elif type_ == "memory_use_percent":
-        state = psutil.virtual_memory().percent
+        state = _virtual_memory().percent
     elif type_ == "memory_use":
-        virtual_memory = psutil.virtual_memory()
+        virtual_memory = _virtual_memory()
         state = round((virtual_memory.total - virtual_memory.available) / 1024 ** 2, 1)
     elif type_ == "memory_free":
-        state = round(psutil.virtual_memory().available / 1024 ** 2, 1)
+        state = round(_virtual_memory().available / 1024 ** 2, 1)
     elif type_ == "swap_use_percent":
-        state = psutil.swap_memory().percent
+        state = _swap_memory().percent
     elif type_ == "swap_use":
-        state = round(psutil.swap_memory().used / 1024 ** 2, 1)
+        state = round(_swap_memory().used / 1024 ** 2, 1)
     elif type_ == "swap_free":
-        state = round(psutil.swap_memory().free / 1024 ** 2, 1)
+        state = round(_swap_memory().free / 1024 ** 2, 1)
     elif type_ == "processor_use":
         state = round(psutil.cpu_percent(interval=None))
     elif type_ == "processor_temperature":
@@ -398,20 +407,20 @@ def _update(
                     err.name,
                 )
     elif type_ in ["network_out", "network_in"]:
-        counters = psutil.net_io_counters(pernic=True)
+        counters = _net_io_counters()
         if data.argument in counters:
             counter = counters[data.argument][IO_COUNTER[type_]]
             state = round(counter / 1024 ** 2, 1)
         else:
             state = None
     elif type_ in ["packets_out", "packets_in"]:
-        counters = psutil.net_io_counters(pernic=True)
+        counters = _net_io_counters()
         if data.argument in counters:
             state = counters[data.argument][IO_COUNTER[type_]]
         else:
             state = None
     elif type_ in ["throughput_network_out", "throughput_network_in"]:
-        counters = psutil.net_io_counters(pernic=True)
+        counters = _net_io_counters()
         if data.argument in counters:
             counter = counters[data.argument][IO_COUNTER[type_]]
             now = dt_util.utcnow()
@@ -429,7 +438,7 @@ def _update(
         else:
             state = None
     elif type_ in ["ipv4_address", "ipv6_address"]:
-        addresses = psutil.net_if_addrs()
+        addresses = _net_io_counters()
         if data.argument in addresses:
             for addr in addresses[data.argument]:
                 if addr.family == IF_ADDRS_FAMILY[type_]:
@@ -439,19 +448,44 @@ def _update(
     elif type_ == "last_boot":
         # Only update on initial setup
         if data.state is None:
-            state = dt_util.as_local(
-                dt_util.utc_from_timestamp(psutil.boot_time())
-            ).isoformat()
+            state = dt_util.utc_from_timestamp(psutil.boot_time()).isoformat()
         else:
             state = data.state
     elif type_ == "load_1m":
-        state = round(os.getloadavg()[0], 2)
+        state = round(_getloadavg()[0], 2)
     elif type_ == "load_5m":
-        state = round(os.getloadavg()[1], 2)
+        state = round(_getloadavg()[1], 2)
     elif type_ == "load_15m":
-        state = round(os.getloadavg()[2], 2)
+        state = round(_getloadavg()[2], 2)
 
     return state, value, update_time
+
+
+# When we drop python 3.8 support these can be switched to
+# @cache https://docs.python.org/3.9/library/functools.html#functools.cache
+@lru_cache(maxsize=None)
+def _disk_usage(path: str) -> Any:
+    return psutil.disk_usage(path)
+
+
+@lru_cache(maxsize=None)
+def _swap_memory() -> Any:
+    return psutil.swap_memory()
+
+
+@lru_cache(maxsize=None)
+def _virtual_memory() -> Any:
+    return psutil.virtual_memory()
+
+
+@lru_cache(maxsize=None)
+def _net_io_counters() -> Any:
+    return psutil.net_io_counters(pernic=True)
+
+
+@lru_cache(maxsize=None)
+def _getloadavg() -> tuple[float, float, float]:
+    return os.getloadavg()
 
 
 def _read_cpu_temperature() -> float | None:
