@@ -96,7 +96,7 @@ SENSOR_TYPES = {
         DATA_RATE_MEGABYTES_PER_SECOND,
         "mdi:server-network",
         True,
-        False,
+        True,
     ],
     "process": ["Process", " ", CPU_ICON, None, True],
     "processor_use": ["Processor use (percent)", PERCENTAGE, CPU_ICON, None, False],
