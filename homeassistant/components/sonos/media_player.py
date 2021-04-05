@@ -885,9 +885,9 @@ class SonosEntity(MediaPlayerEntity):
             self.async_write_ha_state()
 
     @property
-    def volume_level(self) -> int | None:
+    def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
-        return self._player_volume and int(self._player_volume / 100)
+        return self._player_volume and self._player_volume / 100
 
     @property
     def is_volume_muted(self) -> bool | None:
