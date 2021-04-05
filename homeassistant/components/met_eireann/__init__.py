@@ -47,8 +47,8 @@ async def async_setup_entry(hass, config_entry):
         """Fetch data from Met Éireann."""
         try:
             return await weather_data.fetch_data()
-        except Exception as err:  # pragma: no cover
-            raise UpdateFailed(f"Update failed: {err}") from err  # pragma: no cover
+        except Exception as err:
+            raise UpdateFailed(f"Update failed: {err}") from err
 
     coordinator = DataUpdateCoordinator(
         hass,
