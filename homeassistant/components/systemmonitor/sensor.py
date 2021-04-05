@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 import datetime
 import logging
 import os
 import socket
 import sys
-from typing import Any, TypedDict
+from typing import Any, Callable, cast
 
 import psutil
 import voluptuous as vol
@@ -27,14 +28,13 @@ from homeassistant.const import (
     STATE_ON,
     TEMP_CELSIUS,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
-
-# mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,6 +44,13 @@ if sys.maxsize > 2 ** 32:
     CPU_ICON = "mdi:cpu-64-bit"
 else:
     CPU_ICON = "mdi:cpu-32-bit"
+
+SENSOR_TYPE_NAME = 0
+SENSOR_TYPE_UOM = 1
+SENSOR_TYPE_ICON = 2
+SENSOR_TYPE_DEVICE_CLASS = 3
+SENSOR_TYPE_MANDATORY_ARG = 4
+
 
 # Schema: [name, unit of measurement, icon, device class, flag if mandatory arg]
 SENSOR_TYPES = {
@@ -103,13 +110,13 @@ SENSOR_TYPES = {
 }
 
 
-def check_required_arg(value):
+def check_required_arg(value: Any) -> Any:
     """Validate that the required "arg" for the sensor types that need it are set."""
     for sensor in value:
         sensor_type = sensor[CONF_TYPE]
         sensor_arg = sensor.get(CONF_ARG)
 
-        if sensor_arg is None and SENSOR_TYPES[sensor_type][4]:
+        if sensor_arg is None and SENSOR_TYPES[sensor_type][SENSOR_TYPE_MANDATORY_ARG]:  # type: ignore[index]
             raise vol.RequiredFieldInvalid(
                 f"Mandatory 'arg' is missing for sensor type '{sensor_type}'."
             )
@@ -168,7 +175,8 @@ CPU_SENSOR_PREFIXES = [
 ]
 
 
-class SensorData(TypedDict):
+@dataclass
+class SensorData:
     """Data for a sensor."""
 
     argument: Any
@@ -178,7 +186,12 @@ class SensorData(TypedDict):
     last_exception: BaseException | None
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: Callable,
+    discovery_info: Any | None = None,
+) -> None:
     """Set up the system monitor sensors."""
     entities = []
     sensor_registry: dict[str, SensorData] = {}
@@ -203,15 +216,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             _LOGGER.warning("Cannot read CPU / processor temperature information")
             continue
 
-        sensor_registry[type_] = SensorData(
-            {
-                "argument": argument,
-                "state": None,
-                "value": None,
-                "update_time": None,
-                "last_exception": None,
-            }
-        )
+        sensor_registry[type_] = SensorData(argument, None, None, None, None)
         entities.append(SystemMonitorSensor(sensor_registry, type_, argument))
 
     scan_interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
@@ -222,18 +227,20 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(entities)
 
 
-async def async_setup_sensor_registry_updates(hass, sensor_registry, scan_interval):
+async def async_setup_sensor_registry_updates(
+    hass: HomeAssistant,
+    sensor_registry: dict[str, SensorData],
+    scan_interval: datetime.timedelta,
+) -> None:
     """Update the registry and create polling."""
 
     _update_lock = asyncio.Lock()
 
-    def _update_sensors():
+    def _update_sensors() -> None:
         """Update sensors and store the result in the registry."""
         for type_, data in sensor_registry.items():
             try:
-                state, value, update_time = _update(
-                    type_, data.argument, data.state, data.value, data.update_time
-                )
+                state, value, update_time = _update(type_, data)
             except Exception as ex:  # pylint: disable=broad-except
                 data.last_exception = ex
             else:
@@ -242,7 +249,7 @@ async def async_setup_sensor_registry_updates(hass, sensor_registry, scan_interv
                 data.update_time = update_time
                 data.last_exception = None
 
-    async def async_update_data(*_):
+    async def async_update_data(*_: Any) -> None:
         """Update all sensors in one executor jump."""
         if _update_lock.locked():
             _LOGGER.warning(
@@ -259,7 +266,7 @@ async def async_setup_sensor_registry_updates(hass, sensor_registry, scan_interv
     )
 
     @callback
-    def _async_stop_polling(*_):
+    def _async_stop_polling(*_: Any) -> None:
         polling_interval_remover()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_polling)
@@ -268,60 +275,72 @@ async def async_setup_sensor_registry_updates(hass, sensor_registry, scan_interv
 class SystemMonitorSensor(SensorEntity):
     """Implementation of a system monitor sensor."""
 
-    def __init__(self, sensor_registry, sensor_type, argument=""):
+    def __init__(
+        self,
+        sensor_registry: dict[str, SensorData],
+        sensor_type: str,
+        argument: str = "",
+    ) -> None:
         """Initialize the sensor."""
-        self._name = "{} {}".format(SENSOR_TYPES[sensor_type][0], argument)
-        self._unique_id = slugify(f"{sensor_type}_{argument}")
+        self._type: str = sensor_type
+        self._name: str = "{} {}".format(self.sensor_type[SENSOR_TYPE_NAME], argument)
+        self._unique_id: str = slugify(f"{sensor_type}_{argument}")
         self._sensor_registry = sensor_registry
-        self._type = sensor_type
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor."""
         return self._name.rstrip()
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return the unique ID."""
         return self._unique_id
 
     @property
-    def device_class(self):
+    def device_class(self) -> str | None:
         """Return the class of this sensor."""
-        return SENSOR_TYPES[self._type][3]
+        return self.sensor_type[SENSOR_TYPE_DEVICE_CLASS]  # type: ignore[no-any-return]
 
     @property
-    def icon(self):
+    def icon(self) -> str | None:
         """Icon to use in the frontend, if any."""
-        return SENSOR_TYPES[self._type][2]
+        return self.sensor_type[SENSOR_TYPE_ICON]  # type: ignore[no-any-return]
 
     @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the state of the device."""
         return self.data.state
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
+        return self.sensor_type[SENSOR_TYPE_UOM]  # type: ignore[no-any-return]
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return self.data.last_exception is None
 
     @property
-    def data(self):
+    def sensor_type(self) -> list:
+        """Return sensor type data for the sensor."""
+        return SENSOR_TYPES[self._type]  # type: ignore
+
+    @property
+    def data(self) -> SensorData:
         """Return registry entry for the data."""
         return self._sensor_registry[self._type]
 
 
-def _update(type_, argument, last_state, last_value, last_update_time):
+def _update(
+    type_: str, data: SensorData
+) -> tuple[str | None, str | None, datetime.datetime | None]:
     """Get the latest system information."""
-    state = None
-    value = None
-    update_time = None
+    argument = data.argument
+    last_state = data.state
+    last_value = data.value
+    last_update_time = data.update_time
 
     if type_ == "disk_use_percent":
         state = psutil.disk_usage(argument).percent
@@ -347,18 +366,18 @@ def _update(type_, argument, last_state, last_value, last_update_time):
     elif type_ == "processor_temperature":
         state = _read_cpu_temperature()
     elif type_ == "process":
+        state = STATE_OFF
         for proc in psutil.process_iter():
             try:
                 if argument == proc.name():
                     state = STATE_ON
-                    return
+                    break
             except psutil.NoSuchProcess as err:
                 _LOGGER.warning(
                     "Failed to load process with ID: %s, old name: %s",
                     err.pid,
                     err.name,
                 )
-        state = STATE_OFF
     elif type_ in ["network_out", "network_in"]:
         counters = psutil.net_io_counters(pernic=True)
         if argument in counters:
@@ -374,6 +393,8 @@ def _update(type_, argument, last_state, last_value, last_update_time):
             state = None
     elif type_ in ["throughput_network_out", "throughput_network_in"]:
         counters = psutil.net_io_counters(pernic=True)
+        if last_update_time is None:
+            last_update_time = dt_util.utcnow()
         if argument in counters:
             counter = counters[argument][IO_COUNTER[type_]]
             now = dt_util.utcnow()
@@ -414,7 +435,7 @@ def _update(type_, argument, last_state, last_value, last_update_time):
     return state, value, update_time
 
 
-def _read_cpu_temperature():
+def _read_cpu_temperature() -> float | None:
     """Attempt to read CPU / processor temperature."""
     temps = psutil.sensors_temperatures()
 
@@ -424,4 +445,6 @@ def _read_cpu_temperature():
             # construct it ourself here based on the sensor key name.
             _label = f"{name} {i}" if not entry.label else entry.label
             if _label in CPU_SENSOR_PREFIXES:
-                return round(entry.current, 1)
+                return cast(float, round(entry.current, 1))
+
+    return None
