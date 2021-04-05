@@ -176,12 +176,12 @@ async def async_setup_lip(hass, config_entry, lip_devices):
 @callback
 def _async_merge_lip_leap_data(lip_devices, bridge):
     """Merge the leap data into the lip data."""
-    all_devices = bridge.get_devices().values()
+    sensor_devices = bridge.get_devices_by_domain("sensor")
 
     button_devices_by_id = {
         id: device for id, device in lip_devices.items() if "Buttons" in device
     }
-    devices_by_name = {device["name"]: device for device in all_devices}
+    sensor_devices_by_name = {device["name"]: device for device in sensor_devices}
 
     # Add the leap data into the lip data
     # so we know the type, model, and serial
@@ -190,7 +190,7 @@ def _async_merge_lip_leap_data(lip_devices, bridge):
         name = device["Name"]
         leap_name = f"{area}_{name}"
         device["leap_name"] = leap_name
-        leap_device_data = devices_by_name.get(leap_name)
+        leap_device_data = sensor_devices_by_name.get(leap_name)
         if leap_device_data is None:
             continue
         for key in ("type", "model", "serial"):
