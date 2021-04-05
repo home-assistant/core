@@ -389,7 +389,7 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
                 )
         except OSError as err:
             _LOGGER.exception("Error while trigger ota update: %s", err)
-        except Exception as err:
+        except Exception as err:  # pylint: disable=broad-except
             _LOGGER.exception("Error while ota update: %s", err)
 
         _LOGGER.debug("OTA update response: %s", resp)
