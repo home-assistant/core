@@ -1151,23 +1151,14 @@ async def test_subscribe_unsubscribe_bootstrap_integrations(
     assert msg["type"] == "result"
     assert msg["result"] == message
 
-    await websocket_client.send_json(
-        {"id": 8, "type": "unsubscribe_bootstrap_integrations", "subscription": 7}
-    )
-    msg = await websocket_client.receive_json()
-    assert msg["id"] == 8
-    assert msg["success"] is True
-    assert msg["type"] == "result"
-    assert msg["result"] is None
 
-
-async def test_integration_setup(hass, websocket_client, hass_admin_user):
+async def test_integration_setup_info(hass, websocket_client, hass_admin_user):
     """Test subscribe/unsubscribe bootstrap_integrations."""
     hass.data[DATA_SETUP_TIME] = {
         "august": datetime.timedelta(seconds=12.5),
         "isy994": datetime.timedelta(seconds=12.8),
     }
-    await websocket_client.send_json({"id": 7, "type": "integration/setup"})
+    await websocket_client.send_json({"id": 7, "type": "integration/setup_info"})
 
     msg = await websocket_client.receive_json()
     assert msg["id"] == 7

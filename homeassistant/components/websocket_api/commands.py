@@ -36,7 +36,7 @@ def async_register_commands(hass, async_reg):
     async_reg(hass, handle_get_services)
     async_reg(hass, handle_get_states)
     async_reg(hass, handle_manifest_get)
-    async_reg(hass, handle_integration_setup)
+    async_reg(hass, handle_integration_setup_info)
     async_reg(hass, handle_manifest_list)
     async_reg(hass, handle_ping)
     async_reg(hass, handle_render_template)
@@ -45,7 +45,6 @@ def async_register_commands(hass, async_reg):
     async_reg(hass, handle_subscribe_trigger)
     async_reg(hass, handle_test_condition)
     async_reg(hass, handle_unsubscribe_events)
-    async_reg(hass, handle_unsubscribe_bootstrap_integrations)
 
 
 def pong_message(iden):
@@ -119,21 +118,6 @@ def handle_subscribe_bootstrap_integrations(hass, connection, msg):
     )
 
     connection.send_message(messages.result_message(msg["id"]))
-
-
-@callback
-@decorators.websocket_command(
-    {
-        vol.Required("type"): "unsubscribe_bootstrap_integrations",
-        vol.Required("subscription"): cv.positive_int,
-    }
-)
-def handle_unsubscribe_bootstrap_integrations(hass, connection, msg):
-    """Handle unsubscribe bootstrap integrations command."""
-    # Currently these are the same as events so we pass on the request
-    # This api call only exists in case we change the implementation
-    # details.
-    return handle_unsubscribe_events(hass, connection, msg)
 
 
 @callback
@@ -279,9 +263,9 @@ async def handle_manifest_get(hass, connection, msg):
         connection.send_error(msg["id"], const.ERR_NOT_FOUND, "Integration not found")
 
 
-@decorators.websocket_command({vol.Required("type"): "integration/setup"})
+@decorators.websocket_command({vol.Required("type"): "integration/setup_info"})
 @decorators.async_response
-async def handle_integration_setup(hass, connection, msg):
+async def handle_integration_setup_info(hass, connection, msg):
     """Handle integrations command."""
     connection.send_result(
         msg["id"],

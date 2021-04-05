@@ -394,7 +394,6 @@ async def _async_watch_pending_setups(hass: core.HomeAssistant) -> None:
     setup_started: dict[str, datetime] = hass.data[DATA_SETUP_STARTED]
     while True:
         now = dt_util.utcnow()
-        remaining = setup_started.keys()
         remaining_with_setup_started = {
             domain: (now - setup_started[domain]).total_seconds()
             for domain in setup_started
@@ -406,10 +405,10 @@ async def _async_watch_pending_setups(hass: core.HomeAssistant) -> None:
         await asyncio.sleep(SLOW_STARTUP_CHECK_INTERVAL)
         loop_count += SLOW_STARTUP_CHECK_INTERVAL
 
-        if loop_count >= LOG_SLOW_STARTUP_INTERVAL and remaining:
+        if loop_count >= LOG_SLOW_STARTUP_INTERVAL and setup_started:
             _LOGGER.warning(
                 "Waiting on integrations to complete setup: %s",
-                ", ".join(remaining),
+                ", ".join(setup_started),
             )
             loop_count = 0
         _LOGGER.debug("Running timeout Zones: %s", hass.timeout.zones)
