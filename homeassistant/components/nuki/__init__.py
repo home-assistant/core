@@ -35,11 +35,7 @@ UPDATE_INTERVAL = timedelta(seconds=30)
 
 
 def _get_bridge_devices(bridge):
-    # pylint: disable=protected-access
-    locks = bridge._get_devices(0)
-    # pylint: disable=protected-access
-    openers = bridge._get_devices(2)
-    return locks, openers
+    return bridge.locks, bridge.openers
 
 
 def _update_devices(devices):
