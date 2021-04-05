@@ -31,12 +31,32 @@ def ezviz(hass):
 
 
 @fixture
+def ezviz_load_cameras(hass):
+    """Mock the EzvizApi for easier testing."""
+    with patch.object(EzvizClient, "load_cameras", return_value=True), patch(
+        "homeassistant.components.ezviz"
+    ) as mock_ezviz_load_cameras:
+        instance = mock_ezviz_load_cameras.return_value = EzvizClient(
+            "test-username",
+            "test-password",
+            "test-region",
+            "test-timeout",
+        )
+
+        instance.load_cameras = MagicMock(return_value=True)
+
+        yield mock_ezviz_load_cameras
+
+
+@fixture
 def ezviz_get_detection_sensibility(hass):
     """Mock the EzvizApi for easier testing."""
     with patch.object(
         EzvizClient, "get_detection_sensibility", return_value=True
-    ), patch("homeassistant.components.ezviz.coordinator") as mock_ezviz:
-        instance = mock_ezviz.return_value = EzvizClient(
+    ), patch(
+        "homeassistant.components.ezviz.config_flow"
+    ) as mock_ezviz_get_detection_sensibility:
+        instance = mock_ezviz_get_detection_sensibility.return_value = EzvizClient(
             "test-username",
             "test-password",
             "test-region",
@@ -45,7 +65,7 @@ def ezviz_get_detection_sensibility(hass):
 
         instance.get_detection_sensibility = MagicMock(return_value=True)
 
-        yield mock_ezviz
+        yield mock_ezviz_get_detection_sensibility
 
 
 @fixture
