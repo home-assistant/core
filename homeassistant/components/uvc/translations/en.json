@@ -1,0 +1,26 @@
+{
+    "config": {
+      "step": {
+        "user": {
+          "title": "Set up UniFi Video",
+          "data": {
+            "host": "[%key:common::config_flow::data::host%]",
+            "key": "API Key",
+            "password": "Camera Password",
+            "port": "[%key:common::config_flow::data::port%]",
+            "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+          }
+        }
+      },
+      "error": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+        "unknown": "[%key:common::config_flow::error::unknown%]",
+        "invalid_key": "Invalid API Key",
+        "invalid_port": "Invalid Port"
+      },
+      "abort": {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      }
+    }
+}

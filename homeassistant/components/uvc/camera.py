@@ -1,6 +1,4 @@
 """Support for Ubiquiti's UVC cameras."""
-from __future__ import annotations
-
 from datetime import datetime
 import logging
 import re
@@ -10,19 +8,24 @@ from uvcclient import camera as uvc_camera, nvr
 import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
-from homeassistant.const import CONF_PASSWORD, CONF_PORT, CONF_SSL
+from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SSL,
+)
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utc_from_timestamp
+
+from .const import DEFAULT_PASSWORD, DEFAULT_PORT, DEFAULT_SSL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_NVR = "nvr"
 CONF_KEY = "key"
-
-DEFAULT_PASSWORD = "ubnt"
-DEFAULT_PORT = 7080
-DEFAULT_SSL = False
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -35,26 +38,41 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up UVC integration."""
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={
+                CONF_HOST: config["nvr"],
+                CONF_API_KEY: config["key"],
+                CONF_PASSWORD: config["password"],
+                CONF_PORT: config["port"],
+                CONF_SSL: config["ssl"],
+            },
+        )
+    )
+
+    return True
+
+
+async def async_setup_entry(hass, config_entry, async_add_devices):
     """Discover cameras on a Unifi NVR."""
-    addr = config[CONF_NVR]
-    key = config[CONF_KEY]
-    password = config[CONF_PASSWORD]
-    port = config[CONF_PORT]
-    ssl = config[CONF_SSL]
 
+    nvrconn: nvr.UVCRemote = hass.data[DOMAIN]["nvrconn"]
+    identifier: str = hass.data[DOMAIN]["camera_id_field"]
     try:
-        # Exceptions may be raised in all method calls to the nvr library.
-        nvrconn = nvr.UVCRemote(addr, port, key, ssl=ssl)
-        cameras = nvrconn.index()
-
-        identifier = "id" if nvrconn.server_version >= (3, 2, 0) else "uuid"
-        # Filter out airCam models, which are not supported in the latest
-        # version of UnifiVideo and which are EOL by Ubiquiti
+        cameras = await hass.async_add_executor_job(nvrconn.index)
         cameras = [
             camera
             for camera in cameras
-            if "airCam" not in nvrconn.get_camera(camera[identifier])["model"]
+            if "airCam"
+            not in (
+                await hass.async_add_executor_job(
+                    nvrconn.get_camera, camera[identifier]
+                )
+            )["model"]
         ]
     except nvr.NotAuthorized:
         _LOGGER.error("Authorization failure while connecting to NVR")
@@ -66,20 +84,26 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Unable to connect to NVR: %s", str(ex))
         raise PlatformNotReady from ex
 
-    add_entities(
+    async_add_devices(
         [
-            UnifiVideoCamera(nvrconn, camera[identifier], camera["name"], password)
+            UnifiVideoCamera(
+                nvrconn,
+                camera[identifier],
+                camera["name"],
+                hass.data[DOMAIN]["camera_password"],
+            )
             for camera in cameras
         ],
         True,
     )
+
     return True
 
 
 class UnifiVideoCamera(Camera):
     """A Ubiquiti Unifi Video Camera."""
 
-    def __init__(self, camera, uuid, name, password):
+    def __init__(self, camera: nvr.UVCRemote, uuid: str, name: str, password: str):
         """Initialize an Unifi camera."""
         super().__init__()
         self._nvr = camera
@@ -254,7 +278,7 @@ class UnifiVideoCamera(Camera):
         self._caminfo = self._nvr.get_camera(self._uuid)
 
 
-def timestamp_ms_to_date(epoch_ms: int) -> datetime | None:
+def timestamp_ms_to_date(epoch_ms: int) -> datetime or None:
     """Convert millisecond timestamp to datetime."""
     if epoch_ms:
         return utc_from_timestamp(epoch_ms / 1000)
