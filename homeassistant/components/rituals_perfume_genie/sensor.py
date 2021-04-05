@@ -6,7 +6,7 @@ from homeassistant.const import (
     DEVICE_CLASS_SIGNAL_STRENGTH,
     PERCENTAGE,
 )
-from homeassistant.helpers.icon import icon_for_battery_level
+from homeassistant.helpers.icon import icon_for_battery_level, icon_for_signal_level
 
 from .const import COORDINATORS, DEVICES, DOMAIN, HUB
 from .entity import SENSORS, DiffuserEntity
@@ -27,6 +27,8 @@ BATTERY_SUFFIX = " Battery"
 PERFUME_SUFFIX = " Perfume"
 FILL_SUFFIX = " Fill"
 WIFI_SUFFIX = " Wifi"
+
+ATTR_SIGNAL_STRENGTH = "signal_strength"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -146,19 +148,32 @@ class DiffuserWifiSensor(DiffuserEntity):
     @property
     def icon(self):
         """Return the wifi sensor icon."""
-        return {
-            "icon-signal.png": "mdi:wifi-strength-4",
-            "icon-signal-75.png": "mdi:wifi-strength-3",
-            "icon-signal-low.png": "mdi:wifi-strength-1",
-            "icon-signal-0.png": "mdi:wifi-strength-outline",
-        }[self.coordinator.data[HUB][SENSORS][WIFI][ICON]]
+        return icon_for_signal_level(self.state)
 
     @property
     def state(self):
         """Return the state of the wifi sensor."""
-        return self.coordinator.data[HUB][SENSORS][WIFI][TITLE]
+        # Use ICON because TITLE may change in the future.
+        return {
+            "icon-signal.png": 100,
+            "icon-signal-75.png": 70,
+            "icon-signal-low.png": 25,
+            "icon-signal-0.png": 0,
+        }[self.coordinator.data[HUB][SENSORS][WIFI][ICON]]
 
     @property
     def device_class(self):
         """Return the class of the wifi sensor."""
         return DEVICE_CLASS_SIGNAL_STRENGTH
+
+    @property
+    def extra_state_attributes(self):
+        """Return the wifi state attributes."""
+        return {
+            ATTR_SIGNAL_STRENGTH: self.coordinator.data[HUB][SENSORS][WIFI][TITLE],
+        }
+
+    @property
+    def unit_of_measurement(self):
+        """Return the wifi unit of measurement."""
+        return PERCENTAGE
