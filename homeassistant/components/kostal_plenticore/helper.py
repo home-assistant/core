@@ -164,15 +164,13 @@ class ProcessDataUpdateCoordinator(PlenticoreUpdateCoordinator):
         _LOGGER.debug("Fetching %s for %s", self.name, self._fetch)
 
         fetched_data = await client.get_process_data_values(self._fetch)
-        self._data = {
+        return {
             module_id: {
                 process_data.id: process_data.value
                 for process_data in fetched_data[module_id]
             }
             for module_id in fetched_data
         }
-
-        return self._data
 
 
 class SettingDataUpdateCoordinator(PlenticoreUpdateCoordinator):
