@@ -1227,6 +1227,9 @@ pyControl4==0.0.6
 # homeassistant.components.tplink
 pyHS100==0.3.5.2
 
+# homeassistant.components.met_eireann
+pyMetEireann==0.2
+
 # homeassistant.components.met
 # homeassistant.components.norway_air
 pyMetno==0.8.1
