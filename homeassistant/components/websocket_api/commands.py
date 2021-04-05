@@ -45,7 +45,6 @@ def async_register_commands(hass, async_reg):
     async_reg(hass, handle_subscribe_trigger)
     async_reg(hass, handle_test_condition)
     async_reg(hass, handle_unsubscribe_events)
-    async_reg(hass, handle_unsubscribe_bootstrap_integrations)
 
 
 def pong_message(iden):
@@ -119,21 +118,6 @@ def handle_subscribe_bootstrap_integrations(hass, connection, msg):
     )
 
     connection.send_message(messages.result_message(msg["id"]))
-
-
-@callback
-@decorators.websocket_command(
-    {
-        vol.Required("type"): "unsubscribe_bootstrap_integrations",
-        vol.Required("subscription"): cv.positive_int,
-    }
-)
-def handle_unsubscribe_bootstrap_integrations(hass, connection, msg):
-    """Handle unsubscribe bootstrap integrations command."""
-    # Currently these are the same as events so we pass on the request
-    # This api call only exists in case we change the implementation
-    # details.
-    handle_unsubscribe_events(hass, connection, msg)
 
 
 @callback
