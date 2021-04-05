@@ -36,7 +36,7 @@ def async_register_commands(hass, async_reg):
     async_reg(hass, handle_get_services)
     async_reg(hass, handle_get_states)
     async_reg(hass, handle_manifest_get)
-    async_reg(hass, handle_integration_setup)
+    async_reg(hass, handle_integration_setup_info)
     async_reg(hass, handle_manifest_list)
     async_reg(hass, handle_ping)
     async_reg(hass, handle_render_template)
