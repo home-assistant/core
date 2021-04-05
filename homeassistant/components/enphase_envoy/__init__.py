@@ -52,9 +52,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 if condition != "inverters":
                     data[condition] = await getattr(envoy_reader, condition)()
                 else:
-                    data["inverters_production"] = await getattr(
-                        envoy_reader, "inverters_production"
-                    )()
+                    data[
+                        "inverters_production"
+                    ] = await envoy_reader.inverters_production()
 
             _LOGGER.debug("Retrieved data from API: %s", data)
 
