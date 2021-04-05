@@ -1,0 +1,38 @@
+{
+  "lat": 38.90694,
+  "lon": -77.03012,
+  "temp": {
+    "value": 43.93,
+    "units": "F"
+  },
+  "wind_speed": {
+    "value": 9.09,
+    "units": "mph"
+  },
+  "baro_pressure": {
+    "value": 30.3605,
+    "units": "inHg"
+  },
+  "visibility": {
+    "value": 6.21,
+    "units": "mi"
+  },
+  "humidity": {
+    "value": 24.5,
+    "units": "%"
+  },
+  "wind_direction": {
+    "value": 320.31,
+    "units": "degrees"
+  },
+  "weather_code": {
+    "value": "clear"
+  },
+  "o3": {
+    "value": 52.625,
+    "units": "ppb"
+  },
+  "observation_time": {
+    "value": "2021-03-07T18:54:06.055Z"
+  }
+}
