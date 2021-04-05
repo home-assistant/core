@@ -32,6 +32,7 @@ from .const import (
     PLATFORMS,
     PYSMA_COORDINATOR,
     PYSMA_OBJECT,
+    PYSMA_REMOVE_LISTENER,
     PYSMA_SENSORS,
 )
 
@@ -115,7 +116,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Close the session."""
         await sma.close_session()
 
-    hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, async_close_session)
+    remove_stop_listener = hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, async_close_session
+    )
 
     async def async_update_data():
         """Update the used SMA sensors."""
@@ -140,6 +143,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         PYSMA_OBJECT: sma,
         PYSMA_COORDINATOR: coordinator,
         PYSMA_SENSORS: sensor_def,
+        PYSMA_REMOVE_LISTENER: remove_stop_listener,
     }
 
     await coordinator.async_config_entry_first_refresh()
@@ -163,8 +167,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
     if unload_ok:
-        sma = hass.data[DOMAIN][entry.entry_id][PYSMA_OBJECT]
-        await sma.close_session()
-        hass.data[DOMAIN].pop(entry.entry_id)
+        data = hass.data[DOMAIN].pop(entry.entry_id)
+        await data[PYSMA_OBJECT].close_session()
+        data[PYSMA_REMOVE_LISTENER]()
 
     return unload_ok
