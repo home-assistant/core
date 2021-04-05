@@ -55,15 +55,6 @@ async def validate_input(hass: core.HomeAssistant, data: dict):
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
 
-    if len(data[CONF_HOST]) < 3:
-        raise InvalidHost
-
-    if data[CONF_PORT] < 1:
-        raise InvalidPort
-
-    if len(data[CONF_API_KEY]) < 3:
-        raise InvalidKey
-
     await hass.async_add_executor_job(
         _test_connection,
         data[CONF_HOST],
@@ -105,12 +96,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors[CONF_BASE] = "cannot_connect"
             except InvalidAuth:
                 errors[CONF_BASE] = "invalid_auth"
-            except InvalidHost:
-                errors[CONF_HOST] = "invalid_host"
-            except InvalidKey:
-                errors[CONF_API_KEY] = "invalid_key"
-            except InvalidPort:
-                errors[CONF_PORT] = "invalid_port"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors[CONF_BASE] = "unknown"
@@ -129,18 +114,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
-
-
-class InvalidHost(exceptions.HomeAssistantError):
-    """Error to indicate there is an invalid hostname."""
-
-
-class InvalidPort(exceptions.HomeAssistantError):
-    """Error to indicate there is an invalid port number."""
-
-
-class InvalidKey(exceptions.HomeAssistantError):
-    """Error to indicate there is an invalid api key."""
 
 
 class InvalidAuth(exceptions.HomeAssistantError):
