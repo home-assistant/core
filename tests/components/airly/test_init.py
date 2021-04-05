@@ -95,7 +95,7 @@ async def test_update_interval(hass, aioclient_mock):
         year=2030, month=3, day=2, hour=21, minute=20, second=0, tzinfo=NATIVE_UTC
     )
 
-    with patch("homeassistant.core.dt_util.utcnow") as mock_utcnow:
+    with patch("homeassistant.components.airly.dt_util.utcnow") as mock_utcnow:
         mock_utcnow.return_value = point
         async_fire_time_changed(hass, point)
         await hass.async_block_till_done()
