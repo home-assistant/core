@@ -58,7 +58,7 @@ SENSOR_TYPE_MANDATORY_ARG = 4
 SIGNAL_SYSTEMMONITOR_UPDATE = "systemmonitor_update"
 
 # Schema: [name, unit of measurement, icon, device class, flag if mandatory arg]
-SENSOR_TYPES = {
+SENSOR_TYPES: Sequence[str, Optional[str], Optional[str], Optional[str], bool] = {
     "disk_free": ["Disk free", DATA_GIBIBYTES, "mdi:harddisk", None, False],
     "disk_use": ["Disk use", DATA_GIBIBYTES, "mdi:harddisk", None, False],
     "disk_use_percent": [
