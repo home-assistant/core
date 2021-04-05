@@ -482,13 +482,12 @@ class DenonDevice(MediaPlayerEntity):
     async def async_set_dynamic_eq(self, dynamic_eq: bool):
         """Turn DynamicEQ on or off."""
         if dynamic_eq:
-            result = await self._receiver.async_dynamic_eq_on()
+            await self._receiver.async_dynamic_eq_on()
         else:
-            result = await self._receiver.async_dynamic_eq_off()
+            await self._receiver.async_dynamic_eq_off()
 
         if self._update_audyssey:
             await self._receiver.async_update_audyssey()
-        return result
 
     # Decorator defined before is a staticmethod
     async_log_errors = staticmethod(  # pylint: disable=no-staticmethod-decorator
