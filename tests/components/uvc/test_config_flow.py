@@ -18,7 +18,7 @@ async def test_form(hass):
 
     with patch("uvcclient.nvr.UVCRemote.index", return_value="",), patch(
         "uvcclient.nvr.UVCRemote._get_bootstrap",
-        return_value={"systemInfo": {"version": "0.3.0"}},
+        return_value={"systemInfo": {"version": "3.3.0"}},
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
