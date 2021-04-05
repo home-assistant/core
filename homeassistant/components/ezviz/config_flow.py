@@ -128,12 +128,6 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
                 ezviz_client.get_detection_sensibility, data[ATTR_SERIAL]
             )
 
-        except PyEzvizError as err:
-            raise InvalidAuth from err
-
-        except requests.exceptions.ConnectionError as err:
-            raise WrongURL from err
-
         except requests.exceptions.HTTPError as err:
             raise InvalidHost from err
 
