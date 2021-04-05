@@ -15,6 +15,7 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
+from homeassistant.util.dt import as_utc
 
 from .const import CONF_PLACE_ID, CONF_SERVICE_ID, DATA_COORDINATOR, DOMAIN, LOGGER
 
@@ -128,9 +129,8 @@ class ReCollectWasteSensor(CoordinatorEntity, SensorEntity):
         """Update the state."""
         pickup_event = self.coordinator.data[0]
         next_pickup_event = self.coordinator.data[1]
-        next_date = str(next_pickup_event.date)
 
-        self._state = pickup_event.date
+        self._state = as_utc(pickup_event.date)
         self._attributes.update(
             {
                 ATTR_PICKUP_TYPES: async_get_pickup_type_names(
@@ -140,6 +140,6 @@ class ReCollectWasteSensor(CoordinatorEntity, SensorEntity):
                 ATTR_NEXT_PICKUP_TYPES: async_get_pickup_type_names(
                     self._entry, next_pickup_event.pickup_types
                 ),
-                ATTR_NEXT_PICKUP_DATE: next_date,
+                ATTR_NEXT_PICKUP_DATE: as_utc(next_pickup_event.date),
             }
         )
