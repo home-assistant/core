@@ -127,6 +127,15 @@ class UnifiVideoCamera(Camera):
         return True
 
     @property
+    def device_info(self):
+        """Device info."""
+        return {
+            "identifiers": {(DOMAIN, self._uuid)},
+            "manufacturer": "Ubiquiti",
+            "model": self._caminfo["model"],
+        }
+
+    @property
     def supported_features(self):
         """Return supported features."""
         channels = self._caminfo["channels"]
