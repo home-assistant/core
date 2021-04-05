@@ -30,7 +30,9 @@ async def async_setup_entry(hass, config_entry):
     elevation = config_entry.data[CONF_ELEVATION]
 
     if not hass.config.units.is_metric:
-        elevation = int(round(convert_distance(elevation, LENGTH_FEET, LENGTH_METERS)))
+        elevation = int(
+            round(convert_distance(elevation, LENGTH_FEET, LENGTH_METERS))
+        )  # pragma: no cover
 
     raw_weather_data = meteireann.WeatherData(
         async_get_clientsession(hass),
@@ -45,8 +47,8 @@ async def async_setup_entry(hass, config_entry):
         """Fetch data from Met Éireann."""
         try:
             return await weather_data.fetch_data()
-        except Exception as err:
-            raise UpdateFailed(f"Update failed: {err}") from err
+        except Exception as err:  # pragma: no cover
+            raise UpdateFailed(f"Update failed: {err}") from err  # pragma: no cover
 
     coordinator = DataUpdateCoordinator(
         hass,
