@@ -342,21 +342,16 @@ def _update(
     type_: str, data: SensorData
 ) -> tuple[str | None, str | None, datetime.datetime | None]:
     """Get the latest system information."""
-    argument = data.argument
-
-    last_state = data.state
-    last_value = data.value
-    last_update_time = data.update_time
-
+    state = None
     value = None
     update_time = None
 
     if type_ == "disk_use_percent":
-        state = psutil.disk_usage(argument).percent
+        state = psutil.disk_usage(data.argument).percent
     elif type_ == "disk_use":
-        state = round(psutil.disk_usage(argument).used / 1024 ** 3, 1)
+        state = round(psutil.disk_usage(data.argument).used / 1024 ** 3, 1)
     elif type_ == "disk_free":
-        state = round(psutil.disk_usage(argument).free / 1024 ** 3, 1)
+        state = round(psutil.disk_usage(data.argument).free / 1024 ** 3, 1)
     elif type_ == "memory_use_percent":
         state = psutil.virtual_memory().percent
     elif type_ == "memory_use":
@@ -378,7 +373,7 @@ def _update(
         state = STATE_OFF
         for proc in psutil.process_iter():
             try:
-                if argument == proc.name():
+                if data.argument == proc.name():
                     state = STATE_ON
                     break
             except psutil.NoSuchProcess as err:
@@ -389,29 +384,27 @@ def _update(
                 )
     elif type_ in ["network_out", "network_in"]:
         counters = psutil.net_io_counters(pernic=True)
-        if argument in counters:
-            counter = counters[argument][IO_COUNTER[type_]]
+        if data.argument in counters:
+            counter = counters[data.argument][IO_COUNTER[type_]]
             state = round(counter / 1024 ** 2, 1)
         else:
             state = None
     elif type_ in ["packets_out", "packets_in"]:
         counters = psutil.net_io_counters(pernic=True)
-        if argument in counters:
-            state = counters[argument][IO_COUNTER[type_]]
+        if data.argument in counters:
+            state = counters[data.argument][IO_COUNTER[type_]]
         else:
             state = None
     elif type_ in ["throughput_network_out", "throughput_network_in"]:
         counters = psutil.net_io_counters(pernic=True)
-        if last_update_time is None:
-            last_update_time = dt_util.utcnow()
-        if argument in counters:
-            counter = counters[argument][IO_COUNTER[type_]]
+        if data.argument in counters:
+            counter = counters[data.argument][IO_COUNTER[type_]]
             now = dt_util.utcnow()
-            if last_value and last_value < counter:
+            if data.value and data.value < counter:
                 state = round(
-                    (counter - last_value)
+                    (counter - data.value)
                     / 1000 ** 2
-                    / (now - last_update_time).seconds,
+                    / (now - (data.update_time or now)).seconds,
                     3,
                 )
             else:
@@ -422,15 +415,15 @@ def _update(
             state = None
     elif type_ in ["ipv4_address", "ipv6_address"]:
         addresses = psutil.net_if_addrs()
-        if argument in addresses:
-            for addr in addresses[argument]:
+        if data.argument in addresses:
+            for addr in addresses[data.argument]:
                 if addr.family == IF_ADDRS_FAMILY[type_]:
                     state = addr.address
         else:
             state = None
     elif type_ == "last_boot":
         # Only update on initial setup
-        if last_state is None:
+        if data.state is None:
             state = dt_util.as_local(
                 dt_util.utc_from_timestamp(psutil.boot_time())
             ).isoformat()
