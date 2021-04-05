@@ -12,8 +12,6 @@ from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE
 def met_setup_fixture():
     """Patch Met Éireann setup entry."""
     with patch(
-        "homeassistant.components.met_eireann.async_setup", return_value=True
-    ), patch(
         "homeassistant.components.met_eireann.async_setup_entry", return_value=True
     ):
         yield
