@@ -90,14 +90,13 @@ async def test_config_with_turned_off_station(hass, aioclient_mock):
 
 async def test_update_interval(hass, aioclient_mock):
     """Test correct update interval when the number of configured instances changes."""
-    headers = {"X-RateLimit-Limit-day": "100", "X-RateLimit-Remaining-day": "15"}
-    point = datetime(
+    HEADERS = {"X-RateLimit-Limit-day": "100", "X-RateLimit-Remaining-day": "15"}
+    POINT = datetime(
         year=2030, month=3, day=2, hour=21, minute=20, second=0, tzinfo=NATIVE_UTC
     )
 
-    with patch("homeassistant.components.airly.dt_util.utcnow") as mock_utcnow:
-        mock_utcnow.return_value = point
-        async_fire_time_changed(hass, point)
+    with patch("homeassistant.components.airly.dt_util.utcnow", return_value=POINT):
+        async_fire_time_changed(hass, POINT)
         await hass.async_block_till_done()
 
         entry = MockConfigEntry(
@@ -115,7 +114,7 @@ async def test_update_interval(hass, aioclient_mock):
         aioclient_mock.get(
             API_POINT_URL,
             text=load_fixture("airly_valid_station.json"),
-            headers=headers,
+            headers=HEADERS,
         )
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
@@ -127,7 +126,7 @@ async def test_update_interval(hass, aioclient_mock):
 
         # We have 160 minutes to midnight, 15 remaining requests and one instance so
         # next update will be after ceil(160 / 15 * 1) = 11 minutes
-        future = point + timedelta(minutes=11)
+        future = POINT + timedelta(minutes=11)
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
@@ -157,7 +156,7 @@ async def test_update_interval(hass, aioclient_mock):
         aioclient_mock.get(
             "https://airapi.airly.eu/v2/measurements/point?lat=66.660000&lng=111.110000",
             text=load_fixture("airly_valid_station.json"),
-            headers=headers,
+            headers=HEADERS,
         )
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
