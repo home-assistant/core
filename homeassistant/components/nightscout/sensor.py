@@ -9,6 +9,7 @@ from typing import Callable
 from aiohttp import ClientError
 from py_nightscout import Api as NightscoutAPI
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DATE
 from homeassistant.core import HomeAssistant
@@ -33,7 +34,7 @@ async def async_setup_entry(
     async_add_entities([NightscoutSensor(api, "Blood Sugar", entry.unique_id)], True)
 
 
-class NightscoutSensor(Entity):
+class NightscoutSensor(SensorEntity):
     """Implementation of a Nightscout sensor."""
 
     def __init__(self, api: NightscoutAPI, name, unique_id):

@@ -41,7 +41,12 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    PRECISION_TENTHS,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -130,11 +135,16 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             self._setpoint_values[enum] = self.get_zwave_value(
                 THERMOSTAT_SETPOINT_PROPERTY,
                 command_class=CommandClass.THERMOSTAT_SETPOINT,
-                value_property_key=enum.value.key,
+                value_property_key=enum.value,
                 add_to_watched_value_ids=True,
             )
-            # Use the first found setpoint value to always determine the temperature unit
-            if self._setpoint_values[enum] and not self._unit_value:
+            # Use the first found non N/A setpoint value to always determine the
+            # temperature unit
+            if (
+                not self._unit_value
+                and enum != ThermostatSetpointType.NA
+                and self._setpoint_values[enum]
+            ):
                 self._unit_value = self._setpoint_values[enum]
         self._operating_state = self.get_zwave_value(
             THERMOSTAT_OPERATING_STATE_PROPERTY,
@@ -147,6 +157,8 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             add_to_watched_value_ids=True,
             check_all_endpoints=True,
         )
+        if not self._unit_value:
+            self._unit_value = self._current_temp
         self._current_humidity = self.get_zwave_value(
             "Humidity",
             command_class=CommandClass.SENSOR_MULTILEVEL,
@@ -227,6 +239,11 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         ):
             return TEMP_FAHRENHEIT
         return TEMP_CELSIUS
+
+    @property
+    def precision(self) -> float:
+        """Return the precision of 0.1."""
+        return PRECISION_TENTHS
 
     @property
     def hvac_mode(self) -> str:

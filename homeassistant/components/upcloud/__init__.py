@@ -127,7 +127,7 @@ async def async_setup(hass: HomeAssistantType, config) -> bool:
 
     _LOGGER.warning(
         "Loading upcloud via top level config is deprecated and no longer "
-        "necessary as of 0.117. Please remove it from your YAML configuration."
+        "necessary as of 0.117; Please remove it from your YAML configuration"
     )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
@@ -207,9 +207,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
     )
 
     # Call the UpCloud API to refresh data
-    await coordinator.async_request_refresh()
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
 
     # Listen to config entry updates
     coordinator.unsub_handlers.append(

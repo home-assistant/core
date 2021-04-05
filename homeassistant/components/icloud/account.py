@@ -115,8 +115,7 @@ class IcloudAccount:
                 with_family=self._with_family,
             )
 
-            if not self.api.is_trusted_session or self.api.requires_2fa:
-                # Session is no longer trusted
+            if self.api.requires_2fa:
                 # Trigger a new log in to ensure the user enters the 2FA code again.
                 raise PyiCloudFailedLoginException
 
@@ -125,9 +124,9 @@ class IcloudAccount:
             # Login failed which means credentials need to be updated.
             _LOGGER.error(
                 (
-                    "Your password for '%s' is no longer working. Go to the "
+                    "Your password for '%s' is no longer working; Go to the "
                     "Integrations menu and click on Configure on the discovered Apple "
-                    "iCloud card to login again."
+                    "iCloud card to login again"
                 ),
                 self._config_entry.data[CONF_USERNAME],
             )
@@ -163,7 +162,7 @@ class IcloudAccount:
         if self.api is None:
             return
 
-        if not self.api.is_trusted_session or self.api.requires_2fa:
+        if self.api.requires_2fa:
             self._require_reauth()
             return
 
@@ -502,6 +501,6 @@ class IcloudDevice:
         return self._location
 
     @property
-    def state_attributes(self) -> dict[str, any]:
+    def exta_state_attributes(self) -> dict[str, any]:
         """Return the attributes."""
         return self._attrs

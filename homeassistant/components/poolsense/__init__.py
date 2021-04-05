@@ -10,7 +10,6 @@ from poolsense.exceptions import PoolSenseError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -49,10 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     coordinator = PoolSenseDataUpdateCoordinator(hass, entry)
 
-    await coordinator.async_refresh()
-
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
 
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
@@ -118,7 +114,7 @@ class PoolSenseDataUpdateCoordinator(DataUpdateCoordinator):
             try:
                 data = await self.poolsense.get_poolsense_data()
             except (PoolSenseError) as error:
-                _LOGGER.error("PoolSense query did not complete.")
+                _LOGGER.error("PoolSense query did not complete")
                 raise UpdateFailed(error) from error
 
         return data

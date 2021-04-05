@@ -54,7 +54,6 @@ class RuntimeEntryData:
     entry_id: str = attr.ib()
     client: APIClient = attr.ib()
     store: Store = attr.ib()
-    reconnect_task: asyncio.Task | None = attr.ib(default=None)
     state: dict[str, dict[str, Any]] = attr.ib(factory=dict)
     info: dict[str, dict[str, Any]] = attr.ib(factory=dict)
 
@@ -64,7 +63,7 @@ class RuntimeEntryData:
     # If an entity can't find anything in the info array, it will look for info here.
     old_info: dict[str, dict[str, Any]] = attr.ib(factory=dict)
 
-    services: dict[int, "UserService"] = attr.ib(factory=dict)
+    services: dict[int, UserService] = attr.ib(factory=dict)
     available: bool = attr.ib(default=False)
     device_info: DeviceInfo | None = attr.ib(default=None)
     cleanup_callbacks: list[Callable[[], None]] = attr.ib(factory=list)

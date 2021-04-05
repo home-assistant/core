@@ -4,8 +4,7 @@ from __future__ import annotations
 from typing import Any, Awaitable, Callable, Union
 
 from homeassistant import config_entries
-
-from .typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 DiscoveryFunctionType = Callable[[], Union[Awaitable[bool], bool]]
 
@@ -182,7 +181,7 @@ def register_webhook_flow(
 
 
 async def webhook_async_remove_entry(
-    hass: HomeAssistantType, entry: config_entries.ConfigEntry
+    hass: HomeAssistant, entry: config_entries.ConfigEntry
 ) -> None:
     """Remove a webhook config entry."""
     if not entry.data.get("cloudhook") or "cloud" not in hass.config.components:

@@ -18,6 +18,28 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_COMPONENT = "component"
 
+BASE_PLATFORMS = {
+    "air_quality",
+    "alarm_control_panel",
+    "binary_sensor",
+    "climate",
+    "cover",
+    "device_tracker",
+    "fan",
+    "humidifier",
+    "image_processing",
+    "light",
+    "lock",
+    "media_player",
+    "notify",
+    "remote",
+    "scene",
+    "sensor",
+    "switch",
+    "vacuum",
+    "water_heater",
+}
+
 DATA_SETUP_DONE = "setup_done"
 DATA_SETUP_STARTED = "setup_started"
 DATA_SETUP = "setup_tasks"
@@ -147,7 +169,7 @@ async def _async_setup_component(
         return False
 
     if integration.disabled:
-        log_error(f"dependency is disabled - {integration.disabled}")
+        log_error(f"Dependency is disabled - {integration.disabled}")
         return False
 
     # Validate all dependencies exist and there are no circular dependencies
@@ -197,6 +219,8 @@ async def _async_setup_component(
             SLOW_SETUP_WARNING,
         )
 
+    task = None
+    result = True
     try:
         if hasattr(component, "async_setup"):
             task = component.async_setup(hass, processed_config)  # type: ignore
@@ -206,13 +230,14 @@ async def _async_setup_component(
             task = hass.loop.run_in_executor(
                 None, component.setup, hass, processed_config  # type: ignore
             )
-        else:
-            log_error("No setup function defined.")
+        elif not hasattr(component, "async_setup_entry"):
+            log_error("No setup or config entry setup function defined.")
             hass.data[DATA_SETUP_STARTED].pop(domain)
             return False
 
-        async with hass.timeout.async_timeout(SLOW_SETUP_MAX_WAIT, domain):
-            result = await task
+        if task:
+            async with hass.timeout.async_timeout(SLOW_SETUP_MAX_WAIT, domain):
+                result = await task
     except asyncio.TimeoutError:
         _LOGGER.error(
             "Setup of %s is taking longer than %s seconds."
@@ -315,10 +340,11 @@ async def async_prepare_setup_platform(
             log_error(f"Unable to import the component ({exc}).")
             return None
 
-        if hasattr(component, "setup") or hasattr(component, "async_setup"):
-            if not await async_setup_component(hass, integration.domain, hass_config):
-                log_error("Unable to set up component.")
-                return None
+        if (
+            hasattr(component, "setup") or hasattr(component, "async_setup")
+        ) and not await async_setup_component(hass, integration.domain, hass_config):
+            log_error("Unable to set up component.")
+            return None
 
     return platform
 
@@ -380,3 +406,17 @@ def async_when_setup(
         await when_setup()
 
     unsub = hass.bus.async_listen(EVENT_COMPONENT_LOADED, loaded_event)
+
+
+@core.callback
+def async_get_loaded_integrations(hass: core.HomeAssistant) -> set:
+    """Return the complete list of loaded integrations."""
+    integrations = set()
+    for component in hass.config.components:
+        if "." not in component:
+            integrations.add(component)
+            continue
+        domain, platform = component.split(".", 1)
+        if domain in BASE_PLATFORMS:
+            integrations.add(platform)
+    return integrations

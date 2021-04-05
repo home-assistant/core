@@ -1,6 +1,7 @@
 """Helper methods to handle the time in Home Assistant."""
 from __future__ import annotations
 
+from contextlib import suppress
 import datetime as dt
 import re
 from typing import Any, cast
@@ -127,10 +128,9 @@ def parse_datetime(dt_str: str) -> dt.datetime | None:
     Raises ValueError if the input is well formatted but not a valid datetime.
     Returns None if the input isn't well formatted.
     """
-    try:
+    with suppress(ValueError, IndexError):
         return ciso8601.parse_datetime(dt_str)
-    except (ValueError, IndexError):
-        pass
+
     match = DATETIME_RE.match(dt_str)
     if not match:
         return None
@@ -227,7 +227,7 @@ def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> lis
     elif not hasattr(parameter, "__iter__"):
         res = [int(parameter)]
     else:
-        res = list(sorted(int(x) for x in parameter))
+        res = sorted(int(x) for x in parameter)
 
     for val in res:
         if val < min_value or val > max_value:

@@ -94,17 +94,17 @@ class FlowManager(abc.ABC):
         """Entry has finished executing its first step asynchronously."""
 
     @callback
-    def async_progress(self) -> list[dict]:
+    def async_progress(self, include_uninitialized: bool = False) -> list[dict]:
         """Return the flows in progress."""
         return [
             {
                 "flow_id": flow.flow_id,
                 "handler": flow.handler,
                 "context": flow.context,
-                "step_id": flow.cur_step["step_id"],
+                "step_id": flow.cur_step["step_id"] if flow.cur_step else None,
             }
             for flow in self._progress.values()
-            if flow.cur_step is not None
+            if include_uninitialized or flow.cur_step is not None
         ]
 
     async def async_init(

@@ -3,7 +3,8 @@
         "abort": {
             "already_configured": "Enheten er allerede konfigurert",
             "cannot_connect": "Tilkobling mislyktes",
-            "not_irobot_device": "Oppdaget enhet er ikke en iRobot-enhet"
+            "not_irobot_device": "Oppdaget enhet er ikke en iRobot-enhet",
+            "short_blid": "BLID ble avkortet"
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes"
@@ -18,7 +19,7 @@
                 "title": "Koble automatisk til enheten"
             },
             "link": {
-                "description": "Trykk og hold inne Hjem-knappen p\u00e5 {name} til enheten genererer en lyd (omtrent to sekunder)",
+                "description": "Trykk og hold nede Hjem-knappen p\u00e5 {name} til enheten genererer en lyd (omtrent to sekunder), og send deretter innen 30 sekunder.",
                 "title": "Hent passord"
             },
             "link_manual": {
@@ -33,7 +34,7 @@
                     "blid": "",
                     "host": "Vert"
                 },
-                "description": "Ingen Roomba eller Braava har blitt oppdaget i nettverket ditt. BLID er delen av enhetens vertsnavn etter `iRobot-`. F\u00f8lg trinnene som er beskrevet i dokumentasjonen p\u00e5: {auth_help_url}",
+                "description": "Ingen Roomba eller Braava har blitt oppdaget i nettverket ditt. BLID er delen av enhetens vertsnavn etter `iRobot-` eller `Roomba-`. F\u00f8lg trinnene som er beskrevet i dokumentasjonen p\u00e5: {auth_help_url}",
                 "title": "Koble til enheten manuelt"
             },
             "user": {

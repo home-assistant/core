@@ -1,10 +1,12 @@
 """deCONZ sensor platform tests."""
 
+from datetime import timedelta
 from unittest.mock import patch
 
 from homeassistant.components.deconz.const import CONF_ALLOW_CLIP_SENSOR
 from homeassistant.components.deconz.sensor import ATTR_DAYLIGHT
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     DEVICE_CLASS_BATTERY,
@@ -13,8 +15,12 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
+from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
+
+from tests.common import async_fire_time_changed
 
 
 async def test_no_sensors(hass, aioclient_mock):
@@ -56,27 +62,20 @@ async def test_sensors(hass, aioclient_mock, mock_deconz_websocket):
                 "uniqueid": "00:00:00:00:00:00:00:03-00",
             },
             "5": {
-                "name": "Daylight sensor",
-                "type": "Daylight",
-                "state": {"daylight": True, "status": 130},
-                "config": {},
-                "uniqueid": "00:00:00:00:00:00:00:04-00",
-            },
-            "6": {
                 "name": "Power sensor",
                 "type": "ZHAPower",
                 "state": {"current": 2, "power": 6, "voltage": 3},
                 "config": {"reachable": True},
                 "uniqueid": "00:00:00:00:00:00:00:05-00",
             },
-            "7": {
+            "6": {
                 "name": "Consumption sensor",
                 "type": "ZHAConsumption",
                 "state": {"consumption": 2, "power": 6},
                 "config": {"reachable": True},
                 "uniqueid": "00:00:00:00:00:00:00:06-00",
             },
-            "8": {
+            "7": {
                 "id": "CLIP light sensor id",
                 "name": "CLIP light level sensor",
                 "type": "CLIPLightLevel",
@@ -440,6 +439,57 @@ async def test_air_quality_sensor(hass, aioclient_mock):
 
     assert len(hass.states.async_all()) == 1
     assert hass.states.get("sensor.air_quality").state == "poor"
+
+
+async def test_daylight_sensor(hass, aioclient_mock):
+    """Test daylight sensor is disabled by default and when created has expected attributes."""
+    data = {
+        "sensors": {
+            "0": {
+                "config": {
+                    "configured": True,
+                    "on": True,
+                    "sunriseoffset": 30,
+                    "sunsetoffset": -30,
+                },
+                "etag": "55047cf652a7e594d0ee7e6fae01dd38",
+                "manufacturername": "Philips",
+                "modelid": "PHDL00",
+                "name": "Daylight sensor",
+                "state": {
+                    "daylight": True,
+                    "lastupdated": "2018-03-24T17:26:12",
+                    "status": 170,
+                },
+                "swversion": "1.0",
+                "type": "Daylight",
+                "uniqueid": "00:00:00:00:00:00:00:00-00",
+            }
+        }
+    }
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        await setup_deconz_integration(hass, aioclient_mock)
+
+    assert len(hass.states.async_all()) == 0
+    assert not hass.states.get("sensor.daylight_sensor")
+
+    # Enable in entity registry
+
+    entity_registry = er.async_get(hass)
+    entity_registry.async_update_entity(
+        entity_id="sensor.daylight_sensor", disabled_by=None
+    )
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(
+        hass,
+        dt.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
+    assert hass.states.get("sensor.daylight_sensor")
+    assert hass.states.get("sensor.daylight_sensor").attributes[ATTR_DAYLIGHT]
 
 
 async def test_time_sensor(hass, aioclient_mock):

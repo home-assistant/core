@@ -21,8 +21,8 @@
                 "data": {
                     "discovery": "Luba automaatne avastamine"
                 },
-                "description": "Kas soovid seadistada Home Assistanti \u00fchenduse loomiseks Hass.io lisandmooduli {addon} pakutava MQTT vahendajaga?",
-                "title": "MQTT vahendaja Hass.io lisandmooduli abil"
+                "description": "Kas soovid seadistada Home Assistanti \u00fchenduse loomiseks lisandmooduli {addon} pakutava MQTT vahendajaga?",
+                "title": "MQTT vahendaja  Home Assistanti lisandmooduli abil"
             }
         }
     },

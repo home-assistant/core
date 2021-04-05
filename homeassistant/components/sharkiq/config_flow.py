@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import _LOGGER, DOMAIN  # pylint:disable=unused-import
+from .const import _LOGGER, DOMAIN
 
 SHARKIQ_SCHEMA = vol.Schema(
     {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}

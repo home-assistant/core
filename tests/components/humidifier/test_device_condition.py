@@ -256,7 +256,7 @@ async def test_capabilities(hass):
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
-            "name": "available_modes",
+            "name": "mode",
             "options": [("home", "home"), ("away", "away")],
             "required": True,
             "type": "select",
@@ -282,9 +282,7 @@ async def test_capabilities_no_state(hass):
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
-    ) == [
-        {"name": "available_modes", "options": [], "required": True, "type": "select"}
-    ]
+    ) == [{"name": "mode", "options": [], "required": True, "type": "select"}]
 
 
 async def test_get_condition_capabilities(hass, device_reg, entity_reg):

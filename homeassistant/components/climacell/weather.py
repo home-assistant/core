@@ -427,13 +427,12 @@ class ClimaCellV3WeatherEntity(BaseClimaCellWeatherEntity):
                     ),
                     temp_low,
                 )
-            elif self.forecast_type == NOWCAST:
+            elif self.forecast_type == NOWCAST and precipitation:
                 # Precipitation is forecasted in CONF_TIMESTEP increments but in a
                 # per hour rate, so value needs to be converted to an amount.
-                if precipitation:
-                    precipitation = (
-                        precipitation / 60 * self._config_entry.options[CONF_TIMESTEP]
-                    )
+                precipitation = (
+                    precipitation / 60 * self._config_entry.options[CONF_TIMESTEP]
+                )
 
             forecasts.append(
                 self._forecast_dict(

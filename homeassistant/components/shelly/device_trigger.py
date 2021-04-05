@@ -92,7 +92,6 @@ async def async_attach_trigger(
     automation_info: dict,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    config = TRIGGER_SCHEMA(config)
     event_config = {
         event_trigger.CONF_PLATFORM: CONF_EVENT,
         event_trigger.CONF_EVENT_TYPE: EVENT_SHELLY_CLICK,

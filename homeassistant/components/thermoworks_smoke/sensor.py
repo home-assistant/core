@@ -11,7 +11,7 @@ from stringcase import camelcase, snakecase
 import thermoworks_smoke
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     CONF_EMAIL,
@@ -21,7 +21,6 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,7 +90,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             _LOGGER.error(msg)
 
 
-class ThermoworksSmokeSensor(Entity):
+class ThermoworksSmokeSensor(SensorEntity):
     """Implementation of a thermoworks smoke sensor."""
 
     def __init__(self, sensor_type, serial, mgr):

@@ -171,3 +171,33 @@ async def test_deconz_events(hass, aioclient_mock, mock_deconz_websocket):
     await hass.config_entries.async_remove(config_entry.entry_id)
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0
+
+
+async def test_deconz_events_bad_unique_id(hass, aioclient_mock, mock_deconz_websocket):
+    """Verify no devices are created if unique id is bad or missing."""
+    data = {
+        "sensors": {
+            "1": {
+                "name": "Switch 1 no unique id",
+                "type": "ZHASwitch",
+                "state": {"buttonevent": 1000},
+                "config": {},
+            },
+            "2": {
+                "name": "Switch 2 bad unique id",
+                "type": "ZHASwitch",
+                "state": {"buttonevent": 1000},
+                "config": {"battery": 100},
+                "uniqueid": "00:00-00",
+            },
+        }
+    }
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        config_entry = await setup_deconz_integration(hass, aioclient_mock)
+
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+
+    assert len(hass.states.async_all()) == 1
+    assert (
+        len(async_entries_for_config_entry(device_registry, config_entry.entry_id)) == 2
+    )

@@ -7,7 +7,7 @@ from python_awair.devices import AwairDevice
 import voluptuous as vol
 
 from homeassistant.components.awair import AwairDataUpdateCoordinator, AwairResult
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_DEVICE_CLASS, CONF_ACCESS_TOKEN
 from homeassistant.helpers import device_registry as dr
@@ -42,7 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Import Awair configuration from YAML."""
     LOGGER.warning(
-        "Loading Awair via platform setup is deprecated. Please remove it from your configuration."
+        "Loading Awair via platform setup is deprecated; Please remove it from your configuration"
     )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
@@ -84,7 +84,7 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class AwairSensor(CoordinatorEntity):
+class AwairSensor(CoordinatorEntity, SensorEntity):
     """Defines an Awair sensor entity."""
 
     def __init__(
