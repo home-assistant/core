@@ -62,22 +62,28 @@ class MetEireannWeather(CoordinatorEntity, WeatherEntity):
         self._config = config
         self._is_metric = is_metric
         self._hourly = hourly
-        self._name_appendix = "-hourly" if hourly else ""
 
     @property
     def unique_id(self):
         """Return unique ID."""
-        return f"{self._config[CONF_LATITUDE]}-{self._config[CONF_LONGITUDE]}{self._name_appendix}"
+        name_appendix = ""
+        if self._hourly:
+            name_appendix = "-hourly"
+
+        return f"{self._config[CONF_LATITUDE]}-{self._config[CONF_LONGITUDE]}{name_appendix}"
 
     @property
     def name(self):
         """Return the name of the sensor."""
         name = self._config.get(CONF_NAME)
+        name_appendix = ""
+        if self._hourly:
+            name_appendix = " Hourly"
 
         if name is not None:
-            return f"{name}{self._name_appendix}"
+            return f"{name}{name_appendix}"
 
-        return f"{DEFAULT_NAME}{self._name_appendix}"
+        return f"{DEFAULT_NAME}{name_appendix}"
 
     @property
     def entity_registry_enabled_default(self) -> bool:
