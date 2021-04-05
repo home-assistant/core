@@ -32,8 +32,8 @@ from .const import (
     CONF_TIMESTEP,
     DEFAULT_NAME,
     DEFAULT_TIMESTEP,
+    DOMAIN,
 )
-from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
