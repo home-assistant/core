@@ -40,9 +40,13 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def _parse_legacy_options(entry: ConfigEntry, sensor_def: pysma.Sensors) -> None:
-    """Parse the legacy CONF_SENSORS and CONF_CUSTOM configuration options."""
+    """Parse legacy configuration options.
+
+    This will parse the legacy CONF_SENSORS and CONF_CUSTOM configuration options
+    to support deprecated yaml config from platform setup.
+    """
+
     # Add sensors from the custom config
-    # Supports deprecated yaml config from platform setup
     sensor_def.add(
         [
             pysma.Sensor(o[CONF_KEY], n, o[CONF_UNIT], o[CONF_FACTOR], o.get(CONF_PATH))
@@ -51,7 +55,6 @@ async def _parse_legacy_options(entry: ConfigEntry, sensor_def: pysma.Sensors) -
     )
 
     # Parsing of sensors configuration
-    # Supports deprecated yaml config from platform setup
     config_sensors = entry.data.get(CONF_SENSORS)
     if config_sensors:
         # Find and replace sensors removed from pysma
