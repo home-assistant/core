@@ -2,17 +2,18 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging.handlers
 from timeit import default_timer as timer
 from types import ModuleType
-from typing import Awaitable, Callable
+from typing import Awaitable, Callable, Generator, Iterable
 
 from homeassistant import config as conf_util, core, loader, requirements
 from homeassistant.config import async_notify_setup_error
 from homeassistant.const import EVENT_COMPONENT_LOADED, PLATFORM_FORMAT
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt as dt_util, ensure_unique_string
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,6 +43,8 @@ BASE_PLATFORMS = {
 
 DATA_SETUP_DONE = "setup_done"
 DATA_SETUP_STARTED = "setup_started"
+DATA_SETUP_TIME = "setup_time"
+
 DATA_SETUP = "setup_tasks"
 DATA_DEPS_REQS = "deps_reqs_processed"
 
@@ -205,84 +208,77 @@ async def _async_setup_component(
 
     start = timer()
     _LOGGER.info("Setting up %s", domain)
-    hass.data.setdefault(DATA_SETUP_STARTED, {})[domain] = dt_util.utcnow()
-
-    if hasattr(component, "PLATFORM_SCHEMA"):
-        # Entity components have their own warning
-        warn_task = None
-    else:
-        warn_task = hass.loop.call_later(
-            SLOW_SETUP_WARNING,
-            _LOGGER.warning,
-            "Setup of %s is taking over %s seconds.",
-            domain,
-            SLOW_SETUP_WARNING,
-        )
-
-    task = None
-    result = True
-    try:
-        if hasattr(component, "async_setup"):
-            task = component.async_setup(hass, processed_config)  # type: ignore
-        elif hasattr(component, "setup"):
-            # This should not be replaced with hass.async_add_executor_job because
-            # we don't want to track this task in case it blocks startup.
-            task = hass.loop.run_in_executor(
-                None, component.setup, hass, processed_config  # type: ignore
+    with async_start_setup(hass, [domain]):
+        if hasattr(component, "PLATFORM_SCHEMA"):
+            # Entity components have their own warning
+            warn_task = None
+        else:
+            warn_task = hass.loop.call_later(
+                SLOW_SETUP_WARNING,
+                _LOGGER.warning,
+                "Setup of %s is taking over %s seconds.",
+                domain,
+                SLOW_SETUP_WARNING,
             )
-        elif not hasattr(component, "async_setup_entry"):
-            log_error("No setup or config entry setup function defined.")
-            hass.data[DATA_SETUP_STARTED].pop(domain)
+
+        task = None
+        result = True
+        try:
+            if hasattr(component, "async_setup"):
+                task = component.async_setup(hass, processed_config)  # type: ignore
+            elif hasattr(component, "setup"):
+                # This should not be replaced with hass.async_add_executor_job because
+                # we don't want to track this task in case it blocks startup.
+                task = hass.loop.run_in_executor(
+                    None, component.setup, hass, processed_config  # type: ignore
+                )
+            elif not hasattr(component, "async_setup_entry"):
+                log_error("No setup or config entry setup function defined.")
+                return False
+
+            if task:
+                async with hass.timeout.async_timeout(SLOW_SETUP_MAX_WAIT, domain):
+                    result = await task
+        except asyncio.TimeoutError:
+            _LOGGER.error(
+                "Setup of %s is taking longer than %s seconds."
+                " Startup will proceed without waiting any longer",
+                domain,
+                SLOW_SETUP_MAX_WAIT,
+            )
+            return False
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Error during setup of component %s", domain)
+            async_notify_setup_error(hass, domain, integration.documentation)
+            return False
+        finally:
+            end = timer()
+            if warn_task:
+                warn_task.cancel()
+        _LOGGER.info("Setup of domain %s took %.1f seconds", domain, end - start)
+
+        if result is False:
+            log_error("Integration failed to initialize.")
+            return False
+        if result is not True:
+            log_error(
+                f"Integration {domain!r} did not return boolean if setup was "
+                "successful. Disabling component."
+            )
             return False
 
-        if task:
-            async with hass.timeout.async_timeout(SLOW_SETUP_MAX_WAIT, domain):
-                result = await task
-    except asyncio.TimeoutError:
-        _LOGGER.error(
-            "Setup of %s is taking longer than %s seconds."
-            " Startup will proceed without waiting any longer",
-            domain,
-            SLOW_SETUP_MAX_WAIT,
+        # Flush out async_setup calling create_task. Fragile but covered by test.
+        await asyncio.sleep(0)
+        await hass.config_entries.flow.async_wait_init_flow_finish(domain)
+
+        await asyncio.gather(
+            *[
+                entry.async_setup(hass, integration=integration)
+                for entry in hass.config_entries.async_entries(domain)
+            ]
         )
-        hass.data[DATA_SETUP_STARTED].pop(domain)
-        return False
-    except Exception:  # pylint: disable=broad-except
-        _LOGGER.exception("Error during setup of component %s", domain)
-        async_notify_setup_error(hass, domain, integration.documentation)
-        hass.data[DATA_SETUP_STARTED].pop(domain)
-        return False
-    finally:
-        end = timer()
-        if warn_task:
-            warn_task.cancel()
-    _LOGGER.info("Setup of domain %s took %.1f seconds", domain, end - start)
 
-    if result is False:
-        log_error("Integration failed to initialize.")
-        hass.data[DATA_SETUP_STARTED].pop(domain)
-        return False
-    if result is not True:
-        log_error(
-            f"Integration {domain!r} did not return boolean if setup was "
-            "successful. Disabling component."
-        )
-        hass.data[DATA_SETUP_STARTED].pop(domain)
-        return False
-
-    # Flush out async_setup calling create_task. Fragile but covered by test.
-    await asyncio.sleep(0)
-    await hass.config_entries.flow.async_wait_init_flow_finish(domain)
-
-    await asyncio.gather(
-        *[
-            entry.async_setup(hass, integration=integration)
-            for entry in hass.config_entries.async_entries(domain)
-        ]
-    )
-
-    hass.config.components.add(domain)
-    hass.data[DATA_SETUP_STARTED].pop(domain)
+        hass.config.components.add(domain)
 
     # Cleanup
     if domain in hass.data[DATA_SETUP]:
@@ -420,3 +416,30 @@ def async_get_loaded_integrations(hass: core.HomeAssistant) -> set:
         if domain in BASE_PLATFORMS:
             integrations.add(platform)
     return integrations
+
+
+@contextlib.contextmanager
+def async_start_setup(hass: core.HomeAssistant, components: Iterable) -> Generator:
+    """Keep track of when setup starts and finishes."""
+    setup_started = hass.data.setdefault(DATA_SETUP_STARTED, {})
+    started = dt_util.utcnow()
+    unique_components = {}
+    for domain in components:
+        unique = ensure_unique_string(domain, setup_started)
+        unique_components[unique] = domain
+        setup_started[unique] = started
+
+    yield
+
+    setup_time = hass.data.setdefault(DATA_SETUP_TIME, {})
+    time_taken = dt_util.utcnow() - started
+    for unique, domain in unique_components.items():
+        del setup_started[unique]
+        if "." in domain:
+            _, integration = domain.split(".", 1)
+        else:
+            integration = domain
+        if integration in setup_time:
+            setup_time[integration] += time_taken
+        else:
+            setup_time[integration] = time_taken
