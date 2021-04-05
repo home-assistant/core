@@ -174,8 +174,11 @@ class BaseClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
             wind_gust = distance_convert(
                 self.wind_gust, LENGTH_MILES, LENGTH_KILOMETERS
             )
+        cloud_cover = self.cloud_cover
+        if cloud_cover is not None:
+            cloud_cover /= 100
         return {
-            ATTR_CLOUD_COVER: self.cloud_cover / 100 if self.cloud_cover else None,
+            ATTR_CLOUD_COVER: cloud_cover,
             ATTR_WIND_GUST: wind_gust,
             ATTR_PRECIPITATION_TYPE: self.precipitation_type,
         }
