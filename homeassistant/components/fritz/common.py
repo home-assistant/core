@@ -201,7 +201,7 @@ class FritzBoxTools:
                 # Serial numbers are unique identifiers within a specific domain
                 (DOMAIN, self.unique_id)
             },
-            "name": info.get("NewModelName"),
+            "name": info.get("NewName"),
             "manufacturer": "AVM",
             "model": info.get("NewModelName"),
             "sw_version": info.get("NewSoftwareVersion"),
