@@ -63,8 +63,14 @@ LOGGING_INTEGRATIONS = {
     # Error logging
     "system_log",
     "sentry",
+}
+STAGE_0_INTEGRATIONS = {
     # To record data
     "recorder",
+    # Get the frontend up and running as soon
+    # as possible so problem integrations can
+    # be removed
+    "frontend",
 }
 STAGE_1_INTEGRATIONS = {
     # To make sure we forward data to other instances
@@ -73,10 +79,6 @@ STAGE_1_INTEGRATIONS = {
     "cloud",
     # Ensure supervisor is available
     "hassio",
-    # Get the frontend up and running as soon
-    # as possible so problem integrations can
-    # be removed
-    "frontend",
 }
 
 
@@ -499,6 +501,22 @@ async def _async_set_up_integrations(
         _LOGGER.debug("Setting up debuggers: %s", debuggers)
         await async_setup_multi_components(hass, debuggers, config)
 
+    # Load the registries
+    await asyncio.gather(
+        device_registry.async_load(hass),
+        entity_registry.async_load(hass),
+        area_registry.async_load(hass),
+    )
+
+    # Start up recorder and frontend.
+    # Start these as soon as possible in case there is a database issue we
+    # need to report on the frontend
+    stage_0 = domains_to_setup & STAGE_0_INTEGRATIONS
+
+    if stage_0:
+        _LOGGER.debug("Setting up stage 0: %s", stage_0)
+        await async_setup_multi_components(hass, stage_0, config)
+
     # calculate what components to setup in what stage
     stage_1_domains = set()
 
@@ -522,13 +540,8 @@ async def _async_set_up_integrations(
 
             deps_promotion.update(dep_itg.all_dependencies)
 
-    stage_2_domains = domains_to_setup - logging_domains - debuggers - stage_1_domains
-
-    # Load the registries
-    await asyncio.gather(
-        device_registry.async_load(hass),
-        entity_registry.async_load(hass),
-        area_registry.async_load(hass),
+    stage_2_domains = (
+        domains_to_setup - logging_domains - debuggers - stage_0 - stage_1_domains
     )
 
     # Start setup
