@@ -176,7 +176,7 @@ async def async_setup_lip(hass, config_entry, lip_devices):
 @callback
 def _async_merge_lip_leap_data(lip_devices, bridge):
     """Merge the leap data into the lip data."""
-    all_devices = bridge.get_devices()
+    all_devices = bridge.get_devices().values()
 
     button_devices_by_id = {
         id: device for id, device in lip_devices.items() if "Buttons" in device
