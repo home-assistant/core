@@ -9,6 +9,8 @@ import requests.exceptions
 
 from homeassistant.components.ezviz.const import (
     ATTR_SERIAL,
+    ATTR_TYPE_CAMERA,
+    ATTR_TYPE_CLOUD,
     CONF_FFMPEG_ARGUMENTS,
     DEFAULT_FFMPEG_ARGUMENTS,
     DEFAULT_TIMEOUT,
@@ -16,9 +18,11 @@ from homeassistant.components.ezviz.const import (
 )
 from homeassistant.config_entries import SOURCE_DISCOVERY, SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import (
+    CONF_CUSTOMIZE,
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
     CONF_TIMEOUT,
+    CONF_TYPE,
     CONF_URL,
     CONF_USERNAME,
 )
@@ -52,19 +56,22 @@ async def test_user_form(hass, ezviz_config_flow):
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        USER_INPUT_VALIDATE,
-    )
+    with _patch_async_setup() as mock_setup, _patch_async_setup_entry() as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            USER_INPUT_VALIDATE,
+        )
     await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "test-username"
     assert result["data"] == {**USER_INPUT}
 
-    await async_setup_component(hass, "persistent_notification", {})
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -85,48 +92,72 @@ async def test_user_custom_url(hass, ezviz_config_flow):
     )
 
     assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "user_custom_url"
+    assert result["errors"] == {}
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_URL: "test-user"},
-    )
+    with _patch_async_setup() as mock_setup, _patch_async_setup_entry() as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_URL: "test-user"},
+        )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["data"] == {
+        CONF_PASSWORD: "test-pass",
+        CONF_TYPE: ATTR_TYPE_CLOUD,
+        CONF_URL: "test-user",
+        CONF_USERNAME: "test-user",
+    }
+
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_async_step_import(hass, ezviz_config_flow):
     """Test the config import flow."""
     await async_setup_component(hass, "persistent_notification", {})
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=YAML_CONFIG
-    )
+    with _patch_async_setup() as mock_setup, _patch_async_setup_entry() as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=YAML_CONFIG
+        )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == USER_INPUT
+
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_async_step_import_camera(hass, ezviz_config_flow):
     """Test the config import camera flow."""
     await async_setup_component(hass, "persistent_notification", {})
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=YAML_CONFIG_CAMERA
-    )
+    with _patch_async_setup() as mock_setup, _patch_async_setup_entry() as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=YAML_CONFIG_CAMERA
+        )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == USER_INPUT_CAMERA
+
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_async_step_import_2nd_form_returns_camera(hass, ezviz_config_flow):
     """Test we get the user initiated form."""
     await async_setup_component(hass, "persistent_notification", {})
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=YAML_CONFIG
-    )
+    with _patch_async_setup() as mock_setup, _patch_async_setup_entry() as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=YAML_CONFIG
+        )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == USER_INPUT
 
-    with _patch_async_setup_entry() as mock_setup_entry:
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    with _patch_async_setup() as mock_setup, _patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=USER_INPUT_CAMERA_VALIDATE
         )
@@ -135,6 +166,7 @@ async def test_async_step_import_2nd_form_returns_camera(hass, ezviz_config_flow
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == USER_INPUT_CAMERA
 
+    assert len(mock_setup.mock_calls) == 0
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -146,6 +178,7 @@ async def test_async_step_import_abort(hass, ezviz_config_flow):
         DOMAIN, context={"source": SOURCE_IMPORT}, data=YAML_INVALID
     )
     assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "unknown"
 
 
 async def test_async_step_discovery(
@@ -158,26 +191,28 @@ async def test_async_step_discovery(
         DOMAIN, context={"source": SOURCE_DISCOVERY}, data=DISCOVERY_INFO
     )
     assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "confirm"
     assert result["errors"] == {}
 
-    with patch("homeassistant.components.ezviz.PLATFORMS", []):
-        await init_integration(hass)
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_USERNAME: "test-user",
-            CONF_PASSWORD: "test-pass",
-        },
-    )
+    with _patch_async_setup() as mock_setup, _patch_async_setup_entry() as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "test-user",
+                CONF_PASSWORD: "test-pass",
+            },
+        )
     await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {
-        "password": "test-pass",
-        "type": "CAMERA_ACCOUNT",
-        "username": "test-user",
+        CONF_PASSWORD: "test-pass",
+        CONF_TYPE: ATTR_TYPE_CAMERA,
+        CONF_USERNAME: "test-user",
     }
+
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_options_flow(hass):
@@ -191,17 +226,21 @@ async def test_options_flow(hass):
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "init"
+    assert result["errors"] is None
 
-    with _patch_async_setup(), _patch_async_setup_entry():
+    with _patch_async_setup() as mock_setup, _patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={CONF_FFMPEG_ARGUMENTS: "/H.264", CONF_TIMEOUT: 25},
         )
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"][CONF_FFMPEG_ARGUMENTS] == "/H.264"
     assert result["data"][CONF_TIMEOUT] == 25
+
+    assert len(mock_setup.mock_calls) == 0
+    assert len(mock_setup_entry.mock_calls) == 0
 
 
 async def test_user_form_exception(hass, ezviz_config_flow):
@@ -218,6 +257,8 @@ async def test_user_form_exception(hass, ezviz_config_flow):
     )
 
     assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "invalid_auth"}
 
     ezviz_config_flow.side_effect = requests.exceptions.ConnectionError
 
@@ -227,6 +268,8 @@ async def test_user_form_exception(hass, ezviz_config_flow):
     )
 
     assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "invalid_host"}
 
     ezviz_config_flow.side_effect = requests.exceptions.HTTPError
 
@@ -236,6 +279,8 @@ async def test_user_form_exception(hass, ezviz_config_flow):
     )
 
     assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "cannot_connect"}
 
     ezviz_config_flow.side_effect = Exception
 
@@ -245,6 +290,7 @@ async def test_user_form_exception(hass, ezviz_config_flow):
     )
 
     assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "unknown"
 
 
 async def test_import_exception(hass, ezviz_config_flow):
@@ -300,9 +346,8 @@ async def test_discover_exception_step1(
         data={ATTR_SERIAL: "C66666", CONF_IP_ADDRESS: "test-ip"},
     )
     assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "confirm"
     assert result["errors"] == {}
-
-    await async_setup_component(hass, "persistent_notification", {})
 
     # Test Step 1
     ezviz_config_flow.side_effect = PyEzvizError
@@ -316,6 +361,8 @@ async def test_discover_exception_step1(
     )
 
     assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "confirm"
+    assert result["errors"] == {"base": "invalid_auth"}
 
     ezviz_config_flow.side_effect = requests.exceptions.ConnectionError
 
@@ -328,6 +375,8 @@ async def test_discover_exception_step1(
     )
 
     assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "confirm"
+    assert result["errors"] == {"base": "invalid_host"}
 
     ezviz_config_flow.side_effect = requests.exceptions.HTTPError
 
@@ -340,6 +389,8 @@ async def test_discover_exception_step1(
     )
 
     assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "confirm"
+    assert result["errors"] == {"base": "invalid_host"}
 
     ezviz_config_flow.side_effect = Exception
 
@@ -352,6 +403,7 @@ async def test_discover_exception_step1(
     )
 
     assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "unknown"
 
 
 async def test_discover_exception_step3(
@@ -369,9 +421,8 @@ async def test_discover_exception_step3(
         data={ATTR_SERIAL: "C66666", CONF_IP_ADDRESS: "test-ip"},
     )
     assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "confirm"
     assert result["errors"] == {}
-
-    await async_setup_component(hass, "persistent_notification", {})
 
     # Test Step 3
     ezviz_test_rtsp_config_flow.side_effect = AuthTestResultFailed
@@ -385,6 +436,8 @@ async def test_discover_exception_step3(
     )
 
     assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "confirm"
+    assert result["errors"] == {"base": "invalid_auth"}
 
     ezviz_test_rtsp_config_flow.side_effect = SocketConnectionRefusedError
 
@@ -397,6 +450,8 @@ async def test_discover_exception_step3(
     )
 
     assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "confirm"
+    assert result["errors"] == {"base": "invalid_host"}
 
     ezviz_test_rtsp_config_flow.side_effect = gaierror
 
@@ -409,6 +464,8 @@ async def test_discover_exception_step3(
     )
 
     assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "confirm"
+    assert result["errors"] == {"base": "invalid_host"}
 
     ezviz_test_rtsp_config_flow.side_effect = Exception
 
@@ -421,6 +478,7 @@ async def test_discover_exception_step3(
     )
 
     assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "unknown"
 
 
 async def test_user_custom_url_exception(hass, ezviz_config_flow):
@@ -432,10 +490,16 @@ async def test_user_custom_url_exception(hass, ezviz_config_flow):
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_USERNAME: "test-user", CONF_PASSWORD: "test-pass", CONF_URL: "customize"},
+        {
+            CONF_USERNAME: "test-user",
+            CONF_PASSWORD: "test-pass",
+            CONF_URL: CONF_CUSTOMIZE,
+        },
     )
 
     assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "user_custom_url"
+    assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -443,6 +507,8 @@ async def test_user_custom_url_exception(hass, ezviz_config_flow):
     )
 
     assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "user_custom_url"
+    assert result["errors"] == {"base": "invalid_auth"}
 
     ezviz_config_flow.side_effect = requests.exceptions.ConnectionError
 
@@ -452,6 +518,8 @@ async def test_user_custom_url_exception(hass, ezviz_config_flow):
     )
 
     assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "user_custom_url"
+    assert result["errors"] == {"base": "invalid_host"}
 
     ezviz_config_flow.side_effect = requests.exceptions.HTTPError
 
@@ -461,6 +529,8 @@ async def test_user_custom_url_exception(hass, ezviz_config_flow):
     )
 
     assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "user_custom_url"
+    assert result["errors"] == {"base": "cannot_connect"}
 
     ezviz_config_flow.side_effect = Exception
 
