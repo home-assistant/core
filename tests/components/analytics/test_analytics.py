@@ -94,11 +94,12 @@ async def test_send_base(hass, caplog, aioclient_mock):
     """Test send base prefrences are defined."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
+
+    await analytics.save_preferences({ATTR_BASE: True})
+    assert analytics.preferences[ATTR_BASE]
+
     with patch("uuid.UUID.hex", new_callable=PropertyMock) as hex:
         hex.return_value = MOCK_UUID
-
-        await analytics.save_preferences({ATTR_BASE: True})
-        assert analytics.preferences[ATTR_BASE]
         await analytics.send_analytics()
 
     assert f"'uuid': '{MOCK_UUID}'" in caplog.text
@@ -304,14 +305,17 @@ async def test_send_statistics_with_supervisor(hass, caplog, aioclient_mock):
     assert "'integrations':" not in caplog.text
 
 
-async def test_reusing_uuid(hass):
+async def test_reusing_uuid(hass, aioclient_mock):
     """Test reusing the stored UUID."""
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
     analytics._data[ATTR_UUID] = "NOT_MOCK_UUID"
+
+    await analytics.save_preferences({ATTR_BASE: True})
 
     with patch("uuid.UUID.hex", new_callable=PropertyMock) as hex:
         # This is not actually called but that in itself prove the test
         hex.return_value = MOCK_UUID
-        await analytics.load()
+        await analytics.send_analytics()
 
     assert analytics.uuid == "NOT_MOCK_UUID"
