@@ -33,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         config[CONF_HOST],
         config[CONF_USERNAME],
         config[CONF_PASSWORD],
-        async_client=get_async_client(),
+        async_client=get_async_client(hass),
     )
 
     try:
