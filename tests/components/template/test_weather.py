@@ -68,7 +68,7 @@ async def _test_template_state_text(hass, unit_system: UnitSystem):
     await hass.async_block_till_done()
     hass.states.async_set("sensor.pressure", 1002.3)  # in hPa
     await hass.async_block_till_done()
-    hass.states.async_set("sensor.windspeed", 10)  # in m/s
+    hass.states.async_set("sensor.windspeed", 10)  # in km/h
     await hass.async_block_till_done()
     hass.states.async_set("sensor.windbearing", 180)  # in °
     await hass.async_block_till_done()
@@ -91,12 +91,12 @@ async def _test_template_state_text(hass, unit_system: UnitSystem):
     if unit_system is METRIC_SYSTEM:
         assert data.get(ATTR_WEATHER_TEMPERATURE) == approx(22.3)  # in °C
         assert data.get(ATTR_WEATHER_PRESSURE) == approx(1002.3)  # in hpa
-        assert data.get(ATTR_WEATHER_WIND_SPEED) == approx(36)  # in km/h
+        assert data.get(ATTR_WEATHER_WIND_SPEED) == approx(10)  # in km/h
         assert data.get(ATTR_WEATHER_VISIBILITY) == approx(4.6)  # in km
     else:
         assert data.get(ATTR_WEATHER_TEMPERATURE) == approx(22)  # in °F (rounded)
         assert data.get(ATTR_WEATHER_PRESSURE) == approx(29.597899)  # in inhg
-        assert data.get(ATTR_WEATHER_WIND_SPEED) == approx(22.369356)  # in mph
+        assert data.get(ATTR_WEATHER_WIND_SPEED) == approx(6.21371)  # in mph
         assert data.get(ATTR_WEATHER_VISIBILITY) == approx(2.858306)  # in mi
 
 

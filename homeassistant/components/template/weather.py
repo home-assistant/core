@@ -201,14 +201,15 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
     @property
     def wind_speed(self):
         """Return the wind speed."""
-        # unit from template: m/s
+        # unit from template: km/h
 
         if self._wind_speed is None or self._wind_speed == "":
             return None
 
         try:
-            wind_speed_in_kmh = float(self._wind_speed) * 3.6
-            return self.hass.config.units.length(wind_speed_in_kmh, LENGTH_KILOMETERS)
+            return self.hass.config.units.length(
+                float(self._wind_speed), LENGTH_KILOMETERS
+            )
         except ValueError:
             _LOGGER.warning(
                 "Weather template '%s': wind_speed_template must expand to a number, but results in '%s'",
