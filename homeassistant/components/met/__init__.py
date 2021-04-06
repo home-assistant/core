@@ -43,8 +43,7 @@ async def async_setup_entry(hass, config_entry):
     # Don't setup if tracking home location and latitude or longitude isn't set.
     # Also, filters out our onboarding default location.
     if config_entry.data.get(CONF_TRACK_HOME, False) and (
-        not hass.config.latitude
-        or not hass.config.longitude
+        (not hass.config.latitude and not hass.config.longitude)
         or (
             hass.config.latitude == DEFAULT_HOME_LATITUDE
             and hass.config.longitude == DEFAULT_HOME_LONGITUDE

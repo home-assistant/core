@@ -89,13 +89,9 @@ class MetFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by onboarding."""
         # Don't create entry if latitude or longitude isn't set.
         # Also, filters out our onboarding default location.
-        if (
-            not self.hass.config.latitude
-            or not self.hass.config.longitude
-            or (
-                self.hass.config.latitude == DEFAULT_HOME_LATITUDE
-                and self.hass.config.longitude == DEFAULT_HOME_LONGITUDE
-            )
+        if (not self.hass.config.latitude and not self.hass.config.longitude) or (
+            self.hass.config.latitude == DEFAULT_HOME_LATITUDE
+            and self.hass.config.longitude == DEFAULT_HOME_LONGITUDE
         ):
             return self.async_abort(reason="no_home")
 
