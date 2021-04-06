@@ -123,7 +123,7 @@ async def test_full_user_wrong_mdns(hass):
     """Test we abort user flow if unsupported mDNS name got resolved."""
     with patch("pysmappee.api.SmappeeLocalApi.logon", return_value={}), patch(
         "pysmappee.api.SmappeeLocalApi.load_advanced_config",
-        return_value=[{"key": "mdnsHostName", "value": "Smappee5010000001"}],
+        return_value=[{"key": "mdnsHostName", "value": "Smappee5100000001"}],
     ), patch(
         "pysmappee.api.SmappeeLocalApi.load_command_control_config", return_value=[]
     ), patch(
