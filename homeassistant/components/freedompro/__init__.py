@@ -20,6 +20,7 @@ PLATFORMS = [
     "light",
 ]
 
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Freedompro from a config entry."""
     hass.data.setdefault(DOMAIN, {})
