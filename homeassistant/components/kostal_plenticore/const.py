@@ -513,23 +513,9 @@ SENSOR_SETTINGS_DATA = [
     ),
     (
         "devices:local",
-        "Battery:SmartBatteryControl:Enable",
-        "Battery Smart Control",
-        {ATTR_ICON: "mdi:toggle-switch"},
-        "format_round",
-    ),
-    (
-        "devices:local",
         "Battery:Strategy",
         "Battery Strategy",
         {},
-        "format_round",
-    ),
-    (
-        "devices:local",
-        "Generator:ShadowMgmt:Enable",
-        "Shadow Management",
-        {ATTR_ICON: "mdi:toggle-switch"},
         "format_round",
     ),
 ]
