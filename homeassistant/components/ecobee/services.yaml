@@ -80,16 +80,6 @@ set_dst_mode:
       description: Enable automatic daylight savings time.
       example: "true"
 
-set_humidifier_mode:
-  description: Set the humidifier mode.
-  fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: "climate.kitchen"
-    humidifier_mode:
-      description: Mode to set humidifier (auto, off, or manual).
-      example: "auto"
-
 set_mic_mode:
   description: Enable/disable Alexa mic (only for Ecobee 4).
   fields:
