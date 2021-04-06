@@ -262,6 +262,7 @@ async def async_setup_sensor_registry_updates(
         _swap_memory.cache_clear()
         _virtual_memory.cache_clear()
         _net_io_counters.cache_clear()
+        _net_if_addrs.cache_clear()
         _getloadavg.cache_clear()
 
     async def _async_update_data(*_: Any) -> None:
@@ -439,7 +440,7 @@ def _update(
         else:
             state = None
     elif type_ in ["ipv4_address", "ipv6_address"]:
-        addresses = _net_io_counters()
+        addresses = _net_if_addrs()
         if data.argument in addresses:
             for addr in addresses[data.argument]:
                 if addr.family == IF_ADDRS_FAMILY[type_]:
@@ -482,6 +483,11 @@ def _virtual_memory() -> Any:
 @lru_cache(maxsize=None)
 def _net_io_counters() -> Any:
     return psutil.net_io_counters(pernic=True)
+
+
+@lru_cache(maxsize=None)
+def _net_if_addrs() -> Any:
+    return psutil.net_if_addrs()
 
 
 @lru_cache(maxsize=None)
