@@ -64,8 +64,12 @@ async def async_verify_supported_device(hass, host):
     """Verify the doorbell state endpoint returns a 401."""
     device = DoorBird(host, "", "")
     try:
-        await hass.async_add_executor_job(device.doorbell_state)
+        ret = await hass.async_add_executor_job(device.doorbell_state)
+        _LOGGER.warning("async_verify_supported_device: %s", ret)
     except urllib.error.HTTPError as err:
+        _LOGGER.warning("async_verify_supported_device: err=%s", err)
+        _LOGGER.warning("async_verify_supported_device: err.code=%s", err.code)
+
         if err.code == HTTP_UNAUTHORIZED:
             return True
     except OSError:
