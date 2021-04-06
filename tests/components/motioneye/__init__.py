@@ -82,12 +82,12 @@ TEST_CAMERA = {
     "streaming_server_resize": False,
     "upload_subfolders": True,
     "sunday_to": "",
-    "left_text": "camera-name",
+    "left_text": "",
     "image_file_name": "%Y-%m-%d/%H-%M-%S",
     "rotation": 0,
     "capture_mode": "manual",
     "movies": False,
-    "motion_detection": False,
+    "motion_detection": True,
     "text_scale": 1,
     "upload_username": "",
     "upload_port": "",
@@ -148,7 +148,9 @@ def create_mock_motioneye_client() -> AsyncMock:
 
 
 def create_mock_motioneye_config_entry(
-    hass: HomeAssistantType, data: dict[str, Any] | None = None
+    hass: HomeAssistantType,
+    data: dict[str, Any] | None = None,
+    options: dict[str, Any] | None = None,
 ) -> ConfigEntry:
     """Add a test config entry."""
     config_entry: MockConfigEntry = MockConfigEntry(  # type: ignore[no-untyped-call]
@@ -157,6 +159,7 @@ def create_mock_motioneye_config_entry(
         data=data or {CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT},
         title=f"{TEST_HOST}:{TEST_PORT}",
         unique_id=TEST_UNIQUE_ID,
+        options=options or {},
     )
     config_entry.add_to_hass(hass)  # type: ignore[no-untyped-call]
     return config_entry

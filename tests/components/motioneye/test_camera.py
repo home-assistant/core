@@ -281,17 +281,17 @@ async def test_state_attributes(hass: HomeAssistantType) -> None:
     entity_state = hass.states.get(TEST_CAMERA_ENTITY_ID)
     assert entity_state
     assert entity_state.attributes.get("brand") == MOTIONEYE_MANUFACTURER
-    assert not entity_state.attributes.get("motion_detection")
+    assert entity_state.attributes.get("motion_detection")
 
     cameras = copy.deepcopy(TEST_CAMERAS)
-    cameras[KEY_CAMERAS][0][KEY_MOTION_DETECTION] = True
+    cameras[KEY_CAMERAS][0][KEY_MOTION_DETECTION] = False
     client.async_get_cameras = AsyncMock(return_value=cameras)
     async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)
     await hass.async_block_till_done()
 
     entity_state = hass.states.get(TEST_CAMERA_ENTITY_ID)
     assert entity_state
-    assert entity_state.attributes.get("motion_detection")
+    assert not entity_state.attributes.get("motion_detection")
 
 
 async def test_device_info(hass: HomeAssistantType) -> None:

@@ -1,4 +1,4 @@
-"""The motionEye integration."""
+"""Tests for the motionEye integration."""
 from __future__ import annotations
 
 import asyncio
@@ -73,13 +73,14 @@ def get_camera_from_cameras(
     """Get an individual camera dict from a multiple cameras data response."""
     for camera in data.get(KEY_CAMERAS) or []:
         if camera.get(KEY_ID) == camera_id:
-            return camera
+            val: dict[str, Any] = camera
+            return val
     return None
 
 
-def is_acceptable_camera(camera: dict[str, Any]) -> bool:
+def is_acceptable_camera(camera: dict[str, Any] | None) -> bool:
     """Determine if a camera dict is acceptable."""
-    return camera and KEY_ID in camera and KEY_NAME in camera
+    return bool(camera and KEY_ID in camera and KEY_NAME in camera)
 
 
 @callback
@@ -101,7 +102,7 @@ def listen_for_new_cameras(
     )
 
 
-async def async_setup(hass: HomeAssistant, config: dict[str, Any]):
+async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
     """Set up the motionEye component."""
     hass.data[DOMAIN] = {}
     return True
@@ -118,7 +119,28 @@ async def _create_reauth_flow(
     )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def _add_camera(
+    hass: HomeAssistant,
+    client: MotionEyeClient,
+    entry: ConfigEntry,
+    camera_id: int,
+    camera: dict[str, Any],
+    device_id: str,
+) -> None:
+    """Add a motionEye camera to hass."""
+    async_dispatcher_send(
+        hass,
+        SIGNAL_CAMERA_ADD.format(entry.entry_id),
+        camera,
+    )
+
+
+async def _async_entry_updated(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    """Handle entry updates."""
+    await hass.config_entries.async_reload(config_entry.entry_id)
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up motionEye from a config entry."""
     client = create_motioneye_client(
         entry.data[CONF_HOST],
@@ -139,7 +161,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         await client.async_client_close()
         raise ConfigEntryNotReady from exc
 
-    async def async_update_data():
+    async def async_update_data() -> dict[str, Any] | None:
         try:
             return await client.async_get_cameras()
         except MotionEyeClientError as exc:
@@ -179,11 +201,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             if device_unique_id in current_cameras:
                 continue
             current_cameras.add(device_unique_id)
-
-            async_dispatcher_send(
-                hass,
-                SIGNAL_CAMERA_ADD.format(entry.entry_id),
-                camera,
+            hass.async_create_task(
+                _add_camera(hass, client, entry, camera_id, camera, device_unique_id)
             )
 
         # Ensure every device associated with this config entry is still in the list of
@@ -208,12 +227,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             coordinator.async_add_listener(_async_process_motioneye_cameras)
         )
         await coordinator.async_refresh()
+        hass.data[DOMAIN][entry.entry_id][CONF_ON_UNLOAD].append(
+            entry.add_update_listener(_async_entry_updated)
+        )
 
     hass.async_create_task(setup_then_listen())
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = all(
         await asyncio.gather(

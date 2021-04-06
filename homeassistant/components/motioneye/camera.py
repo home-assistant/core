@@ -85,6 +85,7 @@ async def async_setup_entry(
         )
 
     listen_for_new_cameras(hass, entry, camera_add)
+    return True
 
 
 class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
@@ -109,7 +110,7 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
         self._unique_id = get_motioneye_entity_unique_id(
             host, port, self._camera_id, TYPE_MOTIONEYE_MJPEG_CAMERA
         )
-        self._motion_detection_enabled = camera.get(KEY_MOTION_DETECTION, False)
+        self._motion_detection_enabled: bool = camera.get(KEY_MOTION_DETECTION, False)
         self._available = MotionEyeMjpegCamera._is_acceptable_streaming_camera(camera)
 
         # motionEye cameras are always streaming. If streaming is stopped on the
@@ -125,7 +126,9 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
         )
         CoordinatorEntity.__init__(self, coordinator)
 
-    def _get_mjpeg_camera_properties_for_camera(self, camera: dict[str, Any]):
+    def _get_mjpeg_camera_properties_for_camera(
+        self, camera: dict[str, Any]
+    ) -> dict[str, Any]:
         """Convert a motionEye camera to MjpegCamera internal properties."""
         auth = None
         if camera.get(KEY_STREAMING_AUTH_MODE) in [
@@ -143,7 +146,7 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
             CONF_AUTHENTICATION: auth,
         }
 
-    def _set_mjpeg_camera_state_for_camera(self, camera: dict[str, Any]):
+    def _set_mjpeg_camera_state_for_camera(self, camera: dict[str, Any]) -> None:
         """Set the internal state to match the given camera."""
 
         # Sets the state of the underlying (inherited) MjpegCamera based on the updated
@@ -165,7 +168,7 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
         return self._unique_id
 
     @classmethod
-    def _is_acceptable_streaming_camera(cls, camera: dict[str, Any]) -> None:
+    def _is_acceptable_streaming_camera(cls, camera: dict[str, Any] | None) -> bool:
         """Determine if a camera is streaming/usable."""
         return is_acceptable_camera(camera) and MotionEyeClient.is_camera_streaming(
             camera
@@ -183,6 +186,7 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
         if self.coordinator.last_update_success:
             camera = get_camera_from_cameras(self._camera_id, self.coordinator.data)
             if MotionEyeMjpegCamera._is_acceptable_streaming_camera(camera):
+                assert camera
                 self._set_mjpeg_camera_state_for_camera(camera)
                 self._motion_detection_enabled = camera.get(KEY_MOTION_DETECTION, False)
                 available = True
@@ -190,17 +194,17 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
         CoordinatorEntity._handle_coordinator_update(self)
 
     @property
-    def brand(self):
+    def brand(self) -> str:
         """Return the camera brand."""
         return MOTIONEYE_MANUFACTURER
 
     @property
-    def motion_detection_enabled(self):
+    def motion_detection_enabled(self) -> bool:
         """Return the camera motion detection status."""
         return self._motion_detection_enabled
 
     @property
-    def device_info(self):
+    def device_info(self) -> dict[str, Any]:
         """Return the device information."""
         return {
             "identifiers": {
