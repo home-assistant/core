@@ -35,7 +35,12 @@ from homeassistant.helpers.typing import ConfigType
 from . import DOMAIN
 
 BASIC_TRIGGER_TYPES = {"triggered", "disarmed", "arming"}
-TRIGGER_TYPES = BASIC_TRIGGER_TYPES | {"armed_home", "armed_away", "armed_night"}
+TRIGGER_TYPES = BASIC_TRIGGER_TYPES | {
+    "armed_home",
+    "armed_away",
+    "armed_night",
+    "armed_vacation",
+}
 
 TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
     {
@@ -103,10 +108,7 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
         if supported_features & SUPPORT_ALARM_ARM_VACATION:
             triggers.append(
                 {
-                    CONF_PLATFORM: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
+                    **base_trigger,
                     CONF_TYPE: "armed_vacation",
                 }
             )

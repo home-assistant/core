@@ -323,6 +323,7 @@ async def test_if_fires_on_state_change(hass, calls):
         == "armed_vacation - device - alarm_control_panel.entity - armed_night - armed_vacation - None"
     )
 
+
 async def test_if_fires_on_state_change_with_for(hass, calls):
     """Test for triggers firing with delay."""
     entity_id = f"{DOMAIN}.entity"
