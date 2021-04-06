@@ -499,13 +499,6 @@ SENSOR_PROCESS_DATA = [
 SENSOR_SETTINGS_DATA = [
     (
         "devices:local",
-        "Battery:DynamicSoc:Enable",
-        "Battery Dynamic Soc",
-        {ATTR_ICON: "mdi:toggle-switch"},
-        "format_round",
-    ),
-    (
-        "devices:local",
         "Battery:MinHomeComsumption",
         "Battery min Home Consumption",
         {ATTR_UNIT_OF_MEASUREMENT: POWER_WATT, ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER},
