@@ -251,6 +251,7 @@ async def test_reauth_success(hass):
             result["flow_id"],
             user_input={CONF_TOKEN: "new-token"},
         )
+        await hass.async_block_till_done()
 
         assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result2["reason"] == "reauth_successful"
