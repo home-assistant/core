@@ -1333,9 +1333,9 @@ class LoggingUndefined(jinja2.Undefined):
     def _log_message(self):
         template = template_cv.get() or ""
         _LOGGER.warning(
-            "Template variable warning when rendering '%s': %s",
-            template,
+            "Template variable warning: %s when rendering '%s'",
             self._undefined_message,
+            template,
         )
 
     def _fail_with_undefined_error(self, *args, **kwargs):
@@ -1344,9 +1344,9 @@ class LoggingUndefined(jinja2.Undefined):
         except self._undefined_exception as ex:
             template = template_cv.get() or ""
             _LOGGER.error(
-                "Template variable error when rendering '%s': %s",
-                template,
+                "Template variable error: %s when rendering '%s'",
                 self._undefined_message,
+                template,
             )
             raise ex
 
