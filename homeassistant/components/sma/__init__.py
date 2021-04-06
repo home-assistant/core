@@ -65,8 +65,8 @@ async def _parse_legacy_options(entry: ConfigEntry, sensor_def: pysma.Sensors) -
                 config_sensors.append(pysma.LEGACY_MAP[sensor]["new_sensor"])
 
         # Only sensors from config should be enabled
-        for s in sensor_def:
-            s.enabled = s.name in config_sensors
+        for sensor in sensor_def:
+            sensor.enabled = sensor.name in config_sensors
 
 
 async def _migrate_old_unique_ids(
