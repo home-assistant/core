@@ -6,7 +6,7 @@ import aiohttp
 import async_timeout
 
 from homeassistant.components import hassio
-from homeassistant.components.api import ATTR_INSTALLATION_TYPE, ATTR_UUID
+from homeassistant.components.api import ATTR_INSTALLATION_TYPE
 from homeassistant.components.automation.const import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.const import __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant
@@ -37,6 +37,7 @@ from .const import (
     ATTR_SUPPORTED,
     ATTR_USAGE,
     ATTR_USER_COUNT,
+    ATTR_UUID,
     ATTR_VERSION,
     LOGGER,
     PREFERENCE_SCHEMA,
@@ -87,10 +88,6 @@ class Analytics:
         if stored:
             self._data = stored
 
-        if self._data.get(ATTR_UUID) is None:
-            self._data[ATTR_UUID] = uuid.uuid4().hex
-            await self._store.async_save(self._data)
-
         if self.supervisor:
             supervisor_info = hassio.get_supervisor_info(self.hass)
             if not self.onboarded:
@@ -109,6 +106,7 @@ class Analytics:
         preferences = PREFERENCE_SCHEMA(preferences)
         self._data[ATTR_PREFERENCES].update(preferences)
         self._data[ATTR_ONBOARDED] = True
+
         await self._store.async_save(self._data)
 
         if self.supervisor:
@@ -123,6 +121,10 @@ class Analytics:
         if not self.onboarded or not self.preferences.get(ATTR_BASE, False):
             LOGGER.debug("Nothing to submit")
             return
+
+        if self._data.get(ATTR_UUID) is None:
+            self._data[ATTR_UUID] = uuid.uuid4().hex
+            await self._store.async_save(self._data)
 
         if self.supervisor:
             supervisor_info = hassio.get_supervisor_info(self.hass)

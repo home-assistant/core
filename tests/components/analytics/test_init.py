@@ -1,6 +1,4 @@
 """The tests for the analytics ."""
-from unittest.mock import PropertyMock, patch
-
 from homeassistant.components.analytics.const import ANALYTICS_ENDPOINT_URL, DOMAIN
 from homeassistant.setup import async_setup_component
 
@@ -16,9 +14,7 @@ async def test_setup(hass):
 async def test_websocket(hass, hass_ws_client, aioclient_mock):
     """Test websocekt commands."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
-    with patch("uuid.UUID.hex", new_callable=PropertyMock) as hex:
-        hex.return_value = "abcdef"
-        assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
 
     ws_client = await hass_ws_client(hass)
