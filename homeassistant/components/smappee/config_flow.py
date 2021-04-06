@@ -1,6 +1,7 @@
 """Config flow for Smappee."""
 import logging
 
+from pysmappee import mqtt
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -88,8 +89,6 @@ class SmappeeFlowHandler(
         # Attempt to make a connection to the local device
         if serial_number.startswith("50"):
             # next generation device, attempt connect to the local mqtt broker
-            from pysmappee import mqtt
-
             smappee_mqtt = mqtt.SmappeeLocalMqtt(serial_number=serial_number)
             connect = smappee_mqtt.start_attempt()
             if not connect:
