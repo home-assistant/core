@@ -13,9 +13,10 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.util.color import (
-    color_hs_to_RGB,
+    color_hsv_to_RGB,
     color_rgb_to_hex,
     color_RGB_to_hs,
+    color_RGB_to_hsv,
     rgb_hex_to_rgb_list,
 )
 
@@ -39,7 +40,9 @@ class BleBoxLightEntity(BleBoxEntity, LightEntity):
     def supported_features(self):
         """Return supported features."""
         white = SUPPORT_WHITE_VALUE if self._feature.supports_white else 0
-        color = SUPPORT_COLOR if self._feature.supports_color else 0
+        color = (
+            SUPPORT_COLOR | SUPPORT_BRIGHTNESS if self._feature.supports_color else 0
+        )
         brightness = SUPPORT_BRIGHTNESS if self._feature.supports_brightness else 0
         return white | color | brightness
 
@@ -51,6 +54,14 @@ class BleBoxLightEntity(BleBoxEntity, LightEntity):
     @property
     def brightness(self):
         """Return the name."""
+        if self._feature.supports_color:
+            rgbw_hex = self._feature.rgbw_hex
+            if rgbw_hex is None:
+                return None
+
+            rgb = rgb_hex_to_rgb_list(rgbw_hex)[0:3]
+            return color_RGB_to_hsv(*rgb)[2] / 100 * 255
+
         return self._feature.brightness
 
     @property
@@ -79,13 +90,21 @@ class BleBoxLightEntity(BleBoxEntity, LightEntity):
         value = feature.sensible_on_value
 
         if brightness is not None:
-            value = feature.apply_brightness(value, brightness)
+            if self._feature.supports_color:
+                raw_rgb = color_rgb_to_hex(
+                    *color_hsv_to_RGB(*self.hs_color, brightness / 255 * 100)
+                )
+                value = feature.apply_color(value, raw_rgb)
+            else:
+                value = feature.apply_brightness(value, brightness)
 
         if white is not None:
             value = feature.apply_white(value, white)
 
         if hs_color is not None:
-            raw_rgb = color_rgb_to_hex(*color_hs_to_RGB(*hs_color))
+            raw_rgb = color_rgb_to_hex(
+                *color_hsv_to_RGB(*hs_color, (self.brightness or 255) / 255 * 100)
+            )
             value = feature.apply_color(value, raw_rgb)
 
         try:

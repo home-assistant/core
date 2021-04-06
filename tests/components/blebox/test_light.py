@@ -333,6 +333,7 @@ async def test_wlightbox_init(wlightbox, hass, config):
     supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
     assert supported_features & SUPPORT_WHITE_VALUE
     assert supported_features & SUPPORT_COLOR
+    assert supported_features & SUPPORT_BRIGHTNESS
 
     assert ATTR_WHITE_VALUE not in state.attributes
     assert ATTR_HS_COLOR not in state.attributes
