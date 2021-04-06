@@ -1,5 +1,5 @@
 """Test the Bosch SHC config flow."""
-from unittest.mock import PropertyMock, patch
+from unittest.mock import PropertyMock, mock_open, patch
 
 from boschshcpy.exceptions import (
     SHCAuthenticationError,
@@ -11,6 +11,7 @@ from boschshcpy.exceptions import (
 from boschshcpy.information import SHCInformation
 
 from homeassistant import config_entries, setup
+from homeassistant.components.bosch_shc.config_flow import write_tls_asset
 from homeassistant.components.bosch_shc.const import CONF_SHC_CERT, CONF_SHC_KEY, DOMAIN
 
 from tests.common import MockConfigEntry
@@ -64,11 +65,7 @@ async def test_form_user(hass):
             "cert": b"content_cert",
             "key": b"content_key",
         },
-    ), patch(
-        "homeassistant.components.bosch_shc.config_flow.ConfigFlow._write_tls_assets",
-        # ), patch("os.makedirs",
-        # ), patch("builtins.open",
-    ), patch(
+    ), patch("homeassistant.components.bosch_shc.config_flow.write_tls_asset",), patch(
         "boschshcpy.session.SHCSession.authenticate"
     ) as mock_setup, patch(
         "homeassistant.components.bosch_shc.async_setup_entry",
@@ -230,9 +227,7 @@ async def test_form_user_invalid_auth(hass):
             "cert": b"content_cert",
             "key": b"content_key",
         },
-    ), patch(
-        "homeassistant.components.bosch_shc.config_flow.ConfigFlow._write_tls_assets",
-    ), patch(
+    ), patch("homeassistant.components.bosch_shc.config_flow.write_tls_asset",), patch(
         "boschshcpy.session.SHCSession.authenticate",
         side_effect=SHCAuthenticationError,
     ):
@@ -279,9 +274,7 @@ async def test_form_validate_connection_error(hass):
             "cert": b"content_cert",
             "key": b"content_key",
         },
-    ), patch(
-        "homeassistant.components.bosch_shc.config_flow.ConfigFlow._write_tls_assets",
-    ), patch(
+    ), patch("homeassistant.components.bosch_shc.config_flow.write_tls_asset",), patch(
         "boschshcpy.session.SHCSession.authenticate",
         side_effect=SHCConnectionError,
     ):
@@ -328,9 +321,7 @@ async def test_form_validate_mdns_error(hass):
             "cert": b"content_cert",
             "key": b"content_key",
         },
-    ), patch(
-        "homeassistant.components.bosch_shc.config_flow.ConfigFlow._write_tls_assets",
-    ), patch(
+    ), patch("homeassistant.components.bosch_shc.config_flow.write_tls_asset",), patch(
         "boschshcpy.session.SHCSession.authenticate",
         side_effect=SHCmDNSError,
     ):
@@ -377,9 +368,7 @@ async def test_form_validate_session_error(hass):
             "cert": b"content_cert",
             "key": b"content_key",
         },
-    ), patch(
-        "homeassistant.components.bosch_shc.config_flow.ConfigFlow._write_tls_assets",
-    ), patch(
+    ), patch("homeassistant.components.bosch_shc.config_flow.write_tls_asset",), patch(
         "boschshcpy.session.SHCSession.authenticate",
         side_effect=SHCSessionError,
     ):
@@ -426,9 +415,7 @@ async def test_form_validate_exception(hass):
             "cert": b"content_cert",
             "key": b"content_key",
         },
-    ), patch(
-        "homeassistant.components.bosch_shc.config_flow.ConfigFlow._write_tls_assets",
-    ), patch(
+    ), patch("homeassistant.components.bosch_shc.config_flow.write_tls_asset",), patch(
         "boschshcpy.session.SHCSession.authenticate",
         side_effect=Exception,
     ):
@@ -520,9 +507,7 @@ async def test_zeroconf(hass):
             "cert": b"content_cert",
             "key": b"content_key",
         },
-    ), patch(
-        "homeassistant.components.bosch_shc.config_flow.ConfigFlow._write_tls_assets",
-    ), patch(
+    ), patch("homeassistant.components.bosch_shc.config_flow.write_tls_asset",), patch(
         "boschshcpy.session.SHCSession.authenticate",
     ), patch(
         "homeassistant.components.bosch_shc.async_setup", return_value=True
@@ -617,3 +602,20 @@ async def test_zeroconf_not_bosch_shc(hass):
     )
     assert result["type"] == "abort"
     assert result["reason"] == "not_bosch_shc"
+
+
+async def test_tls_assets_writer(hass):
+    """Test we write tls assets to correct location."""
+    assets = {
+        "token": "abc:123",
+        "cert": b"content_cert",
+        "key": b"content_key",
+    }
+    with patch("os.mkdir"), patch("builtins.open", mock_open()) as mocked_file:
+        write_tls_asset(hass, CONF_SHC_CERT, assets["cert"])
+        mocked_file.assert_called_with(hass.config.path(DOMAIN, CONF_SHC_CERT), "w")
+        mocked_file().write.assert_called_with("content_cert")
+
+        write_tls_asset(hass, CONF_SHC_KEY, assets["key"])
+        mocked_file.assert_called_with(hass.config.path(DOMAIN, CONF_SHC_KEY), "w")
+        mocked_file().write.assert_called_with("content_key")

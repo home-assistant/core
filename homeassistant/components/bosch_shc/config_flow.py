@@ -54,6 +54,13 @@ async def validate_input(hass: core.HomeAssistant, host, cert, key):
     await hass.async_add_executor_job(session.authenticate)
 
 
+def write_tls_asset(hass: core.HomeAssistant, filename: str, asset: bytes):
+    """Write the tls assets to disk."""
+    makedirs(hass.config.path(DOMAIN), exist_ok=True)
+    with open(hass.config.path(DOMAIN, filename), "w") as file_handle:
+        file_handle.write(asset.decode("utf-8"))
+
+
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Bosch SHC."""
 
@@ -102,7 +109,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if "token" in result:
                     self.hostname = result["token"].split(":", 1)[1]
 
-                await self.hass.async_add_executor_job(self._write_tls_assets, result)
+                await self.hass.async_add_executor_job(
+                    write_tls_asset, self.hass, CONF_SHC_CERT, result["cert"]
+                )
+                await self.hass.async_add_executor_job(
+                    write_tls_asset, self.hass, CONF_SHC_KEY, result["key"]
+                )
                 await validate_input(
                     self.hass,
                     self.host,
@@ -206,11 +218,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         information = await self.hass.async_add_executor_job(session.mdns_info)
         return {"title": information.name, "unique_id": information.unique_id}
-
-    def _write_tls_assets(self, assets):
-        """Write the tls assets to disk."""
-        makedirs(self.hass.config.path(DOMAIN), exist_ok=True)
-        with open(self.hass.config.path(DOMAIN, CONF_SHC_CERT), "w") as file_handle:
-            file_handle.write(assets["cert"].decode("utf-8"))
-        with open(self.hass.config.path(DOMAIN, CONF_SHC_KEY), "w") as file_handle:
-            file_handle.write(assets["key"].decode("utf-8"))
