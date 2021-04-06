@@ -715,7 +715,7 @@ class LazyState(State):
                 self._attributes = json.loads(self._row.attributes)
             except ValueError:
                 # When json.loads fails
-                _LOGGER.exception("Error converting row to state: %s", self)
+                _LOGGER.exception("Error converting row to state: %s", self._row)
                 self._attributes = {}
         return self._attributes
 
