@@ -6,12 +6,29 @@ from pydeconz.sensor import (
     ANCILLARY_CONTROL_ARMED_AWAY,
     ANCILLARY_CONTROL_ARMED_NIGHT,
     ANCILLARY_CONTROL_ARMED_STAY,
+    ANCILLARY_CONTROL_ARMING_AWAY,
+    ANCILLARY_CONTROL_ARMING_NIGHT,
+    ANCILLARY_CONTROL_ARMING_STAY,
     ANCILLARY_CONTROL_DISARMED,
+    ANCILLARY_CONTROL_ENTRY_DELAY,
+    ANCILLARY_CONTROL_EXIT_DELAY,
+    ANCILLARY_CONTROL_IN_ALARM,
+    ANCILLARY_CONTROL_NOT_READY,
 )
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
 )
+from homeassistant.components.deconz.alarm_control_panel import (
+    SERVICE_ALARM_ARMING_AWAY,
+    SERVICE_ALARM_ARMING_HOME,
+    SERVICE_ALARM_ARMING_NIGHT,
+    SERVICE_ALARM_ENTRY_DELAY,
+    SERVICE_ALARM_EXIT_DELAY,
+    SERVICE_ALARM_NOT_READY,
+    SERVICE_ALARM_TRIGGERED,
+)
+from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_ALARM_ARM_AWAY,
@@ -114,6 +131,78 @@ async def test_alarm_control_panel(hass, aioclient_mock, mock_deconz_websocket):
         blocking=True,
     )
     assert aioclient_mock.mock_calls[4][2] == {"armed": ANCILLARY_CONTROL_DISARMED}
+
+    # Custom services
+
+    # Service set alarm to arming away
+
+    await hass.services.async_call(
+        DECONZ_DOMAIN,
+        SERVICE_ALARM_ARMING_AWAY,
+        {ATTR_ENTITY_ID: "alarm_control_panel.keypad"},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[5][2] == {"armed": ANCILLARY_CONTROL_ARMING_AWAY}
+
+    # Service set alarm to arming home
+
+    await hass.services.async_call(
+        DECONZ_DOMAIN,
+        SERVICE_ALARM_ARMING_HOME,
+        {ATTR_ENTITY_ID: "alarm_control_panel.keypad"},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[6][2] == {"armed": ANCILLARY_CONTROL_ARMING_STAY}
+
+    # Service set alarm to arming night
+
+    await hass.services.async_call(
+        DECONZ_DOMAIN,
+        SERVICE_ALARM_ARMING_NIGHT,
+        {ATTR_ENTITY_ID: "alarm_control_panel.keypad"},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[7][2] == {"armed": ANCILLARY_CONTROL_ARMING_NIGHT}
+
+    # Service set alarm to entry delay
+
+    await hass.services.async_call(
+        DECONZ_DOMAIN,
+        SERVICE_ALARM_ENTRY_DELAY,
+        {ATTR_ENTITY_ID: "alarm_control_panel.keypad"},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[8][2] == {"armed": ANCILLARY_CONTROL_ENTRY_DELAY}
+
+    # Service set alarm to exit delay
+
+    await hass.services.async_call(
+        DECONZ_DOMAIN,
+        SERVICE_ALARM_EXIT_DELAY,
+        {ATTR_ENTITY_ID: "alarm_control_panel.keypad"},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[9][2] == {"armed": ANCILLARY_CONTROL_EXIT_DELAY}
+
+    # Service set alarm to not ready
+
+    await hass.services.async_call(
+        DECONZ_DOMAIN,
+        SERVICE_ALARM_NOT_READY,
+        {ATTR_ENTITY_ID: "alarm_control_panel.keypad"},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[10][2] == {"armed": ANCILLARY_CONTROL_NOT_READY}
+
+    # Service set alarm to triggered
+
+    await hass.services.async_call(
+        DECONZ_DOMAIN,
+        SERVICE_ALARM_TRIGGERED,
+        {ATTR_ENTITY_ID: "alarm_control_panel.keypad"},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[11][2] == {"armed": ANCILLARY_CONTROL_IN_ALARM}
 
     await hass.config_entries.async_unload(config_entry.entry_id)
 
