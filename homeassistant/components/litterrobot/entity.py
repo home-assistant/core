@@ -55,6 +55,11 @@ class LitterRobotEntity(CoordinatorEntity):
 class LitterRobotControlEntity(LitterRobotEntity):
     """A Litter-Robot entity that can control the unit."""
 
+    def __init__(self, robot: Robot, entity_type: str, hub: LitterRobotHub) -> None:
+        """Init a Litter-Robot control entity."""
+        super().__init__(robot=robot, entity_type=entity_type, hub=hub)
+        self._refresh_callback = None
+
     async def perform_action_and_refresh(
         self, action: MethodType, *args: Any, **kwargs: Any
     ) -> bool:
@@ -62,6 +67,7 @@ class LitterRobotControlEntity(LitterRobotEntity):
 
         async def async_call_later_callback(*_) -> None:
             """Perform refresh request on callback."""
+            self._refresh_callback = None
             await self.coordinator.async_request_refresh()
 
         try:
@@ -70,10 +76,20 @@ class LitterRobotControlEntity(LitterRobotEntity):
             _LOGGER.error(ex)
             return False
 
-        async_call_later(
+        self.clear()
+        self._refresh_callback = async_call_later(
             self.hass, REFRESH_WAIT_TIME_SECONDS, async_call_later_callback
         )
         return True
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Cancel refresh callback when entity is being removed from hass."""
+        self.clear()
+
+    def clear(self):
+        """Clear the refresh callback if it has not already fired."""
+        if self._refresh_callback is not None:
+            self._refresh_callback()
 
     @staticmethod
     def parse_time_at_default_timezone(time_str: str) -> time | None:

@@ -24,3 +24,5 @@ ROBOT_DATA = {
     "nightLightActive": "1",
     "sleepModeActive": "112:50:19",
 }
+
+VACUUM_ENTITY_ID = "vacuum.test_litter_box"
