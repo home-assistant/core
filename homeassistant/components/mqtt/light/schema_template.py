@@ -417,7 +417,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             and self._templates[CONF_GREEN_TEMPLATE] is not None
             and self._templates[CONF_BLUE_TEMPLATE] is not None
         ):
-            features = features | SUPPORT_COLOR
+            features = features | SUPPORT_COLOR | SUPPORT_BRIGHTNESS
         if self._config.get(CONF_EFFECT_LIST) is not None:
             features = features | SUPPORT_EFFECT
         if self._templates[CONF_COLOR_TEMP_TEMPLATE] is not None:
