@@ -29,7 +29,7 @@ async def test_unload_entry(hass):
 
 
 async def test_fail_default_home_entry(hass, caplog):
-    """Test successful unload of entry."""
+    """Test abort setup of default home location."""
     await async_process_ha_core_config(
         hass,
         {"latitude": 52.3731339, "longitude": 4.8903147},
