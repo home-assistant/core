@@ -3,6 +3,9 @@
         "abort": {
             "already_configured": "Location is already configured"
         },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
         "step": {
             "user": {
                 "data": {
