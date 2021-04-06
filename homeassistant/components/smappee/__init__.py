@@ -75,12 +75,8 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Smappee from a zeroconf or config entry."""
     if CONF_IP_ADDRESS in entry.data:
-<<<<<<< HEAD
         if helper.is_smappee_genius(entry.data[CONF_SERIALNUMBER]):
             # next generation: local mqtt broker
-=======
-        if entry.data[CONF_SERIALNUMBER].startswith("50"):
->>>>>>> f78fc90cab... mqtt import
             smappee_mqtt = mqtt.SmappeeLocalMqtt(
                 serial_number=entry.data[CONF_SERIALNUMBER]
             )
@@ -89,6 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 api=smappee_mqtt, serialnumber=entry.data[CONF_SERIALNUMBER]
             )
         else:
+            # legacy devices through local api
             smappee_api = api.api.SmappeeLocalApi(ip=entry.data[CONF_IP_ADDRESS])
             smappee = Smappee(
                 api=smappee_api, serialnumber=entry.data[CONF_SERIALNUMBER]
