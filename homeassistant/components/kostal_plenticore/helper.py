@@ -29,7 +29,6 @@ class Plenticore:
         self.config_entry = config_entry
 
         self._client = None
-        self._login = False
         self._shutdown_remove_listener = None
 
         self.device_info = {}
@@ -60,7 +59,6 @@ class Plenticore:
             _LOGGER.error("Error connecting to %s", self.host)
             raise ConfigEntryNotReady from err
         else:
-            self._login = True
             _LOGGER.debug("Log-in successfully to %s", self.host)
 
         self._shutdown_remove_listener = self.hass.bus.async_listen_once(
@@ -107,11 +105,9 @@ class Plenticore:
         if self._shutdown_remove_listener:
             self._shutdown_remove_listener()
 
-        if self._login:
-            self._login = False
-            await self._client.logout()
-            self._client = None
-            _LOGGER.debug("Logged out from %s", self.host)
+        await self._client.logout()
+        self._client = None
+        _LOGGER.debug("Logged out from %s", self.host)
 
 
 class PlenticoreUpdateCoordinator(DataUpdateCoordinator):
