@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "reauth_successful": "Successfully reauthenticated."
+        },
         "error": {
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
@@ -10,6 +13,13 @@
                 "data": {
                     "host": "Host",
                     "port": "Port",
+                    "token": "Access Token"
+                }
+            },
+            "reauth_confirm": {
+                "title": "Reauthenticate Integration",
+                "description": "The Nuki integration needs to re-authenticate with your bridge.",
+                "data": {
                     "token": "Access Token"
                 }
             }
