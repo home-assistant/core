@@ -74,8 +74,11 @@ async def async_verify_supported_device(hass, host):
 
         if err.code == HTTP_UNAUTHORIZED:
             return True
-    except OSError:
+    except OSError as err:
+        _LOGGER.warning("async_verify_supported_device: oserror=%s", err)
         return False
+
+    _LOGGER.warning("async_verify_supported_device: NOT ERROR")
     return False
 
 
