@@ -3,7 +3,13 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.met.const import DOMAIN, HOME_LOCATION_NAME
+from homeassistant.components.met.const import (
+    DEFAULT_HOME_LATITUDE,
+    DEFAULT_HOME_LONGITUDE,
+    DOMAIN,
+    HOME_LOCATION_NAME,
+)
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE
 
 from tests.common import MockConfigEntry
@@ -104,6 +110,24 @@ async def test_onboarding_step(hass):
     assert result["type"] == "create_entry"
     assert result["title"] == HOME_LOCATION_NAME
     assert result["data"] == {"track_home": True}
+
+
+async def test_onboarding_step_abort_default_home(hass):
+    """Test entry not created when default step fails."""
+    await async_process_ha_core_config(
+        hass,
+        {"latitude": 52.3731339, "longitude": 4.8903147},
+    )
+
+    assert hass.config.latitude == DEFAULT_HOME_LATITUDE
+    assert hass.config.longitude == DEFAULT_HOME_LONGITUDE
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "onboarding"}, data={}
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "default_home"
 
 
 async def test_import_step(hass):

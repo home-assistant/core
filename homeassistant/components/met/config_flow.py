@@ -10,7 +10,13 @@ from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE, C
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_TRACK_HOME, DOMAIN, HOME_LOCATION_NAME
+from .const import (
+    CONF_TRACK_HOME,
+    DEFAULT_HOME_LATITUDE,
+    DEFAULT_HOME_LONGITUDE,
+    DOMAIN,
+    HOME_LOCATION_NAME,
+)
 
 
 @callback
@@ -81,6 +87,12 @@ class MetFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_onboarding(self, data=None):
         """Handle a flow initialized by onboarding."""
+        if (
+            self.hass.config.latitude == DEFAULT_HOME_LATITUDE
+            and self.hass.config.longitude == DEFAULT_HOME_LONGITUDE
+        ):
+            return self.async_abort(reason="default_home")
+
         return self.async_create_entry(
             title=HOME_LOCATION_NAME, data={CONF_TRACK_HOME: True}
         )
