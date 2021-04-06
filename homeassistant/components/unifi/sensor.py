@@ -3,7 +3,10 @@
 Support for bandwidth sensors of network clients.
 Support for uptime sensors of network clients.
 """
-from homeassistant.components.sensor import DEVICE_CLASS_TIMESTAMP, DOMAIN
+
+from datetime import datetime, timedelta
+
+from homeassistant.components.sensor import DEVICE_CLASS_TIMESTAMP, DOMAIN, SensorEntity
 from homeassistant.const import DATA_MEGABYTES
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -76,7 +79,7 @@ def add_uptime_entities(controller, async_add_entities, clients):
         async_add_entities(sensors)
 
 
-class UniFiBandwidthSensor(UniFiClient):
+class UniFiBandwidthSensor(UniFiClient, SensorEntity):
     """UniFi bandwidth sensor base class."""
 
     DOMAIN = DOMAIN
@@ -123,7 +126,7 @@ class UniFiTxBandwidthSensor(UniFiBandwidthSensor):
         return self.client.tx_bytes / 1000000
 
 
-class UniFiUpTimeSensor(UniFiClient):
+class UniFiUpTimeSensor(UniFiClient, SensorEntity):
     """UniFi uptime sensor."""
 
     DOMAIN = DOMAIN
@@ -140,8 +143,10 @@ class UniFiUpTimeSensor(UniFiClient):
         return f"{super().name} {self.TYPE.capitalize()}"
 
     @property
-    def state(self) -> int:
+    def state(self) -> datetime:
         """Return the uptime of the client."""
+        if self.client.uptime < 1000000000:
+            return (dt_util.now() - timedelta(seconds=self.client.uptime)).isoformat()
         return dt_util.utc_from_timestamp(float(self.client.uptime)).isoformat()
 
     async def options_updated(self) -> None:

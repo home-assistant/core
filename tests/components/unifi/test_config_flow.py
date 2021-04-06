@@ -1,9 +1,12 @@
 """Test UniFi config flow."""
+
+import socket
 from unittest.mock import patch
 
 import aiounifi
 
 from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant.components.unifi.config_flow import async_discover_unifi
 from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
@@ -148,6 +151,23 @@ async def test_flow_works(hass, aioclient_mock, mock_discovery):
             CONF_SITE_ID: "site_id",
             CONF_VERIFY_SSL: True,
         },
+    }
+
+
+async def test_flow_works_negative_discovery(hass, aioclient_mock, mock_discovery):
+    """Test config flow with a negative outcome of async_discovery_unifi."""
+    result = await hass.config_entries.flow.async_init(
+        UNIFI_DOMAIN, context={"source": "user"}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+    assert result["data_schema"]({CONF_USERNAME: "", CONF_PASSWORD: ""}) == {
+        CONF_HOST: "",
+        CONF_USERNAME: "",
+        CONF_PASSWORD: "",
+        CONF_PORT: 443,
+        CONF_VERIFY_SSL: False,
     }
 
 
@@ -617,3 +637,15 @@ async def test_form_ssdp_gets_form_with_ignored_entry(hass):
         "host": "1.2.3.4",
         "site": "default",
     }
+
+
+async def test_discover_unifi_positive(hass):
+    """Verify positive run of UniFi discovery."""
+    with patch("socket.gethostbyname", return_value=True):
+        assert await async_discover_unifi(hass)
+
+
+async def test_discover_unifi_negative(hass):
+    """Verify negative run of UniFi discovery."""
+    with patch("socket.gethostbyname", side_effect=socket.gaierror):
+        assert await async_discover_unifi(hass) is None

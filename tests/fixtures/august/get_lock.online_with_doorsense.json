@@ -13,9 +13,10 @@
          "updated" : "2000-00-00T00:00:00.447Z"
       }
    },
+   "pubsubChannel":"pubsub",
    "Calibrated" : false,
    "Created" : "2000-00-00T00:00:00.447Z",
-   "HouseID" : "123",
+   "HouseID" : "mockhouseid1",
    "HouseName" : "Test",
    "LockID" : "online_with_doorsense",
    "LockName" : "Online door with doorsense",

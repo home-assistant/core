@@ -1,7 +1,6 @@
 """Config flow for Shelly integration."""
 import asyncio
 import logging
-from socket import gethostbyname
 
 import aiohttp
 import aioshelly
@@ -17,8 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import aiohttp_client
 
-from .const import AIOSHELLY_DEVICE_TIMEOUT_SEC
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import AIOSHELLY_DEVICE_TIMEOUT_SEC, DOMAIN
 from .utils import get_coap_context, get_device_sleep_period
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,10 +31,9 @@ async def validate_input(hass: core.HomeAssistant, host, data):
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    ip_address = await hass.async_add_executor_job(gethostbyname, host)
 
     options = aioshelly.ConnectionOptions(
-        ip_address, data.get(CONF_USERNAME), data.get(CONF_PASSWORD)
+        host, data.get(CONF_USERNAME), data.get(CONF_PASSWORD)
     )
     coap_context = await get_coap_context(hass)
 
@@ -162,51 +159,34 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured({CONF_HOST: zeroconf_info["host"]})
         self.host = zeroconf_info["host"]
 
-        if not info["auth"] and info.get("sleep_mode", False):
-            try:
-                self.device_info = await validate_input(self.hass, self.host, {})
-            except HTTP_CONNECT_ERRORS:
-                return self.async_abort(reason="cannot_connect")
-
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
             "name": zeroconf_info.get("name", "").split(".")[0]
         }
+
+        if info["auth"]:
+            return await self.async_step_credentials()
+
+        try:
+            self.device_info = await validate_input(self.hass, self.host, {})
+        except HTTP_CONNECT_ERRORS:
+            return self.async_abort(reason="cannot_connect")
+
         return await self.async_step_confirm_discovery()
 
     async def async_step_confirm_discovery(self, user_input=None):
         """Handle discovery confirm."""
         errors = {}
         if user_input is not None:
-            if self.info["auth"]:
-                return await self.async_step_credentials()
+            return self.async_create_entry(
+                title=self.device_info["title"] or self.device_info["hostname"],
+                data={
+                    "host": self.host,
+                    "sleep_period": self.device_info["sleep_period"],
+                    "model": self.device_info["model"],
+                },
+            )
 
-            if self.device_info:
-                return self.async_create_entry(
-                    title=self.device_info["title"] or self.device_info["hostname"],
-                    data={
-                        "host": self.host,
-                        "sleep_period": self.device_info["sleep_period"],
-                        "model": self.device_info["model"],
-                    },
-                )
-
-            try:
-                device_info = await validate_input(self.hass, self.host, {})
-            except HTTP_CONNECT_ERRORS:
-                errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
-                return self.async_create_entry(
-                    title=device_info["title"] or device_info["hostname"],
-                    data={
-                        "host": self.host,
-                        "sleep_period": device_info["sleep_period"],
-                        "model": device_info["model"],
-                    },
-                )
+        self._set_confirm_only()
 
         return self.async_show_form(
             step_id="confirm_discovery",

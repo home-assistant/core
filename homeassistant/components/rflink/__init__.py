@@ -10,7 +10,9 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_STATE,
     CONF_COMMAND,
+    CONF_DEVICE_ID,
     CONF_HOST,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
@@ -26,30 +28,31 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.restore_state import RestoreEntity
 
+from .utils import brightness_to_rflink
+
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_EVENT = "event"
-ATTR_STATE = "state"
 
 CONF_ALIASES = "aliases"
 CONF_GROUP_ALIASES = "group_aliases"
 CONF_GROUP = "group"
 CONF_NOGROUP_ALIASES = "nogroup_aliases"
 CONF_DEVICE_DEFAULTS = "device_defaults"
-CONF_DEVICE_ID = "device_id"
-CONF_DEVICES = "devices"
 CONF_AUTOMATIC_ADD = "automatic_add"
 CONF_FIRE_EVENT = "fire_event"
 CONF_IGNORE_DEVICES = "ignore_devices"
 CONF_RECONNECT_INTERVAL = "reconnect_interval"
 CONF_SIGNAL_REPETITIONS = "signal_repetitions"
 CONF_WAIT_FOR_ACK = "wait_for_ack"
+CONF_KEEPALIVE_IDLE = "tcp_keepalive_idle_timer"
 
 DATA_DEVICE_REGISTER = "rflink_device_register"
 DATA_ENTITY_LOOKUP = "rflink_entity_lookup"
 DATA_ENTITY_GROUP_LOOKUP = "rflink_entity_group_only_lookup"
 DEFAULT_RECONNECT_INTERVAL = 10
 DEFAULT_SIGNAL_REPETITIONS = 1
+DEFAULT_TCP_KEEPALIVE_IDLE_TIMER = 3600
 CONNECTION_TIMEOUT = 10
 
 EVENT_BUTTON_PRESSED = "button_pressed"
@@ -66,6 +69,7 @@ SERVICE_SEND_COMMAND = "send_command"
 
 SIGNAL_AVAILABILITY = "rflink_device_available"
 SIGNAL_HANDLE_EVENT = "rflink_handle_event_{}"
+SIGNAL_EVENT = "rflink_event"
 
 TMP_ENTITY = "tmp.{}"
 
@@ -85,6 +89,9 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_PORT): vol.Any(cv.port, cv.string),
                 vol.Optional(CONF_HOST): cv.string,
                 vol.Optional(CONF_WAIT_FOR_ACK, default=True): cv.boolean,
+                vol.Optional(
+                    CONF_KEEPALIVE_IDLE, default=DEFAULT_TCP_KEEPALIVE_IDLE_TIMER
+                ): int,
                 vol.Optional(
                     CONF_RECONNECT_INTERVAL, default=DEFAULT_RECONNECT_INTERVAL
                 ): int,
@@ -136,6 +143,15 @@ async def async_setup(hass, config):
             )
         ):
             _LOGGER.error("Failed Rflink command for %s", str(call.data))
+        else:
+            async_dispatcher_send(
+                hass,
+                SIGNAL_EVENT,
+                {
+                    EVENT_KEY_ID: call.data.get(CONF_DEVICE_ID),
+                    EVENT_KEY_COMMAND: call.data.get(CONF_COMMAND),
+                },
+            )
 
     hass.services.async_register(
         DOMAIN, SERVICE_SEND_COMMAND, async_send_command, schema=SEND_COMMAND_SCHEMA
@@ -199,6 +215,29 @@ async def async_setup(hass, config):
     # TCP port when host configured, otherwise serial port
     port = config[DOMAIN][CONF_PORT]
 
+    keepalive_idle_timer = None
+    # TCP KeepAlive only if this is TCP based connection (not serial)
+    if host is not None:
+        # TCP KEEPALIVE will be enabled if value > 0
+        keepalive_idle_timer = config[DOMAIN][CONF_KEEPALIVE_IDLE]
+        if keepalive_idle_timer < 0:
+            _LOGGER.error(
+                "A bogus TCP Keepalive IDLE timer was provided (%d secs), "
+                "it will be disabled. "
+                "Recommended values: 60-3600 (seconds)",
+                keepalive_idle_timer,
+            )
+            keepalive_idle_timer = None
+        elif keepalive_idle_timer == 0:
+            keepalive_idle_timer = None
+        elif keepalive_idle_timer <= 30:
+            _LOGGER.warning(
+                "A very short TCP Keepalive IDLE timer was provided (%d secs) "
+                "and may produce unexpected disconnections from RFlink device."
+                " Recommended values: 60-3600 (seconds)",
+                keepalive_idle_timer,
+            )
+
     @callback
     def reconnect(exc=None):
         """Schedule reconnect after connection has been unexpectedly lost."""
@@ -209,7 +248,7 @@ async def async_setup(hass, config):
 
         # If HA is not stopping, initiate new connection
         if hass.state != CoreState.stopping:
-            _LOGGER.warning("disconnected from Rflink, reconnecting")
+            _LOGGER.warning("Disconnected from Rflink, reconnecting")
             hass.async_create_task(connect())
 
     async def connect():
@@ -223,6 +262,7 @@ async def async_setup(hass, config):
         connection = create_rflink_connection(
             port=port,
             host=host,
+            keepalive=keepalive_idle_timer,
             event_callback=event_callback,
             disconnect_callback=reconnect,
             loop=hass.loop,
@@ -265,6 +305,7 @@ async def async_setup(hass, config):
         _LOGGER.info("Connected to Rflink")
 
     hass.async_create_task(connect())
+    async_dispatcher_connect(hass, SIGNAL_EVENT, event_callback)
     return True
 
 
@@ -470,7 +511,7 @@ class RflinkCommand(RflinkDevice):
 
         elif command == "dim":
             # convert brightness to rflink dim level
-            cmd = str(int(args[0] / 17))
+            cmd = str(brightness_to_rflink(args[0]))
             self._state = True
 
         elif command == "toggle":

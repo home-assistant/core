@@ -89,7 +89,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._host_already_configured(parsed_url.hostname):
             return self.async_abort(reason="already_configured")
 
-        # pylint: disable=no-member
         self.context["title_placeholders"] = {"name": friendly_name}
 
         self.harmony_config = {
@@ -120,6 +119,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.harmony_config, {}
             )
 
+        self._set_confirm_only()
         return self.async_show_form(
             step_id="link",
             errors=errors,

@@ -4,6 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/stream",
   "requirements": ["av==8.0.3"],
   "dependencies": ["http"],
-  "codeowners": ["@hunterjm", "@uvjustin"],
+  "codeowners": ["@hunterjm", "@uvjustin", "@allenporter"],
   "quality_scale": "internal"
 }

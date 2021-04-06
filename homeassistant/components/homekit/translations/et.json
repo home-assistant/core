@@ -19,7 +19,7 @@
                 "title": "Vali kaasatavad domeenid"
             },
             "pairing": {
-                "description": "Niipea kui {name} on valmis, on sidumine saadaval jaotises \"Notifications\" kui \"HomeKit Bridge Setup\".",
+                "description": "Sidumise l\u00f5puleviimiseks j\u00e4rgi jaotises \"HomeKiti sidumine\" toodud juhiseid alajaotises \"Teatised\".",
                 "title": "HomeKiti sidumine"
             },
             "user": {
@@ -28,8 +28,8 @@
                     "include_domains": "Kaasatavad domeenid",
                     "mode": "Re\u017eiim"
                 },
-                "description": "HomeKiti integreerimine v\u00f5imaldab teil p\u00e4\u00e4seda juurde HomeKiti \u00fcksustele Home Assistant. Sildire\u017eiimis on HomeKit Bridges piiratud 150 lisaseadmega, sealhulgas sild ise. Kui soovid \u00fchendada rohkem lisatarvikuid, on soovitatav kasutada erinevate domeenide jaoks mitut HomeKiti silda. \u00dcksuse \u00fcksikasjalik konfiguratsioon on esmase silla jaoks saadaval ainult YAML-i kaudu. Parema tulemuse saavutamiseks ja ootamatute seadmete kadumise v\u00e4ltimiseks loo ja seo eraldi HomeKiti seade tarviku re\u017eiimis kga meediaesitaja ja kaamera jaoks.",
-                "title": "Aktiveeri HomeKit"
+                "description": "Vali kaasatavad domeenid. Kaasatakse k\u00f5ik domeenis toetatud olemid. Iga telemeedia pleieri ja kaamera jaoks luuakse eraldi HomeKiti eksemplar tarvikure\u017eiimis.",
+                "title": "Vali kaasatavad domeenid"
             }
         }
     },
@@ -55,12 +55,12 @@
                     "entities": "Olemid",
                     "mode": "Re\u017eiim"
                 },
-                "description": "Vali kaasatavad olemid. Tarvikute re\u017eiimis on kaasatav ainult \u00fcks olem. Silla re\u017eiimis, kuvatakse k\u00f5ik domeeni olemid, v\u00e4lja arvatud juhul, kui valitud on kindlad olemid. Silla v\u00e4listamisre\u017eiimis kaasatakse k\u00f5ik domeeni olemid, v\u00e4lja arvatud v\u00e4listatud olemid.",
+                "description": "Vali kaasatavad olemid. Tarvikute re\u017eiimis on kaasatav ainult \u00fcks olem. Silla re\u017eiimis kaasatakse k\u00f5ik domeeni olemid, v\u00e4lja arvatud juhul, kui valitud on kindlad olemid. Silla v\u00e4listamisre\u017eiimis kaasatakse k\u00f5ik domeeni olemid, v\u00e4lja arvatud v\u00e4listatud olemid. Parima kasutuskogemuse jaoks on eraldi HomeKit seadmed iga TV meediumim\u00e4ngija, luku, juhtpuldi ja kaamera jaoks.",
                 "title": "Vali kaasatavd olemid"
             },
             "init": {
                 "data": {
-                    "include_domains": "Kaasatavad domeenid",
+                    "include_domains": "Kaasatud domeenid",
                     "mode": "Re\u017eiim"
                 },
                 "description": "HomeKiti saab seadistada silla v\u00f5i \u00fche lisaseadme avaldamiseks. Lisare\u017eiimis saab kasutada ainult \u00fchte \u00fcksust. Teleriseadmete klassiga meediumipleierite n\u00f5uetekohaseks toimimiseks on vaja lisare\u017eiimi. \u201eKaasatavate domeenide\u201d \u00fcksused puutuvad kokku HomeKitiga. J\u00e4rgmisel ekraanil saad valida, millised \u00fcksused sellesse loendisse lisada v\u00f5i sellest v\u00e4lja j\u00e4tta.",

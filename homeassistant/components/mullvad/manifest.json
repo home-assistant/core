@@ -1,0 +1,12 @@
+{
+  "domain": "mullvad",
+  "name": "Mullvad VPN",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/mullvad",
+  "requirements": [
+    "mullvad-api==1.0.0"
+  ],
+  "codeowners": [
+    "@meichthys"
+  ]
+}

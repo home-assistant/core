@@ -102,7 +102,7 @@ class MockAlarm(MockEntity, AlarmControlPanelEntity):
     def alarm_arm_vacation(self, code=None):
         """Send arm night command."""
         self._state = STATE_ALARM_ARMED_VACATION
-        self.async_write_ha_state()
+        self.schedule_update_ha_state()
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""

@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan.",
+            "webhook_not_internet_accessible": "Instans Home Assistant Anda harus dapat diakses dari internet untuk menerima pesan webhook."
+        },
+        "create_entry": {
+            "default": "Untuk mengirim event ke Home Assistant, Anda harus menyiapkan fitur webhook di Traccar.\n\nGunakan URL berikut: {webhook_url}`\n\nBaca [dokumentasi]({docs_url}) untuk detail lebih lanjut."
+        },
+        "step": {
+            "user": {
+                "description": "Yakin ingin menyiapkan Traccar?",
+                "title": "Siapkan Traccar"
+            }
+        }
+    }
+}

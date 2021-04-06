@@ -1,13 +1,16 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Controller-Site ist bereits konfiguriert"
+            "already_configured": "Controller-Site ist bereits konfiguriert",
+            "configuration_updated": "Konfiguration aktualisiert.",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "error": {
             "faulty_credentials": "Ung\u00fcltige Authentifizierung",
             "service_unavailable": "Verbindung fehlgeschlagen",
             "unknown_client_mac": "Unter dieser MAC-Adresse ist kein Client verf\u00fcgbar."
         },
+        "flow_title": "UniFi Netzwerk {site} ({host})",
         "step": {
             "user": {
                 "data": {

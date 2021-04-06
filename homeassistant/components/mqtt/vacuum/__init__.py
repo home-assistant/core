@@ -1,6 +1,5 @@
 """Support for MQTT vacuums."""
 import functools
-import logging
 
 import voluptuous as vol
 
@@ -12,8 +11,6 @@ from ..mixins import async_setup_entry_helper
 from .schema import CONF_SCHEMA, LEGACY, MQTT_VACUUM_SCHEMA, STATE
 from .schema_legacy import PLATFORM_SCHEMA_LEGACY, async_setup_entity_legacy
 from .schema_state import PLATFORM_SCHEMA_STATE, async_setup_entity_state
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def validate_mqtt_vacuum(value):
@@ -35,7 +32,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up MQTT vacuum dynamically through MQTT discovery."""
-
     setup = functools.partial(
         _async_setup_entity, async_add_entities, config_entry=config_entry
     )

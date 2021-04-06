@@ -19,7 +19,7 @@
                 "title": "S\u00e9lectionnez les domaines \u00e0 inclure"
             },
             "pairing": {
-                "description": "D\u00e8s que le pont {name} est pr\u00eat, l'appairage sera disponible dans \"Notifications\" sous \"Configuration de la Passerelle HomeKit\".",
+                "description": "Pour compl\u00e9ter l'appariement, suivez les instructions dans les \"Notifications\" sous \"Appariement HomeKit\".",
                 "title": "Appairage de la Passerelle Homekit"
             },
             "user": {
@@ -28,8 +28,8 @@
                     "include_domains": "Domaines \u00e0 inclure",
                     "mode": "Mode"
                 },
-                "description": "La passerelle HomeKit vous permettra d'acc\u00e9der \u00e0 vos entit\u00e9s Home Assistant dans HomeKit. Les passerelles HomeKit sont limit\u00e9es \u00e0 150 accessoires par instance, y compris la passerelle elle-m\u00eame. Si vous souhaitez connecter plus que le nombre maximum d'accessoires, il est recommand\u00e9 d'utiliser plusieurs passerelles HomeKit pour diff\u00e9rents domaines. La configuration d\u00e9taill\u00e9e des entit\u00e9s est uniquement disponible via YAML pour la passerelle principale.",
-                "title": "Activer la Passerelle HomeKit"
+                "description": "Choisissez les domaines \u00e0 inclure. Toutes les entit\u00e9s prises en charge dans le domaine seront incluses. Une instance HomeKit distincte en mode accessoire sera cr\u00e9\u00e9e pour chaque lecteur multim\u00e9dia TV et cam\u00e9ra.",
+                "title": "S\u00e9lectionnez les domaines \u00e0 inclure"
             }
         }
     },
@@ -55,12 +55,12 @@
                     "entities": "Entit\u00e9s",
                     "mode": "Mode"
                 },
-                "description": "Choisissez les entit\u00e9s \u00e0 exposer. En mode accessoire, une seule entit\u00e9 est expos\u00e9e. En mode d'inclusion de pont, toutes les entit\u00e9s du domaine seront expos\u00e9es \u00e0 moins que des entit\u00e9s sp\u00e9cifiques ne soient s\u00e9lectionn\u00e9es. En mode d'exclusion de pont, toutes les entit\u00e9s du domaine seront expos\u00e9es \u00e0 l'exception des entit\u00e9s exclues.",
+                "description": "Choisissez les entit\u00e9s \u00e0 inclure. En mode accessoire, une seule entit\u00e9 est incluse. En mode d'inclusion de pont, toutes les entit\u00e9s du domaine seront incluses \u00e0 moins que des entit\u00e9s sp\u00e9cifiques ne soient s\u00e9lectionn\u00e9es. En mode d'exclusion de pont, toutes les entit\u00e9s du domaine seront incluses \u00e0 l'exception des entit\u00e9s exclues. Pour de meilleures performances, un accessoire HomeKit distinct sera cr\u00e9\u00e9 pour chaque lecteur multim\u00e9dia TV et cam\u00e9ra.",
                 "title": "S\u00e9lectionnez les entit\u00e9s \u00e0 exposer"
             },
             "init": {
                 "data": {
-                    "include_domains": "Domaine \u00e0 inclure",
+                    "include_domains": "Domaines \u00e0 inclure",
                     "mode": "Mode"
                 },
                 "description": "Les entit\u00e9s des \u00abdomaines \u00e0 inclure\u00bb seront pont\u00e9es vers HomeKit. Vous pourrez s\u00e9lectionner les entit\u00e9s \u00e0 exclure de cette liste sur l'\u00e9cran suivant.",

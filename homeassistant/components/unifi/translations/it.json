@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Il sito del Controller \u00e8 gi\u00e0 configurato",
             "configuration_updated": "Configurazione aggiornata.",
-            "reauth_successful": "La riautenticazione ha avuto successo"
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
         },
         "error": {
             "faulty_credentials": "Autenticazione non valida",

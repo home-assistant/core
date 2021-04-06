@@ -138,7 +138,6 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
 
     async def async_step_reauth(self, device_config: dict):
         """Trigger a reauthentication flow."""
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
             CONF_NAME: device_config[CONF_NAME],
             CONF_HOST: device_config[CONF_HOST],
@@ -204,7 +203,6 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
             }
         )
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
             CONF_NAME: device[CONF_NAME],
             CONF_HOST: device[CONF_HOST],

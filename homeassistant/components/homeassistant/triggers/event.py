@@ -1,14 +1,13 @@
 """Offer event listening automation rules."""
 import voluptuous as vol
 
-from homeassistant.const import CONF_PLATFORM
+from homeassistant.const import CONF_EVENT_DATA, CONF_PLATFORM
 from homeassistant.core import HassJob, callback
 from homeassistant.helpers import config_validation as cv, template
 
 # mypy: allow-untyped-defs
 
 CONF_EVENT_TYPE = "event_type"
-CONF_EVENT_DATA = "event_data"
 CONF_EVENT_CONTEXT = "context"
 
 TRIGGER_SCHEMA = vol.Schema(
@@ -32,6 +31,7 @@ async def async_attach_trigger(
     hass, config, action, automation_info, *, platform_type="event"
 ):
     """Listen for events based on configuration."""
+    trigger_id = automation_info.get("trigger_id") if automation_info else None
     variables = None
     if automation_info:
         variables = automation_info.get("variables")
@@ -96,6 +96,7 @@ async def async_attach_trigger(
                     "platform": platform_type,
                     "event": event,
                     "description": f"event '{event.event_type}'",
+                    "id": trigger_id,
                 }
             },
             event.context,
