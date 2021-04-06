@@ -234,6 +234,7 @@ class Store:
 
         _LOGGER.debug("Writing data for %s to %s", self.key, path)
         json_util.save_json(path, data, self._private, encoder=self._encoder)
+        raise Exception("I worte here!")
 
     async def _async_migrate_func(self, old_version, old_data):
         """Migrate to the new version."""
