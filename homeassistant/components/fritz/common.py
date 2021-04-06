@@ -39,7 +39,7 @@ class Device:
     """FRITZ!Box device class."""
 
     mac: str
-    ip: str
+    ip_address: str
     name: str
 
 
@@ -237,7 +237,7 @@ class FritzDevice:
             self._ip_address = None
         else:
             self._last_activity = utc_point_in_time
-            self._ip_address = dev_info.ip
+            self._ip_address = dev_info.ip_address
 
     @property
     def is_connected(self):
