@@ -9,22 +9,53 @@ set_volume_level:
     volume_level:
       description: New volume level for siren device.
       example: 0.5
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 1
+          step: 0.05
 
-set_active_tone:
-  description: Set active tone for siren device.
+set_default_tone:
+  description: Set default tone for siren device.
   target:
     entity:
       domain: siren
   fields:
     tone:
-      description: New active tone for siren device.
+      description: New default tone for siren device.
       example: fire
+      required: true
+      selector:
+        text:
 
 turn_on:
   description: Turn siren device on.
   target:
     entity:
       domain: siren
+  fields:
+    tone:
+      description: The tone to emit when turning the siren on. Must be supported by the integration.
+      example: fire
+      required: false
+      selector:
+        text:
+    volume_level:
+      description: The volume level of the noise to emit when turning the siren on. Must be supported by the integration.
+      example: 0.5
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 1
+          step: 0.05
+    duration:
+      description: The duration in seconds of the noise to emit when turning the siren on. Must be supported by the integration.
+      example: 15
+      required: false
+      selector:
+        text:
 
 turn_off:
   description: Turn siren device off.
