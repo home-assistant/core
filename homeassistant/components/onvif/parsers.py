@@ -277,6 +277,7 @@ async def async_parse_tamper_detector(uid: str, msg) -> Event:
 
 
 @PARSERS.register("tns1:Device/HardwareFailure/StorageFailure")
+@PARSERS.register("tns1:Device/Trigger/DigitalInput")
 # pylint: disable=protected-access
 async def async_parse_storage_failure(uid: str, msg) -> Event:
     """Handle parsing event message.
