@@ -1,13 +1,5 @@
 """Constants for waze_travel_time."""
-import voluptuous as vol
-
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_REGION,
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    CONF_UNIT_SYSTEM_METRIC,
-)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC
 
 DOMAIN = "waze_travel_time"
 
@@ -44,21 +36,5 @@ UNITS = [CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL]
 REGIONS = ["US", "NA", "EU", "IL", "AU"]
 VEHICLE_TYPES = ["car", "taxi", "motorcycle"]
 
-WAZE_SCHEMA = {
-    vol.Required(CONF_ORIGIN): cv.string,
-    vol.Required(CONF_DESTINATION): cv.string,
-    vol.Required(CONF_REGION): vol.In(REGIONS),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_INCL_FILTER): cv.string,
-    vol.Optional(CONF_EXCL_FILTER): cv.string,
-    vol.Optional(CONF_REALTIME, default=DEFAULT_REALTIME): cv.boolean,
-    vol.Optional(CONF_VEHICLE_TYPE, default=DEFAULT_VEHICLE_TYPE): vol.In(
-        VEHICLE_TYPES
-    ),
-    vol.Optional(CONF_UNITS): vol.In(UNITS),
-    vol.Optional(CONF_AVOID_TOLL_ROADS, default=DEFAULT_AVOID_TOLL_ROADS): cv.boolean,
-    vol.Optional(
-        CONF_AVOID_SUBSCRIPTION_ROADS, default=DEFAULT_AVOID_SUBSCRIPTION_ROADS
-    ): cv.boolean,
-    vol.Optional(CONF_AVOID_FERRIES, default=DEFAULT_AVOID_FERRIES): cv.boolean,
-}
+# Attempt to find entity_id without finding address with period.
+ENTITY_ID_PATTERN = "(?<![a-zA-Z0-9 ])[a-z_]+[.][a-zA-Z0-9_]+"
