@@ -40,13 +40,13 @@ from .const import NEW_SENSOR
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
+SERVICE_ALARM_ARMING_AWAY = "alarm_arming_away"
+SERVICE_ALARM_ARMING_HOME = "alarm_arming_home"
+SERVICE_ALARM_ARMING_NIGHT = "alarm_arming_night"
+SERVICE_ALARM_ENTRY_DELAY = "alarm_entry_delay"
+SERVICE_ALARM_EXIT_DELAY = "alarm_exit_delay"
+SERVICE_ALARM_NOT_READY = "alarm_not_ready"
 SERVICE_ALARM_TRIGGERED = "alarm_triggered"
-SERVICE_ALARM_ARMING_AWAY = "arming_away"
-SERVICE_ALARM_ARMING_HOME = "arming_home"
-SERVICE_ALARM_ARMING_NIGHT = "arming_night"
-SERVICE_ALARM_ENTRY_DELAY = "entry_delay"
-SERVICE_ALARM_EXIT_DELAY = "exit_delay"
-SERVICE_ALARM_NOT_READY = "not_ready"
 
 DECONZ_TO_ALARM_STATE = {
     ANCILLARY_CONTROL_ARMED_AWAY: STATE_ALARM_ARMED_AWAY,

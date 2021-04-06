@@ -64,3 +64,31 @@ remove_orphaned_entries:
         It can be found as part of the integration name.
         Useful if you run multiple deCONZ integrations.
       example: "00212EFFFF012345"
+
+alarm_arming_away:
+  name: Arming away
+  description: Make keypad signal it is arming to away state.
+
+alarm_arming_home:
+  name: Arming home
+  description: Make keypad signal it is arming to home state.
+
+alarm_arming_night:
+  name: Arming night
+  description: Make keypad signal it is arming to night state.
+
+alarm_entry_delay:
+  name: Entry delay
+  description: Make keypad signal it is in entry delay state.
+
+alarm_exit_delay:
+  name: Exit delay
+  description: Make keypad signal it is in exit delay state.
+
+alarm_not_ready:
+  name: Not ready
+  description: Make keypad signal it is not ready.
+
+alarm_triggered:
+  name: Alarm triggered
+  description: Make keypad signal that alarm is triggered.
