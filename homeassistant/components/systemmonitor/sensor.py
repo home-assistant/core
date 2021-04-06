@@ -179,6 +179,7 @@ CPU_SENSOR_PREFIXES = [
     "radeon 1",
     "soc-thermal 1",
     "soc_thermal 1",
+    "Tctl",
 ]
 
 
