@@ -34,15 +34,16 @@ def _schema_with_defaults(host=None, name=None):
     )
 
 
-async def validate_input(hass: core.HomeAssistant, data):
-    """Validate the user input allows us to connect.
+def _check_device(device):
+    """Verify we can connect to the device and return the status."""
+    return device.ready(), device.info()
 
-    Data has the keys from DATA_SCHEMA with values provided by the user.
-    """
+
+async def validate_input(hass: core.HomeAssistant, data):
+    """Validate the user input allows us to connect."""
     device = DoorBird(data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD])
     try:
-        status = await hass.async_add_executor_job(device.ready)
-        info = await hass.async_add_executor_job(device.info)
+        status, info = await hass.async_add_executor_job(_check_device, device)
     except urllib.error.HTTPError as err:
         if err.code == HTTP_UNAUTHORIZED:
             raise InvalidAuth from err
@@ -57,6 +58,19 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     # Return info that you want to store in the config entry.
     return {"title": data[CONF_HOST], "mac_addr": mac_addr}
+
+
+async def async_verify_supported_device(hass, host):
+    """Verify the doorbell state endpoint returns a 401."""
+    device = DoorBird(host, "", "")
+    try:
+        await hass.async_add_executor_job(device.doorbell_state)
+    except urllib.error.HTTPError as err:
+        if err.code == HTTP_UNAUTHORIZED:
+            return True
+    except OSError:
+        return False
+    return False
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -85,17 +99,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_zeroconf(self, discovery_info):
         """Prepare configuration for a discovered doorbird device."""
         macaddress = discovery_info["properties"]["macaddress"]
+        host = discovery_info[CONF_HOST]
 
         if macaddress[:6] != DOORBIRD_OUI:
             return self.async_abort(reason="not_doorbird_device")
-        if is_link_local(ip_address(discovery_info[CONF_HOST])):
+        if is_link_local(ip_address(host)):
             return self.async_abort(reason="link_local_address")
+        if not await async_verify_supported_device(self.hass, host):
+            return self.async_abort(reason="not_doorbird_device")
 
         await self.async_set_unique_id(macaddress)
 
-        self._abort_if_unique_id_configured(
-            updates={CONF_HOST: discovery_info[CONF_HOST]}
-        )
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
         chop_ending = "._axis-video._tcp.local."
         friendly_hostname = discovery_info["name"]
@@ -104,11 +119,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self.context["title_placeholders"] = {
             CONF_NAME: friendly_hostname,
-            CONF_HOST: discovery_info[CONF_HOST],
+            CONF_HOST: host,
         }
-        self.discovery_schema = _schema_with_defaults(
-            host=discovery_info[CONF_HOST], name=friendly_hostname
-        )
+        self.discovery_schema = _schema_with_defaults(host=host, name=friendly_hostname)
 
         return await self.async_step_user()
 
