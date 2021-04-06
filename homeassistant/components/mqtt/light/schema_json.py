@@ -197,7 +197,9 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             self._supported_features |= config[CONF_BRIGHTNESS] and SUPPORT_BRIGHTNESS
             self._supported_features |= config[CONF_COLOR_TEMP] and SUPPORT_COLOR_TEMP
             self._supported_features |= config[CONF_HS] and SUPPORT_COLOR
-            self._supported_features |= config[CONF_RGB] and SUPPORT_COLOR
+            self._supported_features |= config[CONF_RGB] and (
+                SUPPORT_COLOR | SUPPORT_BRIGHTNESS
+            )
             self._supported_features |= config[CONF_WHITE_VALUE] and SUPPORT_WHITE_VALUE
             self._supported_features |= config[CONF_XY] and SUPPORT_COLOR
 

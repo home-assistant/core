@@ -188,6 +188,33 @@ async def test_fail_setup_if_color_mode_deprecated(hass, mqtt_mock, deprecated):
     assert hass.states.get("light.test") is None
 
 
+async def test_rgb_light(hass, mqtt_mock):
+    """Test RGB light flags brightness support."""
+    assert await async_setup_component(
+        hass,
+        light.DOMAIN,
+        {
+            light.DOMAIN: {
+                "platform": "mqtt",
+                "schema": "json",
+                "name": "test",
+                "command_topic": "test_light_rgb/set",
+                "rgb": True,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.test")
+    expected_features = (
+        light.SUPPORT_TRANSITION
+        | light.SUPPORT_COLOR
+        | light.SUPPORT_FLASH
+        | light.SUPPORT_BRIGHTNESS
+    )
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == expected_features
+
+
 async def test_no_color_brightness_color_temp_white_val_if_no_topics(hass, mqtt_mock):
     """Test for no RGB, brightness, color temp, effect, white val or XY."""
     assert await async_setup_component(
