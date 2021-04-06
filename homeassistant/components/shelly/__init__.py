@@ -18,6 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry, update_coordinator
+from homeassistant.helpers.service import async_extract_referenced_entity_ids
 
 from .const import (
     AIOSHELLY_DEVICE_TIMEOUT_SEC,
@@ -155,27 +156,14 @@ async def async_services_setup(
     async def async_service_ota_update(call: ServiceCall):
         """Trigger OTA update."""
         if not (call.data.get(ATTR_DEVICE_ID) or call.data.get(ATTR_AREA_ID)):
-            _LOGGER.warning("OTA update service: no device or area selected")
+            _LOGGER.warning("OTA update service: no target selected")
             return
 
-        devices = []
-        if call.data.get(ATTR_AREA_ID):
-            for area_id in call.data.get(ATTR_AREA_ID):
-                devices += [
-                    area_dev
-                    for area_dev in device_registry.async_entries_for_area(
-                        dev_reg, area_id
-                    )
-                    if DOMAIN in next(iter(area_dev.identifiers))
-                ]
-
-        if call.data.get(ATTR_DEVICE_ID):
-            for device_id in call.data.get(ATTR_DEVICE_ID):
-                device = dev_reg.async_get(device_id)
-                if not any(device.id == x.id for x in devices):
-                    devices += [device]
-
-        for device in devices:
+        devices = await async_extract_referenced_entity_ids(hass, call)
+        for device_id in devices.referenced_devices:
+            device = dev_reg.async_get(device_id)
+            if DOMAIN not in next(iter(device.identifiers)):
+                continue
             entry_id = next(iter(device.config_entries))
             entry_data = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry_id]
             device_wrapper: ShellyDeviceWrapper = entry_data[COAP]
