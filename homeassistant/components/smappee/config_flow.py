@@ -88,7 +88,9 @@ class SmappeeFlowHandler(
         # Attempt to make a connection to the local device
         if serial_number.startswith("50"):
             # next generation device, attempt connect to the local mqtt broker
-            smappee_mqtt = api.mqtt.SmappeeLocalMqtt(serial_number=serial_number)
+            from pysmappee import mqtt
+
+            smappee_mqtt = mqtt.SmappeeLocalMqtt(serial_number=serial_number)
             connect = smappee_mqtt.start_attempt()
             if not connect:
                 return self.async_abort(reason="cannot_connect")
