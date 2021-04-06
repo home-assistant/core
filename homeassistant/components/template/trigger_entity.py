@@ -120,10 +120,6 @@ class TriggerEntity(update_coordinator.CoordinatorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if self.coordinator.data is self.coordinator.REMOVE_TRIGGER:
-            self.async_remove()
-            return
-
         try:
             rendered = dict(self._static_rendered)
 

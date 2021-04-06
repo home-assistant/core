@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from typing import Callable
 
 from homeassistant import config as conf_util
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -63,7 +64,7 @@ async def _process_config(hass, config):
     # Remove old ones
     if coordinators:
         for coordinator in coordinators:
-            coordinator.async_signal_removal()
+            coordinator.async_remove()
 
     async def init_coordinator(hass, conf):
         coordinator = TriggerUpdateCoordinator(hass, conf)
@@ -84,7 +85,8 @@ class TriggerUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
         """Instantiate trigger data."""
         super().__init__(hass, _LOGGER, name="Trigger Update Coordinator")
         self.config = config
-        self._unsub_trigger = None
+        self._unsub_start: Callable[[], None] | None = None
+        self._unsub_trigger: Callable[[], None] | None = None
 
     @property
     def unique_id(self) -> str | None:
@@ -92,16 +94,19 @@ class TriggerUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
         return self.config.get("unique_id")
 
     @callback
-    def async_signal_removal(self):
+    def async_remove(self):
         """Signal that the entities need to remove themselves."""
-        self.async_set_updated_data(self.REMOVE_TRIGGER)
+        if self._unsub_start:
+            self._unsub_start()
+        if self._unsub_trigger:
+            self._unsub_trigger()
 
     async def async_setup(self, hass_config):
         """Set up the trigger and create entities."""
         if self.hass.state == CoreState.running:
             await self._attach_triggers()
         else:
-            self.hass.bus.async_listen_once(
+            self._unsub_start = self.hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_START, self._attach_triggers
             )
 
@@ -118,6 +123,9 @@ class TriggerUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
 
     async def _attach_triggers(self, start_event=None) -> None:
         """Attach the triggers."""
+        if start_event is not None:
+            self._unsub_start = None
+
         self._unsub_trigger = await trigger_helper.async_initialize_triggers(
             self.hass,
             self.config[CONF_TRIGGER],
