@@ -36,7 +36,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         data[CONF_USERNAME],
         data[CONF_PASSWORD],
         inverters=True,
-        async_client=get_async_client(),
+        async_client=get_async_client(hass),
     )
 
     try:
