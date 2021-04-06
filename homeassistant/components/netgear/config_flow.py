@@ -106,7 +106,7 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Check if already configured
         infos = await self.hass.async_add_executor_job(api.get_info)
-        await self.async_set_unique_id(infos["SerialNumber"])
+        await self.async_set_unique_id(infos["SerialNumber"], raise_on_progress=False)
         self._abort_if_unique_id_configured()
 
         config_data = {

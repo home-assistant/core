@@ -5,19 +5,19 @@
         "title": "Netgear",
         "description": "Default host: {host}\n Default port: {port}\n Default username: {username}",
         "data": {
-          "host": "Host (Optional)",
-          "port": "Port (Optional)",
-          "ssl": "Use SSL (Optional)",
-          "username": "Username (Optional)",
-          "password": "Password"
+          "host": "[%key:common::config_flow::data::host%] (Optional)",
+          "port": "[%key:common::config_flow::data::port%] (Optional)",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "username": "[%key:common::config_flow::data::username%] (Optional)",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       },
       "link": {
         "title": "Netgear",
         "description": "Do you want to setup router {name} ({url})?\n Default username: {username}",
         "data": {
-          "username": "Username (Optional)",
-          "password": "Password"
+          "username": "[%key:common::config_flow::data::username%] (Optional)",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },
