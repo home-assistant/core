@@ -1341,14 +1341,14 @@ class LoggingUndefined(jinja2.Undefined):
     def _fail_with_undefined_error(self, *args, **kwargs):
         try:
             return super()._fail_with_undefined_error(*args, **kwargs)
-        except self._undefined_exception as e:
+        except self._undefined_exception as ex:
             template = template_cv.get() or ""
             _LOGGER.error(
                 "Template variable error when rendering '%s': %s",
                 template,
                 self._undefined_message,
             )
-            raise e
+            raise ex
 
     def __str__(self):
         """Log undefined __str___."""
