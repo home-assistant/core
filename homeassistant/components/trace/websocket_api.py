@@ -11,6 +11,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.json import TraceJSONEncoder
 from homeassistant.helpers.script import (
     SCRIPT_BREAKPOINT_HIT,
     SCRIPT_DEBUG_CONTINUE_ALL,
@@ -24,7 +25,6 @@ from homeassistant.helpers.script import (
 )
 
 from .const import DATA_TRACE
-from .utils import TraceJSONEncoder
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
