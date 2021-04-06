@@ -81,10 +81,10 @@ def test_modify_column(engine_type, substr):
     engine = Mock()
     engine.dialect.name = engine_type
     migration._modify_columns(engine, "events", ["event_type VARCHAR(64)"])
-    if substr is not None:
+    if substr:
         assert substr in engine.execute.call_args[0][0].text
     else:
-        not engine.execute.called
+        assert not engine.execute.called
 
 
 def test_forgiving_add_column():
