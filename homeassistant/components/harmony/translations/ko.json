@@ -10,7 +10,7 @@
         "flow_title": "Logitech Harmony Hub: {name}",
         "step": {
             "link": {
-                "description": "{name} ({host}) \uc744(\ub97c) \uc124\uc815\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",
+                "description": "{name} ({host})\uc744(\ub97c) \uc124\uc815\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",
                 "title": "Logitech Harmony Hub \uc124\uc815\ud558\uae30"
             },
             "user": {

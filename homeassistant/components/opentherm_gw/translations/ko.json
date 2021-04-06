@@ -23,7 +23,8 @@
                     "floor_temperature": "\uc628\ub3c4 \uc18c\uc218\uc810 \ubc84\ub9bc",
                     "precision": "\uc815\ubc00\ub3c4",
                     "read_precision": "\uc77d\uae30 \uc815\ubc00\ub3c4",
-                    "set_precision": "\uc815\ubc00\ub3c4 \uc124\uc815\ud558\uae30"
+                    "set_precision": "\uc815\ubc00\ub3c4 \uc124\uc815\ud558\uae30",
+                    "temporary_override_mode": "\uc784\uc2dc \uc124\uc815\uac12 \uc7ac\uc815\uc758 \ubaa8\ub4dc"
                 },
                 "description": "OpenTherm Gateway \uc635\uc158"
             }

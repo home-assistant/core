@@ -27,7 +27,7 @@
                     "time": "Aeg",
                     "time_type": "Aja t\u00fc\u00fcp",
                     "transit_mode": "Liikumisviis",
-                    "transit_routing_preference": "Marsruudi eelistus",
+                    "transit_routing_preference": "Teekonna eelistused",
                     "units": "\u00dchikud"
                 },
                 "description": "Soovi korral saad m\u00e4\u00e4rata kas v\u00e4ljumisaja v\u00f5i saabumisaja. V\u00e4ljumisaja m\u00e4\u00e4ramisel saad sisestada \"kohe\", Unix-ajatempli v\u00f5i 24-tunnise ajastringi (nt 08:00:00). Saabumisaja m\u00e4\u00e4ramisel saad kasutada Unix-ajatemplit v\u00f5i 24-tunnist ajastringi nagu '08:00:00'"
