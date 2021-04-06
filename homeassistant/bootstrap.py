@@ -71,14 +71,14 @@ STAGE_0_INTEGRATIONS = {
     # as possible so problem integrations can
     # be removed
     "frontend",
+    # Ensure supervisor is available
+    "hassio",
 }
 STAGE_1_INTEGRATIONS = {
     # To make sure we forward data to other instances
     "mqtt_eventstream",
     # To provide account link implementations
     "cloud",
-    # Ensure supervisor is available
-    "hassio",
 }
 
 
