@@ -12,7 +12,7 @@ from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import format_mac
 
 from . import name_short_mac
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,6 +52,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(
                     format_mac(info["mac_address"]), raise_on_progress=False
                 )
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
