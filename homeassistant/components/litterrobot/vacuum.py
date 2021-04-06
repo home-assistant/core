@@ -4,13 +4,14 @@ from __future__ import annotations
 from typing import Any, Callable
 
 from pylitterbot.enums import LitterBoxStatus
+from pylitterbot.robot import VALID_WAIT_TIMES
+import voluptuous as vol
 
 from homeassistant.components.vacuum import (
     STATE_CLEANING,
     STATE_DOCKED,
     STATE_ERROR,
     STATE_PAUSED,
-    SUPPORT_SEND_COMMAND,
     SUPPORT_START,
     SUPPORT_STATE,
     SUPPORT_STATUS,
@@ -21,6 +22,7 @@ from homeassistant.components.vacuum import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
@@ -28,14 +30,13 @@ from .entity import LitterRobotControlEntity
 from .hub import LitterRobotHub
 
 SUPPORT_LITTERROBOT = (
-    SUPPORT_SEND_COMMAND
-    | SUPPORT_START
-    | SUPPORT_STATE
-    | SUPPORT_STATUS
-    | SUPPORT_TURN_OFF
-    | SUPPORT_TURN_ON
+    SUPPORT_START | SUPPORT_STATE | SUPPORT_STATUS | SUPPORT_TURN_OFF | SUPPORT_TURN_ON
 )
 TYPE_LITTER_BOX = "Litter Box"
+
+SERVICE_RESET_WASTE_DRAWER = "reset_waste_drawer"
+SERVICE_SET_SLEEP_MODE = "set_sleep_mode"
+SERVICE_SET_WAIT_TIME = "set_wait_time"
 
 
 async def async_setup_entry(
@@ -54,6 +55,26 @@ async def async_setup_entry(
 
     if entities:
         async_add_entities(entities, True)
+
+    platform = entity_platform.current_platform.get()
+    platform.async_register_entity_service(
+        SERVICE_RESET_WASTE_DRAWER,
+        {},
+        "async_reset_waste_drawer",
+    )
+    platform.async_register_entity_service(
+        SERVICE_SET_SLEEP_MODE,
+        {
+            vol.Required("enabled"): cv.boolean,
+            vol.Optional("start_time"): cv.time,
+        },
+        "async_set_sleep_mode",
+    )
+    platform.async_register_entity_service(
+        SERVICE_SET_WAIT_TIME,
+        {vol.Required("minutes"): vol.In(VALID_WAIT_TIMES)},
+        "async_set_wait_time",
+    )
 
 
 class LitterRobotCleaner(LitterRobotControlEntity, VacuumEntity):
@@ -100,42 +121,24 @@ class LitterRobotCleaner(LitterRobotControlEntity, VacuumEntity):
         """Start a clean cycle."""
         await self.perform_action_and_refresh(self.robot.start_cleaning)
 
-    async def async_send_command(
-        self, command: str, params: dict[str, Any] | None = None, **kwargs
+    async def async_reset_waste_drawer(self) -> None:
+        """Reset the waste drawer level."""
+        await self.robot.reset_waste_drawer()
+        self.coordinator.async_set_updated_data(True)
+
+    async def async_set_sleep_mode(
+        self, enabled: bool, start_time: str | None = None
     ) -> None:
-        """Send command.
+        """Set the sleep mode."""
+        await self.perform_action_and_refresh(
+            self.robot.set_sleep_mode,
+            enabled,
+            self.parse_time_at_default_timezone(start_time),
+        )
 
-        Available commands:
-          - reset_waste_drawer
-            * params: none
-          - set_sleep_mode
-            * params:
-              - enabled: bool
-              - sleep_time: str (optional)
-          - set_wait_time
-            * params:
-              - wait_time: int (one of [3,7,15])
-
-        """
-        if command == "reset_waste_drawer":
-            # Normally we need to request a refresh of data after a command is sent.
-            # However, the API for resetting the waste drawer returns a refreshed
-            # data set for the robot. Thus, we only need to tell hass to update the
-            # state of devices associated with this robot.
-            await self.robot.reset_waste_drawer()
-            self.coordinator.async_set_updated_data(True)
-        elif command == "set_sleep_mode":
-            await self.perform_action_and_refresh(
-                self.robot.set_sleep_mode,
-                params.get("enabled"),
-                self.parse_time_at_default_timezone(params.get("sleep_time")),
-            )
-        elif command == "set_wait_time":
-            await self.perform_action_and_refresh(
-                self.robot.set_wait_time, params.get("wait_time")
-            )
-        else:
-            raise NotImplementedError()
+    async def async_set_wait_time(self, minutes: int) -> None:
+        """Set the wait time."""
+        await self.perform_action_and_refresh(self.robot.set_wait_time, minutes)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
