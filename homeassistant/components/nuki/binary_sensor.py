@@ -7,14 +7,7 @@ from pynuki import STATE_DOORSENSOR_OPENED
 from homeassistant.components.binary_sensor import DEVICE_CLASS_DOOR, BinarySensorEntity
 
 from . import NukiEntity
-from .const import (
-    ATTR_LOCK_DOORSENSOR_STATE,
-    ATTR_LOCK_DOORSENSOR_STATE_NAME,
-    ATTR_NUKI_ID,
-    DATA_COORDINATOR,
-    DATA_LOCKS,
-    DOMAIN as NUKI_DOMAIN,
-)
+from .const import ATTR_NUKI_ID, DATA_COORDINATOR, DATA_LOCKS, DOMAIN as NUKI_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,8 +44,6 @@ class NukiDoorsensorEntity(NukiEntity, BinarySensorEntity):
         """Return the device specific state attributes."""
         data = {
             ATTR_NUKI_ID: self._nuki_device.nuki_id,
-            ATTR_LOCK_DOORSENSOR_STATE: self._nuki_device.door_sensor_state,
-            ATTR_LOCK_DOORSENSOR_STATE_NAME: self._nuki_device.door_sensor_state_name,
         }
         return data
 

@@ -5,8 +5,6 @@ DOMAIN = "nuki"
 ATTR_BATTERY_CRITICAL = "battery_critical"
 ATTR_NUKI_ID = "nuki_id"
 ATTR_UNLATCH = "unlatch"
-ATTR_LOCK_DOORSENSOR_STATE = "doorSensorState"
-ATTR_LOCK_DOORSENSOR_STATE_NAME = "doorSensorStateName"
 
 # Data
 DATA_BRIDGE = "nuki_bridge_data"
