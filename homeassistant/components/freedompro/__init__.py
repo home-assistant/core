@@ -20,15 +20,9 @@ PLATFORMS = [
     "light",
 ]
 
-
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Freedompro component."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Freedompro from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
     api_key = entry.data[CONF_API_KEY]
 
     coordinator = FreedomproDataUpdateCoordinator(hass, api_key)
