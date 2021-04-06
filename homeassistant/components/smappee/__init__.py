@@ -76,6 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Smappee from a zeroconf or config entry."""
     if CONF_IP_ADDRESS in entry.data:
         if entry.data[CONF_SERIALNUMBER].startswith("50"):
+            # next generation: local mqtt broker
             smappee_mqtt = mqtt.SmappeeLocalMqtt(
                 serial_number=entry.data[CONF_SERIALNUMBER]
             )
@@ -85,6 +86,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 api=smappee_mqtt, serialnumber=entry.data[CONF_SERIALNUMBER]
             )
         else:
+            # legacy devices through local api
             smappee_api = api.api.SmappeeLocalApi(ip=entry.data[CONF_IP_ADDRESS])
             smappee = Smappee(
                 api=smappee_api, serialnumber=entry.data[CONF_SERIALNUMBER]
