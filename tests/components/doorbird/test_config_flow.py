@@ -1,8 +1,8 @@
 """Test the DoorBird config flow."""
 from unittest.mock import MagicMock, Mock, patch
-import urllib
 
 import pytest
+import requests
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.doorbird import CONF_CUSTOM_URL, CONF_TOKEN
@@ -24,7 +24,7 @@ def _get_mock_doorbirdapi_return_values(ready=None, info=None):
     type(doorbirdapi_mock).ready = MagicMock(return_value=ready)
     type(doorbirdapi_mock).info = MagicMock(return_value=info)
     type(doorbirdapi_mock).doorbell_state = MagicMock(
-        side_effect=urllib.error.HTTPError("Unauthorized", 401, Mock(), Mock(), Mock())
+        side_effect=requests.exceptions.HTTPError(response=Mock(status_code=401))
     )
     return doorbirdapi_mock
 
@@ -305,7 +305,7 @@ async def test_form_zeroconf_correct_oui(hass):
 @pytest.mark.parametrize(
     "doorbell_state_side_effect",
     [
-        urllib.error.HTTPError("Unauthorized", 404, Mock(), Mock(), Mock()),
+        requests.exceptions.HTTPError(response=Mock(status_code=404)),
         OSError,
         None,
     ],
@@ -373,10 +373,8 @@ async def test_form_user_invalid_auth(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_urllib_error = urllib.error.HTTPError(
-        "http://xyz.tld", 401, "login failed", {}, None
-    )
-    doorbirdapi = _get_mock_doorbirdapi_side_effects(ready=mock_urllib_error)
+    mock_error = requests.exceptions.HTTPError(response=Mock(status_code=401))
+    doorbirdapi = _get_mock_doorbirdapi_side_effects(ready=mock_error)
     with patch(
         "homeassistant.components.doorbird.config_flow.DoorBird",
         return_value=doorbirdapi,

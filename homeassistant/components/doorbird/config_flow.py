@@ -1,9 +1,9 @@
 """Config flow for DoorBird integration."""
 from ipaddress import ip_address
 import logging
-import urllib
 
 from doorbirdpy import DoorBird
+import requests
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -44,8 +44,8 @@ async def validate_input(hass: core.HomeAssistant, data):
     device = DoorBird(data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD])
     try:
         status, info = await hass.async_add_executor_job(_check_device, device)
-    except urllib.error.HTTPError as err:
-        if err.code == HTTP_UNAUTHORIZED:
+    except requests.exceptions.HTTPError as err:
+        if err.response.status_code == HTTP_UNAUTHORIZED:
             raise InvalidAuth from err
         raise CannotConnect from err
     except OSError as err:
@@ -65,8 +65,8 @@ async def async_verify_supported_device(hass, host):
     device = DoorBird(host, "", "")
     try:
         await hass.async_add_executor_job(device.doorbell_state)
-    except urllib.error.HTTPError as err:
-        if err.code == HTTP_UNAUTHORIZED:
+    except requests.exceptions.HTTPError as err:
+        if err.response.status_code == HTTP_UNAUTHORIZED:
             return True
     except OSError:
         return False
