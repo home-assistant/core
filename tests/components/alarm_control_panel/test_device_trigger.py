@@ -314,6 +314,14 @@ async def test_if_fires_on_state_change(hass, calls):
         == "armed_night - device - alarm_control_panel.entity - armed_away - armed_night - None"
     )
 
+    # Fake that the entity is armed vacation.
+    hass.states.async_set("alarm_control_panel.entity", STATE_ALARM_ARMED_VACATION)
+    await hass.async_block_till_done()
+    assert len(calls) == 6
+    assert (
+        calls[5].data["some"]
+        == "armed_vacation - device - alarm_control_panel.entity - armed_night - armed_vacation - None"
+    )
 
 async def test_if_fires_on_state_change_with_for(hass, calls):
     """Test for triggers firing with delay."""
