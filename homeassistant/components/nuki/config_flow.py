@@ -120,7 +120,9 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             existing_entry = await self.async_set_unique_id(info["ids"]["hardwareId"])
             if existing_entry:
                 self.hass.config_entries.async_update_entry(existing_entry, data=conf)
-                await self.hass.config_entries.async_reload(existing_entry.entry_id)
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(existing_entry.entry_id)
+                )
                 return self.async_abort(reason="reauth_successful")
             errors["base"] = "unknown"
 
