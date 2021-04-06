@@ -271,7 +271,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
 
-            except InvalidHost:
+            except (InvalidHost, WrongURL):
                 errors["base"] = "invalid_host"
 
             except Exception:  # pylint: disable=broad-except

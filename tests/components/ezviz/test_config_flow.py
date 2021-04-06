@@ -126,7 +126,7 @@ async def test_async_step_import_2nd_form_returns_camera(hass, ezviz_config_flow
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == USER_INPUT
 
-    with _patch_async_setup() as mock_setup, _patch_async_setup_entry() as mock_setup_entry:
+    with _patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=USER_INPUT_CAMERA_VALIDATE
         )
@@ -135,7 +135,6 @@ async def test_async_step_import_2nd_form_returns_camera(hass, ezviz_config_flow
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == USER_INPUT_CAMERA
 
-    assert len(mock_setup.mock_calls) == 0
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -328,19 +327,7 @@ async def test_discover_exception_step1(
         },
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
-
-    await async_setup_component(hass, "persistent_notification", {})
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_DISCOVERY},
-        data={ATTR_SERIAL: "C66666", CONF_IP_ADDRESS: "test-ip"},
-    )
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] == {}
-
-    await async_setup_component(hass, "persistent_notification", {})
 
     ezviz_config_flow.side_effect = requests.exceptions.HTTPError
 
@@ -353,6 +340,18 @@ async def test_discover_exception_step1(
     )
 
     assert result["type"] == RESULT_TYPE_FORM
+
+    ezviz_config_flow.side_effect = Exception
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "test-user",
+            CONF_PASSWORD: "test-pass",
+        },
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
 
 
 async def test_discover_exception_step3(
