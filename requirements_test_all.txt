@@ -423,7 +423,7 @@ hole==0.5.1
 holidays==0.11.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210402.1
+home-assistant-frontend==20210406.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -705,7 +705,7 @@ pybotvac==0.0.20
 pycfdns==1.2.1
 
 # homeassistant.components.cast
-pychromecast==9.1.1
+pychromecast==9.1.2
 
 # homeassistant.components.climacell
 pyclimacell==0.18.0

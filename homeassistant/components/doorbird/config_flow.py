@@ -62,20 +62,14 @@ async def validate_input(hass: core.HomeAssistant, data):
 
 async def async_verify_supported_device(hass, host):
     """Verify the doorbell state endpoint returns a 401."""
-    _LOGGER.warning("async_verify_supported_device: %s", host)
-
     device = DoorBird(host, "", "")
     try:
         await hass.async_add_executor_job(device.doorbell_state)
     except requests.exceptions.HTTPError as err:
-        _LOGGER.warning("async_verify_supported_device: http=%s", err)
         if err.response.status_code == HTTP_UNAUTHORIZED:
             return True
-    except OSError as err:
-        _LOGGER.warning("async_verify_supported_device: oserror=%s", err)
+    except OSError:
         return False
-
-    _LOGGER.warning("async_verify_supported_device: NOT ERROR")
     return False
 
 
@@ -106,8 +100,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Prepare configuration for a discovered doorbird device."""
         macaddress = discovery_info["properties"]["macaddress"]
         host = discovery_info[CONF_HOST]
-
-        _LOGGER.warning("async_step_zeroconf: %s", discovery_info)
 
         if macaddress[:6] != DOORBIRD_OUI:
             return self.async_abort(reason="not_doorbird_device")
