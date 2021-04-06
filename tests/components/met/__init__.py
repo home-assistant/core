@@ -12,8 +12,8 @@ async def init_integration(hass, track_home=False) -> MockConfigEntry:
     entry_data = {
         CONF_NAME: "test",
         CONF_LATITUDE: 0,
-        CONF_LONGITUDE: 0,
-        CONF_ELEVATION: 0,
+        CONF_LONGITUDE: 1.0,
+        CONF_ELEVATION: 1.0,
     }
 
     if track_home:

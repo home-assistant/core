@@ -87,11 +87,17 @@ class MetFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_onboarding(self, data=None):
         """Handle a flow initialized by onboarding."""
+        # Don't create entry if latitude or longitude isn't set.
+        # Also, filters out our onboarding default location.
         if (
-            self.hass.config.latitude == DEFAULT_HOME_LATITUDE
-            and self.hass.config.longitude == DEFAULT_HOME_LONGITUDE
+            not self.hass.config.latitude
+            or not self.hass.config.longitude
+            or (
+                self.hass.config.latitude == DEFAULT_HOME_LATITUDE
+                and self.hass.config.longitude == DEFAULT_HOME_LONGITUDE
+            )
         ):
-            return self.async_abort(reason="default_home")
+            return self.async_abort(reason="no_home")
 
         return self.async_create_entry(
             title=HOME_LOCATION_NAME, data={CONF_TRACK_HOME: True}

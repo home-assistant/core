@@ -3,12 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.met.const import (
-    DEFAULT_HOME_LATITUDE,
-    DEFAULT_HOME_LONGITUDE,
-    DOMAIN,
-    HOME_LOCATION_NAME,
-)
+from homeassistant.components.met.const import DOMAIN, HOME_LOCATION_NAME
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE
 
@@ -112,22 +107,23 @@ async def test_onboarding_step(hass):
     assert result["data"] == {"track_home": True}
 
 
-async def test_onboarding_step_abort_default_home(hass):
+@pytest.mark.parametrize("latitude,longitude", [(52.3731339, 4.8903147), (0.0, 0.0)])
+async def test_onboarding_step_abort_no_home(hass, latitude, longitude):
     """Test entry not created when default step fails."""
     await async_process_ha_core_config(
         hass,
-        {"latitude": 52.3731339, "longitude": 4.8903147},
+        {"latitude": latitude, "longitude": longitude},
     )
 
-    assert hass.config.latitude == DEFAULT_HOME_LATITUDE
-    assert hass.config.longitude == DEFAULT_HOME_LONGITUDE
+    assert hass.config.latitude == latitude
+    assert hass.config.longitude == longitude
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "onboarding"}, data={}
     )
 
     assert result["type"] == "abort"
-    assert result["reason"] == "default_home"
+    assert result["reason"] == "no_home"
 
 
 async def test_import_step(hass):
