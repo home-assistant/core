@@ -1,4 +1,5 @@
 """Base class for fritzbox_callmonitor entities."""
+from contextlib import suppress
 from datetime import timedelta
 import logging
 import re
@@ -69,11 +70,7 @@ class FritzBoxPhonebook:
             return UNKOWN_NAME
 
         for prefix in self.prefixes:
-            try:
+            with suppress(KeyError):
                 return self.number_dict[prefix + number]
-            except KeyError:
-                pass
-            try:
+            with suppress(KeyError):
                 return self.number_dict[prefix + number.lstrip("0")]
-            except KeyError:
-                pass

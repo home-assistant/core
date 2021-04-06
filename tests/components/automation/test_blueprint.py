@@ -84,6 +84,7 @@ async def test_notify_leaving_zone(hass):
         _hass, config, variables, _context = mock_call_action.mock_calls[0][1]
         message_tpl = config.pop("message")
         assert config == {
+            "alias": "Notify that a person has left the zone",
             "domain": "mobile_app",
             "type": "notify",
             "device_id": "abcdefgh",

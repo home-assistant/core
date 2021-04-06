@@ -4,7 +4,11 @@
             "already_configured": "Service is al geconfigureerd",
             "authorize_url_fail": "Onbekende fout bij het genereren van een autorisatie url.",
             "authorize_url_timeout": "Time-out tijdens genereren autorisatie url.",
-            "unknown": "Onbekende fout opgetreden"
+            "unknown": "Onverwachte fout",
+            "unknown_authorize_url_generation": "Onbekende fout bij het genereren van een autorisatie-URL."
+        },
+        "error": {
+            "invalid_auth": "Ongeldige authenticatie"
         },
         "step": {
             "auth": {

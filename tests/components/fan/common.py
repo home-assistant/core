@@ -7,9 +7,12 @@ from homeassistant.components.fan import (
     ATTR_DIRECTION,
     ATTR_OSCILLATING,
     ATTR_PERCENTAGE,
+    ATTR_PERCENTAGE_STEP,
     ATTR_PRESET_MODE,
     ATTR_SPEED,
     DOMAIN,
+    SERVICE_DECREASE_SPEED,
+    SERVICE_INCREASE_SPEED,
     SERVICE_OSCILLATE,
     SERVICE_SET_DIRECTION,
     SERVICE_SET_PERCENTAGE,
@@ -104,6 +107,38 @@ async def async_set_percentage(
     }
 
     await hass.services.async_call(DOMAIN, SERVICE_SET_PERCENTAGE, data, blocking=True)
+
+
+async def async_increase_speed(
+    hass, entity_id=ENTITY_MATCH_ALL, percentage_step: int = None
+) -> None:
+    """Increase speed for all or specified fan."""
+    data = {
+        key: value
+        for key, value in [
+            (ATTR_ENTITY_ID, entity_id),
+            (ATTR_PERCENTAGE_STEP, percentage_step),
+        ]
+        if value is not None
+    }
+
+    await hass.services.async_call(DOMAIN, SERVICE_INCREASE_SPEED, data, blocking=True)
+
+
+async def async_decrease_speed(
+    hass, entity_id=ENTITY_MATCH_ALL, percentage_step: int = None
+) -> None:
+    """Decrease speed for all or specified fan."""
+    data = {
+        key: value
+        for key, value in [
+            (ATTR_ENTITY_ID, entity_id),
+            (ATTR_PERCENTAGE_STEP, percentage_step),
+        ]
+        if value is not None
+    }
+
+    await hass.services.async_call(DOMAIN, SERVICE_DECREASE_SPEED, data, blocking=True)
 
 
 async def async_set_direction(

@@ -30,7 +30,7 @@
                 "data": {
                     "code": "PIN kode"
                 },
-                "description": "For \u00e5 koble din Nest-konto m\u00e5 du [bekrefte kontoen din]({url}). \n\nEtter bekreftelse, kopier og lim inn den oppgitte PIN koden nedenfor.",
+                "description": "For \u00e5 koble til Nest-kontoen din, [autoriser kontoen din] ( {url} ). \n\n Etter autorisasjon, kopier og lim inn den angitte PIN-koden nedenfor.",
                 "title": "Koble til Nest konto"
             },
             "pick_implementation": {

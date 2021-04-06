@@ -1,9 +1,10 @@
 """HTTP Support for Hass.io."""
+from __future__ import annotations
+
 import asyncio
 import logging
 import os
 import re
-from typing import Dict, Union
 
 import aiohttp
 from aiohttp import web
@@ -57,7 +58,7 @@ class HassIOView(HomeAssistantView):
 
     async def _handle(
         self, request: web.Request, path: str
-    ) -> Union[web.Response, web.StreamResponse]:
+    ) -> web.Response | web.StreamResponse:
         """Route data to Hass.io."""
         hass = request.app["hass"]
         if _need_auth(hass, path) and not request[KEY_AUTHENTICATED]:
@@ -71,7 +72,7 @@ class HassIOView(HomeAssistantView):
 
     async def _command_proxy(
         self, path: str, request: web.Request
-    ) -> Union[web.Response, web.StreamResponse]:
+    ) -> web.Response | web.StreamResponse:
         """Return a client request with proxy origin for Hass.io supervisor.
 
         This method is a coroutine.
@@ -131,7 +132,7 @@ class HassIOView(HomeAssistantView):
         raise HTTPBadGateway()
 
 
-def _init_header(request: web.Request) -> Dict[str, str]:
+def _init_header(request: web.Request) -> dict[str, str]:
     """Create initial header."""
     headers = {
         X_HASSIO: os.environ.get("HASSIO_TOKEN", ""),

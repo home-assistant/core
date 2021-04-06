@@ -1,0 +1,11 @@
+{
+    "device_automation": {
+        "trigger_type": {
+            "animal": "\u05d6\u05d9\u05d4\u05d4 \u05d1\u05e2\u05dc-\u05d7\u05d9\u05d9\u05dd",
+            "human": "\u05d6\u05d9\u05d4\u05d4 \u05d0\u05d3\u05dd",
+            "movement": "\u05d6\u05d9\u05d4\u05d4 \u05ea\u05e0\u05d5\u05e2\u05d4",
+            "turned_off": "\u05db\u05d1\u05d4",
+            "turned_on": "\u05e0\u05d3\u05dc\u05e7"
+        }
+    }
+}

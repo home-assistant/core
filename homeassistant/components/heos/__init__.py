@@ -1,8 +1,9 @@
 """Denon HEOS Media Player."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Dict
 
 from pyheos import Heos, HeosError, const as heos_const
 import voluptuous as vol
@@ -191,7 +192,7 @@ class ControllerManager:
         # Update players
         self._hass.helpers.dispatcher.async_dispatcher_send(SIGNAL_HEOS_UPDATED)
 
-    def update_ids(self, mapped_ids: Dict[int, int]):
+    def update_ids(self, mapped_ids: dict[int, int]):
         """Update the IDs in the device and entity registry."""
         # mapped_ids contains the mapped IDs (new:old)
         for new_id, old_id in mapped_ids.items():

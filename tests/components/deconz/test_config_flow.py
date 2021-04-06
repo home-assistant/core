@@ -442,6 +442,18 @@ async def test_flow_ssdp_discovery(hass, aioclient_mock):
     }
 
 
+async def test_flow_ssdp_bad_discovery(hass, aioclient_mock):
+    """Test that SSDP discovery aborts if manufacturer URL is wrong."""
+    result = await hass.config_entries.flow.async_init(
+        DECONZ_DOMAIN,
+        data={ATTR_UPNP_MANUFACTURER_URL: "other"},
+        context={"source": SOURCE_SSDP},
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "not_deconz_bridge"
+
+
 async def test_ssdp_discovery_update_configuration(hass, aioclient_mock):
     """Test if a discovered bridge is configured but updates with new attributes."""
     config_entry = await setup_deconz_integration(hass, aioclient_mock)
@@ -527,8 +539,6 @@ async def test_flow_hassio_discovery(hass):
     assert result["description_placeholders"] == {"addon": "Mock Addon"}
 
     with patch(
-        "homeassistant.components.deconz.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.deconz.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -543,7 +553,6 @@ async def test_flow_hassio_discovery(hass):
         CONF_PORT: 80,
         CONF_API_KEY: API_KEY,
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 

@@ -7,7 +7,7 @@ import sys
 from pycarwings2 import CarwingsError, Session
 import voluptuous as vol
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, HTTP_OK
+from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME, HTTP_OK
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
@@ -34,7 +34,6 @@ DATA_RANGE_AC_OFF = "range_ac_off"
 CONF_INTERVAL = "update_interval"
 CONF_CHARGING_INTERVAL = "update_interval_charging"
 CONF_CLIMATE_INTERVAL = "update_interval_climate"
-CONF_REGION = "region"
 CONF_VALID_REGIONS = ["NNA", "NE", "NCI", "NMA", "NML"]
 CONF_FORCE_MILES = "force_miles"
 
@@ -82,7 +81,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-LEAF_COMPONENTS = ["sensor", "switch", "binary_sensor"]
+PLATFORMS = ["sensor", "switch", "binary_sensor"]
 
 SIGNAL_UPDATE_LEAF = "nissan_leaf_update"
 
@@ -95,7 +94,7 @@ START_CHARGE_LEAF_SCHEMA = vol.Schema({vol.Required(ATTR_VIN): cv.string})
 
 
 def setup(hass, config):
-    """Set up the Nissan Leaf component."""
+    """Set up the Nissan Leaf integration."""
 
     async def async_handle_update(service):
         """Handle service to update leaf data from Nissan servers."""
@@ -136,7 +135,7 @@ def setup(hass, config):
 
     def setup_leaf(car_config):
         """Set up a car."""
-        _LOGGER.debug("Logging into You+Nissan...")
+        _LOGGER.debug("Logging into You+Nissan")
 
         username = car_config[CONF_USERNAME]
         password = car_config[CONF_PASSWORD]
@@ -171,8 +170,8 @@ def setup(hass, config):
         data_store = LeafDataStore(hass, leaf, car_config)
         hass.data[DATA_LEAF][leaf.vin] = data_store
 
-        for component in LEAF_COMPONENTS:
-            load_platform(hass, component, DOMAIN, {}, car_config)
+        for platform in PLATFORMS:
+            load_platform(hass, platform, DOMAIN, {}, car_config)
 
         async_track_point_in_utc_time(
             hass, data_store.async_update_data, utcnow() + INITIAL_UPDATE
@@ -272,7 +271,6 @@ class LeafDataStore:
 
     async def async_refresh_data(self, now):
         """Refresh the leaf data and update the datastore."""
-
         if self.request_in_progress:
             _LOGGER.debug("Refresh currently in progress for %s", self.leaf.nickname)
             return
@@ -336,7 +334,6 @@ class LeafDataStore:
 
     async def async_get_battery(self):
         """Request battery update from Nissan servers."""
-
         try:
             # Request battery update from the car
             _LOGGER.debug("Requesting battery update, %s", self.leaf.vin)
@@ -388,7 +385,6 @@ class LeafDataStore:
 
     async def async_get_climate(self):
         """Request climate data from Nissan servers."""
-
         try:
             return await self.hass.async_add_executor_job(
                 self.leaf.get_latest_hvac_status
@@ -454,7 +450,7 @@ class LeafEntity(Entity):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return default attributes for Nissan leaf entities."""
         return {
             "next_update": self.car.next_update,

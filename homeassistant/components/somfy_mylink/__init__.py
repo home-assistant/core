@@ -23,7 +23,7 @@ from .const import (
     DEFAULT_PORT,
     DOMAIN,
     MYLINK_STATUS,
-    SOMFY_MYLINK_COMPONENTS,
+    PLATFORMS,
 )
 
 CONFIG_OPTIONS = (CONF_DEFAULT_REVERSE, CONF_ENTITY_CONFIG)
@@ -101,7 +101,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     if not mylink_status or "error" in mylink_status:
         _LOGGER.error(
-            "mylink failed to setup because of an error: %s",
+            "Somfy Mylink failed to setup because of an error: %s",
             mylink_status.get("error", {}).get(
                 "message", "Empty response from mylink device"
             ),
@@ -121,9 +121,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         UNDO_UPDATE_LISTENER: undo_listener,
     }
 
-    for component in SOMFY_MYLINK_COMPONENTS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -182,8 +182,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in SOMFY_MYLINK_COMPONENTS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

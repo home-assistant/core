@@ -379,6 +379,35 @@ async def test_eventbus_add_remove_listener(hass):
     unsub()
 
 
+async def test_eventbus_filtered_listener(hass):
+    """Test we can prefilter events."""
+    calls = []
+
+    @ha.callback
+    def listener(event):
+        """Mock listener."""
+        calls.append(event)
+
+    @ha.callback
+    def filter(event):
+        """Mock filter."""
+        return not event.data["filtered"]
+
+    unsub = hass.bus.async_listen("test", listener, event_filter=filter)
+
+    hass.bus.async_fire("test", {"filtered": True})
+    await hass.async_block_till_done()
+
+    assert len(calls) == 0
+
+    hass.bus.async_fire("test", {"filtered": False})
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+
+    unsub()
+
+
 async def test_eventbus_unsubscribe_listener(hass):
     """Test unsubscribe listener from returned function."""
     calls = []

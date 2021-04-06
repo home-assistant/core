@@ -1,0 +1,58 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "invalid_device": "Ung\u00fcltiges Ger\u00e4t",
+            "invalid_ip": "Ung\u00fcltige IP-Adresse",
+            "invalid_serial": "Ung\u00fcltiger Serieller Port",
+            "invalid_version": "Ung\u00fcltige MySensors Version",
+            "not_a_number": "Bitte eine Nummer eingeben",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "error": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "invalid_device": "Ung\u00fcltiges Ger\u00e4t",
+            "invalid_ip": "Ung\u00fcltige IP-Adresse",
+            "invalid_serial": "Ung\u00fcltiger Serieller Port",
+            "invalid_version": "Ung\u00fcltige MySensors Version",
+            "not_a_number": "Bitte eine Nummer eingeben",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "gw_mqtt": {
+                "data": {
+                    "retain": "MQTT behalten",
+                    "version": "MySensors Version"
+                },
+                "description": "MQTT-Gateway einrichten"
+            },
+            "gw_serial": {
+                "data": {
+                    "baud_rate": "Baudrate",
+                    "device": "Serielle Schnittstelle",
+                    "version": "MySensors Version"
+                },
+                "description": "Einrichtung des seriellen Gateways"
+            },
+            "gw_tcp": {
+                "data": {
+                    "device": "IP-Adresse des Gateways",
+                    "tcp_port": "Port",
+                    "version": "MySensors Version"
+                },
+                "description": "Einrichtung des Ethernet-Gateways"
+            },
+            "user": {
+                "data": {
+                    "gateway_type": "Gateway-Typ"
+                },
+                "description": "Verbindungsmethode zum Gateway w\u00e4hlen"
+            }
+        }
+    },
+    "title": ""
+}

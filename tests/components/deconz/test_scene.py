@@ -1,6 +1,6 @@
 """deCONZ scene platform tests."""
 
-from copy import deepcopy
+from unittest.mock import patch
 
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, SERVICE_TURN_ON
 from homeassistant.const import ATTR_ENTITY_ID
@@ -11,18 +11,6 @@ from .test_gateway import (
     setup_deconz_integration,
 )
 
-GROUPS = {
-    "1": {
-        "id": "Light group id",
-        "name": "Light group",
-        "type": "LightGroup",
-        "state": {"all_on": False, "any_on": True},
-        "action": {},
-        "scenes": [{"id": "1", "name": "Scene"}],
-        "lights": [],
-    }
-}
-
 
 async def test_no_scenes(hass, aioclient_mock):
     """Test that scenes can be loaded without scenes being available."""
@@ -32,11 +20,21 @@ async def test_no_scenes(hass, aioclient_mock):
 
 async def test_scenes(hass, aioclient_mock):
     """Test that scenes works."""
-    data = deepcopy(DECONZ_WEB_REQUEST)
-    data["groups"] = deepcopy(GROUPS)
-    config_entry = await setup_deconz_integration(
-        hass, aioclient_mock, get_state_response=data
-    )
+    data = {
+        "groups": {
+            "1": {
+                "id": "Light group id",
+                "name": "Light group",
+                "type": "LightGroup",
+                "state": {"all_on": False, "any_on": True},
+                "action": {},
+                "scenes": [{"id": "1", "name": "Scene"}],
+                "lights": [],
+            }
+        }
+    }
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        config_entry = await setup_deconz_integration(hass, aioclient_mock)
 
     assert len(hass.states.async_all()) == 1
     assert hass.states.get("scene.light_group_scene")

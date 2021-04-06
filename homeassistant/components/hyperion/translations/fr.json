@@ -2,11 +2,13 @@
     "config": {
         "abort": {
             "already_configured": "Le service est d\u00e9ja configur\u00e9 ",
+            "already_in_progress": "La configuration est d\u00e9j\u00e0 en cours",
             "auth_new_token_not_granted_error": "Le jeton nouvellement cr\u00e9\u00e9 n'a pas \u00e9t\u00e9 approuv\u00e9 sur l'interface utilisateur Hyperion",
             "auth_new_token_not_work_error": "\u00c9chec de l'authentification \u00e0 l'aide du jeton nouvellement cr\u00e9\u00e9",
             "auth_required_error": "Impossible de d\u00e9terminer si une autorisation est requise",
             "cannot_connect": "Echec de connection",
-            "no_id": "L'instance Hyperion Ambilight n'a pas signal\u00e9 son identifiant"
+            "no_id": "L'instance Hyperion Ambilight n'a pas signal\u00e9 son identifiant",
+            "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi"
         },
         "error": {
             "cannot_connect": "Echec de la connexion ",
@@ -43,6 +45,7 @@
         "step": {
             "init": {
                 "data": {
+                    "effect_show_list": "Effets Hyperion \u00e0 montrer",
                     "priority": "Priorit\u00e9 Hyperion \u00e0 utiliser pour les couleurs et les effets"
                 }
             }

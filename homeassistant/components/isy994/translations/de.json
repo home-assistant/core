@@ -29,6 +29,7 @@
                     "ignore_string": "Zeichenfolge ignorieren",
                     "restore_light_state": "Lichthelligkeit wiederherstellen"
                 },
+                "description": "Stelle die Optionen f\u00fcr die ISY-Integration ein: \n - Node Sensor String: Jedes Ger\u00e4t oder jeder Ordner, der 'Node Sensor String' im Namen enth\u00e4lt, wird als Sensor oder bin\u00e4rer Sensor behandelt. \n - String ignorieren: Jedes Ger\u00e4t mit 'Ignore String' im Namen wird ignoriert. \n - Variable Sensor Zeichenfolge: Jede Variable, die 'Variable Sensor String' im Namen enth\u00e4lt, wird als Sensor hinzugef\u00fcgt. \n - Lichthelligkeit wiederherstellen: Wenn diese Option aktiviert ist, wird beim Einschalten eines Lichts die vorherige Helligkeit wiederhergestellt und nicht der integrierte Ein-Pegel des Ger\u00e4ts.",
                 "title": "ISY994 Optionen"
             }
         }

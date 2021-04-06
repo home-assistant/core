@@ -111,9 +111,9 @@ class RingBinarySensor(RingEntityMixin, BinarySensorEntity):
         return self._unique_id
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
-        attrs = super().device_state_attributes
+        attrs = super().extra_state_attributes
 
         if self._active_alert is None:
             return attrs

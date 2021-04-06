@@ -18,11 +18,11 @@ from homeassistant.components.cover import (
     SUPPORT_STOP_TILT,
     CoverEntity,
 )
-from homeassistant.const import STATE_CLOSED, STATE_OPEN
+from homeassistant.const import CONF_OPTIMISTIC, STATE_CLOSED, STATE_OPEN
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import SomfyEntity
-from .const import API, CONF_OPTIMISTIC, COORDINATOR, DOMAIN
+from .const import API, COORDINATOR, DOMAIN
 
 BLIND_DEVICE_CATEGORIES = {Category.INTERIOR_BLIND.value, Category.EXTERIOR_BLIND.value}
 SHUTTER_DEVICE_CATEGORIES = {Category.EXTERIOR_BLIND.value}
@@ -35,7 +35,6 @@ SUPPORTED_CATEGORIES = {
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Somfy cover platform."""
-
     domain_data = hass.data[DOMAIN]
     coordinator = domain_data[COORDINATOR]
     api = domain_data[API]

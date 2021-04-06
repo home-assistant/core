@@ -7,7 +7,7 @@ from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import DOMAIN
 
 REAUTH_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
 USER_SCHEMA = vol.Schema(
@@ -62,7 +62,6 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input and user_input.get(CONF_USERNAME):
             self.username = user_input[CONF_USERNAME]
 
-        # pylint: disable=no-member
         self.context["title_placeholders"] = {CONF_USERNAME: self.username}
 
         if user_input is not None and user_input.get(CONF_PASSWORD) is not None:

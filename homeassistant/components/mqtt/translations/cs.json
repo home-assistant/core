@@ -21,8 +21,8 @@
                 "data": {
                     "discovery": "Povolit automatick\u00e9 vyhled\u00e1v\u00e1n\u00ed za\u0159\u00edzen\u00ed"
                 },
-                "description": "Chcete nakonfigurovat Home Assistant pro p\u0159ipojen\u00ed k MQTT poskytovan\u00e9mu dopl\u0148kem {addon} z Hass.io?",
-                "title": "MQTT Broker prost\u0159ednictv\u00edm dopl\u0148ku Hass.io"
+                "description": "Chcete nakonfigurovat Home Assistant pro p\u0159ipojen\u00ed k MQTT poskytovan\u00e9mu dopl\u0148kem {addon} z Supervisor?",
+                "title": "MQTT Broker prost\u0159ednictv\u00edm dopl\u0148ku Supervisor"
             }
         }
     },

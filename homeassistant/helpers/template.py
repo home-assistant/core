@@ -1,8 +1,11 @@
 """Template helper methods for rendering strings with Home Assistant data."""
+from __future__ import annotations
+
 from ast import literal_eval
 import asyncio
 import base64
 import collections.abc
+from contextlib import suppress
 from datetime import datetime, timedelta
 from functools import partial, wraps
 import json
@@ -11,7 +14,7 @@ import math
 from operator import attrgetter
 import random
 import re
-from typing import Any, Dict, Generator, Iterable, Optional, Type, Union, cast
+from typing import Any, Generator, Iterable, cast
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
@@ -29,10 +32,16 @@ from homeassistant.const import (
     LENGTH_METERS,
     STATE_UNKNOWN,
 )
-from homeassistant.core import State, callback, split_entity_id, valid_entity_id
+from homeassistant.core import (
+    HomeAssistant,
+    State,
+    callback,
+    split_entity_id,
+    valid_entity_id,
+)
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import location as loc_helper
-from homeassistant.helpers.typing import HomeAssistantType, TemplateVarsType
+from homeassistant.helpers import entity_registry, location as loc_helper
+from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import convert, dt as dt_util, location as loc_util
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -46,6 +55,7 @@ DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 _RENDER_INFO = "template.render_info"
 _ENVIRONMENT = "template.environment"
+_ENVIRONMENT_LIMITED = "template.environment_limited"
 
 _RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{|\{#")
 # Match "simple" ints and floats. -1.0, 1, +5, 5.0
@@ -71,7 +81,7 @@ DOMAIN_STATES_RATE_LIMIT = timedelta(seconds=1)
 
 
 @bind_hass
-def attach(hass: HomeAssistantType, obj: Any) -> None:
+def attach(hass: HomeAssistant, obj: Any) -> None:
     """Recursively attach hass to all template instances in list and dict."""
     if isinstance(obj, list):
         for child in obj:
@@ -122,7 +132,7 @@ def is_template_string(maybe_template: str) -> bool:
 class ResultWrapper:
     """Result wrapper class to store render result."""
 
-    render_result: Optional[str]
+    render_result: str | None
 
 
 def gen_result_wrapper(kls):
@@ -131,7 +141,7 @@ def gen_result_wrapper(kls):
     class Wrapper(kls, ResultWrapper):
         """Wrapper of a kls that can store render_result."""
 
-        def __init__(self, *args: tuple, render_result: Optional[str] = None) -> None:
+        def __init__(self, *args: tuple, render_result: str | None = None) -> None:
             super().__init__(*args)
             self.render_result = render_result
 
@@ -153,15 +163,13 @@ class TupleWrapper(tuple, ResultWrapper):
 
     # This is all magic to be allowed to subclass a tuple.
 
-    def __new__(
-        cls, value: tuple, *, render_result: Optional[str] = None
-    ) -> "TupleWrapper":
+    def __new__(cls, value: tuple, *, render_result: str | None = None) -> TupleWrapper:
         """Create a new tuple class."""
         return super().__new__(cls, tuple(value))
 
     # pylint: disable=super-init-not-called
 
-    def __init__(self, value: tuple, *, render_result: Optional[str] = None):
+    def __init__(self, value: tuple, *, render_result: str | None = None):
         """Initialize a new tuple class."""
         self.render_result = render_result
 
@@ -173,7 +181,7 @@ class TupleWrapper(tuple, ResultWrapper):
         return self.render_result
 
 
-RESULT_WRAPPERS: Dict[Type, Type] = {
+RESULT_WRAPPERS: dict[type, type] = {
     kls: gen_result_wrapper(kls)  # type: ignore[no-untyped-call]
     for kls in (list, dict, set)
 }
@@ -197,15 +205,15 @@ class RenderInfo:
         # Will be set sensibly once frozen.
         self.filter_lifecycle = _true
         self.filter = _true
-        self._result: Optional[str] = None
+        self._result: str | None = None
         self.is_static = False
-        self.exception: Optional[TemplateError] = None
+        self.exception: TemplateError | None = None
         self.all_states = False
         self.all_states_lifecycle = False
         self.domains = set()
         self.domains_lifecycle = set()
         self.entities = set()
-        self.rate_limit: Optional[timedelta] = None
+        self.rate_limit: timedelta | None = None
         self.has_time = False
 
     def __repr__(self) -> str:
@@ -291,18 +299,19 @@ class Template:
 
         self.template: str = template.strip()
         self._compiled_code = None
-        self._compiled: Optional[Template] = None
+        self._compiled: Template | None = None
         self.hass = hass
         self.is_static = not is_template_string(template)
         self._limited = None
 
     @property
-    def _env(self) -> "TemplateEnvironment":
-        if self.hass is None or self._limited:
+    def _env(self) -> TemplateEnvironment:
+        if self.hass is None:
             return _NO_HASS_ENV
-        ret: Optional[TemplateEnvironment] = self.hass.data.get(_ENVIRONMENT)
+        wanted_env = _ENVIRONMENT_LIMITED if self._limited else _ENVIRONMENT
+        ret: TemplateEnvironment | None = self.hass.data.get(wanted_env)
         if ret is None:
-            ret = self.hass.data[_ENVIRONMENT] = TemplateEnvironment(self.hass)  # type: ignore[no-untyped-call]
+            ret = self.hass.data[wanted_env] = TemplateEnvironment(self.hass, self._limited)  # type: ignore[no-untyped-call]
         return ret
 
     def ensure_valid(self) -> None:
@@ -327,7 +336,7 @@ class Template:
         If limited is True, the template is not allowed to access any function or filter depending on hass or the state machine.
         """
         if self.is_static:
-            if self.hass.config.legacy_templates or not parse_result:
+            if not parse_result or self.hass.config.legacy_templates:
                 return self.template
             return self._parse_result(self.template)
 
@@ -351,7 +360,7 @@ class Template:
         If limited is True, the template is not allowed to access any function or filter depending on hass or the state machine.
         """
         if self.is_static:
-            if self.hass.config.legacy_templates or not parse_result:
+            if not parse_result or self.hass.config.legacy_templates:
                 return self.template
             return self._parse_result(self.template)
 
@@ -362,7 +371,7 @@ class Template:
 
         try:
             render_result = compiled.render(kwargs)
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:
             raise TemplateError(err) from err
 
         render_result = render_result.strip()
@@ -421,8 +430,6 @@ class Template:
 
         This method must be run in the event loop.
         """
-        assert self.hass
-
         if self.is_static:
             return False
 
@@ -513,10 +520,8 @@ class Template:
         variables = dict(variables or {})
         variables["value"] = value
 
-        try:
+        with suppress(ValueError, TypeError):
             variables["value_json"] = json.loads(value)
-        except (ValueError, TypeError):
-            pass
 
         try:
             return self._compiled.render(variables).strip()
@@ -530,7 +535,7 @@ class Template:
                 )
             return value if error_value is _SENTINEL else error_value
 
-    def _ensure_compiled(self, limited: bool = False) -> "Template":
+    def _ensure_compiled(self, limited: bool = False) -> Template:
         """Bind a template to a specific hass instance."""
         self.ensure_valid()
 
@@ -569,7 +574,7 @@ class Template:
 class AllStates:
     """Class to expose all HA states as attributes."""
 
-    def __init__(self, hass: HomeAssistantType) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize all states."""
         self._hass = hass
 
@@ -623,7 +628,7 @@ class AllStates:
 class DomainStates:
     """Class to expose a specific HA domain as attributes."""
 
-    def __init__(self, hass: HomeAssistantType, domain: str) -> None:
+    def __init__(self, hass: HomeAssistant, domain: str) -> None:
         """Initialize the domain states."""
         self._hass = hass
         self._domain = domain
@@ -668,9 +673,7 @@ class TemplateState(State):
 
     # Inheritance is done so functions that check against State keep working
     # pylint: disable=super-init-not-called
-    def __init__(
-        self, hass: HomeAssistantType, state: State, collect: bool = True
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, state: State, collect: bool = True) -> None:
         """Initialize template state."""
         self._hass = hass
         self._state = state
@@ -768,34 +771,32 @@ class TemplateState(State):
         return f"<template TemplateState({self._state.__repr__()})>"
 
 
-def _collect_state(hass: HomeAssistantType, entity_id: str) -> None:
+def _collect_state(hass: HomeAssistant, entity_id: str) -> None:
     entity_collect = hass.data.get(_RENDER_INFO)
     if entity_collect is not None:
         entity_collect.entities.add(entity_id)
 
 
-def _state_generator(hass: HomeAssistantType, domain: Optional[str]) -> Generator:
+def _state_generator(hass: HomeAssistant, domain: str | None) -> Generator:
     """State generator for a domain or all states."""
     for state in sorted(hass.states.async_all(domain), key=attrgetter("entity_id")):
         yield TemplateState(hass, state, collect=False)
 
 
-def _get_state_if_valid(
-    hass: HomeAssistantType, entity_id: str
-) -> Optional[TemplateState]:
+def _get_state_if_valid(hass: HomeAssistant, entity_id: str) -> TemplateState | None:
     state = hass.states.get(entity_id)
     if state is None and not valid_entity_id(entity_id):
         raise TemplateError(f"Invalid entity ID '{entity_id}'")  # type: ignore
     return _get_template_state_from_state(hass, entity_id, state)
 
 
-def _get_state(hass: HomeAssistantType, entity_id: str) -> Optional[TemplateState]:
+def _get_state(hass: HomeAssistant, entity_id: str) -> TemplateState | None:
     return _get_template_state_from_state(hass, entity_id, hass.states.get(entity_id))
 
 
 def _get_template_state_from_state(
-    hass: HomeAssistantType, entity_id: str, state: Optional[State]
-) -> Optional[TemplateState]:
+    hass: HomeAssistant, entity_id: str, state: State | None
+) -> TemplateState | None:
     if state is None:
         # Only need to collect if none, if not none collect first actual
         # access to the state properties in the state wrapper.
@@ -805,8 +806,8 @@ def _get_template_state_from_state(
 
 
 def _resolve_state(
-    hass: HomeAssistantType, entity_id_or_state: Any
-) -> Union[State, TemplateState, None]:
+    hass: HomeAssistant, entity_id_or_state: Any
+) -> State | TemplateState | None:
     """Return state or entity_id if given."""
     if isinstance(entity_id_or_state, State):
         return entity_id_or_state
@@ -815,7 +816,7 @@ def _resolve_state(
     return None
 
 
-def result_as_boolean(template_result: Optional[str]) -> bool:
+def result_as_boolean(template_result: str | None) -> bool:
     """Convert the template result to a boolean.
 
     True/not 0/'1'/'true'/'yes'/'on'/'enable' are considered truthy
@@ -833,7 +834,7 @@ def result_as_boolean(template_result: Optional[str]) -> bool:
         return False
 
 
-def expand(hass: HomeAssistantType, *args: Any) -> Iterable[State]:
+def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
     """Expand out any groups into entity states."""
     search = list(args)
     found = {}
@@ -863,6 +864,13 @@ def expand(hass: HomeAssistantType, *args: Any) -> Iterable[State]:
             found[entity_id] = entity
 
     return sorted(found.values(), key=lambda a: a.entity_id)
+
+
+def device_entities(hass: HomeAssistant, device_id: str) -> Iterable[str]:
+    """Get entity ids for entities tied to a device."""
+    entity_reg = entity_registry.async_get(hass)
+    entries = entity_registry.async_entries_for_device(entity_reg, device_id)
+    return [entry.entity_id for entry in entries]
 
 
 def closest(hass, *args):
@@ -975,7 +983,7 @@ def distance(hass, *args):
         else:
             if not loc_helper.has_location(point_state):
                 _LOGGER.warning(
-                    "distance:State does not contain valid location: %s", point_state
+                    "Distance:State does not contain valid location: %s", point_state
                 )
                 return None
 
@@ -992,7 +1000,7 @@ def distance(hass, *args):
     )
 
 
-def is_state(hass: HomeAssistantType, entity_id: str, state: State) -> bool:
+def is_state(hass: HomeAssistant, entity_id: str, state: State) -> bool:
     """Test if a state is a specific value."""
     state_obj = _get_state(hass, entity_id)
     return state_obj is not None and state_obj.state == state
@@ -1309,9 +1317,9 @@ def urlencode(value):
 class TemplateEnvironment(ImmutableSandboxedEnvironment):
     """The Home Assistant template environment."""
 
-    def __init__(self, hass):
+    def __init__(self, hass, limited=False):
         """Initialise template environment."""
-        super().__init__()
+        super().__init__(undefined=jinja2.make_logging_undefined(logger=_LOGGER))
         self.hass = hass
         self.template_cache = weakref.WeakValueDictionary()
         self.filters["round"] = forgiving_round
@@ -1366,7 +1374,27 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["strptime"] = strptime
         self.globals["urlencode"] = urlencode
         if hass is None:
+            return
 
+        # We mark these as a context functions to ensure they get
+        # evaluated fresh with every execution, rather than executed
+        # at compile time and the value stored. The context itself
+        # can be discarded, we only need to get at the hass object.
+        def hassfunction(func):
+            """Wrap function that depend on hass."""
+
+            @wraps(func)
+            def wrapper(*args, **kwargs):
+                return func(hass, *args[1:], **kwargs)
+
+            return contextfunction(wrapper)
+
+        self.globals["device_entities"] = hassfunction(device_entities)
+        self.filters["device_entities"] = contextfilter(self.globals["device_entities"])
+
+        if limited:
+            # Only device_entities is available to limited templates, mark other
+            # functions and filters as unsupported.
             def unsupported(name):
                 def warn_unsupported(*args, **kwargs):
                     raise TemplateError(
@@ -1393,19 +1421,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 self.filters[filt] = unsupported(filt)
             return
 
-        # We mark these as a context functions to ensure they get
-        # evaluated fresh with every execution, rather than executed
-        # at compile time and the value stored. The context itself
-        # can be discarded, we only need to get at the hass object.
-        def hassfunction(func):
-            """Wrap function that depend on hass."""
-
-            @wraps(func)
-            def wrapper(*args, **kwargs):
-                return func(hass, *args[1:], **kwargs)
-
-            return contextfunction(wrapper)
-
         self.globals["expand"] = hassfunction(expand)
         self.filters["expand"] = contextfilter(self.globals["expand"])
         self.globals["closest"] = hassfunction(closest)
@@ -1425,7 +1440,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
     def is_safe_attribute(self, obj, attr, value):
         """Test if attribute is safe."""
         if isinstance(obj, (AllStates, DomainStates, TemplateState)):
-            return not attr[0] == "_"
+            return attr[0] != "_"
 
         if isinstance(obj, Namespace):
             return True

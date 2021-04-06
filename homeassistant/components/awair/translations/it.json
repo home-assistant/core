@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "L'account \u00e8 gi\u00e0 configurato",
             "no_devices_found": "Nessun dispositivo trovato sulla rete",
-            "reauth_successful": "La riautenticazione ha avuto successo"
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
         },
         "error": {
             "invalid_access_token": "Token di accesso non valido",

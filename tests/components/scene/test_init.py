@@ -60,8 +60,8 @@ async def test_config_yaml_alias_anchor(hass, entities):
 
     assert light.is_on(hass, light_1.entity_id)
     assert light.is_on(hass, light_2.entity_id)
-    assert 100 == light_1.last_call("turn_on")[1].get("brightness")
-    assert 100 == light_2.last_call("turn_on")[1].get("brightness")
+    assert light_1.last_call("turn_on")[1].get("brightness") == 100
+    assert light_2.last_call("turn_on")[1].get("brightness") == 100
 
 
 async def test_config_yaml_bool(hass, entities):
@@ -88,7 +88,7 @@ async def test_config_yaml_bool(hass, entities):
 
     assert light.is_on(hass, light_1.entity_id)
     assert light.is_on(hass, light_2.entity_id)
-    assert 100 == light_2.last_call("turn_on")[1].get("brightness")
+    assert light_2.last_call("turn_on")[1].get("brightness") == 100
 
 
 async def test_activate_scene(hass, entities):

@@ -22,11 +22,6 @@ PLATFORMS = ["cover", "sensor", "switch", "air_quality", "light", "climate"]
 PARALLEL_UPDATES = 0
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the BleBox devices component."""
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up BleBox devices from a config entry."""
 
@@ -48,9 +43,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     domain_entry = domain.setdefault(entry.entry_id, {})
     product = domain_entry.setdefault(PRODUCT, product)
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
