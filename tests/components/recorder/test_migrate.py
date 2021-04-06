@@ -86,7 +86,7 @@ def test_invalid_update():
     ],
 )
 def test_modify_column(engine_type, substr):
-    """Test that add column will continue if column exists."""
+    """Test that modify column generates the expected query."""
     engine = Mock()
     engine.dialect.name = engine_type
     migration._modify_columns(engine, "events", ["event_type VARCHAR(64)"])
