@@ -220,10 +220,10 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         fault,
                     )
 
-            # If no network interfaces are exposed, fallback to serial number
+            # If no network interfaces are exposed, fallback to serial number or HardwareId
             if not self.device_id:
                 device_info = await device_mgmt.GetDeviceInformation()
-                self.device_id = device_info.SerialNumber
+                self.device_id = device_info.SerialNumber or device_info.HardwareId
 
             if not self.device_id:
                 return self.async_abort(reason="no_mac")
