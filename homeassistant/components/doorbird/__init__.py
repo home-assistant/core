@@ -1,11 +1,10 @@
 """Support for DoorBird devices."""
 import asyncio
 import logging
-import urllib
-from urllib.error import HTTPError
 
 from aiohttp import web
 from doorbirdpy import DoorBird
+import requests
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
@@ -130,8 +129,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     device = DoorBird(device_ip, username, password)
     try:
         status, info = await hass.async_add_executor_job(_init_doorbird_device, device)
-    except urllib.error.HTTPError as err:
-        if err.code == HTTP_UNAUTHORIZED:
+    except requests.exceptions.HTTPError as err:
+        if err.response.status_code == HTTP_UNAUTHORIZED:
             _LOGGER.error(
                 "Authorization rejected by DoorBird for %s@%s", username, device_ip
             )
@@ -202,7 +201,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 async def _async_register_events(hass, doorstation):
     try:
         await hass.async_add_executor_job(doorstation.register_events, hass)
-    except HTTPError:
+    except requests.exceptions.HTTPError:
         hass.components.persistent_notification.async_create(
             "Doorbird configuration failed.  Please verify that API "
             "Operator permission is enabled for the Doorbird user. "
