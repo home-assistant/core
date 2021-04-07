@@ -10,11 +10,27 @@
             "unknown": "Uventet feil"
         },
         "step": {
+            "reauth_validate": {
+                "data": {
+                    "password": "Passord"
+                },
+                "description": "Skriv inn passordet for {username} .",
+                "title": "Godkjenn en August-konto p\u00e5 nytt"
+            },
             "user": {
                 "data": {
                     "login_method": "P\u00e5loggingsmetode",
                     "password": "Passord",
                     "timeout": "Tidsavbrudd (sekunder)",
+                    "username": "Brukernavn"
+                },
+                "description": "Hvis p\u00e5loggingsmetoden er 'e-post', er brukernavnet e-postadressen. Hvis p\u00e5loggingsmetoden er 'telefon', er brukernavn telefonnummeret i formatet '+ NNNNNNNNN'.",
+                "title": "Sett opp en August konto"
+            },
+            "user_validate": {
+                "data": {
+                    "login_method": "P\u00e5loggingsmetode",
+                    "password": "Passord",
                     "username": "Brukernavn"
                 },
                 "description": "Hvis p\u00e5loggingsmetoden er 'e-post', er brukernavnet e-postadressen. Hvis p\u00e5loggingsmetoden er 'telefon', er brukernavn telefonnummeret i formatet '+ NNNNNNNNN'.",

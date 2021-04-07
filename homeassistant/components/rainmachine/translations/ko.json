@@ -16,5 +16,15 @@
                 "title": "\uc0ac\uc6a9\uc790 \uc815\ubcf4 \uc785\ub825\ud558\uae30"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "zone_run_time": "\uae30\ubcf8 \uc9c0\uc5ed \uc2e4\ud589 \uc2dc\uac04 (\ucd08)"
+                },
+                "title": "RainMachine \uad6c\uc131\ud558\uae30"
+            }
+        }
     }
 }

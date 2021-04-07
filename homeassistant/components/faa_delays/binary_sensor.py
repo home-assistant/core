@@ -68,7 +68,7 @@ class FAABinarySensor(CoordinatorEntity, BinarySensorEntity):
         return f"{self._id}_{self._sensor_type}"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return attributes for sensor."""
         if self._sensor_type == "GROUND_DELAY":
             self._attrs["average"] = self.coordinator.data.ground_delay.average

@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Bridge is al geconfigureerd",
-            "already_in_progress": "Configuratiestroom voor bridge wordt al ingesteld.",
+            "already_in_progress": "De configuratiestroom is al aan de gang",
             "no_bridges": "Geen deCONZ apparaten ontdekt",
             "no_hardware_available": "Geen radiohardware aangesloten op deCONZ",
             "not_deconz_bridge": "Dit is geen deCONZ bridge",
@@ -14,8 +14,8 @@
         "flow_title": "deCONZ Zigbee gateway ( {host} )",
         "step": {
             "hassio_confirm": {
-                "description": "Wilt u de Home Assistant configureren om verbinding te maken met de deCONZ gateway van de hass.io add-on {addon}?",
-                "title": "deCONZ Zigbee Gateway via Hass.io add-on"
+                "description": "Wilt u Home Assistant configureren om verbinding te maken met de deCONZ gateway van de Supervisor add-on {addon}?",
+                "title": "deCONZ Zigbee Gateway via Supervisor add-on"
             },
             "link": {
                 "description": "Ontgrendel je deCONZ gateway om te registreren met Home Assistant.\n\n1. Ga naar deCONZ systeeminstellingen (Instellingen -> Gateway -> Geavanceerd)\n2. Druk op de knop \"Gateway ontgrendelen\"",

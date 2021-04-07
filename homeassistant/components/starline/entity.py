@@ -1,5 +1,7 @@
 """StarLine base entity."""
-from typing import Callable, Optional
+from __future__ import annotations
+
+from typing import Callable
 
 from homeassistant.helpers.entity import Entity
 
@@ -17,7 +19,7 @@ class StarlineEntity(Entity):
         self._device = device
         self._key = key
         self._name = name
-        self._unsubscribe_api: Optional[Callable] = None
+        self._unsubscribe_api: Callable | None = None
 
     @property
     def should_poll(self):

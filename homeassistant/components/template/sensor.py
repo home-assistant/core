@@ -1,35 +1,36 @@
 """Allows the creation of a sensor that breaks out state_attributes."""
-from typing import Optional
+from __future__ import annotations
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
     DEVICE_CLASSES_SCHEMA,
+    DOMAIN as SENSOR_DOMAIN,
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA,
+    SensorEntity,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_DEVICE_CLASS,
     CONF_ENTITY_PICTURE_TEMPLATE,
+    CONF_FRIENDLY_NAME,
     CONF_FRIENDLY_NAME_TEMPLATE,
     CONF_ICON_TEMPLATE,
     CONF_SENSORS,
+    CONF_STATE,
     CONF_UNIQUE_ID,
+    CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity, async_generate_entity_id
-from homeassistant.helpers.reload import async_setup_reload_service
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity import async_generate_entity_id
 
-from .const import CONF_AVAILABILITY_TEMPLATE, DOMAIN, PLATFORMS
+from .const import CONF_ATTRIBUTE_TEMPLATES, CONF_AVAILABILITY_TEMPLATE, CONF_TRIGGER
 from .template_entity import TemplateEntity
-
-CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
+from .trigger_entity import TriggerEntity
 
 SENSOR_SCHEMA = vol.All(
     cv.deprecated(ATTR_ENTITY_ID),
@@ -43,8 +44,8 @@ SENSOR_SCHEMA = vol.All(
             vol.Optional(CONF_ATTRIBUTE_TEMPLATES, default={}): vol.Schema(
                 {cv.string: cv.template}
             ),
-            vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
-            vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string,
+            vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+            vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
             vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
             vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
@@ -52,12 +53,31 @@ SENSOR_SCHEMA = vol.All(
     ),
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(SENSOR_SCHEMA)}
+
+def trigger_warning(val):
+    """Warn if a trigger is defined."""
+    if CONF_TRIGGER in val:
+        raise vol.Invalid(
+            "You can only add triggers to template entities if they are defined under `template:`. "
+            "See the template documentation for more information: https://www.home-assistant.io/integrations/template/"
+        )
+
+    return val
+
+
+PLATFORM_SCHEMA = vol.All(
+    PLATFORM_SCHEMA.extend(
+        {
+            vol.Optional(CONF_TRIGGER): cv.match_all,  # to raise custom warning
+            vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(SENSOR_SCHEMA),
+        }
+    ),
+    trigger_warning,
 )
 
 
-async def _async_create_entities(hass, config):
+@callback
+def _async_create_template_tracking_entities(hass, config):
     """Create the template sensors."""
     sensors = []
 
@@ -66,11 +86,11 @@ async def _async_create_entities(hass, config):
         icon_template = device_config.get(CONF_ICON_TEMPLATE)
         entity_picture_template = device_config.get(CONF_ENTITY_PICTURE_TEMPLATE)
         availability_template = device_config.get(CONF_AVAILABILITY_TEMPLATE)
-        friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
+        friendly_name = device_config.get(CONF_FRIENDLY_NAME, device)
         friendly_name_template = device_config.get(CONF_FRIENDLY_NAME_TEMPLATE)
-        unit_of_measurement = device_config.get(ATTR_UNIT_OF_MEASUREMENT)
+        unit_of_measurement = device_config.get(CONF_UNIT_OF_MEASUREMENT)
         device_class = device_config.get(CONF_DEVICE_CLASS)
-        attribute_templates = device_config[CONF_ATTRIBUTE_TEMPLATES]
+        attribute_templates = device_config.get(CONF_ATTRIBUTE_TEMPLATES, {})
         unique_id = device_config.get(CONF_UNIQUE_ID)
 
         sensors.append(
@@ -95,11 +115,16 @@ async def _async_create_entities(hass, config):
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the template sensors."""
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-    async_add_entities(await _async_create_entities(hass, config))
+    if discovery_info is None:
+        async_add_entities(_async_create_template_tracking_entities(hass, config))
+    else:
+        async_add_entities(
+            TriggerSensorEntity(hass, discovery_info["coordinator"], config)
+            for config in discovery_info["entities"]
+        )
 
 
-class SensorTemplate(TemplateEntity, Entity):
+class SensorTemplate(TemplateEntity, SensorEntity):
     """Representation of a Template Sensor."""
 
     def __init__(
@@ -165,7 +190,7 @@ class SensorTemplate(TemplateEntity, Entity):
         return self._state
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the device class of the sensor."""
         return self._device_class
 
@@ -173,3 +198,15 @@ class SensorTemplate(TemplateEntity, Entity):
     def unit_of_measurement(self):
         """Return the unit_of_measurement of the device."""
         return self._unit_of_measurement
+
+
+class TriggerSensorEntity(TriggerEntity, SensorEntity):
+    """Sensor entity based on trigger data."""
+
+    domain = SENSOR_DOMAIN
+    extra_template_keys = (CONF_STATE,)
+
+    @property
+    def state(self) -> str | None:
+        """Return state of the sensor."""
+        return self._rendered.get(CONF_STATE)

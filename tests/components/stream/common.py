@@ -40,6 +40,7 @@ def generate_h264_video(container_format="mp4", audio_codec=None):
     stream.width = 480
     stream.height = 320
     stream.pix_fmt = "yuv420p"
+    stream.options.update({"g": str(fps), "keyint_min": str(fps)})
 
     a_packet = None
     last_a_dts = -1

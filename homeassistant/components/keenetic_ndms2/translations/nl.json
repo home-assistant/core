@@ -10,10 +10,12 @@
             "user": {
                 "data": {
                     "host": "Host",
+                    "name": "Naam",
                     "password": "Wachtwoord",
                     "port": "Poort",
                     "username": "Gebruikersnaam"
-                }
+                },
+                "title": "Keenetic NDMS2 Router instellen"
             }
         }
     },
@@ -21,8 +23,12 @@
         "step": {
             "user": {
                 "data": {
+                    "consider_home": "Overweeg thuisinterval",
+                    "include_arp": "Gebruik ARP-gegevens (genegeerd als hotspot-gegevens worden gebruikt)",
+                    "include_associated": "Gebruik WiFi AP-koppelingsgegevens (genegeerd als hotspot-gegevens worden gebruikt)",
                     "interfaces": "Kies interfaces om te scannen",
-                    "scan_interval": "Scaninterval"
+                    "scan_interval": "Scaninterval",
+                    "try_hotspot": "Gebruik 'ip hotspot'-gegevens (meest nauwkeurig)"
                 }
             }
         }

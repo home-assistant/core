@@ -4,10 +4,50 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.exceptions import ConditionError, HomeAssistantError
-from homeassistant.helpers import condition
+from homeassistant.helpers import condition, trace
 from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
+
+
+def assert_element(trace_element, expected_element, path):
+    """Assert a trace element is as expected.
+
+    Note: Unused variable 'path' is passed to get helpful errors from pytest.
+    """
+    expected_result = expected_element.get("result", {})
+    # Check that every item in expected_element is present and equal in trace_element
+    # The redundant set operation gives helpful errors from pytest
+    assert not set(expected_result) - set(trace_element._result or {})
+    for result_key, result in expected_result.items():
+        assert trace_element._result[result_key] == result
+
+    # Check for unexpected items in trace_element
+    assert not set(trace_element._result or {}) - set(expected_result)
+
+    if "error_type" in expected_element:
+        assert isinstance(trace_element._error, expected_element["error_type"])
+    else:
+        assert trace_element._error is None
+
+
+@pytest.fixture(autouse=True)
+def prepare_condition_trace():
+    """Clear previous trace."""
+    trace.trace_clear()
+
+
+def assert_condition_trace(expected):
+    """Assert a trace condition sequence is as expected."""
+    condition_trace = trace.trace_get(clear=False)
+    trace.trace_clear()
+    expected_trace_keys = list(expected.keys())
+    assert list(condition_trace.keys()) == expected_trace_keys
+    for trace_key_index, key in enumerate(expected_trace_keys):
+        assert len(condition_trace[key]) == len(expected[key])
+        for index, element in enumerate(expected[key]):
+            path = f"[{trace_key_index}][{index}]"
+            assert_element(condition_trace[key][index], element, path)
 
 
 async def test_invalid_condition(hass):
@@ -52,15 +92,126 @@ async def test_and_condition(hass):
 
     with pytest.raises(ConditionError):
         test(hass)
+    assert_condition_trace(
+        {
+            "": [{"error_type": ConditionError}],
+            "conditions/0": [{"error_type": ConditionError}],
+            "conditions/0/entity_id/0": [{"error_type": ConditionError}],
+            "conditions/1": [{"error_type": ConditionError}],
+            "conditions/1/entity_id/0": [{"error_type": ConditionError}],
+        }
+    )
 
     hass.states.async_set("sensor.temperature", 120)
     assert not test(hass)
+    assert_condition_trace(
+        {
+            "": [{"result": {"result": False}}],
+            "conditions/0": [{"result": {"result": False}}],
+            "conditions/0/entity_id/0": [
+                {"result": {"result": False, "state": "120", "wanted_state": "100"}}
+            ],
+        }
+    )
 
     hass.states.async_set("sensor.temperature", 105)
     assert not test(hass)
+    assert_condition_trace(
+        {
+            "": [{"result": {"result": False}}],
+            "conditions/0": [{"result": {"result": False}}],
+            "conditions/0/entity_id/0": [
+                {"result": {"result": False, "state": "105", "wanted_state": "100"}}
+            ],
+        }
+    )
 
     hass.states.async_set("sensor.temperature", 100)
     assert test(hass)
+    assert_condition_trace(
+        {
+            "": [{"result": {"result": True}}],
+            "conditions/0": [{"result": {"result": True}}],
+            "conditions/0/entity_id/0": [
+                {"result": {"result": True, "state": "100", "wanted_state": "100"}}
+            ],
+            "conditions/1": [{"result": {"result": True}}],
+            "conditions/1/entity_id/0": [{"result": {"result": True, "state": 100.0}}],
+        }
+    )
+
+
+async def test_and_condition_raises(hass):
+    """Test the 'and' condition."""
+    test = await condition.async_from_config(
+        hass,
+        {
+            "alias": "And Condition",
+            "condition": "and",
+            "conditions": [
+                {
+                    "condition": "state",
+                    "entity_id": "sensor.temperature",
+                    "state": "100",
+                },
+                {
+                    "condition": "numeric_state",
+                    "entity_id": "sensor.temperature2",
+                    "above": 110,
+                },
+            ],
+        },
+    )
+
+    # All subconditions raise, the AND-condition should raise
+    with pytest.raises(ConditionError):
+        test(hass)
+    assert_condition_trace(
+        {
+            "": [{"error_type": ConditionError}],
+            "conditions/0": [{"error_type": ConditionError}],
+            "conditions/0/entity_id/0": [{"error_type": ConditionError}],
+            "conditions/1": [{"error_type": ConditionError}],
+            "conditions/1/entity_id/0": [{"error_type": ConditionError}],
+        }
+    )
+
+    # The first subconditions raises, the second returns True, the AND-condition
+    # should raise
+    hass.states.async_set("sensor.temperature2", 120)
+    with pytest.raises(ConditionError):
+        test(hass)
+    assert_condition_trace(
+        {
+            "": [{"error_type": ConditionError}],
+            "conditions/0": [{"error_type": ConditionError}],
+            "conditions/0/entity_id/0": [{"error_type": ConditionError}],
+            "conditions/1": [{"result": {"result": True}}],
+            "conditions/1/entity_id/0": [{"result": {"result": True, "state": 120.0}}],
+        }
+    )
+
+    # The first subconditions raises, the second returns False, the AND-condition
+    # should return False
+    hass.states.async_set("sensor.temperature2", 90)
+    assert not test(hass)
+    assert_condition_trace(
+        {
+            "": [{"result": {"result": False}}],
+            "conditions/0": [{"error_type": ConditionError}],
+            "conditions/0/entity_id/0": [{"error_type": ConditionError}],
+            "conditions/1": [{"result": {"result": False}}],
+            "conditions/1/entity_id/0": [
+                {
+                    "result": {
+                        "result": False,
+                        "state": 90.0,
+                        "wanted_state_above": 110.0,
+                    }
+                }
+            ],
+        }
+    )
 
 
 async def test_and_condition_with_template(hass):
@@ -118,15 +269,136 @@ async def test_or_condition(hass):
 
     with pytest.raises(ConditionError):
         test(hass)
+    assert_condition_trace(
+        {
+            "": [{"error_type": ConditionError}],
+            "conditions/0": [{"error_type": ConditionError}],
+            "conditions/0/entity_id/0": [{"error_type": ConditionError}],
+            "conditions/1": [{"error_type": ConditionError}],
+            "conditions/1/entity_id/0": [{"error_type": ConditionError}],
+        }
+    )
 
     hass.states.async_set("sensor.temperature", 120)
     assert not test(hass)
+    assert_condition_trace(
+        {
+            "": [{"result": {"result": False}}],
+            "conditions/0": [{"result": {"result": False}}],
+            "conditions/0/entity_id/0": [
+                {"result": {"result": False, "state": "120", "wanted_state": "100"}}
+            ],
+            "conditions/1": [{"result": {"result": False}}],
+            "conditions/1/entity_id/0": [
+                {
+                    "result": {
+                        "result": False,
+                        "state": 120.0,
+                        "wanted_state_below": 110.0,
+                    }
+                }
+            ],
+        }
+    )
 
     hass.states.async_set("sensor.temperature", 105)
     assert test(hass)
+    assert_condition_trace(
+        {
+            "": [{"result": {"result": True}}],
+            "conditions/0": [{"result": {"result": False}}],
+            "conditions/0/entity_id/0": [
+                {"result": {"result": False, "state": "105", "wanted_state": "100"}}
+            ],
+            "conditions/1": [{"result": {"result": True}}],
+            "conditions/1/entity_id/0": [{"result": {"result": True, "state": 105.0}}],
+        }
+    )
 
     hass.states.async_set("sensor.temperature", 100)
     assert test(hass)
+    assert_condition_trace(
+        {
+            "": [{"result": {"result": True}}],
+            "conditions/0": [{"result": {"result": True}}],
+            "conditions/0/entity_id/0": [
+                {"result": {"result": True, "state": "100", "wanted_state": "100"}}
+            ],
+        }
+    )
+
+
+async def test_or_condition_raises(hass):
+    """Test the 'or' condition."""
+    test = await condition.async_from_config(
+        hass,
+        {
+            "alias": "Or Condition",
+            "condition": "or",
+            "conditions": [
+                {
+                    "condition": "state",
+                    "entity_id": "sensor.temperature",
+                    "state": "100",
+                },
+                {
+                    "condition": "numeric_state",
+                    "entity_id": "sensor.temperature2",
+                    "above": 110,
+                },
+            ],
+        },
+    )
+
+    # All subconditions raise, the OR-condition should raise
+    with pytest.raises(ConditionError):
+        test(hass)
+    assert_condition_trace(
+        {
+            "": [{"error_type": ConditionError}],
+            "conditions/0": [{"error_type": ConditionError}],
+            "conditions/0/entity_id/0": [{"error_type": ConditionError}],
+            "conditions/1": [{"error_type": ConditionError}],
+            "conditions/1/entity_id/0": [{"error_type": ConditionError}],
+        }
+    )
+
+    # The first subconditions raises, the second returns False, the OR-condition
+    # should raise
+    hass.states.async_set("sensor.temperature2", 100)
+    with pytest.raises(ConditionError):
+        test(hass)
+    assert_condition_trace(
+        {
+            "": [{"error_type": ConditionError}],
+            "conditions/0": [{"error_type": ConditionError}],
+            "conditions/0/entity_id/0": [{"error_type": ConditionError}],
+            "conditions/1": [{"result": {"result": False}}],
+            "conditions/1/entity_id/0": [
+                {
+                    "result": {
+                        "result": False,
+                        "state": 100.0,
+                        "wanted_state_above": 110.0,
+                    }
+                }
+            ],
+        }
+    )
+
+    # The first subconditions raises, the second returns True, the OR-condition
+    # should return True
+    hass.states.async_set("sensor.temperature2", 120)
+    assert test(hass)
+    assert_condition_trace(
+        {
+            "": [{"result": {"result": True}}],
+            "conditions/0": [{"error_type": ConditionError}],
+            "conditions/0/entity_id/0": [{"error_type": ConditionError}],
+            "conditions/1": [{"result": {"result": True}}],
+            "conditions/1/entity_id/0": [{"result": {"result": True, "state": 120.0}}],
+        }
+    )
 
 
 async def test_or_condition_with_template(hass):
@@ -180,18 +452,146 @@ async def test_not_condition(hass):
 
     with pytest.raises(ConditionError):
         test(hass)
+    assert_condition_trace(
+        {
+            "": [{"error_type": ConditionError}],
+            "conditions/0": [{"error_type": ConditionError}],
+            "conditions/0/entity_id/0": [{"error_type": ConditionError}],
+            "conditions/1": [{"error_type": ConditionError}],
+            "conditions/1/entity_id/0": [{"error_type": ConditionError}],
+        }
+    )
 
     hass.states.async_set("sensor.temperature", 101)
     assert test(hass)
+    assert_condition_trace(
+        {
+            "": [{"result": {"result": True}}],
+            "conditions/0": [{"result": {"result": False}}],
+            "conditions/0/entity_id/0": [
+                {"result": {"result": False, "state": "101", "wanted_state": "100"}}
+            ],
+            "conditions/1": [{"result": {"result": False}}],
+            "conditions/1/entity_id/0": [
+                {
+                    "result": {
+                        "result": False,
+                        "state": 101.0,
+                        "wanted_state_below": 50.0,
+                    }
+                }
+            ],
+        }
+    )
 
     hass.states.async_set("sensor.temperature", 50)
     assert test(hass)
+    assert_condition_trace(
+        {
+            "": [{"result": {"result": True}}],
+            "conditions/0": [{"result": {"result": False}}],
+            "conditions/0/entity_id/0": [
+                {"result": {"result": False, "state": "50", "wanted_state": "100"}}
+            ],
+            "conditions/1": [{"result": {"result": False}}],
+            "conditions/1/entity_id/0": [
+                {"result": {"result": False, "state": 50.0, "wanted_state_below": 50.0}}
+            ],
+        }
+    )
 
     hass.states.async_set("sensor.temperature", 49)
     assert not test(hass)
+    assert_condition_trace(
+        {
+            "": [{"result": {"result": False}}],
+            "conditions/0": [{"result": {"result": False}}],
+            "conditions/0/entity_id/0": [
+                {"result": {"result": False, "state": "49", "wanted_state": "100"}}
+            ],
+            "conditions/1": [{"result": {"result": True}}],
+            "conditions/1/entity_id/0": [{"result": {"result": True, "state": 49.0}}],
+        }
+    )
 
     hass.states.async_set("sensor.temperature", 100)
     assert not test(hass)
+    assert_condition_trace(
+        {
+            "": [{"result": {"result": False}}],
+            "conditions/0": [{"result": {"result": True}}],
+            "conditions/0/entity_id/0": [
+                {"result": {"result": True, "state": "100", "wanted_state": "100"}}
+            ],
+        }
+    )
+
+
+async def test_not_condition_raises(hass):
+    """Test the 'and' condition."""
+    test = await condition.async_from_config(
+        hass,
+        {
+            "alias": "Not Condition",
+            "condition": "not",
+            "conditions": [
+                {
+                    "condition": "state",
+                    "entity_id": "sensor.temperature",
+                    "state": "100",
+                },
+                {
+                    "condition": "numeric_state",
+                    "entity_id": "sensor.temperature2",
+                    "below": 50,
+                },
+            ],
+        },
+    )
+
+    # All subconditions raise, the NOT-condition should raise
+    with pytest.raises(ConditionError):
+        test(hass)
+    assert_condition_trace(
+        {
+            "": [{"error_type": ConditionError}],
+            "conditions/0": [{"error_type": ConditionError}],
+            "conditions/0/entity_id/0": [{"error_type": ConditionError}],
+            "conditions/1": [{"error_type": ConditionError}],
+            "conditions/1/entity_id/0": [{"error_type": ConditionError}],
+        }
+    )
+
+    # The first subconditions raises, the second returns False, the NOT-condition
+    # should raise
+    hass.states.async_set("sensor.temperature2", 90)
+    with pytest.raises(ConditionError):
+        test(hass)
+    assert_condition_trace(
+        {
+            "": [{"error_type": ConditionError}],
+            "conditions/0": [{"error_type": ConditionError}],
+            "conditions/0/entity_id/0": [{"error_type": ConditionError}],
+            "conditions/1": [{"result": {"result": False}}],
+            "conditions/1/entity_id/0": [
+                {"result": {"result": False, "state": 90.0, "wanted_state_below": 50.0}}
+            ],
+        }
+    )
+
+    # The first subconditions raises, the second returns True, the NOT-condition
+    # should return False
+    hass.states.async_set("sensor.temperature2", 40)
+    assert not test(hass)
+    assert_condition_trace(
+        {
+            "": [{"result": {"result": False}}],
+            "conditions/0": [{"error_type": ConditionError}],
+            "conditions/0/entity_id/0": [{"error_type": ConditionError}],
+            "conditions/1": [{"result": {"result": True}}],
+            "conditions/1/entity_id/0": [{"result": {"result": True, "state": 40.0}}],
+        }
+    )
 
 
 async def test_not_condition_with_template(hass):

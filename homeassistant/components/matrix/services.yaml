@@ -7,3 +7,6 @@ send_message:
     target:
       description: A list of room(s) to send the message to.
       example: "#hasstest:matrix.org"
+    data:
+      description: Extended information of notification. Supports list of images. Optional.
+      example: "{'images': ['/tmp/test.jpg']}"

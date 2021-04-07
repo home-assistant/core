@@ -7,10 +7,10 @@ from requests.exceptions import ConnectTimeout, HTTPError
 import solaredge
 from stringcase import snakecase
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_API_KEY, DEVICE_CLASS_BATTERY, DEVICE_CLASS_POWER
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -117,7 +117,7 @@ class SolarEdgeSensorFactory:
         return sensor_class(self.platform_name, sensor_key, service)
 
 
-class SolarEdgeSensor(CoordinatorEntity, Entity):
+class SolarEdgeSensor(CoordinatorEntity, SensorEntity):
     """Abstract class for a solaredge sensor."""
 
     def __init__(self, platform_name, sensor_key, data_service):
@@ -162,7 +162,7 @@ class SolarEdgeDetailsSensor(SolarEdgeSensor):
     """Representation of an SolarEdge Monitoring API details sensor."""
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self.data_service.attributes
 
@@ -182,7 +182,7 @@ class SolarEdgeInventorySensor(SolarEdgeSensor):
         self._json_key = SENSOR_TYPES[self.sensor_key][0]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self.data_service.attributes.get(self._json_key)
 
@@ -202,7 +202,7 @@ class SolarEdgeEnergyDetailsSensor(SolarEdgeSensor):
         self._json_key = SENSOR_TYPES[self.sensor_key][0]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self.data_service.attributes.get(self._json_key)
 
@@ -232,7 +232,7 @@ class SolarEdgePowerFlowSensor(SolarEdgeSensor):
         return DEVICE_CLASS_POWER
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self.data_service.attributes.get(self._json_key)
 

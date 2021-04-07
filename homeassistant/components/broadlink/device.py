@@ -1,5 +1,6 @@
 """Support for Broadlink devices."""
 import asyncio
+from contextlib import suppress
 from functools import partial
 import logging
 
@@ -12,6 +13,7 @@ from broadlink.exceptions import (
     NetworkTimeoutError,
 )
 
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TIMEOUT, CONF_TYPE
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -22,9 +24,9 @@ from .updater import get_update_manager
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_domains(device_type):
+def get_domains(dev_type):
     """Return the domains available for a device type."""
-    return {domain for domain, types in DOMAINS_AND_TYPES if device_type in types}
+    return {d for d, t in DOMAINS_AND_TYPES.items() if dev_type in t}
 
 
 class BroadlinkDevice:
@@ -94,18 +96,14 @@ class BroadlinkDevice:
 
         update_manager = get_update_manager(self)
         coordinator = update_manager.coordinator
-        await coordinator.async_refresh()
-        if not coordinator.last_update_success:
-            raise ConfigEntryNotReady()
+        await coordinator.async_config_entry_first_refresh()
 
         self.update_manager = update_manager
         self.hass.data[DOMAIN].devices[config.entry_id] = self
         self.reset_jobs.append(config.add_update_listener(self.async_update))
 
-        try:
+        with suppress(BroadlinkException, OSError):
             self.fw_version = await self.hass.async_add_executor_job(api.get_fwversion)
-        except (BroadlinkException, OSError):
-            pass
 
         # Forward entry setup to related domains.
         tasks = (
@@ -174,7 +172,7 @@ class BroadlinkDevice:
         self.hass.async_create_task(
             self.hass.config_entries.flow.async_init(
                 DOMAIN,
-                context={"source": "reauth"},
+                context={"source": SOURCE_REAUTH},
                 data={CONF_NAME: self.name, **self.config.data},
             )
         )

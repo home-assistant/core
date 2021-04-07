@@ -1,6 +1,7 @@
 """Support for Synology DSM switch."""
+from __future__ import annotations
+
 import logging
-from typing import Dict
 
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
 
@@ -49,7 +50,7 @@ class SynoDSMSurveillanceHomeModeToggle(SynologyDSMBaseEntity, ToggleEntity):
         self,
         api: SynoApi,
         entity_type: str,
-        entity_info: Dict[str, str],
+        entity_info: dict[str, str],
         version: str,
         coordinator: DataUpdateCoordinator,
     ):
@@ -95,7 +96,7 @@ class SynoDSMSurveillanceHomeModeToggle(SynologyDSMBaseEntity, ToggleEntity):
         return bool(self._api.surveillance_station)
 
     @property
-    def device_info(self) -> Dict[str, any]:
+    def device_info(self) -> dict[str, any]:
         """Return the device information."""
         return {
             "identifiers": {

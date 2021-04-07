@@ -1,7 +1,8 @@
 """Support for the Fibaro devices."""
+from __future__ import annotations
+
 from collections import defaultdict
 import logging
-from typing import Optional
 
 from fiblary3.client.v4.client import Client as FibaroClient, StateHandler
 import voluptuous as vol
@@ -37,7 +38,7 @@ CONF_RESET_COLOR = "reset_color"
 DOMAIN = "fibaro"
 FIBARO_CONTROLLERS = "fibaro_controllers"
 FIBARO_DEVICES = "fibaro_devices"
-FIBARO_COMPONENTS = [
+PLATFORMS = [
     "binary_sensor",
     "climate",
     "cover",
@@ -365,21 +366,21 @@ def setup(hass, base_config):
             controller.disable_state_handler()
 
     hass.data[FIBARO_DEVICES] = {}
-    for component in FIBARO_COMPONENTS:
-        hass.data[FIBARO_DEVICES][component] = []
+    for platform in PLATFORMS:
+        hass.data[FIBARO_DEVICES][platform] = []
 
     for gateway in gateways:
         controller = FibaroController(gateway)
         if controller.connect():
             hass.data[FIBARO_CONTROLLERS][controller.hub_serial] = controller
-            for component in FIBARO_COMPONENTS:
-                hass.data[FIBARO_DEVICES][component].extend(
-                    controller.fibaro_devices[component]
+            for platform in PLATFORMS:
+                hass.data[FIBARO_DEVICES][platform].extend(
+                    controller.fibaro_devices[platform]
                 )
 
     if hass.data[FIBARO_CONTROLLERS]:
-        for component in FIBARO_COMPONENTS:
-            discovery.load_platform(hass, component, DOMAIN, {}, base_config)
+        for platform in PLATFORMS:
+            discovery.load_platform(hass, platform, DOMAIN, {}, base_config)
         for controller in hass.data[FIBARO_CONTROLLERS].values():
             controller.enable_state_handler()
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_fibaro)
@@ -496,7 +497,7 @@ class FibaroDevice(Entity):
         return self.fibaro_device.unique_id_str
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str | None:
         """Return the name of the device."""
         return self._name
 
@@ -506,7 +507,7 @@ class FibaroDevice(Entity):
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
         attr = {"fibaro_id": self.fibaro_device.id}
 

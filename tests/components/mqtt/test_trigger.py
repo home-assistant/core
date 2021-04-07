@@ -8,7 +8,7 @@ from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_O
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_fire_mqtt_message, async_mock_service, mock_component
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
 @pytest.fixture
@@ -34,9 +34,9 @@ async def test_if_fires_on_topic_match(hass, calls):
                 "action": {
                     "service": "test.automation",
                     "data_template": {
-                        "some": "{{ trigger.platform }} - {{ trigger.topic }}"
-                        " - {{ trigger.payload }} - "
-                        "{{ trigger.payload_json.hello }}"
+                        "some": "{{ trigger.platform }} - {{ trigger.topic }} - "
+                        "{{ trigger.payload }} - {{ trigger.payload_json.hello }} - "
+                        "{{ trigger.id }}"
                     },
                 },
             }
@@ -46,7 +46,9 @@ async def test_if_fires_on_topic_match(hass, calls):
     async_fire_mqtt_message(hass, "test-topic", '{ "hello": "world" }')
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert 'mqtt - test-topic - { "hello": "world" } - world' == calls[0].data["some"]
+    assert (
+        calls[0].data["some"] == 'mqtt - test-topic - { "hello": "world" } - world - 0'
+    )
 
     await hass.services.async_call(
         automation.DOMAIN,

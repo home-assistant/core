@@ -15,6 +15,9 @@
         },
         "flow_title": "{name} ({model} bij {host})",
         "step": {
+            "auth": {
+                "title": "Authenticeer naar het apparaat"
+            },
             "finish": {
                 "data": {
                     "name": "Naam"
@@ -22,16 +25,20 @@
                 "title": "Kies een naam voor het apparaat"
             },
             "reset": {
+                "description": "{name} ( {model} op {host} ) is vergrendeld. U moet het apparaat ontgrendelen om te verifi\u00ebren en de configuratie te voltooien. Instructies:\n 1. Open de Broadlink-app.\n 2. Klik op het apparaat.\n 3. Klik op '...' in de rechterbovenhoek.\n 4. Scrol naar de onderkant van de pagina.\n 5. Schakel het slot uit.",
                 "title": "Ontgrendel het apparaat"
             },
             "unlock": {
                 "data": {
                     "unlock": "Ja, doe het."
-                }
+                },
+                "description": "{name} ( {model} op {host} ) is vergrendeld. Dit kan leiden tot authenticatieproblemen in Home Assistant. Wilt u deze ontgrendelen?",
+                "title": "Ontgrendel het apparaat (optioneel)"
             },
             "user": {
                 "data": {
-                    "host": "Host"
+                    "host": "Host",
+                    "timeout": "Time-out"
                 },
                 "title": "Verbinding maken met het apparaat"
             }

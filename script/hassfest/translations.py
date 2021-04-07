@@ -1,9 +1,10 @@
 """Validate integration translation files."""
+from __future__ import annotations
+
 from functools import partial
 from itertools import chain
 import json
 import re
-from typing import Dict
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -295,7 +296,7 @@ def validate_translation_file(config: Config, integration: Integration, all_stri
             )
 
 
-def validate(integrations: Dict[str, Integration], config: Config):
+def validate(integrations: dict[str, Integration], config: Config):
     """Handle JSON files inside integrations."""
     if config.specific_integrations:
         all_strings = None

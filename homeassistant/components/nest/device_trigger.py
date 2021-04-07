@@ -1,5 +1,5 @@
 """Provides device automations for Nest."""
-from typing import List
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -39,7 +39,7 @@ async def async_get_nest_device_id(hass: HomeAssistant, device_id: str) -> str:
 
 async def async_get_device_trigger_types(
     hass: HomeAssistant, nest_device_id: str
-) -> List[str]:
+) -> list[str]:
     """List event triggers supported for a Nest device."""
     # All devices should have already been loaded so any failures here are
     # "shouldn't happen" cases
@@ -58,7 +58,7 @@ async def async_get_device_trigger_types(
     return trigger_types
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device triggers for a Nest device."""
     nest_device_id = await async_get_nest_device_id(hass, device_id)
     if not nest_device_id:
@@ -82,7 +82,6 @@ async def async_attach_trigger(
     automation_info: dict,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    config = TRIGGER_SCHEMA(config)
     event_config = event_trigger.TRIGGER_SCHEMA(
         {
             event_trigger.CONF_PLATFORM: "event",

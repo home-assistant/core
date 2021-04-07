@@ -3,6 +3,8 @@
 It shows list of users if access from trusted network.
 Abort login flow if not access from trusted network.
 """
+from __future__ import annotations
+
 from ipaddress import (
     IPv4Address,
     IPv4Network,
@@ -11,7 +13,7 @@ from ipaddress import (
     ip_address,
     ip_network,
 )
-from typing import Any, Dict, List, Optional, Union, cast
+from typing import Any, Dict, List, Union, cast
 
 import voluptuous as vol
 
@@ -68,12 +70,12 @@ class TrustedNetworksAuthProvider(AuthProvider):
     DEFAULT_TITLE = "Trusted Networks"
 
     @property
-    def trusted_networks(self) -> List[IPNetwork]:
+    def trusted_networks(self) -> list[IPNetwork]:
         """Return trusted networks."""
         return cast(List[IPNetwork], self.config[CONF_TRUSTED_NETWORKS])
 
     @property
-    def trusted_users(self) -> Dict[IPNetwork, Any]:
+    def trusted_users(self) -> dict[IPNetwork, Any]:
         """Return trusted users per network."""
         return cast(Dict[IPNetwork, Any], self.config[CONF_TRUSTED_USERS])
 
@@ -82,7 +84,7 @@ class TrustedNetworksAuthProvider(AuthProvider):
         """Trusted Networks auth provider does not support MFA."""
         return False
 
-    async def async_login_flow(self, context: Optional[Dict]) -> LoginFlow:
+    async def async_login_flow(self, context: dict | None) -> LoginFlow:
         """Return a flow to login."""
         assert context is not None
         ip_addr = cast(IPAddress, context.get("ip_address"))
@@ -111,7 +113,7 @@ class TrustedNetworksAuthProvider(AuthProvider):
                     if (
                         user.id in user_list
                         or any(
-                            [group.id in flattened_group_list for group in user.groups]
+                            group.id in flattened_group_list for group in user.groups
                         )
                     )
                 ]
@@ -125,7 +127,7 @@ class TrustedNetworksAuthProvider(AuthProvider):
         )
 
     async def async_get_or_create_credentials(
-        self, flow_result: Dict[str, str]
+        self, flow_result: dict[str, str]
     ) -> Credentials:
         """Get credentials based on the flow result."""
         user_id = flow_result["user"]
@@ -169,7 +171,7 @@ class TrustedNetworksAuthProvider(AuthProvider):
 
     @callback
     def async_validate_refresh_token(
-        self, refresh_token: RefreshToken, remote_ip: Optional[str] = None
+        self, refresh_token: RefreshToken, remote_ip: str | None = None
     ) -> None:
         """Verify a refresh token is still valid."""
         if remote_ip is None:
@@ -186,7 +188,7 @@ class TrustedNetworksLoginFlow(LoginFlow):
         self,
         auth_provider: TrustedNetworksAuthProvider,
         ip_addr: IPAddress,
-        available_users: Dict[str, Optional[str]],
+        available_users: dict[str, str | None],
         allow_bypass_login: bool,
     ) -> None:
         """Initialize the login flow."""
@@ -196,8 +198,8 @@ class TrustedNetworksLoginFlow(LoginFlow):
         self._allow_bypass_login = allow_bypass_login
 
     async def async_step_init(
-        self, user_input: Optional[Dict[str, str]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, str] | None = None
+    ) -> dict[str, Any]:
         """Handle the step of the form."""
         try:
             cast(

@@ -1,9 +1,11 @@
 """The ClimaCell integration."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
 from math import ceil
-from typing import Any, Dict, Optional, Union
+from typing import Any
 
 from pyclimacell import ClimaCell
 from pyclimacell.const import (
@@ -22,9 +24,8 @@ from pyclimacell.pyclimacell import (
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -80,11 +81,6 @@ def _set_update_interval(
     return interval
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
-    """Set up the ClimaCell API component."""
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) -> bool:
     """Set up ClimaCell API from a config entry."""
     hass.data.setdefault(DOMAIN, {})
@@ -110,16 +106,13 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
         _set_update_interval(hass, config_entry),
     )
 
-    await coordinator.async_refresh()
-
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
 
     hass.data[DOMAIN][config_entry.entry_id] = coordinator
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
+            hass.config_entries.async_forward_entry_setup(config_entry, platform)
         )
 
     return True
@@ -132,8 +125,8 @@ async def async_unload_entry(
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(config_entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(config_entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )
@@ -169,7 +162,7 @@ class ClimaCellDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=update_interval,
         )
 
-    async def _async_update_data(self) -> Dict[str, Any]:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         data = {FORECASTS: {}}
         try:
@@ -217,8 +210,8 @@ class ClimaCellEntity(CoordinatorEntity):
 
     @staticmethod
     def _get_cc_value(
-        weather_dict: Dict[str, Any], key: str
-    ) -> Optional[Union[int, float, str]]:
+        weather_dict: dict[str, Any], key: str
+    ) -> int | float | str | None:
         """Return property from weather_dict."""
         items = weather_dict.get(key, {})
         # Handle cases where value returned is a list.
@@ -252,7 +245,7 @@ class ClimaCellEntity(CoordinatorEntity):
         return ATTRIBUTION
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> dict[str, Any]:
         """Return device registry information."""
         return {
             "identifiers": {(DOMAIN, self._config_entry.data[CONF_API_KEY])},

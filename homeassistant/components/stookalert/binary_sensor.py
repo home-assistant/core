@@ -57,7 +57,7 @@ class StookalertBinarySensor(BinarySensorEntity):
         self._api_handler = api_handler
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the attribute(s) of the sensor."""
         state_attr = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
