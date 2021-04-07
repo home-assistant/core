@@ -17,7 +17,6 @@ import yarl
 
 from homeassistant import config as conf_util, config_entries, core, loader
 from homeassistant.components import http
-from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.const import REQUIRED_NEXT_PYTHON_DATE, REQUIRED_NEXT_PYTHON_VER
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import area_registry, device_registry, entity_registry
@@ -44,6 +43,7 @@ ERROR_LOG_FILENAME = "home-assistant.log"
 
 # hass.data key for logging information.
 DATA_LOGGING = "logging"
+DATA_INSTANCE = "recorder_instance"
 
 LOG_SLOW_STARTUP_INTERVAL = 60
 SLOW_STARTUP_CHECK_INTERVAL = 1
@@ -540,14 +540,13 @@ async def _async_set_up_integrations(
                 STAGE_1_TIMEOUT, cool_down=COOLDOWN_TIME
             ):
                 await async_setup_multi_components(hass, stage_1_domains, config)
+                # If there is a database upgrade in progress the recorder
+                # queue can exaust the available memory so we need to wait
+                # to move on to stage 2 until its ready
+                if "recorder" in hass.config.components:
+                    await hass.data[DATA_INSTANCE].async_db_ready
         except asyncio.TimeoutError:
             _LOGGER.warning("Setup timed out for stage 1 - moving forward")
-
-    # If there is a database upgrade in progress the recorder
-    # queue can exaust the available memory so we need to wait
-    # to move on to stage 2 until its ready
-    if "recorder" in hass.config.components:
-        await hass.data[DATA_INSTANCE].async_db_ready
 
     # Enables after dependencies
     async_set_domains_to_be_loaded(hass, stage_2_domains)

@@ -34,7 +34,7 @@ from homeassistant.helpers.entityfilter import (
     convert_include_exclude_filter,
 )
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.setup import async_start_setup, async_when_setup_or_start
+from homeassistant.setup import async_start_setup
 import homeassistant.util.dt as dt_util
 
 from . import migration, purge
@@ -203,12 +203,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if hass.state == CoreState.running:
         return await instance.async_db_ready
 
-    async def start_recorder(*_) -> None:
+    async def start_recorder() -> None:
         """Start the recorder."""
         with async_start_setup(hass, ["recorder"]):
             await instance.async_db_ready
 
-    async_when_setup_or_start(hass, "frontend", start_recorder)
+    hass.async_create_task(start_recorder())
     return True
 
 
@@ -299,6 +299,7 @@ class Recorder(threading.Thread):
         self.event_session = None
         self.get_session = None
         self._completed_database_setup = None
+        self._event_listener = None
 
         self.enabled = True
 
@@ -309,7 +310,7 @@ class Recorder(threading.Thread):
     @callback
     def async_initialize(self):
         """Initialize the recorder."""
-        self.hass.bus.async_listen(
+        self._event_listener = self.hass.bus.async_listen(
             MATCH_ALL, self.event_listener, event_filter=self._async_event_filter
         )
 
@@ -362,7 +363,24 @@ class Recorder(threading.Thread):
                 )
 
         self.hass.add_job(register)
+
         if not self._setup_recorder():
+
+            @callback
+            def connection_failed():
+                """Connect failed tasks."""
+                self.async_db_ready.set_result(False)
+                persistent_notification.async_create(
+                    self.hass,
+                    "The recorder could not start, please check the log",
+                    "Recorder",
+                )
+
+            self.hass.add_job(connection_failed)
+            # Cancel the event listener to avoid
+            # memory exhaustion since the queue
+            # would grow without bound otherwise
+            self._event_listener()
             return
 
         @callback
@@ -431,17 +449,6 @@ class Recorder(threading.Thread):
             tries += 1
             time.sleep(self.db_retry_wait)
 
-        @callback
-        def connection_failed():
-            """Connect failed tasks."""
-            self.async_db_ready.set_result(False)
-            persistent_notification.async_create(
-                self.hass,
-                "The recorder could not start, please check the log",
-                "Recorder",
-            )
-
-        self.hass.add_job(connection_failed)
         return False
 
     def _process_one_event(self, event):

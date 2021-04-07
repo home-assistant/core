@@ -1,6 +1,7 @@
 """Recorder constants."""
 
-DATA_INSTANCE = "recorder_instance"
+from homeassistant.bootstrap import DATA_INSTANCE  # noqa: F401
+
 SQLITE_URL_PREFIX = "sqlite://"
 DOMAIN = "recorder"
 
