@@ -372,6 +372,7 @@ def test_recorder_setup_failure():
             exclude_t=[],
             db_integrity_check=False,
         )
+        rec.async_initialize()
         rec.start()
         rec.join()
 

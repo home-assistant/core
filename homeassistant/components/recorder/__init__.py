@@ -33,6 +33,7 @@ from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER,
     convert_include_exclude_filter,
 )
+from homeassistant.helpers.event import track_time_change
 from homeassistant.helpers.recorder import DATA_INSTANCE, RECORDER_DOMAIN as DOMAIN
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
@@ -178,10 +179,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     db_max_retries = conf[CONF_DB_MAX_RETRIES]
     db_retry_wait = conf[CONF_DB_RETRY_WAIT]
     db_integrity_check = conf[CONF_DB_INTEGRITY_CHECK]
-
-    db_url = conf.get(CONF_DB_URL)
-    if not db_url:
-        db_url = DEFAULT_URL.format(hass_config_path=hass.config.path(DEFAULT_DB_FILE))
+    db_url = conf.get(CONF_DB_URL) or DEFAULT_URL.format(
+        hass_config_path=hass.config.path(DEFAULT_DB_FILE)
+    )
     exclude = conf[CONF_EXCLUDE]
     exclude_t = exclude.get(CONF_EVENT_TYPES, [])
     instance = hass.data[DATA_INSTANCE] = Recorder(
@@ -325,69 +325,75 @@ class Recorder(threading.Thread):
 
         self.queue.put(PurgeTask(keep_days, repack, apply_filter))
 
+    @callback
+    def async_register(self, shutdown_task, hass_started):
+        """Post connection initialize."""
+
+        def shutdown(event):
+            """Shut down the Recorder."""
+            if not hass_started.done():
+                hass_started.set_result(shutdown_task)
+            self.queue.put(None)
+            self.join()
+
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
+
+        if self.hass.state == CoreState.running:
+            hass_started.set_result(None)
+            return
+
+        @callback
+        def async_hass_started(event):
+            """Notify that hass has started."""
+            hass_started.set_result(None)
+
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, async_hass_started)
+
+    @callback
+    def async_connection_failed(self):
+        """Connect failed tasks."""
+        self.async_db_ready.set_result(False)
+        persistent_notification.async_create(
+            self.hass,
+            "The recorder could not start, please check the log",
+            "Recorder",
+        )
+        # Cancel the event listener to avoid
+        # memory exhaustion since the queue
+        # would grow without bound otherwise
+        if not self._event_listener:
+            return
+
+        self._event_listener()
+        self._event_listener = None
+
+    @callback
+    def async_connection_success(self):
+        """Connect success tasks."""
+        self.async_db_ready.set_result(True)
+
+    @callback
+    def async_purge(self, now):
+        """Trigger the purge."""
+        self.queue.put(PurgeTask(self.keep_days, repack=False, apply_filter=False))
+
     def run(self):
         """Start processing events to save."""
         shutdown_task = object()
         hass_started = concurrent.futures.Future()
 
-        @callback
-        def register():
-            """Post connection initialize."""
-
-            def shutdown(event):
-                """Shut down the Recorder."""
-                if not hass_started.done():
-                    hass_started.set_result(shutdown_task)
-                self.queue.put(None)
-                self.join()
-
-            self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
-
-            if self.hass.state == CoreState.running:
-                hass_started.set_result(None)
-            else:
-
-                @callback
-                def notify_hass_started(event):
-                    """Notify that hass has started."""
-                    hass_started.set_result(None)
-
-                self.hass.bus.async_listen_once(
-                    EVENT_HOMEASSISTANT_START, notify_hass_started
-                )
-
-        self.hass.add_job(register)
+        self.hass.add_job(
+            callback(lambda: self.async_register(shutdown_task, hass_started))
+        )
 
         if not self._setup_recorder():
-
-            @callback
-            def connection_failed():
-                """Connect failed tasks."""
-                self.async_db_ready.set_result(False)
-                persistent_notification.async_create(
-                    self.hass,
-                    "The recorder could not start, please check the log",
-                    "Recorder",
-                )
-
-            self.hass.add_job(connection_failed)
-            # Cancel the event listener to avoid
-            # memory exhaustion since the queue
-            # would grow without bound otherwise
-            if self._event_listener:
-                self._event_listener()
-                self._event_listener = None
+            self.hass.add_job(self.async_connection_failed)
             return
 
-        async def _set_ready():
-            await asyncio.sleep(200)
-            self.async_db_ready.set_result(True)
-
-        self.hass.add_job(_set_ready)
-        result = hass_started.result()
+        self.hass.add_job(self.async_connection_success)
 
         # If shutdown happened before Home Assistant finished starting
-        if result is shutdown_task:
+        if hass_started.result() is shutdown_task:
             # Make sure we cleanly close the run if
             # we restart before startup finishes
             self._shutdown()
@@ -395,31 +401,17 @@ class Recorder(threading.Thread):
 
         # Start periodic purge
         if self.auto_purge:
-
-            @callback
-            def async_purge(now):
-                """Trigger the purge."""
-                self.queue.put(
-                    PurgeTask(self.keep_days, repack=False, apply_filter=False)
-                )
-
             # Purge every night at 4:12am
-            self.hass.helpers.event.track_time_change(
-                async_purge, hour=4, minute=12, second=0
-            )
+            track_time_change(self.hass, self.async_purge, hour=4, minute=12, second=0)
 
         _LOGGER.debug("Recorder processing the queue")
         # Use a session for the event read loop
         # with a commit every time the event time
         # has changed. This reduces the disk io.
-        while True:
-            event = self.queue.get()
-
-            if event is None:
-                self._shutdown()
-                return
-
+        while (event := self.queue.get()) :
             self._process_one_event(event)
+
+        self._shutdown()
 
     def _setup_recorder(self) -> bool:
         """Create schema and connect to the database."""
