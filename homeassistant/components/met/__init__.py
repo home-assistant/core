@@ -19,7 +19,12 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util.distance import convert as convert_distance
 import homeassistant.util.dt as dt_util
 
-from .const import CONF_TRACK_HOME, DOMAIN
+from .const import (
+    CONF_TRACK_HOME,
+    DEFAULT_HOME_LATITUDE,
+    DEFAULT_HOME_LONGITUDE,
+    DOMAIN,
+)
 
 URL = "https://aa015h6buqvih86i1.api.met.no/weatherapi/locationforecast/2.0/complete"
 
@@ -35,6 +40,20 @@ async def async_setup(hass: HomeAssistant, config: Config) -> bool:
 
 async def async_setup_entry(hass, config_entry):
     """Set up Met as config entry."""
+    # Don't setup if tracking home location and latitude or longitude isn't set.
+    # Also, filters out our onboarding default location.
+    if config_entry.data.get(CONF_TRACK_HOME, False) and (
+        (not hass.config.latitude and not hass.config.longitude)
+        or (
+            hass.config.latitude == DEFAULT_HOME_LATITUDE
+            and hass.config.longitude == DEFAULT_HOME_LONGITUDE
+        )
+    ):
+        _LOGGER.warning(
+            "Skip setting up met.no integration; No Home location has been set"
+        )
+        return False
+
     coordinator = MetDataUpdateCoordinator(hass, config_entry)
     await coordinator.async_config_entry_first_refresh()
 
