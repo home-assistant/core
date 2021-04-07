@@ -8,7 +8,8 @@ from sqlalchemy.exc import InternalError, OperationalError, ProgrammingError
 from sqlalchemy.pool import StaticPool
 
 from homeassistant.bootstrap import async_setup_component
-from homeassistant.components.recorder import RecorderRuns, const, migration, models
+from homeassistant.components.recorder import RecorderRuns, migration, models
+from homeassistant.helpers.recorder import DATA_INSTANCE
 import homeassistant.util.dt as dt_util
 
 from tests.components.recorder import models_original
@@ -39,7 +40,7 @@ async def test_schema_update_calls(hass):
 
     update.assert_has_calls(
         [
-            call(hass.data[const.DATA_INSTANCE].engine, version + 1, 0)
+            call(hass.data[DATA_INSTANCE].engine, version + 1, 0)
             for version in range(0, models.SCHEMA_VERSION)
         ]
     )

@@ -11,10 +11,11 @@ import time
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm.session import Session
 
+from homeassistant.helpers.recorder import DATA_INSTANCE
 from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.dt as dt_util
 
-from .const import CONF_DB_INTEGRITY_CHECK, DATA_INSTANCE, SQLITE_URL_PREFIX
+from .const import CONF_DB_INTEGRITY_CHECK, SQLITE_URL_PREFIX
 from .models import ALL_TABLES, process_timestamp
 
 _LOGGER = logging.getLogger(__name__)

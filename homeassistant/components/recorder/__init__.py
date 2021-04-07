@@ -33,11 +33,12 @@ from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER,
     convert_include_exclude_filter,
 )
+from homeassistant.helpers.recorder import DATA_INSTANCE, RECORDER_DOMAIN as DOMAIN
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
 from . import migration, purge
-from .const import CONF_DB_INTEGRITY_CHECK, DATA_INSTANCE, DOMAIN, SQLITE_URL_PREFIX
+from .const import CONF_DB_INTEGRITY_CHECK, SQLITE_URL_PREFIX
 from .models import Base, Events, RecorderRuns, States
 from .util import (
     dburl_to_path,

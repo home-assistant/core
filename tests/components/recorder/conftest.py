@@ -7,7 +7,7 @@ from typing import Awaitable, Callable, cast
 import pytest
 
 from homeassistant.components.recorder import Recorder
-from homeassistant.components.recorder.const import DATA_INSTANCE
+from homeassistant.helpers.recorder import DATA_INSTANCE
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .common import async_recorder_block_till_done
