@@ -187,7 +187,8 @@ def _register_hass_zc_service(
         addrs.append(socket.inet_pton(socket.AF_INET6, host_ip4))
 
     try:
-        addrs.append(socket.inet_pton(socket.AF_INET6, host_ip6))
+        if host_ip6 != "::1":
+            addrs.append(socket.inet_pton(socket.AF_INET6, host_ip6))
     except OSError:
         _LOGGER.debug("unable to create v6 pton")
 
