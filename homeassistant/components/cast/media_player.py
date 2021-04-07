@@ -1,6 +1,7 @@
 """Provide functionality to interact with Cast devices on the network."""
 from __future__ import annotations
 
+import asyncio
 from contextlib import suppress
 from datetime import timedelta
 import functools as ft
@@ -185,7 +186,9 @@ class CastDevice(MediaPlayerEntity):
         )
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_stop)
         self.async_set_cast_info(self._cast_info)
-        self.hass.async_create_task(
+        # asyncio.create_task is used to avoid delaying startup wrapup if the device 
+        # is discovered already during startup but then fails to respond
+        asyncio.create_task(
             async_create_catching_coro(self.async_connect_to_chromecast())
         )
 
