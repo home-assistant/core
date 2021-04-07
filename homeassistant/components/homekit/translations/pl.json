@@ -55,7 +55,7 @@
                     "entities": "Encje",
                     "mode": "Tryb"
                 },
-                "description": "Wybierz encje, kt\u00f3re maj\u0105 by\u0107 uwzgl\u0119dnione. W trybie \"Akcesorium\" tylko jedna encja jest uwzgl\u0119dniona. W trybie \"Uwzgl\u0119dnij mostek\", wszystkie encje w danej domenie b\u0119d\u0105 uwzgl\u0119dnione, chyba \u017ce wybrane s\u0105 tylko konkretne encje. W trybie \"Wyklucz mostek\", wszystkie encje b\u0119d\u0105 uwzgl\u0119dnione, z wyj\u0105tkiem tych wybranych. Dla najlepszej wydajno\u015bci, zostanie utworzone oddzielne akcesorium HomeKit dla ka\u017cdego tv media playera oraz kamery.",
+                "description": "Wybierz encje, kt\u00f3re maj\u0105 by\u0107 uwzgl\u0119dnione. W trybie \"Akcesorium\" tylko jedna encja jest uwzgl\u0119dniona. W trybie \"Uwzgl\u0119dnij mostek\", wszystkie encje w danej domenie b\u0119d\u0105 uwzgl\u0119dnione, chyba \u017ce wybrane s\u0105 tylko konkretne encje. W trybie \"Wyklucz mostek\", wszystkie encje b\u0119d\u0105 uwzgl\u0119dnione, z wyj\u0105tkiem tych wybranych. Dla najlepszej wydajno\u015bci, zostanie utworzone oddzielne akcesorium HomeKit dla ka\u017cdego tv media playera, aktywno\u015bci pilota, zamka oraz kamery.",
                 "title": "Wybierz encje, kt\u00f3re maj\u0105 by\u0107 uwzgl\u0119dnione"
             },
             "init": {

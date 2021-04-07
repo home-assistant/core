@@ -1,6 +1,7 @@
 """Provide functionality to interact with Cast devices on the network."""
 from __future__ import annotations
 
+import asyncio
 from contextlib import suppress
 from datetime import timedelta
 import functools as ft
@@ -56,6 +57,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.dt as dt_util
+from homeassistant.util.logging import async_create_catching_coro
 
 from .const import (
     ADDED_CAST_DEVICES_KEY,
@@ -184,7 +186,10 @@ class CastDevice(MediaPlayerEntity):
         )
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_stop)
         self.async_set_cast_info(self._cast_info)
-        self.hass.async_create_task(self.async_connect_to_chromecast())
+        # asyncio.create_task is used to avoid delaying startup wrapup
+        asyncio.create_task(
+            async_create_catching_coro(self.async_connect_to_chromecast())
+        )
 
         self._cast_view_remove_handler = async_dispatcher_connect(
             self.hass, SIGNAL_HASS_CAST_SHOW_VIEW, self._handle_signal_show_view
@@ -231,12 +236,6 @@ class CastDevice(MediaPlayerEntity):
             ChromeCastZeroconf.get_zeroconf(),
         )
         self._chromecast = chromecast
-        _LOGGER.debug(
-            "[%s %s] DONE Connecting to cast device by service %s",
-            self.entity_id,
-            self._cast_info.friendly_name,
-            self.services,
-        )
 
         if CAST_MULTIZONE_MANAGER_KEY not in self.hass.data:
             self.hass.data[CAST_MULTIZONE_MANAGER_KEY] = MultizoneManager()
@@ -247,20 +246,7 @@ class CastDevice(MediaPlayerEntity):
         self._available = False
         self.cast_status = chromecast.status
         self.media_status = chromecast.media_controller.status
-
-        _LOGGER.debug(
-            "[%s %s] CALLING START Connecting to cast device by service %s",
-            self.entity_id,
-            self._cast_info.friendly_name,
-            self.services,
-        )
         self._chromecast.start()
-        _LOGGER.debug(
-            "[%s %s] DONE CALLING START Connecting to cast device by service %s",
-            self.entity_id,
-            self._cast_info.friendly_name,
-            self.services,
-        )
         self.async_write_ha_state()
 
     async def _async_disconnect(self):
@@ -822,7 +808,9 @@ class DynamicCastGroup:
         )
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_stop)
         self.async_set_cast_info(self._cast_info)
-        self.hass.async_create_task(self.async_connect_to_chromecast())
+        self.hass.async_create_task(
+            async_create_catching_coro(self.async_connect_to_chromecast())
+        )
 
     async def async_tear_down(self) -> None:
         """Disconnect Chromecast object."""
@@ -872,19 +860,7 @@ class DynamicCastGroup:
         self.mz_mgr = self.hass.data[CAST_MULTIZONE_MANAGER_KEY]
 
         self._status_listener = CastStatusListener(self, chromecast, self.mz_mgr, True)
-        _LOGGER.debug(
-            "[%s %s] ABOUT TO START Connecting to cast device by service %s",
-            "Dynamic group",
-            self._cast_info.friendly_name,
-            self.services,
-        )
         self._chromecast.start()
-        _LOGGER.debug(
-            "[%s %s] FINISHED START Connecting to cast device by service %s",
-            "Dynamic group",
-            self._cast_info.friendly_name,
-            self.services,
-        )
 
     async def _async_disconnect(self):
         """Disconnect Chromecast object if it is set."""
