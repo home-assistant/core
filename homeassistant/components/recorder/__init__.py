@@ -228,10 +228,7 @@ def _async_register_services(hass, instance):
         instance.set_enable(True)
 
     hass.services.async_register(
-        DOMAIN,
-        SERVICE_ENABLE,
-        async_handle_enable_sevice,
-        schema=SERVICE_ENABLE_SCHEMA,
+        DOMAIN, SERVICE_ENABLE, async_handle_enable_sevice, schema=SERVICE_ENABLE_SCHEMA
     )
 
     async def async_handle_disable_service(service):
