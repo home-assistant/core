@@ -34,6 +34,7 @@ from homeassistant.helpers.entityfilter import (
     convert_include_exclude_filter,
 )
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.setup import async_start_setup, async_when_setup_or_start
 import homeassistant.util.dt as dt_util
 
 from . import migration, purge
@@ -198,6 +199,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     instance.async_initialize()
     instance.start()
 
+    async def start_recorder(*_) -> None:
+        """Start the recorder."""
+        with async_start_setup(hass, ["recorder"]):
+            await instance.async_db_ready
+
+    async_when_setup_or_start(hass, "frontend", start_recorder)
+
     async def async_handle_purge_service(service):
         """Handle calls to the purge service."""
         instance.do_adhoc_purge(**service.data)
@@ -223,7 +231,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         schema=SERVICE_DISABLE_SCHEMA,
     )
 
-    return await instance.async_db_ready
+    return True
 
 
 class PurgeTask(NamedTuple):
@@ -316,17 +324,12 @@ class Recorder(threading.Thread):
 
     def run(self):
         """Start processing events to save."""
-
-        if not self._setup_recorder():
-            return
-
         shutdown_task = object()
         hass_started = concurrent.futures.Future()
 
         @callback
         def register():
             """Post connection initialize."""
-            self.async_db_ready.set_result(True)
 
             def shutdown(event):
                 """Shut down the Recorder."""
@@ -351,6 +354,14 @@ class Recorder(threading.Thread):
                 )
 
         self.hass.add_job(register)
+        if not self._setup_recorder():
+            return
+
+        @callback
+        def _set_ready():
+            self.async_db_ready.set_result(True)
+
+        self.hass.add_job(_set_ready)
         result = hass_started.result()
 
         # If shutdown happened before Home Assistant finished starting
