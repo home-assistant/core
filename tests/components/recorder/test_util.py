@@ -7,8 +7,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant.components.recorder import util
-from homeassistant.components.recorder.const import DATA_INSTANCE, SQLITE_URL_PREFIX
+from homeassistant.components.recorder.const import SQLITE_URL_PREFIX
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.helpers.recorder import DATA_INSTANCE
 from homeassistant.util import dt as dt_util
 
 from .common import corrupt_db_file

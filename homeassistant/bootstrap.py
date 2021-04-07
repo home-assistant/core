@@ -22,6 +22,10 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import area_registry, device_registry, entity_registry
 from homeassistant.helpers.aiohttp_client import install_clientsession_catcher
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.recorder import (
+    RECORDER_DOMAIN,
+    async_ensure_recorder_is_ready,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import (
     DATA_SETUP,
@@ -29,7 +33,6 @@ from homeassistant.setup import (
     DATA_SETUP_TIME,
     async_set_domains_to_be_loaded,
     async_setup_component,
-    async_start_setup,
 )
 from homeassistant.util.async_ import gather_with_concurrency
 import homeassistant.util.dt as dt_util
@@ -45,8 +48,6 @@ ERROR_LOG_FILENAME = "home-assistant.log"
 
 # hass.data key for logging information.
 DATA_LOGGING = "logging"
-DATA_INSTANCE = "recorder_instance"
-RECORDER_DOMAIN = "recorder"
 
 LOG_SLOW_STARTUP_INTERVAL = 1
 SLOW_STARTUP_CHECK_INTERVAL = 1
@@ -439,21 +440,6 @@ async def async_setup_multi_components(
             domain,
             exc_info=(type(exception), exception, exception.__traceback__),
         )
-
-
-async def async_ensure_recorder_is_ready(hass: core.HomeAssistant) -> None:
-    """Ensure the recorder is ready if it was setup."""
-    # If there is a database upgrade in progress the recorder
-    # queue can exaust the available memory if we allow stage 2
-    # to start. We wait until the upgrade is completed before
-    # starting.
-    if RECORDER_DOMAIN not in hass.config.components:
-        return
-    async with hass.timeout.async_timeout(
-        RECORDER_BASE_SETUP_TIMEOUT, RECORDER_DOMAIN
-    ), hass.timeout.async_freeze(RECORDER_DOMAIN):
-        with async_start_setup(hass, [RECORDER_DOMAIN]):
-            await hass.data[DATA_INSTANCE].async_db_ready
 
 
 async def _async_set_up_integrations(
