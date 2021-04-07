@@ -205,8 +205,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def start_recorder() -> None:
         """Start the recorder."""
-        with async_start_setup(hass, ["recorder"]):
-            await instance.async_db_ready
+        async with hass.timeout.async_freeze(DOMAIN):
+            with async_start_setup(hass, [DOMAIN]):
+                await instance.async_db_ready
 
     hass.async_create_task(start_recorder())
     return True
