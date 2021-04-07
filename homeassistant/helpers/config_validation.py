@@ -1,4 +1,6 @@
 """Helpers for config validation using voluptuous."""
+from __future__ import annotations
+
 from datetime import (
     date as date_sys,
     datetime as datetime_sys,
@@ -12,19 +14,7 @@ from numbers import Number
 import os
 import re
 from socket import _GLOBAL_DEFAULT_TIMEOUT  # type: ignore # private, not in typeshed
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Hashable,
-    List,
-    Optional,
-    Pattern,
-    Type,
-    TypeVar,
-    Union,
-    cast,
-)
+from typing import Any, Callable, Dict, Hashable, Pattern, TypeVar, cast
 from urllib.parse import urlparse
 from uuid import UUID
 
@@ -131,7 +121,7 @@ def path(value: Any) -> str:
 def has_at_least_one_key(*keys: str) -> Callable:
     """Validate that at least one key exists."""
 
-    def validate(obj: Dict) -> Dict:
+    def validate(obj: dict) -> dict:
         """Test keys exist in dict."""
         if not isinstance(obj, dict):
             raise vol.Invalid("expected dictionary")
@@ -144,10 +134,10 @@ def has_at_least_one_key(*keys: str) -> Callable:
     return validate
 
 
-def has_at_most_one_key(*keys: str) -> Callable[[Dict], Dict]:
+def has_at_most_one_key(*keys: str) -> Callable[[dict], dict]:
     """Validate that zero keys exist or one key exists."""
 
-    def validate(obj: Dict) -> Dict:
+    def validate(obj: dict) -> dict:
         """Test zero keys exist or one key exists in dict."""
         if not isinstance(obj, dict):
             raise vol.Invalid("expected dictionary")
@@ -253,7 +243,7 @@ def isdir(value: Any) -> str:
     return dir_in
 
 
-def ensure_list(value: Union[T, List[T], None]) -> List[T]:
+def ensure_list(value: T | list[T] | None) -> list[T]:
     """Wrap value in list if it is not one."""
     if value is None:
         return []
@@ -269,7 +259,7 @@ def entity_id(value: Any) -> str:
     raise vol.Invalid(f"Entity ID {value} is an invalid entity ID")
 
 
-def entity_ids(value: Union[str, List]) -> List[str]:
+def entity_ids(value: str | list) -> list[str]:
     """Validate Entity IDs."""
     if value is None:
         raise vol.Invalid("Entity IDs can not be None")
@@ -284,7 +274,7 @@ comp_entity_ids = vol.Any(
 )
 
 
-def entity_domain(domain: Union[str, List[str]]) -> Callable[[Any], str]:
+def entity_domain(domain: str | list[str]) -> Callable[[Any], str]:
     """Validate that entity belong to domain."""
     ent_domain = entities_domain(domain)
 
@@ -298,9 +288,7 @@ def entity_domain(domain: Union[str, List[str]]) -> Callable[[Any], str]:
     return validate
 
 
-def entities_domain(
-    domain: Union[str, List[str]]
-) -> Callable[[Union[str, List]], List[str]]:
+def entities_domain(domain: str | list[str]) -> Callable[[str | list], list[str]]:
     """Validate that entities belong to domain."""
     if isinstance(domain, str):
 
@@ -312,7 +300,7 @@ def entities_domain(
         def check_invalid(val: str) -> bool:
             return val not in domain
 
-    def validate(values: Union[str, List]) -> List[str]:
+    def validate(values: str | list) -> list[str]:
         """Test if entity domain is domain."""
         values = entity_ids(values)
         for ent_id in values:
@@ -325,7 +313,7 @@ def entities_domain(
     return validate
 
 
-def enum(enumClass: Type[Enum]) -> vol.All:
+def enum(enumClass: type[Enum]) -> vol.All:
     """Create validator for specified enum."""
     return vol.All(vol.In(enumClass.__members__), enumClass.__getitem__)
 
@@ -423,7 +411,7 @@ def time_period_str(value: str) -> timedelta:
     return offset
 
 
-def time_period_seconds(value: Union[float, str]) -> timedelta:
+def time_period_seconds(value: float | str) -> timedelta:
     """Validate and transform seconds to a time offset."""
     try:
         return timedelta(seconds=float(value))
@@ -450,7 +438,7 @@ positive_time_period_dict = vol.All(time_period_dict, positive_timedelta)
 positive_time_period = vol.All(time_period, positive_timedelta)
 
 
-def remove_falsy(value: List[T]) -> List[T]:
+def remove_falsy(value: list[T]) -> list[T]:
     """Remove falsy values from a list."""
     return [v for v in value if v]
 
@@ -477,7 +465,7 @@ def slug(value: Any) -> str:
 
 
 def schema_with_slug_keys(
-    value_schema: Union[T, Callable], *, slug_validator: Callable[[Any], str] = slug
+    value_schema: T | Callable, *, slug_validator: Callable[[Any], str] = slug
 ) -> Callable:
     """Ensure dicts have slugs as keys.
 
@@ -486,7 +474,7 @@ def schema_with_slug_keys(
     """
     schema = vol.Schema({str: value_schema})
 
-    def verify(value: Dict) -> Dict:
+    def verify(value: dict) -> dict:
         """Validate all keys are slugs and then the value_schema."""
         if not isinstance(value, dict):
             raise vol.Invalid("expected dictionary")
@@ -547,7 +535,7 @@ unit_system = vol.All(
 )
 
 
-def template(value: Optional[Any]) -> template_helper.Template:
+def template(value: Any | None) -> template_helper.Template:
     """Validate a jinja2 template."""
     if value is None:
         raise vol.Invalid("template value is None")
@@ -563,7 +551,7 @@ def template(value: Optional[Any]) -> template_helper.Template:
         raise vol.Invalid(f"invalid template ({ex})") from ex
 
 
-def dynamic_template(value: Optional[Any]) -> template_helper.Template:
+def dynamic_template(value: Any | None) -> template_helper.Template:
     """Validate a dynamic (non static) jinja2 template."""
     if value is None:
         raise vol.Invalid("template value is None")
@@ -632,7 +620,7 @@ def time_zone(value: str) -> str:
 weekdays = vol.All(ensure_list, [vol.In(WEEKDAYS)])
 
 
-def socket_timeout(value: Optional[Any]) -> object:
+def socket_timeout(value: Any | None) -> object:
     """Validate timeout float > 0.0.
 
     None coerced to socket._GLOBAL_DEFAULT_TIMEOUT bare object.
@@ -681,7 +669,7 @@ def uuid4_hex(value: Any) -> str:
     return result.hex
 
 
-def ensure_list_csv(value: Any) -> List:
+def ensure_list_csv(value: Any) -> list:
     """Ensure that input is a list or make one from comma-separated string."""
     if isinstance(value, str):
         return [member.strip() for member in value.split(",")]
@@ -709,9 +697,9 @@ class multi_select:
 
 def deprecated(
     key: str,
-    replacement_key: Optional[str] = None,
-    default: Optional[Any] = None,
-) -> Callable[[Dict], Dict]:
+    replacement_key: str | None = None,
+    default: Any | None = None,
+) -> Callable[[dict], dict]:
     """
     Log key as deprecated and provide a replacement (if exists).
 
@@ -743,15 +731,24 @@ def deprecated(
             " please remove it from your configuration"
         )
 
-    def validator(config: Dict) -> Dict:
+    def validator(config: dict) -> dict:
         """Check if key is in config and log warning."""
         if key in config:
-            KeywordStyleAdapter(logging.getLogger(module_name)).warning(
-                warning,
-                key=key,
-                replacement_key=replacement_key,
-            )
-
+            try:
+                KeywordStyleAdapter(logging.getLogger(module_name)).warning(
+                    warning.replace(
+                        "'{key}' option",
+                        f"'{key}' option near {config.__config_file__}:{config.__line__}",  # type: ignore
+                    ),
+                    key=key,
+                    replacement_key=replacement_key,
+                )
+            except AttributeError:
+                KeywordStyleAdapter(logging.getLogger(module_name)).warning(
+                    warning,
+                    key=key,
+                    replacement_key=replacement_key,
+                )
             value = config[key]
             if replacement_key:
                 config.pop(key)
@@ -772,14 +769,14 @@ def deprecated(
 
 
 def key_value_schemas(
-    key: str, value_schemas: Dict[str, vol.Schema]
-) -> Callable[[Any], Dict[str, Any]]:
+    key: str, value_schemas: dict[str, vol.Schema]
+) -> Callable[[Any], dict[str, Any]]:
     """Create a validator that validates based on a value for specific key.
 
     This gives better error messages.
     """
 
-    def key_value_validator(value: Any) -> Dict[str, Any]:
+    def key_value_validator(value: Any) -> dict[str, Any]:
         if not isinstance(value, dict):
             raise vol.Invalid("Expected a dictionary")
 
@@ -800,10 +797,10 @@ def key_value_schemas(
 
 def key_dependency(
     key: Hashable, dependency: Hashable
-) -> Callable[[Dict[Hashable, Any]], Dict[Hashable, Any]]:
+) -> Callable[[dict[Hashable, Any]], dict[Hashable, Any]]:
     """Validate that all dependencies exist for key."""
 
-    def validator(value: Dict[Hashable, Any]) -> Dict[Hashable, Any]:
+    def validator(value: dict[Hashable, Any]) -> dict[Hashable, Any]:
         """Test dependencies."""
         if not isinstance(value, dict):
             raise vol.Invalid("key dependencies require a dict")
@@ -919,7 +916,7 @@ SERVICE_SCHEMA = vol.All(
             vol.Optional("data"): vol.All(dict, template_complex),
             vol.Optional("data_template"): vol.All(dict, template_complex),
             vol.Optional(CONF_ENTITY_ID): comp_entity_ids,
-            vol.Optional(CONF_TARGET): ENTITY_SERVICE_FIELDS,
+            vol.Optional(CONF_TARGET): vol.Any(ENTITY_SERVICE_FIELDS, dynamic_template),
         }
     ),
     has_at_least_one_key(CONF_SERVICE, CONF_SERVICE_TEMPLATE),
@@ -1238,7 +1235,7 @@ def determine_script_action(action: dict) -> str:
     return SCRIPT_ACTION_CALL_SERVICE
 
 
-ACTION_TYPE_SCHEMAS: Dict[str, Callable[[Any], dict]] = {
+ACTION_TYPE_SCHEMAS: dict[str, Callable[[Any], dict]] = {
     SCRIPT_ACTION_CALL_SERVICE: SERVICE_SCHEMA,
     SCRIPT_ACTION_DELAY: _SCRIPT_DELAY_SCHEMA,
     SCRIPT_ACTION_WAIT_TEMPLATE: _SCRIPT_WAIT_TEMPLATE_SCHEMA,

@@ -12,11 +12,11 @@ from homeassistant.core import callback
 from .const import (
     CONF_MANUAL_RUN_MINS,
     DEFAULT_MANUAL_RUN_MINS,
+    DOMAIN,
     KEY_ID,
     KEY_STATUS,
     KEY_USERNAME,
 )
-from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 

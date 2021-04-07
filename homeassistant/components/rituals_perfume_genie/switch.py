@@ -66,7 +66,7 @@ class DiffuserSwitch(SwitchEntity):
         return ICON
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         attributes = {
             "fan_speed": self._diffuser.data["hub"]["attributes"]["speedc"],

@@ -6,11 +6,7 @@ from hass_nabucasa import Cloud, cloud_api
 from hass_nabucasa.google_report_state import ErrorResponse
 
 from homeassistant.components.google_assistant.helpers import AbstractConfig
-from homeassistant.const import (
-    CLOUD_NEVER_EXPOSED_ENTITIES,
-    EVENT_HOMEASSISTANT_STARTED,
-    HTTP_OK,
-)
+from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, HTTP_OK
 from homeassistant.core import CoreState, split_entity_id
 from homeassistant.helpers import entity_registry
 
@@ -87,8 +83,15 @@ class CloudGoogleConfig(AbstractConfig):
     async def async_initialize(self):
         """Perform async initialization of config."""
         await super().async_initialize()
-        # Remove bad data that was there until 0.103.6 - Jan 6, 2020
-        self._store.pop_agent_user_id(self._user)
+
+        # Remove old/wrong user agent ids
+        remove_agent_user_ids = []
+        for agent_user_id in self._store.agent_user_ids:
+            if agent_user_id != self.agent_user_id:
+                remove_agent_user_ids.append(agent_user_id)
+
+        for agent_user_id in remove_agent_user_ids:
+            await self.async_disconnect_agent_user(agent_user_id)
 
         self._prefs.async_listen_updates(self._async_prefs_updated)
 
@@ -127,6 +130,11 @@ class CloudGoogleConfig(AbstractConfig):
     def agent_user_id(self):
         """Return Agent User Id to use for query responses."""
         return self._cloud.username
+
+    @property
+    def has_registered_user_agent(self):
+        """Return if we have a Agent User Id registered."""
+        return len(self._store.agent_user_ids) > 0
 
     def get_agent_user_id(self, context):
         """Get agent user ID making request."""
@@ -198,17 +206,7 @@ class CloudGoogleConfig(AbstractConfig):
         if not self._should_expose_entity_id(entity_id):
             return
 
-        if self.hass.state == CoreState.running:
-            self.async_schedule_google_sync_all()
+        if self.hass.state != CoreState.running:
             return
 
-        if self._sync_on_started:
-            return
-
-        self._sync_on_started = True
-
-        async def sync_google(_):
-            """Sync entities to Google."""
-            await self.async_sync_entities_all()
-
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, sync_google)
+        self.async_schedule_google_sync_all()

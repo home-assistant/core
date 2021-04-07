@@ -1,7 +1,8 @@
 """Color util methods."""
+from __future__ import annotations
+
 import colorsys
 import math
-from typing import List, Optional, Tuple
 
 import attr
 
@@ -183,7 +184,7 @@ class GamutType:
     blue: XYPoint = attr.ib()
 
 
-def color_name_to_rgb(color_name: str) -> Tuple[int, int, int]:
+def color_name_to_rgb(color_name: str) -> tuple[int, int, int]:
     """Convert color name to RGB hex value."""
     # COLORS map has no spaces in it, so make the color_name have no
     # spaces in it as well for matching purposes
@@ -195,9 +196,11 @@ def color_name_to_rgb(color_name: str) -> Tuple[int, int, int]:
 
 
 # pylint: disable=invalid-name
+
+
 def color_RGB_to_xy(
-    iR: int, iG: int, iB: int, Gamut: Optional[GamutType] = None
-) -> Tuple[float, float]:
+    iR: int, iG: int, iB: int, Gamut: GamutType | None = None
+) -> tuple[float, float]:
     """Convert from RGB color to XY color."""
     return color_RGB_to_xy_brightness(iR, iG, iB, Gamut)[:2]
 
@@ -205,10 +208,9 @@ def color_RGB_to_xy(
 # Taken from:
 # http://www.developers.meethue.com/documentation/color-conversions-rgb-xy
 # License: Code is given as is. Use at your own risk and discretion.
-# pylint: disable=invalid-name
 def color_RGB_to_xy_brightness(
-    iR: int, iG: int, iB: int, Gamut: Optional[GamutType] = None
-) -> Tuple[float, float, int]:
+    iR: int, iG: int, iB: int, Gamut: GamutType | None = None
+) -> tuple[float, float, int]:
     """Convert from RGB color to XY color."""
     if iR + iG + iB == 0:
         return 0.0, 0.0, 0
@@ -247,8 +249,8 @@ def color_RGB_to_xy_brightness(
 
 
 def color_xy_to_RGB(
-    vX: float, vY: float, Gamut: Optional[GamutType] = None
-) -> Tuple[int, int, int]:
+    vX: float, vY: float, Gamut: GamutType | None = None
+) -> tuple[int, int, int]:
     """Convert from XY to a normalized RGB."""
     return color_xy_brightness_to_RGB(vX, vY, 255, Gamut)
 
@@ -256,14 +258,13 @@ def color_xy_to_RGB(
 # Converted to Python from Obj-C, original source from:
 # http://www.developers.meethue.com/documentation/color-conversions-rgb-xy
 def color_xy_brightness_to_RGB(
-    vX: float, vY: float, ibrightness: int, Gamut: Optional[GamutType] = None
-) -> Tuple[int, int, int]:
+    vX: float, vY: float, ibrightness: int, Gamut: GamutType | None = None
+) -> tuple[int, int, int]:
     """Convert from XYZ to RGB."""
-    if Gamut:
-        if not check_point_in_lamps_reach((vX, vY), Gamut):
-            xy_closest = get_closest_point_to_point((vX, vY), Gamut)
-            vX = xy_closest[0]
-            vY = xy_closest[1]
+    if Gamut and not check_point_in_lamps_reach((vX, vY), Gamut):
+        xy_closest = get_closest_point_to_point((vX, vY), Gamut)
+        vX = xy_closest[0]
+        vY = xy_closest[1]
 
     brightness = ibrightness / 255.0
     if brightness == 0.0:
@@ -303,7 +304,7 @@ def color_xy_brightness_to_RGB(
     return (ir, ig, ib)
 
 
-def color_hsb_to_RGB(fH: float, fS: float, fB: float) -> Tuple[int, int, int]:
+def color_hsb_to_RGB(fH: float, fS: float, fB: float) -> tuple[int, int, int]:
     """Convert a hsb into its rgb representation."""
     if fS == 0.0:
         fV = int(fB * 255)
@@ -344,7 +345,7 @@ def color_hsb_to_RGB(fH: float, fS: float, fB: float) -> Tuple[int, int, int]:
     return (r, g, b)
 
 
-def color_RGB_to_hsv(iR: float, iG: float, iB: float) -> Tuple[float, float, float]:
+def color_RGB_to_hsv(iR: float, iG: float, iB: float) -> tuple[float, float, float]:
     """Convert an rgb color to its hsv representation.
 
     Hue is scaled 0-360
@@ -355,12 +356,12 @@ def color_RGB_to_hsv(iR: float, iG: float, iB: float) -> Tuple[float, float, flo
     return round(fHSV[0] * 360, 3), round(fHSV[1] * 100, 3), round(fHSV[2] * 100, 3)
 
 
-def color_RGB_to_hs(iR: float, iG: float, iB: float) -> Tuple[float, float]:
+def color_RGB_to_hs(iR: float, iG: float, iB: float) -> tuple[float, float]:
     """Convert an rgb color to its hs representation."""
     return color_RGB_to_hsv(iR, iG, iB)[:2]
 
 
-def color_hsv_to_RGB(iH: float, iS: float, iV: float) -> Tuple[int, int, int]:
+def color_hsv_to_RGB(iH: float, iS: float, iV: float) -> tuple[int, int, int]:
     """Convert an hsv color into its rgb representation.
 
     Hue is scaled 0-360
@@ -371,27 +372,27 @@ def color_hsv_to_RGB(iH: float, iS: float, iV: float) -> Tuple[int, int, int]:
     return (int(fRGB[0] * 255), int(fRGB[1] * 255), int(fRGB[2] * 255))
 
 
-def color_hs_to_RGB(iH: float, iS: float) -> Tuple[int, int, int]:
+def color_hs_to_RGB(iH: float, iS: float) -> tuple[int, int, int]:
     """Convert an hsv color into its rgb representation."""
     return color_hsv_to_RGB(iH, iS, 100)
 
 
 def color_xy_to_hs(
-    vX: float, vY: float, Gamut: Optional[GamutType] = None
-) -> Tuple[float, float]:
+    vX: float, vY: float, Gamut: GamutType | None = None
+) -> tuple[float, float]:
     """Convert an xy color to its hs representation."""
     h, s, _ = color_RGB_to_hsv(*color_xy_to_RGB(vX, vY, Gamut))
     return h, s
 
 
 def color_hs_to_xy(
-    iH: float, iS: float, Gamut: Optional[GamutType] = None
-) -> Tuple[float, float]:
+    iH: float, iS: float, Gamut: GamutType | None = None
+) -> tuple[float, float]:
     """Convert an hs color to its xy representation."""
     return color_RGB_to_xy(*color_hs_to_RGB(iH, iS), Gamut)
 
 
-def _match_max_scale(input_colors: Tuple, output_colors: Tuple) -> Tuple:
+def _match_max_scale(input_colors: tuple, output_colors: tuple) -> tuple:
     """Match the maximum value of the output to the input."""
     max_in = max(input_colors)
     max_out = max(output_colors)
@@ -402,7 +403,7 @@ def _match_max_scale(input_colors: Tuple, output_colors: Tuple) -> Tuple:
     return tuple(int(round(i * factor)) for i in output_colors)
 
 
-def color_rgb_to_rgbw(r: int, g: int, b: int) -> Tuple[int, int, int, int]:
+def color_rgb_to_rgbw(r: int, g: int, b: int) -> tuple[int, int, int, int]:
     """Convert an rgb color to an rgbw representation."""
     # Calculate the white channel as the minimum of input rgb channels.
     # Subtract the white portion from the remaining rgb channels.
@@ -414,7 +415,7 @@ def color_rgb_to_rgbw(r: int, g: int, b: int) -> Tuple[int, int, int, int]:
     return _match_max_scale((r, g, b), rgbw)  # type: ignore
 
 
-def color_rgbw_to_rgb(r: int, g: int, b: int, w: int) -> Tuple[int, int, int]:
+def color_rgbw_to_rgb(r: int, g: int, b: int, w: int) -> tuple[int, int, int]:
     """Convert an rgbw color to an rgb representation."""
     # Add the white channel back into the rgb channels.
     rgb = (r + w, g + w, b + w)
@@ -429,7 +430,7 @@ def color_rgb_to_hex(r: int, g: int, b: int) -> str:
     return "{:02x}{:02x}{:02x}".format(round(r), round(g), round(b))
 
 
-def rgb_hex_to_rgb_list(hex_string: str) -> List[int]:
+def rgb_hex_to_rgb_list(hex_string: str) -> list[int]:
     """Return an RGB color value list from a hex color string."""
     return [
         int(hex_string[i : i + len(hex_string) // 3], 16)
@@ -437,14 +438,14 @@ def rgb_hex_to_rgb_list(hex_string: str) -> List[int]:
     ]
 
 
-def color_temperature_to_hs(color_temperature_kelvin: float) -> Tuple[float, float]:
+def color_temperature_to_hs(color_temperature_kelvin: float) -> tuple[float, float]:
     """Return an hs color from a color temperature in Kelvin."""
     return color_RGB_to_hs(*color_temperature_to_rgb(color_temperature_kelvin))
 
 
 def color_temperature_to_rgb(
     color_temperature_kelvin: float,
-) -> Tuple[float, float, float]:
+) -> tuple[float, float, float]:
     """
     Return an RGB color from a color temperature in Kelvin.
 
@@ -507,12 +508,12 @@ def _get_blue(temperature: float) -> float:
     return _bound(blue)
 
 
-def color_temperature_mired_to_kelvin(mired_temperature: float) -> float:
+def color_temperature_mired_to_kelvin(mired_temperature: float) -> int:
     """Convert absolute mired shift to degrees kelvin."""
     return math.floor(1000000 / mired_temperature)
 
 
-def color_temperature_kelvin_to_mired(kelvin_temperature: float) -> float:
+def color_temperature_kelvin_to_mired(kelvin_temperature: float) -> int:
     """Convert degrees kelvin to mired shift."""
     return math.floor(1000000 / kelvin_temperature)
 
@@ -554,8 +555,8 @@ def get_closest_point_to_line(A: XYPoint, B: XYPoint, P: XYPoint) -> XYPoint:
 
 
 def get_closest_point_to_point(
-    xy_tuple: Tuple[float, float], Gamut: GamutType
-) -> Tuple[float, float]:
+    xy_tuple: tuple[float, float], Gamut: GamutType
+) -> tuple[float, float]:
     """
     Get the closest matching color within the gamut of the light.
 
@@ -591,7 +592,7 @@ def get_closest_point_to_point(
     return (cx, cy)
 
 
-def check_point_in_lamps_reach(p: Tuple[float, float], Gamut: GamutType) -> bool:
+def check_point_in_lamps_reach(p: tuple[float, float], Gamut: GamutType) -> bool:
     """Check if the provided XYPoint can be recreated by a Hue lamp."""
     v1 = XYPoint(Gamut.green.x - Gamut.red.x, Gamut.green.y - Gamut.red.y)
     v2 = XYPoint(Gamut.blue.x - Gamut.red.x, Gamut.blue.y - Gamut.red.y)

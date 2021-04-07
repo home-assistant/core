@@ -1,9 +1,12 @@
 """Config flow to configure the AdGuard Home integration."""
+from __future__ import annotations
+
+from typing import Any
+
 from adguardhome import AdGuardHome, AdGuardHomeConnectionError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.adguard.const import DOMAIN
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import (
     CONF_HOST,
@@ -15,9 +18,10 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .const import DOMAIN
 
-@config_entries.HANDLERS.register(DOMAIN)
-class AdGuardHomeFlowHandler(ConfigFlow):
+
+class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a AdGuard Home config flow."""
 
     VERSION = 1
@@ -25,7 +29,9 @@ class AdGuardHomeFlowHandler(ConfigFlow):
 
     _hassio_discovery = None
 
-    async def _show_setup_form(self, errors=None):
+    async def _show_setup_form(
+        self, errors: dict[str, str] | None = None
+    ) -> dict[str, Any]:
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
@@ -42,7 +48,9 @@ class AdGuardHomeFlowHandler(ConfigFlow):
             errors=errors or {},
         )
 
-    async def _show_hassio_form(self, errors=None):
+    async def _show_hassio_form(
+        self, errors: dict[str, str] | None = None
+    ) -> dict[str, Any]:
         """Show the Hass.io confirmation form to the user."""
         return self.async_show_form(
             step_id="hassio_confirm",
@@ -51,7 +59,9 @@ class AdGuardHomeFlowHandler(ConfigFlow):
             errors=errors or {},
         )
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Handle a flow initiated by the user."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -91,7 +101,7 @@ class AdGuardHomeFlowHandler(ConfigFlow):
             },
         )
 
-    async def async_step_hassio(self, discovery_info):
+    async def async_step_hassio(self, discovery_info: dict[str, Any]) -> dict[str, Any]:
         """Prepare configuration for a Hass.io AdGuard Home add-on.
 
         This flow is triggered by the discovery component.
@@ -100,6 +110,7 @@ class AdGuardHomeFlowHandler(ConfigFlow):
 
         if not entries:
             self._hassio_discovery = discovery_info
+            await self._async_handle_discovery_without_unique_id()
             return await self.async_step_hassio_confirm()
 
         cur_entry = entries[0]
@@ -129,7 +140,9 @@ class AdGuardHomeFlowHandler(ConfigFlow):
 
         return self.async_abort(reason="existing_instance_updated")
 
-    async def async_step_hassio_confirm(self, user_input=None):
+    async def async_step_hassio_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Confirm Hass.io discovery."""
         if user_input is None:
             return await self._show_hassio_form()

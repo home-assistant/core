@@ -13,7 +13,7 @@
                 "data": {
                     "api_token": "API-Token"
                 },
-                "description": "Du ben\u00f6tigst das API-Token von https://home.juice.net/Manage.",
+                "description": "Sie ben\u00f6tigen das API-Token von https://home.juice.net/Manage.",
                 "title": "Stelle eine Verbindung zu JuiceNet her"
             }
         }

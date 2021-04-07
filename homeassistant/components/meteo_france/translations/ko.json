@@ -1,14 +1,18 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\uc704\uce58\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4.",
+            "already_configured": "\uc704\uce58\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
             "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
         },
         "error": {
-            "empty": "\ub3c4\uc2dc \uac80\uc0c9 \uacb0\uacfc \uc5c6\uc74c: \ub3c4\uc2dc \ud544\ub4dc\ub97c \ud655\uc778\ud558\uc2ed\uc2dc\uc624."
+            "empty": "\ub3c4\uc2dc \uac80\uc0c9 \uacb0\uacfc\uac00 \uc5c6\uc2b5\ub2c8\ub2e4. \ub3c4\uc2dc \ud544\ub4dc\ub97c \ud655\uc778\ud574\uc8fc\uc138\uc694."
         },
         "step": {
             "cities": {
+                "data": {
+                    "city": "\ub3c4\uc2dc"
+                },
+                "description": "\ubaa9\ub85d\uc5d0\uc11c \ub3c4\uc2dc\ub97c \uc120\ud0dd\ud574\uc8fc\uc138\uc694",
                 "title": "\ud504\ub791\uc2a4 \uae30\uc0c1\uccad (M\u00e9t\u00e9o-France)"
             },
             "user": {

@@ -4,10 +4,9 @@ from datetime import timedelta
 from pyetherscan import get_balance
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_ADDRESS, CONF_NAME, CONF_TOKEN
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 ATTRIBUTION = "Data provided by etherscan.io"
 
@@ -42,7 +41,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([EtherscanSensor(name, address, token, token_address)], True)
 
 
-class EtherscanSensor(Entity):
+class EtherscanSensor(SensorEntity):
     """Representation of an Etherscan.io sensor."""
 
     def __init__(self, name, address, token, token_address):
@@ -70,7 +69,7 @@ class EtherscanSensor(Entity):
         return self._unit_of_measurement
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 

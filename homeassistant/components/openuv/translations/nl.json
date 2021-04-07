@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Deze co\u00f6rdinaten zijn al geregistreerd."
+            "already_configured": "Locatie is al geconfigureerd."
         },
         "error": {
             "invalid_api_key": "Ongeldige API-sleutel"
@@ -9,7 +9,7 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "OpenUV API-Sleutel",
+                    "api_key": "API-sleutel",
                     "elevation": "Hoogte",
                     "latitude": "Breedtegraad",
                     "longitude": "Lengtegraad"

@@ -6,13 +6,13 @@
         },
         "error": {
             "invalid_2fa": "Vale 2-teguriline autentimine, proovi uuesti.",
-            "invalid_2fa_method": "Kehtetu 2FA meetod (kontrolli telefoni teel).",
+            "invalid_2fa_method": "Kehtetu kaheastmelise tuvastuse meetod (kontrolli telefonistl).",
             "invalid_login": "Vale kasutajanimi, palun proovi uuesti."
         },
         "step": {
             "2fa": {
                 "data": {
-                    "2fa": "2FA PIN"
+                    "2fa": "Kaheastmelise tuvastuse PIN"
                 },
                 "description": "",
                 "title": "Kaheastmeline autentimine"

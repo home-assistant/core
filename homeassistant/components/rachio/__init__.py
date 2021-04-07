@@ -21,7 +21,7 @@ from .webhooks import (
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORTED_DOMAINS = ["switch", "binary_sensor"]
+PLATFORMS = ["switch", "binary_sensor"]
 
 CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
@@ -39,8 +39,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in SUPPORTED_DOMAINS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )
@@ -99,13 +99,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         webhook_url,
     )
 
-    # Enable component
+    # Enable platform
     hass.data[DOMAIN][entry.entry_id] = person
     async_register_webhook(hass, webhook_id, entry.entry_id)
 
-    for component in SUPPORTED_DOMAINS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True

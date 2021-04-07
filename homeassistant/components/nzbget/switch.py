@@ -1,5 +1,7 @@
 """Support for NZBGet switches."""
-from typing import Callable, List
+from __future__ import annotations
+
+from typing import Callable
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -15,7 +17,7 @@ from .coordinator import NZBGetDataUpdateCoordinator
 async def async_setup_entry(
     hass: HomeAssistantType,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
     """Set up NZBGet sensor based on a config entry."""
     coordinator: NZBGetDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][

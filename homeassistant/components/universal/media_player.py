@@ -1,6 +1,7 @@
 """Combination of multiple media players for a universal controller."""
+from __future__ import annotations
+
 from copy import copy
-from typing import Optional
 
 import voluptuous as vol
 
@@ -270,7 +271,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         return False
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the class of this device."""
         return self._device_class
 
@@ -470,7 +471,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         if SERVICE_MEDIA_PREVIOUS_TRACK in self._cmds:
             flags |= SUPPORT_PREVIOUS_TRACK
 
-        if any([cmd in self._cmds for cmd in [SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN]]):
+        if any(cmd in self._cmds for cmd in [SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN]):
             flags |= SUPPORT_VOLUME_STEP
         if SERVICE_VOLUME_SET in self._cmds:
             flags |= SUPPORT_VOLUME_SET
@@ -502,7 +503,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         return flags
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         active_child = self._child_state
         return {ATTR_ACTIVE_CHILD: active_child.entity_id} if active_child else {}

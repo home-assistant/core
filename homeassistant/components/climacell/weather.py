@@ -1,7 +1,9 @@
 """Weather component that handles meteorological data for your location."""
+from __future__ import annotations
+
 from datetime import datetime
 import logging
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
@@ -64,9 +66,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def _translate_condition(
-    condition: Optional[str], sun_is_up: bool = True
-) -> Optional[str]:
+def _translate_condition(condition: str | None, sun_is_up: bool = True) -> str | None:
     """Translate ClimaCell condition into an HA condition."""
     if not condition:
         return None
@@ -82,13 +82,13 @@ def _forecast_dict(
     forecast_dt: datetime,
     use_datetime: bool,
     condition: str,
-    precipitation: Optional[float],
-    precipitation_probability: Optional[float],
-    temp: Optional[float],
-    temp_low: Optional[float],
-    wind_direction: Optional[float],
-    wind_speed: Optional[float],
-) -> Dict[str, Any]:
+    precipitation: float | None,
+    precipitation_probability: float | None,
+    temp: float | None,
+    temp_low: float | None,
+    wind_direction: float | None,
+    wind_speed: float | None,
+) -> dict[str, Any]:
     """Return formatted Forecast dict from ClimaCell forecast data."""
     if use_datetime:
         translated_condition = _translate_condition(condition, is_up(hass, forecast_dt))
@@ -120,7 +120,7 @@ def _forecast_dict(
 async def async_setup_entry(
     hass: HomeAssistantType,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
     """Set up a config entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
@@ -274,13 +274,12 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
                     ),
                     temp_low,
                 )
-            elif self.forecast_type == NOWCAST:
+            elif self.forecast_type == NOWCAST and precipitation:
                 # Precipitation is forecasted in CONF_TIMESTEP increments but in a
                 # per hour rate, so value needs to be converted to an amount.
-                if precipitation:
-                    precipitation = (
-                        precipitation / 60 * self._config_entry.options[CONF_TIMESTEP]
-                    )
+                precipitation = (
+                    precipitation / 60 * self._config_entry.options[CONF_TIMESTEP]
+                )
 
             forecasts.append(
                 _forecast_dict(

@@ -96,6 +96,7 @@ IGNORE_PRE_COMMIT_HOOK_ID = (
     "check-json",
     "no-commit-to-branch",
     "prettier",
+    "python-typing-update",
 )
 
 
