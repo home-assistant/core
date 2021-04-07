@@ -9,7 +9,7 @@ from homeassistant.components.doorbird import CONF_CUSTOM_URL, CONF_TOKEN
 from homeassistant.components.doorbird.const import CONF_EVENTS, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 
-from tests.common import MockConfigEntry, init_recorder_component
+from tests.common import MockConfigEntry
 
 VALID_CONFIG = {
     CONF_HOST: "1.2.3.4",
@@ -39,10 +39,6 @@ def _get_mock_doorbirdapi_side_effects(ready=None, info=None):
 
 async def test_user_form(hass):
     """Test we get the user form."""
-    await hass.async_add_executor_job(
-        init_recorder_component, hass
-    )  # force in memory db
-
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -82,10 +78,6 @@ async def test_user_form(hass):
 
 async def test_form_import(hass):
     """Test we get the form with import source."""
-    await hass.async_add_executor_job(
-        init_recorder_component, hass
-    )  # force in memory db
-
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     import_config = VALID_CONFIG.copy()
@@ -135,10 +127,6 @@ async def test_form_import(hass):
 
 async def test_form_import_with_zeroconf_already_discovered(hass):
     """Test we get the form with import source."""
-    await hass.async_add_executor_job(
-        init_recorder_component, hass
-    )  # force in memory db
-
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     doorbirdapi = _get_mock_doorbirdapi_return_values(
@@ -208,10 +196,6 @@ async def test_form_import_with_zeroconf_already_discovered(hass):
 
 async def test_form_zeroconf_wrong_oui(hass):
     """Test we abort when we get the wrong OUI via zeroconf."""
-    await hass.async_add_executor_job(
-        init_recorder_component, hass
-    )  # force in memory db
-
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
@@ -229,10 +213,6 @@ async def test_form_zeroconf_wrong_oui(hass):
 
 async def test_form_zeroconf_link_local_ignored(hass):
     """Test we abort when we get a link local address via zeroconf."""
-    await hass.async_add_executor_job(
-        init_recorder_component, hass
-    )  # force in memory db
-
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
@@ -250,9 +230,6 @@ async def test_form_zeroconf_link_local_ignored(hass):
 
 async def test_form_zeroconf_correct_oui(hass):
     """Test we can setup from zeroconf with the correct OUI source."""
-    await hass.async_add_executor_job(
-        init_recorder_component, hass
-    )  # force in memory db
     doorbirdapi = _get_mock_doorbirdapi_return_values(
         ready=[True], info={"WIFI_MAC_ADDR": "macaddr"}
     )
@@ -312,9 +289,6 @@ async def test_form_zeroconf_correct_oui(hass):
 )
 async def test_form_zeroconf_correct_oui_wrong_device(hass, doorbell_state_side_effect):
     """Test we can setup from zeroconf with the correct OUI source but not a doorstation."""
-    await hass.async_add_executor_job(
-        init_recorder_component, hass
-    )  # force in memory db
     doorbirdapi = _get_mock_doorbirdapi_return_values(
         ready=[True], info={"WIFI_MAC_ADDR": "macaddr"}
     )
@@ -341,10 +315,6 @@ async def test_form_zeroconf_correct_oui_wrong_device(hass, doorbell_state_side_
 
 async def test_form_user_cannot_connect(hass):
     """Test we handle cannot connect error."""
-    await hass.async_add_executor_job(
-        init_recorder_component, hass
-    )  # force in memory db
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -365,10 +335,6 @@ async def test_form_user_cannot_connect(hass):
 
 async def test_form_user_invalid_auth(hass):
     """Test we handle cannot invalid auth error."""
-    await hass.async_add_executor_job(
-        init_recorder_component, hass
-    )  # force in memory db
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
