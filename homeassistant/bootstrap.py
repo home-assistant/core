@@ -543,10 +543,15 @@ async def _async_set_up_integrations(
                 STAGE_1_TIMEOUT, cool_down=COOLDOWN_TIME
             ):
                 await async_setup_multi_components(hass, stage_1_domains, config)
-                await async_wait_for_recorder_full_startup(hass)
 
         except asyncio.TimeoutError:
             _LOGGER.warning("Setup timed out for stage 1 - moving forward")
+
+    # If there is a database upgrade in progress the recorder
+    # queue can exaust the available memory if we allow stage 2
+    # to start. We wait until the upgrade is completed before
+    # starting.
+    await async_wait_for_recorder_full_startup(hass)
 
     # Enables after dependencies
     async_set_domains_to_be_loaded(hass, stage_2_domains)
