@@ -2438,6 +2438,24 @@ async def async_setup(hass, config):
             hass.states.async_set("sensor.radiolist", -1, {})
             atrr = hass.states.get("input_select.radio_type").attributes
             hass.states.async_set("input_select.radio_type", "-", atrr)
+        elif context == "podcast_public":
+            hass.states.async_set("sensor.ais_player_mode", "podcast_player")
+            hass.states.async_set("sensor.ais_podcast_origin", "public")
+            hass.states.async_set("sensor.podcastlist", -1, {})
+            atrr = hass.states.get("input_select.podcast_type").attributes
+            hass.states.async_set("input_select.podcast_type", "-", atrr)
+        elif context == "podcast_private":
+            hass.states.async_set("sensor.ais_player_mode", "podcast_player")
+            hass.states.async_set("sensor.ais_podcast_origin", "private")
+            hass.states.async_set("sensor.podcastlist", -1, {})
+            atrr = hass.states.get("input_select.podcast_type").attributes
+            hass.states.async_set("input_select.podcast_type", "-", atrr)
+        elif context == "podcast_shared":
+            hass.states.async_set("sensor.ais_player_mode", "podcast_player")
+            hass.states.async_set("sensor.ais_podcast_origin", "shared")
+            hass.states.async_set("sensor.podcastlist", -1, {})
+            atrr = hass.states.get("input_select.podcast_type").attributes
+            hass.states.async_set("input_select.podcast_type", "-", atrr)
         elif context == "YouTube":
             hass.states.async_set("sensor.ais_player_mode", "music_player")
             await hass.services.async_call(

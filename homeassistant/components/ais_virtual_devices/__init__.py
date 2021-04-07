@@ -29,6 +29,7 @@ async def async_setup(hass, config):
     hass.states.async_set("sensor.ais_tv_activity", "", {})
     hass.states.async_set("sensor.ais_spotify_favorites_mode", "", {})
     hass.states.async_set("sensor.ais_radio_origin", "private", {})
+    hass.states.async_set("sensor.ais_podcast_origin", "private", {})
     hass.states.async_set(
         "sensor.ais_secure_android_id_dom",
         "",
