@@ -11,7 +11,6 @@ from sqlalchemy.exc import (
 )
 from sqlalchemy.schema import AddConstraint, DropConstraint
 
-from .const import DOMAIN
 from .models import SCHEMA_VERSION, TABLE_STATES, Base, SchemaChanges
 from .util import session_scope
 
@@ -41,14 +40,13 @@ def migrate_schema(instance):
             "Database is about to upgrade. Schema version: %s", current_version
         )
 
-        with instance.hass.timeout.freeze(DOMAIN):
-            for version in range(current_version, SCHEMA_VERSION):
-                new_version = version + 1
-                _LOGGER.info("Upgrading recorder db schema to version %s", new_version)
-                _apply_update(instance.engine, new_version, current_version)
-                session.add(SchemaChanges(schema_version=new_version))
+        for version in range(current_version, SCHEMA_VERSION):
+            new_version = version + 1
+            _LOGGER.info("Upgrading recorder db schema to version %s", new_version)
+            _apply_update(instance.engine, new_version, current_version)
+            session.add(SchemaChanges(schema_version=new_version))
 
-                _LOGGER.info("Upgrade to version %s done", new_version)
+            _LOGGER.info("Upgrade to version %s done", new_version)
 
 
 def _create_index(engine, table_name, index_name):
