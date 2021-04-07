@@ -412,6 +412,7 @@ def _async_when_setup(
             _LOGGER.exception("Error handling when_setup callback for %s", component)
 
     if component in hass.config.components:
+        # The task must be tracked so it will be seen by hass.async_block_till_done()
         hass.async_create_task(when_setup())
         return
 
@@ -421,7 +422,8 @@ def _async_when_setup(
         """Call the callback when we matched an event."""
         for listener in listeners:
             listener()
-        await when_setup()
+        # The task must be tracked so it will be seen by hass.async_block_till_done()
+        hass.async_create_task(when_setup())
 
     async def _loaded_event(event: core.Event) -> None:
         """Call the callback if we loaded the expected component."""
