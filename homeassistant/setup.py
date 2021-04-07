@@ -411,9 +411,7 @@ def _async_when_setup(
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Error handling when_setup callback for %s", component)
 
-    if component in hass.config.components or (
-        start_event and hass.state == core.CoreState.running
-    ):
+    if component in hass.config.components:
         hass.async_create_task(when_setup())
         return
 
