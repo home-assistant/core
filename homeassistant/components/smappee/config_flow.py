@@ -150,18 +150,30 @@ class SmappeeFlowHandler(
             )
         # In a LOCAL setup we still need to resolve the host to serial number
         ip_address = user_input["host"]
+        serial_number = None
+
+        # Attempt 1: try to use the local api (older generation) to resolve host to serialnumber
         smappee_api = api.api.SmappeeLocalApi(ip=ip_address)
         logon = await self.hass.async_add_executor_job(smappee_api.logon)
-        if logon is None:
-            return self.async_abort(reason="cannot_connect")
-
-        advanced_config = await self.hass.async_add_executor_job(
-            smappee_api.load_advanced_config
-        )
-        serial_number = None
-        for config_item in advanced_config:
-            if config_item["key"] == "mdnsHostName":
-                serial_number = config_item["value"]
+        if logon is not None:
+            advanced_config = await self.hass.async_add_executor_job(
+                smappee_api.load_advanced_config
+            )
+            for config_item in advanced_config:
+                if config_item["key"] == "mdnsHostName":
+                    serial_number = config_item["value"]
+        else:
+            # Attempt 2: try to use the local mqtt broker (newer generation) to resolve host to serialnumber
+            smappee_mqtt = mqtt.SmappeeLocalMqtt()
+            connect = smappee_mqtt.start_attempt()
+            if not connect:
+                return self.async_abort(reason="cannot_connect")
+            else:
+                smappee_mqtt.start()
+                serial_number = smappee_mqtt.is_config_ready()
+                smappee_mqtt.stop()
+                if serial_number is None:
+                    return self.async_abort(reason="cannot_connect")
 
         if serial_number is None or not serial_number.startswith(
             SUPPORTED_LOCAL_DEVICES

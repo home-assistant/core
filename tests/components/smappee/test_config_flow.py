@@ -108,7 +108,38 @@ async def test_show_zeroconf_connection_error_form_next_generation(hass):
 
 async def test_connection_error(hass):
     """Test we show user form on Smappee connection error."""
-    with patch("pysmappee.api.SmappeeLocalApi.logon", return_value=None):
+    with patch("pysmappee.api.SmappeeLocalApi.logon", return_value=None), patch(
+        "pysmappee.mqtt.SmappeeLocalMqtt.start_attempt", return_value=None
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+        )
+        assert result["step_id"] == "environment"
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"environment": ENV_LOCAL}
+        )
+        assert result["step_id"] == ENV_LOCAL
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": "1.2.3.4"}
+        )
+        assert result["reason"] == "cannot_connect"
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+
+
+async def test_user_local_connection_error(hass):
+    """Test we show user form on Smappee connection error in local next generation option."""
+    with patch("pysmappee.api.SmappeeLocalApi.logon", return_value=None), patch(
+        "pysmappee.mqtt.SmappeeLocalMqtt.start_attempt", return_value=True
+    ), patch("pysmappee.mqtt.SmappeeLocalMqtt.start", return_value=True), patch(
+        "pysmappee.mqtt.SmappeeLocalMqtt.stop", return_value=True
+    ), patch(
+        "pysmappee.mqtt.SmappeeLocalMqtt.is_config_ready", return_value=None
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
