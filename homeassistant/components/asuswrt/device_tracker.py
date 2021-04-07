@@ -81,15 +81,22 @@ class AsusWrtDevice(ScannerEntity):
     @property
     def extra_state_attributes(self) -> dict[str, any]:
         """Return the attributes."""
-        attrs = {
-            "mac": self._device.mac,
-            "ip_address": self._device.ip_address,
-        }
+        attrs = {}
         if self._device.last_activity:
             attrs["last_time_reachable"] = self._device.last_activity.isoformat(
                 timespec="seconds"
             )
         return attrs
+
+    @property
+    def ip_address(self) -> str:
+        """Return the primary ip address of the device."""
+        return self._device.ip_address
+
+    @property
+    def mac_address(self) -> str:
+        """Return the mac address of the device."""
+        return self._device.mac
 
     @property
     def device_info(self) -> dict[str, any]:
