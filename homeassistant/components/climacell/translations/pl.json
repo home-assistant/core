@@ -10,6 +10,7 @@
             "user": {
                 "data": {
                     "api_key": "Klucz API",
+                    "api_version": "Wersja API",
                     "latitude": "Szeroko\u015b\u0107 geograficzna",
                     "longitude": "D\u0142ugo\u015b\u0107 geograficzna",
                     "name": "Nazwa"

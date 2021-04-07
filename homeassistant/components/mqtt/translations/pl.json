@@ -21,8 +21,8 @@
                 "data": {
                     "discovery": "W\u0142\u0105cz wykrywanie"
                 },
-                "description": "Czy chcesz skonfigurowa\u0107 Home Assistanta, aby po\u0142\u0105czy\u0142 si\u0119 z po\u015brednikiem MQTT dostarczonym przez dodatek Hass.io {addon}?",
-                "title": "Po\u015brednik MQTT przez dodatek Hass.io"
+                "description": "Czy chcesz skonfigurowa\u0107 Home Assistanta, aby po\u0142\u0105czy\u0142 si\u0119 z po\u015brednikiem MQTT dostarczonym przez dodatek {addon}?",
+                "title": "Po\u015brednik MQTT przez dodatek Home Assistant"
             }
         }
     },

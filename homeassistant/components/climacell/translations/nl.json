@@ -10,6 +10,7 @@
             "user": {
                 "data": {
                     "api_key": "API-sleutel",
+                    "api_version": "API-versie",
                     "latitude": "Breedtegraad",
                     "longitude": "Lengtegraad",
                     "name": "Naam"
