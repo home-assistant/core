@@ -198,6 +198,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     instance.async_initialize()
     instance.start()
+    _async_register_services(hass, instance)
+
+    if hass.state == CoreState.running:
+        return await instance.async_db_ready
 
     async def start_recorder(*_) -> None:
         """Start the recorder."""
@@ -205,6 +209,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             await instance.async_db_ready
 
     async_when_setup_or_start(hass, "frontend", start_recorder)
+    return True
+
+
+@callback
+def _async_register_services(hass, instance):
+    """Register recorder services."""
 
     async def async_handle_purge_service(service):
         """Handle calls to the purge service."""
@@ -230,8 +240,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         async_handle_disable_service,
         schema=SERVICE_DISABLE_SCHEMA,
     )
-
-    return True
 
 
 class PurgeTask(NamedTuple):
