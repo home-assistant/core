@@ -124,6 +124,7 @@ FLOWS = [
     "kmtronic",
     "kodi",
     "konnected",
+    "kostal_plenticore",
     "kulersky",
     "life360",
     "lifx",

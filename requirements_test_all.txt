@@ -468,6 +468,9 @@ jsonpath==0.82
 # homeassistant.components.konnected
 konnected==1.2.0
 
+# homeassistant.components.kostal_plenticore
+kostal_plenticore==0.2.0
+
 # homeassistant.components.dyson
 libpurecool==0.6.4
 
