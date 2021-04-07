@@ -7,11 +7,6 @@ from homeassistant.core import HomeAssistant
 PLATFORMS = ["sensor"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Google Maps Travel Time component."""
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Google Maps Travel Time from a config entry."""
     for component in PLATFORMS:
