@@ -7,37 +7,37 @@ from bme280spi import BME280 as BME280_spi  # pylint: disable=import-error
 from i2csense.bme280 import BME280 as BME280_i2c  # pylint: disable=import-error
 import smbus
 
+from homeassistant.components.sensor import DOMAIN, SensorEntity
 from homeassistant.const import (
-    CONF_SCAN_INTERVAL,
-    CONF_NAME,
     CONF_MONITORED_CONDITIONS,
+    CONF_NAME,
+    CONF_SCAN_INTERVAL,
     TEMP_FAHRENHEIT,
 )
-from .const import (
-    CONF_OVERSAMPLING_TEMP,
-    CONF_OVERSAMPLING_PRES,
-    CONF_OVERSAMPLING_HUM,
-    CONF_T_STANDBY,
-    CONF_FILTER_MODE,
-    MIN_TIME_BETWEEN_UPDATES,
-    SENSOR_TEMP,
-    SENSOR_HUMID,
-    SENSOR_PRESS,
-    SENSOR_TYPES,
-    DEFAULT_SCAN_INTERVAL,
-    CONF_SPI_DEV,
-    CONF_SPI_BUS,
-    CONF_I2C_ADDRESS,
-    CONF_I2C_BUS,
-    CONF_DELTA_TEMP,
-    CONF_OPERATION_MODE,
-    INTERFACE_SPI,
-    INTERFACE_I2C,
-)
-
-from homeassistant.components.sensor import DOMAIN, SensorEntity
 from homeassistant.util import Throttle
 from homeassistant.util.temperature import celsius_to_fahrenheit
+
+from .const import (
+    CONF_DELTA_TEMP,
+    CONF_FILTER_MODE,
+    CONF_I2C_ADDRESS,
+    CONF_I2C_BUS,
+    CONF_OPERATION_MODE,
+    CONF_OVERSAMPLING_HUM,
+    CONF_OVERSAMPLING_PRES,
+    CONF_OVERSAMPLING_TEMP,
+    CONF_SPI_BUS,
+    CONF_SPI_DEV,
+    CONF_T_STANDBY,
+    DEFAULT_SCAN_INTERVAL,
+    INTERFACE_I2C,
+    INTERFACE_SPI,
+    MIN_TIME_BETWEEN_UPDATES,
+    SENSOR_HUMID,
+    SENSOR_PRESS,
+    SENSOR_TEMP,
+    SENSOR_TYPES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 

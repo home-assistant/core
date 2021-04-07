@@ -374,7 +374,7 @@ blockchain==1.4.4
 # bluepy==1.3.0
 
 # homeassistant.components.bme280
-# bme280spi==0.2.0
+bme280spi==0.2.0
 
 # homeassistant.components.bme680
 # bme680==1.0.5

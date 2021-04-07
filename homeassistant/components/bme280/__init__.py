@@ -1,41 +1,37 @@
 """The bme280 component."""
 import voluptuous as vol
-from homeassistant.helpers import config_validation as cv, discovery
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 
-from homeassistant.const import (
-    CONF_SCAN_INTERVAL,
-    CONF_MONITORED_CONDITIONS,
-    CONF_NAME,
-)
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_SCAN_INTERVAL
+from homeassistant.helpers import config_validation as cv, discovery
+
 from .const import (
-    DOMAIN,
-    CONF_SPI_DEV,
-    CONF_SPI_BUS,
+    CONF_DELTA_TEMP,
+    CONF_FILTER_MODE,
     CONF_I2C_ADDRESS,
     CONF_I2C_BUS,
-    CONF_DELTA_TEMP,
-    CONF_OVERSAMPLING_TEMP,
-    CONF_OVERSAMPLING_PRES,
-    CONF_OVERSAMPLING_HUM,
     CONF_OPERATION_MODE,
+    CONF_OVERSAMPLING_HUM,
+    CONF_OVERSAMPLING_PRES,
+    CONF_OVERSAMPLING_TEMP,
+    CONF_SPI_BUS,
+    CONF_SPI_DEV,
     CONF_T_STANDBY,
-    CONF_FILTER_MODE,
-    DEFAULT_NAME,
-    DEFAULT_OVERSAMPLING_TEMP,
-    DEFAULT_OVERSAMPLING_PRES,
-    DEFAULT_OVERSAMPLING_HUM,
-    DEFAULT_OPERATION_MODE,
-    DEFAULT_T_STANDBY,
+    DEFAULT_DELTA_TEMP,
     DEFAULT_FILTER_MODE,
-    SENSOR_TYPES,
-    DEFAULT_MONITORED,
-    DEFAULT_SCAN_INTERVAL,
     DEFAULT_I2C_ADDRESS,
     DEFAULT_I2C_BUS,
-    DEFAULT_DELTA_TEMP,
+    DEFAULT_MONITORED,
+    DEFAULT_NAME,
+    DEFAULT_OPERATION_MODE,
+    DEFAULT_OVERSAMPLING_HUM,
+    DEFAULT_OVERSAMPLING_PRES,
+    DEFAULT_OVERSAMPLING_TEMP,
+    DEFAULT_SCAN_INTERVAL,
+    DEFAULT_T_STANDBY,
+    DOMAIN,
+    SENSOR_TYPES,
 )
-
 
 CONFIG_SCHEMA = vol.Schema(
     {
