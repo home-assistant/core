@@ -168,12 +168,12 @@ class SmappeeFlowHandler(
             connect = smappee_mqtt.start_attempt()
             if not connect:
                 return self.async_abort(reason="cannot_connect")
-            else:
-                smappee_mqtt.start()
-                serial_number = smappee_mqtt.is_config_ready()
-                smappee_mqtt.stop()
-                if serial_number is None:
-                    return self.async_abort(reason="cannot_connect")
+
+            smappee_mqtt.start()
+            serial_number = smappee_mqtt.is_config_ready()
+            smappee_mqtt.stop()
+            if serial_number is None:
+                return self.async_abort(reason="cannot_connect")
 
         if serial_number is None or not serial_number.startswith(
             SUPPORTED_LOCAL_DEVICES
