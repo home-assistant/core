@@ -1,135 +1,142 @@
 """Support for BME280 temperature, humidity and pressure sensor."""
-from contextlib import suppress
 from datetime import timedelta
 from functools import partial
 import logging
 
-from i2csense.bme280 import BME280  # pylint: disable=import-error
+from bme280spi import BME280 as BME280_spi  # pylint: disable=import-error
+from i2csense.bme280 import BME280 as BME280_i2c  # pylint: disable=import-error
 import smbus
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS,
+    CONF_SCAN_INTERVAL,
     CONF_NAME,
-    PERCENTAGE,
+    CONF_MONITORED_CONDITIONS,
     TEMP_FAHRENHEIT,
 )
-import homeassistant.helpers.config_validation as cv
+from .const import (
+    CONF_OVERSAMPLING_TEMP,
+    CONF_OVERSAMPLING_PRES,
+    CONF_OVERSAMPLING_HUM,
+    CONF_T_STANDBY,
+    CONF_FILTER_MODE,
+    MIN_TIME_BETWEEN_UPDATES,
+    SENSOR_TEMP,
+    SENSOR_HUMID,
+    SENSOR_PRESS,
+    SENSOR_TYPES,
+    DEFAULT_SCAN_INTERVAL,
+    CONF_SPI_DEV,
+    CONF_SPI_BUS,
+    CONF_I2C_ADDRESS,
+    CONF_I2C_BUS,
+    CONF_DELTA_TEMP,
+    CONF_OPERATION_MODE,
+    INTERFACE_SPI,
+    INTERFACE_I2C,
+)
+
+from homeassistant.components.sensor import DOMAIN, SensorEntity
 from homeassistant.util import Throttle
 from homeassistant.util.temperature import celsius_to_fahrenheit
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_I2C_ADDRESS = "i2c_address"
-CONF_I2C_BUS = "i2c_bus"
-CONF_OVERSAMPLING_TEMP = "oversampling_temperature"
-CONF_OVERSAMPLING_PRES = "oversampling_pressure"
-CONF_OVERSAMPLING_HUM = "oversampling_humidity"
-CONF_OPERATION_MODE = "operation_mode"
-CONF_T_STANDBY = "time_standby"
-CONF_FILTER_MODE = "filter_mode"
-CONF_DELTA_TEMP = "delta_temperature"
+SCAN_INTERVAL = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
 
-DEFAULT_NAME = "BME280 Sensor"
-DEFAULT_I2C_ADDRESS = "0x76"
-DEFAULT_I2C_BUS = 1
-DEFAULT_OVERSAMPLING_TEMP = 1  # Temperature oversampling x 1
-DEFAULT_OVERSAMPLING_PRES = 1  # Pressure oversampling x 1
-DEFAULT_OVERSAMPLING_HUM = 1  # Humidity oversampling x 1
-DEFAULT_OPERATION_MODE = 3  # Normal mode (forced mode: 2)
-DEFAULT_T_STANDBY = 5  # Tstandby 5ms
-DEFAULT_FILTER_MODE = 0  # Filter off
-DEFAULT_DELTA_TEMP = 0.0
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=3)
-
-SENSOR_TEMP = "temperature"
-SENSOR_HUMID = "humidity"
-SENSOR_PRESS = "pressure"
-SENSOR_TYPES = {
-    SENSOR_TEMP: ["Temperature", None],
-    SENSOR_HUMID: ["Humidity", PERCENTAGE],
-    SENSOR_PRESS: ["Pressure", "mb"],
-}
-DEFAULT_MONITORED = [SENSOR_TEMP, SENSOR_HUMID, SENSOR_PRESS]
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_I2C_ADDRESS, default=DEFAULT_I2C_ADDRESS): cv.string,
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=DEFAULT_MONITORED): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
-        ),
-        vol.Optional(CONF_I2C_BUS, default=DEFAULT_I2C_BUS): vol.Coerce(int),
-        vol.Optional(
-            CONF_OVERSAMPLING_TEMP, default=DEFAULT_OVERSAMPLING_TEMP
-        ): vol.Coerce(int),
-        vol.Optional(
-            CONF_OVERSAMPLING_PRES, default=DEFAULT_OVERSAMPLING_PRES
-        ): vol.Coerce(int),
-        vol.Optional(
-            CONF_OVERSAMPLING_HUM, default=DEFAULT_OVERSAMPLING_HUM
-        ): vol.Coerce(int),
-        vol.Optional(CONF_OPERATION_MODE, default=DEFAULT_OPERATION_MODE): vol.Coerce(
-            int
-        ),
-        vol.Optional(CONF_T_STANDBY, default=DEFAULT_T_STANDBY): vol.Coerce(int),
-        vol.Optional(CONF_FILTER_MODE, default=DEFAULT_FILTER_MODE): vol.Coerce(int),
-        vol.Optional(CONF_DELTA_TEMP, default=DEFAULT_DELTA_TEMP): vol.Coerce(float),
-    }
-)
+def _set_scan_interval(interval: timedelta) -> None:
+    global SCAN_INTERVAL  # pylint: disable=global-statement
+    SCAN_INTERVAL = interval
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the BME280 sensor."""
-
+    if discovery_info is None:
+        return
     SENSOR_TYPES[SENSOR_TEMP][1] = hass.config.units.temperature_unit
-    name = config[CONF_NAME]
-    i2c_address = config[CONF_I2C_ADDRESS]
-
-    bus = smbus.SMBus(config[CONF_I2C_BUS])
-    sensor = await hass.async_add_executor_job(
-        partial(
-            BME280,
-            bus,
-            i2c_address,
-            osrs_t=config[CONF_OVERSAMPLING_TEMP],
-            osrs_p=config[CONF_OVERSAMPLING_PRES],
-            osrs_h=config[CONF_OVERSAMPLING_HUM],
-            mode=config[CONF_OPERATION_MODE],
-            t_sb=config[CONF_T_STANDBY],
-            filter_mode=config[CONF_FILTER_MODE],
-            delta_temp=config[CONF_DELTA_TEMP],
-            logger=_LOGGER,
+    sensor_conf = discovery_info[DOMAIN]
+    _set_scan_interval(sensor_conf[CONF_SCAN_INTERVAL])
+    name = sensor_conf[CONF_NAME]
+    if CONF_SPI_BUS in sensor_conf and CONF_SPI_DEV in sensor_conf:
+        spi_dev = sensor_conf[CONF_SPI_DEV]
+        spi_bus = sensor_conf[CONF_SPI_BUS]
+        _LOGGER.info("BME280 sensor initialize at %s.%s", spi_bus, spi_dev)
+        sensor = await hass.async_add_executor_job(
+            partial(
+                BME280_spi,
+                t_mode=sensor_conf[CONF_OVERSAMPLING_TEMP],
+                p_mode=sensor_conf[CONF_OVERSAMPLING_PRES],
+                h_mode=sensor_conf[CONF_OVERSAMPLING_HUM],
+                standby=sensor_conf[CONF_T_STANDBY],
+                filter=sensor_conf[CONF_FILTER_MODE],
+                spi_bus=sensor_conf[CONF_SPI_BUS],
+                spi_dev=sensor_conf[CONF_SPI_DEV],
+            )
         )
-    )
-    if not sensor.sample_ok:
-        _LOGGER.error("BME280 sensor not detected at %s", i2c_address)
-        return False
-
-    sensor_handler = await hass.async_add_executor_job(BME280Handler, sensor)
+        if not sensor.sample_ok:
+            _LOGGER.error("BME280 sensor not detected at %s.%s", spi_bus, spi_dev)
+            return False
+        sensor_handler = await hass.async_add_executor_job(
+            BME280Handler, sensor, INTERFACE_SPI
+        )
+    else:
+        i2c_address = sensor_conf[CONF_I2C_ADDRESS]
+        bus = smbus.SMBus(sensor_conf[CONF_I2C_BUS])
+        sensor = await hass.async_add_executor_job(
+            partial(
+                BME280_i2c,
+                bus,
+                i2c_address,
+                osrs_t=sensor_conf[CONF_OVERSAMPLING_TEMP],
+                osrs_p=sensor_conf[CONF_OVERSAMPLING_PRES],
+                osrs_h=sensor_conf[CONF_OVERSAMPLING_HUM],
+                mode=sensor_conf[CONF_OPERATION_MODE],
+                t_sb=sensor_conf[CONF_T_STANDBY],
+                filter_mode=sensor_conf[CONF_FILTER_MODE],
+                delta_temp=sensor_conf[CONF_DELTA_TEMP],
+                logger=_LOGGER,
+            )
+        )
+        if not sensor.sample_ok:
+            _LOGGER.error("BME280 sensor not detected at %s", i2c_address)
+            return False
+        sensor_handler = await hass.async_add_executor_job(
+            BME280Handler, sensor, INTERFACE_I2C
+        )
 
     dev = []
-    with suppress(KeyError):
-        for variable in config[CONF_MONITORED_CONDITIONS]:
+    try:
+        for variable in sensor_conf[CONF_MONITORED_CONDITIONS]:
             dev.append(
                 BME280Sensor(sensor_handler, variable, SENSOR_TYPES[variable][1], name)
             )
+    except KeyError:
+        pass
 
     async_add_entities(dev, True)
 
 
 class BME280Handler:
-    """BME280 sensor working in i2C bus."""
+    """BME280 sensor working in SPI or I2C bus."""
 
-    def __init__(self, sensor):
+    def __init__(self, sensor, interface):
         """Initialize the sensor handler."""
         self.sensor = sensor
-        self.update(True)
+        self.interface = interface
+        if self.interface == INTERFACE_SPI:
+            self.update = self.update_spi
+            self.update()
+        elif self.interface == INTERFACE_I2C:
+            self.update = self.update_i2c
+            self.update(True)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self, first_reading=False):
+    def update_spi(self):
+        """Read sensor data."""
+        self.sensor.update()
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update_i2c(self, first_reading=False):
         """Read sensor data."""
         self.sensor.update(first_reading)
 
@@ -167,9 +174,9 @@ class BME280Sensor(SensorEntity):
         await self.hass.async_add_executor_job(self.bme280_client.update)
         if self.bme280_client.sensor.sample_ok:
             if self.type == SENSOR_TEMP:
-                temperature = round(self.bme280_client.sensor.temperature, 2)
+                temperature = round(self.bme280_client.sensor.temperature, 1)
                 if self.temp_unit == TEMP_FAHRENHEIT:
-                    temperature = round(celsius_to_fahrenheit(temperature), 2)
+                    temperature = round(celsius_to_fahrenheit(temperature), 1)
                 self._state = temperature
             elif self.type == SENSOR_HUMID:
                 self._state = round(self.bme280_client.sensor.humidity, 1)
