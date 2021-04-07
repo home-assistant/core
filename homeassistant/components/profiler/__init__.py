@@ -52,6 +52,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Profiler from a config entry."""
 
+    await asyncio.sleep(5000)
     lock = asyncio.Lock()
     domain_data = hass.data[DOMAIN] = {}
 
