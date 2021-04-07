@@ -26,7 +26,7 @@ import homeassistant.util.dt as dt_util
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 12
+SCHEMA_VERSION = 13
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,6 +38,10 @@ TABLE_RECORDER_RUNS = "recorder_runs"
 TABLE_SCHEMA_CHANGES = "schema_changes"
 
 ALL_TABLES = [TABLE_STATES, TABLE_EVENTS, TABLE_RECORDER_RUNS, TABLE_SCHEMA_CHANGES]
+
+DATETIME_TYPE = DateTime(timezone=True).with_variant(
+    mysql.DATETIME(timezone=True, fsp=6), "mysql"
+)
 
 
 class Events(Base):  # type: ignore
@@ -52,8 +56,8 @@ class Events(Base):  # type: ignore
     event_type = Column(String(32))
     event_data = Column(Text().with_variant(mysql.LONGTEXT, "mysql"))
     origin = Column(String(32))
-    time_fired = Column(DateTime(timezone=True), index=True)
-    created = Column(DateTime(timezone=True), default=dt_util.utcnow)
+    time_fired = Column(DATETIME_TYPE, index=True)
+    created = Column(DATETIME_TYPE, default=dt_util.utcnow)
     context_id = Column(String(36), index=True)
     context_user_id = Column(String(36), index=True)
     context_parent_id = Column(String(36), index=True)
@@ -123,9 +127,9 @@ class States(Base):  # type: ignore
     event_id = Column(
         Integer, ForeignKey("events.event_id", ondelete="CASCADE"), index=True
     )
-    last_changed = Column(DateTime(timezone=True), default=dt_util.utcnow)
-    last_updated = Column(DateTime(timezone=True), default=dt_util.utcnow, index=True)
-    created = Column(DateTime(timezone=True), default=dt_util.utcnow)
+    last_changed = Column(DATETIME_TYPE, default=dt_util.utcnow)
+    last_updated = Column(DATETIME_TYPE, default=dt_util.utcnow, index=True)
+    created = Column(DATETIME_TYPE, default=dt_util.utcnow)
     old_state_id = Column(
         Integer, ForeignKey("states.state_id", ondelete="NO ACTION"), index=True
     )

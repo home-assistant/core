@@ -363,6 +363,20 @@ def _apply_update(engine, new_version, old_version):
         if engine.dialect.name == "mysql":
             _modify_columns(engine, "events", ["event_data LONGTEXT"])
             _modify_columns(engine, "states", ["attributes LONGTEXT"])
+    elif new_version == 13:
+        if engine.dialect.name == "mysql":
+            _modify_columns(
+                engine, "events", ["time_fired DATETIME(6)", "created DATETIME(6)"]
+            )
+            _modify_columns(
+                engine,
+                "states",
+                [
+                    "last_changed DATETIME(6)",
+                    "last_updated DATETIME(6)",
+                    "created DATETIME(6)",
+                ],
+            )
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
