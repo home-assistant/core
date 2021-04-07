@@ -331,7 +331,16 @@ async def test_sensor_bad_value(hass, setup_comp_2):
 
     _setup_sensor(hass, None)
     await hass.async_block_till_done()
+    state = hass.states.get(ENTITY)
+    assert temp == state.attributes.get("current_temperature")
 
+    _setup_sensor(hass, "inf")
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY)
+    assert temp == state.attributes.get("current_temperature")
+
+    _setup_sensor(hass, "nan")
+    await hass.async_block_till_done()
     state = hass.states.get(ENTITY)
     assert temp == state.attributes.get("current_temperature")
 
