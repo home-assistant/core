@@ -209,10 +209,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         with async_start_setup(hass, ["recorder"]):
             _LOGGER.warning("start_recorder sleep")
 
-            await asyncio.sleep(100)
-
-            _LOGGER.warning("start_recorder done sleep")
-
             await instance.async_db_ready
             _LOGGER.warning("done wait")
 
@@ -391,8 +387,9 @@ class Recorder(threading.Thread):
             self._event_listener()
             return
 
-        @callback
-        def _set_ready():
+        #        @callback
+        async def _set_ready():
+            await asyncio.sleep(100)
             self.async_db_ready.set_result(True)
 
         self.hass.add_job(_set_ready)
