@@ -44,6 +44,7 @@ ERROR_LOG_FILENAME = "home-assistant.log"
 
 # hass.data key for logging information.
 DATA_LOGGING = "logging"
+DATA_INSTANCE = "recorder_instance"
 
 LOG_SLOW_STARTUP_INTERVAL = 1
 SLOW_STARTUP_CHECK_INTERVAL = 1
@@ -542,6 +543,11 @@ async def _async_set_up_integrations(
                 STAGE_1_TIMEOUT, cool_down=COOLDOWN_TIME
             ):
                 await async_setup_multi_components(hass, stage_1_domains, config)
+                # If there is a database upgrade in progress the recorder
+                # queue can exaust the available memory so we need to wait
+                # to move on to stage 2 until its ready
+                if "recorder" in hass.config.components:
+                    await hass.data[DATA_INSTANCE].async_db_ready
         except asyncio.TimeoutError:
             _LOGGER.warning("Setup timed out for stage 1 - moving forward")
 
