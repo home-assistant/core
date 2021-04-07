@@ -39,7 +39,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import async_call_later, async_track_time_interval
 import homeassistant.util.color as color_util
 
 from .core import discovery, helpers
@@ -560,13 +560,23 @@ class LightGroup(BaseLight, ZhaGroupEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
-        await super().async_turn_on(**kwargs)
-        await self._debounced_member_refresh.async_call()
+        await self._handle_on_off(super().async_turn_on, kwargs)
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
-        await super().async_turn_off(**kwargs)
-        await self._debounced_member_refresh.async_call()
+        await self._handle_on_off(super().async_turn_off, kwargs)
+
+    async def _handle_on_off(self, operation, kwargs):
+        """Perform the on or off operation."""
+        self._ignore_member_changes = True
+        transition = kwargs.get(light.ATTR_TRANSITION)
+        duration = transition + 0.5 if transition else DEFAULT_TRANSITION + 0.5
+
+        async def refresh_members(_):
+            await self._debounced_member_refresh.async_call()
+
+        await operation(**kwargs)
+        async_call_later(self.hass, duration, refresh_members)
 
     async def async_update(self) -> None:
         """Query all members and determine the light group state."""
@@ -617,6 +627,7 @@ class LightGroup(BaseLight, ZhaGroupEntity):
 
     async def _force_member_updates(self):
         """Force the update of member entities to ensure the states are correct for bulbs that don't report their state."""
+        self._ignore_member_changes = False
         async_dispatcher_send(
             self.hass,
             SIGNAL_LIGHT_GROUP_STATE_CHANGED,
