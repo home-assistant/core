@@ -36,7 +36,7 @@ from homeassistant.helpers.entityfilter import (
 from homeassistant.helpers.event import track_time_change
 from homeassistant.helpers.recorder import DATA_INSTANCE, RECORDER_DOMAIN as DOMAIN
 from homeassistant.helpers.typing import ConfigType
-import homeassistant.util.dt as dt_util
+from homeassistant.util.dt import utcnow
 
 from . import migration, purge
 from .const import CONF_DB_INTEGRITY_CHECK, SQLITE_URL_PREFIX
@@ -272,7 +272,7 @@ class Recorder(threading.Thread):
         self.keep_days = keep_days
         self.commit_interval = commit_interval
         self.queue: Any = queue.SimpleQueue()
-        self.recording_start = dt_util.utcnow()
+        self.recording_start = utcnow()
         self.db_url = uri
         self.db_max_retries = db_max_retries
         self.db_retry_wait = db_retry_wait
@@ -720,16 +720,14 @@ class Recorder(threading.Thread):
                 )
                 session.add(run)
 
-            self.run_info = RecorderRuns(
-                start=self.recording_start, created=dt_util.utcnow()
-            )
+            self.run_info = RecorderRuns(start=self.recording_start, created=utcnow())
             session.add(self.run_info)
             session.flush()
             session.expunge(self.run_info)
 
     def _end_session(self):
         """End the recorder session."""
-        self.run_info.end = dt_util.utcnow()
+        self.run_info.end = utcnow()
         self.event_session.add(self.run_info)
         try:
             self._commit_event_session_or_retry()
