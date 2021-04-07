@@ -57,6 +57,7 @@ from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.trace import (
     TraceElement,
+    script_execution_set,
     trace_append_element,
     trace_get,
     trace_path,
@@ -272,6 +273,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         variables,
         trigger_variables,
         raw_config,
+        blueprint_inputs,
     ):
         """Initialize an automation entity."""
         self._id = automation_id
@@ -289,6 +291,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         self._variables: ScriptVariables = variables
         self._trigger_variables: ScriptVariables = trigger_variables
         self._raw_config = raw_config
+        self._blueprint_inputs = blueprint_inputs
 
     @property
     def name(self):
@@ -436,7 +439,11 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         trigger_context = Context(parent_id=parent_id)
 
         with trace_automation(
-            self.hass, self.unique_id, self._raw_config, trigger_context
+            self.hass,
+            self.unique_id,
+            self._raw_config,
+            self._blueprint_inputs,
+            trigger_context,
         ) as automation_trace:
             if self._variables:
                 try:
@@ -455,7 +462,11 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             automation_trace.set_trigger_description(trigger_description)
 
             # Add initial variables as the trigger step
-            trace_element = TraceElement(variables, "trigger")
+            if "trigger" in variables and "id" in variables["trigger"]:
+                trigger_path = f"trigger/{variables['trigger']['id']}"
+            else:
+                trigger_path = "trigger"
+            trace_element = TraceElement(variables, trigger_path)
             trace_append_element(trace_element)
 
             if (
@@ -467,6 +478,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
                     "Conditions not met, aborting automation. Condition summary: %s",
                     trace_get(clear=False),
                 )
+                script_execution_set("failed_conditions")
                 return
 
             self.async_set_context(trigger_context)
@@ -597,10 +609,12 @@ async def _async_process_config(
         ]
 
         for list_no, config_block in enumerate(conf):
+            raw_blueprint_inputs = None
             raw_config = None
             if isinstance(config_block, blueprint.BlueprintInputs):  # type: ignore
                 blueprints_used = True
                 blueprint_inputs = config_block
+                raw_blueprint_inputs = blueprint_inputs.config_with_inputs
 
                 try:
                     raw_config = blueprint_inputs.async_substitute()
@@ -669,6 +683,7 @@ async def _async_process_config(
                 variables,
                 config_block.get(CONF_TRIGGER_VARIABLES),
                 raw_config,
+                raw_blueprint_inputs,
             )
 
             entities.append(entity)

@@ -12,6 +12,7 @@
         "error": {
             "already_configured": "Konto wurde bereits konfiguriert"
         },
+        "flow_title": "Withings: {profile}",
         "step": {
             "pick_implementation": {
                 "title": "W\u00e4hle die Authentifizierungsmethode"
@@ -24,6 +25,7 @@
                 "title": "Benutzerprofil"
             },
             "reauth": {
+                "description": "Das Profil \"{profile}\" muss neu authentifiziert werden, um weiterhin Withings-Daten zu empfangen.",
                 "title": "Integration erneut authentifizieren"
             }
         }

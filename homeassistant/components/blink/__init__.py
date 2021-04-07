@@ -16,6 +16,7 @@ from homeassistant.components.blink.const import (
     SERVICE_SAVE_VIDEO,
     SERVICE_SEND_PIN,
 )
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_FILENAME, CONF_NAME, CONF_PIN, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -49,7 +50,7 @@ def _reauth_flow_wrapper(hass, data):
     """Reauth flow wrapper."""
     hass.add_job(
         hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "reauth"}, data=data
+            DOMAIN, context={"source": SOURCE_REAUTH}, data=data
         )
     )
     persistent_notification.async_create(

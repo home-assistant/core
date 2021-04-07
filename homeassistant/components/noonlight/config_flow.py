@@ -1,17 +1,9 @@
 """Config flow for Noonlight integration."""
 from __future__ import annotations
 
-# from typing_extensions import Required
-from homeassistant.helpers.config_validation import boolean, string
-
-import logging
-from typing import Any
-
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant import config_entries
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.const import (
     CONF_API_TOKEN,
@@ -26,18 +18,13 @@ from .const import (
     CONF_CITY,
     CONF_INSTRUCTIONS,
     CONF_PHONE,
-    CONF_SERVICES,
     CONF_STATE,
     CONF_ZIPCODE,
-    CONF_ADDRESS_NAME,
-    _LOGGER,
     DOMAIN,
     CONF_SERVICES,
     CONF_SERVICES_LIST,
     CONF_MODE_LIST,
 )
-
-from noonlight_homeassistant import noonlight
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -52,10 +39,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
-        # if self._async_current_entries():
-        #    # Config entry already exists, only one allowed.
-        #    return self.async_abort(reason="single_instance_allowed")
-
         errors = {}
 
         if user_input is not None:
@@ -72,6 +55,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_INSTRUCTIONS: user_input[CONF_INSTRUCTIONS],
                     CONF_PHONE: user_input[CONF_PHONE],
                     CONF_PIN: user_input[CONF_PIN],
+                    CONF_MODE: user_input[CONF_MODE],
                 },
             )
 

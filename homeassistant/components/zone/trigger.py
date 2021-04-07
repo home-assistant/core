@@ -37,6 +37,7 @@ async def async_attach_trigger(
     hass, config, action, automation_info, *, platform_type: str = "zone"
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
+    trigger_id = automation_info.get("trigger_id") if automation_info else None
     entity_id = config.get(CONF_ENTITY_ID)
     zone_entity_id = config.get(CONF_ZONE)
     event = config.get(CONF_EVENT)
@@ -80,6 +81,7 @@ async def async_attach_trigger(
                         "zone": zone_state,
                         "event": event,
                         "description": description,
+                        "id": trigger_id,
                     }
                 },
                 to_s.context,

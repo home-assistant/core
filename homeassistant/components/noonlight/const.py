@@ -1,5 +1,5 @@
 """Constants for the Noonlight integration."""
-from homeassistant.const import CONF_MODE
+
 import logging
 
 DOMAIN = "noonlight"
@@ -14,6 +14,7 @@ CONF_INSTRUCTIONS = "instructions"
 CONF_PHONE = "phone"
 CONF_ADDRESS_NAME = "name"
 CONF_MODE_LIST = ["Sandbox", "Production"]
-
+CONF_MODE_PRODUCTION = "Production"
+CONF_MODE_SANDBOX = "Sandbox"
 
 ATTR_NOONLIGHT_ALARM_ID = "noonlight_alarm_id"

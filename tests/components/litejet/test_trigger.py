@@ -82,7 +82,10 @@ async def setup_automation(hass, trigger):
                 {
                     "alias": "My Test",
                     "trigger": trigger,
-                    "action": {"service": "test.automation"},
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"id": "{{ trigger.id}}"},
+                    },
                 }
             ]
         },
@@ -100,6 +103,7 @@ async def test_simple(hass, calls, mock_litejet):
     await simulate_release(hass, mock_litejet, ENTITY_OTHER_SWITCH_NUMBER)
 
     assert len(calls) == 1
+    assert calls[0].data["id"] == 0
 
 
 async def test_held_more_than_short(hass, calls, mock_litejet):
@@ -134,6 +138,7 @@ async def test_held_more_than_long(hass, calls, mock_litejet):
     assert len(calls) == 0
     await simulate_time(hass, mock_litejet, timedelta(seconds=0.3))
     assert len(calls) == 1
+    assert calls[0].data["id"] == 0
     await simulate_release(hass, mock_litejet, ENTITY_OTHER_SWITCH_NUMBER)
     assert len(calls) == 1
 
@@ -154,6 +159,7 @@ async def test_held_less_than_short(hass, calls, mock_litejet):
     assert len(calls) == 0
     await simulate_release(hass, mock_litejet, ENTITY_OTHER_SWITCH_NUMBER)
     assert len(calls) == 1
+    assert calls[0].data["id"] == 0
 
 
 async def test_held_less_than_long(hass, calls, mock_litejet):
@@ -211,6 +217,7 @@ async def test_held_in_range_just_right(hass, calls, mock_litejet):
     assert len(calls) == 0
     await simulate_release(hass, mock_litejet, ENTITY_OTHER_SWITCH_NUMBER)
     assert len(calls) == 1
+    assert calls[0].data["id"] == 0
 
 
 async def test_held_in_range_long(hass, calls, mock_litejet):

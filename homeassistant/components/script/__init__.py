@@ -12,6 +12,7 @@ from homeassistant.const import (
     ATTR_NAME,
     CONF_ALIAS,
     CONF_DEFAULT,
+    CONF_DESCRIPTION,
     CONF_ICON,
     CONF_MODE,
     CONF_NAME,
@@ -54,7 +55,6 @@ ATTR_LAST_TRIGGERED = "last_triggered"
 ATTR_VARIABLES = "variables"
 
 CONF_ADVANCED = "advanced"
-CONF_DESCRIPTION = "description"
 CONF_EXAMPLE = "example"
 CONF_FIELDS = "fields"
 CONF_REQUIRED = "required"
@@ -287,6 +287,7 @@ async def _async_process_config(hass, config, component):
 
         # Register the service description
         service_desc = {
+            CONF_NAME: script_entity.name,
             CONF_DESCRIPTION: cfg[CONF_DESCRIPTION],
             CONF_FIELDS: cfg[CONF_FIELDS],
         }

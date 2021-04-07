@@ -1,15 +1,9 @@
 """Support for Noonlight alarm control panels."""
-from homeassistant.components.unifi.const import CONF_POE_CLIENTS
-from homeassistant import config_entries
 import logging
 from noonlight_homeassistant import noonlight
 
-import voluptuous as vol
-
 from homeassistant.components.alarm_control_panel import (
-    ENTITY_ID_FORMAT,
     FORMAT_NUMBER,
-    PLATFORM_SCHEMA,
     AlarmControlPanelEntity,
 )
 from homeassistant.components.alarm_control_panel.const import (
@@ -19,9 +13,9 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_TRIGGER,
 )
 from homeassistant.const import (
+    CONF_MODE,
     CONF_NAME,
     CONF_STATE,
-    CONF_UNIQUE_ID,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
@@ -35,9 +29,6 @@ from homeassistant.const import (
 from homeassistant.const import CONF_API_TOKEN, CONF_ADDRESS, CONF_PIN
 
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.script import Script
 
 from .const import (
     CONF_CITY,
@@ -45,11 +36,8 @@ from .const import (
     CONF_PHONE,
     CONF_ZIPCODE,
     CONF_ADDRESS_NAME,
-    _LOGGER,
-    DATA_NOONLIGHT_CONFIG,
-    DOMAIN,
-    ATTR_NOONLIGHT_ALARM_ID,
     CONF_SERVICES,
+    CONF_MODE_PRODUCTION,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,7 +52,6 @@ _VALID_STATES = [
     STATE_UNAVAILABLE,
 ]
 
-CONF_NAME = "Noonlight Alarm"
 CONF_UNIQUE_ID = "001122334455"
 CONF_ARM_AWAY_ACTION = "arm_away"
 CONF_ARM_HOME_ACTION = "arm_home"
@@ -84,7 +71,6 @@ async def _async_create_entities(hass, config):
     arm_home_action = CONF_ARM_HOME_ACTION
     arm_night_action = CONF_ARM_NIGHT_ACTION
     code_arm_required = CONF_CODE_ARM_REQUIRED
-    unique_id = CONF_UNIQUE_ID
 
     alarm_control_panels.append(
         AlarmControlPanelNoonlight(
@@ -95,7 +81,6 @@ async def _async_create_entities(hass, config):
             arm_home_action,
             arm_night_action,
             code_arm_required,
-            unique_id,
         )
     )
 
@@ -109,8 +94,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up then noonlight alarm panel."""
-
-    data = hass.data[DOMAIN]
     alarmControlPanel = AlarmControlPanelNoonlight(
         config_entry,
         hass,
@@ -124,7 +107,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
     devices = [alarmControlPanel]
-    # print(data.apiToken)
 
     async_add_entities(devices, True)
 
@@ -142,9 +124,8 @@ class AlarmControlPanelNoonlight(AlarmControlPanelEntity):
         arm_home_action,
         arm_night_action,
         code_arm_required,
-        unique_id,
     ):
-
+        """Initialize Alarm Control Panel Object."""
         api_token = config_entry.data[CONF_API_TOKEN]
         self.address_name = config_entry.data[CONF_ADDRESS_NAME]
         self.address = config_entry.data[CONF_ADDRESS]
@@ -159,19 +140,21 @@ class AlarmControlPanelNoonlight(AlarmControlPanelEntity):
         self.instructions = config_entry.data[CONF_INSTRUCTIONS]
         self.phone = config_entry.data[CONF_PHONE]
         self.pin = config_entry.data[CONF_PIN]
-        code_arm_required = False
+        self.mode = config_entry.data[CONF_MODE]
+
+        if self.mode == CONF_MODE_PRODUCTION:
+            self.baseurl = "https://api.noonlight.com/dispatch/v1/alarms"
+        else:
+            self.baseurl = "https://api-sandbox.noonlight.com/dispatch/v1/alarms"
 
         self.alarm = noonlight.Noonlight(
-            "https://api-sandbox.noonlight.com/dispatch/v1/alarms",
-            # "https://api.noonlight.com/dispatch/v1/alarms",
+            self.baseurl,
             api_token,
         )
 
         """Initialize the panel."""
         super().__init__()
-        # self.entity_id = async_generate_entity_id(
-        #   ENTITY_ID_FORMAT, device_id, hass=hass
-        # )
+
         self.entity_id = "alarm_control_panel.noonlight"
         self._name = "Noonlight"
         self._disarm_script = None
@@ -202,7 +185,6 @@ class AlarmControlPanelNoonlight(AlarmControlPanelEntity):
     def state(self):
         """Return the state of the device."""
         return self._state
-        # return STATE_ALARM_DISARMED
 
     @property
     def supported_features(self) -> int:
@@ -228,7 +210,6 @@ class AlarmControlPanelNoonlight(AlarmControlPanelEntity):
     @property
     def extra_state_attributes(self):
         """Return device specific state attributes."""
-
         return {
             "noonlight_alarm_id": self.noonlight_alarm_id,
             "noonlight_alarm_status": self.noonlight_alarm_status,
@@ -282,6 +263,7 @@ class AlarmControlPanelNoonlight(AlarmControlPanelEntity):
         self._state = STATE_ALARM_DISARMED
 
     def cancel_alarm(self) -> None:
+        """Cancel the alarm."""
         response = self.alarm.updateAlarm(self.noonlight_alarm_id)
 
         if response:
@@ -289,7 +271,7 @@ class AlarmControlPanelNoonlight(AlarmControlPanelEntity):
             self.noonlight_alarm_status = "Canceled"
 
     def trigger_alarm(self) -> None:
-
+        """Trigger the alarm."""
         response = self.alarm.createAlarm(
             self.address,
             self.address_city,
@@ -305,15 +287,16 @@ class AlarmControlPanelNoonlight(AlarmControlPanelEntity):
             self.pin,
         )
 
-        if response != False:
+        if isinstance(response, (dict, list)):
             self.noonlight_alarm_id = response["id"]
             self.noonlight_alarm_status = response["status"]
             self.noonlight_alarm_owner_id = response["owner_id"]
             self.noonlight_alarm_created_at = response["created_at"]
-        else:
-            return False
+            return True
+
+        return False
 
     async def async_alarm_trigger(self, code=None):
-        """trigger the alarm."""
+        """Trigger the alarm."""
         await self.hass.async_add_executor_job(self.trigger_alarm)
         self._state = STATE_ALARM_TRIGGERED

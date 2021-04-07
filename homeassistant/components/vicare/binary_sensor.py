@@ -85,6 +85,7 @@ SENSORS_BY_HEATINGTYPE = {
         SENSOR_HEATINGROD_LEVEL2,
         SENSOR_HEATINGROD_LEVEL3,
     ],
+    HeatingType.fuelcell: [SENSOR_BURNER_ACTIVE],
 }
 
 

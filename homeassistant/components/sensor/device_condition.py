@@ -25,7 +25,6 @@ from homeassistant.const import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_TIMESTAMP,
     DEVICE_CLASS_VOLTAGE,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -54,7 +53,6 @@ CONF_IS_POWER_FACTOR = "is_power_factor"
 CONF_IS_PRESSURE = "is_pressure"
 CONF_IS_SIGNAL_STRENGTH = "is_signal_strength"
 CONF_IS_TEMPERATURE = "is_temperature"
-CONF_IS_TIMESTAMP = "is_timestamp"
 CONF_IS_VOLTAGE = "is_voltage"
 CONF_IS_VALUE = "is_value"
 
@@ -71,7 +69,6 @@ ENTITY_CONDITIONS = {
     DEVICE_CLASS_PRESSURE: [{CONF_TYPE: CONF_IS_PRESSURE}],
     DEVICE_CLASS_SIGNAL_STRENGTH: [{CONF_TYPE: CONF_IS_SIGNAL_STRENGTH}],
     DEVICE_CLASS_TEMPERATURE: [{CONF_TYPE: CONF_IS_TEMPERATURE}],
-    DEVICE_CLASS_TIMESTAMP: [{CONF_TYPE: CONF_IS_TIMESTAMP}],
     DEVICE_CLASS_VOLTAGE: [{CONF_TYPE: CONF_IS_VOLTAGE}],
     DEVICE_CLASS_NONE: [{CONF_TYPE: CONF_IS_VALUE}],
 }
@@ -94,7 +91,6 @@ CONDITION_SCHEMA = vol.All(
                     CONF_IS_PRESSURE,
                     CONF_IS_SIGNAL_STRENGTH,
                     CONF_IS_TEMPERATURE,
-                    CONF_IS_TIMESTAMP,
                     CONF_IS_VOLTAGE,
                     CONF_IS_VALUE,
                 ]

@@ -5,18 +5,14 @@ import asyncio
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.const import CONF_API_TOKEN, CONF_ADDRESS, CONF_PIN
 
 from .const import _LOGGER, DATA_NOONLIGHT_CONFIG, DOMAIN
 
-DOMAIN = "noonlight"
 PLATFORMS = ["alarm_control_panel"]
-
-from noonlight_homeassistant import noonlight
 
 
 async def async_setup(hass, config):
-
+    """Initialize the integration."""
     hass.data[DATA_NOONLIGHT_CONFIG] = config.get(DOMAIN, {})
     _LOGGER.info("The 'noonlight' component is ready!")
     return True
@@ -24,7 +20,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Noonlight from a config entry."""
-
     data = NoonlightData(hass, entry)
 
     hass.data[DOMAIN] = data
@@ -38,6 +33,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 class NoonlightData:
+    """Class for Noonlight data."""
+
     def __init__(self, hass, entry):
         """Initialize the Noonlight data object."""
         self.hass = hass

@@ -18,7 +18,7 @@
                     "mode": "[%key:common::config_flow::data::mode%]",
                     "entities": "Entities"
                 },
-                "description": "Choose the entities to be included. In accessory mode, only a single entity is included. In bridge include mode, all entities in the domain will be included unless specific entities are selected. In bridge exclude mode, all entities in the domain will be included except for the excluded entities. For best performance, a separate HomeKit accessory will be created for each tv media player and camera.",
+                "description": "Choose the entities to be included. In accessory mode, only a single entity is included. In bridge include mode, all entities in the domain will be included unless specific entities are selected. In bridge exclude mode, all entities in the domain will be included except for the excluded entities. For best performance, a separate HomeKit accessory will be created for each tv media player, activity based remote, lock, and camera.",
                 "title": "Select entities to be included"
             },
             "cameras": {
