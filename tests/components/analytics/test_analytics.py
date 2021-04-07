@@ -14,8 +14,9 @@ from homeassistant.components.analytics.const import (
     ATTR_USAGE,
 )
 from homeassistant.components.api import ATTR_UUID
-from homeassistant.const import __version__ as HA_VERSION
+from homeassistant.const import ATTR_DOMAIN, __version__ as HA_VERSION
 from homeassistant.loader import IntegrationNotFound
+from homeassistant.setup import async_setup_component
 
 MOCK_UUID = "abcdefg"
 
@@ -319,3 +320,16 @@ async def test_reusing_uuid(hass, aioclient_mock):
         await analytics.send_analytics()
 
     assert analytics.uuid == "NOT_MOCK_UUID"
+
+
+async def test_custom_integrations(hass, aioclient_mock):
+    """Test sending custom integrations."""
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    analytics = Analytics(hass)
+    assert await async_setup_component(hass, "test_package", {"test_package": {}})
+    await analytics.save_preferences({ATTR_BASE: True, ATTR_USAGE: True})
+
+    await analytics.send_analytics()
+
+    payload = aioclient_mock.mock_calls[0][2]
+    assert payload["custom_integrations"][0][ATTR_DOMAIN] == "test_package"

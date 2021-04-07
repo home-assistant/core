@@ -8,7 +8,7 @@ import async_timeout
 from homeassistant.components import hassio
 from homeassistant.components.api import ATTR_INSTALLATION_TYPE
 from homeassistant.components.automation.const import DOMAIN as AUTOMATION_DOMAIN
-from homeassistant.const import __version__ as HA_VERSION
+from homeassistant.const import ATTR_DOMAIN, __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import Store
@@ -23,6 +23,7 @@ from .const import (
     ATTR_AUTO_UPDATE,
     ATTR_AUTOMATION_COUNT,
     ATTR_BASE,
+    ATTR_CUSTOM_INTEGRATIONS,
     ATTR_DIAGNOSTICS,
     ATTR_HEALTHY,
     ATTR_INTEGRATION_COUNT,
@@ -131,6 +132,7 @@ class Analytics:
 
         system_info = await async_get_system_info(self.hass)
         integrations = []
+        custom_integrations = []
         addons = []
         payload: dict = {
             ATTR_UUID: self.uuid,
@@ -162,7 +164,16 @@ class Analytics:
                 if isinstance(integration, BaseException):
                     raise integration
 
-                if integration.disabled or not integration.is_built_in:
+                if integration.disabled:
+                    continue
+
+                if not integration.is_built_in:
+                    custom_integrations.append(
+                        {
+                            ATTR_DOMAIN: integration.domain,
+                            ATTR_VERSION: integration.version,
+                        }
+                    )
                     continue
 
                 integrations.append(integration.domain)
@@ -186,6 +197,7 @@ class Analytics:
 
         if self.preferences.get(ATTR_USAGE, False):
             payload[ATTR_INTEGRATIONS] = integrations
+            payload[ATTR_CUSTOM_INTEGRATIONS] = custom_integrations
             if supervisor_info is not None:
                 payload[ATTR_ADDONS] = addons
 
