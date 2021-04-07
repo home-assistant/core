@@ -1,7 +1,8 @@
 """Support for Huawei LTE binary sensors."""
+from __future__ import annotations
 
 import logging
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable
 
 import attr
 from huawei_lte_api.enums.cradle import ConnectionStatusEnum
@@ -29,11 +30,11 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistantType,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
     """Set up from config entry."""
     router = hass.data[DOMAIN].routers[config_entry.data[CONF_URL]]
-    entities: List[Entity] = []
+    entities: list[Entity] = []
 
     if router.data.get(KEY_MONITORING_STATUS):
         entities.append(HuaweiLteMobileConnectionBinarySensor(router))
@@ -53,7 +54,7 @@ class HuaweiLteBaseBinarySensor(HuaweiLteBaseEntity, BinarySensorEntity):
 
     key: str
     item: str
-    _raw_state: Optional[str] = attr.ib(init=False, default=None)
+    _raw_state: str | None = attr.ib(init=False, default=None)
 
     @property
     def entity_registry_enabled_default(self) -> bool:
@@ -142,12 +143,10 @@ class HuaweiLteMobileConnectionBinarySensor(HuaweiLteBaseBinarySensor):
         return True
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Get additional attributes related to connection status."""
-        attributes = super().device_state_attributes
+        attributes = {}
         if self._raw_state in CONNECTION_STATE_ATTRIBUTES:
-            if attributes is None:
-                attributes = {}
             attributes["additional_state"] = CONNECTION_STATE_ATTRIBUTES[
                 self._raw_state
             ]

@@ -13,7 +13,8 @@
     },
     "system_health": {
         "info": {
-            "can_reach_server": "\u53ef\u8bbf\u95ee Airly \u670d\u52a1\u5668"
+            "can_reach_server": "\u53ef\u8bbf\u95ee Airly \u670d\u52a1\u5668",
+            "requests_per_day": "\u5141\u8bb8\u6bcf\u5929\u8bf7\u6c42"
         }
     }
 }

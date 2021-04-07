@@ -117,9 +117,9 @@ async def test_fan(ecobee_fixture, thermostat):
     """Test fan property."""
     assert const.STATE_ON == thermostat.fan
     ecobee_fixture["equipmentStatus"] = ""
-    assert STATE_OFF == thermostat.fan
+    assert thermostat.fan == STATE_OFF
     ecobee_fixture["equipmentStatus"] = "heatPump, heatPump2"
-    assert STATE_OFF == thermostat.fan
+    assert thermostat.fan == STATE_OFF
 
 
 async def test_hvac_mode(ecobee_fixture, thermostat):
@@ -147,7 +147,7 @@ async def test_hvac_mode2(ecobee_fixture, thermostat):
     assert thermostat.hvac_mode == "heat"
 
 
-async def test_device_state_attributes(ecobee_fixture, thermostat):
+async def test_extra_state_attributes(ecobee_fixture, thermostat):
     """Test device state attributes property."""
     ecobee_fixture["equipmentStatus"] = "heatPump2"
     assert {
@@ -155,7 +155,7 @@ async def test_device_state_attributes(ecobee_fixture, thermostat):
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "heatPump2",
-    } == thermostat.device_state_attributes
+    } == thermostat.extra_state_attributes
 
     ecobee_fixture["equipmentStatus"] = "auxHeat2"
     assert {
@@ -163,21 +163,21 @@ async def test_device_state_attributes(ecobee_fixture, thermostat):
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "auxHeat2",
-    } == thermostat.device_state_attributes
+    } == thermostat.extra_state_attributes
     ecobee_fixture["equipmentStatus"] = "compCool1"
     assert {
         "fan": "off",
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "compCool1",
-    } == thermostat.device_state_attributes
+    } == thermostat.extra_state_attributes
     ecobee_fixture["equipmentStatus"] = ""
     assert {
         "fan": "off",
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "",
-    } == thermostat.device_state_attributes
+    } == thermostat.extra_state_attributes
 
     ecobee_fixture["equipmentStatus"] = "Unknown"
     assert {
@@ -185,7 +185,7 @@ async def test_device_state_attributes(ecobee_fixture, thermostat):
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "Unknown",
-    } == thermostat.device_state_attributes
+    } == thermostat.extra_state_attributes
 
     ecobee_fixture["program"]["currentClimateRef"] = "c2"
     assert {
@@ -193,7 +193,7 @@ async def test_device_state_attributes(ecobee_fixture, thermostat):
         "climate_mode": "Climate2",
         "fan_min_on_time": 10,
         "equipment_running": "Unknown",
-    } == thermostat.device_state_attributes
+    } == thermostat.extra_state_attributes
 
 
 async def test_is_aux_heat_on(ecobee_fixture, thermostat):

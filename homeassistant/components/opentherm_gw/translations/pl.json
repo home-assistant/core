@@ -21,7 +21,9 @@
             "init": {
                 "data": {
                     "floor_temperature": "Zaokr\u0105glanie warto\u015bci w d\u00f3\u0142",
-                    "precision": "Precyzja"
+                    "precision": "Precyzja",
+                    "read_precision": "Odczytaj precyzj\u0119",
+                    "set_precision": "Ustaw precyzj\u0119"
                 },
                 "description": "Opcje dla bramki OpenTherm"
             }

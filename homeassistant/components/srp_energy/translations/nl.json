@@ -12,6 +12,8 @@
         "step": {
             "user": {
                 "data": {
+                    "id": "Account ID",
+                    "is_tou": "Is tijd van gebruik plan",
                     "password": "Wachtwoord",
                     "username": "Gebruikersnaam"
                 }

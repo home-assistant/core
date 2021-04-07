@@ -55,7 +55,7 @@
                     "entities": "Entit\u00e9s",
                     "mode": "Mode"
                 },
-                "description": "Choisissez les entit\u00e9s \u00e0 exposer. En mode accessoire, une seule entit\u00e9 est expos\u00e9e. En mode d'inclusion de pont, toutes les entit\u00e9s du domaine seront expos\u00e9es \u00e0 moins que des entit\u00e9s sp\u00e9cifiques ne soient s\u00e9lectionn\u00e9es. En mode d'exclusion de pont, toutes les entit\u00e9s du domaine seront expos\u00e9es \u00e0 l'exception des entit\u00e9s exclues.",
+                "description": "Choisissez les entit\u00e9s \u00e0 inclure. En mode accessoire, une seule entit\u00e9 est incluse. En mode d'inclusion de pont, toutes les entit\u00e9s du domaine seront incluses \u00e0 moins que des entit\u00e9s sp\u00e9cifiques ne soient s\u00e9lectionn\u00e9es. En mode d'exclusion de pont, toutes les entit\u00e9s du domaine seront incluses \u00e0 l'exception des entit\u00e9s exclues. Pour de meilleures performances, un accessoire HomeKit distinct sera cr\u00e9\u00e9 pour chaque lecteur multim\u00e9dia TV et cam\u00e9ra.",
                 "title": "S\u00e9lectionnez les entit\u00e9s \u00e0 exposer"
             },
             "init": {

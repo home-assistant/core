@@ -1,19 +1,20 @@
 """Provides functionality to notify people."""
+from __future__ import annotations
+
 import asyncio
 from functools import partial
 import logging
-from typing import Any, Dict, Optional, cast
+from typing import Any, cast
 
 import voluptuous as vol
 
 import homeassistant.components.persistent_notification as pn
-from homeassistant.const import CONF_NAME, CONF_PLATFORM
-from homeassistant.core import ServiceCall
+from homeassistant.const import CONF_DESCRIPTION, CONF_NAME, CONF_PLATFORM
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import async_set_service_schema
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.util import slugify
@@ -43,7 +44,6 @@ SERVICE_PERSISTENT_NOTIFICATION = "persistent_notification"
 
 NOTIFY_SERVICES = "notify_services"
 
-CONF_DESCRIPTION = "description"
 CONF_FIELDS = "fields"
 
 PLATFORM_SCHEMA = vol.Schema(
@@ -69,7 +69,7 @@ PERSISTENT_NOTIFICATION_SERVICE_SCHEMA = vol.Schema(
 
 
 @bind_hass
-async def async_reload(hass: HomeAssistantType, integration_name: str) -> None:
+async def async_reload(hass: HomeAssistant, integration_name: str) -> None:
     """Register notify services for an integration."""
     if not _async_integration_has_notify_services(hass, integration_name):
         return
@@ -83,7 +83,7 @@ async def async_reload(hass: HomeAssistantType, integration_name: str) -> None:
 
 
 @bind_hass
-async def async_reset_platform(hass: HomeAssistantType, integration_name: str) -> None:
+async def async_reset_platform(hass: HomeAssistant, integration_name: str) -> None:
     """Unregister notify services for an integration."""
     if not _async_integration_has_notify_services(hass, integration_name):
         return
@@ -99,7 +99,7 @@ async def async_reset_platform(hass: HomeAssistantType, integration_name: str) -
 
 
 def _async_integration_has_notify_services(
-    hass: HomeAssistantType, integration_name: str
+    hass: HomeAssistant, integration_name: str
 ) -> bool:
     """Determine if an integration has notify services registered."""
     if (
@@ -114,9 +114,13 @@ def _async_integration_has_notify_services(
 class BaseNotificationService:
     """An abstract class for notification services."""
 
-    hass: Optional[HomeAssistantType] = None
+    # While not purely typed, it makes typehinting more useful for us
+    # and removes the need for constant None checks or asserts.
+    # Ignore types: https://github.com/PyCQA/pylint/issues/3167
+    hass: HomeAssistant = None  # type: ignore
+
     # Name => target
-    registered_targets: Dict[str, str]
+    registered_targets: dict[str, str]
 
     def send_message(self, message, **kwargs):
         """Send a message.
@@ -130,7 +134,9 @@ class BaseNotificationService:
 
         kwargs can contain ATTR_TITLE to specify a title.
         """
-        await self.hass.async_add_executor_job(partial(self.send_message, message, **kwargs))  # type: ignore
+        await self.hass.async_add_executor_job(
+            partial(self.send_message, message, **kwargs)
+        )
 
     async def _async_notify_message_service(self, service: ServiceCall) -> None:
         """Handle sending notification message service calls."""
@@ -155,7 +161,7 @@ class BaseNotificationService:
 
     async def async_setup(
         self,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         service_name: str,
         target_service_name_prefix: str,
     ) -> None:
@@ -175,8 +181,6 @@ class BaseNotificationService:
 
     async def async_register_services(self) -> None:
         """Create or update the notify services."""
-        assert self.hass
-
         if hasattr(self, "targets"):
             stale_targets = set(self.registered_targets)
 
@@ -232,8 +236,6 @@ class BaseNotificationService:
 
     async def async_unregister_services(self) -> None:
         """Unregister the notify services."""
-        assert self.hass
-
         if self.registered_targets:
             remove_targets = set(self.registered_targets)
             for remove_target_name in remove_targets:

@@ -1,11 +1,12 @@
 """Support for esphome sensors."""
+from __future__ import annotations
+
 import math
-from typing import Optional
 
 from aioesphomeapi import SensorInfo, SensorState, TextSensorInfo, TextSensorState
 import voluptuous as vol
 
-from homeassistant.components.sensor import DEVICE_CLASSES
+from homeassistant.components.sensor import DEVICE_CLASSES, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
@@ -41,7 +42,7 @@ async def async_setup_entry(
 # pylint: disable=invalid-overridden-method
 
 
-class EsphomeSensor(EsphomeEntity):
+class EsphomeSensor(EsphomeEntity, SensorEntity):
     """A sensor implementation for esphome."""
 
     @property
@@ -49,7 +50,7 @@ class EsphomeSensor(EsphomeEntity):
         return super()._static_info
 
     @property
-    def _state(self) -> Optional[SensorState]:
+    def _state(self) -> SensorState | None:
         return super()._state
 
     @property
@@ -65,7 +66,7 @@ class EsphomeSensor(EsphomeEntity):
         return self._static_info.force_update
 
     @esphome_state_property
-    def state(self) -> Optional[str]:
+    def state(self) -> str | None:
         """Return the state of the entity."""
         if math.isnan(self._state.state):
             return None
@@ -88,7 +89,7 @@ class EsphomeSensor(EsphomeEntity):
         return self._static_info.device_class
 
 
-class EsphomeTextSensor(EsphomeEntity):
+class EsphomeTextSensor(EsphomeEntity, SensorEntity):
     """A text sensor implementation for ESPHome."""
 
     @property
@@ -96,7 +97,7 @@ class EsphomeTextSensor(EsphomeEntity):
         return super()._static_info
 
     @property
-    def _state(self) -> Optional[TextSensorState]:
+    def _state(self) -> TextSensorState | None:
         return super()._state
 
     @property
@@ -105,7 +106,7 @@ class EsphomeTextSensor(EsphomeEntity):
         return self._static_info.icon
 
     @esphome_state_property
-    def state(self) -> Optional[str]:
+    def state(self) -> str | None:
         """Return the state of the entity."""
         if self._state.missing_state:
             return None

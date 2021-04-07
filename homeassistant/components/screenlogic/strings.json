@@ -1,0 +1,39 @@
+{
+  "config": {
+    "flow_title": "ScreenLogic {name}",
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "gateway_entry": {
+        "title": "ScreenLogic",
+        "description": "Enter your ScreenLogic Gateway information.",
+        "data": {
+            "ip_address": "[%key:common::config_flow::data::ip%]",
+            "port": "[%key:common::config_flow::data::port%]"
+          }
+      },
+      "gateway_select": {
+        "title": "ScreenLogic",
+        "description": "The following ScreenLogic gateways were discovered. Please select one to configure, or choose to manually configure a ScreenLogic gateway.",
+        "data": {
+            "selected_gateway": "Gateway"
+          }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options":{
+    "step": {
+      "init": {
+        "title": "ScreenLogic",
+        "description": "Specify settings for {gateway_name}",
+        "data": {
+          "scan_interval": "Seconds between scans"
+        }
+      }
+    }
+  }
+}

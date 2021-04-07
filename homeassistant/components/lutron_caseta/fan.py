@@ -1,4 +1,6 @@
 """Support for Lutron Caseta fans."""
+from __future__ import annotations
+
 import logging
 
 from pylutron_caseta import FAN_HIGH, FAN_LOW, FAN_MEDIUM, FAN_MEDIUM_HIGH, FAN_OFF
@@ -24,7 +26,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     Adds fan controllers from the Caseta bridge associated with the config_entry
     as fan entities.
     """
-
     entities = []
     data = hass.data[CASETA_DOMAIN][config_entry.entry_id]
     bridge = data[BRIDGE_LEAP]
@@ -42,7 +43,7 @@ class LutronCasetaFan(LutronCasetaDevice, FanEntity):
     """Representation of a Lutron Caseta fan. Including Fan Speed."""
 
     @property
-    def percentage(self) -> str:
+    def percentage(self) -> int | None:
         """Return the current speed percentage."""
         if self._device["fan_speed"] is None:
             return None

@@ -29,7 +29,6 @@ X_INGRESS_PATH = "X-Ingress-Path"
 X_HASS_USER_ID = "X-Hass-User-ID"
 X_HASS_IS_ADMIN = "X-Hass-Is-Admin"
 
-
 WS_TYPE = "type"
 WS_ID = "id"
 
@@ -38,3 +37,11 @@ WS_TYPE_EVENT = "supervisor/event"
 WS_TYPE_SUBSCRIBE = "supervisor/subscribe"
 
 EVENT_SUPERVISOR_EVENT = "supervisor_event"
+
+# Add-on keys
+ATTR_VERSION = "version"
+ATTR_VERSION_LATEST = "version_latest"
+ATTR_UPDATE_AVAILABLE = "update_available"
+ATTR_SLUG = "slug"
+ATTR_URL = "url"
+ATTR_REPOSITORY = "repository"

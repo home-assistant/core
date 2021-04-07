@@ -10,7 +10,7 @@ from tests.common import (
     async_get_device_automations,
     async_mock_service,
 )
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
 @pytest.fixture
@@ -54,7 +54,10 @@ async def test_if_fires_on_turn_on_request(
                     },
                     "action": {
                         "service": "test.automation",
-                        "data_template": {"some": "{{ trigger.device_id }}"},
+                        "data_template": {
+                            "some": "{{ trigger.device_id }}",
+                            "id": "{{ trigger.id}}",
+                        },
                     },
                 }
             ]
@@ -71,3 +74,4 @@ async def test_if_fires_on_turn_on_request(
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data["some"] == mock_device.id
+    assert calls[0].data["id"] == 0

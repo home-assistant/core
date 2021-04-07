@@ -109,7 +109,7 @@ class TodSensor(BinarySensorEntity):
         return self._next_update
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
             ATTR_AFTER: self.after.astimezone(self.hass.config.time_zone).isoformat(),

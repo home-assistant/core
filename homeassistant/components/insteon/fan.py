@@ -39,7 +39,7 @@ class InsteonFanEntity(InsteonEntity, FanEntity):
     """An INSTEON fan entity."""
 
     @property
-    def percentage(self) -> str:
+    def percentage(self) -> int:
         """Return the current speed percentage."""
         if self._insteon_device_group.value is None:
             return None

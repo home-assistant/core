@@ -1,9 +1,11 @@
 """Run Home Assistant."""
+from __future__ import annotations
+
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import dataclasses
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from homeassistant import bootstrap
 from homeassistant.core import callback
@@ -34,8 +36,8 @@ class RuntimeConfig:
 
     verbose: bool = False
 
-    log_rotate_days: Optional[int] = None
-    log_file: Optional[str] = None
+    log_rotate_days: int | None = None
+    log_file: str | None = None
     log_no_color: bool = False
 
     debug: bool = False
@@ -83,7 +85,7 @@ class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):  # type: ignore[valid
 
 
 @callback
-def _async_loop_exception_handler(_: Any, context: Dict[str, Any]) -> None:
+def _async_loop_exception_handler(_: Any, context: dict[str, Any]) -> None:
     """Handle all exception inside the core loop."""
     kwargs = {}
     exception = context.get("exception")

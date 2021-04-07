@@ -1,8 +1,8 @@
 """Support for binary sensor using I2C MCP23017 chip."""
-from adafruit_mcp230xx.mcp23017 import MCP23017  # pylint: disable=import-error
-import board  # pylint: disable=import-error
-import busio  # pylint: disable=import-error
-import digitalio  # pylint: disable=import-error
+from adafruit_mcp230xx.mcp23017 import MCP23017
+import board
+import busio
+import digitalio
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity

@@ -1,6 +1,7 @@
 """Config flow for ONVIF."""
+from __future__ import annotations
+
 from pprint import pformat
-from typing import List
 from urllib.parse import urlparse
 
 from onvif.exceptions import ONVIFError
@@ -21,7 +22,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 
-# pylint: disable=unused-import
 from .const import (
     CONF_DEVICE_ID,
     CONF_RTSP_TRANSPORT,
@@ -36,7 +36,7 @@ from .device import get_device
 CONF_MANUAL_INPUT = "Manually configure ONVIF device"
 
 
-def wsdiscovery() -> List[Service]:
+def wsdiscovery() -> list[Service]:
     """Get ONVIF Profile S devices from network."""
     discovery = WSDiscovery(ttl=4)
     discovery.start()
@@ -49,7 +49,7 @@ def wsdiscovery() -> List[Service]:
 
 async def async_discovery(hass) -> bool:
     """Return if there are devices that can be discovered."""
-    LOGGER.debug("Starting ONVIF discovery...")
+    LOGGER.debug("Starting ONVIF discovery")
     services = await hass.async_add_executor_job(wsdiscovery)
 
     devices = []

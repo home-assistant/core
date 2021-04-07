@@ -1,4 +1,5 @@
 """Support for Swisscom routers (Internet-Box)."""
+from contextlib import suppress
 import logging
 
 from aiohttp.hdrs import CONTENT_TYPE
@@ -97,13 +98,11 @@ class SwisscomDeviceScanner(DeviceScanner):
             return devices
 
         for device in request.json()["status"]:
-            try:
+            with suppress(KeyError, requests.exceptions.RequestException):
                 devices[device["Key"]] = {
                     "ip": device["IPAddress"],
                     "mac": device["PhysAddress"],
                     "host": device["Name"],
                     "status": device["Active"],
                 }
-            except (KeyError, requests.exceptions.RequestException):
-                pass
         return devices

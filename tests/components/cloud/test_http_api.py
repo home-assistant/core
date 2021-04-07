@@ -379,6 +379,7 @@ async def test_websocket_status(
             "exclude_entity_globs": [],
             "exclude_entities": [],
         },
+        "google_registered": False,
         "remote_domain": None,
         "remote_connected": False,
         "remote_certificate": None,

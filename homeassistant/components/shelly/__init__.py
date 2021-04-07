@@ -75,6 +75,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     dev_reg = await device_registry.async_get_registry(hass)
     identifier = (DOMAIN, entry.unique_id)
     device_entry = dev_reg.async_get_device(identifiers={identifier}, connections=set())
+    if device_entry and entry.entry_id not in device_entry.config_entries:
+        device_entry = None
 
     sleep_period = entry.data.get("sleep_period")
 
@@ -134,9 +136,9 @@ async def async_device_setup(
         ] = ShellyDeviceRestWrapper(hass, device)
         platforms = PLATFORMS
 
-    for component in platforms:
+    for platform in platforms:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
 
@@ -323,8 +325,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in platforms
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in platforms
             ]
         )
     )
