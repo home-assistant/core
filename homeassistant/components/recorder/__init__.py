@@ -206,7 +206,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def start_recorder(*_) -> None:
         """Start the recorder."""
         with async_start_setup(hass, ["recorder"]):
-            await asyncio.sleep(200)
             await instance.async_db_ready
 
     async_when_setup_or_start(hass, "frontend", start_recorder)
@@ -217,31 +216,28 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 def _async_register_services(hass, instance):
     """Register recorder services."""
 
-    async def _async_handle_purge_service(service):
+    async def async_handle_purge_service(service):
         """Handle calls to the purge service."""
         instance.do_adhoc_purge(**service.data)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_PURGE, _async_handle_purge_service, schema=SERVICE_PURGE_SCHEMA
+        DOMAIN, SERVICE_PURGE, async_handle_purge_service, schema=SERVICE_PURGE_SCHEMA
     )
 
-    async def _async_handle_enable_sevice(service):
+    async def async_handle_enable_sevice(service):
         instance.set_enable(True)
 
     hass.services.async_register(
-        DOMAIN,
-        SERVICE_ENABLE,
-        _async_handle_enable_sevice,
-        schema=SERVICE_ENABLE_SCHEMA,
+        DOMAIN, SERVICE_ENABLE, async_handle_enable_sevice, schema=SERVICE_ENABLE_SCHEMA
     )
 
-    async def _async_handle_disable_service(service):
+    async def async_handle_disable_service(service):
         instance.set_enable(False)
 
     hass.services.async_register(
         DOMAIN,
         SERVICE_DISABLE,
-        _async_handle_disable_service,
+        async_handle_disable_service,
         schema=SERVICE_DISABLE_SCHEMA,
     )
 
