@@ -1,28 +1,5 @@
 """The tests for UVC camera module."""
 
-
-# from datetime import datetime, timedelta, timezone
-# from unittest.mock import call, patch
-
-# import pytest
-# import requests
-# from uvcclient import camera as camera, nvr
-
-# from homeassistant.components.camera import (
-#     DEFAULT_CONTENT_TYPE,
-#     SERVICE_DISABLE_MOTION,
-#     SERVICE_ENABLE_MOTION,
-#     STATE_RECORDING,
-#     SUPPORT_STREAM,
-#     async_get_image,
-#     async_get_stream_source,
-# )
-# from homeassistant.exceptions import HomeAssistantError
-# from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
-# from homeassistant.setup import async_setup_component
-# from homeassistant.util.dt import utcnow
-
-# from tests.common import async_fire_time_changed
 from unittest.mock import patch
 
 from homeassistant import config_entries

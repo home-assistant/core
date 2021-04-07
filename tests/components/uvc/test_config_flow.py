@@ -6,6 +6,8 @@ from uvcclient import nvr
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.uvc.const import DOMAIN
 
+from tests.common import MockConfigEntry
+
 
 async def test_form(hass):
     """Test we get the form."""
@@ -140,3 +142,18 @@ async def test_import_yaml(hass):
         await hass.async_block_till_done()
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert "errors" not in result
+
+
+async def test_import_aborts_if_configured(hass):
+    """Test config import doesn't re-import unnecessarily."""
+
+    MockConfigEntry(domain=DOMAIN, unique_id="uuid", data={}).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={},
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
