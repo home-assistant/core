@@ -159,8 +159,8 @@ async def async_services_setup(
             _LOGGER.warning("OTA update service: no target selected")
             return
 
-        devices = await async_extract_referenced_entity_ids(hass, call)
-        for device_id in devices.referenced_devices:
+        selected_ids = await async_extract_referenced_entity_ids(hass, call)
+        for device_id in selected_ids.referenced_devices:
             device = dev_reg.async_get(device_id)
             if DOMAIN not in next(iter(device.identifiers)):
                 continue
