@@ -10,6 +10,7 @@ from homeassistant.components.recorder import (
     CONFIG_SCHEMA,
     DATA_INSTANCE,
     DOMAIN,
+    KEEPALIVE_TIME,
     SERVICE_DISABLE,
     SERVICE_ENABLE,
     SERVICE_PURGE,
@@ -22,12 +23,13 @@ from homeassistant.components.recorder import (
 from homeassistant.components.recorder.models import Events, RecorderRuns, States
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     MATCH_ALL,
     STATE_LOCKED,
     STATE_UNLOCKED,
 )
-from homeassistant.core import Context, CoreState, callback
+from homeassistant.core import Context, CoreState, HomeAssistant, callback
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util import dt as dt_util
@@ -41,10 +43,27 @@ from .common import (
 from .conftest import SetupRecorderInstanceT
 
 from tests.common import (
+    async_fire_time_changed,
     async_init_recorder_component,
     fire_time_changed,
     get_test_home_assistant,
 )
+
+
+def _default_recorder(hass):
+    """Return a recorder with reasonable defaults."""
+    return Recorder(
+        hass,
+        auto_purge=True,
+        keep_days=7,
+        commit_interval=1,
+        uri="sqlite://",
+        db_max_retries=10,
+        db_retry_wait=3,
+        entity_filter=CONFIG_SCHEMA({DOMAIN: {}}),
+        exclude_t=[],
+        db_integrity_check=False,
+    )
 
 
 async def test_shutdown_before_startup_finishes(hass):
@@ -70,6 +89,31 @@ async def test_shutdown_before_startup_finishes(hass):
     assert run_info.end is not None
 
 
+async def test_state_gets_saved_when_set_before_start_event(
+    hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT
+):
+    """Test we can record an event when starting with not running."""
+
+    hass.state = CoreState.not_running
+
+    await async_init_recorder_component(hass)
+
+    entity_id = "test.recorder"
+    state = "restoring_from_db"
+    attributes = {"test_attr": 5, "test_attr_10": "nice"}
+
+    hass.states.async_set(entity_id, state, attributes)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+
+    await async_wait_recording_done_without_instance(hass)
+
+    with session_scope(hass=hass) as session:
+        db_states = list(session.query(States))
+        assert len(db_states) == 1
+        assert db_states[0].event_id > 0
+
+
 async def test_saving_state(
     hass: HomeAssistantType, async_setup_recorder_instance: SetupRecorderInstanceT
 ):
@@ -91,6 +135,32 @@ async def test_saving_state(
         state = db_states[0].to_native()
 
     assert state == _state_empty_context(hass, entity_id)
+
+
+async def test_saving_state_with_intermixed_time_changes(
+    hass: HomeAssistantType, async_setup_recorder_instance: SetupRecorderInstanceT
+):
+    """Test saving states with intermixed time changes."""
+    instance = await async_setup_recorder_instance(hass)
+
+    entity_id = "test.recorder"
+    state = "restoring_from_db"
+    attributes = {"test_attr": 5, "test_attr_10": "nice"}
+    attributes2 = {"test_attr": 10, "test_attr_10": "mean"}
+
+    for _ in range(KEEPALIVE_TIME + 1):
+        async_fire_time_changed(hass, dt_util.utcnow())
+    hass.states.async_set(entity_id, state, attributes)
+    for _ in range(KEEPALIVE_TIME + 1):
+        async_fire_time_changed(hass, dt_util.utcnow())
+    hass.states.async_set(entity_id, state, attributes2)
+
+    await async_wait_recording_done(hass, instance)
+
+    with session_scope(hass=hass) as session:
+        db_states = list(session.query(States))
+        assert len(db_states) == 2
+        assert db_states[0].event_id > 0
 
 
 def test_saving_state_with_exception(hass, hass_recorder, caplog):
@@ -170,6 +240,25 @@ def test_saving_event(hass, hass_recorder):
     assert event.time_fired.replace(microsecond=0) == db_event.time_fired.replace(
         microsecond=0
     )
+
+
+def test_saving_state_with_commit_interval_zero(hass_recorder):
+    """Test saving a state with a commit interval of zero."""
+    hass = hass_recorder({"commit_interval": 0})
+    assert hass.data[DATA_INSTANCE].commit_interval == 0
+
+    entity_id = "test.recorder"
+    state = "restoring_from_db"
+    attributes = {"test_attr": 5, "test_attr_10": "nice"}
+
+    hass.states.set(entity_id, state, attributes)
+
+    wait_recording_done(hass)
+
+    with session_scope(hass=hass) as session:
+        db_states = list(session.query(States))
+        assert len(db_states) == 1
+        assert db_states[0].event_id > 0
 
 
 def _add_entities(hass, entity_ids):
@@ -352,27 +441,27 @@ def test_saving_state_and_removing_entity(hass, hass_recorder):
         assert states[2].state is None
 
 
-def test_recorder_setup_failure():
+def test_recorder_setup_failure(hass):
     """Test some exceptions."""
-    hass = get_test_home_assistant()
-
     with patch.object(Recorder, "_setup_connection") as setup, patch(
         "homeassistant.components.recorder.time.sleep"
     ):
         setup.side_effect = ImportError("driver not found")
-        rec = Recorder(
-            hass,
-            auto_purge=True,
-            keep_days=7,
-            commit_interval=1,
-            uri="sqlite://",
-            db_max_retries=10,
-            db_retry_wait=3,
-            entity_filter=CONFIG_SCHEMA({DOMAIN: {}}),
-            exclude_t=[],
-            db_integrity_check=False,
-        )
+        rec = _default_recorder(hass)
         rec.async_initialize()
+        rec.start()
+        rec.join()
+
+    hass.stop()
+
+
+def test_recorder_setup_failure_without_event_listener(hass):
+    """Test recorder setup failure when the event listener is not setup."""
+    with patch.object(Recorder, "_setup_connection") as setup, patch(
+        "homeassistant.components.recorder.time.sleep"
+    ):
+        setup.side_effect = ImportError("driver not found")
+        rec = _default_recorder(hass)
         rec.start()
         rec.join()
 
