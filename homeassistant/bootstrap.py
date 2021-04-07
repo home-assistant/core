@@ -45,6 +45,8 @@ ERROR_LOG_FILENAME = "home-assistant.log"
 DATA_LOGGING = "logging"
 DATA_INSTANCE = "recorder_instance"
 
+RECORDER_DOMAIN = "recorder"
+
 LOG_SLOW_STARTUP_INTERVAL = 60
 SLOW_STARTUP_CHECK_INTERVAL = 1
 SIGNAL_BOOTSTRAP_INTEGRATONS = "bootstrap_integrations"
@@ -53,6 +55,8 @@ STAGE_1_TIMEOUT = 120
 STAGE_2_TIMEOUT = 300
 WRAP_UP_TIMEOUT = 300
 COOLDOWN_TIME = 60
+
+RECORDER_BASE_SETUP_TIMEOUT = 60
 
 MAX_LOAD_CONCURRENTLY = 6
 
@@ -65,7 +69,7 @@ LOGGING_INTEGRATIONS = {
     "system_log",
     "sentry",
     # To record data
-    "recorder",
+    RECORDER_DOMAIN,
 }
 STAGE_1_INTEGRATIONS = {
     # To make sure we forward data to other instances
@@ -434,6 +438,18 @@ async def async_setup_multi_components(
         )
 
 
+async def async_ensure_recorder_is_ready(hass: core.HomeAssistant) -> None:
+    """Ensure the recorder is ready if it was setup."""
+    # If there is a database upgrade in progress the recorder
+    # queue can exaust the available memory if we allow stage 2
+    # to start. We wait until the upgrade is completed before
+    # starting.
+    if RECORDER_DOMAIN not in hass.config.components:
+        return
+    async with hass.timeout.async_timeout(RECORDER_BASE_SETUP_TIMEOUT, RECORDER_DOMAIN):
+        await hass.data[DATA_INSTANCE].async_db_ready
+
+
 async def _async_set_up_integrations(
     hass: core.HomeAssistant, config: dict[str, Any]
 ) -> None:
@@ -540,11 +556,8 @@ async def _async_set_up_integrations(
                 STAGE_1_TIMEOUT, cool_down=COOLDOWN_TIME
             ):
                 await async_setup_multi_components(hass, stage_1_domains, config)
-                # If there is a database upgrade in progress the recorder
-                # queue can exaust the available memory so we need to wait
-                # to move on to stage 2 until its ready
-                if "recorder" in hass.config.components:
-                    await hass.data[DATA_INSTANCE].async_db_ready
+                await async_ensure_recorder_is_ready(hass)
+
         except asyncio.TimeoutError:
             _LOGGER.warning("Setup timed out for stage 1 - moving forward")
 
