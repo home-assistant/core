@@ -380,7 +380,9 @@ class Recorder(threading.Thread):
             # Cancel the event listener to avoid
             # memory exhaustion since the queue
             # would grow without bound otherwise
-            self._event_listener()
+            if self._event_listener:
+                self._event_listener()
+                self._event_listener = None
             return
 
         @callback
