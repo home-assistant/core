@@ -11,6 +11,7 @@ import datetime
 import enum
 import functools
 import logging
+import math
 import os
 import pathlib
 import re
@@ -870,6 +871,7 @@ class State:
         "domain",
         "object_id",
         "_as_dict",
+        "_has_nan",
     ]
 
     def __init__(
@@ -905,6 +907,7 @@ class State:
         self.context = context or Context()
         self.domain, self.object_id = split_entity_id(self.entity_id)
         self._as_dict: dict[str, Collection[Any]] | None = None
+        self._has_nan: bool = False
 
     @property
     def name(self) -> str:
@@ -912,6 +915,21 @@ class State:
         return self.attributes.get(ATTR_FRIENDLY_NAME) or self.object_id.replace(
             "_", " "
         )
+
+    def as_dict_strict(self) -> dict | None:
+        """Return a dict representation of the State.
+
+        Returns None if any attribute is NaN.
+
+        Async friendly.
+
+        To be used for JSON serialization.
+        Ensures: state == State.from_dict(state.as_dict())
+        """
+        as_dict = self.as_dict()
+        if self._has_nan:
+            return None
+        return as_dict
 
     def as_dict(self) -> dict:
         """Return a dict representation of the State.
@@ -935,6 +953,9 @@ class State:
                 "last_updated": last_updated_isoformat,
                 "context": self.context.as_dict(),
             }
+            for attribute in self.attributes.values():
+                if isinstance(attribute, float) and math.isnan(attribute):
+                    self._has_nan = True
         return self._as_dict
 
     @classmethod
