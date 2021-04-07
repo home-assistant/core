@@ -544,8 +544,12 @@ async def _async_set_up_integrations(
     # Start up recorder and frontend.
     # Start these as soon as possible in case there is a database issue we
     # need to report on the frontend
-    stage_0_domains = async_domains_with_deps_promoted(
-        STAGE_0_INTEGRATIONS, domains_to_setup, integration_cache
+    stage_0_domains = (
+        async_domains_with_deps_promoted(
+            STAGE_0_INTEGRATIONS, domains_to_setup, integration_cache
+        )
+        - logging_domains
+        - debuggers
     )
 
     if stage_0_domains:
@@ -559,8 +563,13 @@ async def _async_set_up_integrations(
             _LOGGER.warning("Setup timed out for stage 0 - moving forward")
 
     # calculate what components to setup in what stage
-    stage_1_domains = async_domains_with_deps_promoted(
-        STAGE_1_INTEGRATIONS, domains_to_setup, integration_cache
+    stage_1_domains = (
+        async_domains_with_deps_promoted(
+            STAGE_1_INTEGRATIONS, domains_to_setup, integration_cache
+        )
+        - logging_domains
+        - debuggers
+        - stage_0_domains
     )
 
     stage_2_domains = (
