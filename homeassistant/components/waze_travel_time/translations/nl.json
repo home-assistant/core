@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Locatie is al geconfigureerd."
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "destination": "Bestemming"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "avoid_toll_roads": "Tolwegen vermijden?",
+                    "excl_filter": "Substring NIET in beschrijving van geselecteerde route",
+                    "incl_filter": "Substring in beschrijving van geselecteerde route",
+                    "realtime": "Realtime reistijd?",
+                    "units": "Eenheden",
+                    "vehicle_type": "Voertuigtype"
+                },
+                "description": "Met de 'substring'-invoer kunt u de integratie forceren om een bepaalde route te gebruiken of een bepaalde route te vermijden in de tijdreisberekening."
+            }
+        }
+    },
+    "title": "Waze reistijd"
+}
