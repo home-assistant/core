@@ -209,7 +209,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         sensor_name.startswith("line_")
                         and service_location.local_polling
                     ):
-                        pass
+                        continue
                     entities.append(
                         SmappeeSensor(
                             smappee_base=smappee_base,
