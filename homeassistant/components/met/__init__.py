@@ -68,7 +68,7 @@ class MetDataUpdateCoordinator(DataUpdateCoordinator):
         self.weather = MetWeatherData(
             hass, config_entry.data, hass.config.units.is_metric
         )
-        self.weather.init_data()
+        self.weather.set_coordinates()
 
         update_interval = timedelta(minutes=randrange(55, 65))
 
@@ -88,8 +88,8 @@ class MetDataUpdateCoordinator(DataUpdateCoordinator):
 
         async def _async_update_weather_data(_event=None):
             """Update weather data."""
-            self.weather.init_data()
-            await self.async_refresh()
+            if self.weather.set_coordinates():
+                await self.async_refresh()
 
         self._unsub_track_home = self.hass.bus.async_listen(
             EVENT_CORE_CONFIG_UPDATE, _async_update_weather_data
@@ -114,9 +114,10 @@ class MetWeatherData:
         self.current_weather_data = {}
         self.daily_forecast = None
         self.hourly_forecast = None
+        self._coordinates = None
 
-    def init_data(self):
-        """Weather data inialization - get the coordinates."""
+    def set_coordinates(self):
+        """Weather data inialization - set the coordinates."""
         if self._config.get(CONF_TRACK_HOME, False):
             latitude = self.hass.config.latitude
             longitude = self.hass.config.longitude
@@ -136,10 +137,14 @@ class MetWeatherData:
             "lon": str(longitude),
             "msl": str(elevation),
         }
+        if coordinates == self._coordinates:
+            return False
+        self._coordinates = coordinates
 
         self._weather_data = metno.MetWeatherData(
             coordinates, async_get_clientsession(self.hass), api_url=URL
         )
+        return True
 
     async def fetch_data(self):
         """Fetch data from API - (current weather and forecast)."""
