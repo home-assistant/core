@@ -30,7 +30,7 @@ def test_is_private():
 def test_is_link_local():
     """Test link local addresses."""
     assert network_util.is_link_local(ip_address("169.254.12.3"))
-    assert network_util.is_link_local(ip_address("fe80::1ff:fe23:4567:890a%eth0"))
+    assert network_util.is_link_local(ip_address("fe80::1ff:fe23:4567:890a"))
     assert not network_util.is_link_local(ip_address("127.0.0.1"))
     assert not network_util.is_link_local(ip_address("::1"))
 
