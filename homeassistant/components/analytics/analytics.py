@@ -1,5 +1,6 @@
 """Analytics helper class for the analytics integration."""
 import asyncio
+import uuid
 
 import aiohttp
 import async_timeout
@@ -24,7 +25,6 @@ from .const import (
     ATTR_BASE,
     ATTR_DIAGNOSTICS,
     ATTR_HEALTHY,
-    ATTR_HUUID,
     ATTR_INTEGRATION_COUNT,
     ATTR_INTEGRATIONS,
     ATTR_ONBOARDED,
@@ -37,6 +37,7 @@ from .const import (
     ATTR_SUPPORTED,
     ATTR_USAGE,
     ATTR_USER_COUNT,
+    ATTR_UUID,
     ATTR_VERSION,
     LOGGER,
     PREFERENCE_SCHEMA,
@@ -52,7 +53,7 @@ class Analytics:
         """Initialize the Analytics class."""
         self.hass: HomeAssistant = hass
         self.session = async_get_clientsession(hass)
-        self._data = {ATTR_PREFERENCES: {}, ATTR_ONBOARDED: False}
+        self._data = {ATTR_PREFERENCES: {}, ATTR_ONBOARDED: False, ATTR_UUID: None}
         self._store: Store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
     @property
@@ -72,6 +73,11 @@ class Analytics:
         return self._data[ATTR_ONBOARDED]
 
     @property
+    def uuid(self) -> bool:
+        """Return the uuid for the analytics integration."""
+        return self._data[ATTR_UUID]
+
+    @property
     def supervisor(self) -> bool:
         """Return bool if a supervisor is present."""
         return hassio.is_hassio(self.hass)
@@ -81,6 +87,7 @@ class Analytics:
         stored = await self._store.async_load()
         if stored:
             self._data = stored
+
         if self.supervisor:
             supervisor_info = hassio.get_supervisor_info(self.hass)
             if not self.onboarded:
@@ -99,6 +106,7 @@ class Analytics:
         preferences = PREFERENCE_SCHEMA(preferences)
         self._data[ATTR_PREFERENCES].update(preferences)
         self._data[ATTR_ONBOARDED] = True
+
         await self._store.async_save(self._data)
 
         if self.supervisor:
@@ -114,7 +122,9 @@ class Analytics:
             LOGGER.debug("Nothing to submit")
             return
 
-        huuid = await self.hass.helpers.instance_id.async_get()
+        if self._data.get(ATTR_UUID) is None:
+            self._data[ATTR_UUID] = uuid.uuid4().hex
+            await self._store.async_save(self._data)
 
         if self.supervisor:
             supervisor_info = hassio.get_supervisor_info(self.hass)
@@ -123,7 +133,7 @@ class Analytics:
         integrations = []
         addons = []
         payload: dict = {
-            ATTR_HUUID: huuid,
+            ATTR_UUID: self.uuid,
             ATTR_VERSION: HA_VERSION,
             ATTR_INSTALLATION_TYPE: system_info[ATTR_INSTALLATION_TYPE],
         }
