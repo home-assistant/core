@@ -34,6 +34,7 @@ from .const import (
     CONF_SURVEILLANCE_USERNAME,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    MOTIONEYE_MANUFACTURER,
     SIGNAL_CAMERA_ADD,
 )
 
@@ -121,6 +122,7 @@ async def _create_reauth_flow(
 
 async def _add_camera(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     client: MotionEyeClient,
     entry: ConfigEntry,
     camera_id: int,
@@ -128,6 +130,15 @@ async def _add_camera(
     device_id: str,
 ) -> None:
     """Add a motionEye camera to hass."""
+
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, device_id)},
+        manufacturer=MOTIONEYE_MANUFACTURER,
+        model=MOTIONEYE_MANUFACTURER,
+        name=camera[KEY_NAME],
+    )
+
     async_dispatcher_send(
         hass,
         SIGNAL_CAMERA_ADD.format(entry.entry_id),
@@ -202,7 +213,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 continue
             current_cameras.add(device_unique_id)
             hass.async_create_task(
-                _add_camera(hass, client, entry, camera_id, camera, device_unique_id)
+                _add_camera(
+                    hass,
+                    device_registry,
+                    client,
+                    entry,
+                    camera_id,
+                    camera,
+                    device_unique_id,
+                )
             )
 
         # Ensure every device associated with this config entry is still in the list of

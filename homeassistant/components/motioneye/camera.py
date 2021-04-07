@@ -206,12 +206,4 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
     @property
     def device_info(self) -> dict[str, Any]:
         """Return the device information."""
-        return {
-            "identifiers": {
-                # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, self._device_id),
-            },
-            "name": self.name,
-            "manufacturer": MOTIONEYE_MANUFACTURER,
-            "model": MOTIONEYE_MANUFACTURER,
-        }
+        return {"identifiers": {(DOMAIN, self._device_id)}}
