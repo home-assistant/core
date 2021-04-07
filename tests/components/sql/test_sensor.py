@@ -55,3 +55,26 @@ async def test_invalid_query(hass):
 
     state = hass.states.get("sensor.count_tables")
     assert state.state == STATE_UNKNOWN
+
+
+async def test_invalid_url(hass, caplog):
+    """Test credentials in url is not logged."""
+    config = {
+        "sensor": {
+            "platform": "sql",
+            "db_url": "sqlite://homeassistant:hunter2@homeassistant.local",
+            "queries": [
+                {
+                    "name": "count_tables",
+                    "query": "SELECT 5 as value",
+                    "column": "value",
+                }
+            ],
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    assert "sqlite://homeassistant:hunter2@homeassistant.local" not in caplog.text
+    assert "sqlite://homeassistant.local" in caplog.text
