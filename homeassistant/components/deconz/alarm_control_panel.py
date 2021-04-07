@@ -21,6 +21,7 @@ from homeassistant.components.alarm_control_panel import (
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_HOME,
     SUPPORT_ALARM_ARM_NIGHT,
+    SUPPORT_ALARM_TRIGGER,
     AlarmControlPanelEntity,
 )
 from homeassistant.const import (
@@ -46,7 +47,6 @@ SERVICE_ALARM_ARMING_NIGHT = "alarm_arming_night"
 SERVICE_ALARM_ENTRY_DELAY = "alarm_entry_delay"
 SERVICE_ALARM_EXIT_DELAY = "alarm_exit_delay"
 SERVICE_ALARM_NOT_READY = "alarm_not_ready"
-SERVICE_ALARM_TRIGGERED = "alarm_triggered"
 
 DECONZ_TO_ALARM_STATE = {
     ANCILLARY_CONTROL_ARMED_AWAY: STATE_ALARM_ARMED_AWAY,
@@ -125,10 +125,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
         SERVICE_ALARM_NOT_READY, {}, "async_alarm_not_ready"
     )
 
-    platform.async_register_entity_service(
-        SERVICE_ALARM_TRIGGERED, {}, "async_alarm_triggered"
-    )
-
 
 class DeconzAlarmControlPanel(DeconzDevice, AlarmControlPanelEntity):
     """Representation of a deCONZ alarm control panel."""
@@ -142,6 +138,7 @@ class DeconzAlarmControlPanel(DeconzDevice, AlarmControlPanelEntity):
         self._features = SUPPORT_ALARM_ARM_AWAY
         self._features |= SUPPORT_ALARM_ARM_HOME
         self._features |= SUPPORT_ALARM_ARM_NIGHT
+        self._features |= SUPPORT_ALARM_TRIGGER
 
     @property
     def supported_features(self) -> int:
@@ -168,7 +165,7 @@ class DeconzAlarmControlPanel(DeconzDevice, AlarmControlPanelEntity):
     @property
     def state(self) -> str:
         """Return the state of the sensor."""
-        return DECONZ_TO_ALARM_STATE.get(self._device.panel)
+        return DECONZ_TO_ALARM_STATE.get(self._device.state)
 
     async def async_alarm_arm_away(self, code: None = None) -> None:
         """Send arm away command."""
@@ -185,6 +182,10 @@ class DeconzAlarmControlPanel(DeconzDevice, AlarmControlPanelEntity):
     async def async_alarm_disarm(self, code: None = None) -> None:
         """Send disarm command."""
         await self._device.disarm()
+
+    async def async_alarm_trigger(self, code: None = None) -> None:
+        """Send in alarm command."""
+        await self._device.in_alarm()
 
     # Custom services
 
@@ -211,7 +212,3 @@ class DeconzAlarmControlPanel(DeconzDevice, AlarmControlPanelEntity):
     async def async_alarm_not_ready(self) -> None:
         """Send not ready command."""
         await self._device.not_ready()
-
-    async def async_alarm_triggered(self) -> None:
-        """Send in alarm command."""
-        await self._device.in_alarm()

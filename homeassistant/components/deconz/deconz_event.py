@@ -164,6 +164,7 @@ class DeconzAlarmEvent(DeconzEvent):
             self.gateway.ignore_state_updates
             or "action" not in self._device.changed_keys
         ):
+            self.panel_state = self._device.panel
             return
 
         state, code, _area = self._device.action.split(",")
