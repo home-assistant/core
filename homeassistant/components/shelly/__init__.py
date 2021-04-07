@@ -76,7 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         False,
     )
 
-    dev_reg = await device_registry.async_get_registry(hass)
+    dev_reg = device_registry.async_get(hass)
     identifier = (DOMAIN, entry.unique_id)
     device_entry = dev_reg.async_get_device(identifiers={identifier}, connections=set())
     if device_entry and entry.entry_id not in device_entry.config_entries:
@@ -294,7 +294,7 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 
     async def async_setup(self):
         """Set up the wrapper."""
-        dev_reg = await device_registry.async_get_registry(self.hass)
+        dev_reg = device_registry.async_get(self.hass)
         sw_version = self.device.settings["fw"] if self.device.initialized else ""
         entry = dev_reg.async_get_or_create(
             config_entry_id=self.entry.entry_id,
