@@ -3,7 +3,7 @@
   "name": "Noonlight",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/noonlight",
-  "requirements": ["noonlight-tjdavisbz"],
+  "requirements": ["noonlight-tjdavisbz==0.0.4"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
