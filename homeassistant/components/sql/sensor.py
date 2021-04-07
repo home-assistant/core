@@ -22,6 +22,14 @@ CONF_QUERY = "query"
 DB_URL_RE = re.compile("//(.*):(.*)@")
 
 
+def redact_credentials(data):
+    """Redact credentials from string data."""
+    data = DB_URL_RE.split(data)
+    if len(data) == 1:
+        return data
+    return data[0] + "//****:****@" + data[3]
+
+
 def validate_sql_select(value):
     """Validate that value is a SQL SELECT query."""
     if not value.lstrip().lower().startswith("select"):
@@ -62,8 +70,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     except sqlalchemy.exc.SQLAlchemyError as err:
         _LOGGER.error(
             "Couldn't connect using %s DB_URL: %s",
-            DB_URL_RE.sub("//", str(db_url)),
-            DB_URL_RE.sub("//", str(err)),
+            redact_credentials(db_url),
+            redact_credentials(str(err)),
         )
         return
     finally:
@@ -159,7 +167,7 @@ class SQLSensor(SensorEntity):
             _LOGGER.error(
                 "Error executing query %s: %s",
                 self._query,
-                DB_URL_RE.sub("//", str(err)),
+                redact_credentials(str(err)),
             )
             return
         finally:
