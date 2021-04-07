@@ -56,7 +56,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.dt as dt_util
-from homeassistant.util.logging import async_create_catching_coro
 
 from .const import (
     ADDED_CAST_DEVICES_KEY,
@@ -185,9 +184,7 @@ class CastDevice(MediaPlayerEntity):
         )
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_stop)
         self.async_set_cast_info(self._cast_info)
-        self.hass.async_create_task(
-            async_create_catching_coro(self.async_connect_to_chromecast())
-        )
+        self.hass.async_create_task(self.async_connect_to_chromecast())
 
         self._cast_view_remove_handler = async_dispatcher_connect(
             self.hass, SIGNAL_HASS_CAST_SHOW_VIEW, self._handle_signal_show_view
@@ -806,9 +803,7 @@ class DynamicCastGroup:
         )
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_stop)
         self.async_set_cast_info(self._cast_info)
-        self.hass.async_create_task(
-            async_create_catching_coro(self.async_connect_to_chromecast())
-        )
+        self.hass.async_create_task(self.async_connect_to_chromecast())
 
     async def async_tear_down(self) -> None:
         """Disconnect Chromecast object."""
