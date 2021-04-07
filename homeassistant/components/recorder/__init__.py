@@ -34,7 +34,6 @@ from homeassistant.helpers.entityfilter import (
     convert_include_exclude_filter,
 )
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.setup import async_start_setup
 import homeassistant.util.dt as dt_util
 
 from . import migration, purge
@@ -203,13 +202,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if hass.state == CoreState.running:
         return await instance.async_db_ready
 
-    async def start_recorder() -> None:
-        """Start the recorder."""
-        async with hass.timeout.async_freeze(DOMAIN):
-            with async_start_setup(hass, [DOMAIN]):
-                await instance.async_db_ready
-
-    hass.async_create_task(start_recorder())
     return True
 
 

@@ -29,6 +29,7 @@ from homeassistant.setup import (
     DATA_SETUP_TIME,
     async_set_domains_to_be_loaded,
     async_setup_component,
+    async_start_setup,
 )
 from homeassistant.util.async_ import gather_with_concurrency
 import homeassistant.util.dt as dt_util
@@ -448,8 +449,11 @@ async def async_ensure_recorder_is_ready(hass: core.HomeAssistant) -> None:
     # starting.
     if RECORDER_DOMAIN not in hass.config.components:
         return
-    async with hass.timeout.async_timeout(RECORDER_BASE_SETUP_TIMEOUT, RECORDER_DOMAIN):
-        await hass.data[DATA_INSTANCE].async_db_ready
+    async with hass.timeout.async_timeout(
+        RECORDER_BASE_SETUP_TIMEOUT, RECORDER_DOMAIN
+    ), hass.timeout.async_freeze(RECORDER_DOMAIN):
+        with async_start_setup(hass, [RECORDER_DOMAIN]):
+            await hass.data[DATA_INSTANCE].async_db_ready
 
 
 async def _async_set_up_integrations(
