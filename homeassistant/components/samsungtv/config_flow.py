@@ -158,8 +158,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._host = await self.hass.async_add_executor_job(
                     socket.gethostbyname, user_input[CONF_HOST]
                 )
-            except socket.gaierror:
-                raise data_entry_flow.AbortFlow(RESULT_UNKNOWN_HOST)
+            except socket.gaierror as err:
+                raise data_entry_flow.AbortFlow(RESULT_UNKNOWN_HOST) from err
             self._name = user_input[CONF_NAME]
             self._title = self._name
 
