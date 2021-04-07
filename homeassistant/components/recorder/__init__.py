@@ -391,7 +391,7 @@ class Recorder(threading.Thread):
 
         #        @callback
         async def _set_ready():
-            await asyncio.sleep(100)
+            await asyncio.sleep(200)
             self.async_db_ready.set_result(True)
 
         self.hass.add_job(_set_ready)
