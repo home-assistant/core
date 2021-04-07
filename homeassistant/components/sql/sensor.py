@@ -19,15 +19,12 @@ CONF_COLUMN_NAME = "column"
 CONF_QUERIES = "queries"
 CONF_QUERY = "query"
 
-DB_URL_RE = re.compile("//(.*):(.*)@")
+DB_URL_RE = re.compile("//.*:.*@")
 
 
 def redact_credentials(data):
     """Redact credentials from string data."""
-    data = DB_URL_RE.split(data)
-    if len(data) == 1:
-        return data
-    return data[0] + "//****:****@" + data[3]
+    return DB_URL_RE.sub("//****:****@", data)
 
 
 def validate_sql_select(value):
