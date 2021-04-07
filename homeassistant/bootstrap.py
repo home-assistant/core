@@ -10,7 +10,7 @@ import os
 import sys
 import threading
 from time import monotonic
-from typing import TYPE_CHECKING, Any, Iterable
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 import yarl
@@ -49,7 +49,6 @@ LOG_SLOW_STARTUP_INTERVAL = 1
 SLOW_STARTUP_CHECK_INTERVAL = 1
 SIGNAL_BOOTSTRAP_INTEGRATONS = "bootstrap_integrations"
 
-STAGE_0_TIMEOUT = 120
 STAGE_1_TIMEOUT = 120
 STAGE_2_TIMEOUT = 300
 WRAP_UP_TIMEOUT = 300
@@ -65,22 +64,20 @@ LOGGING_INTEGRATIONS = {
     # Error logging
     "system_log",
     "sentry",
-}
-STAGE_0_INTEGRATIONS = {
     # To record data
     "recorder",
-    # Get the frontend up and running as soon
-    # as possible so problem integrations can
-    # be removed
-    "frontend",
-    # Ensure supervisor is available
-    "hassio",
 }
 STAGE_1_INTEGRATIONS = {
     # To make sure we forward data to other instances
     "mqtt_eventstream",
     # To provide account link implementations
     "cloud",
+    # Ensure supervisor is available
+    "hassio",
+    # Get the frontend up and running as soon
+    # as possible so problem integrations can
+    # be removed
+    "frontend",
 }
 
 
@@ -439,35 +436,6 @@ async def async_setup_multi_components(
         )
 
 
-@core.callback
-def async_domains_with_deps_promoted(
-    domains: Iterable,
-    domains_to_setup: set[str],
-    integration_cache: dict[str, loader.Integration],
-) -> set[str]:
-    """Find and promote dependencies any integration we plan on loading in a stage."""
-    stage_domains = set()
-    deps_promotion = domains
-    while deps_promotion:
-        old_deps_promotion = deps_promotion
-        deps_promotion = set()
-
-        for domain in old_deps_promotion:
-            if domain not in domains_to_setup or domain in stage_domains:
-                continue
-
-            stage_domains.add(domain)
-
-            dep_itg = integration_cache.get(domain)
-
-            if dep_itg is None:
-                continue
-
-            deps_promotion.update(dep_itg.all_dependencies)
-
-    return stage_domains
-
-
 async def _async_set_up_integrations(
     hass: core.HomeAssistant, config: dict[str, Any]
 ) -> None:
@@ -534,50 +502,36 @@ async def _async_set_up_integrations(
         _LOGGER.debug("Setting up debuggers: %s", debuggers)
         await async_setup_multi_components(hass, debuggers, config)
 
+    # calculate what components to setup in what stage
+    stage_1_domains = set()
+
+    # Find all dependencies of any dependency of any stage 1 integration that
+    # we plan on loading and promote them to stage 1
+    deps_promotion = STAGE_1_INTEGRATIONS
+    while deps_promotion:
+        old_deps_promotion = deps_promotion
+        deps_promotion = set()
+
+        for domain in old_deps_promotion:
+            if domain not in domains_to_setup or domain in stage_1_domains:
+                continue
+
+            stage_1_domains.add(domain)
+
+            dep_itg = integration_cache.get(domain)
+
+            if dep_itg is None:
+                continue
+
+            deps_promotion.update(dep_itg.all_dependencies)
+
+    stage_2_domains = domains_to_setup - logging_domains - debuggers - stage_1_domains
+
     # Load the registries
     await asyncio.gather(
         device_registry.async_load(hass),
         entity_registry.async_load(hass),
         area_registry.async_load(hass),
-    )
-
-    # Start up recorder and frontend.
-    # Start these as soon as possible in case there is a database issue we
-    # need to report on the frontend
-    stage_0_domains = (
-        async_domains_with_deps_promoted(
-            STAGE_0_INTEGRATIONS, domains_to_setup, integration_cache
-        )
-        - logging_domains
-        - debuggers
-    )
-
-    if stage_0_domains:
-        _LOGGER.debug("Setting up stage 0: %s", stage_0_domains)
-        try:
-            async with hass.timeout.async_timeout(
-                STAGE_0_TIMEOUT, cool_down=COOLDOWN_TIME
-            ):
-                await async_setup_multi_components(hass, stage_0_domains, config)
-        except asyncio.TimeoutError:
-            _LOGGER.warning("Setup timed out for stage 0 - moving forward")
-
-    # calculate what components to setup in what stage
-    stage_1_domains = (
-        async_domains_with_deps_promoted(
-            STAGE_1_INTEGRATIONS, domains_to_setup, integration_cache
-        )
-        - logging_domains
-        - debuggers
-        - stage_0_domains
-    )
-
-    stage_2_domains = (
-        domains_to_setup
-        - logging_domains
-        - debuggers
-        - stage_0_domains
-        - stage_1_domains
     )
 
     # Start setup
@@ -624,4 +578,5 @@ async def _async_set_up_integrations(
             await hass.async_block_till_done()
     except asyncio.TimeoutError:
         _LOGGER.warning("Setup timed out for bootstrap - moving forward")
+
     _LOGGER.debug("Wrap up complete")
