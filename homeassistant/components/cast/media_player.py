@@ -231,6 +231,12 @@ class CastDevice(MediaPlayerEntity):
             ChromeCastZeroconf.get_zeroconf(),
         )
         self._chromecast = chromecast
+        _LOGGER.debug(
+            "[%s %s] DONE Connecting to cast device by service %s",
+            self.entity_id,
+            self._cast_info.friendly_name,
+            self.services,
+        )
 
         if CAST_MULTIZONE_MANAGER_KEY not in self.hass.data:
             self.hass.data[CAST_MULTIZONE_MANAGER_KEY] = MultizoneManager()
@@ -241,7 +247,20 @@ class CastDevice(MediaPlayerEntity):
         self._available = False
         self.cast_status = chromecast.status
         self.media_status = chromecast.media_controller.status
+
+        _LOGGER.debug(
+            "[%s %s] CALLING START Connecting to cast device by service %s",
+            self.entity_id,
+            self._cast_info.friendly_name,
+            self.services,
+        )
         self._chromecast.start()
+        _LOGGER.debug(
+            "[%s %s] DONE CALLING START Connecting to cast device by service %s",
+            self.entity_id,
+            self._cast_info.friendly_name,
+            self.services,
+        )
         self.async_write_ha_state()
 
     async def _async_disconnect(self):
