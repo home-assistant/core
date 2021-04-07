@@ -422,7 +422,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         try:
             cur_temp = float(state.state)
             if math.isnan(cur_temp) or math.isinf(cur_temp):
-                raise ValueError
+                raise ValueError(f"Sensor has illegal state {state.state}")
             self._cur_temp = cur_temp
         except ValueError as ex:
             _LOGGER.error("Unable to update from sensor: %s", ex)
