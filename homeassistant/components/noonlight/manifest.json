@@ -1,0 +1,14 @@
+{
+  "domain": "noonlight",
+  "name": "Noonlight",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/noonlight",
+  "requirements": ["noonlight-tjdavisbz"],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@tjdavisbz"
+  ]
+}
