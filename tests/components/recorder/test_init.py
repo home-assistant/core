@@ -53,6 +53,7 @@ async def test_shutdown_before_startup_finishes(hass):
     hass.state = CoreState.not_running
 
     await async_init_recorder_component(hass)
+    await hass.data[DATA_INSTANCE].async_db_ready
     await hass.async_block_till_done()
 
     session = await hass.async_add_executor_job(hass.data[DATA_INSTANCE].get_session)
