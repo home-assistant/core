@@ -206,6 +206,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def start_recorder(*_) -> None:
         """Start the recorder."""
         with async_start_setup(hass, ["recorder"]):
+            await asyncio.sleep(200)
             await instance.async_db_ready
 
     async_when_setup_or_start(hass, "frontend", start_recorder)
