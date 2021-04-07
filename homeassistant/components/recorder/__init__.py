@@ -664,7 +664,7 @@ class Recorder(threading.Thread):
                 # instead of every time we open the sqlite connection
                 # as its persistent and isn't free to call every time.
                 self._completed_database_setup = True
-            elif self.engine.dialect.name == "mysql":
+            elif self.db_url.startswith("mysql"):
                 cursor = dbapi_connection.cursor()
                 cursor.execute("SET session wait_timeout=28800")
                 cursor.close()
