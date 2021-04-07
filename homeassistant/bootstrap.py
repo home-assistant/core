@@ -24,7 +24,7 @@ from homeassistant.helpers.aiohttp_client import install_clientsession_catcher
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.recorder import (
     RECORDER_DOMAIN,
-    async_ensure_recorder_is_ready,
+    async_wait_for_recorder_full_startup,
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import (
@@ -546,7 +546,7 @@ async def _async_set_up_integrations(
                 STAGE_1_TIMEOUT, cool_down=COOLDOWN_TIME
             ):
                 await async_setup_multi_components(hass, stage_1_domains, config)
-                await async_ensure_recorder_is_ready(hass)
+                await async_wait_for_recorder_full_startup(hass)
 
         except asyncio.TimeoutError:
             _LOGGER.warning("Setup timed out for stage 1 - moving forward")
