@@ -229,6 +229,7 @@ class ZhaGroupEntity(BaseZhaEntity):
         self._entity_ids: list[str] = entity_ids
         self._async_unsub_state_changed: CALLBACK_TYPE | None = None
         self._handled_group_membership = False
+        self._ignore_member_changes = False
 
     @property
     def available(self) -> bool:
@@ -269,6 +270,8 @@ class ZhaGroupEntity(BaseZhaEntity):
     @callback
     def async_state_changed_listener(self, event: Event):
         """Handle child updates."""
+        if self._ignore_member_changes:
+            return
         # Delay to ensure that we get updates from all members before updating the group
         self.hass.loop.call_later(
             UPDATE_GROUP_FROM_CHILD_DELAY,
