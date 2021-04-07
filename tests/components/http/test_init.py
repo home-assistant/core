@@ -6,7 +6,6 @@ from unittest.mock import Mock, patch
 import pytest
 
 import homeassistant.components.http as http
-from homeassistant.core import CoreState
 from homeassistant.setup import async_setup_component
 from homeassistant.util.ssl import server_context_intermediate, server_context_modern
 
@@ -116,7 +115,6 @@ async def test_proxy_config_only_trust_proxies(hass):
 
 async def test_ssl_profile_defaults_modern(hass):
     """Test default ssl profile."""
-    hass.state = CoreState.not_running
     assert await async_setup_component(hass, "http", {}) is True
 
     hass.http.ssl_certificate = "bla"
@@ -133,7 +131,6 @@ async def test_ssl_profile_defaults_modern(hass):
 
 async def test_ssl_profile_change_intermediate(hass):
     """Test setting ssl profile to intermediate."""
-    hass.state = CoreState.not_running
     assert (
         await async_setup_component(
             hass, "http", {"http": {"ssl_profile": "intermediate"}}
@@ -155,7 +152,6 @@ async def test_ssl_profile_change_intermediate(hass):
 
 async def test_ssl_profile_change_modern(hass):
     """Test setting ssl profile to modern."""
-    hass.state = CoreState.not_running
     assert (
         await async_setup_component(hass, "http", {"http": {"ssl_profile": "modern"}})
         is True
