@@ -727,18 +727,19 @@ class Recorder(threading.Thread):
             session.flush()
             session.expunge(self.run_info)
 
+    def _end_session(self):
+        """End the recorder session."""
+        self.run_info.end = dt_util.utcnow()
+        self.event_session.add(self.run_info)
+        try:
+            self._commit_event_session_or_retry()
+            self.event_session.close()
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.exception("Error saving the event session during shutdown: %s", err)
+
     def _shutdown(self):
         """Save end time for current run."""
         if self.event_session is not None:
-            self.run_info.end = dt_util.utcnow()
-            self.event_session.add(self.run_info)
-            try:
-                self._commit_event_session_or_retry()
-                self.event_session.close()
-            except Exception as err:  # pylint: disable=broad-except
-                _LOGGER.exception(
-                    "Error saving the event session during shutdown: %s", err
-                )
-
+            self._end_session()
         self.run_info = None
         self._close_connection()
