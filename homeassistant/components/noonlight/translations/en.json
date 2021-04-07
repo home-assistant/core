@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "single_instance_allowed": "You can currently only have one instance of the Noonlight integration."
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "title": "Noonlight Authentication Information",
+                "description": "Visit developer.noonlight.com to create a Sandbox account.   A Production account will require requesting an agreement from a Noonlight representative.  Please note that Production accounts are NOT free but allow for DIY alarm monitoring at a very reasonable price.   Only US addresses and numbers are supported.\n\n\n",
+                "data": {
+                    "api_token": "Noonlight Server Token",
+                    "mode": "Sandbox or Production",
+                    "name": "Your Full Name",
+                    "address": "Address Line 1",
+                    "city": "City",
+                    "state": "State",
+                    "zip_code": "Zip Code",
+                    "services": "Service Required",
+                    "instructions": "Instructions for Emergency Responder to Enter Your Property.",
+                    "phone": "Phone Number.  Must be 10 digits starting with a '1'",
+                    "pin": "Pin for Canceling the Alarm"
+                }
+
+            }
+        }
+    },
+    "title": "Noonlight"
+
+}
