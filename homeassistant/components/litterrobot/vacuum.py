@@ -53,8 +53,7 @@ async def async_setup_entry(
             LitterRobotCleaner(robot=robot, entity_type=TYPE_LITTER_BOX, hub=hub)
         )
 
-    if entities:
-        async_add_entities(entities, True)
+    async_add_entities(entities, True)
 
     platform = entity_platform.current_platform.get()
     platform.async_register_entity_service(

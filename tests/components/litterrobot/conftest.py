@@ -33,13 +33,15 @@ def create_mock_robot(
 
 
 def create_mock_account(
-    robot_data: Optional[dict] = None, side_effect: Optional[Any] = None
+    robot_data: Optional[dict] = None,
+    side_effect: Optional[Any] = None,
+    skip_robots: bool = False,
 ) -> MagicMock:
     """Create a mock Litter-Robot account."""
     account = MagicMock(spec=Account)
     account.connect = AsyncMock()
     account.refresh_robots = AsyncMock()
-    account.robots = [create_mock_robot(robot_data, side_effect)]
+    account.robots = [] if skip_robots else [create_mock_robot(robot_data, side_effect)]
     return account
 
 
@@ -47,6 +49,12 @@ def create_mock_account(
 def mock_account() -> MagicMock:
     """Mock a Litter-Robot account."""
     return create_mock_account()
+
+
+@pytest.fixture
+def mock_account_with_no_robots() -> MagicMock:
+    """Mock a Litter-Robot account."""
+    return create_mock_account(skip_robots=True)
 
 
 @pytest.fixture

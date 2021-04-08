@@ -76,5 +76,4 @@ async def async_setup_entry(
         for switch_class, switch_type in ROBOT_SWITCHES:
             entities.append(switch_class(robot=robot, entity_type=switch_type, hub=hub))
 
-    if entities:
-        async_add_entities(entities, True)
+    async_add_entities(entities, True)

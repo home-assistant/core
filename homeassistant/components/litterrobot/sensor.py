@@ -100,5 +100,4 @@ async def async_setup_entry(
                 )
             )
 
-    if entities:
-        async_add_entities(entities, True)
+    async_add_entities(entities, True)
