@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "no_home": "Nessuna coordinata di casa \u00e8 impostata nella configurazione di Home Assistant"
-        },
         "error": {
             "already_configured": "Il servizio \u00e8 gi\u00e0 configurato"
         },
@@ -14,7 +11,7 @@
                     "longitude": "Logitudine",
                     "name": "Nome"
                 },
-                "description": "Meteorologisk institutt",
+                "description": "Inserisci la tua posizione per utilizzare i dati meteorologici dall'API Met \u00c9ireann Public Weather Forecast",
                 "title": "Posizione"
             }
         }

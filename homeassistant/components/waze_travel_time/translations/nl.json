@@ -9,8 +9,11 @@
         "step": {
             "user": {
                 "data": {
-                    "destination": "Bestemming"
-                }
+                    "destination": "Bestemming",
+                    "origin": "Vertrekpunt",
+                    "region": "Regio"
+                },
+                "description": "Voor Vertrekpunt en Bestemming voert u het adres of de GPS-co\u00f6rdinaten van de locatie in (GPS-co\u00f6rdinaten moeten worden gescheiden door een komma). U kunt ook een entiteits-id invoeren die deze informatie in zijn status geeft, een entiteits-id met lengte- en breedtegraadattributen, of een zone-vriendelijke naam."
             }
         }
     },
@@ -18,6 +21,8 @@
         "step": {
             "init": {
                 "data": {
+                    "avoid_ferries": "Veerboten vermijden?",
+                    "avoid_subscription_roads": "Vermijd wegen die een vignet / abonnement nodig hebben?",
                     "avoid_toll_roads": "Tolwegen vermijden?",
                     "excl_filter": "Substring NIET in beschrijving van geselecteerde route",
                     "incl_filter": "Substring in beschrijving van geselecteerde route",

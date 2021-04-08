@@ -5,7 +5,6 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
-            "timeout": "Timeout/No answer",
             "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },
