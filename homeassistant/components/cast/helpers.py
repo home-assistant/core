@@ -15,13 +15,13 @@ class ChromecastInfo:
     This also has the same attributes as the mDNS fields by zeroconf.
     """
 
-    services: Optional[set] = attr.ib()
-    uuid: Optional[str] = attr.ib(
+    services: set | None = attr.ib()
+    uuid: str | None = attr.ib(
         converter=attr.converters.optional(str), default=None
     )  # always convert UUID to string if not None
     _manufacturer = attr.ib(type=Optional[str], default=None)
     model_name: str = attr.ib(default="")
-    friendly_name: Optional[str] = attr.ib(default=None)
+    friendly_name: str | None = attr.ib(default=None)
     is_audio_group = attr.ib(type=Optional[bool], default=False)
     is_dynamic_group = attr.ib(type=Optional[bool], default=None)
 

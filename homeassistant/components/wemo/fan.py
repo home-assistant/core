@@ -115,7 +115,7 @@ class WemoHumidifier(WemoSubscriptionEntity, FanEntity):
         return "mdi:water-percent"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         return {
             ATTR_CURRENT_HUMIDITY: self._current_humidity,

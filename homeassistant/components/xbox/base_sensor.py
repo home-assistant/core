@@ -1,5 +1,5 @@
 """Base Sensor for the Xbox Integration."""
-from typing import Optional
+from __future__ import annotations
 
 from yarl import URL
 
@@ -24,7 +24,7 @@ class XboxBaseSensorEntity(CoordinatorEntity):
         return f"{self.xuid}_{self.attribute}"
 
     @property
-    def data(self) -> Optional[PresenceData]:
+    def data(self) -> PresenceData | None:
         """Return coordinator data for this console."""
         return self.coordinator.data.presence.get(self.xuid)
 

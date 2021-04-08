@@ -21,8 +21,8 @@
                 "data": {
                     "discovery": "Enable discovery"
                 },
-                "description": "Do you want to configure Home Assistant to connect to the MQTT broker provided by the Hass.io add-on {addon}?",
-                "title": "MQTT Broker via Hass.io add-on"
+                "description": "Do you want to configure Home Assistant to connect to the MQTT broker provided by the add-on {addon}?",
+                "title": "MQTT Broker via Home Assistant add-on"
             }
         }
     },

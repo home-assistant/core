@@ -62,8 +62,6 @@ from .const import (
     MODEL_AIRHUMIDIFIER_CA4,
     MODEL_AIRHUMIDIFIER_CB1,
     MODEL_AIRPURIFIER_2S,
-    MODEL_AIRPURIFIER_3,
-    MODEL_AIRPURIFIER_3H,
     MODEL_AIRPURIFIER_PRO,
     MODEL_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V3,
@@ -651,7 +649,7 @@ class XiaomiGenericDevice(XiaomiMiioEntity, FanEntity):
         return self._available
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
         return self._state_attrs
 
@@ -786,7 +784,7 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_2S
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_2S
             self._speed_list = OPERATION_MODES_AIRPURIFIER_2S
-        elif self._model == MODEL_AIRPURIFIER_3 or self._model == MODEL_AIRPURIFIER_3H:
+        elif self._model in MODELS_PURIFIER_MIOT:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_3
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_3
             self._speed_list = OPERATION_MODES_AIRPURIFIER_3

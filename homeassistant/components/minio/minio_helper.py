@@ -1,4 +1,6 @@
 """Minio helper methods."""
+from __future__ import annotations
+
 from collections.abc import Iterable
 import json
 import logging
@@ -6,7 +8,7 @@ from queue import Queue
 import re
 import threading
 import time
-from typing import Iterator, List
+from typing import Iterator
 from urllib.parse import unquote
 
 from minio import Minio
@@ -38,7 +40,7 @@ def create_minio_client(
 
 
 def get_minio_notification_response(
-    minio_client, bucket_name: str, prefix: str, suffix: str, events: List[str]
+    minio_client, bucket_name: str, prefix: str, suffix: str, events: list[str]
 ):
     """Start listening to minio events. Copied from minio-py."""
     query = {"prefix": prefix, "suffix": suffix, "events": events}
@@ -87,7 +89,7 @@ class MinioEventThread(threading.Thread):
         bucket_name: str,
         prefix: str,
         suffix: str,
-        events: List[str],
+        events: list[str],
     ):
         """Copy over all Minio client options."""
         super().__init__()

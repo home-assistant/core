@@ -238,7 +238,7 @@ class UniFiPOEClientSwitch(UniFiClient, SwitchEntity, RestoreEntity):
         await self.device.async_set_port_poe_mode(self.client.sw_port, "off")
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         attributes = {
             "power": self.port.poe_power,
@@ -279,10 +279,11 @@ class UniFiBlockClientSwitch(UniFiClient, SwitchEntity):
     @callback
     def async_update_callback(self) -> None:
         """Update the clients state."""
-        if self.client.last_updated == SOURCE_EVENT:
-
-            if self.client.event.event in CLIENT_BLOCKED + CLIENT_UNBLOCKED:
-                self._is_blocked = self.client.event.event in CLIENT_BLOCKED
+        if (
+            self.client.last_updated == SOURCE_EVENT
+            and self.client.event.event in CLIENT_BLOCKED + CLIENT_UNBLOCKED
+        ):
+            self._is_blocked = self.client.event.event in CLIENT_BLOCKED
 
         super().async_update_callback()
 

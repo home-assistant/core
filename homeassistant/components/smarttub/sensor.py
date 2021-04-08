@@ -2,6 +2,8 @@
 from enum import Enum
 import logging
 
+from homeassistant.components.sensor import SensorEntity
+
 from .const import DOMAIN, SMARTTUB_CONTROLLER
 from .entity import SmartTubSensorBase
 
@@ -44,7 +46,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(entities)
 
 
-class SmartTubSensor(SmartTubSensorBase):
+class SmartTubSensor(SmartTubSensorBase, SensorEntity):
     """Generic class for SmartTub status sensors."""
 
     @property
@@ -70,7 +72,7 @@ class SmartTubPrimaryFiltrationCycle(SmartTubSensor):
         return self._state.status.name.lower()
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         state = self._state
         return {
@@ -96,7 +98,7 @@ class SmartTubSecondaryFiltrationCycle(SmartTubSensor):
         return self._state.status.name.lower()
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         state = self._state
         return {

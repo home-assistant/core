@@ -109,7 +109,7 @@ class TodSensor(BinarySensorEntity):
         return self._next_update
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
             ATTR_AFTER: self.after.astimezone(self.hass.config.time_zone).isoformat(),
@@ -172,20 +172,6 @@ class TodSensor(BinarySensorEntity):
                 before_event_date += timedelta(days=1)
 
         self._time_before = before_event_date
-
-        # We are calculating the _time_after value assuming that it will happen today
-        # But that is not always true, e.g. after 23:00, before 12:00 and now is 10:00
-        # If _time_before and _time_after are ahead of current_datetime:
-        # _time_before is set to 12:00 next day
-        # _time_after is set to 23:00 today
-        # current_datetime is set to 10:00 today
-        if (
-            self._time_after > self.current_datetime
-            and self._time_before > self.current_datetime + timedelta(days=1)
-        ):
-            # remove one day from _time_before and _time_after
-            self._time_after -= timedelta(days=1)
-            self._time_before -= timedelta(days=1)
 
         # Add offset to utc boundaries according to the configuration
         self._time_after += self._after_offset

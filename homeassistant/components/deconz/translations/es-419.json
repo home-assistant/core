@@ -13,8 +13,8 @@
         "flow_title": "Puerta de enlace Zigbee deCONZ ({host})",
         "step": {
             "hassio_confirm": {
-                "description": "\u00bfDesea configurar Home Assistant para conectarse a la puerta de enlace deCONZ proporcionada por el complemento hass.io {addon}?",
-                "title": "deCONZ Zigbee gateway a trav\u00e9s del complemento Hass.io"
+                "description": "\u00bfDesea configurar Home Assistant para conectarse a la puerta de enlace deCONZ proporcionada por el complemento Supervisor {addon}?",
+                "title": "deCONZ Zigbee gateway a trav\u00e9s del complemento Supervisor"
             },
             "link": {
                 "description": "Desbloquee su puerta de enlace deCONZ para registrarse con Home Assistant. \n\n 1. Vaya a Configuraci\u00f3n deCONZ - > Gateway - > Avanzado \n 2. Presione el bot\u00f3n \"Autenticar aplicaci\u00f3n\"",

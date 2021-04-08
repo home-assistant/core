@@ -1,6 +1,7 @@
 """Support for ESPHome cameras."""
+from __future__ import annotations
+
 import asyncio
-from typing import Optional
 
 from aioesphomeapi import CameraInfo, CameraState
 
@@ -42,7 +43,7 @@ class EsphomeCamera(Camera, EsphomeBaseEntity):
         return super()._static_info
 
     @property
-    def _state(self) -> Optional[CameraState]:
+    def _state(self) -> CameraState | None:
         return super()._state
 
     async def async_added_to_hass(self) -> None:
@@ -67,7 +68,7 @@ class EsphomeCamera(Camera, EsphomeBaseEntity):
         async with self._image_cond:
             self._image_cond.notify_all()
 
-    async def async_camera_image(self) -> Optional[bytes]:
+    async def async_camera_image(self) -> bytes | None:
         """Return single camera image bytes."""
         if not self.available:
             return None
@@ -78,7 +79,7 @@ class EsphomeCamera(Camera, EsphomeBaseEntity):
                 return None
             return self._state.image[:]
 
-    async def _async_camera_stream_image(self) -> Optional[bytes]:
+    async def _async_camera_stream_image(self) -> bytes | None:
         """Return a single camera image in a stream."""
         if not self.available:
             return None

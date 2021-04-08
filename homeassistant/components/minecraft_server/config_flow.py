@@ -1,4 +1,5 @@
 """Config flow for Minecraft Server integration."""
+from contextlib import suppress
 from functools import partial
 import ipaddress
 
@@ -10,12 +11,7 @@ from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 
 from . import MinecraftServer, helpers
-from .const import (  # pylint: disable=unused-import
-    DEFAULT_HOST,
-    DEFAULT_NAME,
-    DEFAULT_PORT,
-    DOMAIN,
-)
+from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 
 
 class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -40,10 +36,8 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
                 host = address_right
             else:
                 host = address_left
-                try:
+                with suppress(ValueError):
                     port = int(address_right)
-                except ValueError:
-                    pass  # 'port' is already set to default value.
 
             # Remove '[' and ']' in case of an IPv6 address.
             host = host.strip("[]")

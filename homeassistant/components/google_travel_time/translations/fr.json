@@ -1,0 +1,23 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "common::config_flow::data::api_key",
+                    "origin": "Origine"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "language": "Langue",
+                    "units": "Unit\u00e9s"
+                }
+            }
+        }
+    },
+    "title": "Temps de trajet Google Maps"
+}

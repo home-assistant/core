@@ -50,9 +50,8 @@ class HlsMasterPlaylistView(StreamView):
         track = stream.add_provider("hls")
         stream.start()
         # Wait for a segment to be ready
-        if not track.segments:
-            if not await track.recv():
-                return web.HTTPNotFound()
+        if not track.segments and not await track.recv():
+            return web.HTTPNotFound()
         headers = {"Content-Type": FORMAT_CONTENT_TYPE["hls"]}
         return web.Response(body=self.render(track).encode("utf-8"), headers=headers)
 
@@ -110,9 +109,8 @@ class HlsPlaylistView(StreamView):
         track = stream.add_provider("hls")
         stream.start()
         # Wait for a segment to be ready
-        if not track.segments:
-            if not await track.recv():
-                return web.HTTPNotFound()
+        if not track.segments and not await track.recv():
+            return web.HTTPNotFound()
         headers = {"Content-Type": FORMAT_CONTENT_TYPE["hls"]}
         return web.Response(body=self.render(track).encode("utf-8"), headers=headers)
 

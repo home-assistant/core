@@ -26,7 +26,7 @@ import homeassistant.util.dt as dt_util
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 12
+SCHEMA_VERSION = 13
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,6 +38,10 @@ TABLE_RECORDER_RUNS = "recorder_runs"
 TABLE_SCHEMA_CHANGES = "schema_changes"
 
 ALL_TABLES = [TABLE_STATES, TABLE_EVENTS, TABLE_RECORDER_RUNS, TABLE_SCHEMA_CHANGES]
+
+DATETIME_TYPE = DateTime(timezone=True).with_variant(
+    mysql.DATETIME(timezone=True, fsp=6), "mysql"
+)
 
 
 class Events(Base):  # type: ignore
@@ -52,8 +56,8 @@ class Events(Base):  # type: ignore
     event_type = Column(String(64))
     event_data = Column(Text().with_variant(mysql.LONGTEXT, "mysql"))
     origin = Column(String(32))
-    time_fired = Column(DateTime(timezone=True), index=True)
-    created = Column(DateTime(timezone=True), default=dt_util.utcnow)
+    time_fired = Column(DATETIME_TYPE, index=True)
+    created = Column(DATETIME_TYPE, default=dt_util.utcnow)
     context_id = Column(String(36), index=True)
     context_user_id = Column(String(36), index=True)
     context_parent_id = Column(String(36), index=True)
@@ -63,6 +67,15 @@ class Events(Base):  # type: ignore
         # see logbook
         Index("ix_events_event_type_time_fired", "event_type", "time_fired"),
     )
+
+    def __repr__(self) -> str:
+        """Return string representation of instance for debugging."""
+        return (
+            f"<recorder.Events("
+            f"id={self.event_id}, type='{self.event_type}', data='{self.event_data}', "
+            f"origin='{self.origin}', time_fired='{self.time_fired}'"
+            f")>"
+        )
 
     @staticmethod
     def from_event(event, event_data=None):
@@ -114,9 +127,9 @@ class States(Base):  # type: ignore
     event_id = Column(
         Integer, ForeignKey("events.event_id", ondelete="CASCADE"), index=True
     )
-    last_changed = Column(DateTime(timezone=True), default=dt_util.utcnow)
-    last_updated = Column(DateTime(timezone=True), default=dt_util.utcnow, index=True)
-    created = Column(DateTime(timezone=True), default=dt_util.utcnow)
+    last_changed = Column(DATETIME_TYPE, default=dt_util.utcnow)
+    last_updated = Column(DATETIME_TYPE, default=dt_util.utcnow, index=True)
+    created = Column(DATETIME_TYPE, default=dt_util.utcnow)
     old_state_id = Column(
         Integer, ForeignKey("states.state_id", ondelete="NO ACTION"), index=True
     )
@@ -128,6 +141,17 @@ class States(Base):  # type: ignore
         # (get_states in history.py)
         Index("ix_states_entity_id_last_updated", "entity_id", "last_updated"),
     )
+
+    def __repr__(self) -> str:
+        """Return string representation of instance for debugging."""
+        return (
+            f"<recorder.States("
+            f"id={self.state_id}, domain='{self.domain}', entity_id='{self.entity_id}', "
+            f"state='{self.state}', event_id='{self.event_id}', "
+            f"last_updated='{self.last_updated.isoformat(sep=' ', timespec='seconds')}', "
+            f"old_state_id={self.old_state_id}"
+            f")>"
+        )
 
     @staticmethod
     def from_event(event):
@@ -185,6 +209,19 @@ class RecorderRuns(Base):  # type: ignore
 
     __table_args__ = (Index("ix_recorder_runs_start_end", "start", "end"),)
 
+    def __repr__(self) -> str:
+        """Return string representation of instance for debugging."""
+        end = (
+            f"'{self.end.isoformat(sep=' ', timespec='seconds')}'" if self.end else None
+        )
+        return (
+            f"<recorder.RecorderRuns("
+            f"id={self.run_id}, start='{self.start.isoformat(sep=' ', timespec='seconds')}', "
+            f"end={end}, closed_incorrect={self.closed_incorrect}, "
+            f"created='{self.created.isoformat(sep=' ', timespec='seconds')}'"
+            f")>"
+        )
+
     def entity_ids(self, point_in_time=None):
         """Return the entity ids that existed in this run.
 
@@ -218,6 +255,15 @@ class SchemaChanges(Base):  # type: ignore
     change_id = Column(Integer, primary_key=True)
     schema_version = Column(Integer)
     changed = Column(DateTime(timezone=True), default=dt_util.utcnow)
+
+    def __repr__(self) -> str:
+        """Return string representation of instance for debugging."""
+        return (
+            f"<recorder.SchemaChanges("
+            f"id={self.change_id}, schema_version={self.schema_version}, "
+            f"changed='{self.changed.isoformat(sep=' ', timespec='seconds')}'"
+            f")>"
+        )
 
 
 def process_timestamp(ts):

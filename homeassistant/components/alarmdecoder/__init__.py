@@ -39,11 +39,6 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["alarm_control_panel", "sensor", "binary_sensor"]
 
 
-async def async_setup(hass, config):
-    """Set up for the AlarmDecoder devices."""
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Set up AlarmDecoder config flow."""
     undo_listener = entry.add_update_listener(_update_listener)

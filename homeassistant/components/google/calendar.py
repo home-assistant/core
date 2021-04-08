@@ -80,7 +80,7 @@ class GoogleCalendarEventDevice(CalendarEventDevice):
         self.entity_id = entity_id
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         return {"offset_reached": self._offset_reached}
 

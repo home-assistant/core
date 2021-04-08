@@ -6,6 +6,7 @@ from typing import Callable
 
 from adguardhome import AdGuardHome, AdGuardHomeConnectionError
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, TIME_MILLISECONDS
 from homeassistant.core import HomeAssistant
@@ -48,7 +49,7 @@ async def async_setup_entry(
     async_add_entities(sensors, True)
 
 
-class AdGuardHomeSensor(AdGuardHomeDeviceEntity):
+class AdGuardHomeSensor(AdGuardHomeDeviceEntity, SensorEntity):
     """Defines a AdGuard Home sensor."""
 
     def __init__(
@@ -232,4 +233,4 @@ class AdGuardHomeRulesCountSensor(AdGuardHomeSensor):
 
     async def _adguard_update(self) -> None:
         """Update AdGuard Home entity."""
-        self._state = await self.adguard.filtering.rules_count()
+        self._state = await self.adguard.filtering.rules_count(allowlist=False)

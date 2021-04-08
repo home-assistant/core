@@ -1,5 +1,5 @@
 """Test the Dyson fan component."""
-from typing import Type
+from __future__ import annotations
 
 from libpurecool.const import FanMode, FanSpeed, NightMode, Oscillation
 from libpurecool.dyson_pure_cool import DysonPureCool, DysonPureCoolLink
@@ -67,7 +67,7 @@ ENTITY_ID = f"{PLATFORM_DOMAIN}.{ENTITY_NAME}"
 
 
 @callback
-def async_get_device(spec: Type[DysonPureCoolLink]) -> DysonPureCoolLink:
+def async_get_device(spec: type[DysonPureCoolLink]) -> DysonPureCoolLink:
     """Return a Dyson fan device."""
     if spec == DysonPureCoolLink:
         return async_get_purecoollink_device()

@@ -241,7 +241,7 @@ class XiaomiDevice(Entity):
         self._type = device_type
         self._write_to_hub = xiaomi_hub.write_to_hub
         self._get_from_hub = xiaomi_hub.get_from_hub
-        self._device_state_attributes = {}
+        self._extra_state_attributes = {}
         self._remove_unavailability_tracker = None
         self._xiaomi_hub = xiaomi_hub
         self.parse_data(device["data"], device["raw_data"])
@@ -319,9 +319,9 @@ class XiaomiDevice(Entity):
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
-        return self._device_state_attributes
+        return self._extra_state_attributes
 
     @callback
     def _async_set_unavailable(self, now):
@@ -364,11 +364,11 @@ class XiaomiDevice(Entity):
         max_volt = 3300
         min_volt = 2800
         voltage = data[voltage_key]
-        self._device_state_attributes[ATTR_VOLTAGE] = round(voltage / 1000.0, 2)
+        self._extra_state_attributes[ATTR_VOLTAGE] = round(voltage / 1000.0, 2)
         voltage = min(voltage, max_volt)
         voltage = max(voltage, min_volt)
         percent = ((voltage - min_volt) / (max_volt - min_volt)) * 100
-        self._device_state_attributes[ATTR_BATTERY_LEVEL] = round(percent, 1)
+        self._extra_state_attributes[ATTR_BATTERY_LEVEL] = round(percent, 1)
         return True
 
     def parse_data(self, data, raw_data):

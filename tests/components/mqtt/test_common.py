@@ -20,6 +20,7 @@ DEFAULT_CONFIG_DEVICE_INFO_ID = {
     "name": "Beer",
     "model": "Glass",
     "sw_version": "0.1-beta",
+    "suggested_area": "default_area",
 }
 
 DEFAULT_CONFIG_DEVICE_INFO_MAC = {
@@ -28,6 +29,7 @@ DEFAULT_CONFIG_DEVICE_INFO_MAC = {
     "name": "Beer",
     "model": "Glass",
     "sw_version": "0.1-beta",
+    "suggested_area": "default_area",
 }
 
 
@@ -739,6 +741,7 @@ async def help_test_entity_device_info_with_identifier(hass, mqtt_mock, domain, 
     assert device.name == "Beer"
     assert device.model == "Glass"
     assert device.sw_version == "0.1-beta"
+    assert device.suggested_area == "default_area"
 
 
 async def help_test_entity_device_info_with_connection(hass, mqtt_mock, domain, config):
@@ -764,6 +767,7 @@ async def help_test_entity_device_info_with_connection(hass, mqtt_mock, domain, 
     assert device.name == "Beer"
     assert device.model == "Glass"
     assert device.sw_version == "0.1-beta"
+    assert device.suggested_area == "default_area"
 
 
 async def help_test_entity_device_info_remove(hass, mqtt_mock, domain, config):
@@ -1142,3 +1146,39 @@ async def help_test_entity_debug_info_update_entity_id(hass, mqtt_mock, domain, 
     assert (
         f"{domain}.test" not in hass.data[debug_info.DATA_MQTT_DEBUG_INFO]["entities"]
     )
+
+
+async def help_test_entity_disabled_by_default(hass, mqtt_mock, domain, config):
+    """Test device registry remove."""
+    # Add device settings to config
+    config = copy.deepcopy(config[domain])
+    config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
+    config["enabled_by_default"] = False
+    config["unique_id"] = "veryunique1"
+
+    dev_registry = dr.async_get(hass)
+    ent_registry = er.async_get(hass)
+
+    # Discover a disabled entity
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla1/config", data)
+    await hass.async_block_till_done()
+    entity_id = ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, "veryunique1")
+    assert not hass.states.get(entity_id)
+    assert dev_registry.async_get_device({("mqtt", "helloworld")})
+
+    # Discover an enabled entity, tied to the same device
+    config["enabled_by_default"] = True
+    config["unique_id"] = "veryunique2"
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla2/config", data)
+    await hass.async_block_till_done()
+    entity_id = ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, "veryunique2")
+    assert hass.states.get(entity_id)
+
+    # Remove the enabled entity, both entities and the device should be removed
+    async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla2/config", "")
+    await hass.async_block_till_done()
+    assert not ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, "veryunique1")
+    assert not ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, "veryunique2")
+    assert not dev_registry.async_get_device({("mqtt", "helloworld")})
