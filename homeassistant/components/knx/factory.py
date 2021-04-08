@@ -84,6 +84,7 @@ def _create_cover(knx_module: XKNX, config: ConfigType) -> XknxCover:
         ),
         group_address_angle=config.get(CoverSchema.CONF_ANGLE_ADDRESS),
         group_address_angle_state=config.get(CoverSchema.CONF_ANGLE_STATE_ADDRESS),
+        group_address_locked_state=config.get(CoverSchema.CONF_LOCKED_STATE_ADDRESS),
         group_address_position=config.get(CoverSchema.CONF_POSITION_ADDRESS),
         travel_time_down=config[CoverSchema.CONF_TRAVELLING_TIME_DOWN],
         travel_time_up=config[CoverSchema.CONF_TRAVELLING_TIME_UP],

@@ -26,7 +26,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_utc_time_change
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN
+from .const import ATTR_MOVEMENT_LOCKED, DOMAIN
 from .knx_entity import KnxEntity
 
 
@@ -112,6 +112,13 @@ class KNXCover(KnxEntity, CoverEntity):
     def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
         return self._device.is_closing()
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return device specific state attributes."""
+        if self._device.supports_locked:
+            return {ATTR_MOVEMENT_LOCKED: self._device.is_locked()}
+        return None
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""

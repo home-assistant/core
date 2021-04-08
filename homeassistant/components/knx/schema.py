@@ -220,6 +220,7 @@ class CoverSchema:
     CONF_POSITION_STATE_ADDRESS = "position_state_address"
     CONF_ANGLE_ADDRESS = "angle_address"
     CONF_ANGLE_STATE_ADDRESS = "angle_state_address"
+    CONF_LOCKED_STATE_ADDRESS = "locked_state_address"
     CONF_TRAVELLING_TIME_DOWN = "travelling_time_down"
     CONF_TRAVELLING_TIME_UP = "travelling_time_up"
     CONF_INVERT_POSITION = "invert_position"
@@ -238,6 +239,7 @@ class CoverSchema:
             vol.Optional(CONF_POSITION_STATE_ADDRESS): ga_list_validator,
             vol.Optional(CONF_ANGLE_ADDRESS): ga_list_validator,
             vol.Optional(CONF_ANGLE_STATE_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_LOCKED_STATE_ADDRESS): ga_list_validator,
             vol.Optional(
                 CONF_TRAVELLING_TIME_DOWN, default=DEFAULT_TRAVEL_TIME
             ): cv.positive_float,

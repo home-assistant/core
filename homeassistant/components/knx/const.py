@@ -25,6 +25,7 @@ CONF_STATE_ADDRESS = "state_address"
 CONF_SYNC_STATE = "sync_state"
 CONF_RESET_AFTER = "reset_after"
 
+ATTR_MOVEMENT_LOCKED = "movement_locked"
 ATTR_COUNTER = "counter"
 
 
