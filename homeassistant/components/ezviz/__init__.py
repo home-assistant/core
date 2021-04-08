@@ -3,8 +3,7 @@ import asyncio
 from datetime import timedelta
 import logging
 
-from pyezviz.client import EzvizClient, PyEzvizError
-from requests import ConnectTimeout, HTTPError
+from pyezviz.client import EzvizClient, HTTPError, InvalidURL, PyEzvizError
 
 from homeassistant.const import (
     CONF_PASSWORD,
@@ -73,7 +72,7 @@ async def async_setup_entry(hass, entry):
         ezviz_client = await hass.async_add_executor_job(
             _get_ezviz_client_instance, entry
         )
-    except (ConnectTimeout, HTTPError, PyEzvizError) as error:
+    except (InvalidURL, HTTPError, PyEzvizError) as error:
         _LOGGER.error("Unable to connect to Ezviz service: %s", str(error))
         raise ConfigEntryNotReady from error
 

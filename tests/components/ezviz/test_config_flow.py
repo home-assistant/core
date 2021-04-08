@@ -1,11 +1,9 @@
 """Test the Ezviz config flow."""
 
-from socket import error as SocketConnectionRefusedError, gaierror
 from unittest.mock import patch
 
-from pyezviz import PyEzvizError
-from pyezviz.test_cam_rtsp import AuthTestResultFailed
-import requests.exceptions
+from pyezviz.client import HTTPError, InvalidURL, PyEzvizError
+from pyezviz.test_cam_rtsp import AuthTestResultFailed, InvalidHost
 
 from homeassistant.components.ezviz.const import (
     ATTR_SERIAL,
@@ -260,7 +258,7 @@ async def test_user_form_exception(hass, ezviz_config_flow):
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_auth"}
 
-    ezviz_config_flow.side_effect = requests.exceptions.ConnectionError
+    ezviz_config_flow.side_effect = InvalidURL
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -271,7 +269,7 @@ async def test_user_form_exception(hass, ezviz_config_flow):
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_host"}
 
-    ezviz_config_flow.side_effect = requests.exceptions.HTTPError
+    ezviz_config_flow.side_effect = HTTPError
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -304,7 +302,7 @@ async def test_import_exception(hass, ezviz_config_flow):
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "invalid_auth"
 
-    ezviz_config_flow.side_effect = requests.exceptions.ConnectionError
+    ezviz_config_flow.side_effect = InvalidURL
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=YAML_CONFIG
@@ -313,7 +311,7 @@ async def test_import_exception(hass, ezviz_config_flow):
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "invalid_host"
 
-    ezviz_config_flow.side_effect = requests.exceptions.HTTPError
+    ezviz_config_flow.side_effect = HTTPError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=YAML_CONFIG
@@ -364,7 +362,7 @@ async def test_discover_exception_step1(
     assert result["step_id"] == "confirm"
     assert result["errors"] == {"base": "invalid_auth"}
 
-    ezviz_config_flow.side_effect = requests.exceptions.ConnectionError
+    ezviz_config_flow.side_effect = InvalidURL
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -378,7 +376,7 @@ async def test_discover_exception_step1(
     assert result["step_id"] == "confirm"
     assert result["errors"] == {"base": "invalid_host"}
 
-    ezviz_config_flow.side_effect = requests.exceptions.HTTPError
+    ezviz_config_flow.side_effect = HTTPError
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -439,21 +437,7 @@ async def test_discover_exception_step3(
     assert result["step_id"] == "confirm"
     assert result["errors"] == {"base": "invalid_auth"}
 
-    ezviz_test_rtsp_config_flow.side_effect = SocketConnectionRefusedError
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_USERNAME: "test-user",
-            CONF_PASSWORD: "test-pass",
-        },
-    )
-
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "confirm"
-    assert result["errors"] == {"base": "invalid_host"}
-
-    ezviz_test_rtsp_config_flow.side_effect = gaierror
+    ezviz_test_rtsp_config_flow.side_effect = InvalidHost
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -510,7 +494,7 @@ async def test_user_custom_url_exception(hass, ezviz_config_flow):
     assert result["step_id"] == "user_custom_url"
     assert result["errors"] == {"base": "invalid_auth"}
 
-    ezviz_config_flow.side_effect = requests.exceptions.ConnectionError
+    ezviz_config_flow.side_effect = InvalidURL
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -521,7 +505,7 @@ async def test_user_custom_url_exception(hass, ezviz_config_flow):
     assert result["step_id"] == "user_custom_url"
     assert result["errors"] == {"base": "invalid_host"}
 
-    ezviz_config_flow.side_effect = requests.exceptions.HTTPError
+    ezviz_config_flow.side_effect = HTTPError
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

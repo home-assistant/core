@@ -1,13 +1,10 @@
 """Config flow for ezviz."""
 import logging
-from socket import error as SocketConnectionRefusedError, gaierror
 
-from pyezviz import EzvizClient, PyEzvizError
-from pyezviz.test_cam_rtsp import AuthTestResultFailed, TestRTSPAuth
-import requests.exceptions
+from pyezviz.client import EzvizClient, HTTPError, InvalidURL, PyEzvizError
+from pyezviz.test_cam_rtsp import AuthTestResultFailed, InvalidHost, TestRTSPAuth
 import voluptuous as vol
 
-from homeassistant import exceptions
 from homeassistant.config_entries import CONN_CLASS_CLOUD_POLL, ConfigFlow, OptionsFlow
 from homeassistant.const import (
     CONF_CUSTOMIZE,
@@ -75,14 +72,14 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             await self.hass.async_add_executor_job(_get_ezviz_client_instance, data)
 
-        except PyEzvizError as err:
-            raise InvalidAuth from err
+        except InvalidURL as err:
+            raise InvalidURL from err
 
-        except requests.exceptions.ConnectionError as err:
-            raise WrongURL from err
-
-        except requests.exceptions.HTTPError as err:
+        except HTTPError as err:
             raise InvalidHost from err
+
+        except PyEzvizError as err:
+            raise PyEzvizError from err
 
         auth_data = {
             CONF_USERNAME: data[CONF_USERNAME],
@@ -113,14 +110,14 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
                 _get_ezviz_client_instance, ezviz_client_creds
             )
 
-        except PyEzvizError as err:
-            raise InvalidAuth from err
+        except InvalidURL as err:
+            raise InvalidURL from err
 
-        except requests.exceptions.ConnectionError as err:
-            raise WrongURL from err
-
-        except requests.exceptions.HTTPError as err:
+        except HTTPError as err:
             raise InvalidHost from err
+
+        except PyEzvizError as err:
+            raise PyEzvizError from err
 
         # Secondly try to wake hybernating camera.
         try:
@@ -128,18 +125,18 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
                 ezviz_client.get_detection_sensibility, data[ATTR_SERIAL]
             )
 
-        except requests.exceptions.HTTPError as err:
+        except HTTPError as err:
             raise InvalidHost from err
 
         # Thirdly attempts an authenticated RTSP DESCRIBE request.
         try:
             await self.hass.async_add_executor_job(_test_camera_rtsp_creds, data)
 
-        except AuthTestResultFailed as err:
-            raise InvalidAuth from err
-
-        except (gaierror, SocketConnectionRefusedError) as err:
+        except InvalidHost as err:
             raise InvalidHost from err
+
+        except AuthTestResultFailed as err:
+            raise AuthTestResultFailed from err
 
         return self.async_create_entry(
             title=data[ATTR_SERIAL],
@@ -182,14 +179,14 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 return await self._validate_and_create_auth(user_input)
 
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-
-            except WrongURL:
+            except InvalidURL:
                 errors["base"] = "invalid_host"
 
             except InvalidHost:
                 errors["base"] = "cannot_connect"
+
+            except PyEzvizError:
+                errors["base"] = "invalid_auth"
 
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
@@ -224,14 +221,14 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 return await self._validate_and_create_auth(user_input)
 
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-
-            except WrongURL:
+            except InvalidURL:
                 errors["base"] = "invalid_host"
 
             except InvalidHost:
                 errors["base"] = "cannot_connect"
+
+            except PyEzvizError:
+                errors["base"] = "invalid_auth"
 
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
@@ -268,11 +265,11 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 return await self._validate_and_create_camera_rtsp(user_input)
 
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-
-            except (InvalidHost, WrongURL):
+            except (InvalidHost, InvalidURL):
                 errors["base"] = "invalid_host"
+
+            except (PyEzvizError, AuthTestResultFailed):
+                errors["base"] = "invalid_auth"
 
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
@@ -307,11 +304,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             return await self._validate_and_create_auth(import_config)
 
-        except InvalidAuth:
-            _LOGGER.error("Error importing Ezviz platform config: invalid auth")
-            return self.async_abort(reason="invalid_auth")
-
-        except WrongURL:
+        except InvalidURL:
             _LOGGER.error("Error importing Ezviz platform config: invalid host")
             return self.async_abort(reason="invalid_host")
 
@@ -319,10 +312,15 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Error importing Ezviz platform config: cannot connect")
             return self.async_abort(reason="cannot_connect")
 
+        except (AuthTestResultFailed, PyEzvizError):
+            _LOGGER.error("Error importing Ezviz platform config: invalid auth")
+            return self.async_abort(reason="invalid_auth")
+
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Error importing ezviz platform config: unexpected exception"
             )
+
         return self.async_abort(reason="unknown")
 
     async def async_step_import_camera(self, data):
@@ -365,15 +363,3 @@ class EzvizOptionsFlowHandler(OptionsFlow):
         }
 
         return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
-
-
-class InvalidAuth(exceptions.HomeAssistantError):
-    """Error to indicate there is invalid auth."""
-
-
-class InvalidHost(exceptions.HomeAssistantError):
-    """Error to indicate invalid IP."""
-
-
-class WrongURL(exceptions.HomeAssistantError):
-    """Error to indicate invalid IP."""
