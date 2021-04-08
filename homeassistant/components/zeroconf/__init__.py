@@ -279,6 +279,13 @@ async def _async_start_zeroconf_browser(
         else:
             uppercase_mac = None
 
+        if "manufacturer" in info["properties"]:
+            lowercase_manufacturer: str | None = info["properties"][
+                "manufacturer"
+            ].lower()
+        else:
+            lowercase_manufacturer = None
+
         # Not all homekit types are currently used for discovery
         # so not all service type exist in zeroconf_types
         for entry in zeroconf_types.get(service_type, []):
@@ -293,6 +300,14 @@ async def _async_start_zeroconf_browser(
                     lowercase_name is not None
                     and "name" in entry
                     and not fnmatch.fnmatch(lowercase_name, entry["name"])
+                ):
+                    continue
+                if (
+                    lowercase_manufacturer is not None
+                    and "manufacturer" in entry
+                    and not fnmatch.fnmatch(
+                        lowercase_manufacturer, entry["manufacturer"]
+                    )
                 ):
                     continue
 
