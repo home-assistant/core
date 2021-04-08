@@ -76,7 +76,7 @@ class LitterRobotControlEntity(LitterRobotEntity):
             _LOGGER.error(ex)
             return False
 
-        self.clear()
+        self.async_cancel_refresh_callback()
         self._refresh_callback = async_call_later(
             self.hass, REFRESH_WAIT_TIME_SECONDS, async_call_later_callback
         )
@@ -84,12 +84,14 @@ class LitterRobotControlEntity(LitterRobotEntity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Cancel refresh callback when entity is being removed from hass."""
-        self.clear()
+        self.async_cancel_refresh_callback()
 
-    def clear(self):
+    @callback
+    def async_cancel_refresh_callback(self):
         """Clear the refresh callback if it has not already fired."""
         if self._refresh_callback is not None:
             self._refresh_callback()
+            self._refresh_callback = None
 
     @staticmethod
     def parse_time_at_default_timezone(time_str: str) -> time | None:

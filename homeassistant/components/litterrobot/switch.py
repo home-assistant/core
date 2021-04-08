@@ -26,11 +26,11 @@ class LitterRobotNightLightModeSwitch(LitterRobotControlEntity, SwitchEntity):
         """Return the icon."""
         return "mdi:lightbulb-on" if self.is_on else "mdi:lightbulb-off"
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.perform_action_and_refresh(self.robot.set_night_light, True)
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.perform_action_and_refresh(self.robot.set_night_light, False)
 
@@ -48,11 +48,11 @@ class LitterRobotPanelLockoutSwitch(LitterRobotControlEntity, SwitchEntity):
         """Return the icon."""
         return "mdi:lock" if self.is_on else "mdi:lock-open"
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.perform_action_and_refresh(self.robot.set_panel_lockout, True)
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.perform_action_and_refresh(self.robot.set_panel_lockout, False)
 
