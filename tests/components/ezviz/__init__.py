@@ -2,10 +2,10 @@
 from unittest.mock import patch
 
 from homeassistant.components.ezviz.const import (
-    CONF_CAMERAS,
     ATTR_SERIAL,
     ATTR_TYPE_CAMERA,
     ATTR_TYPE_CLOUD,
+    CONF_CAMERAS,
     CONF_FFMPEG_ARGUMENTS,
     DEFAULT_FFMPEG_ARGUMENTS,
     DEFAULT_TIMEOUT,
@@ -91,13 +91,6 @@ TEST = {
     CONF_PASSWORD: None,
     CONF_IP_ADDRESS: "127.0.0.1",
 }
-
-
-def _patch_async_setup(return_value=True):
-    return patch(
-        "homeassistant.components.ezviz.async_setup",
-        return_value=return_value,
-    )
 
 
 def _patch_async_setup_entry(return_value=True):
