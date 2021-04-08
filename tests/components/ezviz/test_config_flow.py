@@ -182,7 +182,9 @@ async def test_async_step_import_abort(hass, ezviz_config_flow):
 async def test_async_step_discovery(
     hass, ezviz_config_flow, ezviz_test_rtsp_config_flow
 ):
-    """Test discovery step."""
+    """Test discovery and confirm step."""
+    with patch("homeassistant.components.ezviz.PLATFORMS", []):
+        await init_integration(hass)
     await async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
@@ -209,7 +211,7 @@ async def test_async_step_discovery(
         CONF_USERNAME: "test-user",
     }
 
-    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup.mock_calls) == 0
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -335,6 +337,8 @@ async def test_discover_exception_step1(
     ezviz_config_flow,
 ):
     """Test we handle unexpected exception on discovery."""
+    with patch("homeassistant.components.ezviz.PLATFORMS", []):
+        await init_integration(hass)
 
     await async_setup_component(hass, "persistent_notification", {})
 
@@ -410,7 +414,8 @@ async def test_discover_exception_step3(
     ezviz_test_rtsp_config_flow,
 ):
     """Test we handle unexpected exception on discovery."""
-
+    with patch("homeassistant.components.ezviz.PLATFORMS", []):
+        await init_integration(hass)
     await async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
