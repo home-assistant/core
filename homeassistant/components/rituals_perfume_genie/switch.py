@@ -1,5 +1,4 @@
 """Support for Rituals Perfume Genie switches."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -98,7 +97,7 @@ class DiffuserSwitch(SwitchEntity):
         """Update the data of the device."""
         try:
             await self._diffuser.update_data()
-        except (asyncio.TimeoutError, aiohttp.ClientError):
+        except aiohttp.ClientError:
             self._available = False
             _LOGGER.error("Unable to retrieve data from rituals.sense-company.com")
         else:
