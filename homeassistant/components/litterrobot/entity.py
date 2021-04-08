@@ -9,6 +9,7 @@ from typing import Any
 from pylitterbot import Robot
 from pylitterbot.exceptions import InvalidCommandException
 
+from homeassistant.core import callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.dt as dt_util
@@ -65,11 +66,6 @@ class LitterRobotControlEntity(LitterRobotEntity):
     ) -> bool:
         """Perform an action and initiates a refresh of the robot data after a few seconds."""
 
-        async def async_call_later_callback(*_) -> None:
-            """Perform refresh request on callback."""
-            self._refresh_callback = None
-            await self.coordinator.async_request_refresh()
-
         try:
             await action(*args, **kwargs)
         except InvalidCommandException as ex:
@@ -78,9 +74,14 @@ class LitterRobotControlEntity(LitterRobotEntity):
 
         self.async_cancel_refresh_callback()
         self._refresh_callback = async_call_later(
-            self.hass, REFRESH_WAIT_TIME_SECONDS, async_call_later_callback
+            self.hass, REFRESH_WAIT_TIME_SECONDS, self.async_call_later_callback
         )
         return True
+
+    async def async_call_later_callback(self, *_) -> None:
+        """Perform refresh request on callback."""
+        self._refresh_callback = None
+        await self.coordinator.async_request_refresh()
 
     async def async_will_remove_from_hass(self) -> None:
         """Cancel refresh callback when entity is being removed from hass."""

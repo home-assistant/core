@@ -1,7 +1,7 @@
 """Support for Litter-Robot switches."""
 from __future__ import annotations
 
-from typing import Callable
+from typing import Any, Callable
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
