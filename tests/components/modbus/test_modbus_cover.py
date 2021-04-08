@@ -1,8 +1,12 @@
 """The tests for the Modbus cover component."""
+from unittest import mock
+
 import pytest
 
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
+from homeassistant.components.modbus import cover
 from homeassistant.components.modbus.const import CALL_TYPE_COIL, CONF_REGISTER
+from homeassistant.components.modbus.cover import async_setup_platform
 from homeassistant.const import (
     CONF_COVERS,
     CONF_NAME,
@@ -117,7 +121,7 @@ async def test_coil_cover(hass, regs, expected):
         ),
     ],
 )
-async def test_register_COVER(hass, regs, expected):
+async def test_register_cover(hass, regs, expected):
     """Run test for given config."""
     cover_name = "modbus_test_cover"
     state = await base_test(
@@ -137,3 +141,11 @@ async def test_register_COVER(hass, regs, expected):
         scan_interval=5,
     )
     assert state == expected
+
+
+async def test_unsupported_config(hass):
+    """When user tries to run this component without discovery_info, print an error."""
+    with mock.patch.object(cover, "_LOGGER") as mock_logger:
+        await async_setup_platform(hass, {}, None, None)
+        await hass.async_block_till_done()
+        assert mock_logger.error.called
