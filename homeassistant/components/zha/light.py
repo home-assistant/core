@@ -452,17 +452,16 @@ class Light(BaseLight, ZhaEntity):
     async def _handle_on_off(self, operation, kwargs):
         """Perform the on or off operation."""
         transition = kwargs.get(light.ATTR_TRANSITION)
-        if transition:
-            self._transitioning = True
+        default_transition = DEFAULT_TRANSITION / 10 if DEFAULT_TRANSITION > 1 else 1
+        duration = transition + 0.5 if transition else default_transition + 0.5
+        self._transitioning = True
         await operation(**kwargs)
 
         async def do_refresh(_):
             self._transitioning = False
             await self.async_get_state()
 
-        if transition:
-            duration = transition + 0.5
-            async_call_later(self.hass, duration, do_refresh)
+        async_call_later(self.hass, duration, do_refresh)
 
     async def async_get_state(self):
         """Attempt to retrieve the state from the light."""
@@ -602,7 +601,8 @@ class LightGroup(BaseLight, ZhaGroupEntity):
         """Perform the on or off operation."""
         self._ignore_member_changes = True
         transition = kwargs.get(light.ATTR_TRANSITION)
-        duration = transition + 0.5 if transition else DEFAULT_TRANSITION + 0.5
+        default_transition = DEFAULT_TRANSITION / 10 if DEFAULT_TRANSITION > 1 else 1
+        duration = transition + 0.5 if transition else default_transition + 0.5
 
         async def refresh_members(_):
             self._ignore_member_changes = False

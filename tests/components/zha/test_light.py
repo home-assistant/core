@@ -273,6 +273,7 @@ async def test_light(
         await async_test_level_on_off_from_hass(
             hass, cluster_on_off, cluster_level, entity_id
         )
+        await async_shift_time(hass)
 
         # test getting a brightness change from the network
         await async_test_on_from_light(hass, cluster_on_off, entity_id)
