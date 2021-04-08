@@ -98,7 +98,8 @@ class DiffuserSwitch(SwitchEntity):
         """Update the data of the device."""
         try:
             await self._diffuser.update_data()
-            self._available = self._diffuser.data["hub"]["status"] == AVAILABLE_STATE
         except (asyncio.TimeoutError, aiohttp.ClientError):
             self._available = False
             _LOGGER.error("Unable to retrieve data from rituals.sense-company.com")
+        else:
+            self._available = self._diffuser.data["hub"]["status"] == AVAILABLE_STATE
