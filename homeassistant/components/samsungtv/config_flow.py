@@ -34,6 +34,7 @@ from .const import (
     METHOD_WEBSOCKET,
     MODEL_SOUNDBAR,
     RESULT_AUTH_MISSING,
+    RESULT_ID_MISSING,
     RESULT_NOT_SUCCESSFUL,
     RESULT_NOT_SUPPORTED,
     RESULT_SUCCESS,
@@ -157,8 +158,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._host = await self.hass.async_add_executor_job(
                     socket.gethostbyname, user_input[CONF_HOST]
                 )
-            except socket.gaierror:
-                raise data_entry_flow.AbortFlow(RESULT_UNKNOWN_HOST)
+            except socket.gaierror as err:
+                raise data_entry_flow.AbortFlow(RESULT_UNKNOWN_HOST) from err
             self._name = user_input[CONF_NAME]
             self._title = self._name
 
@@ -206,9 +207,11 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._host = user_input[CONF_HOST]
         self._id = user_input[ATTR_PROPERTIES].get("serialNumber")
 
-        if self._id:
-            await self.async_set_unique_id(self._id)
-            await self._async_abort_if_already_configured()
+        if not self._id:
+            await self.async_abort(reason=RESULT_ID_MISSING)
+
+        await self.async_set_unique_id(self._id)
+        self._async_abort_if_already_configured()
 
         await self._async_get_and_check_device_info()
 
