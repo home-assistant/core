@@ -1,3 +1,22 @@
+boost_heating:
+  name: Boost Heating On (To be deprecated)
+  description: To be deprecated please use boost_heating_on.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Select entity_id to boost.
+      required: true
+      example: climate.heating
+    time_period:
+      name: Time Period
+      description: Set the time period for the boost.
+      required: true
+      example: 01:30:00
+    temperature:
+      name: Temperature
+      description: Set the target temperature for the boost period.
+      required: true
+      example: 20.5
 boost_heating_on:
   name: Boost Heating On
   description: Set the boost mode ON defining the period of time and the desired target temperature for the boost.

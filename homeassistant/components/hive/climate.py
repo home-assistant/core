@@ -1,5 +1,6 @@
 """Support for the Hive climate devices."""
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
@@ -52,6 +53,7 @@ SUPPORT_HVAC = [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF]
 SUPPORT_PRESET = [PRESET_NONE, PRESET_BOOST]
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
+_LOGGER = logging.getLogger()
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -66,6 +68,19 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(entities, True)
 
     platform = entity_platform.current_platform.get()
+
+    platform.async_register_entity_service(
+        "boost_heating",
+        {
+            vol.Required(ATTR_TIME_PERIOD): vol.All(
+                cv.time_period,
+                cv.positive_timedelta,
+                lambda td: td.total_seconds() // 60,
+            ),
+            vol.Optional(ATTR_TEMPERATURE, default="25.0"): vol.Coerce(float),
+        },
+        "async_heating_boost",
+    )
 
     platform.async_register_entity_service(
         SERVICE_BOOST_HEATING_ON,
@@ -208,6 +223,13 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
             curtemp = round(self.current_temperature * 2) / 2
             temperature = curtemp + 0.5
             await self.hive.heating.setBoostOn(self.device, 30, temperature)
+
+    async def async_heating_boost(self, time_period, temperature):
+        """Handle boost heating service call."""
+        _LOGGER.warning(
+            "Hive Service heating_boost will be deprecated in 2021.6.0 Please update to heating_boost_on"
+        )
+        await self.async_heating_boost_on(time_period, temperature)
 
     @refresh_system
     async def async_heating_boost_on(self, time_period, temperature):
