@@ -3,6 +3,8 @@
   "name": "Speedtest.net",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/speedtestdotnet",
-  "requirements": ["speedtest-cli==2.1.2"],
+  "requirements": [
+    "speedtest-cli==2.1.3"
+  ],
   "codeowners": ["@rohankapoorcom", "@engrbm87"]
 }
