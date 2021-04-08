@@ -536,7 +536,7 @@ async def test_eventbus_max_length_exceeded(hass):
         hass.bus.async_fire(long_evt_name)
 
     assert exc_info.value.property_name == "event_type"
-    assert exc_info.value.max_length == 32
+    assert exc_info.value.max_length == 64
     assert exc_info.value.value == long_evt_name
 
 
