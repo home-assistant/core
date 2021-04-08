@@ -218,8 +218,6 @@ class MqttCover(MqttEntity, CoverEntity):
         self._optimistic = None
         self._tilt_value = None
         self._tilt_optimistic = None
-        self._has_tilt_topic = None
-        self._force_tilt_optimistic = False
 
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
@@ -262,12 +260,6 @@ class MqttCover(MqttEntity, CoverEntity):
 
     def _tilt_message_received(self, payload):
         """Set the tilt value."""
-
-        # revert optimistic tilt mode, if it was forced
-        if self._force_tilt_optimistic:
-            self._force_tilt_optimistic = False
-            self._tilt_optimistic = False
-
         if type(payload) in [int, float] or payload.isnumeric():
             if (
                 self._config[CONF_TILT_MIN]
@@ -317,10 +309,17 @@ class MqttCover(MqttEntity, CoverEntity):
         def tilt_message_received(msg):
             """Handle tilt updates."""
             payload = msg.payload
-            tilt_status_template = self._config.get(CONF_TILT_STATUS_TEMPLATE)
-            if tilt_status_template is not None:
-                payload = tilt_status_template.async_render_with_possible_json_value(
-                    payload, variables={"entity_id": self.entity_id}
+            template = self._config.get(CONF_TILT_STATUS_TEMPLATE)
+            if template is not None:
+                variables = {
+                    "entity_id": self.entity_id,
+                    "position_open": self._config[CONF_POSITION_OPEN],
+                    "position_closed": self._config[CONF_POSITION_CLOSED],
+                    "tilt_min": self._config[CONF_TILT_MIN],
+                    "tilt_max": self._config[CONF_TILT_MAX],
+                }
+                payload = template.async_render_with_possible_json_value(
+                    payload, variables=variables
                 )
             self._tilt_message_received(payload)
 
@@ -329,10 +328,11 @@ class MqttCover(MqttEntity, CoverEntity):
         def state_message_received(msg):
             """Handle new MQTT state messages."""
             payload = msg.payload
-            value_template = self._config.get(CONF_VALUE_TEMPLATE)
-            if value_template is not None:
-                payload = value_template.async_render_with_possible_json_value(
-                    payload, variables={"entity_id": self.entity_id}
+            template = self._config.get(CONF_VALUE_TEMPLATE)
+            if template is not None:
+                variables = {"entity_id": self.entity_id}
+                payload = template.async_render_with_possible_json_value(
+                    payload, variables=variables
                 )
 
             if payload == self._config[CONF_STATE_STOPPED]:
@@ -377,29 +377,38 @@ class MqttCover(MqttEntity, CoverEntity):
                 template = self._config.get(CONF_VALUE_TEMPLATE)
 
             if template is not None:
-                variables = {"entity_id": self.entity_id}
+                variables = {
+                    "entity_id": self.entity_id,
+                    "position_open": self._config[CONF_POSITION_OPEN],
+                    "position_closed": self._config[CONF_POSITION_CLOSED],
+                    "tilt_min": self._config[CONF_TILT_MIN],
+                    "tilt_max": self._config[CONF_TILT_MAX],
+                }
                 payload = template.async_render_with_possible_json_value(
                     payload, variables=variables
                 )
 
-            try:
-                _LOGGER.debug("Payload: %s", payload)
-                payload = json_loads(payload.replace("'", '"'))
-            except TypeError:
-                pass
-            except JSONDecodeError:
-                pass
+                try:
+                    payload = json_loads(payload)
+                except TypeError:
+                    pass
+                except JSONDecodeError:
+                    pass
 
-            if isinstance(payload, dict):
-                if "position" in payload:
-                    self._position_message_received(payload["position"])
-                else:
-                    _LOGGER.warning("No position was returned by the position_template")
-                    return
-                if "tilt_value" in payload:
-                    self._tilt_message_received(payload["tilt_value"])
-            else:
-                self._position_message_received(payload)
+                if isinstance(payload, dict):
+                    if "position" not in payload:
+                        _LOGGER.warning(
+                            "No position was returned by the position_template"
+                        )
+                        return
+                    if "tilt_position" in payload:
+                        if not self._config.get(CONF_TILT_STATE_OPTIMISTIC):
+                            # reset forced set tilt optimistic
+                            self._tilt_optimistic = False
+                        self._tilt_message_received(payload["tilt_position"])
+                    payload = payload["position"]
+
+            self._position_message_received(payload)
 
         if self._config.get(CONF_GET_POSITION_TOPIC):
             topics["get_position_topic"] = {
@@ -430,9 +439,8 @@ class MqttCover(MqttEntity, CoverEntity):
                 "qos": self._config[CONF_QOS],
             }
         else:
-            if not self._tilt_optimistic:
-                self._force_tilt_optimistic = True
-                self._tilt_optimistic = True
+            # Force into optimistic tilt mode.
+            self._tilt_optimistic = True
 
         self._sub_state = await subscription.async_subscribe_topics(
             self.hass, self._sub_state, topics
@@ -588,15 +596,17 @@ class MqttCover(MqttEntity, CoverEntity):
         tilt = kwargs[ATTR_TILT_POSITION]
         percentage_tilt = tilt
         tilt = self.find_in_range_from_percent(tilt)
-        _LOGGER.debug("kwargs")
-        _LOGGER.debug(kwargs)
         # Handover the tilt after calculated from percent would make it more consistent with receiving templates
         if template is not None:
-            variables = {"entity_id": self.entity_id}
-            tilt = template.async_render(
-                parse_result=False, variables=variables, **kwargs
-            )
-        _LOGGER.info("Tilt: %s" % str(tilt))
+            variables = {
+                "tilt_position": percentage_tilt,
+                "entity_id": self.entity_id,
+                "position_open": self._config[CONF_POSITION_OPEN],
+                "position_closed": self._config[CONF_POSITION_CLOSED],
+                "tilt_min": self._config[CONF_TILT_MIN],
+                "tilt_max": self._config[CONF_TILT_MAX],
+            }
+            tilt = template.async_render(parse_result=False, variables=variables)
 
         mqtt.async_publish(
             self.hass,
@@ -617,10 +627,15 @@ class MqttCover(MqttEntity, CoverEntity):
         percentage_position = position
         position = self.find_in_range_from_percent(position, COVER_PAYLOAD)
         if template is not None:
-            variables = {"entity_id": self.entity_id}
-            position = template.async_render(
-                parse_result=False, variables=variables, **kwargs
-            )
+            variables = {
+                "position": percentage_position,
+                "entity_id": self.entity_id,
+                "position_open": self._config[CONF_POSITION_OPEN],
+                "position_closed": self._config[CONF_POSITION_CLOSED],
+                "tilt_min": self._config[CONF_TILT_MIN],
+                "tilt_max": self._config[CONF_TILT_MAX],
+            }
+            position = template.async_render(parse_result=False, variables=variables)
 
         mqtt.async_publish(
             self.hass,

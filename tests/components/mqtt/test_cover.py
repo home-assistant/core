@@ -767,7 +767,51 @@ async def test_set_position_templated(hass, mqtt_mock):
                 "position_open": 100,
                 "position_closed": 0,
                 "set_position_topic": "set-position-topic",
-                "set_position_template": "{{100-62}}",
+                "set_position_template": "{{position-1}}",
+                "payload_open": "OPEN",
+                "payload_close": "CLOSE",
+                "payload_stop": "STOP",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        cover.DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {ATTR_ENTITY_ID: "cover.test", ATTR_POSITION: 43},
+        blocking=True,
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        "set-position-topic", "42", 0, False
+    )
+
+
+async def test_set_position_templated_and_attributes(hass, mqtt_mock):
+    """Test setting cover position via template and using entities attributes."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "position_topic": "get-position-topic",
+                "command_topic": "command-topic",
+                "position_open": 100,
+                "position_closed": 0,
+                "set_position_topic": "set-position-topic",
+                "set_position_template": '\
+                {% if position > 99 %}\
+                  {% if state_attr(entity_id, "current_position") == None %}\
+                    {{ 5 }}\
+                  {% else %}\
+                    {{ 23 }}\
+                  {% endif %}\
+                {% else %}\
+                  {{ 42 }}\
+                {% endif %}',
                 "payload_open": "OPEN",
                 "payload_close": "CLOSE",
                 "payload_stop": "STOP",
@@ -783,8 +827,85 @@ async def test_set_position_templated(hass, mqtt_mock):
         blocking=True,
     )
 
+    mqtt_mock.async_publish.assert_called_once_with("set-position-topic", "5", 0, False)
+
+
+async def test_set_tilt_templated(hass, mqtt_mock):
+    """Test setting cover tilt position via template."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "position_topic": "get-position-topic",
+                "command_topic": "command-topic",
+                "tilt_command_topic": "tilt-command-topic",
+                "position_open": 100,
+                "position_closed": 0,
+                "set_position_topic": "set-position-topic",
+                "set_position_template": "{{position-1}}",
+                "tilt_command_template": "{{tilt_position+1}}",
+                "payload_open": "OPEN",
+                "payload_close": "CLOSE",
+                "payload_stop": "STOP",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        cover.DOMAIN,
+        SERVICE_SET_COVER_TILT_POSITION,
+        {ATTR_ENTITY_ID: "cover.test", ATTR_TILT_POSITION: 41},
+        blocking=True,
+    )
+
     mqtt_mock.async_publish.assert_called_once_with(
-        "set-position-topic", "38", 0, False
+        "tilt-command-topic", "42", 0, False
+    )
+
+
+async def test_set_tilt_templated_and_attributes(hass, mqtt_mock):
+    """Test setting cover tilt position via template and using entities attributes."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "position_topic": "get-position-topic",
+                "command_topic": "command-topic",
+                "tilt_command_topic": "tilt-command-topic",
+                "position_open": 100,
+                "position_closed": 0,
+                "set_position_topic": "set-position-topic",
+                "set_position_template": "{{position-1}}",
+                "tilt_command_template": '\
+                {% if state_attr(entity_id, "friendly_name") != "test" %}\
+                  {{ 5 }}\
+                {% else %}\
+                  {{ 23 }}\
+                {% endif %}',
+                "payload_open": "OPEN",
+                "payload_close": "CLOSE",
+                "payload_stop": "STOP",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        cover.DOMAIN,
+        SERVICE_SET_COVER_TILT_POSITION,
+        {ATTR_ENTITY_ID: "cover.test", ATTR_TILT_POSITION: 99},
+        blocking=True,
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "23", 0, False
     )
 
 
@@ -1347,53 +1468,6 @@ async def test_tilt_via_topic_template(hass, mqtt_mock):
         ATTR_CURRENT_TILT_POSITION
     ]
     assert current_cover_tilt_position == 50
-
-
-# async def test_tilt_via_topic_template_and_entity_id(hass, mqtt_mock):
-#     """Test tilt by updating status via MQTT and template."""
-#     assert await async_setup_component(
-#         hass,
-#         cover.DOMAIN,
-#         {
-#             cover.DOMAIN: {
-#                 "platform": "mqtt",
-#                 "name": "test",
-#                 "state_topic": "state-topic",
-#                 "command_topic": "command-topic",
-#                 "qos": 0,
-#                 "payload_open": "OPEN",
-#                 "payload_close": "CLOSE",
-#                 "payload_stop": "STOP",
-#                 "tilt_command_topic": "tilt-command-topic",
-#                 "tilt_command_template": '\
-#                 {% set tilt = state_attr(entity_id, "current_tilt_position") %}\
-#                 {% set tilt_change = value - tilt %}\
-#                 {% set position = state_attr(entity_id, "current_position") %}\
-#                 {{ position + tilt_change/100*5 }}',
-#                 "tilt_min": 0,
-#                 "tilt_max": 5,
-#                 # "tilt_status_topic": "tilt-status-topic",
-#                 # "tilt_status_template": "{{ (value | multiply(0.01)) | int }}",
-#                 # "tilt_opened_value": 400,
-#                 # "tilt_closed_value": 125,
-#             }
-#         },
-#     )
-#     await hass.async_block_till_done()
-
-#     async_fire_mqtt_message(hass, "tilt-status-topic", "99")
-
-#     current_cover_tilt_position = hass.states.get("cover.test").attributes[
-#         ATTR_CURRENT_TILT_POSITION
-#     ]
-#     assert current_cover_tilt_position == 0
-
-#     async_fire_mqtt_message(hass, "tilt-status-topic", "5000")
-
-#     current_cover_tilt_position = hass.states.get("cover.test").attributes[
-#         ATTR_CURRENT_TILT_POSITION
-#     ]
-#     assert current_cover_tilt_position == 50
 
 
 async def test_tilt_via_topic_altered_range(hass, mqtt_mock):
@@ -2562,7 +2636,7 @@ async def test_position_in_dict_via_position_topic_template(hass, mqtt_mock):
                 "command_topic": "command-topic",
                 "set_position_topic": "set-position-topic",
                 "position_topic": "get-position-topic",
-                "position_template": '{% set my_json = { "position" : value } %} {{ my_json }}',
+                "position_template": '{{ {"position" : value} | tojson }}',
             }
         },
     )
@@ -2597,10 +2671,7 @@ async def test_position_and_tilt_in_dict_via_position_topic_template(hass, mqtt_
                 "set_position_topic": "set-position-topic",
                 "position_topic": "get-position-topic",
                 "position_template": '\
-                {% set my_json = { \
-                  "position" : value,\
-                  "tilt_value" : value } %}\
-                {{ my_json }}',
+                {{ {"position" : value, "tilt_position" : value } | tojson }}',
             }
         },
     )
@@ -2646,7 +2717,7 @@ async def test_position_and_tilt_in_dict_via_position_topic_template_and_min_max
                 "tilt_max": 5,
                 "position_template": '\
                 {% if state_attr(entity_id, "current_position") == None %}\
-                  {% set my_json = { "position" : value, "tilt_value" : 0 } %}\
+                  {% set my_json = { "position" : value, "tilt_position" : 0 } %}\
                 {% else %}\
                   {% set position = state_attr(entity_id, "current_position") %}\
                   {% set movement = value | int - position %}\
@@ -2654,9 +2725,9 @@ async def test_position_and_tilt_in_dict_via_position_topic_template_and_min_max
                   {% set tilt_new = tilt + movement %}\
                   {% if tilt_new > 5 %} {% set tilt_new = 5 %} {% endif %}\
                   {% if tilt_new < 0 %} {% set tilt_new = 0 %} {% endif %}\
-                  {% set my_json = { "position" : value, "tilt_value" : tilt_new } %}\
+                  {% set my_json = { "position" : value, "tilt_position" : tilt_new } %}\
                 {% endif %}\
-                {{ my_json }}',
+                {{ my_json | tojson }}',
             }
         },
     )
