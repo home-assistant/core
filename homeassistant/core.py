@@ -71,6 +71,7 @@ from homeassistant.exceptions import (
     ServiceNotFound,
     Unauthorized,
 )
+from homeassistant.helpers.typing import StateType
 from homeassistant.util import location
 from homeassistant.util.async_ import (
     fire_coroutine_threadsafe,
@@ -1176,7 +1177,7 @@ class StateMachine:
     def async_set(
         self,
         entity_id: str,
-        new_state: str,
+        new_state: StateType,
         attributes: Mapping[str, Any] | None = None,
         force_update: bool = False,
         context: Context | None = None,
@@ -1191,7 +1192,7 @@ class StateMachine:
         This method must be run in the event loop.
         """
         entity_id = entity_id.lower()
-        if isinstance(cast(Any, new_state), float):
+        if isinstance(new_state, float):
             # If the entity's state is a float, limit precision according to machine
             # epsilon to make the string representation readable
             epsilon = sys.float_info.epsilon
