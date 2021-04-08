@@ -227,7 +227,7 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
     async def async_heating_boost(self, time_period, temperature):
         """Handle boost heating service call."""
         _LOGGER.warning(
-            "Hive Service heating_boost will be deprecated in 2021.6.0 Please update to heating_boost_on"
+            "Hive Service heating_boost will be removed in 2021.7.0, please update to heating_boost_on"
         )
         await self.async_heating_boost_on(time_period, temperature)
 
