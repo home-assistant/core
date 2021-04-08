@@ -169,11 +169,13 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             THERMOSTAT_MODE_PROPERTY,
             CommandClass.THERMOSTAT_FAN_MODE,
             add_to_watched_value_ids=True,
+            check_all_endpoints=True,
         )
         self._fan_state = self.get_zwave_value(
             THERMOSTAT_OPERATING_STATE_PROPERTY,
             CommandClass.THERMOSTAT_FAN_STATE,
             add_to_watched_value_ids=True,
+            check_all_endpoints=True,
         )
         self._set_modes_and_presets()
         self._supported_features = 0

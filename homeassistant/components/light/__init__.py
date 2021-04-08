@@ -73,6 +73,20 @@ VALID_COLOR_MODES = {
 COLOR_MODES_BRIGHTNESS = VALID_COLOR_MODES - {COLOR_MODE_ONOFF}
 COLOR_MODES_COLOR = {COLOR_MODE_HS, COLOR_MODE_RGB, COLOR_MODE_XY}
 
+
+def valid_supported_color_modes(color_modes):
+    """Validate the given color modes."""
+    color_modes = set(color_modes)
+    if (
+        not color_modes
+        or COLOR_MODE_UNKNOWN in color_modes
+        or (COLOR_MODE_BRIGHTNESS in color_modes and len(color_modes) > 1)
+        or (COLOR_MODE_ONOFF in color_modes and len(color_modes) > 1)
+    ):
+        raise vol.Error(f"Invalid supported_color_modes {sorted(color_modes)}")
+    return color_modes
+
+
 # Float that represents transition time in seconds to make change.
 ATTR_TRANSITION = "transition"
 
