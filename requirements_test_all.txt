@@ -146,7 +146,7 @@ aiopvpc==2.0.2
 aiopylgtv==0.4.0
 
 # homeassistant.components.recollect_waste
-aiorecollect==1.0.1
+aiorecollect==1.0.4
 
 # homeassistant.components.shelly
 aioshelly==0.6.2
