@@ -22,7 +22,8 @@ ENTITY_MATCH_ALL = "all"
 # If no name is specified
 DEVICE_DEFAULT_NAME = "Unnamed Device"
 
-# Max characters for an event_type
+# Max characters for an event_type (changing this requires a recorder
+# database migration)
 MAX_LENGTH_EVENT_TYPE = 64
 
 # Sun events
