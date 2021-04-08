@@ -1147,9 +1147,8 @@ async def test_subscribe_unsubscribe_bootstrap_integrations(
     async_dispatcher_send(hass, SIGNAL_BOOTSTRAP_INTEGRATONS, message)
     msg = await websocket_client.receive_json()
     assert msg["id"] == 7
-    assert msg["success"] is True
-    assert msg["type"] == "result"
-    assert msg["result"] == message
+    assert msg["type"] == "event"
+    assert msg["event"] == message
 
 
 async def test_integration_setup_info(hass, websocket_client, hass_admin_user):

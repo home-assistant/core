@@ -111,7 +111,7 @@ def handle_subscribe_bootstrap_integrations(hass, connection, msg):
     @callback
     def forward_bootstrap_integrations(message):
         """Forward bootstrap integrations to websocket."""
-        connection.send_message(messages.result_message(msg["id"], message))
+        connection.send_message(messages.event_message(msg["id"], message))
 
     connection.subscriptions[msg["id"]] = async_dispatcher_connect(
         hass, SIGNAL_BOOTSTRAP_INTEGRATONS, forward_bootstrap_integrations
