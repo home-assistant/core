@@ -1550,3 +1550,11 @@ async def test_state_change_events_match_state_time(hass):
     state = hass.states.get("light.bedroom")
 
     assert state.last_updated == events[0].time_fired
+
+
+async def test_statemachine_float_conversion(hass):
+    """Test conversion of float to string."""
+    assert 1.2 + 2.4 != 3.6
+    hass.states.async_set("some.number", 1.2 + 2.4, {})
+    state = hass.states.get("some.number")
+    assert state.state == "3.6"
