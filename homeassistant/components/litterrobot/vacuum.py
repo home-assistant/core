@@ -109,11 +109,11 @@ class LitterRobotCleaner(LitterRobotControlEntity, VacuumEntity):
             f"{self.robot.status.text}{' (Sleeping)' if self.robot.is_sleeping else ''}"
         )
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the cleaner on, starting a clean cycle."""
         await self.perform_action_and_refresh(self.robot.set_power_status, True)
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the unit off, stopping any cleaning in progress as is."""
         await self.perform_action_and_refresh(self.robot.set_power_status, False)
 
