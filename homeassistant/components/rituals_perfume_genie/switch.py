@@ -1,9 +1,15 @@
 """Support for Rituals Perfume Genie switches."""
+import asyncio
 from datetime import timedelta
+import logging
+
+import aiohttp
 
 from homeassistant.components.switch import SwitchEntity
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -33,6 +39,7 @@ class DiffuserSwitch(SwitchEntity):
     def __init__(self, diffuser):
         """Initialize the switch."""
         self._diffuser = diffuser
+        self._available = True
 
     @property
     def device_info(self):
@@ -53,7 +60,7 @@ class DiffuserSwitch(SwitchEntity):
     @property
     def available(self):
         """Return if the device is available."""
-        return self._diffuser.data["hub"]["status"] == AVAILABLE_STATE
+        return self._available
 
     @property
     def name(self):
@@ -89,4 +96,9 @@ class DiffuserSwitch(SwitchEntity):
 
     async def async_update(self):
         """Update the data of the device."""
-        await self._diffuser.update_data()
+        try:
+            await self._diffuser.update_data()
+            self._available = self._diffuser.data["hub"]["status"] == AVAILABLE_STATE
+        except (asyncio.TimeoutError, aiohttp.ClientError):
+            self._available = False
+            _LOGGER.error("Unable to retrieve data from rituals.sense-company.com")
