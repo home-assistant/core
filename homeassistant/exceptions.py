@@ -154,3 +154,20 @@ class ServiceNotFound(HomeAssistantError):
     def __str__(self) -> str:
         """Return string representation."""
         return f"Unable to find service {self.domain}.{self.service}"
+
+
+class MaxLengthExceeded(HomeAssistantError):
+    """Raised when a property value has exceeded the max character length."""
+
+    def __init__(self, value: str, property_name: str, max_length: int) -> None:
+        """Initialize error."""
+        super().__init__(
+            self,
+            (
+                f"Value {value} for property {property_name} has a max length of "
+                f"{max_length} characters"
+            ),
+        )
+        self.value = value
+        self.property_name = property_name
+        self.max_length = max_length
