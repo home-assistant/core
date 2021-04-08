@@ -183,7 +183,11 @@ class MotionSignalStrengthSensor(CoordinatorEntity, SensorEntity):
         if self.coordinator.data is None:
             return False
 
-        if not self.coordinator.data[KEY_GATEWAY][ATTR_AVAILABLE]:
+        gateway_available = self.coordinator.data[KEY_GATEWAY][ATTR_AVAILABLE]
+        if self._device_type == TYPE_GATEWAY:
+            return gateway_available
+
+        if not gateway_available:
             return False
 
         return self.coordinator.data[self._device.mac][ATTR_AVAILABLE]
