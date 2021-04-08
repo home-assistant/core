@@ -3,7 +3,10 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.device_automation import toggle_entity
+from homeassistant.components.device_automation import (
+    get_supported_features,
+    toggle_entity,
+)
 from homeassistant.components.light import (
     ATTR_FLASH,
     FLASH_SHORT,
@@ -11,13 +14,7 @@ from homeassistant.components.light import (
     VALID_BRIGHTNESS_PCT,
     VALID_FLASH,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
-    CONF_DOMAIN,
-    CONF_TYPE,
-    SERVICE_TURN_ON,
-)
+from homeassistant.const import ATTR_ENTITY_ID, CONF_DOMAIN, CONF_TYPE, SERVICE_TURN_ON
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
@@ -88,12 +85,7 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
         if entry.domain != DOMAIN:
             continue
 
-        state = hass.states.get(entry.entity_id)
-
-        if state:
-            supported_features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        else:
-            supported_features = entry.supported_features
+        supported_features = get_supported_features(hass, entry.entity_id)
 
         if supported_features & SUPPORT_BRIGHTNESS:
             actions.extend(
@@ -133,16 +125,7 @@ async def async_get_action_capabilities(hass: HomeAssistant, config: dict) -> di
     if config[CONF_TYPE] != toggle_entity.CONF_TURN_ON:
         return {}
 
-    registry = await entity_registry.async_get_registry(hass)
-    entry = registry.async_get(config[ATTR_ENTITY_ID])
-    state = hass.states.get(config[ATTR_ENTITY_ID])
-
-    supported_features = 0
-
-    if state:
-        supported_features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-    elif entry:
-        supported_features = entry.supported_features
+    supported_features = get_supported_features(hass, config[ATTR_ENTITY_ID])
 
     extra_fields = {}
 
