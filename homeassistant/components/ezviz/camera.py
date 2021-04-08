@@ -15,7 +15,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
-    ATTR_CAMERAS,
+    CONF_CAMERAS,
     ATTR_SERIAL,
     CONF_FFMPEG_ARGUMENTS,
     DATA_COORDINATOR,
