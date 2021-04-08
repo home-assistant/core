@@ -208,7 +208,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._id = user_input[ATTR_PROPERTIES].get("serialNumber")
 
         if not self._id:
-            await self.async_abort(reason=RESULT_ID_MISSING)
+            return self.async_abort(reason=RESULT_ID_MISSING)
 
         await self.async_set_unique_id(self._id)
         await self._async_abort_if_already_configured()
