@@ -146,7 +146,7 @@ aiopvpc==2.0.2
 aiopylgtv==0.4.0
 
 # homeassistant.components.recollect_waste
-aiorecollect==1.0.1
+aiorecollect==1.0.4
 
 # homeassistant.components.shelly
 aioshelly==0.6.2
@@ -1113,7 +1113,7 @@ sonarr==0.3.0
 speak2mary==1.4.0
 
 # homeassistant.components.speedtestdotnet
-speedtest-cli==2.1.2
+speedtest-cli==2.1.3
 
 # homeassistant.components.spider
 spiderpy==1.4.2
@@ -1226,7 +1226,7 @@ wolf_smartset==0.1.8
 xbox-webapi==2.0.8
 
 # homeassistant.components.knx
-xknx==0.17.5
+xknx==0.18.0
 
 # homeassistant.components.bluesound
 # homeassistant.components.rest
