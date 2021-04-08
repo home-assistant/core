@@ -5,7 +5,7 @@ MANUFACTURER = "Ezviz"
 
 # Configuration
 ATTR_SERIAL = "serial"
-ATTR_CAMERAS = "cameras"
+CONF_CAMERAS = "cameras"
 ATTR_SWITCH = "switch"
 ATTR_ENABLE = "enable"
 ATTR_DIRECTION = "direction"
