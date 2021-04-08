@@ -54,7 +54,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         return True
 
     # Check if importing camera account.
-    if ATTR_CAMERAS in config:
+    if CONF_CAMERAS in config:
         cameras_conf = config.get(ATTR_CAMERAS, CAMERA_SCHEMA)
         for camera in cameras_conf.items():
             hass.async_create_task(
