@@ -1,5 +1,5 @@
 boost_heating:
-  name: Boost Heating On (To be deprecated)
+  name: Boost Heating (To be deprecated)
   description: To be deprecated please use boost_heating_on.
   fields:
     entity_id:
