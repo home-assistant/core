@@ -64,7 +64,7 @@ YAML_CONFIG = {
     CONF_USERNAME: "test-username",
     CONF_PASSWORD: "test-password",
     CONF_URL: "apiieu.ezvizlife.com",
-    ATTR_CAMERAS: {
+    CONF_CAMERAS: {
         "C666666": {CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"}
     },
 }
