@@ -64,6 +64,8 @@ SUPPORT_FLUX_LED = SUPPORT_BRIGHTNESS | SUPPORT_EFFECT | SUPPORT_COLOR
 
 MODE_RGB = "rgb"
 MODE_RGBW = "rgbw"
+MODE_RGBCW = "rgbcw"
+MODE_RGBWW = "rgbww"
 
 # This mode enables white value to be controlled by brightness.
 # RGB value is ignored when this mode is specified.
@@ -145,7 +147,7 @@ DEVICE_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(ATTR_MODE, default=MODE_RGBW): vol.All(
-            cv.string, vol.In([MODE_RGBW, MODE_RGB, MODE_WHITE])
+            cv.string, vol.In([MODE_RGBW, MODE_RGBWW, MODE_RGBCW, MODE_RGB, MODE_WHITE])
         ),
         vol.Optional(CONF_PROTOCOL): vol.All(cv.string, vol.In(["ledenet"])),
         vol.Optional(CONF_CUSTOM_EFFECT): CUSTOM_EFFECT_SCHEMA,
@@ -315,12 +317,27 @@ class FluxLight(LightEntity):
         else:
             self._mode = MODE_RGB
 
-        self._white_value = self._get_rgbw[3]
+        if self._mode == MODE_RGBCW:
+            white_temp = self.temperature_cw()
+            self._white_value = (
+                white_temp[0] if white_temp[0] > white_temp[1] else white_temp[1]
+            )
 
-        if self._mode == MODE_WHITE:
-            self._brightness = self._white_value
+            if white_temp[0] or white_temp[1]:
+                self._brightness = 0
+
+        elif self._mode == MODE_RGBWW:
+            self._white_value = self.temperature_ww()
+
+            if self._bulb.mode == "ww":
+                self._brightness = 0
         else:
-            self._brightness = self._bulb.brightness
+            self._white_value = self._get_rgbw[3]
+
+            if self._mode == MODE_WHITE:
+                self.brightness = self._white_value
+            else:
+                self._brightness = self._bulb.brightness
 
         self._hs_color = color_util.color_RGB_to_hs(*self._get_rgb)
 
@@ -365,12 +382,23 @@ class FluxLight(LightEntity):
         """Return the white value of this light."""
         return self._white_value
 
+    def temperature_cw(self):
+        """Return the cold white temperature."""
+        rgbww = self._bulb.getRgbww()
+        return [rgbww[4], rgbww[3]]
+
+    def temperature_ww(self):
+        """Return the warm white temperature."""
+        rgbww = self._bulb.getRgbww()
+        return rgbww[3]
+
     @property
     def supported_features(self):
         """Return the supported features for this light."""
-        if self._mode == MODE_RGBW:
+        if self._mode == MODE_RGBW or self._mode == MODE_RGBCW:
             return SUPPORT_FLUX_LED | SUPPORT_WHITE_VALUE | SUPPORT_COLOR_TEMP
-
+        if self._mode == MODE_RGBWW:
+            return SUPPORT_FLUX_LED | SUPPORT_WHITE_VALUE
         return SUPPORT_FLUX_LED
 
     @property
@@ -426,8 +454,40 @@ class FluxLight(LightEntity):
         white = kwargs.get(ATTR_WHITE_VALUE)
         color_temp = kwargs.get(ATTR_COLOR_TEMP)
 
-        # handle special modes
+        # Handle special modes
         if color_temp is not None:
+            if white is None:
+                white = self.white_value if self.white_value > 0 else 255
+
+            if self._mode == MODE_RGBCW:
+                # 153 - 500 color temp in mired
+
+                # Map mired range from light input to kelvin range for bulb
+                mired_min = 500
+                mired_max = 153
+                kelvin_min = 2700
+                kelvin_max = 6500
+
+                # Map mired to kelvin specifically for the setWhiteTemperature since it wants 2700~6500 kelvin and
+                # we have 153~500 mired as an input which doesn't match up the way we want
+                color_temp_kelvin = (color_temp - mired_min) / (
+                    mired_max - mired_min
+                ) * (kelvin_max - kelvin_min) + kelvin_min
+
+                color_temp_kelvin = max(color_temp_kelvin - 2700, 0)
+                warm = 255 * (1 - (color_temp_kelvin / 3800))
+                cold = min(255 * color_temp_kelvin / 3800, 255)
+                warm *= white / 255  # White controls brightness
+                cold *= white / 255
+
+                if (
+                    warm > cold
+                ):  # Warm side will activate both cold and warm leds at same rate (much brighter warm mode)
+                    cold = warm
+
+                self._bulb.setRgbw(w=warm, w2=cold)
+                return
+
             if brightness is None:
                 brightness = self.brightness
             if color_temp > COLOR_TEMP_WARM_VS_COLD_WHITE_CUT_OFF:
@@ -435,6 +495,20 @@ class FluxLight(LightEntity):
             else:
                 self._bulb.setRgbw(w2=brightness)
             return
+
+        if white is not None:
+            if self._mode == MODE_RGBCW:
+                current_temp = self.temperature_cw
+                if not current_temp[0] and not current_temp[1]:
+                    current_temp[0] = 255
+                    current_temp[1] = 255
+                current_temp[0] *= white / 255
+                current_temp[1] *= white / 255
+                self._bulb.setRgbw(w=current_temp[1], w2=current_temp[0])
+                return
+            if self._mode == MODE_RGBWW:
+                self._bulb.setWarmWhite255(white)
+                return
 
         if effect == EFFECT_RANDOM:
             color_red = random.randint(0, 255)
