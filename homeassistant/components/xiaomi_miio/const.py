@@ -25,6 +25,7 @@ MODEL_AIRPURIFIER_MA2 = "zhimi.airpurifier.ma2"
 MODEL_AIRPURIFIER_SA1 = "zhimi.airpurifier.sa1"
 MODEL_AIRPURIFIER_SA2 = "zhimi.airpurifier.sa2"
 MODEL_AIRPURIFIER_2S = "zhimi.airpurifier.mc1"
+MODEL_AIRPURIFIER_2H = "zhimi.airpurifier.mc2"
 MODEL_AIRPURIFIER_3 = "zhimi.airpurifier.ma4"
 MODEL_AIRPURIFIER_3H = "zhimi.airpurifier.mb3"
 MODEL_AIRPURIFIER_PROH = "zhimi.airpurifier.va1"
@@ -56,6 +57,7 @@ MODELS_FAN_MIIO = [
     MODEL_AIRPURIFIER_SA1,
     MODEL_AIRPURIFIER_SA2,
     MODEL_AIRPURIFIER_2S,
+    MODEL_AIRPURIFIER_2H,
     MODEL_AIRHUMIDIFIER_V1,
     MODEL_AIRHUMIDIFIER_CA1,
     MODEL_AIRHUMIDIFIER_CB1,
