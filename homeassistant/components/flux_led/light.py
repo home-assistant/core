@@ -317,26 +317,27 @@ class FluxLight(LightEntity):
         else:
             self._mode = MODE_RGB
 
-        white_temp = None
         if self._mode == MODE_RGBCW:
             white_temp = self.temperature_cw()
             self._white_value = (
                 white_temp[0] if white_temp[0] > white_temp[1] else white_temp[1]
             )
+
+            if white_temp[0] or white_temp[1]:
+                self._brightness = 0
+
         elif self._mode == MODE_RGBWW:
             self._white_value = self.temperature_ww
+
+            if self._bulb.mode == "ww":
+                self._brightness = 0
         else:
             self._white_value = self._get_rgbw[3]
 
-        if self._mode == MODE_WHITE:
-            self._brightness = self._white_value
-        elif self._mode == MODE_RGBCW:
-            if white_temp[0] or white_temp[1]:
-                self._brightness = 0
-        elif self._mode == MODE_RGBWW and self._bulb.mode == "ww":
-            self._brightness = 0
-        else:
-            self._brightness = self._bulb.brightness
+            if self._mode == MODE_WHITE:
+                self.brightness = self._white_value
+            else:
+                self._brightness = self._bulb.brightness
 
         self._hs_color = color_util.color_RGB_to_hs(*self._get_rgb)
 
