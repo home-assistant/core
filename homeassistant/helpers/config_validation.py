@@ -711,7 +711,7 @@ def deprecated(
         - No warning if neither key nor replacement_key are provided
             - Adds replacement_key with default value in this case
     """
-    module = inspect.getmodule(inspect.stack(context=1)[1].frame)
+    module = inspect.getmodule(inspect.stack(context=0)[1].frame)
     if module is not None:
         module_name = module.__name__
     else:
