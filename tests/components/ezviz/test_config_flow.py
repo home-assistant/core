@@ -75,7 +75,7 @@ async def test_user_form(hass, ezviz_config_flow):
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "single_instance_allowed"
+    assert result["reason"] == "already_configured_account"
 
 
 async def test_user_custom_url(hass, ezviz_config_flow):
@@ -177,6 +177,30 @@ async def test_async_step_import_abort(hass, ezviz_config_flow):
     )
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "unknown"
+
+
+async def test_step_discovery_abort_if_cloud_account_missing(hass):
+    """Test discovery and confirm step, abort if cloud account was removed."""
+    await async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_DISCOVERY}, data=DISCOVERY_INFO
+    )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "confirm"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "test-user",
+            CONF_PASSWORD: "test-pass",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "ezviz_cloud_account_missing"
 
 
 async def test_async_step_discovery(

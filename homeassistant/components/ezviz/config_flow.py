@@ -94,6 +94,12 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         """Try DESCRIBE on RTSP camera with credentials."""
 
         # Get Ezviz cloud credentials from config entry
+        ezviz_client_creds = {
+            CONF_USERNAME: None,
+            CONF_PASSWORD: None,
+            CONF_URL: None,
+        }
+
         for item in self._async_current_entries():
             if item.data.get(CONF_TYPE) == ATTR_TYPE_CLOUD:
                 ezviz_client_creds = {
@@ -101,6 +107,10 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_PASSWORD: item.data.get(CONF_PASSWORD),
                     CONF_URL: item.data.get(CONF_URL),
                 }
+
+        # Abort flow if user removed cloud account before adding camera.
+        if ezviz_client_creds[CONF_USERNAME] is None:
+            return self.async_abort(reason="ezviz_cloud_account_missing")
 
         # We need to wake hibernating cameras.
         # First create EZVIZ API instance.
@@ -159,7 +169,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         # abort if already configured.
         for item in self._async_current_entries():
             if item.data.get(CONF_TYPE) == ATTR_TYPE_CLOUD:
-                return self.async_abort(reason="single_instance_allowed")
+                return self.async_abort(reason="already_configured_account")
 
         errors = {}
 

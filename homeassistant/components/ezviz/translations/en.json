@@ -1,8 +1,9 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Already configured. Only a single configuration possible.",
-            "unknown": "Unexpected error"
+            "already_configured_account": "Account is already configured.",
+            "unknown": "Unexpected error",
+            "ezviz_cloud_account_missing": "Ezviz cloud account missing. Please reconfigure Ezviz cloud account"
         },
         "error": {
             "cannot_connect": "Failed to connect",

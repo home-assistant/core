@@ -34,8 +34,9 @@
       "invalid_host": "[%key:common::config_flow::error::invalid_host%]"
     },
     "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "already_configured_account": "[%key:common::config_flow::abort::already_configured_account%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "ezviz_cloud_account_missing": "Ezviz cloud account missing. Please reconfigure Ezviz cloud account"
     }
   },
   "options": {
