@@ -762,7 +762,7 @@ hole==0.5.1
 holidays==0.11.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210406.0
+home-assistant-frontend==20210407.1
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -847,6 +847,9 @@ kiwiki-client==0.1.1
 
 # homeassistant.components.konnected
 konnected==1.2.0
+
+# homeassistant.components.kostal_plenticore
+kostal_plenticore==0.2.0
 
 # homeassistant.components.eufy
 lakeside==0.12
