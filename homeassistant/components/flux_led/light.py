@@ -381,20 +381,14 @@ class FluxLight(LightEntity):
         """Return the white value of this light."""
         return self._white_value
 
-    def get_bulb_rgbww(self):
-        """Return the getRgbww value from the bulb."""
-        return self._bulb.getRgbww()
-
-    @property
     def temperature_cw(self):
         """Return the cold white temperature."""
-        rgbww = self.get_bulb_rgbww()
+        rgbww = self._bulb.getRgbww()
         return [rgbww[4], rgbww[3]]
 
-    @property
     def temperature_ww(self):
         """Return the warm white temperature."""
-        rgbww = self.get_bulb_rgbww()
+        rgbww = self._bulb.getRgbww()
         return rgbww[3]
 
     @property
