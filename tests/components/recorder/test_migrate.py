@@ -76,6 +76,26 @@ def test_invalid_update():
         migration._apply_update(None, -1, 0)
 
 
+@pytest.mark.parametrize(
+    ["engine_type", "substr"],
+    [
+        ("postgresql", "ALTER event_type TYPE VARCHAR(64)"),
+        ("mssql", "ALTER COLUMN event_type VARCHAR(64)"),
+        ("mysql", "MODIFY event_type VARCHAR(64)"),
+        ("sqlite", None),
+    ],
+)
+def test_modify_column(engine_type, substr):
+    """Test that modify column generates the expected query."""
+    engine = Mock()
+    engine.dialect.name = engine_type
+    migration._modify_columns(engine, "events", ["event_type VARCHAR(64)"])
+    if substr:
+        assert substr in engine.execute.call_args[0][0].text
+    else:
+        assert not engine.execute.called
+
+
 def test_forgiving_add_column():
     """Test that add column will continue if column exists."""
     engine = create_engine("sqlite://", poolclass=StaticPool)
