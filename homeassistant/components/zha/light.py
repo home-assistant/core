@@ -139,6 +139,7 @@ class BaseLight(LogMixin, light.LightEntity):
         self._level_channel = None
         self._color_channel = None
         self._identify_channel = None
+        self._transitioning = False
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -175,6 +176,8 @@ class BaseLight(LogMixin, light.LightEntity):
         on at `on_level` Zigbee attribute value, regardless of the last set
         level
         """
+        if self._transitioning:
+            return
         value = max(0, min(254, value))
         self._brightness = value
         self.async_write_ha_state()
@@ -438,6 +441,29 @@ class Light(BaseLight, ZhaEntity):
         if "effect" in last_state.attributes:
             self._effect = last_state.attributes["effect"]
 
+    async def async_turn_on(self, **kwargs):
+        """Turn the entity on."""
+        await self._handle_on_off(super().async_turn_on, kwargs)
+
+    async def async_turn_off(self, **kwargs):
+        """Turn the entity off."""
+        await self._handle_on_off(super().async_turn_off, kwargs)
+
+    async def _handle_on_off(self, operation, kwargs):
+        """Perform the on or off operation."""
+        transition = kwargs.get(light.ATTR_TRANSITION)
+        if transition:
+            self._transitioning = True
+        await operation(**kwargs)
+
+        async def do_refresh(_):
+            self._transitioning = False
+            await self.async_get_state()
+
+        if transition:
+            duration = transition + 0.5
+            async_call_later(self.hass, duration, do_refresh)
+
     async def async_get_state(self):
         """Attempt to retrieve the state from the light."""
         if not self.available:
@@ -573,6 +599,7 @@ class LightGroup(BaseLight, ZhaGroupEntity):
         duration = transition + 0.5 if transition else DEFAULT_TRANSITION + 0.5
 
         async def refresh_members(_):
+            self._ignore_member_changes = False
             await self._debounced_member_refresh.async_call()
 
         await operation(**kwargs)
@@ -627,7 +654,6 @@ class LightGroup(BaseLight, ZhaGroupEntity):
 
     async def _force_member_updates(self):
         """Force the update of member entities to ensure the states are correct for bulbs that don't report their state."""
-        self._ignore_member_changes = False
         async_dispatcher_send(
             self.hass,
             SIGNAL_LIGHT_GROUP_STATE_CHANGED,
