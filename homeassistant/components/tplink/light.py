@@ -382,8 +382,8 @@ class TPLinkSmartBulb(LightEntity):
             or self._last_current_power_update + CURRENT_POWER_UPDATE_INTERVAL < now
         ):
             self._last_current_power_update = now
-            self._emeter_params[ATTR_CURRENT_POWER_W] = "{:.1f}".format(
-                self.smartbulb.current_consumption()
+            self._emeter_params[ATTR_CURRENT_POWER_W] = round(
+                float(self.smartbulb.current_consumption()), 1
             )
 
         if (
@@ -395,11 +395,11 @@ class TPLinkSmartBulb(LightEntity):
             daily_statistics = self.smartbulb.get_emeter_daily()
             monthly_statistics = self.smartbulb.get_emeter_monthly()
             try:
-                self._emeter_params[ATTR_DAILY_ENERGY_KWH] = "{:.3f}".format(
-                    daily_statistics[int(time.strftime("%d"))]
+                self._emeter_params[ATTR_DAILY_ENERGY_KWH] = round(
+                    float(daily_statistics[int(time.strftime("%d"))]), 3
                 )
-                self._emeter_params[ATTR_MONTHLY_ENERGY_KWH] = "{:.3f}".format(
-                    monthly_statistics[int(time.strftime("%m"))]
+                self._emeter_params[ATTR_MONTHLY_ENERGY_KWH] = round(
+                    float(monthly_statistics[int(time.strftime("%m"))]), 3
                 )
             except KeyError:
                 # device returned no daily/monthly history
