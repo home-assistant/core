@@ -31,7 +31,6 @@ ATTR_NEXT_PICKUP_DATE = "next_pickup_date"
 
 DEFAULT_ATTRIBUTION = "Pickup data provided by ReCollect Waste"
 DEFAULT_NAME = "recollect_waste"
-DEFAULT_ICON = "mdi:trash-can-outline"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -102,11 +101,6 @@ class ReCollectWasteSensor(CoordinatorEntity, SensorEntity):
     def extra_state_attributes(self) -> dict:
         """Return the state attributes."""
         return self._attributes
-
-    @property
-    def icon(self) -> str:
-        """Icon to use in the frontend."""
-        return DEFAULT_ICON
 
     @property
     def name(self) -> str:
