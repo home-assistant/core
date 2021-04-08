@@ -27,13 +27,13 @@ class TeslaDevice(CoordinatorEntity):
             """Wrap a Tesla device function to check for need to reauthenticate."""
 
             @wraps(func)
-            async def wrapped(*args):
+            async def wrapped(*args, **kwargs):
                 result: Any = None
                 self_object: Optional[TeslaDevice] = None
                 if isinstance(args[0], TeslaDevice):
                     self_object = args[0]
                 try:
-                    result = await func(*args)
+                    result = await func(*args, **kwargs)
                 except IncompleteCredentials:
                     if self_object and self_object.config_entry_id:
                         _LOGGER.debug(
