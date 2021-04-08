@@ -188,6 +188,33 @@ async def test_fail_setup_if_color_mode_deprecated(hass, mqtt_mock, deprecated):
     assert hass.states.get("light.test") is None
 
 
+@pytest.mark.parametrize(
+    "supported_color_modes", [["onoff", "rgb"], ["brightness", "rgb"], ["unknown"]]
+)
+async def test_fail_setup_if_color_modes_invalid(
+    hass, mqtt_mock, supported_color_modes
+):
+    """Test if setup fails if supported color modes is invalid."""
+    config = {
+        light.DOMAIN: {
+            "brightness": True,
+            "color_mode": True,
+            "command_topic": "test_light_rgb/set",
+            "name": "test",
+            "platform": "mqtt",
+            "schema": "json",
+            "supported_color_modes": supported_color_modes,
+        }
+    }
+    assert await async_setup_component(
+        hass,
+        light.DOMAIN,
+        config,
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("light.test") is None
+
+
 async def test_rgb_light(hass, mqtt_mock):
     """Test RGB light flags brightness support."""
     assert await async_setup_component(

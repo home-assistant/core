@@ -35,6 +35,7 @@ from homeassistant.components.light import (
     SUPPORT_WHITE_VALUE,
     VALID_COLOR_MODES,
     LightEntity,
+    valid_supported_color_modes,
 )
 from homeassistant.const import (
     CONF_BRIGHTNESS,
@@ -130,7 +131,10 @@ PLATFORM_SCHEMA_JSON = vol.All(
             vol.Optional(CONF_RGB, default=DEFAULT_RGB): cv.boolean,
             vol.Optional(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
             vol.Inclusive(CONF_SUPPORTED_COLOR_MODES, "color_mode"): vol.All(
-                cv.ensure_list, [vol.In(VALID_COLOR_MODES)], vol.Unique()
+                cv.ensure_list,
+                [vol.In(VALID_COLOR_MODES)],
+                vol.Unique(),
+                valid_supported_color_modes,
             ),
             vol.Optional(CONF_WHITE_VALUE, default=DEFAULT_WHITE_VALUE): cv.boolean,
             vol.Optional(CONF_XY, default=DEFAULT_XY): cv.boolean,
