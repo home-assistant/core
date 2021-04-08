@@ -208,7 +208,7 @@ def _modify_columns(engine, table_name, columns_def):
     """Modify columns in a table."""
     if engine.dialect.name == "sqlite":
         _LOGGER.debug(
-            "Skipping to modify columns %s in table %s. "
+            "Skipping to modify columns %s in table %s; "
             "Modifying column length in SQLite is unnecessary, "
             "it does not impose any length restrictions.",
             ", ".join(column.split(" ")[0] for column in columns_def),
