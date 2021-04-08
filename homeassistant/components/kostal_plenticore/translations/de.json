@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
@@ -9,17 +9,10 @@
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
-            "reauth_confirm": {
-                "data": {
-                    "token": "Zugangstoken"
-                },
-                "title": "Integration erneut authentifizieren"
-            },
             "user": {
                 "data": {
                     "host": "Host",
-                    "port": "Port",
-                    "token": "Zugangstoken"
+                    "password": "Passwort"
                 }
             }
         }
