@@ -1357,6 +1357,29 @@ async def test_blueprint_automation(hass, calls):
     ]
 
 
+async def test_blueprint_automation_bad_config(hass, calls, caplog):
+    """Test blueprint automation with bad inputs."""
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "use_blueprint": {
+                    "path": "test_event_service.yaml",
+                    "input": {
+                        "trigger_event": "blueprint_event",
+                        "service_to_call": {"dict": "not allowed"},
+                    },
+                }
+            }
+        },
+    )
+    hass.bus.async_fire("blueprint_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+    assert "generated invalid automation" in caplog.text
+
+
 async def test_trigger_service(hass, calls):
     """Test the automation trigger service."""
     assert await async_setup_component(
