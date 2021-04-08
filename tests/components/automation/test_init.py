@@ -1357,7 +1357,7 @@ async def test_blueprint_automation(hass, calls):
     ]
 
 
-async def test_blueprint_automation_bad_config(hass, calls, caplog):
+async def test_blueprint_automation_bad_config(hass, caplog):
     """Test blueprint automation with bad inputs."""
     assert await async_setup_component(
         hass,
@@ -1374,9 +1374,6 @@ async def test_blueprint_automation_bad_config(hass, calls, caplog):
             }
         },
     )
-    hass.bus.async_fire("blueprint_event")
-    await hass.async_block_till_done()
-    assert len(calls) == 0
     assert "generated invalid automation" in caplog.text
 
 
