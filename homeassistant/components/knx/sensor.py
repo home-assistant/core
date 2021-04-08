@@ -57,7 +57,7 @@ class KNXSensor(KnxEntity, SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return device specific state attributes."""
-        attr = {}
+        attr: dict[str, Any] = {}
 
         if self._device.last_telegram is not None:
             attr[ATTR_SOURCE] = str(self._device.last_telegram.source_address)

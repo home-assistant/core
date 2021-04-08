@@ -51,7 +51,7 @@ class KNXBinarySensor(KnxEntity, BinarySensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return device specific state attributes."""
-        attr = {}
+        attr: dict[str, Any] = {}
 
         if self._device.counter is not None:
             attr[ATTR_COUNTER] = self._device.counter
