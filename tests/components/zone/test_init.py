@@ -199,6 +199,38 @@ async def test_active_zone_prefers_smaller_zone_if_same_distance_2(hass):
     assert active.entity_id == "zone.smallest_zone"
 
 
+async def test_zone_smaller_than_accuracy(hass):
+    """Test zone size preferences."""
+    latitude = 32.880600
+    longitude = -117.237561
+    assert await setup.async_setup_component(
+        hass,
+        zone.DOMAIN,
+        {
+            "zone": [
+                {
+                    "name": "Smallest Zone",
+                    "latitude": latitude,
+                    "longitude": longitude,
+                    "radius": 50,
+                }
+            ]
+        },
+    )
+
+    # Should not enter zone, accuracy is poor
+    active = zone.async_active_zone(hass, latitude, longitude, 51)
+    assert active is None
+
+    # Should enter zone, accuracy is good enough
+    active = zone.async_active_zone(hass, latitude, longitude, 49, active)
+    assert active.entity_id == "zone.smallest_zone"
+
+    # Should remain in zone
+    active = zone.async_active_zone(hass, latitude, longitude, 51, active)
+    assert active.entity_id == "zone.smallest_zone"
+
+
 async def test_in_zone_works_for_passive_zones(hass):
     """Test working in passive zones."""
     latitude = 32.880600

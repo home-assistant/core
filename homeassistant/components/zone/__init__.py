@@ -91,7 +91,11 @@ STORAGE_VERSION = 1
 
 @bind_hass
 def async_active_zone(
-    hass: HomeAssistant, latitude: float, longitude: float, radius: int = 0
+    hass: HomeAssistant,
+    latitude: float,
+    longitude: float,
+    radius: int = 0,
+    current_zone: State | None = None,
 ) -> State | None:
     """Find the active zone for given latitude, longitude.
 
@@ -105,6 +109,24 @@ def async_active_zone(
 
     min_dist = None
     closest = None
+
+    if (
+        current_zone
+        and current_zone.state != STATE_UNAVAILABLE
+        and not current_zone.attributes.get(ATTR_PASSIVE)
+    ):
+        zone_dist = distance(
+            latitude,
+            longitude,
+            current_zone.attributes[ATTR_LATITUDE],
+            current_zone.attributes[ATTR_LONGITUDE],
+        )
+        if zone_dist is not None:
+            within_zone = zone_dist < current_zone.attributes[ATTR_RADIUS] + radius
+
+            if within_zone:
+                min_dist = zone_dist
+                closest = current_zone
 
     for zone in zones:
         if zone.state == STATE_UNAVAILABLE or zone.attributes.get(ATTR_PASSIVE):
@@ -120,7 +142,7 @@ def async_active_zone(
         if zone_dist is None:
             continue
 
-        within_zone = zone_dist - radius < zone.attributes[ATTR_RADIUS]
+        within_zone = zone_dist + radius < zone.attributes[ATTR_RADIUS]
         closer_zone = closest is None or zone_dist < min_dist  # type: ignore
         smaller_zone = (
             zone_dist == min_dist
