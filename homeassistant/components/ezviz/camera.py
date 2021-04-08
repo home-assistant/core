@@ -15,8 +15,8 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
-    CONF_CAMERAS,
     ATTR_SERIAL,
+    CONF_CAMERAS,
     CONF_FFMPEG_ARGUMENTS,
     DATA_COORDINATOR,
     DEFAULT_CAMERA_USERNAME,
@@ -64,7 +64,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                     data={
                         ATTR_SERIAL: camera[0],
                         CONF_USERNAME: camera[1][CONF_USERNAME],
-                        CONF_PASSWORD: camera[CONF_PASSWORD],
+                        CONF_PASSWORD: camera[1][CONF_PASSWORD],
                     },
                 )
             )
