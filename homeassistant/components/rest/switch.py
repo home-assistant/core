@@ -114,6 +114,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         )
     except (asyncio.TimeoutError, aiohttp.ClientError):
         _LOGGER.error("No route to resource/endpoint: %s", resource)
+        if async_add_entities is not None:
+            async_add_entities([switch])
 
 
 class RestSwitch(SwitchEntity):
