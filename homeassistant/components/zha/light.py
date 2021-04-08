@@ -529,8 +529,14 @@ class Light(BaseLight, ZhaEntity):
     async def _maybe_force_refresh(self, signal):
         """Force update the state if the signal contains the entity id for this entity."""
         if self.entity_id in signal["entity_ids"]:
-            await self.async_get_state()
-            self.async_write_ha_state()
+            # randomize the updating of all of the group members so we don't flood the network
+            refresh_delay = random.randint(10, 90) / 100
+
+            async def _delayed_refresh(_):
+                await self.async_get_state()
+                self.async_write_ha_state()
+
+            async_call_later(self.hass, refresh_delay, _delayed_refresh)
 
 
 @STRICT_MATCH(
