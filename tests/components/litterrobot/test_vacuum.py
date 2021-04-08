@@ -37,11 +37,19 @@ COMPONENT_SERVICE_DOMAIN = {
 async def test_vacuum(hass: HomeAssistant, mock_account):
     """Tests the vacuum entity was set up."""
     await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
+    assert hass.services.has_service(DOMAIN, SERVICE_RESET_WASTE_DRAWER)
 
     vacuum = hass.states.get(VACUUM_ENTITY_ID)
     assert vacuum
     assert vacuum.state == STATE_DOCKED
     assert vacuum.attributes["is_sleeping"] is False
+
+
+async def test_no_robots(hass: HomeAssistant, mock_account_with_no_robots):
+    """Tests the vacuum entity was set up."""
+    await setup_integration(hass, mock_account_with_no_robots, PLATFORM_DOMAIN)
+
+    assert not hass.services.has_service(DOMAIN, SERVICE_RESET_WASTE_DRAWER)
 
 
 async def test_vacuum_with_error(hass: HomeAssistant, mock_account_with_error):
