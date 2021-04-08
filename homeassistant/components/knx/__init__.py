@@ -56,8 +56,6 @@ from .schema import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_KNX_CONFIG = "config_file"
-
 CONF_KNX_ROUTING = "routing"
 CONF_KNX_TUNNELING = "tunneling"
 CONF_KNX_FIRE_EVENT = "fire_event"
@@ -81,13 +79,12 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
             # deprecated since 2021.4
-            cv.deprecated(CONF_KNX_CONFIG),
+            cv.deprecated("config_file"),
             # deprecated since 2021.2
             cv.deprecated(CONF_KNX_FIRE_EVENT),
             cv.deprecated("fire_event_filter", replacement_key=CONF_KNX_EVENT_FILTER),
             vol.Schema(
                 {
-                    vol.Optional(CONF_KNX_CONFIG): cv.string,
                     vol.Exclusive(
                         CONF_KNX_ROUTING, "connection_type"
                     ): ConnectionSchema.ROUTING_SCHEMA,
@@ -313,7 +310,6 @@ class KNXModule:
     def init_xknx(self) -> None:
         """Initialize XKNX object."""
         self.xknx = XKNX(
-            config=self.config_file(),
             own_address=self.config[DOMAIN][CONF_KNX_INDIVIDUAL_ADDRESS],
             rate_limit=self.config[DOMAIN][CONF_KNX_RATE_LIMIT],
             multicast_group=self.config[DOMAIN][CONF_KNX_MCAST_GRP],
@@ -331,15 +327,6 @@ class KNXModule:
     async def stop(self, event: Event) -> None:
         """Stop XKNX object. Disconnect from tunneling or Routing device."""
         await self.xknx.stop()
-
-    def config_file(self) -> str | None:
-        """Resolve and return the full path of xknx.yaml if configured."""
-        config_file = self.config[DOMAIN].get(CONF_KNX_CONFIG)
-        if not config_file:
-            return None
-        if not config_file.startswith("/"):
-            return self.hass.config.path(config_file)
-        return config_file  # type: ignore
 
     def connection_config(self) -> ConnectionConfig:
         """Return the connection_config."""
