@@ -1,4 +1,4 @@
-"""Support for deCONZ climate devices."""
+"""Support for deCONZ alarm control panel devices."""
 from __future__ import annotations
 
 from pydeconz.sensor import (
@@ -15,6 +15,7 @@ from pydeconz.sensor import (
     ANCILLARY_CONTROL_NOT_READY,
     AncillaryControl,
 )
+import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN,
@@ -41,12 +42,20 @@ from .const import NEW_SENSOR
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
-SERVICE_ALARM_ARMING_AWAY = "alarm_arming_away"
-SERVICE_ALARM_ARMING_HOME = "alarm_arming_home"
-SERVICE_ALARM_ARMING_NIGHT = "alarm_arming_night"
-SERVICE_ALARM_ENTRY_DELAY = "alarm_entry_delay"
-SERVICE_ALARM_EXIT_DELAY = "alarm_exit_delay"
-SERVICE_ALARM_NOT_READY = "alarm_not_ready"
+SERVICE_ALARM_ACTION = "alarm_custom_action"
+CONF_ALARM_ACTION = "alarm_action"
+SERVICE_ALARM_ACTION_SCHEMA = {
+    vol.Required(CONF_ALARM_ACTION): vol.In(
+        {
+            ANCILLARY_CONTROL_ARMING_AWAY: "Arming away",
+            ANCILLARY_CONTROL_ARMING_STAY: "Arming home",
+            ANCILLARY_CONTROL_ARMING_NIGHT: "Arming night",
+            ANCILLARY_CONTROL_ENTRY_DELAY: "Entry delay",
+            ANCILLARY_CONTROL_EXIT_DELAY: "Exit delay",
+            ANCILLARY_CONTROL_NOT_READY: "Alarm not ready",
+        }
+    )
+}
 
 DECONZ_TO_ALARM_STATE = {
     ANCILLARY_CONTROL_ARMED_AWAY: STATE_ALARM_ARMED_AWAY,
@@ -71,6 +80,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
     gateway = get_gateway_from_config_entry(hass, config_entry)
     gateway.entities[DOMAIN] = set()
 
+    platform = entity_platform.current_platform.get()
+
     @callback
     def async_add_alarm_control_panel(sensors=gateway.api.sensors.values()) -> None:
         """Add alarm control panel devices from deCONZ."""
@@ -85,6 +96,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
                 entities.append(DeconzAlarmControlPanel(sensor, gateway))
 
         if entities:
+            platform.async_register_entity_service(
+                SERVICE_ALARM_ACTION, SERVICE_ALARM_ACTION_SCHEMA, "async_alarm_action"
+            )
             async_add_entities(entities)
 
     gateway.listeners.append(
@@ -96,34 +110,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
     )
 
     async_add_alarm_control_panel()
-
-    # Custom services
-
-    platform = entity_platform.current_platform.get()
-
-    platform.async_register_entity_service(
-        SERVICE_ALARM_ARMING_AWAY, {}, "async_alarm_arming_away"
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_ALARM_ARMING_HOME, {}, "async_alarm_arming_home"
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_ALARM_ARMING_NIGHT, {}, "async_alarm_arming_night"
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_ALARM_ENTRY_DELAY, {}, "async_alarm_entry_delay"
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_ALARM_EXIT_DELAY, {}, "async_alarm_exit_delay"
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_ALARM_NOT_READY, {}, "async_alarm_not_ready"
-    )
 
 
 class DeconzAlarmControlPanel(DeconzDevice, AlarmControlPanelEntity):
@@ -187,28 +173,6 @@ class DeconzAlarmControlPanel(DeconzDevice, AlarmControlPanelEntity):
         """Send in alarm command."""
         await self._device.in_alarm()
 
-    # Custom services
-
-    async def async_alarm_arming_away(self) -> None:
-        """Send arming away command."""
-        await self._device.arming_away()
-
-    async def async_alarm_arming_home(self) -> None:
-        """Send arming home command."""
-        await self._device.arming_stay()
-
-    async def async_alarm_arming_night(self) -> None:
-        """Send arming night command."""
-        await self._device.arming_night()
-
-    async def async_alarm_entry_delay(self) -> None:
-        """Send entry delay command."""
-        await self._device.entry_delay()
-
-    async def async_alarm_exit_delay(self) -> None:
-        """Send exit delay command."""
-        await self._device.exit_delay()
-
-    async def async_alarm_not_ready(self) -> None:
-        """Send not ready command."""
-        await self._device.not_ready()
+    async def async_alarm_action(self, alarm_action: str) -> None:
+        """Send alarm_action command."""
+        await getattr(self._device, alarm_action)()

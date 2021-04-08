@@ -65,77 +65,24 @@ remove_orphaned_entries:
         Useful if you run multiple deCONZ integrations.
       example: "00212EFFFF012345"
 
-alarm_arming_away:
-  name: Arming away
-  description: Make keypad signal it is arming to away state.
+alarm_custom_action:
+  name: Custom alarm action
+  description: Put keypad in an intermediate state.
   target:
-
-alarm_arming_home:
-  name: Arming home
-  description: Make keypad signal it is arming to home state.
+    entity:
+      integration: deconz
+      domain: alarm_control_panel
   fields:
-    entity_id:
-      name: Entity ID
+    alarm_action:
+      name: Intermediate state
+      description: Communicate that a transition between primary states is happening.
       required: true
-      description: Name of alarm control panel to set state.
-      example: "alarm_control_panel.keypad"
       selector:
-        entity:
-          integration: deconz
-          domain: alarm_control_panel
-
-alarm_arming_night:
-  name: Arming night
-  description: Make keypad signal it is arming to night state.
-  fields:
-    entity_id:
-      name: Entity ID
-      required: true
-      description: Name of alarm control panel to set state.
-      example: "alarm_control_panel.keypad"
-      selector:
-        entity:
-          integration: deconz
-          domain: alarm_control_panel
-
-alarm_entry_delay:
-  name: Entry delay
-  description: Make keypad signal it is in entry delay state.
-  fields:
-    entity_id:
-      name: Entity ID
-      required: true
-      description: Name of alarm control panel to set state.
-      example: "alarm_control_panel.keypad"
-      selector:
-        entity:
-          integration: deconz
-          domain: alarm_control_panel
-
-alarm_exit_delay:
-  name: Exit delay
-  description: Make keypad signal it is in exit delay state.
-  fields:
-    entity_id:
-      name: Entity ID
-      required: true
-      description: Name of alarm control panel to set state.
-      example: "alarm_control_panel.keypad"
-      selector:
-        entity:
-          integration: deconz
-          domain: alarm_control_panel
-
-alarm_not_ready:
-  name: Alarm not ready
-  description: Make keypad signal it is not ready.
-  fields:
-    entity_id:
-      name: Entity ID
-      required: true
-      description: Name of alarm control panel to set state.
-      example: "alarm_control_panel.keypad"
-      selector:
-        entity:
-          integration: deconz
-          domain: alarm_control_panel
+        select:
+          options:
+            - "Arming away"
+            - "Arming home"
+            - "Arming night"
+            - "Entry delay"
+            - "Exit delay"
+            - "Alarm not ready"
