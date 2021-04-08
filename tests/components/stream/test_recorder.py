@@ -266,4 +266,4 @@ async def test_recorder_log(hass, caplog):
     with patch.object(hass.config, "is_allowed_path", return_value=True):
         await stream.async_record("/example/path")
     assert "https://abcd:efgh@foo.bar" not in caplog.text
-    assert "https://foo.bar" in caplog.text
+    assert "https://****:****@foo.bar" in caplog.text
