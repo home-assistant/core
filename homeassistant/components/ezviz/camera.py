@@ -34,7 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(ATTR_CAMERAS, default={}): {cv.string: CAMERA_SCHEMA},
+        vol.Optional(CONF_CAMERAS, default={}): {cv.string: CAMERA_SCHEMA},
     }
 )
 
