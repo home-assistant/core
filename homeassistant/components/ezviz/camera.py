@@ -51,7 +51,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     # Check if entry config exists and skips import if it does.
     if hass.config_entries.async_entries(DOMAIN):
-        return True
+        return
 
     # Check if importing camera account.
     if CONF_CAMERAS in config:
