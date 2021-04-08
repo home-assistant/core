@@ -2,7 +2,7 @@
 from unittest.mock import patch
 
 from homeassistant.components.ezviz.const import (
-    ATTR_CAMERAS,
+    CONF_CAMERAS,
     ATTR_SERIAL,
     ATTR_TYPE_CAMERA,
     ATTR_TYPE_CLOUD,
