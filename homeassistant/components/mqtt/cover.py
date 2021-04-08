@@ -398,7 +398,7 @@ class MqttCover(MqttEntity, CoverEntity):
                 if isinstance(payload, dict):
                     if "position" not in payload:
                         _LOGGER.warning(
-                            "No position was returned by the position_template"
+                            "Template (position_template) returned JSON without position attribute"
                         )
                         return
                     if "tilt_position" in payload:
