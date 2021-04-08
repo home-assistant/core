@@ -11,9 +11,11 @@ import datetime
 import enum
 import functools
 import logging
+import math
 import os
 import pathlib
 import re
+import sys
 import threading
 from time import monotonic
 from types import MappingProxyType
@@ -1189,7 +1191,14 @@ class StateMachine:
         This method must be run in the event loop.
         """
         entity_id = entity_id.lower()
-        new_state = str(new_state)
+        if isinstance(cast(Any, new_state), float):
+            # If the entity's state is a float, limit precision according to machine
+            # epsilon to make the string representation readable
+            epsilon = sys.float_info.epsilon
+            useful_precision = abs(int(math.floor(math.log10(abs(epsilon)))))
+            new_state = f"{new_state:.{useful_precision}}"
+        else:
+            new_state = str(new_state)
         attributes = attributes or {}
         old_state = self._states.get(entity_id)
         if old_state is None:
