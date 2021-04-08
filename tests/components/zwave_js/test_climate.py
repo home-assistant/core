@@ -348,7 +348,9 @@ async def test_thermostat_different_endpoints(
     """Test an entity with values on a different endpoint from the primary value."""
     state = hass.states.get(CLIMATE_RADIO_THERMOSTAT_ENTITY)
 
-    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.5
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.8
+    assert state.attributes[ATTR_FAN_MODE] == "Auto low"
+    assert state.attributes[ATTR_FAN_STATE] == "Idle / off"
 
 
 async def test_setpoint_thermostat(hass, client, climate_danfoss_lc_13, integration):
