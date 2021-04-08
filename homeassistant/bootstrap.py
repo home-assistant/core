@@ -440,7 +440,7 @@ async def _async_set_up_integrations(
     hass.data[DATA_SETUP_STARTED] = {}
     setup_time = hass.data[DATA_SETUP_TIME] = {}
 
-    log_task = asyncio.create_task(_async_watch_pending_setups(hass))
+    watch_task = asyncio.create_task(_async_watch_pending_setups(hass))
 
     domains_to_setup = _get_domains(hass, config)
 
@@ -555,7 +555,9 @@ async def _async_set_up_integrations(
         except asyncio.TimeoutError:
             _LOGGER.warning("Setup timed out for stage 2 - moving forward")
 
-    log_task.cancel()
+    watch_task.cancel()
+    async_dispatcher_send(hass, SIGNAL_BOOTSTRAP_INTEGRATONS, {})
+
     _LOGGER.debug(
         "Integration setup times: %s",
         {
