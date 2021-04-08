@@ -1,6 +1,9 @@
 """Support for Vera lights."""
-import logging
-from typing import Callable, List
+from __future__ import annotations
+
+from typing import Any, Callable
+
+import pyvera as veraApi
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -17,55 +20,56 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.util.color as color_util
 
 from . import VeraDevice
-from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .common import ControllerData, get_controller_data
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
     """Set up the sensor config entry."""
-    controller_data = hass.data[DOMAIN]
+    controller_data = get_controller_data(hass, entry)
     async_add_entities(
         [
-            VeraLight(device, controller_data.controller)
+            VeraLight(device, controller_data)
             for device in controller_data.devices.get(PLATFORM_DOMAIN)
-        ]
+        ],
+        True,
     )
 
 
-class VeraLight(VeraDevice, LightEntity):
+class VeraLight(VeraDevice[veraApi.VeraDimmer], LightEntity):
     """Representation of a Vera Light, including dimmable."""
 
-    def __init__(self, vera_device, controller):
+    def __init__(
+        self, vera_device: veraApi.VeraDimmer, controller_data: ControllerData
+    ):
         """Initialize the light."""
         self._state = False
         self._color = None
         self._brightness = None
-        VeraDevice.__init__(self, vera_device, controller)
+        VeraDevice.__init__(self, vera_device, controller_data)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     @property
-    def brightness(self):
+    def brightness(self) -> int | None:
         """Return the brightness of the light."""
         return self._brightness
 
     @property
-    def hs_color(self):
+    def hs_color(self) -> tuple[float, float] | None:
         """Return the color of the light."""
         return self._color
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
         if self._color:
             return SUPPORT_BRIGHTNESS | SUPPORT_COLOR
         return SUPPORT_BRIGHTNESS
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         if ATTR_HS_COLOR in kwargs and self._color:
             rgb = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
@@ -78,19 +82,20 @@ class VeraLight(VeraDevice, LightEntity):
         self._state = True
         self.schedule_update_ha_state(True)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any):
         """Turn the light off."""
         self.vera_device.switch_off()
         self._state = False
         self.schedule_update_ha_state()
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         return self._state
 
-    def update(self):
+    def update(self) -> None:
         """Call to update state."""
+        super().update()
         self._state = self.vera_device.is_switched_on()
         if self.vera_device.is_dimmable:
             # If it is dimmable, both functions exist. In case color

@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Host bereits konfiguriert"
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
         },
         "error": {
-            "connection_failed": "Verbindung fehlgeschlagen, versuchen Sie es erneut",
+            "cannot_connect": "Verbindung fehlgeschlagen",
             "register_failed": "Registrieren fehlgeschlagen, bitte versuche es erneut",
-            "unknown": "Unbekannter Fehler: Bitte versuchen Sie es sp\u00e4ter erneut"
+            "unknown": "Unerwarteter Fehler"
         },
         "step": {
             "link": {

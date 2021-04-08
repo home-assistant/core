@@ -3,9 +3,10 @@
         "abort": {
             "all_configured": "Alle verkn\u00fcpften Server sind bereits konfiguriert",
             "already_configured": "Dieser Plex-Server ist bereits konfiguriert",
-            "already_in_progress": "Plex wird konfiguriert",
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich",
             "token_request_timeout": "Zeit\u00fcberschreitung beim Erhalt des Tokens",
-            "unknown": "Aus unbekanntem Grund fehlgeschlagen"
+            "unknown": "Unerwarteter Fehler"
         },
         "error": {
             "faulty_credentials": "Autorisierung fehlgeschlagen, Token \u00fcberpr\u00fcfen",
@@ -14,6 +15,7 @@
             "not_found": "Plex-Server nicht gefunden",
             "ssl_error": "SSL-Zertifikatsproblem"
         },
+        "flow_title": "{name} ({host})",
         "step": {
             "manual_setup": {
                 "data": {

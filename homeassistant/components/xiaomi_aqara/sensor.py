@@ -1,6 +1,7 @@
 """Support for Xiaomi Aqara sensors."""
 import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     DEVICE_CLASS_BATTERY,
@@ -9,9 +10,11 @@ from homeassistant.const import (
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
+    LIGHT_LUX,
+    PERCENTAGE,
     POWER_WATT,
+    PRESSURE_HPA,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 
 from . import XiaomiDevice
@@ -21,10 +24,10 @@ _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
     "temperature": [TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
-    "humidity": [UNIT_PERCENTAGE, None, DEVICE_CLASS_HUMIDITY],
+    "humidity": [PERCENTAGE, None, DEVICE_CLASS_HUMIDITY],
     "illumination": ["lm", None, DEVICE_CLASS_ILLUMINANCE],
-    "lux": ["lx", None, DEVICE_CLASS_ILLUMINANCE],
-    "pressure": ["hPa", None, DEVICE_CLASS_PRESSURE],
+    "lux": [LIGHT_LUX, None, DEVICE_CLASS_ILLUMINANCE],
+    "pressure": [PRESSURE_HPA, None, DEVICE_CLASS_PRESSURE],
     "bed_activity": ["μm", None, None],
     "load_power": [POWER_WATT, None, DEVICE_CLASS_POWER],
 }
@@ -86,8 +89,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             _LOGGER.warning("Unmapped Device Model")
 
     # Set up battery sensors
+    seen_sids = set()  # Set of device sids that are already seen
     for devices in gateway.devices.values():
         for device in devices:
+            if device["sid"] in seen_sids:
+                continue
+            seen_sids.add(device["sid"])
             if device["model"] in BATTERY_MODELS:
                 entities.append(
                     XiaomiBatterySensor(device, "Battery", gateway, config_entry)
@@ -101,7 +108,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
 
-class XiaomiSensor(XiaomiDevice):
+class XiaomiSensor(XiaomiDevice, SensorEntity):
     """Representation of a XiaomiSensor."""
 
     def __init__(self, device, name, data_key, xiaomi_hub, config_entry):
@@ -165,13 +172,13 @@ class XiaomiSensor(XiaomiDevice):
         return True
 
 
-class XiaomiBatterySensor(XiaomiDevice):
+class XiaomiBatterySensor(XiaomiDevice, SensorEntity):
     """Representation of a XiaomiSensor."""
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return UNIT_PERCENTAGE
+        return PERCENTAGE
 
     @property
     def device_class(self):
@@ -188,7 +195,7 @@ class XiaomiBatterySensor(XiaomiDevice):
         succeed = super().parse_voltage(data)
         if not succeed:
             return False
-        battery_level = int(self._device_state_attributes.pop(ATTR_BATTERY_LEVEL))
+        battery_level = int(self._extra_state_attributes.pop(ATTR_BATTERY_LEVEL))
         if battery_level <= 0 or battery_level > 100:
             return False
         self._state = battery_level

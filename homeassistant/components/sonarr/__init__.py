@@ -1,22 +1,25 @@
 """The Sonarr component."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
-from typing import Any, Dict
+import logging
+from typing import Any
 
-from sonarr import Sonarr, SonarrError
+from sonarr import Sonarr, SonarrAccessRestricted, SonarrError
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import (
     ATTR_NAME,
     CONF_API_KEY,
     CONF_HOST,
     CONF_PORT,
+    CONF_SOURCE,
     CONF_SSL,
     CONF_VERIFY_SSL,
 )
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -36,9 +39,10 @@ from .const import (
 
 PLATFORMS = ["sensor"]
 SCAN_INTERVAL = timedelta(seconds=30)
+_LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
+async def async_setup(hass: HomeAssistantType, config: dict) -> bool:
     """Set up the Sonarr component."""
     hass.data.setdefault(DOMAIN, {})
     return True
@@ -69,8 +73,11 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     try:
         await sonarr.update()
-    except SonarrError:
-        raise ConfigEntryNotReady
+    except SonarrAccessRestricted:
+        _async_start_reauth(hass, entry)
+        return False
+    except SonarrError as err:
+        raise ConfigEntryNotReady from err
 
     undo_listener = entry.add_update_listener(_async_update_listener)
 
@@ -79,9 +86,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         DATA_UNDO_UPDATE_LISTENER: undo_listener,
     }
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -92,8 +99,8 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )
@@ -106,11 +113,20 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
     return unload_ok
 
 
+def _async_start_reauth(hass: HomeAssistantType, entry: ConfigEntry):
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={CONF_SOURCE: SOURCE_REAUTH},
+            data={"config_entry_id": entry.entry_id, **entry.data},
+        )
+    )
+    _LOGGER.error("API Key is no longer valid. Please reauthenticate")
+
+
 async def _async_update_listener(hass: HomeAssistantType, entry: ConfigEntry) -> None:
     """Handle options update."""
-    async_dispatcher_send(
-        hass, f"sonarr.{entry.entry_id}.entry_options_update", entry.options
-    )
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 class SonarrEntity(Entity):
@@ -150,7 +166,7 @@ class SonarrEntity(Entity):
         return self._enabled_default
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> dict[str, Any]:
         """Return device information about the application."""
         if self._device_id is None:
             return None

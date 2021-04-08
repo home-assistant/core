@@ -5,7 +5,7 @@
             "not_songpal_device": "Ikke en Songpal-enhet"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes."
+            "cannot_connect": "Tilkobling mislyktes"
         },
         "flow_title": "",
         "step": {

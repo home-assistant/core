@@ -2,11 +2,11 @@
     "config": {
         "abort": {
             "already_configured": "ESP ist bereits konfiguriert",
-            "already_in_progress": "Die ESP-Konfiguration wird bereits ausgef\u00fchrt"
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt"
         },
         "error": {
             "connection_error": "Keine Verbindung zum ESP m\u00f6glich. Achte darauf, dass deine YAML-Datei eine Zeile 'api:' enth\u00e4lt.",
-            "invalid_password": "Ung\u00fcltiges Passwort!",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "resolve_error": "Adresse des ESP kann nicht aufgel\u00f6st werden. Wenn dieser Fehler weiterhin besteht, lege eine statische IP-Adresse fest: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
         },
         "flow_title": "ESPHome: {name}",

@@ -1,10 +1,8 @@
 """Support for KWB Easyfire."""
-import logging
-
 from pykwb import kwb
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_HOST,
@@ -13,9 +11,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_RAW = False
 DEFAULT_NAME = "KWB"
@@ -78,7 +73,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors)
 
 
-class KWBSensor(Entity):
+class KWBSensor(SensorEntity):
     """Representation of a KWB Easyfire sensor."""
 
     def __init__(self, easyfire, sensor, client_name):

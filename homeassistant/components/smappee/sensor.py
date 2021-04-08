@@ -1,12 +1,8 @@
 """Support for monitoring a Smappee energy sensor."""
-import logging
-
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import DEVICE_CLASS_POWER, ENERGY_WATT_HOUR, POWER_WATT, VOLT
-from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 TREND_SENSORS = {
     "total_power": [
@@ -243,7 +239,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class SmappeeSensor(Entity):
+class SmappeeSensor(SensorEntity):
     """Implementation of a Smappee sensor."""
 
     def __init__(self, smappee_base, service_location, sensor, attributes):
@@ -291,7 +287,9 @@ class SmappeeSensor(Entity):
         return self._unit_of_measurement
 
     @property
-    def unique_id(self,):
+    def unique_id(
+        self,
+    ):
         """Return the unique ID for this sensor."""
         if self._sensor in ["load", "sensor"]:
             return (

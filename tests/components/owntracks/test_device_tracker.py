@@ -1,5 +1,6 @@
 """The tests for the Owntracks device tracker."""
 import json
+from unittest.mock import patch
 
 import pytest
 
@@ -7,7 +8,6 @@ from homeassistant.components import owntracks
 from homeassistant.const import STATE_NOT_HOME
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_fire_mqtt_message, mock_coro
 
 USER = "greg"
@@ -1318,12 +1318,12 @@ def generate_ciphers(secret):
     # PyNaCl ciphertext generation will fail if the module
     # cannot be imported. However, the test for decryption
     # also relies on this library and won't be run without it.
-    import pickle
     import base64
+    import pickle
 
     try:
-        from nacl.secret import SecretBox
         from nacl.encoding import Base64Encoder
+        from nacl.secret import SecretBox
 
         keylen = SecretBox.KEY_SIZE
         key = secret.encode("utf-8")
@@ -1369,8 +1369,8 @@ def mock_cipher():
 
     def mock_decrypt(ciphertext, key):
         """Decrypt/unpickle."""
-        import pickle
         import base64
+        import pickle
 
         (mkey, plaintext) = pickle.loads(base64.b64decode(ciphertext))
         if key != mkey:

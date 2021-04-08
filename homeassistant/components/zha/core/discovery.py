@@ -1,8 +1,9 @@
 """Device discovery functions for Zigbee Home Automation."""
+from __future__ import annotations
 
 from collections import Counter
 import logging
-from typing import Callable, List, Tuple
+from typing import Callable
 
 from homeassistant import const as ha_const
 from homeassistant.core import callback
@@ -22,6 +23,7 @@ from .. import (  # noqa: F401 pylint: disable=unused-import,
     fan,
     light,
     lock,
+    number,
     sensor,
     switch,
 )
@@ -33,18 +35,19 @@ _LOGGER = logging.getLogger(__name__)
 @callback
 async def async_add_entities(
     _async_add_entities: Callable,
-    entities: List[
-        Tuple[
+    entities: list[
+        tuple[
             zha_typing.ZhaEntityType,
-            Tuple[str, zha_typing.ZhaDeviceType, List[zha_typing.ChannelType]],
+            tuple[str, zha_typing.ZhaDeviceType, list[zha_typing.ChannelType]],
         ]
     ],
+    update_before_add: bool = True,
 ) -> None:
     """Add entities helper."""
     if not entities:
         return
     to_add = [ent_cls(*args) for ent_cls, args in entities]
-    _async_add_entities(to_add, update_before_add=True)
+    _async_add_entities(to_add, update_before_add=update_before_add)
     entities.clear()
 
 
@@ -73,7 +76,7 @@ class ProbeEndpoint:
             ep_device_type = channel_pool.endpoint.device_type
             component = zha_regs.DEVICE_CLASS[ep_profile_id].get(ep_device_type)
 
-        if component and component in zha_const.COMPONENTS:
+        if component and component in zha_const.PLATFORMS:
             channels = channel_pool.unclaimed_channels()
             entity_class, claimed = zha_regs.ZHA_ENTITIES.get_entity(
                 component, channel_pool.manufacturer, channel_pool.model, channels
@@ -120,7 +123,7 @@ class ProbeEndpoint:
         ep_channels: zha_typing.ChannelPoolType,
     ) -> None:
         """Probe specified cluster for specific component."""
-        if component is None or component not in zha_const.COMPONENTS:
+        if component is None or component not in zha_const.PLATFORMS:
             return
         channel_list = [channel]
         unique_id = f"{ep_channels.unique_id}-{channel.cluster.cluster_id}"
@@ -233,16 +236,18 @@ class GroupProbe:
     @staticmethod
     def determine_entity_domains(
         hass: HomeAssistantType, group: zha_typing.ZhaGroupType
-    ) -> List[str]:
+    ) -> list[str]:
         """Determine the entity domains for this group."""
-        entity_domains: List[str] = []
+        entity_domains: list[str] = []
         zha_gateway = hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]
         all_domain_occurrences = []
         for member in group.members:
             if member.device.is_coordinator:
                 continue
             entities = async_entries_for_device(
-                zha_gateway.ha_entity_registry, member.device.device_id
+                zha_gateway.ha_entity_registry,
+                member.device.device_id,
+                include_disabled_entities=True,
             )
             all_domain_occurrences.extend(
                 [

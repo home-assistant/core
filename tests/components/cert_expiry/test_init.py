@@ -1,17 +1,22 @@
 """Tests for Cert Expiry setup."""
 from datetime import timedelta
+from unittest.mock import patch
 
 from homeassistant.components.cert_expiry.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ENTRY_STATE_LOADED, ENTRY_STATE_NOT_LOADED
-from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_START
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PORT,
+    EVENT_HOMEASSISTANT_START,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from .const import HOST, PORT
 from .helpers import future_timestamp, static_datetime
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
@@ -76,21 +81,27 @@ async def test_unload_config_entry(mock_now, hass):
     assert len(config_entries) == 1
     assert entry is config_entries[0]
 
+    timestamp = future_timestamp(100)
     with patch(
         "homeassistant.components.cert_expiry.get_cert_expiry_timestamp",
-        return_value=future_timestamp(100),
+        return_value=timestamp,
     ):
         assert await async_setup_component(hass, DOMAIN, {}) is True
         await hass.async_block_till_done()
 
     assert entry.state == ENTRY_STATE_LOADED
-    state = hass.states.get("sensor.cert_expiry_example_com")
-    assert state.state == "100"
+    state = hass.states.get("sensor.cert_expiry_timestamp_example_com")
+    assert state.state == timestamp.isoformat()
     assert state.attributes.get("error") == "None"
     assert state.attributes.get("is_valid")
 
     await hass.config_entries.async_unload(entry.entry_id)
 
     assert entry.state == ENTRY_STATE_NOT_LOADED
-    state = hass.states.get("sensor.cert_expiry_example_com")
+    state = hass.states.get("sensor.cert_expiry_timestamp_example_com")
+    assert state.state == STATE_UNAVAILABLE
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.cert_expiry_timestamp_example_com")
     assert state is None

@@ -2,11 +2,11 @@
     "config": {
         "abort": {
             "already_configured": "This SimpliSafe account is already in use.",
-            "reauth_successful": "SimpliSafe successfully reauthenticated."
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
             "identifier_exists": "Account already registered",
-            "invalid_credentials": "Invalid credentials",
+            "invalid_auth": "Invalid authentication",
             "still_awaiting_mfa": "Still awaiting MFA email click",
             "unknown": "Unexpected error"
         },
@@ -20,7 +20,7 @@
                     "password": "Password"
                 },
                 "description": "Your access token has expired or been revoked. Enter your password to re-link your account.",
-                "title": "Re-link SimpliSafe Account"
+                "title": "Reauthenticate Integration"
             },
             "user": {
                 "data": {

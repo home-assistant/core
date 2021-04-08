@@ -91,11 +91,11 @@ def async_setup_forwarded(app, trusted_proxies):
         forwarded_for_split = list(reversed(forwarded_for_headers[0].split(",")))
         try:
             forwarded_for = [ip_address(addr.strip()) for addr in forwarded_for_split]
-        except ValueError:
+        except ValueError as err:
             _LOGGER.error(
                 "Invalid IP address in X-Forwarded-For: %s", forwarded_for_headers[0]
             )
-            raise HTTPBadRequest
+            raise HTTPBadRequest from err
 
         # Find the last trusted index in the X-Forwarded-For list
         forwarded_for_index = 0

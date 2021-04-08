@@ -14,7 +14,7 @@
                     "api_key": "API Key",
                     "latitude": "Latitude",
                     "longitude": "Longitude",
-                    "name": "Name of the integration"
+                    "name": "Name"
                 },
                 "description": "If you need help with the configuration have a look here: https://www.home-assistant.io/integrations/accuweather/\n\nSome sensors are not enabled by default. You can enable them in the entity registry after the integration configuration.\nWeather forecast is not enabled by default. You can enable it in the integration options.",
                 "title": "AccuWeather"
@@ -27,9 +27,15 @@
                 "data": {
                     "forecast": "Weather forecast"
                 },
-                "description": "Due to the limitations of the free version of the AccuWeather API key, when you enable weather forecast, data updates will be performed every 64 minutes instead of every 32 minutes.",
+                "description": "Due to the limitations of the free version of the AccuWeather API key, when you enable weather forecast, data updates will be performed every 80 minutes instead of every 40 minutes.",
                 "title": "AccuWeather Options"
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Reach AccuWeather server",
+            "remaining_requests": "Remaining allowed requests"
         }
     }
 }

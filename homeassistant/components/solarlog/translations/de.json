@@ -5,7 +5,7 @@
         },
         "error": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
-            "cannot_connect": "Verbindung fehlgeschlagen. \u00dcberpr\u00fcfe die Host-Adresse"
+            "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "step": {
             "user": {

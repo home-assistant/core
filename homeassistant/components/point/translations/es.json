@@ -5,7 +5,8 @@
             "authorize_url_fail": "Error desconocido generando la url de autorizaci\u00f3n",
             "authorize_url_timeout": "Tiempo de espera agotado generando la url de autorizaci\u00f3n.",
             "external_setup": "Point se ha configurado correctamente a partir de otro flujo.",
-            "no_flows": "El componente no est\u00e1 configurado. Consulta la documentaci\u00f3n."
+            "no_flows": "El componente no est\u00e1 configurado. Consulta la documentaci\u00f3n.",
+            "unknown_authorize_url_generation": "Error desconocido al generar una URL de autorizaci\u00f3n."
         },
         "create_entry": {
             "default": "Autenticado correctamente"
@@ -23,7 +24,7 @@
                 "data": {
                     "flow_impl": "Proveedor"
                 },
-                "description": "\u00bfQuieres comenzar a configurar?",
+                "description": "\u00bfQuieres iniciar la configuraci\u00f3n?",
                 "title": "Selecciona el m\u00e9todo de autenticaci\u00f3n"
             }
         }

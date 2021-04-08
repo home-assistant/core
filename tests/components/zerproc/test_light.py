@@ -1,21 +1,31 @@
 """Test the zerproc lights."""
+from unittest.mock import MagicMock, patch
+
 import pytest
 import pyzerproc
 
 from homeassistant import setup
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_MODE,
     ATTR_HS_COLOR,
     ATTR_RGB_COLOR,
+    ATTR_SUPPORTED_COLOR_MODES,
     ATTR_XY_COLOR,
+    COLOR_MODE_HS,
     SCAN_INTERVAL,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
 )
-from homeassistant.components.zerproc.light import DOMAIN
+from homeassistant.components.zerproc.const import (
+    DATA_ADDRESSES,
+    DATA_DISCOVERY_SUBSCRIPTION,
+    DOMAIN,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
+    ATTR_ICON,
     ATTR_SUPPORTED_FEATURES,
     STATE_OFF,
     STATE_ON,
@@ -23,19 +33,26 @@ from homeassistant.const import (
 )
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
-async def mock_light(hass):
+async def mock_entry(hass):
+    """Create a mock light entity."""
+    return MockConfigEntry(domain=DOMAIN)
+
+
+@pytest.fixture
+async def mock_light(hass, mock_entry):
     """Create a mock light entity."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
-    mock_entry = MockConfigEntry(domain=DOMAIN)
     mock_entry.add_to_hass(hass)
 
-    light = pyzerproc.Light("AA:BB:CC:DD:EE:FF", "LEDBlue-CCDDEEFF")
+    light = MagicMock(spec=pyzerproc.Light)
+    light.address = "AA:BB:CC:DD:EE:FF"
+    light.name = "LEDBlue-CCDDEEFF"
+    light.is_connected.return_value = False
 
     mock_state = pyzerproc.LightState(False, (0, 0, 0))
 
@@ -48,31 +65,36 @@ async def mock_light(hass):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
+    light.is_connected.return_value = True
+
     return light
 
 
-async def test_init(hass):
+async def test_init(hass, mock_entry):
     """Test platform setup."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
-    mock_entry = MockConfigEntry(domain=DOMAIN)
     mock_entry.add_to_hass(hass)
 
-    mock_light_1 = pyzerproc.Light("AA:BB:CC:DD:EE:FF", "LEDBlue-CCDDEEFF")
-    mock_light_2 = pyzerproc.Light("11:22:33:44:55:66", "LEDBlue-33445566")
+    mock_light_1 = MagicMock(spec=pyzerproc.Light)
+    mock_light_1.address = "AA:BB:CC:DD:EE:FF"
+    mock_light_1.name = "LEDBlue-CCDDEEFF"
+    mock_light_1.is_connected.return_value = True
+
+    mock_light_2 = MagicMock(spec=pyzerproc.Light)
+    mock_light_2.address = "11:22:33:44:55:66"
+    mock_light_2.name = "LEDBlue-33445566"
+    mock_light_2.is_connected.return_value = True
 
     mock_state_1 = pyzerproc.LightState(False, (0, 0, 0))
     mock_state_2 = pyzerproc.LightState(True, (0, 80, 255))
 
+    mock_light_1.get_state.return_value = mock_state_1
+    mock_light_2.get_state.return_value = mock_state_2
+
     with patch(
         "homeassistant.components.zerproc.light.pyzerproc.discover",
         return_value=[mock_light_1, mock_light_2],
-    ), patch.object(mock_light_1, "connect"), patch.object(
-        mock_light_2, "connect"
-    ), patch.object(
-        mock_light_1, "get_state", return_value=mock_state_1
-    ), patch.object(
-        mock_light_2, "get_state", return_value=mock_state_2
     ):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
@@ -81,36 +103,38 @@ async def test_init(hass):
     assert state.state == STATE_OFF
     assert state.attributes == {
         ATTR_FRIENDLY_NAME: "LEDBlue-CCDDEEFF",
+        ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_HS],
         ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
+        ATTR_ICON: "mdi:string-lights",
     }
 
     state = hass.states.get("light.ledblue_33445566")
     assert state.state == STATE_ON
     assert state.attributes == {
         ATTR_FRIENDLY_NAME: "LEDBlue-33445566",
+        ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_HS],
         ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
+        ATTR_ICON: "mdi:string-lights",
+        ATTR_COLOR_MODE: COLOR_MODE_HS,
         ATTR_BRIGHTNESS: 255,
         ATTR_HS_COLOR: (221.176, 100.0),
         ATTR_RGB_COLOR: (0, 80, 255),
         ATTR_XY_COLOR: (0.138, 0.08),
     }
 
-    with patch.object(hass.loop, "stop"), patch.object(
-        mock_light_1, "disconnect"
-    ) as mock_disconnect_1, patch.object(
-        mock_light_2, "disconnect"
-    ) as mock_disconnect_2:
+    with patch.object(hass.loop, "stop"):
         await hass.async_stop()
 
-    assert mock_disconnect_1.called
-    assert mock_disconnect_2.called
+    assert mock_light_1.disconnect.called
+    assert mock_light_2.disconnect.called
+
+    assert hass.data[DOMAIN]["addresses"] == {"AA:BB:CC:DD:EE:FF", "11:22:33:44:55:66"}
 
 
-async def test_discovery_exception(hass):
+async def test_discovery_exception(hass, mock_entry):
     """Test platform setup."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
-    mock_entry = MockConfigEntry(domain=DOMAIN)
     mock_entry.add_to_hass(hass)
 
     with patch(
@@ -124,26 +148,26 @@ async def test_discovery_exception(hass):
     assert len(hass.data[DOMAIN]["addresses"]) == 0
 
 
-async def test_connect_exception(hass):
+async def test_remove_entry(hass, mock_light, mock_entry):
     """Test platform setup."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+    assert hass.data[DOMAIN][DATA_ADDRESSES] == {"AA:BB:CC:DD:EE:FF"}
+    assert DATA_DISCOVERY_SUBSCRIPTION in hass.data[DOMAIN]
 
-    mock_entry = MockConfigEntry(domain=DOMAIN)
-    mock_entry.add_to_hass(hass)
+    with patch.object(mock_light, "disconnect") as mock_disconnect:
+        await hass.config_entries.async_remove(mock_entry.entry_id)
 
-    mock_light = pyzerproc.Light("AA:BB:CC:DD:EE:FF", "LEDBlue-CCDDEEFF")
+    assert mock_disconnect.called
+    assert DOMAIN not in hass.data
 
-    with patch(
-        "homeassistant.components.zerproc.light.pyzerproc.discover",
-        return_value=[mock_light],
-    ), patch.object(
-        mock_light, "connect", side_effect=pyzerproc.ZerprocException("TEST")
-    ):
-        await hass.config_entries.async_setup(mock_entry.entry_id)
-        await hass.async_block_till_done()
 
-    # The exception should be captured and no entities should be added
-    assert len(hass.data[DOMAIN]["addresses"]) == 0
+async def test_remove_entry_exceptions_caught(hass, mock_light, mock_entry):
+    """Assert that disconnect exceptions are caught."""
+    with patch.object(
+        mock_light, "disconnect", side_effect=pyzerproc.ZerprocException("Mock error")
+    ) as mock_disconnect:
+        await hass.config_entries.async_remove(mock_entry.entry_id)
+
+    assert mock_disconnect.called
 
 
 async def test_light_turn_on(hass, mock_light):
@@ -259,7 +283,9 @@ async def test_light_update(hass, mock_light):
     assert state.state == STATE_OFF
     assert state.attributes == {
         ATTR_FRIENDLY_NAME: "LEDBlue-CCDDEEFF",
+        ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_HS],
         ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
+        ATTR_ICON: "mdi:string-lights",
     }
 
     # Make sure no discovery calls are made while we emulate time passing
@@ -276,7 +302,9 @@ async def test_light_update(hass, mock_light):
         assert state.state == STATE_UNAVAILABLE
         assert state.attributes == {
             ATTR_FRIENDLY_NAME: "LEDBlue-CCDDEEFF",
+            ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_HS],
             ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
+            ATTR_ICON: "mdi:string-lights",
         }
 
         with patch.object(
@@ -292,7 +320,9 @@ async def test_light_update(hass, mock_light):
         assert state.state == STATE_OFF
         assert state.attributes == {
             ATTR_FRIENDLY_NAME: "LEDBlue-CCDDEEFF",
+            ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_HS],
             ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
+            ATTR_ICON: "mdi:string-lights",
         }
 
         with patch.object(
@@ -308,7 +338,10 @@ async def test_light_update(hass, mock_light):
         assert state.state == STATE_ON
         assert state.attributes == {
             ATTR_FRIENDLY_NAME: "LEDBlue-CCDDEEFF",
+            ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_HS],
             ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
+            ATTR_ICON: "mdi:string-lights",
+            ATTR_COLOR_MODE: COLOR_MODE_HS,
             ATTR_BRIGHTNESS: 220,
             ATTR_HS_COLOR: (261.429, 31.818),
             ATTR_RGB_COLOR: (202, 173, 255),

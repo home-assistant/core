@@ -38,7 +38,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
     conf = config[DOMAIN]
 
-    _LOGGER.info("Found Plum Lightpad configuration in config, importing...")
+    _LOGGER.info("Found Plum Lightpad configuration in config, importing")
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
@@ -62,14 +62,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         return False
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Plum cloud: %s", ex)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from ex
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = plum
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     def cleanup(event):

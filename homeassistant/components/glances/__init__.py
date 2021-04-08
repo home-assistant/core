@@ -121,9 +121,9 @@ class GlancesData:
             self.available = True
             _LOGGER.debug("Successfully connected to Glances")
 
-        except exceptions.GlancesApiConnectionError:
+        except exceptions.GlancesApiConnectionError as err:
             _LOGGER.debug("Can not connect to Glances")
-            raise ConfigEntryNotReady
+            raise ConfigEntryNotReady from err
 
         self.add_options()
         self.set_scan_interval(self.config_entry.options[CONF_SCAN_INTERVAL])

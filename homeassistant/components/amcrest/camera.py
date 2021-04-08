@@ -197,7 +197,7 @@ class AmcrestCam(Camera):
             # and before initiating shapshot.
             while self._snapshot_task:
                 self._check_snapshot_ok()
-                _LOGGER.debug("Waiting for previous snapshot from %s ...", self._name)
+                _LOGGER.debug("Waiting for previous snapshot from %s", self._name)
                 await self._snapshot_task
             self._check_snapshot_ok()
             # Run snapshot command in separate Task that can't be cancelled so
@@ -236,7 +236,7 @@ class AmcrestCam(Camera):
         # streaming via ffmpeg
 
         streaming_url = self._rtsp_url
-        stream = CameraMjpeg(self._ffmpeg.binary, loop=self.hass.loop)
+        stream = CameraMjpeg(self._ffmpeg.binary)
         await stream.open_camera(streaming_url, extra_cmd=self._ffmpeg_arguments)
 
         try:
@@ -266,7 +266,7 @@ class AmcrestCam(Camera):
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the Amcrest-specific camera state attributes."""
         attr = {}
         if self._audio_enabled is not None:

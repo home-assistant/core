@@ -2,10 +2,10 @@
     "config": {
         "abort": {
             "already_configured": "Bridge ist bereits konfiguriert",
-            "already_in_progress": "Der Konfigurationsablauf f\u00fcr die Bridge wird bereits ausgef\u00fchrt.",
-            "no_bridges": "Keine deCON-Bridges entdeckt",
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
+            "no_bridges": "Keine deCONZ-Bridges entdeckt",
+            "no_hardware_available": "Keine Funkhardware an deCONZ angeschlossen",
             "not_deconz_bridge": "Keine deCONZ Bridge entdeckt",
-            "one_instance_only": "Komponente unterst\u00fctzt nur eine deCONZ-Instanz",
             "updated_instance": "deCONZ-Instanz mit neuer Host-Adresse aktualisiert"
         },
         "error": {
@@ -14,8 +14,8 @@
         "flow_title": "deCONZ Zigbee Gateway",
         "step": {
             "hassio_confirm": {
-                "description": "M\u00f6chtest du Home Assistant so konfigurieren, dass er eine Verbindung mit dem deCONZ Gateway herstellt, der vom Add-on hass.io {addon} bereitgestellt wird?",
-                "title": "deCONZ Zigbee Gateway \u00fcber das Hass.io Add-on"
+                "description": "M\u00f6chtest du Home Assistant so konfigurieren, dass er eine Verbindung mit dem deCONZ Gateway herstellt, der vom Supervisor Add-on {addon} bereitgestellt wird?",
+                "title": "deCONZ Zigbee Gateway \u00fcber das Supervisor Add-on"
             },
             "link": {
                 "description": "Entsperre dein deCONZ-Gateway, um es bei Home Assistant zu registrieren. \n\n 1. Gehe in die deCONZ-Systemeinstellungen \n 2. Dr\u00fccke die Taste \"Gateway entsperren\"",
@@ -29,7 +29,7 @@
             },
             "user": {
                 "data": {
-                    "host": "W\u00e4hlen Sie das erkannte deCONZ-Gateway aus"
+                    "host": "W\u00e4hle das erkannte deCONZ-Gateway aus"
                 }
             }
         }
@@ -66,6 +66,7 @@
             "remote_button_quadruple_press": "\"{subtype}\" Taste vierfach geklickt",
             "remote_button_quintuple_press": "\"{subtype}\" Taste f\u00fcnffach geklickt",
             "remote_button_rotated": "Button gedreht \"{subtype}\".",
+            "remote_button_rotated_fast": "Button schnell gedreht \"{subtype}\"",
             "remote_button_rotation_stopped": "Die Tastendrehung \"{subtype}\" wurde gestoppt",
             "remote_button_short_press": "\"{subtype}\" Taste gedr\u00fcckt",
             "remote_button_short_release": "\"{subtype}\" Taste losgelassen",
@@ -93,7 +94,8 @@
             "deconz_devices": {
                 "data": {
                     "allow_clip_sensor": "deCONZ CLIP-Sensoren zulassen",
-                    "allow_deconz_groups": "deCONZ-Lichtgruppen zulassen"
+                    "allow_deconz_groups": "deCONZ-Lichtgruppen zulassen",
+                    "allow_new_devices": "Automatisches Hinzuf\u00fcgen von neuen Ger\u00e4ten zulassen"
                 },
                 "description": "Sichtbarkeit der deCONZ-Ger\u00e4tetypen konfigurieren",
                 "title": "deCONZ-Optionen"

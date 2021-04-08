@@ -1,5 +1,11 @@
 {
     "config": {
+        "abort": {
+            "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges."
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+        },
         "step": {
             "user": {
                 "data": {

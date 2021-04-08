@@ -17,10 +17,10 @@ from homeassistant.components.humidifier.const import (
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
+    PERCENTAGE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_state_change_event
@@ -88,17 +88,21 @@ class HumidifierDehumidifier(HomeAccessory):
         )
 
         # Current and target mode characteristics
-        self.char_current_humidifier_dehumidifier = serv_humidifier_dehumidifier.configure_char(
-            CHAR_CURRENT_HUMIDIFIER_DEHUMIDIFIER, value=0
+        self.char_current_humidifier_dehumidifier = (
+            serv_humidifier_dehumidifier.configure_char(
+                CHAR_CURRENT_HUMIDIFIER_DEHUMIDIFIER, value=0
+            )
         )
-        self.char_target_humidifier_dehumidifier = serv_humidifier_dehumidifier.configure_char(
-            CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER,
-            value=self._hk_device_class,
-            valid_values={
-                HC_HASS_TO_HOMEKIT_DEVICE_CLASS_NAME[
-                    device_class
-                ]: self._hk_device_class
-            },
+        self.char_target_humidifier_dehumidifier = (
+            serv_humidifier_dehumidifier.configure_char(
+                CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER,
+                value=self._hk_device_class,
+                valid_values={
+                    HC_HASS_TO_HOMEKIT_DEVICE_CLASS_NAME[
+                        device_class
+                    ]: self._hk_device_class
+                },
+            )
         )
 
         # Current and target humidity characteristics
@@ -139,7 +143,7 @@ class HumidifierDehumidifier(HomeAccessory):
             if humidity_state:
                 self._async_update_current_humidity(humidity_state)
 
-    async def run_handler(self):
+    async def run(self):
         """Handle accessory driver started event.
 
         Run inside the Home Assistant event loop.
@@ -151,7 +155,7 @@ class HumidifierDehumidifier(HomeAccessory):
                 self.async_update_current_humidity_event,
             )
 
-        await super().run_handler()
+        await super().run()
 
     @callback
     def async_update_current_humidity_event(self, event):
@@ -197,7 +201,7 @@ class HumidifierDehumidifier(HomeAccessory):
                 )
 
         if CHAR_ACTIVE in char_values:
-            self.call_service(
+            self.async_call_service(
                 DOMAIN,
                 SERVICE_TURN_ON if char_values[CHAR_ACTIVE] else SERVICE_TURN_OFF,
                 {ATTR_ENTITY_ID: self.entity_id},
@@ -206,12 +210,12 @@ class HumidifierDehumidifier(HomeAccessory):
 
         if self._target_humidity_char_name in char_values:
             humidity = round(char_values[self._target_humidity_char_name])
-            self.call_service(
+            self.async_call_service(
                 DOMAIN,
                 SERVICE_SET_HUMIDITY,
                 {ATTR_ENTITY_ID: self.entity_id, ATTR_HUMIDITY: humidity},
                 f"{self._target_humidity_char_name} to "
-                f"{char_values[self._target_humidity_char_name]}{UNIT_PERCENTAGE}",
+                f"{char_values[self._target_humidity_char_name]}{PERCENTAGE}",
             )
 
     @callback
@@ -236,6 +240,8 @@ class HumidifierDehumidifier(HomeAccessory):
 
         # Update target humidity
         target_humidity = new_state.attributes.get(ATTR_HUMIDITY)
-        if isinstance(target_humidity, (int, float)):
-            if self.char_target_humidity.value != target_humidity:
-                self.char_target_humidity.set_value(target_humidity)
+        if (
+            isinstance(target_humidity, (int, float))
+            and self.char_target_humidity.value != target_humidity
+        ):
+            self.char_target_humidity.set_value(target_humidity)

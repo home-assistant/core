@@ -1,7 +1,9 @@
 """Allow users to set and activate scenes."""
+from __future__ import annotations
+
 from collections import namedtuple
 import logging
-from typing import Any, List
+from typing import Any
 
 import voluptuous as vol
 
@@ -35,15 +37,15 @@ def _convert_states(states):
     """Convert state definitions to State objects."""
     result = {}
 
-    for entity_id in states:
+    for entity_id, info in states.items():
         entity_id = cv.entity_id(entity_id)
 
-        if isinstance(states[entity_id], dict):
-            entity_attrs = states[entity_id].copy()
+        if isinstance(info, dict):
+            entity_attrs = info.copy()
             state = entity_attrs.pop(ATTR_STATE, None)
             attributes = entity_attrs
         else:
-            state = states[entity_id]
+            state = info
             attributes = {}
 
         # YAML translates 'on' to a boolean
@@ -118,7 +120,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def scenes_with_entity(hass: HomeAssistant, entity_id: str) -> List[str]:
+def scenes_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
     """Return all scenes that reference the entity."""
     if DATA_PLATFORM not in hass.data:
         return []
@@ -133,7 +135,7 @@ def scenes_with_entity(hass: HomeAssistant, entity_id: str) -> List[str]:
 
 
 @callback
-def entities_in_scene(hass: HomeAssistant, entity_id: str) -> List[str]:
+def entities_in_scene(hass: HomeAssistant, entity_id: str) -> list[str]:
     """Return all entities in a scene."""
     if DATA_PLATFORM not in hass.data:
         return []
@@ -298,7 +300,7 @@ class HomeAssistantScene(Scene):
         return self.scene_config.id
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the scene state attributes."""
         attributes = {ATTR_ENTITY_ID: list(self.scene_config.states)}
         unique_id = self.unique_id

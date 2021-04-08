@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "unsupported_firmware": "Het apparaat gebruikt een niet-ondersteunde firmwareversie."
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie",
+            "unknown": "Onverwachte fout"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm_discovery": {
+                "description": "Wilt u het {model} bij {host} instellen? Voordat apparaten op batterijen kunnen worden ingesteld, moet het worden gewekt door op de knop op het apparaat te drukken."
+            },
+            "credentials": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Slapende (op batterij werkende) apparaten moeten wakker zijn wanneer deze apparaten opgezet worden. Je kunt deze apparaten nu wakker maken door op de knop erop te drukken"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button": "Knop",
+            "button1": "Eerste knop",
+            "button2": "Tweede knop",
+            "button3": "Derde knop"
+        },
+        "trigger_type": {
+            "double": "{subtype} dubbel geklikt",
+            "long": "{subtype} lang geklikt",
+            "long_single": "{subtype} lang geklikt en daarna \u00e9\u00e9n keer geklikt",
+            "single": "{subtype} enkel geklikt",
+            "single_long": "{subtype} een keer geklikt en daarna lang geklikt",
+            "triple": "{subtype} driemaal geklikt"
+        }
+    }
+}

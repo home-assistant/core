@@ -1,7 +1,7 @@
 {
     "config": {
-        "error": {
-            "identifier_exists": "A hely m\u00e1r regisztr\u00e1lt"
+        "abort": {
+            "already_configured": "A hely m\u00e1r konfigur\u00e1lva van"
         },
         "step": {
             "user": {

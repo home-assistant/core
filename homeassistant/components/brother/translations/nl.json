@@ -5,7 +5,7 @@
             "unsupported_model": "Dit printermodel wordt niet ondersteund."
         },
         "error": {
-            "connection_error": "Verbindingsfout.",
+            "cannot_connect": "Kan geen verbinding maken",
             "snmp_error": "SNMP-server uitgeschakeld of printer wordt niet ondersteund.",
             "wrong_host": "Ongeldige hostnaam of IP-adres."
         },
@@ -13,7 +13,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Printerhostnaam of IP-adres",
+                    "host": "Host",
                     "type": "Type printer"
                 },
                 "description": "Zet Brother printerintegratie op. Als u problemen heeft met de configuratie ga dan naar: https://www.home-assistant.io/integrations/brother"

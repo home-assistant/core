@@ -2,11 +2,11 @@
     "config": {
         "abort": {
             "already_configured": "L'account \u00e8 gi\u00e0 configurato",
-            "reauth_successful": "Token di accesso aggiornato correttamente"
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
         },
         "error": {
-            "authorization_error": "Errore di autorizzazione. Verificare di avere accesso al progetto e disporre delle credenziali corrette.",
-            "connection_error": "Impossibile connettersi ad Azure DevOps.",
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida",
             "project_error": "Non \u00e8 stato possibile ottenere informazioni sul progetto."
         },
         "flow_title": "Azure DevOps: {project_url}",
@@ -28,6 +28,5 @@
                 "title": "Aggiungere un progetto Azure DevOps"
             }
         }
-    },
-    "title": "Azure DevOps"
+    }
 }

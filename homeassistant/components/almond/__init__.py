@@ -1,9 +1,10 @@
 """Support for Almond."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
 import time
-from typing import Optional
 
 from aiohttp import ClientError, ClientSession
 import async_timeout
@@ -108,8 +109,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
         auth = AlmondLocalAuth(entry.data["host"], websession)
     else:
         # OAuth2
-        implementation = await config_entry_oauth2_flow.async_get_config_entry_implementation(
-            hass, entry
+        implementation = (
+            await config_entry_oauth2_flow.async_get_config_entry_implementation(
+                hass, entry
+            )
         )
         oauth_session = config_entry_oauth2_flow.OAuth2Session(
             hass, entry, implementation
@@ -206,7 +209,7 @@ async def _configure_almond_for_ha(
             msg = err
         _LOGGER.warning("Unable to configure Almond: %s", msg)
         await hass.auth.async_remove_refresh_token(refresh_token)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from err
 
     # Clear all other refresh tokens
     for token in list(user.refresh_tokens.values()):
@@ -279,7 +282,7 @@ class AlmondAgent(conversation.AbstractConversationAgent):
         return True
 
     async def async_process(
-        self, text: str, context: Context, conversation_id: Optional[str] = None
+        self, text: str, context: Context, conversation_id: str | None = None
     ) -> intent.IntentResponse:
         """Process a sentence."""
         response = await self.api.async_converse_text(text, conversation_id)

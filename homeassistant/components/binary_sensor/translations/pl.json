@@ -30,7 +30,7 @@
             "is_not_plugged_in": "sensor {entity_name} wykrywa od\u0142\u0105czenie",
             "is_not_powered": "sensor {entity_name} nie wykrywa zasilania",
             "is_not_present": "sensor {entity_name} nie wykrywa obecno\u015bci",
-            "is_not_unsafe": "sensor {entity_name} nie wykrywa niebezpiecze\u0144stwa",
+            "is_not_unsafe": "sensor {entity_name} nie wykrywa zagro\u017cenia",
             "is_occupied": "sensor {entity_name} jest zaj\u0119ty",
             "is_off": "sensor {entity_name} jest wy\u0142\u0105czony",
             "is_on": "sensor {entity_name} jest w\u0142\u0105czony",
@@ -41,7 +41,7 @@
             "is_problem": "sensor {entity_name} wykrywa problem",
             "is_smoke": "sensor {entity_name} wykrywa dym",
             "is_sound": "sensor {entity_name} wykrywa d\u017awi\u0119k",
-            "is_unsafe": "sensor {entity_name} wykrywa niebezpiecze\u0144stwo",
+            "is_unsafe": "sensor {entity_name} wykrywa zagro\u017cenie",
             "is_vibration": "sensor {entity_name} wykrywa wibracje"
         },
         "trigger_type": {
@@ -74,7 +74,7 @@
             "not_plugged_in": "nast\u0105pi od\u0142\u0105czenie {entity_name}",
             "not_powered": "nast\u0105pi od\u0142\u0105czenie zasilania {entity_name}",
             "not_present": "sensor {entity_name} przestanie wykrywa\u0107 obecno\u015b\u0107",
-            "not_unsafe": "sensor {entity_name} przestanie wykrywa\u0107 niebezpiecze\u0144stwo",
+            "not_unsafe": "sensor {entity_name} przestanie wykrywa\u0107 zagro\u017cenie",
             "occupied": "sensor {entity_name} stanie si\u0119 zaj\u0119ty",
             "opened": "nast\u0105pi otwarcie {entity_name}",
             "plugged_in": "nast\u0105pi pod\u0142\u0105czenie {entity_name}",
@@ -85,18 +85,22 @@
             "sound": "sensor {entity_name} wykryje d\u017awi\u0119k",
             "turned_off": "nast\u0105pi wy\u0142\u0105czenie {entity_name}",
             "turned_on": "nast\u0105pi w\u0142\u0105czenie {entity_name}",
-            "unsafe": "sensor {entity_name} wykryje niebezpiecze\u0144stwo",
+            "unsafe": "sensor {entity_name} wykryje zagro\u017cenie",
             "vibration": "sensor {entity_name} wykryje wibracje"
         }
     },
     "state": {
         "_": {
-            "off": "wy\u0142\u0105czony",
-            "on": "w\u0142\u0105czony"
+            "off": "wy\u0142.",
+            "on": "w\u0142."
         },
         "battery": {
             "off": "na\u0142adowana",
             "on": "roz\u0142adowana"
+        },
+        "battery_charging": {
+            "off": "roz\u0142adowywanie",
+            "on": "\u0142adowanie"
         },
         "cold": {
             "off": "normalnie",
@@ -122,6 +126,10 @@
             "off": "normalnie",
             "on": "gor\u0105co"
         },
+        "light": {
+            "off": "brak",
+            "on": "wykryto"
+        },
         "lock": {
             "off": "zamkni\u0119ty",
             "on": "otwarty"
@@ -134,6 +142,10 @@
             "off": "brak",
             "on": "wykryto"
         },
+        "moving": {
+            "off": "brak ruchu",
+            "on": "w ruchu"
+        },
         "occupancy": {
             "off": "brak",
             "on": "wykryto"
@@ -141,6 +153,10 @@
         "opening": {
             "off": "zamkni\u0119te",
             "on": "otwarte"
+        },
+        "plug": {
+            "off": "od\u0142\u0105czony",
+            "on": "pod\u0142\u0105czony"
         },
         "presence": {
             "off": "poza domem",

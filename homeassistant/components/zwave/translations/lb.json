@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Z-Wave ass scho konfigur\u00e9iert",
-            "one_instance_only": "Komponent \u00ebnnerst\u00ebtzt n\u00ebmmen eng Z-Wave Instanz"
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
+            "single_instance_allowed": "Scho konfigur\u00e9iert. N\u00ebmmen eng eenzeg Konfiguratioun m\u00e9iglech."
         },
         "error": {
             "option_error": "Z-Wave Validatioun net g\u00eblteg. Ass de Pad zum USB Stick richteg?"

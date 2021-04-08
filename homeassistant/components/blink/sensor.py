@@ -1,12 +1,13 @@
 """Support for Blink system camera sensors."""
 import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TEMPERATURE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, TYPE_TEMPERATURE, TYPE_WIFI_STRENGTH
 
@@ -14,7 +15,11 @@ _LOGGER = logging.getLogger(__name__)
 
 SENSORS = {
     TYPE_TEMPERATURE: ["Temperature", TEMP_FAHRENHEIT, DEVICE_CLASS_TEMPERATURE],
-    TYPE_WIFI_STRENGTH: ["Wifi Signal", "dBm", DEVICE_CLASS_SIGNAL_STRENGTH],
+    TYPE_WIFI_STRENGTH: [
+        "Wifi Signal",
+        SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        DEVICE_CLASS_SIGNAL_STRENGTH,
+    ],
 }
 
 
@@ -29,7 +34,7 @@ async def async_setup_entry(hass, config, async_add_entities):
     async_add_entities(entities)
 
 
-class BlinkSensor(Entity):
+class BlinkSensor(SensorEntity):
     """A Blink camera sensor."""
 
     def __init__(self, data, camera, sensor_type):

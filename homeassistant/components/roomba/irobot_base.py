@@ -51,6 +51,7 @@ SUPPORT_IROBOT = (
 STATE_MAP = {
     "": STATE_IDLE,
     "charge": STATE_DOCKED,
+    "evac": STATE_RETURNING,  # Emptying at cleanbase
     "hmMidMsn": STATE_CLEANING,  # Recharging at the middle of a cycle
     "hmPostMsn": STATE_RETURNING,  # Cycle finished
     "hmUsrDock": STATE_RETURNING,
@@ -167,7 +168,7 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
         state = self.vacuum_state
 

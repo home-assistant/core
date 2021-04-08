@@ -17,7 +17,7 @@
     "state": {
         "_": {
             "off": "Inactif",
-            "on": "On"
+            "on": "Actif"
         }
     },
     "title": "Interrupteur"

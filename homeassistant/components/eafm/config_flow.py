@@ -1,16 +1,11 @@
 """Config flow to configure flood monitoring gauges."""
-import logging
-
 from aioeafm import get_stations
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-# pylint: disable=unused-import
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class UKFloodsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -32,7 +27,8 @@ class UKFloodsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(station, raise_on_progress=False)
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
-                title=user_input["station"], data={"station": station},
+                title=user_input["station"],
+                data={"station": station},
             )
 
         session = async_get_clientsession(hass=self.hass)

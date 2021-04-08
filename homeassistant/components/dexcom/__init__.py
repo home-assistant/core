@@ -26,12 +26,6 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=180)
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up configured Dexcom."""
-    hass.data[DOMAIN] = {}
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Dexcom from a config entry."""
     try:
@@ -43,8 +37,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     except AccountError:
         return False
-    except SessionError:
-        raise ConfigEntryNotReady
+    except SessionError as error:
+        raise ConfigEntryNotReady from error
 
     if not entry.options:
         hass.config_entries.async_update_entry(
@@ -55,8 +49,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         try:
             return await hass.async_add_executor_job(dexcom.get_current_glucose_reading)
         except SessionError as error:
-            raise UpdateFailed(error)
+            raise UpdateFailed(error) from error
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         COORDINATOR: DataUpdateCoordinator(
             hass,
@@ -68,11 +63,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         UNDO_UPDATE_LISTENER: entry.add_update_listener(update_listener),
     }
 
-    await hass.data[DOMAIN][entry.entry_id][COORDINATOR].async_refresh()
+    await hass.data[DOMAIN][entry.entry_id][
+        COORDINATOR
+    ].async_config_entry_first_refresh()
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -83,8 +80,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

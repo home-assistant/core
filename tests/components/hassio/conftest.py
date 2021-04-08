@@ -1,5 +1,6 @@
 """Fixtures for Hass.io."""
 import os
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -9,8 +10,6 @@ from homeassistant.setup import async_setup_component
 
 from . import HASSIO_TOKEN
 
-from tests.async_mock import Mock, patch
-
 
 @pytest.fixture
 def hassio_env():
@@ -18,7 +17,7 @@ def hassio_env():
     with patch.dict(os.environ, {"HASSIO": "127.0.0.1"}), patch(
         "homeassistant.components.hassio.HassIO.is_connected",
         return_value={"result": "ok", "data": {}},
-    ), patch.dict(os.environ, {"HASSIO_TOKEN": "123456"}), patch(
+    ), patch.dict(os.environ, {"HASSIO_TOKEN": HASSIO_TOKEN}), patch(
         "homeassistant.components.hassio.HassIO.get_info",
         Mock(side_effect=HassioAPIError()),
     ):
@@ -35,7 +34,8 @@ def hassio_stubs(hassio_env, hass, hass_client, aioclient_mock):
         "homeassistant.components.hassio.HassIO.update_hass_timezone",
         return_value={"result": "ok"},
     ), patch(
-        "homeassistant.components.hassio.HassIO.get_info", side_effect=HassioAPIError(),
+        "homeassistant.components.hassio.HassIO.get_info",
+        side_effect=HassioAPIError(),
     ):
         hass.state = CoreState.starting
         hass.loop.run_until_complete(async_setup_component(hass, "hassio", {}))
@@ -60,7 +60,8 @@ async def hassio_client_supervisor(hass, aiohttp_client, hassio_stubs):
     """Return an authenticated HTTP client."""
     access_token = hass.auth.async_create_access_token(hassio_stubs)
     return await aiohttp_client(
-        hass.http.app, headers={"Authorization": f"Bearer {access_token}"},
+        hass.http.app,
+        headers={"Authorization": f"Bearer {access_token}"},
     )
 
 

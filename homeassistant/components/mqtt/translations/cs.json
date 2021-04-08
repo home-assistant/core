@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Je povolena pouze jedin\u00e1 konfigurace MQTT."
+            "single_instance_allowed": "Ji\u017e nastaveno. Je mo\u017en\u00e1 pouze jedin\u00e1 konfigurace."
         },
         "error": {
-            "cannot_connect": "Nelze se p\u0159ipojit k brokeru."
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
         },
         "step": {
             "broker": {
@@ -21,14 +21,35 @@
                 "data": {
                     "discovery": "Povolit automatick\u00e9 vyhled\u00e1v\u00e1n\u00ed za\u0159\u00edzen\u00ed"
                 },
-                "description": "Chcete nakonfigurovat slu\u017ebu Home Assistant pro p\u0159ipojen\u00ed k zprost\u0159edkovateli MQTT poskytovan\u00e9mu dopl\u0148kem hass.io {addon}?",
-                "title": "MQTT Broker prost\u0159ednictv\u00edm dopl\u0148ku Hass.io"
+                "description": "Chcete nakonfigurovat Home Assistant pro p\u0159ipojen\u00ed k MQTT poskytovan\u00e9mu dopl\u0148kem {addon} z Supervisor?",
+                "title": "MQTT Broker prost\u0159ednictv\u00edm dopl\u0148ku Supervisor"
             }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "Prvn\u00ed tla\u010d\u00edtko",
+            "button_2": "Druh\u00e9 tla\u010d\u00edtko",
+            "button_3": "T\u0159et\u00ed tla\u010d\u00edtko",
+            "button_4": "\u010ctvrt\u00e9 tla\u010d\u00edtko",
+            "button_5": "P\u00e1t\u00e9 tla\u010d\u00edtko",
+            "button_6": "\u0160est\u00e9 tla\u010d\u00edtko",
+            "turn_off": "Vypnout",
+            "turn_on": "Zapnout"
+        },
+        "trigger_type": {
+            "button_double_press": "\"{subtype}\" stisknuto dvakr\u00e1t",
+            "button_long_release": "Uvoln\u011bno \"{subtype}\" po dlouh\u00e9m stisku",
+            "button_quadruple_press": "\"{subtype}\" stisknuto \u010dty\u0159ikr\u00e1t",
+            "button_quintuple_press": "\"{subtype}\" stisknuto \u010dty\u0159ikr\u00e1t",
+            "button_short_press": "\"{subtype}\" stisknuto",
+            "button_short_release": "Uvoln\u011bno \"{subtype}\"",
+            "button_triple_press": "\"{subtype}\" stisknuto t\u0159ikr\u00e1t"
         }
     },
     "options": {
         "error": {
-            "cannot_connect": "Nelze se p\u0159ipojit k brokeru."
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
         },
         "step": {
             "broker": {
@@ -42,7 +63,11 @@
             "options": {
                 "data": {
                     "birth_enable": "Povolit zpr\u00e1vu p\u0159i p\u0159ipojen\u00ed",
-                    "discovery": "Povolit zji\u0161\u0165ov\u00e1n\u00ed"
+                    "discovery": "Povolit zji\u0161\u0165ov\u00e1n\u00ed",
+                    "will_payload": "Obsah zpr\u00e1vy se z\u00e1v\u011bt\u00ed",
+                    "will_qos": "QoS zpr\u00e1vy se z\u00e1v\u011bt\u00ed",
+                    "will_retain": "Zachov\u00e1n\u00ed zpr\u00e1vy se z\u00e1v\u011bt\u00ed",
+                    "will_topic": "T\u00e9ma zpr\u00e1vy se z\u00e1v\u011bt\u00ed (will message)"
                 },
                 "description": "Zvolte mo\u017enosti MQTT."
             }

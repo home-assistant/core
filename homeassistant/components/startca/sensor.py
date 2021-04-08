@@ -7,18 +7,17 @@ import async_timeout
 import voluptuous as vol
 import xmltodict
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_MONITORED_VARIABLES,
     CONF_NAME,
     DATA_GIGABYTES,
     HTTP_OK,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,7 +29,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(hours=1)
 REQUEST_TIMEOUT = 5  # seconds
 
 SENSOR_TYPES = {
-    "usage": ["Usage Ratio", UNIT_PERCENTAGE, "mdi:percent"],
+    "usage": ["Usage Ratio", PERCENTAGE, "mdi:percent"],
     "usage_gb": ["Usage", DATA_GIGABYTES, "mdi:download"],
     "limit": ["Data limit", DATA_GIGABYTES, "mdi:download"],
     "used_download": ["Used Download", DATA_GIGABYTES, "mdi:download"],
@@ -75,7 +74,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(sensors, True)
 
 
-class StartcaSensor(Entity):
+class StartcaSensor(SensorEntity):
     """Representation of Start.ca Bandwidth sensor."""
 
     def __init__(self, startcadata, sensor_type, name):

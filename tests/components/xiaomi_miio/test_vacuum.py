@@ -1,7 +1,9 @@
 """The tests for the Xiaomi vacuum platform."""
 from datetime import datetime, time, timedelta
 from unittest import mock
+from unittest.mock import MagicMock, patch
 
+from miio import DeviceException
 import pytest
 from pytz import utc
 
@@ -20,6 +22,7 @@ from homeassistant.components.vacuum import (
     STATE_CLEANING,
     STATE_ERROR,
 )
+from homeassistant.components.xiaomi_miio import const
 from homeassistant.components.xiaomi_miio.const import DOMAIN as XIAOMI_DOMAIN
 from homeassistant.components.xiaomi_miio.vacuum import (
     ATTR_CLEANED_AREA,
@@ -36,7 +39,6 @@ from homeassistant.components.xiaomi_miio.vacuum import (
     ATTR_SIDE_BRUSH_LEFT,
     ATTR_TIMERS,
     CONF_HOST,
-    CONF_NAME,
     CONF_TOKEN,
     SERVICE_CLEAN_SEGMENT,
     SERVICE_CLEAN_ZONE,
@@ -49,11 +51,14 @@ from homeassistant.components.xiaomi_miio.vacuum import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
-    CONF_PLATFORM,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
 )
-from homeassistant.setup import async_setup_component
+
+from .test_config_flow import TEST_MAC
+
+from tests.common import MockConfigEntry
 
 PLATFORM = "xiaomi_miio"
 
@@ -70,7 +75,7 @@ STATUS_CALLS = [
 @pytest.fixture(name="mock_mirobo_is_got_error")
 def mirobo_is_got_error_fixture():
     """Mock mock_mirobo."""
-    mock_vacuum = mock.MagicMock()
+    mock_vacuum = MagicMock()
     mock_vacuum.status().data = {"test": "raw"}
     mock_vacuum.status().is_on = False
     mock_vacuum.status().fanspeed = 38
@@ -98,21 +103,19 @@ def mirobo_is_got_error_fixture():
     mock_vacuum.dnd_status().start = time(hour=22, minute=0)
     mock_vacuum.dnd_status().end = time(hour=6, minute=0)
 
-    mock_timer_1 = mock.MagicMock()
+    mock_timer_1 = MagicMock()
     mock_timer_1.enabled = True
     mock_timer_1.cron = "5 5 1 8 1"
     mock_timer_1.next_schedule = datetime(2020, 5, 23, 13, 21, 10, tzinfo=utc)
 
-    mock_timer_2 = mock.MagicMock()
+    mock_timer_2 = MagicMock()
     mock_timer_2.enabled = False
     mock_timer_2.cron = "5 5 1 8 2"
     mock_timer_2.next_schedule = datetime(2020, 5, 23, 13, 21, 10, tzinfo=utc)
 
     mock_vacuum.timer.return_value = [mock_timer_1, mock_timer_2]
 
-    with mock.patch(
-        "homeassistant.components.xiaomi_miio.vacuum.Vacuum"
-    ) as mock_vaccum_cls:
+    with patch("homeassistant.components.xiaomi_miio.vacuum.Vacuum") as mock_vaccum_cls:
         mock_vaccum_cls.return_value = mock_vacuum
         yield mock_vacuum
 
@@ -135,14 +138,12 @@ new_fanspeeds = {
 @pytest.fixture(name="mock_mirobo_fanspeeds", params=[old_fanspeeds, new_fanspeeds])
 def mirobo_old_speeds_fixture(request):
     """Fixture for testing both types of fanspeeds."""
-    mock_vacuum = mock.MagicMock()
+    mock_vacuum = MagicMock()
     mock_vacuum.status().battery = 32
     mock_vacuum.fan_speed_presets.return_value = request.param
     mock_vacuum.status().fanspeed = list(request.param.values())[0]
 
-    with mock.patch(
-        "homeassistant.components.xiaomi_miio.vacuum.Vacuum"
-    ) as mock_vaccum_cls:
+    with patch("homeassistant.components.xiaomi_miio.vacuum.Vacuum") as mock_vaccum_cls:
         mock_vaccum_cls.return_value = mock_vacuum
         yield mock_vacuum
 
@@ -150,7 +151,7 @@ def mirobo_old_speeds_fixture(request):
 @pytest.fixture(name="mock_mirobo_is_on")
 def mirobo_is_on_fixture():
     """Mock mock_mirobo."""
-    mock_vacuum = mock.MagicMock()
+    mock_vacuum = MagicMock()
     mock_vacuum.status().data = {"test": "raw"}
     mock_vacuum.status().is_on = True
     mock_vacuum.status().fanspeed = 99
@@ -176,46 +177,53 @@ def mirobo_is_on_fixture():
     mock_vacuum.status().state_code = 5
     mock_vacuum.dnd_status().enabled = False
 
-    mock_timer_1 = mock.MagicMock()
+    mock_timer_1 = MagicMock()
     mock_timer_1.enabled = True
     mock_timer_1.cron = "5 5 1 8 1"
     mock_timer_1.next_schedule = datetime(2020, 5, 23, 13, 21, 10, tzinfo=utc)
 
-    mock_timer_2 = mock.MagicMock()
+    mock_timer_2 = MagicMock()
     mock_timer_2.enabled = False
     mock_timer_2.cron = "5 5 1 8 2"
     mock_timer_2.next_schedule = datetime(2020, 5, 23, 13, 21, 10, tzinfo=utc)
 
     mock_vacuum.timer.return_value = [mock_timer_1, mock_timer_2]
 
-    with mock.patch(
-        "homeassistant.components.xiaomi_miio.vacuum.Vacuum"
-    ) as mock_vaccum_cls:
+    with patch("homeassistant.components.xiaomi_miio.vacuum.Vacuum") as mock_vaccum_cls:
         mock_vaccum_cls.return_value = mock_vacuum
         yield mock_vacuum
 
 
-@pytest.fixture(name="mock_mirobo_errors")
-def mirobo_errors_fixture():
-    """Mock mock_mirobo_errors to simulate a bad vacuum status request."""
-    mock_vacuum = mock.MagicMock()
-    mock_vacuum.status.side_effect = OSError()
-    with mock.patch(
-        "homeassistant.components.xiaomi_miio.vacuum.Vacuum"
-    ) as mock_vaccum_cls:
-        mock_vaccum_cls.return_value = mock_vacuum
-        yield mock_vacuum
-
-
-async def test_xiaomi_exceptions(hass, caplog, mock_mirobo_errors):
-    """Test vacuum supported features."""
+async def test_xiaomi_exceptions(hass, caplog, mock_mirobo_is_on):
+    """Test error logging on exceptions."""
     entity_name = "test_vacuum_cleaner_error"
-    await setup_component(hass, entity_name)
+    entity_id = await setup_component(hass, entity_name)
 
+    def is_available():
+        state = hass.states.get(entity_id)
+        return state.state != STATE_UNAVAILABLE
+
+    # The initial setup has to be done successfully
     assert "Initializing with host 192.168.1.100 (token 12345...)" in caplog.text
-    assert mock_mirobo_errors.status.call_count == 1
-    assert "ERROR" in caplog.text
-    assert "Got OSError while fetching the state" in caplog.text
+    assert "WARNING" not in caplog.text
+    assert is_available()
+
+    # Second update causes an exception, which should be logged
+    mock_mirobo_is_on.status.side_effect = DeviceException("dummy exception")
+    await hass.helpers.entity_component.async_update_entity(entity_id)
+    assert "WARNING" in caplog.text
+    assert "Got exception while fetching the state" in caplog.text
+    assert not is_available()
+
+    # Third update does not get logged as the device is already unavailable,
+    # so we clear the log and reset the status to test that
+    caplog.clear()
+    mock_mirobo_is_on.status.reset_mock()
+
+    await hass.helpers.entity_component.async_update_entity(entity_id)
+    assert "Got exception while fetching the state" not in caplog.text
+    assert not is_available()
+    assert mock_mirobo_is_on.status.call_count == 1
 
 
 async def test_xiaomi_vacuum_services(hass, caplog, mock_mirobo_is_got_error):
@@ -463,7 +471,7 @@ async def test_xiaomi_vacuum_fanspeeds(hass, caplog, mock_mirobo_fanspeeds):
         {"entity_id": entity_id, "fan_speed": "invent"},
         blocking=True,
     )
-    assert "ERROR" in caplog.text
+    assert "Fan speed step not recognized" in caplog.text
 
 
 async def test_xiaomi_vacuum_goto_service(hass, caplog, mock_mirobo_is_on):
@@ -515,17 +523,21 @@ async def setup_component(hass, entity_name):
     """Set up vacuum component."""
     entity_id = f"{DOMAIN}.{entity_name}"
 
-    await async_setup_component(
-        hass,
-        DOMAIN,
-        {
-            DOMAIN: {
-                CONF_PLATFORM: PLATFORM,
-                CONF_HOST: "192.168.1.100",
-                CONF_NAME: entity_name,
-                CONF_TOKEN: "12345678901234567890123456789012",
-            }
+    config_entry = MockConfigEntry(
+        domain=XIAOMI_DOMAIN,
+        unique_id="123456",
+        title=entity_name,
+        data={
+            const.CONF_FLOW_TYPE: const.CONF_DEVICE,
+            CONF_HOST: "192.168.1.100",
+            CONF_TOKEN: "12345678901234567890123456789012",
+            const.CONF_MODEL: const.MODELS_VACUUM[0],
+            const.CONF_MAC: TEST_MAC,
         },
     )
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+
     return entity_id

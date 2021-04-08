@@ -2,6 +2,7 @@
 import asyncio
 import logging
 
+# pylint: disable=import-error
 from haffmpeg.tools import IMAGE_JPEG, ImageFrame
 from pyezviz.camera import EzvizCamera
 from pyezviz.client import EzvizClient, PyEzvizError
@@ -157,7 +158,7 @@ class HassEzvizCamera(Camera):
         return True
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the Ezviz-specific camera state attributes."""
         return {
             # if privacy == true, the device closed the lid or did a 180° tilt
@@ -216,7 +217,7 @@ class HassEzvizCamera(Camera):
 
     async def async_camera_image(self):
         """Return a frame from the camera stream."""
-        ffmpeg = ImageFrame(self._ffmpeg.binary, loop=self.hass.loop)
+        ffmpeg = ImageFrame(self._ffmpeg.binary)
 
         image = await asyncio.shield(
             ffmpeg.get_image(self._rtsp_stream, output_format=IMAGE_JPEG)

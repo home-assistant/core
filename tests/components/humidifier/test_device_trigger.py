@@ -6,7 +6,7 @@ import voluptuous_serialize
 
 import homeassistant.components.automation as automation
 from homeassistant.components.humidifier import DOMAIN, const, device_trigger
-from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_MODE, ATTR_SUPPORTED_FEATURES, STATE_OFF, STATE_ON
 from homeassistant.helpers import config_validation as cv, device_registry
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -20,6 +20,7 @@ from tests.common import (
     mock_device_registry,
     mock_registry,
 )
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
 @pytest.fixture
@@ -55,7 +56,7 @@ async def test_get_triggers(hass, device_reg, entity_reg):
         STATE_ON,
         {
             const.ATTR_HUMIDITY: 23,
-            const.ATTR_MODE: "home",
+            ATTR_MODE: "home",
             const.ATTR_AVAILABLE_MODES: ["home", "away"],
             ATTR_SUPPORTED_FEATURES: 1,
         },
@@ -94,7 +95,7 @@ async def test_if_fires_on_state_change(hass, calls):
         STATE_ON,
         {
             const.ATTR_HUMIDITY: 23,
-            const.ATTR_MODE: "home",
+            ATTR_MODE: "home",
             const.ATTR_AVAILABLE_MODES: ["home", "away"],
             ATTR_SUPPORTED_FEATURES: 1,
         },
@@ -242,7 +243,7 @@ async def test_invalid_config(hass, calls):
         STATE_ON,
         {
             const.ATTR_HUMIDITY: 23,
-            const.ATTR_MODE: "home",
+            ATTR_MODE: "home",
             const.ATTR_AVAILABLE_MODES: ["home", "away"],
             ATTR_SUPPORTED_FEATURES: 1,
         },

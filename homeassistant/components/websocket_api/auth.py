@@ -62,7 +62,7 @@ class AuthPhase:
             )
             self._logger.warning(error_msg)
             self._send_message(auth_invalid_message(error_msg))
-            raise Disconnect
+            raise Disconnect from err
 
         if "access_token" in msg:
             self._logger.debug("Received access_token")

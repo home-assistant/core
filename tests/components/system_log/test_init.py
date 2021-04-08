@@ -2,14 +2,13 @@
 import asyncio
 import logging
 import queue
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import system_log
 from homeassistant.core import callback
-
-from tests.async_mock import MagicMock, patch
 
 _LOGGER = logging.getLogger("test_logger")
 BASIC_CONFIG = {"system_log": {"max_entries": 2}}
@@ -31,6 +30,8 @@ async def _async_block_until_queue_empty(hass, sq):
     await hass.async_block_till_done()
     while not sq.empty():
         await asyncio.sleep(0.01)
+    hass.data[system_log.DOMAIN].acquire()
+    hass.data[system_log.DOMAIN].release()
     await hass.async_block_till_done()
 
 
@@ -228,9 +229,7 @@ async def test_clear_logs(hass, simple_queue, hass_client):
     _LOGGER.error("error message")
     await _async_block_until_queue_empty(hass, simple_queue)
 
-    hass.async_add_job(
-        hass.services.async_call(system_log.DOMAIN, system_log.SERVICE_CLEAR, {})
-    )
+    await hass.services.async_call(system_log.DOMAIN, system_log.SERVICE_CLEAR, {})
     await _async_block_until_queue_empty(hass, simple_queue)
 
     # Assert done by get_error_log
@@ -242,10 +241,8 @@ async def test_write_log(hass):
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     logger = MagicMock()
     with patch("logging.getLogger", return_value=logger) as mock_logging:
-        hass.async_add_job(
-            hass.services.async_call(
-                system_log.DOMAIN, system_log.SERVICE_WRITE, {"message": "test_message"}
-            )
+        await hass.services.async_call(
+            system_log.DOMAIN, system_log.SERVICE_WRITE, {"message": "test_message"}
         )
         await hass.async_block_till_done()
     mock_logging.assert_called_once_with("homeassistant.components.system_log.external")
@@ -256,12 +253,10 @@ async def test_write_choose_logger(hass):
     """Test that correct logger is chosen."""
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     with patch("logging.getLogger") as mock_logging:
-        hass.async_add_job(
-            hass.services.async_call(
-                system_log.DOMAIN,
-                system_log.SERVICE_WRITE,
-                {"message": "test_message", "logger": "myLogger"},
-            )
+        await hass.services.async_call(
+            system_log.DOMAIN,
+            system_log.SERVICE_WRITE,
+            {"message": "test_message", "logger": "myLogger"},
         )
         await hass.async_block_till_done()
     mock_logging.assert_called_once_with("myLogger")
@@ -272,12 +267,10 @@ async def test_write_choose_level(hass):
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     logger = MagicMock()
     with patch("logging.getLogger", return_value=logger):
-        hass.async_add_job(
-            hass.services.async_call(
-                system_log.DOMAIN,
-                system_log.SERVICE_WRITE,
-                {"message": "test_message", "level": "debug"},
-            )
+        await hass.services.async_call(
+            system_log.DOMAIN,
+            system_log.SERVICE_WRITE,
+            {"message": "test_message", "level": "debug"},
         )
         await hass.async_block_till_done()
     assert logger.method_calls[0] == ("debug", ("test_message",))
@@ -298,20 +291,19 @@ async def async_log_error_from_test_path(hass, path, sq):
     call_path = "internal_path.py"
     with patch.object(
         _LOGGER, "findCaller", MagicMock(return_value=(call_path, 0, None, None))
+    ), patch(
+        "traceback.extract_stack",
+        MagicMock(
+            return_value=[
+                get_frame("main_path/main.py"),
+                get_frame(path),
+                get_frame(call_path),
+                get_frame("venv_path/logging/log.py"),
+            ]
+        ),
     ):
-        with patch(
-            "traceback.extract_stack",
-            MagicMock(
-                return_value=[
-                    get_frame("main_path/main.py"),
-                    get_frame(path),
-                    get_frame(call_path),
-                    get_frame("venv_path/logging/log.py"),
-                ]
-            ),
-        ):
-            _LOGGER.error("error message")
-            await _async_block_until_queue_empty(hass, sq)
+        _LOGGER.error("error message")
+        await _async_block_until_queue_empty(hass, sq)
 
 
 async def test_homeassistant_path(hass, simple_queue, hass_client):

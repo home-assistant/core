@@ -1,4 +1,6 @@
 """Tests for the Abode light device."""
+from unittest.mock import patch
+
 from homeassistant.components.abode import ATTR_DEVICE_ID
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -14,10 +16,9 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
+from homeassistant.helpers import entity_registry as er
 
 from .common import setup_platform
-
-from tests.async_mock import patch
 
 DEVICE_ID = "light.living_room_lamp"
 
@@ -25,7 +26,7 @@ DEVICE_ID = "light.living_room_lamp"
 async def test_entity_registry(hass):
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, LIGHT_DOMAIN)
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get(DEVICE_ID)
     assert entry.unique_id == "741385f4388b2637df4c6b398fe50581"

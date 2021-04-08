@@ -1,0 +1,12 @@
+{
+  "domain": "kulersky",
+  "name": "Kuler Sky",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/kulersky",
+  "requirements": [
+    "pykulersky==0.5.2"
+  ],
+  "codeowners": [
+    "@emlove"
+  ]
+}

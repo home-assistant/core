@@ -65,11 +65,11 @@ async def async_setup(hass, config):
 
     hass.bus.async_listen(EVENT_COMPONENT_LOADED, component_loaded)
 
-    tasks = [setup_panel(panel_name) for panel_name in SECTIONS]
+    tasks = [asyncio.create_task(setup_panel(panel_name)) for panel_name in SECTIONS]
 
     for panel_name in ON_DEMAND:
         if panel_name in hass.config.components:
-            tasks.append(setup_panel(panel_name))
+            tasks.append(asyncio.create_task(setup_panel(panel_name)))
 
     if tasks:
         await asyncio.wait(tasks)
@@ -189,7 +189,7 @@ class BaseEditConfigView(HomeAssistantView):
 
     async def read_config(self, hass):
         """Read the config."""
-        current = await hass.async_add_job(_read, hass.config.path(self.path))
+        current = await hass.async_add_executor_job(_read, hass.config.path(self.path))
         if not current:
             current = self._empty_config()
         return current

@@ -4,8 +4,8 @@
             "already_configured": "El host ya est\u00e1 configurado."
         },
         "error": {
-            "connection": "Error de conexi\u00f3n: comprueba tu host, puerto y ssl",
-            "login": "Error de inicio de sesi\u00f3n: comprueba tu nombre de usuario y contrase\u00f1a",
+            "cannot_connect": "No se pudo conectar",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "missing_data": "Faltan datos: por favor, vuelva a intentarlo m\u00e1s tarde o pruebe con otra configuraci\u00f3n",
             "otp_failed": "La autenticaci\u00f3n de dos pasos fall\u00f3, vuelva a intentar con un nuevo c\u00f3digo de acceso",
             "unknown": "Error desconocido: por favor, consulta logs para obtener m\u00e1s detalles"
@@ -23,7 +23,8 @@
                     "password": "Contrase\u00f1a",
                     "port": "Puerto",
                     "ssl": "Usar SSL/TLS para conectar con tu NAS",
-                    "username": "Usuario"
+                    "username": "Usuario",
+                    "verify_ssl": "Verificar certificado SSL"
                 },
                 "description": "\u00bfQuieres configurar {name} ({host})?",
                 "title": "Synology DSM"
@@ -34,7 +35,8 @@
                     "password": "Contrase\u00f1a",
                     "port": "Puerto",
                     "ssl": "Usar SSL/TLS para conectar con tu NAS",
-                    "username": "Usuario"
+                    "username": "Usuario",
+                    "verify_ssl": "Verificar certificado SSL"
                 },
                 "title": "Synology DSM"
             }
@@ -44,7 +46,8 @@
         "step": {
             "init": {
                 "data": {
-                    "scan_interval": "Minutos entre escaneos"
+                    "scan_interval": "Minutos entre escaneos",
+                    "timeout": "Tiempo de espera (segundos)"
                 }
             }
         }

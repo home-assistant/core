@@ -26,7 +26,7 @@ ATTR_UDP_PORT = "udp_port"
 
 # Units of measurement
 CURRENT_MA = "mA"
-SIGNAL_DBM = "dBm"
 
 # Services
 SERVICE_EFFECT = "effect"
+SERVICE_PRESET = "preset"

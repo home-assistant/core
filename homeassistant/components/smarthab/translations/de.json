@@ -1,7 +1,8 @@
 {
     "config": {
         "error": {
-            "unknown_error": "Unerwarteter Fehler"
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "unknown": "Unerwarteter Fehler"
         },
         "step": {
             "user": {

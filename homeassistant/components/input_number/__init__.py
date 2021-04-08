@@ -1,27 +1,28 @@
 """Support to set a numeric value from a slider or text box."""
+from __future__ import annotations
+
 import logging
-import typing
 
 import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_EDITABLE,
     ATTR_MODE,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_ICON,
     CONF_ID,
     CONF_MODE,
     CONF_NAME,
+    CONF_UNIT_OF_MEASUREMENT,
     SERVICE_RELOAD,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceCallType
+from homeassistant.helpers.typing import ConfigType, ServiceCallType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,7 +68,7 @@ CREATE_FIELDS = {
     vol.Optional(CONF_INITIAL): vol.Coerce(float),
     vol.Optional(CONF_STEP, default=1): vol.All(vol.Coerce(float), vol.Range(min=1e-3)),
     vol.Optional(CONF_ICON): cv.icon,
-    vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_MODE, default=MODE_SLIDER): vol.In([MODE_BOX, MODE_SLIDER]),
 }
 
@@ -78,7 +79,7 @@ UPDATE_FIELDS = {
     vol.Optional(CONF_INITIAL): vol.Coerce(float),
     vol.Optional(CONF_STEP): vol.All(vol.Coerce(float), vol.Range(min=1e-3)),
     vol.Optional(CONF_ICON): cv.icon,
-    vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_MODE): vol.In([MODE_BOX, MODE_SLIDER]),
 }
 
@@ -95,7 +96,7 @@ CONFIG_SCHEMA = vol.Schema(
                         vol.Coerce(float), vol.Range(min=1e-3)
                     ),
                     vol.Optional(CONF_ICON): cv.icon,
-                    vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string,
+                    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
                     vol.Optional(CONF_MODE, default=MODE_SLIDER): vol.In(
                         [MODE_BOX, MODE_SLIDER]
                     ),
@@ -111,7 +112,7 @@ STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an input slider."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     id_manager = collection.IDManager()
@@ -119,8 +120,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     yaml_collection = collection.YamlCollection(
         logging.getLogger(f"{__name__}.yaml_collection"), id_manager
     )
-    collection.attach_entity_component_collection(
-        component, yaml_collection, InputNumber.from_yaml
+    collection.sync_entity_lifecycle(
+        hass, DOMAIN, DOMAIN, component, yaml_collection, InputNumber.from_yaml
     )
 
     storage_collection = NumberStorageCollection(
@@ -128,8 +129,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
     )
-    collection.attach_entity_component_collection(
-        component, storage_collection, InputNumber
+    collection.sync_entity_lifecycle(
+        hass, DOMAIN, DOMAIN, component, storage_collection, InputNumber
     )
 
     await yaml_collection.async_load(
@@ -140,9 +141,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     collection.StorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
-
-    collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, yaml_collection)
-    collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, storage_collection)
 
     async def reload_service_handler(service_call: ServiceCallType) -> None:
         """Reload yaml entities."""
@@ -180,16 +178,16 @@ class NumberStorageCollection(collection.StorageCollection):
     CREATE_SCHEMA = vol.Schema(vol.All(CREATE_FIELDS, _cv_input_number))
     UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
 
-    async def _process_create_data(self, data: typing.Dict) -> typing.Dict:
+    async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
         return self.CREATE_SCHEMA(data)
 
     @callback
-    def _get_suggested_id(self, info: typing.Dict) -> str:
+    def _get_suggested_id(self, info: dict) -> str:
         """Suggest an ID based on the config."""
         return info[CONF_NAME]
 
-    async def _update_data(self, data: dict, update_data: typing.Dict) -> typing.Dict:
+    async def _update_data(self, data: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         update_data = self.UPDATE_SCHEMA(update_data)
         return _cv_input_number({**data, **update_data})
@@ -198,14 +196,14 @@ class NumberStorageCollection(collection.StorageCollection):
 class InputNumber(RestoreEntity):
     """Representation of a slider."""
 
-    def __init__(self, config: typing.Dict):
+    def __init__(self, config: dict):
         """Initialize an input number."""
         self._config = config
         self.editable = True
         self._current_value = config.get(CONF_INITIAL)
 
     @classmethod
-    def from_yaml(cls, config: typing.Dict) -> "InputNumber":
+    def from_yaml(cls, config: dict) -> InputNumber:
         """Return entity instance initialized from yaml storage."""
         input_num = cls(config)
         input_num.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
@@ -250,15 +248,15 @@ class InputNumber(RestoreEntity):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return self._config.get(ATTR_UNIT_OF_MEASUREMENT)
+        return self._config.get(CONF_UNIT_OF_MEASUREMENT)
 
     @property
-    def unique_id(self) -> typing.Optional[str]:
+    def unique_id(self) -> str | None:
         """Return unique id of the entity."""
         return self._config[CONF_ID]
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             ATTR_INITIAL: self._config.get(CONF_INITIAL),
@@ -304,7 +302,7 @@ class InputNumber(RestoreEntity):
         """Decrement value."""
         await self.async_set_value(max(self._current_value - self._step, self._minimum))
 
-    async def async_update_config(self, config: typing.Dict) -> None:
+    async def async_update_config(self, config: dict) -> None:
         """Handle when the config is updated."""
         self._config = config
         # just in case min/max values changed

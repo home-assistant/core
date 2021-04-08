@@ -1,15 +1,23 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Konto bereits konfiguriert",
-            "no_device": "Auf keinem Ihrer Ger\u00e4te ist \"Find my iPhone\" aktiviert"
+            "already_configured": "Konto wurde bereits konfiguriert",
+            "no_device": "Auf keinem Ihrer Ger\u00e4te ist \"Find my iPhone\" aktiviert",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "error": {
-            "login": "Login-Fehler: Bitte \u00fcberpr\u00fcfe deine E-Mail & Passwort",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "send_verification_code": "Fehler beim Senden des Best\u00e4tigungscodes",
             "validate_verification_code": "Verifizierung des Verifizierungscodes fehlgeschlagen. W\u00e4hle ein vertrauensw\u00fcrdiges Ger\u00e4t aus und starte die Verifizierung erneut"
         },
         "step": {
+            "reauth": {
+                "data": {
+                    "password": "Passwort"
+                },
+                "description": "Ihr zuvor eingegebenes Passwort f\u00fcr {username} funktioniert nicht mehr. Aktualisieren Sie Ihr Passwort, um diese Integration weiterhin zu verwenden.",
+                "title": "Integration erneut authentifizieren"
+            },
             "trusted_device": {
                 "data": {
                     "trusted_device": "Vertrauensw\u00fcrdiges Ger\u00e4t"

@@ -1,4 +1,6 @@
 """Support for Tuya switches."""
+from datetime import timedelta
+
 from homeassistant.components.switch import (
     DOMAIN as SENSOR_DOMAIN,
     ENTITY_ID_FORMAT,
@@ -10,7 +12,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from . import TuyaDevice
 from .const import DOMAIN, TUYA_DATA, TUYA_DISCOVERY_NEW
 
-PARALLEL_UPDATES = 0
+SCAN_INTERVAL = timedelta(seconds=15)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -23,7 +25,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if not dev_ids:
             return
         entities = await hass.async_add_executor_job(
-            _setup_entities, hass, dev_ids, platform,
+            _setup_entities,
+            hass,
+            dev_ids,
+            platform,
         )
         async_add_entities(entities)
 

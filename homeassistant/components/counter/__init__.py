@@ -1,6 +1,7 @@
 """Component to count within automations."""
+from __future__ import annotations
+
 import logging
-from typing import Dict, Optional
 
 import voluptuous as vol
 
@@ -12,13 +13,13 @@ from homeassistant.const import (
     CONF_MINIMUM,
     CONF_NAME,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -100,7 +101,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the counters."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     id_manager = collection.IDManager()
@@ -108,8 +109,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     yaml_collection = collection.YamlCollection(
         logging.getLogger(f"{__name__}.yaml_collection"), id_manager
     )
-    collection.attach_entity_component_collection(
-        component, yaml_collection, Counter.from_yaml
+    collection.sync_entity_lifecycle(
+        hass, DOMAIN, DOMAIN, component, yaml_collection, Counter.from_yaml
     )
 
     storage_collection = CounterStorageCollection(
@@ -117,8 +118,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
     )
-    collection.attach_entity_component_collection(
-        component, storage_collection, Counter
+    collection.sync_entity_lifecycle(
+        hass, DOMAIN, DOMAIN, component, storage_collection, Counter
     )
 
     await yaml_collection.async_load(
@@ -129,9 +130,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     collection.StorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
-
-    collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, yaml_collection)
-    collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, storage_collection)
 
     component.async_register_entity_service(SERVICE_INCREMENT, {}, "async_increment")
     component.async_register_entity_service(SERVICE_DECREMENT, {}, "async_decrement")
@@ -157,16 +155,16 @@ class CounterStorageCollection(collection.StorageCollection):
     CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
     UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
 
-    async def _process_create_data(self, data: Dict) -> Dict:
+    async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
         return self.CREATE_SCHEMA(data)
 
     @callback
-    def _get_suggested_id(self, info: Dict) -> str:
+    def _get_suggested_id(self, info: dict) -> str:
         """Suggest an ID based on the config."""
         return info[CONF_NAME]
 
-    async def _update_data(self, data: dict, update_data: Dict) -> Dict:
+    async def _update_data(self, data: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         update_data = self.UPDATE_SCHEMA(update_data)
         return {**data, **update_data}
@@ -175,14 +173,14 @@ class CounterStorageCollection(collection.StorageCollection):
 class Counter(RestoreEntity):
     """Representation of a counter."""
 
-    def __init__(self, config: Dict):
+    def __init__(self, config: dict):
         """Initialize a counter."""
-        self._config: Dict = config
-        self._state: Optional[int] = config[CONF_INITIAL]
+        self._config: dict = config
+        self._state: int | None = config[CONF_INITIAL]
         self.editable: bool = True
 
     @classmethod
-    def from_yaml(cls, config: Dict) -> "Counter":
+    def from_yaml(cls, config: dict) -> Counter:
         """Create counter instance from yaml config."""
         counter = cls(config)
         counter.editable = False
@@ -195,22 +193,22 @@ class Counter(RestoreEntity):
         return False
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str | None:
         """Return name of the counter."""
         return self._config.get(CONF_NAME)
 
     @property
-    def icon(self) -> Optional[str]:
+    def icon(self) -> str | None:
         """Return the icon to be used for this entity."""
         return self._config.get(CONF_ICON)
 
     @property
-    def state(self) -> Optional[int]:
+    def state(self) -> int | None:
         """Return the current value of the counter."""
         return self._state
 
     @property
-    def state_attributes(self) -> Dict:
+    def extra_state_attributes(self) -> dict:
         """Return the state attributes."""
         ret = {
             ATTR_EDITABLE: self.editable,
@@ -224,7 +222,7 @@ class Counter(RestoreEntity):
         return ret
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return unique id of the entity."""
         return self._config[CONF_ID]
 
@@ -277,7 +275,7 @@ class Counter(RestoreEntity):
         self._state = self.compute_next_state(new_state)
         self.async_write_ha_state()
 
-    async def async_update_config(self, config: Dict) -> None:
+    async def async_update_config(self, config: dict) -> None:
         """Change the counter's settings WS CRUD."""
         self._config = config
         self._state = self.compute_next_state(self._state)

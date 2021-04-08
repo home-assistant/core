@@ -1,4 +1,6 @@
 """Test Google Smart Home."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components import camera
@@ -28,8 +30,12 @@ from homeassistant.setup import async_setup_component
 
 from . import BASIC_CONFIG, MockConfig
 
-from tests.async_mock import patch
-from tests.common import mock_area_registry, mock_device_registry, mock_registry
+from tests.common import (
+    async_capture_events,
+    mock_area_registry,
+    mock_device_registry,
+    mock_registry,
+)
 
 REQ_ID = "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
 
@@ -76,8 +82,7 @@ async def test_sync_message(hass):
         },
     )
 
-    events = []
-    hass.bus.async_listen(EVENT_SYNC_RECEIVED, events.append)
+    events = async_capture_events(hass, EVENT_SYNC_RECEIVED)
 
     result = await sh.async_handle_message(
         hass,
@@ -152,18 +157,29 @@ async def test_sync_message(hass):
 
 
 # pylint: disable=redefined-outer-name
-async def test_sync_in_area(hass, registries):
+@pytest.mark.parametrize("area_on_device", [True, False])
+async def test_sync_in_area(area_on_device, hass, registries):
     """Test a sync message where room hint comes from area."""
     area = registries.area.async_create("Living Room")
 
     device = registries.device.async_get_or_create(
         config_entry_id="1234",
+        manufacturer="Someone",
+        model="Some model",
+        sw_version="Some Version",
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    registries.device.async_update_device(device.id, area_id=area.id)
+    registries.device.async_update_device(
+        device.id, area_id=area.id if area_on_device else None
+    )
 
     entity = registries.entity.async_get_or_create(
-        "light", "test", "1235", suggested_object_id="demo_light", device_id=device.id
+        "light",
+        "test",
+        "1235",
+        suggested_object_id="demo_light",
+        device_id=device.id,
+        area_id=area.id if not area_on_device else None,
     )
 
     light = DemoLight(
@@ -180,8 +196,7 @@ async def test_sync_in_area(hass, registries):
 
     config = MockConfig(should_expose=lambda _: True, entity_config={})
 
-    events = []
-    hass.bus.async_listen(EVENT_SYNC_RECEIVED, events.append)
+    events = async_capture_events(hass, EVENT_SYNC_RECEIVED)
 
     result = await sh.async_handle_message(
         hass,
@@ -240,6 +255,11 @@ async def test_sync_in_area(hass, registries):
                             "temperatureMaxK": 6535,
                         },
                     },
+                    "deviceInfo": {
+                        "manufacturer": "Someone",
+                        "model": "Some model",
+                        "swVersion": "Some Version",
+                    },
                     "roomHint": "Living Room",
                 }
             ],
@@ -278,8 +298,7 @@ async def test_query_message(hass):
     light3.entity_id = "light.color_temp_light"
     await light3.async_update_ha_state()
 
-    events = []
-    hass.bus.async_listen(EVENT_QUERY_RECEIVED, events.append)
+    events = async_capture_events(hass, EVENT_QUERY_RECEIVED)
 
     result = await sh.async_handle_message(
         hass,
@@ -370,11 +389,8 @@ async def test_execute(hass):
         "light", "turn_off", {"entity_id": "light.ceiling_lights"}, blocking=True
     )
 
-    events = []
-    hass.bus.async_listen(EVENT_COMMAND_RECEIVED, events.append)
-
-    service_events = []
-    hass.bus.async_listen(EVENT_CALL_SERVICE, service_events.append)
+    events = async_capture_events(hass, EVENT_COMMAND_RECEIVED)
+    service_events = async_capture_events(hass, EVENT_CALL_SERVICE)
 
     result = await sh.async_handle_message(
         hass,
@@ -553,8 +569,7 @@ async def test_raising_error_trait(hass):
         {ATTR_MIN_TEMP: 15, ATTR_MAX_TEMP: 30, ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
     )
 
-    events = []
-    hass.bus.async_listen(EVENT_COMMAND_RECEIVED, events.append)
+    events = async_capture_events(hass, EVENT_COMMAND_RECEIVED)
     await hass.async_block_till_done()
 
     result = await sh.async_handle_message(
@@ -643,8 +658,7 @@ async def test_unavailable_state_does_sync(hass):
     light._available = False  # pylint: disable=protected-access
     await light.async_update_ha_state()
 
-    events = []
-    hass.bus.async_listen(EVENT_SYNC_RECEIVED, events.append)
+    events = async_capture_events(hass, EVENT_SYNC_RECEIVED)
 
     result = await sh.async_handle_message(
         hass,
@@ -795,7 +809,10 @@ async def test_device_class_binary_sensor(hass, device_class, google_type):
             "agentUserId": "test-agent",
             "devices": [
                 {
-                    "attributes": {"queryOnlyOpenClose": True},
+                    "attributes": {
+                        "queryOnlyOpenClose": True,
+                        "discreteOnlyOpenClose": True,
+                    },
                     "id": "binary_sensor.demo_sensor",
                     "name": {"name": "Demo Sensor"},
                     "traits": ["action.devices.traits.OpenClose"],
@@ -836,10 +853,13 @@ async def test_device_class_cover(hass, device_class, google_type):
             "agentUserId": "test-agent",
             "devices": [
                 {
-                    "attributes": {},
+                    "attributes": {"discreteOnlyOpenClose": True},
                     "id": "cover.demo_sensor",
                     "name": {"name": "Demo Sensor"},
-                    "traits": ["action.devices.traits.OpenClose"],
+                    "traits": [
+                        "action.devices.traits.StartStop",
+                        "action.devices.traits.OpenClose",
+                    ],
                     "type": google_type,
                     "willReportState": False,
                 }
@@ -853,6 +873,8 @@ async def test_device_class_cover(hass, device_class, google_type):
     [
         ("non_existing_class", "action.devices.types.SETTOP"),
         ("tv", "action.devices.types.TV"),
+        ("speaker", "action.devices.types.SPEAKER"),
+        ("receiver", "action.devices.types.AUDIO_VIDEO_RECEIVER"),
     ],
 )
 async def test_device_media_player(hass, device_class, google_type):
@@ -914,7 +936,8 @@ async def test_query_disconnect(hass):
 async def test_trait_execute_adding_query_data(hass):
     """Test a trait execute influencing query data."""
     await async_process_ha_core_config(
-        hass, {"external_url": "https://example.com"},
+        hass,
+        {"external_url": "https://example.com"},
     )
     hass.states.async_set(
         "camera.office", "idle", {"supported_features": camera.SUPPORT_STREAM}
@@ -970,6 +993,7 @@ async def test_trait_execute_adding_query_data(hass):
                     "states": {
                         "online": True,
                         "cameraStreamAccessUrl": "https://example.com/api/streams/bla",
+                        "cameraStreamReceiverAppId": "B12CE3CA",
                     },
                 }
             ]
@@ -1127,4 +1151,119 @@ async def test_reachable_devices(hass):
     assert result == {
         "requestId": REQ_ID,
         "payload": {"devices": [{"verificationId": "light.ceiling_lights"}]},
+    }
+
+
+async def test_sync_message_recovery(hass, caplog):
+    """Test a sync message recovers from bad entities."""
+    light = DemoLight(
+        None,
+        "Demo Light",
+        state=False,
+        hs_color=(180, 75),
+    )
+    light.hass = hass
+    light.entity_id = "light.demo_light"
+    await light.async_update_ha_state()
+
+    hass.states.async_set(
+        "light.bad_light",
+        "on",
+        {
+            "min_mireds": "badvalue",
+            "supported_features": hass.components.light.SUPPORT_COLOR_TEMP,
+        },
+    )
+
+    result = await sh.async_handle_message(
+        hass,
+        BASIC_CONFIG,
+        "test-agent",
+        {"requestId": REQ_ID, "inputs": [{"intent": "action.devices.SYNC"}]},
+        const.SOURCE_CLOUD,
+    )
+
+    assert result == {
+        "requestId": REQ_ID,
+        "payload": {
+            "agentUserId": "test-agent",
+            "devices": [
+                {
+                    "id": "light.demo_light",
+                    "name": {"name": "Demo Light"},
+                    "attributes": {
+                        "colorModel": "hsv",
+                        "colorTemperatureRange": {
+                            "temperatureMaxK": 6535,
+                            "temperatureMinK": 2000,
+                        },
+                    },
+                    "traits": [
+                        "action.devices.traits.Brightness",
+                        "action.devices.traits.OnOff",
+                        "action.devices.traits.ColorSetting",
+                    ],
+                    "willReportState": False,
+                    "type": "action.devices.types.LIGHT",
+                },
+            ],
+        },
+    }
+
+    assert "Error serializing light.bad_light" in caplog.text
+
+
+async def test_query_recover(hass, caplog):
+    """Test that we recover if an entity raises during query."""
+
+    hass.states.async_set(
+        "light.good",
+        "on",
+        {
+            "supported_features": hass.components.light.SUPPORT_BRIGHTNESS,
+            "brightness": 50,
+        },
+    )
+    hass.states.async_set(
+        "light.bad",
+        "on",
+        {
+            "supported_features": hass.components.light.SUPPORT_BRIGHTNESS,
+            "brightness": "shoe",
+        },
+    )
+
+    result = await sh.async_handle_message(
+        hass,
+        BASIC_CONFIG,
+        "test-agent",
+        {
+            "requestId": REQ_ID,
+            "inputs": [
+                {
+                    "intent": "action.devices.QUERY",
+                    "payload": {
+                        "devices": [
+                            {"id": "light.good"},
+                            {"id": "light.bad"},
+                        ]
+                    },
+                }
+            ],
+        },
+        const.SOURCE_CLOUD,
+    )
+
+    assert (
+        f"Unexpected error serializing query for {hass.states.get('light.bad')}"
+        in caplog.text
+    )
+    assert result == {
+        "requestId": REQ_ID,
+        "payload": {
+            "devices": {
+                "light.bad": {"online": False},
+                "light.good": {"on": True, "online": True, "brightness": 19},
+            }
+        },
     }

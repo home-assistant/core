@@ -1,5 +1,5 @@
 """Provide the device automations for Alarm control panel."""
-from typing import Dict, List
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -11,6 +11,7 @@ from homeassistant.components.alarm_control_panel.const import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
     CONF_CONDITION,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -57,7 +58,7 @@ CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
 
 async def async_get_conditions(
     hass: HomeAssistant, device_id: str
-) -> List[Dict[str, str]]:
+) -> list[dict[str, str]]:
     """List device conditions for Alarm control panel devices."""
     registry = await entity_registry.async_get_registry(hass)
     conditions = []
@@ -73,7 +74,7 @@ async def async_get_conditions(
         if state is None:
             continue
 
-        supported_features = state.attributes["supported_features"]
+        supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
 
         # Add conditions for each entity that belongs to this integration
         conditions += [

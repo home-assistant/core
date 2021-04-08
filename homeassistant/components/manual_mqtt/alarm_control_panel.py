@@ -406,22 +406,23 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         if isinstance(self._code, str):
             alarm_code = self._code
         else:
-            alarm_code = self._code.render(from_state=self._state, to_state=state)
+            alarm_code = self._code.render(
+                from_state=self._state, to_state=state, parse_result=False
+            )
         check = not alarm_code or code == alarm_code
         if not check:
             _LOGGER.warning("Invalid code given for %s", state)
         return check
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
-        state_attr = {}
-
-        if self.state == STATE_ALARM_PENDING:
-            state_attr[ATTR_PRE_PENDING_STATE] = self._previous_state
-            state_attr[ATTR_POST_PENDING_STATE] = self._state
-
-        return state_attr
+        if self.state != STATE_ALARM_PENDING:
+            return {}
+        return {
+            ATTR_PRE_PENDING_STATE: self._previous_state,
+            ATTR_POST_PENDING_STATE: self._state,
+        }
 
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""

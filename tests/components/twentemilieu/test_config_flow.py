@@ -9,9 +9,11 @@ from homeassistant.components.twentemilieu.const import (
     CONF_POST_CODE,
     DOMAIN,
 )
-from homeassistant.const import CONF_ID
+from homeassistant.const import CONF_ID, CONTENT_TYPE_JSON
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 FIXTURE_USER_INPUT = {
     CONF_ID: "12345",
@@ -21,7 +23,7 @@ FIXTURE_USER_INPUT = {
 }
 
 
-async def test_show_set_form(hass):
+async def test_show_set_form(hass: HomeAssistant) -> None:
     """Test that the setup form is served."""
     flow = config_flow.TwenteMilieuFlowHandler()
     flow.hass = hass
@@ -31,7 +33,9 @@ async def test_show_set_form(hass):
     assert result["step_id"] == "user"
 
 
-async def test_connection_error(hass, aioclient_mock):
+async def test_connection_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test we show user form on Twente Milieu connection error."""
     aioclient_mock.post(
         "https://twentemilieuapi.ximmio.com/api/FetchAdress", exc=aiohttp.ClientError
@@ -43,15 +47,17 @@ async def test_connection_error(hass, aioclient_mock):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "connection_error"}
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_invalid_address(hass, aioclient_mock):
+async def test_invalid_address(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test we show user form on Twente Milieu invalid address error."""
     aioclient_mock.post(
         "https://twentemilieuapi.ximmio.com/api/FetchAdress",
         json={"dataList": []},
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
     flow = config_flow.TwenteMilieuFlowHandler()
@@ -63,7 +69,9 @@ async def test_invalid_address(hass, aioclient_mock):
     assert result["errors"] == {"base": "invalid_address"}
 
 
-async def test_address_already_set_up(hass, aioclient_mock):
+async def test_address_already_set_up(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test we abort if address has already been set up."""
     MockConfigEntry(domain=DOMAIN, data=FIXTURE_USER_INPUT, title="12345").add_to_hass(
         hass
@@ -72,7 +80,7 @@ async def test_address_already_set_up(hass, aioclient_mock):
     aioclient_mock.post(
         "https://twentemilieuapi.ximmio.com/api/FetchAdress",
         json={"dataList": [{"UniqueId": "12345"}]},
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
     flow = config_flow.TwenteMilieuFlowHandler()
@@ -80,15 +88,17 @@ async def test_address_already_set_up(hass, aioclient_mock):
     result = await flow.async_step_user(user_input=FIXTURE_USER_INPUT)
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "address_already_set_up"
+    assert result["reason"] == "already_configured"
 
 
-async def test_full_flow_implementation(hass, aioclient_mock):
+async def test_full_flow_implementation(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test registering an integration and finishing flow works."""
     aioclient_mock.post(
         "https://twentemilieuapi.ximmio.com/api/FetchAdress",
         json={"dataList": [{"UniqueId": "12345"}]},
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
     flow = config_flow.TwenteMilieuFlowHandler()

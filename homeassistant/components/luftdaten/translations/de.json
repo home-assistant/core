@@ -1,9 +1,9 @@
 {
     "config": {
         "error": {
-            "communication_error": "Keine Kommunikation mit Luftdaten API m\u00f6glich",
-            "invalid_sensor": "Sensor nicht verf\u00fcgbar oder ung\u00fcltig",
-            "sensor_exists": "Sensor bereits registriert"
+            "already_configured": "Der Dienst ist bereits konfiguriert",
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_sensor": "Sensor nicht verf\u00fcgbar oder ung\u00fcltig"
         },
         "step": {
             "user": {

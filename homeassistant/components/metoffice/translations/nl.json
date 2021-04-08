@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Kon niet verbinden",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-sleutel",
+                    "latitude": "Breedtegraad",
+                    "longitude": "Lengtegraad"
+                },
+                "description": "De lengte- en breedtegraad worden gebruikt om het dichtstbijzijnde weerstation te vinden.",
+                "title": "Maak verbinding met het UK Met Office"
+            }
+        }
+    }
+}

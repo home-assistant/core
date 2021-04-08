@@ -12,6 +12,9 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.const import ATTR_LOCATION
+from homeassistant.helpers.reload import setup_reload_service
+
+from . import DOMAIN as TELEGRAM_DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,6 +23,7 @@ ATTR_KEYBOARD = "keyboard"
 ATTR_INLINE_KEYBOARD = "inline_keyboard"
 ATTR_PHOTO = "photo"
 ATTR_VIDEO = "video"
+ATTR_VOICE = "voice"
 ATTR_DOCUMENT = "document"
 
 CONF_CHAT_ID = "chat_id"
@@ -29,6 +33,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_CHAT_ID): vol.Coerce
 
 def get_service(hass, config, discovery_info=None):
     """Get the Telegram notification service."""
+
+    setup_reload_service(hass, TELEGRAM_DOMAIN, PLATFORMS)
     chat_id = config.get(CONF_CHAT_ID)
     return TelegramNotificationService(hass, chat_id)
 
@@ -60,7 +66,7 @@ class TelegramNotificationService(BaseNotificationService):
             keys = keys if isinstance(keys, list) else [keys]
             service_data.update(inline_keyboard=keys)
 
-        # Send a photo, video, document, or location
+        # Send a photo, video, document, voice, or location
         if data is not None and ATTR_PHOTO in data:
             photos = data.get(ATTR_PHOTO)
             photos = photos if isinstance(photos, list) else [photos]
@@ -74,6 +80,13 @@ class TelegramNotificationService(BaseNotificationService):
             for video_data in videos:
                 service_data.update(video_data)
                 self.hass.services.call(DOMAIN, "send_video", service_data=service_data)
+            return
+        if data is not None and ATTR_VOICE in data:
+            voices = data.get(ATTR_VOICE)
+            voices = voices if isinstance(voices, list) else [voices]
+            for voice_data in voices:
+                service_data.update(voice_data)
+                self.hass.services.call(DOMAIN, "send_voice", service_data=service_data)
             return
         if data is not None and ATTR_LOCATION in data:
             service_data.update(data.get(ATTR_LOCATION))

@@ -1,5 +1,6 @@
 """Support for HomeKit Controller air quality sensors."""
 from aiohomekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.components.air_quality import AirQualityEntity
 from homeassistant.core import callback
@@ -68,7 +69,7 @@ class HomeAirQualitySensor(HomeKitEntity, AirQualityEntity):
         return self.service.value(CharacteristicsTypes.DENSITY_VOC)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         data = {"air_quality_text": self.air_quality_text}
 
@@ -85,10 +86,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     conn = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
-    def async_add_service(aid, service):
-        if service["stype"] != "air-quality":
+    def async_add_service(service):
+        if service.short_type != ServicesTypes.AIR_QUALITY_SENSOR:
             return False
-        info = {"aid": aid, "iid": service["iid"]}
+        info = {"aid": service.accessory.aid, "iid": service.iid}
         async_add_entities([HomeAirQualitySensor(conn, info)], True)
         return True
 

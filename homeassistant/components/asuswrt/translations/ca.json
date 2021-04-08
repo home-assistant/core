@@ -1,0 +1,45 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_host": "Nom de l'amfitri\u00f3 o l'adre\u00e7a IP inv\u00e0lids",
+            "pwd_and_ssh": "Proporciona, nom\u00e9s, la contrasenya o el fitxer de claus SSH",
+            "pwd_or_ssh": "Proporciona la contrasenya o el fitxer de claus SSH",
+            "ssh_not_file": "No s'ha trobat el fitxer de claus SSH",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "mode": "Mode",
+                    "name": "Nom",
+                    "password": "Contrasenya",
+                    "port": "Port",
+                    "protocol": "Protocol de comunicacions a utilitzar",
+                    "ssh_key": "Ruta al fitxer de claus SSH (en lloc de la contrasenya)",
+                    "username": "Nom d'usuari"
+                },
+                "description": "Introdueix el par\u00e0metre necessari per connectar-te al router",
+                "title": "AsusWRT"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "consider_home": "Segons d'espera abans de considerar un dispositiu a fora",
+                    "dnsmasq": "La ubicaci\u00f3 dins el router dels fitxers dnsmasq.leases",
+                    "interface": "La interf\u00edcie de la qual obtenir les estad\u00edstiques (per exemple, eth0, eth1, etc.)",
+                    "require_ip": "Els dispositius han de tenir una IP (per al mode de punt d'acc\u00e9s)",
+                    "track_unknown": "Segueix dispositius desconeguts/sense nom"
+                },
+                "title": "Opcions d'AsusWRT"
+            }
+        }
+    }
+}

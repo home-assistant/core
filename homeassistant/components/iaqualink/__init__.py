@@ -1,8 +1,10 @@
 """Component to embed Aqualink devices."""
+from __future__ import annotations
+
 import asyncio
 from functools import wraps
 import logging
-from typing import Any, Dict
+from typing import Any
 
 import aiohttp.client_exceptions
 from iaqualink import (
@@ -96,7 +98,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> None
         aiohttp.client_exceptions.ClientConnectorError,
     ) as aio_exception:
         _LOGGER.warning("Exception raised while attempting to login: %s", aio_exception)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from aio_exception
 
     systems = await aqualink.get_systems()
     systems = list(systems.values())
@@ -234,7 +236,7 @@ class AqualinkEntity(Entity):
         return self.dev.system.online
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> dict[str, Any]:
         """Return the device info."""
         return {
             "identifiers": {(DOMAIN, self.unique_id)},

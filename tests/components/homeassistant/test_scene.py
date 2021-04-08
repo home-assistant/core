@@ -1,4 +1,6 @@
 """Test Home Assistant scenes."""
+from unittest.mock import patch
+
 import pytest
 import voluptuous as vol
 
@@ -6,18 +8,14 @@ from homeassistant.components.homeassistant import scene as ha_scene
 from homeassistant.components.homeassistant.scene import EVENT_SCENE_RELOADED
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
-from tests.common import async_mock_service
+from tests.common import async_capture_events, async_mock_service
 
 
 async def test_reload_config_service(hass):
     """Test the reload config service."""
     assert await async_setup_component(hass, "scene", {})
 
-    test_reloaded_event = []
-    hass.bus.async_listen(
-        EVENT_SCENE_RELOADED, lambda event: test_reloaded_event.append(event)
-    )
+    test_reloaded_event = async_capture_events(hass, EVENT_SCENE_RELOADED)
 
     with patch(
         "homeassistant.config.load_yaml_config_file",
@@ -320,3 +318,12 @@ async def test_config(hass):
     no_icon = hass.states.get("scene.scene_no_icon")
     assert no_icon is not None
     assert "icon" not in no_icon.attributes
+
+
+def test_validator():
+    """Test validators."""
+    parsed = ha_scene.STATES_SCHEMA({"light.Test": {"state": "on"}})
+    assert len(parsed) == 1
+    assert "light.test" in parsed
+    assert parsed["light.test"].entity_id == "light.test"
+    assert parsed["light.test"].state == "on"

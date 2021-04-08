@@ -100,9 +100,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         aiohttp.client_exceptions.ClientConnectorError,
         asyncio.TimeoutError,
         pysensibo.SensiboError,
-    ):
+    ) as err:
         _LOGGER.exception("Failed to connect to Sensibo servers")
-        raise PlatformNotReady
+        raise PlatformNotReady from err
 
     if not devices:
         return
@@ -191,7 +191,7 @@ class SensiboClimate(ClimateEntity):
         return self._external_state or super().state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {"battery": self.current_battery}
 

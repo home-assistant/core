@@ -6,7 +6,11 @@ import forecastio
 from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
 import voluptuous as vol
 
-from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE, PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_TEMPERATURE,
+    PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_API_KEY,
@@ -18,17 +22,17 @@ from homeassistant.const import (
     DEGREE,
     LENGTH_CENTIMETERS,
     LENGTH_KILOMETERS,
+    PERCENTAGE,
+    PRECIPITATION_MILLIMETERS_PER_HOUR,
+    PRESSURE_MBAR,
     SPEED_KILOMETERS_PER_HOUR,
     SPEED_METERS_PER_SECOND,
     SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    TIME_HOURS,
-    UNIT_PERCENTAGE,
     UV_INDEX,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -109,21 +113,21 @@ SENSOR_TYPES = {
     ],
     "precip_intensity": [
         "Precip Intensity",
-        f"mm/{TIME_HOURS}",
+        PRECIPITATION_MILLIMETERS_PER_HOUR,
         "in",
-        f"mm/{TIME_HOURS}",
-        f"mm/{TIME_HOURS}",
-        f"mm/{TIME_HOURS}",
+        PRECIPITATION_MILLIMETERS_PER_HOUR,
+        PRECIPITATION_MILLIMETERS_PER_HOUR,
+        PRECIPITATION_MILLIMETERS_PER_HOUR,
         "mdi:weather-rainy",
         ["currently", "minutely", "hourly", "daily"],
     ],
     "precip_probability": [
         "Precip Probability",
-        UNIT_PERCENTAGE,
-        UNIT_PERCENTAGE,
-        UNIT_PERCENTAGE,
-        UNIT_PERCENTAGE,
-        UNIT_PERCENTAGE,
+        PERCENTAGE,
+        PERCENTAGE,
+        PERCENTAGE,
+        PERCENTAGE,
+        PERCENTAGE,
         "mdi:water-percent",
         ["currently", "minutely", "hourly", "daily"],
     ],
@@ -199,31 +203,31 @@ SENSOR_TYPES = {
     ],
     "cloud_cover": [
         "Cloud Coverage",
-        UNIT_PERCENTAGE,
-        UNIT_PERCENTAGE,
-        UNIT_PERCENTAGE,
-        UNIT_PERCENTAGE,
-        UNIT_PERCENTAGE,
+        PERCENTAGE,
+        PERCENTAGE,
+        PERCENTAGE,
+        PERCENTAGE,
+        PERCENTAGE,
         "mdi:weather-partly-cloudy",
         ["currently", "hourly", "daily"],
     ],
     "humidity": [
         "Humidity",
-        UNIT_PERCENTAGE,
-        UNIT_PERCENTAGE,
-        UNIT_PERCENTAGE,
-        UNIT_PERCENTAGE,
-        UNIT_PERCENTAGE,
+        PERCENTAGE,
+        PERCENTAGE,
+        PERCENTAGE,
+        PERCENTAGE,
+        PERCENTAGE,
         "mdi:water-percent",
         ["currently", "hourly", "daily"],
     ],
     "pressure": [
         "Pressure",
-        "mbar",
-        "mbar",
-        "mbar",
-        "mbar",
-        "mbar",
+        PRESSURE_MBAR,
+        PRESSURE_MBAR,
+        PRESSURE_MBAR,
+        PRESSURE_MBAR,
+        PRESSURE_MBAR,
         "mdi:gauge",
         ["currently", "hourly", "daily"],
     ],
@@ -329,11 +333,11 @@ SENSOR_TYPES = {
     ],
     "precip_intensity_max": [
         "Daily Max Precip Intensity",
-        f"mm/{TIME_HOURS}",
+        PRECIPITATION_MILLIMETERS_PER_HOUR,
         "in",
-        f"mm/{TIME_HOURS}",
-        f"mm/{TIME_HOURS}",
-        f"mm/{TIME_HOURS}",
+        PRECIPITATION_MILLIMETERS_PER_HOUR,
+        PRECIPITATION_MILLIMETERS_PER_HOUR,
+        PRECIPITATION_MILLIMETERS_PER_HOUR,
         "mdi:thermometer",
         ["daily"],
     ],
@@ -543,7 +547,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class DarkSkySensor(Entity):
+class DarkSkySensor(SensorEntity):
     """Implementation of a Dark Sky sensor."""
 
     def __init__(
@@ -619,7 +623,7 @@ class DarkSkySensor(Entity):
         return None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
@@ -707,7 +711,7 @@ class DarkSkySensor(Entity):
         return state
 
 
-class DarkSkyAlertSensor(Entity):
+class DarkSkyAlertSensor(SensorEntity):
     """Implementation of a Dark Sky sensor."""
 
     def __init__(self, forecast_data, sensor_type, name):
@@ -738,7 +742,7 @@ class DarkSkyAlertSensor(Entity):
         return "mdi:alert-circle-outline"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._alerts
 

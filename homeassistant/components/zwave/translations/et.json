@@ -1,4 +1,23 @@
 {
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
+        },
+        "error": {
+            "option_error": "Z-Wave valideerimine nurjus. Kas USB-m\u00e4lupulga tee on \u00f5ige?"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "network_key": "V\u00f5rguv\u00f5ti (j\u00e4ta automaatse genereerimise jaoks t\u00fchjaks)",
+                    "usb_path": "USB seadme rada"
+                },
+                "description": "Seda sidumist enam ei hallata. Uueks sidumiseks kasuta Z-Wave JS.\n\nKonfiguratsioonimuutujate kohta leiad teavet https://www.home-assistant.io/docs/z-wave/installation/",
+                "title": "Seadista Z-Wave"
+            }
+        }
+    },
     "state": {
         "_": {
             "dead": "Surnud",
@@ -7,8 +26,8 @@
             "sleeping": "Ootel"
         },
         "query_stage": {
-            "dead": "Surnud ({query_stage})",
-            "initializing": "L\u00e4htestan ( {query_stage} )"
+            "dead": "Surnud",
+            "initializing": "L\u00e4htestan"
         }
     }
 }

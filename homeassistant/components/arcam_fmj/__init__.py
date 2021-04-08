@@ -1,5 +1,6 @@
 """Arcam component."""
 import asyncio
+from contextlib import suppress
 import logging
 
 from arcam.fmj import ConnectionFailed
@@ -23,15 +24,13 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN, invalidation_version="0.115")
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
 async def _await_cancel(task):
     task.cancel()
-    try:
+    with suppress(asyncio.CancelledError):
         await task
-    except asyncio.CancelledError:
-        pass
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType):
@@ -108,8 +107,6 @@ async def _run_client(hass, client, interval):
             await asyncio.sleep(interval)
         except asyncio.TimeoutError:
             continue
-        except asyncio.CancelledError:
-            raise
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception, aborting arcam client")
             return

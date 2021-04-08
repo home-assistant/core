@@ -1,14 +1,14 @@
 """Test config flow."""
 
+from unittest.mock import patch
+
 import pytest
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
 from homeassistant.components import mqtt
-from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -45,7 +45,7 @@ async def test_user_connection_works(hass, mock_try_connection, mock_finish_setu
     assert result["result"].data == {
         "broker": "127.0.0.1",
         "port": 1883,
-        "discovery": False,
+        "discovery": True,
     }
     # Check we tried the connection
     assert len(mock_try_connection.mock_calls) == 1
@@ -154,7 +154,6 @@ async def test_option_flow(hass, mqtt_mock, mock_try_connection):
     """Test config flow options."""
     mock_try_connection.return_value = True
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    await async_start(hass, "homeassistant", config_entry)
     config_entry.data = {
         mqtt.CONF_BROKER: "test-broker",
         mqtt.CONF_PORT: 1234,
@@ -227,7 +226,6 @@ async def test_disable_birth_will(hass, mqtt_mock, mock_try_connection):
     """Test disabling birth and will."""
     mock_try_connection.return_value = True
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    await async_start(hass, "homeassistant", config_entry)
     config_entry.data = {
         mqtt.CONF_BROKER: "test-broker",
         mqtt.CONF_PORT: 1234,
@@ -310,7 +308,6 @@ async def test_option_flow_default_suggested_values(
     """Test config flow options has default/suggested values."""
     mock_try_connection.return_value = True
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    await async_start(hass, "homeassistant", config_entry)
     config_entry.data = {
         mqtt.CONF_BROKER: "test-broker",
         mqtt.CONF_PORT: 1234,
@@ -505,7 +502,8 @@ async def test_options_bad_birth_message_fails(hass, mock_try_connection):
     assert result["step_id"] == "options"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"birth_topic": "ha_state/online/#"},
+        result["flow_id"],
+        user_input={"birth_topic": "ha_state/online/#"},
     )
     assert result["type"] == "form"
     assert result["errors"]["base"] == "bad_birth"
@@ -540,7 +538,8 @@ async def test_options_bad_will_message_fails(hass, mock_try_connection):
     assert result["step_id"] == "options"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"will_topic": "ha_state/offline/#"},
+        result["flow_id"],
+        user_input={"will_topic": "ha_state/offline/#"},
     )
     assert result["type"] == "form"
     assert result["errors"]["base"] == "bad_will"

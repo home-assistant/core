@@ -7,7 +7,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import aiohttp_client
 
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import DOMAIN
 
 
 class TileFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -47,6 +47,6 @@ class TileFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_USERNAME], user_input[CONF_PASSWORD], session=session
             )
         except TileError:
-            return await self._show_form({"base": "invalid_credentials"})
+            return await self._show_form({"base": "invalid_auth"})
 
         return self.async_create_entry(title=user_input[CONF_USERNAME], data=user_input)

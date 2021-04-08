@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Nur eine einzige Konfiguration von MQTT ist zul\u00e4ssig."
+            "single_instance_allowed": "Bereits konfiguriert. Es ist nur eine Konfiguration m\u00f6glich."
         },
         "error": {
-            "cannot_connect": "Es konnte keine Verbindung zum Broker hergestellt werden."
+            "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "step": {
             "broker": {
@@ -21,8 +21,8 @@
                 "data": {
                     "discovery": "Suche aktivieren"
                 },
-                "description": "M\u00f6chtest du Home Assistant so konfigurieren, dass er eine Verbindung mit dem MQTT-Broker herstellt, der vom Hass.io Add-on {addon} bereitgestellt wird?",
-                "title": "MQTT Broker per Hass.io add-on"
+                "description": "M\u00f6chtest du Home Assistant so konfigurieren, dass er eine Verbindung mit dem MQTT-Broker herstellt, der vom Supervisor Add-on {addon} bereitgestellt wird?",
+                "title": "MQTT Broker per Supervisor add-on"
             }
         }
     },
@@ -49,11 +49,25 @@
         }
     },
     "options": {
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
         "step": {
             "broker": {
                 "data": {
-                    "password": "Passwort"
-                }
+                    "broker": "Broker",
+                    "password": "Passwort",
+                    "port": "Port",
+                    "username": "Benutzername"
+                },
+                "description": "Bitte gib die Verbindungsinformationen deines MQTT-Brokers ein."
+            },
+            "options": {
+                "data": {
+                    "discovery": "Erkennung aktivieren",
+                    "will_enable": "Letzten Willen aktivieren"
+                },
+                "description": "Bitte die MQTT-Einstellungen ausw\u00e4hlen."
             }
         }
     }

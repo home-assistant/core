@@ -1,10 +1,13 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Konto wurde bereits konfiguriert",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
+        },
         "error": {
-            "connection_error": "Fehler beim Verbinden; \u00dcberpr\u00fcfe dein Netzwerk und versuche es erneut",
-            "identifier_exists": "E-Mail bereits registriert",
-            "invalid_credentials": "Ung\u00fcltige Anmeldeinformationen",
-            "unknown_error": "Unbekannter Fehler, bitte Log-Info melden"
+            "already_configured": "Konto wurde bereits konfiguriert",
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung"
         },
         "step": {
             "user": {
@@ -21,6 +24,7 @@
         "step": {
             "init": {
                 "data": {
+                    "enable_wake_on_start": "Aufwachen des Autos beim Start erzwingen",
                     "scan_interval": "Sekunden zwischen den Scans"
                 }
             }

@@ -1,9 +1,9 @@
 {
     "config": {
         "error": {
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "service": "Error al intentar contactar con SmartHab. El servicio podr\u00eda estar ca\u00eddo. Verifica tu conexi\u00f3n.",
-            "unknown_error": "Error inesperado",
-            "wrong_login": "Autenticaci\u00f3n no v\u00e1lida"
+            "unknown": "Error inesperado"
         },
         "step": {
             "user": {

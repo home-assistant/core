@@ -6,7 +6,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_COMMAND,
     CONF_NAME,
@@ -17,10 +17,10 @@ from homeassistant.const import (
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.reload import setup_reload_service
 
 from . import check_output_or_log
-from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT
+from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,6 +44,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Command Sensor."""
+
+    setup_reload_service(hass, DOMAIN, PLATFORMS)
+
     name = config.get(CONF_NAME)
     command = config.get(CONF_COMMAND)
     unit = config.get(CONF_UNIT_OF_MEASUREMENT)
@@ -59,7 +62,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class CommandSensor(Entity):
+class CommandSensor(SensorEntity):
     """Representation of a sensor that is using shell commands."""
 
     def __init__(
@@ -91,7 +94,7 @@ class CommandSensor(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._attributes
 
@@ -141,19 +144,14 @@ class CommandSensorData:
     def update(self):
         """Get the latest data with a shell command."""
         command = self.command
-        cache = {}
 
-        if command in cache:
-            prog, args, args_compiled = cache[command]
-        elif " " not in command:
+        if " " not in command:
             prog = command
             args = None
             args_compiled = None
-            cache[command] = (prog, args, args_compiled)
         else:
             prog, args = command.split(" ", 1)
             args_compiled = template.Template(args, self.hass)
-            cache[command] = (prog, args, args_compiled)
 
         if args_compiled:
             try:

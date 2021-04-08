@@ -105,14 +105,14 @@ class GaradgetCover(CoverEntity):
                     self._name = doorconfig["nme"]
             self.update()
         except requests.exceptions.ConnectionError as ex:
-            _LOGGER.error("Unable to connect to server: %(reason)s", dict(reason=ex))
+            _LOGGER.error("Unable to connect to server: %(reason)s", {"reason": ex})
             self._state = STATE_OFFLINE
             self._available = False
             self._name = DEFAULT_NAME
         except KeyError:
             _LOGGER.warning(
                 "Garadget device %(device)s seems to be offline",
-                dict(device=self.device_id),
+                {"device": self.device_id},
             )
             self._name = DEFAULT_NAME
             self._state = STATE_OFFLINE
@@ -120,9 +120,8 @@ class GaradgetCover(CoverEntity):
 
     def __del__(self):
         """Try to remove token."""
-        if self._obtained_token is True:
-            if self.access_token is not None:
-                self.remove_token()
+        if self._obtained_token is True and self.access_token is not None:
+            self.remove_token()
 
     @property
     def name(self):
@@ -130,17 +129,12 @@ class GaradgetCover(CoverEntity):
         return self._name
 
     @property
-    def should_poll(self):
-        """No polling needed for a demo cover."""
-        return True
-
-    @property
     def available(self):
         """Return True if entity is available."""
         return self._available
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         data = {}
 
@@ -235,19 +229,21 @@ class GaradgetCover(CoverEntity):
             self.sensor = status["sensor"]
             self._available = True
         except requests.exceptions.ConnectionError as ex:
-            _LOGGER.error("Unable to connect to server: %(reason)s", dict(reason=ex))
+            _LOGGER.error("Unable to connect to server: %(reason)s", {"reason": ex})
             self._state = STATE_OFFLINE
         except KeyError:
             _LOGGER.warning(
                 "Garadget device %(device)s seems to be offline",
-                dict(device=self.device_id),
+                {"device": self.device_id},
             )
             self._state = STATE_OFFLINE
 
-        if self._state not in [STATE_CLOSING, STATE_OPENING]:
-            if self._unsub_listener_cover is not None:
-                self._unsub_listener_cover()
-                self._unsub_listener_cover = None
+        if (
+            self._state not in [STATE_CLOSING, STATE_OPENING]
+            and self._unsub_listener_cover is not None
+        ):
+            self._unsub_listener_cover()
+            self._unsub_listener_cover = None
 
     def _get_variable(self, var):
         """Get latest status."""

@@ -2,10 +2,10 @@
     "config": {
         "abort": {
             "already_configured": "Bridge is al geconfigureerd",
-            "already_in_progress": "Configuratiestroom voor bridge wordt al ingesteld.",
+            "already_in_progress": "De configuratiestroom is al aan de gang",
             "no_bridges": "Geen deCONZ apparaten ontdekt",
+            "no_hardware_available": "Geen radiohardware aangesloten op deCONZ",
             "not_deconz_bridge": "Dit is geen deCONZ bridge",
-            "one_instance_only": "Component ondersteunt slechts \u00e9\u00e9n deCONZ instantie",
             "updated_instance": "DeCONZ-instantie bijgewerkt met nieuw host-adres"
         },
         "error": {
@@ -14,8 +14,8 @@
         "flow_title": "deCONZ Zigbee gateway ( {host} )",
         "step": {
             "hassio_confirm": {
-                "description": "Wilt u de Home Assistant configureren om verbinding te maken met de deCONZ gateway van de hass.io add-on {addon}?",
-                "title": "deCONZ Zigbee Gateway via Hass.io add-on"
+                "description": "Wilt u Home Assistant configureren om verbinding te maken met de deCONZ gateway van de Home Assistant add-on {addon}?",
+                "title": "deCONZ Zigbee Gateway via Home Assistant add-on"
             },
             "link": {
                 "description": "Ontgrendel je deCONZ gateway om te registreren met Home Assistant.\n\n1. Ga naar deCONZ systeeminstellingen (Instellingen -> Gateway -> Geavanceerd)\n2. Druk op de knop \"Gateway ontgrendelen\"",
@@ -42,6 +42,10 @@
             "button_2": "Tweede knop",
             "button_3": "Derde knop",
             "button_4": "Vierde knop",
+            "button_5": "Vijfde knop",
+            "button_6": "Zesde knop",
+            "button_7": "Zevende knop",
+            "button_8": "Achtste knop",
             "close": "Sluiten",
             "dim_down": "Dim omlaag",
             "dim_up": "Dim omhoog",
@@ -66,8 +70,9 @@
             "remote_button_quadruple_press": "\" {subtype} \" knop viervoudig aangeklikt",
             "remote_button_quintuple_press": "\" {subtype} \" knop vijf keer aangeklikt",
             "remote_button_rotated": "Knop gedraaid \" {subtype} \"",
+            "remote_button_rotated_fast": "Knop is snel gedraaid \" {subtype} \"",
             "remote_button_rotation_stopped": "Knoprotatie \" {subtype} \" gestopt",
-            "remote_button_short_press": "\" {subtype} \" knop ingedrukt",
+            "remote_button_short_press": "\"{subtype}\" knop ingedrukt",
             "remote_button_short_release": "\"{subtype}\" knop losgelaten",
             "remote_button_triple_press": "\" {subtype} \" knop driemaal geklikt",
             "remote_double_tap": "Apparaat \"{subtype}\" dubbel getikt",
@@ -93,7 +98,8 @@
             "deconz_devices": {
                 "data": {
                     "allow_clip_sensor": "DeCONZ CLIP sensoren toestaan",
-                    "allow_deconz_groups": "Sta deCONZ-lichtgroepen toe"
+                    "allow_deconz_groups": "Sta deCONZ-lichtgroepen toe",
+                    "allow_new_devices": "Sta automatische toevoeging van nieuwe apparaten toe"
                 },
                 "description": "Configureer de zichtbaarheid van deCONZ-apparaattypen",
                 "title": "deCONZ opties"

@@ -16,7 +16,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-# pylint: disable=unused-import
 from .const import (
     CONF_HOUSECODE,
     CONF_HUB_VERSION,
@@ -65,10 +64,10 @@ async def _async_connect(**kwargs):
     """Connect to the Insteon modem."""
     try:
         await async_connect(**kwargs)
-        _LOGGER.info("Connected to Insteon modem.")
+        _LOGGER.info("Connected to Insteon modem")
         return True
     except ConnectionError:
-        _LOGGER.error("Could not connect to Insteon modem.")
+        _LOGGER.error("Could not connect to Insteon modem")
         return False
 
 
@@ -115,14 +114,10 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return InsteonOptionsFlowHandler(config_entry)
 
     async def async_step_user(self, user_input=None):
-        """For backward compatibility."""
-        return await self.async_step_init(user_input=user_input)
-
-    async def async_step_init(self, user_input=None):
         """Init the config flow."""
         errors = {}
         if self._async_current_entries():
-            return self.async_abort(reason="already_configured")
+            return self.async_abort(reason="single_instance_allowed")
         if user_input is not None:
             selection = user_input.get(MODEM_TYPE)
 
@@ -134,7 +129,7 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         modem_types = [PLM, HUB1, HUB2]
         data_schema = vol.Schema({vol.Required(MODEM_TYPE): vol.In(modem_types)})
         return self.async_show_form(
-            step_id="init", data_schema=data_schema, errors=errors
+            step_id="user", data_schema=data_schema, errors=errors
         )
 
     async def async_step_plm(self, user_input=None):
@@ -177,7 +172,7 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_info):
         """Import a yaml entry as a config entry."""
         if self._async_current_entries():
-            return self.async_abort(reason="already_configured")
+            return self.async_abort(reason="single_instance_allowed")
         if not await _async_connect(**import_info):
             return self.async_abort(reason="cannot_connect")
         return self.async_create_entry(title="", data=import_info)
@@ -248,7 +243,8 @@ class InsteonOptionsFlowHandler(config_entries.OptionsFlow):
                 data[CONF_PASSWORD] = user_input[CONF_PASSWORD]
             self.hass.config_entries.async_update_entry(self.config_entry, data=data)
             return self.async_create_entry(
-                title="", data={**self.config_entry.options},
+                title="",
+                data={**self.config_entry.options},
             )
         data_schema = build_hub_schema(**self.config_entry.data)
         return self.async_show_form(
@@ -291,7 +287,9 @@ class InsteonOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             options = _remove_override(user_input[CONF_ADDRESS], options)
             async_dispatcher_send(
-                self.hass, SIGNAL_REMOVE_DEVICE_OVERRIDE, user_input[CONF_ADDRESS],
+                self.hass,
+                SIGNAL_REMOVE_DEVICE_OVERRIDE,
+                user_input[CONF_ADDRESS],
             )
             return self.async_create_entry(title="", data=options)
 

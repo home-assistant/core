@@ -1,6 +1,4 @@
 """Support for the Geofency device tracker platform."""
-import logging
-
 from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
@@ -10,8 +8,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import DOMAIN as GF_DOMAIN, TRACKER_UPDATE
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -60,7 +56,7 @@ class GeofencyEntity(TrackerEntity, RestoreEntity):
         self._unique_id = device
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific attributes."""
         return self._attributes
 

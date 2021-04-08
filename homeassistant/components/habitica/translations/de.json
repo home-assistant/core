@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "invalid_credentials": "Ung\u00fcltige Authentifizierung",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-Schl\u00fcssel",
+                    "url": "URL"
+                }
+            }
+        }
+    },
+    "title": "Habitica"
+}

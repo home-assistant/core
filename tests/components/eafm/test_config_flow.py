@@ -1,5 +1,6 @@
 """Tests for eafm config flow."""
-from asynctest import patch
+from unittest.mock import patch
+
 import pytest
 from voluptuous.error import MultipleInvalid
 

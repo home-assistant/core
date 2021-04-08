@@ -1,5 +1,6 @@
 """Tests for the WLED light platform."""
 import json
+from unittest.mock import patch
 
 from wled import Device as WLEDDevice, WLEDConnectionError
 
@@ -23,6 +24,7 @@ from homeassistant.components.wled.const import (
     ATTR_SPEED,
     DOMAIN,
     SERVICE_EFFECT,
+    SERVICE_PRESET,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -34,9 +36,9 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed, load_fixture
 from tests.components.wled import init_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -48,7 +50,7 @@ async def test_rgb_light_state(
     """Test the creation and values of the WLED lights."""
     await init_integration(hass, aioclient_mock)
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     # First segment of the strip
     state = hass.states.get("light.wled_rgb_light_segment_0")
@@ -114,7 +116,9 @@ async def test_segment_change_state(
         )
         await hass.async_block_till_done()
         light_mock.assert_called_once_with(
-            on=False, segment_id=0, transition=50,
+            on=False,
+            segment_id=0,
+            transition=50,
         )
 
     with patch("wled.WLED.segment") as light_mock:
@@ -149,7 +153,9 @@ async def test_segment_change_state(
         )
         await hass.async_block_till_done()
         light_mock.assert_called_once_with(
-            color_primary=(255, 159, 70), on=True, segment_id=0,
+            color_primary=(255, 159, 70),
+            on=True,
+            segment_id=0,
         )
 
 
@@ -168,7 +174,8 @@ async def test_master_change_state(
         )
         await hass.async_block_till_done()
         light_mock.assert_called_once_with(
-            on=False, transition=50,
+            on=False,
+            transition=50,
         )
 
     with patch("wled.WLED.master") as light_mock:
@@ -184,7 +191,9 @@ async def test_master_change_state(
         )
         await hass.async_block_till_done()
         light_mock.assert_called_once_with(
-            brightness=42, on=True, transition=50,
+            brightness=42,
+            on=True,
+            transition=50,
         )
 
     with patch("wled.WLED.master") as light_mock:
@@ -196,7 +205,8 @@ async def test_master_change_state(
         )
         await hass.async_block_till_done()
         light_mock.assert_called_once_with(
-            on=False, transition=50,
+            on=False,
+            transition=50,
         )
 
     with patch("wled.WLED.master") as light_mock:
@@ -212,7 +222,9 @@ async def test_master_change_state(
         )
         await hass.async_block_till_done()
         light_mock.assert_called_once_with(
-            brightness=42, on=True, transition=50,
+            brightness=42,
+            on=True,
+            transition=50,
         )
 
 
@@ -231,7 +243,8 @@ async def test_dynamically_handle_segments(
 
     # Test removal if segment went missing, including the master entity
     with patch(
-        "homeassistant.components.wled.WLED.update", return_value=device,
+        "homeassistant.components.wled.WLED.update",
+        return_value=device,
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
         await hass.async_block_till_done()
@@ -259,7 +272,8 @@ async def test_single_segment_behavior(
 
     # Test absent master
     with patch(
-        "homeassistant.components.wled.WLED.update", return_value=device,
+        "homeassistant.components.wled.WLED.update",
+        return_value=device,
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
         await hass.async_block_till_done()
@@ -274,7 +288,8 @@ async def test_single_segment_behavior(
     device.state.brightness = 100
     device.state.segments[0].brightness = 255
     with patch(
-        "homeassistant.components.wled.WLED.update", return_value=device,
+        "homeassistant.components.wled.WLED.update",
+        return_value=device,
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
         await hass.async_block_till_done()
@@ -286,7 +301,8 @@ async def test_single_segment_behavior(
     # Test segment is off when master is off
     device.state.on = False
     with patch(
-        "homeassistant.components.wled.WLED.update", return_value=device,
+        "homeassistant.components.wled.WLED.update",
+        return_value=device,
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
         await hass.async_block_till_done()
@@ -304,7 +320,8 @@ async def test_single_segment_behavior(
         )
         await hass.async_block_till_done()
         master_mock.assert_called_once_with(
-            on=False, transition=50,
+            on=False,
+            transition=50,
         )
 
     # Test master is turned on when turning on a single segment, and segment
@@ -389,7 +406,9 @@ async def test_rgbw_light(
         )
         await hass.async_block_till_done()
         light_mock.assert_called_once_with(
-            on=True, segment_id=0, color_primary=(255, 159, 70, 139),
+            on=True,
+            segment_id=0,
+            color_primary=(255, 159, 70, 139),
         )
 
     with patch("wled.WLED.segment") as light_mock:
@@ -401,7 +420,9 @@ async def test_rgbw_light(
         )
         await hass.async_block_till_done()
         light_mock.assert_called_once_with(
-            color_primary=(255, 0, 0, 100), on=True, segment_id=0,
+            color_primary=(255, 0, 0, 100),
+            on=True,
+            segment_id=0,
         )
 
     with patch("wled.WLED.segment") as light_mock:
@@ -417,7 +438,9 @@ async def test_rgbw_light(
         )
         await hass.async_block_till_done()
         light_mock.assert_called_once_with(
-            color_primary=(0, 0, 0, 100), on=True, segment_id=0,
+            color_primary=(0, 0, 0, 100),
+            on=True,
+            segment_id=0,
         )
 
 
@@ -435,6 +458,7 @@ async def test_effect_service(
                 ATTR_EFFECT: "Rainbow",
                 ATTR_ENTITY_ID: "light.wled_rgb_light_segment_0",
                 ATTR_INTENSITY: 200,
+                ATTR_PALETTE: "Tiamat",
                 ATTR_REVERSE: True,
                 ATTR_SPEED: 100,
             },
@@ -442,7 +466,12 @@ async def test_effect_service(
         )
         await hass.async_block_till_done()
         light_mock.assert_called_once_with(
-            effect="Rainbow", intensity=200, reverse=True, segment_id=0, speed=100,
+            effect="Rainbow",
+            intensity=200,
+            palette="Tiamat",
+            reverse=True,
+            segment_id=0,
+            speed=100,
         )
 
     with patch("wled.WLED.segment") as light_mock:
@@ -454,7 +483,8 @@ async def test_effect_service(
         )
         await hass.async_block_till_done()
         light_mock.assert_called_once_with(
-            segment_id=0, effect=9,
+            segment_id=0,
+            effect=9,
         )
 
     with patch("wled.WLED.segment") as light_mock:
@@ -471,7 +501,10 @@ async def test_effect_service(
         )
         await hass.async_block_till_done()
         light_mock.assert_called_once_with(
-            intensity=200, reverse=True, segment_id=0, speed=100,
+            intensity=200,
+            reverse=True,
+            segment_id=0,
+            speed=100,
         )
 
     with patch("wled.WLED.segment") as light_mock:
@@ -481,6 +514,7 @@ async def test_effect_service(
             {
                 ATTR_EFFECT: "Rainbow",
                 ATTR_ENTITY_ID: "light.wled_rgb_light_segment_0",
+                ATTR_PALETTE: "Tiamat",
                 ATTR_REVERSE: True,
                 ATTR_SPEED: 100,
             },
@@ -488,7 +522,11 @@ async def test_effect_service(
         )
         await hass.async_block_till_done()
         light_mock.assert_called_once_with(
-            effect="Rainbow", reverse=True, segment_id=0, speed=100,
+            effect="Rainbow",
+            palette="Tiamat",
+            reverse=True,
+            segment_id=0,
+            speed=100,
         )
 
     with patch("wled.WLED.segment") as light_mock:
@@ -505,7 +543,10 @@ async def test_effect_service(
         )
         await hass.async_block_till_done()
         light_mock.assert_called_once_with(
-            effect="Rainbow", intensity=200, segment_id=0, speed=100,
+            effect="Rainbow",
+            intensity=200,
+            segment_id=0,
+            speed=100,
         )
 
     with patch("wled.WLED.segment") as light_mock:
@@ -522,7 +563,10 @@ async def test_effect_service(
         )
         await hass.async_block_till_done()
         light_mock.assert_called_once_with(
-            effect="Rainbow", intensity=200, reverse=True, segment_id=0,
+            effect="Rainbow",
+            intensity=200,
+            reverse=True,
+            segment_id=0,
         )
 
 
@@ -538,6 +582,49 @@ async def test_effect_service_error(
             DOMAIN,
             SERVICE_EFFECT,
             {ATTR_ENTITY_ID: "light.wled_rgb_light_segment_0", ATTR_EFFECT: 9},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+        state = hass.states.get("light.wled_rgb_light_segment_0")
+        assert state.state == STATE_ON
+        assert "Invalid response from API" in caplog.text
+
+
+async def test_preset_service(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test the preset service of a WLED light."""
+    await init_integration(hass, aioclient_mock)
+
+    with patch("wled.WLED.preset") as light_mock:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PRESET,
+            {
+                ATTR_ENTITY_ID: "light.wled_rgb_light_segment_0",
+                ATTR_PRESET: 1,
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        light_mock.assert_called_once_with(
+            preset=1,
+        )
+
+
+async def test_preset_service_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog
+) -> None:
+    """Test error handling of the WLED preset service."""
+    aioclient_mock.post("http://192.168.1.123:80/json/state", text="", status=400)
+    await init_integration(hass, aioclient_mock)
+
+    with patch("homeassistant.components.wled.WLED.update"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PRESET,
+            {ATTR_ENTITY_ID: "light.wled_rgb_light_segment_0", ATTR_PRESET: 1},
             blocking=True,
         )
         await hass.async_block_till_done()

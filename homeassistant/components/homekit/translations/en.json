@@ -1,20 +1,35 @@
 {
     "config": {
         "abort": {
-            "port_name_in_use": "A bridge with the same name or port is already configured."
+            "port_name_in_use": "An accessory or bridge with the same name or port is already configured."
         },
         "step": {
+            "accessory_mode": {
+                "data": {
+                    "entity_id": "Entity"
+                },
+                "description": "Choose the entity to be included. In accessory mode, only a single entity is included.",
+                "title": "Select entity to be included"
+            },
+            "bridge_mode": {
+                "data": {
+                    "include_domains": "Domains to include"
+                },
+                "description": "Choose the domains to be included. All supported entities in the domain will be included.",
+                "title": "Select domains to be included"
+            },
             "pairing": {
-                "description": "As soon as the {name} bridge is ready, pairing will be available in \u201cNotifications\u201d as \u201cHomeKit Bridge Setup\u201d.",
-                "title": "Pair HomeKit Bridge"
+                "description": "To complete pairing following the instructions in \u201cNotifications\u201d under \u201cHomeKit Pairing\u201d.",
+                "title": "Pair HomeKit"
             },
             "user": {
                 "data": {
                     "auto_start": "Autostart (disable if using Z-Wave or other delayed start system)",
-                    "include_domains": "Domains to include"
+                    "include_domains": "Domains to include",
+                    "mode": "Mode"
                 },
-                "description": "A HomeKit Bridge will allow you to access your Home Assistant entities in HomeKit. HomeKit Bridges are limited to 150 accessories per instance including the bridge itself. If you wish to bridge more than the maximum number of accessories, it is recommended that you use multiple HomeKit bridges for different domains. Detailed entity configuration is only available via YAML for the primary bridge.",
-                "title": "Activate HomeKit Bridge"
+                "description": "Choose the domains to be included. All supported entities in the domain will be included. A separate HomeKit instance in accessory mode will be created for each tv media player and camera.",
+                "title": "Select domains to be included"
             }
         }
     },
@@ -22,10 +37,10 @@
         "step": {
             "advanced": {
                 "data": {
-                    "auto_start": "Autostart (disable if using Z-Wave or other delayed start system)",
+                    "auto_start": "Autostart (disable if you are calling the homekit.start service manually)",
                     "safe_mode": "Safe Mode (enable only if pairing fails)"
                 },
-                "description": "These settings only need to be adjusted if the HomeKit bridge is not functional.",
+                "description": "These settings only need to be adjusted if HomeKit is not functional.",
                 "title": "Advanced Configuration"
             },
             "cameras": {
@@ -35,25 +50,26 @@
                 "description": "Check all cameras that support native H.264 streams. If the camera does not output a H.264 stream, the system will transcode the video to H.264 for HomeKit. Transcoding requires a performant CPU and is unlikely to work on single board computers.",
                 "title": "Select camera video codec."
             },
-            "exclude": {
+            "include_exclude": {
                 "data": {
-                    "exclude_entities": "Entities to exclude"
+                    "entities": "Entities",
+                    "mode": "Mode"
                 },
-                "description": "Choose the entities that you do NOT want to be bridged.",
-                "title": "Exclude entities in selected domains from bridge"
+                "description": "Choose the entities to be included. In accessory mode, only a single entity is included. In bridge include mode, all entities in the domain will be included unless specific entities are selected. In bridge exclude mode, all entities in the domain will be included except for the excluded entities. For best performance, a separate HomeKit accessory will be created for each tv media player, activity based remote, lock, and camera.",
+                "title": "Select entities to be included"
             },
             "init": {
                 "data": {
-                    "include_domains": "Domains to include"
+                    "include_domains": "Domains to include",
+                    "mode": "Mode"
                 },
-                "description": "Entities in the \u201cDomains to include\u201d will be bridged to HomeKit. You will be able to select which entities to exclude from this list on the next screen.",
-                "title": "Select domains to bridge."
+                "description": "HomeKit can be configured expose a bridge or a single accessory. In accessory mode, only a single entity can be used. Accessory mode is required for media players with the TV device class to function properly. Entities in the \u201cDomains to include\u201d will be included to HomeKit. You will be able to select which entities to include or exclude from this list on the next screen.",
+                "title": "Select domains to be included."
             },
             "yaml": {
                 "description": "This entry is controlled via YAML",
-                "title": "Adjust HomeKit Bridge Options"
+                "title": "Adjust HomeKit Options"
             }
         }
-    },
-    "title": "HomeKit Bridge"
+    }
 }

@@ -1,12 +1,12 @@
 """Support for OpenUV sensors."""
-import logging
-
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import TIME_MINUTES, UV_INDEX
 from homeassistant.core import callback
 from homeassistant.util.dt import as_local, parse_datetime
 
-from . import (
-    DATA_OPENUV_CLIENT,
+from . import OpenUvEntity
+from .const import (
+    DATA_CLIENT,
     DATA_UV,
     DOMAIN,
     TYPE_CURRENT_OZONE_LEVEL,
@@ -19,10 +19,7 @@ from . import (
     TYPE_SAFE_EXPOSURE_TIME_4,
     TYPE_SAFE_EXPOSURE_TIME_5,
     TYPE_SAFE_EXPOSURE_TIME_6,
-    OpenUvEntity,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_MAX_UV_TIME = "time"
 
@@ -80,8 +77,8 @@ SENSORS = {
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up a Nest sensor based on a config entry."""
-    openuv = hass.data[DOMAIN][DATA_OPENUV_CLIENT][entry.entry_id]
+    """Set up a OpenUV sensor based on a config entry."""
+    openuv = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
 
     sensors = []
     for kind, attrs in SENSORS.items():
@@ -91,7 +88,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(sensors, True)
 
 
-class OpenUvSensor(OpenUvEntity):
+class OpenUvSensor(OpenUvEntity, SensorEntity):
     """Define a binary sensor for OpenUV."""
 
     def __init__(self, openuv, sensor_type, name, icon, unit, entry_id):

@@ -49,8 +49,8 @@ async def validate_input(hass: HomeAssistant, user_input):
 
     try:
         client = await connect_client(hass, user_input)
-    except asyncio.TimeoutError:
-        raise CannotConnect
+    except asyncio.TimeoutError as err:
+        raise CannotConnect from err
     try:
 
         def disconnect_callback():
@@ -62,7 +62,7 @@ async def validate_input(hass: HomeAssistant, user_input):
     except CannotConnect:
         client.disconnect_callback = None
         client.stop()
-        raise CannotConnect
+        raise
     else:
         client.disconnect_callback = None
         client.stop()

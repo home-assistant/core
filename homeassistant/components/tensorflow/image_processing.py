@@ -125,8 +125,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         # (The model_dir is created during the manual setup process. See integration docs.)
 
         # pylint: disable=import-outside-toplevel
-        from object_detection.utils import config_util, label_map_util
         from object_detection.builders import model_builder
+        from object_detection.utils import config_util, label_map_util
     except ImportError:
         _LOGGER.error(
             "No TensorFlow Object Detection library found! Install or compile "
@@ -204,7 +204,12 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
     """Representation of an TensorFlow image processor."""
 
     def __init__(
-        self, hass, camera_entity, name, category_index, config,
+        self,
+        hass,
+        camera_entity,
+        name,
+        category_index,
+        config,
     ):
         """Initialize the TensorFlow entity."""
         model_config = config.get(CONF_MODEL)
@@ -274,7 +279,7 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
         return self._total_matches
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         return {
             ATTR_MATCHES: self._matches,
@@ -323,20 +328,21 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
 
         for path in paths:
             _LOGGER.info("Saving results image to %s", path)
+            if not os.path.exists(os.path.dirname(path)):
+                os.makedirs(os.path.dirname(path), exist_ok=True)
             img.save(path)
 
     def process_image(self, image):
         """Process the image."""
         model = self.hass.data[DOMAIN][CONF_MODEL]
         if not model:
-            _LOGGER.debug("Model not yet ready.")
+            _LOGGER.debug("Model not yet ready")
             return
 
         start = time.perf_counter()
         try:
-            import cv2  # pylint: disable=import-error, import-outside-toplevel
+            import cv2  # pylint: disable=import-outside-toplevel
 
-            # pylint: disable=no-member
             img = cv2.imdecode(np.asarray(bytearray(image)), cv2.IMREAD_UNCHANGED)
             inp = img[:, :, [2, 1, 0]]  # BGR->RGB
             inp_expanded = inp.reshape(1, inp.shape[0], inp.shape[1], 3)
@@ -400,7 +406,7 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
                 continue
 
             # If we got here, we should include it
-            if category not in matches.keys():
+            if category not in matches:
                 matches[category] = []
             matches[category].append({"score": float(score), "box": boxes})
             total_matches += 1

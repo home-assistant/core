@@ -4,18 +4,17 @@ import threading
 from time import monotonic, sleep
 
 import bme680  # pylint: disable=import-error
-from smbus import SMBus  # pylint: disable=import-error
+from smbus import SMBus
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    PERCENTAGE,
     TEMP_FAHRENHEIT,
-    UNIT_PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util.temperature import celsius_to_fahrenheit
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,10 +54,10 @@ SENSOR_GAS = "gas"
 SENSOR_AQ = "airquality"
 SENSOR_TYPES = {
     SENSOR_TEMP: ["Temperature", None],
-    SENSOR_HUMID: ["Humidity", UNIT_PERCENTAGE],
+    SENSOR_HUMID: ["Humidity", PERCENTAGE],
     SENSOR_PRESS: ["Pressure", "mb"],
     SENSOR_GAS: ["Gas Resistance", "Ohms"],
-    SENSOR_AQ: ["Air Quality", UNIT_PERCENTAGE],
+    SENSOR_AQ: ["Air Quality", PERCENTAGE],
 }
 DEFAULT_MONITORED = [SENSOR_TEMP, SENSOR_HUMID, SENSOR_PRESS, SENSOR_AQ]
 OVERSAMPLING_VALUES = {0, 1, 2, 4, 8, 16}
@@ -111,7 +110,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     SENSOR_TYPES[SENSOR_TEMP][1] = hass.config.units.temperature_unit
     name = config[CONF_NAME]
 
-    sensor_handler = await hass.async_add_job(_setup_bme680, config)
+    sensor_handler = await hass.async_add_executor_job(_setup_bme680, config)
     if sensor_handler is None:
         return
 
@@ -131,7 +130,6 @@ def _setup_bme680(config):
     sensor_handler = None
     sensor = None
     try:
-        # pylint: disable=no-member
         i2c_address = config[CONF_I2C_ADDRESS]
         bus = SMBus(config[CONF_I2C_BUS])
         sensor = bme680.BME680(i2c_address, bus)
@@ -317,7 +315,7 @@ class BME680Handler:
         return hum_score + gas_score
 
 
-class BME680Sensor(Entity):
+class BME680Sensor(SensorEntity):
     """Implementation of the BME680 sensor."""
 
     def __init__(self, bme680_client, sensor_type, temp_unit, name):
@@ -347,7 +345,7 @@ class BME680Sensor(Entity):
 
     async def async_update(self):
         """Get the latest data from the BME680 and update the states."""
-        await self.hass.async_add_job(self.bme680_client.update)
+        await self.hass.async_add_executor_job(self.bme680_client.update)
         if self.type == SENSOR_TEMP:
             temperature = round(self.bme680_client.sensor_data.temperature, 1)
             if self.temp_unit == TEMP_FAHRENHEIT:

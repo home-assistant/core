@@ -1,16 +1,19 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Kontoen er allerede konfigurert",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
+        },
         "error": {
-            "connection_error": "Feil ved tilkobling; sjekk nettverket og pr\u00f8v p\u00e5 nytt",
-            "identifier_exists": "E-post er allerede registrert",
-            "invalid_credentials": "Ugyldig legitimasjon",
-            "unknown_error": "Ukjent feil, Vennligst rapporter informasjon fra Loggen"
+            "already_configured": "Kontoen er allerede konfigurert",
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning"
         },
         "step": {
             "user": {
                 "data": {
                     "password": "Passord",
-                    "username": "E-postadresse"
+                    "username": "E-post"
                 },
                 "description": "Vennligst fyll inn din informasjonen.",
                 "title": "Tesla - Konfigurasjon"

@@ -1,6 +1,5 @@
 """Support for Logi Circle devices."""
 import asyncio
-import logging
 
 from aiohttp.client_exceptions import ClientResponseError
 import async_timeout
@@ -12,6 +11,7 @@ from homeassistant import config_entries
 from homeassistant.components.camera import ATTR_FILENAME, CAMERA_SERVICE_SCHEMA
 from homeassistant.const import (
     ATTR_MODE,
+    CONF_API_KEY,
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     CONF_MONITORED_CONDITIONS,
@@ -23,7 +23,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import config_flow
 from .const import (
-    CONF_API_KEY,
     CONF_REDIRECT_URI,
     DATA_LOGI,
     DEFAULT_CACHEDB,
@@ -39,7 +38,6 @@ from .const import (
 NOTIFICATION_ID = "logi_circle_notification"
 NOTIFICATION_TITLE = "Logi Circle Setup"
 
-_LOGGER = logging.getLogger(__name__)
 _TIMEOUT = 15  # seconds
 
 SERVICE_SET_CONFIG = "set_config"
@@ -48,6 +46,8 @@ SERVICE_LIVESTREAM_RECORD = "livestream_record"
 
 ATTR_VALUE = "value"
 ATTR_DURATION = "duration"
+
+PLATFORMS = ["camera", "sensor"]
 
 SENSOR_SCHEMA = vol.Schema(
     {
@@ -119,7 +119,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up Logi Circle from a config entry."""
-
     logi_circle = LogiCircle(
         client_id=entry.data[CONF_CLIENT_ID],
         client_secret=entry.data[CONF_CLIENT_SECRET],
@@ -174,9 +173,9 @@ async def async_setup_entry(hass, entry):
 
     hass.data[DATA_LOGI] = logi_circle
 
-    for component in "camera", "sensor":
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     async def service_handler(service):
@@ -222,8 +221,8 @@ async def async_setup_entry(hass, entry):
 
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
-    for component in "camera", "sensor":
-        await hass.config_entries.async_forward_entry_unload(entry, component)
+    for platform in PLATFORMS:
+        await hass.config_entries.async_forward_entry_unload(entry, platform)
 
     logi_circle = hass.data.pop(DATA_LOGI)
 

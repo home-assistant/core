@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+        },
+        "error": {
+            "duplicate_entry": "\ud574\ub2f9 \ud638\uc2a4\ud2b8\ub294 \uc774\ubbf8 \ucd94\uac00\ub418\uc5c8\uc2b5\ub2c8\ub2e4.",
+            "invalid_auth": "\uc778\uc99d\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "step": {
+            "link": {
+                "description": "Roon\uc5d0\uc11c Home Assistant\ub97c \uc778\uc99d\ud574\uc8fc\uc5b4\uc57c \ud569\ub2c8\ub2e4. \ud655\uc778\uc744 \ud074\ub9ad\ud55c \ud6c4 Roon Core \uc560\ud50c\ub9ac\ucf00\uc774\uc158\uc73c\ub85c \uc774\ub3d9\ud558\uc5ec \uc124\uc815\uc744 \uc5f4\uace0 \ud655\uc7a5 \ud0ed\uc5d0\uc11c Home Assistant\ub97c \ud65c\uc131\ud654\ud574\uc8fc\uc138\uc694.",
+                "title": "Roon\uc5d0\uc11c HomeAssistant \uc778\uc99d\ud558\uae30"
+            },
+            "user": {
+                "data": {
+                    "host": "\ud638\uc2a4\ud2b8"
+                },
+                "description": "Roon \uc11c\ubc84\ub97c \ucc3e\uc744 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4. \ud638\uc2a4\ud2b8 \uc774\ub984 \ub610\ub294 IP \uc8fc\uc18c\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694."
+            }
+        }
+    }
+}

@@ -1,12 +1,25 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Account gi\u00e0 configurato"
+            "already_configured": "L'account \u00e8 gi\u00e0 configurato",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
         },
         "error": {
-            "login": "Errore di accesso: si prega di controllare il nome utente e la password"
+            "invalid_auth": "Autenticazione non valida",
+            "usercode": "Codice utente non valido per questo utente in questa posizione"
         },
         "step": {
+            "locations": {
+                "data": {
+                    "location": "Posizione"
+                },
+                "description": "Immettere il codice utente per questo utente in questa posizione",
+                "title": "Codici utente posizione"
+            },
+            "reauth_confirm": {
+                "description": "Total Connect deve autenticare nuovamente il tuo account",
+                "title": "Autenticare nuovamente l'integrazione"
+            },
             "user": {
                 "data": {
                     "password": "Password",

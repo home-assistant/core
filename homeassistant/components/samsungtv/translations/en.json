@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "This Samsung TV is already configured.",
-            "already_in_progress": "Samsung TV configuration is already in progress.",
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
             "auth_missing": "Home Assistant is not authorized to connect to this Samsung TV. Please check your TV's settings to authorize Home Assistant.",
-            "not_successful": "Unable to connect to this Samsung TV device.",
+            "cannot_connect": "Failed to connect",
             "not_supported": "This Samsung TV device is currently not supported."
         },
         "flow_title": "Samsung TV: {model}",

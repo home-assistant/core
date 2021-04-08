@@ -3,20 +3,19 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_MONITORED_CONDITIONS,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 
 from . import ATTRIBUTION, DATA_ARLO, DEFAULT_BRAND, SIGNAL_UPDATE_ARLO
@@ -28,10 +27,10 @@ SENSOR_TYPES = {
     "last_capture": ["Last", None, "run-fast"],
     "total_cameras": ["Arlo Cameras", None, "video"],
     "captured_today": ["Captured Today", None, "file-video"],
-    "battery_level": ["Battery Level", UNIT_PERCENTAGE, "battery-50"],
+    "battery_level": ["Battery Level", PERCENTAGE, "battery-50"],
     "signal_strength": ["Signal Strength", None, "signal"],
     "temperature": ["Temperature", TEMP_CELSIUS, "thermometer"],
-    "humidity": ["Humidity", UNIT_PERCENTAGE, "water-percent"],
+    "humidity": ["Humidity", PERCENTAGE, "water-percent"],
     "air_quality": ["Air Quality", CONCENTRATION_PARTS_PER_MILLION, "biohazard"],
 }
 
@@ -73,7 +72,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class ArloSensor(Entity):
+class ArloSensor(SensorEntity):
     """An implementation of a Netgear Arlo IP sensor."""
 
     def __init__(self, name, device, sensor_type):
@@ -183,7 +182,7 @@ class ArloSensor(Entity):
                 self._state = None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         attrs = {}
 

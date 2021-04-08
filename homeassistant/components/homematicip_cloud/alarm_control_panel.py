@@ -1,6 +1,8 @@
 """Support for HomematicIP Cloud alarm control panel."""
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from homematicip.functionalHomes import SecurityAndAlarmHome
 
@@ -36,7 +38,7 @@ async def async_setup_entry(
 
 
 class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
-    """Representation of an alarm control panel."""
+    """Representation of the HomematicIP alarm control panel."""
 
     def __init__(self, hap: HomematicipHAP) -> None:
         """Initialize the alarm control panel."""
@@ -44,7 +46,7 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
         _LOGGER.info("Setting up %s", self.name)
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> dict[str, Any]:
         """Return device specific attributes."""
         return {
             "identifiers": {(HMIPC_DOMAIN, f"ACP {self._home.id}")},
@@ -56,7 +58,7 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
 
     @property
     def state(self) -> str:
-        """Return the state of the device."""
+        """Return the state of the alarm control panel."""
         # check for triggered alarm
         if self._security_and_alarm.alarmActive:
             return STATE_ALARM_TRIGGERED
@@ -98,7 +100,7 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
 
     @callback
     def _async_device_changed(self, *args, **kwargs) -> None:
-        """Handle device state changes."""
+        """Handle entity state changes."""
         # Don't update disabled entities
         if self.enabled:
             _LOGGER.debug("Event %s (%s)", self.name, CONST_ALARM_CONTROL_PANEL_NAME)
@@ -111,7 +113,7 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
 
     @property
     def name(self) -> str:
-        """Return the name of the generic device."""
+        """Return the name of the generic entity."""
         name = CONST_ALARM_CONTROL_PANEL_NAME
         if self._home.name:
             name = f"{self._home.name} {name}"
@@ -124,7 +126,7 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
 
     @property
     def available(self) -> bool:
-        """Device available."""
+        """Return if alarm control panel is available."""
         return self._home.connected
 
     @property

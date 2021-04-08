@@ -1,6 +1,7 @@
 """Tests for the yandex transport platform."""
 
 import json
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -9,7 +10,6 @@ from homeassistant.const import CONF_NAME
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import AsyncMock, patch
 from tests.common import assert_setup_component, load_fixture
 
 REPLY = json.loads(load_fixture("yandex_transport_reply.json"))
@@ -24,13 +24,13 @@ def mock_requester():
         yield instance
 
 
-STOP_ID = 9639579
+STOP_ID = "stop__9639579"
 ROUTES = ["194", "т36", "т47", "м10"]
 NAME = "test_name"
 TEST_CONFIG = {
     "sensor": {
         "platform": "yandex_transport",
-        "stop_id": 9639579,
+        "stop_id": "stop__9639579",
         "routes": ROUTES,
         "name": NAME,
     }

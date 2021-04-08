@@ -1,20 +1,16 @@
 """Support for the Tesla sensors."""
-import logging
-from typing import Optional
+from __future__ import annotations
 
-from homeassistant.components.sensor import DEVICE_CLASSES
+from homeassistant.components.sensor import DEVICE_CLASSES, SensorEntity
 from homeassistant.const import (
     LENGTH_KILOMETERS,
     LENGTH_MILES,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.helpers.entity import Entity
 from homeassistant.util.distance import convert
 
 from . import DOMAIN as TESLA_DOMAIN, TeslaDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -30,7 +26,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class TeslaSensor(TeslaDevice, Entity):
+class TeslaSensor(TeslaDevice, SensorEntity):
     """Representation of Tesla sensors."""
 
     def __init__(self, tesla_device, coordinator, sensor_type=None):
@@ -42,7 +38,7 @@ class TeslaSensor(TeslaDevice, Entity):
             self._unique_id = f"{super().unique_id}_{self.type}"
 
     @property
-    def state(self) -> Optional[float]:
+    def state(self) -> float | None:
         """Return the state of the sensor."""
         if self.tesla_device.type == "temperature sensor":
             if self.type == "outside":
@@ -61,7 +57,7 @@ class TeslaSensor(TeslaDevice, Entity):
         return self.tesla_device.get_value()
 
     @property
-    def unit_of_measurement(self) -> Optional[str]:
+    def unit_of_measurement(self) -> str | None:
         """Return the unit_of_measurement of the device."""
         units = self.tesla_device.measurement
         if units == "F":
@@ -75,7 +71,7 @@ class TeslaSensor(TeslaDevice, Entity):
         return units
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the device_class of the device."""
         return (
             self.tesla_device.device_class
@@ -84,7 +80,7 @@ class TeslaSensor(TeslaDevice, Entity):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
         attr = self._attributes.copy()
         if self.tesla_device.type == "charging rate sensor":

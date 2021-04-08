@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Z-Wave ist bereits konfiguriert",
-            "one_instance_only": "Komponente unterst\u00fctzt nur eine Z-Wave-Instanz"
+            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
         },
         "error": {
             "option_error": "Z-Wave-Validierung fehlgeschlagen. Ist der Pfad zum USB-Stick korrekt?"

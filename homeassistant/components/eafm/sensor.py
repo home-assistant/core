@@ -5,10 +5,13 @@ import logging
 from aioeafm import get_station
 import async_timeout
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, LENGTH_METERS
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import DOMAIN
 
@@ -75,14 +78,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     await coordinator.async_refresh()
 
 
-class Measurement(Entity):
+class Measurement(CoordinatorEntity, SensorEntity):
     """A gauge at a flood monitoring station."""
 
     attribution = "This uses Environment Agency flood and river level data from the real-time data API"
 
     def __init__(self, coordinator, key):
         """Initialise the gauge with a data instance and station."""
-        self.coordinator = coordinator
+        super().__init__(coordinator)
         self.key = key
 
     @property
@@ -109,11 +112,6 @@ class Measurement(Entity):
     def name(self):
         """Return the name of the gauge."""
         return f"{self.station_name} {self.parameter_name} {self.qualifier}"
-
-    @property
-    def should_poll(self) -> bool:
-        """Stations are polled as a group - the entity shouldn't poll by itself."""
-        return False
 
     @property
     def unique_id(self):
@@ -150,12 +148,6 @@ class Measurement(Entity):
 
         return True
 
-    async def async_added_to_hass(self):
-        """When entity is added to hass."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
     @property
     def unit_of_measurement(self):
         """Return units for the sensor."""
@@ -165,7 +157,7 @@ class Measurement(Entity):
         return UNIT_MAPPING.get(measure["unit"], measure["unitName"])
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the sensor specific state attributes."""
         return {ATTR_ATTRIBUTION: self.attribution}
 
@@ -173,11 +165,3 @@ class Measurement(Entity):
     def state(self):
         """Return the current sensor value."""
         return self.coordinator.data["measures"][self.key]["latestReading"]["value"]
-
-    async def async_update(self):
-        """
-        Update the entity.
-
-        Only used by the generic entity update service.
-        """
-        await self.coordinator.async_request_refresh()

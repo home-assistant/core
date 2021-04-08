@@ -1,14 +1,14 @@
 {
     "config": {
         "abort": {
-            "name_exists": "Name existiert bereits"
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
         },
         "step": {
             "user": {
                 "data": {
                     "advertise_ip": "IP Adresse annoncieren",
                     "advertise_port": "Port annoncieren",
-                    "host_ip": "Host-IP",
+                    "host_ip": "Host-IP-Adresse",
                     "listen_port": "Listen-Port",
                     "name": "Name",
                     "upnp_bind_multicast": "Multicast binden (True/False)"

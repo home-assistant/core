@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
             "unknown": "Errore imprevisto"
         },
         "error": {
@@ -9,11 +10,11 @@
         },
         "flow_title": "Roku: {name}",
         "step": {
+            "discovery_confirm": {
+                "description": "Vuoi configurare {name}?",
+                "title": "Roku"
+            },
             "ssdp_confirm": {
-                "data": {
-                    "one": "uno",
-                    "other": "altri"
-                },
                 "description": "Vuoi impostare {name}?",
                 "title": "Roku"
             },

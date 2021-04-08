@@ -10,7 +10,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_STATION_ID, DEFAULT_NAME, DOMAIN  # pylint:disable=unused-import
+from .const import CONF_STATION_ID, DEFAULT_NAME, DOMAIN
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -44,7 +44,8 @@ class GiosFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     await gios.update()
 
                 return self.async_create_entry(
-                    title=user_input[CONF_STATION_ID], data=user_input,
+                    title=user_input[CONF_STATION_ID],
+                    data=user_input,
                 )
             except (ApiError, ClientConnectorError, asyncio.TimeoutError):
                 errors["base"] = "cannot_connect"

@@ -7,7 +7,7 @@ from sml import SmlGetListResponse
 from sml.asyncio import SmlProtocol
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -15,7 +15,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.typing import Optional
 from homeassistant.util.dt import utcnow
@@ -77,8 +76,36 @@ class EDL21:
         # D=7: Instantaneous value
         # E=0: Total
         "1-0:16.7.0*255": "Sum active instantaneous power",
+        # C=31: Active amperage L1
+        # D=7: Instantaneous value
+        # E=0: Total
+        "1-0:31.7.0*255": "L1 active instantaneous amperage",
+        # C=36: Active power L1
+        # D=7: Instantaneous value
+        # E=0: Total
+        "1-0:36.7.0*255": "L1 active instantaneous power",
+        # C=51: Active amperage L2
+        # D=7: Instantaneous value
+        # E=0: Total
+        "1-0:51.7.0*255": "L2 active instantaneous amperage",
+        # C=56: Active power L2
+        # D=7: Instantaneous value
+        # E=0: Total
+        "1-0:56.7.0*255": "L2 active instantaneous power",
+        # C=71: Active amperage L3
+        # D=7: Instantaneous value
+        # E=0: Total
+        "1-0:71.7.0*255": "L3 active instantaneous amperage",
+        # C=76: Active power L3
+        # D=7: Instantaneous value
+        # E=0: Total
+        "1-0:76.7.0*255": "L3 active instantaneous power",
+        # C=96: Electricity-related service entries
+        "1-0:96.1.0*255": "Metering point ID 1",
     }
     _OBIS_BLACKLIST = {
+        # C=96: Electricity-related service entries
+        "1-0:96.50.1*1",  # Manufacturer specific
         # A=129: Manufacturer specific
         "129-129:199.130.3*255",  # Iskraemeco: Manufacturer
         "129-129:199.130.5*255",  # Iskraemeco: Public Key
@@ -103,7 +130,7 @@ class EDL21:
 
         electricity_id = None
         for telegram in message_body.get("valList", []):
-            if telegram.get("objName") == "1-0:0.0.9*255":
+            if telegram.get("objName") in ("1-0:0.0.9*255", "1-0:96.1.0*255"):
                 electricity_id = telegram.get("value")
                 break
 
@@ -133,7 +160,7 @@ class EDL21:
                 elif obis not in self._OBIS_BLACKLIST:
                     _LOGGER.warning(
                         "Unhandled sensor %s detected. Please report at "
-                        'https://github.com/home-assistant/home-assistant/issues?q=is%%3Aissue+label%%3A"integration%%3A+edl21"+',
+                        'https://github.com/home-assistant/core/issues?q=is%%3Aissue+label%%3A"integration%%3A+edl21"+',
                         obis,
                     )
                     self._OBIS_BLACKLIST.add(obis)
@@ -165,7 +192,7 @@ class EDL21:
         self._async_add_entities(new_entities, update_before_add=True)
 
 
-class EDL21Entity(Entity):
+class EDL21Entity(SensorEntity):
     """Entity reading values from EDL21 telegram."""
 
     def __init__(self, electricity_id, obis, name, telegram):
@@ -241,7 +268,7 @@ class EDL21Entity(Entity):
         return self._telegram.get("value")
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Enumerate supported attributes."""
         return {
             self._state_attrs[k]: v

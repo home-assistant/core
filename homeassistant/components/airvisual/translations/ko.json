@@ -1,12 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\uc88c\ud45c\uac12 \ub610\ub294 Node/Pro ID \uac00 \uc774\ubbf8 \ub4f1\ub85d\ub418\uc5c8\uc2b5\ub2c8\ub2e4."
+            "already_configured": "Node/Pro ID\uac00 \uc774\ubbf8 \ub4f1\ub85d\ub418\uc5c8\uac70\ub098 \uc704\uce58\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "reauth_successful": "\uc7ac\uc778\uc99d\uc5d0 \uc131\uacf5\ud588\uc2b5\ub2c8\ub2e4"
         },
         "error": {
-            "general_error": "\uc54c \uc218 \uc5c6\ub294 \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4.",
-            "invalid_api_key": "API \ud0a4\uac00 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4.",
-            "unable_to_connect": "AirVisual Node/Pro \uae30\uae30\uc5d0 \uc5f0\uacb0\ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4."
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "general_error": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4",
+            "invalid_api_key": "API \ud0a4\uac00 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "location_not_found": "\uc704\uce58\ub97c \ucc3e\uc744 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4."
         },
         "step": {
             "geography": {
@@ -18,13 +20,38 @@
                 "description": "AirVisual \ud074\ub77c\uc6b0\ub4dc API \ub97c \uc0ac\uc6a9\ud558\uc5ec \uc9c0\ub9ac\uc801 \uc704\uce58\ub97c \ubaa8\ub2c8\ud130\ub9c1\ud569\ub2c8\ub2e4.",
                 "title": "\uc9c0\ub9ac\uc801 \uc704\uce58 \uad6c\uc131\ud558\uae30"
             },
+            "geography_by_coords": {
+                "data": {
+                    "api_key": "API \ud0a4",
+                    "latitude": "\uc704\ub3c4",
+                    "longitude": "\uacbd\ub3c4"
+                },
+                "description": "AirVisual \ud074\ub77c\uc6b0\ub4dc API\ub97c \uc0ac\uc6a9\ud558\uc5ec \uc704\ub3c4/\uacbd\ub3c4\ub97c \ubaa8\ub2c8\ud130\ub9c1\ud569\ub2c8\ub2e4.",
+                "title": "\uc9c0\ub9ac\uc801 \uc704\uce58 \uad6c\uc131\ud558\uae30"
+            },
+            "geography_by_name": {
+                "data": {
+                    "api_key": "API \ud0a4",
+                    "city": "\ub3c4\uc2dc",
+                    "country": "\uad6d\uac00",
+                    "state": "\uc8fc"
+                },
+                "description": "AirVisual \ud074\ub77c\uc6b0\ub4dc API\ub97c \uc0ac\uc6a9\ud558\uc5ec \ub3c4\uc2dc/\uc8fc/\uad6d\uac00\ub97c \ubaa8\ub2c8\ud130\ub9c1\ud569\ub2c8\ub2e4.",
+                "title": "\uc9c0\ub9ac\uc801 \uc704\uce58 \uad6c\uc131\ud558\uae30"
+            },
             "node_pro": {
                 "data": {
-                    "ip_address": "\uae30\uae30 IP \uc8fc\uc18c/\ud638\uc2a4\ud2b8 \uc774\ub984",
+                    "ip_address": "\ud638\uc2a4\ud2b8",
                     "password": "\ube44\ubc00\ubc88\ud638"
                 },
                 "description": "\uc0ac\uc6a9\uc790\uc758 AirVisual \uae30\uae30\ub97c \ubaa8\ub2c8\ud130\ub9c1\ud569\ub2c8\ub2e4. \uae30\uae30\uc758 UI \uc5d0\uc11c \ube44\ubc00\ubc88\ud638\ub97c \ucc3e\uc744 \uc218 \uc788\uc2b5\ub2c8\ub2e4.",
                 "title": "AirVisual Node/Pro \uad6c\uc131\ud558\uae30"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API \ud0a4"
+                },
+                "title": "AirVisual \uc7ac\uc778\uc99d\ud558\uae30"
             },
             "user": {
                 "data": {

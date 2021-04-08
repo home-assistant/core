@@ -1,10 +1,9 @@
 {
     "config": {
         "error": {
-            "already_configured": "Az \u00e1tj\u00e1r\u00f3 m\u00e1r konfigur\u00e1lva van",
-            "id_exists": "Az \u00e1tj\u00e1r\u00f3 azonos\u00edt\u00f3ja m\u00e1r l\u00e9tezik",
-            "serial_error": "Hiba t\u00f6rt\u00e9nt az eszk\u00f6zh\u00f6z val\u00f3 csatlakoz\u00e1skor",
-            "timeout": "A csatlakoz\u00e1si k\u00eds\u00e9rletre sz\u00e1nt id\u0151 lej\u00e1rt"
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "id_exists": "Az \u00e1tj\u00e1r\u00f3 azonos\u00edt\u00f3ja m\u00e1r l\u00e9tezik"
         },
         "step": {
             "init": {
@@ -22,7 +21,8 @@
             "init": {
                 "data": {
                     "floor_temperature": "Padl\u00f3 h\u0151m\u00e9rs\u00e9klete",
-                    "precision": "Pontoss\u00e1g"
+                    "precision": "Pontoss\u00e1g",
+                    "temporary_override_mode": "Ideiglenes be\u00e1ll\u00edt\u00e1s fel\u00fclb\u00edr\u00e1l\u00e1si m\u00f3dja"
                 }
             }
         }

@@ -1,7 +1,8 @@
 """Support for Plum Lightpad lights."""
+from __future__ import annotations
+
 import asyncio
-import logging
-from typing import Callable, List
+from typing import Callable
 
 from plumlightpad import Plum
 
@@ -20,13 +21,11 @@ import homeassistant.util.color as color_util
 
 from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity]], None],
+    async_add_entities: Callable[[list[Entity]], None],
 ) -> None:
     """Set up Plum Lightpad dimmer lights and glow rings."""
 

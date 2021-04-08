@@ -61,10 +61,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             )
         )
         flume_devices = await hass.async_add_executor_job(
-            partial(FlumeDeviceList, flume_auth, http_session=http_session,)
+            partial(
+                FlumeDeviceList,
+                flume_auth,
+                http_session=http_session,
+            )
         )
-    except RequestException:
-        raise ConfigEntryNotReady
+    except RequestException as ex:
+        raise ConfigEntryNotReady from ex
     except Exception as ex:  # pylint: disable=broad-except
         _LOGGER.error("Invalid credentials for flume: %s", ex)
         return False
@@ -75,9 +79,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         FLUME_HTTP_SESSION: http_session,
     }
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -88,8 +92,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

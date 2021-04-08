@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 class RequestDataValidator:
     """Decorator that will validate the incoming data.
 
-    Takes in a voluptuous schema and adds 'post_data' as
+    Takes in a voluptuous schema and adds 'data' as
     keyword argument to the function call.
 
     Will return a 400 if no JSON provided or doesn't match schema.

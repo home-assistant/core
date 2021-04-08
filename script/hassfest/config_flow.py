@@ -1,6 +1,7 @@
 """Generate config flow file."""
+from __future__ import annotations
+
 import json
-from typing import Dict
 
 from .model import Config, Integration
 
@@ -33,6 +34,11 @@ def validate_integration(config: Config, integration: Integration):
                 "config_flow",
                 "HomeKit information in a manifest requires a config flow to exist",
             )
+        if integration.manifest.get("mqtt"):
+            integration.add_error(
+                "config_flow",
+                "MQTT information in a manifest requires a config flow to exist",
+            )
         if integration.manifest.get("ssdp"):
             integration.add_error(
                 "config_flow",
@@ -43,6 +49,11 @@ def validate_integration(config: Config, integration: Integration):
                 "config_flow",
                 "Zeroconf information in a manifest requires a config flow to exist",
             )
+        if integration.manifest.get("dhcp"):
+            integration.add_error(
+                "config_flow",
+                "DHCP information in a manifest requires a config flow to exist",
+            )
         return
 
     config_flow = config_flow_file.read_text()
@@ -51,8 +62,10 @@ def validate_integration(config: Config, integration: Integration):
         "async_step_discovery" in config_flow
         or "async_step_hassio" in config_flow
         or "async_step_homekit" in config_flow
+        or "async_step_mqtt" in config_flow
         or "async_step_ssdp" in config_flow
         or "async_step_zeroconf" in config_flow
+        or "async_step_dhcp" in config_flow
     )
 
     if not needs_unique_id:
@@ -78,7 +91,7 @@ def validate_integration(config: Config, integration: Integration):
     )
 
 
-def generate_and_validate(integrations: Dict[str, Integration], config: Config):
+def generate_and_validate(integrations: dict[str, Integration], config: Config):
     """Validate and generate config flow data."""
     domains = []
 
@@ -91,8 +104,10 @@ def generate_and_validate(integrations: Dict[str, Integration], config: Config):
         if not (
             integration.manifest.get("config_flow")
             or integration.manifest.get("homekit")
+            or integration.manifest.get("mqtt")
             or integration.manifest.get("ssdp")
             or integration.manifest.get("zeroconf")
+            or integration.manifest.get("dhcp")
         ):
             continue
 
@@ -103,7 +118,7 @@ def generate_and_validate(integrations: Dict[str, Integration], config: Config):
     return BASE.format(json.dumps(domains, indent=4))
 
 
-def validate(integrations: Dict[str, Integration], config: Config):
+def validate(integrations: dict[str, Integration], config: Config):
     """Validate config flow file."""
     config_flow_path = config.root / "homeassistant/generated/config_flows.py"
     config.cache["config_flow"] = content = generate_and_validate(integrations, config)
@@ -122,7 +137,7 @@ def validate(integrations: Dict[str, Integration], config: Config):
         return
 
 
-def generate(integrations: Dict[str, Integration], config: Config):
+def generate(integrations: dict[str, Integration], config: Config):
     """Generate config flow file."""
     config_flow_path = config.root / "homeassistant/generated/config_flows.py"
     with open(str(config_flow_path), "w") as fp:

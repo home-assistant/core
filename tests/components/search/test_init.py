@@ -1,15 +1,21 @@
 """Tests for Search integration."""
 from homeassistant.components import search
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
 async def test_search(hass):
     """Test that search works."""
-    area_reg = await hass.helpers.area_registry.async_get_registry()
-    device_reg = await hass.helpers.device_registry.async_get_registry()
-    entity_reg = await hass.helpers.entity_registry.async_get_registry()
+    area_reg = ar.async_get(hass)
+    device_reg = dr.async_get(hass)
+    entity_reg = er.async_get(hass)
 
     living_room_area = area_reg.async_create("Living Room")
 
@@ -187,6 +193,10 @@ async def test_search(hass):
         },
     )
 
+    # Ensure automations set up correctly.
+    assert hass.states.get("automation.wled_entity") is not None
+    assert hass.states.get("automation.wled_device") is not None
+
     # Explore the graph from every node and make sure we find the same results
     expected = {
         "config_entry": {wled_config_entry.entry_id},
@@ -270,12 +280,70 @@ async def test_search(hass):
         assert searcher.async_search(search_type, search_id) == {}
 
 
+async def test_area_lookup(hass):
+    """Test area based lookup."""
+    area_reg = ar.async_get(hass)
+    device_reg = dr.async_get(hass)
+    entity_reg = er.async_get(hass)
+
+    living_room_area = area_reg.async_create("Living Room")
+
+    await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "wled": {
+                    "sequence": [
+                        {
+                            "service": "light.turn_on",
+                            "target": {"area_id": living_room_area.id},
+                        },
+                    ]
+                },
+            }
+        },
+    )
+
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": [
+                {
+                    "alias": "area_turn_on",
+                    "trigger": {"platform": "template", "value_template": "true"},
+                    "action": [
+                        {
+                            "service": "light.turn_on",
+                            "data": {
+                                "area_id": living_room_area.id,
+                            },
+                        },
+                    ],
+                },
+            ]
+        },
+    )
+
+    searcher = search.Searcher(hass, device_reg, entity_reg)
+    assert searcher.async_search("area", living_room_area.id) == {
+        "script": {"script.wled"},
+        "automation": {"automation.area_turn_on"},
+    }
+
+    searcher = search.Searcher(hass, device_reg, entity_reg)
+    assert searcher.async_search("automation", "automation.area_turn_on") == {
+        "area": {living_room_area.id},
+    }
+
+
 async def test_ws_api(hass, hass_ws_client):
     """Test WS API."""
     assert await async_setup_component(hass, "search", {})
 
-    area_reg = await hass.helpers.area_registry.async_get_registry()
-    device_reg = await hass.helpers.device_registry.async_get_registry()
+    area_reg = ar.async_get(hass)
+    device_reg = dr.async_get(hass)
 
     kitchen_area = area_reg.async_create("Kitchen")
 

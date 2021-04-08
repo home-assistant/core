@@ -1,18 +1,18 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Deze Panasonic Viera TV is al geconfigureerd.",
-            "not_connected": "De externe verbinding met uw Panasonic Viera-tv was verbroken. Controleer de logs voor meer informatie.",
-            "unknown": "Er is een onbekende fout opgetreden. Controleer de logs voor meer informatie."
+            "already_configured": "Apparaat is al geconfigureerd",
+            "cannot_connect": "Kan geen verbinding maken",
+            "unknown": "Onverwachte fout"
         },
         "error": {
-            "invalid_pin_code": "De ingevoerde pincode is ongeldig",
-            "not_connected": "Kon geen externe verbinding met uw Panasonic Viera TV tot stand brengen"
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_pin_code": "De PIN-code die u hebt ingevoerd is ongeldig"
         },
         "step": {
             "pairing": {
                 "data": {
-                    "pin": "PIN"
+                    "pin": "PIN-code"
                 },
                 "description": "Voer de PIN-code in die op uw TV wordt weergegeven",
                 "title": "Koppelen"
@@ -22,10 +22,9 @@
                     "host": "IP-adres",
                     "name": "Naam"
                 },
-                "description": "Voer het IP-adres van uw Panasonic Viera TV in",
+                "description": "Voer de IP-adres van uw Panasonic Viera TV in.",
                 "title": "Uw tv instellen"
             }
         }
-    },
-    "title": "Panasonic Viera"
+    }
 }

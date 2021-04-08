@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "unsupported_firmware": "\u88dd\u7f6e\u4f7f\u7528\u7684\u97cc\u9ad4\u4e0d\u652f\u63f4\u3002"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm_discovery": {
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a\u4f4d\u65bc {host} \u7684 {model}\uff1f\n\n\u958b\u59cb\u8a2d\u5b9a\u524d\uff0c\u5fc5\u9808\u6309\u4e0b\u88dd\u7f6e\u4e0a\u7684\u6309\u9215\u4ee5\u559a\u9192\u96fb\u6c60\u4f9b\u96fb\u88dd\u7f6e\u3002\n\u4e0d\u5177\u5bc6\u78bc\u4fdd\u8b77\u7684\u96fb\u6c60\u4f9b\u96fb\u88dd\u7f6e\uff0c\u53ef\u4ee5\u65bc\u559a\u9192\u5f8c\u65b0\u589e\u3002\u53ef\u4ee5\u4f7f\u7528\u88dd\u7f6e\u4e0a\u7684\u6309\u9215\u6216\u7b49\u5f85\u88dd\u7f6e\u4e0b\u4e00\u6b21\u8cc7\u6599\u66f4\u65b0\u6642\u9032\u884c\u624b\u52d5\u559a\u9192\u3002"
+            },
+            "credentials": {
+                "data": {
+                    "password": "\u5bc6\u78bc",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef"
+                },
+                "description": "\u958b\u59cb\u8a2d\u5b9a\u524d\uff0c\u5fc5\u9808\u6309\u4e0b\u88dd\u7f6e\u4e0a\u7684\u6309\u9215\u4ee5\u559a\u9192\u96fb\u6c60\u4f9b\u96fb\u88dd\u7f6e\u3002"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button": "\u6309\u9215",
+            "button1": "\u7b2c\u4e00\u500b\u6309\u9215",
+            "button2": "\u7b2c\u4e8c\u500b\u6309\u9215",
+            "button3": "\u7b2c\u4e09\u500b\u6309\u9215"
+        },
+        "trigger_type": {
+            "double": "{subtype} \u96d9\u64ca",
+            "long": "{subtype} \u9577\u6309",
+            "long_single": "{subtype} \u9577\u6309\u5f8c\u55ae\u64ca",
+            "single": "{subtype} \u55ae\u64ca",
+            "single_long": "{subtype} \u55ae\u64ca\u5f8c\u9577\u6309",
+            "triple": "{subtype} \u4e09\u9023\u64ca"
+        }
+    }
+}

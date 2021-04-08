@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida",
+            "unknown": "Errore imprevisto"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Nome utente"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "polling_interval": "Intervallo di scansione (in secondi)"
+                }
+            }
+        }
+    }
+}

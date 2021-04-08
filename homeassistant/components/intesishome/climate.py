@@ -107,9 +107,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     except IHAuthenticationError:
         _LOGGER.error("Invalid username or password")
         return
-    except IHConnectionError:
+    except IHConnectionError as ex:
         _LOGGER.error("Error connecting to the %s server", device_type)
-        raise PlatformNotReady
+        raise PlatformNotReady from ex
 
     ih_devices = controller.get_devices()
     if ih_devices:
@@ -199,7 +199,7 @@ class IntesisAC(ClimateEntity):
             await self._controller.connect()
         except IHConnectionError as ex:
             _LOGGER.error("Exception connecting to IntesisHome: %s", ex)
-            raise PlatformNotReady
+            raise PlatformNotReady from ex
 
     @property
     def name(self):
@@ -212,7 +212,7 @@ class IntesisAC(ClimateEntity):
         return TEMP_CELSIUS
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
         attrs = {}
         if self._outdoor_temp:
@@ -374,9 +374,11 @@ class IntesisAC(ClimateEntity):
                 reconnect_minutes,
             )
             # Schedule reconnection
-            async_call_later(
-                self.hass, reconnect_minutes * 60, self._controller.connect()
-            )
+
+            async def try_connect(_now):
+                await self._controller.connect()
+
+            async_call_later(self.hass, reconnect_minutes * 60, try_connect)
 
         if self._controller.is_connected and not self._connected:
             # Connection has been restored

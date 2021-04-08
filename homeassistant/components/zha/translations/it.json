@@ -1,11 +1,12 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "\u00c8 consentita solo una singola configurazione di ZHA."
+            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
         },
         "error": {
-            "cannot_connect": "Impossibile connettersi al dispositivo ZHA."
+            "cannot_connect": "Impossibile connettersi"
         },
+        "flow_title": "ZHA: {name}",
         "step": {
             "pick_radio": {
                 "data": {
@@ -65,6 +66,7 @@
             "device_dropped": "Dispositivo caduto",
             "device_flipped": "Dispositivo capovolto \" {subtype} \"",
             "device_knocked": "Dispositivo bussato \" {subtype} \"",
+            "device_offline": "Dispositivo offline",
             "device_rotated": "Dispositivo ruotato \" {subtype} \"",
             "device_shaken": "Dispositivo in vibrazione",
             "device_slid": "Dispositivo scivolato \"{sottotipo}\"",

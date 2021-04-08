@@ -21,15 +21,30 @@ from homeassistant.const import (
 import homeassistant.core as ha
 from homeassistant.exceptions import HomeAssistantError, Unauthorized, UnknownUser
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.service import async_extract_entity_ids
+from homeassistant.helpers.service import (
+    async_extract_config_entry_ids,
+    async_extract_referenced_entity_ids,
+)
+
+ATTR_ENTRY_ID = "entry_id"
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = ha.DOMAIN
 SERVICE_RELOAD_CORE_CONFIG = "reload_core_config"
+SERVICE_RELOAD_CONFIG_ENTRY = "reload_config_entry"
 SERVICE_CHECK_CONFIG = "check_config"
 SERVICE_UPDATE_ENTITY = "update_entity"
 SERVICE_SET_LOCATION = "set_location"
 SCHEMA_UPDATE_ENTITY = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
+SCHEMA_RELOAD_CONFIG_ENTRY = vol.All(
+    vol.Schema(
+        {
+            vol.Optional(ATTR_ENTRY_ID): str,
+            **cv.ENTITY_SERVICE_FIELDS,
+        },
+    ),
+    cv.has_at_least_one_key(ATTR_ENTRY_ID, *cv.ENTITY_SERVICE_FIELDS),
+)
 
 
 async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
@@ -37,39 +52,38 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
 
     async def async_handle_turn_service(service):
         """Handle calls to homeassistant.turn_on/off."""
-        entity_ids = await async_extract_entity_ids(hass, service)
+        referenced = await async_extract_referenced_entity_ids(hass, service)
+        all_referenced = referenced.referenced | referenced.indirectly_referenced
 
         # Generic turn on/off method requires entity id
-        if not entity_ids:
+        if not all_referenced:
             _LOGGER.error(
-                "homeassistant/%s cannot be called without entity_id", service.service
+                "The service homeassistant.%s cannot be called without a target",
+                service.service,
             )
             return
 
         # Group entity_ids by domain. groupby requires sorted data.
         by_domain = it.groupby(
-            sorted(entity_ids), lambda item: ha.split_entity_id(item)[0]
+            sorted(all_referenced), lambda item: ha.split_entity_id(item)[0]
         )
 
         tasks = []
+        unsupported_entities = set()
 
         for domain, ent_ids in by_domain:
             # This leads to endless loop.
             if domain == DOMAIN:
                 _LOGGER.warning(
-                    "Called service homeassistant.%s with invalid entity IDs %s",
+                    "Called service homeassistant.%s with invalid entities %s",
                     service.service,
                     ", ".join(ent_ids),
                 )
                 continue
 
-            # We want to block for all calls and only return when all calls
-            # have been processed. If a service does not exist it causes a 10
-            # second delay while we're blocking waiting for a response.
-            # But services can be registered on other HA instances that are
-            # listening to the bus too. So as an in between solution, we'll
-            # block only if the service is defined in the current HA instance.
-            blocking = hass.services.has_service(domain, service.service)
+            if not hass.services.has_service(domain, service.service):
+                unsupported_entities.update(set(ent_ids) & referenced.referenced)
+                continue
 
             # Create a new dict for this call
             data = dict(service.data)
@@ -79,8 +93,19 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
 
             tasks.append(
                 hass.services.async_call(
-                    domain, service.service, data, blocking, context=service.context
+                    domain,
+                    service.service,
+                    data,
+                    blocking=True,
+                    context=service.context,
                 )
+            )
+
+        if unsupported_entities:
+            _LOGGER.warning(
+                "The service homeassistant.%s does not support entities %s",
+                service.service,
+                ", ".join(sorted(unsupported_entities)),
             )
 
         if tasks:
@@ -192,6 +217,28 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
         SERVICE_SET_LOCATION,
         async_set_location,
         vol.Schema({ATTR_LATITUDE: cv.latitude, ATTR_LONGITUDE: cv.longitude}),
+    )
+
+    async def async_handle_reload_config_entry(call):
+        """Service handler for reloading a config entry."""
+        reload_entries = set()
+        if ATTR_ENTRY_ID in call.data:
+            reload_entries.add(call.data[ATTR_ENTRY_ID])
+        reload_entries.update(await async_extract_config_entry_ids(hass, call))
+        if not reload_entries:
+            raise ValueError("There were no matching config entries to reload")
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_reload(config_entry_id)
+                for config_entry_id in reload_entries
+            ]
+        )
+
+    hass.helpers.service.async_register_admin_service(
+        ha.DOMAIN,
+        SERVICE_RELOAD_CONFIG_ENTRY,
+        async_handle_reload_config_entry,
+        schema=SCHEMA_RELOAD_CONFIG_ENTRY,
     )
 
     return True

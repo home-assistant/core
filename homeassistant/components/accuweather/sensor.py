@@ -1,11 +1,12 @@
 """Support for the AccuWeather service."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
     CONF_NAME,
     DEVICE_CLASS_TEMPERATURE,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_FORECAST,
@@ -48,14 +49,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(sensors, False)
 
 
-class AccuWeatherSensor(Entity):
+class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
     """Define an AccuWeather entity."""
 
     def __init__(self, name, kind, coordinator, forecast_day=None):
         """Initialize."""
+        super().__init__(coordinator)
         self._name = name
         self.kind = kind
-        self.coordinator = coordinator
         self._device_class = None
         self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
         self._unit_system = "Metric" if self.coordinator.is_metric else "Imperial"
@@ -86,16 +87,6 @@ class AccuWeatherSensor(Entity):
         }
 
     @property
-    def should_poll(self):
-        """Return the polling requirement of the entity."""
-        return False
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self.coordinator.last_update_success
-
-    @property
     def state(self):
         """Return the state."""
         if self.forecast_day is not None:
@@ -106,7 +97,7 @@ class AccuWeatherSensor(Entity):
                 return self.coordinator.data[ATTR_FORECAST][self.forecast_day][
                     self.kind
                 ]["Value"]
-            if self.kind in ["WindGustDay", "WindGustNight"]:
+            if self.kind in ["WindDay", "WindNight", "WindGustDay", "WindGustNight"]:
                 return self.coordinator.data[ATTR_FORECAST][self.forecast_day][
                     self.kind
                 ]["Speed"]["Value"]
@@ -125,7 +116,7 @@ class AccuWeatherSensor(Entity):
             return self.coordinator.data["PrecipitationSummary"][self.kind][
                 self._unit_system
             ]["Value"]
-        if self.kind == "WindGust":
+        if self.kind in ["Wind", "WindGust"]:
             return self.coordinator.data[self.kind]["Speed"][self._unit_system]["Value"]
         return self.coordinator.data[self.kind]
 
@@ -151,10 +142,10 @@ class AccuWeatherSensor(Entity):
         return SENSOR_TYPES[self.kind][self._unit_system]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self.forecast_day is not None:
-            if self.kind in ["WindGustDay", "WindGustNight"]:
+            if self.kind in ["WindDay", "WindNight", "WindGustDay", "WindGustNight"]:
                 self._attrs["direction"] = self.coordinator.data[ATTR_FORECAST][
                     self.forecast_day
                 ][self.kind]["Direction"]["English"]
@@ -173,13 +164,3 @@ class AccuWeatherSensor(Entity):
     def entity_registry_enabled_default(self):
         """Return if the entity should be enabled when first added to the entity registry."""
         return bool(self.kind not in OPTIONAL_SENSORS)
-
-    async def async_added_to_hass(self):
-        """Connect to dispatcher listening for entity data notifications."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self):
-        """Update AccuWeather entity."""
-        await self.coordinator.async_request_refresh()

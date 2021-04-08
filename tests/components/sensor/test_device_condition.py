@@ -4,7 +4,7 @@ import pytest
 import homeassistant.components.automation as automation
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.components.sensor.device_condition import ENTITY_CONDITIONS
-from homeassistant.const import CONF_PLATFORM, STATE_UNKNOWN, UNIT_PERCENTAGE
+from homeassistant.const import CONF_PLATFORM, PERCENTAGE, STATE_UNKNOWN
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
 
@@ -16,7 +16,11 @@ from tests.common import (
     mock_device_registry,
     mock_registry,
 )
-from tests.testing_config.custom_components.test.sensor import DEVICE_CLASSES
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
+from tests.testing_config.custom_components.test.sensor import (
+    DEVICE_CLASSES,
+    UNITS_OF_MEASUREMENT,
+)
 
 
 @pytest.fixture
@@ -68,6 +72,7 @@ async def test_get_conditions(hass, device_reg, entity_reg):
             "entity_id": platform.ENTITIES[device_class].entity_id,
         }
         for device_class in DEVICE_CLASSES
+        if device_class in UNITS_OF_MEASUREMENT
         for condition in ENTITY_CONDITIONS[device_class]
         if device_class != "none"
     ]
@@ -99,13 +104,13 @@ async def test_get_condition_capabilities(hass, device_reg, entity_reg):
     expected_capabilities = {
         "extra_fields": [
             {
-                "description": {"suffix": UNIT_PERCENTAGE},
+                "description": {"suffix": PERCENTAGE},
                 "name": "above",
                 "optional": True,
                 "type": "float",
             },
             {
-                "description": {"suffix": UNIT_PERCENTAGE},
+                "description": {"suffix": PERCENTAGE},
                 "name": "below",
                 "optional": True,
                 "type": "float",

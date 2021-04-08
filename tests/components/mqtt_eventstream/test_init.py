@@ -1,7 +1,6 @@
 """The tests for the MQTT eventstream component."""
 import json
-
-import pytest
+from unittest.mock import ANY, patch
 
 import homeassistant.components.mqtt_eventstream as eventstream
 from homeassistant.const import EVENT_STATE_CHANGED
@@ -10,17 +9,11 @@ from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import ANY, patch
 from tests.common import (
     async_fire_mqtt_message,
     async_fire_time_changed,
     mock_state_change_event,
 )
-
-
-@pytest.fixture(autouse=True)
-def mock_storage(hass_storage):
-    """Autouse hass_storage for the TestCase tests."""
 
 
 async def add_eventstream(hass, sub_topic=None, pub_topic=None, ignore_event=None):
@@ -70,7 +63,8 @@ async def test_state_changed_event_sends_message(hass, mqtt_mock):
     e_id = "fake.entity"
     pub_topic = "bar"
     with patch(
-        ("homeassistant.core.dt_util.utcnow"), return_value=now,
+        ("homeassistant.core.dt_util.utcnow"),
+        return_value=now,
     ):
         # Add the eventstream component for publishing events
         assert await add_eventstream(hass, pub_topic=pub_topic)
@@ -144,7 +138,7 @@ async def test_receiving_remote_event_fires_hass_event(hass, mqtt_mock):
     async_fire_mqtt_message(hass, sub_topic, payload)
     await hass.async_block_till_done()
 
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_ignored_event_doesnt_send_over_stream(hass, mqtt_mock):

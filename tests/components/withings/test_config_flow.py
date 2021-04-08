@@ -30,11 +30,11 @@ async def test_config_non_unique_profile(hass: HomeAssistant) -> None:
     )
 
     assert result
-    assert result["errors"]["base"] == "profile_exists"
+    assert result["errors"]["base"] == "already_configured"
 
 
 async def test_config_reauth_profile(
-    hass: HomeAssistant, aiohttp_client, aioclient_mock
+    hass: HomeAssistant, aiohttp_client, aioclient_mock, current_request_with_host
 ) -> None:
     """Test reauth an existing profile re-creates the config entry."""
     hass_config = {
@@ -65,10 +65,19 @@ async def test_config_reauth_profile(
     assert result["step_id"] == "reauth"
     assert result["description_placeholders"] == {const.PROFILE: "person0"}
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
 
     # pylint: disable=protected-access
-    state = config_entry_oauth2_flow._encode_jwt(hass, {"flow_id": result["flow_id"]})
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
 
     client: TestClient = await aiohttp_client(hass.http.app)
     resp = await client.get(f"{AUTH_CALLBACK_PATH}?code=abcd&state={state}")

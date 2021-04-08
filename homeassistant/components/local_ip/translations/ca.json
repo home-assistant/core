@@ -1,13 +1,14 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Nom\u00e9s \u00e9s possible configurar una sola IP local."
+            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
         },
         "step": {
             "user": {
                 "data": {
                     "name": "Nom del sensor"
                 },
+                "description": "Vols comen\u00e7ar la configuraci\u00f3?",
                 "title": "Adre\u00e7a IP local"
             }
         }

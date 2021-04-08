@@ -8,6 +8,7 @@
             "service_unavailable": "Feeler beim verbannen",
             "unknown_client_mac": "Kee Cliwent mat der MAC Adress disponibel"
         },
+        "flow_title": "UniFi Network {site} ({host})",
         "step": {
             "user": {
                 "data": {
@@ -15,8 +16,8 @@
                     "password": "Passwuert",
                     "port": "Port",
                     "site": "Site ID",
-                    "username": "Benotzer",
-                    "verify_ssl": "Kontroller benotzt g\u00ebltegen Zertifikat"
+                    "username": "Benotzernumm",
+                    "verify_ssl": "SSL Zertifikat iwwerpr\u00e9iwen"
                 },
                 "title": "Unifi Kontroller ariichten"
             }
@@ -53,7 +54,8 @@
             },
             "statistics_sensors": {
                 "data": {
-                    "allow_bandwidth_sensors": "Bandbreet Benotzung Sensore fir Netzwierk Cliente"
+                    "allow_bandwidth_sensors": "Bandbreet Benotzung Sensore fir Netzwierk Cliente",
+                    "allow_uptime_sensors": "Uptime Sensoren fir Netzwierkklienten"
                 },
                 "description": "Statistik Sensoren konfigur\u00e9ieren",
                 "title": "UniFi Optiounen 3/3"

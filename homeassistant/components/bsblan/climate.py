@@ -1,7 +1,9 @@
 """BSBLAN platform to control a compatible Climate Device."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable
 
 from bsblan import BSBLan, BSBLanError, Info, State
 
@@ -74,7 +76,7 @@ BSBLAN_TO_HA_PRESET = {
 async def async_setup_entry(
     hass: HomeAssistantType,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
     """Set up BSBLan device based on a config entry."""
     bsblan: BSBLan = hass.data[DOMAIN][entry.entry_id][DATA_BSBLAN_CLIENT]
@@ -86,19 +88,21 @@ class BSBLanClimate(ClimateEntity):
     """Defines a BSBLan climate device."""
 
     def __init__(
-        self, entry_id: str, bsblan: BSBLan, info: Info,
+        self,
+        entry_id: str,
+        bsblan: BSBLan,
+        info: Info,
     ):
         """Initialize BSBLan climate device."""
-        self._current_temperature: Optional[float] = None
+        self._current_temperature: float | None = None
         self._available = True
-        self._current_hvac_mode: Optional[int] = None
-        self._target_temperature: Optional[float] = None
-        self._info: Info = info
-        self.bsblan = bsblan
+        self._hvac_mode: str | None = None
+        self._target_temperature: float | None = None
         self._temperature_unit = None
-        self._hvac_mode = None
         self._preset_mode = None
         self._store_hvac_mode = None
+        self._info: Info = info
+        self.bsblan = bsblan
 
     @property
     def name(self) -> str:
@@ -135,7 +139,7 @@ class BSBLanClimate(ClimateEntity):
     @property
     def hvac_mode(self):
         """Return the current operation mode."""
-        return self._current_hvac_mode
+        return self._hvac_mode
 
     @property
     def hvac_modes(self):
@@ -162,10 +166,10 @@ class BSBLanClimate(ClimateEntity):
         _LOGGER.debug("Setting preset mode to: %s", preset_mode)
         if preset_mode == PRESET_NONE:
             # restore previous hvac mode
-            self._current_hvac_mode = self._store_hvac_mode
+            self._hvac_mode = self._store_hvac_mode
         else:
             # Store hvac mode.
-            self._store_hvac_mode = self._current_hvac_mode
+            self._store_hvac_mode = self._hvac_mode
             await self.async_set_data(preset_mode=preset_mode)
 
     async def async_set_hvac_mode(self, hvac_mode):
@@ -213,21 +217,21 @@ class BSBLanClimate(ClimateEntity):
 
         self._available = True
 
-        self._current_temperature = float(state.current_temperature)
-        self._target_temperature = float(state.target_temperature)
+        self._current_temperature = float(state.current_temperature.value)
+        self._target_temperature = float(state.target_temperature.value)
 
         # check if preset is active else get hvac mode
-        _LOGGER.debug("state hvac/preset mode: %s", state.current_hvac_mode)
-        if state.current_hvac_mode == "2":
+        _LOGGER.debug("state hvac/preset mode: %s", state.hvac_mode.value)
+        if state.hvac_mode.value == "2":
             self._preset_mode = PRESET_ECO
         else:
-            self._current_hvac_mode = BSBLAN_TO_HA_STATE[state.current_hvac_mode]
+            self._hvac_mode = BSBLAN_TO_HA_STATE[state.hvac_mode.value]
             self._preset_mode = PRESET_NONE
 
-        self._temperature_unit = state.temperature_unit
+        self._temperature_unit = state.current_temperature.unit
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> dict[str, Any]:
         """Return device information about this BSBLan device."""
         return {
             ATTR_IDENTIFIERS: {(DOMAIN, self._info.device_identification)},

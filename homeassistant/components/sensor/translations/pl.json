@@ -2,31 +2,43 @@
     "device_automation": {
         "condition_type": {
             "is_battery_level": "obecny poziom na\u0142adowania baterii {entity_name}",
+            "is_carbon_dioxide": "Bie\u017c\u0105cy poziom st\u0119\u017cenia dwutlenku w\u0119gla w {entity_name}",
+            "is_carbon_monoxide": "Bie\u017c\u0105cy poziom st\u0119\u017cenia tlenku w\u0119gla w {entity_name}",
+            "is_current": "obecne nat\u0119\u017cenie pr\u0105du {entity_name}",
+            "is_energy": "obecna energia {entity_name}",
             "is_humidity": "obecna wilgotno\u015b\u0107 {entity_name}",
             "is_illuminance": "obecne nat\u0119\u017cenie o\u015bwietlenia {entity_name}",
             "is_power": "obecna moc {entity_name}",
+            "is_power_factor": "obecny wsp\u00f3\u0142czynnik mocy {entity_name}",
             "is_pressure": "obecne ci\u015bnienie {entity_name}",
             "is_signal_strength": "obecna si\u0142a sygna\u0142u {entity_name}",
             "is_temperature": "obecna temperatura {entity_name}",
             "is_timestamp": "obecny znacznik czasu {entity_name}",
-            "is_value": "obecna warto\u015b\u0107 {entity_name}"
+            "is_value": "obecna warto\u015b\u0107 {entity_name}",
+            "is_voltage": "obecne napi\u0119cie {entity_name}"
         },
         "trigger_type": {
             "battery_level": "zmieni si\u0119 poziom baterii {entity_name}",
+            "carbon_dioxide": "Zmiana st\u0119\u017cenie dwutlenku w\u0119gla w {entity_name}",
+            "carbon_monoxide": "Zmiana st\u0119\u017cenia tlenku w\u0119gla w {entity_name}",
+            "current": "zmieni si\u0119 nat\u0119\u017cenie pr\u0105du w {entity_name}",
+            "energy": "zmieni si\u0119 energia {entity_name}",
             "humidity": "zmieni si\u0119 wilgotno\u015b\u0107 {entity_name}",
             "illuminance": "zmieni si\u0119 nat\u0119\u017cenie o\u015bwietlenia {entity_name}",
             "power": "zmieni si\u0119 moc {entity_name}",
+            "power_factor": "zmieni si\u0119 wsp\u00f3\u0142czynnik mocy w {entity_name}",
             "pressure": "zmieni si\u0119 ci\u015bnienie {entity_name}",
             "signal_strength": "zmieni si\u0119 si\u0142a sygna\u0142u {entity_name}",
             "temperature": "zmieni si\u0119 temperatura {entity_name}",
             "timestamp": "zmieni si\u0119 znacznik czasu {entity_name}",
-            "value": "zmieni si\u0119 warto\u015b\u0107 {entity_name}"
+            "value": "zmieni si\u0119 warto\u015b\u0107 {entity_name}",
+            "voltage": "zmieni si\u0119 napi\u0119cie w {entity_name}"
         }
     },
     "state": {
         "_": {
-            "off": "wy\u0142\u0105czony",
-            "on": "w\u0142\u0105czony"
+            "off": "wy\u0142.",
+            "on": "w\u0142."
         }
     },
     "title": "Sensor"

@@ -1,6 +1,7 @@
 """eafm fixtures."""
 
-from asynctest import patch
+from unittest.mock import patch
+
 import pytest
 
 

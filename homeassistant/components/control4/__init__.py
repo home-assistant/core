@@ -18,8 +18,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, device_registry as dr, entity
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers import aiohttp_client, device_registry as dr
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import (
     CONF_ACCOUNT,
@@ -39,17 +42,9 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["light"]
 
 
-async def async_setup(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Stub to allow setting up this component.
-
-    Configuration through YAML is not supported at this time.
-    """
-    hass.data.setdefault(DOMAIN, {})
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Control4 from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
     entry_data = hass.data[DOMAIN].setdefault(entry.entry_id, {})
     account_session = aiohttp_client.async_get_clientsession(hass)
 
@@ -59,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         await account.getAccountBearerToken()
     except client_exceptions.ClientError as exception:
         _LOGGER.error("Error connecting to Control4 account API: %s", exception)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from exception
     except BadCredentials as exception:
         _LOGGER.error(
             "Error authenticating with Control4 account API, incorrect username or password: %s",
@@ -112,9 +107,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     entry_data[CONF_CONFIG_LISTENER] = entry.add_update_listener(update_listener)
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -131,8 +126,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )
@@ -154,7 +149,7 @@ async def get_items_of_category(hass: HomeAssistant, entry: ConfigEntry, categor
     return return_list
 
 
-class Control4Entity(entity.Entity):
+class Control4Entity(CoordinatorEntity):
     """Base entity for Control4."""
 
     def __init__(
@@ -170,11 +165,11 @@ class Control4Entity(entity.Entity):
         device_id: int,
     ):
         """Initialize a Control4 entity."""
+        super().__init__(coordinator)
         self.entry = entry
         self.entry_data = entry_data
         self._name = name
         self._idx = idx
-        self._coordinator = coordinator
         self._controller_unique_id = entry_data[CONF_CONTROLLER_UNIQUE_ID]
         self._device_name = device_name
         self._device_manufacturer = device_manufacturer
@@ -202,23 +197,3 @@ class Control4Entity(entity.Entity):
             "model": self._device_model,
             "via_device": (DOMAIN, self._controller_unique_id),
         }
-
-    @property
-    def should_poll(self):
-        """No need to poll. Coordinator notifies entity of updates."""
-        return False
-
-    @property
-    def available(self):
-        """Return if entity is available."""
-        return self._coordinator.last_update_success
-
-    async def async_added_to_hass(self):
-        """When entity is added to hass."""
-        self.async_on_remove(
-            self._coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self):
-        """Update the state of the device."""
-        await self._coordinator.async_request_refresh()

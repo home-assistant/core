@@ -1,8 +1,10 @@
 """Support for WLED."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from wled import WLED, Device as WLEDDevice, WLEDConnectionError, WLEDError
 
@@ -12,11 +14,12 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME, CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from .const import (
     ATTR_IDENTIFIERS,
@@ -27,14 +30,9 @@ from .const import (
 )
 
 SCAN_INTERVAL = timedelta(seconds=5)
-WLED_COMPONENTS = (LIGHT_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN)
+PLATFORMS = (LIGHT_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the WLED components."""
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -42,10 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Create WLED instance for this entry
     coordinator = WLEDDataUpdateCoordinator(hass, host=entry.data[CONF_HOST])
-    await coordinator.async_refresh()
-
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
@@ -57,9 +52,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     # Set up all platforms for this device/entry.
-    for component in WLED_COMPONENTS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -69,19 +64,22 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload WLED config entry."""
 
     # Unload entities for this entry/device.
-    await asyncio.gather(
-        *(
-            hass.config_entries.async_forward_entry_unload(entry, component)
-            for component in WLED_COMPONENTS
+    unload_ok = all(
+        await asyncio.gather(
+            *(
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
+            )
         )
     )
 
-    # Cleanup
-    del hass.data[DOMAIN][entry.entry_id]
+    if unload_ok:
+        del hass.data[DOMAIN][entry.entry_id]
+
     if not hass.data[DOMAIN]:
         del hass.data[DOMAIN]
 
-    return True
+    return unload_ok
 
 
 def wled_exception_handler(func):
@@ -111,13 +109,19 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
     """Class to manage fetching WLED data from single endpoint."""
 
     def __init__(
-        self, hass: HomeAssistant, *, host: str,
+        self,
+        hass: HomeAssistant,
+        *,
+        host: str,
     ):
         """Initialize global WLED data updater."""
         self.wled = WLED(host, session=async_get_clientsession(hass))
 
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL,
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=SCAN_INTERVAL,
         )
 
     def update_listeners(self) -> None:
@@ -130,10 +134,10 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
         try:
             return await self.wled.update(full_update=not self.last_update_success)
         except WLEDError as error:
-            raise UpdateFailed(f"Invalid response from API: {error}")
+            raise UpdateFailed(f"Invalid response from API: {error}") from error
 
 
-class WLEDEntity(Entity):
+class WLEDEntity(CoordinatorEntity):
     """Defines a base WLED entity."""
 
     def __init__(
@@ -146,12 +150,12 @@ class WLEDEntity(Entity):
         enabled_default: bool = True,
     ) -> None:
         """Initialize the WLED entity."""
+        super().__init__(coordinator)
         self._enabled_default = enabled_default
         self._entry_id = entry_id
         self._icon = icon
         self._name = name
         self._unsub_dispatcher = None
-        self.coordinator = coordinator
 
     @property
     def name(self) -> str:
@@ -164,36 +168,16 @@ class WLEDEntity(Entity):
         return self._icon
 
     @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.coordinator.last_update_success
-
-    @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return self._enabled_default
-
-    @property
-    def should_poll(self) -> bool:
-        """Return the polling requirement of the entity."""
-        return False
-
-    async def async_added_to_hass(self) -> None:
-        """Connect to dispatcher listening for entity data notifications."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self) -> None:
-        """Update WLED entity."""
-        await self.coordinator.async_request_refresh()
 
 
 class WLEDDeviceEntity(WLEDEntity):
     """Defines a WLED device entity."""
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> dict[str, Any]:
         """Return device information about this WLED device."""
         return {
             ATTR_IDENTIFIERS: {(DOMAIN, self.coordinator.data.info.mac_address)},

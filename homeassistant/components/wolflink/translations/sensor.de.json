@@ -1,0 +1,17 @@
+{
+    "state": {
+        "wolflink__state": {
+            "partymodus": "Party-Modus",
+            "permanent": "Permanent",
+            "solarbetrieb": "Solarmodus",
+            "sparbetrieb": "Sparmodus",
+            "sparen": "Sparen",
+            "stabilisierung": "Stabilisierung",
+            "standby": "Standby",
+            "start": "Start",
+            "storung": "Fehler",
+            "test": "Test",
+            "tpw": "TPW"
+        }
+    }
+}

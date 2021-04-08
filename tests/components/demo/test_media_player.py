@@ -1,13 +1,20 @@
 """The tests for the Demo Media player platform."""
+from unittest.mock import patch
+
 import pytest
 import voluptuous as vol
 
 import homeassistant.components.media_player as mp
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_ENTITY_PICTURE,
+    ATTR_SUPPORTED_FEATURES,
+    STATE_OFF,
+    STATE_PAUSED,
+    STATE_PLAYING,
+)
 from homeassistant.helpers.aiohttp_client import DATA_CLIENTSESSION
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import patch
-from tests.components.media_player import common
 
 TEST_ENTITY_ID = "media_player.walkman"
 
@@ -31,16 +38,47 @@ async def test_source_select(hass):
     )
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
-    assert state.attributes.get("source") == "dvd"
+    assert state.attributes.get(mp.ATTR_INPUT_SOURCE) == "dvd"
 
     with pytest.raises(vol.Invalid):
-        await common.async_select_source(hass, None, entity_id)
+        await hass.services.async_call(
+            mp.DOMAIN,
+            mp.SERVICE_SELECT_SOURCE,
+            {ATTR_ENTITY_ID: entity_id, mp.ATTR_INPUT_SOURCE: None},
+            blocking=True,
+        )
     state = hass.states.get(entity_id)
-    assert state.attributes.get("source") == "dvd"
+    assert state.attributes.get(mp.ATTR_INPUT_SOURCE) == "dvd"
 
-    await common.async_select_source(hass, "xbox", entity_id)
+    await hass.services.async_call(
+        mp.DOMAIN,
+        mp.SERVICE_SELECT_SOURCE,
+        {ATTR_ENTITY_ID: entity_id, mp.ATTR_INPUT_SOURCE: "xbox"},
+        blocking=True,
+    )
     state = hass.states.get(entity_id)
-    assert state.attributes.get("source") == "xbox"
+    assert state.attributes.get(mp.ATTR_INPUT_SOURCE) == "xbox"
+
+
+async def test_repeat_set(hass):
+    """Test the repeat set service."""
+    entity_id = "media_player.walkman"
+
+    assert await async_setup_component(
+        hass, mp.DOMAIN, {"media_player": {"platform": "demo"}}
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.attributes.get(mp.ATTR_MEDIA_REPEAT) == mp.const.REPEAT_MODE_OFF
+
+    await hass.services.async_call(
+        mp.DOMAIN,
+        mp.SERVICE_REPEAT_SET,
+        {ATTR_ENTITY_ID: entity_id, mp.ATTR_MEDIA_REPEAT: mp.const.REPEAT_MODE_ALL},
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state.attributes.get(mp.ATTR_MEDIA_REPEAT) == mp.const.REPEAT_MODE_ALL
 
 
 async def test_clear_playlist(hass):
@@ -49,10 +87,18 @@ async def test_clear_playlist(hass):
         hass, mp.DOMAIN, {"media_player": {"platform": "demo"}}
     )
     await hass.async_block_till_done()
-    assert hass.states.is_state(TEST_ENTITY_ID, "playing")
 
-    await common.async_clear_playlist(hass, TEST_ENTITY_ID)
-    assert hass.states.is_state(TEST_ENTITY_ID, "off")
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_PLAYING
+
+    await hass.services.async_call(
+        mp.DOMAIN,
+        mp.SERVICE_CLEAR_PLAYLIST,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_OFF
 
 
 async def test_volume_services(hass):
@@ -61,36 +107,70 @@ async def test_volume_services(hass):
         hass, mp.DOMAIN, {"media_player": {"platform": "demo"}}
     )
     await hass.async_block_till_done()
+
     state = hass.states.get(TEST_ENTITY_ID)
-    assert state.attributes.get("volume_level") == 1.0
+    assert state.attributes.get(mp.ATTR_MEDIA_VOLUME_LEVEL) == 1.0
 
     with pytest.raises(vol.Invalid):
-        await common.async_set_volume_level(hass, None, TEST_ENTITY_ID)
-    state = hass.states.get(TEST_ENTITY_ID)
-    assert state.attributes.get("volume_level") == 1.0
+        await hass.services.async_call(
+            mp.DOMAIN,
+            mp.SERVICE_VOLUME_SET,
+            {ATTR_ENTITY_ID: TEST_ENTITY_ID, mp.ATTR_MEDIA_VOLUME_LEVEL: None},
+            blocking=True,
+        )
 
-    await common.async_set_volume_level(hass, 0.5, TEST_ENTITY_ID)
     state = hass.states.get(TEST_ENTITY_ID)
-    assert state.attributes.get("volume_level") == 0.5
+    assert state.attributes.get(mp.ATTR_MEDIA_VOLUME_LEVEL) == 1.0
 
-    await common.async_volume_down(hass, TEST_ENTITY_ID)
+    await hass.services.async_call(
+        mp.DOMAIN,
+        mp.SERVICE_VOLUME_SET,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID, mp.ATTR_MEDIA_VOLUME_LEVEL: 0.5},
+        blocking=True,
+    )
     state = hass.states.get(TEST_ENTITY_ID)
-    assert state.attributes.get("volume_level") == 0.4
+    assert state.attributes.get(mp.ATTR_MEDIA_VOLUME_LEVEL) == 0.5
 
-    await common.async_volume_up(hass, TEST_ENTITY_ID)
+    await hass.services.async_call(
+        mp.DOMAIN,
+        mp.SERVICE_VOLUME_DOWN,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
     state = hass.states.get(TEST_ENTITY_ID)
-    assert state.attributes.get("volume_level") == 0.5
+    assert state.attributes.get(mp.ATTR_MEDIA_VOLUME_LEVEL) == 0.4
 
-    assert False is state.attributes.get("is_volume_muted")
+    await hass.services.async_call(
+        mp.DOMAIN,
+        mp.SERVICE_VOLUME_UP,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.attributes.get(mp.ATTR_MEDIA_VOLUME_LEVEL) == 0.5
+
+    assert state.attributes.get(mp.ATTR_MEDIA_VOLUME_MUTED) is False
 
     with pytest.raises(vol.Invalid):
-        await common.async_mute_volume(hass, None, TEST_ENTITY_ID)
-    state = hass.states.get(TEST_ENTITY_ID)
-    assert state.attributes.get("is_volume_muted") is False
+        await hass.services.async_call(
+            mp.DOMAIN,
+            mp.SERVICE_VOLUME_MUTE,
+            {ATTR_ENTITY_ID: TEST_ENTITY_ID, mp.ATTR_MEDIA_VOLUME_MUTED: None},
+            blocking=True,
+        )
 
-    await common.async_mute_volume(hass, True, TEST_ENTITY_ID)
     state = hass.states.get(TEST_ENTITY_ID)
-    assert state.attributes.get("is_volume_muted") is True
+    assert state.attributes.get(mp.ATTR_MEDIA_VOLUME_MUTED) is False
+
+    await hass.services.async_call(
+        mp.DOMAIN,
+        mp.SERVICE_VOLUME_MUTE,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID, mp.ATTR_MEDIA_VOLUME_MUTED: True},
+        blocking=True,
+    )
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.attributes.get(mp.ATTR_MEDIA_VOLUME_MUTED) is True
 
 
 async def test_turning_off_and_on(hass):
@@ -99,17 +179,38 @@ async def test_turning_off_and_on(hass):
         hass, mp.DOMAIN, {"media_player": {"platform": "demo"}}
     )
     await hass.async_block_till_done()
-    assert hass.states.is_state(TEST_ENTITY_ID, "playing")
 
-    await common.async_turn_off(hass, TEST_ENTITY_ID)
-    assert hass.states.is_state(TEST_ENTITY_ID, "off")
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_PLAYING
+
+    await hass.services.async_call(
+        mp.DOMAIN,
+        mp.SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_OFF
     assert not mp.is_on(hass, TEST_ENTITY_ID)
 
-    await common.async_turn_on(hass, TEST_ENTITY_ID)
-    assert hass.states.is_state(TEST_ENTITY_ID, "playing")
+    await hass.services.async_call(
+        mp.DOMAIN,
+        mp.SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_PLAYING
+    assert mp.is_on(hass, TEST_ENTITY_ID)
 
-    await common.async_toggle(hass, TEST_ENTITY_ID)
-    assert hass.states.is_state(TEST_ENTITY_ID, "off")
+    await hass.services.async_call(
+        mp.DOMAIN,
+        mp.SERVICE_TOGGLE,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_OFF
     assert not mp.is_on(hass, TEST_ENTITY_ID)
 
 
@@ -119,19 +220,45 @@ async def test_playing_pausing(hass):
         hass, mp.DOMAIN, {"media_player": {"platform": "demo"}}
     )
     await hass.async_block_till_done()
-    assert hass.states.is_state(TEST_ENTITY_ID, "playing")
 
-    await common.async_media_pause(hass, TEST_ENTITY_ID)
-    assert hass.states.is_state(TEST_ENTITY_ID, "paused")
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_PLAYING
 
-    await common.async_media_play_pause(hass, TEST_ENTITY_ID)
-    assert hass.states.is_state(TEST_ENTITY_ID, "playing")
+    await hass.services.async_call(
+        mp.DOMAIN,
+        mp.SERVICE_MEDIA_PAUSE,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_PAUSED
 
-    await common.async_media_play_pause(hass, TEST_ENTITY_ID)
-    assert hass.states.is_state(TEST_ENTITY_ID, "paused")
+    await hass.services.async_call(
+        mp.DOMAIN,
+        mp.SERVICE_MEDIA_PLAY_PAUSE,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_PLAYING
 
-    await common.async_media_play(hass, TEST_ENTITY_ID)
-    assert hass.states.is_state(TEST_ENTITY_ID, "playing")
+    await hass.services.async_call(
+        mp.DOMAIN,
+        mp.SERVICE_MEDIA_PLAY_PAUSE,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_PAUSED
+
+    await hass.services.async_call(
+        mp.DOMAIN,
+        mp.SERVICE_MEDIA_PLAY,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_PLAYING
 
 
 async def test_prev_next_track(hass):
@@ -140,36 +267,63 @@ async def test_prev_next_track(hass):
         hass, mp.DOMAIN, {"media_player": {"platform": "demo"}}
     )
     await hass.async_block_till_done()
-    state = hass.states.get(TEST_ENTITY_ID)
-    assert state.attributes.get("media_track") == 1
 
-    await common.async_media_next_track(hass, TEST_ENTITY_ID)
     state = hass.states.get(TEST_ENTITY_ID)
-    assert state.attributes.get("media_track") == 2
+    assert state.attributes.get(mp.ATTR_MEDIA_TRACK) == 1
 
-    await common.async_media_next_track(hass, TEST_ENTITY_ID)
+    await hass.services.async_call(
+        mp.DOMAIN,
+        mp.SERVICE_MEDIA_NEXT_TRACK,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
     state = hass.states.get(TEST_ENTITY_ID)
-    assert state.attributes.get("media_track") == 3
+    assert state.attributes.get(mp.ATTR_MEDIA_TRACK) == 2
 
-    await common.async_media_previous_track(hass, TEST_ENTITY_ID)
+    await hass.services.async_call(
+        mp.DOMAIN,
+        mp.SERVICE_MEDIA_NEXT_TRACK,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
     state = hass.states.get(TEST_ENTITY_ID)
-    assert state.attributes.get("media_track") == 2
+    assert state.attributes.get(mp.ATTR_MEDIA_TRACK) == 3
+
+    await hass.services.async_call(
+        mp.DOMAIN,
+        mp.SERVICE_MEDIA_PREVIOUS_TRACK,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.attributes.get(mp.ATTR_MEDIA_TRACK) == 2
 
     assert await async_setup_component(
         hass, mp.DOMAIN, {"media_player": {"platform": "demo"}}
     )
     await hass.async_block_till_done()
+
     ent_id = "media_player.lounge_room"
     state = hass.states.get(ent_id)
-    assert state.attributes.get("media_episode") == 1
+    assert state.attributes.get(mp.ATTR_MEDIA_EPISODE) == 1
 
-    await common.async_media_next_track(hass, ent_id)
+    await hass.services.async_call(
+        mp.DOMAIN,
+        mp.SERVICE_MEDIA_NEXT_TRACK,
+        {ATTR_ENTITY_ID: ent_id},
+        blocking=True,
+    )
     state = hass.states.get(ent_id)
-    assert state.attributes.get("media_episode") == 2
+    assert state.attributes.get(mp.ATTR_MEDIA_EPISODE) == 2
 
-    await common.async_media_previous_track(hass, ent_id)
+    await hass.services.async_call(
+        mp.DOMAIN,
+        mp.SERVICE_MEDIA_PREVIOUS_TRACK,
+        {ATTR_ENTITY_ID: ent_id},
+        blocking=True,
+    )
     state = hass.states.get(ent_id)
-    assert state.attributes.get("media_episode") == 1
+    assert state.attributes.get(mp.ATTR_MEDIA_EPISODE) == 1
 
 
 async def test_play_media(hass):
@@ -178,21 +332,36 @@ async def test_play_media(hass):
         hass, mp.DOMAIN, {"media_player": {"platform": "demo"}}
     )
     await hass.async_block_till_done()
+
     ent_id = "media_player.living_room"
     state = hass.states.get(ent_id)
-    assert mp.SUPPORT_PLAY_MEDIA & state.attributes.get("supported_features") > 0
-    assert state.attributes.get("media_content_id") is not None
+    assert mp.SUPPORT_PLAY_MEDIA & state.attributes.get(ATTR_SUPPORTED_FEATURES) > 0
+    assert state.attributes.get(mp.ATTR_MEDIA_CONTENT_ID) is not None
 
     with pytest.raises(vol.Invalid):
-        await common.async_play_media(hass, None, "some_id", ent_id)
+        await hass.services.async_call(
+            mp.DOMAIN,
+            mp.SERVICE_PLAY_MEDIA,
+            {ATTR_ENTITY_ID: ent_id, mp.ATTR_MEDIA_CONTENT_ID: "some_id"},
+            blocking=True,
+        )
     state = hass.states.get(ent_id)
-    assert mp.SUPPORT_PLAY_MEDIA & state.attributes.get("supported_features") > 0
-    assert state.attributes.get("media_content_id") != "some_id"
+    assert mp.SUPPORT_PLAY_MEDIA & state.attributes.get(ATTR_SUPPORTED_FEATURES) > 0
+    assert state.attributes.get(mp.ATTR_MEDIA_CONTENT_ID) != "some_id"
 
-    await common.async_play_media(hass, "youtube", "some_id", ent_id)
+    await hass.services.async_call(
+        mp.DOMAIN,
+        mp.SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: ent_id,
+            mp.ATTR_MEDIA_CONTENT_TYPE: "youtube",
+            mp.ATTR_MEDIA_CONTENT_ID: "some_id",
+        },
+        blocking=True,
+    )
     state = hass.states.get(ent_id)
-    assert mp.SUPPORT_PLAY_MEDIA & state.attributes.get("supported_features") > 0
-    assert state.attributes.get("media_content_id") == "some_id"
+    assert mp.SUPPORT_PLAY_MEDIA & state.attributes.get(ATTR_SUPPORTED_FEATURES) > 0
+    assert state.attributes.get(mp.ATTR_MEDIA_CONTENT_ID) == "some_id"
 
 
 async def test_seek(hass, mock_media_seek):
@@ -201,15 +370,33 @@ async def test_seek(hass, mock_media_seek):
         hass, mp.DOMAIN, {"media_player": {"platform": "demo"}}
     )
     await hass.async_block_till_done()
+
     ent_id = "media_player.living_room"
     state = hass.states.get(ent_id)
-    assert state.attributes["supported_features"] & mp.SUPPORT_SEEK
-    assert not mock_media_seek.called
-    with pytest.raises(vol.Invalid):
-        await common.async_media_seek(hass, None, ent_id)
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] & mp.SUPPORT_SEEK
     assert not mock_media_seek.called
 
-    await common.async_media_seek(hass, 100, ent_id)
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            mp.DOMAIN,
+            mp.SERVICE_MEDIA_SEEK,
+            {
+                ATTR_ENTITY_ID: ent_id,
+                mp.ATTR_MEDIA_SEEK_POSITION: None,
+            },
+            blocking=True,
+        )
+    assert not mock_media_seek.called
+
+    await hass.services.async_call(
+        mp.DOMAIN,
+        mp.SERVICE_MEDIA_SEEK,
+        {
+            ATTR_ENTITY_ID: ent_id,
+            mp.ATTR_MEDIA_SEEK_POSITION: 100,
+        },
+        blocking=True,
+    )
     assert mock_media_seek.called
 
 
@@ -249,9 +436,45 @@ async def test_media_image_proxy(hass, hass_client):
 
     hass.data[DATA_CLIENTSESSION] = MockWebsession()
 
-    assert hass.states.is_state(TEST_ENTITY_ID, "playing")
     state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_PLAYING
     client = await hass_client()
-    req = await client.get(state.attributes.get("entity_picture"))
+    req = await client.get(state.attributes.get(ATTR_ENTITY_PICTURE))
     assert req.status == 200
     assert await req.text() == fake_picture_data
+
+
+async def test_grouping(hass):
+    """Test the join/unjoin services."""
+    walkman = "media_player.walkman"
+    kitchen = "media_player.kitchen"
+
+    assert await async_setup_component(
+        hass, mp.DOMAIN, {"media_player": {"platform": "demo"}}
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(walkman)
+    assert state.attributes.get(mp.ATTR_GROUP_MEMBERS) == []
+
+    await hass.services.async_call(
+        mp.DOMAIN,
+        mp.SERVICE_JOIN,
+        {
+            ATTR_ENTITY_ID: walkman,
+            mp.ATTR_GROUP_MEMBERS: [
+                kitchen,
+            ],
+        },
+        blocking=True,
+    )
+    state = hass.states.get(walkman)
+    assert state.attributes.get(mp.ATTR_GROUP_MEMBERS) == [walkman, kitchen]
+
+    await hass.services.async_call(
+        mp.DOMAIN,
+        mp.SERVICE_UNJOIN,
+        {ATTR_ENTITY_ID: walkman},
+        blocking=True,
+    )
+    state = hass.states.get(walkman)
+    assert state.attributes.get(mp.ATTR_GROUP_MEMBERS) == []

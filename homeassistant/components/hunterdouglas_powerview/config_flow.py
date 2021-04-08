@@ -10,8 +10,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import async_get_device_info
-from .const import DEVICE_NAME, DEVICE_SERIAL_NUMBER, HUB_EXCEPTIONS
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DEVICE_NAME, DEVICE_SERIAL_NUMBER, DOMAIN, HUB_EXCEPTIONS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,8 +32,8 @@ async def validate_input(hass: core.HomeAssistant, data):
     try:
         async with async_timeout.timeout(10):
             device_info = await async_get_device_info(pv_request)
-    except HUB_EXCEPTIONS:
-        raise CannotConnect
+    except HUB_EXCEPTIONS as err:
+        raise CannotConnect from err
     if not device_info:
         raise CannotConnect
 
@@ -79,10 +78,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_import(self, user_input=None):
-        """Handle the initial step."""
-        return await self.async_step_user(user_input)
-
     async def async_step_homekit(self, homekit_info):
         """Handle HomeKit discovery."""
 
@@ -126,7 +121,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def _host_already_configured(self, host):
         """See if we already have a hub with the host address configured."""
         existing_hosts = {
-            entry.data[CONF_HOST]
+            entry.data.get(CONF_HOST)
             for entry in self._async_current_entries()
             if CONF_HOST in entry.data
         }

@@ -1,11 +1,5 @@
 {
     "config": {
-        "create_entry": {
-            "default": "Vellukka autentisering med Logi Circle"
-        },
-        "error": {
-            "auth_error": "API-autorisasjonen mislyktes."
-        },
         "step": {
             "auth": {
                 "title": "Godkjenn med Logi Circle"

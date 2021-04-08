@@ -1,6 +1,8 @@
 """Support for Azure DevOps."""
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from aioazuredevops.client import DevOpsClient
 import aiohttp
@@ -12,17 +14,12 @@ from homeassistant.components.azure_devops.const import (
     DATA_AZURE_DEVOPS_CLIENT,
     DOMAIN,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
-    """Set up the Azure DevOps components."""
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
@@ -38,7 +35,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
                 )
                 hass.async_create_task(
                     hass.config_entries.flow.async_init(
-                        DOMAIN, context={"source": "reauth"}, data=entry.data,
+                        DOMAIN,
+                        context={"source": SOURCE_REAUTH},
+                        data=entry.data,
                     )
                 )
                 return False
@@ -98,7 +97,7 @@ class AzureDevOpsEntity(Entity):
         else:
             if self._available:
                 _LOGGER.debug(
-                    "An error occurred while updating Azure DevOps sensor.",
+                    "An error occurred while updating Azure DevOps sensor",
                     exc_info=True,
                 )
             self._available = False
@@ -112,10 +111,17 @@ class AzureDevOpsDeviceEntity(AzureDevOpsEntity):
     """Defines a Azure DevOps device entity."""
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> dict[str, Any]:
         """Return device information about this Azure DevOps instance."""
         return {
-            "identifiers": {(DOMAIN, self.organization, self.project,)},
+            "identifiers": {
+                (
+                    DOMAIN,
+                    self.organization,
+                    self.project,
+                )
+            },
             "manufacturer": self.organization,
             "name": self.project,
+            "entry_type": "service",
         }

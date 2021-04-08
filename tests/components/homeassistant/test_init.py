@@ -2,6 +2,7 @@
 # pylint: disable=protected-access
 import asyncio
 import unittest
+from unittest.mock import Mock, patch
 
 import pytest
 import voluptuous as vol
@@ -10,6 +11,7 @@ import yaml
 from homeassistant import config
 import homeassistant.components as comps
 from homeassistant.components.homeassistant import (
+    ATTR_ENTRY_ID,
     SERVICE_CHECK_CONFIG,
     SERVICE_RELOAD_CORE_CONFIG,
     SERVICE_SET_LOCATION,
@@ -32,11 +34,12 @@ from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import entity
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import Mock, patch
 from tests.common import (
+    MockConfigEntry,
     async_capture_events,
     async_mock_service,
     get_test_home_assistant,
+    mock_registry,
     mock_service,
     patch_yaml_files,
 )
@@ -134,28 +137,28 @@ class TestComponentsCore(unittest.TestCase):
         calls = mock_service(self.hass, "light", SERVICE_TURN_ON)
         turn_on(self.hass)
         self.hass.block_till_done()
-        assert 0 == len(calls)
+        assert len(calls) == 0
 
     def test_turn_on(self):
         """Test turn_on method."""
         calls = mock_service(self.hass, "light", SERVICE_TURN_ON)
         turn_on(self.hass, "light.Ceiling")
         self.hass.block_till_done()
-        assert 1 == len(calls)
+        assert len(calls) == 1
 
     def test_turn_off(self):
         """Test turn_off method."""
         calls = mock_service(self.hass, "light", SERVICE_TURN_OFF)
         turn_off(self.hass, "light.Bowl")
         self.hass.block_till_done()
-        assert 1 == len(calls)
+        assert len(calls) == 1
 
     def test_toggle(self):
         """Test toggle method."""
         calls = mock_service(self.hass, "light", SERVICE_TOGGLE)
         toggle(self.hass, "light.Bowl")
         self.hass.block_till_done()
-        assert 1 == len(calls)
+        assert len(calls) == 1
 
     @patch("homeassistant.config.os.path.isfile", Mock(return_value=True))
     def test_reload_core_conf(self):
@@ -248,7 +251,7 @@ class TestComponentsCore(unittest.TestCase):
         assert not mock_stop.called
 
 
-async def test_turn_on_to_not_block_for_domains_without_service(hass):
+async def test_turn_on_skips_domains_without_service(hass, caplog):
     """Test if turn_on is blocking domain with no service."""
     await async_setup_component(hass, "homeassistant", {})
     async_mock_service(hass, "light", SERVICE_TURN_ON)
@@ -261,27 +264,29 @@ async def test_turn_on_to_not_block_for_domains_without_service(hass):
     service_call = ha.ServiceCall(
         "homeassistant",
         "turn_on",
-        {"entity_id": ["light.test", "sensor.bla", "light.bla"]},
+        {"entity_id": ["light.test", "sensor.bla", "binary_sensor.blub", "light.bla"]},
     )
     service = hass.services._services["homeassistant"]["turn_on"]
 
     with patch(
-        "homeassistant.core.ServiceRegistry.async_call", return_value=None,
+        "homeassistant.core.ServiceRegistry.async_call",
+        return_value=None,
     ) as mock_call:
-        await service.func(service_call)
+        await service.job.target(service_call)
 
-    assert mock_call.call_count == 2
+    assert mock_call.call_count == 1
     assert mock_call.call_args_list[0][0] == (
         "light",
         "turn_on",
         {"entity_id": ["light.bla", "light.test"]},
-        True,
     )
-    assert mock_call.call_args_list[1][0] == (
-        "sensor",
-        "turn_on",
-        {"entity_id": ["sensor.bla"]},
-        False,
+    assert mock_call.call_args_list[0][1] == {
+        "blocking": True,
+        "context": service_call.context,
+    }
+    assert (
+        "The service homeassistant.turn_on does not support entities binary_sensor.blub, sensor.bla"
+        in caplog.text
     )
 
 
@@ -290,7 +295,8 @@ async def test_entity_update(hass):
     await async_setup_component(hass, "homeassistant", {})
 
     with patch(
-        "homeassistant.helpers.entity_component.async_update_entity", return_value=None,
+        "homeassistant.helpers.entity_component.async_update_entity",
+        return_value=None,
     ) as mock_update:
         await hass.services.async_call(
             "homeassistant",
@@ -373,9 +379,71 @@ async def test_not_allowing_recursion(hass, caplog):
 
     for service in SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE:
         await hass.services.async_call(
-            ha.DOMAIN, service, {"entity_id": "homeassistant.light"}, blocking=True,
+            ha.DOMAIN,
+            service,
+            {"entity_id": "homeassistant.light"},
+            blocking=True,
         )
         assert (
-            f"Called service homeassistant.{service} with invalid entity IDs homeassistant.light"
+            f"Called service homeassistant.{service} with invalid entities homeassistant.light"
             in caplog.text
         ), service
+
+
+async def test_reload_config_entry_by_entity_id(hass):
+    """Test being able to reload a config entry by entity_id."""
+    await async_setup_component(hass, "homeassistant", {})
+    entity_reg = mock_registry(hass)
+    entry1 = MockConfigEntry(domain="mockdomain")
+    entry1.add_to_hass(hass)
+    entry2 = MockConfigEntry(domain="mockdomain")
+    entry2.add_to_hass(hass)
+    reg_entity1 = entity_reg.async_get_or_create(
+        "binary_sensor", "powerwall", "battery_charging", config_entry=entry1
+    )
+    reg_entity2 = entity_reg.async_get_or_create(
+        "binary_sensor", "powerwall", "battery_status", config_entry=entry2
+    )
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload",
+        return_value=None,
+    ) as mock_reload:
+        await hass.services.async_call(
+            "homeassistant",
+            "reload_config_entry",
+            {"entity_id": f"{reg_entity1.entity_id},{reg_entity2.entity_id}"},
+            blocking=True,
+        )
+
+    assert len(mock_reload.mock_calls) == 2
+    assert {mock_reload.mock_calls[0][1][0], mock_reload.mock_calls[1][1][0]} == {
+        entry1.entry_id,
+        entry2.entry_id,
+    }
+
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            "homeassistant",
+            "reload_config_entry",
+            {"entity_id": "unknown.entity_id"},
+            blocking=True,
+        )
+
+
+async def test_reload_config_entry_by_entry_id(hass):
+    """Test being able to reload a config entry by config entry id."""
+    await async_setup_component(hass, "homeassistant", {})
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload",
+        return_value=None,
+    ) as mock_reload:
+        await hass.services.async_call(
+            "homeassistant",
+            "reload_config_entry",
+            {ATTR_ENTRY_ID: "8955375327824e14ba89e4b29cc3ec9a"},
+            blocking=True,
+        )
+
+    assert len(mock_reload.mock_calls) == 1
+    assert mock_reload.mock_calls[0][1][0] == "8955375327824e14ba89e4b29cc3ec9a"

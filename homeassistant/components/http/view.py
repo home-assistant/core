@@ -1,8 +1,10 @@
 """Support for views."""
+from __future__ import annotations
+
 import asyncio
 import json
 import logging
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable
 
 from aiohttp import web
 from aiohttp.typedefs import LooseHeaders
@@ -26,8 +28,8 @@ _LOGGER = logging.getLogger(__name__)
 class HomeAssistantView:
     """Base view for all views."""
 
-    url: Optional[str] = None
-    extra_urls: List[str] = []
+    url: str | None = None
+    extra_urls: list[str] = []
     # Views inheriting from this class can override this
     requires_auth = True
     cors_allowed = False
@@ -43,16 +45,16 @@ class HomeAssistantView:
 
     @staticmethod
     def json(
-        result: Any, status_code: int = HTTP_OK, headers: Optional[LooseHeaders] = None,
+        result: Any,
+        status_code: int = HTTP_OK,
+        headers: LooseHeaders | None = None,
     ) -> web.Response:
         """Return a JSON response."""
         try:
-            msg = json.dumps(
-                result, sort_keys=True, cls=JSONEncoder, allow_nan=False
-            ).encode("UTF-8")
+            msg = json.dumps(result, cls=JSONEncoder, allow_nan=False).encode("UTF-8")
         except (ValueError, TypeError) as err:
             _LOGGER.error("Unable to serialize to JSON: %s\n%s", err, result)
-            raise HTTPInternalServerError
+            raise HTTPInternalServerError from err
         response = web.Response(
             body=msg,
             content_type=CONTENT_TYPE_JSON,
@@ -66,8 +68,8 @@ class HomeAssistantView:
         self,
         message: str,
         status_code: int = HTTP_OK,
-        message_code: Optional[str] = None,
-        headers: Optional[LooseHeaders] = None,
+        message_code: str | None = None,
+        headers: LooseHeaders | None = None,
     ) -> web.Response:
         """Return a JSON message response."""
         data = {"message": message}
@@ -116,7 +118,10 @@ def request_handler_factory(view: HomeAssistantView, handler: Callable) -> Calla
             raise HTTPUnauthorized()
 
         _LOGGER.debug(
-            "Serving %s to %s (auth: %s)", request.path, request.remote, authenticated,
+            "Serving %s to %s (auth: %s)",
+            request.path,
+            request.remote,
+            authenticated,
         )
 
         try:
@@ -124,12 +129,12 @@ def request_handler_factory(view: HomeAssistantView, handler: Callable) -> Calla
 
             if asyncio.iscoroutine(result):
                 result = await result
-        except vol.Invalid:
-            raise HTTPBadRequest()
-        except exceptions.ServiceNotFound:
-            raise HTTPInternalServerError()
-        except exceptions.Unauthorized:
-            raise HTTPUnauthorized()
+        except vol.Invalid as err:
+            raise HTTPBadRequest() from err
+        except exceptions.ServiceNotFound as err:
+            raise HTTPInternalServerError() from err
+        except exceptions.Unauthorized as err:
+            raise HTTPUnauthorized() from err
 
         if isinstance(result, web.StreamResponse):
             # The method handler returned a ready-made Response, how nice of it

@@ -1,6 +1,5 @@
 """Support for Avion dimmers."""
 import importlib
-import logging
 import time
 
 import voluptuous as vol
@@ -20,8 +19,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
 
 SUPPORT_AVION_LED = SUPPORT_BRIGHTNESS
 
@@ -44,7 +41,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up an Avion switch."""
-    # pylint: disable=no-member
     avion = importlib.import_module("avion")
 
     lights = []
@@ -114,7 +110,6 @@ class AvionLight(LightEntity):
 
     def set_state(self, brightness):
         """Set the state of this lamp to the provided brightness."""
-        # pylint: disable=no-member
         avion = importlib.import_module("avion")
 
         # Bluetooth LE is unreliable, and the connection may drop at any

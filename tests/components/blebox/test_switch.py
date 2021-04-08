@@ -1,6 +1,6 @@
 """Blebox switch tests."""
-
 import logging
+from unittest.mock import AsyncMock, PropertyMock
 
 import blebox_uniapi
 import pytest
@@ -13,6 +13,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.helpers import device_registry as dr
 
 from .conftest import (
     async_setup_entities,
@@ -21,8 +22,6 @@ from .conftest import (
     mock_only_feature,
     setup_product_mock,
 )
-
-from tests.async_mock import AsyncMock, PropertyMock
 
 
 @pytest.fixture(name="switchbox")
@@ -59,7 +58,7 @@ async def test_switchbox_init(switchbox, hass, config):
 
     assert state.state == STATE_OFF
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
 
     assert device.name == "My switch box"
@@ -117,7 +116,10 @@ async def test_switchbox_on(switchbox, hass, config):
     feature_mock.async_turn_on = AsyncMock(side_effect=turn_on)
 
     await hass.services.async_call(
-        "switch", SERVICE_TURN_ON, {"entity_id": entity_id}, blocking=True,
+        "switch",
+        SERVICE_TURN_ON,
+        {"entity_id": entity_id},
+        blocking=True,
     )
 
     state = hass.states.get(entity_id)
@@ -142,7 +144,10 @@ async def test_switchbox_off(switchbox, hass, config):
     feature_mock.async_turn_off = AsyncMock(side_effect=turn_off)
 
     await hass.services.async_call(
-        "switch", SERVICE_TURN_OFF, {"entity_id": entity_id}, blocking=True,
+        "switch",
+        SERVICE_TURN_OFF,
+        {"entity_id": entity_id},
+        blocking=True,
     )
     state = hass.states.get(entity_id)
     assert state.state == STATE_OFF
@@ -199,7 +204,7 @@ async def test_switchbox_d_init(switchbox_d, hass, config):
     assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_SWITCH
     assert state.state == STATE_OFF  # NOTE: should instead be STATE_UNKNOWN?
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
 
     assert device.name == "My relays"
@@ -216,7 +221,7 @@ async def test_switchbox_d_init(switchbox_d, hass, config):
     assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_SWITCH
     assert state.state == STATE_OFF  # NOTE: should instead be STATE_UNKNOWN?
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
 
     assert device.name == "My relays"
@@ -279,7 +284,10 @@ async def test_switchbox_d_turn_first_on(switchbox_d, hass, config):
 
     feature_mocks[0].async_turn_on = AsyncMock(side_effect=turn_on0)
     await hass.services.async_call(
-        "switch", SERVICE_TURN_ON, {"entity_id": entity_ids[0]}, blocking=True,
+        "switch",
+        SERVICE_TURN_ON,
+        {"entity_id": entity_ids[0]},
+        blocking=True,
     )
 
     assert hass.states.get(entity_ids[0]).state == STATE_ON
@@ -305,7 +313,10 @@ async def test_switchbox_d_second_on(switchbox_d, hass, config):
 
     feature_mocks[1].async_turn_on = AsyncMock(side_effect=turn_on1)
     await hass.services.async_call(
-        "switch", SERVICE_TURN_ON, {"entity_id": entity_ids[1]}, blocking=True,
+        "switch",
+        SERVICE_TURN_ON,
+        {"entity_id": entity_ids[1]},
+        blocking=True,
     )
 
     assert hass.states.get(entity_ids[0]).state == STATE_OFF
@@ -331,7 +342,10 @@ async def test_switchbox_d_first_off(switchbox_d, hass, config):
 
     feature_mocks[0].async_turn_off = AsyncMock(side_effect=turn_off0)
     await hass.services.async_call(
-        "switch", SERVICE_TURN_OFF, {"entity_id": entity_ids[0]}, blocking=True,
+        "switch",
+        SERVICE_TURN_OFF,
+        {"entity_id": entity_ids[0]},
+        blocking=True,
     )
 
     assert hass.states.get(entity_ids[0]).state == STATE_OFF
@@ -357,7 +371,10 @@ async def test_switchbox_d_second_off(switchbox_d, hass, config):
 
     feature_mocks[1].async_turn_off = AsyncMock(side_effect=turn_off1)
     await hass.services.async_call(
-        "switch", SERVICE_TURN_OFF, {"entity_id": entity_ids[1]}, blocking=True,
+        "switch",
+        SERVICE_TURN_OFF,
+        {"entity_id": entity_ids[1]},
+        blocking=True,
     )
     assert hass.states.get(entity_ids[0]).state == STATE_ON
     assert hass.states.get(entity_ids[1]).state == STATE_OFF

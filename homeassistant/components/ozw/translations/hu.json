@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "addon_info_failed": "Nem siker\u00fclt bet\u00f6lteni az OpenZWave kieg\u00e9sz\u00edt\u0151 inform\u00e1ci\u00f3kat.",
+            "addon_install_failed": "Nem siker\u00fclt telep\u00edteni az OpenZWave b\u0151v\u00edtm\u00e9nyt.",
+            "addon_set_config_failed": "Nem siker\u00fclt be\u00e1ll\u00edtani az OpenZWave konfigur\u00e1ci\u00f3t.",
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "already_in_progress": "A konfigur\u00e1ci\u00f3 m\u00e1r folyamatban van.",
+            "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges."
+        },
+        "error": {
+            "addon_start_failed": "Nem siker\u00fclt elind\u00edtani az OpenZWave b\u0151v\u00edtm\u00e9nyt. Ellen\u0151rizze a konfigur\u00e1ci\u00f3t."
+        },
+        "step": {
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "Haszn\u00e1ld az OpenZWave Supervisor b\u0151v\u00edtm\u00e9nyt"
+                },
+                "description": "Szeretn\u00e9d haszn\u00e1lni az OpenZWave Supervisor b\u0151v\u00edtm\u00e9nyt?",
+                "title": "V\u00e1laszd ki a csatlakoz\u00e1si m\u00f3dot"
+            },
+            "start_addon": {
+                "data": {
+                    "network_key": "H\u00e1l\u00f3zati kulcs",
+                    "usb_path": "USB eszk\u00f6z el\u00e9r\u00e9si \u00fat"
+                }
+            }
+        }
+    }
+}

@@ -5,12 +5,13 @@ import logging
 import pysma
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PATH,
     CONF_SCAN_INTERVAL,
+    CONF_SENSORS,
     CONF_SSL,
     CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
@@ -18,7 +19,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,7 +27,6 @@ CONF_CUSTOM = "custom"
 CONF_FACTOR = "factor"
 CONF_GROUP = "group"
 CONF_KEY = "key"
-CONF_SENSORS = "sensors"
 CONF_UNIT = "unit"
 
 GROUPS = ["user", "installer"]
@@ -40,7 +39,7 @@ def _check_sensor_schema(conf):
     except (ImportError, AttributeError):
         return conf
 
-    customs = list(conf[CONF_CUSTOM].keys())
+    customs = list(conf[CONF_CUSTOM])
 
     for sensor in conf[CONF_SENSORS]:
         if sensor in customs:
@@ -86,7 +85,6 @@ PLATFORM_SCHEMA = vol.All(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up SMA WebConnect sensor."""
-
     # Check config again during load - dependency available
     config = _check_sensor_schema(config)
 
@@ -120,7 +118,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if isinstance(config_sensors, list):
         if not config_sensors:  # Use all sensors by default
             config_sensors = [s.name for s in sensor_def]
-        used_sensors = list(set(config_sensors + list(config[CONF_CUSTOM].keys())))
+        used_sensors = list(set(config_sensors + list(config[CONF_CUSTOM])))
         for sensor in used_sensors:
             hass_sensors.append(SMAsensor(sensor_def[sensor], []))
 
@@ -170,7 +168,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_track_time_interval(hass, async_sma, interval)
 
 
-class SMAsensor(Entity):
+class SMAsensor(SensorEntity):
     """Representation of a SMA sensor."""
 
     def __init__(self, pysma_sensor, sub_sensors):
@@ -197,7 +195,7 @@ class SMAsensor(Entity):
         return self._sensor.unit
 
     @property
-    def device_state_attributes(self):  # Can be remove from 0.99
+    def extra_state_attributes(self):  # Can be remove from 0.99
         """Return the state attributes of the sensor."""
         return self._attr
 

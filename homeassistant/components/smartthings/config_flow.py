@@ -16,7 +16,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-# pylint: disable=unused-import
 from .const import (
     APP_OAUTH_CLIENT_NAME,
     APP_OAUTH_SCOPES,
@@ -80,7 +79,8 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # Show the confirmation
         if user_input is None:
             return self.async_show_form(
-                step_id="user", description_placeholders={"webhook_url": webhook_url},
+                step_id="user",
+                description_placeholders={"webhook_url": webhook_url},
             )
 
         # Show the next screen

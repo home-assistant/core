@@ -1,6 +1,4 @@
 """Support for ADS covers."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.cover import (
@@ -24,8 +22,6 @@ from . import (
     STATE_KEY_STATE,
     AdsEntity,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "ADS Cover"
 
