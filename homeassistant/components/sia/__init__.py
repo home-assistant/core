@@ -13,25 +13,20 @@ from .hub import SIAHub
 PLATFORMS = [ALARM_CONTROL_PANEL_DOMAIN]
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the sia component."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up sia from a config entry."""
     hub = SIAHub(hass, entry.data, entry.entry_id, entry.title)
-
     await hub.async_setup_hub()
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = hub
+
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
 
-    hub.sia_client.start(reuse_port=True)
+    await hub.sia_client.start(reuse_port=True)
     return True
 
 

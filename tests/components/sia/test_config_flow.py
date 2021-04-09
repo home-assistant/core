@@ -8,6 +8,7 @@ from homeassistant.components.sia.const import DOMAIN
 
 BASIC_CONFIG = {
     "port": 7777,
+    "protocol": "TCP",
     "account": "ABCDEF",
     "encryption_key": "AAAAAAAAAAAAAAAA",
     "ping_interval": 10,
@@ -33,27 +34,28 @@ async def test_form(hass):
         return_value=True,
     ), patch(
         "homeassistant.components.sia.config_flow.validate_input",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data=BASIC_CONFIG,
         )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == f"SIA Alarm on port {BASIC_CONFIG['port']}"
-    assert result["data"] == {
-        "port": BASIC_CONFIG["port"],
-        "accounts": [
-            {
-                "account": BASIC_CONFIG["account"],
-                "encryption_key": BASIC_CONFIG["encryption_key"],
-                "ping_interval": BASIC_CONFIG["ping_interval"],
-                "zones": BASIC_CONFIG["zones"],
-                "ignore_timestamps": BASIC_CONFIG["ignore_timestamps"],
-            }
-        ],
-    }
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["title"] == f"SIA Alarm on port {BASIC_CONFIG['port']}"
+        assert result["data"] == {
+            "port": BASIC_CONFIG["port"],
+            "protocol": BASIC_CONFIG["protocol"],
+            "accounts": [
+                {
+                    "account": BASIC_CONFIG["account"],
+                    "encryption_key": BASIC_CONFIG["encryption_key"],
+                    "ping_interval": BASIC_CONFIG["ping_interval"],
+                    "zones": BASIC_CONFIG["zones"],
+                    "ignore_timestamps": BASIC_CONFIG["ignore_timestamps"],
+                }
+            ],
+        }
 
 
 async def test_form_additional_account(hass):
@@ -81,6 +83,7 @@ async def test_form_additional_account(hass):
     assert result3["title"] == "SIA Alarm on port 7777"
     assert result3["data"] == {
         "port": 7777,
+        "protocol": "TCP",
         "accounts": [
             {
                 "account": "ABCDEF",

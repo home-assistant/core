@@ -1,9 +1,9 @@
 """The sia hub."""
 import logging
 
-from pysiaalarm.aio import SIAAccount, SIAClient, SIAEvent
+from pysiaalarm.aio import CommunicationsProtocol, SIAAccount, SIAClient, SIAEvent
 
-from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_PORT, CONF_PROTOCOL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, EventOrigin, HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -13,13 +13,6 @@ from .const import (
     CONF_ENCRYPTION_KEY,
     CONF_IGNORE_TIMESTAMPS,
     DOMAIN,
-    EVENT_ACCOUNT,
-    EVENT_CODE,
-    EVENT_ID,
-    EVENT_MESSAGE,
-    EVENT_PORT,
-    EVENT_TIMESTAMP,
-    EVENT_ZONE,
     SIA_EVENT,
 )
 
@@ -45,16 +38,20 @@ class SIAHub:
         self._remove_shutdown_listener = None
         self.sia_accounts = [
             SIAAccount(
-                a[CONF_ACCOUNT],
-                a.get(CONF_ENCRYPTION_KEY),
-                IGNORED_TIMEBAND
-                if hub_config[CONF_IGNORE_TIMESTAMPS]
+                account_id=a[CONF_ACCOUNT],
+                key=a.get(CONF_ENCRYPTION_KEY),
+                allowed_timeband=IGNORED_TIMEBAND
+                if a[CONF_IGNORE_TIMESTAMPS]
                 else DEFAULT_TIMEBAND,
             )
             for a in self._accounts
         ]
         self.sia_client = SIAClient(
-            "", self._port, self.sia_accounts, self.async_create_and_fire_event
+            host="",
+            port=self._port,
+            accounts=self.sia_accounts,
+            function=self.async_create_and_fire_event,
+            protocol=CommunicationsProtocol(hub_config[CONF_PROTOCOL]),
         )
 
     async def async_setup_hub(self):
@@ -86,16 +83,12 @@ class SIAHub:
             event.account,
             self._port,
         )
+        # Get rid of SIAAccount in the event, because it might contain the encryption key.
+        event.sia_account = None
+        # Change the message_type to value because otherwise it is not JSON serializable.
+        event.message_type = event.message_type.value
         self._hass.bus.async_fire(
             event_type=f"{SIA_EVENT}_{self._port}_{event.account}",
-            event_data={
-                EVENT_PORT: self._port,
-                EVENT_ACCOUNT: event.account,
-                EVENT_ZONE: event.ri,
-                EVENT_CODE: event.code,
-                EVENT_MESSAGE: event.message,
-                EVENT_ID: event.id,
-                EVENT_TIMESTAMP: event.timestamp,
-            },
+            event_data=event.to_dict(),
             origin=EventOrigin.remote,
         )

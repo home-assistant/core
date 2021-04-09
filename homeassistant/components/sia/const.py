@@ -1,10 +1,6 @@
 """Constants for the sia integration."""
 from datetime import timedelta
 
-ATTR_LAST_MESSAGE = "last_message"
-ATTR_LAST_CODE = "last_code"
-ATTR_LAST_TIMESTAMP = "last_timestamp"
-
 CONF_ACCOUNT = "account"
 CONF_ACCOUNTS = "accounts"
 CONF_ADDITIONAL_ACCOUNTS = "additional_account"
@@ -20,10 +16,10 @@ HUB_SENSOR_NAME = "last_heartbeat"
 HUB_ZONE = 0
 PING_INTERVAL_MARGIN = timedelta(seconds=30)
 
-EVENT_CODE = "code"
+EVENT_CODE = "last_code"
 EVENT_ACCOUNT = "account"
 EVENT_ZONE = "zone"
 EVENT_PORT = "port"
-EVENT_MESSAGE = "message"
-EVENT_ID = "id"
-EVENT_TIMESTAMP = "timestamp"
+EVENT_MESSAGE = "last_message"
+EVENT_ID = "last_id"
+EVENT_TIMESTAMP = "last_timestamp"
