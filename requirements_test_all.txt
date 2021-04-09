@@ -532,6 +532,9 @@ netdisco==2.8.2
 # homeassistant.components.nexia
 nexia==0.9.5
 
+# homeassistant.components.notify_events
+notify-events==1.0.4
+
 # homeassistant.components.nsw_fuel_station
 nsw-fuel-api-client==1.0.10
 
