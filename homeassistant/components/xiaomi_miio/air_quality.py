@@ -189,6 +189,8 @@ class AirMonitorCGDN1(XiaomiMiioEntity, AirQualityEntity):
         self._carbon_dioxide = None
         self._particulate_matter_2_5 = None
         self._particulate_matter_10 = None
+        self._temperature = None
+        self._humidity = None
 
     async def async_update(self):
         """Fetch state from the miio device."""
@@ -198,6 +200,8 @@ class AirMonitorCGDN1(XiaomiMiioEntity, AirQualityEntity):
             self._carbon_dioxide = state.co2
             self._particulate_matter_2_5 = round(state.pm25, 1)
             self._particulate_matter_10 = round(state.pm10, 1)
+            self._temperature = round(state.temperature, 2)
+            self._humidity = round(state.humidity, 2)
             self._available = True
         except DeviceException as ex:
             self._available = False
@@ -227,6 +231,16 @@ class AirMonitorCGDN1(XiaomiMiioEntity, AirQualityEntity):
     def particulate_matter_10(self):
         """Return the particulate matter 10 level."""
         return self._particulate_matter_10
+
+    @property
+    def temperature(self):
+        """Return the current temperature."""
+        return self._temperature
+
+    @property
+    def humidity(self):
+        """Return the current humidity."""
+        return self._humidity
 
 
 DEVICE_MAP = {
