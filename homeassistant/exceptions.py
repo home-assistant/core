@@ -98,12 +98,31 @@ class ConditionErrorContainer(ConditionError):
             yield from item.output(indent)
 
 
-class PlatformNotReady(HomeAssistantError):
+class IntegrationError(HomeAssistantError):
+    """Base class for platform and config entry exceptions."""
+
+    def __str__(self) -> str:
+        """Return a human readable error."""
+        error_str = super().__str__()
+        if error_str:
+            return error_str
+
+        if self.__cause__:
+            return str(self.__cause__)
+
+        return ""
+
+
+class PlatformNotReady(IntegrationError):
     """Error to indicate that platform is not ready."""
 
 
-class ConfigEntryNotReady(HomeAssistantError):
+class ConfigEntryNotReady(IntegrationError):
     """Error to indicate that config entry is not ready."""
+
+
+class ConfigEntryAuthFailed(IntegrationError):
+    """Error to indicate that config entry could not authenticate."""
 
 
 class InvalidStateError(HomeAssistantError):

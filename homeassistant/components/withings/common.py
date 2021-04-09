@@ -28,7 +28,7 @@ from withings_api.common import (
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_WEBHOOK_ID,
     HTTP_UNAUTHORIZED,
@@ -38,7 +38,7 @@ from homeassistant.const import (
     TIME_SECONDS,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.config_entry_oauth2_flow import (
     AUTH_CALLBACK_PATH,
@@ -737,31 +737,7 @@ class DataManager:
             if isinstance(
                 exception, (UnauthorizedException, AuthFailedException)
             ) or NOT_AUTHENTICATED_ERROR.match(str(exception)):
-                context = {
-                    const.PROFILE: self._profile,
-                    "userid": self._user_id,
-                    "source": SOURCE_REAUTH,
-                }
-
-                # Check if reauth flow already exists.
-                flow = next(
-                    iter(
-                        flow
-                        for flow in self._hass.config_entries.flow.async_progress()
-                        if flow.context == context
-                    ),
-                    None,
-                )
-                if flow:
-                    return
-
-                # Start a reauth flow.
-                await self._hass.config_entries.flow.async_init(
-                    const.DOMAIN,
-                    context=context,
-                )
-                return
-
+                raise ConfigEntryAuthFailed from exception
             raise exception
 
     async def _async_get_all_data(self) -> dict[MeasureType, Any] | None:
