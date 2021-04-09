@@ -28,8 +28,6 @@ ATTR_FILE_MIME_TYPE = "mime_type"
 ATTR_FILE_KIND_FILE = "file"
 ATTR_FILE_KIND_IMAGE = "image"
 
-ATTR_TOKEN = "token"
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -116,12 +114,7 @@ class NotifyEventsNotificationService(BaseNotificationService):
 
     def send_message(self, message, **kwargs):
         """Send a message."""
-        token = self.token
         data = kwargs.get(ATTR_DATA) or {}
 
         msg = self.prepare_message(message, data)
-
-        if data.get(ATTR_TOKEN, "").trim():
-            token = data[ATTR_TOKEN]
-
-        msg.send(token)
+        msg.send(self.token)
