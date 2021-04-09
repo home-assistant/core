@@ -94,7 +94,7 @@ class FolderSensor(SensorEntity):
         return FOLDER_SENSOR_ALERT_ICON
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._state
 
