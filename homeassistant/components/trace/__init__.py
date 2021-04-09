@@ -8,6 +8,7 @@ from typing import Any, Deque
 from homeassistant.core import Context
 from homeassistant.helpers.trace import (
     TraceElement,
+    script_execution_get,
     trace_id_get,
     trace_id_set,
     trace_set_child_id,
@@ -47,14 +48,17 @@ class ActionTrace:
         self,
         key: tuple[str, str],
         config: dict[str, Any],
+        blueprint_inputs: dict[str, Any],
         context: Context,
     ):
         """Container for script trace."""
         self._trace: dict[str, Deque[TraceElement]] | None = None
         self._config: dict[str, Any] = config
+        self._blueprint_inputs: dict[str, Any] = blueprint_inputs
         self.context: Context = context
         self._error: Exception | None = None
         self._state: str = "running"
+        self._script_execution: str | None = None
         self.run_id: str = str(next(self._run_ids))
         self._timestamp_finish: dt.datetime | None = None
         self._timestamp_start: dt.datetime = dt_util.utcnow()
@@ -75,6 +79,7 @@ class ActionTrace:
         """Set finish time."""
         self._timestamp_finish = dt_util.utcnow()
         self._state = "stopped"
+        self._script_execution = script_execution_get()
 
     def as_dict(self) -> dict[str, Any]:
         """Return dictionary version of this ActionTrace."""
@@ -90,6 +95,7 @@ class ActionTrace:
             {
                 "trace": traces,
                 "config": self._config,
+                "blueprint_inputs": self._blueprint_inputs,
                 "context": self.context,
             }
         )
@@ -109,6 +115,7 @@ class ActionTrace:
             "last_step": last_step,
             "run_id": self.run_id,
             "state": self._state,
+            "script_execution": self._script_execution,
             "timestamp": {
                 "start": self._timestamp_start,
                 "finish": self._timestamp_finish,

@@ -204,10 +204,15 @@ def async_prepare_call_from_config(
 
     target = {}
     if CONF_TARGET in config:
-        conf = config.get(CONF_TARGET)
+        conf = config[CONF_TARGET]
         try:
-            template.attach(hass, conf)
-            target.update(template.render_complex(conf, variables))
+            if isinstance(conf, template.Template):
+                conf.hass = hass
+                target.update(conf.async_render(variables))
+            else:
+                template.attach(hass, conf)
+                target.update(template.render_complex(conf, variables))
+
             if CONF_ENTITY_ID in target:
                 target[CONF_ENTITY_ID] = cv.comp_entity_ids(target[CONF_ENTITY_ID])
         except TemplateError as ex:

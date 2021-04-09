@@ -7,13 +7,14 @@ from roombapy.roomba import RoombaInfo
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
+from homeassistant.components.roomba import config_flow
 from homeassistant.components.roomba.const import CONF_BLID, CONF_CONTINUOUS, DOMAIN
 from homeassistant.const import CONF_DELAY, CONF_HOST, CONF_PASSWORD
 
 from tests.common import MockConfigEntry
 
 MOCK_IP = "1.2.3.4"
-VALID_CONFIG = {CONF_HOST: MOCK_IP, CONF_BLID: "blid", CONF_PASSWORD: "password"}
+VALID_CONFIG = {CONF_HOST: MOCK_IP, CONF_BLID: "BLID", CONF_PASSWORD: "password"}
 
 DHCP_DISCOVERY_DEVICES = [
     {
@@ -31,16 +32,23 @@ DHCP_DISCOVERY_DEVICES = [
 
 DHCP_DISCOVERY_DEVICES_WITHOUT_MATCHING_IP = [
     {
-        IP_ADDRESS: "1.1.1.1",
+        IP_ADDRESS: "4.4.4.4",
         MAC_ADDRESS: "50:14:79:DD:EE:FF",
         HOSTNAME: "irobot-blid",
     },
     {
-        IP_ADDRESS: "1.1.1.1",
+        IP_ADDRESS: "5.5.5.5",
         MAC_ADDRESS: "80:A5:89:DD:EE:FF",
         HOSTNAME: "roomba-blid",
     },
 ]
+
+
+@pytest.fixture(autouse=True)
+def roomba_no_wake_time():
+    """Fixture that prevents sleep."""
+    with patch.object(config_flow, "ROOMBA_WAKE_TIME", 0):
+        yield
 
 
 def _create_mocked_roomba(
@@ -58,7 +66,7 @@ def _mocked_discovery(*_):
     roomba_discovery = MagicMock()
 
     roomba = RoombaInfo(
-        hostname="irobot-blid",
+        hostname="irobot-BLID",
         robot_name="robot_name",
         ip=MOCK_IP,
         mac="mac",
@@ -68,12 +76,22 @@ def _mocked_discovery(*_):
     )
 
     roomba_discovery.get_all = MagicMock(return_value=[roomba])
+    roomba_discovery.get = MagicMock(return_value=roomba)
+
+    return roomba_discovery
+
+
+def _mocked_no_devices_found_discovery(*_):
+    roomba_discovery = MagicMock()
+    roomba_discovery.get_all = MagicMock(return_value=[])
+    roomba_discovery.get = MagicMock(return_value=None)
     return roomba_discovery
 
 
 def _mocked_failed_discovery(*_):
     roomba_discovery = MagicMock()
-    roomba_discovery.get_all = MagicMock(return_value=[])
+    roomba_discovery.get_all = MagicMock(side_effect=OSError)
+    roomba_discovery.get = MagicMock(side_effect=OSError)
     return roomba_discovery
 
 
@@ -145,9 +163,9 @@ async def test_form_user_discovery_and_password_fetch(hass):
 
     assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result3["title"] == "robot_name"
-    assert result3["result"].unique_id == "blid"
+    assert result3["result"].unique_id == "BLID"
     assert result3["data"] == {
-        CONF_BLID: "blid",
+        CONF_BLID: "BLID",
         CONF_CONTINUOUS: True,
         CONF_DELAY: 1,
         CONF_HOST: MOCK_IP,
@@ -161,7 +179,7 @@ async def test_form_user_discovery_skips_known(hass):
     """Test discovery proceeds to manual if all discovered are already known."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
-    entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG, unique_id="blid")
+    entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG, unique_id="BLID")
     entry.add_to_hass(hass)
 
     with patch(
@@ -177,16 +195,16 @@ async def test_form_user_discovery_skips_known(hass):
     assert result["step_id"] == "manual"
 
 
-async def test_form_user_failed_discovery_aborts_already_configured(hass):
+async def test_form_user_no_devices_found_discovery_aborts_already_configured(hass):
     """Test if we manually configure an existing host we abort."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
-    entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG, unique_id="blid")
+    entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG, unique_id="BLID")
     entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.roomba.config_flow.RoombaDiscovery",
-        _mocked_failed_discovery,
+        _mocked_no_devices_found_discovery,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -264,9 +282,9 @@ async def test_form_user_discovery_manual_and_auto_password_fetch(hass):
 
     assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result4["title"] == "myroomba"
-    assert result4["result"].unique_id == "blid"
+    assert result4["result"].unique_id == "BLID"
     assert result4["data"] == {
-        CONF_BLID: "blid",
+        CONF_BLID: "BLID",
         CONF_CONTINUOUS: True,
         CONF_DELAY: 1,
         CONF_HOST: MOCK_IP,
@@ -274,6 +292,35 @@ async def test_form_user_discovery_manual_and_auto_password_fetch(hass):
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_user_discover_fails_aborts_already_configured(hass):
+    """Test if we manually configure an existing host we abort after failed discovery."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG, unique_id="BLID")
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.roomba.config_flow.RoombaDiscovery",
+        _mocked_failed_discovery,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] is None
+    assert result["step_id"] == "manual"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: MOCK_IP, CONF_BLID: "blid"},
+    )
+    await hass.async_block_till_done()
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result2["reason"] == "already_configured"
 
 
 async def test_form_user_discovery_manual_and_auto_password_fetch_but_cannot_connect(
@@ -341,8 +388,8 @@ async def test_form_user_discovery_manual_and_auto_password_fetch_but_cannot_con
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test_form_user_discovery_fails_and_auto_password_fetch(hass):
-    """Test discovery fails and we can auto fetch the password."""
+async def test_form_user_discovery_no_devices_found_and_auto_password_fetch(hass):
+    """Test discovery finds no devices and we can auto fetch the password."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     mocked_roomba = _create_mocked_roomba(
@@ -352,7 +399,7 @@ async def test_form_user_discovery_fails_and_auto_password_fetch(hass):
 
     with patch(
         "homeassistant.components.roomba.config_flow.RoombaDiscovery",
-        _mocked_failed_discovery,
+        _mocked_no_devices_found_discovery,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -391,9 +438,9 @@ async def test_form_user_discovery_fails_and_auto_password_fetch(hass):
 
     assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result3["title"] == "myroomba"
-    assert result3["result"].unique_id == "blid"
+    assert result3["result"].unique_id == "BLID"
     assert result3["data"] == {
-        CONF_BLID: "blid",
+        CONF_BLID: "BLID",
         CONF_CONTINUOUS: True,
         CONF_DELAY: 1,
         CONF_HOST: MOCK_IP,
@@ -403,8 +450,8 @@ async def test_form_user_discovery_fails_and_auto_password_fetch(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_user_discovery_fails_and_password_fetch_fails(hass):
-    """Test discovery fails and password fetch fails."""
+async def test_form_user_discovery_no_devices_found_and_password_fetch_fails(hass):
+    """Test discovery finds no devices and password fetch fails."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     mocked_roomba = _create_mocked_roomba(
@@ -414,7 +461,7 @@ async def test_form_user_discovery_fails_and_password_fetch_fails(hass):
 
     with patch(
         "homeassistant.components.roomba.config_flow.RoombaDiscovery",
-        _mocked_failed_discovery,
+        _mocked_no_devices_found_discovery,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -460,9 +507,9 @@ async def test_form_user_discovery_fails_and_password_fetch_fails(hass):
 
     assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result4["title"] == "myroomba"
-    assert result4["result"].unique_id == "blid"
+    assert result4["result"].unique_id == "BLID"
     assert result4["data"] == {
-        CONF_BLID: "blid",
+        CONF_BLID: "BLID",
         CONF_CONTINUOUS: True,
         CONF_DELAY: 1,
         CONF_HOST: MOCK_IP,
@@ -472,10 +519,10 @@ async def test_form_user_discovery_fails_and_password_fetch_fails(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_user_discovery_fails_and_password_fetch_fails_and_cannot_connect(
+async def test_form_user_discovery_not_devices_found_and_password_fetch_fails_and_cannot_connect(
     hass,
 ):
-    """Test discovery fails and password fetch fails then we cannot connect."""
+    """Test discovery finds no devices and password fetch fails then we cannot connect."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     mocked_roomba = _create_mocked_roomba(
@@ -486,7 +533,7 @@ async def test_form_user_discovery_fails_and_password_fetch_fails_and_cannot_con
 
     with patch(
         "homeassistant.components.roomba.config_flow.RoombaDiscovery",
-        _mocked_failed_discovery,
+        _mocked_no_devices_found_discovery,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -593,9 +640,9 @@ async def test_form_user_discovery_and_password_fetch_gets_connection_refused(ha
 
     assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result4["title"] == "myroomba"
-    assert result4["result"].unique_id == "blid"
+    assert result4["result"].unique_id == "BLID"
     assert result4["data"] == {
-        CONF_BLID: "blid",
+        CONF_BLID: "BLID",
         CONF_CONTINUOUS: True,
         CONF_DELAY: 1,
         CONF_HOST: MOCK_IP,
@@ -650,9 +697,9 @@ async def test_dhcp_discovery_and_roomba_discovery_finds(hass, discovery_data):
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == "robot_name"
-    assert result2["result"].unique_id == "blid"
+    assert result2["result"].unique_id == "BLID"
     assert result2["data"] == {
-        CONF_BLID: "blid",
+        CONF_BLID: "BLID",
         CONF_CONTINUOUS: True,
         CONF_DELAY: 1,
         CONF_HOST: MOCK_IP,
@@ -697,7 +744,7 @@ async def test_dhcp_discovery_falls_back_to_manual(hass, discovery_data):
 
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
-        {CONF_HOST: "1.1.1.1", CONF_BLID: "blid"},
+        {CONF_HOST: MOCK_IP, CONF_BLID: "blid"},
     )
     await hass.async_block_till_done()
     assert result3["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -723,12 +770,12 @@ async def test_dhcp_discovery_falls_back_to_manual(hass, discovery_data):
 
     assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result4["title"] == "myroomba"
-    assert result4["result"].unique_id == "blid"
+    assert result4["result"].unique_id == "BLID"
     assert result4["data"] == {
-        CONF_BLID: "blid",
+        CONF_BLID: "BLID",
         CONF_CONTINUOUS: True,
         CONF_DELAY: 1,
-        CONF_HOST: "1.1.1.1",
+        CONF_HOST: MOCK_IP,
         CONF_PASSWORD: "password",
     }
     assert len(mock_setup.mock_calls) == 1
@@ -749,7 +796,7 @@ async def test_dhcp_discovery_with_ignored(hass):
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
             data={
-                IP_ADDRESS: "1.1.1.1",
+                IP_ADDRESS: MOCK_IP,
                 MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
                 HOSTNAME: "irobot-blid",
             },
@@ -763,7 +810,7 @@ async def test_dhcp_discovery_already_configured_host(hass):
     """Test we abort if the host is already configured."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
-    config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "1.1.1.1"})
+    config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: MOCK_IP})
     config_entry.add_to_hass(hass)
 
     with patch(
@@ -773,7 +820,7 @@ async def test_dhcp_discovery_already_configured_host(hass):
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
             data={
-                IP_ADDRESS: "1.1.1.1",
+                IP_ADDRESS: MOCK_IP,
                 MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
                 HOSTNAME: "irobot-blid",
             },
@@ -789,7 +836,7 @@ async def test_dhcp_discovery_already_configured_blid(hass):
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     config_entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_BLID: "blid"}, unique_id="blid"
+        domain=DOMAIN, data={CONF_BLID: "BLID"}, unique_id="BLID"
     )
     config_entry.add_to_hass(hass)
 
@@ -800,7 +847,7 @@ async def test_dhcp_discovery_already_configured_blid(hass):
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
             data={
-                IP_ADDRESS: "1.1.1.1",
+                IP_ADDRESS: MOCK_IP,
                 MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
                 HOSTNAME: "irobot-blid",
             },
@@ -816,7 +863,7 @@ async def test_dhcp_discovery_not_irobot(hass):
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     config_entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_BLID: "blid"}, unique_id="blid"
+        domain=DOMAIN, data={CONF_BLID: "BLID"}, unique_id="BLID"
     )
     config_entry.add_to_hass(hass)
 
@@ -827,7 +874,7 @@ async def test_dhcp_discovery_not_irobot(hass):
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
             data={
-                IP_ADDRESS: "1.1.1.1",
+                IP_ADDRESS: MOCK_IP,
                 MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
                 HOSTNAME: "Notirobot-blid",
             },
@@ -836,3 +883,67 @@ async def test_dhcp_discovery_not_irobot(hass):
 
     assert result["type"] == "abort"
     assert result["reason"] == "not_irobot_device"
+
+
+async def test_dhcp_discovery_partial_hostname(hass):
+    """Test we abort flows when we have a partial hostname."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    with patch(
+        "homeassistant.components.roomba.config_flow.RoombaDiscovery", _mocked_discovery
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data={
+                IP_ADDRESS: MOCK_IP,
+                MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
+                HOSTNAME: "irobot-blid",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "link"
+
+    with patch(
+        "homeassistant.components.roomba.config_flow.RoombaDiscovery", _mocked_discovery
+    ):
+        result2 = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data={
+                IP_ADDRESS: MOCK_IP,
+                MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
+                HOSTNAME: "irobot-blidthatislonger",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "form"
+    assert result2["step_id"] == "link"
+
+    current_flows = hass.config_entries.flow.async_progress()
+    assert len(current_flows) == 1
+    assert current_flows[0]["flow_id"] == result2["flow_id"]
+
+    with patch(
+        "homeassistant.components.roomba.config_flow.RoombaDiscovery", _mocked_discovery
+    ):
+        result3 = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data={
+                IP_ADDRESS: MOCK_IP,
+                MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
+                HOSTNAME: "irobot-bl",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] == "abort"
+    assert result3["reason"] == "short_blid"
+
+    current_flows = hass.config_entries.flow.async_progress()
+    assert len(current_flows) == 1
+    assert current_flows[0]["flow_id"] == result2["flow_id"]

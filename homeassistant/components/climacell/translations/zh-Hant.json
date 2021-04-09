@@ -10,6 +10,7 @@
             "user": {
                 "data": {
                     "api_key": "API \u5bc6\u9470",
+                    "api_version": "API \u7248\u672c",
                     "latitude": "\u7def\u5ea6",
                     "longitude": "\u7d93\u5ea6",
                     "name": "\u540d\u7a31"

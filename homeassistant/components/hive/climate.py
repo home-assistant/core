@@ -1,5 +1,6 @@
 """Support for the Hive climate devices."""
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
@@ -20,7 +21,12 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.helpers import config_validation as cv, entity_platform
 
 from . import HiveEntity, refresh_system
-from .const import ATTR_TIME_PERIOD, DOMAIN, SERVICE_BOOST_HEATING
+from .const import (
+    ATTR_TIME_PERIOD,
+    DOMAIN,
+    SERVICE_BOOST_HEATING_OFF,
+    SERVICE_BOOST_HEATING_ON,
+)
 
 HIVE_TO_HASS_STATE = {
     "SCHEDULE": HVAC_MODE_AUTO,
@@ -47,6 +53,7 @@ SUPPORT_HVAC = [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF]
 SUPPORT_PRESET = [PRESET_NONE, PRESET_BOOST]
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
+_LOGGER = logging.getLogger()
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -63,7 +70,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     platform = entity_platform.current_platform.get()
 
     platform.async_register_entity_service(
-        SERVICE_BOOST_HEATING,
+        "boost_heating",
         {
             vol.Required(ATTR_TIME_PERIOD): vol.All(
                 cv.time_period,
@@ -73,6 +80,25 @@ async def async_setup_entry(hass, entry, async_add_entities):
             vol.Optional(ATTR_TEMPERATURE, default="25.0"): vol.Coerce(float),
         },
         "async_heating_boost",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_BOOST_HEATING_ON,
+        {
+            vol.Required(ATTR_TIME_PERIOD): vol.All(
+                cv.time_period,
+                cv.positive_timedelta,
+                lambda td: td.total_seconds() // 60,
+            ),
+            vol.Optional(ATTR_TEMPERATURE, default="25.0"): vol.Coerce(float),
+        },
+        "async_heating_boost_on",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_BOOST_HEATING_OFF,
+        {},
+        "async_heating_boost_off",
     )
 
 
@@ -192,18 +218,30 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
     async def async_set_preset_mode(self, preset_mode):
         """Set new preset mode."""
         if preset_mode == PRESET_NONE and self.preset_mode == PRESET_BOOST:
-            await self.hive.heating.turnBoostOff(self.device)
+            await self.hive.heating.setBoostOff(self.device)
         elif preset_mode == PRESET_BOOST:
             curtemp = round(self.current_temperature * 2) / 2
             temperature = curtemp + 0.5
-            await self.hive.heating.turnBoostOn(self.device, 30, temperature)
+            await self.hive.heating.setBoostOn(self.device, 30, temperature)
 
-    @refresh_system
     async def async_heating_boost(self, time_period, temperature):
         """Handle boost heating service call."""
-        await self.hive.heating.turnBoostOn(self.device, time_period, temperature)
+        _LOGGER.warning(
+            "Hive Service heating_boost will be removed in 2021.7.0, please update to heating_boost_on"
+        )
+        await self.async_heating_boost_on(time_period, temperature)
+
+    @refresh_system
+    async def async_heating_boost_on(self, time_period, temperature):
+        """Handle boost heating service call."""
+        await self.hive.heating.setBoostOn(self.device, time_period, temperature)
+
+    @refresh_system
+    async def async_heating_boost_off(self):
+        """Handle boost heating service call."""
+        await self.hive.heating.setBoostOff(self.device)
 
     async def async_update(self):
         """Update all Node data from Hive."""
         await self.hive.session.updateData(self.device)
-        self.device = await self.hive.heating.getHeating(self.device)
+        self.device = await self.hive.heating.getClimate(self.device)

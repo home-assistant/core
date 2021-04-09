@@ -21,8 +21,8 @@
                 "data": {
                     "discovery": "Attiva l'individuazione"
                 },
-                "description": "Vuoi configurare Home Assistant per connettersi al broker MQTT fornito dal componente aggiuntivo di Hass.io: {addon}?",
-                "title": "Broker MQTT tramite il componente aggiuntivo di Hass.io"
+                "description": "Vuoi configurare Home Assistant per connettersi al broker MQTT fornito dal componente aggiuntivo: {addon}?",
+                "title": "Broker MQTT tramite il componente aggiuntivo di Home Assistant"
             }
         }
     },

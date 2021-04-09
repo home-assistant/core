@@ -17,6 +17,7 @@ from homeassistant import exceptions
 from homeassistant.components import device_automation, scene
 from homeassistant.components.logger import LOGSEVERITY
 from homeassistant.const import (
+    ATTR_AREA_ID,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
     CONF_ALIAS,
@@ -62,6 +63,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.event import async_call_later, async_track_template
 from homeassistant.helpers.script_variables import ScriptVariables
+from homeassistant.helpers.trace import script_execution_set
 from homeassistant.helpers.trigger import (
     async_initialize_triggers,
     async_validate_trigger_config,
@@ -331,15 +333,19 @@ class _ScriptRun:
     async def async_run(self) -> None:
         """Run script."""
         try:
-            if self._stop.is_set():
-                return
             self._log("Running %s", self._script.running_description)
             for self._step, self._action in enumerate(self._script.sequence):
                 if self._stop.is_set():
+                    script_execution_set("cancelled")
                     break
                 await self._async_step(log_exceptions=False)
+            else:
+                script_execution_set("finished")
         except _StopScript:
-            pass
+            script_execution_set("aborted")
+        except Exception:
+            script_execution_set("error")
+            raise
         finally:
             self._finish()
 
@@ -900,10 +906,10 @@ def _referenced_extract_ids(data: dict[str, Any], key: str, found: set[str]) -> 
         return
 
     if isinstance(item_ids, str):
-        item_ids = [item_ids]
-
-    for item_id in item_ids:
-        found.add(item_id)
+        found.add(item_ids)
+    else:
+        for item_id in item_ids:
+            found.add(item_id)
 
 
 class Script:
@@ -970,6 +976,7 @@ class Script:
         self._choose_data: dict[int, dict[str, Any]] = {}
         self._referenced_entities: set[str] | None = None
         self._referenced_devices: set[str] | None = None
+        self._referenced_areas: set[str] | None = None
         self.variables = variables
         self._variables_dynamic = template.is_complex(variables)
         if self._variables_dynamic:
@@ -1032,6 +1039,28 @@ class Script:
         return self.script_mode in (SCRIPT_MODE_PARALLEL, SCRIPT_MODE_QUEUED)
 
     @property
+    def referenced_areas(self):
+        """Return a set of referenced areas."""
+        if self._referenced_areas is not None:
+            return self._referenced_areas
+
+        referenced: set[str] = set()
+
+        for step in self.sequence:
+            action = cv.determine_script_action(step)
+
+            if action == cv.SCRIPT_ACTION_CALL_SERVICE:
+                for data in (
+                    step.get(CONF_TARGET),
+                    step.get(service.CONF_SERVICE_DATA),
+                    step.get(service.CONF_SERVICE_DATA_TEMPLATE),
+                ):
+                    _referenced_extract_ids(data, ATTR_AREA_ID, referenced)
+
+        self._referenced_areas = referenced
+        return referenced
+
+    @property
     def referenced_devices(self):
         """Return a set of referenced devices."""
         if self._referenced_devices is not None:
@@ -1044,7 +1073,6 @@ class Script:
 
             if action == cv.SCRIPT_ACTION_CALL_SERVICE:
                 for data in (
-                    step,
                     step.get(CONF_TARGET),
                     step.get(service.CONF_SERVICE_DATA),
                     step.get(service.CONF_SERVICE_DATA_TEMPLATE),
@@ -1114,6 +1142,7 @@ class Script:
             if self.script_mode == SCRIPT_MODE_SINGLE:
                 if self._max_exceeded != "SILENT":
                     self._log("Already running", level=LOGSEVERITY[self._max_exceeded])
+                script_execution_set("failed_single")
                 return
             if self.script_mode == SCRIPT_MODE_RESTART:
                 self._log("Restarting")
@@ -1124,6 +1153,7 @@ class Script:
                         "Maximum number of runs exceeded",
                         level=LOGSEVERITY[self._max_exceeded],
                     )
+                script_execution_set("failed_max_runs")
                 return
 
         # If this is a top level Script then make a copy of the variables in case they

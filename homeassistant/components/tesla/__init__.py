@@ -9,7 +9,7 @@ from teslajsonpy import Controller as TeslaAPI
 from teslajsonpy.exceptions import IncompleteCredentials, TeslaException
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
@@ -220,7 +220,7 @@ def _async_start_reauth(hass: HomeAssistant, entry: ConfigEntry):
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "reauth"},
+            context={"source": SOURCE_REAUTH},
             data=entry.data,
         )
     )

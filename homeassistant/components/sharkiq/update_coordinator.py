@@ -12,7 +12,7 @@ from sharkiqpy import (
     SharkIqVacuum,
 )
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -76,7 +76,7 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator):
         ) as err:
             _LOGGER.debug("Bad auth state.  Attempting re-auth", exc_info=err)
             flow_context = {
-                "source": "reauth",
+                "source": SOURCE_REAUTH,
                 "unique_id": self._config_entry.unique_id,
             }
 

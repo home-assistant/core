@@ -58,12 +58,14 @@ from homeassistant.const import (
     EVENT_TIMER_OUT_OF_SYNC,
     LENGTH_METERS,
     MATCH_ALL,
+    MAX_LENGTH_EVENT_TYPE,
     __version__,
 )
 from homeassistant.exceptions import (
     HomeAssistantError,
     InvalidEntityFormatError,
     InvalidStateError,
+    MaxLengthExceeded,
     ServiceNotFound,
     Unauthorized,
 )
@@ -697,6 +699,9 @@ class EventBus:
 
         This method must be run in the event loop.
         """
+        if len(event_type) > MAX_LENGTH_EVENT_TYPE:
+            raise MaxLengthExceeded(event_type, "event_type", MAX_LENGTH_EVENT_TYPE)
+
         listeners = self._listeners.get(event_type, [])
 
         # EVENT_HOMEASSISTANT_CLOSE should go only to his listeners

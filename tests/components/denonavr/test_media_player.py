@@ -4,7 +4,6 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import media_player
-from homeassistant.components.denonavr import ATTR_COMMAND, SERVICE_GET_COMMAND
 from homeassistant.components.denonavr.config_flow import (
     CONF_MANUFACTURER,
     CONF_MODEL,
@@ -12,12 +11,15 @@ from homeassistant.components.denonavr.config_flow import (
     CONF_TYPE,
     DOMAIN,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_MAC
+from homeassistant.components.denonavr.media_player import (
+    ATTR_COMMAND,
+    SERVICE_GET_COMMAND,
+)
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST
 
 from tests.common import MockConfigEntry
 
 TEST_HOST = "1.2.3.4"
-TEST_MAC = "ab:cd:ef:gh"
 TEST_NAME = "Test_Receiver"
 TEST_MODEL = "model5"
 TEST_SERIALNUMBER = "123456789"
@@ -36,10 +38,10 @@ ENTITY_ID = f"{media_player.DOMAIN}.{TEST_NAME}"
 def client_fixture():
     """Patch of client library for tests."""
     with patch(
-        "homeassistant.components.denonavr.receiver.denonavr.DenonAVR",
+        "homeassistant.components.denonavr.receiver.DenonAVR",
         autospec=True,
     ) as mock_client_class, patch(
-        "homeassistant.components.denonavr.receiver.denonavr.discover"
+        "homeassistant.components.denonavr.config_flow.denonavr.async_discover"
     ):
         mock_client_class.return_value.name = TEST_NAME
         mock_client_class.return_value.model_name = TEST_MODEL
@@ -57,7 +59,6 @@ async def setup_denonavr(hass):
     """Initialize media_player for tests."""
     entry_data = {
         CONF_HOST: TEST_HOST,
-        CONF_MAC: TEST_MAC,
         CONF_MODEL: TEST_MODEL,
         CONF_TYPE: TEST_RECEIVER_TYPE,
         CONF_MANUFACTURER: TEST_MANUFACTURER,
@@ -92,4 +93,4 @@ async def test_get_command(hass, client):
     await hass.services.async_call(DOMAIN, SERVICE_GET_COMMAND, data)
     await hass.async_block_till_done()
 
-    client.send_get_command.assert_called_with("test_command")
+    client.async_get_command.assert_awaited_with("test_command")
