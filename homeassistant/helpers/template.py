@@ -465,7 +465,7 @@ class Template:
                 _render_with_context(self.template, compiled, **kwargs)
             except TimeoutError:
                 pass
-            except Exception:
+            except Exception:  # pylint: disable=broad-except
                 self._exc_info = sys.exc_info()
             finally:
                 run_callback_threadsafe(self.hass.loop, finish_event.set)
