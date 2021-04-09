@@ -2,23 +2,25 @@
 import asyncio
 import logging
 import os
+import ssl
 
+import async_timeout
 from pylutron_caseta.pairing import PAIR_CA, PAIR_CERT, PAIR_KEY, async_pair
 from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.zeroconf import ATTR_HOSTNAME
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
 
-from . import DOMAIN  # pylint: disable=unused-import
 from .const import (
     ABORT_REASON_ALREADY_CONFIGURED,
     ABORT_REASON_CANNOT_CONNECT,
+    BRIDGE_TIMEOUT,
     CONF_CA_CERTS,
     CONF_CERTFILE,
     CONF_KEYFILE,
+    DOMAIN,
     ERROR_CANNOT_CONNECT,
     STEP_IMPORT_FAILED,
 )
@@ -50,6 +52,8 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize a Lutron Caseta flow."""
         self.data = {}
         self.lutron_id = None
+        self.tls_assets_validated = False
+        self.attempted_tls_validation = False
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -61,7 +65,7 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(self, discovery_info):
         """Handle a flow initialized by zeroconf discovery."""
-        hostname = discovery_info[ATTR_HOSTNAME]
+        hostname = discovery_info["hostname"]
         if hostname is None or not hostname.startswith("lutron-"):
             return self.async_abort(reason="not_lutron_device")
 
@@ -72,14 +76,15 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured({CONF_HOST: host})
 
         self.data[CONF_HOST] = host
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
             CONF_NAME: self.bridge_id,
             CONF_HOST: host,
         }
         return await self.async_step_link()
 
-    async_step_homekit = async_step_zeroconf
+    async def async_step_homekit(self, discovery_info):
+        """Handle a flow initialized by homekit discovery."""
+        return await self.async_step_zeroconf(discovery_info)
 
     async def async_step_link(self, user_input=None):
         """Handle pairing with the hub."""
@@ -90,11 +95,16 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._configure_tls_assets()
 
+        if (
+            not self.attempted_tls_validation
+            and await self.hass.async_add_executor_job(self._tls_assets_exist)
+            and await self.async_validate_connectable_bridge_config()
+        ):
+            self.tls_assets_validated = True
+        self.attempted_tls_validation = True
+
         if user_input is not None:
-            if (
-                await self.hass.async_add_executor_job(self._tls_assets_exist)
-                and await self.async_validate_connectable_bridge_config()
-            ):
+            if self.tls_assets_validated:
                 # If we previous paired and the tls assets already exist,
                 # we do not need to go though pairing again.
                 return self.async_create_entry(title=self.bridge_id, data=self.data)
@@ -160,7 +170,6 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         This flow is triggered by `async_setup`.
         """
-
         host = import_info[CONF_HOST]
         # Store the imported config for other steps in this flow to access.
         self.data[CONF_HOST] = host
@@ -189,8 +198,6 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import_failed(self, user_input=None):
         """Make failed import surfaced to user."""
-
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {CONF_NAME: self.data[CONF_HOST]}
 
         if user_input is None:
@@ -204,6 +211,7 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_validate_connectable_bridge_config(self):
         """Check if we can connect to the bridge with the current config."""
+        bridge = None
 
         try:
             bridge = Smartbridge.create_tls(
@@ -212,16 +220,23 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 certfile=self.hass.config.path(self.data[CONF_CERTFILE]),
                 ca_certs=self.hass.config.path(self.data[CONF_CA_CERTS]),
             )
-
-            await bridge.connect()
-            if not bridge.is_connected():
-                return False
-
-            await bridge.close()
-            return True
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception(
-                "Unknown exception while checking connectivity to bridge %s",
+        except ssl.SSLError:
+            _LOGGER.error(
+                "Invalid certificate used to connect to bridge at %s",
                 self.data[CONF_HOST],
             )
             return False
+
+        connected_ok = False
+        try:
+            async with async_timeout.timeout(BRIDGE_TIMEOUT):
+                await bridge.connect()
+            connected_ok = bridge.is_connected()
+        except asyncio.TimeoutError:
+            _LOGGER.error(
+                "Timeout while trying to connect to bridge at %s",
+                self.data[CONF_HOST],
+            )
+
+        await bridge.close()
+        return connected_ok

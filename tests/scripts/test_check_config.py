@@ -1,5 +1,4 @@
 """Test check_config script."""
-import logging
 from unittest.mock import patch
 
 import pytest
@@ -8,8 +7,6 @@ from homeassistant.config import YAML_CONFIG_FILE
 import homeassistant.scripts.check_config as check_config
 
 from tests.common import get_test_config_dir, patch_yaml_files
-
-_LOGGER = logging.getLogger(__name__)
 
 BASE_CONFIG = (
     "homeassistant:\n"

@@ -175,7 +175,7 @@ class RoonDevice(MediaPlayerEntity):
             "name": self.name,
             "manufacturer": "RoonLabs",
             "model": dev_model,
-            "via_hub": (DOMAIN, self._server.roon_id),
+            "via_device": (DOMAIN, self._server.roon_id),
         }
 
     def update_data(self, player_data=None):
@@ -465,7 +465,7 @@ class RoonDevice(MediaPlayerEntity):
             return
 
         for source in self.player_data["source_controls"]:
-            if source["supports_standby"] and not source["status"] == "indeterminate":
+            if source["supports_standby"] and source["status"] != "indeterminate":
                 self._server.roonapi.standby(self.output_id, source["control_key"])
                 return
 

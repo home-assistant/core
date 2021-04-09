@@ -1,12 +1,15 @@
 """Demo platform that has a couple of fake sensors."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
+    CONCENTRATION_PARTS_PER_MILLION,
+    DEVICE_CLASS_CO,
+    DEVICE_CLASS_CO2,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
-from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN
 
@@ -31,6 +34,22 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 PERCENTAGE,
                 None,
             ),
+            DemoSensor(
+                "sensor_3",
+                "Carbon monoxide",
+                54,
+                DEVICE_CLASS_CO,
+                CONCENTRATION_PARTS_PER_MILLION,
+                None,
+            ),
+            DemoSensor(
+                "sensor_4",
+                "Carbon dioxide",
+                54,
+                DEVICE_CLASS_CO2,
+                CONCENTRATION_PARTS_PER_MILLION,
+                14,
+            ),
         ]
     )
 
@@ -40,7 +59,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     await async_setup_platform(hass, {}, async_add_entities)
 
 
-class DemoSensor(Entity):
+class DemoSensor(SensorEntity):
     """Representation of a Demo sensor."""
 
     def __init__(
@@ -96,7 +115,7 @@ class DemoSensor(Entity):
         return self._unit_of_measurement
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self._battery:
             return {ATTR_BATTERY_LEVEL: self._battery}

@@ -5,7 +5,8 @@ from pyhap.accessory_driver import AccessoryDriver
 import pytest
 
 from homeassistant.components.homekit.const import EVENT_HOMEKIT_CHANGED
-from homeassistant.core import callback as ha_callback
+
+from tests.common import async_capture_events
 
 
 @pytest.fixture
@@ -13,7 +14,9 @@ def hk_driver(loop):
     """Return a custom AccessoryDriver instance for HomeKit accessory init."""
     with patch("pyhap.accessory_driver.Zeroconf"), patch(
         "pyhap.accessory_driver.AccessoryEncoder"
-    ), patch("pyhap.accessory_driver.HAPServer"), patch(
+    ), patch("pyhap.accessory_driver.HAPServer.async_stop"), patch(
+        "pyhap.accessory_driver.HAPServer.async_start"
+    ), patch(
         "pyhap.accessory_driver.AccessoryDriver.publish"
     ), patch(
         "pyhap.accessory_driver.AccessoryDriver.persist"
@@ -24,8 +27,4 @@ def hk_driver(loop):
 @pytest.fixture
 def events(hass):
     """Yield caught homekit_changed events."""
-    events = []
-    hass.bus.async_listen(
-        EVENT_HOMEKIT_CHANGED, ha_callback(lambda e: events.append(e))
-    )
-    yield events
+    return async_capture_events(hass, EVENT_HOMEKIT_CHANGED)

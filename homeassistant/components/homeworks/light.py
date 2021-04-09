@@ -82,7 +82,7 @@ class HomeworksLight(HomeworksDevice, LightEntity):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Supported attributes."""
         return {"homeworks_address": self._addr}
 

@@ -9,13 +9,13 @@
             "old_firmware": "Hi ha un programari antic i no compatible al dispositiu Bond - actualitza'l abans de continuar",
             "unknown": "Error inesperat"
         },
-        "flow_title": "Bond: {bond_id} ({host})",
+        "flow_title": "Bond: {name} ({host})",
         "step": {
             "confirm": {
                 "data": {
                     "access_token": "Token d'acc\u00e9s"
                 },
-                "description": "Vols configurar {bond_id}?"
+                "description": "Vols configurar {name}?"
             },
             "user": {
                 "data": {

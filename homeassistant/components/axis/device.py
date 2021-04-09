@@ -263,9 +263,7 @@ class AxisNetworkDevice:
     def disconnect_from_stream(self):
         """Stop stream."""
         if self.api.stream.state != STATE_STOPPED:
-            self.api.stream.connection_status_callback.remove(
-                self.async_connection_status_callback
-            )
+            self.api.stream.connection_status_callback.clear()
             self.api.stream.stop()
 
     async def shutdown(self, event):
@@ -304,13 +302,13 @@ async def get_device(hass, host, port, username, password):
     )
 
     try:
-        with async_timeout.timeout(15):
+        with async_timeout.timeout(30):
             await device.vapix.initialize()
 
         return device
 
     except axis.Unauthorized as err:
-        LOGGER.warning("Connected to device at %s but not registered.", host)
+        LOGGER.warning("Connected to device at %s but not registered", host)
         raise AuthenticationRequired from err
 
     except (asyncio.TimeoutError, axis.RequestError) as err:

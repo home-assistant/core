@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 from zeroconf import (
     BadTypeInNameException,
+    Error as ZeroconfError,
     InterfaceChoice,
     IPVersion,
     ServiceInfo,
@@ -98,6 +99,24 @@ def get_zeroconf_info_mock(macaddress):
             priority=0,
             server="name.local.",
             properties={b"macaddress": macaddress.encode()},
+        )
+
+    return mock_zc_info
+
+
+def get_zeroconf_info_mock_manufacturer(manufacturer):
+    """Return info for get_service_info for an zeroconf device."""
+
+    def mock_zc_info(service_type, name):
+        return ServiceInfo(
+            service_type,
+            name,
+            addresses=[b"\n\x00\x00\x14"],
+            port=80,
+            weight=0,
+            priority=0,
+            server="name.local.",
+            properties={b"manufacturer": manufacturer.encode()},
         )
 
     return mock_zc_info
@@ -236,7 +255,7 @@ async def test_service_with_invalid_name(hass, mock_zeroconf, caplog):
     assert "Failed to get info for device name" in caplog.text
 
 
-async def test_zeroconf_match(hass, mock_zeroconf):
+async def test_zeroconf_match_macaddress(hass, mock_zeroconf):
     """Test configured options for a device are loaded via config entry."""
 
     def http_only_service_update_mock(zeroconf, services, handlers):
@@ -273,6 +292,39 @@ async def test_zeroconf_match(hass, mock_zeroconf):
     assert mock_config_flow.mock_calls[0][1][0] == "shelly"
 
 
+async def test_zeroconf_match_manufacturer(hass, mock_zeroconf):
+    """Test configured options for a device are loaded via config entry."""
+
+    def http_only_service_update_mock(zeroconf, services, handlers):
+        """Call service update handler."""
+        handlers[0](
+            zeroconf,
+            "_airplay._tcp.local.",
+            "s1000._airplay._tcp.local.",
+            ServiceStateChange.Added,
+        )
+
+    with patch.dict(
+        zc_gen.ZEROCONF,
+        {"_airplay._tcp.local.": [{"domain": "samsungtv", "manufacturer": "samsung*"}]},
+        clear=True,
+    ), patch.object(
+        hass.config_entries.flow, "async_init"
+    ) as mock_config_flow, patch.object(
+        zeroconf, "HaServiceBrowser", side_effect=http_only_service_update_mock
+    ) as mock_service_browser:
+        mock_zeroconf.get_service_info.side_effect = (
+            get_zeroconf_info_mock_manufacturer("Samsung Electronics")
+        )
+        assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    assert len(mock_service_browser.mock_calls) == 1
+    assert len(mock_config_flow.mock_calls) == 1
+    assert mock_config_flow.mock_calls[0][1][0] == "samsungtv"
+
+
 async def test_zeroconf_no_match(hass, mock_zeroconf):
     """Test configured options for a device are loaded via config entry."""
 
@@ -296,6 +348,38 @@ async def test_zeroconf_no_match(hass, mock_zeroconf):
     ) as mock_service_browser:
         mock_zeroconf.get_service_info.side_effect = get_zeroconf_info_mock(
             "FFAADDCC11DD"
+        )
+        assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    assert len(mock_service_browser.mock_calls) == 1
+    assert len(mock_config_flow.mock_calls) == 0
+
+
+async def test_zeroconf_no_match_manufacturer(hass, mock_zeroconf):
+    """Test configured options for a device are loaded via config entry."""
+
+    def http_only_service_update_mock(zeroconf, services, handlers):
+        """Call service update handler."""
+        handlers[0](
+            zeroconf,
+            "_airplay._tcp.local.",
+            "s1000._airplay._tcp.local.",
+            ServiceStateChange.Added,
+        )
+
+    with patch.dict(
+        zc_gen.ZEROCONF,
+        {"_airplay._tcp.local.": [{"domain": "samsungtv", "manufacturer": "samsung*"}]},
+        clear=True,
+    ), patch.object(
+        hass.config_entries.flow, "async_init"
+    ) as mock_config_flow, patch.object(
+        zeroconf, "HaServiceBrowser", side_effect=http_only_service_update_mock
+    ) as mock_service_browser:
+        mock_zeroconf.get_service_info.side_effect = (
+            get_zeroconf_info_mock_manufacturer("Not Samsung Electronics")
         )
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -495,3 +579,35 @@ async def test_get_instance(hass, mock_zeroconf):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     assert len(mock_zeroconf.ha_close.mock_calls) == 1
+
+
+async def test_removed_ignored(hass, mock_zeroconf):
+    """Test we remove it when a zeroconf entry is removed."""
+    mock_zeroconf.get_service_info.side_effect = ZeroconfError
+
+    def service_update_mock(zeroconf, services, handlers):
+        """Call service update handler."""
+        handlers[0](
+            zeroconf, "_service.added", "name._service.added", ServiceStateChange.Added
+        )
+        handlers[0](
+            zeroconf,
+            "_service.updated",
+            "name._service.updated",
+            ServiceStateChange.Updated,
+        )
+        handlers[0](
+            zeroconf,
+            "_service.removed",
+            "name._service.removed",
+            ServiceStateChange.Removed,
+        )
+
+    with patch.object(zeroconf, "HaServiceBrowser", side_effect=service_update_mock):
+        assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    assert len(mock_zeroconf.get_service_info.mock_calls) == 2
+    assert mock_zeroconf.get_service_info.mock_calls[0][1][0] == "_service.added"
+    assert mock_zeroconf.get_service_info.mock_calls[1][1][0] == "_service.updated"

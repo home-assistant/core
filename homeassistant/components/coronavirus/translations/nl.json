@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Dit land is al geconfigureerd."
+            "already_configured": "Service is al geconfigureerd"
         },
         "step": {
             "user": {

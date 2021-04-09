@@ -1,7 +1,4 @@
 """Support for NWS weather service."""
-from datetime import timedelta
-import logging
-
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_SUNNY,
@@ -43,16 +40,13 @@ from .const import (
     COORDINATOR_OBSERVATION,
     DAYNIGHT,
     DOMAIN,
+    FORECAST_VALID_TIME,
     HOURLY,
     NWS_DATA,
+    OBSERVATION_VALID_TIME,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 PARALLEL_UPDATES = 0
-
-OBSERVATION_VALID_TIME = timedelta(minutes=20)
-FORECAST_VALID_TIME = timedelta(minutes=45)
 
 
 def convert_condition(time, weather):

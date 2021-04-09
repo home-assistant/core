@@ -245,9 +245,9 @@ class AiohttpClientMockResponse:
         """Return mock response."""
         return self.response
 
-    async def text(self, encoding="utf-8"):
+    async def text(self, encoding="utf-8", errors="strict"):
         """Return mock response as a string."""
-        return self.response.decode(encoding)
+        return self.response.decode(encoding, errors=errors)
 
     async def json(self, encoding="utf-8", content_type=None):
         """Return mock response as a json."""
@@ -288,7 +288,7 @@ def mock_aiohttp_client():
         return session
 
     with mock.patch(
-        "homeassistant.helpers.aiohttp_client.async_create_clientsession",
+        "homeassistant.helpers.aiohttp_client._async_create_clientsession",
         side_effect=create_session,
     ):
         yield mocker

@@ -11,6 +11,7 @@ import pytz
 import requests
 import voluptuous as vol
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     AREA_SQUARE_METERS,
     ATTR_ATTRIBUTION,
@@ -27,7 +28,6 @@ from homeassistant.const import (
     __version__,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -132,7 +132,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class ZamgSensor(Entity):
+class ZamgSensor(SensorEntity):
     """Implementation of a ZAMG sensor."""
 
     def __init__(self, probe, variable, name):
@@ -157,7 +157,7 @@ class ZamgSensor(Entity):
         return SENSOR_TYPES[self.variable][1]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
