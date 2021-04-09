@@ -208,6 +208,7 @@ class ConfigEntry:
         tries: int = 0,
     ) -> None:
         """Set up an entry."""
+        current_entry.set(self)
         if self.source == SOURCE_IGNORE or self.disabled_by:
             return
 
@@ -767,7 +768,6 @@ class ConfigEntries:
         Return True if entry has been successfully loaded.
         """
         entry = self.async_get_entry(entry_id)
-        current_entry.set(entry)
 
         if entry is None:
             raise UnknownEntry
