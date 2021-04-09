@@ -74,8 +74,7 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "connection_error"
             else:
                 if authenticated:
-                    await self.async_set_unique_id(self.username)
-                    entry = self.async_current_entry_for_unique_id()
+                    entry = await self.async_set_unique_id(self.username)
                     self.hass.config_entries.async_update_entry(
                         entry,
                         data={
