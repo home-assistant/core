@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from contextvars import ContextVar
 import functools
 import logging
 from types import MappingProxyType, MethodType
@@ -133,6 +134,7 @@ class ConfigEntry:
         "_setup_lock",
         "update_listeners",
         "_async_cancel_retry_setup",
+        "_on_unload",
     )
 
     def __init__(
@@ -198,6 +200,9 @@ class ConfigEntry:
         # Function to cancel a scheduled retry
         self._async_cancel_retry_setup: Callable[[], Any] | None = None
 
+        # Hold list for functions to call on unload.
+        self._on_unload: list[CALLBACK_TYPE] | None = None
+
     async def async_setup(
         self,
         hass: HomeAssistant,
@@ -206,6 +211,7 @@ class ConfigEntry:
         tries: int = 0,
     ) -> None:
         """Set up an entry."""
+        current_entry.set(self)
         if self.source == SOURCE_IGNORE or self.disabled_by:
             return
 
@@ -290,6 +296,8 @@ class ConfigEntry:
                 self._async_cancel_retry_setup = hass.bus.async_listen_once(
                     EVENT_HOMEASSISTANT_STARTED, setup_again
                 )
+
+            self._async_process_on_unload()
             return
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
@@ -357,6 +365,8 @@ class ConfigEntry:
             # Only adjust state if we unloaded the component
             if result and integration.domain == self.domain:
                 self.state = ENTRY_STATE_NOT_LOADED
+
+            self._async_process_on_unload()
 
             return result
         except Exception:  # pylint: disable=broad-except
@@ -469,6 +479,25 @@ class ConfigEntry:
             "unique_id": self.unique_id,
             "disabled_by": self.disabled_by,
         }
+
+    @callback
+    def async_on_unload(self, func: CALLBACK_TYPE) -> None:
+        """Add a function to call when config entry is unloaded."""
+        if self._on_unload is None:
+            self._on_unload = []
+        self._on_unload.append(func)
+
+    @callback
+    def _async_process_on_unload(self) -> None:
+        """Process the on_unload callbacks."""
+        if self._on_unload is not None:
+            while self._on_unload:
+                self._on_unload.pop()()
+
+
+current_entry: ContextVar[ConfigEntry | None] = ContextVar(
+    "current_entry", default=None
+)
 
 
 class ConfigEntriesFlowManager(data_entry_flow.FlowManager):

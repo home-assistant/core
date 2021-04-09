@@ -1,15 +1,16 @@
 """Test the config manager."""
 import asyncio
 from datetime import timedelta
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, loader
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
@@ -2489,3 +2490,97 @@ async def test_updating_entry_with_and_without_changes(manager):
     assert manager.async_update_entry(entry, title="newtitle") is True
     assert manager.async_update_entry(entry, unique_id="abc123") is False
     assert manager.async_update_entry(entry, unique_id="abc1234") is True
+
+
+async def test_entry_reload_calls_on_unload_listeners(hass, manager):
+    """Test reload calls the on unload listeners."""
+    entry = MockConfigEntry(domain="comp", state=config_entries.ENTRY_STATE_LOADED)
+    entry.add_to_hass(hass)
+
+    async_setup = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=True)
+    async_unload_entry = AsyncMock(return_value=True)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup=async_setup,
+            async_setup_entry=mock_setup_entry,
+            async_unload_entry=async_unload_entry,
+        ),
+    )
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    mock_unload_callback = Mock()
+
+    entry.async_on_unload(mock_unload_callback)
+
+    assert await manager.async_reload(entry.entry_id)
+    assert len(async_unload_entry.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_unload_callback.mock_calls) == 1
+    assert entry.state == config_entries.ENTRY_STATE_LOADED
+
+    assert await manager.async_reload(entry.entry_id)
+    assert len(async_unload_entry.mock_calls) == 2
+    assert len(mock_setup_entry.mock_calls) == 2
+    # Since we did not register another async_on_unload it should
+    # have only been called once
+    assert len(mock_unload_callback.mock_calls) == 1
+    assert entry.state == config_entries.ENTRY_STATE_LOADED
+
+
+async def test_entry_reload_cleans_up_aiohttp_session(hass, manager):
+    """Test reload cleans up aiohttp sessions their close listener created by the config entry."""
+    entry = MockConfigEntry(domain="comp", state=config_entries.ENTRY_STATE_LOADED)
+    entry.add_to_hass(hass)
+    async_setup_calls = 0
+
+    async def async_setup_entry(hass, _):
+        """Mock setup entry."""
+        nonlocal async_setup_calls
+        async_setup_calls += 1
+        async_create_clientsession(hass)
+        return True
+
+    async_setup = AsyncMock(return_value=True)
+    async_unload_entry = AsyncMock(return_value=True)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup=async_setup,
+            async_setup_entry=async_setup_entry,
+            async_unload_entry=async_unload_entry,
+        ),
+    )
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    assert await manager.async_reload(entry.entry_id)
+    assert len(async_unload_entry.mock_calls) == 1
+    assert async_setup_calls == 1
+    assert entry.state == config_entries.ENTRY_STATE_LOADED
+
+    original_close_listeners = hass.bus.async_listeners()[EVENT_HOMEASSISTANT_CLOSE]
+
+    assert await manager.async_reload(entry.entry_id)
+    assert len(async_unload_entry.mock_calls) == 2
+    assert async_setup_calls == 2
+    assert entry.state == config_entries.ENTRY_STATE_LOADED
+
+    assert (
+        hass.bus.async_listeners()[EVENT_HOMEASSISTANT_CLOSE]
+        == original_close_listeners
+    )
+
+    assert await manager.async_reload(entry.entry_id)
+    assert len(async_unload_entry.mock_calls) == 3
+    assert async_setup_calls == 3
+    assert entry.state == config_entries.ENTRY_STATE_LOADED
+
+    assert (
+        hass.bus.async_listeners()[EVENT_HOMEASSISTANT_CLOSE]
+        == original_close_listeners
+    )
