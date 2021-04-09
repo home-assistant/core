@@ -56,7 +56,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     # Check if importing camera account.
     if CONF_CAMERAS in config:
         cameras_conf = config[CONF_CAMERAS]
-        for camera in cameras_conf.items():
+        for serial, camera in cameras_conf.items():
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
                     DOMAIN,
