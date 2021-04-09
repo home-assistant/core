@@ -62,7 +62,7 @@ MANIFEST_JSON = {
     "screenshots": [
         {
             "src": "/static/images/screenshots/screenshot-1.png",
-            "sizes": "413×792",
+            "sizes": "413x792",
             "type": "image/png",
         }
     ],
