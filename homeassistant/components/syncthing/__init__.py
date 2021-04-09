@@ -29,11 +29,6 @@ PLATFORMS = ["sensor"]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the syncthing component."""
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up syncthing from a config entry."""
     data = entry.data
