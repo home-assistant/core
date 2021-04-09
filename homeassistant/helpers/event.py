@@ -790,12 +790,14 @@ class _TrackTemplateResultInfo:
         self._track_state_changes: _TrackStateChangeFiltered | None = None
         self._time_listeners: dict[Template, Callable] = {}
 
-    def async_setup(self, raise_on_template_error: bool) -> None:
+    def async_setup(self, raise_on_template_error: bool, strict: bool = False) -> None:
         """Activation of template tracking."""
         for track_template_ in self._track_templates:
             template = track_template_.template
             variables = track_template_.variables
-            self._info[template] = info = template.async_render_to_info(variables)
+            self._info[template] = info = template.async_render_to_info(
+                variables, strict=strict
+            )
 
             if info.exception:
                 if raise_on_template_error:
@@ -1022,6 +1024,7 @@ def async_track_template_result(
     track_templates: Iterable[TrackTemplate],
     action: TrackTemplateResultListener,
     raise_on_template_error: bool = False,
+    strict: bool = False,
 ) -> _TrackTemplateResultInfo:
     """Add a listener that fires when the result of a template changes.
 
@@ -1050,6 +1053,8 @@ def async_track_template_result(
         processing the template during setup, the system
         will raise the exception instead of setting up
         tracking.
+    strict
+        When set to True, raise on undefined variables.
 
     Returns
     -------
@@ -1057,7 +1062,7 @@ def async_track_template_result(
 
     """
     tracker = _TrackTemplateResultInfo(hass, track_templates, action)
-    tracker.async_setup(raise_on_template_error)
+    tracker.async_setup(raise_on_template_error, strict=strict)
     return tracker
 
 
