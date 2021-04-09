@@ -65,11 +65,6 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator):
                 self.device.device_info,
             )
 
-    @property
-    def device_info(self):
-        """Return the gree device information."""
-        return self.device.device_info
-
 
 class DiscoveryService(Listener):
     """Discovery event handler for gree devices."""

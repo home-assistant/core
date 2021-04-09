@@ -1,7 +1,10 @@
 """The Gree Climate integration."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
+from typing import Callable
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -15,6 +18,7 @@ from .const import (
     COORDINATORS,
     DATA_DISCOVERY_INTERVAL,
     DATA_DISCOVERY_SERVICE,
+    DATA_UNSUBSCRIBE,
     DISCOVERY_SCAN_INTERVAL,
     DISPATCHERS,
     DOMAIN,
@@ -43,7 +47,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         if hass.data.get(DATA_DISCOVERY_SERVICE) is not None:
             del hass.data[DATA_DISCOVERY_SERVICE]
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_event)
+    unsubscribe_callbacks: list[Callable] = []
+    unsubscribe_callbacks.append(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_event)
+    )
+    hass.data[DATA_UNSUBSCRIBE] = unsubscribe_callbacks
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, CLIMATE_DOMAIN)
@@ -52,11 +60,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.config_entries.async_forward_entry_setup(entry, SWITCH_DOMAIN)
     )
 
-    _LOGGER.debug("Scanning network for Gree devices")
-    await gree_discovery.discovery.scan()
-
-    async def _async_scan_update(now):
+    async def _async_scan_update(_=None):
         await gree_discovery.discovery.scan()
+
+    _LOGGER.debug("Scanning network for Gree devices")
+    await _async_scan_update()
 
     hass.data[DOMAIN][DATA_DISCOVERY_INTERVAL] = async_track_time_interval(
         hass, _async_scan_update, timedelta(seconds=DISCOVERY_SCAN_INTERVAL)
@@ -77,6 +85,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     if hass.data.get(DATA_DISCOVERY_SERVICE) is not None:
         del hass.data[DATA_DISCOVERY_SERVICE]
+
+    for unsubscribe in hass.data[DATA_UNSUBSCRIBE]:
+        unsubscribe()
 
     results = asyncio.gather(
         hass.config_entries.async_forward_entry_unload(entry, CLIMATE_DOMAIN),
