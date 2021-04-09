@@ -37,7 +37,7 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
         self._candle_lighting_offset = data["candle_lighting_offset"]
         self._havdalah_offset = data["havdalah_offset"]
         self._prefix = data["prefix"]
-        self._next_update = None
+        self._update_unsub = None
 
     @property
     def icon(self):
@@ -82,6 +82,7 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
     @callback
     def _update(self, now=None):
         """Update the state of the sensor."""
+        self._update_unsub = None
         self._schedule_update()
         self.async_write_ha_state()
 
@@ -96,7 +97,8 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
         havdalah = zmanim.havdalah
         if havdalah is not None and now < havdalah < update:
             update = havdalah
-        if self._next_update == update:
-            return
-        self._next_update = update
-        event.async_track_point_in_time(self.hass, self._update, update)
+        if self._update_unsub:
+            self._update_unsub()
+        self._update_unsub = event.async_track_point_in_time(
+            self.hass, self._update, update
+        )
