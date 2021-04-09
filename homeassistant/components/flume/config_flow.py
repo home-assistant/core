@@ -14,8 +14,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 
-from .const import BASE_TOKEN_FILENAME
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import BASE_TOKEN_FILENAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

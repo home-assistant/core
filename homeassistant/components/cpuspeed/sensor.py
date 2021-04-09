@@ -2,10 +2,9 @@
 from cpuinfo import cpuinfo
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME, FREQUENCY_GIGAHERTZ
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 ATTR_BRAND = "brand"
 ATTR_HZ = "ghz_advertised"
@@ -29,7 +28,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([CpuSpeedSensor(name)], True)
 
 
-class CpuSpeedSensor(Entity):
+class CpuSpeedSensor(SensorEntity):
     """Representation of a CPU sensor."""
 
     def __init__(self, name):

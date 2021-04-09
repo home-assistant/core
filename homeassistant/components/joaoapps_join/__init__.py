@@ -121,10 +121,9 @@ def setup(hass, config):
         device_names = device.get(CONF_DEVICE_NAMES)
         name = device.get(CONF_NAME)
         name = f"{name.lower().replace(' ', '_')}_" if name else ""
-        if api_key:
-            if not get_devices(api_key):
-                _LOGGER.error("Error connecting to Join, check API key")
-                return False
+        if api_key and not get_devices(api_key):
+            _LOGGER.error("Error connecting to Join, check API key")
+            return False
         if device_id is None and device_ids is None and device_names is None:
             _LOGGER.error(
                 "No device was provided. Please specify device_id"

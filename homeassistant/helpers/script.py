@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from datetime import datetime, timedelta
 from functools import partial
 import itertools
@@ -17,6 +17,7 @@ from homeassistant import exceptions
 from homeassistant.components import device_automation, scene
 from homeassistant.components.logger import LOGSEVERITY
 from homeassistant.const import (
+    ATTR_AREA_ID,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
     CONF_ALIAS,
@@ -62,6 +63,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.event import async_call_later, async_track_template
 from homeassistant.helpers.script_variables import ScriptVariables
+from homeassistant.helpers.trace import script_execution_set
 from homeassistant.helpers.trigger import (
     async_initialize_triggers,
     async_validate_trigger_config,
@@ -143,26 +145,26 @@ async def trace_action(hass, script_run, stop, variables):
 
     trace_id = trace_id_get()
     if trace_id:
-        unique_id = trace_id[0]
+        key = trace_id[0]
         run_id = trace_id[1]
         breakpoints = hass.data[DATA_SCRIPT_BREAKPOINTS]
-        if unique_id in breakpoints and (
+        if key in breakpoints and (
             (
-                run_id in breakpoints[unique_id]
+                run_id in breakpoints[key]
                 and (
-                    path in breakpoints[unique_id][run_id]
-                    or NODE_ANY in breakpoints[unique_id][run_id]
+                    path in breakpoints[key][run_id]
+                    or NODE_ANY in breakpoints[key][run_id]
                 )
             )
             or (
-                RUN_ID_ANY in breakpoints[unique_id]
+                RUN_ID_ANY in breakpoints[key]
                 and (
-                    path in breakpoints[unique_id][RUN_ID_ANY]
-                    or NODE_ANY in breakpoints[unique_id][RUN_ID_ANY]
+                    path in breakpoints[key][RUN_ID_ANY]
+                    or NODE_ANY in breakpoints[key][RUN_ID_ANY]
                 )
             )
         ):
-            async_dispatcher_send(hass, SCRIPT_BREAKPOINT_HIT, unique_id, run_id, path)
+            async_dispatcher_send(hass, SCRIPT_BREAKPOINT_HIT, key, run_id, path)
 
             done = asyncio.Event()
 
@@ -172,7 +174,7 @@ async def trace_action(hass, script_run, stop, variables):
                     stop.set()
                 done.set()
 
-            signal = SCRIPT_DEBUG_CONTINUE_STOP.format(unique_id, run_id)
+            signal = SCRIPT_DEBUG_CONTINUE_STOP.format(key, run_id)
             remove_signal1 = async_dispatcher_connect(hass, signal, async_continue_stop)
             remove_signal2 = async_dispatcher_connect(
                 hass, SCRIPT_DEBUG_CONTINUE_ALL, async_continue_stop
@@ -187,7 +189,7 @@ async def trace_action(hass, script_run, stop, variables):
 
     try:
         yield trace_element
-    except Exception as ex:  # pylint: disable=broad-except
+    except Exception as ex:
         trace_element.set_error(ex)
         raise ex
     finally:
@@ -331,15 +333,19 @@ class _ScriptRun:
     async def async_run(self) -> None:
         """Run script."""
         try:
-            if self._stop.is_set():
-                return
             self._log("Running %s", self._script.running_description)
             for self._step, self._action in enumerate(self._script.sequence):
                 if self._stop.is_set():
+                    script_execution_set("cancelled")
                     break
                 await self._async_step(log_exceptions=False)
+            else:
+                script_execution_set("finished")
         except _StopScript:
-            pass
+            script_execution_set("aborted")
+        except Exception:
+            script_execution_set("error")
+            raise
         finally:
             self._finish()
 
@@ -427,11 +433,12 @@ class _ScriptRun:
 
         delay = delay.total_seconds()
         self._changed()
+        trace_set_result(delay=delay, done=False)
         try:
             async with async_timeout.timeout(delay):
                 await self._stop.wait()
         except asyncio.TimeoutError:
-            pass
+            trace_set_result(delay=delay, done=True)
 
     async def _async_wait_template_step(self):
         """Handle a wait template."""
@@ -443,6 +450,7 @@ class _ScriptRun:
         self._step_log("wait template", timeout)
 
         self._variables["wait"] = {"remaining": timeout, "completed": False}
+        trace_set_result(wait=self._variables["wait"])
 
         wait_template = self._action[CONF_WAIT_TEMPLATE]
         wait_template.hass = self._hass
@@ -455,10 +463,9 @@ class _ScriptRun:
         @callback
         def async_script_wait(entity_id, from_s, to_s):
             """Handle script after template condition is true."""
-            self._variables["wait"] = {
-                "remaining": to_context.remaining if to_context else timeout,
-                "completed": True,
-            }
+            wait_var = self._variables["wait"]
+            wait_var["remaining"] = to_context.remaining if to_context else timeout
+            wait_var["completed"] = True
             done.set()
 
         to_context = None
@@ -475,10 +482,11 @@ class _ScriptRun:
             async with async_timeout.timeout(timeout) as to_context:
                 await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
         except asyncio.TimeoutError as ex:
+            self._variables["wait"]["remaining"] = 0.0
             if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
                 self._log(_TIMEOUT_MSG)
+                trace_set_result(wait=self._variables["wait"], timeout=True)
                 raise _StopScript from ex
-            self._variables["wait"]["remaining"] = 0.0
         finally:
             for task in tasks:
                 task.cancel()
@@ -490,10 +498,8 @@ class _ScriptRun:
         async def async_cancel_long_task() -> None:
             # Stop long task and wait for it to finish.
             long_task.cancel()
-            try:
+            with suppress(Exception):
                 await long_task
-            except Exception:  # pylint: disable=broad-except
-                pass
 
         # Wait for long task while monitoring for a stop request.
         stop_task = self._hass.async_create_task(self._stop.wait())
@@ -539,6 +545,7 @@ class _ScriptRun:
         else:
             limit = SERVICE_CALL_LIMIT
 
+        trace_set_result(params=params, running_script=running_script, limit=limit)
         service_task = self._hass.async_create_task(
             self._hass.services.async_call(
                 **params,
@@ -567,6 +574,7 @@ class _ScriptRun:
     async def _async_scene_step(self):
         """Activate the scene specified in the action."""
         self._step_log("activate scene")
+        trace_set_result(scene=self._action[CONF_SCENE])
         await self._hass.services.async_call(
             scene.DOMAIN,
             SERVICE_TURN_ON,
@@ -592,6 +600,7 @@ class _ScriptRun:
                     "Error rendering event data template: %s", ex, level=logging.ERROR
                 )
 
+        trace_set_result(event=self._action[CONF_EVENT], event_data=event_data)
         self._hass.bus.async_fire(
             self._action[CONF_EVENT], event_data, context=self._context
         )
@@ -734,7 +743,7 @@ class _ScriptRun:
 
         if choose_data["default"]:
             trace_set_result(choice="default")
-            with trace_path(["default", "sequence"]):
+            with trace_path(["default"]):
                 await self._async_run_script(choose_data["default"])
 
     async def _async_wait_for_trigger_step(self):
@@ -748,14 +757,14 @@ class _ScriptRun:
 
         variables = {**self._variables}
         self._variables["wait"] = {"remaining": timeout, "trigger": None}
+        trace_set_result(wait=self._variables["wait"])
 
         done = asyncio.Event()
 
         async def async_done(variables, context=None):
-            self._variables["wait"] = {
-                "remaining": to_context.remaining if to_context else timeout,
-                "trigger": variables["trigger"],
-            }
+            wait_var = self._variables["wait"]
+            wait_var["remaining"] = to_context.remaining if to_context else timeout
+            wait_var["trigger"] = variables["trigger"]
             done.set()
 
         def log_cb(level, msg, **kwargs):
@@ -782,10 +791,11 @@ class _ScriptRun:
             async with async_timeout.timeout(timeout) as to_context:
                 await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
         except asyncio.TimeoutError as ex:
+            self._variables["wait"]["remaining"] = 0.0
             if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
                 self._log(_TIMEOUT_MSG)
+                trace_set_result(wait=self._variables["wait"], timeout=True)
                 raise _StopScript from ex
-            self._variables["wait"]["remaining"] = 0.0
         finally:
             for task in tasks:
                 task.cancel()
@@ -896,10 +906,10 @@ def _referenced_extract_ids(data: dict[str, Any], key: str, found: set[str]) -> 
         return
 
     if isinstance(item_ids, str):
-        item_ids = [item_ids]
-
-    for item_id in item_ids:
-        found.add(item_id)
+        found.add(item_ids)
+    else:
+        for item_id in item_ids:
+            found.add(item_id)
 
 
 class Script:
@@ -966,6 +976,7 @@ class Script:
         self._choose_data: dict[int, dict[str, Any]] = {}
         self._referenced_entities: set[str] | None = None
         self._referenced_devices: set[str] | None = None
+        self._referenced_areas: set[str] | None = None
         self.variables = variables
         self._variables_dynamic = template.is_complex(variables)
         if self._variables_dynamic:
@@ -1028,6 +1039,28 @@ class Script:
         return self.script_mode in (SCRIPT_MODE_PARALLEL, SCRIPT_MODE_QUEUED)
 
     @property
+    def referenced_areas(self):
+        """Return a set of referenced areas."""
+        if self._referenced_areas is not None:
+            return self._referenced_areas
+
+        referenced: set[str] = set()
+
+        for step in self.sequence:
+            action = cv.determine_script_action(step)
+
+            if action == cv.SCRIPT_ACTION_CALL_SERVICE:
+                for data in (
+                    step.get(CONF_TARGET),
+                    step.get(service.CONF_SERVICE_DATA),
+                    step.get(service.CONF_SERVICE_DATA_TEMPLATE),
+                ):
+                    _referenced_extract_ids(data, ATTR_AREA_ID, referenced)
+
+        self._referenced_areas = referenced
+        return referenced
+
+    @property
     def referenced_devices(self):
         """Return a set of referenced devices."""
         if self._referenced_devices is not None:
@@ -1040,7 +1073,6 @@ class Script:
 
             if action == cv.SCRIPT_ACTION_CALL_SERVICE:
                 for data in (
-                    step,
                     step.get(CONF_TARGET),
                     step.get(service.CONF_SERVICE_DATA),
                     step.get(service.CONF_SERVICE_DATA_TEMPLATE),
@@ -1110,6 +1142,7 @@ class Script:
             if self.script_mode == SCRIPT_MODE_SINGLE:
                 if self._max_exceeded != "SILENT":
                     self._log("Already running", level=LOGSEVERITY[self._max_exceeded])
+                script_execution_set("failed_single")
                 return
             if self.script_mode == SCRIPT_MODE_RESTART:
                 self._log("Restarting")
@@ -1120,6 +1153,7 @@ class Script:
                         "Maximum number of runs exceeded",
                         level=LOGSEVERITY[self._max_exceeded],
                     )
+                script_execution_set("failed_max_runs")
                 return
 
         # If this is a top level Script then make a copy of the variables in case they
@@ -1277,13 +1311,13 @@ class Script:
 
 
 @callback
-def breakpoint_clear(hass, unique_id, run_id, node):
+def breakpoint_clear(hass, key, run_id, node):
     """Clear a breakpoint."""
     run_id = run_id or RUN_ID_ANY
     breakpoints = hass.data[DATA_SCRIPT_BREAKPOINTS]
-    if unique_id not in breakpoints or run_id not in breakpoints[unique_id]:
+    if key not in breakpoints or run_id not in breakpoints[key]:
         return
-    breakpoints[unique_id][run_id].discard(node)
+    breakpoints[key][run_id].discard(node)
 
 
 @callback
@@ -1293,15 +1327,15 @@ def breakpoint_clear_all(hass):
 
 
 @callback
-def breakpoint_set(hass, unique_id, run_id, node):
+def breakpoint_set(hass, key, run_id, node):
     """Set a breakpoint."""
     run_id = run_id or RUN_ID_ANY
     breakpoints = hass.data[DATA_SCRIPT_BREAKPOINTS]
-    if unique_id not in breakpoints:
-        breakpoints[unique_id] = {}
-    if run_id not in breakpoints[unique_id]:
-        breakpoints[unique_id][run_id] = set()
-    breakpoints[unique_id][run_id].add(node)
+    if key not in breakpoints:
+        breakpoints[key] = {}
+    if run_id not in breakpoints[key]:
+        breakpoints[key][run_id] = set()
+    breakpoints[key][run_id].add(node)
 
 
 @callback
@@ -1310,35 +1344,35 @@ def breakpoint_list(hass):
     breakpoints = hass.data[DATA_SCRIPT_BREAKPOINTS]
 
     return [
-        {"unique_id": unique_id, "run_id": run_id, "node": node}
-        for unique_id in breakpoints
-        for run_id in breakpoints[unique_id]
-        for node in breakpoints[unique_id][run_id]
+        {"key": key, "run_id": run_id, "node": node}
+        for key in breakpoints
+        for run_id in breakpoints[key]
+        for node in breakpoints[key][run_id]
     ]
 
 
 @callback
-def debug_continue(hass, unique_id, run_id):
+def debug_continue(hass, key, run_id):
     """Continue execution of a halted script."""
     # Clear any wildcard breakpoint
-    breakpoint_clear(hass, unique_id, run_id, NODE_ANY)
+    breakpoint_clear(hass, key, run_id, NODE_ANY)
 
-    signal = SCRIPT_DEBUG_CONTINUE_STOP.format(unique_id, run_id)
+    signal = SCRIPT_DEBUG_CONTINUE_STOP.format(key, run_id)
     async_dispatcher_send(hass, signal, "continue")
 
 
 @callback
-def debug_step(hass, unique_id, run_id):
+def debug_step(hass, key, run_id):
     """Single step a halted script."""
     # Set a wildcard breakpoint
-    breakpoint_set(hass, unique_id, run_id, NODE_ANY)
+    breakpoint_set(hass, key, run_id, NODE_ANY)
 
-    signal = SCRIPT_DEBUG_CONTINUE_STOP.format(unique_id, run_id)
+    signal = SCRIPT_DEBUG_CONTINUE_STOP.format(key, run_id)
     async_dispatcher_send(hass, signal, "continue")
 
 
 @callback
-def debug_stop(hass, unique_id, run_id):
+def debug_stop(hass, key, run_id):
     """Stop execution of a running or halted script."""
-    signal = SCRIPT_DEBUG_CONTINUE_STOP.format(unique_id, run_id)
+    signal = SCRIPT_DEBUG_CONTINUE_STOP.format(key, run_id)
     async_dispatcher_send(hass, signal, "stop")

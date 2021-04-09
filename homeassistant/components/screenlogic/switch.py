@@ -19,7 +19,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     for switch in data["devices"]["switch"]:
         entities.append(ScreenLogicSwitch(coordinator, switch))
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class ScreenLogicSwitch(ScreenlogicEntity, SwitchEntity):
@@ -44,20 +44,20 @@ class ScreenLogicSwitch(ScreenlogicEntity, SwitchEntity):
         return await self._async_set_circuit(ON_OFF.OFF)
 
     async def _async_set_circuit(self, circuit_value) -> None:
-        if await self.hass.async_add_executor_job(
-            self.gateway.set_circuit, self._data_key, circuit_value
-        ):
-            _LOGGER.debug("Screenlogic turn %s %s", circuit_value, self._data_key)
+        async with self.coordinator.api_lock:
+            success = await self.hass.async_add_executor_job(
+                self.gateway.set_circuit, self._data_key, circuit_value
+            )
+
+        if success:
+            _LOGGER.debug("Turn %s %s", self._data_key, circuit_value)
             await self.coordinator.async_request_refresh()
         else:
-            _LOGGER.info("Screenlogic turn %s %s error", circuit_value, self._data_key)
+            _LOGGER.warning(
+                "Failed to set_circuit %s %s", self._data_key, circuit_value
+            )
 
     @property
     def circuit(self):
         """Shortcut to access the circuit."""
-        return self.circuits_data[self._data_key]
-
-    @property
-    def circuits_data(self):
-        """Shortcut to access the circuits data."""
-        return self.coordinator.data["circuits"]
+        return self.coordinator.data["circuits"][self._data_key]

@@ -4,6 +4,7 @@ from __future__ import annotations
 from hatasmota import const as hc, status_sensor
 
 from homeassistant.components import sensor
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
@@ -38,7 +39,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 
 from .const import DATA_REMOVE_DISCOVER_COMPONENT
 from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW
@@ -145,7 +145,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, Entity):
+class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, SensorEntity):
     """Representation of a Tasmota sensor."""
 
     def __init__(self, **kwds):

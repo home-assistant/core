@@ -35,6 +35,7 @@ extension-pkg-whitelist = [
 ]
 
 [tool.pylint.BASIC]
+class-const-naming-style = "any"
 good-names = [
     "_",
     "ev",

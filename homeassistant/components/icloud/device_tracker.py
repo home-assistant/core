@@ -110,7 +110,7 @@ class IcloudTrackerEntity(TrackerEntity):
     @property
     def extra_state_attributes(self) -> dict[str, any]:
         """Return the device state attributes."""
-        return self._device.state_attributes
+        return self._device.extra_state_attributes
 
     @property
     def device_info(self) -> dict[str, any]:

@@ -8,7 +8,7 @@ from pygatt.backends import Characteristic, GATTToolBackend
 from pygatt.exceptions import BLEError, NotConnectedError, NotificationTimeout
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_MAC,
     CONF_NAME,
@@ -18,7 +18,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,7 +61,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     mon.start()
 
 
-class SkybeaconHumid(Entity):
+class SkybeaconHumid(SensorEntity):
     """Representation of a Skybeacon humidity sensor."""
 
     def __init__(self, name, mon):
@@ -91,7 +90,7 @@ class SkybeaconHumid(Entity):
         return {ATTR_DEVICE: "SKYBEACON", ATTR_MODEL: 1}
 
 
-class SkybeaconTemp(Entity):
+class SkybeaconTemp(SensorEntity):
     """Representation of a Skybeacon temperature sensor."""
 
     def __init__(self, name, mon):
@@ -120,7 +119,7 @@ class SkybeaconTemp(Entity):
         return {ATTR_DEVICE: "SKYBEACON", ATTR_MODEL: 1}
 
 
-class Monitor(threading.Thread):
+class Monitor(threading.Thread, SensorEntity):
     """Connection handling."""
 
     def __init__(self, hass, mac, name):

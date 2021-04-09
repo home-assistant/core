@@ -1,14 +1,17 @@
 """Reusable utilities for the Bond component."""
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any, cast
 
 from aiohttp import ClientResponseError
 from bond_api import Action, Bond
 
+from homeassistant.util.async_ import gather_with_concurrency
+
 from .const import BRIDGE_MAKE
+
+MAX_REQUESTS = 6
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -114,15 +117,25 @@ class BondHub:
         # Fetch all available devices using Bond API.
         device_ids = await self.bond.devices()
         self._devices = []
+        setup_device_ids = []
+        tasks = []
         for idx, device_id in enumerate(device_ids):
             if max_devices is not None and idx >= max_devices:
                 break
-
-            device, props = await asyncio.gather(
-                self.bond.device(device_id), self.bond.device_properties(device_id)
+            setup_device_ids.append(device_id)
+            tasks.extend(
+                [self.bond.device(device_id), self.bond.device_properties(device_id)]
             )
 
-            self._devices.append(BondDevice(device_id, device, props))
+        responses = await gather_with_concurrency(MAX_REQUESTS, *tasks)
+        response_idx = 0
+        for device_id in setup_device_ids:
+            self._devices.append(
+                BondDevice(
+                    device_id, responses[response_idx], responses[response_idx + 1]
+                )
+            )
+            response_idx += 2
 
         _LOGGER.debug("Discovered Bond devices: %s", self._devices)
         try:

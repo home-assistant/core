@@ -1,5 +1,6 @@
 """Support for INSTEON Modems (PLM and Hub)."""
 import asyncio
+from contextlib import suppress
 import logging
 
 from pyinsteon import async_close, async_connect, devices
@@ -37,10 +38,8 @@ async def async_get_device_config(hass, config_entry):
     # Make a copy of addresses due to edge case where the list of devices could change during status update
     # Cannot be done concurrently due to issues with the underlying protocol.
     for address in list(devices):
-        try:
+        with suppress(AttributeError):
             await devices[address].async_status()
-        except AttributeError:
-            pass
 
     await devices.async_load(id_devices=1)
     for addr in devices:

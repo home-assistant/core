@@ -22,7 +22,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 
-# pylint: disable=unused-import
 from .const import (
     CONF_DEVICE_ID,
     CONF_RTSP_TRANSPORT,

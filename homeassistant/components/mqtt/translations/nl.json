@@ -21,8 +21,8 @@
                 "data": {
                     "discovery": "Detectie inschakelen"
                 },
-                "description": "Wilt u Home Assistant configureren om verbinding te maken met de MQTT-broker die wordt aangeboden door de Supervisor add-on {addon} ?",
-                "title": "MQTT Broker via Supervisor add-on"
+                "description": "Wilt u Home Assistant configureren om verbinding te maken met de MQTT-broker die wordt aangeboden door de add-on {addon}?",
+                "title": "MQTT Broker via Home Assistant add-on"
             }
         }
     },
@@ -50,11 +50,14 @@
     },
     "options": {
         "error": {
+            "bad_birth": "Ongeldig birth topic",
+            "bad_will": "Ongeldig will topic",
             "cannot_connect": "Kon niet verbinden"
         },
         "step": {
             "broker": {
                 "data": {
+                    "broker": "Broker",
                     "password": "Wachtwoord",
                     "port": "Poort",
                     "username": "Gebruikersnaam"
@@ -65,7 +68,15 @@
                 "data": {
                     "birth_enable": "Geboortebericht inschakelen",
                     "birth_payload": "Birth message payload",
-                    "birth_topic": "Birth message onderwerp"
+                    "birth_qos": "Birth message QoS",
+                    "birth_retain": "Birth message behouden",
+                    "birth_topic": "Birth message onderwerp",
+                    "discovery": "Discovery inschakelen",
+                    "will_enable": "Will message inschakelen",
+                    "will_payload": "Will message payload",
+                    "will_qos": "Will message QoS",
+                    "will_retain": "Will message behouden",
+                    "will_topic": "Will message topic"
                 },
                 "description": "Selecteer MQTT-opties."
             }

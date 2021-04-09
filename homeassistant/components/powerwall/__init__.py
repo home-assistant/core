@@ -11,7 +11,7 @@ from tesla_powerwall import (
     PowerwallUnreachableError,
 )
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -156,7 +156,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         }
     )
 
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
     for platform in PLATFORMS:
         hass.async_create_task(
@@ -185,7 +185,7 @@ def _async_start_reauth(hass: HomeAssistant, entry: ConfigEntry):
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "reauth"},
+            context={"source": SOURCE_REAUTH},
             data=entry.data,
         )
     )

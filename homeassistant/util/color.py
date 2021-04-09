@@ -261,11 +261,10 @@ def color_xy_brightness_to_RGB(
     vX: float, vY: float, ibrightness: int, Gamut: GamutType | None = None
 ) -> tuple[int, int, int]:
     """Convert from XYZ to RGB."""
-    if Gamut:
-        if not check_point_in_lamps_reach((vX, vY), Gamut):
-            xy_closest = get_closest_point_to_point((vX, vY), Gamut)
-            vX = xy_closest[0]
-            vY = xy_closest[1]
+    if Gamut and not check_point_in_lamps_reach((vX, vY), Gamut):
+        xy_closest = get_closest_point_to_point((vX, vY), Gamut)
+        vX = xy_closest[0]
+        vY = xy_closest[1]
 
     brightness = ibrightness / 255.0
     if brightness == 0.0:
@@ -428,7 +427,7 @@ def color_rgbw_to_rgb(r: int, g: int, b: int, w: int) -> tuple[int, int, int]:
 
 def color_rgb_to_hex(r: int, g: int, b: int) -> str:
     """Return a RGB color from a hex color string."""
-    return "{:02x}{:02x}{:02x}".format(round(r), round(g), round(b))
+    return f"{round(r):02x}{round(g):02x}{round(b):02x}"
 
 
 def rgb_hex_to_rgb_list(hex_string: str) -> list[int]:

@@ -15,6 +15,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     DOMAIN,
+    SensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -89,7 +90,7 @@ async def async_setup_entry(
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
 
 
-class Sensor(ZhaEntity):
+class Sensor(ZhaEntity, SensorEntity):
     """Base ZHA sensor."""
 
     SENSOR_ATTR: int | str | None = None

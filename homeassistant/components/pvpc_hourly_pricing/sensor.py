@@ -7,6 +7,7 @@ from random import randint
 from aiopvpc import PVPCData
 
 from homeassistant import config_entries
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_NAME, CURRENCY_EURO, ENERGY_KILO_WATT_HOUR
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -42,7 +43,7 @@ async def async_setup_entry(
     )
 
 
-class ElecPriceSensor(RestoreEntity):
+class ElecPriceSensor(RestoreEntity, SensorEntity):
     """Class to hold the prices of electricity as a sensor."""
 
     unit_of_measurement = UNIT

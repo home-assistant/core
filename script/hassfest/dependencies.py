@@ -5,6 +5,7 @@ import ast
 from pathlib import Path
 
 from homeassistant.requirements import DISCOVERY_INTEGRATIONS
+from homeassistant.setup import BASE_PLATFORMS
 
 from .model import Integration
 
@@ -117,22 +118,7 @@ ALLOWED_USED_COMPONENTS = {
     "websocket_api",
     "zone",
     # Entity integrations with platforms
-    "alarm_control_panel",
-    "binary_sensor",
-    "climate",
-    "cover",
-    "device_tracker",
-    "fan",
-    "humidifier",
-    "image_processing",
-    "light",
-    "lock",
-    "media_player",
-    "scene",
-    "sensor",
-    "switch",
-    "vacuum",
-    "water_heater",
+    *BASE_PLATFORMS,
     # Other
     "mjpeg",  # base class, has no reqs or component to load.
     "stream",  # Stream cannot install on all systems, can be imported without reqs.

@@ -11,8 +11,12 @@ from homeassistant.const import (
     ATTR_MODE,
     ATTR_NAME,
     CONF_ALIAS,
+    CONF_DEFAULT,
+    CONF_DESCRIPTION,
     CONF_ICON,
     CONF_MODE,
+    CONF_NAME,
+    CONF_SELECTOR,
     CONF_SEQUENCE,
     CONF_VARIABLES,
     SERVICE_RELOAD,
@@ -35,8 +39,12 @@ from homeassistant.helpers.script import (
     Script,
     make_script_schema,
 )
+from homeassistant.helpers.selector import validate_selector
 from homeassistant.helpers.service import async_set_service_schema
+from homeassistant.helpers.trace import trace_get, trace_path
 from homeassistant.loader import bind_hass
+
+from .trace import trace_script
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,9 +54,10 @@ ATTR_LAST_ACTION = "last_action"
 ATTR_LAST_TRIGGERED = "last_triggered"
 ATTR_VARIABLES = "variables"
 
-CONF_DESCRIPTION = "description"
+CONF_ADVANCED = "advanced"
 CONF_EXAMPLE = "example"
 CONF_FIELDS = "fields"
+CONF_REQUIRED = "required"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
@@ -64,8 +73,13 @@ SCRIPT_ENTRY_SCHEMA = make_script_schema(
         vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
         vol.Optional(CONF_FIELDS, default={}): {
             cv.string: {
+                vol.Optional(CONF_ADVANCED, default=False): cv.boolean,
+                vol.Optional(CONF_DEFAULT): cv.match_all,
                 vol.Optional(CONF_DESCRIPTION): cv.string,
                 vol.Optional(CONF_EXAMPLE): cv.string,
+                vol.Optional(CONF_NAME): cv.string,
+                vol.Optional(CONF_REQUIRED, default=False): cv.boolean,
+                vol.Optional(CONF_SELECTOR): validate_selector,
             }
         },
     },
@@ -151,6 +165,37 @@ def devices_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
     return list(script_entity.script.referenced_devices)
 
 
+@callback
+def scripts_with_area(hass: HomeAssistant, area_id: str) -> list[str]:
+    """Return all scripts that reference the area."""
+    if DOMAIN not in hass.data:
+        return []
+
+    component = hass.data[DOMAIN]
+
+    return [
+        script_entity.entity_id
+        for script_entity in component.entities
+        if area_id in script_entity.script.referenced_areas
+    ]
+
+
+@callback
+def areas_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Return all areas in a script."""
+    if DOMAIN not in hass.data:
+        return []
+
+    component = hass.data[DOMAIN]
+
+    script_entity = component.get_entity(entity_id)
+
+    if script_entity is None:
+        return []
+
+    return list(script_entity.script.referenced_areas)
+
+
 async def async_setup(hass, config):
     """Load the scripts from the configuration."""
     hass.data[DOMAIN] = component = EntityComponent(_LOGGER, DOMAIN, hass)
@@ -221,7 +266,7 @@ async def _async_process_config(hass, config, component):
         )
 
     script_entities = [
-        ScriptEntity(hass, object_id, cfg)
+        ScriptEntity(hass, object_id, cfg, cfg.raw_config)
         for object_id, cfg in config.get(DOMAIN, {}).items()
     ]
 
@@ -242,6 +287,7 @@ async def _async_process_config(hass, config, component):
 
         # Register the service description
         service_desc = {
+            CONF_NAME: script_entity.name,
             CONF_DESCRIPTION: cfg[CONF_DESCRIPTION],
             CONF_FIELDS: cfg[CONF_FIELDS],
         }
@@ -253,7 +299,7 @@ class ScriptEntity(ToggleEntity):
 
     icon = None
 
-    def __init__(self, hass, object_id, cfg):
+    def __init__(self, hass, object_id, cfg, raw_config):
         """Initialize the script."""
         self.object_id = object_id
         self.icon = cfg.get(CONF_ICON)
@@ -272,6 +318,7 @@ class ScriptEntity(ToggleEntity):
             variables=cfg.get(CONF_VARIABLES),
         )
         self._changed = asyncio.Event()
+        self._raw_config = raw_config
 
     @property
     def should_poll(self):
@@ -284,7 +331,7 @@ class ScriptEntity(ToggleEntity):
         return self.script.name
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {
             ATTR_LAST_TRIGGERED: self.script.last_triggered,
@@ -323,7 +370,7 @@ class ScriptEntity(ToggleEntity):
             {ATTR_NAME: self.script.name, ATTR_ENTITY_ID: self.entity_id},
             context=context,
         )
-        coro = self.script.async_run(variables, context)
+        coro = self._async_run(variables, context)
         if wait:
             await coro
             return
@@ -334,6 +381,15 @@ class ScriptEntity(ToggleEntity):
         self._changed.clear()
         self.hass.async_create_task(coro)
         await self._changed.wait()
+
+    async def _async_run(self, variables, context):
+        with trace_script(
+            self.hass, self.object_id, self._raw_config, context
+        ) as script_trace:
+            # Prepare tracing the execution of the script's sequence
+            script_trace.set_trace(trace_get())
+            with trace_path("sequence"):
+                return await self.script.async_run(variables, context)
 
     async def async_turn_off(self, **kwargs):
         """Stop running the script.

@@ -2,8 +2,8 @@
 from datetime import timedelta
 import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_BATTERY_LEVEL, LIGHT_LUX, PERCENTAGE, TEMP_CELSIUS
-from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN as TAHOMA_DOMAIN, TahomaDevice
 
@@ -25,7 +25,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class TahomaSensor(TahomaDevice, Entity):
+class TahomaSensor(TahomaDevice, SensorEntity):
     """Representation of a Tahoma Sensor."""
 
     def __init__(self, tahoma_device, controller):

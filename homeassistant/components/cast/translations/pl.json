@@ -27,7 +27,9 @@
         "step": {
             "options": {
                 "data": {
-                    "known_hosts": "Opcjonalna lista znanych host\u00f3w, je\u015bli wykrywanie mDNS nie dzia\u0142a."
+                    "ignore_cec": "Opcjonalna lista, kt\u00f3ra zostanie przekazana do pychromecast.IGNORE_CEC.",
+                    "known_hosts": "Opcjonalna lista znanych host\u00f3w, je\u015bli wykrywanie mDNS nie dzia\u0142a.",
+                    "uuid": "Opcjonalna lista identyfikator\u00f3w UUID. Casty nie wymienione na li\u015bcie nie zostan\u0105 dodane."
                 },
                 "description": "Wprowad\u017a konfiguracj\u0119 Google Cast."
             }

@@ -6,8 +6,7 @@ import logging
 from typing import Any, Iterable
 
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import Context, State
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.util import dt as dt_util
 
 from . import ATTR_DATE, ATTR_DATETIME, ATTR_TIME, CONF_HAS_DATE, CONF_HAS_TIME, DOMAIN
@@ -34,7 +33,7 @@ def is_valid_time(string: str) -> bool:
 
 
 async def _async_reproduce_state(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     state: State,
     *,
     context: Context | None = None,
@@ -79,7 +78,7 @@ async def _async_reproduce_state(
 
 
 async def async_reproduce_states(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     states: Iterable[State],
     *,
     context: Context | None = None,
