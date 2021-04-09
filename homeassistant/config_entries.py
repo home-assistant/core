@@ -17,7 +17,6 @@ from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.event import Event
-from homeassistant.helpers.leak_detector import async_check_for_aiohttp_leaks
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.setup import async_process_deps_reqs, async_setup_component
 from homeassistant.util.decorator import Registry
@@ -135,6 +134,7 @@ class ConfigEntry:
         "_setup_lock",
         "update_listeners",
         "_async_cancel_retry_setup",
+        "_on_unload",
     )
 
     def __init__(
@@ -199,6 +199,9 @@ class ConfigEntry:
 
         # Function to cancel a scheduled retry
         self._async_cancel_retry_setup: Callable[[], Any] | None = None
+
+        # Hold list for functions to call on unload.
+        self._on_unload: list[CALLBACK_TYPE] | None = None
 
     async def async_setup(
         self,
@@ -294,7 +297,6 @@ class ConfigEntry:
                     EVENT_HOMEASSISTANT_STARTED, setup_again
                 )
 
-            self._async_check_for_leaks(hass)
             return
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
@@ -361,8 +363,11 @@ class ConfigEntry:
 
             # Only adjust state if we unloaded the component
             if result and integration.domain == self.domain:
-                self._async_check_for_leaks(hass)
                 self.state = ENTRY_STATE_NOT_LOADED
+
+            if self._on_unload is not None:
+                while self._on_unload:
+                    self._on_unload.pop()()
 
             return result
         except Exception:  # pylint: disable=broad-except
@@ -477,9 +482,11 @@ class ConfigEntry:
         }
 
     @callback
-    def _async_check_for_leaks(self, hass: HomeAssistant) -> None:
-        """Check for memory leaks when unloading a config entry."""
-        async_check_for_aiohttp_leaks(hass, self.entry_id, self.domain)
+    def async_on_unload(self, func: CALLBACK_TYPE) -> None:
+        """Add a function to call when config entry is unloaded."""
+        if self._on_unload is None:
+            self._on_unload = []
+        self._on_unload.append(func)
 
 
 current_entry: ContextVar[ConfigEntry | None] = ContextVar(
