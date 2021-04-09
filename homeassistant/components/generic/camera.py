@@ -35,11 +35,14 @@ CONF_STILL_IMAGE_URL = "still_image_url"
 CONF_STREAM_SOURCE = "stream_source"
 CONF_FRAMERATE = "framerate"
 CONF_RTSP_TRANSPORT = "rtsp_transport"
+CONF_TIMEOUT = "timeout"
 FFMPEG_OPTION_MAP = {CONF_RTSP_TRANSPORT: "rtsp_transport"}
 ALLOWED_RTSP_TRANSPORT_PROTOCOLS = {"tcp", "udp", "udp_multicast", "http"}
 
 DEFAULT_NAME = "Generic Camera"
-GET_IMAGE_TIMEOUT = 10
+# Default image get timeout is 10s, override via config file your camera
+# is slow to respond.
+DEFAULT_IMAGE_TIMEOUT = 10
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -57,6 +60,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             cv.small_float, cv.positive_int
         ),
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+        vol.Optional(CONF_TIMEOUT, default=DEFAULT_IMAGE_TIMEOUT): cv.positive_int,
         vol.Optional(CONF_RTSP_TRANSPORT): vol.In(ALLOWED_RTSP_TRANSPORT_PROTOCOLS),
     }
 )
@@ -88,6 +92,7 @@ class GenericCamera(Camera):
         self._frame_interval = 1 / device_info[CONF_FRAMERATE]
         self._supported_features = SUPPORT_STREAM if self._stream_source else 0
         self.content_type = device_info[CONF_CONTENT_TYPE]
+        self._timeout = device_info[CONF_TIMEOUT]
         self.verify_ssl = device_info[CONF_VERIFY_SSL]
         if device_info.get(CONF_RTSP_TRANSPORT):
             self.stream_options[FFMPEG_OPTION_MAP[CONF_RTSP_TRANSPORT]] = device_info[
@@ -150,12 +155,16 @@ class GenericCamera(Camera):
         try:
             async_client = get_async_client(self.hass, verify_ssl=self.verify_ssl)
             response = await async_client.get(
-                url, auth=self._auth, timeout=GET_IMAGE_TIMEOUT
+                url, auth=self._auth, timeout=self._timeout
             )
             response.raise_for_status()
             image = response.content
         except httpx.TimeoutException:
-            _LOGGER.error("Timeout getting camera image from %s", self._name)
+            _LOGGER.error(
+                "Exceeded timeout of %d seconds getting camera image from %s",
+                self._timeout,
+                self._name,
+            )
             return self._last_url, self._last_image
         except (httpx.RequestError, httpx.HTTPStatusError) as err:
             _LOGGER.error("Error getting new camera image from %s: %s", self._name, err)
