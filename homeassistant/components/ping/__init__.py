@@ -24,20 +24,22 @@ async def async_setup(hass, config):
 
 
 @callback
-def async_get_next_ping_id(hass):
+def async_get_next_ping_id(hass, count=1):
     """Find the next id to use in the outbound ping.
+
+    When using multiping, we increment the id
+    by the number of ids that multiping
+    will use.
 
     Must be called in async
     """
-    current_id = hass.data[DOMAIN][PING_ID]
-    if current_id == MAX_PING_ID:
-        next_id = DEFAULT_START_ID
-    else:
-        next_id = current_id + 1
-
-    hass.data[DOMAIN][PING_ID] = next_id
-
-    return next_id
+    allocated_id = hass.data[DOMAIN][PING_ID] + 1
+    if allocated_id > MAX_PING_ID:
+        allocated_id -= MAX_PING_ID - DEFAULT_START_ID
+    hass.data[DOMAIN][PING_ID] += count
+    if hass.data[DOMAIN][PING_ID] > MAX_PING_ID:
+        hass.data[DOMAIN][PING_ID] -= MAX_PING_ID - DEFAULT_START_ID
+    return allocated_id
 
 
 def _can_use_icmp_lib_with_privilege() -> None | bool:
