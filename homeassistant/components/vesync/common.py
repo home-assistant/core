@@ -47,7 +47,7 @@ class VeSyncDevice(ToggleEntity):
     def unique_id(self):
         """Return the ID of this device."""
         if isinstance(self.device.sub_device_no, int):
-            return "{}{}".format(self.device.cid, str(self.device.sub_device_no))
+            return f"{self.device.cid}{str(self.device.sub_device_no)}"
         return self.device.cid
 
     @property
