@@ -36,7 +36,7 @@ async def validate_input(hass: core.HomeAssistant, data):
             loop=hass.loop,
         ) as client:
             await client.system.config()
-            return {"title": f"{data[CONF_NAME]} ({data[CONF_URL]})"}
+            return {"title": f"{data[CONF_URL]}"}
     except aiosyncthing.exceptions.UnauthorizedError as error:
         raise InvalidAuth from error
     except Exception as error:
