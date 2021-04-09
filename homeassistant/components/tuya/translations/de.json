@@ -14,6 +14,7 @@
                 "data": {
                     "country_code": "L\u00e4ndercode Ihres Kontos (z. B. 1 f\u00fcr USA oder 86 f\u00fcr China)",
                     "password": "Passwort",
+                    "platform": "Die App, in der Ihr Konto registriert ist",
                     "username": "Benutzername"
                 },
                 "description": "Gib deine Tuya-Anmeldeinformationen ein.",

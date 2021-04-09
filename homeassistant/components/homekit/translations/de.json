@@ -27,6 +27,7 @@
                     "include_domains": "Einzubeziehende Domains",
                     "mode": "Modus"
                 },
+                "description": "W\u00e4hlen Sie die Domains aus, die aufgenommen werden sollen. Alle unterst\u00fctzten Entit\u00e4ten in der Domain werden aufgenommen. F\u00fcr jeden TV-Mediaplayer und jede Kamera wird eine separate HomeKit-Instanz im Zubeh\u00f6rmodus erstellt.",
                 "title": "HomeKit aktivieren"
             }
         }

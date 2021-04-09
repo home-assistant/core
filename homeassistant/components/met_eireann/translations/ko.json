@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "\uc11c\ube44\uc2a4\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "elevation": "\uace0\ub3c4",
+                    "latitude": "\uc704\ub3c4",
+                    "longitude": "\uacbd\ub3c4",
+                    "name": "\uc774\ub984"
+                },
+                "description": "Met \u00c9ireann \uacf5\uacf5 \uae30\uc0c1\uc608\ubcf4 API\uc5d0\uc11c \ub0a0\uc528 \ub370\uc774\ud130\ub97c \uc0ac\uc6a9\ud560 \uc704\uce58\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694.",
+                "title": "\uc704\uce58"
+            }
+        }
+    }
+}
