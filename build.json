@@ -9,7 +9,8 @@
     "i386": "ghcr.io/home-assistant/i386-homeassistant-base:2021.03.1"
   },
   "labels": {
-    "io.hass.type": "core"
+    "io.hass.type": "core",
+    "org.opencontainers.image.source": "https://github.com/home-assistant/core"
   },
   "version_tag": true
 }
