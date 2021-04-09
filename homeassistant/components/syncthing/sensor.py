@@ -4,10 +4,10 @@ import logging
 
 import aiosyncthing
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_NAME
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
@@ -52,7 +52,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         raise PlatformNotReady from exception
 
 
-class FolderSensor(Entity):
+class FolderSensor(SensorEntity):
     """A Syncthing folder sensor."""
 
     def __init__(self, hass, syncthing, name, folder_id, folder_label, version):
