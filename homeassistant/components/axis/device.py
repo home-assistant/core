@@ -263,9 +263,7 @@ class AxisNetworkDevice:
     def disconnect_from_stream(self):
         """Stop stream."""
         if self.api.stream.state != STATE_STOPPED:
-            self.api.stream.connection_status_callback.remove(
-                self.async_connection_status_callback
-            )
+            self.api.stream.connection_status_callback.clear()
             self.api.stream.stop()
 
     async def shutdown(self, event):
