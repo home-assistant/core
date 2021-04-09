@@ -33,6 +33,16 @@ class ValueID:
     property_key: str | None = None
 
     @staticmethod
+    def from_unique_id(unique_id: str) -> ValueID:
+        """
+        Get a ValueID from a unique ID.
+
+        This also works for Notification CC Binary Sensors which have their own unique ID
+        format.
+        """
+        return ValueID.from_string_id(unique_id.split(".")[1])
+
+    @staticmethod
     def from_string_id(value_id_str: str) -> ValueID:
         """Get a ValueID from a string representation of the value ID."""
         parts = value_id_str.split("-")
@@ -46,16 +56,6 @@ class ValueID:
             and self.property_ == other.property_
             and self.property_key == other.property_key
         )
-
-
-def value_id_str_from_unique_id(unique_id: str) -> str:
-    """
-    Get a value ID from a standard Z-Wave JS unique ID.
-
-    This also works for Notification CC Binary Sensors which have their own unique ID
-    format.
-    """
-    return unique_id.split(".")[1]
 
 
 @callback
@@ -72,8 +72,7 @@ def async_migrate_old_entity(
     if ent_reg.async_get_entity_id(platform, DOMAIN, unique_id):
         return
 
-    value_id_str = value_id_str_from_unique_id(unique_id)
-    value_id = ValueID.from_string_id(value_id_str)
+    value_id = ValueID.from_unique_id(unique_id)
 
     # Look for existing entities in the registry that could be the same value but on
     # a different endpoint
@@ -84,8 +83,7 @@ def async_migrate_old_entity(
         if entity.domain != platform or entity.unique_id in registered_unique_ids:
             continue
 
-        old_ent_value_id_str = value_id_str_from_unique_id(entity.unique_id)
-        old_ent_value_id = ValueID.from_string_id(old_ent_value_id_str)
+        old_ent_value_id = ValueID.from_unique_id(entity.unique_id)
 
         if value_id.is_same_value_different_endpoints(old_ent_value_id):
             existing_entities.append(entity)
