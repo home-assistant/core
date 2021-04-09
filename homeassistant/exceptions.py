@@ -103,14 +103,7 @@ class IntegrationError(HomeAssistantError):
 
     def __str__(self) -> str:
         """Return a human readable error."""
-        error_str = super().__str__()
-        if error_str:
-            return error_str
-
-        if self.__cause__:
-            return str(self.__cause__)
-
-        return ""
+        return super().__str__() or str(self.__cause__)
 
 
 class PlatformNotReady(IntegrationError):

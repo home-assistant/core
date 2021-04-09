@@ -62,8 +62,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if not client.is_valid_credentials():
         raise ConfigEntryAuthFailed("TotalConnect authentication failed")
 
-        return False
-
     hass.data[DOMAIN][entry.entry_id] = client
 
     for platform in PLATFORMS:
