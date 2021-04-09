@@ -82,8 +82,7 @@ class DiscoveryService(Listener):
         self.discovery = Discovery(DISCOVERY_TIMEOUT)
         self.discovery.add_listener(self)
 
-        if COORDINATORS not in hass.data[DOMAIN]:
-            hass.data[DOMAIN][COORDINATORS] = []
+        hass.data[DOMAIN].setdefault(COORDINATORS, [])
 
     async def device_found(self, device_info: DeviceInfo) -> None:
         """Handle new device found on the network."""
