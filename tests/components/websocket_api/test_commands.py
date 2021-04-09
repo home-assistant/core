@@ -709,7 +709,7 @@ async def test_render_template_manual_entity_ids_no_longer_needed(
 async def test_render_template_with_error(hass, websocket_client, caplog, template):
     """Test a template with an error."""
     await websocket_client.send_json(
-        {"id": 5, "type": "render_template", "template": template}
+        {"id": 5, "type": "render_template", "template": template, "strict": True}
     )
 
     msg = await websocket_client.receive_json()
@@ -741,6 +741,7 @@ async def test_render_template_with_timeout_and_error(
             "type": "render_template",
             "template": template,
             "timeout": 5,
+            "strict": True,
         }
     )
 
