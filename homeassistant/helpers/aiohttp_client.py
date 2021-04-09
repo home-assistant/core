@@ -16,6 +16,9 @@ import async_timeout
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, __version__
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.frame import warn_use
+from homeassistant.helpers.leak_detector import (
+    async_register_clientsession_leak_detection,
+)
 from homeassistant.loader import bind_hass
 from homeassistant.util import ssl as ssl_util
 
@@ -42,7 +45,10 @@ def async_get_clientsession(
         key = DATA_CLIENTSESSION
 
     if key not in hass.data:
-        hass.data[key] = async_create_clientsession(hass, verify_ssl)
+        hass.data[key] = async_create_clientsession(
+            hass, verify_ssl, auto_cleanup=False
+        )
+        _async_register_clientsession_shutdown(hass, hass.data[key])
 
     return cast(aiohttp.ClientSession, hass.data[key])
 
@@ -76,7 +82,7 @@ def async_create_clientsession(
     )
 
     if auto_cleanup:
-        _async_register_clientsession_shutdown(hass, clientsession)
+        _async_register_clientsession_shutdown_with_leak_detection(hass, clientsession)
 
     return clientsession
 
@@ -140,6 +146,26 @@ async def async_aiohttp_proxy_stream(
             await response.write(data)
 
     return response
+
+
+@callback
+def _async_register_clientsession_shutdown_with_leak_detection(
+    hass: HomeAssistant, clientsession: aiohttp.ClientSession
+) -> None:
+    """Register ClientSession close on Home Assistant shutdown.
+
+    This method must be run in the event loop.
+    """
+    cleanup = async_register_clientsession_leak_detection(hass, clientsession)
+
+    @callback
+    def _async_close_websession(event: Event) -> None:
+        """Close websession."""
+        if cleanup:
+            cleanup()
+        clientsession.detach()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_close_websession)
 
 
 @callback
