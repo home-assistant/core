@@ -1002,6 +1002,9 @@ niluclient==0.1.2
 # homeassistant.components.noaa_tides
 noaa-coops==0.1.8
 
+# homeassistant.components.noonlight
+noonlight-tjdavisbz==0.0.4
+
 # homeassistant.components.notify_events
 notify-events==1.0.4
 
