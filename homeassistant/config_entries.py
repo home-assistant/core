@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from contextvars import ContextVar
 import functools
 import logging
 from types import MappingProxyType, MethodType
@@ -16,6 +17,7 @@ from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.event import Event
+from homeassistant.helpers.leak_detector import async_check_for_aiohttp_leaks
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.setup import async_process_deps_reqs, async_setup_component
 from homeassistant.util.decorator import Registry
@@ -290,6 +292,8 @@ class ConfigEntry:
                 self._async_cancel_retry_setup = hass.bus.async_listen_once(
                     EVENT_HOMEASSISTANT_STARTED, setup_again
                 )
+
+            self._async_check_for_leaks(hass)
             return
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
@@ -356,6 +360,7 @@ class ConfigEntry:
 
             # Only adjust state if we unloaded the component
             if result and integration.domain == self.domain:
+                self._async_check_for_leaks(hass)
                 self.state = ENTRY_STATE_NOT_LOADED
 
             return result
@@ -469,6 +474,16 @@ class ConfigEntry:
             "unique_id": self.unique_id,
             "disabled_by": self.disabled_by,
         }
+
+    @callback
+    def _async_check_for_leaks(self, hass: HomeAssistant) -> None:
+        """Check for memory leaks when unloading a config entry."""
+        async_check_for_aiohttp_leaks(hass, self.entry_id, self.domain)
+
+
+current_entry: ContextVar[ConfigEntry | None] = ContextVar(
+    "current_entry", default=None
+)
 
 
 class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
@@ -752,6 +767,7 @@ class ConfigEntries:
         Return True if entry has been successfully loaded.
         """
         entry = self.async_get_entry(entry_id)
+        current_entry.set(entry)
 
         if entry is None:
             raise UnknownEntry
