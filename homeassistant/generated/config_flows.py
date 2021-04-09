@@ -66,6 +66,7 @@ FLOWS = [
     "enphase_envoy",
     "epson",
     "esphome",
+    "ezviz",
     "faa_delays",
     "fireservicerota",
     "flick_electric",
