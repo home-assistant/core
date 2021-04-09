@@ -317,9 +317,7 @@ class SpeechManager:
             provider.name = engine
         self.providers[engine] = provider
 
-        platform_path = PLATFORM_FORMAT.format(domain=engine, platform=DOMAIN)
-        if platform_path not in self.hass.config.components:
-            self.hass.config.components.add(platform_path)
+        self.hass.config.components.add(PLATFORM_FORMAT.format(domain=engine, platform=DOMAIN))
 
     async def async_get_url_path(
         self, engine, message, cache=None, language=None, options=None
