@@ -48,7 +48,7 @@ class ValueID:
         )
 
 
-def value_id_from_unique_id(unique_id: str) -> str:
+def value_id_str_from_unique_id(unique_id: str) -> str:
     """
     Get a value ID from a standard Z-Wave JS unique ID.
 
@@ -72,7 +72,7 @@ def async_migrate_old_entity(
     if ent_reg.async_get_entity_id(platform, DOMAIN, unique_id):
         return
 
-    value_id_str = value_id_from_unique_id(unique_id)
+    value_id_str = value_id_str_from_unique_id(unique_id)
     value_id = ValueID.from_string_id(value_id_str)
 
     # Look for existing entities in the registry that could be the same value but on
@@ -84,7 +84,7 @@ def async_migrate_old_entity(
         if entity.domain != platform or entity.unique_id in registered_unique_ids:
             continue
 
-        old_ent_value_id_str = value_id_from_unique_id(entity.unique_id)
+        old_ent_value_id_str = value_id_str_from_unique_id(entity.unique_id)
         old_ent_value_id = ValueID.from_string_id(old_ent_value_id_str)
 
         if value_id.is_same_value_different_endpoints(old_ent_value_id):
