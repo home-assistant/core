@@ -11,9 +11,10 @@ import urllib.error
 import aiohttp
 import requests
 
+from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import entity, event
 from homeassistant.util.dt import utcnow
 
@@ -170,6 +171,7 @@ class DataUpdateCoordinator(Generic[T]):
 
         self._debounced_refresh.async_cancel()
         start = monotonic()
+        auth_failed = False
 
         try:
             self.data = await self._async_update_data()
@@ -207,6 +209,17 @@ class DataUpdateCoordinator(Generic[T]):
                     self.logger.error("Error fetching %s data: %s", self.name, err)
                 self.last_update_success = False
 
+        except ConfigEntryAuthFailed as err:
+            auth_failed = True
+            self.last_exception = err
+            if self.last_update_success:
+                if log_failures:
+                    self.logger.error("Error fetching %s data: %s", self.name, err)
+                self.last_update_success = False
+
+            config_entry = config_entries.current_entry.get()
+            if config_entry:
+                config_entry.async_start_reauth(self.hass)
         except NotImplementedError as err:
             self.last_exception = err
             raise err
@@ -230,7 +243,7 @@ class DataUpdateCoordinator(Generic[T]):
                 self.name,
                 monotonic() - start,
             )
-            if self._listeners:
+            if not auth_failed and self._listeners:
                 self._schedule_refresh()
 
         _LOGGER.debug("Listeners for %s: %s", self.name, self._listeners)

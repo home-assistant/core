@@ -9,7 +9,7 @@ from teslajsonpy import Controller as TeslaAPI
 from teslajsonpy.exceptions import IncompleteCredentials, TeslaException
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
@@ -20,7 +20,8 @@ from homeassistant.const import (
     CONF_USERNAME,
     HTTP_UNAUTHORIZED,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -158,12 +159,11 @@ async def async_setup_entry(hass, config_entry):
                 CONF_WAKE_ON_START, DEFAULT_WAKE_ON_START
             )
         )
-    except IncompleteCredentials:
-        _async_start_reauth(hass, config_entry)
-        return False
+    except IncompleteCredentials as ex:
+        raise ConfigEntryAuthFailed from ex
     except TeslaException as ex:
         if ex.code == HTTP_UNAUTHORIZED:
-            _async_start_reauth(hass, config_entry)
+            raise ConfigEntryAuthFailed from ex
         _LOGGER.error("Unable to communicate with Tesla API: %s", ex.message)
         return False
     _async_save_tokens(hass, config_entry, access_token, refresh_token)
@@ -214,17 +214,6 @@ async def async_unload_entry(hass, config_entry) -> bool:
         _LOGGER.debug("Unloaded entry for %s", username)
         return True
     return False
-
-
-def _async_start_reauth(hass: HomeAssistant, entry: ConfigEntry):
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH},
-            data=entry.data,
-        )
-    )
-    _LOGGER.error("Credentials are no longer valid. Please reauthenticate")
 
 
 async def update_listener(hass, config_entry):
