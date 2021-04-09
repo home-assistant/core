@@ -69,4 +69,4 @@ def resolve_zone(hass, friendly_name):
 def _get_location_from_attributes(state):
     """Get the lat/long string from an states attributes."""
     attr = state.attributes
-    return "{},{}".format(attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE))
+    return f"{attr.get(ATTR_LATITUDE)},{attr.get(ATTR_LONGITUDE)}"

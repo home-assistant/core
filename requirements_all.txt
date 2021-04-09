@@ -381,7 +381,7 @@ bond-api==0.1.12
 
 # homeassistant.components.amazon_polly
 # homeassistant.components.route53
-boto3==1.17.25
+boto3==1.16.52
 
 # homeassistant.components.braviatv
 bravia-tv==1.0.8
@@ -1384,6 +1384,9 @@ pyephember==0.3.1
 # homeassistant.components.everlights
 pyeverlights==0.1.0
 
+# homeassistant.components.ezviz
+pyezviz==0.1.8.7
+
 # homeassistant.components.fido
 pyfido==2.1.1
 
@@ -1482,7 +1485,7 @@ pykira==0.1.1
 pykmtronic==0.0.3
 
 # homeassistant.components.kodi
-pykodi==0.2.3
+pykodi==0.2.5
 
 # homeassistant.components.kulersky
 pykulersky==0.5.2
@@ -2375,7 +2378,7 @@ zengge==0.2
 zeroconf==0.29.0
 
 # homeassistant.components.zha
-zha-quirks==0.0.55
+zha-quirks==0.0.56
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9

@@ -180,6 +180,7 @@ CPU_SENSOR_PREFIXES = [
     "soc-thermal 1",
     "soc_thermal 1",
     "Tctl",
+    "cpu0-thermal",
 ]
 
 
@@ -504,7 +505,9 @@ def _read_cpu_temperature() -> float | None:
             # In case the label is empty (e.g. on Raspberry PI 4),
             # construct it ourself here based on the sensor key name.
             _label = f"{name} {i}" if not entry.label else entry.label
-            if _label in CPU_SENSOR_PREFIXES:
+            # check both name and label because some systems embed cpu# in the
+            # name, which makes label not match because label adds cpu# at end.
+            if _label in CPU_SENSOR_PREFIXES or name in CPU_SENSOR_PREFIXES:
                 return cast(float, round(entry.current, 1))
 
     return None
