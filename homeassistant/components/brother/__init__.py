@@ -7,8 +7,7 @@ from brother import Brother, SnmpError, UnsupportedModel
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_TYPE
-from homeassistant.core import Config, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DATA_CONFIG_ENTRY, DOMAIN, SNMP
@@ -21,11 +20,6 @@ SCAN_INTERVAL = timedelta(seconds=30)
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: Config):
-    """Set up the Brother component."""
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Brother from a config entry."""
     host = entry.data[CONF_HOST]
@@ -36,19 +30,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     coordinator = BrotherDataUpdateCoordinator(
         hass, host=host, kind=kind, snmp_engine=snmp_engine
     )
-    await coordinator.async_refresh()
-
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN].setdefault(DATA_CONFIG_ENTRY, {})
     hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id] = coordinator
     hass.data[DOMAIN][SNMP] = snmp_engine
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -59,8 +50,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

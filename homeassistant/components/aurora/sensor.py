@@ -1,12 +1,9 @@
 """Support for Aurora Forecast sensor."""
-import logging
-
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import PERCENTAGE
 
 from . import AuroraEntity
 from .const import COORDINATOR, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entries):
@@ -22,7 +19,7 @@ async def async_setup_entry(hass, entry, async_add_entries):
     async_add_entries([entity])
 
 
-class AuroraSensor(AuroraEntity):
+class AuroraSensor(AuroraEntity, SensorEntity):
     """Implementation of an aurora sensor."""
 
     @property

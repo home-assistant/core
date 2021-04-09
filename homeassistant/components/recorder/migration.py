@@ -204,6 +204,65 @@ def _add_columns(engine, table_name, columns_def):
             )
 
 
+def _modify_columns(engine, table_name, columns_def):
+    """Modify columns in a table."""
+    if engine.dialect.name == "sqlite":
+        _LOGGER.debug(
+            "Skipping to modify columns %s in table %s; "
+            "Modifying column length in SQLite is unnecessary, "
+            "it does not impose any length restrictions",
+            ", ".join(column.split(" ")[0] for column in columns_def),
+            table_name,
+        )
+        return
+
+    _LOGGER.warning(
+        "Modifying columns %s in table %s. Note: this can take several "
+        "minutes on large databases and slow computers. Please "
+        "be patient!",
+        ", ".join(column.split(" ")[0] for column in columns_def),
+        table_name,
+    )
+
+    if engine.dialect.name == "postgresql":
+        columns_def = [
+            "ALTER {column} TYPE {type}".format(
+                **dict(zip(["column", "type"], col_def.split(" ", 1)))
+            )
+            for col_def in columns_def
+        ]
+    elif engine.dialect.name == "mssql":
+        columns_def = [f"ALTER COLUMN {col_def}" for col_def in columns_def]
+    else:
+        columns_def = [f"MODIFY {col_def}" for col_def in columns_def]
+
+    try:
+        engine.execute(
+            text(
+                "ALTER TABLE {table} {columns_def}".format(
+                    table=table_name, columns_def=", ".join(columns_def)
+                )
+            )
+        )
+        return
+    except (InternalError, OperationalError):
+        _LOGGER.info("Unable to use quick column modify. Modifying 1 by 1")
+
+    for column_def in columns_def:
+        try:
+            engine.execute(
+                text(
+                    "ALTER TABLE {table} {column_def}".format(
+                        table=table_name, column_def=column_def
+                    )
+                )
+            )
+        except (InternalError, OperationalError):
+            _LOGGER.exception(
+                "Could not modify column %s in table %s", column_def, table_name
+            )
+
+
 def _update_states_table_with_foreign_key_options(engine):
     """Add the options to foreign key constraints."""
     inspector = reflection.Inspector.from_engine(engine)
@@ -321,6 +380,26 @@ def _apply_update(engine, new_version, old_version):
     elif new_version == 11:
         _create_index(engine, "states", "ix_states_old_state_id")
         _update_states_table_with_foreign_key_options(engine)
+    elif new_version == 12:
+        if engine.dialect.name == "mysql":
+            _modify_columns(engine, "events", ["event_data LONGTEXT"])
+            _modify_columns(engine, "states", ["attributes LONGTEXT"])
+    elif new_version == 13:
+        if engine.dialect.name == "mysql":
+            _modify_columns(
+                engine, "events", ["time_fired DATETIME(6)", "created DATETIME(6)"]
+            )
+            _modify_columns(
+                engine,
+                "states",
+                [
+                    "last_changed DATETIME(6)",
+                    "last_updated DATETIME(6)",
+                    "created DATETIME(6)",
+                ],
+            )
+    elif new_version == 14:
+        _modify_columns(engine, "events", ["event_type VARCHAR(64)"])
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 

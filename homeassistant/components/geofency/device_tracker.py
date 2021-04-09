@@ -56,7 +56,7 @@ class GeofencyEntity(TrackerEntity, RestoreEntity):
         self._unique_id = device
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific attributes."""
         return self._attributes
 

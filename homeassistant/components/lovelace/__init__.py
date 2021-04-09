@@ -34,7 +34,7 @@ from .const import (
     STORAGE_DASHBOARD_UPDATE_FIELDS,
     url_slug,
 )
-from .system_health import system_health_info  # NOQA
+from .system_health import system_health_info  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
 

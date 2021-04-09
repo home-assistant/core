@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
+        },
+        "error": {
+            "invalid_auth": "Vigane autentimine",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "E-posti aadress",
+                    "password": "Salas\u00f5na"
+                },
+                "description": "Sisselogimiseks sisesta oma SmartTubi e-posti aadress ja salas\u00f5na",
+                "title": "Sisselogimine"
+            }
+        }
+    }
+}

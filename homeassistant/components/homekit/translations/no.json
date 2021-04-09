@@ -19,7 +19,7 @@
                 "title": "Velg domener som skal inkluderes"
             },
             "pairing": {
-                "description": "S\u00e5 snart {name} er klart, vil sammenkobling v\u00e6re tilgjengelig i \"Notifications\" som \"HomeKit Bridge Setup\".",
+                "description": "For \u00e5 fullf\u00f8re sammenkoblingen ved \u00e5 f\u00f8lge instruksjonene i \"Varsler\" under \"Sammenkobling av HomeKit\".",
                 "title": "Koble sammen HomeKit"
             },
             "user": {
@@ -28,8 +28,8 @@
                     "include_domains": "Domener \u00e5 inkludere",
                     "mode": "Modus"
                 },
-                "description": "HomeKit-integrasjonen gir deg tilgang til Home Assistant-enhetene dine i HomeKit. I bromodus er HomeKit Bridges begrenset til 150 tilbeh\u00f8r per forekomst inkludert selve broen. Hvis du \u00f8nsker \u00e5 bygge bro over maksimalt antall tilbeh\u00f8r, anbefales det at du bruker flere HomeKit-broer for forskjellige domener. Detaljert enhetskonfigurasjon er bare tilgjengelig via YAML. For best ytelse og for \u00e5 forhindre uventet utilgjengelighet, opprett og par sammen en egen HomeKit-forekomst i tilbeh\u00f8rsmodus for hver tv-mediaspiller og kamera.",
-                "title": "Aktiver HomeKit"
+                "description": "Velg domenene som skal inkluderes. Alle st\u00f8ttede enheter i domenet vil bli inkludert. Det opprettes en egen HomeKit-forekomst i tilbeh\u00f8rsmodus for hver tv-mediaspiller og kamera.",
+                "title": "Velg domener som skal inkluderes"
             }
         }
     },
@@ -55,7 +55,7 @@
                     "entities": "Entiteter",
                     "mode": "Modus"
                 },
-                "description": "Velg enhetene som skal inkluderes. I tilbeh\u00f8rsmodus er bare \u00e9n enkelt enhet inkludert. I bridge include-modus inkluderes alle enheter i domenet med mindre bestemte enheter er valgt. I brounnlatingsmodus inkluderes alle enheter i domenet, med unntak av de utelatte enhetene. For best mulig ytelse, og for \u00e5 forhindre uventet utilgjengelighet, opprett og par en separat HomeKit-forekomst i tilbeh\u00f8rsmodus for hver tv-mediespiller og kamera.",
+                "description": "Velg enhetene som skal inkluderes. I tilbeh\u00f8rsmodus er bare en enkelt enhet inkludert. I bridge-inkluderingsmodus vil alle enheter i domenet bli inkludert, med mindre spesifikke enheter er valgt. I bridge-ekskluderingsmodus vil alle enheter i domenet bli inkludert, bortsett fra de ekskluderte enhetene. For best ytelse opprettes et eget HomeKit-tilbeh\u00f8r for hver tv-mediaspiller, aktivitetsbasert fjernkontroll, l\u00e5s og kamera.",
                 "title": "Velg enheter som skal inkluderes"
             },
             "init": {

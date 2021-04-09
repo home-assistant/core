@@ -4,5 +4,16 @@
             "turn_off": "\u95dc\u9589{entity_name}",
             "turn_on": "\u958b\u555f{entity_name}"
         }
+    },
+    "state": {
+        "_": {
+            "eco": "\u7bc0\u80fd",
+            "electric": "\u96fb\u529b",
+            "gas": "\u74e6\u65af",
+            "heat_pump": "\u6696\u6c23",
+            "high_demand": "\u9ad8\u7528\u91cf",
+            "off": "\u95dc\u9589",
+            "performance": "\u6548\u80fd"
+        }
     }
 }

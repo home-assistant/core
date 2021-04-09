@@ -20,9 +20,6 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.devolo_home_control.async_setup",
-        return_value=True,
-    ) as mock_setup, patch(
         "homeassistant.components.devolo_home_control.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
@@ -43,7 +40,6 @@ async def test_form(hass):
         "mydevolo_url": "https://www.mydevolo.com",
     }
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -90,9 +86,6 @@ async def test_form_advanced_options(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.devolo_home_control.async_setup",
-        return_value=True,
-    ) as mock_setup, patch(
         "homeassistant.components.devolo_home_control.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
@@ -117,5 +110,4 @@ async def test_form_advanced_options(hass):
         "mydevolo_url": "https://test_mydevolo_url.test",
     }
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1

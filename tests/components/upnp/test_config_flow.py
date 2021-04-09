@@ -6,10 +6,12 @@ from unittest.mock import AsyncMock, patch
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import ssdp
 from homeassistant.components.upnp.const import (
+    CONFIG_ENTRY_HOSTNAME,
     CONFIG_ENTRY_SCAN_INTERVAL,
     CONFIG_ENTRY_ST,
     CONFIG_ENTRY_UDN,
     DEFAULT_SCAN_INTERVAL,
+    DISCOVERY_HOSTNAME,
     DISCOVERY_LOCATION,
     DISCOVERY_NAME,
     DISCOVERY_ST,
@@ -41,6 +43,7 @@ async def test_flow_ssdp_discovery(hass: HomeAssistantType):
             DISCOVERY_UDN: mock_device.udn,
             DISCOVERY_UNIQUE_ID: mock_device.unique_id,
             DISCOVERY_USN: mock_device.usn,
+            DISCOVERY_HOSTNAME: mock_device.hostname,
         }
     ]
     with patch.object(
@@ -75,10 +78,11 @@ async def test_flow_ssdp_discovery(hass: HomeAssistantType):
         assert result["data"] == {
             CONFIG_ENTRY_ST: mock_device.device_type,
             CONFIG_ENTRY_UDN: mock_device.udn,
+            CONFIG_ENTRY_HOSTNAME: mock_device.hostname,
         }
 
 
-async def test_flow_ssdp_discovery_incomplete(hass: HomeAssistantType):
+async def test_flow_ssdp_incomplete_discovery(hass: HomeAssistantType):
     """Test config flow: incomplete discovery through ssdp."""
     udn = "uuid:device_1"
     location = "dummy"
@@ -89,13 +93,62 @@ async def test_flow_ssdp_discovery_incomplete(hass: HomeAssistantType):
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
         data={
-            ssdp.ATTR_SSDP_ST: mock_device.device_type,
-            # ssdp.ATTR_UPNP_UDN: mock_device.udn,  # Not provided.
             ssdp.ATTR_SSDP_LOCATION: location,
+            ssdp.ATTR_SSDP_ST: mock_device.device_type,
+            ssdp.ATTR_SSDP_USN: mock_device.usn,
+            # ssdp.ATTR_UPNP_UDN: mock_device.udn,  # Not provided.
         },
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "incomplete_discovery"
+
+
+async def test_flow_ssdp_discovery_ignored(hass: HomeAssistantType):
+    """Test config flow: discovery through ssdp, but ignored."""
+    udn = "uuid:device_random_1"
+    location = "dummy"
+    mock_device = MockDevice(udn)
+
+    # Existing entry.
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONFIG_ENTRY_UDN: "uuid:device_random_2",
+            CONFIG_ENTRY_ST: mock_device.device_type,
+            CONFIG_ENTRY_HOSTNAME: mock_device.hostname,
+        },
+        options={CONFIG_ENTRY_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL},
+    )
+    config_entry.add_to_hass(hass)
+
+    discoveries = [
+        {
+            DISCOVERY_LOCATION: location,
+            DISCOVERY_NAME: mock_device.name,
+            DISCOVERY_ST: mock_device.device_type,
+            DISCOVERY_UDN: mock_device.udn,
+            DISCOVERY_UNIQUE_ID: mock_device.unique_id,
+            DISCOVERY_USN: mock_device.usn,
+            DISCOVERY_HOSTNAME: mock_device.hostname,
+        }
+    ]
+
+    with patch.object(
+        Device, "async_supplement_discovery", AsyncMock(return_value=discoveries[0])
+    ):
+        # Discovered via step ssdp, but ignored.
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_SSDP},
+            data={
+                ssdp.ATTR_SSDP_LOCATION: location,
+                ssdp.ATTR_SSDP_ST: mock_device.device_type,
+                ssdp.ATTR_SSDP_USN: mock_device.usn,
+                ssdp.ATTR_UPNP_UDN: mock_device.udn,
+            },
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "discovery_ignored"
 
 
 async def test_flow_user(hass: HomeAssistantType):
@@ -111,6 +164,7 @@ async def test_flow_user(hass: HomeAssistantType):
             DISCOVERY_UDN: mock_device.udn,
             DISCOVERY_UNIQUE_ID: mock_device.unique_id,
             DISCOVERY_USN: mock_device.usn,
+            DISCOVERY_HOSTNAME: mock_device.hostname,
         }
     ]
 
@@ -139,6 +193,7 @@ async def test_flow_user(hass: HomeAssistantType):
         assert result["data"] == {
             CONFIG_ENTRY_ST: mock_device.device_type,
             CONFIG_ENTRY_UDN: mock_device.udn,
+            CONFIG_ENTRY_HOSTNAME: mock_device.hostname,
         }
 
 
@@ -155,6 +210,7 @@ async def test_flow_import(hass: HomeAssistantType):
             DISCOVERY_UDN: mock_device.udn,
             DISCOVERY_UNIQUE_ID: mock_device.unique_id,
             DISCOVERY_USN: mock_device.usn,
+            DISCOVERY_HOSTNAME: mock_device.hostname,
         }
     ]
 
@@ -175,6 +231,7 @@ async def test_flow_import(hass: HomeAssistantType):
         assert result["data"] == {
             CONFIG_ENTRY_ST: mock_device.device_type,
             CONFIG_ENTRY_UDN: mock_device.udn,
+            CONFIG_ENTRY_HOSTNAME: mock_device.hostname,
         }
 
 
@@ -189,6 +246,7 @@ async def test_flow_import_already_configured(hass: HomeAssistantType):
         data={
             CONFIG_ENTRY_UDN: mock_device.udn,
             CONFIG_ENTRY_ST: mock_device.device_type,
+            CONFIG_ENTRY_HOSTNAME: mock_device.hostname,
         },
         options={CONFIG_ENTRY_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL},
     )
@@ -216,6 +274,7 @@ async def test_flow_import_incomplete(hass: HomeAssistantType):
             DISCOVERY_UDN: mock_device.udn,
             DISCOVERY_UNIQUE_ID: mock_device.unique_id,
             DISCOVERY_USN: mock_device.usn,
+            DISCOVERY_HOSTNAME: mock_device.hostname,
         }
     ]
 
@@ -243,6 +302,7 @@ async def test_options_flow(hass: HomeAssistantType):
             DISCOVERY_UDN: mock_device.udn,
             DISCOVERY_UNIQUE_ID: mock_device.unique_id,
             DISCOVERY_USN: mock_device.usn,
+            DISCOVERY_HOSTNAME: mock_device.hostname,
         }
     ]
     config_entry = MockConfigEntry(
@@ -250,6 +310,7 @@ async def test_options_flow(hass: HomeAssistantType):
         data={
             CONFIG_ENTRY_UDN: mock_device.udn,
             CONFIG_ENTRY_ST: mock_device.device_type,
+            CONFIG_ENTRY_HOSTNAME: mock_device.hostname,
         },
         options={CONFIG_ENTRY_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL},
     )

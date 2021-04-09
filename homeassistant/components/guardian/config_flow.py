@@ -7,7 +7,7 @@ from homeassistant import config_entries, core
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import callback
 
-from .const import CONF_UID, DOMAIN, LOGGER  # pylint:disable=unused-import
+from .const import CONF_UID, DOMAIN, LOGGER
 
 DATA_SCHEMA = vol.Schema(
     {vol.Required(CONF_IP_ADDRESS): str, vol.Required(CONF_PORT, default=7777): int}
@@ -88,7 +88,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         pin = async_get_pin_from_discovery_hostname(discovery_info["hostname"])
         await self._async_set_unique_id(pin)
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context[CONF_IP_ADDRESS] = discovery_info["host"]
 
         if any(

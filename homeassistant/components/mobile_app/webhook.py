@@ -1,5 +1,6 @@
 """Webhook handlers for mobile_app."""
 import asyncio
+from contextlib import suppress
 from functools import wraps
 import logging
 import secrets
@@ -23,6 +24,7 @@ from homeassistant.components.frontend import MANIFEST_JSON
 from homeassistant.components.sensor import DEVICE_CLASSES as SENSOR_CLASSES
 from homeassistant.components.zone.const import DOMAIN as ZONE_DOMAIN
 from homeassistant.const import (
+    ATTR_DEVICE_ID,
     ATTR_DOMAIN,
     ATTR_SERVICE,
     ATTR_SERVICE_DATA,
@@ -49,7 +51,6 @@ from .const import (
     ATTR_APP_VERSION,
     ATTR_CAMERA_ENTITY_ID,
     ATTR_COURSE,
-    ATTR_DEVICE_ID,
     ATTR_DEVICE_NAME,
     ATTR_EVENT_DATA,
     ATTR_EVENT_TYPE,
@@ -471,6 +472,7 @@ async def webhook_update_sensor_states(hass, config_entry, data):
 
     device_name = config_entry.data[ATTR_DEVICE_NAME]
     resp = {}
+
     for sensor in data:
         entity_type = sensor[ATTR_SENSOR_TYPE]
 
@@ -494,8 +496,6 @@ async def webhook_update_sensor_states(hass, config_entry, data):
             }
             continue
 
-        entry = {CONF_WEBHOOK_ID: config_entry.data[CONF_WEBHOOK_ID]}
-
         try:
             sensor = sensor_schema_full(sensor)
         except vol.Invalid as err:
@@ -512,9 +512,8 @@ async def webhook_update_sensor_states(hass, config_entry, data):
             }
             continue
 
-        new_state = {**entry, **sensor}
-
-        async_dispatcher_send(hass, SIGNAL_SENSOR_UPDATE, new_state)
+        sensor[CONF_WEBHOOK_ID] = config_entry.data[CONF_WEBHOOK_ID]
+        async_dispatcher_send(hass, SIGNAL_SENSOR_UPDATE, sensor)
 
         resp[unique_id] = {"success": True}
 
@@ -551,10 +550,8 @@ async def webhook_get_config(hass, config_entry, data):
     if CONF_CLOUDHOOK_URL in config_entry.data:
         resp[CONF_CLOUDHOOK_URL] = config_entry.data[CONF_CLOUDHOOK_URL]
 
-    try:
+    with suppress(hass.components.cloud.CloudNotAvailable):
         resp[CONF_REMOTE_UI_URL] = hass.components.cloud.async_remote_ui_url()
-    except hass.components.cloud.CloudNotAvailable:
-        pass
 
     return webhook_response(resp, registration=config_entry.data)
 

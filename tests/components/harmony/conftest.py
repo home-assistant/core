@@ -1,5 +1,4 @@
 """Fixtures for harmony tests."""
-import logging
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from aioharmony.const import ClientCallbackType
@@ -8,8 +7,6 @@ import pytest
 from homeassistant.components.harmony.const import ACTIVITY_POWER_OFF
 
 from .const import NILE_TV_ACTIVITY_ID, PLAY_MUSIC_ACTIVITY_ID, WATCH_TV_ACTIVITY_ID
-
-_LOGGER = logging.getLogger(__name__)
 
 ACTIVITIES_TO_IDS = {
     ACTIVITY_POWER_OFF: -1,
@@ -40,10 +37,10 @@ IDS_TO_DEVICES = {
 class FakeHarmonyClient:
     """FakeHarmonyClient to mock away network calls."""
 
-    def __init__(
+    def initialize(
         self, ip_address: str = "", callbacks: ClientCallbackType = MagicMock()
     ):
-        """Initialize FakeHarmonyClient class."""
+        """Initialize FakeHarmonyClient class to capture callbacks."""
         self._activity_name = "Watch TV"
         self.close = AsyncMock()
         self.send_commands = AsyncMock()
@@ -51,6 +48,8 @@ class FakeHarmonyClient:
         self.sync = AsyncMock()
         self._callbacks = callbacks
         self.fw_version = "123.456"
+
+        return self
 
     async def connect(self):
         """Connect and call the appropriate callbacks."""
@@ -133,13 +132,28 @@ class FakeHarmonyClient:
         )
         return config
 
+    def mock_reconnection(self):
+        """Simulate reconnection to the hub."""
+        self._callbacks.connect(None)
+
+    def mock_disconnection(self):
+        """Simulate disconnection to the hub."""
+        self._callbacks.disconnect(None)
+
 
 @pytest.fixture()
-def mock_hc():
-    """Create a mock HarmonyClient."""
+def harmony_client():
+    """Create the FakeHarmonyClient instance."""
+    return FakeHarmonyClient()
+
+
+@pytest.fixture()
+def mock_hc(harmony_client):
+    """Patch the real HarmonyClient with initialization side effect."""
+
     with patch(
         "homeassistant.components.harmony.data.HarmonyClient",
-        side_effect=FakeHarmonyClient,
+        side_effect=harmony_client.initialize,
     ) as fake:
         yield fake
 

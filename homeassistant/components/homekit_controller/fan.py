@@ -80,6 +80,13 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
 
         return features
 
+    @property
+    def speed_count(self):
+        """Speed count for the fan."""
+        return round(
+            100 / max(1, self.service[CharacteristicsTypes.ROTATION_SPEED].minStep or 0)
+        )
+
     async def async_set_direction(self, direction):
         """Set the direction of the fan."""
         await self.async_put_characteristics(
@@ -110,7 +117,7 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
         if not self.is_on:
             characteristics[self.on_characteristic] = True
 
-        if self.supported_features & SUPPORT_SET_SPEED:
+        if percentage is not None and self.supported_features & SUPPORT_SET_SPEED:
             characteristics[CharacteristicsTypes.ROTATION_SPEED] = percentage
 
         if characteristics:

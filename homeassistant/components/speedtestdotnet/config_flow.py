@@ -13,8 +13,8 @@ from .const import (
     DEFAULT_NAME,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SERVER,
+    DOMAIN,
 )
-from .const import DOMAIN  # pylint: disable=unused-import
 
 
 class SpeedTestFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):

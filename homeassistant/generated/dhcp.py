@@ -17,6 +17,11 @@ DHCP = [
         "macaddress": "B8B7F1*"
     },
     {
+        "domain": "august",
+        "hostname": "august*",
+        "macaddress": "E076D0*"
+    },
+    {
         "domain": "axis",
         "hostname": "axis-00408c*",
         "macaddress": "00408C*"
@@ -30,6 +35,32 @@ DHCP = [
         "domain": "axis",
         "hostname": "axis-b8a44f*",
         "macaddress": "B8A44F*"
+    },
+    {
+        "domain": "blink",
+        "hostname": "blink*",
+        "macaddress": "B85F98*"
+    },
+    {
+        "domain": "broadlink",
+        "macaddress": "34EA34*"
+    },
+    {
+        "domain": "broadlink",
+        "macaddress": "24DFA7*"
+    },
+    {
+        "domain": "broadlink",
+        "macaddress": "A043B0*"
+    },
+    {
+        "domain": "broadlink",
+        "macaddress": "B4430D*"
+    },
+    {
+        "domain": "emonitor",
+        "hostname": "emonitor*",
+        "macaddress": "0090C2*"
     },
     {
         "domain": "flume",
@@ -110,6 +141,16 @@ DHCP = [
         "macaddress": "501479*"
     },
     {
+        "domain": "roomba",
+        "hostname": "roomba-*",
+        "macaddress": "80A589*"
+    },
+    {
+        "domain": "screenlogic",
+        "hostname": "pentair: *",
+        "macaddress": "00C033*"
+    },
+    {
         "domain": "sense",
         "hostname": "sense-*",
         "macaddress": "009D6B*"
@@ -153,5 +194,9 @@ DHCP = [
         "domain": "toon",
         "hostname": "eneco-*",
         "macaddress": "74C63B*"
+    },
+    {
+        "domain": "verisure",
+        "macaddress": "0023C1*"
     }
 ]

@@ -13,9 +13,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_REGION
 from homeassistant.helpers import aiohttp_client
 
-# https://github.com/PyCQA/pylint/issues/3202
-from .const import DOMAIN  # pylint: disable=unused-import
-from .const import MAZDA_REGIONS
+from .const import DOMAIN, MAZDA_REGIONS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,15 +38,15 @@ class MazdaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             await self.async_set_unique_id(user_input[CONF_EMAIL].lower())
+            websession = aiohttp_client.async_get_clientsession(self.hass)
+            mazda_client = MazdaAPI(
+                user_input[CONF_EMAIL],
+                user_input[CONF_PASSWORD],
+                user_input[CONF_REGION],
+                websession,
+            )
 
             try:
-                websession = aiohttp_client.async_get_clientsession(self.hass)
-                mazda_client = MazdaAPI(
-                    user_input[CONF_EMAIL],
-                    user_input[CONF_PASSWORD],
-                    user_input[CONF_REGION],
-                    websession,
-                )
                 await mazda_client.validate_credentials()
             except MazdaAuthenticationException:
                 errors["base"] = "invalid_auth"

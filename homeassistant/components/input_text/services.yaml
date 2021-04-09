@@ -1,11 +1,16 @@
 set_value:
+  name: Set
   description: Set the value of an input text entity.
+  target:
   fields:
-    entity_id:
-      description: Entity id of the input text to set the new value.
-      example: input_text.text1
     value:
+      name: Value
       description: The target value the entity should be set to.
+      required: true
       example: This is an example text
+      selector:
+        text:
+
 reload:
+  name: Reload
   description: Reload the input_text configuration.

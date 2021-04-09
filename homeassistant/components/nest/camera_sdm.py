@@ -1,8 +1,8 @@
 """Support for Google Nest SDM Cameras."""
+from __future__ import annotations
 
 import datetime
 import logging
-from typing import Optional
 
 from google_nest_sdm.camera_traits import (
     CameraEventImageTrait,
@@ -74,7 +74,7 @@ class NestCamera(Camera):
         return False
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return a unique ID."""
         # The API "name" field is a unique device identifier.
         return f"{self._device.name}-camera"
@@ -145,6 +145,9 @@ class NestCamera(Camera):
             _LOGGER.debug("Failed to extend stream: %s", err)
             # Next attempt to catch a url will get a new one
             self._stream = None
+            if self.stream:
+                self.stream.stop()
+                self.stream = None
             return
         # Update the stream worker with the latest valid url
         if self.stream:
