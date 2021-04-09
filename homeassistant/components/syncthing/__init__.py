@@ -122,15 +122,17 @@ class SyncthingClient:
         events = self._client.events
         server_was_unavailable = False
         while True:
-            try:
-                await self._client.system.ping()
+            if await self._server_available():
                 if server_was_unavailable:
                     _LOGGER.info("The syncthing server '%s' is back online", self._name)
                     async_dispatcher_send(
                         self._hass, f"{SERVER_AVAILABLE}-{self._name}"
                     )
                     server_was_unavailable = False
-
+            else:
+                await asyncio.sleep(RECONNECT_INTERVAL.seconds)
+                continue
+            try:
                 async for event in events.listen():
                     if events.last_seen_id == 0:
                         continue  # skipping historical events from the first batch
@@ -148,7 +150,6 @@ class SyncthingClient:
                         f"{signal_name}-{self._name}-{folder}",
                         event,
                     )
-                return
             except aiosyncthing.exceptions.SyncthingError:
                 _LOGGER.info(
                     "The syncthing server '%s' is not available. Sleeping %i seconds and retrying",
@@ -159,3 +160,11 @@ class SyncthingClient:
                 await asyncio.sleep(RECONNECT_INTERVAL.seconds)
                 server_was_unavailable = True
                 continue
+
+    async def _server_available(self):
+        try:
+            await self._client.system.ping()
+        except aiosyncthing.exceptions.SyncthingError:
+            return False
+        else:
+            return True
