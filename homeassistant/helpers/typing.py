@@ -1,6 +1,6 @@
 """Typing Helpers for Home Assistant."""
 from enum import Enum
-from typing import Any, Dict, Mapping, Optional, Tuple, Union
+from typing import Any, Dict, Mapping, Optional, Tuple
 
 import homeassistant.core
 
@@ -12,7 +12,7 @@ EventType = homeassistant.core.Event
 HomeAssistantType = homeassistant.core.HomeAssistant
 ServiceCallType = homeassistant.core.ServiceCall
 ServiceDataType = Dict[str, Any]
-StateType = Union[None, str, int, float]
+StateType = homeassistant.core.StateType
 TemplateVarsType = Optional[Mapping[str, Any]]
 
 # Custom type for recorder Queries

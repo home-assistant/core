@@ -30,6 +30,7 @@ from typing import (
     Mapping,
     Optional,
     TypeVar,
+    Union,
     cast,
 )
 
@@ -71,7 +72,6 @@ from homeassistant.exceptions import (
     ServiceNotFound,
     Unauthorized,
 )
-from homeassistant.helpers.typing import StateType
 from homeassistant.util import location
 from homeassistant.util.async_ import (
     fire_coroutine_threadsafe,
@@ -117,6 +117,8 @@ SOURCE_YAML = "yaml"
 
 # How long to wait until things that run on startup have to finish.
 TIMEOUT_EVENT_START = 15
+
+StateType = Union[None, str, int, float]
 
 _LOGGER = logging.getLogger(__name__)
 
