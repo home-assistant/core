@@ -121,7 +121,7 @@ class NotifyEventsNotificationService(BaseNotificationService):
 
         msg = self.prepare_message(message, data)
 
-        if data.get(ATTR_TOKEN, "").trim():
+        if data.get(ATTR_TOKEN, "").strip():
             token = data[ATTR_TOKEN]
 
         msg.send(token)
