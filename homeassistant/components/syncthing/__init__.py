@@ -130,9 +130,7 @@ class SyncthingClient:
             try:
                 await self._client.system.ping()
                 if server_was_unavailable:
-                    _LOGGER.info(
-                        "The syncthing server '%s' is back online", self._name
-                    )
+                    _LOGGER.info("The syncthing server '%s' is back online", self._name)
                     async_dispatcher_send(
                         self._hass, f"{SERVER_AVAILABLE}-{self._name}"
                     )
