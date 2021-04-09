@@ -109,7 +109,7 @@ class SyncthingClient:
 
     def subscribe(self):
         """Start event listener coroutine."""
-        self._listen_task = self._hass.loop.create_task(self._listen())
+        self._listen_task = asyncio.create_task(self._listen())
 
     async def unsubscribe(self):
         """Stop event listener coroutine."""
