@@ -473,7 +473,7 @@ class CastDevice(MediaPlayerEntity):
                     self.hass,
                     refresh_token.id,
                     media_id,
-                    timedelta(minutes=5),
+                    timedelta(seconds=media_source.DEFAULT_EXPIRY_TIME),
                 )
 
             # prepend external URL
