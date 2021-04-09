@@ -541,6 +541,9 @@ nexia==0.9.6
 # homeassistant.components.notify_events
 notify-events==1.0.4
 
+# homeassistant.components.notify_events
+notify-events==1.0.4
+
 # homeassistant.components.nsw_fuel_station
 nsw-fuel-api-client==1.0.10
 
