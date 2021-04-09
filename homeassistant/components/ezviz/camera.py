@@ -63,7 +63,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                     context={"source": SOURCE_IMPORT},
                     data={
                         ATTR_SERIAL: serial,
-                        CONF_USERNAME: camera[1][CONF_USERNAME],
+                        CONF_USERNAME: camera[CONF_USERNAME],
                         CONF_PASSWORD: camera[1][CONF_PASSWORD],
                     },
                 )
