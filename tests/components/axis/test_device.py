@@ -23,7 +23,9 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
+    STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
 )
 
 from tests.common import MockConfigEntry, async_fire_mqtt_message
@@ -288,7 +290,7 @@ async def setup_axis_integration(hass, config=ENTRY_CONFIG, options=ENTRY_OPTION
     )
     config_entry.add_to_hass(hass)
 
-    with patch("axis.rtsp.RTSPClient.start", return_value=True), respx.mock:
+    with respx.mock:
         mock_default_vapix_requests(respx)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -389,12 +391,38 @@ async def test_update_address(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_device_unavailable(hass):
+async def test_device_unavailable(hass, mock_rtsp_event, mock_rtsp_signal_state):
     """Successful setup."""
-    config_entry = await setup_axis_integration(hass)
-    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
-    device.async_connection_status_callback(status=False)
-    assert not device.available
+    await setup_axis_integration(hass)
+
+    # Provide an entity that can be used to verify connection state on
+    mock_rtsp_event(
+        topic="tns1:AudioSource/tnsaxis:TriggerLevel",
+        data_type="triggered",
+        data_value="10",
+        source_name="channel",
+        source_idx="1",
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(f"{BINARY_SENSOR_DOMAIN}.{NAME}_sound_1").state == STATE_OFF
+
+    # Connection to device has failed
+
+    mock_rtsp_signal_state(connected=False)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get(f"{BINARY_SENSOR_DOMAIN}.{NAME}_sound_1").state
+        == STATE_UNAVAILABLE
+    )
+
+    # Connection to device has been restored
+
+    mock_rtsp_signal_state(connected=True)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(f"{BINARY_SENSOR_DOMAIN}.{NAME}_sound_1").state == STATE_OFF
 
 
 async def test_device_reset(hass):
