@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 @callback
 def async_register_clientsession_leak_detection(
     hass: HomeAssistant, clientsession: aiohttp.ClientSession
-) -> Callable | None:
+) -> Callable:
     """Register ClientSession close on Home Assistant shutdown.
 
     This method must be run in the event loop.
@@ -28,15 +28,22 @@ def async_register_clientsession_leak_detection(
 
     config_entry = config_entries.current_entry.get()
     if not config_entry:
-        return None
+
+        @callback
+        def _cleanup_without_entry() -> None:
+            clientsession.detach()
+
+        return _cleanup_without_entry
 
     entry_id = config_entry.entry_id
     sessions.setdefault(entry_id, []).append(clientsession)
 
-    def cleanup() -> None:
+    @callback
+    def _cleanup_with_entry() -> None:
+        clientsession.detach()
         sessions[entry_id].remove(clientsession)
 
-    return cleanup
+    return _cleanup_with_entry
 
 
 @callback

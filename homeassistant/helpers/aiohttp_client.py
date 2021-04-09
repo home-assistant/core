@@ -156,16 +156,10 @@ def _async_register_clientsession_shutdown_with_leak_detection(
 
     This method must be run in the event loop.
     """
-    cleanup = async_register_clientsession_leak_detection(hass, clientsession)
-
-    @callback
-    def _async_close_websession(event: Event) -> None:
-        """Close websession."""
-        if cleanup:
-            cleanup()
-        clientsession.detach()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_close_websession)
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_CLOSE,
+        async_register_clientsession_leak_detection(hass, clientsession),
+    )
 
 
 @callback
