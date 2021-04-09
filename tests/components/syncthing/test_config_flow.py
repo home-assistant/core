@@ -1,5 +1,7 @@
 """Tests for syncthing config flow."""
 
+from unittest.mock import patch
+
 from aiosyncthing.exceptions import UnauthorizedError
 import pytest
 
@@ -7,7 +9,6 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.syncthing.const import DOMAIN
 from homeassistant.const import CONF_NAME, CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 
-from unittest.mock import patch
 from tests.common import MockConfigEntry
 
 NAME = "Syncthing"
