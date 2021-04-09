@@ -120,7 +120,7 @@ def async_create_clientsession(
     )
 
     if auto_cleanup:
-        _async_register_clientsession_shutdown(hass, clientsession)
+        _async_register_clientsession_shutdown_with_leak_detection(hass, clientsession)
 
     return clientsession
 
