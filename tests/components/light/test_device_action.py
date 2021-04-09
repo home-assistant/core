@@ -107,15 +107,23 @@ async def test_get_action_capabilities(hass, device_reg, entity_reg):
         config_entry_id=config_entry.entry_id,
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    # Test with entity without optional capabilities
+    entity_id = entity_reg.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
         device_id=device_entry.id,
-    )
-
+    ).entity_id
     actions = await async_get_device_automations(hass, "action", device_entry.id)
     assert len(actions) == 3
+    for action in actions:
+        capabilities = await async_get_device_automation_capabilities(
+            hass, "action", action
+        )
+        assert capabilities == {"extra_fields": []}
+
+    # Test without entity
+    entity_reg.async_remove(entity_id)
     for action in actions:
         capabilities = await async_get_device_automation_capabilities(
             hass, "action", action
@@ -194,7 +202,7 @@ async def test_get_action_capabilities(hass, device_reg, entity_reg):
         ),
     ],
 )
-async def test_get_action_capabilities_brightness(
+async def test_get_action_capabilities_features(
     hass,
     device_reg,
     entity_reg,

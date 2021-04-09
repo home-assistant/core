@@ -83,10 +83,7 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
         if entry.domain != DOMAIN:
             continue
 
-        try:
-            supported_features = get_supported_features(hass, entry.entity_id)
-        except HomeAssistantError:
-            supported_features = 0
+        supported_features = get_supported_features(hass, entry.entity_id)
 
         if supported_features & SUPPORT_BRIGHTNESS:
             actions.extend(
@@ -126,7 +123,10 @@ async def async_get_action_capabilities(hass: HomeAssistant, config: dict) -> di
     if config[CONF_TYPE] != toggle_entity.CONF_TURN_ON:
         return {}
 
-    supported_features = get_supported_features(hass, config[ATTR_ENTITY_ID])
+    try:
+        supported_features = get_supported_features(hass, config[ATTR_ENTITY_ID])
+    except HomeAssistantError:
+        supported_features = 0
 
     extra_fields = {}
 
