@@ -718,8 +718,11 @@ class SonosEntity(MediaPlayerEntity):
             ) and (
                 self.state != STATE_PLAYING
                 or self.soco.music_source_from_uri(self._media_title) == MUSIC_SRC_RADIO
-                and self._uri is not None
-                and self._media_title in self._uri  # type: ignore[operator]
+                or (
+                    isinstance(self._media_title, str)
+                    and isinstance(self._uri, str)
+                    and self._media_title in self._uri
+                )
             ):
                 self._media_title = uri_meta_data.title
         except (TypeError, KeyError, AttributeError):
