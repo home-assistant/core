@@ -303,9 +303,7 @@ async def async_setup(hass, config):
 
         p_type = p_config.get(CONF_PLATFORM)
 
-        platform = importlib.import_module(
-            ".{}".format(p_config[CONF_PLATFORM]), __name__
-        )
+        platform = importlib.import_module(f".{p_config[CONF_PLATFORM]}", __name__)
 
         _LOGGER.info("Setting up %s.%s", DOMAIN, p_type)
         try:
