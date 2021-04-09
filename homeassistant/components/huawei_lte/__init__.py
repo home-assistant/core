@@ -492,9 +492,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
     def service_handler(service: ServiceCall) -> None:
         """Apply a service."""
-        url = service.data.get(CONF_URL)
         routers = hass.data[DOMAIN].routers
-        if url:
+        if url := service.data.get(CONF_URL):
             router = routers.get(url)
         elif not routers:
             _LOGGER.error("%s: no routers configured", service.service)
