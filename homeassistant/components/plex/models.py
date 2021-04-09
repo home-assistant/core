@@ -7,7 +7,7 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.util import dt as dt_util
 
-LIVE_TV_SECTION = "-4"
+LIVE_TV_SECTION = -4
 
 
 class PlexSession:
