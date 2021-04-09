@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_NAME, CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
+from homeassistant.util.network import normalize_url
 
 from .const import DEFAULT_NAME, DEFAULT_URL, DEFAULT_VERIFY_SSL, DOMAIN
 
@@ -25,7 +26,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect."""
 
     for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.data[CONF_NAME] == data[CONF_NAME]:
+        if entry.data[CONF_URL] == normalize_url(data[CONF_URL]):
             raise AlreadyConfigured
 
     try:
@@ -60,8 +61,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except InvalidAuth:
                 errors[CONF_TOKEN] = "invalid_auth"
             except AlreadyConfigured:
-                errors[CONF_NAME] = "already_configured"
+                errors[CONF_URL] = "already_configured"
             else:
+                user_input[CONF_URL] = normalize_url(user_input[CONF_URL])
                 return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
