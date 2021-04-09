@@ -6,6 +6,7 @@ import aiosyncthing
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_NAME
+from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_time_interval
@@ -139,6 +140,7 @@ class FolderSensor(SensorEntity):
                 self.hass, refresh, SCAN_INTERVAL
             )
 
+    @callback
     def unsubscribe(self):
         """Stop polling syncthing folder status."""
         if self._unsub_timer is not None:
@@ -148,6 +150,7 @@ class FolderSensor(SensorEntity):
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
 
+        @callback
         async def handle_folder_summary(event):
             if self._state is not None:
                 # A workaround, for some reason, state of paused folder is an empty string
