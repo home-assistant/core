@@ -13,7 +13,8 @@
                     "ip_address": "IP-Adresse",
                     "password": "Passwort",
                     "username": "Benutzername"
-                }
+                },
+                "title": "GogoGate2 oder iSmartGate einrichten"
             }
         }
     }
