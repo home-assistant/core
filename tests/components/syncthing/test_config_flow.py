@@ -3,9 +3,8 @@
 from unittest.mock import patch
 
 from aiosyncthing.exceptions import UnauthorizedError
-import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.syncthing.const import DOMAIN
 from homeassistant.const import CONF_NAME, CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 
@@ -24,26 +23,23 @@ MOCK_ENTRY = {
 }
 
 
-@pytest.fixture
-def mock_listening():
-    """Mock listening."""
-    with patch("homeassistant.components.syncthing.SyncthingClient.subscribe"):
-        yield
-
-
 async def test_show_setup_form(hass):
     """Test that the setup form is served."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=None
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {}
     assert result["step_id"] == "user"
 
 
-async def test_flow_successfull(hass, mock_listening):
+async def test_flow_successfull(hass):
     """Test with required fields only."""
-    with patch("aiosyncthing.system.System.config"):
+    with patch("aiosyncthing.system.System.config"), patch(
+        "homeassistant.components.syncthing.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": "user"},
@@ -61,6 +57,7 @@ async def test_flow_successfull(hass, mock_listening):
         assert result["data"][CONF_URL] == URL
         assert result["data"][CONF_TOKEN] == TOKEN
         assert result["data"][CONF_VERIFY_SSL] == VERIFY_SSL
+        assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_flow_already_configured(hass):
