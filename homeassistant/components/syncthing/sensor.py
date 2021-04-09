@@ -37,7 +37,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         version = await syncthing.system.version()
         entities = [
             FolderSensor(
-                hass,
                 syncthing,
                 name,
                 folder["id"],
@@ -55,9 +54,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class FolderSensor(SensorEntity):
     """A Syncthing folder sensor."""
 
-    def __init__(self, hass, syncthing, name, folder_id, folder_label, version):
+    def __init__(self, syncthing, name, folder_id, folder_label, version):
         """Initialize the sensor."""
-        self.hass = hass
         self._syncthing = syncthing
         self._name = name
         self._folder_id = folder_id
