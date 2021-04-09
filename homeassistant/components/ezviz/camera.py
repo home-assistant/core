@@ -64,7 +64,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                     data={
                         ATTR_SERIAL: serial,
                         CONF_USERNAME: camera[CONF_USERNAME],
-                        CONF_PASSWORD: camera[1][CONF_PASSWORD],
+                        CONF_PASSWORD: camera[CONF_PASSWORD],
                     },
                 )
             )
