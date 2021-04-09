@@ -153,7 +153,7 @@ class SolarEdgeSensor(CoordinatorEntity, SensorEntity):
     @property
     def name(self) -> str:
         """Return the name."""
-        return "{} ({})".format(self.platform_name, SENSOR_TYPES[self.sensor_key][1])
+        return f"{self.platform_name} ({SENSOR_TYPES[self.sensor_key][1]})"
 
     @property
     def icon(self) -> str | None:
