@@ -125,7 +125,7 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
                     count=PING_ATTEMPTS_COUNT,
                     timeout=ICMP_TIMEOUT,
                     privileged=privileged,
-                    id=async_get_next_ping_id(hass),
+                    id=async_get_next_ping_id(hass, len(ip_to_dev_id)),
                 )
             )
             _LOGGER.debug("Multiping responses: %s", responses)
