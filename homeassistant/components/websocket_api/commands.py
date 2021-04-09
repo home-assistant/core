@@ -290,6 +290,7 @@ def handle_ping(hass, connection, msg):
         vol.Optional("entity_ids"): cv.entity_ids,
         vol.Optional("variables"): dict,
         vol.Optional("timeout"): vol.Coerce(float),
+        vol.Optional("strict", default=False): bool,
     }
 )
 @decorators.async_response
@@ -303,7 +304,9 @@ async def handle_render_template(hass, connection, msg):
 
     if timeout:
         try:
-            timed_out = await template_obj.async_render_will_timeout(timeout)
+            timed_out = await template_obj.async_render_will_timeout(
+                timeout, strict=msg["strict"]
+            )
         except TemplateError as ex:
             connection.send_error(msg["id"], const.ERR_TEMPLATE_ERROR, str(ex))
             return
@@ -337,6 +340,7 @@ async def handle_render_template(hass, connection, msg):
             [TrackTemplate(template_obj, variables)],
             _template_listener,
             raise_on_template_error=True,
+            strict=msg["strict"],
         )
     except TemplateError as ex:
         connection.send_error(msg["id"], const.ERR_TEMPLATE_ERROR, str(ex))
