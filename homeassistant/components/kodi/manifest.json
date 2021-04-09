@@ -3,7 +3,7 @@
   "name": "Kodi",
   "documentation": "https://www.home-assistant.io/integrations/kodi",
   "requirements": [
-    "pykodi==0.2.3"
+    "pykodi==0.2.4"
   ],
   "codeowners": [
     "@OnFreund",
