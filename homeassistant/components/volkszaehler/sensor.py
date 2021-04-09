@@ -89,7 +89,7 @@ class VolkszaehlerSensor(SensorEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self._name, SENSOR_TYPES[self.type][0])
+        return f"{self._name} {SENSOR_TYPES[self.type][0]}"
 
     @property
     def icon(self):
