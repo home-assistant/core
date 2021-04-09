@@ -9,6 +9,7 @@
             "invalid_host": "Der Hosteintrag hatte nicht das vollst\u00e4ndige URL-Format, z. B. http://192.168.10.100:80",
             "unknown": "Unerwarteter Fehler"
         },
+        "flow_title": "Universalger\u00e4te ISY994 {name} ({host})",
         "step": {
             "user": {
                 "data": {
@@ -27,7 +28,9 @@
             "init": {
                 "data": {
                     "ignore_string": "Zeichenfolge ignorieren",
-                    "restore_light_state": "Lichthelligkeit wiederherstellen"
+                    "restore_light_state": "Lichthelligkeit wiederherstellen",
+                    "sensor_string": "Knoten Sensor String",
+                    "variable_sensor_string": "Variabler Sensor String"
                 },
                 "description": "Stelle die Optionen f\u00fcr die ISY-Integration ein: \n - Node Sensor String: Jedes Ger\u00e4t oder jeder Ordner, der 'Node Sensor String' im Namen enth\u00e4lt, wird als Sensor oder bin\u00e4rer Sensor behandelt. \n - String ignorieren: Jedes Ger\u00e4t mit 'Ignore String' im Namen wird ignoriert. \n - Variable Sensor Zeichenfolge: Jede Variable, die 'Variable Sensor String' im Namen enth\u00e4lt, wird als Sensor hinzugef\u00fcgt. \n - Lichthelligkeit wiederherstellen: Wenn diese Option aktiviert ist, wird beim Einschalten eines Lichts die vorherige Helligkeit wiederhergestellt und nicht der integrierte Ein-Pegel des Ger\u00e4ts.",
                 "title": "ISY994 Optionen"
