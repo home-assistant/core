@@ -35,7 +35,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     try:
         config = await syncthing.system.config()
         version = await syncthing.system.version()
-        dev = [
+        entities = [
             FolderSensor(
                 hass,
                 syncthing,
@@ -47,7 +47,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             for folder in config["folders"]
         ]
 
-        async_add_entities(dev)
+        async_add_entities(entities)
     except aiosyncthing.exceptions.SyncthingError as exception:
         raise PlatformNotReady from exception
 
