@@ -87,7 +87,7 @@ def register_node_in_dev_reg(
     dev_reg: device_registry.DeviceRegistry,
     client: ZwaveClient,
     node: ZwaveNode,
-) -> None:
+) -> device_registry.DeviceEntry:
     """Register node in dev reg."""
     params = {
         "config_entry_id": entry.entry_id,
@@ -102,6 +102,10 @@ def register_node_in_dev_reg(
     device = dev_reg.async_get_or_create(**params)
 
     async_dispatcher_send(hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device)
+
+    # We can assert here because we will always get a device
+    assert device
+    return device
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -120,6 +124,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry_hass_data[DATA_UNSUBSCRIBE] = unsubscribe_callbacks
     entry_hass_data[DATA_PLATFORM_SETUP] = {}
 
+    registered_unique_ids: dict[str, dict[str, set[str]]] = {}
+
     async def async_on_node_ready(node: ZwaveNode) -> None:
         """Handle node ready event."""
         LOGGER.debug("Processing node %s", node)
@@ -127,14 +133,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         platform_setup_tasks = entry_hass_data[DATA_PLATFORM_SETUP]
 
         # register (or update) node in device registry
-        register_node_in_dev_reg(hass, entry, dev_reg, client, node)
+        device = register_node_in_dev_reg(hass, entry, dev_reg, client, node)
+
+        registered_unique_ids.setdefault(device.id, {})
 
         # run discovery on all node values and create/update entities
         for disc_info in async_discover_values(node):
+            platform = disc_info.platform
+            registered_unique_ids[device.id].setdefault(platform, set())
+
             # This migration logic was added in 2021.3 to handle a breaking change to
             # the value_id format. Some time in the future, this call (as well as the
             # helper functions) can be removed.
-            async_migrate_discovered_value(ent_reg, client, disc_info)
+            async_migrate_discovered_value(
+                hass,
+                ent_reg,
+                registered_unique_ids[device.id][platform],
+                device,
+                client,
+                disc_info,
+            )
+
             if disc_info.platform not in platform_setup_tasks:
                 platform_setup_tasks[disc_info.platform] = hass.async_create_task(
                     hass.config_entries.async_forward_entry_setup(
@@ -143,11 +162,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 )
 
             await platform_setup_tasks[disc_info.platform]
-
             LOGGER.debug("Discovered entity: %s", disc_info)
-            async_dispatcher_send(
-                hass, f"{DOMAIN}_{entry.entry_id}_add_{disc_info.platform}", disc_info
-            )
 
         # add listener for stateless node value notification events
         unsubscribe_callbacks.append(
@@ -189,6 +204,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         device = dev_reg.async_get_device({dev_id})
         # note: removal of entity registry entry is handled by core
         dev_reg.async_remove_device(device.id)  # type: ignore
+        registered_unique_ids.pop(device.id, None)  # type: ignore
 
     @callback
     def async_on_value_notification(notification: ValueNotification) -> None:
