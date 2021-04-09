@@ -3,10 +3,7 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.device_automation import (
-    get_supported_features,
-    toggle_entity,
-)
+from homeassistant.components.device_automation import toggle_entity
 from homeassistant.components.light import (
     ATTR_FLASH,
     FLASH_SHORT,
@@ -15,8 +12,9 @@ from homeassistant.components.light import (
     VALID_FLASH,
 )
 from homeassistant.const import ATTR_ENTITY_ID, CONF_DOMAIN, CONF_TYPE, SERVICE_TURN_ON
-from homeassistant.core import Context, HomeAssistant
+from homeassistant.core import Context, HomeAssistant, HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry
+from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS_STEP_PCT, DOMAIN, SUPPORT_BRIGHTNESS
@@ -85,7 +83,10 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
         if entry.domain != DOMAIN:
             continue
 
-        supported_features = get_supported_features(hass, entry.entity_id)
+        try:
+            supported_features = get_supported_features(hass, entry.entity_id)
+        except HomeAssistantError:
+            supported_features = 0
 
         if supported_features & SUPPORT_BRIGHTNESS:
             actions.extend(

@@ -10,14 +10,9 @@ import voluptuous as vol
 import voluptuous_serialize
 
 from homeassistant.components import websocket_api
-from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES,
-    CONF_DEVICE_ID,
-    CONF_DOMAIN,
-    CONF_PLATFORM,
-)
+from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.loader import IntegrationNotFound
 from homeassistant.requirements import async_get_integration_with_requirements
@@ -183,23 +178,6 @@ async def _async_get_device_automation_capabilities(hass, automation_type, autom
         )
 
     return capabilities
-
-
-def get_supported_features(hass: HomeAssistant, entity_id: str) -> int:
-    """Get supported features for an entity.
-
-    First try the statemachine, then registry.
-    """
-    state = hass.states.get(entity_id)
-    if state:
-        return state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-
-    entity_registry = er.async_get(hass)
-    entry = entity_registry.async_get(entity_id)
-    if not entry:
-        return 0
-
-    return entry.supported_features or 0
 
 
 def handle_device_errors(func):
