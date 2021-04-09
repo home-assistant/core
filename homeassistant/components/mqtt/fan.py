@@ -651,18 +651,18 @@ class MqttFan(MqttEntity, FanEntity):
         This method is a coroutine.
         """
         speed_payload = None
-        if self._feature_legacy_speeds:
+        if speed in self._legacy_speeds_list:
             if speed == SPEED_LOW:
                 speed_payload = self._payload["SPEED_LOW"]
             elif speed == SPEED_MEDIUM:
                 speed_payload = self._payload["SPEED_MEDIUM"]
             elif speed == SPEED_HIGH:
                 speed_payload = self._payload["SPEED_HIGH"]
-            elif speed == SPEED_OFF:
-                speed_payload = self._payload["SPEED_OFF"]
             else:
-                _LOGGER.warning("'%s'is not a valid speed", speed)
-                return
+                speed_payload = self._payload["SPEED_OFF"]
+        else:
+            _LOGGER.warning("'%s' is not a valid speed", speed)
+            return
 
         if speed_payload:
             mqtt.async_publish(
