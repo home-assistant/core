@@ -763,7 +763,7 @@ hole==0.5.1
 holidays==0.10.5.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210407.2
+home-assistant-frontend==20210407.3
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1476,7 +1476,7 @@ pykira==0.1.1
 pykmtronic==0.0.3
 
 # homeassistant.components.kodi
-pykodi==0.2.3
+pykodi==0.2.5
 
 # homeassistant.components.kulersky
 pykulersky==0.5.2
@@ -2372,7 +2372,7 @@ zengge==0.2
 zeroconf==0.29.0
 
 # homeassistant.components.zha
-zha-quirks==0.0.55
+zha-quirks==0.0.56
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9
