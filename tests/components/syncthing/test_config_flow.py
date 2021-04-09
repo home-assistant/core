@@ -52,7 +52,7 @@ async def test_flow_successfull(hass):
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == "Syncthing (http://127.0.0.1:8384)"
+        assert result["title"] == "http://127.0.0.1:8384"
         assert result["data"][CONF_NAME] == NAME
         assert result["data"][CONF_URL] == URL
         assert result["data"][CONF_TOKEN] == TOKEN
@@ -72,7 +72,7 @@ async def test_flow_already_configured(hass):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"]["name"] == "already_configured"
+    assert result["errors"]["url"] == "already_configured"
 
 
 async def test_flow_invalid_auth(hass):
