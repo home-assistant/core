@@ -27,6 +27,12 @@ def async_register_clientsession_leak_detection(
     )
 
     config_entry = config_entries.current_entry.get()
+    _LOGGER.warning(
+        "async_register_clientsession_leak_detection: %s - %s",
+        clientsession,
+        config_entry,
+    )
+
     if not config_entry:
 
         @callback
@@ -51,10 +57,18 @@ def async_check_for_aiohttp_leaks(
     hass: HomeAssistant, entry_id: str, domain: str
 ) -> None:
     """Check for a memory leak when unloading a config entry."""
+    _LOGGER.warning("async_check_for_aiohttp_leaks: %s - %s", entry_id, domain)
     if DATA_CLIENTSESSION_CONFIG_ENTRY not in hass.data:
         return
     if entry_id not in hass.data[DATA_CLIENTSESSION_CONFIG_ENTRY]:
         return
+    _LOGGER.warning(
+        "async_check_for_aiohttp_leaks: %s - %s -- sessions: %s",
+        entry_id,
+        domain,
+        hass.data[DATA_CLIENTSESSION_CONFIG_ENTRY][entry_id],
+    )
+
     for clientsession in hass.data[DATA_CLIENTSESSION_CONFIG_ENTRY][entry_id]:
         _LOGGER.error(
             "Config entry %s for %s leaked client session %s",
