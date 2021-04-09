@@ -183,7 +183,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result2["reason"] == "reauth_successful"
+        assert result2["reason"] == "already_in_progress"
 
 
 async def test_reauth_authorization_error(hass: HomeAssistant) -> None:

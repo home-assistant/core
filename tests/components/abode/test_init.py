@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 from abodepy.exceptions import AbodeAuthenticationException
 
+from homeassistant import data_entry_flow
 from homeassistant.components.abode import (
     DOMAIN as ABODE_DOMAIN,
     SERVICE_CAPTURE_IMAGE,
@@ -68,7 +69,8 @@ async def test_invalid_credentials(hass):
         "homeassistant.components.abode.Abode",
         side_effect=AbodeAuthenticationException((HTTP_BAD_REQUEST, "auth error")),
     ), patch(
-        "homeassistant.components.abode.config_flow.AbodeFlowHandler.async_step_reauth"
+        "homeassistant.components.abode.config_flow.AbodeFlowHandler.async_step_reauth",
+        return_value={"type": data_entry_flow.RESULT_TYPE_FORM},
     ) as mock_async_step_reauth:
         await setup_platform(hass, ALARM_DOMAIN)
 
