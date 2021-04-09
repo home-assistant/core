@@ -121,7 +121,7 @@ def main():
             if plugin is requirements and not config.specific_integrations:
                 print()
             plugin.validate(integrations, config)
-            print(" done in {:.2f}s".format(monotonic() - start))
+            print(f" done in {monotonic() - start:.2f}s")
         except RuntimeError as err:
             print()
             print()

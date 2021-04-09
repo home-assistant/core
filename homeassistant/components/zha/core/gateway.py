@@ -360,9 +360,7 @@ class ZHAGateway:
         if zha_device is not None:
             device_info = zha_device.zha_device_info
             zha_device.async_cleanup_handles()
-            async_dispatcher_send(
-                self._hass, "{}_{}".format(SIGNAL_REMOVE, str(zha_device.ieee))
-            )
+            async_dispatcher_send(self._hass, f"{SIGNAL_REMOVE}_{str(zha_device.ieee)}")
             asyncio.ensure_future(self._async_remove_device(zha_device, entity_refs))
             if device_info is not None:
                 async_dispatcher_send(

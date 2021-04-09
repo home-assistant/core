@@ -356,7 +356,7 @@ class RachioZone(RachioSwitch):
 
     def __str__(self):
         """Display the zone as a string."""
-        return 'Rachio Zone "{}" on {}'.format(self.name, str(self._controller))
+        return f'Rachio Zone "{self.name}" on {str(self._controller)}'
 
     @property
     def zone_id(self) -> str:

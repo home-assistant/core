@@ -385,7 +385,7 @@ class TodoistProjectData:
         task[SUMMARY] = data[CONTENT]
         task[COMPLETED] = data[CHECKED] == 1
         task[PRIORITY] = data[PRIORITY]
-        task[DESCRIPTION] = "https://todoist.com/showTask?id={}".format(data[ID])
+        task[DESCRIPTION] = f"https://todoist.com/showTask?id={data[ID]}"
 
         # All task Labels (optional parameter).
         task[LABELS] = [

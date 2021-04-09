@@ -105,4 +105,4 @@ def find_coordinates(
 def _get_location_from_attributes(entity_state: State) -> str:
     """Get the lat/long string from an entities attributes."""
     attr = entity_state.attributes
-    return "{},{}".format(attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE))
+    return f"{attr.get(ATTR_LATITUDE)},{attr.get(ATTR_LONGITUDE)}"

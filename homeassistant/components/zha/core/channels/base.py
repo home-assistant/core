@@ -315,7 +315,7 @@ class ZDOChannel(LogMixin):
         self._cluster = cluster
         self._zha_device = device
         self._status = ChannelStatus.CREATED
-        self._unique_id = "{}:{}_ZDO".format(str(device.ieee), device.name)
+        self._unique_id = f"{str(device.ieee)}:{device.name}_ZDO"
         self._cluster.add_listener(self)
 
     @property
