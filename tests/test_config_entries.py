@@ -2498,7 +2498,7 @@ async def test_entry_reload_cleans_up_aiohttp_session(hass, manager):
     entry.add_to_hass(hass)
     async_setup_calls = 0
 
-    async def async_setup_entry(hass, entry):
+    async def async_setup_entry(hass, _):
         """Mock setup entry."""
         nonlocal async_setup_calls
         async_setup_calls += 1
