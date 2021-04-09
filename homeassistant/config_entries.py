@@ -297,6 +297,7 @@ class ConfigEntry:
                     EVENT_HOMEASSISTANT_STARTED, setup_again
                 )
 
+            self._async_process_on_unload()
             return
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
@@ -365,9 +366,7 @@ class ConfigEntry:
             if result and integration.domain == self.domain:
                 self.state = ENTRY_STATE_NOT_LOADED
 
-            if self._on_unload is not None:
-                while self._on_unload:
-                    self._on_unload.pop()()
+            self._async_process_on_unload()
 
             return result
         except Exception:  # pylint: disable=broad-except
@@ -487,6 +486,13 @@ class ConfigEntry:
         if self._on_unload is None:
             self._on_unload = []
         self._on_unload.append(func)
+
+    @callback
+    def _async_process_on_unload(self) -> None:
+        """Process the on_unload callbacks."""
+        if self._on_unload is not None:
+            while self._on_unload:
+                self._on_unload.pop()()
 
 
 current_entry: ContextVar[ConfigEntry | None] = ContextVar(
