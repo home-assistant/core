@@ -516,6 +516,7 @@ class ConfigEntry:
         """Start a reauth flow."""
         flow_context = {
             "source": SOURCE_REAUTH,
+            "entry_id": self.entry_id,
             "unique_id": self.unique_id,
         }
 
