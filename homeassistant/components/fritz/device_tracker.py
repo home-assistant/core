@@ -6,13 +6,13 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA, SOURCE_TYPE_ROUTER
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .common import FritzBoxTools
 from .const import DEFAULT_DEVICE_NAME, DOMAIN
@@ -34,6 +34,22 @@ PLATFORM_SCHEMA = vol.All(
         }
     ),
 )
+
+
+async def async_get_scanner(hass: HomeAssistantType, config: ConfigType):
+    """Import legacy FRITZ!Box configuration."""
+    if DOMAIN not in config:
+        return True
+
+    _LOGGER.debug("Import legacy FRITZ!Box configuration from YAML")
+    for entry_config in config[DOMAIN][CONF_DEVICES]:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=entry_config
+            )
+        )
+
+    return None
 
 
 async def async_setup_entry(

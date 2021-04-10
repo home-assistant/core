@@ -3,7 +3,7 @@ import logging
 
 from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICES,
     CONF_HOST,
@@ -18,21 +18,6 @@ from .common import FritzBoxTools
 from .const import DEFAULT_HOST, DEFAULT_PORT, DOMAIN, SUPPORTED_DOMAINS
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
-    """Set up FRITZ!Box Tools component."""
-    if DOMAIN not in config:
-        return True
-
-    for entry_config in config[DOMAIN][CONF_DEVICES]:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=entry_config
-            )
-        )
-
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
