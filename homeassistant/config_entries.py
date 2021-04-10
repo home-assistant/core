@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from contextvars import ContextVar
 import functools
 import logging
 from types import MappingProxyType, MethodType
@@ -13,7 +14,11 @@ import attr
 from homeassistant import data_entry_flow, loader
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.event import Event
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
@@ -133,6 +138,7 @@ class ConfigEntry:
         "_setup_lock",
         "update_listeners",
         "_async_cancel_retry_setup",
+        "_on_unload",
     )
 
     def __init__(
@@ -198,6 +204,9 @@ class ConfigEntry:
         # Function to cancel a scheduled retry
         self._async_cancel_retry_setup: Callable[[], Any] | None = None
 
+        # Hold list for functions to call on unload.
+        self._on_unload: list[CALLBACK_TYPE] | None = None
+
     async def async_setup(
         self,
         hass: HomeAssistant,
@@ -206,6 +215,7 @@ class ConfigEntry:
         tries: int = 0,
     ) -> None:
         """Set up an entry."""
+        current_entry.set(self)
         if self.source == SOURCE_IGNORE or self.disabled_by:
             return
 
@@ -253,13 +263,26 @@ class ConfigEntry:
                     "%s.async_setup_entry did not return boolean", integration.domain
                 )
                 result = False
+        except ConfigEntryAuthFailed as ex:
+            message = str(ex)
+            auth_base_message = "could not authenticate"
+            auth_message = (
+                f"{auth_base_message}: {message}" if message else auth_base_message
+            )
+            _LOGGER.warning(
+                "Config entry '%s' for %s integration %s",
+                self.title,
+                self.domain,
+                auth_message,
+            )
+            self._async_process_on_unload()
+            self.async_start_reauth(hass)
+            result = False
         except ConfigEntryNotReady as ex:
             self.state = ENTRY_STATE_SETUP_RETRY
             wait_time = 2 ** min(tries, 4) * 5
             tries += 1
             message = str(ex)
-            if not message and ex.__cause__:
-                message = str(ex.__cause__)
             ready_message = f"ready yet: {message}" if message else "ready yet"
             if tries == 1:
                 _LOGGER.warning(
@@ -290,6 +313,8 @@ class ConfigEntry:
                 self._async_cancel_retry_setup = hass.bus.async_listen_once(
                     EVENT_HOMEASSISTANT_STARTED, setup_again
                 )
+
+            self._async_process_on_unload()
             return
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
@@ -357,6 +382,8 @@ class ConfigEntry:
             # Only adjust state if we unloaded the component
             if result and integration.domain == self.domain:
                 self.state = ENTRY_STATE_NOT_LOADED
+
+            self._async_process_on_unload()
 
             return result
         except Exception:  # pylint: disable=broad-except
@@ -469,6 +496,46 @@ class ConfigEntry:
             "unique_id": self.unique_id,
             "disabled_by": self.disabled_by,
         }
+
+    @callback
+    def async_on_unload(self, func: CALLBACK_TYPE) -> None:
+        """Add a function to call when config entry is unloaded."""
+        if self._on_unload is None:
+            self._on_unload = []
+        self._on_unload.append(func)
+
+    @callback
+    def _async_process_on_unload(self) -> None:
+        """Process the on_unload callbacks."""
+        if self._on_unload is not None:
+            while self._on_unload:
+                self._on_unload.pop()()
+
+    @callback
+    def async_start_reauth(self, hass: HomeAssistant) -> None:
+        """Start a reauth flow."""
+        flow_context = {
+            "source": SOURCE_REAUTH,
+            "entry_id": self.entry_id,
+            "unique_id": self.unique_id,
+        }
+
+        for flow in hass.config_entries.flow.async_progress():
+            if flow["context"] == flow_context:
+                return
+
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                self.domain,
+                context=flow_context,
+                data=self.data,
+            )
+        )
+
+
+current_entry: ContextVar[ConfigEntry | None] = ContextVar(
+    "current_entry", default=None
+)
 
 
 class ConfigEntriesFlowManager(data_entry_flow.FlowManager):

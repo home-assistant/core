@@ -337,11 +337,9 @@ async def async_setup_entry(
     router = hass.data[DOMAIN].routers[config_entry.data[CONF_URL]]
     sensors: list[Entity] = []
     for key in SENSOR_KEYS:
-        items = router.data.get(key)
-        if not items:
+        if not (items := router.data.get(key)):
             continue
-        key_meta = SENSOR_META.get(key)
-        if key_meta:
+        if key_meta := SENSOR_META.get(key):
             if key_meta.include:
                 items = filter(key_meta.include.search, items)
             if key_meta.exclude:
@@ -361,10 +359,9 @@ def format_default(value: StateType) -> tuple[StateType, str | None]:
     unit = None
     if value is not None:
         # Clean up value and infer unit, e.g. -71dBm, 15 dB
-        match = re.match(
+        if match := re.match(
             r"([>=<]*)(?P<value>.+?)\s*(?P<unit>[a-zA-Z]+)\s*$", str(value)
-        )
-        if match:
+        ):
             try:
                 value = float(match.group("value"))
                 unit = match.group("unit")

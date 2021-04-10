@@ -8,10 +8,14 @@ from yalexs.exceptions import AugustApiAIOHTTPError
 from yalexs.pubnub_activity import activities_from_pubnub_message
 from yalexs.pubnub_async import AugustPubNub, async_create_pubnub
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
-from homeassistant.const import CONF_PASSWORD, HTTP_UNAUTHORIZED
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 
 from .activity import ActivityStream
 from .const import DATA_AUGUST, DOMAIN, MIN_TIME_BETWEEN_DETAIL_UPDATES, PLATFORMS
@@ -43,28 +47,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     try:
         await august_gateway.async_setup(entry.data)
         return await async_setup_august(hass, entry, august_gateway)
-    except ClientResponseError as err:
-        if err.status == HTTP_UNAUTHORIZED:
-            _async_start_reauth(hass, entry)
-            return False
-
+    except (RequireValidation, InvalidAuth) as err:
+        raise ConfigEntryAuthFailed from err
+    except (ClientResponseError, CannotConnect, asyncio.TimeoutError) as err:
         raise ConfigEntryNotReady from err
-    except (RequireValidation, InvalidAuth):
-        _async_start_reauth(hass, entry)
-        return False
-    except (CannotConnect, asyncio.TimeoutError) as err:
-        raise ConfigEntryNotReady from err
-
-
-def _async_start_reauth(hass: HomeAssistant, entry: ConfigEntry):
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH},
-            data=entry.data,
-        )
-    )
-    _LOGGER.error("Password is no longer valid. Please reauthenticate")
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):

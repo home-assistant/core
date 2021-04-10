@@ -74,6 +74,7 @@ MANIFEST_SCHEMA = vol.Schema(
                     {
                         vol.Required("type"): str,
                         vol.Optional("macaddress"): vol.All(str, verify_uppercase),
+                        vol.Optional("manufacturer"): vol.All(str, verify_lowercase),
                         vol.Optional("name"): vol.All(str, verify_lowercase),
                     }
                 ),

@@ -84,13 +84,10 @@ class SharkIqConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _, errors = await self._async_validate_input(user_input)
 
             if not errors:
-                for entry in self._async_current_entries():
-                    if entry.unique_id == self.unique_id:
-                        self.hass.config_entries.async_update_entry(
-                            entry, data=user_input
-                        )
+                entry = await self.async_set_unique_id(self.unique_id)
+                self.hass.config_entries.async_update_entry(entry, data=user_input)
 
-                        return self.async_abort(reason="reauth_successful")
+                return self.async_abort(reason="reauth_successful")
 
             if errors["base"] != "invalid_auth":
                 return self.async_abort(reason=errors["base"])

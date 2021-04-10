@@ -1,9 +1,11 @@
 """Commands part of Websocket API."""
 import asyncio
+import json
 
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_READ
+from homeassistant.bootstrap import SIGNAL_BOOTSTRAP_INTEGRATONS
 from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
 from homeassistant.const import EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL
 from homeassistant.core import DOMAIN as HASS_DOMAIN, callback
@@ -14,10 +16,12 @@ from homeassistant.exceptions import (
     Unauthorized,
 )
 from homeassistant.helpers import config_validation as cv, entity, template
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import TrackTemplate, async_track_template_result
+from homeassistant.helpers.json import ExtendedJSONEncoder
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.loader import IntegrationNotFound, async_get_integration
-from homeassistant.setup import async_get_loaded_integrations
+from homeassistant.setup import DATA_SETUP_TIME, async_get_loaded_integrations
 
 from . import const, decorators, messages
 
@@ -34,9 +38,11 @@ def async_register_commands(hass, async_reg):
     async_reg(hass, handle_get_services)
     async_reg(hass, handle_get_states)
     async_reg(hass, handle_manifest_get)
+    async_reg(hass, handle_integration_setup_info)
     async_reg(hass, handle_manifest_list)
     async_reg(hass, handle_ping)
     async_reg(hass, handle_render_template)
+    async_reg(hass, handle_subscribe_bootstrap_integrations)
     async_reg(hass, handle_subscribe_events)
     async_reg(hass, handle_subscribe_trigger)
     async_reg(hass, handle_test_condition)
@@ -90,6 +96,27 @@ def handle_subscribe_events(hass, connection, msg):
 
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
         event_type, forward_events
+    )
+
+    connection.send_message(messages.result_message(msg["id"]))
+
+
+@callback
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "subscribe_bootstrap_integrations",
+    }
+)
+def handle_subscribe_bootstrap_integrations(hass, connection, msg):
+    """Handle subscribe bootstrap integrations command."""
+
+    @callback
+    def forward_bootstrap_integrations(message):
+        """Forward bootstrap integrations to websocket."""
+        connection.send_message(messages.event_message(msg["id"], message))
+
+    connection.subscriptions[msg["id"]] = async_dispatcher_connect(
+        hass, SIGNAL_BOOTSTRAP_INTEGRATONS, forward_bootstrap_integrations
     )
 
     connection.send_message(messages.result_message(msg["id"]))
@@ -238,6 +265,19 @@ async def handle_manifest_get(hass, connection, msg):
         connection.send_error(msg["id"], const.ERR_NOT_FOUND, "Integration not found")
 
 
+@decorators.websocket_command({vol.Required("type"): "integration/setup_info"})
+@decorators.async_response
+async def handle_integration_setup_info(hass, connection, msg):
+    """Handle integrations command."""
+    connection.send_result(
+        msg["id"],
+        [
+            {"domain": integration, "seconds": timedelta.total_seconds()}
+            for integration, timedelta in hass.data[DATA_SETUP_TIME].items()
+        ],
+    )
+
+
 @callback
 @decorators.websocket_command({vol.Required("type"): "ping"})
 def handle_ping(hass, connection, msg):
@@ -252,6 +292,7 @@ def handle_ping(hass, connection, msg):
         vol.Optional("entity_ids"): cv.entity_ids,
         vol.Optional("variables"): dict,
         vol.Optional("timeout"): vol.Coerce(float),
+        vol.Optional("strict", default=False): bool,
     }
 )
 @decorators.async_response
@@ -265,7 +306,9 @@ async def handle_render_template(hass, connection, msg):
 
     if timeout:
         try:
-            timed_out = await template_obj.async_render_will_timeout(timeout)
+            timed_out = await template_obj.async_render_will_timeout(
+                timeout, strict=msg["strict"]
+            )
         except TemplateError as ex:
             connection.send_error(msg["id"], const.ERR_TEMPLATE_ERROR, str(ex))
             return
@@ -299,6 +342,7 @@ async def handle_render_template(hass, connection, msg):
             [TrackTemplate(template_obj, variables)],
             _template_listener,
             raise_on_template_error=True,
+            strict=msg["strict"],
         )
     except TemplateError as ex:
         connection.send_error(msg["id"], const.ERR_TEMPLATE_ERROR, str(ex))
@@ -375,10 +419,11 @@ async def handle_subscribe_trigger(hass, connection, msg):
     @callback
     def forward_triggers(variables, context=None):
         """Forward events to websocket."""
+        message = messages.event_message(
+            msg["id"], {"variables": variables, "context": context}
+        )
         connection.send_message(
-            messages.event_message(
-                msg["id"], {"variables": variables, "context": context}
-            )
+            json.dumps(message, cls=ExtendedJSONEncoder, allow_nan=False)
         )
 
     connection.subscriptions[msg["id"]] = (

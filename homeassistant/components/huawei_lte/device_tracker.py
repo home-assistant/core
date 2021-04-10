@@ -105,6 +105,7 @@ def async_add_new_entities(
 
 
 def _better_snakecase(text: str) -> str:
+    # Awaiting https://github.com/okunishinishi/python-stringcase/pull/18
     if text == text.upper():
         # All uppercase to all lowercase to get http for HTTP, not h_t_t_p
         text = text.lower()
