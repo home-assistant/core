@@ -15,6 +15,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.util.network import normalize_url
 
 from .const import (
     DOMAIN,
@@ -40,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     client = aiosyncthing.Syncthing(
         data[CONF_TOKEN],
-        url=data[CONF_URL],
+        url=normalize_url(data[CONF_URL]),
         verify_ssl=data[CONF_VERIFY_SSL],
     )
 
@@ -96,6 +97,11 @@ class SyncthingClient:
         self._client = client
         self._name = name
         self._listen_task = None
+
+    @property
+    def url(self):
+        """Get server URL."""
+        return self._client.url
 
     @property
     def database(self):
