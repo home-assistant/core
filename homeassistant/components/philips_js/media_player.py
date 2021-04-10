@@ -344,6 +344,11 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         _LOGGER.debug("Call play media type <%s>, Id <%s>", media_type, media_id)
 
         if media_type == MEDIA_TYPE_CHANNEL:
+            if "/" not in media_id:
+                for channel_idS, channelS in self._tv.channels.items():
+                    if media_id.lower().strip() == channelS.get("name", f"Channel: {channel_idS}").lower().strip():
+                        _LOGGER.debug("Channel name <%s> to Media Id <alltv/%s>", media_id, channel_idS)
+                        media_id = f"alltv/{channel_idS}"
             list_id, _, channel_id = media_id.partition("/")
             if channel_id:
                 await self._tv.setChannel(channel_id, list_id)
