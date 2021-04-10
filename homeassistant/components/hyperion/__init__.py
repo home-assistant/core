@@ -204,7 +204,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     async def async_instances_to_clients_raw(instances: list[dict[str, Any]]) -> None:
         """Convert instances to Hyperion clients."""
-        device_registry = await dr.async_get_registry(hass)
+        device_registry = dr.async_get(hass)
         running_instances: set[int] = set()
         stopped_instances: set[int] = set()
         existing_instances = hass.data[DOMAIN][config_entry.entry_id][

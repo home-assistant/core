@@ -7,9 +7,11 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from hyperion import const
 
+from homeassistant.components.hyperion import get_hyperion_unique_id
 from homeassistant.components.hyperion.const import CONF_PRIORITY, DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import HomeAssistantType
 
 from tests.common import MockConfigEntry
@@ -168,3 +170,20 @@ def call_registered_callback(
     for call in client.add_callbacks.call_args_list:
         if key in call[0][0]:
             call[0][0][key](*args, **kwargs)
+
+
+def register_test_entity(
+    hass: HomeAssistantType, domain: str, type_name: str, entity_id: str
+) -> None:
+    """Register a test entity."""
+    unique_id = get_hyperion_unique_id(TEST_SYSINFO_ID, TEST_INSTANCE, type_name)
+    entity_id = entity_id.split(".")[1]
+
+    entity_registry = er.async_get(hass)
+    entity_registry.async_get_or_create(
+        domain,
+        DOMAIN,
+        unique_id,
+        suggested_object_id=entity_id,
+        disabled_by=None,
+    )

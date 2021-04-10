@@ -1,6 +1,7 @@
 """Tests for the Hyperion integration."""
 from __future__ import annotations
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, Mock, call, patch
 
 from hyperion import const
@@ -15,6 +16,7 @@ from homeassistant.components.hyperion.const import (
     DOMAIN,
     HYPERION_MANUFACTURER_NAME,
     HYPERION_MODEL_NAME,
+    TYPE_HYPERION_PRIORITY_LIGHT,
 )
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -24,6 +26,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import (
     ENTRY_STATE_SETUP_ERROR,
+    RELOAD_AFTER_UPDATE_DELAY,
     SOURCE_REAUTH,
     ConfigEntry,
 )
@@ -38,6 +41,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.util import dt
 import homeassistant.util.color as color_util
 
 from . import (
@@ -60,8 +64,11 @@ from . import (
     add_test_config_entry,
     call_registered_callback,
     create_mock_client,
+    register_test_entity,
     setup_test_config_entry,
 )
+
+from tests.common import async_fire_time_changed
 
 COLOR_BLACK = color_util.COLORS["black"]
 
@@ -821,11 +828,13 @@ async def test_priority_light_async_updates(
     client = create_mock_client()
     client.priorities = [{**priority_template}]
 
-    with patch(
-        "homeassistant.components.hyperion.light.HyperionPriorityLight.entity_registry_enabled_default"
-    ) as enabled_by_default_mock:
-        enabled_by_default_mock.return_value = True
-        await setup_test_config_entry(hass, hyperion_client=client)
+    register_test_entity(
+        hass,
+        LIGHT_DOMAIN,
+        TYPE_HYPERION_PRIORITY_LIGHT,
+        TEST_PRIORITY_LIGHT_ENTITY_ID_1,
+    )
+    await setup_test_config_entry(hass, hyperion_client=client)
 
     # == Scenario: Color at HA priority will show light as on.
     entity_state = hass.states.get(TEST_PRIORITY_LIGHT_ENTITY_ID_1)
@@ -981,11 +990,13 @@ async def test_priority_light_async_updates_off_sets_black(
         }
     ]
 
-    with patch(
-        "homeassistant.components.hyperion.light.HyperionPriorityLight.entity_registry_enabled_default"
-    ) as enabled_by_default_mock:
-        enabled_by_default_mock.return_value = True
-        await setup_test_config_entry(hass, hyperion_client=client)
+    register_test_entity(
+        hass,
+        LIGHT_DOMAIN,
+        TYPE_HYPERION_PRIORITY_LIGHT,
+        TEST_PRIORITY_LIGHT_ENTITY_ID_1,
+    )
+    await setup_test_config_entry(hass, hyperion_client=client)
 
     client.async_send_clear = AsyncMock(return_value=True)
     client.async_send_set_color = AsyncMock(return_value=True)
@@ -1033,11 +1044,13 @@ async def test_priority_light_prior_color_preserved_after_black(
     client.priorities = []
     client.visible_priority = None
 
-    with patch(
-        "homeassistant.components.hyperion.light.HyperionPriorityLight.entity_registry_enabled_default"
-    ) as enabled_by_default_mock:
-        enabled_by_default_mock.return_value = True
-        await setup_test_config_entry(hass, hyperion_client=client)
+    register_test_entity(
+        hass,
+        LIGHT_DOMAIN,
+        TYPE_HYPERION_PRIORITY_LIGHT,
+        TEST_PRIORITY_LIGHT_ENTITY_ID_1,
+    )
+    await setup_test_config_entry(hass, hyperion_client=client)
 
     # Turn the light on full green...
     # On (=), 100% (=), solid (=), [0,0,255] (=)
@@ -1139,11 +1152,13 @@ async def test_priority_light_has_no_external_sources(hass: HomeAssistantType) -
     client = create_mock_client()
     client.priorities = []
 
-    with patch(
-        "homeassistant.components.hyperion.light.HyperionPriorityLight.entity_registry_enabled_default"
-    ) as enabled_by_default_mock:
-        enabled_by_default_mock.return_value = True
-        await setup_test_config_entry(hass, hyperion_client=client)
+    register_test_entity(
+        hass,
+        LIGHT_DOMAIN,
+        TYPE_HYPERION_PRIORITY_LIGHT,
+        TEST_PRIORITY_LIGHT_ENTITY_ID_1,
+    )
+    await setup_test_config_entry(hass, hyperion_client=client)
 
     entity_state = hass.states.get(TEST_PRIORITY_LIGHT_ENTITY_ID_1)
     assert entity_state
@@ -1160,6 +1175,7 @@ async def test_light_option_effect_hide_list(hass: HomeAssistantType) -> None:
     )
 
     entity_state = hass.states.get(TEST_ENTITY_ID_1)
+    assert entity_state
     assert entity_state.attributes["effect_list"] == [
         "Solid",
         "BOBLIGHTSERVER",
@@ -1171,11 +1187,14 @@ async def test_light_option_effect_hide_list(hass: HomeAssistantType) -> None:
 async def test_device_info(hass: HomeAssistantType) -> None:
     """Verify device information includes expected details."""
     client = create_mock_client()
-    with patch(
-        "homeassistant.components.hyperion.light.HyperionPriorityLight.entity_registry_enabled_default"
-    ) as enabled_by_default_mock:
-        enabled_by_default_mock.return_value = True
-        await setup_test_config_entry(hass, hyperion_client=client)
+
+    register_test_entity(
+        hass,
+        LIGHT_DOMAIN,
+        TYPE_HYPERION_PRIORITY_LIGHT,
+        TEST_PRIORITY_LIGHT_ENTITY_ID_1,
+    )
+    await setup_test_config_entry(hass, hyperion_client=client)
 
     device_id = get_hyperion_device_id(TEST_SYSINFO_ID, TEST_INSTANCE)
     device_registry = dr.async_get(hass)
@@ -1195,3 +1214,36 @@ async def test_device_info(hass: HomeAssistantType) -> None:
     ]
     assert TEST_PRIORITY_LIGHT_ENTITY_ID_1 in entities_from_device
     assert TEST_ENTITY_ID_1 in entities_from_device
+
+
+async def test_lights_can_be_enabled(hass: HomeAssistantType) -> None:
+    """Verify lights can be enabled."""
+    client = create_mock_client()
+    await setup_test_config_entry(hass, hyperion_client=client)
+
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get(TEST_PRIORITY_LIGHT_ENTITY_ID_1)
+    assert entry
+    assert entry.disabled
+    assert entry.disabled_by == "integration"
+    entity_state = hass.states.get(TEST_PRIORITY_LIGHT_ENTITY_ID_1)
+    assert not entity_state
+
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient",
+        return_value=client,
+    ):
+        updated_entry = entity_registry.async_update_entity(
+            TEST_PRIORITY_LIGHT_ENTITY_ID_1, disabled_by=None
+        )
+        assert not updated_entry.disabled
+        await hass.async_block_till_done()
+
+        async_fire_time_changed(  # type: ignore[no-untyped-call]
+            hass,
+            dt.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+        )
+        await hass.async_block_till_done()
+
+    entity_state = hass.states.get(TEST_PRIORITY_LIGHT_ENTITY_ID_1)
+    assert entity_state
