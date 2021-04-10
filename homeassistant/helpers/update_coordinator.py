@@ -150,7 +150,7 @@ class DataUpdateCoordinator(Generic[T]):
         fails. Additionally logging is handled by config entry setup
         to ensure that multiple retries do not cause log spam.
         """
-        await self._async_refresh(log_failures=False)
+        await self._async_refresh(log_failures=False, raise_on_auth_failed=True)
         if self.last_update_success:
             return
         ex = ConfigEntryNotReady()
@@ -161,7 +161,9 @@ class DataUpdateCoordinator(Generic[T]):
         """Refresh data and log errors."""
         await self._async_refresh(log_failures=True)
 
-    async def _async_refresh(self, log_failures: bool = True) -> None:
+    async def _async_refresh(
+        self, log_failures: bool = True, raise_on_auth_failed: bool = False
+    ) -> None:
         """Refresh data."""
         if self._unsub_refresh:
             self._unsub_refresh()
@@ -212,8 +214,14 @@ class DataUpdateCoordinator(Generic[T]):
             self.last_exception = err
             if self.last_update_success:
                 if log_failures:
-                    self.logger.error("Error fetching %s data: %s", self.name, err)
+                    self.logger.error(
+                        "Authentication failed while fetching %s data: %s",
+                        self.name,
+                        err,
+                    )
                 self.last_update_success = False
+            if raise_on_auth_failed:
+                raise
 
             config_entry = config_entries.current_entry.get()
             if config_entry:

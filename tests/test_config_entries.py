@@ -1,6 +1,7 @@
 """Test the config manager."""
 import asyncio
 from datetime import timedelta
+import logging
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -14,6 +15,7 @@ from homeassistant.exceptions import (
     HomeAssistantError,
 )
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
@@ -2539,7 +2541,7 @@ async def test_entry_reload_calls_on_unload_listeners(hass, manager):
 
 
 async def test_setup_raise_auth_failed(hass, caplog):
-    """Test a setup raising not ready."""
+    """Test a setup raising ConfigEntryAuthFailed."""
     entry = MockConfigEntry(title="test_title", domain="test")
 
     mock_setup_entry = AsyncMock(
@@ -2567,5 +2569,101 @@ async def test_setup_raise_auth_failed(hass, caplog):
 
     # Verify multiple ConfigEntryAuthFailed does not generate a second flow
     assert entry.state == config_entries.ENTRY_STATE_SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+
+async def test_setup_raise_auth_failed_from_first_coordinator_update(hass, caplog):
+    """Test async_config_entry_first_refresh raises ConfigEntryAuthFailed."""
+    entry = MockConfigEntry(title="test_title", domain="test")
+
+    async def async_setup_entry(hass, entry):
+        """Mock setup entry with a simple coordinator."""
+
+        async def _async_update_data():
+            raise ConfigEntryAuthFailed("The password is no longer valid")
+
+        coordinator = DataUpdateCoordinator(
+            hass,
+            logging.getLogger(__name__),
+            name="any",
+            update_method=_async_update_data,
+            update_interval=timedelta(seconds=1000),
+        )
+
+        await coordinator.async_config_entry_first_refresh()
+        return True
+
+    mock_integration(hass, MockModule("test", async_setup_entry=async_setup_entry))
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    await entry.async_setup(hass)
+    await hass.async_block_till_done()
+    assert "could not authenticate: The password is no longer valid" in caplog.text
+
+    assert entry.state == config_entries.ENTRY_STATE_SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["entry_id"] == entry.entry_id
+    assert flows[0]["context"]["source"] == config_entries.SOURCE_REAUTH
+
+    caplog.clear()
+    entry.state = config_entries.ENTRY_STATE_NOT_LOADED
+
+    await entry.async_setup(hass)
+    await hass.async_block_till_done()
+    assert "could not authenticate: The password is no longer valid" in caplog.text
+
+    # Verify multiple ConfigEntryAuthFailed does not generate a second flow
+    assert entry.state == config_entries.ENTRY_STATE_SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+
+async def test_setup_raise_auth_failed_from_future_coordinator_update(hass, caplog):
+    """Test a coordinator raises ConfigEntryAuthFailed in the future."""
+    entry = MockConfigEntry(title="test_title", domain="test")
+
+    async def async_setup_entry(hass, entry):
+        """Mock setup entry with a simple coordinator."""
+
+        async def _async_update_data():
+            raise ConfigEntryAuthFailed("The password is no longer valid")
+
+        coordinator = DataUpdateCoordinator(
+            hass,
+            logging.getLogger(__name__),
+            name="any",
+            update_method=_async_update_data,
+            update_interval=timedelta(seconds=1000),
+        )
+
+        await coordinator.async_refresh()
+        return True
+
+    mock_integration(hass, MockModule("test", async_setup_entry=async_setup_entry))
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    await entry.async_setup(hass)
+    await hass.async_block_till_done()
+    assert "Authentication failed while fetching" in caplog.text
+    assert "The password is no longer valid" in caplog.text
+
+    assert entry.state == config_entries.ENTRY_STATE_LOADED
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["entry_id"] == entry.entry_id
+    assert flows[0]["context"]["source"] == config_entries.SOURCE_REAUTH
+
+    caplog.clear()
+    entry.state = config_entries.ENTRY_STATE_NOT_LOADED
+
+    await entry.async_setup(hass)
+    await hass.async_block_till_done()
+    assert "Authentication failed while fetching" in caplog.text
+    assert "The password is no longer valid" in caplog.text
+
+    # Verify multiple ConfigEntryAuthFailed does not generate a second flow
+    assert entry.state == config_entries.ENTRY_STATE_LOADED
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
