@@ -51,7 +51,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             try:
                 await envoy_reader.getData()
             except httpx.HTTPError as err:
-                raise UpdateFailed(f"Error communicating with API: {err}") from err
+                template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+                message = template.format(type(err).__name__, err.args)
+                raise UpdateFailed(f"Error communicating with API: {message}") from err
 
             for condition in SENSORS:
                 if condition != "inverters":
