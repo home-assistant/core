@@ -11,10 +11,10 @@ from hyperion import client, const as hyperion_const
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SOURCE, CONF_TOKEN
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -109,17 +109,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def _create_reauth_flow(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-) -> None:
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={CONF_SOURCE: SOURCE_REAUTH}, data=config_entry.data
-        )
-    )
-
-
 @callback
 def listen_for_instance_updates(
     hass: HomeAssistant,
@@ -181,14 +170,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         and token is None
     ):
         await hyperion_client.async_client_disconnect()
-        await _create_reauth_flow(hass, config_entry)
-        return False
+        raise ConfigEntryAuthFailed
 
     # Client login doesn't work? => Reauth.
     if not await hyperion_client.async_client_login():
         await hyperion_client.async_client_disconnect()
-        await _create_reauth_flow(hass, config_entry)
-        return False
+        raise ConfigEntryAuthFailed
 
     # Cannot switch instance or cannot load state? => Not ready.
     if (

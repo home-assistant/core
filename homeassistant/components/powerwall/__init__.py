@@ -11,10 +11,10 @@ from tesla_powerwall import (
     PowerwallUnreachableError,
 )
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -115,8 +115,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except AccessDeniedError as err:
         _LOGGER.debug("Authentication failed", exc_info=err)
         http_session.close()
-        _async_start_reauth(hass, entry)
-        return False
+        raise ConfigEntryAuthFailed from err
 
     await _migrate_old_unique_ids(hass, entry_id, powerwall_data)
 
@@ -130,13 +129,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         _LOGGER.debug("Updating data")
         try:
             return await _async_update_powerwall_data(hass, entry, power_wall)
-        except AccessDeniedError:
+        except AccessDeniedError as err:
             if password is None:
-                raise
+                raise ConfigEntryAuthFailed from err
 
             # If the session expired, relogin, and try again
-            await hass.async_add_executor_job(power_wall.login, "", password)
-            return await _async_update_powerwall_data(hass, entry, power_wall)
+            try:
+                await hass.async_add_executor_job(power_wall.login, "", password)
+                return await _async_update_powerwall_data(hass, entry, power_wall)
+            except AccessDeniedError as ex:
+                raise ConfigEntryAuthFailed from ex
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -179,17 +181,6 @@ async def _async_update_powerwall_data(
         hass.data[DOMAIN][entry.entry_id][POWERWALL_API_CHANGED] = True
         # Returns the cached data. This data can also be None
         return hass.data[DOMAIN][entry.entry_id][POWERWALL_COORDINATOR].data
-
-
-def _async_start_reauth(hass: HomeAssistant, entry: ConfigEntry):
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH},
-            data=entry.data,
-        )
-    )
-    _LOGGER.error("Password is no longer valid. Please reauthenticate")
 
 
 def _login_and_fetch_base_info(power_wall: Powerwall, password: str):

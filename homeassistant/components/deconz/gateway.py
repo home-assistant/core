@@ -4,10 +4,9 @@ import asyncio
 import async_timeout
 from pydeconz import DeconzSession, errors
 
-from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.core import callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -174,15 +173,8 @@ class DeconzGateway:
         except CannotConnect as err:
             raise ConfigEntryNotReady from err
 
-        except AuthenticationRequired:
-            self.hass.async_create_task(
-                self.hass.config_entries.flow.async_init(
-                    DECONZ_DOMAIN,
-                    context={"source": SOURCE_REAUTH},
-                    data=self.config_entry.data,
-                )
-            )
-            return False
+        except AuthenticationRequired as err:
+            raise ConfigEntryAuthFailed from err
 
         for platform in PLATFORMS:
             self.hass.async_create_task(

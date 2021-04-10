@@ -9,7 +9,7 @@ import abodepy.helpers.timeline as TIMELINE
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DATE,
@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity import Entity
@@ -124,17 +124,10 @@ async def async_setup_entry(hass, config_entry):
         )
 
     except AbodeAuthenticationException as ex:
-        LOGGER.error("Invalid credentials: %s", ex)
-        await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH},
-            data=config_entry.data,
-        )
-        return False
+        raise ConfigEntryAuthFailed(f"Invalid credentials: {ex}") from ex
 
     except (AbodeException, ConnectTimeout, HTTPError) as ex:
-        LOGGER.error("Unable to connect to Abode: %s", ex)
-        raise ConfigEntryNotReady from ex
+        raise ConfigEntryNotReady(f"Unable to connect to Abode: {ex}") from ex
 
     hass.data[DOMAIN] = AbodeSystem(abode, polling)
 

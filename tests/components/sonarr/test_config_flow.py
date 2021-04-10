@@ -101,13 +101,15 @@ async def test_full_reauth_flow_implementation(
     hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the manual reauth flow from start to finish."""
-    entry = await setup_integration(hass, aioclient_mock, skip_entry_setup=True)
+    entry = await setup_integration(
+        hass, aioclient_mock, skip_entry_setup=True, unique_id="any"
+    )
     assert entry
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={CONF_SOURCE: SOURCE_REAUTH},
-        data={"config_entry_id": entry.entry_id, **entry.data},
+        context={CONF_SOURCE: SOURCE_REAUTH, "unique_id": entry.unique_id},
+        data=entry.data,
     )
 
     assert result["type"] == RESULT_TYPE_FORM

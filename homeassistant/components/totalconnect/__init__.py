@@ -5,9 +5,10 @@ import logging
 from total_connect_client import TotalConnectClient
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_USERCODES, DOMAIN
@@ -46,16 +47,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     password = conf[CONF_PASSWORD]
 
     if CONF_USERCODES not in conf:
-        _LOGGER.warning("No usercodes in TotalConnect configuration")
         # should only happen for those who used UI before we added usercodes
-        await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": SOURCE_REAUTH,
-            },
-            data=conf,
-        )
-        return False
+        raise ConfigEntryAuthFailed("No usercodes in TotalConnect configuration")
 
     temp_codes = conf[CONF_USERCODES]
     usercodes = {}
@@ -67,18 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
 
     if not client.is_valid_credentials():
-        _LOGGER.error("TotalConnect authentication failed")
-        await hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={
-                    "source": SOURCE_REAUTH,
-                },
-                data=conf,
-            )
-        )
-
-        return False
+        raise ConfigEntryAuthFailed("TotalConnect authentication failed")
 
     hass.data[DOMAIN][entry.entry_id] = client
 

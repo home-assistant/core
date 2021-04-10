@@ -7,14 +7,9 @@ from pybotvac import Account, Neato
 from pybotvac.exceptions import NeatoException
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
-from homeassistant.const import (
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    CONF_SOURCE,
-    CONF_TOKEN,
-)
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_TOKEN
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util import Throttle
@@ -74,14 +69,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Set up config entry."""
     if CONF_TOKEN not in entry.data:
-        # Init reauth flow
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                NEATO_DOMAIN,
-                context={CONF_SOURCE: SOURCE_REAUTH},
-            )
-        )
-        return False
+        raise ConfigEntryAuthFailed
 
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(

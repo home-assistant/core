@@ -14,8 +14,8 @@ from homeassistant.components.azure_devops.const import (
     DATA_AZURE_DEVOPS_CLIENT,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
@@ -30,17 +30,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         if entry.data[CONF_PAT] is not None:
             await client.authorize(entry.data[CONF_PAT], entry.data[CONF_ORG])
             if not client.authorized:
-                _LOGGER.warning(
+                raise ConfigEntryAuthFailed(
                     "Could not authorize with Azure DevOps. You may need to update your token"
                 )
-                hass.async_create_task(
-                    hass.config_entries.flow.async_init(
-                        DOMAIN,
-                        context={"source": SOURCE_REAUTH},
-                        data=entry.data,
-                    )
-                )
-                return False
         await client.get_project(entry.data[CONF_ORG], entry.data[CONF_PROJECT])
     except aiohttp.ClientError as exception:
         _LOGGER.warning(exception)

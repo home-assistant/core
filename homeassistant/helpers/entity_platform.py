@@ -228,8 +228,6 @@ class EntityPlatform:
                 tries += 1
                 wait_time = min(tries, 6) * PLATFORM_NOT_READY_BASE_WAIT_TIME
                 message = str(ex)
-                if not message and ex.__cause__:
-                    message = str(ex.__cause__)
                 ready_message = f"ready yet: {message}" if message else "ready yet"
                 if tries == 1:
                     logger.warning(

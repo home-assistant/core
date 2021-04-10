@@ -14,7 +14,11 @@ import attr
 from homeassistant import data_entry_flow, loader
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.event import Event
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
@@ -259,13 +263,26 @@ class ConfigEntry:
                     "%s.async_setup_entry did not return boolean", integration.domain
                 )
                 result = False
+        except ConfigEntryAuthFailed as ex:
+            message = str(ex)
+            auth_base_message = "could not authenticate"
+            auth_message = (
+                f"{auth_base_message}: {message}" if message else auth_base_message
+            )
+            _LOGGER.warning(
+                "Config entry '%s' for %s integration %s",
+                self.title,
+                self.domain,
+                auth_message,
+            )
+            self._async_process_on_unload()
+            self.async_start_reauth(hass)
+            result = False
         except ConfigEntryNotReady as ex:
             self.state = ENTRY_STATE_SETUP_RETRY
             wait_time = 2 ** min(tries, 4) * 5
             tries += 1
             message = str(ex)
-            if not message and ex.__cause__:
-                message = str(ex.__cause__)
             ready_message = f"ready yet: {message}" if message else "ready yet"
             if tries == 1:
                 _LOGGER.warning(
@@ -493,6 +510,27 @@ class ConfigEntry:
         if self._on_unload is not None:
             while self._on_unload:
                 self._on_unload.pop()()
+
+    @callback
+    def async_start_reauth(self, hass: HomeAssistant) -> None:
+        """Start a reauth flow."""
+        flow_context = {
+            "source": SOURCE_REAUTH,
+            "entry_id": self.entry_id,
+            "unique_id": self.unique_id,
+        }
+
+        for flow in hass.config_entries.flow.async_progress():
+            if flow["context"] == flow_context:
+                return
+
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                self.domain,
+                context=flow_context,
+                data=self.data,
+            )
+        )
 
 
 current_entry: ContextVar[ConfigEntry | None] = ContextVar(
