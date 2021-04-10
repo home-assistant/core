@@ -267,7 +267,7 @@ defusedxml==0.6.0
 denonavr==0.10.5
 
 # homeassistant.components.devolo_home_control
-devolo-home-control-api==0.17.1
+devolo-home-control-api==0.17.3
 
 # homeassistant.components.directv
 directv==0.4.0
@@ -402,7 +402,7 @@ habitipy==0.2.0
 hangups==0.4.11
 
 # homeassistant.components.cloud
-hass-nabucasa==0.42.0
+hass-nabucasa==0.43.0
 
 # homeassistant.components.tasmota
 hatasmota==0.2.9
@@ -423,7 +423,7 @@ hole==0.5.1
 holidays==0.11.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210407.2
+home-assistant-frontend==20210407.3
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -530,7 +530,7 @@ nessclient==0.9.15
 netdisco==2.8.2
 
 # homeassistant.components.nexia
-nexia==0.9.5
+nexia==0.9.6
 
 # homeassistant.components.notify_events
 notify-events==1.0.4
@@ -980,7 +980,7 @@ python-nest==4.1.0
 python-openzwave-mqtt[mqtt-client]==1.4.0
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.19
+python-smarttub==0.0.23
 
 # homeassistant.components.songpal
 python-songpal==0.12

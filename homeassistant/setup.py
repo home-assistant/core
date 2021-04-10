@@ -41,6 +41,7 @@ BASE_PLATFORMS = {
     "scene",
     "sensor",
     "switch",
+    "tts",
     "vacuum",
     "water_heater",
 }
