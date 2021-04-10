@@ -33,5 +33,6 @@
     "zeroconf",
     "zone"
   ],
-  "codeowners": []
+  "codeowners": [],
+  "quality_scale": "internal"
 }

@@ -1,5 +1,7 @@
 """Support for Modbus."""
-from typing import Any, Union
+from __future__ import annotations
+
+from typing import Any
 
 import voluptuous as vol
 
@@ -95,7 +97,7 @@ from .modbus import modbus_setup
 BASE_SCHEMA = vol.Schema({vol.Optional(CONF_NAME, default=DEFAULT_HUB): cv.string})
 
 
-def number(value: Any) -> Union[int, float]:
+def number(value: Any) -> int | float:
     """Coerce a value to number without losing precision."""
     if isinstance(value, int):
         return value
