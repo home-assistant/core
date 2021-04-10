@@ -2,34 +2,32 @@
 import asyncio
 from urllib.error import URLError
 
-import voluptuous as vol
 from youless_api import YoulessAPI
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
-from ...exceptions import PlatformNotReady
 from .const import DOMAIN
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 PLATFORMS = ["sensor"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the youless component."""
     hass.data[DOMAIN] = {}
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up youless from a config entry."""
     api = YoulessAPI(entry.data[CONF_HOST])
 
     try:
         await hass.async_add_executor_job(api.initialize)
     except URLError as exception:
-        raise PlatformNotReady from exception
+        raise ConfigEntryNotReady from exception
 
     hass.data[DOMAIN][entry.entry_id] = api
     for component in PLATFORMS:
@@ -40,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = all(
         await asyncio.gather(

@@ -5,7 +5,7 @@ from urllib.error import HTTPError, URLError
 import voluptuous as vol
 from youless_api import YoulessAPI
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_NAME
 
 from .const import DOMAIN  # pylint:disable=unused-import
@@ -13,19 +13,6 @@ from .const import DOMAIN  # pylint:disable=unused-import
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_NAME): str, vol.Required(CONF_HOST): str})
-
-
-async def validate_input(hass: core.HomeAssistant, data):
-    """Validate the user input using the API connector."""
-    try:
-        api = YoulessAPI(data[CONF_HOST])
-        await hass.async_add_executor_job(api.initialize)
-    except HTTPError as exception:
-        raise CannotConnect() from exception
-    except URLError as exception:
-        raise CannotConnect() from exception
-
-    return {"title": data[CONF_NAME]}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -39,17 +26,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                info = await validate_input(self.hass, user_input)
+                api = YoulessAPI(user_input[CONF_HOST])
+                await self.hass.async_add_executor_job(api.initialize)
+
+                device_id = config_entries.uuid_util.random_uuid_hex()
+                if api.mac_address is not None:
+                    device_id = api.mac_address
 
                 return self.async_create_entry(
-                    title=info["title"],
+                    title=user_input[CONF_NAME],
                     data={
                         CONF_HOST: user_input[CONF_HOST],
-                        CONF_NAME: user_input[CONF_NAME],
-                        CONF_DEVICE: user_input[CONF_NAME],
+                        CONF_DEVICE: device_id,
                     },
                 )
-            except CannotConnect:
+            except (HTTPError, URLError):
                 _LOGGER.exception("Cannot connect to host")
                 errors["base"] = "cannot_connect"
 

@@ -6,10 +6,6 @@
   "requirements": [
     "youless-api==0.7"
   ],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
   "codeowners": [
     "@gjong"
   ]
