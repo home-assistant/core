@@ -37,7 +37,7 @@ from .const import (
     CONF_ATTRIBUTES,
     CONF_AVAILABILITY,
     CONF_AVAILABILITY_TEMPLATE,
-    CONF_DEVICE_ID,
+    CONF_OBJECT_ID,
     CONF_PICTURE,
     CONF_TRIGGER,
 )
@@ -110,8 +110,8 @@ def rewrite_legacy_to_modern_conf(cfg: dict[str, dict]) -> list[dict]:
     """Rewrite a legacy sensor definitions to modern ones."""
     sensors = []
 
-    for device_id, entity_cfg in cfg.items():
-        entity_cfg = {**entity_cfg, CONF_DEVICE_ID: device_id}
+    for object_id, entity_cfg in cfg.items():
+        entity_cfg = {**entity_cfg, CONF_OBJECT_ID: object_id}
 
         for from_key, to_key in LEGACY_FIELDS.items():
             if from_key not in entity_cfg or to_key in entity_cfg:
@@ -123,7 +123,7 @@ def rewrite_legacy_to_modern_conf(cfg: dict[str, dict]) -> list[dict]:
             entity_cfg[to_key] = val
 
         if CONF_NAME not in entity_cfg:
-            entity_cfg[CONF_NAME] = template.Template(device_id)
+            entity_cfg[CONF_NAME] = template.Template(object_id)
 
         sensors.append(entity_cfg)
 
@@ -149,7 +149,7 @@ def _async_create_template_tracking_entities(async_add_entities, hass, definitio
 
     for entity_conf in definitions:
         # Still available on legacy
-        device_id = entity_conf.get(CONF_DEVICE_ID)
+        object_id = entity_conf.get(CONF_OBJECT_ID)
 
         state_template = entity_conf[CONF_STATE]
         icon_template = entity_conf.get(CONF_ICON)
@@ -164,7 +164,7 @@ def _async_create_template_tracking_entities(async_add_entities, hass, definitio
         sensors.append(
             SensorTemplate(
                 hass,
-                device_id,
+                object_id,
                 friendly_name_template,
                 unit_of_measurement,
                 state_template,
@@ -212,7 +212,7 @@ class SensorTemplate(TemplateEntity, SensorEntity):
     def __init__(
         self,
         hass,
-        device_id: str | None,
+        object_id: str | None,
         friendly_name_template: template.Template,
         unit_of_measurement: str | None,
         state_template: template.Template,
@@ -230,9 +230,9 @@ class SensorTemplate(TemplateEntity, SensorEntity):
             icon_template=icon_template,
             entity_picture_template=entity_picture_template,
         )
-        if device_id is not None:
+        if object_id is not None:
             self.entity_id = async_generate_entity_id(
-                ENTITY_ID_FORMAT, device_id, hass=hass
+                ENTITY_ID_FORMAT, object_id, hass=hass
             )
 
         if friendly_name_template and friendly_name_template.is_static:
