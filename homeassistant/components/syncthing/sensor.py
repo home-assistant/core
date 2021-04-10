@@ -136,8 +136,8 @@ class FolderSensor(SensorEntity):
     def device_info(self):
         """Return device information."""
         return {
-            "identifiers": {(DOMAIN, self._name)},
-            "name": self._name,
+            "identifiers": {(DOMAIN, self._syncthing.url)},
+            "name": f"Syncthing ({self._syncthing.url})",
             "manufacturer": "Syncthing Team",
             "sw_version": self._version,
             "entry_type": "service",
