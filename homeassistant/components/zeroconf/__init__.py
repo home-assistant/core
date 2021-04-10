@@ -32,6 +32,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.singleton import singleton
 from homeassistant.loader import async_get_homekit, async_get_zeroconf
+from homeassistant.util import network as network_util
 
 from .models import HaServiceBrowser, HaZeroconf
 from .usage import install_multiple_zeroconf_catcher
@@ -187,7 +188,7 @@ def _register_hass_zc_service(
         addrs.append(socket.inet_pton(socket.AF_INET6, host_ip4))
 
     try:
-        if host_ip6 != "::1":
+        if network_util.is_local(ipaddress.ip_address(host_ip6)):
             addrs.append(socket.inet_pton(socket.AF_INET6, host_ip6))
     except OSError:
         _LOGGER.debug("unable to create v6 pton")
