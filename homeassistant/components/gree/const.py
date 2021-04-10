@@ -4,7 +4,6 @@ COORDINATORS = "coordinators"
 
 DATA_DISCOVERY_SERVICE = "gree_discovery"
 DATA_DISCOVERY_INTERVAL = "gree_discovery_interval"
-DATA_UNSUBSCRIBE = "gree_data_unsubscribe"
 
 DISCOVERY_SCAN_INTERVAL = 300
 DISCOVERY_TIMEOUT = 8
