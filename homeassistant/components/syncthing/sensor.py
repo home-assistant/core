@@ -55,6 +55,34 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class FolderSensor(SensorEntity):
     """A Syncthing folder sensor."""
 
+    STATE_ATTRIBUTES = [
+        "errors",
+        "globalBytes",
+        "globalDeleted",
+        "globalDirectories",
+        "globalFiles",
+        "globalSymlinks",
+        "globalTotalItems",
+        "ignorePatterns",
+        "inSyncBytes",
+        "inSyncFiles",
+        "invalid",
+        "localBytes",
+        "localDeleted",
+        "localDirectories",
+        "localFiles",
+        "localSymlinks",
+        "localTotalItems",
+        "needBytes",
+        "needDeletes",
+        "needDirectories",
+        "needFiles",
+        "needSymlinks",
+        "needTotalItems",
+        "pullErrors",
+        "state",
+    ]
+
     def __init__(self, syncthing, name, folder_id, folder_label, version):
         """Initialize the sensor."""
         self._syncthing = syncthing
@@ -119,13 +147,10 @@ class FolderSensor(SensorEntity):
         """Request folder status and update state."""
         try:
             state = await self._syncthing.database.status(self._folder_id)
-            # A workaround, for some reason, state of paused folders is an empty string
-            if state["state"] == "":
-                state["state"] = "paused"
-            self._state = state
-            self._state.update({"id": self._folder_id})
         except aiosyncthing.exceptions.SyncthingError:
             self._state = None
+        else:
+            self._state = self._filter_state(state)
         self.async_write_ha_state()
 
     def subscribe(self):
@@ -153,11 +178,7 @@ class FolderSensor(SensorEntity):
         @callback
         async def handle_folder_summary(event):
             if self._state is not None:
-                # A workaround, for some reason, state of paused folder is an empty string
-                if event["data"]["summary"]["state"] == "":
-                    event["data"]["summary"]["state"] = "paused"
-                self._state = event["data"]["summary"]
-                self._state.update({"id": self._folder_id})
+                self._state = self._filter_state(event["data"]["summary"])
                 self.async_write_ha_state()
 
         self.async_on_remove(
@@ -223,3 +244,17 @@ class FolderSensor(SensorEntity):
         self.async_on_remove(self.unsubscribe)
 
         await self.async_update_status()
+
+    def _filter_state(self, state):
+        # Select only needed state attributes
+        state = {key: state[key] for key in state.keys() & self.STATE_ATTRIBUTES}
+
+        # A workaround, for some reason, state of paused folders is an empty string
+        if state["state"] == "":
+            state["state"] = "paused"
+
+        # Add some useful attributes
+        state["id"] = self._folder_id
+        state["label"] = self._folder_label
+
+        return state
