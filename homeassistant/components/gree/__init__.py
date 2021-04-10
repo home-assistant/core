@@ -41,8 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     @callback
     def shutdown_event(_: Event) -> None:
         if hass.data[DOMAIN].get(DATA_DISCOVERY_INTERVAL) is not None:
-            hass.data[DOMAIN][DATA_DISCOVERY_INTERVAL]()
-            hass.data[DOMAIN].pop(DATA_DISCOVERY_INTERVAL)
+            hass.data[DOMAIN].pop(DATA_DISCOVERY_INTERVAL)()
 
         if hass.data.get(DATA_DISCOVERY_SERVICE) is not None:
             del hass.data[DATA_DISCOVERY_SERVICE]
