@@ -1,0 +1,49 @@
+ezviz_alarm_sound:
+  description: 'Set movement warning sounds.'
+  fields:
+    entity_id:
+      description: 'Name(s) of entities to move.'
+      example: 'camera.living_room_camera'
+    level:
+      description: 'Sound level (2 is disabled, 1 intensive, 0 soft).'
+      example: '0'
+ezviz_ptz:
+  description: 'Moves the camera to the direction, with defined speed'
+  fields:
+    direction:
+      description: 'Direction (up, down, left, right).'
+      example: 'up'
+    entity_id:
+      description: 'Name(s) of entities to move.'
+      example: 'camera.living_room_camera'
+    speed:
+      description: 'Speed of the movement (from 1 to 9).'
+      example: '5'
+ezviz_set_alarm_detection_sensibility:
+  description: 'Sets the detection sensibility level.'
+  fields:
+    entity_id:
+      description: 'Name(s) of entities to perform action on.'
+      example: 'camera.living_room_camera'
+    level:
+      description: 'Sensibility level (1-6) for device (type 0)
+      or (1-100) for cameras (type 3).'
+      example: '0'
+    type_value:
+      description: 'Type of detection. Options : 0 - Device or 3 - Camera'
+      example: '3'
+ezviz_sound_alarm:
+  description: 'Sounds the alarm on your camera.'
+  fields:
+    enable:
+      description: 'Enter 1 or 2 (1=disable, 2=enable).'
+      example: '1'
+    entity_id:
+      description: 'Name(s) of entities to perform action on.'
+      example: 'camera.living_room_camera'
+ezviz_wake_device:
+  description: 'This can also be used to wake device from hibernation.'
+  fields:
+    entity_id:
+      description: 'Name(s) of entities to perform action on.'
+      example: 'camera.living_room_camera'

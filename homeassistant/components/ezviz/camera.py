@@ -10,18 +10,27 @@ from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Cam
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.config_entries import SOURCE_DISCOVERY, SOURCE_IGNORE, SOURCE_IMPORT
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
+    ATTR_DIRECTION,
+    ATTR_ENABLE,
+    ATTR_LEVEL,
     ATTR_SERIAL,
+    ATTR_SPEED,
+    ATTR_TYPE,
     CONF_CAMERAS,
     CONF_FFMPEG_ARGUMENTS,
     DATA_COORDINATOR,
     DEFAULT_CAMERA_USERNAME,
     DEFAULT_FFMPEG_ARGUMENTS,
     DEFAULT_RTSP_PORT,
+    DIR_DOWN,
+    DIR_LEFT,
+    DIR_RIGHT,
+    DIR_UP,
     DOMAIN,
     MANUFACTURER,
 )
@@ -157,6 +166,46 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     async_add_entities(camera_entities)
 
+    platform = entity_platform.current_platform.get()
+
+    platform.async_register_entity_service(
+        "ezviz_ptz",
+        {
+            vol.Required(ATTR_DIRECTION): vol.In(
+                [DIR_UP, DIR_DOWN, DIR_LEFT, DIR_RIGHT]
+            ),
+            vol.Required(ATTR_SPEED): cv.positive_int,
+        },
+        "perform_ezviz_ptz",
+    )
+
+    platform.async_register_entity_service(
+        "ezviz_sound_alarm",
+        {
+            vol.Required(ATTR_ENABLE): cv.positive_int,
+        },
+        "perform_ezviz_sound_alarm",
+    )
+
+    platform.async_register_entity_service(
+        "ezviz_wake_device", {}, "perform_ezviz_wake_device"
+    )
+
+    platform.async_register_entity_service(
+        "ezviz_alarm_sound",
+        {vol.Required(ATTR_LEVEL): cv.positive_int},
+        "perform_ezviz_alarm_sound",
+    )
+
+    platform.async_register_entity_service(
+        "ezviz_set_alarm_detection_sensibility",
+        {
+            vol.Required(ATTR_LEVEL): cv.positive_int,
+            vol.Required(ATTR_TYPE): cv.positive_int,
+        },
+        "perform_ezviz_set_alarm_detection_sensibility",
+    )
+
 
 class EzvizCamera(CoordinatorEntity, Camera, RestoreEntity):
     """An implementation of a Ezviz security camera."""
@@ -271,3 +320,45 @@ class EzvizCamera(CoordinatorEntity, Camera, RestoreEntity):
             self._rtsp_stream = rtsp_stream_source
             return rtsp_stream_source
         return None
+
+    def perform_ezviz_ptz(self, direction, speed):
+        """Perform a PTZ action on the camera."""
+        _LOGGER.debug("PTZ action '%s' on %s", direction, self._name)
+
+        self.coordinator.ezviz_client.ptz_control(
+            str(direction).upper(), self._serial, "START", speed
+        )
+        self.coordinator.ezviz_client.ptz_control(
+            str(direction).upper(), self._serial, "STOP", speed
+        )
+
+    def perform_ezviz_sound_alarm(self, enable):
+        """Sound the alarm on a camera."""
+        _LOGGER.debug("EZVIZ Alarm Switch to %s", enable)
+
+        self.coordinator.ezviz_client.sound_alarm(self._serial, enable)
+
+    def perform_ezviz_wake_device(self):
+        """Basically wakes the camera by querying the device."""
+        _LOGGER.debug("Wake camera '%s' with serial %s", self._name, self._serial)
+
+        self.coordinator.ezviz_client.get_detection_sensibility(self._serial)
+
+    def perform_ezviz_alarm_sound(self, level):
+        """Enable/Disable movement sound alarm."""
+        _LOGGER.debug("Set alarm sound on camera '%s' on %s", self._name, level)
+
+        self.coordinator.ezviz_client.alarm_sound(self._serial, level, 1)
+
+    def perform_ezviz_set_alarm_detection_sensibility(self, level, type_value):
+        """Set camera detection sensibility level service."""
+        _LOGGER.debug(
+            "Set detection sensibility level '%s' on camera '%s' using type %s",
+            level,
+            self._name,
+            type_value,
+        )
+
+        self.coordinator.ezviz_client.detection_sensibility(
+            self._serial, level, type_value
+        )
