@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import functools
 from typing import Callable
 
 from async_timeout import timeout
@@ -54,15 +55,15 @@ from .const import (
     CONF_USB_PATH,
     CONF_USE_ADDON,
     DATA_CLIENT,
+    DATA_PLATFORM_SETUP,
     DATA_UNSUBSCRIBE,
     DOMAIN,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
     LOGGER,
-    PLATFORMS,
     ZWAVE_JS_NOTIFICATION_EVENT,
     ZWAVE_JS_VALUE_NOTIFICATION_EVENT,
 )
-from .discovery import async_discover_values
+from .discovery import ZwaveDiscoveryInfo, async_discover_values
 from .helpers import get_device_id
 from .migrate import async_migrate_discovered_value
 from .services import ZWaveServices
@@ -113,11 +114,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client = ZwaveClient(entry.data[CONF_URL], async_get_clientsession(hass))
     dev_reg = device_registry.async_get(hass)
     ent_reg = entity_registry.async_get(hass)
+    entry_hass_data: dict = hass.data[DOMAIN].setdefault(entry.entry_id, {})
+
+    @callback
+    def async_dispatch_discovery_info(
+        disc_info: ZwaveDiscoveryInfo, task: asyncio.tasks.Task
+    ) -> None:
+        """Dispatch a signal for discovery info once platform setup task is done."""
+        async_dispatcher_send(
+            hass, f"{DOMAIN}_{entry.entry_id}_add_{disc_info.platform}", disc_info
+        )
 
     @callback
     def async_on_node_ready(node: ZwaveNode) -> None:
         """Handle node ready event."""
         LOGGER.debug("Processing node %s", node)
+
+        platform_setup_tasks = entry_hass_data[DATA_PLATFORM_SETUP]
 
         # register (or update) node in device registry
         register_node_in_dev_reg(hass, entry, dev_reg, client, node)
@@ -130,9 +143,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # the value_id format. Some time in the future, this call (as well as the
             # helper functions) can be removed.
             async_migrate_discovered_value(ent_reg, client, disc_info)
-            async_dispatcher_send(
-                hass, f"{DOMAIN}_{entry.entry_id}_add_{disc_info.platform}", disc_info
+            if disc_info.platform not in platform_setup_tasks:
+                platform_setup_tasks[disc_info.platform] = hass.async_create_task(
+                    hass.config_entries.async_forward_entry_setup(
+                        entry, disc_info.platform
+                    )
+                )
+            platform_setup_tasks[disc_info.platform].add_done_callback(
+                functools.partial(async_dispatch_discovery_info, disc_info)
             )
+
         # add listener for stateless node value notification events
         node.on(
             "value notification",
@@ -234,7 +254,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         hass.bus.async_fire(ZWAVE_JS_NOTIFICATION_EVENT, event_data)
 
-    entry_hass_data: dict = hass.data[DOMAIN].setdefault(entry.entry_id, {})
     # connect and throw error if connection failed
     try:
         async with timeout(CONNECT_TIMEOUT):
@@ -259,6 +278,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unsubscribe_callbacks: list[Callable] = []
     entry_hass_data[DATA_CLIENT] = client
     entry_hass_data[DATA_UNSUBSCRIBE] = unsubscribe_callbacks
+    entry_hass_data[DATA_PLATFORM_SETUP] = {}
 
     services = ZWaveServices(hass, ent_reg)
     services.async_register()
@@ -268,14 +288,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def start_platforms() -> None:
         """Start platforms and perform discovery."""
-        # wait until all required platforms are ready
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_setup(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-
         driver_ready = asyncio.Event()
 
         async def handle_ha_shutdown(event: Event) -> None:
@@ -368,8 +380,13 @@ async def disconnect_client(
     """Disconnect client."""
     listen_task.cancel()
     platform_task.cancel()
+    platform_setup_tasks = (
+        hass.data[DOMAIN].get(entry.entry_id, {}).get(DATA_PLATFORM_SETUP, {}).values()
+    )
+    for task in platform_setup_tasks:
+        task.cancel()
 
-    await asyncio.gather(listen_task, platform_task)
+    await asyncio.gather(listen_task, platform_task, *platform_setup_tasks)
 
     if client.connected:
         await client.disconnect()
@@ -378,14 +395,20 @@ async def disconnect_client(
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
+    tasks = []
+    for platform, task in hass.data[DOMAIN][entry.entry_id][
+        DATA_PLATFORM_SETUP
+    ].items():
+        if task.done():
+            tasks.append(
                 hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+            )
+        else:
+            task.cancel()
+            tasks.append(task)
+
+    unload_ok = all(await asyncio.gather(*tasks))
+
     if not unload_ok:
         return False
 
