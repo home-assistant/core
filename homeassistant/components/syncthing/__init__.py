@@ -130,7 +130,9 @@ class SyncthingClient:
         while True:
             if await self._server_available():
                 if server_was_unavailable:
-                    _LOGGER.info("The syncthing server '%s' is back online", self._name)
+                    _LOGGER.info(
+                        "The syncthing server '%s' is back online", self._client.url
+                    )
                     async_dispatcher_send(
                         self._hass, f"{SERVER_AVAILABLE}-{self._name}"
                     )
@@ -159,7 +161,7 @@ class SyncthingClient:
             except aiosyncthing.exceptions.SyncthingError:
                 _LOGGER.info(
                     "The syncthing server '%s' is not available. Sleeping %i seconds and retrying",
-                    self._name,
+                    self._client.url,
                     RECONNECT_INTERVAL.seconds,
                 )
                 async_dispatcher_send(self._hass, f"{SERVER_UNAVAILABLE}-{self._name}")
