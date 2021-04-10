@@ -27,7 +27,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity import async_generate_entity_id
@@ -211,9 +211,9 @@ class SensorTemplate(TemplateEntity, SensorEntity):
 
     def __init__(
         self,
-        hass,
+        hass: HomeAssistant,
         object_id: str | None,
-        friendly_name_template: template.Template,
+        friendly_name_template: template.Template | None,
         unit_of_measurement: str | None,
         state_template: template.Template,
         icon_template: template.Template | None,
@@ -235,12 +235,19 @@ class SensorTemplate(TemplateEntity, SensorEntity):
                 ENTITY_ID_FORMAT, object_id, hass=hass
             )
 
-        if friendly_name_template and friendly_name_template.is_static:
-            self._name = friendly_name_template.async_render(parse_result=False)
-            self._friendly_name_template = None
-        else:
-            self._friendly_name_template = friendly_name_template
-            self._name = None
+        self._name: str | None = None
+        self._friendly_name_template = friendly_name_template
+
+        if friendly_name_template:
+            friendly_name_template.hass = hass
+            try:
+                self._name = friendly_name_template.async_render(parse_result=False)
+            except template.TemplateError:
+                pass
+            finally:
+                # This is so TemplateEntity can group
+                # them together correctly.
+                friendly_name_template.hass = None
 
         self._unit_of_measurement = unit_of_measurement
         self._template = state_template
@@ -252,7 +259,7 @@ class SensorTemplate(TemplateEntity, SensorEntity):
     async def async_added_to_hass(self):
         """Register callbacks."""
         self.add_template_attribute("_state", self._template, None, self._update_state)
-        if self._friendly_name_template is not None:
+        if self._friendly_name_template and not self._friendly_name_template.is_static:
             self.add_template_attribute("_name", self._friendly_name_template)
 
         await super().async_added_to_hass()
