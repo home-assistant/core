@@ -44,7 +44,7 @@ from .const import (
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
-LEGACY_SENSOR_FIELDS = {
+LEGACY_FIELDS = {
     CONF_ICON_TEMPLATE: CONF_ICON,
     CONF_ENTITY_PICTURE_TEMPLATE: CONF_PICTURE,
     CONF_AVAILABILITY_TEMPLATE: CONF_AVAILABILITY,
@@ -113,7 +113,7 @@ def rewrite_legacy_to_modern_conf(cfg: dict[str, dict]) -> list[dict]:
     for device_id, entity_cfg in cfg.items():
         entity_cfg = {**entity_cfg, CONF_DEVICE_ID: device_id}
 
-        for from_key, to_key in LEGACY_SENSOR_FIELDS.items():
+        for from_key, to_key in LEGACY_FIELDS.items():
             if from_key not in entity_cfg or to_key in entity_cfg:
                 continue
 
