@@ -479,7 +479,7 @@ deluge-client==1.7.1
 denonavr==0.9.10
 
 # homeassistant.components.devolo_home_control
-devolo-home-control-api==0.17.1
+devolo-home-control-api==0.17.3
 
 # homeassistant.components.directv
 directv==0.4.0
@@ -1479,7 +1479,7 @@ pykira==0.1.1
 pykmtronic==0.0.3
 
 # homeassistant.components.kodi
-pykodi==0.2.3
+pykodi==0.2.5
 
 # homeassistant.components.kulersky
 pykulersky==0.5.2
@@ -1825,7 +1825,7 @@ python-qbittorrent==0.4.2
 python-ripple-api==0.0.3
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.19
+python-smarttub==0.0.23
 
 # homeassistant.components.sochain
 python-sochain-api==0.0.2
@@ -2375,7 +2375,7 @@ zengge==0.2
 zeroconf==0.29.0
 
 # homeassistant.components.zha
-zha-quirks==0.0.55
+zha-quirks==0.0.56
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9
