@@ -5,7 +5,9 @@
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
-        }
+        },
+        "description": "Please enter the API key obtained from https://home.freedompro.eu",
+        "title": "Freedompro API key"
       }
     },
     "error": {
