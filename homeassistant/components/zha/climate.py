@@ -73,6 +73,7 @@ ATTR_OCCP_COOL_SETPT = "occupied_cooling_setpoint"
 ATTR_OCCP_HEAT_SETPT = "occupied_heating_setpoint"
 ATTR_UNOCCP_HEAT_SETPT = "unoccupied_heating_setpoint"
 ATTR_UNOCCP_COOL_SETPT = "unoccupied_cooling_setpoint"
+ATTR_WINDOW_OPEN = "window_open"
 
 
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
@@ -151,6 +152,31 @@ SYSTEM_MODE_2_HVAC = {
 ZCL_TEMP = 100
 
 
+# Info from: https://github.com/SimpleUserHA/DanfosseTRV/raw/main/Danfoss%20Ally%20Radiator%20Thermostat%201.08%20Zigbee%20Cluster%20Specifications%2016122020.pdf
+class WindowDetection(enum.IntEnum):
+    """Danfoss specific Window Detection attribute enum."""
+
+    # Window state not reported
+    QUARANTINE = 0x00
+    # Window Closed
+    CLOSED = 0x01
+    # Window might be opening
+    HOLD = 0x02
+    # Window Open
+    OPEN = 0x03
+    # In window open state (from external sensor), but detected closed locally
+    EXT_OPEN = 0x4
+
+
+WINDOW_DETECTION_2_STATE = {
+    WindowDetection.QUARANTINE: "Quarantine",
+    WindowDetection.CLOSED: "Closed",
+    WindowDetection.HOLD: "Hold",
+    WindowDetection.OPEN: "Open",
+    WindowDetection.EXT_OPEN: "Open (local detection: closed)",
+}
+
+
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation sensor from config entry."""
     entities_to_create = hass.data[DATA_ZHA][DOMAIN]
@@ -207,6 +233,10 @@ class Thermostat(ZhaEntity, ClimateEntity):
             data[ATTR_PI_HEATING_DEMAND] = self._thrm.pi_heating_demand
         if self._thrm.pi_cooling_demand is not None:
             data[ATTR_PI_COOLING_DEMAND] = self._thrm.pi_cooling_demand
+        if self._thrm.window_open is not None:
+            data[ATTR_WINDOW_OPEN] = WINDOW_DETECTION_2_STATE.get(
+                self._thrm.window_open
+            )
 
         unoccupied_cooling_setpoint = self._thrm.unoccupied_cooling_setpoint
         if unoccupied_cooling_setpoint is not None:

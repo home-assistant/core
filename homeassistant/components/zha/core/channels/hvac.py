@@ -111,6 +111,7 @@ class ThermostatChannel(ZigbeeChannel):
             "system_mode": False,
             "unoccupied_heating_setpoint": False,
             "unoccupied_cooling_setpoint": False,
+            "etrv_open_windows_detection": False,
         }
         self._abs_max_cool_setpoint_limit = 3200  # 32C
         self._abs_min_cool_setpoint_limit = 1600  # 16C
@@ -132,6 +133,7 @@ class ThermostatChannel(ZigbeeChannel):
         self._system_mode = None
         self._unoccupied_cooling_setpoint = None
         self._unoccupied_heating_setpoint = None
+        self._etrv_open_windows_detection = None
         self._report_config = [
             {"attr": "local_temp", "config": REPORT_CONFIG_CLIMATE},
             {"attr": "occupied_cooling_setpoint", "config": REPORT_CONFIG_CLIMATE},
@@ -253,6 +255,11 @@ class ThermostatChannel(ZigbeeChannel):
     def unoccupied_heating_setpoint(self) -> int | None:
         """Temperature when room is not occupied."""
         return self._unoccupied_heating_setpoint
+
+    @property
+    def window_open(self) -> int | None:
+        """TRV detection for open windows."""
+        return self._etrv_open_windows_detection
 
     @callback
     def attribute_updated(self, attrid, value):
