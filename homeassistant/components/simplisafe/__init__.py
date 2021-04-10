@@ -17,7 +17,6 @@ from simplipy.websocket import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     ATTR_CODE,
     CONF_CODE,
@@ -26,7 +25,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import CoreState, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
     config_validation as cv,
@@ -514,27 +513,9 @@ class SimpliSafe:
         for result in results:
             if isinstance(result, InvalidCredentialsError):
                 if self._emergency_refresh_token_used:
-                    matching_flows = [
-                        flow
-                        for flow in self._hass.config_entries.flow.async_progress()
-                        if flow["context"].get("source") == SOURCE_REAUTH
-                        and flow["context"].get("unique_id")
-                        == self.config_entry.unique_id
-                    ]
-
-                    if not matching_flows:
-                        self._hass.async_create_task(
-                            self._hass.config_entries.flow.async_init(
-                                DOMAIN,
-                                context={
-                                    "source": SOURCE_REAUTH,
-                                    "unique_id": self.config_entry.unique_id,
-                                },
-                                data=self.config_entry.data,
-                            )
-                        )
-
-                    raise UpdateFailed("Update failed with stored refresh token")
+                    raise ConfigEntryAuthFailed(
+                        "Update failed with stored refresh token"
+                    )
 
                 LOGGER.warning("SimpliSafe cloud error; trying stored refresh token")
                 self._emergency_refresh_token_used = True

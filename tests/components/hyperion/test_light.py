@@ -761,7 +761,11 @@ async def test_setup_entry_no_token_reauth(hass: HomeAssistantType) -> None:
         assert client.async_client_disconnect.called
         mock_flow_init.assert_called_once_with(
             DOMAIN,
-            context={CONF_SOURCE: SOURCE_REAUTH},
+            context={
+                CONF_SOURCE: SOURCE_REAUTH,
+                "entry_id": config_entry.entry_id,
+                "unique_id": config_entry.unique_id,
+            },
             data=config_entry.data,
         )
         assert config_entry.state == ENTRY_STATE_SETUP_ERROR
@@ -785,7 +789,11 @@ async def test_setup_entry_bad_token_reauth(hass: HomeAssistantType) -> None:
         assert client.async_client_disconnect.called
         mock_flow_init.assert_called_once_with(
             DOMAIN,
-            context={CONF_SOURCE: SOURCE_REAUTH},
+            context={
+                CONF_SOURCE: SOURCE_REAUTH,
+                "entry_id": config_entry.entry_id,
+                "unique_id": config_entry.unique_id,
+            },
             data=config_entry.data,
         )
         assert config_entry.state == ENTRY_STATE_SETUP_ERROR
