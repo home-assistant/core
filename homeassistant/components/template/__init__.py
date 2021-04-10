@@ -68,7 +68,7 @@ async def _process_config(hass, config):
 
     async def init_coordinator(hass, conf):
         coordinator = TriggerUpdateCoordinator(hass, conf)
-        await coordinator.async_setup(conf)
+        await coordinator.async_setup(config)
         return coordinator
 
     hass.data[DOMAIN] = await asyncio.gather(

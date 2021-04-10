@@ -31,6 +31,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     HTTP_BAD_REQUEST,
     HTTP_NOT_FOUND,
+    PLATFORM_FORMAT,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -315,6 +316,10 @@ class SpeechManager:
         if provider.name is None:
             provider.name = engine
         self.providers[engine] = provider
+
+        self.hass.config.components.add(
+            PLATFORM_FORMAT.format(domain=engine, platform=DOMAIN)
+        )
 
     async def async_get_url_path(
         self, engine, message, cache=None, language=None, options=None
