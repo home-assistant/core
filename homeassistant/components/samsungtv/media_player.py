@@ -21,6 +21,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     CONF_HOST,
+    CONF_IP_ADDRESS,
     CONF_MAC,
     CONF_METHOD,
     CONF_NAME,
@@ -29,6 +30,8 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import callback
+from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.script import Script
@@ -75,6 +78,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             hass, turn_on_action, config_entry.data.get(CONF_NAME, DEFAULT_NAME), DOMAIN
         )
 
+    await _migrate_old_unique_ids(hass, config_entry)
+
     # Initialize bridge
     data = config_entry.data.copy()
     bridge = SamsungTVBridge.get_bridge(
@@ -95,6 +100,25 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         )
 
     async_add_entities([SamsungTVDevice(bridge, config_entry, on_script)])
+
+
+async def _migrate_old_unique_ids(hass, config_entry):
+    host = config_entry.data[CONF_HOST]
+    ip_address = config_entry.data[CONF_IP_ADDRESS]
+
+    @callback
+    def _async_migrator(entity_entry: entity_registry.RegistryEntry):
+
+        LOGGER.info(
+            "Migrating unique_id from [%s] to [%s]",
+            ip_address,
+            host,
+        )
+        return {"new_unique_id": host}
+
+    await entity_registry.async_migrate_entries(
+        hass, config_entry.entry_id, _async_migrator
+    )
 
 
 class SamsungTVDevice(MediaPlayerEntity):
