@@ -116,6 +116,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ent_reg = entity_registry.async_get(hass)
     entry_hass_data: dict = hass.data[DOMAIN].setdefault(entry.entry_id, {})
 
+    unsubscribe_callbacks: list[Callable] = []
+    entry_hass_data[DATA_CLIENT] = client
+    entry_hass_data[DATA_UNSUBSCRIBE] = unsubscribe_callbacks
+    entry_hass_data[DATA_PLATFORM_SETUP] = {}
+
     @callback
     def async_dispatch_discovery_info(
         disc_info: ZwaveDiscoveryInfo, task: asyncio.tasks.Task
@@ -274,11 +279,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         LOGGER.info("Connected to Zwave JS Server")
         entry_hass_data[DATA_CONNECT_FAILED_LOGGED] = False
         entry_hass_data[DATA_INVALID_SERVER_VERSION_LOGGED] = False
-
-    unsubscribe_callbacks: list[Callable] = []
-    entry_hass_data[DATA_CLIENT] = client
-    entry_hass_data[DATA_UNSUBSCRIBE] = unsubscribe_callbacks
-    entry_hass_data[DATA_PLATFORM_SETUP] = {}
 
     services = ZWaveServices(hass, ent_reg)
     services.async_register()
