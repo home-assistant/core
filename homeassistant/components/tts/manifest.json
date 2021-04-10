@@ -5,6 +5,6 @@
   "requirements": ["mutagen==1.45.1"],
   "dependencies": ["http"],
   "after_dependencies": ["media_player"],
-  "quality_scale": "internal",
-  "codeowners": ["@pvizeli"]
+  "codeowners": ["@pvizeli"],
+  "quality_scale": "internal"
 }
