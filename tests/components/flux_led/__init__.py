@@ -1,1 +1,1 @@
-"""Tests for the flux_led component."""
+"""Tests for the flux_led integration."""
