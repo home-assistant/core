@@ -1,5 +1,5 @@
 """Constants for Brother integration."""
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import ATTR_ICON, PERCENTAGE
 
 ATTR_BELT_UNIT_REMAINING_LIFE = "belt_unit_remaining_life"
 ATTR_BLACK_DRUM_COUNTER = "black_drum_counter"
@@ -20,7 +20,6 @@ ATTR_DRUM_REMAINING_PAGES = "drum_remaining_pages"
 ATTR_DUPLEX_COUNTER = "duplex_unit_pages_counter"
 ATTR_ENABLED = "enabled"
 ATTR_FUSER_REMAINING_LIFE = "fuser_remaining_life"
-ATTR_ICON = "icon"
 ATTR_LABEL = "label"
 ATTR_LASER_REMAINING_LIFE = "laser_remaining_life"
 ATTR_MAGENTA_DRUM_COUNTER = "magenta_drum_counter"
@@ -41,11 +40,15 @@ ATTR_YELLOW_DRUM_REMAINING_PAGES = "yellow_drum_remaining_pages"
 ATTR_YELLOW_INK_REMAINING = "yellow_ink_remaining"
 ATTR_YELLOW_TONER_REMAINING = "yellow_toner_remaining"
 
+DATA_CONFIG_ENTRY = "config_entry"
+
 DOMAIN = "brother"
 
 UNIT_PAGES = "p"
 
 PRINTER_TYPES = ["laser", "ink"]
+
+SNMP = "snmp"
 
 SENSOR_TYPES = {
     ATTR_STATUS: {

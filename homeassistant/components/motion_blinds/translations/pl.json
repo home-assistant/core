@@ -8,7 +8,7 @@
         "error": {
             "discovery_error": "Nie uda\u0142o si\u0119 wykry\u0107 bramki ruchu"
         },
-        "flow_title": "Motion Blinds",
+        "flow_title": "Rolety Motion",
         "step": {
             "connect": {
                 "data": {
@@ -30,7 +30,7 @@
                     "host": "Adres IP"
                 },
                 "description": "Po\u0142\u0105cz si\u0119 z bram\u0105 ruchu. Je\u015bli adres IP nie jest ustawiony, u\u017cywane jest automatyczne wykrywanie",
-                "title": "Motion Blinds"
+                "title": "Rolety Motion"
             }
         }
     }

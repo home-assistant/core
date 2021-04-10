@@ -1,7 +1,8 @@
 """All constants related to the ZHA component."""
+from __future__ import annotations
+
 import enum
 import logging
-from typing import List
 
 import bellows.zigbee.application
 from zigpy.config import CONF_DEVICE_PATH  # noqa: F401 # pylint: disable=unused-import
@@ -31,7 +32,6 @@ ATTR_ATTRIBUTE_NAME = "attribute_name"
 ATTR_AVAILABLE = "available"
 ATTR_CLUSTER_ID = "cluster_id"
 ATTR_CLUSTER_TYPE = "cluster_type"
-ATTR_COMMAND = "command"
 ATTR_COMMAND_TYPE = "command_type"
 ATTR_DEVICE_IEEE = "device_ieee"
 ATTR_DEVICE_TYPE = "device_type"
@@ -47,7 +47,6 @@ ATTR_MANUFACTURER = "manufacturer"
 ATTR_MANUFACTURER_CODE = "manufacturer_code"
 ATTR_MEMBERS = "members"
 ATTR_MODEL = "model"
-ATTR_NAME = "name"
 ATTR_NEIGHBORS = "neighbors"
 ATTR_NODE_DESCRIPTOR = "node_descriptor"
 ATTR_NWK = "nwk"
@@ -104,7 +103,7 @@ CLUSTER_COMMANDS_SERVER = "server_commands"
 CLUSTER_TYPE_IN = "in"
 CLUSTER_TYPE_OUT = "out"
 
-COMPONENTS = (
+PLATFORMS = (
     BINARY_SENSOR,
     CLIMATE,
     COVER,
@@ -174,6 +173,9 @@ MFG_CLUSTER_ID_START = 0xFC00
 POWER_MAINS_POWERED = "Mains"
 POWER_BATTERY_OR_UNKNOWN = "Battery or Unknown"
 
+PRESET_SCHEDULE = "schedule"
+PRESET_COMPLEX = "complex"
+
 
 class RadioType(enum.Enum):
     """Possible options for radio type."""
@@ -204,7 +206,7 @@ class RadioType(enum.Enum):
     )
 
     @classmethod
-    def list(cls) -> List[str]:
+    def list(cls) -> list[str]:
         """Return a list of descriptions."""
         return [e.description for e in RadioType]
 

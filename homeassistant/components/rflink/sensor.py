@@ -2,10 +2,12 @@
 from rflink.parser import PACKET_FIELDS, UNITS
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    CONF_DEVICES,
     CONF_NAME,
+    CONF_SENSOR_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
 )
 import homeassistant.helpers.config_validation as cv
@@ -14,7 +16,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from . import (
     CONF_ALIASES,
     CONF_AUTOMATIC_ADD,
-    CONF_DEVICES,
     DATA_DEVICE_REGISTER,
     DATA_ENTITY_LOOKUP,
     EVENT_KEY_ID,
@@ -31,8 +32,6 @@ SENSOR_ICONS = {
     "battery": "mdi:battery",
     "temperature": "mdi:thermometer",
 }
-
-CONF_SENSOR_TYPE = "sensor_type"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -99,7 +98,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_SENSOR] = add_new_device
 
 
-class RflinkSensor(RflinkDevice):
+class RflinkSensor(RflinkDevice, SensorEntity):
     """Representation of a Rflink sensor."""
 
     def __init__(

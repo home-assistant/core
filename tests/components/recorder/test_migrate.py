@@ -1,13 +1,15 @@
 """The tests for the Recorder component."""
 # pylint: disable=protected-access
-from unittest.mock import call, patch
+from unittest.mock import Mock, PropertyMock, call, patch
 
 import pytest
 from sqlalchemy import create_engine
+from sqlalchemy.exc import InternalError, OperationalError, ProgrammingError
 from sqlalchemy.pool import StaticPool
 
 from homeassistant.bootstrap import async_setup_component
-from homeassistant.components.recorder import const, migration, models
+from homeassistant.components.recorder import RecorderRuns, const, migration, models
+import homeassistant.util.dt as dt_util
 
 from tests.components.recorder import models_original
 
@@ -50,8 +52,16 @@ async def test_schema_migrate(hass):
     throwing exceptions. Maintaining a set of assertions based on schema
     inspection could quickly become quite cumbersome.
     """
+
+    def _mock_setup_run(self):
+        self.run_info = RecorderRuns(
+            start=self.recording_start, created=dt_util.utcnow()
+        )
+
     with patch("sqlalchemy.create_engine", new=create_engine_test), patch(
-        "homeassistant.components.recorder.Recorder._setup_run"
+        "homeassistant.components.recorder.Recorder._setup_run",
+        side_effect=_mock_setup_run,
+        autospec=True,
     ) as setup_run:
         await async_setup_component(
             hass, "recorder", {"recorder": {"db_url": "sqlite://"}}
@@ -64,6 +74,26 @@ def test_invalid_update():
     """Test that an invalid new version raises an exception."""
     with pytest.raises(ValueError):
         migration._apply_update(None, -1, 0)
+
+
+@pytest.mark.parametrize(
+    ["engine_type", "substr"],
+    [
+        ("postgresql", "ALTER event_type TYPE VARCHAR(64)"),
+        ("mssql", "ALTER COLUMN event_type VARCHAR(64)"),
+        ("mysql", "MODIFY event_type VARCHAR(64)"),
+        ("sqlite", None),
+    ],
+)
+def test_modify_column(engine_type, substr):
+    """Test that modify column generates the expected query."""
+    engine = Mock()
+    engine.dialect.name = engine_type
+    migration._modify_columns(engine, "events", ["event_type VARCHAR(64)"])
+    if substr:
+        assert substr in engine.execute.call_args[0][0].text
+    else:
+        assert not engine.execute.called
 
 
 def test_forgiving_add_column():
@@ -79,3 +109,30 @@ def test_forgiving_add_index():
     engine = create_engine("sqlite://", poolclass=StaticPool)
     models.Base.metadata.create_all(engine)
     migration._create_index(engine, "states", "ix_states_context_id")
+
+
+@pytest.mark.parametrize(
+    "exception_type", [OperationalError, ProgrammingError, InternalError]
+)
+def test_forgiving_add_index_with_other_db_types(caplog, exception_type):
+    """Test that add index will continue if index exists on mysql and postgres."""
+    mocked_index = Mock()
+    type(mocked_index).name = "ix_states_context_id"
+    mocked_index.create = Mock(
+        side_effect=exception_type(
+            "CREATE INDEX ix_states_old_state_id ON states (old_state_id);",
+            [],
+            'relation "ix_states_old_state_id" already exists',
+        )
+    )
+
+    mocked_table = Mock()
+    type(mocked_table).indexes = PropertyMock(return_value=[mocked_index])
+
+    with patch(
+        "homeassistant.components.recorder.migration.Table", return_value=mocked_table
+    ):
+        migration._create_index(Mock(), "states", "ix_states_context_id")
+
+    assert "already exists on states" in caplog.text
+    assert "continuing" in caplog.text

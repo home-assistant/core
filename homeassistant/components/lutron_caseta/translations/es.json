@@ -29,6 +29,27 @@
     },
     "device_automation": {
         "trigger_subtype": {
+            "button_1": "Primer bot\u00f3n",
+            "button_2": "Segundo bot\u00f3n",
+            "button_3": "Tercer bot\u00f3n",
+            "button_4": "Cuarto bot\u00f3n",
+            "close_1": "Cerrar 1",
+            "close_2": "Cerrar 2",
+            "close_3": "Cerrar 3",
+            "close_4": "Cerrar 4",
+            "close_all": "Cerrar todo",
+            "group_1_button_1": "Primer bot\u00f3n de primer grupo",
+            "group_1_button_2": "Segundo bot\u00f3n del primer grupo",
+            "group_2_button_1": "Primer bot\u00f3n del segundo grupo",
+            "group_2_button_2": "Segundo bot\u00f3n del segundo grupo",
+            "lower": "Inferior",
+            "lower_1": "Inferior 1",
+            "lower_2": "Inferior 2",
+            "lower_3": "Inferior 3",
+            "lower_4": "Inferior 4",
+            "lower_all": "Bajar todo",
+            "off": "Apagado",
+            "on": "Encendido",
             "open_1": "Abrir 1",
             "open_2": "Abrir 2",
             "open_3": "Abrir 3",
@@ -46,6 +67,10 @@
             "stop_3": "Detener 3",
             "stop_4": "Detener 4",
             "stop_all": "Detener todo"
+        },
+        "trigger_type": {
+            "press": "\"{subtipo}\" presionado",
+            "release": "\"{subtipo}\" liberado"
         }
     }
 }

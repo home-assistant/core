@@ -1,5 +1,5 @@
 """Demo fan platform that has a fake fan."""
-from typing import List, Optional
+from __future__ import annotations
 
 from homeassistant.components.fan import (
     SPEED_HIGH,
@@ -15,6 +15,8 @@ from homeassistant.components.fan import (
 
 PRESET_MODE_AUTO = "auto"
 PRESET_MODE_SMART = "smart"
+PRESET_MODE_SLEEP = "sleep"
+PRESET_MODE_ON = "on"
 
 FULL_SUPPORT = SUPPORT_SET_SPEED | SUPPORT_OSCILLATE | SUPPORT_DIRECTION
 LIMITED_SUPPORT = SUPPORT_SET_SPEED
@@ -38,6 +40,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                     SPEED_HIGH,
                     PRESET_MODE_AUTO,
                     PRESET_MODE_SMART,
+                    PRESET_MODE_SLEEP,
+                    PRESET_MODE_ON,
                 ],
             ),
             DemoFan(
@@ -54,7 +58,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 "fan3",
                 "Percentage Full Fan",
                 FULL_SUPPORT,
-                [PRESET_MODE_AUTO, PRESET_MODE_SMART],
+                [
+                    PRESET_MODE_AUTO,
+                    PRESET_MODE_SMART,
+                    PRESET_MODE_SLEEP,
+                    PRESET_MODE_ON,
+                ],
                 None,
             ),
             DemoPercentageFan(
@@ -62,7 +71,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 "fan4",
                 "Percentage Limited Fan",
                 LIMITED_SUPPORT,
-                [PRESET_MODE_AUTO, PRESET_MODE_SMART],
+                [
+                    PRESET_MODE_AUTO,
+                    PRESET_MODE_SMART,
+                    PRESET_MODE_SLEEP,
+                    PRESET_MODE_ON,
+                ],
                 None,
             ),
             AsyncDemoPercentageFan(
@@ -70,7 +84,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 "fan5",
                 "Preset Only Limited Fan",
                 SUPPORT_PRESET_MODE,
-                [PRESET_MODE_AUTO, PRESET_MODE_SMART],
+                [
+                    PRESET_MODE_AUTO,
+                    PRESET_MODE_SMART,
+                    PRESET_MODE_SLEEP,
+                    PRESET_MODE_ON,
+                ],
                 [],
             ),
         ]
@@ -91,15 +110,15 @@ class BaseDemoFan(FanEntity):
         unique_id: str,
         name: str,
         supported_features: int,
-        preset_modes: Optional[List[str]],
-        speed_list: Optional[List[str]],
+        preset_modes: list[str] | None,
+        speed_list: list[str] | None,
     ) -> None:
         """Initialize the entity."""
         self.hass = hass
         self._unique_id = unique_id
         self._supported_features = supported_features
         self._speed = SPEED_OFF
-        self._percentage = 0
+        self._percentage = None
         self._speed_list = speed_list
         self._preset_modes = preset_modes
         self._preset_mode = None
@@ -192,9 +211,14 @@ class DemoPercentageFan(BaseDemoFan, FanEntity):
     """A demonstration fan component that uses percentages."""
 
     @property
-    def percentage(self) -> str:
+    def percentage(self) -> int | None:
         """Return the current speed."""
         return self._percentage
+
+    @property
+    def speed_count(self) -> int:
+        """Return the number of speeds the fan supports."""
+        return 3
 
     def set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
@@ -203,12 +227,12 @@ class DemoPercentageFan(BaseDemoFan, FanEntity):
         self.schedule_update_ha_state()
 
     @property
-    def preset_mode(self) -> Optional[str]:
+    def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., auto, smart, interval, favorite."""
         return self._preset_mode
 
     @property
-    def preset_modes(self) -> Optional[List[str]]:
+    def preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes."""
         return self._preset_modes
 
@@ -247,9 +271,14 @@ class AsyncDemoPercentageFan(BaseDemoFan, FanEntity):
     """An async demonstration fan component that uses percentages."""
 
     @property
-    def percentage(self) -> str:
+    def percentage(self) -> int | None:
         """Return the current speed."""
         return self._percentage
+
+    @property
+    def speed_count(self) -> int:
+        """Return the number of speeds the fan supports."""
+        return 3
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
@@ -258,12 +287,12 @@ class AsyncDemoPercentageFan(BaseDemoFan, FanEntity):
         self.async_write_ha_state()
 
     @property
-    def preset_mode(self) -> Optional[str]:
+    def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., auto, smart, interval, favorite."""
         return self._preset_mode
 
     @property
-    def preset_modes(self) -> Optional[List[str]]:
+    def preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes."""
         return self._preset_modes
 

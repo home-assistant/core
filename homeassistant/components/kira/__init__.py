@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
+    CONF_REPEAT,
     CONF_SENSORS,
     CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
@@ -28,7 +29,6 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_HOST = "0.0.0.0"
 DEFAULT_PORT = 65432
 
-CONF_REPEAT = "repeat"
 CONF_REMOTES = "remotes"
 CONF_SENSOR = "sensor"
 CONF_REMOTE = "remote"

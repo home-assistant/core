@@ -12,7 +12,7 @@ from google_nest_sdm.exceptions import (
 from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
     CONF_CLIENT_ID,
@@ -22,7 +22,7 @@ from homeassistant.const import (
     CONF_STRUCTURE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
     config_entry_oauth2_flow,
@@ -167,14 +167,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         await subscriber.start_async()
     except AuthException as err:
         _LOGGER.debug("Subscriber authentication error: %s", err)
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_REAUTH},
-                data=entry.data,
-            )
-        )
-        return False
+        raise ConfigEntryAuthFailed from err
     except ConfigurationException as err:
         _LOGGER.error("Configuration error: %s", err)
         subscriber.stop_async()
@@ -198,9 +191,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN].pop(DATA_NEST_UNAVAILABLE, None)
     hass.data[DOMAIN][DATA_SUBSCRIBER] = subscriber
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -211,14 +204,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     if DATA_SDM not in entry.data:
         # Legacy API
         return True
-
+    _LOGGER.debug("Stopping nest subscriber")
     subscriber = hass.data[DOMAIN][DATA_SUBSCRIBER]
     subscriber.stop_async()
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

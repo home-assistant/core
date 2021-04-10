@@ -7,7 +7,7 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.util import dt as dt_util
 
-LIVE_TV_SECTION = "-4"
+LIVE_TV_SECTION = -4
 
 
 class PlexSession:
@@ -70,7 +70,7 @@ class PlexSession:
             self.media_library_title = "Live TV"
         else:
             self.media_library_title = (
-                media.section().title if media.section() is not None else ""
+                media.section().title if media.librarySectionID is not None else ""
             )
 
         if media.type == "episode":

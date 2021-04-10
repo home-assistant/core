@@ -1,6 +1,9 @@
 """Sensors for the Elexa Guardian integration."""
-from typing import Callable, Dict, Optional
+from __future__ import annotations
 
+from typing import Callable
+
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
@@ -108,7 +111,7 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class PairedSensorSensor(PairedSensorEntity):
+class PairedSensorSensor(PairedSensorEntity, SensorEntity):
     """Define a binary sensor related to a Guardian valve controller."""
 
     def __init__(
@@ -117,9 +120,9 @@ class PairedSensorSensor(PairedSensorEntity):
         coordinator: DataUpdateCoordinator,
         kind: str,
         name: str,
-        device_class: Optional[str],
-        icon: Optional[str],
-        unit: Optional[str],
+        device_class: str | None,
+        icon: str | None,
+        unit: str | None,
     ) -> None:
         """Initialize."""
         super().__init__(entry, coordinator, kind, name, device_class, icon)
@@ -151,18 +154,18 @@ class PairedSensorSensor(PairedSensorEntity):
             self._state = self.coordinator.data["temperature"]
 
 
-class ValveControllerSensor(ValveControllerEntity):
+class ValveControllerSensor(ValveControllerEntity, SensorEntity):
     """Define a generic Guardian sensor."""
 
     def __init__(
         self,
         entry: ConfigEntry,
-        coordinators: Dict[str, DataUpdateCoordinator],
+        coordinators: dict[str, DataUpdateCoordinator],
         kind: str,
         name: str,
-        device_class: Optional[str],
-        icon: Optional[str],
-        unit: Optional[str],
+        device_class: str | None,
+        icon: str | None,
+        unit: str | None,
     ) -> None:
         """Initialize."""
         super().__init__(entry, coordinators, kind, name, device_class, icon)

@@ -1,17 +1,21 @@
 """Provides functionality to interact with humidifier devices."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, final
 
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_MODE,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -19,7 +23,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 from .const import (
@@ -27,7 +31,6 @@ from .const import (
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
-    ATTR_MODE,
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
     DEVICE_CLASS_DEHUMIDIFIER,
@@ -57,7 +60,7 @@ def is_on(hass, entity_id):
     return hass.states.is_state(entity_id, STATE_ON)
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up humidifier devices."""
     component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
@@ -86,21 +89,21 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
     return await hass.data[DOMAIN].async_setup_entry(entry)
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
 class HumidifierEntity(ToggleEntity):
-    """Representation of a humidifier device."""
+    """Base class for humidifier entities."""
 
     @property
-    def capability_attributes(self) -> Dict[str, Any]:
+    def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
         supported_features = self.supported_features or 0
         data = {
@@ -113,8 +116,9 @@ class HumidifierEntity(ToggleEntity):
 
         return data
 
+    @final
     @property
-    def state_attributes(self) -> Dict[str, Any]:
+    def state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
         supported_features = self.supported_features or 0
         data = {}
@@ -128,12 +132,12 @@ class HumidifierEntity(ToggleEntity):
         return data
 
     @property
-    def target_humidity(self) -> Optional[int]:
+    def target_humidity(self) -> int | None:
         """Return the humidity we try to reach."""
         return None
 
     @property
-    def mode(self) -> Optional[str]:
+    def mode(self) -> str | None:
         """Return the current mode, e.g., home, auto, baby.
 
         Requires SUPPORT_MODES.
@@ -141,7 +145,7 @@ class HumidifierEntity(ToggleEntity):
         raise NotImplementedError
 
     @property
-    def available_modes(self) -> Optional[List[str]]:
+    def available_modes(self) -> list[str] | None:
         """Return a list of available modes.
 
         Requires SUPPORT_MODES.

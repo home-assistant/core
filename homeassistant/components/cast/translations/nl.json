@@ -1,12 +1,37 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "Geen Google Cast-apparaten gevonden op het netwerk.",
-            "single_instance_allowed": "Er is slechts \u00e9\u00e9n configuratie van Google Cast nodig."
+            "no_devices_found": "Geen apparaten gevonden op het netwerk",
+            "single_instance_allowed": "Al geconfigureerd. Slechts een enkele configuratie mogelijk."
+        },
+        "error": {
+            "invalid_known_hosts": "Bekende hosts moet een door komma's gescheiden lijst van hosts zijn."
         },
         "step": {
+            "config": {
+                "data": {
+                    "known_hosts": "Optionele lijst van bekende hosts indien mDNS discovery niet werkt."
+                },
+                "description": "Voer de Google Cast configuratie in.",
+                "title": "Google Cast"
+            },
             "confirm": {
-                "description": "Wilt u Google Cast instellen?"
+                "description": "Wil je beginnen met instellen?"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_known_hosts": "Bekende hosts moet een door komma's gescheiden lijst van hosts zijn."
+        },
+        "step": {
+            "options": {
+                "data": {
+                    "ignore_cec": "Optionele lijst die zal worden doorgegeven aan pychromecast.IGNORE_CEC.",
+                    "known_hosts": "Optionele lijst van bekende hosts indien mDNS discovery niet werkt.",
+                    "uuid": "Optionele lijst van UUID's. Casts die niet in de lijst staan, worden niet toegevoegd."
+                },
+                "description": "Voer de Google Cast configuratie in."
             }
         }
     }

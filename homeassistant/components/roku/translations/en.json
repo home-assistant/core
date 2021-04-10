@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
             "unknown": "Unexpected error"
         },
         "error": {

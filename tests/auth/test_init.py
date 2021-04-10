@@ -501,9 +501,8 @@ async def test_refresh_token_provider_validation(mock_hass):
     with patch(
         "homeassistant.auth.providers.insecure_example.ExampleAuthProvider.async_validate_refresh_token",
         side_effect=InvalidAuthError("Invalid access"),
-    ) as call:
-        with pytest.raises(InvalidAuthError):
-            manager.async_create_access_token(refresh_token, ip)
+    ) as call, pytest.raises(InvalidAuthError):
+        manager.async_create_access_token(refresh_token, ip)
 
     call.assert_called_with(refresh_token, ip)
 

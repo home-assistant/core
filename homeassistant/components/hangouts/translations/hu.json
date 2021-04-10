@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "A Google Hangouts m\u00e1r konfigur\u00e1lva van",
-            "unknown": "Ismeretlen hiba t\u00f6rt\u00e9nt."
+            "already_configured": "A szolg\u00e1ltat\u00e1s m\u00e1r konfigur\u00e1lva van",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "error": {
             "invalid_2fa": "\u00c9rv\u00e9nytelen K\u00e9tfaktoros hiteles\u00edt\u00e9s, pr\u00f3b\u00e1ld \u00fajra.",
@@ -14,7 +14,6 @@
                 "data": {
                     "2fa": "2FA Pin"
                 },
-                "description": "\u00dcres",
                 "title": "K\u00e9tfaktoros Hiteles\u00edt\u00e9s"
             },
             "user": {
@@ -22,7 +21,6 @@
                     "email": "E-mail",
                     "password": "Jelsz\u00f3"
                 },
-                "description": "\u00dcres",
                 "title": "Google Hangouts Bejelentkez\u00e9s"
             }
         }

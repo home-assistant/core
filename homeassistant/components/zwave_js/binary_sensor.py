@@ -1,7 +1,8 @@
 """Representation of Z-Wave binary sensors."""
+from __future__ import annotations
 
 import logging
-from typing import Callable, List, Optional, TypedDict
+from typing import Callable, TypedDict
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass
@@ -56,14 +57,14 @@ class NotificationSensorMapping(TypedDict, total=False):
     """Represent a notification sensor mapping dict type."""
 
     type: int  # required
-    states: List[str]
+    states: list[str]
     device_class: str
     enabled: bool
 
 
 # Mappings for Notification sensors
 # https://github.com/zwave-js/node-zwave-js/blob/master/packages/config/config/notifications.json
-NOTIFICATION_SENSOR_MAPPINGS: List[NotificationSensorMapping] = [
+NOTIFICATION_SENSOR_MAPPINGS: list[NotificationSensorMapping] = [
     {
         # NotificationType 1: Smoke Alarm - State Id's 1 and 2 - Smoke detected
         "type": NOTIFICATION_SMOKE_ALARM,
@@ -201,13 +202,13 @@ class PropertySensorMapping(TypedDict, total=False):
     """Represent a property sensor mapping dict type."""
 
     property_name: str  # required
-    on_states: List[str]  # required
+    on_states: list[str]  # required
     device_class: str
     enabled: bool
 
 
 # Mappings for property sensors
-PROPERTY_SENSOR_MAPPINGS: List[PropertySensorMapping] = [
+PROPERTY_SENSOR_MAPPINGS: list[PropertySensorMapping] = [
     {
         "property_name": PROPERTY_DOOR_STATUS,
         "on_states": ["open"],
@@ -226,7 +227,7 @@ async def async_setup_entry(
     @callback
     def async_add_binary_sensor(info: ZwaveDiscoveryInfo) -> None:
         """Add Z-Wave Binary Sensor."""
-        entities: List[BinarySensorEntity] = []
+        entities: list[BinarySensorEntity] = []
 
         if info.platform_hint == "notification":
             # Get all sensors from Notification CC states
@@ -257,13 +258,25 @@ async def async_setup_entry(
 class ZWaveBooleanBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
     """Representation of a Z-Wave binary_sensor."""
 
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        client: ZwaveClient,
+        info: ZwaveDiscoveryInfo,
+    ) -> None:
+        """Initialize a ZWaveBooleanBinarySensor entity."""
+        super().__init__(config_entry, client, info)
+        self._name = self.generate_name(include_value_name=True)
+
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return if the sensor is on or off."""
+        if self.info.primary_value.value is None:
+            return None
         return bool(self.info.primary_value.value)
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return device class."""
         if self.info.primary_value.command_class == CommandClass.BATTERY:
             return DEVICE_CLASS_BATTERY
@@ -272,12 +285,12 @@ class ZWaveBooleanBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
-        if self.info.primary_value.command_class == CommandClass.SENSOR_BINARY:
-            # Legacy binary sensors are phased out (replaced by notification sensors)
-            # Disable by default to not confuse users
-            if self.info.node.device_class.generic != "Binary Sensor":
-                return False
-        return True
+        # Legacy binary sensors are phased out (replaced by notification sensors)
+        # Disable by default to not confuse users
+        return bool(
+            self.info.primary_value.command_class != CommandClass.SENSOR_BINARY
+            or self.info.node.device_class.generic.key == 0x20
+        )
 
 
 class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
@@ -293,24 +306,23 @@ class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         """Initialize a ZWaveNotificationBinarySensor entity."""
         super().__init__(config_entry, client, info)
         self.state_key = state_key
+        self._name = self.generate_name(
+            include_value_name=True,
+            alternate_value_name=self.info.primary_value.property_name,
+            additional_info=[self.info.primary_value.metadata.states[self.state_key]],
+        )
         # check if we have a custom mapping for this value
         self._mapping_info = self._get_sensor_mapping()
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return if the sensor is on or off."""
+        if self.info.primary_value.value is None:
+            return None
         return int(self.info.primary_value.value) == int(self.state_key)
 
     @property
-    def name(self) -> str:
-        """Return default name from device name and value name combination."""
-        node_name = self.info.node.name or self.info.node.device_config.description
-        value_name = self.info.primary_value.property_name
-        state_label = self.info.primary_value.metadata.states[self.state_key]
-        return f"{node_name}: {value_name} - {state_label}"
-
-    @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return device class."""
         return self._mapping_info.get("device_class")
 
@@ -351,14 +363,17 @@ class ZWavePropertyBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         super().__init__(config_entry, client, info)
         # check if we have a custom mapping for this value
         self._mapping_info = self._get_sensor_mapping()
+        self._name = self.generate_name(include_value_name=True)
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return if the sensor is on or off."""
+        if self.info.primary_value.value is None:
+            return None
         return self.info.primary_value.value in self._mapping_info["on_states"]
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return device class."""
         return self._mapping_info.get("device_class")
 

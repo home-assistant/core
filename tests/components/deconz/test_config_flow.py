@@ -212,7 +212,7 @@ async def test_manual_configuration_after_discovery_ResponseError(hass, aioclien
 
 async def test_manual_configuration_update_configuration(hass, aioclient_mock):
     """Test that manual configuration can update existing config entry."""
-    config_entry = await setup_deconz_integration(hass)
+    config_entry = await setup_deconz_integration(hass, aioclient_mock)
 
     aioclient_mock.get(
         pydeconz.utils.URL_DISCOVER,
@@ -258,7 +258,7 @@ async def test_manual_configuration_update_configuration(hass, aioclient_mock):
 
 async def test_manual_configuration_dont_update_configuration(hass, aioclient_mock):
     """Test that _create_entry work and that bridgeid can be requested."""
-    await setup_deconz_integration(hass)
+    await setup_deconz_integration(hass, aioclient_mock)
 
     aioclient_mock.get(
         pydeconz.utils.URL_DISCOVER,
@@ -374,7 +374,7 @@ async def test_link_get_api_key_ResponseError(hass, aioclient_mock):
 
 async def test_reauth_flow_update_configuration(hass, aioclient_mock):
     """Verify reauth flow can update gateway API key."""
-    config_entry = await setup_deconz_integration(hass)
+    config_entry = await setup_deconz_integration(hass, aioclient_mock)
 
     result = await hass.config_entries.flow.async_init(
         DECONZ_DOMAIN,
@@ -442,9 +442,21 @@ async def test_flow_ssdp_discovery(hass, aioclient_mock):
     }
 
 
-async def test_ssdp_discovery_update_configuration(hass):
+async def test_flow_ssdp_bad_discovery(hass, aioclient_mock):
+    """Test that SSDP discovery aborts if manufacturer URL is wrong."""
+    result = await hass.config_entries.flow.async_init(
+        DECONZ_DOMAIN,
+        data={ATTR_UPNP_MANUFACTURER_URL: "other"},
+        context={"source": SOURCE_SSDP},
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "not_deconz_bridge"
+
+
+async def test_ssdp_discovery_update_configuration(hass, aioclient_mock):
     """Test if a discovered bridge is configured but updates with new attributes."""
-    config_entry = await setup_deconz_integration(hass)
+    config_entry = await setup_deconz_integration(hass, aioclient_mock)
 
     with patch(
         "homeassistant.components.deconz.async_setup_entry",
@@ -467,9 +479,9 @@ async def test_ssdp_discovery_update_configuration(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_ssdp_discovery_dont_update_configuration(hass):
+async def test_ssdp_discovery_dont_update_configuration(hass, aioclient_mock):
     """Test if a discovered bridge has already been configured."""
-    config_entry = await setup_deconz_integration(hass)
+    config_entry = await setup_deconz_integration(hass, aioclient_mock)
 
     result = await hass.config_entries.flow.async_init(
         DECONZ_DOMAIN,
@@ -486,9 +498,13 @@ async def test_ssdp_discovery_dont_update_configuration(hass):
     assert config_entry.data[CONF_HOST] == "1.2.3.4"
 
 
-async def test_ssdp_discovery_dont_update_existing_hassio_configuration(hass):
+async def test_ssdp_discovery_dont_update_existing_hassio_configuration(
+    hass, aioclient_mock
+):
     """Test to ensure the SSDP discovery does not update an Hass.io entry."""
-    config_entry = await setup_deconz_integration(hass, source=SOURCE_HASSIO)
+    config_entry = await setup_deconz_integration(
+        hass, aioclient_mock, source=SOURCE_HASSIO
+    )
 
     result = await hass.config_entries.flow.async_init(
         DECONZ_DOMAIN,
@@ -523,8 +539,6 @@ async def test_flow_hassio_discovery(hass):
     assert result["description_placeholders"] == {"addon": "Mock Addon"}
 
     with patch(
-        "homeassistant.components.deconz.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.deconz.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -539,13 +553,12 @@ async def test_flow_hassio_discovery(hass):
         CONF_PORT: 80,
         CONF_API_KEY: API_KEY,
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_hassio_discovery_update_configuration(hass):
+async def test_hassio_discovery_update_configuration(hass, aioclient_mock):
     """Test we can update an existing config entry."""
-    config_entry = await setup_deconz_integration(hass)
+    config_entry = await setup_deconz_integration(hass, aioclient_mock)
 
     with patch(
         "homeassistant.components.deconz.async_setup_entry",
@@ -571,9 +584,9 @@ async def test_hassio_discovery_update_configuration(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_hassio_discovery_dont_update_configuration(hass):
+async def test_hassio_discovery_dont_update_configuration(hass, aioclient_mock):
     """Test we can update an existing config entry."""
-    await setup_deconz_integration(hass)
+    await setup_deconz_integration(hass, aioclient_mock)
 
     result = await hass.config_entries.flow.async_init(
         DECONZ_DOMAIN,
@@ -590,9 +603,9 @@ async def test_hassio_discovery_dont_update_configuration(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_option_flow(hass):
+async def test_option_flow(hass, aioclient_mock):
     """Test config flow options."""
-    config_entry = await setup_deconz_integration(hass)
+    config_entry = await setup_deconz_integration(hass, aioclient_mock)
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 

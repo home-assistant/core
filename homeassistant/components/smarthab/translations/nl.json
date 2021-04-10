@@ -1,14 +1,18 @@
 {
     "config": {
         "error": {
+            "invalid_auth": "Ongeldige authenticatie",
             "service": "Fout bij het bereiken van SmartHab. De service is mogelijk uitgevallen. Controleer uw verbinding.",
             "unknown": "Onverwachte fout"
         },
         "step": {
             "user": {
                 "data": {
+                    "email": "E-mail",
                     "password": "Wachtwoord"
-                }
+                },
+                "description": "Om technische redenen moet u een tweede account gebruiken dat specifiek is voor uw Home Assistant-installatie. U kunt er een aanmaken vanuit de SmartHab-toepassing.",
+                "title": "Stel SmartHab in"
             }
         }
     }

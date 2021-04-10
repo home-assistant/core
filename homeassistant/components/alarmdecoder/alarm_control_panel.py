@@ -163,7 +163,7 @@ class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
         return self._code_arm_required
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             "ac_power": self._ac_power,

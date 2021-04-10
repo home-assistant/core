@@ -2,12 +2,12 @@
 from unittest.mock import patch
 
 import pytest
+from pywilight.const import DOMAIN
 
 from homeassistant.components.wilight.config_flow import (
     CONF_MODEL_NAME,
     CONF_SERIAL_NUMBER,
 )
-from homeassistant.components.wilight.const import DOMAIN
 from homeassistant.config_entries import SOURCE_SSDP
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SOURCE
 from homeassistant.data_entry_flow import (

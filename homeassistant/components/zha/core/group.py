@@ -1,8 +1,10 @@
 """Group for Zigbee Home Automation."""
+from __future__ import annotations
+
 import asyncio
 import collections
 import logging
-from typing import Any, Dict, List
+from typing import Any
 
 import zigpy.exceptions
 
@@ -58,16 +60,16 @@ class ZHAGroupMember(LogMixin):
         return self._zha_device
 
     @property
-    def member_info(self) -> Dict[str, Any]:
+    def member_info(self) -> dict[str, Any]:
         """Get ZHA group info."""
-        member_info: Dict[str, Any] = {}
+        member_info: dict[str, Any] = {}
         member_info["endpoint_id"] = self.endpoint_id
         member_info["device"] = self.device.zha_device_info
         member_info["entities"] = self.associated_entities
         return member_info
 
     @property
-    def associated_entities(self) -> List[GroupEntityReference]:
+    def associated_entities(self) -> list[GroupEntityReference]:
         """Return the list of entities that were derived from this endpoint."""
         ha_entity_registry = self.device.gateway.ha_entity_registry
         zha_device_registry = self.device.gateway.device_registry
@@ -136,7 +138,7 @@ class ZHAGroup(LogMixin):
         return self._zigpy_group.endpoint
 
     @property
-    def members(self) -> List[ZHAGroupMember]:
+    def members(self) -> list[ZHAGroupMember]:
         """Return the ZHA devices that are members of this group."""
         return [
             ZHAGroupMember(
@@ -146,7 +148,7 @@ class ZHAGroup(LogMixin):
             if member_ieee in self._zha_gateway.devices
         ]
 
-    async def async_add_members(self, members: List[GroupMember]) -> None:
+    async def async_add_members(self, members: list[GroupMember]) -> None:
         """Add members to this group."""
         if len(members) > 1:
             tasks = []
@@ -162,7 +164,7 @@ class ZHAGroup(LogMixin):
                 members[0].ieee
             ].async_add_endpoint_to_group(members[0].endpoint_id, self.group_id)
 
-    async def async_remove_members(self, members: List[GroupMember]) -> None:
+    async def async_remove_members(self, members: list[GroupMember]) -> None:
         """Remove members from this group."""
         if len(members) > 1:
             tasks = []
@@ -181,18 +183,18 @@ class ZHAGroup(LogMixin):
             ].async_remove_endpoint_from_group(members[0].endpoint_id, self.group_id)
 
     @property
-    def member_entity_ids(self) -> List[str]:
+    def member_entity_ids(self) -> list[str]:
         """Return the ZHA entity ids for all entities for the members of this group."""
-        all_entity_ids: List[str] = []
+        all_entity_ids: list[str] = []
         for member in self.members:
             entity_references = member.associated_entities
             for entity_reference in entity_references:
                 all_entity_ids.append(entity_reference["entity_id"])
         return all_entity_ids
 
-    def get_domain_entity_ids(self, domain) -> List[str]:
+    def get_domain_entity_ids(self, domain) -> list[str]:
         """Return entity ids from the entity domain for this group."""
-        domain_entity_ids: List[str] = []
+        domain_entity_ids: list[str] = []
         for member in self.members:
             if member.device.is_coordinator:
                 continue
@@ -207,9 +209,9 @@ class ZHAGroup(LogMixin):
         return domain_entity_ids
 
     @property
-    def group_info(self) -> Dict[str, Any]:
+    def group_info(self) -> dict[str, Any]:
         """Get ZHA group info."""
-        group_info: Dict[str, Any] = {}
+        group_info: dict[str, Any] = {}
         group_info["group_id"] = self.group_id
         group_info["name"] = self.name
         group_info["members"] = [member.member_info for member in self.members]

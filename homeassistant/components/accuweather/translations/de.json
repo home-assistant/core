@@ -5,7 +5,8 @@
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
-            "invalid_api_key": "Ung\u00fcltiger API-Schl\u00fcssel"
+            "invalid_api_key": "Ung\u00fcltiger API-Schl\u00fcssel",
+            "requests_exceeded": "Die zul\u00e4ssige Anzahl von Anforderungen an die Accuweather-API wurde \u00fcberschritten. Sie m\u00fcssen warten oder den API-Schl\u00fcssel \u00e4ndern."
         },
         "step": {
             "user": {

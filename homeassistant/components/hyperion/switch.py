@@ -1,6 +1,8 @@
 """Switch platform for Hyperion."""
+from __future__ import annotations
 
-from typing import Any, Callable, Dict, Optional
+import functools
+from typing import Any, Callable
 
 from hyperion import client
 from hyperion.const import (
@@ -156,7 +158,7 @@ class HyperionComponentSwitch(SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the switch is on."""
-        for component in self._client.components:
+        for component in self._client.components or []:
             if component[KEY_NAME] == self._component_name:
                 return bool(component.setdefault(KEY_ENABLED, False))
         return False
@@ -177,29 +179,26 @@ class HyperionComponentSwitch(SwitchEntity):
             }
         )
 
-    # pylint: disable=unused-argument
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         await self._async_send_set_component(True)
 
-    # pylint: disable=unused-argument
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         await self._async_send_set_component(False)
 
     @callback
-    def _update_components(self, _: Optional[Dict[str, Any]] = None) -> None:
+    def _update_components(self, _: dict[str, Any] | None = None) -> None:
         """Update Hyperion components."""
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks when entity added to hass."""
-        assert self.hass
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
                 SIGNAL_ENTITY_REMOVE.format(self._unique_id),
-                self.async_remove,
+                functools.partial(self.async_remove, force_remove=True),
             )
         )
 

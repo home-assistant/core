@@ -42,7 +42,7 @@ async def async_setup_platform(hass, config):
     if (last_error_date is not None) and (isinstance(last_error_date, int)):
         last_error_date = dt.datetime.fromtimestamp(last_error_date)
         _LOGGER.info(
-            "telegram webhook last_error_date: %s. Status: %s",
+            "Telegram webhook last_error_date: %s. Status: %s",
             last_error_date,
             current_status,
         )

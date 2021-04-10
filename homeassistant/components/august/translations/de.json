@@ -10,6 +10,13 @@
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
+            "reauth_validate": {
+                "data": {
+                    "password": "Passwort"
+                },
+                "description": "Gib das Passwort f\u00fcr {username} ein.",
+                "title": "August-Konto erneut authentifizieren"
+            },
             "user": {
                 "data": {
                     "login_method": "Anmeldemethode",
@@ -19,6 +26,15 @@
                 },
                 "description": "Wenn die Anmeldemethode \"E-Mail\" lautet, ist Benutzername die E-Mail-Adresse. Wenn die Anmeldemethode \"Telefon\" ist, ist Benutzername die Telefonnummer im Format \"+ NNNNNNNNN\".",
                 "title": "Richten Sie ein August-Konto ein"
+            },
+            "user_validate": {
+                "data": {
+                    "login_method": "Anmeldemethode",
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "description": "Wenn die Anmeldemethode \"E-Mail\" lautet, ist Benutzername die E-Mail-Adresse. Wenn die Anmeldemethode \"Telefon\" ist, ist Benutzername die Telefonnummer im Format \"+ NNNNNNNNN\".",
+                "title": "Richte ein August-Konto ein"
             },
             "validation": {
                 "data": {

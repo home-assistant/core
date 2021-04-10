@@ -19,7 +19,7 @@
                 "title": "Seleziona i domini da includere"
             },
             "pairing": {
-                "description": "Non appena il {name} \u00e8 pronto, l'associazione sar\u00e0 disponibile in \"Notifiche\" come \"Configurazione HomeKit Bridge\".",
+                "description": "Per completare l'associazione, seguire le istruzioni in \"Notifiche\" sotto \"Associazione HomeKit\".",
                 "title": "Associa HomeKit"
             },
             "user": {
@@ -28,8 +28,8 @@
                     "include_domains": "Domini da includere",
                     "mode": "Modalit\u00e0"
                 },
-                "description": "L'integrazione di HomeKit ti consentir\u00e0 di accedere alle entit\u00e0 di Home Assistant in HomeKit. In modalit\u00e0 bridge, i bridge HomeKit sono limitati a 150 accessori per istanza, incluso il bridge stesso. Se desideri eseguire il bridge di un numero di accessori superiore a quello massimo, si consiglia di utilizzare pi\u00f9 bridge HomeKit per domini diversi. La configurazione dettagliata dell'entit\u00e0 \u00e8 disponibile solo tramite YAML per il bridge principale.",
-                "title": "Attiva HomeKit"
+                "description": "Scegli i domini da includere. Verranno incluse tutte le entit\u00e0 supportate nel dominio. Verr\u00e0 creata un'istanza HomeKit separata in modalit\u00e0 accessorio per ogni lettore multimediale TV e telecamera.",
+                "title": "Seleziona i domini da includere"
             }
         }
     },
@@ -55,7 +55,7 @@
                     "entities": "Entit\u00e0",
                     "mode": "Modalit\u00e0"
                 },
-                "description": "Scegliere le entit\u00e0 da includere. In modalit\u00e0 accessorio, \u00e8 inclusa una sola entit\u00e0. In modalit\u00e0 di inclusione bridge, tutte le entit\u00e0 nel dominio saranno incluse, a meno che non siano selezionate entit\u00e0 specifiche. In modalit\u00e0 di esclusione bridge, tutte le entit\u00e0 nel dominio saranno incluse, ad eccezione delle entit\u00e0 escluse. Per prestazioni ottimali e per evitare una indisponibilit\u00e0 imprevista, creare e associare un'istanza HomeKit separata in modalit\u00e0 accessorio per ogni lettore multimediale, TV e videocamera.",
+                "description": "Scegliere le entit\u00e0 da includere. In modalit\u00e0 accessorio, \u00e8 inclusa una sola entit\u00e0. In modalit\u00e0 di inclusione bridge, tutte le entit\u00e0 nel dominio saranno incluse, a meno che non siano selezionate entit\u00e0 specifiche. In modalit\u00e0 di esclusione bridge, tutte le entit\u00e0 nel dominio saranno incluse, ad eccezione delle entit\u00e0 escluse. Per prestazioni ottimali, sar\u00e0 creata una HomeKit separata accessoria per ogni lettore multimediale TV, telecomando basato sulle attivit\u00e0, serratura e videocamera.",
                 "title": "Seleziona le entit\u00e0 da includere"
             },
             "init": {

@@ -3,7 +3,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_ICON, CONF_TYPE, CONF_URL
+from homeassistant.const import CONF_ICON, CONF_MODE, CONF_TYPE, CONF_URL
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import slugify
@@ -13,13 +13,11 @@ EVENT_LOVELACE_UPDATED = "lovelace_updated"
 
 DEFAULT_ICON = "hass:view-dashboard"
 
-CONF_MODE = "mode"
 MODE_YAML = "yaml"
 MODE_STORAGE = "storage"
 MODE_AUTO = "auto-gen"
 
 LOVELACE_CONFIG_FILE = "ui-lovelace.yaml"
-CONF_RESOURCES = "resources"
 CONF_URL_PATH = "url_path"
 CONF_RESOURCE_TYPE_WS = "res_type"
 
