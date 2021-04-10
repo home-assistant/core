@@ -1,9 +1,11 @@
 """The xbox integration."""
+from __future__ import annotations
+
 import asyncio
+from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Dict, Optional
 
 import voluptuous as vol
 from xbox.webapi.api.client import XboxLiveClient
@@ -93,7 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
 
     coordinator = XboxUpdateCoordinator(hass, client, consoles)
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
     hass.data[DOMAIN][entry.entry_id] = {
         "client": XboxLiveClient(auth),
@@ -101,9 +103,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         "coordinator": coordinator,
     }
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -114,8 +116,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )
@@ -133,7 +135,7 @@ class ConsoleData:
     """Xbox console status data."""
 
     status: SmartglassConsoleStatus
-    app_details: Optional[Product]
+    app_details: Product | None
 
 
 @dataclass
@@ -149,7 +151,7 @@ class PresenceData:
     in_game: bool
     in_multiplayer: bool
     gamer_score: str
-    gold_tenure: Optional[str]
+    gold_tenure: str | None
     account_tier: str
 
 
@@ -157,8 +159,8 @@ class PresenceData:
 class XboxData:
     """Xbox dataclass for update coordinator."""
 
-    consoles: Dict[str, ConsoleData]
-    presence: Dict[str, PresenceData]
+    consoles: dict[str, ConsoleData]
+    presence: dict[str, PresenceData]
 
 
 class XboxUpdateCoordinator(DataUpdateCoordinator):
@@ -184,9 +186,9 @@ class XboxUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> XboxData:
         """Fetch the latest console status."""
         # Update Console Status
-        new_console_data: Dict[str, ConsoleData] = {}
+        new_console_data: dict[str, ConsoleData] = {}
         for console in self.consoles.result:
-            current_state: Optional[ConsoleData] = self.data.consoles.get(console.id)
+            current_state: ConsoleData | None = self.data.consoles.get(console.id)
             status: SmartglassConsoleStatus = (
                 await self.client.smartglass.get_console_status(console.id)
             )
@@ -198,7 +200,7 @@ class XboxUpdateCoordinator(DataUpdateCoordinator):
             )
 
             # Setup focus app
-            app_details: Optional[Product] = None
+            app_details: Product | None = None
             if current_state is not None:
                 app_details = current_state.app_details
 
@@ -246,13 +248,11 @@ class XboxUpdateCoordinator(DataUpdateCoordinator):
 
 def _build_presence_data(person: Person) -> PresenceData:
     """Build presence data from a person."""
-    active_app: Optional[PresenceDetail] = None
-    try:
+    active_app: PresenceDetail | None = None
+    with suppress(StopIteration):
         active_app = next(
             presence for presence in person.presence_details if presence.is_primary
         )
-    except StopIteration:
-        pass
 
     return PresenceData(
         xuid=person.xuid,

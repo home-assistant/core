@@ -31,7 +31,6 @@ ATTR_ACTION = "action"
 ACTION_PRESS = "press"
 ACTION_RELEASE = "release"
 
-CONF_TYPE = "type"
 CONF_SUBTYPE = "subtype"
 
 BRIDGE_TIMEOUT = 35

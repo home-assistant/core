@@ -5,7 +5,7 @@
         },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
-            "invalid_host": "Nom de l'amfitri\u00f3 o l'adre\u00e7a IP inv\u00e0lids",
+            "invalid_host": "Nom de l'amfitri\u00f3 o adre\u00e7a IP inv\u00e0lids",
             "unknown": "Error inesperat"
         },
         "step": {
@@ -14,7 +14,7 @@
                     "host": "Amfitri\u00f3",
                     "name": "Nom"
                 },
-                "description": "En primer lloc, has de baixar-te l'aplicaci\u00f3 Goal Zero: https://www.goalzero.com/product-features/yeti-app/ \n\nSegueix les instruccions per connectar el teu Yeti a la teva xarxa Wifi. A continuaci\u00f3, has d'obtenir la IP d'amfitri\u00f3 del teu encaminador (router). Cal que aquest tingui la configuraci\u00f3 DHCP activada per al teu dispositiu per aix\u00ed garantir que la IP no canvi\u00ef. Si cal, consulta el manual del teu encaminador.",
+                "description": "En primer lloc, has de baixar-te l'aplicaci\u00f3 Goal Zero: https://www.goalzero.com/product-features/yeti-app/ \n\nSegueix les instruccions per connectar el Yeti a la xarxa Wifi. A continuaci\u00f3, has d'obtenir la IP d'amfitri\u00f3 del teu router. Cal que aquest tingui la configuraci\u00f3 DHCP activada per al teu dispositiu, per aix\u00ed garantir que la IP no canvi\u00ef. Si cal, consulta el manual del router.",
                 "title": "Goal Zero Yeti"
             }
         }

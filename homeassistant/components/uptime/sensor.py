@@ -2,10 +2,13 @@
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import DEVICE_CLASS_TIMESTAMP, PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_TIMESTAMP,
+    PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
 DEFAULT_NAME = "Uptime"
@@ -30,7 +33,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([UptimeSensor(name)], True)
 
 
-class UptimeSensor(Entity):
+class UptimeSensor(SensorEntity):
     """Representation of an uptime sensor."""
 
     def __init__(self, name):

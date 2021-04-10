@@ -1,0 +1,12 @@
+{
+  "domain": "smarttub",
+  "name": "SmartTub",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/smarttub",
+  "dependencies": [],
+  "codeowners": ["@mdz"],
+  "requirements": [
+      "python-smarttub==0.0.23"
+  ],
+  "quality_scale": "platinum"
+}

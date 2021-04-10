@@ -9,7 +9,7 @@
         },
         "step": {
             "authorize": {
-                "description": "Vennligst godkjenn denne appen p\u00e5 [https://www.ecobee.com/consumerportal](https://www.ecobee.com/consumerportal) med pin-kode:\n\n{pin}\n\nTrykk deretter p\u00e5 send.",
+                "description": "Autoriser denne appen p\u00e5 https://www.ecobee.com/consumerportal/index.html med PIN-kode: \n\n {pin}\n\n Trykk deretter p\u00e5 Send.",
                 "title": "Godkjenn app p\u00e5 ecobee.com"
             },
             "user": {

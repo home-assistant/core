@@ -3,18 +3,20 @@ import logging
 
 import requests
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ICON,
     CONF_NAME,
     CONF_UNIT_OF_MEASUREMENT,
+    DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
+    ENERGY_WATT_HOUR,
     PERCENTAGE,
     TEMP_CELSIUS,
     TIME_HOURS,
 )
-from homeassistant.helpers.entity import Entity
 
 from . import (
     DOMAIN as VICARE_DOMAIN,
@@ -58,6 +60,13 @@ SENSOR_COMPRESSOR_HOURS_LOADCLASS2 = "compressor_hours_loadclass2"
 SENSOR_COMPRESSOR_HOURS_LOADCLASS3 = "compressor_hours_loadclass3"
 SENSOR_COMPRESSOR_HOURS_LOADCLASS4 = "compressor_hours_loadclass4"
 SENSOR_COMPRESSOR_HOURS_LOADCLASS5 = "compressor_hours_loadclass5"
+
+# fuelcell sensors
+SENSOR_POWER_PRODUCTION_CURRENT = "power_production_current"
+SENSOR_POWER_PRODUCTION_TODAY = "power_production_today"
+SENSOR_POWER_PRODUCTION_THIS_WEEK = "power_production_this_week"
+SENSOR_POWER_PRODUCTION_THIS_MONTH = "power_production_this_month"
+SENSOR_POWER_PRODUCTION_THIS_YEAR = "power_production_this_year"
 
 SENSOR_TYPES = {
     SENSOR_OUTSIDE_TEMPERATURE: {
@@ -216,6 +225,42 @@ SENSOR_TYPES = {
         CONF_GETTER: lambda api: api.getReturnTemperature(),
         CONF_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
     },
+    # fuelcell sensors
+    SENSOR_POWER_PRODUCTION_CURRENT: {
+        CONF_NAME: "Power production current",
+        CONF_ICON: None,
+        CONF_UNIT_OF_MEASUREMENT: ENERGY_WATT_HOUR,
+        CONF_GETTER: lambda api: api.getPowerProductionCurrent(),
+        CONF_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+    },
+    SENSOR_POWER_PRODUCTION_TODAY: {
+        CONF_NAME: "Power production today",
+        CONF_ICON: None,
+        CONF_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+        CONF_GETTER: lambda api: api.getPowerProductionToday(),
+        CONF_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+    },
+    SENSOR_POWER_PRODUCTION_THIS_WEEK: {
+        CONF_NAME: "Power production this week",
+        CONF_ICON: None,
+        CONF_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+        CONF_GETTER: lambda api: api.getPowerProductionThisWeek(),
+        CONF_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+    },
+    SENSOR_POWER_PRODUCTION_THIS_MONTH: {
+        CONF_NAME: "Power production this month",
+        CONF_ICON: None,
+        CONF_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+        CONF_GETTER: lambda api: api.getPowerProductionThisMonth(),
+        CONF_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+    },
+    SENSOR_POWER_PRODUCTION_THIS_YEAR: {
+        CONF_NAME: "Power production this year",
+        CONF_ICON: None,
+        CONF_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+        CONF_GETTER: lambda api: api.getPowerProductionThisYear(),
+        CONF_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+    },
 }
 
 SENSORS_GENERIC = [SENSOR_OUTSIDE_TEMPERATURE, SENSOR_SUPPLY_TEMPERATURE]
@@ -245,6 +290,27 @@ SENSORS_BY_HEATINGTYPE = {
         SENSOR_COMPRESSOR_HOURS_LOADCLASS5,
         SENSOR_RETURN_TEMPERATURE,
     ],
+    HeatingType.fuelcell: [
+        # gas
+        SENSOR_BOILER_TEMPERATURE,
+        SENSOR_BURNER_HOURS,
+        SENSOR_BURNER_MODULATION,
+        SENSOR_BURNER_STARTS,
+        SENSOR_DHW_GAS_CONSUMPTION_TODAY,
+        SENSOR_DHW_GAS_CONSUMPTION_THIS_WEEK,
+        SENSOR_DHW_GAS_CONSUMPTION_THIS_MONTH,
+        SENSOR_DHW_GAS_CONSUMPTION_THIS_YEAR,
+        SENSOR_GAS_CONSUMPTION_TODAY,
+        SENSOR_GAS_CONSUMPTION_THIS_WEEK,
+        SENSOR_GAS_CONSUMPTION_THIS_MONTH,
+        SENSOR_GAS_CONSUMPTION_THIS_YEAR,
+        # fuel cell
+        SENSOR_POWER_PRODUCTION_CURRENT,
+        SENSOR_POWER_PRODUCTION_TODAY,
+        SENSOR_POWER_PRODUCTION_THIS_WEEK,
+        SENSOR_POWER_PRODUCTION_THIS_MONTH,
+        SENSOR_POWER_PRODUCTION_THIS_YEAR,
+    ],
 }
 
 
@@ -269,7 +335,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class ViCareSensor(Entity):
+class ViCareSensor(SensorEntity):
     """Representation of a ViCare sensor."""
 
     def __init__(self, name, api, sensor_type):

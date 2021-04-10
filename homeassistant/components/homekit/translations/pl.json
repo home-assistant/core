@@ -19,7 +19,7 @@
                 "title": "Wybierz uwzgl\u0119dniane domeny"
             },
             "pairing": {
-                "description": "Gdy tylko {name} b\u0119dzie gotowy, opcja parowania b\u0119dzie dost\u0119pna w \u201ePowiadomieniach\u201d jako \u201eKonfiguracja mostka HomeKit\u201d.",
+                "description": "Aby doko\u0144czy\u0107 parowanie, post\u0119puj wg instrukcji \u201eParowanie HomeKit\u201d w \u201ePowiadomieniach\u201d.",
                 "title": "Parowanie z HomeKit"
             },
             "user": {
@@ -28,8 +28,8 @@
                     "include_domains": "Domeny do uwzgl\u0119dnienia",
                     "mode": "Tryb"
                 },
-                "description": "Integracja HomeKit pozwala na dost\u0119p do Twoich encji Home Assistant w HomeKit. W trybie \"Mostka\", mostki HomeKit s\u0105 ograniczone do 150 urz\u0105dze\u0144, w\u0142\u0105czaj\u0105c w to sam mostek. Je\u015bli chcesz wi\u0119cej ni\u017c dozwolona maksymalna liczba urz\u0105dze\u0144, zaleca si\u0119 u\u017cywanie wielu most\u00f3w HomeKit dla r\u00f3\u017cnych domen. Szczeg\u00f3\u0142owa konfiguracja encji jest dost\u0119pna tylko w trybie YAML dla g\u0142\u00f3wnego mostka. Dla najlepszej wydajno\u015bci oraz by zapobiec nieprzewidzianej niedost\u0119pno\u015bci urz\u0105dzenia, utw\u00f3rz i sparuj oddzieln\u0105 instancj\u0119 HomeKit w trybie akcesorium dla ka\u017cdego media playera oraz kamery.",
-                "title": "Aktywacja HomeKit"
+                "description": "Wybierz domeny do uwzgl\u0119dnienia. Wszystkie wspierane encje w danej domenie b\u0119d\u0105 uwzgl\u0119dnione. W trybie akcesorium, oddzielna instancja HomeKit zostanie utworzona dla ka\u017cdego tv media playera oraz kamery.",
+                "title": "Wybierz uwzgl\u0119dniane domeny"
             }
         }
     },
@@ -55,7 +55,7 @@
                     "entities": "Encje",
                     "mode": "Tryb"
                 },
-                "description": "Wybierz encje, kt\u00f3re maj\u0105 by\u0107 uwzgl\u0119dnione. W trybie \"Akcesorium\" tylko jedna encja jest uwzgl\u0119dniona. W trybie \"Uwzgl\u0119dnij mostek\", wszystkie encje w danej domenie b\u0119d\u0105 uwzgl\u0119dnione, chyba \u017ce wybrane s\u0105 tylko konkretne encje. W trybie \"Wyklucz mostek\", wszystkie encje b\u0119d\u0105 uwzgl\u0119dnione, z wyj\u0105tkiem tych wybranych. Dla najlepszej wydajno\u015bci oraz by zapobiec nieprzewidzianej niedost\u0119pno\u015bci urz\u0105dzenia, utw\u00f3rz i sparuj oddzieln\u0105 instancj\u0119 HomeKit w trybie akcesorium dla ka\u017cdego media playera oraz kamery.",
+                "description": "Wybierz encje, kt\u00f3re maj\u0105 by\u0107 uwzgl\u0119dnione. W trybie \"Akcesorium\" tylko jedna encja jest uwzgl\u0119dniona. W trybie \"Uwzgl\u0119dnij mostek\", wszystkie encje w danej domenie b\u0119d\u0105 uwzgl\u0119dnione, chyba \u017ce wybrane s\u0105 tylko konkretne encje. W trybie \"Wyklucz mostek\", wszystkie encje b\u0119d\u0105 uwzgl\u0119dnione, z wyj\u0105tkiem tych wybranych. Dla najlepszej wydajno\u015bci, zostanie utworzone oddzielne akcesorium HomeKit dla ka\u017cdego tv media playera, aktywno\u015bci pilota, zamka oraz kamery.",
                 "title": "Wybierz encje, kt\u00f3re maj\u0105 by\u0107 uwzgl\u0119dnione"
             },
             "init": {

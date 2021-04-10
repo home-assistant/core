@@ -19,7 +19,7 @@
                 "title": "Selecciona els dominis a incloure"
             },
             "pairing": {
-                "description": "Tan aviat com {name} estigui llest, la vinculaci\u00f3 estar\u00e0 disponible a \"Notificacions\" com a \"Configuraci\u00f3 de l'enlla\u00e7 HomeKit\".",
+                "description": "Per completar la vinculaci\u00f3, segueix les instruccions a \"Configuraci\u00f3 de l'enlla\u00e7 HomeKit\" sota \"Notificacions\".",
                 "title": "Vinculaci\u00f3 HomeKit"
             },
             "user": {
@@ -28,8 +28,8 @@
                     "include_domains": "Dominis a incloure",
                     "mode": "Mode"
                 },
-                "description": "La integraci\u00f3 HomeKit et permetr\u00e0 l'acc\u00e9s a les teves entitats de Home Assistant a HomeKit. En mode enlla\u00e7, els enlla\u00e7os HomeKit estan limitats a un m\u00e0xim de 150 accessoris per inst\u00e0ncia (incl\u00f2s el propi enlla\u00e7). Si volguessis enlla\u00e7ar m\u00e9s accessoris que el m\u00e0xim perm\u00e8s, \u00e9s recomanable que utilitzis diferents enlla\u00e7os HomeKit per a dominis diferents. La configuraci\u00f3 avan\u00e7ada d'entitat nom\u00e9s est\u00e0 disponible en YAML. Per obtenir el millor rendiment i evitar errors de disponibilitat inesperats , crea i vincula una inst\u00e0ncia HomeKit en mode accessori per a cada repoductor multim\u00e8dia/TV i c\u00e0mera.",
-                "title": "Activaci\u00f3 de HomeKit"
+                "description": "Selecciona els dominis a incloure. S'inclouran totes les entitats del domini compatibles. Es crear\u00e0 una inst\u00e0ncia HomeKit en mode accessori per a cada repoductor multim\u00e8dia/TV i c\u00e0mera.",
+                "title": "Selecciona els dominis a incloure"
             }
         }
     },
@@ -55,7 +55,7 @@
                     "entities": "Entitats",
                     "mode": "Mode"
                 },
-                "description": "Tria les entitats que vulguis incloure. En mode accessori, nom\u00e9s s'inclou una sola entitat. En mode enlla\u00e7 inclusiu, s'exposaran totes les entitats del domini tret de que se'n seleccionin algunes en concret. En mode enlla\u00e7 excusiu, s'inclouran totes les entitats del domini excepte les entitats excloses. Per obtenir el millor rendiment i evitar errors de disponibilitat inesperats , crea i vincula una inst\u00e0ncia HomeKit en mode accessori per a cada repoductor multim\u00e8dia/TV i c\u00e0mera.",
+                "description": "Tria les entitats a incloure. En mode accessori, nom\u00e9s s'inclou una sola entitat. En mode enlla\u00e7 inclusiu, s'inclouran totes les entitats del domini tret de que se'n seleccionin algunes en concret. En mode enlla\u00e7 excusiu, s'inclouran totes les entitats del domini excepte les entitats excloses. Per obtenir el millor rendiment, es crea una inst\u00e0ncia HomeKit per a cada repoductor multim\u00e8dia/TV i c\u00e0mera.",
                 "title": "Selecciona les entitats a incloure"
             },
             "init": {

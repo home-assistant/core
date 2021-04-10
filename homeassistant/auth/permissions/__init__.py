@@ -1,6 +1,8 @@
 """Permissions for Home Assistant."""
+from __future__ import annotations
+
 import logging
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 
 import voluptuous as vol
 
@@ -19,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 class AbstractPermissions:
     """Default permissions class."""
 
-    _cached_entity_func: Optional[Callable[[str, str], bool]] = None
+    _cached_entity_func: Callable[[str, str], bool] | None = None
 
     def _entity_func(self) -> Callable[[str, str], bool]:
         """Return a function that can test entity access."""

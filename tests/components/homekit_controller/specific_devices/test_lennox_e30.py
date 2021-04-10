@@ -8,6 +8,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.components.homekit_controller.common import (
     Helper,
@@ -21,7 +22,7 @@ async def test_lennox_e30_setup(hass):
     accessories = await setup_accessories_from_file(hass, "lennox_e30.json")
     config_entry, pairing = await setup_test_accessories(hass, accessories)
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     climate = entity_registry.async_get("climate.lennox")
     assert climate.unique_id == "homekit-XXXXXXXX-100"
@@ -35,7 +36,7 @@ async def test_lennox_e30_setup(hass):
         SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_RANGE
     )
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
 
     device = device_registry.async_get(climate.device_id)
     assert device.manufacturer == "Lennox"

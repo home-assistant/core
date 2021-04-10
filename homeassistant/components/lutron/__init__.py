@@ -12,6 +12,8 @@ from homeassistant.util import slugify
 
 DOMAIN = "lutron"
 
+PLATFORMS = ["light", "cover", "switch", "scene", "binary_sensor"]
+
 _LOGGER = logging.getLogger(__name__)
 
 LUTRON_BUTTONS = "lutron_buttons"
@@ -37,7 +39,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 def setup(hass, base_config):
-    """Set up the Lutron component."""
+    """Set up the Lutron integration."""
     hass.data[LUTRON_BUTTONS] = []
     hass.data[LUTRON_CONTROLLER] = None
     hass.data[LUTRON_DEVICES] = {
@@ -92,8 +94,8 @@ def setup(hass, base_config):
                 (area.name, area.occupancy_group)
             )
 
-    for component in ("light", "cover", "switch", "scene", "binary_sensor"):
-        discovery.load_platform(hass, component, DOMAIN, {}, base_config)
+    for platform in PLATFORMS:
+        discovery.load_platform(hass, platform, DOMAIN, {}, base_config)
     return True
 
 

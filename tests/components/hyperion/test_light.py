@@ -1,12 +1,16 @@
 """Tests for the Hyperion integration."""
-import logging
-from typing import Optional
+from __future__ import annotations
+
 from unittest.mock import AsyncMock, Mock, call, patch
 
 from hyperion import const
 
 from homeassistant.components.hyperion import light as hyperion_light
-from homeassistant.components.hyperion.const import DEFAULT_ORIGIN, DOMAIN
+from homeassistant.components.hyperion.const import (
+    CONF_EFFECT_HIDE_LIST,
+    DEFAULT_ORIGIN,
+    DOMAIN,
+)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
@@ -27,7 +31,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.helpers.entity_registry import async_get_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.color as color_util
 
@@ -52,14 +56,12 @@ from . import (
     setup_test_config_entry,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 COLOR_BLACK = color_util.COLORS["black"]
 
 
 def _get_config_entry_from_unique_id(
     hass: HomeAssistantType, unique_id: str
-) -> Optional[ConfigEntry]:
+) -> ConfigEntry | None:
     for entry in hass.config_entries.async_entries(domain=DOMAIN):
         if TEST_SYSINFO_ID == entry.unique_id:
             return entry
@@ -112,7 +114,7 @@ async def test_setup_config_entry_not_ready_load_state_fail(
 
 async def test_setup_config_entry_dynamic_instances(hass: HomeAssistantType) -> None:
     """Test dynamic changes in the instance configuration."""
-    registry = await async_get_registry(hass)
+    registry = er.async_get(hass)
 
     config_entry = add_test_config_entry(hass)
 
@@ -759,7 +761,11 @@ async def test_setup_entry_no_token_reauth(hass: HomeAssistantType) -> None:
         assert client.async_client_disconnect.called
         mock_flow_init.assert_called_once_with(
             DOMAIN,
-            context={CONF_SOURCE: SOURCE_REAUTH},
+            context={
+                CONF_SOURCE: SOURCE_REAUTH,
+                "entry_id": config_entry.entry_id,
+                "unique_id": config_entry.unique_id,
+            },
             data=config_entry.data,
         )
         assert config_entry.state == ENTRY_STATE_SETUP_ERROR
@@ -783,7 +789,11 @@ async def test_setup_entry_bad_token_reauth(hass: HomeAssistantType) -> None:
         assert client.async_client_disconnect.called
         mock_flow_init.assert_called_once_with(
             DOMAIN,
-            context={CONF_SOURCE: SOURCE_REAUTH},
+            context={
+                CONF_SOURCE: SOURCE_REAUTH,
+                "entry_id": config_entry.entry_id,
+                "unique_id": config_entry.unique_id,
+            },
             data=config_entry.data,
         )
         assert config_entry.state == ENTRY_STATE_SETUP_ERROR
@@ -1131,3 +1141,21 @@ async def test_priority_light_has_no_external_sources(hass: HomeAssistantType) -
     entity_state = hass.states.get(TEST_PRIORITY_LIGHT_ENTITY_ID_1)
     assert entity_state
     assert entity_state.attributes["effect_list"] == [hyperion_light.KEY_EFFECT_SOLID]
+
+
+async def test_light_option_effect_hide_list(hass: HomeAssistantType) -> None:
+    """Test the effect_hide_list option."""
+    client = create_mock_client()
+    client.effects = [{const.KEY_NAME: "One"}, {const.KEY_NAME: "Two"}]
+
+    await setup_test_config_entry(
+        hass, hyperion_client=client, options={CONF_EFFECT_HIDE_LIST: ["Two", "V4L"]}
+    )
+
+    entity_state = hass.states.get(TEST_ENTITY_ID_1)
+    assert entity_state.attributes["effect_list"] == [
+        "Solid",
+        "BOBLIGHTSERVER",
+        "GRABBER",
+        "One",
+    ]

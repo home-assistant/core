@@ -1,8 +1,10 @@
 """Support for Generic Modbus Thermostats."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 import struct
-from typing import Any, Dict, Optional
+from typing import Any
 
 from pymodbus.exceptions import ConnectionException, ModbusException
 from pymodbus.pdu import ExceptionResponse
@@ -13,11 +15,12 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import (
-    ATTR_TEMPERATURE,
     CONF_NAME,
+    CONF_OFFSET,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
     CONF_STRUCTURE,
+    CONF_TEMPERATURE_UNIT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
@@ -28,8 +31,8 @@ from homeassistant.helpers.typing import (
     HomeAssistantType,
 )
 
-from . import ModbusHub
 from .const import (
+    ATTR_TEMPERATURE,
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
     CONF_CLIMATES,
@@ -39,16 +42,15 @@ from .const import (
     CONF_DATA_TYPE,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
-    CONF_OFFSET,
     CONF_PRECISION,
     CONF_SCALE,
     CONF_STEP,
     CONF_TARGET_TEMP,
-    CONF_UNIT,
     DATA_TYPE_CUSTOM,
     DEFAULT_STRUCT_FORMAT,
     MODBUS_DOMAIN,
 )
+from .modbus import ModbusHub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +59,7 @@ async def async_setup_platform(
     hass: HomeAssistantType,
     config: ConfigType,
     async_add_entities,
-    discovery_info: Optional[DiscoveryInfoType] = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ):
     """Read configuration and create Modbus climate."""
     if discovery_info is None:
@@ -108,12 +110,12 @@ class ModbusThermostat(ClimateEntity):
     def __init__(
         self,
         hub: ModbusHub,
-        config: Dict[str, Any],
+        config: dict[str, Any],
     ):
         """Initialize the modbus thermostat."""
         self._hub: ModbusHub = hub
         self._name = config[CONF_NAME]
-        self._slave = config[CONF_SLAVE]
+        self._slave = config.get(CONF_SLAVE)
         self._target_temperature_register = config[CONF_TARGET_TEMP]
         self._current_temperature_register = config[CONF_CURRENT_TEMP]
         self._current_temperature_register_type = config[
@@ -128,7 +130,7 @@ class ModbusThermostat(ClimateEntity):
         self._scale = config[CONF_SCALE]
         self._scan_interval = timedelta(seconds=config[CONF_SCAN_INTERVAL])
         self._offset = config[CONF_OFFSET]
-        self._unit = config[CONF_UNIT]
+        self._unit = config[CONF_TEMPERATURE_UNIT]
         self._max_temp = config[CONF_MAX_TEMP]
         self._min_temp = config[CONF_MIN_TEMP]
         self._temp_step = config[CONF_STEP]
@@ -146,7 +148,6 @@ class ModbusThermostat(ClimateEntity):
 
         False if entity pushes its state to HA.
         """
-
         # Handle polling directly in this entity
         return False
 
@@ -207,11 +208,11 @@ class ModbusThermostat(ClimateEntity):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
+        if ATTR_TEMPERATURE not in kwargs:
+            return
         target_temperature = int(
             (kwargs.get(ATTR_TEMPERATURE) - self._offset) / self._scale
         )
-        if target_temperature is None:
-            return
         byte_string = struct.pack(self._structure, target_temperature)
         register_value = struct.unpack(">h", byte_string[0:2])[0]
         self._write_register(self._target_temperature_register, register_value)
@@ -233,7 +234,7 @@ class ModbusThermostat(ClimateEntity):
 
         self.schedule_update_ha_state()
 
-    def _read_register(self, register_type, register) -> Optional[float]:
+    def _read_register(self, register_type, register) -> float | None:
         """Read register using the Modbus hub slave."""
         try:
             if register_type == CALL_TYPE_REGISTER_INPUT:
@@ -275,7 +276,7 @@ class ModbusThermostat(ClimateEntity):
     def _write_register(self, register, value):
         """Write holding register using the Modbus hub slave."""
         try:
-            self._hub.write_registers(self._slave, register, [value, 0])
+            self._hub.write_registers(self._slave, register, value)
         except ConnectionException:
             self._available = False
             return

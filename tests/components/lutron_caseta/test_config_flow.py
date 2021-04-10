@@ -17,10 +17,11 @@ from homeassistant.components.lutron_caseta.const import (
     ERROR_CANNOT_CONNECT,
     STEP_IMPORT_FAILED,
 )
-from homeassistant.components.zeroconf import ATTR_HOSTNAME
 from homeassistant.const import CONF_HOST
 
 from tests.common import MockConfigEntry
+
+ATTR_HOSTNAME = "hostname"
 
 EMPTY_MOCK_CONFIG_ENTRY = {
     CONF_HOST: "",

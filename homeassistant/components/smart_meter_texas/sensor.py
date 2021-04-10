@@ -1,6 +1,7 @@
 """Support for Smart Meter Texas sensors."""
 from smart_meter_texas import Meter
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_ADDRESS, ENERGY_KILO_WATT_HOUR
 from homeassistant.core import callback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -29,7 +30,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class SmartMeterTexasSensor(CoordinatorEntity, RestoreEntity):
+class SmartMeterTexasSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
     """Representation of an Smart Meter Texas sensor."""
 
     def __init__(self, meter: Meter, coordinator: DataUpdateCoordinator):
@@ -65,7 +66,7 @@ class SmartMeterTexasSensor(CoordinatorEntity, RestoreEntity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
         attributes = {
             METER_NUMBER: self.meter.meter,

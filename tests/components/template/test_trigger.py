@@ -18,7 +18,7 @@ from tests.common import (
     async_mock_service,
     mock_component,
 )
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
 @pytest.fixture
@@ -43,12 +43,17 @@ async def test_if_fires_on_change_bool(hass, calls):
             automation.DOMAIN: {
                 "trigger": {
                     "platform": "template",
-                    "value_template": "{{ states.test.entity.state and true }}",
+                    "value_template": '{{ states.test.entity.state == "world" and true }}',
                 },
-                "action": {"service": "test.automation"},
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {"id": "{{ trigger.id}}"},
+                },
             }
         },
     )
+
+    assert len(calls) == 0
 
     hass.states.async_set("test.entity", "world")
     await hass.async_block_till_done()
@@ -64,6 +69,7 @@ async def test_if_fires_on_change_bool(hass, calls):
     hass.states.async_set("test.entity", "planet")
     await hass.async_block_till_done()
     assert len(calls) == 1
+    assert calls[0].data["id"] == 0
 
 
 async def test_if_fires_on_change_str(hass, calls):
@@ -75,12 +81,14 @@ async def test_if_fires_on_change_str(hass, calls):
             automation.DOMAIN: {
                 "trigger": {
                     "platform": "template",
-                    "value_template": '{{ states.test.entity.state and "true" }}',
+                    "value_template": '{{ states.test.entity.state == "world" and "true" }}',
                 },
                 "action": {"service": "test.automation"},
             }
         },
     )
+
+    assert len(calls) == 0
 
     hass.states.async_set("test.entity", "world")
     await hass.async_block_till_done()
@@ -96,7 +104,7 @@ async def test_if_fires_on_change_str_crazy(hass, calls):
             automation.DOMAIN: {
                 "trigger": {
                     "platform": "template",
-                    "value_template": '{{ states.test.entity.state and "TrUE" }}',
+                    "value_template": '{{ states.test.entity.state == "world" and "TrUE" }}',
                 },
                 "action": {"service": "test.automation"},
             }
@@ -104,6 +112,100 @@ async def test_if_fires_on_change_str_crazy(hass, calls):
     )
 
     hass.states.async_set("test.entity", "world")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+
+async def test_if_not_fires_when_true_at_setup(hass, calls):
+    """Test for not firing during startup."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "template",
+                    "value_template": '{{ states.test.entity.state == "hello" }}',
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    assert len(calls) == 0
+
+    hass.states.async_set("test.entity", "hello", force_update=True)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+
+async def test_if_not_fires_when_true_at_setup_variables(hass, calls):
+    """Test for not firing during startup + trigger_variables."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger_variables": {"entity": "test.entity"},
+                "trigger": {
+                    "platform": "template",
+                    "value_template": '{{ is_state(entity|default("test.entity2"), "hello") }}',
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    assert len(calls) == 0
+
+    # Assert that the trigger doesn't fire immediately when it's setup
+    # If trigger_variable 'entity' is not passed to initial check at setup, the
+    # trigger will immediately fire
+    hass.states.async_set("test.entity", "hello", force_update=True)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    hass.states.async_set("test.entity", "goodbye", force_update=True)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # Assert that the trigger fires after state change
+    # If trigger_variable 'entity' is not passed to the template trigger, the
+    # trigger will never fire because it falls back to 'test.entity2'
+    hass.states.async_set("test.entity", "hello", force_update=True)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+
+async def test_if_not_fires_because_fail(hass, calls):
+    """Test for not firing after TemplateError."""
+    hass.states.async_set("test.number", "1")
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "template",
+                    "value_template": "{{ 84 / states.test.number.state|int == 42 }}",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    assert len(calls) == 0
+
+    hass.states.async_set("test.number", "2")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    hass.states.async_set("test.number", "0")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    hass.states.async_set("test.number", "2")
     await hass.async_block_till_done()
     assert len(calls) == 1
 
@@ -117,7 +219,7 @@ async def test_if_not_fires_on_change_bool(hass, calls):
             automation.DOMAIN: {
                 "trigger": {
                     "platform": "template",
-                    "value_template": "{{ states.test.entity.state and false }}",
+                    "value_template": '{{ states.test.entity.state == "world" and false }}',
                 },
                 "action": {"service": "test.automation"},
             }
@@ -198,7 +300,7 @@ async def test_if_fires_on_two_change(hass, calls):
             automation.DOMAIN: {
                 "trigger": {
                     "platform": "template",
-                    "value_template": "{{ states.test.entity.state and true }}",
+                    "value_template": "{{ states.test.entity.state == 'world' }}",
                 },
                 "action": {"service": "test.automation"},
             }
@@ -297,7 +399,7 @@ async def test_if_fires_on_change_with_template_advanced(hass, calls):
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].context.parent_id == context.id
-    assert "template - test.entity - hello - world - None" == calls[0].data["some"]
+    assert calls[0].data["some"] == "template - test.entity - hello - world - None"
 
 
 async def test_if_fires_on_no_change_with_template_advanced(hass, calls):
@@ -559,7 +661,7 @@ async def test_if_fires_on_change_with_for_advanced(hass, calls):
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].context.parent_id == context.id
-    assert "template - test.entity - hello - world - 0:00:05" == calls[0].data["some"]
+    assert calls[0].data["some"] == "template - test.entity - hello - world - 0:00:05"
 
 
 async def test_if_fires_on_change_with_for_0(hass, calls):

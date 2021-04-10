@@ -1,5 +1,13 @@
 """Support for WiLight lights."""
 
+from pywilight.const import (
+    ITEM_LIGHT,
+    LIGHT_COLOR,
+    LIGHT_DIMMER,
+    LIGHT_ON_OFF,
+    SUPPORT_NONE,
+)
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
@@ -10,15 +18,7 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from . import WiLightDevice
-from .const import (
-    DOMAIN,
-    ITEM_LIGHT,
-    LIGHT_COLOR,
-    LIGHT_DIMMER,
-    LIGHT_ON_OFF,
-    SUPPORT_NONE,
-)
+from . import DOMAIN, WiLightDevice
 
 
 def entities_from_discovered_wilight(hass, api_device):

@@ -1,17 +1,17 @@
 {
     "device_automation": {
         "action_type": {
-            "lock": "{entity_name} \uc7a0\uae08",
-            "open": "{entity_name} \uc5f4\uae30",
-            "unlock": "{entity_name} \uc7a0\uae08 \ud574\uc81c"
+            "lock": "{entity_name}\uc744(\ub97c) \uc7a0\uadf8\uae30",
+            "open": "{entity_name}\uc744(\ub97c) \uc5f4\uae30",
+            "unlock": "{entity_name}\uc744(\ub97c) \uc7a0\uae08 \ud574\uc81c\ud558\uae30"
         },
         "condition_type": {
-            "is_locked": "{entity_name} \uc774(\uac00) \uc7a0\uaca8\uc788\uc73c\uba74",
-            "is_unlocked": "{entity_name} \uc774(\uac00) \uc7a0\uaca8\uc788\uc9c0 \uc54a\uc73c\uba74"
+            "is_locked": "{entity_name}\uc774(\uac00) \uc7a0\uaca8\uc788\uc73c\uba74",
+            "is_unlocked": "{entity_name}\uc774(\uac00) \uc7a0\uaca8\uc788\uc9c0 \uc54a\uc73c\uba74"
         },
         "trigger_type": {
-            "locked": "{entity_name} \uc774(\uac00) \uc7a0\uae38 \ub54c",
-            "unlocked": "{entity_name} \uc774(\uac00) \uc7a0\uae08\uc774 \ud574\uc81c\ub420 \ub54c"
+            "locked": "{entity_name}\uc774(\uac00) \uc7a0\uacbc\uc744 \ub54c",
+            "unlocked": "{entity_name}\uc774(\uac00) \uc7a0\uae08\uc774 \ud574\uc81c\ub418\uc5c8\uc744 \ub54c"
         }
     },
     "state": {
@@ -20,5 +20,5 @@
             "unlocked": "\ud574\uc81c"
         }
     },
-    "title": "\uc7a0\uae40"
+    "title": "\uc7a0\uae08\uc7a5\uce58"
 }

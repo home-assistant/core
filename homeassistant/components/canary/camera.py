@@ -1,7 +1,9 @@
 """Support for Canary camera."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
-from typing import Callable, List
+from typing import Callable
 
 from haffmpeg.camera import CameraMjpeg
 from haffmpeg.tools import IMAGE_JPEG, ImageFrame
@@ -44,7 +46,7 @@ PLATFORM_SCHEMA = vol.All(
 async def async_setup_entry(
     hass: HomeAssistantType,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
     """Set up Canary sensors based on a config entry."""
     coordinator: CanaryDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][

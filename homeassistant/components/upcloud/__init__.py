@@ -1,9 +1,10 @@
 """Support for UpCloud."""
+from __future__ import annotations
 
 import dataclasses
 from datetime import timedelta
 import logging
-from typing import Dict, List
+from typing import Dict
 
 import requests.exceptions
 import upcloud_api
@@ -40,7 +41,6 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_CORE_NUMBER = "core_number"
 ATTR_HOSTNAME = "hostname"
 ATTR_MEMORY_AMOUNT = "memory_amount"
-ATTR_STATE = "state"
 ATTR_TITLE = "title"
 ATTR_UUID = "uuid"
 ATTR_ZONE = "zone"
@@ -92,7 +92,7 @@ class UpCloudDataUpdateCoordinator(
             hass, _LOGGER, name=f"{username}@UpCloud", update_interval=update_interval
         )
         self.cloud_manager = cloud_manager
-        self.unsub_handlers: List[CALLBACK_TYPE] = []
+        self.unsub_handlers: list[CALLBACK_TYPE] = []
 
     async def async_update_config(self, config_entry: ConfigEntry) -> None:
         """Handle config update."""
@@ -100,7 +100,7 @@ class UpCloudDataUpdateCoordinator(
             seconds=config_entry.options[CONF_SCAN_INTERVAL]
         )
 
-    async def _async_update_data(self) -> Dict[str, upcloud_api.Server]:
+    async def _async_update_data(self) -> dict[str, upcloud_api.Server]:
         return {
             x.uuid: x
             for x in await self.hass.async_add_executor_job(
@@ -113,10 +113,10 @@ class UpCloudDataUpdateCoordinator(
 class UpCloudHassData:
     """Home Assistant UpCloud runtime data."""
 
-    coordinators: Dict[str, UpCloudDataUpdateCoordinator] = dataclasses.field(
+    coordinators: dict[str, UpCloudDataUpdateCoordinator] = dataclasses.field(
         default_factory=dict
     )
-    scan_interval_migrations: Dict[str, int] = dataclasses.field(default_factory=dict)
+    scan_interval_migrations: dict[str, int] = dataclasses.field(default_factory=dict)
 
 
 async def async_setup(hass: HomeAssistantType, config) -> bool:
@@ -127,7 +127,7 @@ async def async_setup(hass: HomeAssistantType, config) -> bool:
 
     _LOGGER.warning(
         "Loading upcloud via top level config is deprecated and no longer "
-        "necessary as of 0.117. Please remove it from your YAML configuration."
+        "necessary as of 0.117; Please remove it from your YAML configuration"
     )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
@@ -207,9 +207,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
     )
 
     # Call the UpCloud API to refresh data
-    await coordinator.async_request_refresh()
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
 
     # Listen to config entry updates
     coordinator.unsub_handlers.append(
@@ -297,7 +295,7 @@ class UpCloudServerEntity(CoordinatorEntity):
         return DEFAULT_COMPONENT_DEVICE_CLASS
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the UpCloud server."""
         return {
             x: getattr(self._server, x, None)

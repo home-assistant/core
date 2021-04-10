@@ -1,5 +1,5 @@
 """Provides device automations for Media player."""
-from typing import Dict, List
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -35,7 +35,7 @@ CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
 
 async def async_get_conditions(
     hass: HomeAssistant, device_id: str
-) -> List[Dict[str, str]]:
+) -> list[dict[str, str]]:
     """List device conditions for Media player devices."""
     registry = await entity_registry.async_get_registry(hass)
     conditions = []

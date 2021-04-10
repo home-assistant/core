@@ -12,12 +12,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 
-from .const import (  # pylint: disable=unused-import
-    CONF_CATEGORIES,
-    DEFAULT_RADIUS,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-)
+from .const import CONF_CATEGORIES, DEFAULT_RADIUS, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 DATA_SCHEMA = vol.Schema(
     {vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): cv.positive_int}

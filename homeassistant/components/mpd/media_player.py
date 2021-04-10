@@ -1,4 +1,5 @@
 """Support to interact with a Music Player Daemon."""
+from contextlib import suppress
 from datetime import timedelta
 import hashlib
 import logging
@@ -129,10 +130,8 @@ class MpdDevice(MediaPlayerEntity):
 
     def _disconnect(self):
         """Disconnect from MPD."""
-        try:
+        with suppress(mpd.ConnectionError):
             self._client.disconnect()
-        except mpd.ConnectionError:
-            pass
         self._is_connected = False
         self._status = None
 
@@ -281,20 +280,22 @@ class MpdDevice(MediaPlayerEntity):
             try:
                 response = await self._client.readpicture(file)
             except mpd.CommandError as error:
-                _LOGGER.warning(
-                    "Retrieving artwork through `readpicture` command failed: %s",
-                    error,
-                )
+                if error.errno is not mpd.FailureResponseCode.NO_EXIST:
+                    _LOGGER.warning(
+                        "Retrieving artwork through `readpicture` command failed: %s",
+                        error,
+                    )
 
         # read artwork contained in the media directory (cover.{jpg,png,tiff,bmp}) if none is embedded
         if can_albumart and not response:
             try:
                 response = await self._client.albumart(file)
             except mpd.CommandError as error:
-                _LOGGER.warning(
-                    "Retrieving artwork through `albumart` command failed: %s",
-                    error,
-                )
+                if error.errno is not mpd.FailureResponseCode.NO_EXIST:
+                    _LOGGER.warning(
+                        "Retrieving artwork through `albumart` command failed: %s",
+                        error,
+                    )
 
         if not response:
             return None, None

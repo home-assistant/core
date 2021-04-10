@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
+        },
+        "error": {
+            "open_failed": "Die angegebene serielle Schnittstelle kann nicht ge\u00f6ffnet werden."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Port"
+                },
+                "description": "Verbinde den RS232-2-Anschluss des LiteJet mit deinen Computer und gib den Pfad zum Ger\u00e4t der seriellen Schnittstelle ein.\n\nDer LiteJet MCP muss f\u00fcr 19,2 K Baud, 8 Datenbits, 1 Stoppbit, keine Parit\u00e4t und zur \u00dcbertragung eines 'CR' nach jeder Antwort konfiguriert werden.",
+                "title": "Verbinde zu LiteJet"
+            }
+        }
+    }
+}

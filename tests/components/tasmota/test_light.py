@@ -924,7 +924,7 @@ async def test_transition(hass, mqtt_mock, setup_tasmota):
     await common.async_turn_on(hass, "light.test", brightness=255, transition=4)
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Backlog",
-        "NoDelay;Fade 1;NoDelay;Speed 8;NoDelay;Dimmer 100",
+        "NoDelay;Fade2 1;NoDelay;Speed2 8;NoDelay;Dimmer 100",
         0,
         False,
     )
@@ -934,7 +934,7 @@ async def test_transition(hass, mqtt_mock, setup_tasmota):
     await common.async_turn_on(hass, "light.test", brightness=255, transition=100)
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Backlog",
-        "NoDelay;Fade 1;NoDelay;Speed 40;NoDelay;Dimmer 100",
+        "NoDelay;Fade2 1;NoDelay;Speed2 40;NoDelay;Dimmer 100",
         0,
         False,
     )
@@ -944,7 +944,7 @@ async def test_transition(hass, mqtt_mock, setup_tasmota):
     await common.async_turn_on(hass, "light.test", brightness=0, transition=100)
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Backlog",
-        "NoDelay;Fade 1;NoDelay;Speed 1;NoDelay;Power1 OFF",
+        "NoDelay;Fade2 1;NoDelay;Speed2 1;NoDelay;Power1 OFF",
         0,
         False,
     )
@@ -954,7 +954,7 @@ async def test_transition(hass, mqtt_mock, setup_tasmota):
     await common.async_turn_on(hass, "light.test", brightness=128, transition=4)
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Backlog",
-        "NoDelay;Fade 1;NoDelay;Speed 16;NoDelay;Dimmer 50",
+        "NoDelay;Fade2 1;NoDelay;Speed2 16;NoDelay;Dimmer 50",
         0,
         False,
     )
@@ -972,7 +972,7 @@ async def test_transition(hass, mqtt_mock, setup_tasmota):
     await common.async_turn_off(hass, "light.test", transition=6)
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Backlog",
-        "NoDelay;Fade 1;NoDelay;Speed 24;NoDelay;Power1 OFF",
+        "NoDelay;Fade2 1;NoDelay;Speed2 24;NoDelay;Power1 OFF",
         0,
         False,
     )
@@ -990,7 +990,7 @@ async def test_transition(hass, mqtt_mock, setup_tasmota):
     await common.async_turn_off(hass, "light.test", transition=0)
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Backlog",
-        "NoDelay;Fade 0;NoDelay;Power1 OFF",
+        "NoDelay;Fade2 0;NoDelay;Power1 OFF",
         0,
         False,
     )
@@ -1011,7 +1011,7 @@ async def test_transition(hass, mqtt_mock, setup_tasmota):
     await common.async_turn_on(hass, "light.test", rgb_color=[255, 0, 0], transition=6)
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Backlog",
-        "NoDelay;Fade 1;NoDelay;Speed 24;NoDelay;Power1 ON;NoDelay;Color2 255,0,0",
+        "NoDelay;Fade2 1;NoDelay;Speed2 24;NoDelay;Power1 ON;NoDelay;Color2 255,0,0",
         0,
         False,
     )
@@ -1032,7 +1032,7 @@ async def test_transition(hass, mqtt_mock, setup_tasmota):
     await common.async_turn_on(hass, "light.test", rgb_color=[255, 0, 0], transition=6)
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Backlog",
-        "NoDelay;Fade 1;NoDelay;Speed 12;NoDelay;Power1 ON;NoDelay;Color2 255,0,0",
+        "NoDelay;Fade2 1;NoDelay;Speed2 12;NoDelay;Power1 ON;NoDelay;Color2 255,0,0",
         0,
         False,
     )
@@ -1051,7 +1051,7 @@ async def test_transition(hass, mqtt_mock, setup_tasmota):
     await common.async_turn_on(hass, "light.test", color_temp=500, transition=6)
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Backlog",
-        "NoDelay;Fade 1;NoDelay;Speed 24;NoDelay;Power1 ON;NoDelay;CT 500",
+        "NoDelay;Fade2 1;NoDelay;Speed2 24;NoDelay;Power1 ON;NoDelay;CT 500",
         0,
         False,
     )
@@ -1070,7 +1070,7 @@ async def test_transition(hass, mqtt_mock, setup_tasmota):
     await common.async_turn_on(hass, "light.test", color_temp=326, transition=6)
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Backlog",
-        "NoDelay;Fade 1;NoDelay;Speed 40;NoDelay;Power1 ON;NoDelay;CT 326",
+        "NoDelay;Fade2 1;NoDelay;Speed2 40;NoDelay;Power1 ON;NoDelay;CT 326",
         0,
         False,
     )
@@ -1103,7 +1103,7 @@ async def test_transition_fixed(hass, mqtt_mock, setup_tasmota):
     await common.async_turn_on(hass, "light.test", brightness=255, transition=4)
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Backlog",
-        "NoDelay;Fade 1;NoDelay;Speed 8;NoDelay;Dimmer 100",
+        "NoDelay;Fade2 1;NoDelay;Speed2 8;NoDelay;Dimmer 100",
         0,
         False,
     )
@@ -1113,7 +1113,7 @@ async def test_transition_fixed(hass, mqtt_mock, setup_tasmota):
     await common.async_turn_on(hass, "light.test", brightness=255, transition=100)
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Backlog",
-        "NoDelay;Fade 1;NoDelay;Speed 40;NoDelay;Dimmer 100",
+        "NoDelay;Fade2 1;NoDelay;Speed2 40;NoDelay;Dimmer 100",
         0,
         False,
     )
@@ -1123,7 +1123,7 @@ async def test_transition_fixed(hass, mqtt_mock, setup_tasmota):
     await common.async_turn_on(hass, "light.test", brightness=0, transition=4)
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Backlog",
-        "NoDelay;Fade 1;NoDelay;Speed 8;NoDelay;Power1 OFF",
+        "NoDelay;Fade2 1;NoDelay;Speed2 8;NoDelay;Power1 OFF",
         0,
         False,
     )
@@ -1133,7 +1133,7 @@ async def test_transition_fixed(hass, mqtt_mock, setup_tasmota):
     await common.async_turn_on(hass, "light.test", brightness=128, transition=4)
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Backlog",
-        "NoDelay;Fade 1;NoDelay;Speed 8;NoDelay;Dimmer 50",
+        "NoDelay;Fade2 1;NoDelay;Speed2 8;NoDelay;Dimmer 50",
         0,
         False,
     )
@@ -1143,7 +1143,7 @@ async def test_transition_fixed(hass, mqtt_mock, setup_tasmota):
     await common.async_turn_on(hass, "light.test", brightness=128, transition=0)
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Backlog",
-        "NoDelay;Fade 0;NoDelay;Dimmer 50",
+        "NoDelay;Fade2 0;NoDelay;Dimmer 50",
         0,
         False,
     )

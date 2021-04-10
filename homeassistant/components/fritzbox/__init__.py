@@ -5,7 +5,7 @@ import socket
 from pyfritzhome import Fritzhome, LoginError
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_DEVICES,
     CONF_HOST,
@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.exceptions import ConfigEntryAuthFailed
 import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_CONNECTIONS, DEFAULT_HOST, DEFAULT_USERNAME, DOMAIN, PLATFORMS
@@ -80,22 +81,15 @@ async def async_setup_entry(hass, entry):
 
     try:
         await hass.async_add_executor_job(fritz.login)
-    except LoginError:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_REAUTH},
-                data=entry,
-            )
-        )
-        return False
+    except LoginError as err:
+        raise ConfigEntryAuthFailed from err
 
     hass.data.setdefault(DOMAIN, {CONF_CONNECTIONS: {}, CONF_DEVICES: set()})
     hass.data[DOMAIN][CONF_CONNECTIONS][entry.entry_id] = fritz
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     def logout_fritzbox(event):
@@ -115,8 +109,8 @@ async def async_unload_entry(hass, entry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )
