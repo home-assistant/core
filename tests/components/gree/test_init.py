@@ -10,16 +10,6 @@ from tests.common import MockConfigEntry
 
 async def test_setup_simple(hass):
     """Test gree integration is setup."""
-    await async_setup_component(hass, GREE_DOMAIN, {})
-    await hass.async_block_till_done()
-
-    # No flows started
-    assert len(hass.config_entries.flow.async_progress()) == 0
-
-
-async def test_unload_config_entry(hass):
-    """Test that the async_unload_entry works."""
-    # As we have currently no configuration, we just to pass the domain here.
     entry = MockConfigEntry(domain=GREE_DOMAIN)
     entry.add_to_hass(hass)
 
@@ -37,6 +27,20 @@ async def test_unload_config_entry(hass):
         assert len(switch_setup.mock_calls) == 1
         assert entry.state == ENTRY_STATE_LOADED
 
+    # No flows started
+    assert len(hass.config_entries.flow.async_progress()) == 0
+
+
+async def test_unload_config_entry(hass):
+    """Test that the async_unload_entry works."""
+    # As we have currently no configuration, we just to pass the domain here.
+    entry = MockConfigEntry(domain=GREE_DOMAIN)
+    entry.add_to_hass(hass)
+
+    assert await async_setup_component(hass, GREE_DOMAIN, {})
+    await hass.async_block_till_done()
+
     await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
 
     assert entry.state == ENTRY_STATE_NOT_LOADED
