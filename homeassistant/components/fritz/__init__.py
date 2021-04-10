@@ -1,9 +1,9 @@
 """Support for AVM Fritz!Box functions."""
 import logging
 
-from fritzconnection.core.exceptions import FritzConnectionException
+from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
 
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_DEVICES,
     CONF_HOST,
@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .common import FritzBoxTools
@@ -52,16 +53,10 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     try:
         await fritz_tools.async_setup()
-    except FritzConnectionException:
-        _LOGGER.error("Unable to setup FRITZ!Box Tools component")
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_REAUTH},
-                data=entry,
-            )
-        )
-        return False
+    except FritzSecurityError as ex:
+        raise ConfigEntryAuthFailed from ex
+    except FritzConnectionException as ex:
+        raise ConfigEntryNotReady from ex
 
     hass.data.setdefault(DOMAIN, {CONF_DEVICES: set()})
     hass.data[DOMAIN][entry.entry_id] = fritz_tools
