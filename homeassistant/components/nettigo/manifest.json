@@ -1,0 +1,9 @@
+{
+  "domain": "nettigo",
+  "name": "Nettigo Air Monitor",
+  "documentation": "https://www.home-assistant.io/integrations/nettigo",
+  "codeowners": ["@bieniu"],
+  "requirements": ["nettigo==0.2.1"],
+  "zeroconf": [{ "type": "_http._tcp.local.", "name": "nam*" }],
+  "config_flow": true
+}
