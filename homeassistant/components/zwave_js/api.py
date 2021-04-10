@@ -367,14 +367,34 @@ async def websocket_refresh_node_info(
 ) -> None:
     """Re-interview a node."""
     node_id = msg[NODE_ID]
-    node = client.driver.controller.nodes.get(node_id)
+    controller = client.driver.controller
+    node = controller.nodes.get(node_id)
+
+    @callback
+    def async_cleanup() -> None:
+        """Remove signal listeners."""
+        for unsub in unsubs:
+            unsub()
+
+    @callback
+    def forward_event(event: dict) -> None:
+        connection.send_message(
+            websocket_api.event_message(msg[ID], {"event": event["event"]})
+        )
 
     if node is None:
         connection.send_error(msg[ID], ERR_NOT_FOUND, f"Node {node_id} not found")
         return
 
-    await node.async_refresh_info()
-    connection.send_result(msg[ID])
+    connection.subscriptions[msg["id"]] = async_cleanup
+    unsubs = [
+        node.on("interview started", forward_event),
+        node.on("interview completed", forward_event),
+        node.on("interview failed", forward_event),
+    ]
+
+    result = await node.async_refresh_info()
+    connection.send_result(msg[ID], result)
 
 
 @websocket_api.require_admin  # type:ignore
