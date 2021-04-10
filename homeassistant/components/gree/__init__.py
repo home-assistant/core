@@ -43,9 +43,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         if hass.data[DOMAIN].get(DATA_DISCOVERY_INTERVAL) is not None:
             hass.data[DOMAIN].pop(DATA_DISCOVERY_INTERVAL)()
 
-        if hass.data.get(DATA_DISCOVERY_SERVICE) is not None:
-            del hass.data[DATA_DISCOVERY_SERVICE]
-
     unsubscribe_callbacks: list[Callable] = []
     unsubscribe_callbacks.append(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_event)
@@ -83,7 +80,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data[DOMAIN].pop(DATA_DISCOVERY_INTERVAL)
 
     if hass.data.get(DATA_DISCOVERY_SERVICE) is not None:
-        del hass.data[DATA_DISCOVERY_SERVICE]
+        hass.data.pop(DATA_DISCOVERY_SERVICE)
 
     for unsubscribe in hass.data[DATA_UNSUBSCRIBE]:
         unsubscribe()
