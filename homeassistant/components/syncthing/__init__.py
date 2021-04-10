@@ -6,7 +6,6 @@ import aiosyncthing
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_NAME,
     CONF_TOKEN,
     CONF_URL,
     CONF_VERIFY_SSL,
@@ -34,40 +33,42 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up syncthing from a config entry."""
     data = entry.data
 
+    url = normalize_url(data[CONF_URL])
+
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
 
-    name = data[CONF_NAME]
-
     client = aiosyncthing.Syncthing(
         data[CONF_TOKEN],
-        url=normalize_url(data[CONF_URL]),
+        url=url,
         verify_ssl=data[CONF_VERIFY_SSL],
     )
 
     try:
-        await client.system.ping()
+        status = await client.system.status()
     except aiosyncthing.exceptions.SyncthingError as exception:
         await client.close()
         raise ConfigEntryNotReady from exception
+    else:
+        server_id = status["myID"]
 
-    syncthing = SyncthingClient(hass, client, name)
+        syncthing = SyncthingClient(hass, client, server_id)
 
-    syncthing.subscribe()
+        syncthing.subscribe()
 
-    hass.data[DOMAIN][name] = syncthing
+        hass.data[DOMAIN][url] = syncthing
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+        for component in PLATFORMS:
+            hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(entry, component)
+            )
 
-    async def cancel_listen_task(_):
-        await syncthing.unsubscribe()
+        async def cancel_listen_task(_):
+            await syncthing.unsubscribe()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cancel_listen_task)
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cancel_listen_task)
 
-    return True
+        return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -81,9 +82,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
     if unload_ok:
-        name = entry.data[CONF_NAME]
-        await hass.data[DOMAIN][name].unsubscribe()
-        hass.data[DOMAIN].pop(name)
+        url = entry.data[CONF_URL]
+        await hass.data[DOMAIN][url].unsubscribe()
+        hass.data[DOMAIN].pop(url)
 
     return unload_ok
 
@@ -91,11 +92,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 class SyncthingClient:
     """A Syncthing client."""
 
-    def __init__(self, hass, client, name):
+    def __init__(self, hass, client, server_id):
         """Initialize the client."""
         self._hass = hass
         self._client = client
-        self._name = name
+        self._server_id = server_id
         self._listen_task = None
 
     @property
@@ -134,7 +135,7 @@ class SyncthingClient:
                         "The syncthing server '%s' is back online", self._client.url
                     )
                     async_dispatcher_send(
-                        self._hass, f"{SERVER_AVAILABLE}-{self._name}"
+                        self._hass, f"{SERVER_AVAILABLE}-{self._server_id}"
                     )
                     server_was_unavailable = False
             else:
@@ -155,7 +156,7 @@ class SyncthingClient:
                         folder = event["data"]["id"]
                     async_dispatcher_send(
                         self._hass,
-                        f"{signal_name}-{self._name}-{folder}",
+                        f"{signal_name}-{self._server_id}-{folder}",
                         event,
                     )
             except aiosyncthing.exceptions.SyncthingError:
@@ -164,7 +165,9 @@ class SyncthingClient:
                     self._client.url,
                     RECONNECT_INTERVAL.seconds,
                 )
-                async_dispatcher_send(self._hass, f"{SERVER_UNAVAILABLE}-{self._name}")
+                async_dispatcher_send(
+                    self._hass, f"{SERVER_UNAVAILABLE}-{self._server_id}"
+                )
                 await asyncio.sleep(RECONNECT_INTERVAL.seconds)
                 server_was_unavailable = True
                 continue

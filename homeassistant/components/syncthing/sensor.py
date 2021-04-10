@@ -5,7 +5,7 @@ import logging
 import aiosyncthing
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -31,7 +31,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Syncthing sensors."""
 
     name = config_entry.data[CONF_NAME]
-    syncthing = hass.data[DOMAIN][name]
+    url = config_entry.data[CONF_URL]
+    syncthing = hass.data[DOMAIN][url]
 
     try:
         config = await syncthing.system.config()
@@ -189,7 +190,7 @@ class FolderSensor(SensorEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{FOLDER_SUMMARY_RECEIVED}-{self._name}-{self._folder_id}",
+                f"{FOLDER_SUMMARY_RECEIVED}-{self._server_id}-{self._folder_id}",
                 handle_folder_summary,
             )
         )
@@ -202,7 +203,7 @@ class FolderSensor(SensorEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{STATE_CHANGED_RECEIVED}-{self._name}-{self._folder_id}",
+                f"{STATE_CHANGED_RECEIVED}-{self._server_id}-{self._folder_id}",
                 handle_state_changed,
             )
         )
@@ -215,7 +216,7 @@ class FolderSensor(SensorEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{FOLDER_PAUSED_RECEIVED}-{self._name}-{self._folder_id}",
+                f"{FOLDER_PAUSED_RECEIVED}-{self._server_id}-{self._folder_id}",
                 handle_folder_paused,
             )
         )
@@ -228,7 +229,7 @@ class FolderSensor(SensorEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{SERVER_UNAVAILABLE}-{self._name}",
+                f"{SERVER_UNAVAILABLE}-{self._server_id}",
                 handle_server_unavailable,
             )
         )
@@ -240,7 +241,7 @@ class FolderSensor(SensorEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{SERVER_AVAILABLE}-{self._name}",
+                f"{SERVER_AVAILABLE}-{self._server_id}",
                 handle_server_available,
             )
         )
