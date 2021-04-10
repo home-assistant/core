@@ -17,8 +17,8 @@ from .util import session_scope
 _LOGGER = logging.getLogger(__name__)
 
 
-def migrate_schema(instance):
-    """Check if the schema needs to be upgraded."""
+def get_schema_version(instance):
+    """Get the schema version."""
     with session_scope(session=instance.get_session()) as session:
         res = (
             session.query(SchemaChanges)
@@ -33,13 +33,20 @@ def migrate_schema(instance):
                 "No schema version found. Inspected version: %s", current_version
             )
 
-        if current_version == SCHEMA_VERSION:
-            return
+        return current_version
 
+
+def schema_is_current(current_version):
+    """Check if the schema is current."""
+    return current_version == SCHEMA_VERSION
+
+
+def migrate_schema(instance, current_version):
+    """Check if the schema needs to be upgraded."""
+    with session_scope(session=instance.get_session()) as session:
         _LOGGER.warning(
             "Database is about to upgrade. Schema version: %s", current_version
         )
-
         for version in range(current_version, SCHEMA_VERSION):
             new_version = version + 1
             _LOGGER.info("Upgrading recorder db schema to version %s", new_version)
