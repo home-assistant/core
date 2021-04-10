@@ -21,6 +21,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
+    CONF_IP_ADDRESS,
     CONF_MAC,
     CONF_METHOD,
     CONF_NAME,
@@ -86,6 +87,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         on_script = Script(
             hass, turn_on_action, config_entry.data.get(CONF_NAME, DEFAULT_NAME), DOMAIN
         )
+
+    await _migrate_old_unique_ids(hass, config_entry)
 
     # Initialize bridge
     data = config_entry.data.copy()
