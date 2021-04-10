@@ -18,7 +18,7 @@ class FakeDiscovery:
         self.mock_devices = [build_device_mock()]
         self.timeout = timeout
         self._listeners = []
-        self._count = 0
+        self.scan_count = 0
 
     def add_listener(self, listener: Listener) -> None:
         """Add an event listener."""
@@ -26,8 +26,8 @@ class FakeDiscovery:
 
     async def scan(self, wait_for: int = 0):
         """Search for devices, return mocked data."""
-        self._count += 1
-        _LOGGER.info("CALLED SCAN %d TIMES", self._count)
+        self.scan_count += 1
+        _LOGGER.info("CALLED SCAN %d TIMES", self.scan_count)
 
         infos = [x.device_info for x in self.mock_devices]
         for listener in self._listeners:

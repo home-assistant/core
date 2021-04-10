@@ -42,6 +42,8 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator):
         """Update the state of the device."""
         try:
             await self.device.update_state()
+        except DeviceNotBoundError as error:
+            raise UpdateFailed(f"Device {self.name} is unavailable") from error
         except DeviceTimeoutError as error:
             self._error_count += 1
 

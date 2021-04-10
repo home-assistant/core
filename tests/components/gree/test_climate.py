@@ -106,8 +106,28 @@ async def test_discovery_setup(hass, discovery, device):
     assert len(hass.states.async_all(DOMAIN)) == 2
 
 
-async def test_discovery_setup_connection_error(hass, discovery, device):
+async def test_discovery_setup_connection_error(hass, discovery, device, mock_now):
     """Test gree integration is setup."""
+    MockDevice1 = build_device_mock(
+        name="fake-device-1", ipAddress="1.1.1.1", mac="aabbcc112233"
+    )
+    MockDevice1.bind = AsyncMock(side_effect=DeviceNotBoundError)
+    MockDevice1.update_state = AsyncMock(side_effect=DeviceNotBoundError)
+
+    discovery.return_value.mock_devices = [MockDevice1]
+    device.return_value = MockDevice1
+
+    await async_setup_gree(hass)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all(DOMAIN)) == 1
+    state = hass.states.get(ENTITY_ID)
+    assert state.name == "fake-device-1"
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_discovery_after_setup(hass, discovery, device, mock_now):
+    """Test gree devices don't change after multiple discoveries."""
     MockDevice1 = build_device_mock(
         name="fake-device-1", ipAddress="1.1.1.1", mac="aabbcc112233"
     )
@@ -124,7 +144,86 @@ async def test_discovery_setup_connection_error(hass, discovery, device):
     await async_setup_gree(hass)
     await hass.async_block_till_done()
 
+    assert discovery.return_value.scan_count == 1
     assert len(hass.states.async_all(DOMAIN)) == 2
+
+    # rediscover the same devices shouldn't change anything
+    discovery.return_value.mock_devices = [MockDevice1, MockDevice2]
+    device.side_effect = [MockDevice1, MockDevice2]
+
+    next_update = mock_now + timedelta(minutes=6)
+    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
+        async_fire_time_changed(hass, next_update)
+    await hass.async_block_till_done()
+
+    assert discovery.return_value.scan_count == 2
+    assert len(hass.states.async_all(DOMAIN)) == 2
+
+
+async def test_discovery_add_device_after_setup(hass, discovery, device, mock_now):
+    """Test gree devices can be added after initial setup."""
+    MockDevice1 = build_device_mock(
+        name="fake-device-1", ipAddress="1.1.1.1", mac="aabbcc112233"
+    )
+    MockDevice1.bind = AsyncMock(side_effect=DeviceNotBoundError)
+
+    MockDevice2 = build_device_mock(
+        name="fake-device-2", ipAddress="2.2.2.2", mac="bbccdd223344"
+    )
+    MockDevice2.bind = AsyncMock(side_effect=DeviceTimeoutError)
+
+    discovery.return_value.mock_devices = [MockDevice1]
+    device.side_effect = [MockDevice1]
+
+    await async_setup_gree(hass)
+    await hass.async_block_till_done()
+
+    assert discovery.return_value.scan_count == 1
+    assert len(hass.states.async_all(DOMAIN)) == 1
+
+    # rediscover the same devices shouldn't change anything
+    discovery.return_value.mock_devices = [MockDevice2]
+    device.side_effect = [MockDevice2]
+
+    next_update = mock_now + timedelta(minutes=6)
+    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
+        async_fire_time_changed(hass, next_update)
+    await hass.async_block_till_done()
+
+    assert discovery.return_value.scan_count == 2
+    assert len(hass.states.async_all(DOMAIN)) == 2
+
+
+async def test_discovery_device_bind_after_setup(hass, discovery, device, mock_now):
+    """Test gree devices can be added after a late device bind."""
+    MockDevice1 = build_device_mock(
+        name="fake-device-1", ipAddress="1.1.1.1", mac="aabbcc112233"
+    )
+    MockDevice1.bind = AsyncMock(side_effect=DeviceNotBoundError)
+    MockDevice1.update_state = AsyncMock(side_effect=DeviceNotBoundError)
+
+    discovery.return_value.mock_devices = [MockDevice1]
+    device.return_value = MockDevice1
+
+    await async_setup_gree(hass)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all(DOMAIN)) == 1
+    state = hass.states.get(ENTITY_ID)
+    assert state.name == "fake-device-1"
+    assert state.state == STATE_UNAVAILABLE
+
+    # Now the device becomes available
+    MockDevice1.bind.side_effect = None
+    MockDevice1.update_state.side_effect = None
+
+    next_update = mock_now + timedelta(minutes=5)
+    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
+        async_fire_time_changed(hass, next_update)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state != STATE_UNAVAILABLE
 
 
 async def test_update_connection_failure(hass, device, mock_now):
