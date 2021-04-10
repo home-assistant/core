@@ -192,9 +192,7 @@ class Battery(Sensor):
             state_attrs["battery_quantity"] = battery_quantity
         battery_voltage = self._channel.cluster.get("battery_voltage")
         if battery_voltage is not None:
-            v_10mv = round(battery_voltage / 10, 2)
-            v_100mv = round(battery_voltage / 10, 1)
-            state_attrs["battery_voltage"] = v_100mv if v_100mv == v_10mv else v_10mv
+            state_attrs["battery_voltage"] = round(battery_voltage / 10, 2)
         return state_attrs
 
 
