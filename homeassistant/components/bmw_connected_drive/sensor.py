@@ -1,24 +1,18 @@
 """Support for reading vehicle status from BMW connected drive portal."""
 import logging
 
+import homeassistant.util.dt as dt_util
 from bimmer_connected.const import SERVICE_LAST_TRIP, SERVICE_STATUS
 from bimmer_connected.state import ChargingState
-
-from homeassistant.const import (
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    ENERGY_KILO_WATT_HOUR,
-    LENGTH_KILOMETERS,
-    LENGTH_MILES,
-    PERCENTAGE,
-    TIME_HOURS,
-    TIME_MINUTES,
-    VOLUME_GALLONS,
-    VOLUME_LITERS,
-)
+from homeassistant.const import (CONF_UNIT_SYSTEM_IMPERIAL,
+                                 ENERGY_KILO_WATT_HOUR, LENGTH_KILOMETERS,
+                                 LENGTH_MILES, PERCENTAGE, TIME_HOURS,
+                                 TIME_MINUTES, VOLUME_GALLONS, VOLUME_LITERS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 
-from . import DOMAIN as BMW_DOMAIN, BMWConnectedDriveBaseEntity
+from . import DOMAIN as BMW_DOMAIN
+from . import BMWConnectedDriveBaseEntity
 from .const import CONF_ACCOUNT, DATA_ENTRIES
 
 _LOGGER = logging.getLogger(__name__)
@@ -85,7 +79,7 @@ ATTR_TO_HA_GENERIC = {
     # No icon as this is dealt with directly as a special case in icon()
     "charging_level_hv": [None, PERCENTAGE, True],
     # LastTrip attributes
-    "date": ["mdi:calendar-blank", None, True],
+    "date_utc": ["mdi:calendar", None, True],
     "duration": ["mdi:timer-outline", TIME_MINUTES, True],
     "electric_distance_ratio": ["mdi:percent-outline", PERCENTAGE, False],
 }
@@ -115,10 +109,20 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         entities.append(device)
             if service == SERVICE_LAST_TRIP:
                 for attribute_name in vehicle.state.last_trip.available_attributes:
-                    device = BMWConnectedDriveSensor(
-                        account, vehicle, attribute_name, attribute_info, service
-                    )
-                    entities.append(device)
+                    if attribute_name == "date":
+                        device = BMWConnectedDriveSensor(
+                            account,
+                            vehicle,
+                            "date_utc",
+                            attribute_info,
+                            service,
+                        )
+                        entities.append(device)
+                    else:
+                        device = BMWConnectedDriveSensor(
+                            account, vehicle, attribute_name, attribute_info, service
+                        )
+                        entities.append(device)
 
     async_add_entities(entities, True)
 
@@ -209,4 +213,8 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, Entity):
         elif self._service is None:
             self._state = getattr(vehicle_state, self._attribute)
         elif self._service == SERVICE_LAST_TRIP:
-            self._state = getattr(vehicle_last_trip, self._attribute)
+            if self._attribute == "date_utc":
+                date_str = getattr(vehicle_last_trip, "date")
+                self._state = dt_util.parse_datetime(date_str)
+            else:
+                self._state = getattr(vehicle_last_trip, self._attribute)
