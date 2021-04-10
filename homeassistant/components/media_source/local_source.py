@@ -1,9 +1,13 @@
 """Local Media Source Implementation."""
 from __future__ import annotations
 
+import io
+import logging
 import mimetypes
 from pathlib import Path
+import urllib
 
+from PIL import Image, ImageOps
 from aiohttp import web
 
 from homeassistant.components.http import HomeAssistantView
@@ -16,6 +20,8 @@ from homeassistant.util import raise_if_invalid_path
 from .const import DOMAIN, MEDIA_CLASS_MAP, MEDIA_MIME_TYPES
 from .models import BrowseMediaSource, MediaSource, MediaSourceItem, PlayMedia
 
+_LOGGER = logging.getLogger(__name__)
+
 
 @callback
 def async_setup(hass: HomeAssistant):
@@ -23,6 +29,7 @@ def async_setup(hass: HomeAssistant):
     source = LocalSource(hass)
     hass.data[DOMAIN][DOMAIN] = source
     hass.http.register_view(LocalMediaView(hass, source))
+    hass.http.register_view(LocalMediaThumbnailView(hass, source))
 
 
 class LocalSource(MediaSource):
@@ -147,6 +154,12 @@ class LocalSource(MediaSource):
             mime_type and mime_type.split("/")[0], MEDIA_CLASS_DIRECTORY
         )
 
+        thumbnail = None
+        if media_class == "image":
+            thumbnail = urllib.parse.quote(
+                f"/media-thumb/{source_dir_id}/{path.relative_to(self.hass.config.media_dirs[source_dir_id])}"
+            )
+
         media = BrowseMediaSource(
             domain=DOMAIN,
             identifier=f"{source_dir_id}/{path.relative_to(self.hass.config.media_dirs[source_dir_id])}",
@@ -155,6 +168,7 @@ class LocalSource(MediaSource):
             title=title,
             can_play=is_file,
             can_expand=is_dir,
+            thumbnail=thumbnail,
         )
 
         if is_file or is_child:
@@ -212,3 +226,68 @@ class LocalMediaView(HomeAssistantView):
             raise web.HTTPNotFound()
 
         return web.FileResponse(media_path)
+
+
+class LocalMediaThumbnailView(HomeAssistantView):
+    """
+    Local Media Finder View.
+
+    Returns thumbnails of media files in config/media.
+    """
+
+    url = "/media-thumb/{source_dir_id}/{location:.*}"
+    name = "media-thumb"
+    requires_auth = False
+
+    def __init__(self, hass: HomeAssistant, source: LocalSource):
+        """Initialize the media view."""
+        self.hass = hass
+        self.source = source
+
+    async def get(
+        self, request: web.Request, source_dir_id: str, location: str
+    ) -> web.FileResponse:
+        """Start a GET request."""
+        try:
+            raise_if_invalid_path(location)
+        except ValueError as err:
+            raise web.HTTPBadRequest() from err
+
+        if source_dir_id not in self.hass.config.media_dirs:
+            raise web.HTTPNotFound()
+
+        media_path = self.source.async_full_path(source_dir_id, location)
+
+        # Check that the file exists
+        if not media_path.is_file():
+            raise web.HTTPNotFound()
+
+        # Check that it's a media file
+        mime_type, _ = mimetypes.guess_type(str(media_path))
+        if not mime_type or mime_type.split("/")[0] not in ("image"):
+            raise web.HTTPNotFound()
+
+        try:
+            img = Image.open(media_path)
+        except OSError as err:
+            _LOGGER.warning("Failed to open image")
+            raise ValueError() from err
+
+        # Rotate thumbnail
+        img = ImageOps.exif_transpose(img)
+
+        size = 175, 175
+
+        img.thumbnail(size)
+
+        data = io.BytesIO()
+        img.save(data, format="png")
+
+        resp = web.StreamResponse(
+            status=200,
+            headers={"Cache-Control": "max-age=31536000"},
+            content_type="image/png",
+        )
+        await resp.prepare(request)
+        await resp.write(data.getvalue())
+        return resp

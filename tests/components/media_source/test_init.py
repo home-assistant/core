@@ -41,11 +41,11 @@ async def test_async_browse_media(hass):
     assert await async_setup_component(hass, const.DOMAIN, {})
     await hass.async_block_till_done()
 
-    # Test non-media ignored (/media has test.mp3 and not_media.txt)
+    # Test non-media ignored (/media has test.mp3, test.png, test.gif, test.jpg (and not_media.txt))
     media = await media_source.async_browse_media(hass, "")
     assert isinstance(media, media_source.models.BrowseMediaSource)
     assert media.title == "media/"
-    assert len(media.children) == 1
+    assert len(media.children) == 4
 
     # Test invalid media content
     with pytest.raises(ValueError):
