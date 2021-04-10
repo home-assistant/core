@@ -12,6 +12,8 @@ from homeassistant.components.recorder import RecorderRuns, migration, models
 from homeassistant.helpers.recorder import DATA_INSTANCE
 import homeassistant.util.dt as dt_util
 
+from .common import async_wait_recording_done_without_instance
+
 from tests.components.recorder import models_original
 
 
@@ -27,6 +29,7 @@ def create_engine_test(*args, **kwargs):
 
 async def test_schema_update_calls(hass):
     """Test that schema migrations occur in correct order."""
+    await async_setup_component(hass, "persistent_notification", {})
     with patch(
         "homeassistant.components.recorder.create_engine", new=create_engine_test
     ), patch(
@@ -36,7 +39,7 @@ async def test_schema_update_calls(hass):
         await async_setup_component(
             hass, "recorder", {"recorder": {"db_url": "sqlite://"}}
         )
-        await hass.async_block_till_done()
+        await async_wait_recording_done_without_instance(hass)
 
     update.assert_has_calls(
         [
@@ -53,6 +56,8 @@ async def test_schema_migrate(hass):
     throwing exceptions. Maintaining a set of assertions based on schema
     inspection could quickly become quite cumbersome.
     """
+
+    await async_setup_component(hass, "persistent_notification", {})
 
     def _mock_setup_run(self):
         self.run_info = RecorderRuns(

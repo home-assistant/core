@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import concurrent.futures
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 import queue
 import sqlite3
@@ -12,6 +12,7 @@ import time
 from typing import Any, Callable, NamedTuple
 
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.pool import StaticPool
 import voluptuous as vol
@@ -33,7 +34,7 @@ from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER,
     convert_include_exclude_filter,
 )
-from homeassistant.helpers.event import track_time_change
+from homeassistant.helpers.event import track_time_change, track_time_interval
 from homeassistant.helpers.recorder import DATA_INSTANCE, RECORDER_DOMAIN as DOMAIN
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
@@ -57,6 +58,8 @@ SERVICE_DISABLE = "disable"
 ATTR_KEEP_DAYS = "keep_days"
 ATTR_REPACK = "repack"
 ATTR_APPLY_FILTER = "apply_filter"
+
+MAX_QUEUE_BACKLOG = 10000
 
 SERVICE_PURGE_SCHEMA = vol.Schema(
     {
@@ -200,10 +203,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     instance.start()
     _async_register_services(hass, instance)
 
-    if hass.state == CoreState.running:
-        return await instance.async_db_ready
-
-    return True
+    return await instance.async_db_ready
 
 
 @callback
@@ -295,6 +295,8 @@ class Recorder(threading.Thread):
         self._completed_database_setup = None
         self._event_listener = None
 
+        self._queue_watcher = None
+
         self.enabled = True
 
     def set_enable(self, enable):
@@ -355,15 +357,19 @@ class Recorder(threading.Thread):
         self.async_db_ready.set_result(False)
         persistent_notification.async_create(
             self.hass,
-            "The recorder could not start, please check the log",
+            "The recorder could not start, please check [the logs](/config/logs)",
             "Recorder",
         )
         # Cancel the event listener to avoid
         # memory exhaustion since the queue
         # would grow without bound otherwise
+        self._async_cancel_event_listener()
+
+    @callback
+    def _async_cancel_event_listener(self):
+        """Cancel the event listener."""
         if not self._event_listener:
             return
-
         self._event_listener()
         self._event_listener = None
 
@@ -386,9 +392,15 @@ class Recorder(threading.Thread):
             callback(lambda: self.async_register(shutdown_task, hass_started))
         )
 
-        if not self._setup_recorder():
+        current_version = self._setup_recorder()
+
+        if current_version is None:
             self.hass.add_job(self.async_connection_failed)
             return
+
+        schema_is_current = migration.schema_is_current(current_version)
+        if schema_is_current:
+            self._setup_run()
 
         self.hass.add_job(self.async_connection_success)
 
@@ -398,6 +410,9 @@ class Recorder(threading.Thread):
             # we restart before startup finishes
             self._shutdown()
             return
+
+        if not schema_is_current:
+            self._migrate_schema_and_setup_run(current_version)
 
         # Start periodic purge
         if self.auto_purge:
@@ -409,19 +424,24 @@ class Recorder(threading.Thread):
         # with a commit every time the event time
         # has changed. This reduces the disk io.
         while (event := self.queue.get()) :
-            self._process_one_event(event)
+            try:
+                self._process_one_event(event)
+            except exc.DatabaseError as err:
+                if not self._handle_database_error(err):
+                    _LOGGER.exception("Error while processing event %s: %s", err)
+            except Exception as err:  # pylint disable=broad-except
+                _LOGGER.exception("Error while processing event %s: %s", err)
 
         self._shutdown()
 
-    def _setup_recorder(self) -> bool:
-        """Create schema and connect to the database."""
+    def _setup_recorder(self) -> tuple[bool, bool]:
+        """Create connect to the database and get the schema version."""
         tries = 1
 
         while tries <= self.db_max_retries:
             try:
                 self._setup_connection()
-                migration.migrate_schema(self)
-                self._setup_run()
+                return migration.get_schema_version(self)
             except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.exception(
                     "Error during connection setup to %s: %s (retrying in %s seconds)",
@@ -429,26 +449,67 @@ class Recorder(threading.Thread):
                     err,
                     self.db_retry_wait,
                 )
-            else:
-                _LOGGER.debug("Connected to recorder database")
-                self._open_event_session()
-                return True
-
             tries += 1
             time.sleep(self.db_retry_wait)
 
-        return False
+        return None
+
+    def _start_queue_watcher(self):
+        """Start watching the queue to ensure it does not grow too large."""
+        self._queue_watcher = track_time_interval(
+            self.hass, self._async_check_queue, timedelta(minutes=5)
+        )
+
+    @callback
+    def _async_check_queue(self):
+        """Check the queue growth while the migration is in progress to avoid ram exausting."""
+        if not self._event_listener:
+            return
+        if self.queue.qsize() > MAX_QUEUE_BACKLOG:
+            self._async_cancel_event_listener()
+
+    def _stop_queue_watcher(self):
+        """Stop watching the queue."""
+        self._queue_watcher()
+        if not self._event_listener:
+            self.hass.add_job(self.async_initialize)
+
+    def _migrate_schema_and_setup_run(self, current_version) -> bool:
+        """Migrate schema to the latest version."""
+        self._start_queue_watcher()
+        persistent_notification.create(
+            self.hass,
+            "The database is being upgraded. Integrations such as logbook and history that read the database may return inconsistent results until the migration completes.",
+            "Database Migration",
+            "recorder_database_migration",
+        )
+
+        try:
+            migration.migrate_schema(self, current_version)
+        except exc.DatabaseError as err:
+            if self._handle_database_error(err):
+                return
+            _LOGGER.exception("Error during schema migration")
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Error during schema migration")
+            return False
+
+        self._stop_queue_watcher()
+        self._setup_run()
+        persistent_notification.dismiss(self.hass, "recorder_database_migration")
+        return True
+
+    def _run_purge(self, keep_days, repack, apply_filter):
+        """Purge the database."""
+        if purge.purge_old_data(self, keep_days, repack, apply_filter):
+            return
+        # Schedule a new purge task if this one didn't finish
+        self.queue.put(PurgeTask(keep_days, repack, apply_filter))
 
     def _process_one_event(self, event):
         """Process one event."""
         if isinstance(event, PurgeTask):
-            # Schedule a new purge task if this one didn't finish
-            if not purge.purge_old_data(
-                self, event.keep_days, event.repack, event.apply_filter
-            ):
-                self.queue.put(
-                    PurgeTask(event.keep_days, event.repack, event.apply_filter)
-                )
+            self._run_purge(event.keep_days, event.repack, event.apply_filter)
             return
         if isinstance(event, WaitTask):
             self._queue_watch.set()
@@ -478,10 +539,6 @@ class Recorder(threading.Thread):
         except (TypeError, ValueError):
             _LOGGER.warning("Event is not JSON serializable: %s", event)
             return
-        except Exception as err:  # pylint: disable=broad-except
-            # Must catch the exception to prevent the loop from collapsing
-            _LOGGER.exception("Error adding event: %s", err)
-            return
 
         if event.event_type == EVENT_STATE_CHANGED:
             try:
@@ -506,9 +563,6 @@ class Recorder(threading.Thread):
                     "State is not JSON serializable: %s",
                     event.data.get("new_state"),
                 )
-            except Exception as err:  # pylint: disable=broad-except
-                # Must catch the exception to prevent the loop from collapsing
-                _LOGGER.exception("Error adding state change: %s", err)
 
         # If they do not have a commit interval
         # than we commit right away
@@ -520,20 +574,24 @@ class Recorder(threading.Thread):
         try:
             self._commit_event_session_or_retry()
             return
-        except exc.DatabaseError as err:
-            if isinstance(err.__cause__, sqlite3.DatabaseError):
-                _LOGGER.exception(
-                    "Unrecoverable sqlite3 database corruption detected: %s", err
-                )
-                self._handle_sqlite_corruption()
-                return
-            _LOGGER.exception("Unexpected error saving events: %s", err)
-        except Exception as err:  # pylint: disable=broad-except
+        except exc.DatabaseError:
+            raise  # let our sqlite3 corruption logic handle this
+        except SQLAlchemyError as err:  # pylint: disable=broad-except
             # Must catch the exception to prevent the loop from collapsing
             _LOGGER.exception("Unexpected error saving events: %s", err)
 
         self._reopen_event_session()
         return
+
+    def _handle_database_error(self, err):
+        """Handle a database error that may result in moving away the corrupt db."""
+        if isinstance(err.__cause__, sqlite3.DatabaseError):
+            _LOGGER.exception(
+                "Unrecoverable sqlite3 database corruption detected: %s", err
+            )
+            self._handle_sqlite_corruption()
+            return True
+        return False
 
     def _commit_event_session_or_retry(self):
         tries = 1
@@ -580,23 +638,29 @@ class Recorder(threading.Thread):
 
     def _handle_sqlite_corruption(self):
         """Handle the sqlite3 database being corrupt."""
+        self._close_event_session()
         self._close_connection()
         move_away_broken_database(dburl_to_path(self.db_url))
         self._setup_recorder()
+        self._setup_run()
 
-    def _reopen_event_session(self):
-        """Rollback the event session and reopen it after a failure."""
+    def _close_event_session(self):
+        """Close the event session."""
         self._old_states = {}
 
         try:
             self.event_session.rollback()
             self.event_session.close()
-        except Exception as err:  # pylint: disable=broad-except
-            # Must catch the exception to prevent the loop from collapsing
+        except exc.DatabaseError:
+            raise  # let our sqlite3 corruption logic handle this
+        except SQLAlchemyError as err:
             _LOGGER.exception(
                 "Error while rolling back and closing the event session: %s", err
             )
 
+    def _reopen_event_session(self):
+        """Rollback the event session and reopen it after a failure."""
+        self._close_event_session()
         self._open_event_session()
 
     def _open_event_session(self):
@@ -604,7 +668,9 @@ class Recorder(threading.Thread):
         try:
             self.event_session = self.get_session()
             self.event_session.expire_on_commit = False
-        except Exception as err:  # pylint: disable=broad-except
+        except exc.DatabaseError:
+            raise  # let our sqlite3 corruption logic handle this
+        except SQLAlchemyError as err:
             _LOGGER.exception("Error while creating new event session: %s", err)
 
     def _send_keep_alive(self):
@@ -612,7 +678,9 @@ class Recorder(threading.Thread):
             _LOGGER.debug("Sending keepalive")
             self.event_session.connection().scalar(select([1]))
             return
-        except Exception as err:  # pylint: disable=broad-except
+        except exc.DatabaseError:
+            raise  # let our sqlite3 corruption logic handle this
+        except SQLAlchemyError as err:
             _LOGGER.error(
                 "Error in database connectivity during keepalive: %s",
                 err,
@@ -695,6 +763,7 @@ class Recorder(threading.Thread):
 
         Base.metadata.create_all(self.engine)
         self.get_session = scoped_session(sessionmaker(bind=self.engine))
+        _LOGGER.debug("Connected to recorder database")
 
     @property
     def _using_file_sqlite(self):
@@ -726,6 +795,8 @@ class Recorder(threading.Thread):
             session.add(self.run_info)
             session.flush()
             session.expunge(self.run_info)
+
+        self._open_event_session()
 
     def _end_session(self):
         """End the recorder session."""
