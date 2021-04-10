@@ -15,7 +15,8 @@
     {"type":"_airplay._tcp.local.","manufacturer":"samsung*"}
   ],
   "codeowners": [
-    "@escoand"
+    "@escoand",
+    "@chemelli74"
   ],
   "config_flow": true
 }
