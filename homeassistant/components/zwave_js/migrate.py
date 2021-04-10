@@ -87,9 +87,12 @@ def async_migrate_old_entity(
 
         if value_id.is_same_value_different_endpoints(old_ent_value_id):
             existing_entities.append(entity)
+            # We can return early if we get more than one result
+            if len(existing_entities) > 1:
+                return
 
-    # If we can't find exactly one existing entity, there's nothing to migrate
-    if len(existing_entities) != 1:
+    # If we couldn't find any results, return early
+    if not existing_entities:
         return
 
     entity = existing_entities[0]
