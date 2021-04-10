@@ -7,5 +7,6 @@
   ],
   "codeowners": [
     "@bdraco"
-  ]
+  ],
+  "quality_scale": "internal"
 }
