@@ -2,7 +2,7 @@
 import logging
 from urllib.parse import urlparse
 
-from fritzconnection.core.exceptions import FritzConnectionException
+from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -15,7 +15,13 @@ from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 
 from .common import CONFIG_SCHEMA, FritzBoxTools
-from .const import DEFAULT_HOST, DEFAULT_PORT, DOMAIN, ERROR_CONNECTION_ERROR
+from .const import (
+    DEFAULT_HOST,
+    DEFAULT_PORT,
+    DOMAIN,
+    ERROR_AUTH_INVALID,
+    ERROR_CONNECTION_ERROR,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,6 +56,8 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
 
         try:
             await self.fritz_tools.async_setup()
+        except FritzSecurityError:
+            return ERROR_AUTH_INVALID
         except FritzConnectionException:
             return ERROR_CONNECTION_ERROR
 
