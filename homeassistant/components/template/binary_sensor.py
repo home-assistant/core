@@ -218,12 +218,17 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity):
         self._name: str | None = None
         self._friendly_name_template: template.Template | None = friendly_name
 
+        # Try to render the name as it can influence the entity ID
         if friendly_name:
             friendly_name.hass = hass
             try:
                 self._name = friendly_name.async_render(parse_result=False)
             except template.TemplateError:
                 pass
+            finally:
+                # This is so TemplateEntity can group
+                # them together correctly.
+                friendly_name.hass = None
 
         self._device_class = device_class
         self._template = value_template
