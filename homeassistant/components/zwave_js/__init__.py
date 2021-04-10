@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections import defaultdict
 from typing import Callable
 
 from async_timeout import timeout
@@ -124,7 +125,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry_hass_data[DATA_UNSUBSCRIBE] = unsubscribe_callbacks
     entry_hass_data[DATA_PLATFORM_SETUP] = {}
 
-    registered_unique_ids: dict[str, dict[str, set[str]]] = {}
+    registered_unique_ids: dict[str, dict[str, set[str]]] = defaultdict(dict)
 
     async def async_on_node_ready(node: ZwaveNode) -> None:
         """Handle node ready event."""
@@ -135,12 +136,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # register (or update) node in device registry
         device = register_node_in_dev_reg(hass, entry, dev_reg, client, node)
 
-        registered_unique_ids.setdefault(device.id, {})
-
         # run discovery on all node values and create/update entities
         for disc_info in async_discover_values(node):
             platform = disc_info.platform
-            registered_unique_ids[device.id].setdefault(platform, set())
+            registered_unique_ids[device.id] = defaultdict(set)
 
             # This migration logic was added in 2021.3 to handle a breaking change to
             # the value_id format. Some time in the future, this call (as well as the
