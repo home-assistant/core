@@ -5,7 +5,7 @@ import logging
 import aiosyncthing
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import CONF_NAME, CONF_URL
+from homeassistant.const import CONF_URL
 from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -30,20 +30,16 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Syncthing sensors."""
 
-    name = config_entry.data[CONF_NAME]
     url = config_entry.data[CONF_URL]
     syncthing = hass.data[DOMAIN][url]
 
     try:
         config = await syncthing.system.config()
         version = await syncthing.system.version()
-        status = await syncthing.system.status()
-
-        server_id = status["myID"]
+        server_id = syncthing.server_id
         entities = [
             FolderSensor(
                 syncthing,
-                name,
                 server_id,
                 folder["id"],
                 folder["label"],
@@ -88,10 +84,9 @@ class FolderSensor(SensorEntity):
         "state",
     ]
 
-    def __init__(self, syncthing, name, server_id, folder_id, folder_label, version):
+    def __init__(self, syncthing, server_id, folder_id, folder_label, version):
         """Initialize the sensor."""
         self._syncthing = syncthing
-        self._name = name
         self._server_id = server_id
         self._folder_id = folder_id
         self._folder_label = folder_label
@@ -99,15 +94,17 @@ class FolderSensor(SensorEntity):
         self._unsub_timer = None
         self._version = version
 
+        self._short_server_id = server_id.split("-")[0]
+
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"{self._name} {self._folder_id} {self._folder_label}"
+        return f"{self._short_server_id} {self._folder_id} {self._folder_label}"
 
     @property
     def unique_id(self):
         """Return the unique id of the entity."""
-        return f"{DOMAIN}-{self._name}-{self._folder_id}"
+        return f"{DOMAIN}-{self._short_server_id}-{self._folder_id}"
 
     @property
     def state(self):
