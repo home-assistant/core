@@ -12,7 +12,7 @@
     }
   ],
   "zeroconf": [
-    "_airplay._tcp.local."
+    {"type":"_airplay._tcp.local.","manufacturer":"samsung*"}
   ],
   "codeowners": [
     "@escoand"
