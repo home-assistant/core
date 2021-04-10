@@ -92,6 +92,10 @@ def create_event_handler(patterns, hass):
             """File deleted."""
             self.process(event)
 
+        def on_closed(self, event):
+            """File closed."""
+            self.process(event)
+
     return EventHandler(patterns, hass)
 
 
