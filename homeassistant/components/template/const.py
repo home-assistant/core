@@ -24,3 +24,4 @@ PLATFORMS = [
 CONF_AVAILABILITY = "availability"
 CONF_ATTRIBUTES = "attributes"
 CONF_PICTURE = "picture"
+CONF_DEVICE_ID = "device_id"

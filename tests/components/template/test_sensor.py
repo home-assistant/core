@@ -35,6 +35,33 @@ async def test_template(hass):
             {
                 "sensor": {
                     "platform": "template",
+                    "sensor": [{"state": "It {{ states.sensor.test_state.state }}."}],
+                }
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.unnamed_device")
+    assert state.state == "It ."
+
+    hass.states.async_set("sensor.test_state", "Works")
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.unnamed_device")
+    assert state.state == "It Works."
+
+
+async def test_template_legacy(hass):
+    """Test template."""
+    with assert_setup_component(1, sensor.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            sensor.DOMAIN,
+            {
+                "sensor": {
+                    "platform": "template",
                     "sensors": {
                         "test_template_sensor": {
                             "value_template": "It {{ states.sensor.test_state.state }}."
