@@ -1,7 +1,9 @@
 """Tests for Climacell weather entity."""
+from __future__ import annotations
+
 from datetime import datetime
 import logging
-from typing import Any, Dict
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -58,7 +60,7 @@ async def _enable_entity(hass: HomeAssistantType, entity_name: str) -> None:
     assert updated_entry.disabled is False
 
 
-async def _setup(hass: HomeAssistantType, config: Dict[str, Any]) -> State:
+async def _setup(hass: HomeAssistantType, config: dict[str, Any]) -> State:
     """Set up entry and return entity state."""
     with patch(
         "homeassistant.util.dt.utcnow",

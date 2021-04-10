@@ -1,6 +1,6 @@
 """Axis conftest."""
+from __future__ import annotations
 
-from typing import Optional
 from unittest.mock import patch
 
 from axis.rtsp import (
@@ -34,7 +34,7 @@ def mock_axis_rtspclient():
 
         rtsp_client_mock.return_value.stop = stop_stream
 
-        def make_rtsp_call(data: Optional[dict] = None, state: str = ""):
+        def make_rtsp_call(data: dict | None = None, state: str = ""):
             """Generate a RTSP call."""
             axis_streammanager_session_callback = rtsp_client_mock.call_args[0][4]
 

@@ -1,6 +1,7 @@
 """Tests for 1-Wire integration."""
+from __future__ import annotations
 
-from typing import Any, List, Tuple
+from typing import Any
 from unittest.mock import patch
 
 from pyownet.protocol import ProtocolError
@@ -129,8 +130,8 @@ def setup_owproxy_mock_devices(owproxy, domain, device_ids) -> None:
 
 
 def setup_sysbus_mock_devices(
-    domain: str, device_ids: List[str]
-) -> Tuple[List[str], List[Any]]:
+    domain: str, device_ids: list[str]
+) -> tuple[list[str], list[Any]]:
     """Set up mock for sysbus."""
     glob_result = []
     read_side_effect = []

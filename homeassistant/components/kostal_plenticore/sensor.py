@@ -1,7 +1,9 @@
 """Platform for Kostal Plenticore sensors."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -109,9 +111,9 @@ class PlenticoreDataSensor(CoordinatorEntity, SensorEntity):
         module_id: str,
         data_id: str,
         sensor_name: str,
-        sensor_data: Dict[str, Any],
+        sensor_data: dict[str, Any],
         formatter: Callable[[str], Any],
-        device_info: Dict[str, Any],
+        device_info: dict[str, Any],
     ):
         """Create a new Sensor Entity for Plenticore process data."""
         super().__init__(coordinator)
@@ -147,7 +149,7 @@ class PlenticoreDataSensor(CoordinatorEntity, SensorEntity):
         await super().async_will_remove_from_hass()
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> dict[str, Any]:
         """Return the device info."""
         return self._device_info
 
@@ -162,17 +164,17 @@ class PlenticoreDataSensor(CoordinatorEntity, SensorEntity):
         return f"{self.platform_name} {self._sensor_name}"
 
     @property
-    def unit_of_measurement(self) -> Optional[str]:
+    def unit_of_measurement(self) -> str | None:
         """Return the unit of this Sensor Entity or None."""
         return self._sensor_data.get(ATTR_UNIT_OF_MEASUREMENT)
 
     @property
-    def icon(self) -> Optional[str]:
+    def icon(self) -> str | None:
         """Return the icon name of this Sensor Entity or None."""
         return self._sensor_data.get(ATTR_ICON)
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the class of this device, from component DEVICE_CLASSES."""
         return self._sensor_data.get(ATTR_DEVICE_CLASS)
 
@@ -182,7 +184,7 @@ class PlenticoreDataSensor(CoordinatorEntity, SensorEntity):
         return self._sensor_data.get(ATTR_ENABLED_DEFAULT, False)
 
     @property
-    def state(self) -> Optional[Any]:
+    def state(self) -> Any | None:
         """Return the state of the sensor."""
         if self.coordinator.data is None:
             # None is translated to STATE_UNKNOWN
