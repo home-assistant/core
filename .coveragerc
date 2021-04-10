@@ -287,6 +287,7 @@ omit =
     homeassistant/components/ezviz/binary_sensor.py
     homeassistant/components/ezviz/sensor.py
     homeassistant/components/ezviz/switch.py
+    homeassistant/components/ezviz/alarm_control_panel.py
     homeassistant/components/familyhub/camera.py
     homeassistant/components/faa_delays/__init__.py
     homeassistant/components/faa_delays/binary_sensor.py
