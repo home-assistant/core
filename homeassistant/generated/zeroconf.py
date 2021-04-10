@@ -13,7 +13,8 @@ ZEROCONF = {
     ],
     "_airplay._tcp.local.": [
         {
-            "domain": "samsungtv"
+            "domain": "samsungtv",
+            "manufacturer": "samsung*"
         }
     ],
     "_api._udp.local.": [
