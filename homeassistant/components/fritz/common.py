@@ -43,34 +43,6 @@ class Device:
     name: str
 
 
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Required(CONF_DEVICES): vol.All(
-                        cv.ensure_list,
-                        [
-                            vol.Schema(
-                                {
-                                    vol.Optional(CONF_HOST): cv.string,
-                                    vol.Optional(CONF_PORT): cv.port,
-                                    vol.Required(CONF_USERNAME): cv.string,
-                                    vol.Required(CONF_PASSWORD): cv.string,
-                                }
-                            )
-                        ],
-                    )
-                }
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
-
-SERVICE_SCHEMA = vol.Schema({vol.Required(ATTR_HOST): cv.string})
-
 
 class FritzBoxTools:
     """FrtizBoxTools class."""
