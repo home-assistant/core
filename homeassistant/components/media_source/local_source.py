@@ -284,10 +284,9 @@ class LocalMediaThumbnailView(HomeAssistantView):
         img.save(data, format="png")
 
         resp = web.StreamResponse(
-            status=200,
-            headers={"Cache-Control": "max-age=31536000"},
-            content_type="image/png",
+            status=200, headers={"Cache-Control": "max-age=31536000"}
         )
+        resp.headers["Content-Type"] = "image/png"
         await resp.prepare(request)
         await resp.write(data.getvalue())
         return resp
