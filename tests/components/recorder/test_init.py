@@ -62,7 +62,6 @@ def _default_recorder(hass):
         db_retry_wait=3,
         entity_filter=CONFIG_SCHEMA({DOMAIN: {}}),
         exclude_t=[],
-        db_integrity_check=False,
     )
 
 
