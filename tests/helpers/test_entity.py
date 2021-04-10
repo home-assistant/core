@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, PropertyMock, patch
 import pytest
 
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import Context
+from homeassistant.core import Context, HomeAssistantError
 from homeassistant.helpers import entity, entity_registry
 
 from tests.common import (
@@ -744,3 +744,31 @@ async def test_removing_entity_unavailable(hass):
     state = hass.states.get("hello.world")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_get_supported_features_entity_registry(hass):
+    """Test get_supported_features falls back to entity registry."""
+    entity_reg = mock_registry(hass)
+    entity_id = entity_reg.async_get_or_create(
+        "hello", "world", "5678", supported_features=456
+    ).entity_id
+    assert entity.get_supported_features(hass, entity_id) == 456
+
+
+async def test_get_supported_features_prioritize_state(hass):
+    """Test get_supported_features gives priority to state."""
+    entity_reg = mock_registry(hass)
+    entity_id = entity_reg.async_get_or_create(
+        "hello", "world", "5678", supported_features=456
+    ).entity_id
+    assert entity.get_supported_features(hass, entity_id) == 456
+
+    hass.states.async_set(entity_id, None, {"supported_features": 123})
+
+    assert entity.get_supported_features(hass, entity_id) == 123
+
+
+async def test_get_supported_features_raises_on_unknown(hass):
+    """Test get_supported_features raises on unknown entity_id."""
+    with pytest.raises(HomeAssistantError):
+        entity.get_supported_features(hass, "hello.world")
