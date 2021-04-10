@@ -100,6 +100,11 @@ class SyncthingClient:
         self._listen_task = None
 
     @property
+    def server_id(self):
+        """Get server id."""
+        return self._server_id
+
+    @property
     def url(self):
         """Get server URL."""
         return self._client.url
