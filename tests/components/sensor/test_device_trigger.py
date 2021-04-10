@@ -21,7 +21,10 @@ from tests.common import (
     mock_registry,
 )
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
-from tests.testing_config.custom_components.test.sensor import DEVICE_CLASSES
+from tests.testing_config.custom_components.test.sensor import (
+    DEVICE_CLASSES,
+    UNITS_OF_MEASUREMENT,
+)
 
 
 @pytest.fixture
@@ -73,11 +76,12 @@ async def test_get_triggers(hass, device_reg, entity_reg):
             "entity_id": platform.ENTITIES[device_class].entity_id,
         }
         for device_class in DEVICE_CLASSES
+        if device_class in UNITS_OF_MEASUREMENT
         for trigger in ENTITY_TRIGGERS[device_class]
         if device_class != "none"
     ]
     triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
-    assert len(triggers) == 14
+    assert len(triggers) == 13
     assert triggers == expected_triggers
 
 

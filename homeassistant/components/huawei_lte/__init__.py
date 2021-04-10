@@ -48,11 +48,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     discovery,
 )
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-    dispatcher_send,
-)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -82,7 +78,6 @@ from .const import (
     SERVICE_REBOOT,
     SERVICE_RESUME_INTEGRATION,
     SERVICE_SUSPEND_INTEGRATION,
-    UPDATE_OPTIONS_SIGNAL,
     UPDATE_SIGNAL,
 )
 
@@ -436,11 +431,6 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
         hass.data[DOMAIN].hass_config,
     )
 
-    # Add config entry options update listener
-    router.unload_handlers.append(
-        config_entry.add_update_listener(async_signal_options_update)
-    )
-
     def _update_router(*_: Any) -> None:
         """
         Update router data.
@@ -492,9 +482,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
     def service_handler(service: ServiceCall) -> None:
         """Apply a service."""
-        url = service.data.get(CONF_URL)
         routers = hass.data[DOMAIN].routers
-        if url:
+        if url := service.data.get(CONF_URL):
             router = routers.get(url)
         elif not routers:
             _LOGGER.error("%s: no routers configured", service.service)
@@ -557,13 +546,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         )
 
     return True
-
-
-async def async_signal_options_update(
-    hass: HomeAssistantType, config_entry: ConfigEntry
-) -> None:
-    """Handle config entry options update."""
-    async_dispatcher_send(hass, UPDATE_OPTIONS_SIGNAL, config_entry)
 
 
 async def async_migrate_entry(
@@ -631,29 +613,16 @@ class HuaweiLteBaseEntity(Entity):
         """Update state."""
         raise NotImplementedError
 
-    async def async_update_options(self, config_entry: ConfigEntry) -> None:
-        """Update config entry options."""
-
     async def async_added_to_hass(self) -> None:
         """Connect to update signals."""
         self._unsub_handlers.append(
             async_dispatcher_connect(self.hass, UPDATE_SIGNAL, self._async_maybe_update)
-        )
-        self._unsub_handlers.append(
-            async_dispatcher_connect(
-                self.hass, UPDATE_OPTIONS_SIGNAL, self._async_maybe_update_options
-            )
         )
 
     async def _async_maybe_update(self, url: str) -> None:
         """Update state if the update signal comes from our router."""
         if url == self.router.url:
             self.async_schedule_update_ha_state(True)
-
-    async def _async_maybe_update_options(self, config_entry: ConfigEntry) -> None:
-        """Update options if the update signal comes from our router."""
-        if config_entry.data[CONF_URL] == self.router.url:
-            await self.async_update_options(config_entry)
 
     async def async_will_remove_from_hass(self) -> None:
         """Invoke unsubscription handlers."""

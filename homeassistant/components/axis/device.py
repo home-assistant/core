@@ -13,7 +13,6 @@ from axis.streammanager import SIGNAL_PLAYING, STATE_STOPPED
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
 from homeassistant.components.mqtt.models import Message
-from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -23,7 +22,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.httpx_client import get_async_client
@@ -221,15 +220,8 @@ class AxisNetworkDevice:
         except CannotConnect as err:
             raise ConfigEntryNotReady from err
 
-        except AuthenticationRequired:
-            self.hass.async_create_task(
-                self.hass.config_entries.flow.async_init(
-                    AXIS_DOMAIN,
-                    context={"source": SOURCE_REAUTH},
-                    data=self.config_entry.data,
-                )
-            )
-            return False
+        except AuthenticationRequired as err:
+            raise ConfigEntryAuthFailed from err
 
         self.fw_version = self.api.vapix.firmware_version
         self.product_type = self.api.vapix.product_type
@@ -263,9 +255,7 @@ class AxisNetworkDevice:
     def disconnect_from_stream(self):
         """Stop stream."""
         if self.api.stream.state != STATE_STOPPED:
-            self.api.stream.connection_status_callback.remove(
-                self.async_connection_status_callback
-            )
+            self.api.stream.connection_status_callback.clear()
             self.api.stream.stop()
 
     async def shutdown(self, event):
@@ -304,7 +294,7 @@ async def get_device(hass, host, port, username, password):
     )
 
     try:
-        with async_timeout.timeout(15):
+        with async_timeout.timeout(30):
             await device.vapix.initialize()
 
         return device

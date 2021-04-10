@@ -8,7 +8,7 @@ import async_timeout
 from teslajsonpy import Controller as TeslaAPI
 from teslajsonpy.exceptions import IncompleteCredentials, TeslaException
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_PASSWORD,
@@ -17,7 +17,8 @@ from homeassistant.const import (
     CONF_USERNAME,
     HTTP_UNAUTHORIZED,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -135,12 +136,11 @@ async def async_setup_entry(hass, config_entry):
         refresh_token = result["refresh_token"]
         access_token = result["access_token"]
         expiration = result["expiration"]
-    except IncompleteCredentials:
-        _async_start_reauth(hass, config_entry)
-        return False
+    except IncompleteCredentials as ex:
+        raise ConfigEntryAuthFailed from ex
     except TeslaException as ex:
         if ex.code == HTTP_UNAUTHORIZED:
-            _async_start_reauth(hass, config_entry)
+            raise ConfigEntryAuthFailed from ex
         _LOGGER.error("Unable to communicate with Tesla API: %s", ex.message)
         return False
     _async_save_tokens(hass, config_entry, access_token, refresh_token, expiration)
@@ -191,17 +191,6 @@ async def async_unload_entry(hass, config_entry) -> bool:
         _LOGGER.debug("Unloaded entry for %s", username)
         return True
     return False
-
-
-def _async_start_reauth(hass: HomeAssistant, entry: ConfigEntry):
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": "reauth"},
-            data=entry.data,
-        )
-    )
-    _LOGGER.error("Credentials are no longer valid. Please reauthenticate")
 
 
 async def update_listener(hass, config_entry):

@@ -55,9 +55,11 @@ from .conftest import base_config_test
 async def test_config_modbus(hass, do_discovery, do_options, do_config):
     """Run test for modbus."""
     config = {
-        DOMAIN: do_config,
+        DOMAIN: {
+            **do_config,
+            **do_options,
+        }
     }
-    config.update(do_options)
     await base_config_test(
         hass,
         None,

@@ -8,6 +8,7 @@ from pyatv.const import Protocol
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_NAME,
@@ -33,8 +34,6 @@ BACKOFF_TIME_UPPER_LIMIT = 300  # Five minutes
 
 NOTIFICATION_TITLE = "Apple TV Notification"
 NOTIFICATION_ID = "apple_tv_notification"
-
-SOURCE_REAUTH = "reauth"
 
 SIGNAL_CONNECTED = "apple_tv_connected"
 SIGNAL_DISCONNECTED = "apple_tv_disconnected"

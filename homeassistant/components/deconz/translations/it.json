@@ -14,8 +14,8 @@
         "flow_title": "Gateway Zigbee deCONZ ({host})",
         "step": {
             "hassio_confirm": {
-                "description": "Vuoi configurare Home Assistant per connettersi al gateway deCONZ fornito dal componente aggiuntivo di Hass.io: {addon}?",
-                "title": "Gateway deCONZ Zigbee tramite il componente aggiuntivo di Hass.io"
+                "description": "Vuoi configurare Home Assistant per connettersi al gateway deCONZ fornito dal componente aggiuntivo: {addon}?",
+                "title": "Gateway deCONZ Zigbee tramite il componente aggiuntivo di Home Assistant"
             },
             "link": {
                 "description": "Sblocca il tuo gateway deCONZ per registrarti con Home Assistant.\n\n1. Vai a Impostazioni deCONZ -> Gateway -> Avanzate\n2. Premere il pulsante \"Autentica app\"",
@@ -42,6 +42,10 @@
             "button_2": "Secondo pulsante",
             "button_3": "Terzo pulsante",
             "button_4": "Quarto pulsante",
+            "button_5": "Quinto pulsante",
+            "button_6": "Sesto pulsante",
+            "button_7": "Settimo pulsante",
+            "button_8": "Ottavo pulsante",
             "close": "Chiudere",
             "dim_down": "Diminuire luminosit\u00e0",
             "dim_up": "Aumentare luminosit\u00e0",

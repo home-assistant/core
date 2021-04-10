@@ -60,6 +60,7 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_stop_inclusion)
     websocket_api.async_register_command(hass, websocket_remove_node)
     websocket_api.async_register_command(hass, websocket_stop_exclusion)
+    websocket_api.async_register_command(hass, websocket_refresh_node_info)
     websocket_api.async_register_command(hass, websocket_update_log_config)
     websocket_api.async_register_command(hass, websocket_get_log_config)
     websocket_api.async_register_command(hass, websocket_get_config_parameters)
@@ -299,6 +300,32 @@ async def websocket_remove_node(
         msg[ID],
         result,
     )
+
+
+@websocket_api.require_admin  # type: ignore
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/refresh_node_info",
+        vol.Required(ENTRY_ID): str,
+        vol.Required(NODE_ID): int,
+    },
+)
+async def websocket_refresh_node_info(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+) -> None:
+    """Re-interview a node."""
+    entry_id = msg[ENTRY_ID]
+    node_id = msg[NODE_ID]
+    client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
+    node = client.driver.controller.nodes.get(node_id)
+
+    if node is None:
+        connection.send_error(msg[ID], ERR_NOT_FOUND, f"Node {node_id} not found")
+        return
+
+    await node.async_refresh_info()
+    connection.send_result(msg[ID])
 
 
 @websocket_api.require_admin  # type:ignore
