@@ -9,7 +9,7 @@ from yalexs.pubnub_activity import activities_from_pubnub_message
 from yalexs.pubnub_async import AugustPubNub, async_create_pubnub
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, HTTP_UNAUTHORIZED
+from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -47,14 +47,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     try:
         await august_gateway.async_setup(entry.data)
         return await async_setup_august(hass, entry, august_gateway)
-    except ClientResponseError as err:
-        if err.status == HTTP_UNAUTHORIZED:
-            raise ConfigEntryAuthFailed from err
-
-        raise ConfigEntryNotReady from err
     except (RequireValidation, InvalidAuth) as err:
         raise ConfigEntryAuthFailed from err
-    except (CannotConnect, asyncio.TimeoutError) as err:
+    except (ClientResponseError, CannotConnect, asyncio.TimeoutError) as err:
         raise ConfigEntryNotReady from err
 
 

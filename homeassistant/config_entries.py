@@ -267,7 +267,7 @@ class ConfigEntry:
             message = str(ex)
             auth_base_message = "could not authenticate"
             auth_message = (
-                f"{auth_base_message} {message}" if message else auth_base_message
+                f"{auth_base_message}: {message}" if message else auth_base_message
             )
             _LOGGER.warning(
                 "Config entry '%s' for %s integration %s",
@@ -516,6 +516,7 @@ class ConfigEntry:
         """Start a reauth flow."""
         flow_context = {
             "source": SOURCE_REAUTH,
+            "entry_id": self.entry_id,
             "unique_id": self.unique_id,
         }
 

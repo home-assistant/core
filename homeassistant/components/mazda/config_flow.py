@@ -96,16 +96,18 @@ class MazdaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 await self.async_set_unique_id(user_input[CONF_EMAIL].lower())
 
-                entry = await self.async_set_unique_id(self.unique_id)
-                if entry:
-                    self.hass.config_entries.async_update_entry(entry, data=user_input)
+                for entry in self._async_current_entries():
+                    if entry.unique_id == self.unique_id:
+                        self.hass.config_entries.async_update_entry(
+                            entry, data=user_input
+                        )
 
-                    # Reload the config entry otherwise devices will remain unavailable
-                    self.hass.async_create_task(
-                        self.hass.config_entries.async_reload(entry.entry_id)
-                    )
+                        # Reload the config entry otherwise devices will remain unavailable
+                        self.hass.async_create_task(
+                            self.hass.config_entries.async_reload(entry.entry_id)
+                        )
 
-                    return self.async_abort(reason="reauth_successful")
+                        return self.async_abort(reason="reauth_successful")
                 errors["base"] = "unknown"
 
         return self.async_show_form(

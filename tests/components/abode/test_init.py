@@ -1,7 +1,7 @@
 """Tests for the Abode module."""
 from unittest.mock import patch
 
-from abodepy.exceptions import AbodeAuthenticationException
+from abodepy.exceptions import AbodeAuthenticationException, AbodeException
 
 from homeassistant import data_entry_flow
 from homeassistant.components.abode import (
@@ -11,6 +11,7 @@ from homeassistant.components.abode import (
     SERVICE_TRIGGER_AUTOMATION,
 )
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
+from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY
 from homeassistant.const import CONF_USERNAME, HTTP_BAD_REQUEST
 
 from .common import setup_platform
@@ -75,3 +76,17 @@ async def test_invalid_credentials(hass):
         await setup_platform(hass, ALARM_DOMAIN)
 
         mock_async_step_reauth.assert_called_once()
+
+
+async def test_raise_config_entry_not_ready_when_offline(hass):
+    """Config entry state is ENTRY_STATE_SETUP_RETRY when abode is offline."""
+    with patch(
+        "homeassistant.components.abode.Abode",
+        side_effect=AbodeException("any"),
+    ):
+        config_entry = await setup_platform(hass, ALARM_DOMAIN)
+        await hass.async_block_till_done()
+
+    assert config_entry.state == ENTRY_STATE_SETUP_RETRY
+
+    assert hass.config_entries.flow.async_progress() == []
