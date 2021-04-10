@@ -36,10 +36,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     try:
         config = await syncthing.system.config()
         version = await syncthing.system.version()
+        status = await syncthing.system.status()
+
+        server_id = status["myID"]
         entities = [
             FolderSensor(
                 syncthing,
                 name,
+                server_id,
                 folder["id"],
                 folder["label"],
                 version["version"],
@@ -83,10 +87,11 @@ class FolderSensor(SensorEntity):
         "state",
     ]
 
-    def __init__(self, syncthing, name, folder_id, folder_label, version):
+    def __init__(self, syncthing, name, server_id, folder_id, folder_label, version):
         """Initialize the sensor."""
         self._syncthing = syncthing
         self._name = name
+        self._server_id = server_id
         self._folder_id = folder_id
         self._folder_label = folder_label
         self._state = None
@@ -136,7 +141,7 @@ class FolderSensor(SensorEntity):
     def device_info(self):
         """Return device information."""
         return {
-            "identifiers": {(DOMAIN, self._syncthing.url)},
+            "identifiers": {(DOMAIN, self._server_id)},
             "name": f"Syncthing ({self._syncthing.url})",
             "manufacturer": "Syncthing Team",
             "sw_version": self._version,
