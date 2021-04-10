@@ -12,8 +12,8 @@ from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
-    ENERGY_WATT_HOUR,
     PERCENTAGE,
+    POWER_WATT,
     TEMP_CELSIUS,
     TIME_HOURS,
 )
@@ -229,7 +229,7 @@ SENSOR_TYPES = {
     SENSOR_POWER_PRODUCTION_CURRENT: {
         CONF_NAME: "Power production current",
         CONF_ICON: None,
-        CONF_UNIT_OF_MEASUREMENT: ENERGY_WATT_HOUR,
+        CONF_UNIT_OF_MEASUREMENT: POWER_WATT,
         CONF_GETTER: lambda api: api.getPowerProductionCurrent(),
         CONF_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
     },
