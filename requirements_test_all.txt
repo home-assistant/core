@@ -1214,7 +1214,7 @@ vsure==1.7.3
 vultr==0.1.2
 
 # homeassistant.components.wake_on_lan
-wakeonlan==2.0.0
+wakeonlan==2.0.1
 
 # homeassistant.components.folder_watcher
 watchdog==2.0.2
