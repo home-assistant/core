@@ -261,7 +261,7 @@ defusedxml==0.6.0
 denonavr==0.9.10
 
 # homeassistant.components.devolo_home_control
-devolo-home-control-api==0.17.1
+devolo-home-control-api==0.17.3
 
 # homeassistant.components.directv
 directv==0.4.0
@@ -517,6 +517,9 @@ netdisco==2.8.2
 
 # homeassistant.components.nexia
 nexia==0.9.5
+
+# homeassistant.components.notify_events
+notify-events==1.0.4
 
 # homeassistant.components.nsw_fuel_station
 nsw-fuel-api-client==1.0.10
@@ -787,7 +790,7 @@ pykira==0.1.1
 pykmtronic==0.0.3
 
 # homeassistant.components.kodi
-pykodi==0.2.3
+pykodi==0.2.5
 
 # homeassistant.components.kulersky
 pykulersky==0.5.2
@@ -959,7 +962,7 @@ python-nest==4.1.0
 python-openzwave-mqtt[mqtt-client]==1.4.0
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.19
+python-smarttub==0.0.23
 
 # homeassistant.components.songpal
 python-songpal==0.12
@@ -1233,7 +1236,7 @@ zeep[async]==4.0.0
 zeroconf==0.29.0
 
 # homeassistant.components.zha
-zha-quirks==0.0.55
+zha-quirks==0.0.56
 
 # homeassistant.components.zha
 zigpy-cc==0.5.2
