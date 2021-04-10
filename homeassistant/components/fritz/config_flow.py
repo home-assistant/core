@@ -14,7 +14,7 @@ from homeassistant.components.ssdp import (
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 
-from .common import CONFIG_SCHEMA, FritzBoxTools
+from .common import FritzBoxTools
 from .const import (
     DEFAULT_HOST,
     DEFAULT_PORT,
@@ -63,6 +63,18 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
 
         return None
 
+    async def _async_create_entry(self):
+        """Async create flow handler entry."""
+        return self.async_create_entry(
+            title=self._name,
+            data={
+                CONF_HOST: self.fritz_tools.host,
+                CONF_PASSWORD: self.fritz_tools.password,
+                CONF_PORT: self.fritz_tools.port,
+                CONF_USERNAME: self.fritz_tools.username,
+            },
+        )
+
     async def async_step_ssdp(self, discovery_info):
         """Handle a flow initialized by discovery."""
         ssdp_location = urlparse(discovery_info[ATTR_SSDP_LOCATION])
@@ -110,15 +122,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
             errors["base"] = error
             return self._show_setup_form_confirm(errors)
 
-        return self.async_create_entry(
-            title=self._name,
-            data={
-                CONF_HOST: self.fritz_tools.host,
-                CONF_PASSWORD: self.fritz_tools.password,
-                CONF_PORT: self.fritz_tools.port,
-                CONF_USERNAME: self.fritz_tools.username,
-            },
-        )
+        return self._async_create_entry()
 
     def _show_setup_form_init(self, errors=None):
         """Show the setup form to the user."""
@@ -177,55 +181,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
             errors["base"] = error
             return self._show_setup_form_init(errors)
 
-        return self.async_create_entry(
-            title=self._name,
-            data={
-                CONF_HOST: self.fritz_tools.host,
-                CONF_PASSWORD: self.fritz_tools.password,
-                CONF_PORT: self.fritz_tools.port,
-                CONF_USERNAME: self.fritz_tools.username,
-            },
-        )
-
-    async def async_step_import(self, import_config):
-        """Import a FRITZ!Box Tools as a config entry.
-
-        This flow is triggered by `async_setup` for configured devices.
-        This flow is also triggered by `async_step_discovery`.
-
-        This will execute for any complete
-        configuration.
-        """
-        _LOGGER.debug("start step import_config")
-        self.import_schema = CONFIG_SCHEMA
-
-        self._host = import_config.get(CONF_HOST, DEFAULT_HOST)
-        self._port = import_config.get(CONF_PORT, DEFAULT_PORT)
-        self._username = import_config.get(CONF_USERNAME)
-        self._password = import_config.get(CONF_PASSWORD)
-
-        error = await self.fritz_tools_init()
-
-        self._name = self.fritz_tools.device_info["model"]
-
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if entry.data[CONF_HOST] == self._host:
-                return self.async_abort(reason="ready")
-
-        if error:
-            _LOGGER.error(
-                "Import of config failed. Check your fritzbox credentials: %s", error
-            )
-
-        return self.async_create_entry(
-            title=self._name,
-            data={
-                CONF_HOST: self._host,
-                CONF_PASSWORD: self._password,
-                CONF_PORT: self._port,
-                CONF_USERNAME: self._username,
-            },
-        )
+        return self._async_create_entry()
 
     async def async_step_reauth(self, data):
         """Handle flow upon an API authentication error."""
