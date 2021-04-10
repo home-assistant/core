@@ -4,7 +4,7 @@ from datetime import timedelta
 import pytest
 
 from homeassistant import core
-from homeassistant.helpers.json import JSONEncoder, TraceJSONEncoder
+from homeassistant.helpers.json import ExtendedJSONEncoder, JSONEncoder
 from homeassistant.util import dt as dt_util
 
 
@@ -31,7 +31,7 @@ def test_json_encoder(hass):
 
 def test_trace_json_encoder(hass):
     """Test the Trace JSON Encoder."""
-    ha_json_enc = TraceJSONEncoder()
+    ha_json_enc = ExtendedJSONEncoder()
     state = core.State("test.test", "hello")
 
     # Test serializing a datetime

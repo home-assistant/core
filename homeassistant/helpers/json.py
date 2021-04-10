@@ -22,7 +22,7 @@ class JSONEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, o)
 
 
-class TraceJSONEncoder(JSONEncoder):
+class ExtendedJSONEncoder(JSONEncoder):
     """JSONEncoder that supports Home Assistant objects and falls back to repr(o)."""
 
     def default(self, o: Any) -> Any:
