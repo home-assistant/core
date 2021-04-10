@@ -43,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     except FritzConnectionException as ex:
         raise ConfigEntryNotReady from ex
 
-    hass.data.setdefault(DOMAIN, {CONF_DEVICES: set()})
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = fritz_tools
 
     # Load the other platforms like switch
