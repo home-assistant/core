@@ -7,7 +7,7 @@
         },
         "error": {
             "discovery_error": "No s'ha pogut descobrir cap passarel\u00b7la Xiaomi Aqara, prova d'utilitzar la IP del dispositiu que executa Home Assistant com a interf\u00edcie",
-            "invalid_host": "Nom de l'amfitri\u00f3 o l'adre\u00e7a IP inv\u00e0lids, consulta https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem",
+            "invalid_host": "Nom de l'amfitri\u00f3 o adre\u00e7a IP inv\u00e0lids, consulta https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem",
             "invalid_interface": "Interf\u00edcie de xarxa no v\u00e0lida",
             "invalid_key": "Clau de la passarel\u00b7la no v\u00e0lida",
             "invalid_mac": "Adre\u00e7a MAC no v\u00e0lida"
