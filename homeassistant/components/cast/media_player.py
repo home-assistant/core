@@ -65,6 +65,7 @@ from .const import (
     CONF_IGNORE_CEC,
     CONF_UUID,
     DOMAIN as CAST_DOMAIN,
+    KNOWN_CHROMECAST_INFO_KEY,
     SIGNAL_CAST_DISCOVERED,
     SIGNAL_CAST_REMOVED,
     SIGNAL_HASS_CAST_SHOW_VIEW,
@@ -128,6 +129,7 @@ def _async_create_cast_device(hass: HomeAssistantType, info: ChromecastInfo):
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Cast from a config entry."""
     hass.data.setdefault(ADDED_CAST_DEVICES_KEY, set())
+    hass.data.setdefault(KNOWN_CHROMECAST_INFO_KEY, {})
 
     # Import CEC IGNORE attributes
     pychromecast.IGNORE_CEC += config_entry.data.get(CONF_IGNORE_CEC) or []
