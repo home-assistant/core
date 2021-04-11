@@ -5,7 +5,7 @@ import logging
 
 import pysma
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryNotReady
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -56,17 +56,19 @@ async def _parse_legacy_options(entry: ConfigEntry, sensor_def: pysma.Sensors) -
 
     # Parsing of sensors configuration
     config_sensors = entry.data.get(CONF_SENSORS)
-    if config_sensors:
-        # Find and replace sensors removed from pysma
-        # This only alters the config, the actual sensor migration takes place in _migrate_old_unique_ids
-        for sensor in config_sensors.copy():
-            if sensor in pysma.LEGACY_MAP:
-                config_sensors.remove(sensor)
-                config_sensors.append(pysma.LEGACY_MAP[sensor]["new_sensor"])
+    if not config_sensors:
+        return
 
-        # Only sensors from config should be enabled
-        for sensor in sensor_def:
-            sensor.enabled = sensor.name in config_sensors
+    # Find and replace sensors removed from pysma
+    # This only alters the config, the actual sensor migration takes place in _migrate_old_unique_ids
+    for sensor in config_sensors.copy():
+        if sensor in pysma.LEGACY_MAP:
+            config_sensors.remove(sensor)
+            config_sensors.append(pysma.LEGACY_MAP[sensor]["new_sensor"])
+
+    # Only sensors from config should be enabled
+    for sensor in sensor_def:
+        sensor.enabled = sensor.name in config_sensors
 
 
 async def _migrate_old_unique_ids(
@@ -102,12 +104,12 @@ async def _migrate_old_unique_ids(
             "sensor", "sma", f"sma-{original_key}-{sensor}"
         )
 
-        if entity_id:
-            # Change entity_id to new format using the device serial in entry.unique_id
-            new_unique_id = (
-                f"{entry.unique_id}-{pysma_sensor.key}_{pysma_sensor.key_idx}"
-            )
-            entity_registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
+        if not entity_id:
+            continue
+
+        # Change entity_id to new format using the device serial in entry.unique_id
+        new_unique_id = f"{entry.unique_id}-{pysma_sensor.key}_{pysma_sensor.key_idx}"
+        entity_registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -129,15 +131,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     session = async_get_clientsession(hass, verify_ssl=verify_ssl)
     sma = pysma.SMA(session, url, password, group)
 
-    # Ensure we logout on shutdown
-    async def async_close_session(event):
-        """Close the session."""
-        await sma.close_session()
-
-    remove_stop_listener = hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, async_close_session
-    )
-
     # Define the coordinator
     async def async_update_data():
         """Update the used SMA sensors."""
@@ -157,6 +150,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_interval=interval,
     )
 
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except ConfigEntryNotReady:
+        await sma.close_session()
+        raise
+
+    # Ensure we logout on shutdown
+    async def async_close_session(event):
+        """Close the session."""
+        await sma.close_session()
+
+    remove_stop_listener = hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, async_close_session
+    )
+
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         PYSMA_OBJECT: sma,
@@ -164,8 +172,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         PYSMA_SENSORS: sensor_def,
         PYSMA_REMOVE_LISTENER: remove_stop_listener,
     }
-
-    await coordinator.async_config_entry_first_refresh()
 
     for component in PLATFORMS:
         hass.async_create_task(
