@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+import zigpy.types as t
 import zigpy.zcl.clusters
 from zigpy.zcl.clusters.hvac import Thermostat
 import zigpy.zcl.foundation as zcl_f
@@ -43,9 +44,11 @@ from homeassistant.components.climate.const import (
     SERVICE_SET_TEMPERATURE,
 )
 from homeassistant.components.zha.climate import (
+    ATTR_WINDOW_OPEN,
     DOMAIN,
     HVAC_MODE_2_SYSTEM,
     SEQ_OF_OPERATION,
+    WindowDetection,
 )
 from homeassistant.components.zha.core.const import PRESET_COMPLEX, PRESET_SCHEDULE
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_UNKNOWN
@@ -121,9 +124,31 @@ CLIMATE_MOES = {
         "out_clusters": [zigpy.zcl.clusters.general.Ota.cluster_id],
     }
 }
+
+CLIMATE_DANFOSS = {
+    1: {
+        "device_type": zigpy.profiles.zha.DeviceType.THERMOSTAT,
+        "in_clusters": [
+            zigpy.zcl.clusters.general.Basic.cluster_id,
+            zigpy.zcl.clusters.general.PowerConfiguration.cluster_id,
+            zigpy.zcl.clusters.general.Identify.cluster_id,
+            zigpy.zcl.clusters.general.Time.cluster_id,
+            zigpy.zcl.clusters.general.PollControl.cluster_id,
+            zigpy.zcl.clusters.hvac.Thermostat.cluster_id,
+            zigpy.zcl.clusters.hvac.UserInterface.cluster_id,
+            zigpy.zcl.clusters.homeautomation.Diagnostic.cluster_id,
+        ],
+        "out_clusters": [
+            zigpy.zcl.clusters.general.Basic.cluster_id,
+            zigpy.zcl.clusters.general.Ota.cluster_id,
+        ],
+    }
+}
+
 MANUF_SINOPE = "Sinope Technologies"
 MANUF_ZEN = "Zen Within"
 MANUF_MOES = "_TZE200_ckud7u2l"
+MANUF_DANFOSS = "Danfoss"
 
 ZCL_ATTR_PLUG = {
     "abs_min_heat_setpoint_limit": 800,
@@ -196,6 +221,13 @@ async def device_climate_sinope(device_climate_mock):
 
 
 @pytest.fixture
+async def device_climate_danfoss(device_climate_mock):
+    """Danfoss thermostat."""
+
+    return await device_climate_mock(CLIMATE_DANFOSS, manuf=MANUF_DANFOSS)
+
+
+@pytest.fixture
 async def device_climate_zen(device_climate_mock):
     """Zen Within thermostat."""
 
@@ -230,6 +262,29 @@ async def test_climate_local_temp(hass, device_climate):
     await send_attributes_report(hass, thrm_cluster, {0: 2100})
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 21.0
+
+
+async def test_climate_window_detection(hass, device_climate_danfoss):
+    """Test reporting of windows state."""
+
+    thrm_cluster = device_climate_danfoss.device.endpoints[1].thermostat
+    # Mock Danfoss custom attribute
+    thrm_cluster.attributes.update(
+        {
+            0x4000: ("etrv_open_windows_detection", t.enum8),
+        }
+    )
+    entity_id = await find_entity_id(DOMAIN, device_climate_danfoss, hass)
+
+    await send_attributes_report(hass, thrm_cluster, {0x4000: WindowDetection.OPEN})
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_WINDOW_OPEN] == "Open"
+
+    await send_attributes_report(hass, thrm_cluster, {0x4000: WindowDetection.CLOSED})
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_WINDOW_OPEN] == "Closed"
 
 
 async def test_climate_hvac_action_running_state(hass, device_climate):
