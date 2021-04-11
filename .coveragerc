@@ -674,6 +674,7 @@ omit =
     homeassistant/components/netgear/device_tracker.py
     homeassistant/components/netgear_lte/*
     homeassistant/components/netio/switch.py
+    homeassistant/components/nettigo/__init__.py
     homeassistant/components/nettigo/air_quality.py
     homeassistant/components/nettigo/const.py
     homeassistant/components/nettigo/sensor.py
