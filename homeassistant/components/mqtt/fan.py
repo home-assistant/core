@@ -1,6 +1,7 @@
 """Support for MQTT fans."""
 import functools
 import logging
+import math
 
 import voluptuous as vol
 
@@ -441,13 +442,12 @@ class MqttFan(MqttEntity, FanEntity):
                 )
                 return
 
-            if not self._feature_percentage:
-                if speed in self._legacy_speeds_list_no_off:
-                    self._percentage = ordered_list_item_to_percentage(
-                        self._legacy_speeds_list_no_off, speed
-                    )
-                elif speed == SPEED_OFF:
-                    self._percentage = 0
+            if speed in self._legacy_speeds_list_no_off:
+                self._percentage = ordered_list_item_to_percentage(
+                    self._legacy_speeds_list_no_off, speed
+                )
+            elif speed == SPEED_OFF:
+                self._percentage = 0
 
             self.async_write_ha_state()
 
@@ -592,7 +592,7 @@ class MqttFan(MqttEntity, FanEntity):
 
         This method is a coroutine.
         """
-        percentage_payload = int(
+        percentage_payload = math.ceil(
             percentage_to_ranged_value(self._speed_range, percentage)
         )
         mqtt_payload = self._command_templates[ATTR_PERCENTAGE](percentage_payload)
