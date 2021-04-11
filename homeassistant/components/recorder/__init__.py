@@ -513,7 +513,7 @@ class Recorder(threading.Thread):
         persistent_notification.create(
             self.hass,
             "System performance will temporarily degrade during the database upgrade. Integrations that read the database, such as logbook and history, may return inconsistent results until the upgrade completes."
-            "Database Migration",
+            "Database upgrade in progress",
             "recorder_database_migration",
         )
 
