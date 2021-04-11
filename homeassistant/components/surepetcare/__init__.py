@@ -106,11 +106,6 @@ async def async_setup(hass, config) -> bool:
         ]
     )
 
-    hass.add_job(_discover, things, surepy, hass, config)
-    return True
-
-
-async def _discover(things, surepy, hass, config):
     conf = config[DOMAIN]
 
     # update interval
@@ -118,19 +113,20 @@ async def _discover(things, surepy, hass, config):
     # discover hubs the flaps/feeders are connected to
     hub_ids = set()
     for device in things.copy():
-        device_data = await surepy.device(device[CONF_ID])
+        device_data = await hass.async_add_executor_job(surepy.device, device[CONF_ID])
+        dd = await device_data
         if (
-            CONF_PARENT in device_data
-            and device_data[CONF_PARENT][CONF_PRODUCT_ID] == SurepyProduct.HUB
-            and device_data[CONF_PARENT][CONF_ID] not in hub_ids
+            CONF_PARENT in dd
+            and dd[CONF_PARENT][CONF_PRODUCT_ID] == SurepyProduct.HUB
+            and dd[CONF_PARENT][CONF_ID] not in hub_ids
         ):
             things.append(
                 {
-                    CONF_ID: device_data[CONF_PARENT][CONF_ID],
+                    CONF_ID: dd[CONF_PARENT][CONF_ID],
                     CONF_TYPE: SurepyProduct.HUB,
                 }
             )
-            hub_ids.add(device_data[CONF_PARENT][CONF_ID])
+            hub_ids.add(dd[CONF_PARENT][CONF_ID])
 
     # add pets
     things.extend(
@@ -142,7 +138,8 @@ async def _discover(things, surepy, hass, config):
     spc = hass.data[DATA_SURE_PETCARE][SPC] = SurePetcareAPI(hass, surepy, things)
 
     # initial update
-    await spc.async_update()
+    upd = await hass.async_add_executor_job(spc.async_update)
+    await upd
 
     async_track_time_interval(hass, spc.async_update, scan_interval)
 
