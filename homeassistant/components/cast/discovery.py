@@ -40,7 +40,6 @@ def discover_chromecast(hass: HomeAssistant, device_info):
     info = info.fill_out_missing_chromecast_info()
     _LOGGER.debug("Discovered new or updated chromecast %s", info)
 
-    # Do not remove, used by custom components
     hass.data[KNOWN_CHROMECAST_INFO_KEY][info.uuid] = info
     dispatcher_send(hass, SIGNAL_CAST_DISCOVERED, info)
 

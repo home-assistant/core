@@ -5,8 +5,8 @@ DEFAULT_PORT = 8009
 
 # Stores a threading.Lock that is held by the internal pychromecast discovery.
 INTERNAL_DISCOVERY_RUNNING_KEY = "cast_discovery_running"
-# Stores all ChromecastInfo we encountered through discovery or config as a set
-# If we find a chromecast with a new host, the old one will be removed again.
+# Stores all ChromecastInfo we encountered through discovery as a set
+# Note: No longer used by the cast integration but kept to not break custom components
 KNOWN_CHROMECAST_INFO_KEY = "cast_known_chromecasts"
 # Stores UUIDs of cast devices that were added as entities. Doesn't store
 # None UUIDs.
