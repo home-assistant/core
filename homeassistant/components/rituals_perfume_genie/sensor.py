@@ -141,11 +141,6 @@ class DiffuserWifiSensor(DiffuserEntity):
         super().__init__(diffuser, coordinator, WIFI_SUFFIX)
 
     @property
-    def icon(self):
-        """Return the wifi sensor icon."""
-        return icon_for_signal_level(self.state)
-
-    @property
     def state(self):
         """Return the state of the wifi sensor."""
         # Use ICON because TITLE may change in the future.
