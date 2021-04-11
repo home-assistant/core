@@ -18,6 +18,7 @@ from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_TIMESTAMP,
     DEVICE_CLASS_VOLTAGE,
     ELECTRICAL_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
@@ -29,7 +30,7 @@ from homeassistant.const import (
     VOLT,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
+from homeassistant.util import Throttle, dt
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -527,9 +528,9 @@ MIX_SENSOR_TYPES = {
     # This sensor is manually created using the most recent X-Axis value from the chartData
     "mix_last_update": (
         "Last Data Update",
-        "",
+        None,
         "lastdataupdate",
-        {},
+        {"device_class": DEVICE_CLASS_TIMESTAMP},
     ),
     # Values from 'dashboard_data' API call
     "mix_import_from_grid_today_combined": (
@@ -720,7 +721,10 @@ class GrowattData:
                 # Get the chart data and work out the time of the last entry, use this as the last time data was published to the Growatt Server
                 mix_chart_entries = mix_detail["chartData"]
                 sorted_keys = sorted(mix_chart_entries)
-                mix_detail["lastdataupdate"] = sorted_keys[-1]
+                updated_time = dt.parse_datetime(
+                    str(dt.now().date()) + " " + str(sorted_keys[-1])
+                )
+                mix_detail["lastdataupdate"] = updated_time
 
                 # Dashboard data is largely inaccurate for mix system but it is the only call with the ability to return the combined
                 # imported from grid value that is the combination of charging AND load consumption
