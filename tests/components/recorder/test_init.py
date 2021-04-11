@@ -3,8 +3,9 @@
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
-from sqlalchemy.exc import OperationalError
+from sqlalchemy.exc import OperationalError, SQLAlchemyError
 
+from homeassistant.components import recorder
 from homeassistant.components.recorder import (
     CONF_DB_URL,
     CONFIG_SCHEMA,
@@ -136,6 +137,32 @@ async def test_saving_state(
     assert state == _state_empty_context(hass, entity_id)
 
 
+async def test_saving_many_states(
+    hass: HomeAssistantType, async_setup_recorder_instance: SetupRecorderInstanceT
+):
+    """Test we expire after many commits."""
+    instance = await async_setup_recorder_instance(hass)
+
+    entity_id = "test.recorder"
+    attributes = {"test_attr": 5, "test_attr_10": "nice"}
+
+    with patch.object(
+        hass.data[DATA_INSTANCE].event_session, "expire_all"
+    ) as expire_all, patch.object(recorder, "EXPIRE_AFTER_COMMITS", 2):
+        for _ in range(3):
+            hass.states.async_set(entity_id, "on", attributes)
+            await async_wait_recording_done(hass, instance)
+            hass.states.async_set(entity_id, "off", attributes)
+            await async_wait_recording_done(hass, instance)
+
+    assert expire_all.called
+
+    with session_scope(hass=hass) as session:
+        db_states = list(session.query(States))
+        assert len(db_states) == 6
+        assert db_states[0].event_id > 0
+
+
 async def test_saving_state_with_intermixed_time_changes(
     hass: HomeAssistantType, async_setup_recorder_instance: SetupRecorderInstanceT
 ):
@@ -198,6 +225,44 @@ def test_saving_state_with_exception(hass, hass_recorder, caplog):
 
     assert "Error executing query" not in caplog.text
     assert "Error saving events" not in caplog.text
+
+
+def test_saving_state_with_sqlalchemy_exception(hass, hass_recorder, caplog):
+    """Test saving state when there is an SQLAlchemyError."""
+    hass = hass_recorder()
+
+    entity_id = "test.recorder"
+    state = "restoring_from_db"
+    attributes = {"test_attr": 5, "test_attr_10": "nice"}
+
+    def _throw_if_state_in_session(*args, **kwargs):
+        for obj in hass.data[DATA_INSTANCE].event_session:
+            if isinstance(obj, States):
+                raise SQLAlchemyError(
+                    "insert the state", "fake params", "forced to fail"
+                )
+
+    with patch("time.sleep"), patch.object(
+        hass.data[DATA_INSTANCE].event_session,
+        "flush",
+        side_effect=_throw_if_state_in_session,
+    ):
+        hass.states.set(entity_id, "fail", attributes)
+        wait_recording_done(hass)
+
+    assert "SQLAlchemyError error processing event" in caplog.text
+
+    caplog.clear()
+    hass.states.set(entity_id, state, attributes)
+    wait_recording_done(hass)
+
+    with session_scope(hass=hass) as session:
+        db_states = list(session.query(States))
+        assert len(db_states) >= 1
+
+    assert "Error executing query" not in caplog.text
+    assert "Error saving events" not in caplog.text
+    assert "SQLAlchemyError error processing event" not in caplog.text
 
 
 def test_saving_event(hass, hass_recorder):
@@ -571,6 +636,7 @@ def test_saving_state_with_serializable_data(hass_recorder, caplog):
     """Test saving data that cannot be serialized does not crash."""
     hass = hass_recorder()
 
+    hass.bus.fire("bad_event", {"fail": CannotSerializeMe()})
     hass.states.set("test.one", "on", {"fail": CannotSerializeMe()})
     wait_recording_done(hass)
     hass.states.set("test.two", "on", {})

@@ -58,7 +58,7 @@ ATTR_KEEP_DAYS = "keep_days"
 ATTR_REPACK = "repack"
 ATTR_APPLY_FILTER = "apply_filter"
 
-MAX_QUEUE_BACKLOG = 10000
+MAX_QUEUE_BACKLOG = 30000
 
 SERVICE_PURGE_SCHEMA = vol.Schema(
     {
@@ -755,13 +755,6 @@ class Recorder(threading.Thread):
             kwargs["echo"] = False
 
         if self._using_file_sqlite:
-            #
-            # Here we run an sqlite3 quick_check.  In the majority
-            # of cases, the quick_check takes under 10 seconds.
-            #
-            # On systems with very large databases and
-            # very slow disk or cpus, this can take a while.
-            #
             validate_or_move_away_sqlite_database(self.db_url)
 
         if self.engine is not None:
