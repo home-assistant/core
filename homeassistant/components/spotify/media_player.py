@@ -62,6 +62,7 @@ from .const import (
     DATA_SPOTIFY_ME,
     DATA_SPOTIFY_SESSION,
     DOMAIN,
+    KNOWN_SPOTIFY_DEVICES,
     SPOTIFY_SCOPES,
 )
 
@@ -199,6 +200,7 @@ async def async_setup_entry(
         entry.data[CONF_NAME],
     )
     async_add_entities([spotify], True)
+    hass.data.setdefault(KNOWN_SPOTIFY_DEVICES, [])
 
 
 def spotify_exception_handler(func):
@@ -506,6 +508,8 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
 
         devices = self._spotify.devices() or {}
         self._devices = devices.get("devices", [])
+        # Needed by custom components
+        self.hass.data[KNOWN_SPOTIFY_DEVICES] = self._devices
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""
