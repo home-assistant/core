@@ -15,32 +15,32 @@ from tests.common import MockConfigEntry
 VALID_CONFIG = {CONF_HOST: "10.10.2.3"}
 
 
-async def test_show_form(hass):
-    """Test that the form is served with no input."""
+async def test_form_create_entry(hass):
+    """Test that the user step works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == SOURCE_USER
+    assert result["errors"] == {}
 
-
-async def test_form_create_entry(hass):
-    """Test that the user step works."""
     with patch(
         "homeassistant.components.nettigo.Nettigo.async_get_mac_address",
         return_value="aa:bb:cc:dd:ee:ff",
-    ), patch("homeassistant.components.nettigo.async_setup_entry", return_value=True):
+    ), patch(
+        "homeassistant.components.nettigo.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=VALID_CONFIG,
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            VALID_CONFIG,
         )
+        await hass.async_block_till_done()
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == "10.10.2.3"
         assert result["data"][CONF_HOST] == "10.10.2.3"
+        assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.parametrize(
