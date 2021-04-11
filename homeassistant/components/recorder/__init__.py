@@ -423,14 +423,16 @@ class Recorder(threading.Thread):
         # Use a session for the event read loop
         # with a commit every time the event time
         # has changed. This reduces the disk io.
-        while (event := self.queue.get()) :
+        while event := self.queue.get():
             try:
                 self._process_one_event(event)
             except exc.DatabaseError as err:
                 if not self._handle_database_error(err):
-                    _LOGGER.exception("Error while processing event %s: %s", err)
-            except Exception as err:  # pylint disable=broad-except
-                _LOGGER.exception("Error while processing event %s: %s", err)
+                    _LOGGER.exception(
+                        "Database error while processing event %s: %s", event, err
+                    )
+            except Exception as err:  # pylint: disable=broad-except
+                _LOGGER.exception("Error while processing event %s: %s", event, err)
 
         self._shutdown()
 
@@ -483,19 +485,22 @@ class Recorder(threading.Thread):
             "Database Migration",
             "recorder_database_migration",
         )
+        setup_run = True
 
         try:
             migration.migrate_schema(self, current_version)
         except exc.DatabaseError as err:
             if self._handle_database_error(err):
-                return
-            _LOGGER.exception("Error during schema migration")
+                setup_run = False  # self._handle_database_error will do this
+            else:
+                _LOGGER.exception("Database error during schema migration")
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Error during schema migration")
             return False
 
         self._stop_queue_watcher()
-        self._setup_run()
+        if setup_run:
+            self._setup_run()
         persistent_notification.dismiss(self.hass, "recorder_database_migration")
         return True
 
