@@ -21,10 +21,7 @@ from homeassistant.const import REQUIRED_NEXT_PYTHON_DATE, REQUIRED_NEXT_PYTHON_
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import area_registry, device_registry, entity_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.recorder import (
-    RECORDER_DOMAIN,
-    async_wait_for_recorder_full_startup,
-)
+from homeassistant.helpers.recorder import RECORDER_DOMAIN
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import (
     DATA_SETUP,
@@ -546,12 +543,6 @@ async def _async_set_up_integrations(
 
         except asyncio.TimeoutError:
             _LOGGER.warning("Setup timed out for stage 1 - moving forward")
-
-    # If there is a database upgrade in progress the recorder
-    # queue can exaust the available memory if we allow stage 2
-    # to start. We wait until the upgrade is completed before
-    # starting.
-    await async_wait_for_recorder_full_startup(hass)
 
     # Enables after dependencies
     async_set_domains_to_be_loaded(hass, stage_2_domains)
