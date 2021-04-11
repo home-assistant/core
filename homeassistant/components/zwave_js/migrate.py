@@ -55,6 +55,7 @@ class ValueID:
             self.command_class == other.command_class
             and self.property_ == other.property_
             and self.property_key == other.property_key
+            and self.endpoint != other.endpoint
         )
 
 
@@ -76,30 +77,30 @@ def async_migrate_old_entity(
 
     # Look for existing entities in the registry that could be the same value but on
     # a different endpoint
-    existing_entities: list[RegistryEntry] = []
-    for entity in async_entries_for_device(ent_reg, device.id):
+    existing_entity_entries: list[RegistryEntry] = []
+    for entry in async_entries_for_device(ent_reg, device.id):
         # If entity is not in the domain for this discovery info or entity has already
         # been processed, skip it
-        if entity.domain != platform or entity.unique_id in registered_unique_ids:
+        if entry.domain != platform or entry.unique_id in registered_unique_ids:
             continue
 
-        old_ent_value_id = ValueID.from_unique_id(entity.unique_id)
+        old_ent_value_id = ValueID.from_unique_id(entry.unique_id)
 
         if value_id.is_same_value_different_endpoints(old_ent_value_id):
-            existing_entities.append(entity)
+            existing_entity_entries.append(entry)
             # We can return early if we get more than one result
-            if len(existing_entities) > 1:
+            if len(existing_entity_entries) > 1:
                 return
 
     # If we couldn't find any results, return early
-    if not existing_entities:
+    if not existing_entity_entries:
         return
 
-    entity = existing_entities[0]
-    state = hass.states.get(entity.entity_id)
+    entry = existing_entity_entries[0]
+    state = hass.states.get(entry.entity_id)
 
     if not state or state.state == STATE_UNAVAILABLE:
-        async_migrate_unique_id(ent_reg, platform, entity.unique_id, unique_id)
+        async_migrate_unique_id(ent_reg, platform, entry.unique_id, unique_id)
 
 
 @callback
