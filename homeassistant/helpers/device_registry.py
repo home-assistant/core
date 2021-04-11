@@ -10,6 +10,7 @@ import attr
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.exceptions import RequiredParameterMissing
 from homeassistant.loader import bind_hass
 import homeassistant.util.uuid as uuid_util
 
@@ -259,10 +260,10 @@ class DeviceRegistry:
         # To disable a device if it gets created
         disabled_by: str | None | UndefinedType = UNDEFINED,
         suggested_area: str | None | UndefinedType = UNDEFINED,
-    ) -> DeviceEntry | None:
+    ) -> DeviceEntry:
         """Get device. Create if it doesn't exist."""
         if not identifiers and not connections:
-            return None
+            raise RequiredParameterMissing(["identifiers", "connections"])
 
         if identifiers is None:
             identifiers = set()
@@ -300,7 +301,7 @@ class DeviceRegistry:
         else:
             via_device_id = UNDEFINED
 
-        return self._async_update_device(
+        device = self._async_update_device(
             device.id,
             add_config_entry_id=config_entry_id,
             via_device_id=via_device_id,
@@ -314,6 +315,11 @@ class DeviceRegistry:
             disabled_by=disabled_by,
             suggested_area=suggested_area,
         )
+
+        # This is safe because _async_update_device will always return a device
+        # in this use case.
+        assert device
+        return device
 
     @callback
     def async_update_device(
