@@ -4,7 +4,7 @@
 from homeassistant.components.knx import CONF_KNX_EXPOSE, KNX_ADDRESS
 from homeassistant.const import CONF_ATTRIBUTE, CONF_ENTITY_ID, CONF_TYPE
 
-from . import async_wait_for_queue, setup_knx_integration
+from . import setup_knx_integration
 
 
 async def test_binary_expose(hass, knx_ip_interface_mock):
@@ -27,7 +27,6 @@ async def test_binary_expose(hass, knx_ip_interface_mock):
     knx_ip_interface_mock.reset_mock()
     hass.states.async_set(entity_id, "on", {})
     await hass.async_block_till_done()
-    await async_wait_for_queue(knx_ip_interface_mock)
     assert (
         knx_ip_interface_mock.send_telegram.call_count == 1
     ), "Expected telegram for state change"
@@ -36,7 +35,6 @@ async def test_binary_expose(hass, knx_ip_interface_mock):
     knx_ip_interface_mock.reset_mock()
     hass.states.async_set(entity_id, "on", {"brightness": 180})
     await hass.async_block_till_done()
-    await async_wait_for_queue(knx_ip_interface_mock)
     assert (
         knx_ip_interface_mock.send_telegram.call_count == 0
     ), "Expected no telegram; state not changed"
@@ -45,7 +43,6 @@ async def test_binary_expose(hass, knx_ip_interface_mock):
     knx_ip_interface_mock.reset_mock()
     hass.states.async_set(entity_id, "off", {"brightness": 0})
     await hass.async_block_till_done()
-    await async_wait_for_queue(knx_ip_interface_mock)
     assert (
         knx_ip_interface_mock.send_telegram.call_count == 1
     ), "Expected telegram for state change"
@@ -73,26 +70,22 @@ async def test_expose_attribute(hass, knx_ip_interface_mock):
     knx_ip_interface_mock.reset_mock()
     hass.states.async_set(entity_id, "on", {})
     await hass.async_block_till_done()
-    await async_wait_for_queue(knx_ip_interface_mock)
     assert knx_ip_interface_mock.send_telegram.call_count == 0
 
     # Change attribute; keep state
     knx_ip_interface_mock.reset_mock()
     hass.states.async_set(entity_id, "on", {attribute: 1})
     await hass.async_block_till_done()
-    await async_wait_for_queue(knx_ip_interface_mock)
     assert knx_ip_interface_mock.send_telegram.call_count == 1
 
     # Change state keep attribute
     knx_ip_interface_mock.reset_mock()
     hass.states.async_set(entity_id, "off", {attribute: 1})
     await hass.async_block_till_done()
-    await async_wait_for_queue(knx_ip_interface_mock)
     assert knx_ip_interface_mock.send_telegram.call_count == 0
 
     # Change state and attribute
     knx_ip_interface_mock.reset_mock()
     hass.states.async_set(entity_id, "on", {attribute: 0})
     await hass.async_block_till_done()
-    await async_wait_for_queue(knx_ip_interface_mock)
     assert knx_ip_interface_mock.send_telegram.call_count == 1
