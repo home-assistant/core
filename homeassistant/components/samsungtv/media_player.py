@@ -18,6 +18,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_STEP,
 )
+from homeassistant.components.ssdp import ATTR_UPNP_UDN
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     CONF_HOST,
@@ -103,7 +104,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 async def _migrate_old_unique_ids(hass, config_entry):
-    host = config_entry.data[CONF_HOST]
+    unique_id = config_entry.data[ATTR_UPNP_UDN]
     ip_address = config_entry.data[CONF_IP_ADDRESS]
 
     @callback
@@ -112,9 +113,9 @@ async def _migrate_old_unique_ids(hass, config_entry):
         LOGGER.info(
             "Migrating unique_id from [%s] to [%s]",
             ip_address,
-            host,
+            unique_id,
         )
-        return {"new_unique_id": host}
+        return {"new_unique_id": unique_id}
 
     await entity_registry.async_migrate_entries(
         hass, config_entry.entry_id, _async_migrator
