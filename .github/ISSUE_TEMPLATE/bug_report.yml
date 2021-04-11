@@ -26,10 +26,10 @@ body:
       value: |
         ## Environment
   - type: input
+    id: version
     validations:
       required: true
     attributes:
-      id: version
       label: What is version of Home Assistant Core has the issue?
       placeholder: core-
       description: >

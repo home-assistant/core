@@ -18,5 +18,10 @@
                 "title": "GIO\u015a (Poolse hoofdinspectie van milieubescherming)"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "GIO\u015a server bereikbaar"
+        }
     }
 }

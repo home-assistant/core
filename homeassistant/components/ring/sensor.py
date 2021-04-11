@@ -1,6 +1,10 @@
 """This component provides HA sensor support for Ring Door Bell/Chimes."""
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import PERCENTAGE, SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+from homeassistant.const import (
+    DEVICE_CLASS_TIMESTAMP,
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.icon import icon_for_battery_level
 
@@ -40,9 +44,9 @@ class RingSensor(RingEntityMixin, SensorEntity):
         super().__init__(config_entry_id, device)
         self._sensor_type = sensor_type
         self._extra = None
-        self._icon = "mdi:{}".format(SENSOR_TYPES.get(sensor_type)[3])
+        self._icon = f"mdi:{SENSOR_TYPES.get(sensor_type)[3]}"
         self._kind = SENSOR_TYPES.get(sensor_type)[4]
-        self._name = "{} {}".format(self._device.name, SENSOR_TYPES.get(sensor_type)[0])
+        self._name = f"{self._device.name} {SENSOR_TYPES.get(sensor_type)[0]}"
         self._unique_id = f"{device.id}-{sensor_type}"
 
     @property
@@ -210,7 +214,7 @@ SENSOR_TYPES = {
         None,
         "history",
         None,
-        "timestamp",
+        DEVICE_CLASS_TIMESTAMP,
         HistoryRingSensor,
     ],
     "last_ding": [
@@ -219,7 +223,7 @@ SENSOR_TYPES = {
         None,
         "history",
         "ding",
-        "timestamp",
+        DEVICE_CLASS_TIMESTAMP,
         HistoryRingSensor,
     ],
     "last_motion": [
@@ -228,7 +232,7 @@ SENSOR_TYPES = {
         None,
         "history",
         "motion",
-        "timestamp",
+        DEVICE_CLASS_TIMESTAMP,
         HistoryRingSensor,
     ],
     "volume": [

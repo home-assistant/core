@@ -170,12 +170,12 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, entry):
+    async def async_step_reauth(self, data):
         """Trigger a reauthentication flow."""
-        self._entry = entry
-        self._host = entry.data[CONF_HOST]
-        self._name = entry.data[CONF_HOST]
-        self._username = entry.data[CONF_USERNAME]
+        self._entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        self._host = data[CONF_HOST]
+        self._name = data[CONF_HOST]
+        self._username = data[CONF_USERNAME]
 
         return await self.async_step_reauth_confirm()
 

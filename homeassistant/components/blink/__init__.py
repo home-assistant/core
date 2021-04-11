@@ -16,6 +16,7 @@ from homeassistant.components.blink.const import (
     SERVICE_SAVE_VIDEO,
     SERVICE_SEND_PIN,
 )
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_FILENAME, CONF_NAME, CONF_PIN, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -49,7 +50,7 @@ def _reauth_flow_wrapper(hass, data):
     """Reauth flow wrapper."""
     hass.add_job(
         hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "reauth"}, data=data
+            DOMAIN, context={"source": SOURCE_REAUTH}, data=data
         )
     )
     persistent_notification.async_create(
@@ -57,12 +58,6 @@ def _reauth_flow_wrapper(hass, data):
         "Blink configuration migrated to a new version. Please go to the integrations page to re-configure (such as sending a new 2FA key).",
         "Blink Migration",
     )
-
-
-async def async_setup(hass, config):
-    """Set up a Blink component."""
-    hass.data[DOMAIN] = {}
-    return True
 
 
 async def async_migrate_entry(hass, entry):
@@ -81,8 +76,9 @@ async def async_migrate_entry(hass, entry):
 
 async def async_setup_entry(hass, entry):
     """Set up Blink via config entry."""
-    _async_import_options_from_data_if_missing(hass, entry)
+    hass.data.setdefault(DOMAIN, {})
 
+    _async_import_options_from_data_if_missing(hass, entry)
     hass.data[DOMAIN][entry.entry_id] = await hass.async_add_executor_job(
         _blink_startup_wrapper, hass, entry
     )

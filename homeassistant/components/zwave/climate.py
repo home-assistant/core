@@ -182,10 +182,12 @@ class ZWaveClimateBase(ZWaveDeviceEntity, ClimateEntity):
                 int(self.node.manufacturer_id, 16),
                 int(self.node.product_id, 16),
             )
-            if specific_sensor_key in DEVICE_MAPPINGS:
-                if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_ZXT_120:
-                    _LOGGER.debug("Remotec ZXT-120 Zwave Thermostat workaround")
-                    self._zxt_120 = 1
+            if (
+                specific_sensor_key in DEVICE_MAPPINGS
+                and DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_ZXT_120
+            ):
+                _LOGGER.debug("Remotec ZXT-120 Zwave Thermostat workaround")
+                self._zxt_120 = 1
         self.update_properties()
 
     def _mode(self) -> None:
@@ -567,9 +569,8 @@ class ZWaveClimateBase(ZWaveDeviceEntity, ClimateEntity):
     def set_swing_mode(self, swing_mode):
         """Set new target swing mode."""
         _LOGGER.debug("Set swing_mode to %s", swing_mode)
-        if self._zxt_120 == 1:
-            if self.values.zxt_120_swing_mode:
-                self.values.zxt_120_swing_mode.data = swing_mode
+        if self._zxt_120 == 1 and self.values.zxt_120_swing_mode:
+            self.values.zxt_120_swing_mode.data = swing_mode
 
     @property
     def extra_state_attributes(self):

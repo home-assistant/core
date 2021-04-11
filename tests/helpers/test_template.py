@@ -2267,9 +2267,6 @@ async def test_template_timeout(hass):
     tmp = template.Template("{{ states | count }}", hass)
     assert await tmp.async_render_will_timeout(3) is False
 
-    tmp2 = template.Template("{{ error_invalid + 1 }}", hass)
-    assert await tmp2.async_render_will_timeout(3) is False
-
     tmp3 = template.Template("static", hass)
     assert await tmp3.async_render_will_timeout(3) is False
 
@@ -2285,6 +2282,13 @@ async def test_template_timeout(hass):
 """
     tmp5 = template.Template(slow_template_str, hass)
     assert await tmp5.async_render_will_timeout(0.000001) is True
+
+
+async def test_template_timeout_raise(hass):
+    """Test we can raise from."""
+    tmp2 = template.Template("{{ error_invalid + 1 }}", hass)
+    with pytest.raises(TemplateError):
+        assert await tmp2.async_render_will_timeout(3) is False
 
 
 async def test_lights(hass):
@@ -2503,4 +2507,7 @@ async def test_undefined_variable(hass, caplog):
     """Test a warning is logged on undefined variables."""
     tpl = template.Template("{{ no_such_variable }}", hass)
     assert tpl.async_render() == ""
-    assert "Template variable warning: no_such_variable is undefined" in caplog.text
+    assert (
+        "Template variable warning: 'no_such_variable' is undefined when rendering '{{ no_such_variable }}'"
+        in caplog.text
+    )

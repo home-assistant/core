@@ -135,11 +135,16 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             self._setpoint_values[enum] = self.get_zwave_value(
                 THERMOSTAT_SETPOINT_PROPERTY,
                 command_class=CommandClass.THERMOSTAT_SETPOINT,
-                value_property_key=enum.value.key,
+                value_property_key=enum.value,
                 add_to_watched_value_ids=True,
             )
-            # Use the first found setpoint value to always determine the temperature unit
-            if self._setpoint_values[enum] and not self._unit_value:
+            # Use the first found non N/A setpoint value to always determine the
+            # temperature unit
+            if (
+                not self._unit_value
+                and enum != ThermostatSetpointType.NA
+                and self._setpoint_values[enum]
+            ):
                 self._unit_value = self._setpoint_values[enum]
         self._operating_state = self.get_zwave_value(
             THERMOSTAT_OPERATING_STATE_PROPERTY,
@@ -152,6 +157,8 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             add_to_watched_value_ids=True,
             check_all_endpoints=True,
         )
+        if not self._unit_value:
+            self._unit_value = self._current_temp
         self._current_humidity = self.get_zwave_value(
             "Humidity",
             command_class=CommandClass.SENSOR_MULTILEVEL,
@@ -162,11 +169,13 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             THERMOSTAT_MODE_PROPERTY,
             CommandClass.THERMOSTAT_FAN_MODE,
             add_to_watched_value_ids=True,
+            check_all_endpoints=True,
         )
         self._fan_state = self.get_zwave_value(
             THERMOSTAT_OPERATING_STATE_PROPERTY,
             CommandClass.THERMOSTAT_FAN_STATE,
             add_to_watched_value_ids=True,
+            check_all_endpoints=True,
         )
         self._set_modes_and_presets()
         self._supported_features = 0

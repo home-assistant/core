@@ -39,8 +39,8 @@ from .const import (
     DEFAULT_TIMEOUT,
     DEFAULT_USE_SSL,
     DEFAULT_VERIFY_SSL,
+    DOMAIN,
 )
-from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 

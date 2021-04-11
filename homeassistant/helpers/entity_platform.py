@@ -4,22 +4,34 @@ from __future__ import annotations
 import asyncio
 from contextvars import ContextVar
 from datetime import datetime, timedelta
+import logging
 from logging import Logger
 from types import ModuleType
 from typing import TYPE_CHECKING, Callable, Coroutine, Iterable
 
 from homeassistant import config_entries
-from homeassistant.const import ATTR_RESTORED, DEVICE_DEFAULT_NAME
+from homeassistant.const import (
+    ATTR_RESTORED,
+    DEVICE_DEFAULT_NAME,
+    EVENT_HOMEASSISTANT_STARTED,
+)
 from homeassistant.core import (
     CALLBACK_TYPE,
+    CoreState,
+    HomeAssistant,
     ServiceCall,
     callback,
     split_entity_id,
     valid_entity_id,
 )
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
-from homeassistant.helpers import config_validation as cv, service
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dev_reg,
+    entity_registry as ent_reg,
+    service,
+)
+from homeassistant.setup import async_start_setup
 from homeassistant.util.async_ import run_callback_threadsafe
 
 from .entity_registry import DISABLED_INTEGRATION
@@ -38,6 +50,8 @@ PLATFORM_NOT_READY_RETRIES = 10
 DATA_ENTITY_PLATFORM = "entity_platform"
 PLATFORM_NOT_READY_BASE_WAIT_TIME = 30  # seconds
 
+_LOGGER = logging.getLogger(__name__)
+
 
 class EntityPlatform:
     """Manage the entities for a single platform."""
@@ -45,7 +59,7 @@ class EntityPlatform:
     def __init__(
         self,
         *,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         logger: Logger,
         domain: str,
         platform_name: str,
@@ -192,59 +206,75 @@ class EntityPlatform:
             self.platform_name,
             SLOW_SETUP_WARNING,
         )
+        with async_start_setup(hass, [full_name]):
+            try:
+                task = async_create_setup_task()
 
-        try:
-            task = async_create_setup_task()
+                async with hass.timeout.async_timeout(SLOW_SETUP_MAX_WAIT, self.domain):
+                    await asyncio.shield(task)
 
-            async with hass.timeout.async_timeout(SLOW_SETUP_MAX_WAIT, self.domain):
-                await asyncio.shield(task)
+                # Block till all entities are done
+                while self._tasks:
+                    pending = [task for task in self._tasks if not task.done()]
+                    self._tasks.clear()
 
-            # Block till all entities are done
-            while self._tasks:
-                pending = [task for task in self._tasks if not task.done()]
-                self._tasks.clear()
+                    if pending:
+                        await asyncio.gather(*pending)
 
-                if pending:
-                    await asyncio.gather(*pending)
+                hass.config.components.add(full_name)
+                self._setup_complete = True
+                return True
+            except PlatformNotReady as ex:
+                tries += 1
+                wait_time = min(tries, 6) * PLATFORM_NOT_READY_BASE_WAIT_TIME
+                message = str(ex)
+                ready_message = f"ready yet: {message}" if message else "ready yet"
+                if tries == 1:
+                    logger.warning(
+                        "Platform %s not %s; Retrying in background in %d seconds",
+                        self.platform_name,
+                        ready_message,
+                        wait_time,
+                    )
+                else:
+                    logger.debug(
+                        "Platform %s not %s; Retrying in %d seconds",
+                        self.platform_name,
+                        ready_message,
+                        wait_time,
+                    )
 
-            hass.config.components.add(full_name)
-            self._setup_complete = True
-            return True
-        except PlatformNotReady:
-            tries += 1
-            wait_time = min(tries, 6) * PLATFORM_NOT_READY_BASE_WAIT_TIME
-            logger.warning(
-                "Platform %s not ready yet. Retrying in %d seconds.",
-                self.platform_name,
-                wait_time,
-            )
+                async def setup_again(*_):  # type: ignore[no-untyped-def]
+                    """Run setup again."""
+                    self._async_cancel_retry_setup = None
+                    await self._async_setup_platform(async_create_setup_task, tries)
 
-            async def setup_again(now):  # type: ignore[no-untyped-def]
-                """Run setup again."""
-                self._async_cancel_retry_setup = None
-                await self._async_setup_platform(async_create_setup_task, tries)
-
-            self._async_cancel_retry_setup = async_call_later(
-                hass, wait_time, setup_again
-            )
-            return False
-        except asyncio.TimeoutError:
-            logger.error(
-                "Setup of platform %s is taking longer than %s seconds."
-                " Startup will proceed without waiting any longer.",
-                self.platform_name,
-                SLOW_SETUP_MAX_WAIT,
-            )
-            return False
-        except Exception:  # pylint: disable=broad-except
-            logger.exception(
-                "Error while setting up %s platform for %s",
-                self.platform_name,
-                self.domain,
-            )
-            return False
-        finally:
-            warn_task.cancel()
+                if hass.state == CoreState.running:
+                    self._async_cancel_retry_setup = async_call_later(
+                        hass, wait_time, setup_again
+                    )
+                else:
+                    self._async_cancel_retry_setup = hass.bus.async_listen_once(
+                        EVENT_HOMEASSISTANT_STARTED, setup_again
+                    )
+                return False
+            except asyncio.TimeoutError:
+                logger.error(
+                    "Setup of platform %s is taking longer than %s seconds."
+                    " Startup will proceed without waiting any longer.",
+                    self.platform_name,
+                    SLOW_SETUP_MAX_WAIT,
+                )
+                return False
+            except Exception:  # pylint: disable=broad-except
+                logger.exception(
+                    "Error while setting up %s platform for %s",
+                    self.platform_name,
+                    self.domain,
+                )
+                return False
+            finally:
+                warn_task.cancel()
 
     def _schedule_add_entities(
         self, new_entities: Iterable[Entity], update_before_add: bool = False
@@ -298,8 +328,8 @@ class EntityPlatform:
 
         hass = self.hass
 
-        device_registry = await hass.helpers.device_registry.async_get_registry()
-        entity_registry = await hass.helpers.entity_registry.async_get_registry()
+        device_registry = dev_reg.async_get(hass)
+        entity_registry = ent_reg.async_get(hass)
         tasks = [
             self._async_add_entity(  # type: ignore
                 entity, update_before_add, entity_registry, device_registry
@@ -628,7 +658,7 @@ current_platform: ContextVar[EntityPlatform | None] = ContextVar(
 
 @callback
 def async_get_platforms(
-    hass: HomeAssistantType, integration_name: str
+    hass: HomeAssistant, integration_name: str
 ) -> list[EntityPlatform]:
     """Find existing platforms."""
     if (

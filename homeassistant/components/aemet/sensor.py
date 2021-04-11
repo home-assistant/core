@@ -1,6 +1,4 @@
 """Support for the AEMET OpenData service."""
-from homeassistant.components.sensor import SensorEntity
-
 from .abstract_aemet_sensor import AbstractAemetSensor
 from .const import (
     DOMAIN,
@@ -58,7 +56,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
 
-class AemetSensor(AbstractAemetSensor, SensorEntity):
+class AemetSensor(AbstractAemetSensor):
     """Implementation of an AEMET OpenData sensor."""
 
     def __init__(
@@ -81,7 +79,7 @@ class AemetSensor(AbstractAemetSensor, SensorEntity):
         return self._weather_coordinator.data.get(self._sensor_type)
 
 
-class AemetForecastSensor(AbstractAemetSensor, SensorEntity):
+class AemetForecastSensor(AbstractAemetSensor):
     """Implementation of an AEMET OpenData forecast sensor."""
 
     def __init__(
@@ -108,9 +106,10 @@ class AemetForecastSensor(AbstractAemetSensor, SensorEntity):
     @property
     def state(self):
         """Return the state of the device."""
+        forecast = None
         forecasts = self._weather_coordinator.data.get(
             FORECAST_MODE_ATTR_API[self._forecast_mode]
         )
         if forecasts:
-            return forecasts[0].get(self._sensor_type)
-        return None
+            forecast = forecasts[0].get(self._sensor_type)
+        return forecast

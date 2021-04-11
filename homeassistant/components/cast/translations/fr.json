@@ -27,7 +27,9 @@
         "step": {
             "options": {
                 "data": {
-                    "known_hosts": "Liste facultative des h\u00f4tes connus si la d\u00e9couverte mDNS ne fonctionne pas."
+                    "ignore_cec": "Liste facultative qui sera transmise \u00e0 pychromecast.IGNORE_CEC.",
+                    "known_hosts": "Liste facultative des h\u00f4tes connus si la d\u00e9couverte mDNS ne fonctionne pas.",
+                    "uuid": "Liste facultative des UUID. Les moulages non r\u00e9pertori\u00e9s ne seront pas ajout\u00e9s."
                 },
                 "description": "Veuillez saisir la configuration de Google Cast."
             }

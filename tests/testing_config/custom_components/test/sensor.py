@@ -24,7 +24,6 @@ UNITS_OF_MEASUREMENT = {
     sensor.DEVICE_CLASS_ILLUMINANCE: "lm",  # current light level (lx/lm)
     sensor.DEVICE_CLASS_SIGNAL_STRENGTH: SIGNAL_STRENGTH_DECIBELS,  # signal strength (dB/dBm)
     sensor.DEVICE_CLASS_TEMPERATURE: "C",  # temperature (C/F)
-    sensor.DEVICE_CLASS_TIMESTAMP: "hh:mm:ss",  # timestamp (ISO8601)
     sensor.DEVICE_CLASS_PRESSURE: PRESSURE_HPA,  # pressure (hPa/mbar)
     sensor.DEVICE_CLASS_POWER: "kW",  # power (W/kW)
     sensor.DEVICE_CLASS_CURRENT: "A",  # current (A)

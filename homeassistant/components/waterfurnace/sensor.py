@@ -74,7 +74,7 @@ class WaterFurnaceSensor(SensorEntity):
 
         # This ensures that the sensors are isolated per waterfurnace unit
         self.entity_id = ENTITY_ID_FORMAT.format(
-            "wf_{}_{}".format(slugify(self.client.unit), slugify(self._attr))
+            f"wf_{slugify(self.client.unit)}_{slugify(self._attr)}"
         )
 
     @property

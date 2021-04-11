@@ -237,19 +237,18 @@ async def test_update_stale(hass, mock_device_tracker_conf):
     with patch(
         "homeassistant.components.device_tracker.legacy.dt_util.utcnow",
         return_value=register_time,
-    ):
-        with assert_setup_component(1, device_tracker.DOMAIN):
-            assert await async_setup_component(
-                hass,
-                device_tracker.DOMAIN,
-                {
-                    device_tracker.DOMAIN: {
-                        CONF_PLATFORM: "test",
-                        device_tracker.CONF_CONSIDER_HOME: 59,
-                    }
-                },
-            )
-            await hass.async_block_till_done()
+    ), assert_setup_component(1, device_tracker.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            device_tracker.DOMAIN,
+            {
+                device_tracker.DOMAIN: {
+                    CONF_PLATFORM: "test",
+                    device_tracker.CONF_CONSIDER_HOME: 59,
+                }
+            },
+        )
+        await hass.async_block_till_done()
 
     assert hass.states.get("device_tracker.dev1").state == STATE_HOME
 
@@ -458,19 +457,18 @@ async def test_see_passive_zone_state(hass, mock_device_tracker_conf):
     with patch(
         "homeassistant.components.device_tracker.legacy.dt_util.utcnow",
         return_value=register_time,
-    ):
-        with assert_setup_component(1, device_tracker.DOMAIN):
-            assert await async_setup_component(
-                hass,
-                device_tracker.DOMAIN,
-                {
-                    device_tracker.DOMAIN: {
-                        CONF_PLATFORM: "test",
-                        device_tracker.CONF_CONSIDER_HOME: 59,
-                    }
-                },
-            )
-            await hass.async_block_till_done()
+    ), assert_setup_component(1, device_tracker.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            device_tracker.DOMAIN,
+            {
+                device_tracker.DOMAIN: {
+                    CONF_PLATFORM: "test",
+                    device_tracker.CONF_CONSIDER_HOME: 59,
+                }
+            },
+        )
+        await hass.async_block_till_done()
 
     state = hass.states.get("device_tracker.dev1")
     attrs = state.attributes

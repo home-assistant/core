@@ -10,6 +10,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import SLOW_UPDATE_WARNING
 
 from .const import BPUP_STOP, BPUP_SUBS, BRIDGE_MAKE, DOMAIN, HUB
@@ -19,19 +20,18 @@ PLATFORMS = ["cover", "fan", "light", "switch"]
 _API_TIMEOUT = SLOW_UPDATE_WARNING - 1
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up the Bond component."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Bond from a config entry."""
     host = entry.data[CONF_HOST]
     token = entry.data[CONF_ACCESS_TOKEN]
     config_entry_id = entry.entry_id
 
-    bond = Bond(host=host, token=token, timeout=ClientTimeout(total=_API_TIMEOUT))
+    bond = Bond(
+        host=host,
+        token=token,
+        timeout=ClientTimeout(total=_API_TIMEOUT),
+        session=async_get_clientsession(hass),
+    )
     hub = BondHub(bond)
     try:
         await hub.setup()
@@ -41,6 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     bpup_subs = BPUPSubscriptions()
     stop_bpup = await start_bpup(host, bpup_subs)
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         HUB: hub,
         BPUP_SUBS: bpup_subs,
