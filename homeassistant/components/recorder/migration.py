@@ -1,5 +1,6 @@
 """Schema migration helpers."""
 import logging
+import time
 
 from sqlalchemy import ForeignKeyConstraint, MetaData, Table, text
 from sqlalchemy.engine import reflection
@@ -57,6 +58,7 @@ def migrate_schema(instance, current_version):
             session.add(SchemaChanges(schema_version=new_version))
 
             _LOGGER.info("Upgrade to version %s done", new_version)
+    time.sleep(200)
 
 
 def _create_index(engine, table_name, index_name):
