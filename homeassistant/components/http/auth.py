@@ -1,6 +1,7 @@
 """Authentication for HTTP component."""
 import logging
 import secrets
+from urllib.parse import quote
 
 from aiohttp import hdrs
 from aiohttp.web import middleware
@@ -34,7 +35,7 @@ def async_sign_path(hass, refresh_token_id, path, expiration):
         secret,
         algorithm="HS256",
     )
-    return f"{path}?{SIGN_QUERY_PARAM}=" f"{encoded.decode()}"
+    return f"{quote(path)}?{SIGN_QUERY_PARAM}=" f"{encoded.decode()}"
 
 
 @callback
