@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import abc
 import asyncio
+from collections.abc import Mapping
 from types import MappingProxyType
 from typing import Any
 import uuid
@@ -318,7 +319,7 @@ class FlowHandler:
         self,
         *,
         title: str,
-        data: dict,
+        data: Mapping[str, Any],
         description: str | None = None,
         description_placeholders: dict | None = None,
     ) -> dict[str, Any]:
