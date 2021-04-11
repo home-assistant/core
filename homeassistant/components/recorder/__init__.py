@@ -316,8 +316,6 @@ class Recorder(threading.Thread):
 
         The queue grows during migraton or if something really goes wrong.
         """
-        if not self._event_listener:
-            return
         size = self.queue.qsize()
         _LOGGER.debug("Recorder queue size is: %s", size)
         if self.queue.qsize() <= MAX_QUEUE_BACKLOG:
@@ -326,13 +324,16 @@ class Recorder(threading.Thread):
             "The recorder queue reached the maximum size of %s; Events are no longer being recorded",
             MAX_QUEUE_BACKLOG,
         )
-        self._cancel_event_listener()
+        self._stop_queue_watcher_and_event_listener()
 
-    def _stop_queue_watcher(self):
+    def _stop_queue_watcher_and_event_listener(self):
         """Stop watching the queue."""
         if self._queue_watcher:
             self._queue_watcher()
             self._queue_watcher = None
+        if self._event_listener:
+            self._event_listener()
+            self._event_listener = None
 
     @callback
     def _async_event_filter(self, event):
@@ -384,17 +385,7 @@ class Recorder(threading.Thread):
             "The recorder could not start, check [the logs](/config/logs)",
             "Recorder",
         )
-        # Cancel the event listener to avoid
-        # memory exhaustion since the queue
-        # would grow without bound otherwise
-        self._cancel_event_listener()
-
-    def _cancel_event_listener(self):
-        """Cancel the event listener."""
-        if not self._event_listener:
-            return
-        self._event_listener()
-        self._event_listener = None
+        self._stop_queue_watcher_and_event_listener()
 
     @callback
     def async_connection_success(self):
@@ -432,18 +423,19 @@ class Recorder(threading.Thread):
 
         self.hass.add_job(self.async_connection_success)
 
-        if not schema_is_current and not self._migrate_schema_and_setup_run(
-            current_version
-        ):
-            self._cancel_event_listener()
-            persistent_notification.create(
-                self.hass,
-                "The database migration failed, check [the logs](/config/logs)."
-                "Database Migration Failed",
-                "recorder_database_migration",
-            )
-            self._shutdown()
-            return
+        if not schema_is_current:
+            if self._migrate_schema_and_setup_run(current_version):
+                if not self._event_listener:
+                    self.hass.add_job(self.async_initialize)
+            else:
+                persistent_notification.create(
+                    self.hass,
+                    "The database migration failed, check [the logs](/config/logs)."
+                    "Database Migration Failed",
+                    "recorder_database_migration",
+                )
+                self._shutdown()
+                return
 
         # If shutdown happened before Home Assistant finished starting
         if hass_started.result() is shutdown_task:
@@ -536,8 +528,6 @@ class Recorder(threading.Thread):
             self._setup_run()
             return True
         finally:
-            if not self._event_listener:
-                self.hass.add_job(self.async_initialize)
             persistent_notification.dismiss(self.hass, "recorder_database_migration")
 
     def _run_purge(self, keep_days, repack, apply_filter):
@@ -761,9 +751,6 @@ class Recorder(threading.Thread):
         if self._using_file_sqlite:
             validate_or_move_away_sqlite_database(self.db_url)
 
-        if self.engine is not None:
-            self.engine.dispose()
-
         self.engine = create_engine(self.db_url, **kwargs)
 
         sqlalchemy_event.listen(self.engine, "connect", setup_recorder_connection)
@@ -807,6 +794,8 @@ class Recorder(threading.Thread):
 
     def _end_session(self):
         """End the recorder session."""
+        if self.event_session is None:
+            return
         try:
             self.run_info.end = dt_util.utcnow()
             self.event_session.add(self.run_info)
@@ -815,10 +804,10 @@ class Recorder(threading.Thread):
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.exception("Error saving the event session during shutdown: %s", err)
 
+        self.run_info = None
+
     def _shutdown(self):
         """Save end time for current run."""
-        self._stop_queue_watcher()
-        if self.event_session is not None:
-            self._end_session()
-        self.run_info = None
+        self._stop_queue_watcher_and_event_listener()
+        self._end_session()
         self._close_connection()
