@@ -23,7 +23,6 @@ from .const import (
     DATA_RATE_PACKETS_PER_SECOND,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    DOMAIN_COORDINATORS,
     DOMAIN_DEVICES,
     KIBIBYTE,
     LOGGER as _LOGGER,
@@ -102,8 +101,9 @@ async def async_setup_entry(
         update_method=device.async_get_traffic_data,
         update_interval=update_interval,
     )
+    device.coordinator = coordinator
+
     await coordinator.async_refresh()
-    hass.data[DOMAIN][DOMAIN_COORDINATORS][udn] = coordinator
 
     sensors = [
         RawUpnpSensor(coordinator, device, SENSOR_TYPES[BYTES_RECEIVED]),
