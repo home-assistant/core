@@ -434,6 +434,19 @@ class Recorder(threading.Thread):
 
         self.hass.add_job(self.async_connection_success)
 
+        if not schema_is_current and not self._migrate_schema_and_setup_run(
+            current_version
+        ):
+            self._async_cancel_event_listener()
+            persistent_notification.create(
+                self.hass,
+                "The database migration failed, check [the logs](/config/logs)."
+                "Database Migration Failed",
+                "recorder_database_migration",
+            )
+            self._shutdown()
+            return
+
         # If shutdown happened before Home Assistant finished starting
         if hass_started.result() is shutdown_task:
             # Make sure we cleanly close the run if
