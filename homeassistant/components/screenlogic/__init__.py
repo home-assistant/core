@@ -200,12 +200,7 @@ class ScreenlogicEntity(CoordinatorEntity):
                 hardware_type
             ]
         except KeyError:
-            equipment_model = "Unknown"
-            _LOGGER.warning(
-                "Unknown equipment configuration. Controller: %s Hardware: %s",
-                controller_type,
-                hardware_type,
-            )
+            equipment_model = f"Unknown Model C:{controller_type} H:{hardware_type}"
         return {
             "connections": {(dr.CONNECTION_NETWORK_MAC, self.mac)},
             "name": self.gateway_name,
