@@ -1,0 +1,28 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "title": "Verbinden mit Ezviz Cloud"
+            },
+            "user_custom_url": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timeout": "Anfrage-Timeout (Sekunden)"
+                }
+            }
+        }
+    }
+}
