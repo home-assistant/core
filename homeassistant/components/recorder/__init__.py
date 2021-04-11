@@ -423,6 +423,16 @@ class Recorder(threading.Thread):
 
         self.hass.add_job(self.async_connection_success)
 
+        # If shutdown happened before Home Assistant finished starting
+        if hass_started.result() is shutdown_task:
+            # Make sure we cleanly close the run if
+            # we restart before startup finishes
+            self._shutdown()
+            return
+
+        # We wait to start the migration until startup has finished
+        # since it can be cpu intensive and we do not want it to compete
+        # with startup which is also cpu intensive
         if not schema_is_current:
             if self._migrate_schema_and_setup_run(current_version):
                 if not self._event_listener:
@@ -436,13 +446,6 @@ class Recorder(threading.Thread):
                 )
                 self._shutdown()
                 return
-
-        # If shutdown happened before Home Assistant finished starting
-        if hass_started.result() is shutdown_task:
-            # Make sure we cleanly close the run if
-            # we restart before startup finishes
-            self._shutdown()
-            return
 
         # Start periodic purge
         if self.auto_purge:
@@ -509,7 +512,7 @@ class Recorder(threading.Thread):
         """Migrate schema to the latest version."""
         persistent_notification.create(
             self.hass,
-            "The database is being upgraded. Integrations such as logbook and history that read the database may return inconsistent results until the migration completes.",
+            "Performance may be degrated while the database is being upgraded. Integrations such as logbook and history that read the database may return inconsistent results until the migration completes.",
             "Database Migration",
             "recorder_database_migration",
         )
