@@ -39,7 +39,8 @@ IAS_ACE_GET_ZONE_STATUS = (
     0x0009  # ("get_zone_status", (t.uint8_t, t.uint8_t, t.Bool, t.bitmap16), False)
 )
 NAME = 0
-SIGNAL_ARMED_STATE_CHANGED = "armed_state_changed"
+SIGNAL_ARMED_STATE_CHANGED = "zha_armed_state_changed"
+SIGNAL_ALARM_TRIGGERED = "zha_armed_triggered"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,6 +70,12 @@ class IasAce(ZigbeeChannel):
             security.IasAce.PanelStatus.Panel_Disarmed
         )  # where do we store this to handle restarts
         self.panel_code = "1234"  # need to figure out how to handle this ( > 1 code, multi users etc.)
+        self.code_required_arm_actions = False
+        self.invalid_tries = 0
+        self.max_invalid_tries = 3
+        self.alarm_status: security.IasAce.AlarmStatus = (
+            security.IasAce.AlarmStatus.No_Alarm
+        )
 
     @callback
     def cluster_command(self, tsn, command_id, args):
@@ -90,42 +97,73 @@ class IasAce(ZigbeeChannel):
                 "zone_id": zone_id,
             },
         )
+        reply = True
 
-        if code != self.panel_code:
-            self.warning("Invalid code supplied to IAS ACE")
-            response = self.arm_response(
-                security.IasAce.ArmNotification.Invalid_Arm_Disarm_Code
-            )
-        else:
-            if mode == security.IasAce.ArmMode.Disarm:
-                if self.armed_state == security.IasAce.PanelStatus.Panel_Disarmed:
+        if mode == security.IasAce.ArmMode.Disarm:
+            if code != self.panel_code:
+                self.warning("Invalid code supplied to IAS ACE")
+                self.invalid_tries += 1
+                response = self.arm_response(
+                    security.IasAce.ArmNotification.Invalid_Arm_Disarm_Code
+                )
+                reply = False
+            else:
+                if (
+                    self.armed_state == security.IasAce.PanelStatus.Panel_Disarmed
+                    and self.alarm_status == security.IasAce.AlarmStatus.No_Alarm
+                ):
                     self.warning("IAS ACE already disarmed")
                     response = self.arm_response(
                         security.IasAce.ArmNotification.Already_Disarmed
                     )
+                    self.invalid_tries = 0
                 else:
                     self.warning("Disarming all IAS ACE zones")
                     self.armed_state = security.IasAce.PanelStatus.Panel_Disarmed
+                    self.alarm_status = security.IasAce.AlarmStatus.No_Alarm
+                    self.invalid_tries = 0
                     response = self.arm_response(
                         security.IasAce.ArmNotification.All_Zones_Disarmed
                     )
-            elif mode == security.IasAce.ArmMode.Arm_All_Zones:
+        elif mode == security.IasAce.ArmMode.Arm_All_Zones:
+            if self.code_required_arm_actions and code != self.panel_code:
+                self.warning("Invalid code supplied to IAS ACE")
+                response = self.arm_response(
+                    security.IasAce.ArmNotification.Invalid_Arm_Disarm_Code
+                )
+                reply = False
+            else:
                 self.warning("Arming all IAS ACE zones")
                 self.armed_state = security.IasAce.PanelStatus.Armed_Away
                 response = self.arm_response(
                     security.IasAce.ArmNotification.All_Zones_Armed
                 )
-            elif mode == security.IasAce.ArmMode.Arm_Day_Home_Only:
+        elif mode == security.IasAce.ArmMode.Arm_Day_Home_Only:
+            if self.code_required_arm_actions and code != self.panel_code:
+                self.warning("Invalid code supplied to IAS ACE")
+                response = self.arm_response(
+                    security.IasAce.ArmNotification.Invalid_Arm_Disarm_Code
+                )
+                reply = False
+            else:
                 self.warning("Arming IAS ACE Day Home Zones Only")
                 self.armed_state = security.IasAce.PanelStatus.Armed_Stay
                 response = self.arm_response(
-                    security.IasAce.ArmNotification.All_Zones_Armed
+                    security.IasAce.ArmNotification.Only_Day_Home_Zones_Armed
                 )
 
         asyncio.create_task(response)
-        self.async_send_signal(
-            f"{self.unique_id}_{SIGNAL_ARMED_STATE_CHANGED}", self.armed_state
-        )
+
+        if self.invalid_tries >= self.max_invalid_tries:
+            self.alarm_status = security.IasAce.AlarmStatus.Emergency
+            self.armed_state = security.IasAce.PanelStatus.In_Alarm
+            self.async_send_signal(f"{self.unique_id}_{SIGNAL_ALARM_TRIGGERED}")
+        else:
+            self.async_send_signal(
+                f"{self.unique_id}_{SIGNAL_ARMED_STATE_CHANGED}", self.armed_state
+            )
+        self.set_panel_status()
+        return reply
 
     def bypass(self, zone_list, code):
         """Handle the IAS ACE bypass command."""
@@ -136,17 +174,29 @@ class IasAce(ZigbeeChannel):
 
     def emergency(self):
         """Handle the IAS ACE emergency command."""
+        self.alarm_status = security.IasAce.AlarmStatus.Emergency
+        self.armed_state = security.IasAce.PanelStatus.In_Alarm
         self.zha_send_event(
             self._cluster.server_commands.get(IAS_ACE_EMERGENCY)[NAME], {}
         )
+        self.async_send_signal(f"{self.unique_id}_{SIGNAL_ALARM_TRIGGERED}")
+        self.set_panel_status()
 
     def fire(self):
         """Handle the IAS ACE fire command."""
+        self.alarm_status = security.IasAce.AlarmStatus.Fire
+        self.armed_state = security.IasAce.PanelStatus.In_Alarm
         self.zha_send_event(self._cluster.server_commands.get(IAS_ACE_FIRE)[NAME], {})
+        self.async_send_signal(f"{self.unique_id}_{SIGNAL_ALARM_TRIGGERED}")
+        self.set_panel_status()
 
     def panic(self):
         """Handle the IAS ACE panic command."""
+        self.alarm_status = security.IasAce.AlarmStatus.Emergency_Panic
+        self.armed_state = security.IasAce.PanelStatus.In_Alarm
         self.zha_send_event(self._cluster.server_commands.get(IAS_ACE_PANIC)[NAME], {})
+        self.async_send_signal(f"{self.unique_id}_{SIGNAL_ALARM_TRIGGERED}")
+        self.set_panel_status()
 
     def get_zone_id_map(self):
         """Handle the IAS ACE zone id map command."""
@@ -163,7 +213,17 @@ class IasAce(ZigbeeChannel):
             self.armed_state,
             0x00,
             security.IasAce.AudibleNotification.Default_Sound,
-            security.IasAce.AlarmStatus.No_Alarm,
+            self.alarm_status,
+        )
+        asyncio.create_task(response)
+
+    def set_panel_status(self):
+        """Handle the IAS ACE panel status command."""
+        response = self.panel_status_changed(
+            self.armed_state,
+            0x00,
+            security.IasAce.AudibleNotification.Default_Sound,
+            self.alarm_status,
         )
         asyncio.create_task(response)
 

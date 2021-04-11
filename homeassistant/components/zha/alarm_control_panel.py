@@ -12,7 +12,6 @@ from homeassistant.components.alarm_control_panel import (
     DOMAIN,
     FORMAT_TEXT,
     SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
     SUPPORT_ALARM_ARM_HOME,
     SUPPORT_ALARM_ARM_NIGHT,
     SUPPORT_ALARM_TRIGGER,
@@ -20,7 +19,6 @@ from homeassistant.components.alarm_control_panel import (
 )
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_DISARMED,
@@ -30,7 +28,11 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .core import discovery
-from .core.channels.security import SIGNAL_ARMED_STATE_CHANGED
+from .core.channels.security import (
+    SIGNAL_ALARM_TRIGGERED,
+    SIGNAL_ARMED_STATE_CHANGED,
+    IasAce as AceChannel,
+)
 from .core.const import (
     CHANNEL_IAS_ACE,
     DATA_ZHA,
@@ -74,8 +76,9 @@ class ZHAAlarmControlPanel(ZhaEntity, AlarmControlPanelEntity):
     def __init__(self, unique_id, zha_device, channels, **kwargs):
         """Initialize the ZHA alarm control device."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
-        self._channel = channels[0]
-        self._code = "1234"
+        self._channel: AceChannel = channels[0]
+        self._channel.panel_code = "1234"
+        self._channel.code_required_arm_actions = False
         self._state = STATE_ALARM_DISARMED
 
     async def async_added_to_hass(self):
@@ -83,6 +86,9 @@ class ZHAAlarmControlPanel(ZhaEntity, AlarmControlPanelEntity):
         await super().async_added_to_hass()
         self.async_accept_signal(
             self._channel, SIGNAL_ARMED_STATE_CHANGED, self.async_set_armed_mode
+        )
+        self.async_accept_signal(
+            self._channel, SIGNAL_ALARM_TRIGGERED, self.async_alarm_trigger
         )
 
     @callback
@@ -110,42 +116,43 @@ class ZHAAlarmControlPanel(ZhaEntity, AlarmControlPanelEntity):
     @property
     def code_arm_required(self):
         """Whether the code is required for arm actions."""
-        return True
+        return self._channel.code_required_arm_actions
 
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
-        await self.hass.async_add_executor_job(self.alarm_disarm, code)
+        success = self._channel.arm(IasAce.ArmMode.Disarm, code, 0)
+        if not success:
+            return
         self._state = STATE_ALARM_DISARMED
         self.async_write_ha_state()
 
     async def async_alarm_arm_home(self, code=None):
         """Send arm home command."""
-        await self.hass.async_add_executor_job(self.alarm_arm_home, code)
+        success = self._channel.arm(IasAce.ArmMode.Arm_Day_Home_Only, code, 0)
+        if not success:
+            return
         self._state = STATE_ALARM_ARMED_HOME
         self.async_write_ha_state()
 
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
-        await self.hass.async_add_executor_job(self.alarm_arm_away, code)
+        success = self._channel.arm(IasAce.ArmMode.Arm_All_Zones, code, 0)
+        if not success:
+            return
         self._state = STATE_ALARM_ARMED_AWAY
         self.async_write_ha_state()
 
     async def async_alarm_arm_night(self, code=None):
         """Send arm night command."""
-        await self.hass.async_add_executor_job(self.alarm_arm_night, code)
+        success = self._channel.arm(IasAce.ArmMode.Arm_Night_Sleep_Only, code, 0)
+        if not success:
+            return
         self._state = STATE_ALARM_ARMED_NIGHT
         self.async_write_ha_state()
 
     async def async_alarm_trigger(self, code=None):
         """Send alarm trigger command."""
-        await self.hass.async_add_executor_job(self.alarm_trigger, code)
         self._state = STATE_ALARM_TRIGGERED
-        self.async_write_ha_state()
-
-    async def async_alarm_arm_custom_bypass(self, code=None):
-        """Send arm custom bypass command."""
-        await self.hass.async_add_executor_job(self.alarm_arm_custom_bypass, code)
-        self._state = STATE_ALARM_ARMED_CUSTOM_BYPASS
         self.async_write_ha_state()
 
     @property
@@ -154,7 +161,6 @@ class ZHAAlarmControlPanel(ZhaEntity, AlarmControlPanelEntity):
         return (
             SUPPORT_ALARM_ARM_HOME
             | SUPPORT_ALARM_ARM_AWAY
-            | SUPPORT_ALARM_ARM_CUSTOM_BYPASS
             | SUPPORT_ALARM_ARM_NIGHT
             | SUPPORT_ALARM_TRIGGER
         )
@@ -173,10 +179,3 @@ class ZHAAlarmControlPanel(ZhaEntity, AlarmControlPanelEntity):
             ATTR_CODE_ARM_REQUIRED: self.code_arm_required,
         }
         return state_attr
-
-    def _validate_code(self, code, state):
-        """Validate given code."""
-        check = self._code is None or code == self._code
-        if not check:
-            _LOGGER.warning("Wrong code entered for %s", state)
-        return check
