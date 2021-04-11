@@ -362,7 +362,7 @@ async def client_listen(
     # All model instances will be replaced when the new state is acquired.
     if should_reload:
         LOGGER.info("Disconnected from server. Reloading integration")
-        asyncio.create_task(hass.config_entries.async_reload(entry.entry_id))
+        hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
 
 
 async def disconnect_client(
