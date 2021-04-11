@@ -618,7 +618,7 @@ async def test_sending_mqtt_commands_with_alternate_speed_range(hass, mqtt_mock)
                     "percentage_state_topic": "percentage-state-topic1",
                     "percentage_command_topic": "percentage-command-topic1",
                     "speed_range_min": 1,
-                    "speed_range_max": 100,
+                    "speed_range_max": 3,
                 },
                 {
                     "platform": "mqtt",
@@ -651,9 +651,25 @@ async def test_sending_mqtt_commands_with_alternate_speed_range(hass, mqtt_mock)
     state = hass.states.get("fan.test1")
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
+    await common.async_set_percentage(hass, "fan.test1", 33)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "percentage-command-topic1", "1", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test1")
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_set_percentage(hass, "fan.test1", 66)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "percentage-command-topic1", "2", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test1")
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
     await common.async_set_percentage(hass, "fan.test1", 100)
     mqtt_mock.async_publish.assert_called_once_with(
-        "percentage-command-topic1", "100", 0, False
+        "percentage-command-topic1", "3", 0, False
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test1")
