@@ -106,7 +106,8 @@ async def async_setup(hass, config) -> bool:
         ]
     )
 
-    return await hass.async_add_job(_discover, things, surepy, hass, config)
+    hass.add_job(_discover, things, surepy, hass, config)
+    return True
 
 
 async def _discover(things, surepy, hass, config):
