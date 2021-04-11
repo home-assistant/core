@@ -6,7 +6,6 @@ from homeassistant.const import (
     DEVICE_CLASS_SIGNAL_STRENGTH,
     PERCENTAGE,
 )
-from homeassistant.helpers.icon import icon_for_battery_level, icon_for_signal_level
 
 from .const import COORDINATORS, DEVICES, DOMAIN, HUB
 from .entity import SENSORS, DiffuserEntity
