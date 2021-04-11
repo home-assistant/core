@@ -460,26 +460,39 @@ class Recorder(threading.Thread):
 
         _LOGGER.debug("Recorder processing the queue")
         self.hass.add_job(self._async_recorder_ready)
+        self._run_event_loop()
+
+    def _run_event_loop(self):
+        """Run the event loop for the recorder."""
         # Use a session for the event read loop
         # with a commit every time the event time
         # has changed. This reduces the disk io.
         while event := self.queue.get():
             try:
-                self._process_one_event(event)
-            except exc.DatabaseError as err:
-                if not self._handle_database_error(err):
-                    _LOGGER.exception(
-                        "Database error while processing event %s: %s", event, err
-                    )
-            except SQLAlchemyError as err:  # pylint: disable=broad-except
-                _LOGGER.exception(
-                    "SQLAlchemyError error processing event %s: %s", event, err
-                )
-                self._try_reopen_event_session()
+                self._process_one_event_or_recover(event)
             except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.exception("Error while processing event %s: %s", event, err)
 
         self._shutdown()
+
+    def _process_one_event_or_recover(self, event):
+        """Process an event, reconnect, or recover a malformed database."""
+        try:
+            self._process_one_event(event)
+            return
+        except exc.DatabaseError as err:
+            if not self._handle_database_error(err):
+                _LOGGER.exception(
+                    "Database error while processing event %s: %s", event, err
+                )
+        except SQLAlchemyError as err:
+            _LOGGER.exception(
+                "SQLAlchemyError error processing event %s: %s", event, err
+            )
+
+        # Reset the session if an SQLAlchemyError (including DatabaseError)
+        # happens to rollback and recover
+        self._reopen_event_session()
 
     def _setup_recorder(self) -> None | int:
         """Create connect to the database and get the schema version."""
@@ -673,14 +686,6 @@ class Recorder(threading.Thread):
             _LOGGER.exception(
                 "Error while rolling back and closing the event session: %s", err
             )
-
-    def _try_reopen_event_session(self):
-        """Try to reopen the event session."""
-        try:
-            self._reopen_event_session()
-        except Exception:  # pylint: disable=broad-except
-            # Must catch the exception to prevent the loop from collapsing
-            _LOGGER.exception("Failed to reopen the event session")
 
     def _reopen_event_session(self):
         """Rollback the event session and reopen it after a failure."""
