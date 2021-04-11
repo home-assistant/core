@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any, Mapping
+from typing import Any, Callable, Mapping
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -82,7 +82,7 @@ async def async_setup_platform(
 
 
 async def async_setup_entry(
-    hass, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities: Callable
 ) -> None:
     """Set up the UPnP/IGD sensors."""
     udn = config_entry.data[CONFIG_ENTRY_UDN]
@@ -126,14 +126,11 @@ class UpnpSensor(CoordinatorEntity, SensorEntity):
         coordinator: DataUpdateCoordinator[Mapping[str, Any]],
         device: Device,
         sensor_type: Mapping[str, str],
-        update_multiplier: int = 2,
     ) -> None:
         """Initialize the base sensor."""
         super().__init__(coordinator)
         self._device = device
         self._sensor_type = sensor_type
-        self._update_counter_max = update_multiplier
-        self._update_counter = 0
 
     @property
     def icon(self) -> str:
