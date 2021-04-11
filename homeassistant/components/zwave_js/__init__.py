@@ -315,8 +315,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 dev_reg.async_remove_device(device.id)
 
         # run discovery on all ready nodes
-        for node in client.driver.controller.nodes.values():
-            await async_on_node_added(node)
+        await asyncio.gather(
+            *[
+                async_on_node_added(node)
+                for node in client.driver.controller.nodes.values()
+            ]
+        )
 
         # listen for new nodes being added to the mesh
         client.driver.controller.on(
