@@ -32,6 +32,17 @@
     "value": 52.625,
     "units": "ppb"
   },
+  "wind_gust": {
+    "value": 14.96,
+    "units": "mph"
+  },
+  "precipitation_type": {
+      "value": "rain"
+  },
+  "cloud_cover": {
+      "value": 100,
+      "units": "%"
+  },
   "observation_time": {
     "value": "2021-03-07T18:54:06.055Z"
   }
