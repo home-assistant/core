@@ -1,9 +1,4 @@
 # Security Policy
 
-## Reporting a Vulnerability
+You can find the Home Assistant security policy guidelines [here](https://www.home-assistant.io/security/).
 
-If you think that you have found a security vulnerability in Home Assistant, please disclose it to us via our security e-mail address at security@home-assistant.io.
-
-Please do not make vulnerabilities public without notifying us and giving us at least 3 days to respond.
-
-If you are going to write about Home Assistant’s security, please get in touch, so we can make sure that all claims are correct.
