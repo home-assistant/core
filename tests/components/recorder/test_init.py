@@ -24,7 +24,7 @@ from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.models import Events, RecorderRuns, States
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     MATCH_ALL,
     STATE_LOCKED,
@@ -104,7 +104,7 @@ async def test_state_gets_saved_when_set_before_start_event(
 
     hass.states.async_set(entity_id, state, attributes)
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
 
     await async_wait_recording_done_without_instance(hass)
 

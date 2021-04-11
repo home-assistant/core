@@ -21,7 +21,7 @@ from homeassistant.components import persistent_notification
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_EXCLUDE,
-    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED,
@@ -374,7 +374,7 @@ class Recorder(threading.Thread):
             """Notify that hass has started."""
             hass_started.set_result(None)
 
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, async_hass_started)
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, async_hass_started)
 
     @callback
     def async_connection_failed(self):
