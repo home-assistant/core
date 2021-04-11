@@ -95,11 +95,6 @@ class DiffuserBatterySensor(DiffuserEntity):
         super().__init__(diffuser, coordinator, BATTERY_SUFFIX)
 
     @property
-    def icon(self):
-        """Return the battery sensor icon."""
-        return icon_for_battery_level(battery_level=self.state, charging=self._charging)
-
-    @property
     def state(self):
         """Return the state of the battery sensor."""
         # Use ICON because TITLE may change in the future.
