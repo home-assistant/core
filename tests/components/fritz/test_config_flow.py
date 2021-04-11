@@ -43,8 +43,7 @@ MOCK_SSDP_DATA = {
 async def test_user(hass: HomeAssistantType):
     """Test starting a flow by user."""
     with patch(
-        "homeassistant.components.fritz.common.FritzConnection.__init__",
-        return_value=None,
+        "homeassistant.components.fritz.common.FritzConnection",
     ), patch("homeassistant.components.fritz.common.FritzStatus"), patch(
         "homeassistant.components.fritz.common.FritzHosts"
     ), patch(
