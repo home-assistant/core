@@ -454,19 +454,6 @@ class Recorder(threading.Thread):
             self._shutdown()
             return
 
-        if not schema_is_current and not self._migrate_schema_and_setup_run(
-            current_version
-        ):
-            self._async_cancel_event_listener()
-            persistent_notification.create(
-                self.hass,
-                "The database migration failed, check [the logs](/config/logs)."
-                "Database Migration Failed",
-                "recorder_database_migration",
-            )
-            self._shutdown()
-            return
-
         # Start periodic purge
         if self.auto_purge:
             # Purge every night at 4:12am
@@ -703,11 +690,8 @@ class Recorder(threading.Thread):
 
     def _open_event_session(self):
         """Open the event session."""
-        try:
-            self.event_session = self.get_session()
-            self.event_session.expire_on_commit = False
-        except SQLAlchemyError as err:
-            _LOGGER.exception("Error while creating new event session: %s", err)
+        self.event_session = self.get_session()
+        self.event_session.expire_on_commit = False
 
     def _send_keep_alive(self):
         """Send a keep alive to keep the db connection open."""
