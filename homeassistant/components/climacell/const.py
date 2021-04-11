@@ -35,6 +35,11 @@ MAX_FORECASTS = {
     NOWCAST: 30,
 }
 
+# Additional attributes
+ATTR_WIND_GUST = "wind_gust"
+ATTR_CLOUD_COVER = "cloud_cover"
+ATTR_PRECIPITATION_TYPE = "precipitation_type"
+
 # V4 constants
 CONDITIONS = {
     WeatherCode.WIND: ATTR_CONDITION_WINDY,
@@ -76,6 +81,9 @@ CC_ATTR_CONDITION = "weatherCode"
 CC_ATTR_VISIBILITY = "visibility"
 CC_ATTR_PRECIPITATION = "precipitationIntensityAvg"
 CC_ATTR_PRECIPITATION_PROBABILITY = "precipitationProbability"
+CC_ATTR_WIND_GUST = "windGust"
+CC_ATTR_CLOUD_COVER = "cloudCover"
+CC_ATTR_PRECIPITATION_TYPE = "precipitationType"
 
 # V3 constants
 CONDITIONS_V3 = {
@@ -117,3 +125,6 @@ CC_V3_ATTR_VISIBILITY = "visibility"
 CC_V3_ATTR_PRECIPITATION = "precipitation"
 CC_V3_ATTR_PRECIPITATION_DAILY = "precipitation_accumulation"
 CC_V3_ATTR_PRECIPITATION_PROBABILITY = "precipitation_probability"
+CC_V3_ATTR_WIND_GUST = "wind_gust"
+CC_V3_ATTR_CLOUD_COVER = "cloud_cover"
+CC_V3_ATTR_PRECIPITATION_TYPE = "precipitation_type"

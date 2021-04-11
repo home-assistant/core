@@ -13,7 +13,13 @@ from homeassistant.components.climacell.config_flow import (
     _get_config_schema,
     _get_unique_id,
 )
-from homeassistant.components.climacell.const import ATTRIBUTION, DOMAIN
+from homeassistant.components.climacell.const import (
+    ATTR_CLOUD_COVER,
+    ATTR_PRECIPITATION_TYPE,
+    ATTR_WIND_GUST,
+    ATTRIBUTION,
+    DOMAIN,
+)
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLOUDY,
     ATTR_CONDITION_RAINY,
@@ -222,6 +228,9 @@ async def test_v3_weather(
     assert weather_state.attributes[ATTR_WEATHER_VISIBILITY] == 9.994026240000002
     assert weather_state.attributes[ATTR_WEATHER_WIND_BEARING] == 320.31
     assert weather_state.attributes[ATTR_WEATHER_WIND_SPEED] == 14.62893696
+    assert weather_state.attributes[ATTR_CLOUD_COVER] == 1
+    assert weather_state.attributes[ATTR_WIND_GUST] == 24.075786240000003
+    assert weather_state.attributes[ATTR_PRECIPITATION_TYPE] == "rain"
 
 
 async def test_v4_weather(
@@ -382,3 +391,6 @@ async def test_v4_weather(
     assert weather_state.attributes[ATTR_WEATHER_VISIBILITY] == 13.116153600000002
     assert weather_state.attributes[ATTR_WEATHER_WIND_BEARING] == 315.14
     assert weather_state.attributes[ATTR_WEATHER_WIND_SPEED] == 15.01517952
+    assert weather_state.attributes[ATTR_CLOUD_COVER] == 1
+    assert weather_state.attributes[ATTR_WIND_GUST] == 20.34210816
+    assert weather_state.attributes[ATTR_PRECIPITATION_TYPE] == "rain"
