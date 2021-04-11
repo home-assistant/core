@@ -594,7 +594,6 @@ class MqttFan(MqttEntity, FanEntity):
         """
         percentage_payload = math.ceil(percentage_to_ranged_value(self._speed_range, percentage))
             math.ceil(percentage_to_ranged_value(self._speed_range, percentage))
-        )
         mqtt_payload = self._command_templates[ATTR_PERCENTAGE](percentage_payload)
         # Legacy are deprecated in the schema, support will be removed after a quarter (2021.7)
         if self._feature_legacy_speeds:
