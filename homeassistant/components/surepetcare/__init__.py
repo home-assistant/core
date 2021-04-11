@@ -72,10 +72,6 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass, config) -> bool:
     """Initialize the Sure Petcare component."""
     conf = config[DOMAIN]
-
-    # update interval
-    scan_interval = conf[CONF_SCAN_INTERVAL]
-
     # shared data
     hass.data[DOMAIN] = hass.data[DATA_SURE_PETCARE] = {}
 
@@ -110,6 +106,14 @@ async def async_setup(hass, config) -> bool:
         ]
     )
 
+    return await hass.async_add_job(_discover, things, surepy, hass, config)
+
+
+async def _discover(things, surepy, hass, config):
+    conf = config[DOMAIN]
+
+    # update interval
+    scan_interval = conf[CONF_SCAN_INTERVAL]
     # discover hubs the flaps/feeders are connected to
     hub_ids = set()
     for device in things.copy():
