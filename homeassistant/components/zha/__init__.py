@@ -141,17 +141,13 @@ async def async_unload_entry(hass, config_entry):
     for unsub_dispatcher in dispatchers:
         unsub_dispatcher()
 
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
+    # our components don't have unload methods so no need to look at return values
+    await asyncio.gather(
+        *[
+            hass.config_entries.async_forward_entry_unload(config_entry, platform)
+            for platform in PLATFORMS
+        ]
     )
-
-    if not unload_ok:
-        return False
 
     hass.data[DATA_ZHA][DATA_ZHA_SHUTDOWN_TASK]()
 
