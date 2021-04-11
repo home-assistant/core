@@ -6,7 +6,7 @@ DATA_SPOTIFY_CLIENT = "spotify_client"
 DATA_SPOTIFY_ME = "spotify_me"
 DATA_SPOTIFY_SESSION = "spotify_session"
 
-# Stores the devices retrievd from Spotify
+# Stores the devices retrieved from Spotify
 # Used by custom components so another spotify auth
 # won't be required
 KNOWN_SPOTIFY_DEVICES = "known_spotify_devices"
