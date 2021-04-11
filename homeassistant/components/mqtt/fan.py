@@ -592,7 +592,7 @@ class MqttFan(MqttEntity, FanEntity):
 
         This method is a coroutine.
         """
-        percentage_payload = int(
+        percentage_payload = math.ceil(percentage_to_ranged_value(self._speed_range, percentage))
             math.ceil(percentage_to_ranged_value(self._speed_range, percentage))
         )
         mqtt_payload = self._command_templates[ATTR_PERCENTAGE](percentage_payload)
