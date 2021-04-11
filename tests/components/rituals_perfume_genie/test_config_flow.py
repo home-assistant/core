@@ -32,8 +32,6 @@ async def test_form(hass):
         "homeassistant.components.rituals_perfume_genie.config_flow.Account",
         side_effect=_mock_account,
     ), patch(
-        "homeassistant.components.rituals_perfume_genie.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.rituals_perfume_genie.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -49,7 +47,6 @@ async def test_form(hass):
     assert result2["type"] == "create_entry"
     assert result2["title"] == TEST_EMAIL
     assert isinstance(result2["data"][ACCOUNT_HASH], str)
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
