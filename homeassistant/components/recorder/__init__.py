@@ -512,7 +512,7 @@ class Recorder(threading.Thread):
         """Migrate schema to the latest version."""
         persistent_notification.create(
             self.hass,
-            "Performance may be degrated while the database is being upgraded. Integrations such as logbook and history that read the database may return inconsistent results until the migration completes.",
+            "System performance will temporarily degrade during the database upgrade. Integrations that read the database, such as logbook and history, may return inconsistent results until the upgrade completes."
             "Database Migration",
             "recorder_database_migration",
         )
