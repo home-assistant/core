@@ -103,5 +103,8 @@ class NettigoFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Get device MAC address."""
         websession = async_get_clientsession(self.hass)
         nettigo = Nettigo(websession, host)
-        with async_timeout.timeout(5):
+        # Device firmware uses synchronous code and doesn't respond to http queries
+        # when reading data from sensors. The nettigo library tries to get the data
+        # 4 times, so we use a longer than usual timeout here.
+        with async_timeout.timeout(30):
             return await nettigo.async_get_mac_address()
