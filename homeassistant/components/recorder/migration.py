@@ -1,6 +1,5 @@
 """Schema migration helpers."""
 import logging
-import time
 
 from sqlalchemy import ForeignKeyConstraint, MetaData, Table, text
 from sqlalchemy.engine import reflection
@@ -44,9 +43,6 @@ def schema_is_current(current_version):
 
 def migrate_schema(instance, current_version):
     """Check if the schema needs to be upgraded."""
-    if schema_is_current(current_version):
-        return
-
     with session_scope(session=instance.get_session()) as session:
         _LOGGER.warning(
             "Database is about to upgrade. Schema version: %s", current_version
@@ -58,7 +54,6 @@ def migrate_schema(instance, current_version):
             session.add(SchemaChanges(schema_version=new_version))
 
             _LOGGER.info("Upgrade to version %s done", new_version)
-    time.sleep(200)
 
 
 def _create_index(engine, table_name, index_name):
@@ -216,16 +211,6 @@ def _add_columns(engine, table_name, columns_def):
 
 def _modify_columns(engine, table_name, columns_def):
     """Modify columns in a table."""
-    if engine.dialect.name == "sqlite":
-        _LOGGER.debug(
-            "Skipping to modify columns %s in table %s; "
-            "Modifying column length in SQLite is unnecessary, "
-            "it does not impose any length restrictions",
-            ", ".join(column.split(" ")[0] for column in columns_def),
-            table_name,
-        )
-        return
-
     _LOGGER.warning(
         "Modifying columns %s in table %s. Note: this can take several "
         "minutes on large databases and slow computers. Please "
@@ -233,18 +218,7 @@ def _modify_columns(engine, table_name, columns_def):
         ", ".join(column.split(" ")[0] for column in columns_def),
         table_name,
     )
-
-    if engine.dialect.name == "postgresql":
-        columns_def = [
-            "ALTER {column} TYPE {type}".format(
-                **dict(zip(["column", "type"], col_def.split(" ", 1)))
-            )
-            for col_def in columns_def
-        ]
-    elif engine.dialect.name == "mssql":
-        columns_def = [f"ALTER COLUMN {col_def}" for col_def in columns_def]
-    else:
-        columns_def = [f"MODIFY {col_def}" for col_def in columns_def]
+    columns_def = [f"MODIFY {col_def}" for col_def in columns_def]
 
     try:
         engine.execute(
@@ -408,8 +382,6 @@ def _apply_update(engine, new_version, old_version):
                     "created DATETIME(6)",
                 ],
             )
-    elif new_version == 14:
-        _modify_columns(engine, "events", ["event_type VARCHAR(64)"])
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
