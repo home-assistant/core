@@ -8,7 +8,6 @@ from sqlalchemy.exc import OperationalError
 from homeassistant.components.recorder import (
     CONF_DB_URL,
     CONFIG_SCHEMA,
-    DATA_INSTANCE,
     DOMAIN,
     KEEPALIVE_TIME,
     SERVICE_DISABLE,
@@ -20,6 +19,7 @@ from homeassistant.components.recorder import (
     run_information_from_instance,
     run_information_with_session,
 )
+from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.models import Events, RecorderRuns, States
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import (
@@ -789,15 +789,20 @@ async def test_database_corruption_while_running(hass, tmpdir, caplog):
 
     hass.states.async_set("test.lost", "on", {})
 
-    await async_wait_recording_done_without_instance(hass)
-    await hass.async_add_executor_job(corrupt_db_file, test_db_file)
-    await async_wait_recording_done_without_instance(hass)
+    with patch.object(
+        hass.data[DATA_INSTANCE].event_session,
+        "close",
+        side_effect=OperationalError("statement", {}, []),
+    ):
+        await async_wait_recording_done_without_instance(hass)
+        await hass.async_add_executor_job(corrupt_db_file, test_db_file)
+        await async_wait_recording_done_without_instance(hass)
 
-    # This state will not be recorded because
-    # the database corruption will be discovered
-    # and we will have to rollback to recover
-    hass.states.async_set("test.one", "off", {})
-    await async_wait_recording_done_without_instance(hass)
+        # This state will not be recorded because
+        # the database corruption will be discovered
+        # and we will have to rollback to recover
+        hass.states.async_set("test.one", "off", {})
+        await async_wait_recording_done_without_instance(hass)
 
     assert "Unrecoverable sqlite3 database corruption detected" in caplog.text
     assert "The system will rename the corrupt database file" in caplog.text

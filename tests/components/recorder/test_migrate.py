@@ -17,9 +17,9 @@ from sqlalchemy.pool import StaticPool
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import recorder
 from homeassistant.components.recorder import RecorderRuns, migration, models
+from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.models import States
 from homeassistant.components.recorder.util import session_scope
-from homeassistant.helpers.recorder import DATA_INSTANCE
 import homeassistant.util.dt as dt_util
 
 from .common import async_wait_recording_done_without_instance

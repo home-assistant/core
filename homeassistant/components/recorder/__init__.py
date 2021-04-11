@@ -35,12 +35,11 @@ from homeassistant.helpers.entityfilter import (
     convert_include_exclude_filter,
 )
 from homeassistant.helpers.event import async_track_time_interval, track_time_change
-from homeassistant.helpers.recorder import DATA_INSTANCE, RECORDER_DOMAIN as DOMAIN
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
 from . import migration, purge
-from .const import CONF_DB_INTEGRITY_CHECK, SQLITE_URL_PREFIX
+from .const import CONF_DB_INTEGRITY_CHECK, DATA_INSTANCE, DOMAIN, SQLITE_URL_PREFIX
 from .models import Base, Events, RecorderRuns, States
 from .util import (
     dburl_to_path,
@@ -454,19 +453,6 @@ class Recorder(threading.Thread):
             self._shutdown()
             return
 
-        if not schema_is_current and not self._migrate_schema_and_setup_run(
-            current_version
-        ):
-            self._async_cancel_event_listener()
-            persistent_notification.create(
-                self.hass,
-                "The database migration failed, check [the logs](/config/logs)."
-                "Database Migration Failed",
-                "recorder_database_migration",
-            )
-            self._shutdown()
-            return
-
         # Start periodic purge
         if self.auto_purge:
             # Purge every night at 4:12am
@@ -703,11 +689,8 @@ class Recorder(threading.Thread):
 
     def _open_event_session(self):
         """Open the event session."""
-        try:
-            self.event_session = self.get_session()
-            self.event_session.expire_on_commit = False
-        except SQLAlchemyError as err:
-            _LOGGER.exception("Error while creating new event session: %s", err)
+        self.event_session = self.get_session()
+        self.event_session.expire_on_commit = False
 
     def _send_keep_alive(self):
         """Send a keep alive to keep the db connection open."""

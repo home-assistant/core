@@ -21,7 +21,6 @@ from homeassistant.const import REQUIRED_NEXT_PYTHON_DATE, REQUIRED_NEXT_PYTHON_
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import area_registry, device_registry, entity_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.recorder import RECORDER_DOMAIN
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import (
     DATA_SETUP,
@@ -45,7 +44,7 @@ ERROR_LOG_FILENAME = "home-assistant.log"
 # hass.data key for logging information.
 DATA_LOGGING = "logging"
 
-LOG_SLOW_STARTUP_INTERVAL = 1
+LOG_SLOW_STARTUP_INTERVAL = 60
 SLOW_STARTUP_CHECK_INTERVAL = 1
 SIGNAL_BOOTSTRAP_INTEGRATONS = "bootstrap_integrations"
 
@@ -65,7 +64,7 @@ LOGGING_INTEGRATIONS = {
     "system_log",
     "sentry",
     # To record data
-    RECORDER_DOMAIN,
+    "recorder",
 }
 STAGE_1_INTEGRATIONS = {
     # To make sure we forward data to other instances
@@ -540,7 +539,6 @@ async def _async_set_up_integrations(
                 STAGE_1_TIMEOUT, cool_down=COOLDOWN_TIME
             ):
                 await async_setup_multi_components(hass, stage_1_domains, config)
-
         except asyncio.TimeoutError:
             _LOGGER.warning("Setup timed out for stage 1 - moving forward")
 
@@ -577,5 +575,3 @@ async def _async_set_up_integrations(
             await hass.async_block_till_done()
     except asyncio.TimeoutError:
         _LOGGER.warning("Setup timed out for bootstrap - moving forward")
-
-    _LOGGER.debug("Wrap up complete")

@@ -11,11 +11,10 @@ import time
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm.session import Session
 
-from homeassistant.helpers.recorder import DATA_INSTANCE
 from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.dt as dt_util
 
-from .const import SQLITE_URL_PREFIX
+from .const import DATA_INSTANCE, SQLITE_URL_PREFIX
 from .models import (
     ALL_TABLES,
     TABLE_RECORDER_RUNS,

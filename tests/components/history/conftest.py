@@ -2,7 +2,7 @@
 import pytest
 
 from homeassistant.components import history
-from homeassistant.helpers.recorder import DATA_INSTANCE
+from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant, init_recorder_component
