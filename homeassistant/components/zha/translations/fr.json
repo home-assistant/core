@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "Impossible de se connecter au p\u00e9riph\u00e9rique ZHA."
         },
+        "flow_title": "ZHA: {name}",
         "step": {
             "pick_radio": {
                 "data": {
