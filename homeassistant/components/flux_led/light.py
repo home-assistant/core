@@ -335,7 +335,7 @@ class FluxLight(LightEntity):
             self._white_value = self._get_rgbw[3]
 
             if self._mode == MODE_WHITE:
-                self.brightness = self._white_value
+                self._brightness = self._white_value
             else:
                 self._brightness = self._bulb.brightness
 
