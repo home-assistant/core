@@ -1,5 +1,6 @@
 """The Rituals Perfume Genie integration."""
 import asyncio
+from datetime import timedelta
 import logging
 
 from aiohttp.client_exceptions import ClientConnectorError
@@ -9,19 +10,16 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import ACCOUNT_HASH, DOMAIN
+from .const import ACCOUNT_HASH, COORDINATORS, DEVICES, DOMAIN, HUB, HUBLOT
 
-_LOGGER = logging.getLogger(__name__)
+PLATFORMS = ["switch", "sensor"]
 
 EMPTY_CREDENTIALS = ""
 
-PLATFORMS = ["switch"]
-
-
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Rituals Perfume Genie component."""
-    return True
+_LOGGER = logging.getLogger(__name__)
+UPDATE_INTERVAL = timedelta(seconds=30)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -31,11 +29,40 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     account.data = {ACCOUNT_HASH: entry.data.get(ACCOUNT_HASH)}
 
     try:
-        await account.get_devices()
+        account_devices = await account.get_devices()
     except ClientConnectorError as ex:
         raise ConfigEntryNotReady from ex
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = account
+    hublots = []
+    devices = {}
+    for device in account_devices:
+        hublot = device.data[HUB][HUBLOT]
+        hublots.append(hublot)
+        devices[hublot] = device
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+        COORDINATORS: {},
+        DEVICES: devices,
+    }
+
+    for hublot in hublots:
+        device = hass.data[DOMAIN][entry.entry_id][DEVICES][hublot]
+
+        async def async_update_data():
+            await device.update_data()
+            return device.data
+
+        coordinator = DataUpdateCoordinator(
+            hass,
+            _LOGGER,
+            name=f"{DOMAIN}-{hublot}",
+            update_method=async_update_data,
+            update_interval=UPDATE_INTERVAL,
+        )
+
+        await coordinator.async_refresh()
+
+        hass.data[DOMAIN][entry.entry_id][COORDINATORS][hublot] = coordinator
 
     for platform in PLATFORMS:
         hass.async_create_task(
