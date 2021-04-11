@@ -1,9 +1,11 @@
 """Support for the Nettigo service."""
-from typing import Callable, Union
+from __future__ import annotations
+
+from typing import Any
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -13,7 +15,7 @@ from .const import DOMAIN, SENSORS
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Add a Nettigo entities from a config_entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
@@ -40,7 +42,7 @@ class NettigoSensor(CoordinatorEntity, SensorEntity):
         return SENSORS[self.sensor_type][0]
 
     @property
-    def state(self) -> Union[None, str, float]:
+    def state(self) -> str | None:
         """Return the state."""
         return getattr(self.coordinator.data, self.sensor_type)
 
@@ -55,12 +57,12 @@ class NettigoSensor(CoordinatorEntity, SensorEntity):
         return SENSORS[self.sensor_type][2]
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the icon."""
         return SENSORS[self.sensor_type][3]
 
     @property
-    def entity_registry_enabled_default(self):
+    def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return SENSORS[self.sensor_type][4]
 
@@ -70,6 +72,6 @@ class NettigoSensor(CoordinatorEntity, SensorEntity):
         return f"{self.coordinator.unique_id}-{self.sensor_type}".lower()
 
     @property
-    def device_info(self) -> dict:
+    def device_info(self) -> dict[str, Any]:
         """Return the device info."""
         return self.coordinator.device_info

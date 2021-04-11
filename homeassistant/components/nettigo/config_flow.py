@@ -1,7 +1,8 @@
 """Adds config flow for Nettigo."""
+from __future__ import annotations
+
 import asyncio
 import logging
-from typing import Optional
 
 from aiohttp.client_exceptions import ClientConnectorError
 import async_timeout
@@ -24,16 +25,19 @@ class NettigoFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
-    host = None
 
-    async def async_step_user(self, user_input: Optional[ConfigType] = None) -> dict:
+    def __init__(self):
+        """Initialize flow."""
+        self._host: str | None = None
+
+    async def async_step_user(self, user_input: ConfigType | None = None):
         """Handle a flow initialized by the user."""
         errors = {}
 
         if user_input is not None:
-            host = user_input[CONF_HOST]
+            self._host = user_input[CONF_HOST]
             try:
-                mac = await self._async_get_mac(host)
+                mac = await self._async_get_mac(self._host)
             except (ApiError, ClientConnectorError, asyncio.TimeoutError):
                 errors["base"] = "cannot_connect"
             except CannotGetMac:
@@ -44,10 +48,10 @@ class NettigoFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             else:
 
                 await self.async_set_unique_id(format_mac(mac))
-                self._abort_if_unique_id_configured({CONF_HOST: host})
+                self._abort_if_unique_id_configured({CONF_HOST: self._host})
 
                 return self.async_create_entry(
-                    title=host,
+                    title=self._host,
                     data=user_input,
                 )
 
@@ -63,17 +67,17 @@ class NettigoFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(self, zeroconf_info: DiscoveryInfoType):
         """Handle zeroconf discovery."""
-        self.host = zeroconf_info[CONF_HOST]
+        self._host = zeroconf_info[CONF_HOST]
 
         try:
-            mac = await self._async_get_mac(self.host)
+            mac = await self._async_get_mac(self._host)
         except (ApiError, ClientConnectorError, asyncio.TimeoutError):
             return self.async_abort(reason="cannot_connect")
         except CannotGetMac:
             return self.async_abort(reason="device_unsupported")
 
         await self.async_set_unique_id(format_mac(mac))
-        self._abort_if_unique_id_configured({CONF_HOST: self.host})
+        self._abort_if_unique_id_configured({CONF_HOST: self._host})
 
         self.context["title_placeholders"] = {
             ATTR_NAME: zeroconf_info[ATTR_NAME].split(".")[0]
@@ -87,15 +91,15 @@ class NettigoFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             return self.async_create_entry(
-                title=self.host,
-                data={CONF_HOST: self.host},
+                title=self._host,
+                data={CONF_HOST: self._host},
             )
 
         self._set_confirm_only()
 
         return self.async_show_form(
             step_id="confirm_discovery",
-            description_placeholders={CONF_HOST: self.host},
+            description_placeholders={CONF_HOST: self._host},
             errors=errors,
         )
 
