@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-import functools
 from typing import Callable
 
 from async_timeout import timeout
@@ -63,7 +62,7 @@ from .const import (
     ZWAVE_JS_NOTIFICATION_EVENT,
     ZWAVE_JS_VALUE_NOTIFICATION_EVENT,
 )
-from .discovery import ZwaveDiscoveryInfo, async_discover_values
+from .discovery import async_discover_values
 from .helpers import get_device_id
 from .migrate import async_migrate_discovered_value
 from .services import ZWaveServices
@@ -121,17 +120,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry_hass_data[DATA_UNSUBSCRIBE] = unsubscribe_callbacks
     entry_hass_data[DATA_PLATFORM_SETUP] = {}
 
-    @callback
-    def async_dispatch_discovery_info(
-        disc_info: ZwaveDiscoveryInfo, task: asyncio.tasks.Task
-    ) -> None:
-        """Dispatch a signal for discovery info once platform setup task is done."""
-        async_dispatcher_send(
-            hass, f"{DOMAIN}_{entry.entry_id}_add_{disc_info.platform}", disc_info
-        )
-
-    @callback
-    def async_on_node_ready(node: ZwaveNode) -> None:
+    async def async_on_node_ready(node: ZwaveNode) -> None:
         """Handle node ready event."""
         LOGGER.debug("Processing node %s", node)
 
@@ -142,8 +131,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         # run discovery on all node values and create/update entities
         for disc_info in async_discover_values(node):
-            LOGGER.debug("Discovered entity: %s", disc_info)
-
             # This migration logic was added in 2021.3 to handle a breaking change to
             # the value_id format. Some time in the future, this call (as well as the
             # helper functions) can be removed.
@@ -154,8 +141,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                         entry, disc_info.platform
                     )
                 )
-            platform_setup_tasks[disc_info.platform].add_done_callback(
-                functools.partial(async_dispatch_discovery_info, disc_info)
+
+            await platform_setup_tasks[disc_info.platform]
+
+            LOGGER.debug("Discovered entity: %s", disc_info)
+            async_dispatcher_send(
+                hass, f"{DOMAIN}_{entry.entry_id}_add_{disc_info.platform}", disc_info
             )
 
         # add listener for stateless node value notification events
@@ -168,19 +159,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "notification", lambda event: async_on_notification(event["notification"])
         )
 
-    @callback
-    def async_on_node_added(node: ZwaveNode) -> None:
+    async def async_on_node_added(node: ZwaveNode) -> None:
         """Handle node added event."""
         # we only want to run discovery when the node has reached ready state,
         # otherwise we'll have all kinds of missing info issues.
         if node.ready:
-            async_on_node_ready(node)
+            await async_on_node_ready(node)
             return
         # if node is not yet ready, register one-time callback for ready state
         LOGGER.debug("Node added: %s - waiting for it to become ready", node.node_id)
         node.once(
             "ready",
-            lambda event: async_on_node_ready(event["node"]),
+            lambda event: hass.async_create_task(async_on_node_ready(event["node"])),
         )
         # we do submit the node to device registry so user has
         # some visual feedback that something is (in the process of) being added
@@ -326,11 +316,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         # run discovery on all ready nodes
         for node in client.driver.controller.nodes.values():
-            async_on_node_added(node)
+            await async_on_node_added(node)
 
         # listen for new nodes being added to the mesh
         client.driver.controller.on(
-            "node added", lambda event: async_on_node_added(event["node"])
+            "node added",
+            lambda event: hass.async_create_task(async_on_node_added(event["node"])),
         )
         # listen for nodes being removed from the mesh
         # NOTE: This will not remove nodes that were removed when HA was not running
