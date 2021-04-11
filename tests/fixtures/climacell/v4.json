@@ -7,7 +7,10 @@
     "windDirection": 315.14,
     "weatherCode": 1000,
     "visibility": 8.15,
-    "pollutantO3": 46.53
+    "pollutantO3": 46.53,
+    "windGust": 12.64,
+    "cloudCover": 100,
+    "precipitationType": 1
   },
   "forecasts": {
     "nowcast": [

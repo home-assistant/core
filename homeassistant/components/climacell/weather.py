@@ -3,9 +3,17 @@ from __future__ import annotations
 
 from datetime import datetime
 import logging
-from typing import Any, Callable
+from typing import Any, Callable, Mapping
 
-from pyclimacell.const import CURRENT, DAILY, FORECASTS, HOURLY, NOWCAST, WeatherCode
+from pyclimacell.const import (
+    CURRENT,
+    DAILY,
+    FORECASTS,
+    HOURLY,
+    NOWCAST,
+    PrecipitationType,
+    WeatherCode,
+)
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
@@ -38,11 +46,16 @@ from homeassistant.util.pressure import convert as pressure_convert
 
 from . import ClimaCellEntity
 from .const import (
+    ATTR_CLOUD_COVER,
+    ATTR_PRECIPITATION_TYPE,
+    ATTR_WIND_GUST,
+    CC_ATTR_CLOUD_COVER,
     CC_ATTR_CONDITION,
     CC_ATTR_HUMIDITY,
     CC_ATTR_OZONE,
     CC_ATTR_PRECIPITATION,
     CC_ATTR_PRECIPITATION_PROBABILITY,
+    CC_ATTR_PRECIPITATION_TYPE,
     CC_ATTR_PRESSURE,
     CC_ATTR_TEMPERATURE,
     CC_ATTR_TEMPERATURE_HIGH,
@@ -50,13 +63,16 @@ from .const import (
     CC_ATTR_TIMESTAMP,
     CC_ATTR_VISIBILITY,
     CC_ATTR_WIND_DIRECTION,
+    CC_ATTR_WIND_GUST,
     CC_ATTR_WIND_SPEED,
+    CC_V3_ATTR_CLOUD_COVER,
     CC_V3_ATTR_CONDITION,
     CC_V3_ATTR_HUMIDITY,
     CC_V3_ATTR_OZONE,
     CC_V3_ATTR_PRECIPITATION,
     CC_V3_ATTR_PRECIPITATION_DAILY,
     CC_V3_ATTR_PRECIPITATION_PROBABILITY,
+    CC_V3_ATTR_PRECIPITATION_TYPE,
     CC_V3_ATTR_PRESSURE,
     CC_V3_ATTR_TEMPERATURE,
     CC_V3_ATTR_TEMPERATURE_HIGH,
@@ -64,6 +80,7 @@ from .const import (
     CC_V3_ATTR_TIMESTAMP,
     CC_V3_ATTR_VISIBILITY,
     CC_V3_ATTR_WIND_DIRECTION,
+    CC_V3_ATTR_WIND_GUST,
     CC_V3_ATTR_WIND_SPEED,
     CLEAR_CONDITIONS,
     CONDITIONS,
@@ -149,6 +166,38 @@ class BaseClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
 
         return {k: v for k, v in data.items() if v is not None}
 
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return additional state attributes."""
+        wind_gust = self.wind_gust
+        if wind_gust and self.hass.config.units.is_metric:
+            wind_gust = distance_convert(
+                self.wind_gust, LENGTH_MILES, LENGTH_KILOMETERS
+            )
+        cloud_cover = self.cloud_cover
+        if cloud_cover is not None:
+            cloud_cover /= 100
+        return {
+            ATTR_CLOUD_COVER: cloud_cover,
+            ATTR_WIND_GUST: wind_gust,
+            ATTR_PRECIPITATION_TYPE: self.precipitation_type,
+        }
+
+    @property
+    def cloud_cover(self):
+        """Return cloud cover."""
+        raise NotImplementedError
+
+    @property
+    def wind_gust(self):
+        """Return wind gust speed."""
+        raise NotImplementedError
+
+    @property
+    def precipitation_type(self):
+        """Return precipitation type."""
+        raise NotImplementedError
+
 
 class ClimaCellWeatherEntity(BaseClimaCellWeatherEntity):
     """Entity that talks to ClimaCell v4 API to retrieve weather data."""
@@ -194,6 +243,24 @@ class ClimaCellWeatherEntity(BaseClimaCellWeatherEntity):
     def humidity(self):
         """Return the humidity."""
         return self._get_current_property(CC_ATTR_HUMIDITY)
+
+    @property
+    def wind_gust(self):
+        """Return the wind gust speed."""
+        return self._get_current_property(CC_ATTR_WIND_GUST)
+
+    @property
+    def cloud_cover(self):
+        """Reteurn the cloud cover."""
+        return self._get_current_property(CC_ATTR_CLOUD_COVER)
+
+    @property
+    def precipitation_type(self):
+        """Return precipitation type."""
+        precipitation_type = self._get_current_property(CC_ATTR_PRECIPITATION_TYPE)
+        if precipitation_type is None:
+            return None
+        return PrecipitationType(precipitation_type).name.lower()
 
     @property
     def wind_speed(self):
@@ -337,6 +404,25 @@ class ClimaCellV3WeatherEntity(BaseClimaCellWeatherEntity):
     def humidity(self):
         """Return the humidity."""
         return self._get_cc_value(self.coordinator.data[CURRENT], CC_V3_ATTR_HUMIDITY)
+
+    @property
+    def wind_gust(self):
+        """Return the wind gust speed."""
+        return self._get_cc_value(self.coordinator.data[CURRENT], CC_V3_ATTR_WIND_GUST)
+
+    @property
+    def cloud_cover(self):
+        """Reteurn the cloud cover."""
+        return self._get_cc_value(
+            self.coordinator.data[CURRENT], CC_V3_ATTR_CLOUD_COVER
+        )
+
+    @property
+    def precipitation_type(self):
+        """Return precipitation type."""
+        return self._get_cc_value(
+            self.coordinator.data[CURRENT], CC_V3_ATTR_PRECIPITATION_TYPE
+        )
 
     @property
     def wind_speed(self):
