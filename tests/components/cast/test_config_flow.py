@@ -166,6 +166,7 @@ async def test_option_flow(hass, parameter_data):
     assert result["step_id"] == "options"
     data_schema = result["data_schema"].schema
     assert set(data_schema) == {"known_hosts"}
+    orig_data = dict(config_entry.data)
 
     # Reconfigure ignore_cec, known_hosts, uuid
     context = {"source": "user", "show_advanced_options": True}
@@ -201,7 +202,12 @@ async def test_option_flow(hass, parameter_data):
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] is None
-    assert config_entry.data == {"ignore_cec": [], "known_hosts": [], "uuid": []}
+    assert config_entry.data == {
+        **orig_data,
+        "ignore_cec": [],
+        "known_hosts": [],
+        "uuid": [],
+    }
 
 
 async def test_known_hosts(hass, castbrowser_mock, castbrowser_constructor_mock):
