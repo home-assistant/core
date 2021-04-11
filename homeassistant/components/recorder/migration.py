@@ -43,6 +43,9 @@ def schema_is_current(current_version):
 
 def migrate_schema(instance, current_version):
     """Check if the schema needs to be upgraded."""
+    import time
+
+    time.sleep(200)
     with session_scope(session=instance.get_session()) as session:
         _LOGGER.warning(
             "Database is about to upgrade. Schema version: %s", current_version
