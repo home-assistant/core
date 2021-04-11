@@ -69,7 +69,7 @@ async def test_form_errors(hass, error):
 
 
 async def test_form_abort(hass):
-    """Test we handle errors."""
+    """Test we handle abort after error."""
     with patch(
         "homeassistant.components.nettigo.Nettigo.async_get_mac_address",
         side_effect=CannotGetMac("Cannot get MAC address from device"),
@@ -86,7 +86,7 @@ async def test_form_abort(hass):
 
 
 async def test_form_already_configured(hass):
-    """Test we get the form."""
+    """Test that errors are shown when duplicates are added."""
     entry = MockConfigEntry(
         domain=DOMAIN, unique_id="aa:bb:cc:dd:ee:ff", data=VALID_CONFIG
     )
