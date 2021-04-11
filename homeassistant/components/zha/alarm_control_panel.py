@@ -1,7 +1,6 @@
 """Alarm control panels on Zigbee Home Automation networks."""
 import functools
 import logging
-from typing import Any
 
 from zigpy.zcl.clusters.security import IasAce
 
@@ -52,6 +51,7 @@ IAS_ACE_STATE_MAP = {
     IasAce.PanelStatus.Armed_Stay: STATE_ALARM_ARMED_HOME,
     IasAce.PanelStatus.Armed_Night: STATE_ALARM_ARMED_NIGHT,
     IasAce.PanelStatus.Armed_Away: STATE_ALARM_ARMED_AWAY,
+    IasAce.PanelStatus.In_Alarm: STATE_ALARM_TRIGGERED,
 }
 
 
@@ -76,10 +76,11 @@ class ZHAAlarmControlPanel(ZhaEntity, AlarmControlPanelEntity):
     def __init__(self, unique_id, zha_device, channels, **kwargs):
         """Initialize the ZHA alarm control device."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
+        # Will get these from ZHA config in config entry options device map
         self._channel: AceChannel = channels[0]
         self._channel.panel_code = "1234"
         self._channel.code_required_arm_actions = False
-        self._state = STATE_ALARM_DISARMED
+        self._channel.max_invalid_tries = 3
 
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
@@ -92,10 +93,8 @@ class ZHAAlarmControlPanel(ZhaEntity, AlarmControlPanelEntity):
         )
 
     @callback
-    def async_set_armed_mode(self, value: Any) -> None:
+    def async_set_armed_mode(self) -> None:
         """Set the entity state."""
-        _LOGGER.debug("armed state [%s]", value)
-        self._state = IAS_ACE_STATE_MAP.get(value)
         self.async_write_ha_state()
 
     @callback
@@ -120,39 +119,26 @@ class ZHAAlarmControlPanel(ZhaEntity, AlarmControlPanelEntity):
 
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
-        success = self._channel.arm(IasAce.ArmMode.Disarm, code, 0)
-        if not success:
-            return
-        self._state = STATE_ALARM_DISARMED
+        self._channel.arm(IasAce.ArmMode.Disarm, code, 0)
         self.async_write_ha_state()
 
     async def async_alarm_arm_home(self, code=None):
         """Send arm home command."""
-        success = self._channel.arm(IasAce.ArmMode.Arm_Day_Home_Only, code, 0)
-        if not success:
-            return
-        self._state = STATE_ALARM_ARMED_HOME
+        self._channel.arm(IasAce.ArmMode.Arm_Day_Home_Only, code, 0)
         self.async_write_ha_state()
 
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
-        success = self._channel.arm(IasAce.ArmMode.Arm_All_Zones, code, 0)
-        if not success:
-            return
-        self._state = STATE_ALARM_ARMED_AWAY
+        self._channel.arm(IasAce.ArmMode.Arm_All_Zones, code, 0)
         self.async_write_ha_state()
 
     async def async_alarm_arm_night(self, code=None):
         """Send arm night command."""
-        success = self._channel.arm(IasAce.ArmMode.Arm_Night_Sleep_Only, code, 0)
-        if not success:
-            return
-        self._state = STATE_ALARM_ARMED_NIGHT
+        self._channel.arm(IasAce.ArmMode.Arm_Night_Sleep_Only, code, 0)
         self.async_write_ha_state()
 
     async def async_alarm_trigger(self, code=None):
         """Send alarm trigger command."""
-        self._state = STATE_ALARM_TRIGGERED
         self.async_write_ha_state()
 
     @property
@@ -168,7 +154,7 @@ class ZHAAlarmControlPanel(ZhaEntity, AlarmControlPanelEntity):
     @property
     def state(self):
         """Return the state of the entity."""
-        return self._state
+        return IAS_ACE_STATE_MAP.get(self._channel.armed_state)
 
     @property
     def state_attributes(self):
