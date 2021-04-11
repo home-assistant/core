@@ -29,13 +29,16 @@ MODEL_AIRPURIFIER_3 = "zhimi.airpurifier.ma4"
 MODEL_AIRPURIFIER_3H = "zhimi.airpurifier.mb3"
 MODEL_AIRPURIFIER_3C = "zhimi.airpurifier.mb4"
 MODEL_AIRPURIFIER_PROH = "zhimi.airpurifier.va1"
+MODEL_AIRPURIFIER_GENERIC = "zhimi.airpurifier."
 
 MODEL_AIRHUMIDIFIER_V1 = "zhimi.humidifier.v1"
 MODEL_AIRHUMIDIFIER_CA1 = "zhimi.humidifier.ca1"
 MODEL_AIRHUMIDIFIER_CA4 = "zhimi.humidifier.ca4"
 MODEL_AIRHUMIDIFIER_CB1 = "zhimi.humidifier.cb1"
+MODEL_AIRHUMIDIFIER_GENERIC = "zhimi.humidifier."
 
 MODEL_AIRFRESH_VA2 = "zhimi.airfresh.va2"
+MODEL_AIRFRESH_GENERIC = "zhimi.airfresh."
 
 MODELS_PURIFIER_MIOT = [
     MODEL_AIRPURIFIER_3,
@@ -63,6 +66,10 @@ MODELS_FAN_MIIO = [
     MODEL_AIRHUMIDIFIER_CB1,
     MODEL_AIRFRESH_VA2,
 ]
+
+SENSOR_PURIFIER_AQI = "aqi"
+SENSOR_PURIFIER_FILTER_LIFE = "filter_life"
+SENSOR_PURIFIER_FILTER_USED = "filter_used"
 
 # AirQuality Models
 MODEL_AIRQUALITYMONITOR_V1 = "zhimi.airmonitor.v1"

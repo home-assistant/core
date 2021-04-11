@@ -59,11 +59,14 @@ from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
     DOMAIN,
+    MODEL_AIRFRESH_GENERIC,
     MODEL_AIRHUMIDIFIER_CA1,
     MODEL_AIRHUMIDIFIER_CA4,
     MODEL_AIRHUMIDIFIER_CB1,
+    MODEL_AIRHUMIDIFIER_GENERIC,
     MODEL_AIRPURIFIER_2S,
     MODEL_AIRPURIFIER_3C,
+    MODEL_AIRPURIFIER_GENERIC,
     MODEL_AIRPURIFIER_PRO,
     MODEL_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V3,
@@ -572,7 +575,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             entity = XiaomiAirPurifierMiot(
                 NAME_AIR_PURIFIER, air_purifier, config_entry, unique_id
             )
-        elif model.startswith("zhimi.airpurifier."):
+        elif model.startswith(MODEL_AIRPURIFIER_GENERIC):
             air_purifier = AirPurifier(host, token)
             entity = XiaomiAirPurifier(
                 NAME_AIR_PURIFIER, air_purifier, config_entry, unique_id
@@ -582,12 +585,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             entity = XiaomiAirHumidifierMiot(
                 NAME_AIR_HUMIDIFIER, air_humidifier, config_entry, unique_id
             )
-        elif model.startswith("zhimi.humidifier."):
+        elif model.startswith(MODEL_AIRHUMIDIFIER_GENERIC):
             air_humidifier = AirHumidifier(host, token, model=model)
             entity = XiaomiAirHumidifier(
                 NAME_AIR_HUMIDIFIER, air_humidifier, config_entry, unique_id
             )
-        elif model.startswith("zhimi.airfresh."):
+        elif model.startswith(MODEL_AIRFRESH_GENERIC):
             air_fresh = AirFresh(host, token)
             entity = XiaomiAirFresh(NAME_AIRFRESH, air_fresh, config_entry, unique_id)
         else:

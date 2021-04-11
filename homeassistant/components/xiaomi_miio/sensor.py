@@ -41,10 +41,15 @@ from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
+    CONF_MODEL,
     DOMAIN,
     KEY_COORDINATOR,
     MODEL_AIRPURIFIER_3C,
+    MODEL_AIRPURIFIER_GENERIC,
     MODELS_PURIFIER_MIOT,
+    SENSOR_PURIFIER_AQI,
+    SENSOR_PURIFIER_FILTER_LIFE,
+    SENSOR_PURIFIER_FILTER_USED,
 )
 from .device import XiaomiMiioEntity
 from .gateway import XiaomiGatewayDevice
@@ -52,9 +57,19 @@ from .gateway import XiaomiGatewayDevice
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Xiaomi Miio Sensor"
-UNIT_LUMEN = "lm"
 
-CONF_MODEL = "model"
+UNIT_LUMEN = "lm"
+AIR_PURIFIER_UNITS = {
+    SENSOR_PURIFIER_AQI: "AQI",
+    SENSOR_PURIFIER_FILTER_LIFE: "%",
+    SENSOR_PURIFIER_FILTER_USED: "h",
+}
+
+AIR_PURIFIER_ICONS = {
+    SENSOR_PURIFIER_AQI: "mdi:cloud",
+    SENSOR_PURIFIER_FILTER_LIFE: "mdi:air-filter",
+    SENSOR_PURIFIER_FILTER_USED: "mdi:air-filter",
+}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -164,70 +179,88 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if model == MODEL_AIRPURIFIER_3C:
             air_purifier = AirPurifierMB4(host, token)
             entities.append(
-                XiaomiAirPurifier(
-                    NAME_AIR_QUALITY_INDEX, air_purifier, config_entry, unique_id
+                XiaomiAirPurifierSensor(
+                    NAME_AIR_QUALITY_INDEX,
+                    air_purifier,
+                    config_entry,
+                    unique_id,
+                    SENSOR_PURIFIER_AQI,
                 )
             )
             entities.append(
-                XiaomiAirPurifierFilterRemaining(
+                XiaomiAirPurifierSensor(
                     NAME_FILTER_LIFE_REMAINING,
                     air_purifier,
                     config_entry,
-                    unique_id + "_filter_life",
+                    unique_id,
+                    SENSOR_PURIFIER_FILTER_LIFE,
                 )
             )
             entities.append(
-                XiaomiAirPurifierFilterUsed(
+                XiaomiAirPurifierSensor(
                     NAME_FILTER_HOURS_USED,
                     air_purifier,
                     config_entry,
-                    unique_id + "_filter_used",
+                    unique_id,
+                    SENSOR_PURIFIER_FILTER_USED,
                 )
             )
         elif model in MODELS_PURIFIER_MIOT:
             air_purifier = AirPurifierMiot(host, token)
             entities.append(
-                XiaomiAirPurifier(
-                    NAME_AIR_QUALITY_INDEX, air_purifier, config_entry, unique_id
+                XiaomiAirPurifierSensor(
+                    NAME_AIR_QUALITY_INDEX,
+                    air_purifier,
+                    config_entry,
+                    unique_id,
+                    SENSOR_PURIFIER_AQI,
                 )
             )
             entities.append(
-                XiaomiAirPurifierFilterRemaining(
+                XiaomiAirPurifierSensor(
                     NAME_FILTER_LIFE_REMAINING,
                     air_purifier,
                     config_entry,
-                    unique_id + "_filter_life",
+                    unique_id,
+                    SENSOR_PURIFIER_FILTER_LIFE,
                 )
             )
             entities.append(
-                XiaomiAirPurifierFilterUsed(
+                XiaomiAirPurifierSensor(
                     NAME_FILTER_HOURS_USED,
                     air_purifier,
                     config_entry,
-                    unique_id + "_filter_used",
+                    unique_id,
+                    SENSOR_PURIFIER_FILTER_USED,
                 )
             )
-        elif model.startswith("zhimi.airpurifier."):
+        elif model.startswith(MODEL_AIRPURIFIER_GENERIC):
             air_purifier = AirPurifier(host, token)
             entities.append(
-                XiaomiAirPurifier(
-                    NAME_AIR_QUALITY_INDEX, air_purifier, config_entry, unique_id
+                XiaomiAirPurifierSensor(
+                    NAME_AIR_QUALITY_INDEX,
+                    air_purifier,
+                    config_entry,
+                    unique_id,
+                    SENSOR_PURIFIER_AQI,
                 )
             )
             entities.append(
-                XiaomiAirPurifierFilterRemaining(
+                XiaomiAirPurifierSensor(
                     NAME_FILTER_LIFE_REMAINING,
                     air_purifier,
                     config_entry,
-                    unique_id + "_filter_life",
+                    unique_id,
+                    SENSOR_PURIFIER_FILTER_LIFE,
                 )
             )
             entities.append(
-                XiaomiAirPurifierFilterUsed(
+                XiaomiAirPurifierSensor(
                     NAME_FILTER_HOURS_USED,
                     air_purifier,
                     config_entry,
-                    unique_id + "_filter_used",
+                    unique_id,
+                    SENSOR_PURIFIER_FILTER_USED,
                 )
             )
         else:
@@ -239,17 +272,20 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, update_before_add=True)
 
 
-class XiaomiAirPurifierFilterUsed(XiaomiMiioEntity, SensorEntity):
+class XiaomiAirPurifierSensor(XiaomiMiioEntity, SensorEntity):
     """Representation of a Xiaomi Mi Air Purifier."""
 
-    def __init__(self, name, device, entry, unique_id):
+    def __init__(self, name, device, entry, unique_id, sensor_type):
         """Initialize the entity."""
-        super().__init__(name, device, entry, unique_id)
 
-        self._icon = "mdi:air-filter"
-        self._unit_of_measurement = "h"
+        sensor_unique_id = unique_id + sensor_type
+        super().__init__(name, device, entry, sensor_unique_id)
+
+        self._icon = AIR_PURIFIER_ICONS[sensor_type]
+        self._unit_of_measurement = AIR_PURIFIER_UNITS[sensor_type]
         self._available = None
-        self._state = None
+        self._state = {}
+        self._sensor_type = sensor_type
 
     @property
     def unit_of_measurement(self):
@@ -278,104 +314,15 @@ class XiaomiAirPurifierFilterUsed(XiaomiMiioEntity, SensorEntity):
             _LOGGER.debug("Got new state: %s", state)
 
             self._available = True
-            self._state = state.filter_hours_used
-
-        except DeviceException as ex:
-            if self._available:
-                self._available = False
-                _LOGGER.error("Got exception while fetching the state: %s", ex)
-
-
-class XiaomiAirPurifierFilterRemaining(XiaomiMiioEntity, SensorEntity):
-    """Representation of a Xiaomi Mi Air Purifier."""
-
-    def __init__(self, name, device, entry, unique_id):
-        """Initialize the entity."""
-        super().__init__(name, device, entry, unique_id)
-
-        self._icon = "mdi:air-filter"
-        self._unit_of_measurement = "%"
-        self._available = None
-        self._state = None
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Return the icon to use for device if any."""
-        return self._icon
-
-    @property
-    def available(self):
-        """Return true when state is known."""
-        return self._available
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
-
-    async def async_update(self):
-        """Fetch state from the miio device."""
-        try:
-            state = await self.hass.async_add_executor_job(self._device.status)
-            _LOGGER.debug("Got new state: %s", state)
-
-            self._available = True
-            self._state = state.filter_life_remaining
-
-        except DeviceException as ex:
-            if self._available:
-                self._available = False
-                _LOGGER.error("Got exception while fetching the state: %s", ex)
-
-
-class XiaomiAirPurifier(XiaomiMiioEntity, SensorEntity):
-    """Representation of a Xiaomi Mi Air Purifier."""
-
-    def __init__(self, name, device, entry, unique_id):
-        """Initialize the entity."""
-        super().__init__(name, device, entry, unique_id)
-
-        self._icon = "mdi:cloud"
-        self._unit_of_measurement = "AQI"
-        self._available = None
-        self._state = None
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Return the icon to use for device if any."""
-        return self._icon
-
-    @property
-    def available(self):
-        """Return true when state is known."""
-        return self._available
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
-
-    async def async_update(self):
-        """Fetch state from the miio device."""
-        try:
-            state = await self.hass.async_add_executor_job(self._device.status)
-            _LOGGER.debug("Got new state: %s", state)
-
-            self._available = True
-            if state.aqi is not None:
-                self._state = state.aqi
+            if self._sensor_type == SENSOR_PURIFIER_AQI:
+                if state.aqi is not None:
+                    self._state = state.aqi
+                else:
+                    self._state = 1
+            elif self._sensor_type == SENSOR_PURIFIER_FILTER_LIFE:
+                self._state = state.filter_life_remaining
             else:
-                self._state = 1
+                self._state = state.filter_hours_used
 
         except DeviceException as ex:
             if self._available:
