@@ -168,8 +168,9 @@ class SmappeeFlowHandler(
             if not connect:
                 return self.async_abort(reason="cannot_connect")
 
-            smappee_mqtt.start()
-            serial_number = smappee_mqtt.is_config_ready()
+            serial_number = await self.hass.async_add_executor_job(
+                smappee_mqtt.start_and_wait_for_config
+            )
             smappee_mqtt.stop()
             if serial_number is None:
                 return self.async_abort(reason="cannot_connect")
