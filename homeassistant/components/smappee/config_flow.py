@@ -89,7 +89,7 @@ class SmappeeFlowHandler(
         if helper.is_smappee_genius(serial_number):
             # next generation device, attempt connect to the local mqtt broker
             smappee_mqtt = mqtt.SmappeeLocalMqtt(serial_number=serial_number)
-            connect = smappee_mqtt.start_attempt()
+            connect = await self.hass.async_add_executor_job(smappee_mqtt.start_attempt)
             if not connect:
                 return self.async_abort(reason="cannot_connect")
         else:
