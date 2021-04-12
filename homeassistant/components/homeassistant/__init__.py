@@ -139,8 +139,7 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
             )
 
         if call.service == SERVICE_HOMEASSISTANT_STOP:
-            # Must not be tracked so we can make this a blocking call
-            asyncio.create_task(hass.async_stop())
+            hass.async_create_task(hass.async_stop())
             return
 
         errors = await conf_util.async_check_ha_config_file(hass)
@@ -161,8 +160,7 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
             )
 
         if call.service == SERVICE_HOMEASSISTANT_RESTART:
-            # Must not be tracked so we can make this a blocking call
-            asyncio.create_task(hass.async_stop(RESTART_EXIT_CODE))
+            hass.async_create_task(hass.async_stop(RESTART_EXIT_CODE))
 
     async def async_handle_update_service(call):
         """Service handler for updating an entity."""
