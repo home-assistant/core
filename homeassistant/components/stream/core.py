@@ -8,6 +8,9 @@ from typing import Any, Callable
 
 from aiohttp import web
 import attr
+import av.audio.stream
+import av.container
+import av.video
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
@@ -24,9 +27,9 @@ class StreamBuffer:
     """Represent a segment."""
 
     segment: io.BytesIO = attr.ib()
-    output = attr.ib()  # type=av.OutputContainer
-    vstream = attr.ib()  # type=av.VideoStream
-    astream = attr.ib(default=None)  # type=Optional[av.AudioStream]
+    output: av.container.OutputContainer = attr.ib()
+    vstream: av.video.VideoStream = attr.ib()
+    astream: av.audio.stream.AudioStream | None = attr.ib(default=None)
 
 
 @attr.s
