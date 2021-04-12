@@ -1,4 +1,5 @@
 """Test zone component."""
+import math
 from unittest.mock import patch
 
 import pytest
@@ -16,6 +17,7 @@ from homeassistant.const import (
 from homeassistant.core import Context
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.location import vincenty
 
 from tests.common import MockConfigEntry
 
@@ -54,6 +56,143 @@ def storage_setup(hass, hass_storage):
         return await setup.async_setup_component(hass, DOMAIN, config)
 
     return _storage
+
+
+# Author: https://github.com/pktrigg
+# Source: https://github.com/pktrigg/pyall/blob/master/geodetic.py
+# License: https://github.com/pktrigg/pyall/blob/master/LICENSE
+def calculateGeographicalPositionFromRangeBearing(latitude1, longitude1, alpha1To2, s):
+    """
+    Calculate new position giving starting position, bearing and distance.
+
+    Returns the lat and long of projected point and reverse azimuth
+    given a reference point and a distance and azimuth to project.
+    lats, longs and azimuths are passed in decimal degrees
+    Returns ( latitude2,  longitude2,  alpha2To1 ) as a tuple
+    """
+    if math.isclose(s, 0):
+        return (latitude1, longitude1, s)
+
+    f = 1.0 / 298.257223563  # WGS84
+    a = 6378137.0  # metres
+
+    piD4 = math.atan(1.0)
+    two_pi = piD4 * 8.0
+
+    latitude1 = latitude1 * piD4 / 45.0
+    longitude1 = longitude1 * piD4 / 45.0
+    alpha1To2 = alpha1To2 * piD4 / 45.0
+    if alpha1To2 < 0.0:
+        alpha1To2 = alpha1To2 + two_pi
+    if alpha1To2 > two_pi:
+        alpha1To2 = alpha1To2 - two_pi
+
+    b = a * (1.0 - f)
+
+    TanU1 = (1 - f) * math.tan(latitude1)
+    U1 = math.atan(TanU1)
+    sigma1 = math.atan2(TanU1, math.cos(alpha1To2))
+    Sinalpha = math.cos(U1) * math.sin(alpha1To2)
+    cosalpha_sq = 1.0 - Sinalpha * Sinalpha
+
+    u2 = cosalpha_sq * (a * a - b * b) / (b * b)
+    A = 1.0 + (u2 / 16384) * (4096 + u2 * (-768 + u2 * (320 - 175 * u2)))
+    B = (u2 / 1024) * (256 + u2 * (-128 + u2 * (74 - 47 * u2)))
+
+    # Starting with the approximation
+    sigma = s / (b * A)
+
+    last_sigma = 2.0 * sigma + 2.0  # something impossible
+
+    # Iterate the following three equations
+    # until there is no significant change in sigma
+
+    # two_sigma_m , delta_sigma
+    while abs((last_sigma - sigma) / sigma) > 1.0e-9:
+        two_sigma_m = 2 * sigma1 + sigma
+
+        delta_sigma = (
+            B
+            * math.sin(sigma)
+            * (
+                math.cos(two_sigma_m)
+                + (B / 4)
+                * (
+                    math.cos(sigma)
+                    * (
+                        -1
+                        + 2 * math.pow(math.cos(two_sigma_m), 2)
+                        - (B / 6)
+                        * math.cos(two_sigma_m)
+                        * (-3 + 4 * math.pow(math.sin(sigma), 2))
+                        * (-3 + 4 * math.pow(math.cos(two_sigma_m), 2))
+                    )
+                )
+            )
+        )
+        last_sigma = sigma
+        sigma = (s / (b * A)) + delta_sigma
+
+    latitude2 = math.atan2(
+        (
+            math.sin(U1) * math.cos(sigma)
+            + math.cos(U1) * math.sin(sigma) * math.cos(alpha1To2)
+        ),
+        (
+            (1 - f)
+            * math.sqrt(
+                math.pow(Sinalpha, 2)
+                + pow(
+                    math.sin(U1) * math.sin(sigma)
+                    - math.cos(U1) * math.cos(sigma) * math.cos(alpha1To2),
+                    2,
+                )
+            )
+        ),
+    )
+
+    # Intentional misspelling to not collide with lambda keyword
+    lembda = math.atan2(
+        (math.sin(sigma) * math.sin(alpha1To2)),
+        (
+            math.cos(U1) * math.cos(sigma)
+            - math.sin(U1) * math.sin(sigma) * math.cos(alpha1To2)
+        ),
+    )
+
+    C = (f / 16) * cosalpha_sq * (4 + f * (4 - 3 * cosalpha_sq))
+
+    omega = lembda - (1 - C) * f * Sinalpha * (
+        sigma
+        + C
+        * math.sin(sigma)
+        * (
+            math.cos(two_sigma_m)
+            + C * math.cos(sigma) * (-1 + 2 * math.pow(math.cos(two_sigma_m), 2))
+        )
+    )
+
+    longitude2 = longitude1 + omega
+
+    alpha21 = math.atan2(
+        Sinalpha,
+        (
+            -math.sin(U1) * math.sin(sigma)
+            + math.cos(U1) * math.cos(sigma) * math.cos(alpha1To2)
+        ),
+    )
+
+    alpha21 = alpha21 + two_pi / 2.0
+    if alpha21 < 0.0:
+        alpha21 = alpha21 + two_pi
+    if alpha21 > two_pi:
+        alpha21 = alpha21 - two_pi
+
+    latitude2 = latitude2 * 45.0 / piD4
+    longitude2 = longitude2 * 45.0 / piD4
+    alpha21 = alpha21 * 45.0 / piD4
+
+    return latitude2, longitude2, alpha21
 
 
 async def test_setup_no_zones_still_adds_home_zone(hass):
@@ -229,6 +368,95 @@ async def test_zone_smaller_than_accuracy(hass):
     # Should remain in zone
     active = zone.async_active_zone(hass, latitude, longitude, 51, active)
     assert active.entity_id == "zone.smallest_zone"
+
+
+def assert_zone(zone, expected_zone, idx):
+    """Assert current zone is the expected one.
+
+    Unused parameter idx added to get useful debug information from pytest.
+    """
+    if expected_zone is None:
+        assert zone is None
+    else:
+        assert zone.entity_id == f"zone.{expected_zone}"
+
+
+@pytest.mark.parametrize(
+    "zone_radii,start_location,locations,expected_zones",
+    # zone radii: radius for each configured zone
+    # start_location: initial latitude, longitude, accuracy
+    # locations: list of (distance, accuracy) from starting location
+    # expected zones: list of expected zone for each location in the locations list
+    [
+        # Don't enter a zone smaller than the location's accuracy
+        (
+            (6, 12),
+            (55.69991353346531, 13.206717073911985, 6),
+            [(0, 12), (0, 11.9), (0, 3)],
+            [None, "kebab_shop_garden", "kebab_shop"],
+        ),
+        # Don't leave a zone if location with accuracy intersects with zone
+        (
+            (6, 12),
+            (55.69991353346531, 13.206717073911985, 6),
+            [(0, 3), (0, 11.9), (0, 12)],
+            ["kebab_shop", "kebab_shop", "kebab_shop"],
+        ),
+        # Exit a zone if location with accuracy does not intersect with zone
+        (
+            (6, 11),
+            (55.69991353346531, 13.206717073911985, 6),
+            [(0, 3), (6, 3), (9, 3), (6, 3)],
+            ["kebab_shop", "kebab_shop", None, "kebab_shop_garden"],
+        ),
+        # Exit a zone if location with accuracy does not intersect with zone
+        (
+            (6, 13),
+            (55.69991353346531, 13.206717073911985, 6),
+            [(0, 3), (6, 3), (9, 3), (6, 3)],
+            ["kebab_shop", "kebab_shop", "kebab_shop_garden", "kebab_shop_garden"],
+        ),
+    ],
+)
+async def test_zone_criteria(
+    hass, zone_radii, start_location, locations, expected_zones
+):
+    """Test zone enter and exit criteria."""
+    assert await setup.async_setup_component(
+        hass,
+        zone.DOMAIN,
+        {
+            "zone": [
+                {
+                    "name": "Kebab shop",
+                    "latitude": 55.69991353346531,
+                    "longitude": 13.206717073911985,
+                    "radius": zone_radii[0],
+                },
+                {
+                    "name": "Kebab shop garden",
+                    "latitude": 55.69991353346531,
+                    "longitude": 13.206717073911985,
+                    "radius": zone_radii[1],
+                },
+            ]
+        },
+    )
+
+    active = None
+    for idx, location in enumerate(locations):
+        distance, radius = location
+        # Calculate new location
+        lat, lon, _ = calculateGeographicalPositionFromRangeBearing(
+            start_location[0], start_location[1], 0, distance
+        )
+        # Verify that the distance to the calculated position is correct
+        assert (
+            -0.1 < distance - vincenty((lat, lon), (start_location[0:2])) * 1000 < 0.1
+        )
+        active = zone.async_active_zone(hass, lat, lon, radius, active)
+        expected_zone = expected_zones[idx]
+        assert_zone(active, expected_zone, idx)
 
 
 async def test_in_zone_works_for_passive_zones(hass):
