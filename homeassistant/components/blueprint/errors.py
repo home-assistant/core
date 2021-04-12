@@ -1,5 +1,8 @@
 """Blueprint errors."""
-from typing import Any, Iterable
+from __future__ import annotations
+
+from collections.abc import Iterable
+from typing import Any
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error

@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable
 import functools
 import logging
-from typing import Any, Awaitable
+from typing import Any
 
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import CALLBACK_TYPE, Event, callback

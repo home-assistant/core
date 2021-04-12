@@ -1,7 +1,8 @@
 """Module that groups code required to handle state restore for component."""
 from __future__ import annotations
 
-from typing import Any, Iterable
+from collections.abc import Iterable
+from typing import Any
 
 from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state

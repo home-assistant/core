@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 from collections import OrderedDict
-from typing import Container, Iterable, MutableMapping, cast
+from collections.abc import Container, Iterable, MutableMapping
+from typing import cast
 
 import attr
 

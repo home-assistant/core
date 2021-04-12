@@ -3,8 +3,9 @@ from __future__ import annotations
 
 import asyncio
 from collections import Counter
+from collections.abc import Iterator
 import itertools
-from typing import Any, Callable, Iterator, cast
+from typing import Any, Callable, cast
 
 import voluptuous as vol
 

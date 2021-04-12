@@ -1,7 +1,7 @@
 """Smart energy channels module for Zigbee Home Automation."""
 from __future__ import annotations
 
-from typing import Coroutine
+from collections.abc import Coroutine
 
 import zigpy.zcl.clusters.smartenergy as smartenergy
 

@@ -1,7 +1,8 @@
 """Harmony data object which contains the Harmony Client."""
+from __future__ import annotations
 
+from collections.abc import Iterable
 import logging
-from typing import Iterable
 
 from aioharmony.const import ClientCallbackType, SendCommandDevice
 import aioharmony.exceptions as aioexc

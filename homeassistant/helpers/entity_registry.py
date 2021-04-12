@@ -10,8 +10,9 @@ timer.
 from __future__ import annotations
 
 from collections import OrderedDict
+from collections.abc import Iterable
 import logging
-from typing import TYPE_CHECKING, Any, Callable, Iterable, cast
+from typing import TYPE_CHECKING, Any, Callable, cast
 
 import attr
 

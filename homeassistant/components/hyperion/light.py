@@ -1,10 +1,11 @@
 """Support for Hyperion-NG remotes."""
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 import functools
 import logging
 from types import MappingProxyType
-from typing import Any, Callable, Mapping, Sequence
+from typing import Any, Callable
 
 from hyperion import client, const
 

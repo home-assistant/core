@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Iterable
 from datetime import timedelta
 from itertools import chain
 import logging
 from types import ModuleType
-from typing import Any, Callable, Iterable
+from typing import Any, Callable
 
 import voluptuous as vol
 

@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Iterable
 import copy
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import functools as ft
 import logging
 import time
-from typing import Any, Awaitable, Callable, Iterable, List, cast
+from typing import Any, Callable, List, cast
 
 import attr
 

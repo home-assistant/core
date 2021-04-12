@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable
 from datetime import datetime, timedelta
 import logging
 from time import monotonic
-from typing import Any, Awaitable, Callable, Generic, TypeVar
+from typing import Any, Callable, Generic, TypeVar
 import urllib.error
 
 import aiohttp

@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from collections.abc import Iterable
 from datetime import date, datetime, timedelta
 import logging
-from typing import Any, Callable, Iterable
+from typing import Any, Callable
 
 from requests.exceptions import ConnectTimeout, HTTPError
 from solaredge import Solaredge

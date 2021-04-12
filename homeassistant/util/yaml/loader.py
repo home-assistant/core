@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 from collections import OrderedDict
+from collections.abc import Iterator
 import fnmatch
 import logging
 import os
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, TextIO, TypeVar, Union, overload
+from typing import Any, Dict, List, TextIO, TypeVar, Union, overload
 
 import yaml
 

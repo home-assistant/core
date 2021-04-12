@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Coroutine, Iterable, KeysView
 from datetime import datetime, timedelta
 import enum
 from functools import lru_cache, wraps
@@ -11,7 +12,7 @@ import socket
 import string
 import threading
 from types import MappingProxyType
-from typing import Any, Callable, Coroutine, Iterable, KeysView, TypeVar
+from typing import Any, Callable, TypeVar
 
 import slugify as unicode_slug
 

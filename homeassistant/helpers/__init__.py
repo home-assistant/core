@@ -1,8 +1,9 @@
 """Helper methods for components within Home Assistant."""
 from __future__ import annotations
 
+from collections.abc import Iterable, Sequence
 import re
-from typing import TYPE_CHECKING, Any, Iterable, Sequence
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import CONF_PLATFORM
 

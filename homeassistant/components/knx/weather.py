@@ -1,7 +1,8 @@
 """Support for KNX/IP weather station."""
 from __future__ import annotations
 
-from typing import Callable, Iterable
+from collections.abc import Iterable
+from typing import Callable
 
 from xknx.devices import Weather as XknxWeather
 
