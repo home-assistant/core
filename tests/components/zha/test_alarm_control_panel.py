@@ -10,6 +10,8 @@ from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
     STATE_UNAVAILABLE,
@@ -135,3 +137,37 @@ async def test_alarm_control_panel(hass, zha_device_joined_restored, zigpy_devic
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
     cluster.client_command.reset_mock()
+
+    # arm_home from HA
+    cluster.client_command.reset_mock()
+    await hass.services.async_call(
+        ALARM_DOMAIN, "alarm_arm_home", {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_HOME
+    assert cluster.client_command.call_count == 2
+    assert cluster.client_command.await_count == 2
+    assert cluster.client_command.call_args == call(
+        4,
+        security.IasAce.PanelStatus.Armed_Stay,
+        0,
+        security.IasAce.AudibleNotification.Default_Sound,
+        security.IasAce.AlarmStatus.No_Alarm,
+    )
+
+    # arm_night from HA
+    cluster.client_command.reset_mock()
+    await hass.services.async_call(
+        ALARM_DOMAIN, "alarm_arm_night", {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_NIGHT
+    assert cluster.client_command.call_count == 2
+    assert cluster.client_command.await_count == 2
+    assert cluster.client_command.call_args == call(
+        4,
+        security.IasAce.PanelStatus.Armed_Night,
+        0,
+        security.IasAce.AudibleNotification.Default_Sound,
+        security.IasAce.AlarmStatus.No_Alarm,
+    )
