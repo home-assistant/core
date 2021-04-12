@@ -101,7 +101,7 @@ ATTR_TO_HA_GENERIC = {
     # No icon as this is dealt with directly as a special case in icon()
     "charging_level_hv": [None, None, PERCENTAGE, True],
     # LastTrip attributes
-    "date_utc": ["mdi:calendar", DEVICE_CLASS_TIMESTAMP, None, True],
+    "date_utc": [None, DEVICE_CLASS_TIMESTAMP, None, True],
     "duration": ["mdi:timer-outline", None, TIME_MINUTES, True],
     "electric_distance_ratio": ["mdi:percent-outline", None, PERCENTAGE, False],
 }
