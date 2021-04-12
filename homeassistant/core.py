@@ -509,6 +509,7 @@ class HomeAssistant:
 
         This method is a coroutine.
         """
+        _LOGGER.debug("Called async_stop with force=%s", force)
         if not force:
             # Some tests require async_stop to run,
             # regardless of the state of the loop.
@@ -523,6 +524,8 @@ class HomeAssistant:
                     "Stopping Home Assistant before startup has completed may fail"
                 )
 
+        _LOGGER.debug("Starting stage 1 shutdown")
+
         # stage 1
         self.state = CoreState.stopping
         self.async_track_tasks()
@@ -535,6 +538,8 @@ class HomeAssistant:
                 "Timed out waiting for shutdown stage 1 to complete, the shutdown will continue"
             )
 
+        _LOGGER.debug("Starting stage 2 shutdown")
+
         # stage 2
         self.state = CoreState.final_write
         self.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
@@ -545,6 +550,8 @@ class HomeAssistant:
             _LOGGER.warning(
                 "Timed out waiting for shutdown stage 2 to complete, the shutdown will continue"
             )
+
+        _LOGGER.debug("Starting stage 3 shutdown")
 
         # stage 3
         self.state = CoreState.not_running
@@ -567,6 +574,8 @@ class HomeAssistant:
 
         self.exit_code = exit_code
         self.state = CoreState.stopped
+
+        _LOGGER.debug("Final shutdown")
 
         if self._stopped is not None:
             self._stopped.set()
