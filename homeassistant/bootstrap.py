@@ -513,10 +513,12 @@ async def _async_set_up_integrations(
                 to_resolve.add(dep)
 
     _LOGGER.info("Domains to be set up: %s", domains_to_setup)
+    setup_requested = set()
 
     logging_domains = async_domains_with_deps_promoted(
         LOGGING_INTEGRATIONS, domains_to_setup, integration_cache
     )
+    setup_requested.update(logging_domains)
 
     # Load logging as soon as possible
     if logging_domains:
@@ -524,20 +526,28 @@ async def _async_set_up_integrations(
         await async_setup_multi_components(hass, logging_domains, config)
 
     # Start up debuggers. Start these first in case they want to wait.
-    debuggers = async_domains_with_deps_promoted(
-        DEBUGGER_INTEGRATIONS, domains_to_setup, integration_cache
+    debuggers = (
+        async_domains_with_deps_promoted(
+            DEBUGGER_INTEGRATIONS, domains_to_setup, integration_cache
+        )
+        - setup_requested
     )
+    setup_requested.update(logging_domains)
 
     if debuggers:
         _LOGGER.debug("Setting up debuggers: %s", debuggers)
         await async_setup_multi_components(hass, debuggers, config)
 
     # calculate what components to setup in what stage
-    stage_1_domains = async_domains_with_deps_promoted(
-        STAGE_1_INTEGRATIONS, domains_to_setup, integration_cache
+    stage_1_domains = (
+        async_domains_with_deps_promoted(
+            STAGE_1_INTEGRATIONS, domains_to_setup, integration_cache
+        )
+        - setup_requested
     )
+    setup_requested.update(logging_domains)
 
-    stage_2_domains = domains_to_setup - logging_domains - debuggers - stage_1_domains
+    stage_2_domains = domains_to_setup - setup_requested
 
     # Load the registries
     await asyncio.gather(
