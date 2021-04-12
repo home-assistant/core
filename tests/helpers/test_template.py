@@ -567,11 +567,15 @@ def test_from_json(hass):
 def test_min(hass):
     """Test the min filter."""
     assert template.Template("{{ [1, 2, 3] | min }}", hass).async_render() == 1
+    assert template.Template("{{ min([1, 2, 3]) }}", hass).async_render() == 1
+    assert template.Template("{{ min(1, 2, 3) }}", hass).async_render() == 1
 
 
 def test_max(hass):
     """Test the max filter."""
     assert template.Template("{{ [1, 2, 3] | max }}", hass).async_render() == 3
+    assert template.Template("{{ max([1, 2, 3]) }}", hass).async_render() == 3
+    assert template.Template("{{ max(1, 2, 3) }}", hass).async_render() == 3
 
 
 def test_ord(hass):
