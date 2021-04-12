@@ -20,7 +20,7 @@ from homeassistant.const import (
 )
 import homeassistant.core as ha
 from homeassistant.exceptions import HomeAssistantError, Unauthorized, UnknownUser
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, recorder
 from homeassistant.helpers.service import (
     async_extract_config_entry_ids,
     async_extract_referenced_entity_ids,
@@ -126,18 +126,15 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
 
     async def async_handle_core_service(call):
         """Service handler for handling core services."""
-        if "recorder" in hass.config.components:
-            from homeassistant.components import (  # pylint: disable=import-outside-toplevel
-                recorder,
+        if (
+            call.service in SHUTDOWN_SERVICES
+            and await recorder.async_migration_in_progress(hass)
+        ):
+            _LOGGER.error(
+                "The system cannot %s while a database upgrade in progress.",
+                call.service,
             )
-
-            if (
-                call.service in SHUTDOWN_SERVICES
-                and await recorder.async_migration_in_progress(hass)
-            ):
-                raise HomeAssistantError(
-                    f"The system cannot {call.service} while a database upgrade in progress."
-                )
+            return
 
         if call.service == SERVICE_HOMEASSISTANT_STOP:
             hass.async_create_task(hass.async_stop())

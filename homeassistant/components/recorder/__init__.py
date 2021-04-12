@@ -134,7 +134,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 @bind_hass
-async def async_migration_in_progress(hass):
+async def async_migration_in_progress(hass: HomeAssistant) -> bool:
     """Determine is a migration is in progress.
 
     This is a thin wrapper that allows us to change
