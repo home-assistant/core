@@ -523,7 +523,7 @@ class Thermostat(ClimateEntity):
     def extra_state_attributes(self):
         """Return device specific state attributes."""
         status = self.thermostat["equipmentStatus"]
-        attrs = {
+        return {
             "fan": self.fan,
             "climate_mode": self._preset_modes[
                 self.thermostat["program"]["currentClimateRef"]
@@ -531,8 +531,6 @@ class Thermostat(ClimateEntity):
             "equipment_running": status,
             "fan_min_on_time": self.thermostat["settings"]["fanMinOnTime"],
         }
-
-        return attrs
 
     @property
     def is_aux_heat(self):
