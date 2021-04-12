@@ -37,6 +37,7 @@ from homeassistant.setup import async_setup_component
 from tests.common import (
     MockConfigEntry,
     async_capture_events,
+    async_init_recorder_component,
     async_mock_service,
     get_test_home_assistant,
     mock_registry,
@@ -475,7 +476,7 @@ async def test_raises_when_db_upgrade_in_progress_recorder_loaded(hass, service)
     """Test services raise an exception when a db upgrade is in progress."""
     await async_setup_component(hass, "persistent_notification", {})
     await async_setup_component(hass, "homeassistant", {})
-    await async_setup_component(hass, "recorder", {})
+    await async_init_recorder_component(hass)
 
     with pytest.raises(HomeAssistantError), patch(
         "homeassistant.components.recorder.async_migration_in_progress",
