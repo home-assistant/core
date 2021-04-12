@@ -137,7 +137,7 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_migration_in_progress(hass):
     """Determine is a migration is in progress.
 
-    This is a thin wrapper that allow us to change
+    This is a thin wrapper that allows us to change
     out the implementation later.
     """
     if DATA_INSTANCE not in hass.data:
