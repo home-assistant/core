@@ -131,8 +131,6 @@ IGNORE_VIOLATIONS = {
     ("openalpr_cloud", "openalpr_local"),
     ("lutron_caseta", "lutron"),
     ("ffmpeg_noise", "ffmpeg_motion"),
-    # Conditional that only checks if the recorder is actually loaded
-    ("homeassistant", "recorder"),
     # Demo
     ("demo", "manual"),
     ("demo", "openalpr_local"),
