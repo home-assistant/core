@@ -79,6 +79,10 @@ def async_activate_log_queue_handler(hass: HomeAssistant) -> None:
         """Cleanup handler."""
         logging.root.removeHandler(queue_handler)
         listener.stop()
+        # Ensure any messages that happen after
+        # close still get logged
+        for original_handler in migrated_handlers:
+            logging.root.addHandler(original_handler)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_stop_queue_handler)
 
