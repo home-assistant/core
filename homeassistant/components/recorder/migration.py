@@ -55,10 +55,6 @@ def migrate_schema(instance, current_version):
 
             _LOGGER.info("Upgrade to version %s done", new_version)
 
-    import time
-
-    time.sleep(1000)
-
 
 def _create_index(engine, table_name, index_name):
     """Create an index for the specified table.
