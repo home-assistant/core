@@ -434,6 +434,9 @@ class Recorder(threading.Thread):
         if not schema_is_current:
             if self._migrate_schema_and_setup_run(current_version):
                 if not self._event_listener:
+                    # If the schema migration takes so longer that the end
+                    # queue watcher safety kicks in because MAX_QUEUE_BACKLOG
+                    # is reached, we need to reinitialize the listener.
                     self.hass.add_job(self.async_initialize)
             else:
                 persistent_notification.create(
