@@ -6,7 +6,7 @@ import logging
 import time
 from typing import TYPE_CHECKING
 
-from sqlalchemy.exc import OperationalError, SQLAlchemyError
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import distinct
 
@@ -69,8 +69,7 @@ def purge_old_data(
             return False
 
         _LOGGER.warning("Error purging history: %s", err)
-    except SQLAlchemyError as err:
-        _LOGGER.warning("Error purging history: %s", err)
+
     return True
 
 

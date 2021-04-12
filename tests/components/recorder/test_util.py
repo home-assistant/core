@@ -74,75 +74,28 @@ def test_recorder_bad_execute(hass_recorder):
     assert e_mock.call_count == 2
 
 
-def test_validate_or_move_away_sqlite_database_with_integrity_check(
-    hass, tmpdir, caplog
-):
-    """Ensure a malformed sqlite database is moved away.
-
-    A quick_check is run here
-    """
-
-    db_integrity_check = True
+def test_validate_or_move_away_sqlite_database(hass, tmpdir, caplog):
+    """Ensure a malformed sqlite database is moved away."""
 
     test_dir = tmpdir.mkdir("test_validate_or_move_away_sqlite_database")
     test_db_file = f"{test_dir}/broken.db"
     dburl = f"{SQLITE_URL_PREFIX}{test_db_file}"
 
-    assert util.validate_sqlite_database(test_db_file, db_integrity_check) is False
+    assert util.validate_sqlite_database(test_db_file) is False
     assert os.path.exists(test_db_file) is True
-    assert (
-        util.validate_or_move_away_sqlite_database(dburl, db_integrity_check) is False
-    )
+    assert util.validate_or_move_away_sqlite_database(dburl) is False
 
     corrupt_db_file(test_db_file)
 
-    assert util.validate_sqlite_database(dburl, db_integrity_check) is False
+    assert util.validate_sqlite_database(dburl) is False
 
-    assert (
-        util.validate_or_move_away_sqlite_database(dburl, db_integrity_check) is False
-    )
+    assert util.validate_or_move_away_sqlite_database(dburl) is False
 
     assert "corrupt or malformed" in caplog.text
 
-    assert util.validate_sqlite_database(dburl, db_integrity_check) is False
+    assert util.validate_sqlite_database(dburl) is False
 
-    assert util.validate_or_move_away_sqlite_database(dburl, db_integrity_check) is True
-
-
-def test_validate_or_move_away_sqlite_database_without_integrity_check(
-    hass, tmpdir, caplog
-):
-    """Ensure a malformed sqlite database is moved away.
-
-    The quick_check is skipped, but we can still find
-    corruption if the whole database is unreadable
-    """
-
-    db_integrity_check = False
-
-    test_dir = tmpdir.mkdir("test_validate_or_move_away_sqlite_database")
-    test_db_file = f"{test_dir}/broken.db"
-    dburl = f"{SQLITE_URL_PREFIX}{test_db_file}"
-
-    assert util.validate_sqlite_database(test_db_file, db_integrity_check) is False
-    assert os.path.exists(test_db_file) is True
-    assert (
-        util.validate_or_move_away_sqlite_database(dburl, db_integrity_check) is False
-    )
-
-    corrupt_db_file(test_db_file)
-
-    assert util.validate_sqlite_database(dburl, db_integrity_check) is False
-
-    assert (
-        util.validate_or_move_away_sqlite_database(dburl, db_integrity_check) is False
-    )
-
-    assert "corrupt or malformed" in caplog.text
-
-    assert util.validate_sqlite_database(dburl, db_integrity_check) is False
-
-    assert util.validate_or_move_away_sqlite_database(dburl, db_integrity_check) is True
+    assert util.validate_or_move_away_sqlite_database(dburl) is True
 
 
 async def test_last_run_was_recently_clean(hass):
@@ -197,12 +150,10 @@ def test_combined_checks(hass_recorder, caplog):
 
     cursor = hass.data[DATA_INSTANCE].engine.raw_connection().cursor()
 
-    assert util.run_checks_on_open_db("fake_db_path", cursor, False) is None
-    assert "skipped because db_integrity_check was disabled" in caplog.text
+    assert util.run_checks_on_open_db("fake_db_path", cursor) is None
+    assert "could not validate that the sqlite3 database" in caplog.text
 
     caplog.clear()
-    assert util.run_checks_on_open_db("fake_db_path", cursor, True) is None
-    assert "could not validate that the sqlite3 database" in caplog.text
 
     # We are patching recorder.util here in order
     # to avoid creating the full database on disk
@@ -210,50 +161,36 @@ def test_combined_checks(hass_recorder, caplog):
         "homeassistant.components.recorder.util.basic_sanity_check", return_value=False
     ):
         caplog.clear()
-        assert util.run_checks_on_open_db("fake_db_path", cursor, False) is None
-        assert "skipped because db_integrity_check was disabled" in caplog.text
-
-        caplog.clear()
-        assert util.run_checks_on_open_db("fake_db_path", cursor, True) is None
+        assert util.run_checks_on_open_db("fake_db_path", cursor) is None
         assert "could not validate that the sqlite3 database" in caplog.text
 
     # We are patching recorder.util here in order
     # to avoid creating the full database on disk
     with patch("homeassistant.components.recorder.util.last_run_was_recently_clean"):
         caplog.clear()
-        assert util.run_checks_on_open_db("fake_db_path", cursor, False) is None
-        assert (
-            "system was restarted cleanly and passed the basic sanity check"
-            in caplog.text
-        )
-
-        caplog.clear()
-        assert util.run_checks_on_open_db("fake_db_path", cursor, True) is None
-        assert (
-            "system was restarted cleanly and passed the basic sanity check"
-            in caplog.text
-        )
+        assert util.run_checks_on_open_db("fake_db_path", cursor) is None
+        assert "restarted cleanly and passed the basic sanity check" in caplog.text
 
     caplog.clear()
     with patch(
         "homeassistant.components.recorder.util.last_run_was_recently_clean",
         side_effect=sqlite3.DatabaseError,
     ), pytest.raises(sqlite3.DatabaseError):
-        util.run_checks_on_open_db("fake_db_path", cursor, False)
+        util.run_checks_on_open_db("fake_db_path", cursor)
 
     caplog.clear()
     with patch(
         "homeassistant.components.recorder.util.last_run_was_recently_clean",
         side_effect=sqlite3.DatabaseError,
     ), pytest.raises(sqlite3.DatabaseError):
-        util.run_checks_on_open_db("fake_db_path", cursor, True)
+        util.run_checks_on_open_db("fake_db_path", cursor)
 
     cursor.execute("DROP TABLE events;")
 
     caplog.clear()
     with pytest.raises(sqlite3.DatabaseError):
-        util.run_checks_on_open_db("fake_db_path", cursor, False)
+        util.run_checks_on_open_db("fake_db_path", cursor)
 
     caplog.clear()
     with pytest.raises(sqlite3.DatabaseError):
-        util.run_checks_on_open_db("fake_db_path", cursor, True)
+        util.run_checks_on_open_db("fake_db_path", cursor)
