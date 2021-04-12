@@ -60,8 +60,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
             cleanup()
 
     if hass.data[DOMAIN].get(DATA_DISCOVERY_INTERVAL) is not None:
-        hass.data[DOMAIN][DATA_DISCOVERY_INTERVAL]()
-        hass.data[DOMAIN].pop(DATA_DISCOVERY_INTERVAL)
+        hass.data[DOMAIN].pop(DATA_DISCOVERY_INTERVAL)()
 
     if hass.data.get(DATA_DISCOVERY_SERVICE) is not None:
         hass.data.pop(DATA_DISCOVERY_SERVICE)
