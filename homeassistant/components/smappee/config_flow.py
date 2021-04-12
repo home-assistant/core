@@ -1,7 +1,7 @@
 """Config flow for Smappee."""
 import logging
 
-from pysmappee import mqtt
+from pysmappee import helper, mqtt
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -42,7 +42,6 @@ class SmappeeFlowHandler(
         """Handle zeroconf discovery."""
 
         if not discovery_info[CONF_HOSTNAME].startswith(SUPPORTED_LOCAL_DEVICES):
-            # We only support Energy, Solar, Plus, Pro and Genius models
             return self.async_abort(reason="invalid_mdns")
 
         serial_number = (
@@ -87,7 +86,7 @@ class SmappeeFlowHandler(
         serial_number = self.context.get(CONF_SERIALNUMBER)
 
         # Attempt to make a connection to the local device
-        if serial_number.startswith("50"):
+        if helper.is_smappee_genius(serial_number):
             # next generation device, attempt connect to the local mqtt broker
             smappee_mqtt = mqtt.SmappeeLocalMqtt(serial_number=serial_number)
             connect = smappee_mqtt.start_attempt()
@@ -178,7 +177,6 @@ class SmappeeFlowHandler(
         if serial_number is None or not serial_number.startswith(
             SUPPORTED_LOCAL_DEVICES
         ):
-            # We currently only support Energy and Solar models (legacy)
             return self.async_abort(reason="invalid_mdns")
 
         serial_number = serial_number.replace("Smappee", "")
