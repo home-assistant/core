@@ -21,6 +21,7 @@ from homeassistant.const import (
 import homeassistant.core as ha
 from homeassistant.exceptions import HomeAssistantError, Unauthorized, UnknownUser
 from homeassistant.helpers import config_validation as cv, recorder
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.service import (
     async_extract_config_entry_ids,
     async_extract_referenced_entity_ids,
@@ -144,9 +145,7 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
         if call.service == SERVICE_HOMEASSISTANT_STOP:
             # We delay the stop by WEBSOCKET_RECEIVE_DELAY to ensure the frontend
             # can receive the response before the webserver shuts down
-            hass.loop.call_later(
-                WEBSOCKET_RECEIVE_DELAY, hass.async_create_task, hass.async_stop()
-            )
+            async_call_later(hass, WEBSOCKET_RECEIVE_DELAY, hass.async_stop)
             return
 
         errors = await conf_util.async_check_ha_config_file(hass)
@@ -169,10 +168,13 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
         if call.service == SERVICE_HOMEASSISTANT_RESTART:
             # We delay the restart by WEBSOCKET_RECEIVE_DELAY to ensure the frontend
             # can receive the response before the webserver shuts down
-            hass.loop.call_later(
+            async def _async_stop_with_code(_):
+                await hass.async_stop(RESTART_EXIT_CODE)
+
+            async_call_later(
+                hass,
                 WEBSOCKET_RECEIVE_DELAY,
-                hass.async_create_task,
-                hass.async_stop(RESTART_EXIT_CODE),
+                _async_stop_with_code,
             )
 
     async def async_handle_update_service(call):
