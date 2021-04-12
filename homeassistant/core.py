@@ -115,6 +115,10 @@ SOURCE_DISCOVERED = "discovered"
 SOURCE_STORAGE = "storage"
 SOURCE_YAML = "yaml"
 
+# Used when converting float states to string: limit precision according to machine
+# epsilon to make the string representation readable
+FLOAT_PRECISION = abs(int(math.floor(math.log10(abs(sys.float_info.epsilon)))))
+
 # How long to wait until things that run on startup have to finish.
 TIMEOUT_EVENT_START = 15
 
@@ -1197,9 +1201,7 @@ class StateMachine:
         if isinstance(new_state, float):
             # If the entity's state is a float, limit precision according to machine
             # epsilon to make the string representation readable
-            epsilon = sys.float_info.epsilon
-            useful_precision = abs(int(math.floor(math.log10(abs(epsilon)))))
-            new_state = f"{new_state:.{useful_precision}}"
+            new_state = f"{new_state:.{FLOAT_PRECISION}}"
         else:
             new_state = str(new_state)
         attributes = attributes or {}
