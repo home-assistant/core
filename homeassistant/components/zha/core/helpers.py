@@ -31,7 +31,6 @@ from .const import (
     CUSTOM_CONFIGURATION,
     DATA_ZHA,
     DATA_ZHA_GATEWAY,
-    ZHA_OPTIONS,
 )
 from .registries import BINDABLE_CLUSTERS
 from .typing import ZhaDeviceType, ZigpyClusterType
@@ -131,11 +130,11 @@ def async_is_bindable_target(source_zha_device, target_zha_device):
 
 
 @callback
-def async_get_zha_config_value(config_entry, config_key, default):
+def async_get_zha_config_value(config_entry, section, config_key, default):
     """Get the value for the specified configuration from the zha config entry."""
     return (
         config_entry.options.get(CUSTOM_CONFIGURATION, {})
-        .get(ZHA_OPTIONS, {})
+        .get(section, {})
         .get(config_key, default)
     )
 
