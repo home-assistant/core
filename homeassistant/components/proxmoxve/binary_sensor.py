@@ -21,7 +21,7 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
             continue
 
         for node_config in host_config["nodes"]:
-            node_name = node_config["node"]
+            node_name = node_config["name"]
 
             for vm_id in node_config["vms"]:
                 coordinator = host_name_coordinators[node_name][vm_id]
