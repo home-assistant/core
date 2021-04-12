@@ -407,9 +407,7 @@ class Recorder(threading.Thread):
         shutdown_task = object()
         hass_started = concurrent.futures.Future()
 
-        self.hass.add_job(
-            self.async_register, shutdown_task, hass_started
-        )
+        self.hass.add_job(self.async_register, shutdown_task, hass_started)
 
         current_version = self._setup_recorder()
 
@@ -475,10 +473,11 @@ class Recorder(threading.Thread):
             self._process_one_event(event)
             return
         except exc.DatabaseError as err:
-            if not self._handle_database_error(err):
-                _LOGGER.exception(
-                    "Database error while processing event %s: %s", event, err
-                )
+            if self._handle_database_error(err):
+                return
+            _LOGGER.exception(
+                "Unhandled database error while processing event %s: %s", event, err
+            )
         except SQLAlchemyError as err:
             _LOGGER.exception(
                 "SQLAlchemyError error processing event %s: %s", event, err
