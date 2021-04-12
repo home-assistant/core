@@ -524,6 +524,7 @@ async def _async_set_up_integrations(
     if logging_domains:
         _LOGGER.info("Setting up logging: %s", logging_domains)
         await async_setup_multi_components(hass, logging_domains, config)
+        _LOGGER.info("Finished setting up logging: %s", logging_domains)
 
     # Start up debuggers. Start these first in case they want to wait.
     debuggers = (
@@ -537,6 +538,7 @@ async def _async_set_up_integrations(
     if debuggers:
         _LOGGER.debug("Setting up debuggers: %s", debuggers)
         await async_setup_multi_components(hass, debuggers, config)
+        _LOGGER.debug("Finished setting up debuggers: %s", debuggers)
 
     # calculate what components to setup in what stage
     stage_1_domains = (
