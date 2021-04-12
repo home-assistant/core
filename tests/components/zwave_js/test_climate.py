@@ -9,6 +9,8 @@ from homeassistant.components.climate.const import (
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
+    ATTR_MAX_TEMP,
+    ATTR_MIN_TEMP,
     ATTR_PRESET_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -448,6 +450,8 @@ async def test_thermostat_heatit(hass, client, climate_heatit_z_trm3, integratio
     assert state.attributes[ATTR_TEMPERATURE] == 22.5
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_TARGET_TEMPERATURE
+    assert state.attributes[ATTR_MIN_TEMP] == 5
+    assert state.attributes[ATTR_MAX_TEMP] == 35
 
 
 async def test_thermostat_srt321_hrt4_zw(hass, client, srt321_hrt4_zw, integration):
