@@ -6,18 +6,15 @@ from typing import Callable
 
 from adguardhome import AdGuardHome, AdGuardHomeConnectionError
 
-from homeassistant.components.adguard import AdGuardHomeDeviceEntity
-from homeassistant.components.adguard.const import (
-    DATA_ADGUARD_CLIENT,
-    DATA_ADGUARD_VERSION,
-    DOMAIN,
-)
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, TIME_MILLISECONDS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
+
+from . import AdGuardHomeDeviceEntity
+from .const import DATA_ADGUARD_CLIENT, DATA_ADGUARD_VERSION, DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=300)
 PARALLEL_UPDATES = 4

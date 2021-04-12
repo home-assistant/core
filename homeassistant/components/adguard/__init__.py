@@ -68,9 +68,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except AdGuardHomeConnectionError as exception:
         raise ConfigEntryNotReady from exception
 
-    for platform in PLATFORMS:
+    for component in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
+            hass.config_entries.async_forward_entry_setup(entry, component)
         )
 
     async def add_url(call) -> None:

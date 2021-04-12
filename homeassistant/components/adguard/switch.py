@@ -7,17 +7,14 @@ from typing import Callable
 
 from adguardhome import AdGuardHome, AdGuardHomeConnectionError, AdGuardHomeError
 
-from homeassistant.components.adguard import AdGuardHomeDeviceEntity
-from homeassistant.components.adguard.const import (
-    DATA_ADGUARD_CLIENT,
-    DATA_ADGUARD_VERSION,
-    DOMAIN,
-)
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
+
+from . import AdGuardHomeDeviceEntity
+from .const import DATA_ADGUARD_CLIENT, DATA_ADGUARD_VERSION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
