@@ -107,7 +107,7 @@ class IasAce(ZigbeeChannel):
         )
 
         zigbee_reply = self.arm_map[mode](code)
-        asyncio.create_task(zigbee_reply)
+        self._ch_pool.hass.async_create_task(zigbee_reply)
 
         if self.invalid_tries >= self.max_invalid_tries:
             self.alarm_status = AceCluster.AlarmStatus.Emergency
@@ -239,7 +239,7 @@ class IasAce(ZigbeeChannel):
             AceCluster.AudibleNotification.Default_Sound,
             self.alarm_status,
         )
-        asyncio.create_task(response)
+        self._ch_pool.hass.async_create_task(response)
 
     def _send_panel_status_changed(self) -> None:
         """Handle the IAS ACE panel status changed command."""
@@ -249,7 +249,7 @@ class IasAce(ZigbeeChannel):
             AceCluster.AudibleNotification.Default_Sound,
             self.alarm_status,
         )
-        asyncio.create_task(response)
+        self._ch_pool.hass.async_create_task(response)
 
     def _get_bypassed_zone_list(self):
         """Handle the IAS ACE bypassed zone list command."""
