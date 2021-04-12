@@ -1,8 +1,6 @@
 """Allows the creation of a sensor that breaks out state_attributes."""
 from __future__ import annotations
 
-from itertools import chain
-
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -134,7 +132,7 @@ PLATFORM_SCHEMA = vol.All(
     PLATFORM_SCHEMA.extend(
         {
             vol.Optional(CONF_TRIGGER): cv.match_all,  # to raise custom warning
-            vol.Optional(CONF_SENSORS): cv.schema_with_slug_keys(LEGACY_SENSOR_SCHEMA),
+            vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(LEGACY_SENSOR_SCHEMA),
         }
     ),
     extra_validation_checks,
@@ -181,28 +179,24 @@ def _async_create_template_tracking_entities(async_add_entities, hass, definitio
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the template sensors."""
-    if discovery_info is not None:
-        if "coordinator" not in discovery_info:
-            _async_create_template_tracking_entities(
-                async_add_entities, hass, discovery_info["entities"]
-            )
-            return
+    if discovery_info is None:
+        _async_create_template_tracking_entities(
+            async_add_entities,
+            hass,
+            rewrite_legacy_to_modern_conf(config[CONF_SENSORS]),
+        )
+        return
 
+    if "coordinator" in discovery_info:
         async_add_entities(
             TriggerSensorEntity(hass, discovery_info["coordinator"], config)
             for config in discovery_info["entities"]
         )
         return
 
-    defs = []
-
-    if SENSOR_DOMAIN in config:
-        defs.append(config[SENSOR_DOMAIN])
-
-    if CONF_SENSORS in config:
-        defs.append(rewrite_legacy_to_modern_conf(config[CONF_SENSORS]))
-
-    _async_create_template_tracking_entities(async_add_entities, hass, chain(*defs))
+    _async_create_template_tracking_entities(
+        async_add_entities, hass, discovery_info["entities"]
+    )
 
 
 class SensorTemplate(TemplateEntity, SensorEntity):
