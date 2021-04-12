@@ -310,7 +310,12 @@ class FluxLight(LightEntity):
             _LOGGER.warning("Error updating flux_led: %s", error)
             return
 
-        if self._bulb.mode == "ww":
+        if len(self._bulb.raw_state) > 10:
+            if self._bulb.raw_state[9] == self._bulb.raw_state[11]:
+                self._mode = MODE_RGBWW
+            else:
+                self._mode = MODE_RGBCW
+        elif self._bulb.mode == "ww":
             self._mode = MODE_WHITE
         elif self._bulb.rgbwcapable and not self._bulb.rgbwprotocol:
             self._mode = MODE_RGBW
