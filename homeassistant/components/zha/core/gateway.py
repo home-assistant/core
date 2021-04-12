@@ -127,7 +127,7 @@ class ZHAGateway:
         }
         self.debug_enabled = False
         self._log_relay_handler = LogRelayHandler(hass, self)
-        self._config_entry = config_entry
+        self.config_entry = config_entry
         self._unsubs = []
 
     async def async_initialize(self):
@@ -139,7 +139,7 @@ class ZHAGateway:
         self.ha_device_registry = await get_dev_reg(self._hass)
         self.ha_entity_registry = await get_ent_reg(self._hass)
 
-        radio_type = self._config_entry.data[CONF_RADIO_TYPE]
+        radio_type = self.config_entry.data[CONF_RADIO_TYPE]
 
         app_controller_cls = RadioType[radio_type].controller
         self.radio_description = RadioType[radio_type].description
@@ -150,7 +150,7 @@ class ZHAGateway:
             os.path.join(self._hass.config.config_dir, DEFAULT_DATABASE_NAME),
         )
         app_config[CONF_DATABASE] = database
-        app_config[CONF_DEVICE] = self._config_entry.data[CONF_DEVICE]
+        app_config[CONF_DEVICE] = self.config_entry.data[CONF_DEVICE]
 
         app_config = app_controller_cls.SCHEMA(app_config)
         try:
@@ -506,7 +506,7 @@ class ZHAGateway:
             zha_device = ZHADevice.new(self._hass, zigpy_device, self, restored)
             self._devices[zigpy_device.ieee] = zha_device
             device_registry_device = self.ha_device_registry.async_get_or_create(
-                config_entry_id=self._config_entry.entry_id,
+                config_entry_id=self.config_entry.entry_id,
                 connections={(CONNECTION_ZIGBEE, str(zha_device.ieee))},
                 identifiers={(DOMAIN, str(zha_device.ieee))},
                 name=zha_device.name,
