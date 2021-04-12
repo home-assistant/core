@@ -1,4 +1,4 @@
-"""Support for the Nettigo air_quality service."""
+"""Support for the Nettigo Air Monitor air_quality service."""
 from __future__ import annotations
 
 from typing import Any
@@ -19,13 +19,13 @@ PARALLEL_UPDATES = 1
 async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
-    """Add a Nettigo entities from a config_entry."""
+    """Add a Nettigo Air Monitor entities from a config_entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
     entities = []
     for sensor in AIR_QUALITY_SENSORS:
         if f"{sensor}_p1" in coordinator.data:
-            entities.append(NettigoAirQuality(coordinator, sensor))
+            entities.append(NAMAirQuality(coordinator, sensor))
 
     async_add_entities(entities, False)
 
@@ -42,8 +42,8 @@ def round_state(func):
     return _decorator
 
 
-class NettigoAirQuality(CoordinatorEntity, AirQualityEntity):
-    """Define an Nettigo air quality."""
+class NAMAirQuality(CoordinatorEntity, AirQualityEntity):
+    """Define an Nettigo Air Monitor air quality."""
 
     def __init__(self, coordinator: DataUpdateCoordinator, sensor_type: str):
         """Initialize."""

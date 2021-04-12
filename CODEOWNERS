@@ -308,6 +308,7 @@ homeassistant/components/my/* @home-assistant/core
 homeassistant/components/myq/* @bdraco
 homeassistant/components/mysensors/* @MartinHjelmare @functionpointer
 homeassistant/components/mystrom/* @fabaff
+homeassistant/components/nam/* @bieniu
 homeassistant/components/neato/* @dshokouhi @Santobert
 homeassistant/components/nederlandse_spoorwegen/* @YarmoM
 homeassistant/components/nello/* @pschmitt
@@ -315,7 +316,6 @@ homeassistant/components/ness_alarm/* @nickw444
 homeassistant/components/nest/* @allenporter
 homeassistant/components/netatmo/* @cgtobi
 homeassistant/components/netdata/* @fabaff
-homeassistant/components/nettigo/* @bieniu
 homeassistant/components/nexia/* @bdraco
 homeassistant/components/nextbus/* @vividboarder
 homeassistant/components/nextcloud/* @meichthys

@@ -1,4 +1,4 @@
-"""Adds config flow for Nettigo."""
+"""Adds config flow for Nettigo Air Monitor."""
 from __future__ import annotations
 
 import asyncio
@@ -6,7 +6,7 @@ import logging
 
 from aiohttp.client_exceptions import ClientConnectorError
 import async_timeout
-from nettigo import ApiError, CannotGetMac, Nettigo
+from nettigo_air_monitor import ApiError, CannotGetMac, NettigoAirMonitor
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -20,8 +20,8 @@ from .const import DOMAIN  # pylint:disable=unused-import
 _LOGGER = logging.getLogger(__name__)
 
 
-class NettigoFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
-    """Config flow for Nettigo."""
+class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+    """Config flow for Nettigo Air Monitor."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
@@ -106,9 +106,9 @@ class NettigoFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_get_mac(self, host: str) -> str:
         """Get device MAC address."""
         websession = async_get_clientsession(self.hass)
-        nettigo = Nettigo(websession, host)
+        nam = NettigoAirMonitor(websession, host)
         # Device firmware uses synchronous code and doesn't respond to http queries
-        # when reading data from sensors. The nettigo library tries to get the data
-        # 4 times, so we use a longer than usual timeout here.
+        # when reading data from sensors. The nettigo-air-monitor library tries to get
+        # the data 4 times, so we use a longer than usual timeout here.
         with async_timeout.timeout(30):
-            return await nettigo.async_get_mac_address()
+            return await nam.async_get_mac_address()

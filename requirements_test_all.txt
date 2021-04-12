@@ -535,8 +535,8 @@ nessclient==0.9.15
 # homeassistant.components.ssdp
 netdisco==2.8.2
 
-# homeassistant.components.nettigo
-nettigo==0.2.2
+# homeassistant.components.nam
+nettigo-air-monitor==0.2.3
 
 # homeassistant.components.nexia
 nexia==0.9.6

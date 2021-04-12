@@ -1,12 +1,12 @@
-"""Define tests for the Nettigo config flow."""
+"""Define tests for the Nettigo Air Monitor config flow."""
 import asyncio
 from unittest.mock import patch
 
-from nettigo import ApiError, CannotGetMac
+from nettigo_air_monitor import ApiError, CannotGetMac
 import pytest
 
 from homeassistant import data_entry_flow
-from homeassistant.components.nettigo.const import DOMAIN
+from homeassistant.components.nam.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 
 from tests.common import MockConfigEntry

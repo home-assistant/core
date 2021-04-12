@@ -1,4 +1,4 @@
-"""The Nettigo component."""
+"""The Nettigo Air Monitor component."""
 from __future__ import annotations
 
 import asyncio
@@ -8,7 +8,7 @@ from typing import Any
 from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientConnectorError
 import async_timeout
-from nettigo import ApiError, InvalidSensorData, Nettigo
+from nettigo_air_monitor import ApiError, InvalidSensorData, NettigoAirMonitor
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
@@ -30,7 +30,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     websession = async_get_clientsession(hass)
 
-    coordinator = NettigoUpdateCoordinator(hass, websession, host, entry.unique_id)
+    coordinator = NAMUpdateCoordinator(hass, websession, host, entry.unique_id)
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
@@ -61,15 +61,15 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
     return unload_ok
 
 
-class NettigoUpdateCoordinator(DataUpdateCoordinator):
-    """Class to manage fetching Nettigo data."""
+class NAMUpdateCoordinator(DataUpdateCoordinator):
+    """Class to manage fetching Nettigo Air Monitor data."""
 
     def __init__(
         self, hass: HomeAssistantType, session: ClientSession, host: str, unique_id: str
     ):
         """Initialize."""
         self.host = host
-        self.nettigo = Nettigo(session, host)
+        self.nam = NettigoAirMonitor(session, host)
         self._unique_id = unique_id
 
         super().__init__(
@@ -80,10 +80,10 @@ class NettigoUpdateCoordinator(DataUpdateCoordinator):
         """Update data via library."""
         try:
             # Device firmware uses synchronous code and doesn't respond to http queries
-            # when reading data from sensors. The nettigo library tries to get the data
-            # 4 times, so we use a longer than usual timeout here.
+            # when reading data from sensors. The nettigo-air-quality library tries to
+            # get the data 4 times, so we use a longer than usual timeout here.
             with async_timeout.timeout(30):
-                data = await self.nettigo.async_update()
+                data = await self.nam.async_update()
         except (ApiError, ClientConnectorError, InvalidSensorData) as error:
             raise UpdateFailed(error) from error
 
@@ -103,6 +103,6 @@ class NettigoUpdateCoordinator(DataUpdateCoordinator):
             "identifiers": {(DOMAIN, self._unique_id)},
             "connections": {(CONNECTION_NETWORK_MAC, self._unique_id)},
             "name": DEFAULT_NAME,
-            "sw_version": self.nettigo.software_version,
+            "sw_version": self.nam.software_version,
             "manufacturer": MANUFACTURER,
         }

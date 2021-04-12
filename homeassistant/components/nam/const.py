@@ -1,4 +1,4 @@
-"""Constants for Nettigo integration."""
+"""Constants for Nettigo Air Monitor integration."""
 from datetime import timedelta
 
 from homeassistant.const import (
@@ -15,7 +15,7 @@ from homeassistant.const import (
 
 DEFAULT_NAME = "Nettigo Air Monitor"
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=6)
-DOMAIN = "nettigo"
+DOMAIN = "nam"
 MANUFACTURER = "Nettigo"
 
 AIR_QUALITY_SENSORS = {"sds": "SDS011", "sps30": "SPS30"}
