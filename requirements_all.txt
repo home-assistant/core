@@ -1364,7 +1364,7 @@ pydroid-ipcam==0.8
 pyebox==1.1.4
 
 # homeassistant.components.econet
-pyeconet==0.1.13
+pyeconet==0.1.14
 
 # homeassistant.components.edimax
 pyedimax==0.2.1

@@ -1457,6 +1457,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["timedelta"] = timedelta
         self.globals["strptime"] = strptime
         self.globals["urlencode"] = urlencode
+        self.globals["max"] = max
+        self.globals["min"] = min
+
         if hass is None:
             return
 
