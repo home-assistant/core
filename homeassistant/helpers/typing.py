@@ -4,22 +4,6 @@ from typing import Any, Dict, Mapping, Optional, Tuple, Union
 
 import homeassistant.core
 
-__all__ = (
-    "GPSType",
-    "ConfigType",
-    "ContextType",
-    "DiscoveryInfoType",
-    "EventType",
-    "HomeAssistantType",
-    "ServiceCallType",
-    "ServiceDataType",
-    "StateType",
-    "TemplateVarsType",
-    "QueryType",
-    "UndefinedType",
-    "UNDEFINED",
-)
-
 GPSType = Tuple[float, float]
 ConfigType = Dict[str, Any]
 ContextType = homeassistant.core.Context
