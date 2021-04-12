@@ -4,60 +4,37 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from adax import get_adax_token
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import ACCOUNT_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-# TODO adjust the data schema to the data that you need
-STEP_USER_DATA_SCHEMA = vol.Schema({"host": str, "username": str, "password": str})
-
-
-class PlaceholderHub:
-    """Placeholder class to make tests pass.
-
-    TODO Remove this placeholder class and replace with things from your PyPI package.
-    """
-
-    def __init__(self, host: str) -> None:
-        """Initialize."""
-        self.host = host
-
-    async def authenticate(self, username: str, password: str) -> bool:
-        """Test if we can authenticate with the host."""
-        return True
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {vol.Required(ACCOUNT_ID): int, vol.Required(CONF_PASSWORD): str}
+)
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate the user input allows us to connect.
+    """Validate the user input allows us to connect."""
+    account_id = data[ACCOUNT_ID]
+    password = data[CONF_PASSWORD].replace(" ", "")
 
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
-    # TODO validate the data can be used to set up a connection.
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if entry.data[ACCOUNT_ID] == account_id:
+            raise AlreadyConfigured
 
-    # If your PyPI package is not built with async, pass your methods
-    # to the executor:
-    # await hass.async_add_executor_job(
-    #     your_validate_func, data["username"], data["password"]
-    # )
-
-    hub = PlaceholderHub(data["host"])
-
-    if not await hub.authenticate(data["username"], data["password"]):
-        raise InvalidAuth
-
-    # If you cannot connect:
-    # throw CannotConnect
-    # If the authentication is wrong:
-    # InvalidAuth
-
-    # Return info that you want to store in the config entry.
-    return {"title": "Name of the device"}
+    token = await get_adax_token(async_get_clientsession(hass), account_id, password)
+    if token is None:
+        _LOGGER.info("Adax: Failed to login to retrieve token")
+        raise CannotConnect
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -82,8 +59,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, user_input)
         except CannotConnect:
             errors["base"] = "cannot_connect"
-        except InvalidAuth:
-            errors["base"] = "invalid_auth"
+        except AlreadyConfigured:
+            return self.async_abort(reason="already_configured")
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
@@ -99,5 +76,5 @@ class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
+class AlreadyConfigured(HomeAssistantError):
+    """Error to indicate host is already configured."""
