@@ -37,7 +37,6 @@ from homeassistant.setup import async_setup_component
 from tests.common import (
     MockConfigEntry,
     async_capture_events,
-    async_init_recorder_component,
     async_mock_service,
     get_test_home_assistant,
     mock_registry,
@@ -472,14 +471,14 @@ async def test_raises_when_db_upgrade_in_progress_recorder_not_loaded(hass, serv
 @pytest.mark.parametrize(
     "service", [SERVICE_HOMEASSISTANT_RESTART, SERVICE_HOMEASSISTANT_STOP]
 )
-async def test_raises_when_db_upgrade_in_progress_recorder_loaded(hass, service):
-    """Test services raise an exception when a db upgrade is in progress."""
-    await async_setup_component(hass, "persistent_notification", {})
+async def test_raises_when_db_upgrade_in_progress_recorder_loaded(
+    hass, service, caplog
+):
+    """Test an error is logged when they try to restart during migration."""
     await async_setup_component(hass, "homeassistant", {})
-    await async_init_recorder_component(hass)
 
-    with pytest.raises(HomeAssistantError), patch(
-        "homeassistant.components.recorder.async_migration_in_progress",
+    with patch(
+        "homeassistant.helpers.recorder.async_migration_in_progress",
         return_value=True,
     ) as mock_async_migration_in_progress:
         await hass.services.async_call(
@@ -487,22 +486,22 @@ async def test_raises_when_db_upgrade_in_progress_recorder_loaded(hass, service)
             service,
             blocking=True,
         )
+        assert "The system cannot" in caplog.text
+        assert "while a database upgrade in progress" in caplog.text
 
     assert mock_async_migration_in_progress.called
 
+    caplog.clear()
     with patch(
-        "homeassistant.components.recorder.async_migration_in_progress",
+        "homeassistant.helpers.recorder.async_migration_in_progress",
         return_value=False,
-    ) as mock_async_migration_in_progress, patch(
-        "homeassistant.core.HomeAssistant.async_stop"
-    ) as stop_mock, patch(
-        "homeassistant.config.async_check_ha_config_file", return_value=False
-    ):
+    ) as mock_async_migration_in_progress:
         await hass.services.async_call(
             "homeassistant",
             service,
             blocking=True,
         )
+        assert "The system cannot" not in caplog.text
+        assert "while a database upgrade in progress" not in caplog.text
 
-    assert stop_mock.called
     assert mock_async_migration_in_progress.called
