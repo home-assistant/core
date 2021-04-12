@@ -24,10 +24,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = hub
     try:
         await hub.sia_client.start(reuse_port=True)
-    except OSError:
+    except OSError as exc:
         raise ConfigEntryNotReady(
-            "SIA Server at port %s could not start.", entry.data[CONF_PORT]
-        )
+            f"SIA Server at port {entry.data[CONF_PORT]} could not start."
+        ) from exc
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
