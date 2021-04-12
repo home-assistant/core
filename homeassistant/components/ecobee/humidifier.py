@@ -21,13 +21,13 @@ MODE_OFF = "off"
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the ecobee thermostat humidifier entity."""
     data = hass.data[DOMAIN]
-    devices = []
+    entities = []
     for index in range(len(data.ecobee.thermostats)):
         thermostat = data.ecobee.get_thermostat(index)
         if thermostat["settings"]["hasHumidifier"]:
-            devices.append(EcobeeHumidifier(data, index))
+            entities.append(EcobeeHumidifier(data, index))
 
-    async_add_entities(devices, True)
+    async_add_entities(entities, True)
 
 
 class EcobeeHumidifier(HumidifierEntity):
@@ -103,7 +103,7 @@ class EcobeeHumidifier(HumidifierEntity):
         """Set humidifier mode (auto, off, manual)."""
         if mode.lower() not in (self.available_modes):
             raise ValueError(
-                f"Invalid mode value: {mode}  Valid values are 'auto', 'off', or 'manual'"
+                f"Invalid mode value: {mode}  Valid values are {', '.join(self.available_modes)}."
             )
 
         self.data.ecobee.set_humidifier_mode(self.thermostat_index, mode)
@@ -111,11 +111,6 @@ class EcobeeHumidifier(HumidifierEntity):
 
     def set_humidity(self, humidity):
         """Set the humidity level."""
-        if humidity not in range(0, 101):
-            raise ValueError(
-                f"Invalid set_humidity value (must be in range 0-100): {humidity}"
-            )
-
         self.data.ecobee.set_humidity(self.thermostat_index, humidity)
         self.update_without_throttle = True
 
