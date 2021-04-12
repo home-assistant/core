@@ -6,7 +6,6 @@ import logging
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
-from homeassistant.components import recorder
 import homeassistant.config as conf_util
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -127,13 +126,18 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
 
     async def async_handle_core_service(call):
         """Service handler for handling core services."""
-        if (
-            call.service in SHUTDOWN_SERVICES
-            and await recorder.async_migration_in_progress(hass)
-        ):
-            raise HomeAssistantError(
-                f"The system cannot {call.service} while a database upgrade in progress."
+        if "recorder" in hass.config.components:
+            from homeassistant.components import (  # pylint: disable=import-outside-toplevel
+                recorder,
             )
+
+            if (
+                call.service in SHUTDOWN_SERVICES
+                and await recorder.async_migration_in_progress(hass)
+            ):
+                raise HomeAssistantError(
+                    f"The system cannot {call.service} while a database upgrade in progress."
+                )
 
         if call.service == SERVICE_HOMEASSISTANT_STOP:
             hass.async_create_task(hass.async_stop())
