@@ -1,4 +1,6 @@
 """Config flow for Kodi integration."""
+from __future__ import annotations
+
 import logging
 
 from pykodi import CannotConnectError, InvalidAuthError, Kodi, get_kodi_connection
@@ -16,7 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import DiscoveryInfoType, Optional
+from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import (
     CONF_WS_PORT,
@@ -90,14 +92,14 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize flow."""
-        self._host: Optional[str] = None
-        self._port: Optional[int] = DEFAULT_PORT
-        self._ws_port: Optional[int] = DEFAULT_WS_PORT
-        self._name: Optional[str] = None
-        self._username: Optional[str] = None
-        self._password: Optional[str] = None
-        self._ssl: Optional[bool] = DEFAULT_SSL
-        self._discovery_name: Optional[str] = None
+        self._host: str | None = None
+        self._port: int | None = DEFAULT_PORT
+        self._ws_port: int | None = DEFAULT_WS_PORT
+        self._name: str | None = None
+        self._username: str | None = None
+        self._password: str | None = None
+        self._ssl: bool | None = DEFAULT_SSL
+        self._discovery_name: str | None = None
 
     async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType):
         """Handle zeroconf discovery."""

@@ -1,4 +1,5 @@
 """Support for EDL21 Smart Meters."""
+from __future__ import annotations
 
 from datetime import timedelta
 import logging
@@ -16,7 +17,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity_registry import async_get_registry
-from homeassistant.helpers.typing import Optional
 from homeassistant.util.dt import utcnow
 
 _LOGGER = logging.getLogger(__name__)
@@ -258,7 +258,7 @@ class EDL21Entity(SensorEntity):
         return self._obis
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str | None:
         """Return a name."""
         return self._name
 

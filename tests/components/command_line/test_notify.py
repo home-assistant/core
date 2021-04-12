@@ -1,16 +1,19 @@
 """The tests for the command line notification platform."""
+from __future__ import annotations
+
 import os
 import subprocess
 import tempfile
+from typing import Any
 from unittest.mock import patch
 
 from homeassistant import setup
 from homeassistant.components.notify import DOMAIN
-from homeassistant.helpers.typing import Any, Dict, HomeAssistantType
+from homeassistant.helpers.typing import HomeAssistantType
 
 
 async def setup_test_service(
-    hass: HomeAssistantType, config_dict: Dict[str, Any]
+    hass: HomeAssistantType, config_dict: dict[str, Any]
 ) -> None:
     """Set up a test command line notify service."""
     assert await setup.async_setup_component(

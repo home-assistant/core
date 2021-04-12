@@ -1,6 +1,9 @@
 """The tests the cover command line platform."""
+from __future__ import annotations
+
 import os
 import tempfile
+from typing import Any
 from unittest.mock import patch
 
 from homeassistant import config as hass_config, setup
@@ -12,14 +15,14 @@ from homeassistant.const import (
     SERVICE_RELOAD,
     SERVICE_STOP_COVER,
 )
-from homeassistant.helpers.typing import Any, Dict, HomeAssistantType
+from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
 
 
 async def setup_test_entity(
-    hass: HomeAssistantType, config_dict: Dict[str, Any]
+    hass: HomeAssistantType, config_dict: dict[str, Any]
 ) -> None:
     """Set up a test command line notify service."""
     assert await setup.async_setup_component(

@@ -1,4 +1,5 @@
 """Representation of ISYEntity Types."""
+from __future__ import annotations
 
 from pyisy.constants import (
     COMMAND_FRIENDLY_NAME,
@@ -11,7 +12,6 @@ from pyisy.helpers import NodeProperty
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import Dict
 
 from .const import _LOGGER, DOMAIN
 
@@ -134,7 +134,7 @@ class ISYNodeEntity(ISYEntity):
     """Representation of a ISY Nodebase (Node/Group) entity."""
 
     @property
-    def extra_state_attributes(self) -> Dict:
+    def extra_state_attributes(self) -> dict:
         """Get the state attributes for the device.
 
         The 'aux_properties' in the pyisy Node class are combined with the
@@ -186,7 +186,7 @@ class ISYProgramEntity(ISYEntity):
         self._actions = actions
 
     @property
-    def extra_state_attributes(self) -> Dict:
+    def extra_state_attributes(self) -> dict:
         """Get the state attributes for the device."""
         attr = {}
         if self._actions:

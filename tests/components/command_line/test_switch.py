@@ -1,8 +1,11 @@
 """The tests for the Command line switch platform."""
+from __future__ import annotations
+
 import json
 import os
 import subprocess
 import tempfile
+from typing import Any
 from unittest.mock import patch
 
 from homeassistant import setup
@@ -14,14 +17,14 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.helpers.typing import Any, Dict, HomeAssistantType
+from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
 
 
 async def setup_test_entity(
-    hass: HomeAssistantType, config_dict: Dict[str, Any]
+    hass: HomeAssistantType, config_dict: dict[str, Any]
 ) -> None:
     """Set up a test command line switch entity."""
     assert await setup.async_setup_component(
