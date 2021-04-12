@@ -29,6 +29,7 @@ from .core.const import (
     DATA_ZHA_DISPATCHERS,
     DATA_ZHA_GATEWAY,
     DATA_ZHA_PLATFORM_LOADED,
+    DATA_ZHA_SHUTDOWN_TASK,
     DOMAIN,
     PLATFORMS,
     SIGNAL_ADD_ENTITIES,
@@ -121,7 +122,9 @@ async def async_setup_entry(hass, config_entry):
         await zha_data[DATA_ZHA_GATEWAY].shutdown()
         await zha_data[DATA_ZHA_GATEWAY].async_update_device_storage()
 
-    hass.bus.async_listen_once(ha_const.EVENT_HOMEASSISTANT_STOP, async_zha_shutdown)
+    zha_data[DATA_ZHA_SHUTDOWN_TASK] = hass.bus.async_listen_once(
+        ha_const.EVENT_HOMEASSISTANT_STOP, async_zha_shutdown
+    )
     asyncio.create_task(async_load_entities(hass))
     return True
 
@@ -129,6 +132,7 @@ async def async_setup_entry(hass, config_entry):
 async def async_unload_entry(hass, config_entry):
     """Unload ZHA config entry."""
     await hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].shutdown()
+    await hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].async_update_device_storage()
 
     GROUP_PROBE.cleanup()
     api.async_unload_api(hass)
@@ -137,8 +141,15 @@ async def async_unload_entry(hass, config_entry):
     for unsub_dispatcher in dispatchers:
         unsub_dispatcher()
 
-    for platform in PLATFORMS:
-        await hass.config_entries.async_forward_entry_unload(config_entry, platform)
+    # our components don't have unload methods so no need to look at return values
+    await asyncio.gather(
+        *[
+            hass.config_entries.async_forward_entry_unload(config_entry, platform)
+            for platform in PLATFORMS
+        ]
+    )
+
+    hass.data[DATA_ZHA][DATA_ZHA_SHUTDOWN_TASK]()
 
     return True
 
