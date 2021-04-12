@@ -906,37 +906,3 @@ async def test_template_validation_error(hass, caplog):
 
     state = hass.states.get("binary_sensor.test")
     assert state.attributes.get("icon") is None
-
-
-async def test_modern_template_with_templated_delay_on(hass):
-    """Test binary sensor template with template delay on."""
-    config = {
-        "binary_sensor": {
-            "platform": "template",
-            "binary_sensor": [
-                {
-                    "name": "virtual thingy {{ states.sensor.test_state.state }}",
-                    "state": "{{ states.sensor.test_state.state == 'on' }}",
-                    "device_class": "motion",
-                    "delay_on": '{{ ({ "seconds": 6 / 2 }) }}',
-                }
-            ],
-        }
-    }
-    await setup.async_setup_component(hass, binary_sensor.DOMAIN, config)
-    await hass.async_block_till_done()
-    await hass.async_start()
-
-    hass.states.async_set("sensor.test_state", "on")
-    await hass.async_block_till_done()
-
-    state = hass.states.get("binary_sensor.virtual_thingy")
-    assert state.state == "off"
-    assert state.name == "virtual thingy on"
-
-    future = dt_util.utcnow() + timedelta(seconds=3)
-    async_fire_time_changed(hass, future)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("binary_sensor.virtual_thingy")
-    assert state.state == "on"

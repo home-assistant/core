@@ -125,9 +125,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_SENSORS): cv.schema_with_slug_keys(
             LEGACY_BINARY_SENSOR_SCHEMA
         ),
-        vol.Optional(BINARY_SENSOR_DOMAIN): vol.All(
-            cv.ensure_list, [BINARY_SENSOR_SCHEMA]
-        ),
     }
 )
 
