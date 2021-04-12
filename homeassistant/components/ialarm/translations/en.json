@@ -11,10 +11,10 @@
             "user": {
                 "data": {
                     "host": "Host",
+                    "pin": "PIN Code",
                     "port": "Port"
                 }
             }
         }
-    },
-    "title": "Antifurto365 iAlarm"
+    }
 }
