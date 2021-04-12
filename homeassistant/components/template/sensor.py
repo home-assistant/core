@@ -135,7 +135,6 @@ PLATFORM_SCHEMA = vol.All(
         {
             vol.Optional(CONF_TRIGGER): cv.match_all,  # to raise custom warning
             vol.Optional(CONF_SENSORS): cv.schema_with_slug_keys(LEGACY_SENSOR_SCHEMA),
-            vol.Optional(SENSOR_DOMAIN): vol.All(cv.ensure_list, [SENSOR_SCHEMA]),
         }
     ),
     extra_validation_checks,
