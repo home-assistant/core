@@ -407,9 +407,7 @@ class Recorder(threading.Thread):
         shutdown_task = object()
         hass_started = concurrent.futures.Future()
 
-        self.hass.add_job(
-            callback(lambda: self.async_register(shutdown_task, hass_started))
-        )
+        self.hass.add_job(self.async_register, shutdown_task, hass_started)
 
         current_version = self._setup_recorder()
 
@@ -436,6 +434,9 @@ class Recorder(threading.Thread):
         if not schema_is_current:
             if self._migrate_schema_and_setup_run(current_version):
                 if not self._event_listener:
+                    # If the schema migration takes so longer that the end
+                    # queue watcher safety kicks in because MAX_QUEUE_BACKLOG
+                    # is reached, we need to reinitialize the listener.
                     self.hass.add_job(self.async_initialize)
             else:
                 persistent_notification.create(
@@ -475,10 +476,11 @@ class Recorder(threading.Thread):
             self._process_one_event(event)
             return
         except exc.DatabaseError as err:
-            if not self._handle_database_error(err):
-                _LOGGER.exception(
-                    "Database error while processing event %s: %s", event, err
-                )
+            if self._handle_database_error(err):
+                return
+            _LOGGER.exception(
+                "Unhandled database error while processing event %s: %s", event, err
+            )
         except SQLAlchemyError as err:
             _LOGGER.exception(
                 "SQLAlchemyError error processing event %s: %s", event, err
@@ -512,7 +514,7 @@ class Recorder(threading.Thread):
         """Migrate schema to the latest version."""
         persistent_notification.create(
             self.hass,
-            "System performance will temporarily degrade during the database upgrade. Integrations that read the database, such as logbook and history, may return inconsistent results until the upgrade completes.",
+            "System performance will temporarily degrade during the database upgrade. Do not power down or restart the system until the upgrade completes. Integrations that read the database, such as logbook and history, may return inconsistent results until the upgrade completes.",
             "Database upgrade in progress",
             "recorder_database_migration",
         )
