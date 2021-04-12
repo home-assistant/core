@@ -150,13 +150,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
 
         # add listener for stateless node value notification events
-        node.on(
-            "value notification",
-            lambda event: async_on_value_notification(event["value_notification"]),
+        unsubscribe_callbacks.append(
+            node.on(
+                "value notification",
+                lambda event: async_on_value_notification(event["value_notification"]),
+            )
         )
         # add listener for stateless node notification events
-        node.on(
-            "notification", lambda event: async_on_notification(event["notification"])
+        unsubscribe_callbacks.append(
+            node.on(
+                "notification",
+                lambda event: async_on_notification(event["notification"]),
+            )
         )
 
     async def async_on_node_added(node: ZwaveNode) -> None:
@@ -323,14 +328,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
         # listen for new nodes being added to the mesh
-        client.driver.controller.on(
-            "node added",
-            lambda event: hass.async_create_task(async_on_node_added(event["node"])),
+        unsubscribe_callbacks.append(
+            client.driver.controller.on(
+                "node added",
+                lambda event: hass.async_create_task(
+                    async_on_node_added(event["node"])
+                ),
+            )
         )
         # listen for nodes being removed from the mesh
         # NOTE: This will not remove nodes that were removed when HA was not running
-        client.driver.controller.on(
-            "node removed", lambda event: async_on_node_removed(event["node"])
+        unsubscribe_callbacks.append(
+            client.driver.controller.on(
+                "node removed", lambda event: async_on_node_removed(event["node"])
+            )
         )
 
     platform_task = hass.async_create_task(start_platforms())
@@ -390,6 +401,9 @@ async def disconnect_client(
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+    for unsub in hass.data[DOMAIN][entry.entry_id][DATA_UNSUBSCRIBE]:
+        unsub()
+
     tasks = []
     for platform, task in hass.data[DOMAIN][entry.entry_id][
         DATA_PLATFORM_SETUP
@@ -408,9 +422,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
 
     info = hass.data[DOMAIN].pop(entry.entry_id)
-
-    for unsub in info[DATA_UNSUBSCRIBE]:
-        unsub()
 
     if DATA_CLIENT_LISTEN_TASK in info:
         await disconnect_client(
