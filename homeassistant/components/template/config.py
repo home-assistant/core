@@ -47,7 +47,9 @@ async def async_validate_config(hass, config):
 
         if CONF_SENSORS in cfg:
             logging.getLogger(__name__).warning(
-                "The entity definition format under template: differs from the platform configuration format. See https://www.home-assistant.io/integrations/template#configuration-for-trigger-based-template-sensors"
+                "The entity definition format under template: differs from the platform "
+                "configuration format. See "
+                "https://www.home-assistant.io/integrations/template#configuration-for-trigger-based-template-sensors"
             )
             sensors = list(cfg[SENSOR_DOMAIN]) if SENSOR_DOMAIN in cfg else []
             sensors.extend(
