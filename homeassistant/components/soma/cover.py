@@ -4,7 +4,11 @@ import logging
 
 from requests import RequestException
 
-from homeassistant.components.cover import ATTR_POSITION, CoverEntity
+from homeassistant.components.cover import (
+    ATTR_POSITION,
+    ATTR_TILT_POSITION,
+    CoverEntity,
+)
 from homeassistant.components.soma import API, DEVICES, DOMAIN, SomaEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,9 +64,53 @@ class SomaCover(SomaEntity, CoverEntity):
                 "Unable to reach device %s (%s)", self.device["name"], response["msg"]
             )
 
+    def close_cover_tilt(self, **kwargs):
+        """Close the cover tilt."""
+        response = self.api.set_shade_position(
+            self.device["mac"], 100
+        )  # Close in 'down' direction
+        if response["result"] == "success":
+            self.current_position = 0
+        else:
+            _LOGGER.error(
+                "Unable to reach device %s (%s)", self.device["name"], response["msg"]
+            )
+
+    def open_cover_tilt(self, **kwargs):
+        """Open the cover tilt."""
+        response = self.api.set_shade_position(self.device["mac"], 0)  # Fully open
+        if response["result"] == "success":
+            self.current_position = 50
+        else:
+            _LOGGER.error(
+                "Unable to reach device %s (%s)", self.device["name"], response["msg"]
+            )
+
+    def set_cover_tilt_position(self, **kwargs):
+        """Move the cover tilt to a specific position."""
+        # 0 -> Closed down (api: 100)
+        # 50 -> Fully open (api: 0)
+        # 100 -> Closed up (api: -100)
+        if kwargs[ATTR_TILT_POSITION] == 50:
+            target_api_position = 0  # Fully open
+        else:
+            target_api_position = 100 - ((kwargs[ATTR_TILT_POSITION] / 50) * 100)
+        response = self.api.set_shade_position(self.device["mac"], target_api_position)
+        if response["result"] == "success":
+            self.current_position = kwargs[ATTR_TILT_POSITION]
+        else:
+            _LOGGER.error(
+                "Unable to reach device %s (%s)", self.device["name"], response["msg"]
+            )
+
     @property
     def current_cover_position(self):
         """Return the current position of cover shutter."""
+        return self.current_position
+
+    @property
+    def current_cover_tilt_position(self):
+        """Return the current position of cover tilt."""
         return self.current_position
 
     @property
