@@ -13,6 +13,8 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import AIR_QUALITY_SENSORS, DEFAULT_NAME, DOMAIN
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
