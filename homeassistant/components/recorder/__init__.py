@@ -408,7 +408,7 @@ class Recorder(threading.Thread):
         hass_started = concurrent.futures.Future()
 
         self.hass.add_job(
-            callback(lambda: self.async_register(shutdown_task, hass_started))
+            self.async_register, shutdown_task, hass_started
         )
 
         current_version = self._setup_recorder()
