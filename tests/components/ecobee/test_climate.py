@@ -164,6 +164,7 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat):
         "fan_min_on_time": 10,
         "equipment_running": "auxHeat2",
     } == thermostat.extra_state_attributes
+
     ecobee_fixture["equipmentStatus"] = "compCool1"
     assert {
         "fan": "off",
