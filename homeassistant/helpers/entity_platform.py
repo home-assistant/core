@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from contextvars import ContextVar
 from datetime import datetime, timedelta
+import itertools
 import logging
 from logging import Logger
 from types import ModuleType
@@ -55,6 +56,18 @@ DATA_ENTITY_PLATFORM = "entity_platform"
 PLATFORM_NOT_READY_BASE_WAIT_TIME = 30  # seconds
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_shutdown(hass: HomeAssistant) -> None:
+    """Call when Home Assistant is stopping."""
+    if DATA_ENTITY_PLATFORM not in hass.data:
+        return
+    await asyncio.gather(
+        *[
+            platform.async_shutdown()
+            for platform in itertools.chain(*hass.data[DATA_ENTITY_PLATFORM].values())
+        ]
+    )
 
 
 class EntityPlatform:
@@ -173,6 +186,17 @@ class EntityPlatform:
             )
 
         await self._async_setup_platform(async_create_setup_task)
+
+    async def async_shutdown(self) -> None:
+        """Call when Home Assistant is stopping."""
+        self.async_cancel_retry_setup()
+
+    @callback
+    def async_cancel_retry_setup(self) -> None:
+        """Cancel retry setup."""
+        if self._async_cancel_retry_setup is not None:
+            self._async_cancel_retry_setup()
+            self._async_cancel_retry_setup = None
 
     async def async_setup_entry(self, config_entry: config_entries.ConfigEntry) -> bool:
         """Set up the platform from a config entry."""
@@ -549,9 +573,7 @@ class EntityPlatform:
 
         This method must be run in the event loop.
         """
-        if self._async_cancel_retry_setup is not None:
-            self._async_cancel_retry_setup()
-            self._async_cancel_retry_setup = None
+        self.async_cancel_retry_setup()
 
         if not self.entities:
             return
