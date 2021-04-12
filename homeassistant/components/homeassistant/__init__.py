@@ -126,15 +126,12 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
 
     async def async_handle_core_service(call):
         """Service handler for handling core services."""
-        if "recorder" in hass.config.components:
+        if call.service in SHUTDOWN_SERVICES and "recorder" in hass.config.components:
             from homeassistant.components import (  # pylint: disable=import-outside-toplevel
                 recorder,
             )
 
-            if (
-                call.service in SHUTDOWN_SERVICES
-                and await recorder.async_migration_in_progress(hass)
-            ):
+            if await recorder.async_migration_in_progress(hass):
                 raise HomeAssistantError(
                     f"The system cannot {call.service} while a database upgrade in progress."
                 )
