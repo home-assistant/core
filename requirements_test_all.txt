@@ -1251,7 +1251,7 @@ xmltodict==0.12.0
 yalexs==1.1.10
 
 # homeassistant.components.yeelight
-yeelight==0.5.4
+yeelight==0.6.0
 
 # homeassistant.components.onvif
 zeep[async]==4.0.0

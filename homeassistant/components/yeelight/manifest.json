@@ -3,7 +3,7 @@
   "name": "Yeelight",
   "documentation": "https://www.home-assistant.io/integrations/yeelight",
   "requirements": [
-    "yeelight==0.5.4"
+    "yeelight==0.6.0"
   ],
   "codeowners": [
     "@rytilahti",
