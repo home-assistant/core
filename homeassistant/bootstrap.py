@@ -10,7 +10,7 @@ import os
 import sys
 import threading
 from time import monotonic
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Iterable
 
 import voluptuous as vol
 import yarl
@@ -433,6 +433,35 @@ async def async_setup_multi_components(
         )
 
 
+@core.callback
+def async_domains_with_deps_promoted(
+    domains: Iterable,
+    domains_to_setup: set[str],
+    integration_cache: dict[str, loader.Integration],
+) -> set[str]:
+    """Find and promote dependencies any integration we plan on loading in a stage."""
+    stage_domains = set()
+    deps_promotion = domains
+    while deps_promotion:
+        old_deps_promotion = deps_promotion
+        deps_promotion = set()
+
+        for domain in old_deps_promotion:
+            if domain not in domains_to_setup or domain in stage_domains:
+                continue
+
+            stage_domains.add(domain)
+
+            dep_itg = integration_cache.get(domain)
+
+            if dep_itg is None:
+                continue
+
+            deps_promotion.update(dep_itg.all_dependencies)
+
+    return stage_domains
+
+
 async def _async_set_up_integrations(
     hass: core.HomeAssistant, config: dict[str, Any]
 ) -> None:
@@ -484,8 +513,12 @@ async def _async_set_up_integrations(
                 to_resolve.add(dep)
 
     _LOGGER.info("Domains to be set up: %s", domains_to_setup)
+    setup_requested = set()
 
-    logging_domains = domains_to_setup & LOGGING_INTEGRATIONS
+    logging_domains = async_domains_with_deps_promoted(
+        LOGGING_INTEGRATIONS, domains_to_setup, integration_cache
+    )
+    setup_requested.update(logging_domains)
 
     # Load logging as soon as possible
     if logging_domains:
@@ -493,36 +526,28 @@ async def _async_set_up_integrations(
         await async_setup_multi_components(hass, logging_domains, config)
 
     # Start up debuggers. Start these first in case they want to wait.
-    debuggers = domains_to_setup & DEBUGGER_INTEGRATIONS
+    debuggers = (
+        async_domains_with_deps_promoted(
+            DEBUGGER_INTEGRATIONS, domains_to_setup, integration_cache
+        )
+        - setup_requested
+    )
+    setup_requested.update(logging_domains)
 
     if debuggers:
         _LOGGER.debug("Setting up debuggers: %s", debuggers)
         await async_setup_multi_components(hass, debuggers, config)
 
     # calculate what components to setup in what stage
-    stage_1_domains = set()
+    stage_1_domains = (
+        async_domains_with_deps_promoted(
+            STAGE_1_INTEGRATIONS, domains_to_setup, integration_cache
+        )
+        - setup_requested
+    )
+    setup_requested.update(logging_domains)
 
-    # Find all dependencies of any dependency of any stage 1 integration that
-    # we plan on loading and promote them to stage 1
-    deps_promotion = STAGE_1_INTEGRATIONS
-    while deps_promotion:
-        old_deps_promotion = deps_promotion
-        deps_promotion = set()
-
-        for domain in old_deps_promotion:
-            if domain not in domains_to_setup or domain in stage_1_domains:
-                continue
-
-            stage_1_domains.add(domain)
-
-            dep_itg = integration_cache.get(domain)
-
-            if dep_itg is None:
-                continue
-
-            deps_promotion.update(dep_itg.all_dependencies)
-
-    stage_2_domains = domains_to_setup - logging_domains - debuggers - stage_1_domains
+    stage_2_domains = domains_to_setup - setup_requested
 
     # Load the registries
     await asyncio.gather(
