@@ -401,13 +401,13 @@ async def disconnect_client(
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    for unsub in hass.data[DOMAIN][entry.entry_id][DATA_UNSUBSCRIBE]:
+    info = hass.data[DOMAIN].pop(entry.entry_id)
+
+    for unsub in info[DATA_UNSUBSCRIBE]:
         unsub()
 
     tasks = []
-    for platform, task in hass.data[DOMAIN][entry.entry_id][
-        DATA_PLATFORM_SETUP
-    ].items():
+    for platform, task in info[DATA_PLATFORM_SETUP].items():
         if task.done():
             tasks.append(
                 hass.config_entries.async_forward_entry_unload(entry, platform)
@@ -417,11 +417,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             tasks.append(task)
 
     unload_ok = all(await asyncio.gather(*tasks))
-
-    if not unload_ok:
-        return False
-
-    info = hass.data[DOMAIN].pop(entry.entry_id)
 
     if DATA_CLIENT_LISTEN_TASK in info:
         await disconnect_client(
@@ -441,7 +436,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             LOGGER.error("Failed to stop the Z-Wave JS add-on: %s", err)
             return False
 
-    return True
+    return unload_ok
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
