@@ -7,6 +7,7 @@ from datetime import timedelta
 import functools as ft
 import json
 import logging
+from urllib.parse import quote
 
 import pychromecast
 from pychromecast.controllers.homeassistant import HomeAssistantController
@@ -472,7 +473,7 @@ class CastDevice(MediaPlayerEntity):
                 media_id = async_sign_path(
                     self.hass,
                     refresh_token.id,
-                    media_id,
+                    quote(media_id),
                     timedelta(seconds=media_source.DEFAULT_EXPIRY_TIME),
                 )
 
