@@ -110,8 +110,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for coordinator in hass.data[DOMAIN][COORDINATORS]:
         init_device(coordinator)
 
-    hass.data[DOMAIN].setdefault(DISPATCHERS, [])
-
     hass.data[DOMAIN][DISPATCHERS].append(
         async_dispatcher_connect(hass, DISPATCH_DEVICE_DISCOVERED, init_device)
     )

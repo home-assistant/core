@@ -33,6 +33,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     gree_discovery = DiscoveryService(hass)
     hass.data[DATA_DISCOVERY_SERVICE] = gree_discovery
 
+    hass.data[DOMAIN].setdefault(DISPATCHERS, [])
+
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, CLIMATE_DOMAIN)
     )
