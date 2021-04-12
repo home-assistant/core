@@ -245,10 +245,6 @@ class SensorTemplate(TemplateEntity, SensorEntity):
                 self._name = friendly_name_template.async_render(parse_result=False)
             except template.TemplateError:
                 pass
-            finally:
-                # This is so TemplateEntity can group
-                # them together correctly.
-                friendly_name_template.hass = None
 
         self._unit_of_measurement = unit_of_measurement
         self._template = state_template
