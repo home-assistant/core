@@ -232,6 +232,7 @@ FLOWS = [
     "profiler",
     "progettihwsw",
     "prosegur",
+    "proxmoxve",
     "ps4",
     "pvpc_hourly_pricing",
     "rachio",
