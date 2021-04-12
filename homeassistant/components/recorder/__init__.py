@@ -432,11 +432,13 @@ class Recorder(threading.Thread):
         schema_is_current = migration.schema_is_current(current_version)
         if schema_is_current:
             self._setup_run()
+        else:
+            self.migration_in_progress = True
 
         self.hass.add_job(self.async_connection_success)
-
         # If shutdown happened before Home Assistant finished starting
         if hass_started.result() is shutdown_task:
+            self.migration_in_progress = False
             # Make sure we cleanly close the run if
             # we restart before startup finishes
             self._shutdown()
@@ -537,7 +539,6 @@ class Recorder(threading.Thread):
             "Database upgrade in progress",
             "recorder_database_migration",
         )
-        self.migration_in_progress = True
         self.hass.add_job(self._async_migration_started)
 
         try:
