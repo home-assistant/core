@@ -80,8 +80,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             smappee_mqtt = mqtt.SmappeeLocalMqtt(
                 serial_number=entry.data[CONF_SERIALNUMBER]
             )
-            smappee_mqtt.start()
-            await hass.async_add_executor_job(smappee_mqtt.is_config_ready)
+            await hass.async_add_executor_job(smappee_mqtt.start_and_wait_for_config)
             smappee = Smappee(
                 api=smappee_mqtt, serialnumber=entry.data[CONF_SERIALNUMBER]
             )
