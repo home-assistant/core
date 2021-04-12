@@ -66,9 +66,7 @@ class SomaCover(SomaEntity, CoverEntity):
 
     def close_cover_tilt(self, **kwargs):
         """Close the cover tilt."""
-        response = self.api.set_shade_position(
-            self.device["mac"], 100
-        )  # Close in 'down' direction
+        response = self.api.set_shade_position(self.device["mac"], 100)
         if response["result"] == "success":
             self.current_position = 0
         else:
@@ -78,7 +76,7 @@ class SomaCover(SomaEntity, CoverEntity):
 
     def open_cover_tilt(self, **kwargs):
         """Open the cover tilt."""
-        response = self.api.set_shade_position(self.device["mac"], 0)  # Fully open
+        response = self.api.set_shade_position(self.device["mac"], 0)
         if response["result"] == "success":
             self.current_position = 50
         else:
@@ -92,7 +90,7 @@ class SomaCover(SomaEntity, CoverEntity):
         # 50 -> Fully open (api: 0)
         # 100 -> Closed up (api: -100)
         if kwargs[ATTR_TILT_POSITION] == 50:
-            target_api_position = 0  # Fully open
+            target_api_position = 0
         else:
             target_api_position = 100 - ((kwargs[ATTR_TILT_POSITION] / 50) * 100)
         response = self.api.set_shade_position(self.device["mac"], target_api_position)
