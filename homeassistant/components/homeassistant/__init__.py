@@ -145,7 +145,13 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
         if call.service == SERVICE_HOMEASSISTANT_STOP:
             # We delay the stop by WEBSOCKET_RECEIVE_DELAY to ensure the frontend
             # can receive the response before the webserver shuts down
-            async_call_later(hass, WEBSOCKET_RECEIVE_DELAY, hass.async_stop)
+            @ha.callback
+            def _async_stop(_):
+                # This must not be a tracked task otherwise
+                # the task itself will block stop
+                asyncio.create_task(hass.async_stop())
+
+            async_call_later(hass, WEBSOCKET_RECEIVE_DELAY, _async_stop)
             return
 
         errors = await conf_util.async_check_ha_config_file(hass)
@@ -170,7 +176,9 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
             # can receive the response before the webserver shuts down
             @ha.callback
             def _async_stop_with_code(_):
-                hass.async_create_task(hass.async_stop(RESTART_EXIT_CODE))
+                # This must not be a tracked task otherwise
+                # the task itself will block restart
+                asyncio.create_task(hass.async_stop(RESTART_EXIT_CODE))
 
             async_call_later(
                 hass,
