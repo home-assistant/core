@@ -16,6 +16,7 @@ from homeassistant.components.alarm_control_panel import (
     SUPPORT_ALARM_TRIGGER,
     AlarmControlPanelEntity,
 )
+from homeassistant.components.zha.core.typing import ZhaDeviceType
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
@@ -34,10 +35,15 @@ from .core.channels.security import (
 )
 from .core.const import (
     CHANNEL_IAS_ACE,
+    CONF_ALARM_ARM_REQUIRES_CODE,
+    CONF_ALARM_FAILED_TRIES,
+    CONF_ALARM_MASTER_CODE,
     DATA_ZHA,
     DATA_ZHA_DISPATCHERS,
     SIGNAL_ADD_ENTITIES,
+    ZHA_ALARM_OPTIONS,
 )
+from .core.helpers import async_get_zha_config_value
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 
@@ -73,14 +79,20 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class ZHAAlarmControlPanel(ZhaEntity, AlarmControlPanelEntity):
     """Entity for ZHA alarm control devices."""
 
-    def __init__(self, unique_id, zha_device, channels, **kwargs):
+    def __init__(self, unique_id, zha_device: ZhaDeviceType, channels, **kwargs):
         """Initialize the ZHA alarm control device."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
-        # Will get these from ZHA config in config entry options device map
+        cfg_entry = zha_device.gateway.config_entry
         self._channel: AceChannel = channels[0]
-        self._channel.panel_code = "1234"
-        self._channel.code_required_arm_actions = False
-        self._channel.max_invalid_tries = 3
+        self._channel.panel_code = async_get_zha_config_value(
+            cfg_entry, ZHA_ALARM_OPTIONS, CONF_ALARM_MASTER_CODE, "1234"
+        )
+        self._channel.code_required_arm_actions = async_get_zha_config_value(
+            cfg_entry, ZHA_ALARM_OPTIONS, CONF_ALARM_ARM_REQUIRES_CODE, False
+        )
+        self._channel.max_invalid_tries = async_get_zha_config_value(
+            cfg_entry, ZHA_ALARM_OPTIONS, CONF_ALARM_FAILED_TRIES, 3
+        )
 
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""

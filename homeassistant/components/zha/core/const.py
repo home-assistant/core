@@ -121,6 +121,10 @@ PLATFORMS = (
     SWITCH,
 )
 
+CONF_ALARM_MASTER_CODE = "alarm_master_code"
+CONF_ALARM_FAILED_TRIES = "alarm_failed_tries"
+CONF_ALARM_ARM_REQUIRES_CODE = "alarm_arm_requires_code"
+
 CONF_BAUDRATE = "baudrate"
 CONF_CUSTOM_QUIRKS_PATH = "custom_quirks_path"
 CONF_DATABASE = "database_path"
@@ -137,6 +141,14 @@ CONF_ZHA_OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DEFAULT_LIGHT_TRANSITION): cv.positive_int,
         vol.Required(CONF_ENABLE_IDENTIFY_ON_JOIN, default=True): cv.boolean,
+    }
+)
+
+CONF_ZHA_ALARM_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ALARM_MASTER_CODE, default="1234"): cv.string,
+        vol.Required(CONF_ALARM_FAILED_TRIES, default=3): cv.positive_int,
+        vol.Required(CONF_ALARM_ARM_REQUIRES_CODE, default=False): cv.boolean,
     }
 )
 
@@ -194,8 +206,13 @@ POWER_BATTERY_OR_UNKNOWN = "Battery or Unknown"
 PRESET_SCHEDULE = "schedule"
 PRESET_COMPLEX = "complex"
 
+ZHA_ALARM_OPTIONS = "zha_alarm_options"
 ZHA_OPTIONS = "zha_options"
-ZHA_CONFIG_SCHEMAS = {ZHA_OPTIONS: CONF_ZHA_OPTIONS_SCHEMA}
+
+ZHA_CONFIG_SCHEMAS = {
+    ZHA_OPTIONS: CONF_ZHA_OPTIONS_SCHEMA,
+    ZHA_ALARM_OPTIONS: CONF_ZHA_ALARM_SCHEMA,
+}
 
 
 class RadioType(enum.Enum):
