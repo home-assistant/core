@@ -105,8 +105,7 @@ def condition_trace_update_result(result: bool, **kwargs: Any) -> None:
     if not node:
         return
 
-    old_result = node._result or {}
-    node.set_result(**{**old_result, **{"result": result}, **kwargs})
+    node.update_result(result=result, **kwargs)
 
 
 @contextmanager
