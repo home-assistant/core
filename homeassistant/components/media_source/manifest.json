@@ -2,7 +2,8 @@
   "domain": "media_source",
   "name": "Media Source",
   "documentation": "https://www.home-assistant.io/integrations/media_source",
-  "dependencies": ["http"],
+  "dependencies": ["http","ffmpeg"],
+  "requirements": ["mutagen==1.45.1","pillow==8.1.2"],
   "codeowners": ["@hunterjm"],
   "quality_scale": "internal"
 }

@@ -1,20 +1,41 @@
 """Local Media Source Implementation."""
 from __future__ import annotations
 
+import asyncio
+from io import BytesIO
+import logging
 import mimetypes
 from pathlib import Path
+import urllib
 
+from PIL import Image
 from aiohttp import web
+from haffmpeg.tools import IMAGE_JPEG, ImageFrame
+from mutagen import File
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.media_player.const import MEDIA_CLASS_DIRECTORY
+from homeassistant.components.media_player.const import (
+    MEDIA_CLASS_DIRECTORY,
+    MEDIA_CLASS_IMAGE,
+    MEDIA_CLASS_MUSIC,
+    MEDIA_CLASS_VIDEO,
+)
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import raise_if_invalid_path
 
-from .const import DOMAIN, MEDIA_CLASS_MAP, MEDIA_MIME_TYPES
+from .const import (
+    DATA_FFMPEG,
+    DOMAIN,
+    MEDIA_CLASS_MAP,
+    MEDIA_MIME_TYPES,
+    THUMBNAIL_QUALITY,
+    THUMBNAIL_SIZE,
+)
 from .models import BrowseMediaSource, MediaSource, MediaSourceItem, PlayMedia
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @callback
@@ -23,6 +44,7 @@ def async_setup(hass: HomeAssistant):
     source = LocalSource(hass)
     hass.data[DOMAIN][DOMAIN] = source
     hass.http.register_view(LocalMediaView(hass, source))
+    hass.http.register_view(LocalMediaThumbnailView(hass, source))
 
 
 class LocalSource(MediaSource):
@@ -147,6 +169,12 @@ class LocalSource(MediaSource):
             mime_type and mime_type.split("/")[0], MEDIA_CLASS_DIRECTORY
         )
 
+        thumbnail = None
+        if media_class in (MEDIA_CLASS_MUSIC, MEDIA_CLASS_IMAGE, MEDIA_CLASS_VIDEO):
+            thumbnail = urllib.parse.quote(
+                f"/media-thumb/{source_dir_id}/{path.relative_to(self.hass.config.media_dirs[source_dir_id])}"
+            )
+
         media = BrowseMediaSource(
             domain=DOMAIN,
             identifier=f"{source_dir_id}/{path.relative_to(self.hass.config.media_dirs[source_dir_id])}",
@@ -155,6 +183,7 @@ class LocalSource(MediaSource):
             title=title,
             can_play=is_file,
             can_expand=is_dir,
+            thumbnail=thumbnail,
         )
 
         if is_file or is_child:
@@ -212,3 +241,111 @@ class LocalMediaView(HomeAssistantView):
             raise web.HTTPNotFound()
 
         return web.FileResponse(media_path)
+
+
+class LocalMediaThumbnailView(HomeAssistantView):
+    """
+    Local Media Finder View.
+
+    Returns thumbnails of media files in config/media.
+    """
+
+    url = "/media-thumb/{source_dir_id}/{location:.*}"
+    name = "media-thumb"
+    requires_auth = False
+
+    def __init__(self, hass: HomeAssistant, source: LocalSource):
+        """Initialize the media view."""
+        self.hass = hass
+        self.source = source
+        self._ffmpeg = hass.data[DATA_FFMPEG]
+
+    async def get(
+        self, request: web.Request, source_dir_id: str, location: str
+    ) -> web.FileResponse:
+        """Start a GET request."""
+        try:
+            raise_if_invalid_path(location)
+        except ValueError as err:
+            raise web.HTTPBadRequest() from err
+
+        if source_dir_id not in self.hass.config.media_dirs:
+            raise web.HTTPNotFound()
+
+        media_path = self.source.async_full_path(source_dir_id, location)
+
+        # Check that the file exists
+        if not media_path.is_file():
+            raise web.HTTPNotFound()
+
+        # Check that it's a media file
+        mime_type, _ = mimetypes.guess_type(str(media_path))
+        if not mime_type or mime_type.split("/")[0] not in MEDIA_MIME_TYPES:
+            raise web.HTTPNotFound()
+
+        media_class = MEDIA_CLASS_MAP.get(
+            mime_type and mime_type.split("/")[0], MEDIA_CLASS_DIRECTORY
+        )
+
+        img = await self.__get_image(media_class, media_path)
+
+        if not img:
+            raise web.HTTPNotFound()
+
+        exif = b""
+        # Get raw exif data for thumbnail (keep orientation and other info)
+        if img.info:
+            exif = img.info.get("exif", b"")
+
+        img.thumbnail(THUMBNAIL_SIZE, Image.HAMMING)
+
+        # Convert unsupported JPEG modes
+        if img.mode not in ("RGB", "L", "CMYK"):
+            img = img.convert("RGB")
+
+        # save thumbnail to buffer
+        data = BytesIO()
+        img.save(data, format="jpeg", exif=exif, quality=THUMBNAIL_QUALITY)
+
+        resp = web.StreamResponse(
+            status=200,
+            headers={"Cache-Control": "max-age=31536000", "Content-Type": "image/jpeg"},
+        )
+
+        await resp.prepare(request)
+        await resp.write(data.getvalue())
+        return resp
+
+    async def __get_image(self, media_class, media_path):
+        img = None
+
+        if media_class == MEDIA_CLASS_IMAGE:
+            try:
+                img = Image.open(media_path)
+            except OSError as err:
+                _LOGGER.warning("Failed to create thumbnail for image '%s", media_path)
+                raise ValueError() from err
+
+        if media_class == MEDIA_CLASS_MUSIC:
+            try:
+                audio = File(media_path)
+                apic = audio.tags.get("APIC:")
+                if apic:
+                    img = Image.open(BytesIO(apic.data))
+            except OSError as err:
+                _LOGGER.warning("Failed to create thumbnail for music '%s", media_path)
+                raise ValueError() from err
+
+        if media_class == MEDIA_CLASS_VIDEO:
+            try:
+                ffmpeg = ImageFrame(self._ffmpeg.binary)
+                image = await asyncio.shield(
+                    ffmpeg.get_image(media_path, output_format=IMAGE_JPEG)
+                )
+                if image:
+                    img = Image.open(BytesIO(image))
+            except OSError as err:
+                _LOGGER.warning("Failed to create thumbnail for video '%s", media_path)
+                raise ValueError() from err
+
+        return img

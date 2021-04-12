@@ -956,6 +956,7 @@ motionblinds==0.4.10
 # homeassistant.components.mullvad
 mullvad-api==1.0.0
 
+# homeassistant.components.media_source
 # homeassistant.components.tts
 mutagen==1.45.1
 
@@ -1129,6 +1130,7 @@ pilight==0.1.1
 
 # homeassistant.components.doods
 # homeassistant.components.image
+# homeassistant.components.media_source
 # homeassistant.components.proxy
 # homeassistant.components.qrcode
 # homeassistant.components.seven_segments

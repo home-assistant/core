@@ -18,3 +18,11 @@ URI_SCHEME = "media-source://"
 URI_SCHEME_REGEX = re.compile(
     r"^media-source:\/\/(?:(?P<domain>(?!_)[\da-z_]+(?<!_))(?:\/(?P<identifier>(?!\/).+))?)?$"
 )
+
+DATA_FFMPEG = "ffmpeg"
+
+# Thumbnail JPEG size
+THUMBNAIL_SIZE = 200, 200
+
+# Thumbnail JPEG quality
+THUMBNAIL_QUALITY = 50
