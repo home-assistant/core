@@ -35,7 +35,6 @@ homeassistant/components/almond/* @gcampax @balloob
 homeassistant/components/alpha_vantage/* @fabaff
 homeassistant/components/ambiclimate/* @danielhiversen
 homeassistant/components/ambient_station/* @bachya
-homeassistant/components/amcrest/* @pnbruckner
 homeassistant/components/analytics/* @home-assistant/core @ludeeus
 homeassistant/components/androidtv/* @JeffLIrion
 homeassistant/components/apache_kafka/* @bachya
@@ -368,7 +367,7 @@ homeassistant/components/powerwall/* @bdraco @jrester
 homeassistant/components/profiler/* @bdraco
 homeassistant/components/progettihwsw/* @ardaseremet
 homeassistant/components/prometheus/* @knyar
-homeassistant/components/proxmoxve/* @k4ds3 @jhollowe
+homeassistant/components/proxmoxve/* @k4ds3 @jhollowe @Corbeno
 homeassistant/components/ps4/* @ktnrg45
 homeassistant/components/push/* @dgomes
 homeassistant/components/pvoutput/* @fabaff

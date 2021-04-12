@@ -48,6 +48,7 @@ def create_engine_test(*args, **kwargs):
 
 async def test_schema_update_calls(hass):
     """Test that schema migrations occur in correct order."""
+    assert await recorder.async_migration_in_progress(hass) is False
     await async_setup_component(hass, "persistent_notification", {})
     with patch(
         "homeassistant.components.recorder.create_engine", new=create_engine_test
@@ -60,6 +61,7 @@ async def test_schema_update_calls(hass):
         )
         await async_wait_recording_done_without_instance(hass)
 
+    assert await recorder.async_migration_in_progress(hass) is False
     update.assert_has_calls(
         [
             call(hass.data[DATA_INSTANCE].engine, version + 1, 0)
@@ -68,11 +70,30 @@ async def test_schema_update_calls(hass):
     )
 
 
+async def test_migration_in_progress(hass):
+    """Test that we can check for migration in progress."""
+    assert await recorder.async_migration_in_progress(hass) is False
+    await async_setup_component(hass, "persistent_notification", {})
+
+    with patch(
+        "homeassistant.components.recorder.create_engine", new=create_engine_test
+    ):
+        await async_setup_component(
+            hass, "recorder", {"recorder": {"db_url": "sqlite://"}}
+        )
+        await hass.data[DATA_INSTANCE].async_migration_event.wait()
+        assert await recorder.async_migration_in_progress(hass) is True
+        await async_wait_recording_done_without_instance(hass)
+
+    assert await recorder.async_migration_in_progress(hass) is False
+
+
 async def test_database_migration_failed(hass):
     """Test we notify if the migration fails."""
     await async_setup_component(hass, "persistent_notification", {})
     create_calls = async_mock_service(hass, "persistent_notification", "create")
     dismiss_calls = async_mock_service(hass, "persistent_notification", "dismiss")
+    assert await recorder.async_migration_in_progress(hass) is False
 
     with patch(
         "homeassistant.components.recorder.create_engine", new=create_engine_test
@@ -89,6 +110,7 @@ async def test_database_migration_failed(hass):
         await hass.async_add_executor_job(hass.data[DATA_INSTANCE].join)
         await hass.async_block_till_done()
 
+    assert await recorder.async_migration_in_progress(hass) is False
     assert len(create_calls) == 2
     assert len(dismiss_calls) == 1
 
@@ -96,6 +118,7 @@ async def test_database_migration_failed(hass):
 async def test_database_migration_encounters_corruption(hass):
     """Test we move away the database if its corrupt."""
     await async_setup_component(hass, "persistent_notification", {})
+    assert await recorder.async_migration_in_progress(hass) is False
 
     sqlite3_exception = DatabaseError("statement", {}, [])
     sqlite3_exception.__cause__ = sqlite3.DatabaseError()
@@ -116,6 +139,7 @@ async def test_database_migration_encounters_corruption(hass):
         hass.states.async_set("my.entity", "off", {})
         await async_wait_recording_done_without_instance(hass)
 
+    assert await recorder.async_migration_in_progress(hass) is False
     assert move_away.called
 
 
@@ -124,6 +148,7 @@ async def test_database_migration_encounters_corruption_not_sqlite(hass):
     await async_setup_component(hass, "persistent_notification", {})
     create_calls = async_mock_service(hass, "persistent_notification", "create")
     dismiss_calls = async_mock_service(hass, "persistent_notification", "dismiss")
+    assert await recorder.async_migration_in_progress(hass) is False
 
     with patch(
         "homeassistant.components.recorder.migration.schema_is_current",
@@ -143,6 +168,7 @@ async def test_database_migration_encounters_corruption_not_sqlite(hass):
         await hass.async_add_executor_job(hass.data[DATA_INSTANCE].join)
         await hass.async_block_till_done()
 
+    assert await recorder.async_migration_in_progress(hass) is False
     assert not move_away.called
     assert len(create_calls) == 2
     assert len(dismiss_calls) == 1
@@ -151,6 +177,7 @@ async def test_database_migration_encounters_corruption_not_sqlite(hass):
 async def test_events_during_migration_are_queued(hass):
     """Test that events during migration are queued."""
 
+    assert await recorder.async_migration_in_progress(hass) is False
     await async_setup_component(hass, "persistent_notification", {})
     with patch(
         "homeassistant.components.recorder.create_engine", new=create_engine_test
@@ -167,6 +194,7 @@ async def test_events_during_migration_are_queued(hass):
         await hass.data[DATA_INSTANCE].async_recorder_ready.wait()
         await async_wait_recording_done_without_instance(hass)
 
+    assert await recorder.async_migration_in_progress(hass) is False
     db_states = await hass.async_add_executor_job(_get_native_states, hass, "my.entity")
     assert len(db_states) == 2
 
@@ -174,6 +202,7 @@ async def test_events_during_migration_are_queued(hass):
 async def test_events_during_migration_queue_exhausted(hass):
     """Test that events during migration takes so long the queue is exhausted."""
     await async_setup_component(hass, "persistent_notification", {})
+    assert await recorder.async_migration_in_progress(hass) is False
 
     with patch(
         "homeassistant.components.recorder.create_engine", new=create_engine_test
@@ -191,6 +220,7 @@ async def test_events_during_migration_queue_exhausted(hass):
         await hass.data[DATA_INSTANCE].async_recorder_ready.wait()
         await async_wait_recording_done_without_instance(hass)
 
+    assert await recorder.async_migration_in_progress(hass) is False
     db_states = await hass.async_add_executor_job(_get_native_states, hass, "my.entity")
     assert len(db_states) == 1
     hass.states.async_set("my.entity", "on", {})
@@ -230,6 +260,26 @@ def test_invalid_update():
     """Test that an invalid new version raises an exception."""
     with pytest.raises(ValueError):
         migration._apply_update(None, -1, 0)
+
+
+@pytest.mark.parametrize(
+    ["engine_type", "substr"],
+    [
+        ("postgresql", "ALTER event_type TYPE VARCHAR(64)"),
+        ("mssql", "ALTER COLUMN event_type VARCHAR(64)"),
+        ("mysql", "MODIFY event_type VARCHAR(64)"),
+        ("sqlite", None),
+    ],
+)
+def test_modify_column(engine_type, substr):
+    """Test that modify column generates the expected query."""
+    engine = Mock()
+    engine.dialect.name = engine_type
+    migration._modify_columns(engine, "events", ["event_type VARCHAR(64)"])
+    if substr:
+        assert substr in engine.execute.call_args[0][0].text
+    else:
+        assert not engine.execute.called
 
 
 def test_forgiving_add_column():
