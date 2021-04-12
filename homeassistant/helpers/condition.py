@@ -656,7 +656,10 @@ def template(
 
 
 def async_template(
-    hass: HomeAssistant, value_template: Template, variables: TemplateVarsType = None
+    hass: HomeAssistant,
+    value_template: Template,
+    variables: TemplateVarsType = None,
+    trace_result: bool = True,
 ) -> bool:
     """Test if template condition matches."""
     try:
@@ -666,7 +669,8 @@ def async_template(
         raise ConditionErrorMessage("template", str(ex)) from ex
 
     result = value.lower() == "true"
-    condition_trace_set_result(result, entities=list(info.entities))
+    if trace_result:
+        condition_trace_set_result(result, entities=list(info.entities))
     return result
 
 
