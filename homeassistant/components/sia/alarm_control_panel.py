@@ -185,7 +185,7 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
         """
         if not self.enabled:
             return
-        sia_event = SIAEvent.from_dict(event.data)
+        sia_event = SIAEvent.from_dict(event.data)  # pylint: disable=no-member
         new_state = CODE_CONSEQUENCES.get(sia_event.code)
         if int(sia_event.ri) == self._zone:
             if new_state is not None:

@@ -5,7 +5,9 @@ from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
 from .hub import SIAHub
@@ -20,13 +22,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = hub
-
+    try:
+        await hub.sia_client.start(reuse_port=True)
+    except OSError:
+        raise ConfigEntryNotReady(
+            "SIA Server at port %s could not start.", entry.data[CONF_PORT]
+        )
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
-
-    await hub.sia_client.start(reuse_port=True)
     return True
 
 

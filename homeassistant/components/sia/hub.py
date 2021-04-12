@@ -83,12 +83,8 @@ class SIAHub:
             event.account,
             self._port,
         )
-        # Get rid of SIAAccount in the event, because it might contain the encryption key.
-        event.sia_account = None
-        # Change the message_type to value because otherwise it is not JSON serializable.
-        event.message_type = event.message_type.value
         self._hass.bus.async_fire(
             event_type=f"{SIA_EVENT}_{self._port}_{event.account}",
-            event_data=event.to_dict(),
+            event_data=event.to_dict(encode_json=True),
             origin=EventOrigin.remote,
         )
