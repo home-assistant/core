@@ -12,6 +12,7 @@ from homeassistant.components.climate.const import (
     ATTR_PRESET_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    CURRENT_HVAC_COOL,
     CURRENT_HVAC_IDLE,
     DOMAIN as CLIMATE_DOMAIN,
     HVAC_MODE_COOL,
@@ -351,6 +352,7 @@ async def test_thermostat_different_endpoints(
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.8
     assert state.attributes[ATTR_FAN_MODE] == "Auto low"
     assert state.attributes[ATTR_FAN_STATE] == "Idle / off"
+    assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_COOL
 
 
 async def test_setpoint_thermostat(hass, client, climate_danfoss_lc_13, integration):
