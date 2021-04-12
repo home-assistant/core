@@ -45,7 +45,10 @@ SCHEMA_RELOAD_CONFIG_ENTRY = vol.All(
     ),
     cv.has_at_least_one_key(ATTR_ENTRY_ID, *cv.ENTITY_SERVICE_FIELDS),
 )
+
+
 SHUTDOWN_SERVICES = (SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART)
+WEBSOCKET_RECEIVE_DELAY = 1
 
 
 async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
@@ -139,7 +142,11 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
             )
 
         if call.service == SERVICE_HOMEASSISTANT_STOP:
-            hass.async_create_task(hass.async_stop())
+            # We delay the stop by WEBSOCKET_RECEIVE_DELAY to ensure the frontend
+            # can receive the response before the webserver shuts down
+            hass.loop.call_later(
+                WEBSOCKET_RECEIVE_DELAY, hass.async_create_task, hass.async_stop()
+            )
             return
 
         errors = await conf_util.async_check_ha_config_file(hass)
@@ -160,7 +167,13 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
             )
 
         if call.service == SERVICE_HOMEASSISTANT_RESTART:
-            hass.async_create_task(hass.async_stop(RESTART_EXIT_CODE))
+            # We delay the restart by WEBSOCKET_RECEIVE_DELAY to ensure the frontend
+            # can receive the response before the webserver shuts down
+            hass.loop.call_later(
+                WEBSOCKET_RECEIVE_DELAY,
+                hass.async_create_task,
+                hass.async_stop(RESTART_EXIT_CODE),
+            )
 
     async def async_handle_update_service(call):
         """Service handler for updating an entity."""
