@@ -25,10 +25,10 @@ async def test_form_create_entry(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.nettigo.Nettigo.async_get_mac_address",
+        "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
         return_value="aa:bb:cc:dd:ee:ff",
     ), patch(
-        "homeassistant.components.nettigo.async_setup_entry", return_value=True
+        "homeassistant.components.nam.async_setup_entry", return_value=True
     ) as mock_setup_entry:
 
         result = await hass.config_entries.flow.async_configure(
@@ -55,7 +55,7 @@ async def test_form_errors(hass, error):
     """Test we handle errors."""
     exc, base_error = error
     with patch(
-        "homeassistant.components.nettigo.Nettigo.async_get_mac_address",
+        "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
         side_effect=exc,
     ):
 
@@ -71,7 +71,7 @@ async def test_form_errors(hass, error):
 async def test_form_abort(hass):
     """Test we handle abort after error."""
     with patch(
-        "homeassistant.components.nettigo.Nettigo.async_get_mac_address",
+        "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
         side_effect=CannotGetMac("Cannot get MAC address from device"),
     ):
 
@@ -97,7 +97,7 @@ async def test_form_already_configured(hass):
     )
 
     with patch(
-        "homeassistant.components.nettigo.Nettigo.async_get_mac_address",
+        "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
         return_value="aa:bb:cc:dd:ee:ff",
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -115,7 +115,7 @@ async def test_form_already_configured(hass):
 async def test_zeroconf(hass):
     """Test we get the form."""
     with patch(
-        "homeassistant.components.nettigo.Nettigo.async_get_mac_address",
+        "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
         return_value="aa:bb:cc:dd:ee:ff",
     ):
         result = await hass.config_entries.flow.async_init(
@@ -135,7 +135,7 @@ async def test_zeroconf(hass):
     assert context["confirm_only"] is True
 
     with patch(
-        "homeassistant.components.nettigo.async_setup_entry",
+        "homeassistant.components.nam.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
@@ -161,7 +161,7 @@ async def test_zeroconf_errors(hass, error):
     """Test we handle errors."""
     exc, reason = error
     with patch(
-        "homeassistant.components.nettigo.Nettigo.async_get_mac_address",
+        "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
         side_effect=exc,
     ):
 
