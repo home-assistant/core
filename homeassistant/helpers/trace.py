@@ -51,6 +51,11 @@ class TraceElement:
         """Set result."""
         self._result = {**kwargs}
 
+    def update_result(self, **kwargs: Any) -> None:
+        """Set result."""
+        old_result = self._result or {}
+        self._result = {**old_result, **kwargs}
+
     def as_dict(self) -> dict[str, Any]:
         """Return dictionary version of this TraceElement."""
         result: dict[str, Any] = {"path": self.path, "timestamp": self._timestamp}

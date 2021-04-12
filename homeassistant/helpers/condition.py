@@ -96,6 +96,18 @@ def condition_trace_set_result(result: bool, **kwargs: Any) -> None:
     node.set_result(result=result, **kwargs)
 
 
+def condition_trace_update_result(result: bool, **kwargs: Any) -> None:
+    """Update the result of TraceElement at the top of the stack."""
+    node = trace_stack_top(trace_stack_cv)
+
+    # The condition function may be called directly, in which case tracing
+    # is not setup
+    if not node:
+        return
+
+    node.update_result(result=result, **kwargs)
+
+
 @contextmanager
 def trace_condition(variables: TemplateVarsType) -> Generator:
     """Trace condition evaluation."""
@@ -118,7 +130,7 @@ def trace_condition_function(condition: ConditionCheckerType) -> ConditionChecke
         """Trace condition."""
         with trace_condition(variables):
             result = condition(hass, variables)
-            condition_trace_set_result(result)
+            condition_trace_update_result(result)
             return result
 
     return wrapper
@@ -644,15 +656,22 @@ def template(
 
 
 def async_template(
-    hass: HomeAssistant, value_template: Template, variables: TemplateVarsType = None
+    hass: HomeAssistant,
+    value_template: Template,
+    variables: TemplateVarsType = None,
+    trace_result: bool = True,
 ) -> bool:
     """Test if template condition matches."""
     try:
-        value: str = value_template.async_render(variables, parse_result=False)
+        info = value_template.async_render_to_info(variables, parse_result=False)
+        value = info.result()
     except TemplateError as ex:
         raise ConditionErrorMessage("template", str(ex)) from ex
 
-    return value.lower() == "true"
+    result = value.lower() == "true"
+    if trace_result:
+        condition_trace_set_result(result, entities=list(info.entities))
+    return result
 
 
 def async_template_from_config(
