@@ -8,7 +8,6 @@ from typing import Any, Callable
 
 from aiohttp import web
 import attr
-import av.audio.stream
 import av.container
 import av.video
 
@@ -29,7 +28,7 @@ class StreamBuffer:
     segment: io.BytesIO = attr.ib()
     output: av.container.OutputContainer = attr.ib()
     vstream: av.video.VideoStream = attr.ib()
-    astream: av.audio.stream.AudioStream | None = attr.ib(default=None)
+    astream = attr.ib(default=None)  # type=Optional[av.audio.AudioStream]
 
 
 @attr.s
