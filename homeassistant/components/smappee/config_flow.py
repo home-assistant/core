@@ -164,7 +164,7 @@ class SmappeeFlowHandler(
         else:
             # Attempt 2: try to use the local mqtt broker (newer generation) to resolve host to serialnumber
             smappee_mqtt = mqtt.SmappeeLocalMqtt()
-            connect = smappee_mqtt.start_attempt()
+            connect = await self.hass.async_add_executor_job(smappee_mqtt.start_attempt)
             if not connect:
                 return self.async_abort(reason="cannot_connect")
 
