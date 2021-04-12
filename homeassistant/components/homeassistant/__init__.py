@@ -168,8 +168,9 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
         if call.service == SERVICE_HOMEASSISTANT_RESTART:
             # We delay the restart by WEBSOCKET_RECEIVE_DELAY to ensure the frontend
             # can receive the response before the webserver shuts down
-            async def _async_stop_with_code(_):
-                await hass.async_stop(RESTART_EXIT_CODE)
+            @ha.callback
+            def _async_stop_with_code(_):
+                hass.async_create_task(hass.async_stop(RESTART_EXIT_CODE))
 
             async_call_later(
                 hass,
