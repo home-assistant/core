@@ -57,7 +57,7 @@ def migrate_schema(instance, current_version):
 
     import time
 
-    time.sleep(200)
+    time.sleep(1000)
 
 
 def _create_index(engine, table_name, index_name):
