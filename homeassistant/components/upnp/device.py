@@ -36,7 +36,7 @@ from .const import (
 
 
 def _get_local_ip(hass: HomeAssistantType) -> IPv4Address | None:
-    """."""
+    """Get the configured local ip."""
     if DOMAIN in hass.data and DOMAIN_CONFIG in hass.data[DOMAIN]:
         local_ip = hass.data[DOMAIN][DOMAIN_CONFIG].get(CONF_LOCAL_IP)
         if local_ip:

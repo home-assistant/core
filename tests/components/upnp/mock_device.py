@@ -13,13 +13,24 @@ from homeassistant.components.upnp.device import Device
 import homeassistant.util.dt as dt_util
 
 
+class MockDeviceUpdater:
+    """Mock DeviceUpdater from async_upnp_client."""
+
+    async def async_start(self):
+        """Do nothing."""
+
+    async def async_stop(self):
+        """Do nothing."""
+
+
 class MockDevice(Device):
     """Mock device for Device."""
 
     def __init__(self, udn: str) -> None:
         """Initialize mock device."""
         igd_device = object()
-        super().__init__(igd_device)
+        mock_device_updater = MockDeviceUpdater()
+        super().__init__(igd_device, mock_device_updater)
         self._udn = udn
 
     @classmethod

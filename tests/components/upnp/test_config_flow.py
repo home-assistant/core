@@ -19,7 +19,7 @@ from homeassistant.components.upnp.const import (
     DISCOVERY_UNIQUE_ID,
     DISCOVERY_USN,
     DOMAIN,
-    DOMAIN_COORDINATORS,
+    DOMAIN_DEVICES,
 )
 from homeassistant.components.upnp.device import Device
 from homeassistant.helpers.typing import HomeAssistantType
@@ -327,7 +327,8 @@ async def test_options_flow(hass: HomeAssistantType):
         await hass.async_block_till_done()
 
         # DataUpdateCoordinator gets a default of 30 seconds for updates.
-        coordinator = hass.data[DOMAIN][DOMAIN_COORDINATORS][mock_device.udn]
+        device = hass.data[DOMAIN][DOMAIN_DEVICES][mock_device.udn]
+        coordinator = device.coordinator
         assert coordinator.update_interval == timedelta(seconds=DEFAULT_SCAN_INTERVAL)
 
         # Options flow with no input results in form.
