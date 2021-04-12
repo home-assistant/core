@@ -61,7 +61,7 @@ def mock_select_fixture():
 def mock_ssl_context_fixture():
     """Mock select."""
     with patch(
-        "ssl.create_default_context",
+        "homeassistant.components.tcp.sensor.ssl.create_default_context",
     ) as mock_ssl_context:
         mock_ssl_context.return_value.wrap_socket.return_value.recv.return_value = (
             socket_test_value + "_ssl"
