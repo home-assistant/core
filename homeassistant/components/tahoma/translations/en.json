@@ -5,7 +5,8 @@
                 "description": "Enter your TaHoma credentials for the TaHoma App or the tahomalink.com platform.",
                 "data": {
                     "username": "Username",
-                    "password": "Password"
+                    "password": "Password",
+                    "hub": "Hub"
                 }
             }
         },

@@ -20,11 +20,14 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 
 from .const import (
+    CONF_HUB,
     CONF_UPDATE_INTERVAL,
+    DEFAULT_HUB,
     DEFAULT_UPDATE_INTERVAL,
     DOMAIN,
-    IGNORED_TAHOMA_TYPES,
-    TAHOMA_TYPES,
+    IGNORED_TAHOMA_DEVICES,
+    SUPPORTED_ENDPOINTS,
+    TAHOMA_DEVICE_TO_PLATFORM,
 )
 from .coordinator import TahomaDataUpdateCoordinator
 
@@ -42,9 +45,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     username = entry.data.get(CONF_USERNAME)
     password = entry.data.get(CONF_PASSWORD)
+    hub = entry.data.get(CONF_HUB, DEFAULT_HUB)
+    endpoint = SUPPORTED_ENDPOINTS[hub]
 
     session = aiohttp_client.async_create_clientsession(hass)
-    client = TahomaClient(username, password, session=session)
+    client = TahomaClient(
+        username,
+        password,
+        session=session,
+        api_url=endpoint,
+    )
 
     try:
         await client.login()
@@ -97,12 +107,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     }
 
     for device in tahoma_coordinator.data.values():
-        platform = TAHOMA_TYPES.get(device.widget) or TAHOMA_TYPES.get(device.ui_class)
+        platform = TAHOMA_DEVICE_TO_PLATFORM.get(
+            device.widget
+        ) or TAHOMA_DEVICE_TO_PLATFORM.get(device.ui_class)
         if platform:
             platforms[platform].append(device)
         elif (
-            device.widget not in IGNORED_TAHOMA_TYPES
-            and device.ui_class not in IGNORED_TAHOMA_TYPES
+            device.widget not in IGNORED_TAHOMA_DEVICES
+            and device.ui_class not in IGNORED_TAHOMA_DEVICES
         ):
             _LOGGER.debug(
                 "Unsupported TaHoma device detected (%s - %s - %s)",
