@@ -59,13 +59,9 @@ class ProsegurAlarm(alarm.AlarmControlPanelEntity):
         """Return the list of supported features."""
         return SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_HOME
 
-    async def async_added_to_hass(self):
-        """Register callbacks."""
-
-        self.async_schedule_update_ha_state(True)
-
     async def async_update(self):
         """Update alarm status."""
+
         try:
             self._installation = await Installation.retrieve(self._auth)
         except ConnectionError as err:
@@ -81,12 +77,18 @@ class ProsegurAlarm(alarm.AlarmControlPanelEntity):
 
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
+        if self._installation is None:
+            await self.async_update()
         await self._installation.disarm(self._auth)
 
     async def async_alarm_arm_home(self, code=None):
         """Send arm away command."""
+        if self._installation is None:
+            await self.async_update()
         await self._installation.arm_partially(self._auth)
 
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
+        if self._installation is None:
+            await self.async_update()
         await self._installation.arm(self._auth)

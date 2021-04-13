@@ -1,7 +1,7 @@
 """Config flow for Prosegur Alarm integration."""
 import logging
 
-from pyprosegur.auth import Auth
+from pyprosegur.auth import COUNTRY, Auth
 from pyprosegur.installation import Installation
 import voluptuous as vol
 
@@ -12,14 +12,16 @@ from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema({"username": str, "password": str})
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {"username": str, "password": str, "country": vol.In(COUNTRY.keys())}
+)
 
 
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect."""
     try:
         session = aiohttp_client.async_get_clientsession(hass)
-        auth = Auth(session, data["username"], data["password"])
+        auth = Auth(session, data["username"], data["password"], data["country"])
         install = await Installation.retrieve(auth)
     except ConnectionRefusedError:
         raise InvalidAuth from ConnectionRefusedError
@@ -30,6 +32,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         "contract": install.contract,
         "username": data["username"],
         "password": data["password"],
+        "country": data["country"],
     }
 
 
@@ -54,6 +57,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
         else:
             user_input["contract"] = info["contract"]
             return self.async_create_entry(title=info["title"], data=user_input)

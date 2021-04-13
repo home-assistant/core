@@ -25,7 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     session = aiohttp_client.async_get_clientsession(hass)
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][entry.entry_id] = Auth(
-        session, entry.data["username"], entry.data["password"]
+        session, entry.data["username"], entry.data["password"], entry.data["country"]
     )
 
     for component in PLATFORMS:

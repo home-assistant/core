@@ -13,7 +13,8 @@
                 "data": {
                     "host": "Host",
                     "password": "Password",
-                    "username": "Username"
+                    "username": "Username",
+                    "country": "Country"
                 }
             }
         }
