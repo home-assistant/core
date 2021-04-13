@@ -355,10 +355,7 @@ async def async_extract_referenced_entity_ids(
     # Find devices for this area
     selected.referenced_devices.update(selector.device_ids)
     for device_entry in dev_reg.devices.values():
-        if (
-            device_entry.area_id in selector.area_ids
-            or device_entry.id in selector.device_ids
-        ):
+        if device_entry.area_id in selector.area_ids:
             selected.referenced_devices.add(device_entry.id)
     if not selector.area_ids and not selected.referenced_devices:
         return selected
