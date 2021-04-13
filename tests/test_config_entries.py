@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, loader
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -2667,3 +2667,15 @@ async def test_setup_raise_auth_failed_from_future_coordinator_update(hass, capl
     assert entry.state == config_entries.ENTRY_STATE_LOADED
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
+
+
+async def test_initialize_and_shutdown(hass):
+    """Test we call the shutdown function at stop."""
+    manager = config_entries.ConfigEntries(hass, {})
+
+    with patch.object(manager, "_async_shutdown") as mock_async_shutdown:
+        await manager.async_initialize()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+
+    assert mock_async_shutdown.called
