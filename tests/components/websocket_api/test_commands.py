@@ -126,7 +126,7 @@ async def test_call_service_blocking(hass, websocket_client, command):
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
     mock_call.assert_called_once_with(
-        ANY, "homeassistant", "restart", ANY, blocking=False, context=ANY, target=ANY
+        ANY, "homeassistant", "restart", ANY, blocking=True, context=ANY, target=ANY
     )
 
 
