@@ -1,8 +1,7 @@
 """Demo implementation of the media player."""
 from typing import Callable, List
 
-import math
-from pyamaha import NetUSB, Tuner, Zone, Clock
+from aiomusiccast import MusicCastMediaContent
 import voluptuous as vol
 
 from homeassistant.components.media_player import BrowseMedia, MediaPlayerEntity
@@ -10,7 +9,6 @@ from homeassistant.components.media_player.const import (
     MEDIA_CLASS_DIRECTORY,
     MEDIA_CLASS_TRACK,
     MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_TRACK,
     REPEAT_MODE_ALL,
     REPEAT_MODE_OFF,
     REPEAT_MODE_ONE,
@@ -40,28 +38,24 @@ from homeassistant.util import uuid
 from . import MusicCastDataUpdateCoordinator, MusicCastDeviceEntity, _LOGGER
 from .const import ATTR_MUSICCAST_GROUP, DOMAIN, NULL_GROUP, ATTR_MC_LINK, ATTR_MAIN_SYNC, SERVICE_ALARM, \
     ATTR_SLEEP_TIME, SERVICE_SLEEP, SERVICE_RECALL_NETUSB_PRESET, SERVICE_STORE_NETUSB_PRESET
-from .musiccast_device import MusicCastData
+from aiomusiccast.musiccast_device import MusicCastData
 from ...helpers import entity_platform
 
 PARALLEL_UPDATES = 1
 
 DEFAULT_ZONE = "main"
 
-BROWSABLE_INPUTS = [
-    "usb",
-    "server",
-    "net_radio",
-    "rhapsody",
-    "napster",
-    "pandora",
-    "siriusxm",
-    "juke",
-    "radiko",
-    "qobuz",
-    "deezer",
-    "amazon_music",
-]
+REPEAT_MODE_MAPPING = {
+    REPEAT_MODE_OFF: "off",
+    REPEAT_MODE_ONE: "one",
+    REPEAT_MODE_ALL: "all"
+}
 
+MEDIA_CLASS_MAPPING = {
+    "track": MEDIA_CLASS_TRACK,
+    "directory": MEDIA_CLASS_DIRECTORY,
+    "categories": "categories"
+}
 
 async def async_setup_entry(
     hass: HomeAssistantType,
@@ -269,66 +263,49 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
 
     async def async_turn_on(self):
         """Turn the media player on."""
-        await self.coordinator.musiccast.device.request(
-            Zone.set_power(self._zone_id, "on")
-        )
+        await self.coordinator.musiccast.turn_on(self._zone_id)
         self.schedule_update_ha_state()
 
     async def async_turn_off(self):
         """Turn the media player off."""
-        await self.coordinator.musiccast.device.request(
-            Zone.set_power(self._zone_id, "standby")
-        )
+        await self.coordinator.musiccast.turn_off(self._zone_id)
         self.schedule_update_ha_state()
 
     async def async_mute_volume(self, mute):
         """Mute the volume."""
 
-        await self.coordinator.musiccast.device.request(
-            Zone.set_mute(self._zone_id, mute)
-        )
-
+        await self.coordinator.musiccast.mute_volume(self._zone_id, mute)
         self.schedule_update_ha_state()
 
     async def async_set_volume_level(self, volume):
         """Set the volume level, range 0..1."""
-        vol = self._volume_min + (self._volume_max - self._volume_min) * volume
-
-        await self.coordinator.musiccast.device.request(
-            Zone.set_volume(self._zone_id, round(vol), 1)
-        )
-
+        await self.coordinator.musiccast.set_volume_level(self._zone_id, volume)
         self.schedule_update_ha_state()
 
     async def async_media_play(self):
         """Send play command."""
-
         if self._is_netusb:
-            await self.coordinator.musiccast.device.request(NetUSB.set_playback("play"))
+            await self.coordinator.musiccast.netusb_play()
 
     async def async_media_pause(self):
         """Send pause command."""
         if self._is_netusb:
-            await self.coordinator.musiccast.device.request(
-                NetUSB.set_playback("pause")
-            )
+            await self.coordinator.musiccast.netusb_pause()
 
     async def async_media_stop(self):
         """Send stop command."""
         if self._is_netusb:
-            await self.coordinator.musiccast.device.request(NetUSB.set_playback("stop"))
+            await self.coordinator.musiccast.netusb_pause()
 
     async def async_set_shuffle(self, shuffle):
         """Enable/disable shuffle mode."""
-        if self._is_netusb and self.shuffle != shuffle:
-            await self.coordinator.musiccast.device.request(NetUSB.toggle_shuffle())
+        if self._is_netusb:
+            await self.coordinator.musiccast.netusb_shuffle(shuffle)
 
     async def async_select_sound_mode(self, sound_mode):
         """Select sound mode."""
         print(f'CHANGING TO SOUND MODE "{sound_mode}"')
-        await self.coordinator.musiccast.device.request(
-            Zone.set_sound_program(self._zone_id, sound_mode)
-        )
+        await self.coordinator.musiccast.select_sound_mode(self._zone_id, sound_mode)
 
     @property
     def media_content_id(self):
@@ -344,9 +321,8 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
     def media_image_url(self):
         """Return the image url of current playing media."""
         return (
-            f"http://{self.ip_address}{self.coordinator.data.netusb_albumart_url}"
-            if self._is_netusb and self.coordinator.data.netusb_albumart_url
-            else ""
+            self.coordinator.musiccast.media_image_url
+            if self._is_netusb else ""
         )
 
     @property
@@ -355,40 +331,17 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
         if self._is_netusb:
             return self.coordinator.data.netusb_track
         elif self._is_tuner:
-            if self.coordinator.data.band == "dab":
-                return self.coordinator.data.dab_dls
-            else:
-                if (
-                    self.coordinator.data.rds_text_a == ""
-                    and self.coordinator.data.rds_text_b != ""
-                ):
-                    return self.coordinator.data.rds_text_b
-                elif (
-                    self.coordinator.data.rds_text_a != ""
-                    and self.coordinator.data.rds_text_b == ""
-                ):
-                    return self.coordinator.data.rds_text_a
-                elif (
-                    self.coordinator.data.rds_text_a != ""
-                    and self.coordinator.data.rds_text_b != ""
-                ):
-                    return f"{self.coordinator.data.rds_text_a} / {self.coordinator.data.rds_text_b}"
+            return self.coordinator.musiccast.tuner_media_title
 
         return None
 
     @property
     def media_artist(self):
         """Return the artist of current playing media (Music track only)."""
-
         if self._is_netusb:
             return self.coordinator.data.netusb_artist
         elif self._is_tuner:
-            if self.coordinator.data.band == "dab":
-                return self.coordinator.data.dab_service_label
-            elif self.coordinator.data.band == "fm":
-                return self.coordinator.data.fm_freq
-            elif self.coordinator.data.band == "am":
-                return self.coordinator.data.am_freq
+            return self.coordinator.musiccast.tuner_media_artist
 
         return None
 
@@ -423,32 +376,16 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
     async def async_media_previous_track(self):
         """Send previous track command."""
         if self._is_netusb:
-            await self.coordinator.musiccast.device.request(
-                NetUSB.set_playback("previous")
-            )
+            await self.coordinator.musiccast.netusb_previous_track()
         elif self._is_tuner:
-            if self.coordinator.data.band in ("fm", "am"):
-                await self.coordinator.musiccast.device.request(
-                    Tuner.set_freq(self.coordinator.data.band, "auto_down", 0)
-                )
-            elif self.coordinator.data.band == "dab":
-                await self.coordinator.musiccast.device.request(
-                    Tuner.set_dab_service("previous")
-                )
+            await self.coordinator.musiccast.tuner_previous_station()
 
     async def async_media_next_track(self):
         """Send next track command."""
         if self._is_netusb:
-            await self.coordinator.musiccast.device.request(NetUSB.set_playback("next"))
+            await self.coordinator.musiccast.netusb_next_track()
         elif self._is_tuner:
-            if self.coordinator.data.band in ("fm", "am"):
-                await self.coordinator.musiccast.device.request(
-                    Tuner.set_freq(self.coordinator.data.band, "auto_up", 0)
-                )
-            elif self.coordinator.data.band == "dab":
-                await self.coordinator.musiccast.device.request(
-                    Tuner.set_dab_service("next")
-                )
+            await self.coordinator.musiccast.tuner_next_station()
 
     def clear_playlist(self):
         """Clear players playlist."""
@@ -461,17 +398,12 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
 
     async def async_set_repeat(self, repeat):
         """Enable/disable repeat mode."""
-        print([self.repeat, repeat])
-        if self._is_netusb and self.repeat != repeat and self.repeat != REPEAT_MODE_ONE:
-            await self.coordinator.musiccast.device.request(NetUSB.toggle_repeat())
+        if self._is_netusb:
+            await self.coordinator.musiccast.netusb_repeat(REPEAT_MODE_MAPPING.get(repeat, "off"))
 
     async def async_select_source(self, source):
         """Select input source."""
-        # We need to set the new source data manually to ensure that the data are updated before they are requested
-        # during the group update processes.
-        await self.coordinator.musiccast.device.request(
-            Zone.set_input(self._zone_id, source, "")
-        )
+        await self.coordinator.musiccast.select_source(self._zone_id, source)
 
     @property
     def source(self):
@@ -512,9 +444,9 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
 
     async def async_play_media(self, media_type: str, media_id: str, **kwargs) -> None:
         """Play media."""
-
-        print(f"PLAY MEDIA ({media_type} / {media_id})")
-
+        print(media_id)
+        print(media_type)
+        print(kwargs)
         if media_id:
             parts = media_id.split(":")
 
@@ -524,9 +456,7 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
                 if index == "-1":
                     index = "0"
 
-                await self.coordinator.musiccast.device.request(
-                    NetUSB.set_list_control("main", "play", index, self._zone_id)
-                )
+                await self.coordinator.musiccast.play_list_media(index, self._zone_id)
 
             elif parts[0] == "presets":
                 index = parts[1]
@@ -537,228 +467,69 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
 
         print(f"BROWSE MEDIA ({media_content_type} / {media_content_id})")
 
-        inputs = list(set(BROWSABLE_INPUTS) & set(self.source_list))
-        inputs.sort()
-
-        menu_layer = None
+        media_content_provider = MusicCastMediaContent(self.coordinator.musiccast, self._zone_id)
 
         if media_content_id and media_content_type != "categories":
-            parts = media_content_id.split(":")
+            media_content_path = media_content_id.split(":")
+            media_content_provider = await MusicCastMediaContent.browse_media(
+                self.coordinator.musiccast,
+                self._zone_id,
+                media_content_path,
+                24)
 
-            list_info = None
-
-            if parts[0] == "input":
-                input = parts[1]
-
-                # reset list info
-
-                while True:
-                    list_info = await (
-                        await self.coordinator.musiccast.device.request(
-                            NetUSB.get_list_info(input, 0, 8, "en", "main")
-                        )
-                    ).json()
-
-                    menu_layer = list_info.get("menu_layer")
-                    if menu_layer == 0:
-                        break
-                    else:
-                        await self.coordinator.musiccast.device.request(
-                            NetUSB.set_list_control("main", "return", "", self._zone_id)
-                        )
-
-            elif parts[0] == "list":
-                input = parts[1]
-
-                if parts[3] == "-1":
-                    await self.coordinator.musiccast.device.request(
-                        NetUSB.set_list_control(
-                            "main", "return", parts[3], self._zone_id
-                        )
-                    )
-                else:
-                    await self.coordinator.musiccast.device.request(
-                        NetUSB.set_list_control(
-                            "main", "select", parts[3], self._zone_id
-                        )
-                    )
-
-                list_info = await (
-                    await self.coordinator.musiccast.device.request(
-                        NetUSB.get_list_info(input, 0, 8, "en", "main")
-                    )
-                ).json()
-
-                menu_layer = list_info.get("menu_layer")
-
-            elif parts[0] == "presets":
-                children = []
-
-                for i, preset in self.coordinator.data.netusb_preset_list.items():
-                    child = BrowseMedia(
-                        title=preset[0] + " - " + preset[1],
-                        media_class=MEDIA_CLASS_TRACK,
-                        media_content_id=f"presets:{i}",
-                        media_content_type=MEDIA_TYPE_TRACK,
-                        can_play=True,
-                        can_expand=False,
-                        thumbnail=None,
-                    )
-                    children.append(child)
-
-                preset_folder = BrowseMedia(
-                    title="Presets",
-                    media_class=MEDIA_CLASS_DIRECTORY,
-                    media_content_id=f"presets",
-                    media_content_type=MEDIA_CLASS_DIRECTORY,
-                    can_play=False,
-                    can_expand=True,
-                    children=children,
-                    children_media_class=MEDIA_CLASS_TRACK,
-                )
-                return preset_folder
-
-            # Show first layer of list_info
-
-            children = []
-
-            parent_is_directory = False
-
-            for i, info in enumerate(list_info.get("list_info", [])):
-                # b[1]     Capable of Select(common for all Net/USB sources
-                # b[2]     Capable of Play(common for all Net/USB sources)
-
-                is_selectable = info.get("attribute") & 0b10 == 0b10
-                is_playable = info.get("attribute") & 0b100 == 0b100
-
-                child = BrowseMedia(
-                    title=info.get("text"),
-                    media_class=MEDIA_CLASS_DIRECTORY
-                    if is_selectable
-                    else MEDIA_CLASS_TRACK,
-                    media_content_id=f"list:{input}:{menu_layer + 1}:{i}",
-                    media_content_type=MEDIA_CLASS_DIRECTORY
-                    if is_selectable
-                    else MEDIA_TYPE_TRACK,
-                    can_play=is_playable,
-                    can_expand=is_selectable,
-                    thumbnail=info.get("thumbnail"),
-                )
-                children.append(child)
-
-                parent_is_directory = parent_is_directory or is_selectable
-
-            input_folder = BrowseMedia(
-                title=list_info.get("menu_name"),
-                media_class=MEDIA_CLASS_DIRECTORY,
-                media_content_id=f"list:{input}:{menu_layer}:-1",
-                media_content_type=MEDIA_CLASS_DIRECTORY,
-                can_play=not parent_is_directory,
-                can_expand=True,
-                children=children,
-                children_media_class=MEDIA_CLASS_DIRECTORY
-                if parent_is_directory
-                else MEDIA_CLASS_TRACK,
-            )
-
-            return input_folder
-
-        # START MAIN CATEGORIES FOR INPUTS
-        menu_layer = 0
+        else:
+            media_content_provider = media_content_provider.categories(self.coordinator.musiccast, self._zone_id)
 
         children = [
-                        BrowseMedia(
-                            title="Presets",
-                            media_class=MEDIA_CLASS_DIRECTORY,
-                            media_content_id=f"presets",
-                            media_content_type=MEDIA_CLASS_DIRECTORY,
-                            can_play=False,
-                            can_expand=True,
-                            thumbnail="mdi-heart",
-                        )
-                   ] + [
-                            BrowseMedia(
-                                title=self.coordinator.data.input_names.get(input, input),
-                                media_class=MEDIA_CLASS_DIRECTORY,
-                                media_content_id=f"input:{input}",
-                                media_content_type=MEDIA_CLASS_DIRECTORY,
-                                can_play=False,
-                                can_expand=True,
-                            )
-                            for input in inputs
+            BrowseMedia(
+                title=child.title,
+                media_class=MEDIA_CLASS_MAPPING.get(child.content_type),
+                media_content_id=child.content_id,
+                media_content_type=MEDIA_CLASS_DIRECTORY if media_content_provider.can_play else MEDIA_CLASS_TRACK,
+                can_play=child.can_play,
+                can_expand=child.can_browse,
+                thumbnail=child.thumbnail,
+            )
+            for child in media_content_provider.children
         ]
 
         overview = BrowseMedia(
-            title="Library",
-            media_class=MEDIA_CLASS_DIRECTORY,
-            media_content_id="",
-            media_content_type="categories",
-            can_play=False,
-            can_expand=True,
-            children=children,
-            children_media_class=MEDIA_CLASS_DIRECTORY,
+            title=media_content_provider.title,
+            media_class=MEDIA_CLASS_MAPPING.get(media_content_provider.content_type),
+            media_content_id=media_content_provider.content_id,
+            media_content_type=MEDIA_CLASS_DIRECTORY if media_content_provider.can_play else MEDIA_CLASS_TRACK,
+            can_play=media_content_provider.can_play,
+            can_expand=media_content_provider.can_browse,
+            children=children
         )
 
         return overview
 
     async def recall_netusb_preset(self, preset):
         """Play the selected preset."""
-        await self.coordinator.musiccast.device.get(NetUSB.recall_preset(self._zone_id, preset))
+        await self.coordinator.musiccast.recall_netusb_preset(self._zone_id, preset)
 
     async def store_netusb_preset(self, preset):
         """Play the selected preset."""
-        await self.coordinator.musiccast.device.get(NetUSB.store_preset(preset))
+        await self.coordinator.musiccast.store_netusb_preset(preset)
 
     async def set_sleep_timer(self, sleep_time=0):
         """Set sleep time"""
         if 'sleep' not in self.coordinator.data.zones[self._zone_id].func_list:
             raise Exception(self.entity_id + " does not have a sleep timer.")
-        sleep_time = math.ceil(sleep_time/30) * 30
-        await self.coordinator.musiccast.device.get(Zone.set_sleep(self._zone_id, sleep_time))
+        await self.coordinator.musiccast.set_sleep_timer(self._zone_id, sleep_time)
 
     @property
     def alarm_input_list(self):
         if not self.coordinator.data.has_alarm:
             return {}
-        inputs = {"resume:" + inp: "Resume " + inp for inp in self.coordinator.data.alarm_resume_input_list}
-        if "netusb" in self.coordinator.data.alarm_preset_list:
-            inputs = {**inputs, **{"preset:netusb:" + str(index): entry[0] + " - " + entry[1]
-                                   for index, entry in self.coordinator.data.netusb_preset_list.items()}
-                      }
-
-        return inputs
+        return self.coordinator.musiccast.alarm_input_list
 
     async def configure_alarm(self, enable=None, volume=None, alarm_time=None, source=""):
         """Setup alarm"""
         if not self.coordinator.data.has_alarm:
             raise Exception(self.entity_id + " does not have a alarm.")
-        enable = self.coordinator.data.alarm_enabled if enable is None else enable
-        resume_input = None
-        preset_type = None
-        preset_num = None
-        playback_type = None
-
-        parts = source.split(':')
-        if len(parts) > 0 and parts[0] != "":
-            playback_type = parts[0]
-            if playback_type == "resume":
-                resume_input = parts[1]
-            elif playback_type == "preset":
-                preset_type = parts[1]
-                preset_num = int(parts[2])
-            else:
-                playback_type = None
-
-        if isinstance(alarm_time, str):
-            time_parts = alarm_time.split(':')
-            alarm_time = time_parts[0] + time_parts[1]
-
-        await self.coordinator.musiccast.device.post(
-            *Clock.set_alarm_settings(enable, volume=volume, mode="oneday" if playback_type or alarm_time else None,
-                                      day="oneday" if playback_type or alarm_time else None,
-                                      playback_type=playback_type, alarm_time=alarm_time, preset_num=preset_num,
-                                      preset_type=preset_type, enable=enable if playback_type or alarm_time else None,
-                                      resume_input=resume_input))
+        await self.coordinator.musiccast.configure_alarm(enable=None, volume=None, alarm_time=None, source="")
 
     # Group and MusicCast System specific functions/properties
 
@@ -796,8 +567,8 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
         If the media player is not part of a group, False is returned.
         """
         return (
-                self.is_network_client or (
-                self.source == ATTR_MAIN_SYNC)
+                self.is_network_client or
+                self.source == ATTR_MAIN_SYNC
         )
 
     def get_all_mc_entities(self):
@@ -889,9 +660,13 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
             if client != self:
                 await client.async_client_join(group, self)
 
-        await self.coordinator.musiccast.mc_server_group_extend(self._zone_id,
-                                                                [entity.ip_address for entity in entities],
-                                                                group)
+        distribution_num = sum([len(server.coordinator.data.group_client_list) for server in self.get_all_server_entities()])
+        await self.coordinator.musiccast.mc_server_group_extend(
+            self._zone_id,
+            [entity.ip_address for entity in entities],
+            group,
+            distribution_num
+        )
         _LOGGER.info(self.entity_id + " added the following entities " + str(entities))
         _LOGGER.info(self.entity_id + " has now the following musiccast group " + str(self.musiccast_group))
 
@@ -1028,9 +803,12 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
                 # The client is no longer part of the group. Prepare removal.
                 client_ips_for_removal.append(expected_client_ip)
 
+        distribution_num = sum([len(server.coordinator.data.group_client_list) for server in self.get_all_server_entities()])
         if len(client_ips_for_removal):
             _LOGGER.info(self.entity_id + " says good bye to the following members " + str(client_ips_for_removal))
-            await self.coordinator.musiccast.mc_server_group_reduce(self._zone_id, client_ips_for_removal)
+            await self.coordinator.musiccast.mc_server_group_reduce(
+                self._zone_id, client_ips_for_removal, distribution_num
+            )
         if len(self.musiccast_group) < 2:
             # The group is empty, stop distribution.
             await self.async_server_close_group()

@@ -32,7 +32,7 @@ from .const import (
     SERVICE_UNJOIN,
     UNJOIN_SERVICE_SCHEMA,
 )
-from .musiccast_device import MusicCastData, MusicCastDevice
+from aiomusiccast.musiccast_device import MusicCastData, MusicCastDevice
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
@@ -50,7 +50,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up MusicCast from a config entry."""
 
-    client = MusicCastDevice(hass, async_get_clientsession(hass), entry.data[CONF_HOST])
+    client = MusicCastDevice(entry.data[CONF_HOST], async_get_clientsession(hass), hass.loop)
     coordinator = MusicCastDataUpdateCoordinator(hass, client=client)
     await coordinator.async_refresh()
 

@@ -1,6 +1,7 @@
 {
   "title": "MusicCast",
   "config": {
+    "flow_title": "MusicCast: {name}",
     "step": {
       "user": {
         "description": "Set up MusicCast to integrate with Home Assistant.",
@@ -14,7 +15,8 @@
     },
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "yxcControlURL_missing": "The control URL is not given in the ssdp description."
     }
   }
 }
