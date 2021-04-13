@@ -119,6 +119,7 @@ PLATFORMS = (
 )
 
 CONF_BAUDRATE = "baudrate"
+CONF_CUSTOM_QUIRKS_PATH = "custom_quirks_path"
 CONF_DATABASE = "database_path"
 CONF_DEFAULT_LIGHT_TRANSITION = "default_light_transition"
 CONF_DEVICE_CONFIG = "device_config"
