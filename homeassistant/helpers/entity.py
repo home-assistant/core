@@ -110,10 +110,11 @@ def get_supported_features(hass: HomeAssistant, entity_id: str) -> int:
     return entry.supported_features or 0
 
 
-def _stringify_state(state: StateType, available: bool) -> str:
+def _stringify_state(entity: Entity) -> str:
     """Convert state to string."""
-    if not available:
+    if not entity.available:
         return STATE_UNAVAILABLE
+    state = entity.state
     if state is None:
         return STATE_UNKNOWN
     if isinstance(state, float):
@@ -365,7 +366,7 @@ class Entity(ABC):
         attr = self.capability_attributes
         attr = dict(attr) if attr else {}
 
-        state = _stringify_state(self.state, self.available)
+        state = _stringify_state(self)
         if self.available:
             attr.update(self.state_attributes or {})
             extra_state_attributes = self.extra_state_attributes
