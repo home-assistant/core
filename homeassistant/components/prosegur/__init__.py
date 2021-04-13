@@ -21,7 +21,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Prosegur Alarm from a config entry."""
     session = aiohttp_client.async_get_clientsession(hass)
-    hass.data[DOMAIN] = {}
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = Auth(
         session,
         entry.data[CONF_USERNAME],
