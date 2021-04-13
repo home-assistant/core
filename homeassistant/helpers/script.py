@@ -456,7 +456,7 @@ class _ScriptRun:
         wait_template.hass = self._hass
 
         # check if condition already okay
-        if condition.async_template(self._hass, wait_template, self._variables):
+        if condition.async_template(self._hass, wait_template, self._variables, False):
             self._variables["wait"]["completed"] = True
             return
 
