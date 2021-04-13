@@ -12,7 +12,6 @@ import aiohttp
 import requests
 
 from homeassistant import config_entries
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import entity, event
@@ -73,10 +72,6 @@ class DataUpdateCoordinator(Generic[T]):
             request_refresh_debouncer.function = self.async_refresh
 
         self._debounced_refresh = request_refresh_debouncer
-
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, self._async_stop_refresh
-        )
 
     @callback
     def async_add_listener(self, update_callback: CALLBACK_TYPE) -> Callable[[], None]:
@@ -170,6 +165,10 @@ class DataUpdateCoordinator(Generic[T]):
             self._unsub_refresh = None
 
         self._debounced_refresh.async_cancel()
+
+        if self.hass.is_stopping:
+            return
+
         start = monotonic()
         auth_failed = False
 
