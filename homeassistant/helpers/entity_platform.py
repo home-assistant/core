@@ -190,6 +190,7 @@ class EntityPlatform:
     async def async_shutdown(self) -> None:
         """Call when Home Assistant is stopping."""
         self.async_cancel_retry_setup()
+        self.async_unsub_polling()
 
     @callback
     def async_cancel_retry_setup(self) -> None:
@@ -582,10 +583,15 @@ class EntityPlatform:
 
         await asyncio.gather(*tasks)
 
+        self.async_unsub_polling()
+        self._setup_complete = False
+
+    @callback
+    def async_unsub_polling(self) -> None:
+        """Stop polling."""
         if self._async_unsub_polling is not None:
             self._async_unsub_polling()
             self._async_unsub_polling = None
-        self._setup_complete = False
 
     async def async_destroy(self) -> None:
         """Destroy an entity platform.
