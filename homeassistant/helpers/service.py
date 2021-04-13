@@ -362,8 +362,9 @@ async def async_extract_referenced_entity_ids(
         return selected
 
     for ent_entry in ent_reg.entities.values():
-        if ent_entry.area_id in selector.area_ids or (
-            not ent_entry.area_id and ent_entry.device_id in selected.referenced_devices
+        if (
+            ent_entry.area_id in selector.area_ids
+            or ent_entry.device_id in selected.referenced_devices
         ):
             selected.indirectly_referenced.add(ent_entry.entity_id)
 
