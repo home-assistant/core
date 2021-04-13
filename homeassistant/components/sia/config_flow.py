@@ -84,34 +84,6 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data_schema=ACCOUNT_SCHEMA,
                 errors={},
             )
-        errors = {}
-        try:
-            validate_input(user_input)
-        except InvalidKeyFormatError:
-            errors["base"] = "invalid_key_format"
-        except InvalidKeyLengthError:
-            errors["base"] = "invalid_key_length"
-        except InvalidAccountFormatError:
-            errors["base"] = "invalid_account_format"
-        except InvalidAccountLengthError:
-            errors["base"] = "invalid_account_length"
-        except InvalidPing:
-            errors["base"] = "invalid_ping"
-        except InvalidZones:
-            errors["base"] = "invalid_zones"
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        if errors:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=ACCOUNT_SCHEMA,
-                errors=errors,
-            )
-
-        self.update_data(user_input)
-        if user_input[CONF_ADDITIONAL_ACCOUNTS]:
-            return await self.async_step_add_account()
 
     async def async_step_user(self, user_input: dict = None):
         """Handle the initial step."""
