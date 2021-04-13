@@ -11,11 +11,9 @@ import datetime
 import enum
 import functools
 import logging
-import math
 import os
 import pathlib
 import re
-import sys
 import threading
 from time import monotonic
 from types import MappingProxyType
@@ -30,7 +28,6 @@ from typing import (
     Mapping,
     Optional,
     TypeVar,
-    Union,
     cast,
 )
 
@@ -115,14 +112,8 @@ SOURCE_DISCOVERED = "discovered"
 SOURCE_STORAGE = "storage"
 SOURCE_YAML = "yaml"
 
-# Used when converting float states to string: limit precision according to machine
-# epsilon to make the string representation readable
-FLOAT_PRECISION = abs(int(math.floor(math.log10(abs(sys.float_info.epsilon)))))
-
 # How long to wait until things that run on startup have to finish.
 TIMEOUT_EVENT_START = 15
-
-StateType = Union[None, str, int, float]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -1183,7 +1174,7 @@ class StateMachine:
     def async_set(
         self,
         entity_id: str,
-        new_state: StateType,
+        new_state: str,
         attributes: Mapping[str, Any] | None = None,
         force_update: bool = False,
         context: Context | None = None,
@@ -1198,12 +1189,6 @@ class StateMachine:
         This method must be run in the event loop.
         """
         entity_id = entity_id.lower()
-        if isinstance(new_state, float):
-            # If the entity's state is a float, limit precision according to machine
-            # epsilon to make the string representation readable
-            new_state = f"{new_state:.{FLOAT_PRECISION}}"
-        else:
-            new_state = str(new_state)
         attributes = attributes or {}
         old_state = self._states.get(entity_id)
         if old_state is None:

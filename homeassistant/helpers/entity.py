@@ -7,6 +7,8 @@ from collections.abc import Mapping
 from datetime import datetime, timedelta
 import functools as ft
 import logging
+import math
+import sys
 from timeit import default_timer as timer
 from typing import Any, Awaitable, Iterable
 
@@ -42,6 +44,10 @@ SLOW_UPDATE_WARNING = 10
 DATA_ENTITY_SOURCE = "entity_info"
 SOURCE_CONFIG_ENTRY = "config_entry"
 SOURCE_PLATFORM_CONFIG = "platform_config"
+
+# Used when converting float states to string: limit precision according to machine
+# epsilon to make the string representation readable
+FLOAT_PRECISION = abs(int(math.floor(math.log10(abs(sys.float_info.epsilon)))))
 
 
 @callback
@@ -346,11 +352,18 @@ class Entity(ABC):
         attr = self.capability_attributes
         attr = dict(attr) if attr else {}
 
-        if not self.available:
-            state = STATE_UNAVAILABLE
-        else:
-            sstate = self.state
-            state = STATE_UNKNOWN if sstate is None else str(sstate)
+        def stringify_state(state: StateType, available: bool) -> str:
+            """Convert state to string."""
+            if not available:
+                return STATE_UNAVAILABLE
+            if isinstance(state, float):
+                # If the entity's state is a float, limit precision according to machine
+                # epsilon to make the string representation readable
+                return f"{state:.{FLOAT_PRECISION}}"
+            return str(state)
+
+        state = stringify_state(self.state, self.available)
+        if self.available:
             attr.update(self.state_attributes or {})
             extra_state_attributes = self.extra_state_attributes
             # Backwards compatibility for "device_state_attributes" deprecated in 2021.4
