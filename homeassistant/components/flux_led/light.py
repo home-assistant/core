@@ -309,8 +309,8 @@ class FluxLight(LightEntity):
         except BrokenPipeError as error:
             _LOGGER.warning("Error updating flux_led: %s", error)
             return
-
-        if len(self._bulb.raw_state) > 10:
+        
+        if self._bulb.protocol:
             if self._bulb.raw_state[9] == self._bulb.raw_state[11]:
                 self._mode = MODE_RGBWW
             else:
@@ -321,7 +321,7 @@ class FluxLight(LightEntity):
             self._mode = MODE_RGBW
         else:
             self._mode = MODE_RGB
-
+        
         if self._mode == MODE_RGBCW:
             white_temp = self.temperature_cw()
             self._white_value = (
@@ -330,12 +330,16 @@ class FluxLight(LightEntity):
 
             if white_temp[0] or white_temp[1]:
                 self._brightness = 0
+            else:
+                self._brightness = self._bulb.brightness
 
         elif self._mode == MODE_RGBWW:
             self._white_value = self.temperature_ww()
 
             if self._bulb.mode == "ww":
                 self._brightness = 0
+            else:
+                self._brightness = self._bulb.brightness
         else:
             self._white_value = self._get_rgbw[3]
 
@@ -562,12 +566,8 @@ class FluxLight(LightEntity):
 
         if self._mode == MODE_WHITE:
             self._bulb.setRgbw(0, 0, 0, w=brightness)
-
-        elif self._mode == MODE_RGBW:
-            self._bulb.setRgbw(*tuple(rgb), w=white, brightness=brightness)
-
-        else:
-            self._bulb.setRgb(*tuple(rgb), brightness=brightness)
+        
+        self._bulb.setRgbw(*tuple(rgb), w=white, brightness=brightness)
 
     def turn_off(self, **kwargs):
         """Turn off the light."""
