@@ -17,6 +17,7 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
     config_entry_oauth2_flow,
@@ -94,15 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async with async_timeout.timeout(60):
             await lyric.get_locations()
     except LyricAuthenticationException as exception:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_REAUTH},
-                data=entry.data,
-            )
-        )
-        _LOGGER.warning(exception)
-        return False
+        raise ConfigEntryAuthFailed from exception
     except (LyricException, ClientResponseError) as exception:
         _LOGGER.error(exception)
         return False
@@ -114,14 +107,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 await lyric.get_locations()
             return lyric
         except LyricAuthenticationException as exception:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": SOURCE_REAUTH},
-                    data=entry.data,
-                )
-            )
-            raise UpdateFailed(exception) from exception
+            raise ConfigEntryAuthFailed from exception
         except (LyricException, ClientResponseError) as exception:
             raise UpdateFailed(exception) from exception
 
