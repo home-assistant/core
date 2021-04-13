@@ -75,24 +75,7 @@ async def test_alarm_control_panel(hass, zha_device_joined_restored, zigpy_devic
     )
 
     # disarm from HA
-    cluster.client_command.reset_mock()
-    await hass.services.async_call(
-        ALARM_DOMAIN,
-        "alarm_disarm",
-        {ATTR_ENTITY_ID: entity_id, "code": "4321"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
-    assert cluster.client_command.call_count == 2
-    assert cluster.client_command.await_count == 2
-    assert cluster.client_command.call_args == call(
-        4,
-        security.IasAce.PanelStatus.Panel_Disarmed,
-        0,
-        security.IasAce.AudibleNotification.Default_Sound,
-        security.IasAce.AlarmStatus.No_Alarm,
-    )
+    await reset_alarm_panel(hass, cluster, entity_id)
 
     # trip alarm from faulty code entry
     cluster.client_command.reset_mock()
@@ -126,17 +109,8 @@ async def test_alarm_control_panel(hass, zha_device_joined_restored, zigpy_devic
         security.IasAce.AlarmStatus.Emergency,
     )
 
-    # reset the panel so it isn't in alarm state
-    cluster.client_command.reset_mock()
-    await hass.services.async_call(
-        ALARM_DOMAIN,
-        "alarm_disarm",
-        {ATTR_ENTITY_ID: entity_id, "code": "4321"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
-    cluster.client_command.reset_mock()
+    # reset the panel
+    await reset_alarm_panel(hass, cluster, entity_id)
 
     # arm_home from HA
     cluster.client_command.reset_mock()
@@ -171,3 +145,101 @@ async def test_alarm_control_panel(hass, zha_device_joined_restored, zigpy_devic
         security.IasAce.AudibleNotification.Default_Sound,
         security.IasAce.AlarmStatus.No_Alarm,
     )
+
+    # reset the panel
+    await reset_alarm_panel(hass, cluster, entity_id)
+
+    # arm from panel
+    cluster.listener_event(
+        "cluster_command", 1, 0, [security.IasAce.ArmMode.Arm_All_Zones, "", 0]
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_AWAY
+
+    # reset the panel
+    await reset_alarm_panel(hass, cluster, entity_id)
+
+    # arm day home only from panel
+    cluster.listener_event(
+        "cluster_command", 1, 0, [security.IasAce.ArmMode.Arm_Day_Home_Only, "", 0]
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_HOME
+
+    # reset the panel
+    await reset_alarm_panel(hass, cluster, entity_id)
+
+    # arm night sleep only from panel
+    cluster.listener_event(
+        "cluster_command", 1, 0, [security.IasAce.ArmMode.Arm_Night_Sleep_Only, "", 0]
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_NIGHT
+
+    # disarm from panel with bad code
+    cluster.listener_event(
+        "cluster_command", 1, 0, [security.IasAce.ArmMode.Disarm, "", 0]
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_NIGHT
+
+    # disarm from panel with bad code for 2nd time trips alarm
+    cluster.listener_event(
+        "cluster_command", 1, 0, [security.IasAce.ArmMode.Disarm, "", 0]
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_ALARM_TRIGGERED
+
+    # disarm from panel with good code
+    cluster.listener_event(
+        "cluster_command", 1, 0, [security.IasAce.ArmMode.Disarm, "4321", 0]
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
+
+    # panic from panel
+    cluster.listener_event("cluster_command", 1, 4, [])
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_ALARM_TRIGGERED
+
+    # reset the panel
+    await reset_alarm_panel(hass, cluster, entity_id)
+
+    # fire from panel
+    cluster.listener_event("cluster_command", 1, 3, [])
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_ALARM_TRIGGERED
+
+    # reset the panel
+    await reset_alarm_panel(hass, cluster, entity_id)
+
+    # emergency from panel
+    cluster.listener_event("cluster_command", 1, 2, [])
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_ALARM_TRIGGERED
+
+    # reset the panel
+    await reset_alarm_panel(hass, cluster, entity_id)
+
+
+async def reset_alarm_panel(hass, cluster, entity_id):
+    """Reset the state of the alarm panel."""
+    cluster.client_command.reset_mock()
+    await hass.services.async_call(
+        ALARM_DOMAIN,
+        "alarm_disarm",
+        {ATTR_ENTITY_ID: entity_id, "code": "4321"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
+    assert cluster.client_command.call_count == 2
+    assert cluster.client_command.await_count == 2
+    assert cluster.client_command.call_args == call(
+        4,
+        security.IasAce.PanelStatus.Panel_Disarmed,
+        0,
+        security.IasAce.AudibleNotification.Default_Sound,
+        security.IasAce.AlarmStatus.No_Alarm,
+    )
+    cluster.client_command.reset_mock()
