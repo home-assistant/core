@@ -1,5 +1,5 @@
 """Test the Prosegur Alarm config flow."""
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from homeassistant import config_entries, setup
 from homeassistant.components.prosegur.const import DOMAIN
@@ -95,3 +95,48 @@ async def test_form_cannot_connect(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_unknown_exception(hass):
+    """Test we handle unknown exceptions."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "pyprosegur.installation.Installation",
+        side_effect=ValueError,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "test-username",
+                "password": "test-password",
+                "country": "PT",
+            },
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_form_validate_input(hass):
+    """Test we retrieve data from Installation."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "pyprosegur.installation.Installation.retrieve",
+        return_value=MagicMock,
+    ) as mock_retrieve:
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "test-username",
+                "password": "test-password",
+                "country": "PT",
+            },
+        )
+
+    assert len(mock_retrieve.mock_calls) == 1

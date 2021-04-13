@@ -1,5 +1,7 @@
 """Tests for the Prosegur alarm control panel device."""
 
+from unittest.mock import patch
+
 from pyprosegur.installation import Status
 from pytest import fixture, mark
 
@@ -98,3 +100,13 @@ async def test_arm(hass, aioclient_mock, mock_auth, code, alarm_service, alarm_s
     assert len(aioclient_mock.mock_calls) == 1
     state = hass.states.get(PROSEGUR_ALARM_ENTITY)
     assert state.state == alarm_state
+
+    with patch(
+        "pyprosegur.installation.Installation.retrieve",
+        side_effect=ConnectionError("mocked error"),
+    ):
+        await entity_component.async_update_entity(hass, PROSEGUR_ALARM_ENTITY)
+        await hass.async_block_till_done()
+        assert len(aioclient_mock.mock_calls) == 1
+        state = hass.states.get(PROSEGUR_ALARM_ENTITY)
+        assert state.state == alarm_state
