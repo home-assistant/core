@@ -135,11 +135,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         # register (or update) node in device registry
         device = register_node_in_dev_reg(hass, entry, dev_reg, client, node)
+        registered_unique_ids[device.id] = defaultdict(set)
 
         # run discovery on all node values and create/update entities
         for disc_info in async_discover_values(node):
             platform = disc_info.platform
-            registered_unique_ids[device.id] = defaultdict(set)
 
             # This migration logic was added in 2021.3 to handle a breaking change to
             # the value_id format. Some time in the future, this call (as well as the
