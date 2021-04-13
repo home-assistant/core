@@ -152,6 +152,13 @@ def area_mock(hass):
         device_id=device_area_a.id,
         area_id="area-a",
     )
+    entity_in_area_b = ent_reg.RegistryEntry(
+        entity_id="light.in_area_b",
+        unique_id="in-area-b-id",
+        platform="test",
+        device_id=device_area_a.id,
+        area_id="area-b",
+    )
     mock_registry(
         hass,
         {
@@ -162,6 +169,7 @@ def area_mock(hass):
             entity_no_area.entity_id: entity_no_area,
             entity_diff_area.entity_id: entity_diff_area,
             entity_in_area_a.entity_id: entity_in_area_a,
+            entity_in_area_b.entity_id: entity_in_area_b,
         },
     )
 
@@ -421,6 +429,7 @@ async def test_extract_entity_ids_from_devices(hass, area_mock):
         hass, ha.ServiceCall("light", "turn_on", {"device_id": "device-area-a-id"})
     ) == {
         "light.in_area_a",
+        "light.in_area_b",
     }
 
     assert (
