@@ -556,6 +556,41 @@ async def test_when_setup_already_loaded(hass):
     assert calls == ["test", "test"]
 
 
+async def test_async_when_setup_or_start_already_loaded(hass):
+    """Test when setup or start."""
+    calls = []
+
+    async def mock_callback(hass, component):
+        """Mock callback."""
+        calls.append(component)
+
+    setup.async_when_setup_or_start(hass, "test", mock_callback)
+    await hass.async_block_till_done()
+    assert calls == []
+
+    hass.config.components.add("test")
+    hass.bus.async_fire(EVENT_COMPONENT_LOADED, {"component": "test"})
+    await hass.async_block_till_done()
+    assert calls == ["test"]
+
+    # Event listener should be gone
+    hass.bus.async_fire(EVENT_COMPONENT_LOADED, {"component": "test"})
+    await hass.async_block_till_done()
+    assert calls == ["test"]
+
+    # Should be called right away
+    setup.async_when_setup_or_start(hass, "test", mock_callback)
+    await hass.async_block_till_done()
+    assert calls == ["test", "test"]
+
+    setup.async_when_setup_or_start(hass, "not_loaded", mock_callback)
+    await hass.async_block_till_done()
+    assert calls == ["test", "test"]
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+    assert calls == ["test", "test", "not_loaded"]
+
+
 async def test_setup_import_blows_up(hass):
     """Test that we handle it correctly when importing integration blows up."""
     with patch(
