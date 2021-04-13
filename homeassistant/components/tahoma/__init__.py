@@ -62,16 +62,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         scenarios = await client.get_scenarios()
         places = await client.get_places()
     except BadCredentialsException:
-        _LOGGER.error("Invalid authentication.")
+        _LOGGER.error("Invalid authentication")
         return False
     except TooManyRequestsException as exception:
-        _LOGGER.error("Too many requests, try again later.")
+        _LOGGER.error("Too many requests, try again later")
         raise ConfigEntryNotReady from exception
     except (TimeoutError, ClientError, ServerDisconnectedError) as exception:
-        _LOGGER.error("Failed to connect.")
+        _LOGGER.error("Failed to connect")
         raise ConfigEntryNotReady from exception
     except MaintenanceException as exception:
-        _LOGGER.error("Server is down for maintenance.")
+        _LOGGER.error("Server is down for maintenance")
         raise ConfigEntryNotReady from exception
     except Exception as exception:  # pylint: disable=broad-except
         _LOGGER.exception(exception)
@@ -92,7 +92,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
 
     _LOGGER.debug(
-        "Initialized DataUpdateCoordinator with %s interval.", str(update_interval)
+        "Initialized DataUpdateCoordinator with %s interval", str(update_interval)
     )
 
     await tahoma_coordinator.async_refresh()

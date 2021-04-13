@@ -7,7 +7,7 @@ from homeassistant.components.lock import DOMAIN as LOCK
 DOMAIN = "tahoma"
 
 CONF_HUB = "hub"
-DEFAULT_HUB = "Somfy TaHoma"
+DEFAULT_HUB = "Somfy TaHoma (Europe)"
 
 MIN_UPDATE_INTERVAL = 30
 DEFAULT_UPDATE_INTERVAL = 30
