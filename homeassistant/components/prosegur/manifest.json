@@ -6,10 +6,6 @@
   "requirements": [
     "pyprosegur==0.0.4"
   ],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
   "codeowners": [
     "@dgomes"
   ]

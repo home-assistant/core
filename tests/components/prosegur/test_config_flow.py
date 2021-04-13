@@ -2,7 +2,6 @@
 from unittest.mock import patch
 
 from homeassistant import config_entries, setup
-from homeassistant.components.prosegur.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.prosegur.const import DOMAIN
 
 
@@ -60,7 +59,7 @@ async def test_form_invalid_auth(hass):
 
     with patch(
         "pyprosegur.auth.Auth",
-        side_effect=InvalidAuth,
+        side_effect=ConnectionRefusedError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -83,7 +82,7 @@ async def test_form_cannot_connect(hass):
 
     with patch(
         "pyprosegur.installation.Installation",
-        side_effect=CannotConnect,
+        side_effect=ConnectionError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

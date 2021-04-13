@@ -2,15 +2,13 @@
 import asyncio
 
 from pyprosegur.auth import Auth
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 
-from .const import DOMAIN
-
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
+from .const import CONF_COUNTRY, DOMAIN
 
 PLATFORMS = ["alarm_control_panel"]
 
@@ -25,7 +23,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     session = aiohttp_client.async_get_clientsession(hass)
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][entry.entry_id] = Auth(
-        session, entry.data["username"], entry.data["password"], entry.data["country"]
+        session,
+        entry.data[CONF_USERNAME],
+        entry.data[CONF_PASSWORD],
+        entry.data[CONF_COUNTRY],
     )
 
     for component in PLATFORMS:
