@@ -7,7 +7,7 @@ from homeassistant.components.lock import DOMAIN as LOCK
 DOMAIN = "tahoma"
 
 CONF_HUB = "hub"
-DEFAULT_HUB = "Somfy TaHoma (Europe)"
+DEFAULT_HUB = "Somfy (Europe)"
 
 MIN_UPDATE_INTERVAL = 30
 DEFAULT_UPDATE_INTERVAL = 30
@@ -17,10 +17,9 @@ SUPPORTED_ENDPOINTS = {
     "eedomus": "https://ha101-1.overkiz.com/enduser-mobile-web/enduserAPI/",
     "Hi Kumo": "https://ha117-1.overkiz.com/enduser-mobile-web/enduserAPI/",
     "Rexel Energeasy Connect": "https://ha112-1.overkiz.com/enduser-mobile-web/enduserAPI/",
-    "Somfy Connexoon (Europe)": "https://tahomalink.com/enduser-mobile-web/enduserAPI/",
-    "Somfy Connexoon (Australia)": "https://ha201-1.overkiz.com/enduser-mobile-web/enduserAPI/",
-    "Somfy TaHoma (Europe)": "https://tahomalink.com/enduser-mobile-web/enduserAPI/",
-    "Somfy TaHoma (North America)": "https://ha401-1.overkiz.com/enduser-mobile-web/enduserAPI/",
+    "Somfy (Australia)": "https://ha201-1.overkiz.com/enduser-mobile-web/enduserAPI/",
+    "Somfy (Europe)": "https://tahomalink.com/enduser-mobile-web/enduserAPI/",
+    "Somfy (North America)": "https://ha401-1.overkiz.com/enduser-mobile-web/enduserAPI/",
 }
 
 IGNORED_TAHOMA_DEVICES = [

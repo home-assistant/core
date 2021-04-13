@@ -18,7 +18,7 @@ from tests.common import MockConfigEntry
 
 TEST_EMAIL = "test@testdomain.com"
 TEST_PASSWORD = "test-password"
-TEST_HUB = "Somfy TaHoma (Europe)"
+TEST_HUB = "Somfy (Europe)"
 
 
 async def test_form(hass):
