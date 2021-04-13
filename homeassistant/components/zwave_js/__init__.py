@@ -135,7 +135,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         # register (or update) node in device registry
         device = register_node_in_dev_reg(hass, entry, dev_reg, client, node)
-        registered_unique_ids[device.id] = defaultdict(set)
+        # We only want to create the defaultdict once, even on reinterviews
+        if device.id not in registered_unique_ids:
+            registered_unique_ids[device.id] = defaultdict(set)
 
         # run discovery on all node values and create/update entities
         for disc_info in async_discover_values(node):
