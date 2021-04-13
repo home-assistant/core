@@ -119,7 +119,7 @@ def rewrite_legacy_to_modern_conf(cfg: dict[str, dict]) -> list[dict]:
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_SENSORS): cv.schema_with_slug_keys(
+        vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(
             LEGACY_BINARY_SENSOR_SCHEMA
         ),
     }
