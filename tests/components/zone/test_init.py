@@ -195,6 +195,21 @@ def calculateGeographicalPositionFromRangeBearing(latitude1, longitude1, alpha1T
     return latitude2, longitude2, alpha21
 
 
+def calculate_postion_from_distance(position, distance):
+    """Calculate new position giving initial position and distance.
+
+    Asserts that the result is in accordance with inverse vincenty from location util.
+    """
+    lat, lon, _ = calculateGeographicalPositionFromRangeBearing(
+        position[0], position[1], 0, distance
+    )
+
+    # Verify that the distance to the calculated position is correct
+    assert -0.1 < distance - vincenty((lat, lon), position) * 1000 < 0.1
+
+    return (lat, lon)
+
+
 async def test_setup_no_zones_still_adds_home_zone(hass):
     """Test if no config is passed in we still get the home zone."""
     assert await setup.async_setup_component(hass, zone.DOMAIN, {"zone": None})
@@ -382,46 +397,68 @@ def assert_zone(zone, expected_zone, idx):
 
 
 @pytest.mark.parametrize(
-    "zone_radii,start_location,locations,expected_zones",
-    # zone radii: radius for each configured zone
-    # start_location: initial latitude, longitude, accuracy
+    "zone_settings,locations,expected_zones",
+    # zone settings: (distance from origin, radius) for each configured zone
     # locations: list of (distance, accuracy) from starting location
     # expected zones: list of expected zone for each location in the locations list
     [
+        # Test concentric zones
         # Don't enter a zone smaller than the location's accuracy
         (
-            (6, 12),
-            (55.69991353346531, 13.206717073911985, 6),
+            [(0, 6), (0, 12)],
             [(0, 12), (0, 11.9), (0, 3)],
             [None, "kebab_shop_garden", "kebab_shop"],
         ),
+        # Test concentric zones
         # Don't leave a zone if location with accuracy intersects with zone
         (
-            (6, 12),
-            (55.69991353346531, 13.206717073911985, 6),
+            [(0, 6), (0, 12)],
             [(0, 3), (0, 11.9), (0, 12)],
             ["kebab_shop", "kebab_shop", "kebab_shop"],
         ),
+        # Test concentric zones
         # Exit a zone if location with accuracy does not intersect with zone
+        # In this test we expect to jump directly from inner zone to no zone
         (
-            (6, 11),
-            (55.69991353346531, 13.206717073911985, 6),
+            [(0, 6), (0, 11)],
             [(0, 3), (6, 3), (9, 3), (6, 3)],
             ["kebab_shop", "kebab_shop", None, "kebab_shop_garden"],
         ),
+        # Test concentric zones
         # Exit a zone if location with accuracy does not intersect with zone
+        # In this test we expect to jump from inner zone to outer zone
         (
-            (6, 13),
-            (55.69991353346531, 13.206717073911985, 6),
+            [(0, 6), (0, 13)],
+            [(0, 3), (6, 3), (9, 3), (6, 3)],
+            ["kebab_shop", "kebab_shop", "kebab_shop_garden", "kebab_shop_garden"],
+        ),
+        # Non concentric zones
+        # Exit a zone if location with accuracy does not intersect with zone
+        # In this test we expect to jump from first zone to second zone via no zone
+        (
+            [(0, 6), (12, 6)],
+            [(0, 3), (6, 3), (9, 3), (12, 3)],
+            ["kebab_shop", "kebab_shop", None, "kebab_shop_garden"],
+        ),
+        # Non concentric zones
+        # Exit a zone if location with accuracy does not intersect with zone
+        # In this test we expect to jump directly from first zone to second zone
+        (
+            [(0, 6), (9, 6)],
             [(0, 3), (6, 3), (9, 3), (6, 3)],
             ["kebab_shop", "kebab_shop", "kebab_shop_garden", "kebab_shop_garden"],
         ),
     ],
 )
-async def test_zone_criteria(
-    hass, zone_radii, start_location, locations, expected_zones
-):
+async def test_zone_criteria(hass, zone_settings, locations, expected_zones):
     """Test zone enter and exit criteria."""
+    origin = (55.69991353346531, 13.206717073911985)
+    zone_locations = []
+
+    for setting in zone_settings:
+        lat, lon = calculate_postion_from_distance(origin, setting[0])
+        zone_locations.append((lat, lon, setting[1]))
+
     assert await setup.async_setup_component(
         hass,
         zone.DOMAIN,
@@ -429,15 +466,15 @@ async def test_zone_criteria(
             "zone": [
                 {
                     "name": "Kebab shop",
-                    "latitude": 55.69991353346531,
-                    "longitude": 13.206717073911985,
-                    "radius": zone_radii[0],
+                    "latitude": zone_locations[0][0],
+                    "longitude": zone_locations[0][1],
+                    "radius": zone_locations[0][2],
                 },
                 {
                     "name": "Kebab shop garden",
-                    "latitude": 55.69991353346531,
-                    "longitude": 13.206717073911985,
-                    "radius": zone_radii[1],
+                    "latitude": zone_locations[1][0],
+                    "longitude": zone_locations[1][1],
+                    "radius": zone_locations[1][2],
                 },
             ]
         },
@@ -447,13 +484,7 @@ async def test_zone_criteria(
     for idx, location in enumerate(locations):
         distance, radius = location
         # Calculate new location
-        lat, lon, _ = calculateGeographicalPositionFromRangeBearing(
-            start_location[0], start_location[1], 0, distance
-        )
-        # Verify that the distance to the calculated position is correct
-        assert (
-            -0.1 < distance - vincenty((lat, lon), (start_location[0:2])) * 1000 < 0.1
-        )
+        lat, lon = calculate_postion_from_distance(origin, distance)
         active = zone.async_active_zone(hass, lat, lon, radius, active)
         expected_zone = expected_zones[idx]
         assert_zone(active, expected_zone, idx)
