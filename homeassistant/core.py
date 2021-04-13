@@ -87,6 +87,11 @@ if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntries
 
 
+STAGE_1_SHUTDOWN_TIMEOUT = 120
+STAGE_2_SHUTDOWN_TIMEOUT = 60
+STAGE_3_SHUTDOWN_TIMEOUT = 30
+
+
 block_async_io.enable()
 
 T = TypeVar("T")
@@ -528,7 +533,7 @@ class HomeAssistant:
         self.async_track_tasks()
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         try:
-            async with self.timeout.async_timeout(120):
+            async with self.timeout.async_timeout(STAGE_1_SHUTDOWN_TIMEOUT):
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
@@ -539,7 +544,7 @@ class HomeAssistant:
         self.state = CoreState.final_write
         self.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
         try:
-            async with self.timeout.async_timeout(60):
+            async with self.timeout.async_timeout(STAGE_2_SHUTDOWN_TIMEOUT):
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
@@ -558,7 +563,7 @@ class HomeAssistant:
         shutdown_run_callback_threadsafe(self.loop)
 
         try:
-            async with self.timeout.async_timeout(30):
+            async with self.timeout.async_timeout(STAGE_3_SHUTDOWN_TIMEOUT):
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
