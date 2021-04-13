@@ -18,6 +18,7 @@ from .core import ZHAGateway
 from .core.const import (
     BAUD_RATES,
     CONF_BAUDRATE,
+    CONF_CUSTOM_QUIRKS_PATH,
     CONF_DATABASE,
     CONF_DEVICE_CONFIG,
     CONF_ENABLE_QUIRKS,
@@ -48,6 +49,7 @@ ZHA_CONFIG_SCHEMA = {
     vol.Optional(CONF_ZIGPY): dict,
     vol.Optional(CONF_RADIO_TYPE): cv.enum(RadioType),
     vol.Optional(CONF_USB_PATH): cv.string,
+    vol.Optional(CONF_CUSTOM_QUIRKS_PATH): cv.isdir,
 }
 CONFIG_SCHEMA = vol.Schema(
     {
