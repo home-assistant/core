@@ -161,7 +161,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 )
 
             await platform_setup_tasks[disc_info.platform]
+
             LOGGER.debug("Discovered entity: %s", disc_info)
+            async_dispatcher_send(
+                hass, f"{DOMAIN}_{entry.entry_id}_add_{disc_info.platform}", disc_info
+            )
 
         # add listener for stateless node value notification events
         unsubscribe_callbacks.append(
