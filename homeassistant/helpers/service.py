@@ -357,6 +357,7 @@ async def async_extract_referenced_entity_ids(
     for device_entry in dev_reg.devices.values():
         if device_entry.area_id in selector.area_ids:
             selected.referenced_devices.add(device_entry.id)
+
     if not selector.area_ids and not selected.referenced_devices:
         return selected
 
@@ -367,7 +368,10 @@ async def async_extract_referenced_entity_ids(
                 not ent_entry.area_id
                 and ent_entry.device_id in selected.referenced_devices
             )
-            or ent_entry.device_id in selector.device_ids
+            or (
+                ent_entry.device_id not in selected.missing_devices
+                and ent_entry.device_id in selector.device_ids
+            )
         ):
             selected.indirectly_referenced.add(ent_entry.entity_id)
 
