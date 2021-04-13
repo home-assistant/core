@@ -413,17 +413,17 @@ async def test_extract_entity_ids_from_area(hass, area_mock):
 
 async def test_extract_entity_ids_from_devices(hass, area_mock):
     """Test extract_entity_ids method with devices."""
-    call = ha.ServiceCall("light", "turn_on", {"device_id": "device-no-area-id"})
-
-    assert {
+    assert await service.async_extract_entity_ids(
+        hass, ha.ServiceCall("light", "turn_on", {"device_id": "device-no-area-id"})
+    ) == {
         "light.no_area",
-    } == await service.async_extract_entity_ids(hass, call)
+    }
 
-    call = ha.ServiceCall("light", "turn_on", {"device_id": "device-other-area-id"})
-
-    assert {
+    assert await service.async_extract_entity_ids(
+        hass, ha.ServiceCall("light", "turn_on", {"device_id": "device-other-area-id"})
+    ) == {
         "light.in_yet_another_area",
-    } == await service.async_extract_entity_ids(hass, call)
+    }
 
     assert (
         await service.async_extract_entity_ids(
