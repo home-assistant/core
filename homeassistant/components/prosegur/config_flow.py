@@ -17,7 +17,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Required("country"): vol.In(COUNTRY.keys()),
+        vol.Required(CONF_COUNTRY): vol.In(COUNTRY.keys()),
     }
 )
 
@@ -35,7 +35,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     except ConnectionError:
         raise CannotConnect from ConnectionError
 
-    # Return info that you want to store in the config entry.
+    # Info to store in the config entry.
     return {
         "title": f"Contract {install.contract}",
         "contract": install.contract,
