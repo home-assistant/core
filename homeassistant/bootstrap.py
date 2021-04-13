@@ -17,18 +17,9 @@ import yarl
 
 from homeassistant import config as conf_util, config_entries, core, loader
 from homeassistant.components import http
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STOP,
-    REQUIRED_NEXT_PYTHON_DATE,
-    REQUIRED_NEXT_PYTHON_VER,
-)
+from homeassistant.const import REQUIRED_NEXT_PYTHON_DATE, REQUIRED_NEXT_PYTHON_VER
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import (
-    area_registry,
-    device_registry,
-    entity_platform,
-    entity_registry,
-)
+from homeassistant.helpers import area_registry, device_registry, entity_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import (
@@ -480,13 +471,6 @@ async def _async_set_up_integrations(
     """Set up all the integrations."""
     hass.data[DATA_SETUP_STARTED] = {}
     setup_time = hass.data[DATA_SETUP_TIME] = {}
-
-    async def _async_shutdown_entity_platforms(event: core.Event) -> None:
-        await entity_platform.async_shutdown(hass)
-
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, _async_shutdown_entity_platforms
-    )
 
     watch_task = asyncio.create_task(_async_watch_pending_setups(hass))
 

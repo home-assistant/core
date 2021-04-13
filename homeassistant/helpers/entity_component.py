@@ -12,7 +12,11 @@ import voluptuous as vol
 
 from homeassistant import config as conf_util
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ENTITY_NAMESPACE, CONF_SCAN_INTERVAL
+from homeassistant.const import (
+    CONF_ENTITY_NAMESPACE,
+    CONF_SCAN_INTERVAL,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -118,6 +122,8 @@ class EntityComponent:
 
         This method must be run in the event loop.
         """
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
+
         self.config = config
 
         # Look in config for Domain, Domain 2, Domain 3 etc and load them
@@ -321,4 +327,12 @@ class EntityComponent:
             platform=platform,
             scan_interval=scan_interval,
             entity_namespace=entity_namespace,
+        )
+
+    async def _async_shutdown(self) -> None:
+        """Call when Home Assistant is stopping."""
+        if not self._platforms:
+            return
+        await asyncio.gather(
+            *[platform.async_shutdown() for platform in chain(self._platforms.values())]
         )
