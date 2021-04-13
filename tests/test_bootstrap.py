@@ -8,9 +8,7 @@ import pytest
 
 from homeassistant import bootstrap, core, runner
 import homeassistant.config as config_util
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_platform
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
@@ -612,26 +610,3 @@ async def test_setup_safe_mode_if_no_frontend(
     assert hass.config.skip_pip
     assert hass.config.internal_url == "http://192.168.1.100:8123"
     assert hass.config.external_url == "https://abcdef.ui.nabu.casa"
-
-
-@pytest.mark.parametrize("load_registries", [False])
-async def test_stop_shuts_down_platforms(hass):
-    """Test entity_platform.async_shutdown is called on the stop event."""
-
-    mock_integration(
-        hass,
-        MockModule(
-            domain="normal_integration",
-            partial_manifest={"after_dependencies": ["an_after_dep"]},
-        ),
-    )
-
-    await bootstrap._async_set_up_integrations(hass, {"normal_integration": {}})
-
-    assert "normal_integration" in hass.config.components
-
-    with patch.object(entity_platform, "async_shutdown") as mock_async_shutdown:
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-        await hass.async_block_till_done()
-
-    assert mock_async_shutdown.called
