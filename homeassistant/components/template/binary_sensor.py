@@ -1,13 +1,10 @@
 """Support for exposing a templated binary sensor."""
 from __future__ import annotations
 
-from itertools import chain
-
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
-    DOMAIN as BINARY_SENSOR_DOMAIN,
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA,
     BinarySensorEntity,
@@ -171,15 +168,9 @@ def _async_create_template_tracking_entities(async_add_entities, hass, definitio
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the template binary sensors."""
-    defs = []
-
-    if BINARY_SENSOR_DOMAIN in config:
-        defs.append(config[BINARY_SENSOR_DOMAIN])
-
-    if CONF_SENSORS in config:
-        defs.append(rewrite_legacy_to_modern_conf(config[CONF_SENSORS]))
-
-    _async_create_template_tracking_entities(async_add_entities, hass, chain(*defs))
+    _async_create_template_tracking_entities(
+        async_add_entities, hass, rewrite_legacy_to_modern_conf(config[CONF_SENSORS])
+    )
 
 
 class BinarySensorTemplate(TemplateEntity, BinarySensorEntity):
