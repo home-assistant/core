@@ -72,8 +72,6 @@ async def test_form_additional_account(hass):
     assert result2["errors"] == {}
 
     with patch(
-        "homeassistant.components.sia.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.sia.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result3 = await hass.config_entries.flow.async_configure(
@@ -102,7 +100,6 @@ async def test_form_additional_account(hass):
         ],
     }
     await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
