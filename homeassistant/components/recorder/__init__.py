@@ -371,15 +371,6 @@ class Recorder(threading.Thread):
     def async_register(self, shutdown_task, hass_started):
         """Post connection initialize."""
 
-        def shutdown(event):
-            """Shut down the Recorder."""
-            if not hass_started.done():
-                hass_started.set_result(shutdown_task)
-            self.queue.put(None)
-            self.join()
-
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
-
         def force_shutdown(event):
             """Force shutdown."""
             self._stop_queue_watcher_and_event_listener()
@@ -397,7 +388,19 @@ class Recorder(threading.Thread):
                     break
             self.queue.put(None)
 
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_FINAL_WRITE, force_shutdown)
+        cancel_force_shutdown = self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_FINAL_WRITE, force_shutdown
+        )
+
+        def shutdown(event):
+            """Shut down the Recorder."""
+            if not hass_started.done():
+                hass_started.set_result(shutdown_task)
+            self.queue.put(None)
+            self.join()
+            cancel_force_shutdown()
+
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
 
         if self.hass.state == CoreState.running:
             hass_started.set_result(None)
