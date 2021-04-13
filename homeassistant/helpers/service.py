@@ -370,11 +370,8 @@ async def async_extract_referenced_entity_ids(
                 not ent_entry.area_id
                 and ent_entry.device_id in selected.referenced_devices
             )
-            # when device matches target device and it's not missing
-            or (
-                ent_entry.device_id not in selected.missing_devices
-                and ent_entry.device_id in selector.device_ids
-            )
+            # when device matches target device
+            or ent_entry.device_id in selector.device_ids
         ):
             selected.indirectly_referenced.add(ent_entry.entity_id)
 
