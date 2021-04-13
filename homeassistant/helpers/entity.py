@@ -110,6 +110,19 @@ def get_supported_features(hass: HomeAssistant, entity_id: str) -> int:
     return entry.supported_features or 0
 
 
+def _stringify_state(state: StateType, available: bool) -> str:
+    """Convert state to string."""
+    if not available:
+        return STATE_UNAVAILABLE
+    if state is None:
+        return STATE_UNKNOWN
+    if isinstance(state, float):
+        # If the entity's state is a float, limit precision according to machine
+        # epsilon to make the string representation readable
+        return f"{state:.{FLOAT_PRECISION}}"
+    return str(state)
+
+
 class Entity(ABC):
     """An abstract class for Home Assistant entities."""
 
@@ -352,17 +365,7 @@ class Entity(ABC):
         attr = self.capability_attributes
         attr = dict(attr) if attr else {}
 
-        def stringify_state(state: StateType, available: bool) -> str:
-            """Convert state to string."""
-            if not available:
-                return STATE_UNAVAILABLE
-            if isinstance(state, float):
-                # If the entity's state is a float, limit precision according to machine
-                # epsilon to make the string representation readable
-                return f"{state:.{FLOAT_PRECISION}}"
-            return str(state)
-
-        state = stringify_state(self.state, self.available)
+        state = _stringify_state(self.state, self.available)
         if self.available:
             attr.update(self.state_attributes or {})
             extra_state_attributes = self.extra_state_attributes

@@ -1189,6 +1189,7 @@ class StateMachine:
         This method must be run in the event loop.
         """
         entity_id = entity_id.lower()
+        new_state = str(new_state)
         attributes = attributes or {}
         old_state = self._states.get(entity_id)
         if old_state is None:
