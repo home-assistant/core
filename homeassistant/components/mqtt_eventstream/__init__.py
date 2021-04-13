@@ -66,7 +66,7 @@ async def async_setup(hass, config):
         if event.origin != EventOrigin.local:
             return
 
-        # User-defined events to ignore
+        # Events to ignore
         if event.event_type in ignore_event:
             return
 
