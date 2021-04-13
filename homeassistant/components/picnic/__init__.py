@@ -4,7 +4,7 @@ import asyncio
 from python_picnic_api import PicnicAPI
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 
 from .const import CONF_API, CONF_COORDINATOR, CONF_COUNTRY_CODE, DOMAIN
@@ -21,8 +21,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 def create_picnic_client(entry: ConfigEntry):
     """Create an instance of the PicnicAPI client."""
     return PicnicAPI(
-        username=entry.data.get(CONF_USERNAME),
-        password=entry.data.get(CONF_PASSWORD),
+        auth_token=entry.data.get(CONF_ACCESS_TOKEN),
         country_code=entry.data.get(CONF_COUNTRY_CODE),
     )
 
@@ -34,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         CONF_API: picnic_client,
-        CONF_COORDINATOR: PicnicUpdateCoordinator(hass, picnic_client),
+        CONF_COORDINATOR: PicnicUpdateCoordinator(hass, picnic_client, entry),
     }
 
     for component in PLATFORMS:

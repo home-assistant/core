@@ -3,6 +3,6 @@
   "name": "Picnic",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/picnic",
-  "requirements": ["python-picnic-api==1.0.0"],
+  "requirements": ["python-picnic-api==1.1.0"],
   "codeowners": ["@corneyl"]
 }

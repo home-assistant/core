@@ -86,12 +86,10 @@ class PicnicSensor(CoordinatorEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self.sensor_type in self.coordinator.data
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return True if unable to access real state of the entity."""
-        return not self.coordinator.last_update_success
+        return (
+            self.coordinator.last_update_success and
+            self.sensor_type in self.coordinator.data
+        )
 
     @property
     def entity_registry_enabled_default(self) -> bool:

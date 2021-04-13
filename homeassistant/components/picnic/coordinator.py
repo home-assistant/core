@@ -26,14 +26,17 @@ from .const import (
     SENSOR_SELECTED_SLOT_MIN_ORDER_VALUE,
     SENSOR_SELECTED_SLOT_START,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_ACCESS_TOKEN
 
 
 class PicnicUpdateCoordinator(DataUpdateCoordinator):
     """The coordinator to fetch data from the Picnic API at a set interval."""
 
-    def __init__(self, hass: HomeAssistant, picnic_api_client: PicnicAPI):
+    def __init__(self, hass: HomeAssistant, picnic_api_client: PicnicAPI, config_entry: ConfigEntry):
         """Initialize the coordinator with the given Picnic API client."""
         self.picnic_api_client = picnic_api_client
+        self.config_entry = config_entry
         self._user_address = None
 
         logger = logging.getLogger(__name__)
@@ -61,6 +64,7 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
         # Fetch from the API and pre-process the data
         cart = self.picnic_api_client.get_cart()
         last_order = self._get_last_order()
+        self._update_auth_token()
 
         if not cart or not last_order:
             raise UpdateFailed("API response doesn't contain expected data.")
@@ -153,3 +157,9 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
 
         # Make a copy because some references are local
         return last_order
+
+    def _update_auth_token(self):
+        """Set the updated authentication token."""
+        updated_token = self.picnic_api_client.session.auth_token
+        if self.config_entry.data.get(CONF_ACCESS_TOKEN) != updated_token:
+            self.config_entry.data[CONF_ACCESS_TOKEN] = updated_token

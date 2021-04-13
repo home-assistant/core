@@ -1,5 +1,6 @@
 """Config flow for Picnic integration."""
 import logging
+from typing import Tuple
 
 from python_picnic_api import PicnicAPI
 from python_picnic_api.session import PicnicAuthError
@@ -7,7 +8,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME
 
 from .const import (  # pylint: disable=unused-import
     CONF_COUNTRY_CODE,
@@ -32,10 +33,10 @@ class PicnicHub:
     """Hub class to test user authentication."""
 
     @staticmethod
-    def authenticate(username, password, country_code) -> None:
+    def authenticate(username, password, country_code) -> Tuple[str, dict]:
         """Test if we can authenticate with the Picnic API."""
         picnic = PicnicAPI(username, password, country_code)
-        return picnic.get_user()
+        return picnic.session.auth_token, picnic.get_user()
 
 
 async def validate_input(hass: core.HomeAssistant, data):
@@ -46,7 +47,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     hub = PicnicHub()
 
     try:
-        user_data = await hass.async_add_executor_job(
+        auth_token, user_data = await hass.async_add_executor_job(
             hub.authenticate,
             data[CONF_USERNAME],
             data[CONF_PASSWORD],
@@ -62,7 +63,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         f'{user_data["address"]["street"]} {user_data["address"]["house_number"]}'
         + f'{user_data["address"]["house_number_ext"]}'
     )
-    return {
+    return auth_token, {
         "title": address,
         "unique_id": user_data["user_id"],
     }
@@ -84,7 +85,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
-            info = await validate_input(self.hass, user_input)
+            auth_token, info = await validate_input(self.hass, user_input)
         except CannotConnect:
             errors["base"] = "cannot_connect"
         except InvalidAuth:
@@ -97,7 +98,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(info["unique_id"])
             self._abort_if_unique_id_configured()
 
-            return self.async_create_entry(title=info["title"], data=user_input)
+            return self.async_create_entry(title=info["title"], data={
+                CONF_ACCESS_TOKEN: auth_token,
+                CONF_COUNTRY_CODE: user_input[CONF_COUNTRY_CODE]
+            })
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
