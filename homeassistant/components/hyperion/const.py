@@ -40,6 +40,8 @@ DEFAULT_PRIORITY = 128
 
 DOMAIN = "hyperion"
 
+HYPERION_MANUFACTURER_NAME = "Hyperion"
+HYPERION_MODEL_NAME = f"{HYPERION_MANUFACTURER_NAME}-NG"
 HYPERION_RELEASES_URL = "https://github.com/hyperion-project/hyperion.ng/releases"
 HYPERION_VERSION_WARN_CUTOFF = "2.0.0-alpha.9"
 

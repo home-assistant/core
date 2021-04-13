@@ -26,7 +26,7 @@ async def async_setup_gree(hass):
     await hass.async_block_till_done()
 
 
-async def test_send_panel_light_on(hass, discovery, device):
+async def test_send_panel_light_on(hass):
     """Test for sending power on command to the device."""
     await async_setup_gree(hass)
 
@@ -42,7 +42,7 @@ async def test_send_panel_light_on(hass, discovery, device):
     assert state.state == STATE_ON
 
 
-async def test_send_panel_light_on_device_timeout(hass, discovery, device):
+async def test_send_panel_light_on_device_timeout(hass, device):
     """Test for sending power on command to the device with a device timeout."""
     device().push_state_update.side_effect = DeviceTimeoutError
 
@@ -60,7 +60,7 @@ async def test_send_panel_light_on_device_timeout(hass, discovery, device):
     assert state.state == STATE_ON
 
 
-async def test_send_panel_light_off(hass, discovery, device):
+async def test_send_panel_light_off(hass):
     """Test for sending power on command to the device."""
     await async_setup_gree(hass)
 
@@ -76,7 +76,7 @@ async def test_send_panel_light_off(hass, discovery, device):
     assert state.state == STATE_OFF
 
 
-async def test_send_panel_light_toggle(hass, discovery, device):
+async def test_send_panel_light_toggle(hass):
     """Test for sending power on command to the device."""
     await async_setup_gree(hass)
 
@@ -117,7 +117,7 @@ async def test_send_panel_light_toggle(hass, discovery, device):
     assert state.state == STATE_ON
 
 
-async def test_panel_light_name(hass, discovery, device):
+async def test_panel_light_name(hass):
     """Test for name property."""
     await async_setup_gree(hass)
     state = hass.states.get(ENTITY_ID)
