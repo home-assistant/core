@@ -99,6 +99,9 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_ping"
         except InvalidZones:
             errors["base"] = "invalid_zones"
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
         if errors:
             return self.async_show_form(
                 step_id="user",

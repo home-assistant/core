@@ -4,6 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
+from homeassistant.components.sia.config_flow import ACCOUNT_SCHEMA, HUB_SCHEMA
 from homeassistant.components.sia.const import DOMAIN
 
 BASIC_CONFIG = {
@@ -145,6 +146,12 @@ async def test_form_errors(hass, additional, field, value, error):
     if not additional:
         config = BASIC_CONFIG.copy()
         config[field] = value
+        with patch("homeassistant.components.sia.async_setup_entry", return_value=True):
+            result_err = await hass.config_entries.flow.async_configure(
+                result["flow_id"], config
+            )
+            assert result_err["type"] == "form"
+            assert result_err["errors"] == {"base": error}
     else:
         add_config = BASIC_CONFIG.copy()
         add_config["additional_account"] = True
@@ -157,9 +164,80 @@ async def test_form_errors(hass, additional, field, value, error):
         config = ADDITIONAL_ACCOUNT.copy()
         config[field] = value
 
-    with patch("homeassistant.components.sia.async_setup_entry", return_value=True):
-        result_err = await hass.config_entries.flow.async_configure(
-            result["flow_id"], config
+        with patch("homeassistant.components.sia.async_setup_entry", return_value=True):
+            result_err = await hass.config_entries.flow.async_configure(
+                result_add["flow_id"], config
+            )
+            assert result_err["type"] == "form"
+            assert result_err["errors"] == {"base": error}
+
+
+@pytest.mark.parametrize(
+    "additional",
+    [
+        (False),
+        (True),
+    ],
+)
+async def test_form_start(hass, additional):
+    """Start the form and check if you get the data_schema."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    if not additional:
+        assert result
+        assert result["step_id"] == "user"
+        assert result["errors"] == {}
+        assert result["data_schema"] == HUB_SCHEMA
+    else:
+        add_config = BASIC_CONFIG.copy()
+        add_config["additional_account"] = True
+        result_add = await hass.config_entries.flow.async_configure(
+            result["flow_id"], add_config
         )
-    assert result_err["type"] == "form"
-    assert result_err["errors"] == {"base": error}
+        assert result_add
+        assert result_add["step_id"] == "user"
+        assert result_add["errors"] == {}
+        assert result_add["data_schema"] == ACCOUNT_SCHEMA
+
+
+@pytest.mark.parametrize(
+    "additional",
+    [
+        (False),
+        (True),
+    ],
+)
+async def test_unknown(hass, additional):
+    """Start the form and check if you get the data_schema."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    if not additional:
+        with patch(
+            "homeassistant.components.sia.config_flow.validate_input",
+            side_effect=Exception("Test"),
+        ):
+            result_err = await hass.config_entries.flow.async_configure(
+                result["flow_id"], BASIC_CONFIG
+            )
+            assert result_err
+            assert result_err["step_id"] == "user"
+            assert result_err["errors"] == {"base": "unknown"}
+            assert result_err["data_schema"] == HUB_SCHEMA
+    else:
+        add_config = BASIC_CONFIG.copy()
+        add_config["additional_account"] = True
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], add_config
+        )
+        with patch(
+            "homeassistant.components.sia.config_flow.validate_input",
+            side_effect=Exception("Test"),
+        ):
+            result_add = await hass.config_entries.flow.async_configure(
+                result2["flow_id"], ADDITIONAL_ACCOUNT
+            )
+            assert result_add
+            assert result_add["step_id"] == "user"
+            assert result_add["errors"] == {"base": "unknown"}
