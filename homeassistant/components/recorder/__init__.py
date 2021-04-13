@@ -21,6 +21,7 @@ from homeassistant.components import persistent_notification
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_EXCLUDE,
+    EVENT_HOMEASSISTANT_FINAL_WRITE,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
@@ -378,6 +379,27 @@ class Recorder(threading.Thread):
             self.join()
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
+
+        def force_shutdown(event):
+            """Force shutdown."""
+            if not self.is_alive:
+                return
+            self._stop_queue_watcher_and_event_listener()
+            # If the queue is full of events to be processed because
+            # the database is so broken that every event results in a retry
+            # we will never be able to get though the events to shutdown in time.
+            #
+            # We drain all the events in the queue and then insert
+            # an empty one to ensure the next thing the recorder sees
+            # is a request to shutdown.
+            while True:
+                try:
+                    self.queue.get_nowait()
+                except queue.Empty:
+                    break
+            self.queue.put(None)
+
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_FINAL_WRITE, force_shutdown)
 
         if self.hass.state == CoreState.running:
             hass_started.set_result(None)
