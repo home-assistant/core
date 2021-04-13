@@ -330,7 +330,7 @@ class Template:
 
     def ensure_valid(self) -> None:
         """Return if template is valid."""
-        if self._compiled_code is not None:
+        if self.is_static or self._compiled_code is not None:
             return
 
         try:
