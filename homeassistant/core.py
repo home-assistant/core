@@ -859,8 +859,6 @@ class EventBus:
             if not self._listeners[event_type]:
                 self._listeners.pop(event_type)
         except (KeyError, ValueError):
-            if self._hass.is_stopping:
-                return
             # KeyError is key event_type listener did not exist
             # ValueError if listener did not exist within event_type
             _LOGGER.exception(
