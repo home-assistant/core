@@ -34,6 +34,7 @@ TUYA_PLATFORMS = {
     "tuya": "Tuya",
     "smart_life": "Smart Life",
     "jinvoo_smart": "Jinvoo Smart",
+    "brilliant_smart": "Brilliant Smart",
 }
 
 TUYA_TYPE_NOT_QUERY = ["scene", "switch"]
