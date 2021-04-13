@@ -20,7 +20,7 @@ def async_describe_events(hass, async_describe_event):
             message = f"send command {data['request']['namespace']}/{data['request']['name']} for {name}"
         else:
             message = (
-                f"send command {data['request']['namespace']}/{data['request']['name']}"
+                f"sent command {data['request']['namespace']}/{data['request']['name']}"
             )
 
         return {"name": "Amazon Alexa", "message": message, "entity_id": entity_id}
