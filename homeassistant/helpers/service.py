@@ -363,11 +363,14 @@ async def async_extract_referenced_entity_ids(
 
     for ent_entry in ent_reg.entities.values():
         if (
+            # when area matches the target area
             ent_entry.area_id in selector.area_ids
+            # when device matches a referenced devices with no explicitly set area
             or (
                 not ent_entry.area_id
                 and ent_entry.device_id in selected.referenced_devices
             )
+            # when device matches target device and it's not missing
             or (
                 ent_entry.device_id not in selected.missing_devices
                 and ent_entry.device_id in selector.device_ids
