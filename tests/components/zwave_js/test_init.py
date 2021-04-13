@@ -330,7 +330,7 @@ async def test_old_entity_migration(
         assert ent_reg.async_get_entity_id("sensor", DOMAIN, old_unique_id) is None
 
 
-async def test_skip_old_entity_migration_for_multiiple(
+async def test_skip_old_entity_migration_for_multiple(
     hass, hank_binary_switch_state, client, integration
 ):
     """Test that multiple entities of the same value but on a different endpoint get skipped."""
