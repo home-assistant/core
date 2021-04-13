@@ -382,8 +382,6 @@ class Recorder(threading.Thread):
 
         def force_shutdown(event):
             """Force shutdown."""
-            if not self.is_alive:
-                return
             self._stop_queue_watcher_and_event_listener()
             # If the queue is full of events to be processed because
             # the database is so broken that every event results in a retry
