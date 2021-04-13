@@ -150,6 +150,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             THERMOSTAT_OPERATING_STATE_PROPERTY,
             command_class=CommandClass.THERMOSTAT_OPERATING_STATE,
             add_to_watched_value_ids=True,
+            check_all_endpoints=True,
         )
         self._current_temp = self.get_zwave_value(
             THERMOSTAT_CURRENT_TEMP_PROPERTY,

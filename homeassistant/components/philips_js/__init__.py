@@ -134,8 +134,12 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
     async def _notify_task(self):
         while self.api.on and self.api.notify_change_supported:
-            if await self.api.notifyChange(130):
+            res = await self.api.notifyChange(130)
+            if res:
                 self.async_set_updated_data(None)
+            elif res is None:
+                LOGGER.debug("Aborting notify due to unexpected return")
+                break
 
     @callback
     def _async_notify_stop(self):
