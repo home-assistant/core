@@ -183,3 +183,18 @@ class MaxLengthExceeded(HomeAssistantError):
         self.value = value
         self.property_name = property_name
         self.max_length = max_length
+
+
+class RequiredParameterMissing(HomeAssistantError):
+    """Raised when a required parameter is missing from a function call."""
+
+    def __init__(self, parameter_names: list[str]) -> None:
+        """Initialize error."""
+        super().__init__(
+            self,
+            (
+                "Call must include at least one of the following parameters: "
+                f"{', '.join(parameter_names)}"
+            ),
+        )
+        self.parameter_names = parameter_names
