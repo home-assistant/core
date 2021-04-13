@@ -47,7 +47,7 @@ SOURCE_PLATFORM_CONFIG = "platform_config"
 
 # Used when converting float states to string: limit precision according to machine
 # epsilon to make the string representation readable
-FLOAT_PRECISION = abs(int(math.floor(math.log10(abs(sys.float_info.epsilon)))))
+FLOAT_PRECISION = abs(int(math.floor(math.log10(abs(sys.float_info.epsilon))))) - 1
 
 
 @callback
