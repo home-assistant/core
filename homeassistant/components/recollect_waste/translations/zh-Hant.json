@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
         },
         "error": {
             "invalid_place_or_service_id": "\u5730\u9ede\u6216\u670d\u52d9 ID \u7121\u6548"

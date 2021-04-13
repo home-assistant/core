@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "not_forked_daapd": "\u88dd\u7f6e\u4e26\u975e forked-daapd \u4f3a\u670d\u5668\u3002"
         },
         "error": {

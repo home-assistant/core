@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "duplicate_persistence_file": "Persistence \u6a94\u6848\u5df2\u4f7f\u7528\u4e2d",
             "duplicate_topic": "\u4e3b\u984c\u5df2\u4f7f\u7528\u4e2d",
@@ -20,7 +20,7 @@
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
         "error": {
-            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "duplicate_persistence_file": "Persistence \u6a94\u6848\u5df2\u4f7f\u7528\u4e2d",
             "duplicate_topic": "\u4e3b\u984c\u5df2\u4f7f\u7528\u4e2d",
