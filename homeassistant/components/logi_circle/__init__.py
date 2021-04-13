@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.camera import ATTR_FILENAME
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     ATTR_MODE,
     CONF_API_KEY,
     CONF_CLIENT_ID,
@@ -72,17 +73,28 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-LOGI_CIRCLE_SERVICE_SET_CONFIG = {
-    vol.Required(ATTR_MODE): vol.In([LED_MODE_KEY, RECORDING_MODE_KEY]),
-    vol.Required(ATTR_VALUE): cv.boolean,
-}
+LOGI_CIRCLE_SERVICE_SET_CONFIG = vol.Schema(
+    {
+        vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
+        vol.Required(ATTR_MODE): vol.In([LED_MODE_KEY, RECORDING_MODE_KEY]),
+        vol.Required(ATTR_VALUE): cv.boolean,
+    }
+)
 
-LOGI_CIRCLE_SERVICE_SNAPSHOT = {vol.Required(ATTR_FILENAME): cv.template}
+LOGI_CIRCLE_SERVICE_SNAPSHOT = vol.Schema(
+    {
+        vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
+        vol.Required(ATTR_FILENAME): cv.template,
+    }
+)
 
-LOGI_CIRCLE_SERVICE_RECORD = {
-    vol.Required(ATTR_FILENAME): cv.template,
-    vol.Required(ATTR_DURATION): cv.positive_int,
-}
+LOGI_CIRCLE_SERVICE_RECORD = vol.Schema(
+    {
+        vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
+        vol.Required(ATTR_FILENAME): cv.template,
+        vol.Required(ATTR_DURATION): cv.positive_int,
+    }
+)
 
 
 async def async_setup(hass, config):
