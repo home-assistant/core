@@ -22,7 +22,7 @@ def async_describe_events(hass, async_describe_event):
         if command.startswith(COMMON_COMMAND_PREFIX):
             command = command[len(COMMON_COMMAND_PREFIX) :]
 
-        message = f"send command {command} for {name} (via {event.data['source']})"
+        message = f"sent command {command} for {name} (via {event.data['source']})"
 
         return {"name": "Google Assistant", "message": message, "entity_id": entity_id}
 

@@ -96,7 +96,7 @@ async def async_setup(hass: HomeAssistant, yaml_config: dict[str, Any]):
     if DOMAIN not in yaml_config:
         return True
 
-    config = yaml_config.get(DOMAIN, {})
+    config = yaml_config[DOMAIN]
 
     google_config = GoogleConfig(hass, config)
     await google_config.async_initialize()
