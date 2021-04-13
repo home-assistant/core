@@ -17,7 +17,7 @@ def async_describe_events(hass, async_describe_event):
         if entity_id:
             state = hass.states.get(entity_id)
             name = state.name if state else entity_id
-            message = f"send command {data['request']['namespace']}/{data['request']['name']} for {name}"
+            message = f"sent command {data['request']['namespace']}/{data['request']['name']} for {name}"
         else:
             message = (
                 f"sent command {data['request']['namespace']}/{data['request']['name']}"
