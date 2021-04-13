@@ -26,7 +26,7 @@ import homeassistant.util.dt as dt_util
 from tests.common import assert_setup_component, async_fire_time_changed
 
 
-async def test_template(hass):
+async def test_template_legacy(hass):
     """Test template."""
     with assert_setup_component(1, sensor.DOMAIN):
         assert await async_setup_component(
