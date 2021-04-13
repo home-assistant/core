@@ -106,7 +106,7 @@ aioguardian==1.0.4
 aioharmony==0.2.7
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.2.60
+aiohomekit==0.2.61
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -382,7 +382,7 @@ guppy3==3.1.0
 ha-ffmpeg==3.0.2
 
 # homeassistant.components.philips_js
-ha-philipsjs==2.3.2
+ha-philipsjs==2.7.0
 
 # homeassistant.components.habitica
 habitipy==0.2.0
@@ -476,7 +476,7 @@ logi_circle==0.2.2
 luftdaten==0.6.4
 
 # homeassistant.components.maxcube
-maxcube-api==0.4.1
+maxcube-api==0.4.2
 
 # homeassistant.components.mythicbeastsdns
 mbddns==0.1.2
@@ -516,7 +516,7 @@ nessclient==0.9.15
 netdisco==2.8.2
 
 # homeassistant.components.nexia
-nexia==0.9.5
+nexia==0.9.6
 
 # homeassistant.components.notify_events
 notify-events==1.0.4
