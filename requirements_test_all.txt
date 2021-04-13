@@ -938,7 +938,7 @@ pyserial==3.5
 pysignalclirestapi==0.3.4
 
 # homeassistant.components.sma
-pysma==0.3.5
+pysma==0.4.3
 
 # homeassistant.components.smappee
 pysmappee==0.2.17
