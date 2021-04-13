@@ -76,9 +76,13 @@ class DataUpdateCoordinator(Generic[T]):
 
         self._debounced_refresh = request_refresh_debouncer
 
-        self.hass.bus.async_listen_once(
+        self._stop_listener: Callable[[], None] = self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STOP, self._async_stop_refresh
         )
+
+    def __del__(self) -> None:
+        """Remove stop listener when coordinator is destroyed."""
+        self._stop_listener()
 
     @callback
     def async_add_listener(self, update_callback: CALLBACK_TYPE) -> Callable[[], None]:
