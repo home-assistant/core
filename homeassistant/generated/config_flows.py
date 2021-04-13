@@ -210,6 +210,7 @@ FLOWS = [
     "shelly",
     "shopping_list",
     "simplisafe",
+    "sma",
     "smappee",
     "smart_meter_texas",
     "smarthab",
