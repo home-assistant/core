@@ -312,6 +312,7 @@ class DHCPWatcher(WatcherBase):
         )
 
         self._sniffer.start()
+        self._sniffer.thread.name = self.__class__.__name__
 
     def handle_dhcp_packet(self, packet):
         """Process a dhcp packet."""
