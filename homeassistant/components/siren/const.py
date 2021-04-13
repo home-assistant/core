@@ -4,6 +4,7 @@ DOMAIN = "siren"
 
 ATTR_TONE = "tone"
 
+ATTR_DEFAULT_DURATION = "default_duration"
 ATTR_DEFAULT_TONE = "default_tone"
 ATTR_AVAILABLE_TONES = "available_tones"
 ATTR_DURATION = "duration"

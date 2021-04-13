@@ -26,6 +26,7 @@ from homeassistant.loader import bind_hass
 
 from .const import (
     ATTR_AVAILABLE_TONES,
+    ATTR_DEFAULT_DURATION,
     ATTR_DEFAULT_TONE,
     ATTR_DURATION,
     ATTR_TONE,
@@ -132,8 +133,8 @@ class SirenEntity(ToggleEntity):
         if self.volume_level is not None:
             data[ATTR_VOLUME_LEVEL] = self.volume_level
 
-        if self.duration is not None:
-            data[ATTR_DURATION] = self.duration
+        if self.default_duration is not None:
+            data[ATTR_DEFAULT_DURATION] = self.default_duration
 
         if supported_features & SUPPORT_TONES:
             data[ATTR_DEFAULT_TONE] = self.default_tone
@@ -190,4 +191,4 @@ class SirenEntity(ToggleEntity):
 
     async def async_set_default_duration(self, duration: int) -> None:
         """Set default siren duration in seconds."""
-        await self.hass.async_add_executor_job(self.set_duration, duration)
+        await self.hass.async_add_executor_job(self.set_default_duration, duration)
