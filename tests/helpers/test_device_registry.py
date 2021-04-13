@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, callback
+from homeassistant.exceptions import RequiredParameterMissing
 from homeassistant.helpers import device_registry, entity_registry
 
 from tests.common import (
@@ -114,18 +115,21 @@ async def test_requirement_for_identifier_or_connection(registry):
         manufacturer="manufacturer",
         model="model",
     )
-    entry3 = registry.async_get_or_create(
-        config_entry_id="1234",
-        connections=set(),
-        identifiers=set(),
-        manufacturer="manufacturer",
-        model="model",
-    )
 
     assert len(registry.devices) == 2
     assert entry
     assert entry2
-    assert entry3 is None
+
+    with pytest.raises(RequiredParameterMissing) as exc_info:
+        registry.async_get_or_create(
+            config_entry_id="1234",
+            connections=set(),
+            identifiers=set(),
+            manufacturer="manufacturer",
+            model="model",
+        )
+
+    assert exc_info.value.parameter_names == ["identifiers", "connections"]
 
 
 async def test_multiple_config_entries(registry):

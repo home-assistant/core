@@ -24,7 +24,11 @@ from homeassistant.core import (
     split_entity_id,
     valid_entity_id,
 )
-from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    PlatformNotReady,
+    RequiredParameterMissing,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dev_reg,
@@ -434,9 +438,11 @@ class EntityPlatform:
                     if key in device_info:
                         processed_dev_info[key] = device_info[key]
 
-                device = device_registry.async_get_or_create(**processed_dev_info)
-                if device:
+                try:
+                    device = device_registry.async_get_or_create(**processed_dev_info)
                     device_id = device.id
+                except RequiredParameterMissing:
+                    pass
 
             disabled_by: str | None = None
             if not entity.entity_registry_enabled_default:
