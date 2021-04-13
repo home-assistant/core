@@ -102,8 +102,6 @@ port = vol.All(vol.Coerce(int), vol.Range(min=1, max=65535))
 # typing typevar
 T = TypeVar("T")
 
-_LOGGER = logging.getLogger(__name__)
-
 
 def path(value: Any) -> str:
     """Validate it's a safe path."""
@@ -543,8 +541,6 @@ def template(value: Any | None) -> template_helper.Template:
         raise vol.Invalid("template value is None")
     if isinstance(value, (list, dict, template_helper.Template)):
         raise vol.Invalid("template value should be a string")
-
-    _LOGGER.warning("Validating template: %s", str(value))
 
     template_value = template_helper.Template(str(value))  # type: ignore
 
