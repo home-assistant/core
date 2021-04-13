@@ -22,6 +22,7 @@ async def test_form(hass):
             "contract": "123",
             "username": "test-username",
             "password": "test-password",
+            "country": "PT",
         },
     ), patch(
         "homeassistant.components.prosegur.async_setup", return_value=True
@@ -34,6 +35,7 @@ async def test_form(hass):
             {
                 "username": "test-username",
                 "password": "test-password",
+                "country": "PT",
             },
         )
         await hass.async_block_till_done()
@@ -44,6 +46,7 @@ async def test_form(hass):
         "contract": "123",
         "username": "test-username",
         "password": "test-password",
+        "country": "PT",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -64,6 +67,7 @@ async def test_form_invalid_auth(hass):
             {
                 "username": "test-username",
                 "password": "test-password",
+                "country": "PT",
             },
         )
 
@@ -86,6 +90,7 @@ async def test_form_cannot_connect(hass):
             {
                 "username": "test-username",
                 "password": "test-password",
+                "country": "PT",
             },
         )
 

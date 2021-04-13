@@ -16,6 +16,7 @@ async def setup_platform(hass, platform):
             "contract": "1234abcd",
             CONF_USERNAME: "user@email.com",
             CONF_PASSWORD: "password",
+            "country": "PT",
         },
     )
     mock_entry.add_to_hass(hass)
