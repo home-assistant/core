@@ -104,8 +104,6 @@ def register_node_in_dev_reg(
 
     async_dispatcher_send(hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device)
 
-    # We can assert here because we will always get a device
-    assert device
     return device
 
 
