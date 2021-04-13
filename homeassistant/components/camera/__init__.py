@@ -89,26 +89,18 @@ _RND = SystemRandom()
 
 MIN_STREAM_INTERVAL = 0.5  # seconds
 
-CAMERA_SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids})
+CAMERA_SERVICE_SNAPSHOT = {vol.Required(ATTR_FILENAME): cv.template}
 
-CAMERA_SERVICE_SNAPSHOT = CAMERA_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_FILENAME): cv.template}
-)
+CAMERA_SERVICE_PLAY_STREAM = {
+    vol.Required(ATTR_MEDIA_PLAYER): cv.entities_domain(DOMAIN_MP),
+    vol.Optional(ATTR_FORMAT, default="hls"): vol.In(OUTPUT_FORMATS),
+}
 
-CAMERA_SERVICE_PLAY_STREAM = CAMERA_SERVICE_SCHEMA.extend(
-    {
-        vol.Required(ATTR_MEDIA_PLAYER): cv.entities_domain(DOMAIN_MP),
-        vol.Optional(ATTR_FORMAT, default="hls"): vol.In(OUTPUT_FORMATS),
-    }
-)
-
-CAMERA_SERVICE_RECORD = CAMERA_SERVICE_SCHEMA.extend(
-    {
-        vol.Required(CONF_FILENAME): cv.template,
-        vol.Optional(CONF_DURATION, default=30): vol.Coerce(int),
-        vol.Optional(CONF_LOOKBACK, default=0): vol.Coerce(int),
-    }
-)
+CAMERA_SERVICE_RECORD = {
+    vol.Required(CONF_FILENAME): cv.template,
+    vol.Optional(CONF_DURATION, default=30): vol.Coerce(int),
+    vol.Optional(CONF_LOOKBACK, default=0): vol.Coerce(int),
+}
 
 WS_TYPE_CAMERA_THUMBNAIL = "camera_thumbnail"
 SCHEMA_WS_CAMERA_THUMBNAIL = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
@@ -271,17 +263,13 @@ async def async_setup(hass, config):
     hass.helpers.event.async_track_time_interval(update_tokens, TOKEN_CHANGE_INTERVAL)
 
     component.async_register_entity_service(
-        SERVICE_ENABLE_MOTION, CAMERA_SERVICE_SCHEMA, "async_enable_motion_detection"
+        SERVICE_ENABLE_MOTION, {}, "async_enable_motion_detection"
     )
     component.async_register_entity_service(
-        SERVICE_DISABLE_MOTION, CAMERA_SERVICE_SCHEMA, "async_disable_motion_detection"
+        SERVICE_DISABLE_MOTION, {}, "async_disable_motion_detection"
     )
-    component.async_register_entity_service(
-        SERVICE_TURN_OFF, CAMERA_SERVICE_SCHEMA, "async_turn_off"
-    )
-    component.async_register_entity_service(
-        SERVICE_TURN_ON, CAMERA_SERVICE_SCHEMA, "async_turn_on"
-    )
+    component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
+    component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_turn_on")
     component.async_register_entity_service(
         SERVICE_SNAPSHOT, CAMERA_SERVICE_SNAPSHOT, async_handle_snapshot_service
     )
