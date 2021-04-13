@@ -105,6 +105,7 @@ def area_mock(hass):
             device_in_area.id: device_in_area,
             device_no_area.id: device_no_area,
             device_diff_area.id: device_diff_area,
+            device_other_area.id: device_other_area,
         },
     )
 
@@ -146,7 +147,7 @@ def area_mock(hass):
         platform="test",
         device_id=device_diff_area.id,
     )
-    entity_in_other_area = ent_reg.RegistryEntry(
+    entity_in_yet_another_area = ent_reg.RegistryEntry(
         entity_id="light.in_yet_another_area",
         unique_id="in-other-area-id",
         platform="test",
@@ -162,6 +163,7 @@ def area_mock(hass):
             entity_assigned_to_area.entity_id: entity_assigned_to_area,
             entity_no_area.entity_id: entity_no_area,
             entity_diff_area.entity_id: entity_diff_area,
+            entity_in_yet_another_area.entity_id: entity_in_yet_another_area,
         },
     )
 
