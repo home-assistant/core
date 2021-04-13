@@ -11,8 +11,13 @@ from sense_energy import (
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TIMEOUT
-from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    CONF_EMAIL,
+    CONF_PASSWORD,
+    CONF_TIMEOUT,
+    EVENT_HOMEASSISTANT_STOP,
+)
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -24,12 +29,14 @@ from .const import (
     ACTIVE_UPDATE_RATE,
     DEFAULT_TIMEOUT,
     DOMAIN,
+    EVENT_STOP_REMOVE,
     SENSE_DATA,
     SENSE_DEVICE_UPDATE,
     SENSE_DEVICES_DATA,
     SENSE_DISCOVERED_DEVICES_DATA,
     SENSE_TIMEOUT_EXCEPTIONS,
     SENSE_TRENDS_COORDINATOR,
+    TRACK_TIME_REMOVE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -132,7 +139,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # successful so we do it later.
     hass.loop.create_task(trends_coordinator.async_request_refresh())
 
-    hass.data[DOMAIN][entry.entry_id] = {
+    data = hass.data[DOMAIN][entry.entry_id] = {
         SENSE_DATA: gateway,
         SENSE_DEVICES_DATA: sense_devices_data,
         SENSE_TRENDS_COORDINATOR: trends_coordinator,
@@ -156,11 +163,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             sense_devices_data.set_devices_data(data["devices"])
         async_dispatcher_send(hass, f"{SENSE_DEVICE_UPDATE}-{gateway.sense_monitor_id}")
 
-    hass.data[DOMAIN][entry.entry_id][
-        "track_time_remove_callback"
-    ] = async_track_time_interval(
+    remove_update_callback = async_track_time_interval(
         hass, async_sense_update, timedelta(seconds=ACTIVE_UPDATE_RATE)
     )
+
+    @callback
+    def _remove_update_callback_at_stop(event):
+        remove_update_callback()
+
+    data[TRACK_TIME_REMOVE] = remove_update_callback
+    data[EVENT_STOP_REMOVE] = hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, _remove_update_callback_at_stop
+    )
+
     return True
 
 
@@ -174,10 +189,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
             ]
         )
     )
-    track_time_remove_callback = hass.data[DOMAIN][entry.entry_id][
-        "track_time_remove_callback"
-    ]
-    track_time_remove_callback()
+    data = hass.data[DOMAIN][entry.entry_id]
+    data[EVENT_STOP_REMOVE]()
+    data[TRACK_TIME_REMOVE]()
 
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
