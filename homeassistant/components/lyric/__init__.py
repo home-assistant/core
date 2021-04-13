@@ -97,8 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except LyricAuthenticationException as exception:
         raise ConfigEntryAuthFailed from exception
     except (LyricException, ClientResponseError) as exception:
-        _LOGGER.error(exception)
-        return False
+        raise ConfigEntryNotReady from exception
 
     async def async_update_data() -> Lyric:
         """Fetch data from Lyric."""
