@@ -339,6 +339,11 @@ WARNING_DEVICE_SQUAWK_MODE_ARMED = 0
 WARNING_DEVICE_SQUAWK_MODE_DISARMED = 1
 
 ZHA_DISCOVERY_NEW = "zha_discovery_new_{}"
+ZHA_CHANNEL_MSG = "zha_channel_message"
+ZHA_CHANNEL_MSG_BIND = "zha_channel_bind"
+ZHA_CHANNEL_MSG_CFG_RPT = "zha_channel_configure_reporting"
+ZHA_CHANNEL_MSG_DATA = "zha_channel_msg_data"
+ZHA_CHANNEL_CFG_DONE = "zha_channel_cfg_done"
 ZHA_GW_MSG = "zha_gateway_message"
 ZHA_GW_MSG_DEVICE_FULL_INIT = "device_fully_initialized"
 ZHA_GW_MSG_DEVICE_INFO = "device_info"
