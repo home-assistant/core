@@ -1,11 +1,11 @@
 """Test Alexa config."""
 import contextlib
+from unittest.mock import AsyncMock, Mock, patch
 
 from homeassistant.components.cloud import ALEXA_SCHEMA, alexa_config
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.util.dt import utcnow
 
-from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import async_fire_time_changed
 
 
@@ -215,3 +215,16 @@ async def test_alexa_update_report_state(hass, cloud_prefs):
         await hass.async_block_till_done()
 
     assert len(mock_sync.mock_calls) == 1
+
+
+def test_enabled_requires_valid_sub(hass, mock_expired_cloud_login, cloud_prefs):
+    """Test that alexa config enabled requires a valid Cloud sub."""
+    assert cloud_prefs.alexa_enabled
+    assert hass.data["cloud"].is_logged_in
+    assert hass.data["cloud"].subscription_expired
+
+    config = alexa_config.AlexaConfig(
+        hass, ALEXA_SCHEMA({}), "mock-user-id", cloud_prefs, hass.data["cloud"]
+    )
+
+    assert not config.enabled

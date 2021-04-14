@@ -1,5 +1,5 @@
 """Provides device automations for Alarm control panel."""
-from typing import List
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
+    CONF_FOR,
     CONF_PLATFORM,
     CONF_TYPE,
     STATE_ALARM_ARMED_AWAY,
@@ -23,7 +24,6 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
-    STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
@@ -32,24 +32,19 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
 
-TRIGGER_TYPES = {
-    "triggered",
-    "disarmed",
-    "arming",
-    "armed_home",
-    "armed_away",
-    "armed_night",
-}
+BASIC_TRIGGER_TYPES = {"triggered", "disarmed", "arming"}
+TRIGGER_TYPES = BASIC_TRIGGER_TYPES | {"armed_home", "armed_away", "armed_night"}
 
 TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
+        vol.Optional(CONF_FOR): cv.positive_time_period_dict,
     }
 )
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device triggers for Alarm control panel devices."""
     registry = await entity_registry.async_get_registry(hass)
     triggers = []
@@ -68,61 +63,52 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
         supported_features = entity_state.attributes[ATTR_SUPPORTED_FEATURES]
 
         # Add triggers for each entity that belongs to this integration
+        base_trigger = {
+            CONF_PLATFORM: "device",
+            CONF_DEVICE_ID: device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_ENTITY_ID: entry.entity_id,
+        }
+
         triggers += [
             {
-                CONF_PLATFORM: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "disarmed",
-            },
-            {
-                CONF_PLATFORM: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "triggered",
-            },
-            {
-                CONF_PLATFORM: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "arming",
-            },
+                **base_trigger,
+                CONF_TYPE: trigger,
+            }
+            for trigger in BASIC_TRIGGER_TYPES
         ]
         if supported_features & SUPPORT_ALARM_ARM_HOME:
             triggers.append(
                 {
-                    CONF_PLATFORM: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
+                    **base_trigger,
                     CONF_TYPE: "armed_home",
                 }
             )
         if supported_features & SUPPORT_ALARM_ARM_AWAY:
             triggers.append(
                 {
-                    CONF_PLATFORM: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
+                    **base_trigger,
                     CONF_TYPE: "armed_away",
                 }
             )
         if supported_features & SUPPORT_ALARM_ARM_NIGHT:
             triggers.append(
                 {
-                    CONF_PLATFORM: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
+                    **base_trigger,
                     CONF_TYPE: "armed_night",
                 }
             )
 
     return triggers
+
+
+async def async_get_trigger_capabilities(hass: HomeAssistant, config: dict) -> dict:
+    """List trigger capabilities."""
+    return {
+        "extra_fields": vol.Schema(
+            {vol.Optional(CONF_FOR): cv.positive_time_period_dict}
+        )
+    }
 
 
 async def async_attach_trigger(
@@ -132,24 +118,17 @@ async def async_attach_trigger(
     automation_info: dict,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    config = TRIGGER_SCHEMA(config)
-    from_state = None
-
     if config[CONF_TYPE] == "triggered":
         to_state = STATE_ALARM_TRIGGERED
     elif config[CONF_TYPE] == "disarmed":
         to_state = STATE_ALARM_DISARMED
     elif config[CONF_TYPE] == "arming":
-        from_state = STATE_ALARM_DISARMED
         to_state = STATE_ALARM_ARMING
     elif config[CONF_TYPE] == "armed_home":
-        from_state = STATE_ALARM_PENDING or STATE_ALARM_ARMING
         to_state = STATE_ALARM_ARMED_HOME
     elif config[CONF_TYPE] == "armed_away":
-        from_state = STATE_ALARM_PENDING or STATE_ALARM_ARMING
         to_state = STATE_ALARM_ARMED_AWAY
     elif config[CONF_TYPE] == "armed_night":
-        from_state = STATE_ALARM_PENDING or STATE_ALARM_ARMING
         to_state = STATE_ALARM_ARMED_NIGHT
 
     state_config = {
@@ -157,8 +136,8 @@ async def async_attach_trigger(
         CONF_ENTITY_ID: config[CONF_ENTITY_ID],
         state_trigger.CONF_TO: to_state,
     }
-    if from_state:
-        state_config[state_trigger.CONF_FROM] = from_state
+    if CONF_FOR in config:
+        state_config[CONF_FOR] = config[CONF_FOR]
     state_config = state_trigger.TRIGGER_SCHEMA(state_config)
     return await state_trigger.async_attach_trigger(
         hass, state_config, action, automation_info, platform_type="device"

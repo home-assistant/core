@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_NAME,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
@@ -28,6 +29,7 @@ from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.entity_registry import (
+    async_entries_for_config_entry,
     async_get_registry as async_get_entity_registry,
 )
 from homeassistant.helpers.entity_values import EntityValues
@@ -35,7 +37,6 @@ from homeassistant.helpers.event import async_track_time_change
 from homeassistant.util import convert
 import homeassistant.util.dt as dt_util
 
-from . import config_flow  # noqa: F401 pylint: disable=unused-import
 from . import const, websocket_api as wsapi, workaround
 from .const import (
     CONF_AUTOHEAL,
@@ -81,13 +82,15 @@ CONF_DEVICE_CONFIG = "device_config"
 CONF_DEVICE_CONFIG_GLOB = "device_config_glob"
 CONF_DEVICE_CONFIG_DOMAIN = "device_config_domain"
 
+DATA_ZWAVE_CONFIG_YAML_PRESENT = "zwave_config_yaml_present"
+
 DEFAULT_CONF_IGNORED = False
 DEFAULT_CONF_INVERT_OPENCLOSE_BUTTONS = False
 DEFAULT_CONF_INVERT_PERCENT = False
 DEFAULT_CONF_REFRESH_VALUE = False
 DEFAULT_CONF_REFRESH_DELAY = 5
 
-SUPPORTED_PLATFORMS = [
+PLATFORMS = [
     "binary_sensor",
     "climate",
     "cover",
@@ -101,7 +104,7 @@ SUPPORTED_PLATFORMS = [
 RENAME_NODE_SCHEMA = vol.Schema(
     {
         vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
-        vol.Required(const.ATTR_NAME): cv.string,
+        vol.Required(ATTR_NAME): cv.string,
         vol.Optional(const.ATTR_UPDATE_IDS, default=False): cv.boolean,
     }
 )
@@ -110,7 +113,7 @@ RENAME_VALUE_SCHEMA = vol.Schema(
     {
         vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
         vol.Required(const.ATTR_VALUE_ID): vol.Coerce(int),
-        vol.Required(const.ATTR_NAME): cv.string,
+        vol.Required(ATTR_NAME): cv.string,
         vol.Optional(const.ATTR_UPDATE_IDS, default=False): cv.boolean,
     }
 )
@@ -250,6 +253,64 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+async def async_get_ozw_migration_data(hass):
+    """Return dict with info for migration to ozw integration."""
+    data_to_migrate = {}
+
+    zwave_config_entries = hass.config_entries.async_entries(DOMAIN)
+    if not zwave_config_entries:
+        _LOGGER.error("Config entry not set up")
+        return data_to_migrate
+
+    if hass.data.get(DATA_ZWAVE_CONFIG_YAML_PRESENT):
+        _LOGGER.warning(
+            "Remove %s from configuration.yaml "
+            "to avoid setting up this integration on restart "
+            "after completing migration to ozw",
+            DOMAIN,
+        )
+
+    config_entry = zwave_config_entries[0]  # zwave only has a single config entry
+    ent_reg = await async_get_entity_registry(hass)
+    entity_entries = async_entries_for_config_entry(ent_reg, config_entry.entry_id)
+    unique_entries = {entry.unique_id: entry for entry in entity_entries}
+    dev_reg = await async_get_device_registry(hass)
+
+    for entity_values in hass.data[DATA_ENTITY_VALUES]:
+        node = entity_values.primary.node
+        unique_id = compute_value_unique_id(node, entity_values.primary)
+        if unique_id not in unique_entries:
+            continue
+        device_identifier, _ = node_device_id_and_name(
+            node, entity_values.primary.instance
+        )
+        device_entry = dev_reg.async_get_device({device_identifier}, set())
+        data_to_migrate[unique_id] = {
+            "node_id": node.node_id,
+            "node_instance": entity_values.primary.instance,
+            "device_id": device_entry.id,
+            "command_class": entity_values.primary.command_class,
+            "command_class_label": entity_values.primary.label,
+            "value_index": entity_values.primary.index,
+            "unique_id": unique_id,
+            "entity_entry": unique_entries[unique_id],
+        }
+
+    return data_to_migrate
+
+
+@callback
+def async_is_ozw_migrated(hass):
+    """Return True if migration to ozw is done."""
+    ozw_config_entries = hass.config_entries.async_entries("ozw")
+    if not ozw_config_entries:
+        return False
+
+    ozw_config_entry = ozw_config_entries[0]  # only one ozw entry is allowed
+    migrated = bool(ozw_config_entry.data.get("migrated"))
+    return migrated
+
+
 def _obj_to_dict(obj):
     """Convert an object into a hash for debug."""
     return {
@@ -312,6 +373,7 @@ async def async_setup(hass, config):
 
     conf = config[DOMAIN]
     hass.data[DATA_ZWAVE_CONFIG] = conf
+    hass.data[DATA_ZWAVE_CONFIG_YAML_PRESENT] = True
 
     if not hass.config_entries.async_entries(DOMAIN):
         hass.async_create_task(
@@ -335,13 +397,18 @@ async def async_setup_entry(hass, config_entry):
 
     Will automatically load components to support devices found on the network.
     """
-    # pylint: disable=import-error
     from openzwave.group import ZWaveGroup
     from openzwave.network import ZWaveNetwork
     from openzwave.option import ZWaveOption
 
     # pylint: enable=import-error
     from pydispatch import dispatcher
+
+    if async_is_ozw_migrated(hass):
+        _LOGGER.error(
+            "Migration to ozw has been done. Please remove the zwave integration"
+        )
+        return False
 
     # Merge config entry and yaml config
     config = config_entry.data
@@ -505,7 +572,7 @@ async def async_setup_entry(hass, config_entry):
     async def _remove_device(node):
         dev_reg = await async_get_device_registry(hass)
         identifier, name = node_device_id_and_name(node)
-        device = dev_reg.async_get_device(identifiers={identifier}, connections=set())
+        device = dev_reg.async_get_device(identifiers={identifier})
         if device is not None:
             _LOGGER.debug("Removing Device - %s - %s", device.id, name)
             dev_reg.async_remove_device(device.id)
@@ -595,7 +662,7 @@ async def async_setup_entry(hass, config_entry):
         """Rename a node."""
         node_id = service.data.get(const.ATTR_NODE_ID)
         node = network.nodes[node_id]  # pylint: disable=unsubscriptable-object
-        name = service.data.get(const.ATTR_NAME)
+        name = service.data.get(ATTR_NAME)
         node.name = name
         _LOGGER.info("Renamed Z-Wave node %d to %s", node_id, name)
         update_ids = service.data.get(const.ATTR_UPDATE_IDS)
@@ -616,7 +683,7 @@ async def async_setup_entry(hass, config_entry):
         value_id = service.data.get(const.ATTR_VALUE_ID)
         node = network.nodes[node_id]  # pylint: disable=unsubscriptable-object
         value = node.values[value_id]
-        name = service.data.get(const.ATTR_NAME)
+        name = service.data.get(ATTR_NAME)
         value.label = name
         _LOGGER.info(
             "Renamed Z-Wave value (Node %d Value %d) to %s", node_id, value_id, name
@@ -822,9 +889,7 @@ async def async_setup_entry(hass, config_entry):
                 continue
             network.manager.pressButton(value.value_id)
             network.manager.releaseButton(value.value_id)
-            _LOGGER.info(
-                "Resetting meters on node %s instance %s....", node_id, instance
-            )
+            _LOGGER.info("Resetting meters on node %s instance %s", node_id, instance)
             return
         _LOGGER.info(
             "Node %s on instance %s does not have resettable meters", node_id, instance
@@ -848,7 +913,7 @@ async def async_setup_entry(hass, config_entry):
 
     def start_zwave(_service_or_event):
         """Startup Z-Wave network."""
-        _LOGGER.info("Starting Z-Wave network...")
+        _LOGGER.info("Starting Z-Wave network")
         network.start()
         hass.bus.fire(const.EVENT_NETWORK_START)
 
@@ -872,7 +937,7 @@ async def async_setup_entry(hass, config_entry):
                         "Z-Wave not ready after %d seconds, continuing anyway", waited
                     )
                     _LOGGER.info(
-                        "final network state: %d %s", network.state, network.state_str
+                        "Final network state: %d %s", network.state, network.state_str
                     )
                     break
 
@@ -994,7 +1059,7 @@ async def async_setup_entry(hass, config_entry):
 
     hass.services.async_register(DOMAIN, const.SERVICE_START_NETWORK, start_zwave)
 
-    for entry_component in SUPPORTED_PLATFORMS:
+    for entry_component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, entry_component)
         )
@@ -1162,7 +1227,7 @@ class ZWaveDeviceEntityValues:
                 return
 
             self._hass.data[DATA_DEVICES][device.unique_id] = device
-            if component in SUPPORTED_PLATFORMS:
+            if component in PLATFORMS:
                 async_dispatcher_send(self._hass, f"zwave_new_{component}", device)
             else:
                 await discovery.async_load_platform(
@@ -1184,7 +1249,6 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
 
     def __init__(self, values, domain):
         """Initialize the z-Wave device."""
-        # pylint: disable=import-error
         super().__init__()
         from openzwave.network import ZWaveNetwork
         from pydispatch import dispatcher
@@ -1296,7 +1360,7 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
         attrs = {
             const.ATTR_NODE_ID: self.node_id,

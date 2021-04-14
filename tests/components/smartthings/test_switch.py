@@ -12,6 +12,8 @@ from homeassistant.components.switch import (
     ATTR_TODAY_ENERGY_KWH,
     DOMAIN as SWITCH_DOMAIN,
 )
+from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .conftest import setup_platform
@@ -21,8 +23,8 @@ async def test_entity_and_device_attributes(hass, device_factory):
     """Test the attributes of the entity are correct."""
     # Arrange
     device = device_factory("Switch_1", [Capability.switch], {Attribute.switch: "on"})
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
     # Act
     await setup_platform(hass, SWITCH_DOMAIN, devices=[device])
     # Assert
@@ -30,7 +32,7 @@ async def test_entity_and_device_attributes(hass, device_factory):
     assert entry
     assert entry.unique_id == device.device_id
 
-    entry = device_registry.async_get_device({(DOMAIN, device.device_id)}, [])
+    entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
     assert entry
     assert entry.name == device.label
     assert entry.model == device.device_type_name
@@ -96,4 +98,4 @@ async def test_unload_config_entry(hass, device_factory):
     # Act
     await hass.config_entries.async_forward_entry_unload(config_entry, "switch")
     # Assert
-    assert not hass.states.get("switch.switch_1")
+    assert hass.states.get("switch.switch_1").state == STATE_UNAVAILABLE

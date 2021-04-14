@@ -7,8 +7,7 @@ from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 
-from .const import CONF_INTEGRATION_CREATED_ADDON, CONF_USE_ADDON
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import CONF_INTEGRATION_CREATED_ADDON, CONF_USE_ADDON, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,6 +35,15 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # If we install the add-on we should uninstall it on entry remove.
         self.integration_created_addon = False
         self.install_task = None
+
+    async def async_step_import(self, data):
+        """Handle imported data.
+
+        This step will be used when importing data during zwave to ozw migration.
+        """
+        self.network_key = data.get(CONF_NETWORK_KEY)
+        self.usb_path = data.get(CONF_USB_PATH)
+        return await self.async_step_user()
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -88,7 +96,11 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         This is the entry point for the logic that is needed
         when this integration will depend on the MQTT integration.
         """
-        if "mqtt" not in self.hass.config.components:
+        mqtt_entries = self.hass.config_entries.async_entries("mqtt")
+        if (
+            not mqtt_entries
+            or mqtt_entries[0].state != config_entries.ENTRY_STATE_LOADED
+        ):
             return self.async_abort(reason="mqtt_required")
         return self._async_create_entry_from_vars()
 
@@ -163,13 +175,15 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 return self._async_create_entry_from_vars()
 
-        self.usb_path = self.addon_config.get(CONF_ADDON_DEVICE, "")
-        self.network_key = self.addon_config.get(CONF_ADDON_NETWORK_KEY, "")
+        usb_path = self.addon_config.get(CONF_ADDON_DEVICE, self.usb_path or "")
+        network_key = self.addon_config.get(
+            CONF_ADDON_NETWORK_KEY, self.network_key or ""
+        )
 
         data_schema = vol.Schema(
             {
-                vol.Required(CONF_USB_PATH, default=self.usb_path): str,
-                vol.Optional(CONF_NETWORK_KEY, default=self.network_key): str,
+                vol.Required(CONF_USB_PATH, default=usb_path): str,
+                vol.Optional(CONF_NETWORK_KEY, default=network_key): str,
             }
         )
 

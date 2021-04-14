@@ -5,7 +5,7 @@ from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import (  # pylint: disable=unused-import
+from .const import (
     CONF_MOUNT_DIR,
     CONF_TYPE_OWFS,
     CONF_TYPE_OWSERVER,

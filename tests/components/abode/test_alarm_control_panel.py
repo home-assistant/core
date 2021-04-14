@@ -1,4 +1,6 @@
 """Tests for the Abode alarm control panel device."""
+from unittest.mock import PropertyMock, patch
+
 import abodepy.helpers.constants as CONST
 
 from homeassistant.components.abode import ATTR_DEVICE_ID
@@ -14,10 +16,9 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_DISARMED,
 )
+from homeassistant.helpers import entity_registry as er
 
 from .common import setup_platform
-
-from tests.async_mock import PropertyMock, patch
 
 DEVICE_ID = "alarm_control_panel.abode_alarm"
 
@@ -25,7 +26,7 @@ DEVICE_ID = "alarm_control_panel.abode_alarm"
 async def test_entity_registry(hass):
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, ALARM_DOMAIN)
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get(DEVICE_ID)
     # Abode alarm device unique_id is the MAC address

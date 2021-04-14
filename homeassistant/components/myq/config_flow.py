@@ -9,7 +9,7 @@ from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import aiohttp_client
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,12 +80,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
         await self.async_set_unique_id(properties["id"])
         return await self.async_step_user()
-
-    async def async_step_import(self, user_input):
-        """Handle import."""
-        await self.async_set_unique_id(user_input[CONF_USERNAME])
-        self._abort_if_unique_id_configured()
-        return await self.async_step_user(user_input)
 
 
 class CannotConnect(exceptions.HomeAssistantError):

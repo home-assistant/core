@@ -1,14 +1,14 @@
 """Fixtures for pywemo."""
 import asyncio
+from unittest.mock import create_autospec, patch
 
 import pytest
 import pywemo
 
 from homeassistant.components.wemo import CONF_DISCOVERY, CONF_STATIC
 from homeassistant.components.wemo.const import DOMAIN
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import create_autospec, patch
 
 MOCK_HOST = "127.0.0.1"
 MOCK_PORT = 50000
@@ -73,7 +73,7 @@ async def async_wemo_entity_fixture(hass, pywemo_device):
     )
     await hass.async_block_till_done()
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
     entity_entries = list(entity_registry.entities.values())
     assert len(entity_entries) == 1
 

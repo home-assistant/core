@@ -1,8 +1,7 @@
 """Support for Soma Smartshades."""
-import logging
+import asyncio
 
 from api.soma_api import SomaApi
-from requests import RequestException
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -16,8 +15,6 @@ from .const import API, DOMAIN, HOST, PORT
 
 DEVICES = "devices"
 
-_LOGGER = logging.getLogger(__name__)
-
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -27,7 +24,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SOMA_COMPONENTS = ["cover", "sensor"]
+PLATFORMS = ["cover", "sensor"]
 
 
 async def async_setup(hass, config):
@@ -53,9 +50,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     devices = await hass.async_add_executor_job(hass.data[DOMAIN][API].list_devices)
     hass.data[DOMAIN][DEVICES] = devices["shades"]
 
-    for component in SOMA_COMPONENTS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -63,7 +60,16 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Unload a config entry."""
-    return True
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
+            ]
+        )
+    )
+
+    return unload_ok
 
 
 class SomaEntity(Entity):
@@ -103,43 +109,3 @@ class SomaEntity(Entity):
             "name": self.name,
             "manufacturer": "Wazombi Labs",
         }
-
-    async def async_update(self):
-        """Update the device with the latest data."""
-        try:
-            response = await self.hass.async_add_executor_job(
-                self.api.get_shade_state, self.device["mac"]
-            )
-        except RequestException:
-            _LOGGER.error("Connection to SOMA Connect failed")
-            self.is_available = False
-            return
-        if response["result"] != "success":
-            _LOGGER.error(
-                "Unable to reach device %s (%s)", self.device["name"], response["msg"]
-            )
-            self.is_available = False
-            return
-        self.current_position = 100 - response["position"]
-        try:
-            response = await self.hass.async_add_executor_job(
-                self.api.get_battery_level, self.device["mac"]
-            )
-        except RequestException:
-            _LOGGER.error("Connection to SOMA Connect failed")
-            self.is_available = False
-            return
-        if response["result"] != "success":
-            _LOGGER.error(
-                "Unable to reach device %s (%s)", self.device["name"], response["msg"]
-            )
-            self.is_available = False
-            return
-        # https://support.somasmarthome.com/hc/en-us/articles/360026064234-HTTP-API
-        # battery_level response is expected to be min = 360, max 410 for
-        # 0-100% levels above 410 are consider 100% and below 360, 0% as the
-        # device considers 360 the minimum to move the motor.
-        _battery = round(2 * (response["battery_level"] - 360))
-        battery = max(min(100, _battery), 0)
-        self.battery_state = battery
-        self.is_available = True

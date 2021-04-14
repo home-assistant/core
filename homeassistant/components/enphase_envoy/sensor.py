@@ -8,7 +8,7 @@ from envoy_reader.envoy_reader import EnvoyReader
 import httpx
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_MONITORED_CONDITIONS,
@@ -156,7 +156,7 @@ async def async_setup_platform(
     async_add_entities(entities)
 
 
-class Envoy(CoordinatorEntity):
+class Envoy(CoordinatorEntity, SensorEntity):
     """Envoy entity."""
 
     def __init__(self, sensor_type, name, serial_number, unit, coordinator):
@@ -202,7 +202,7 @@ class Envoy(CoordinatorEntity):
         return ICON
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if (
             self._type == "inverters"

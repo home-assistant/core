@@ -5,10 +5,9 @@ import logging
 import vasttrafik
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_DELAY, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.util.dt import now
 
@@ -20,7 +19,6 @@ ATTR_LINE = "line"
 ATTR_TRACK = "track"
 ATTRIBUTION = "Data provided by Västtrafik"
 
-CONF_DELAY = "delay"
 CONF_DEPARTURES = "departures"
 CONF_FROM = "from"
 CONF_HEADING = "heading"
@@ -55,7 +53,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the departure sensor."""
-
     planner = vasttrafik.JournyPlanner(config.get(CONF_KEY), config.get(CONF_SECRET))
     sensors = []
 
@@ -73,7 +70,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class VasttrafikDepartureSensor(Entity):
+class VasttrafikDepartureSensor(SensorEntity):
     """Implementation of a Vasttrafik Departure Sensor."""
 
     def __init__(self, planner, name, departure, heading, lines, delay):
@@ -108,7 +105,7 @@ class VasttrafikDepartureSensor(Entity):
         return ICON
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._attributes
 

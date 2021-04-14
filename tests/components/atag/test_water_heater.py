@@ -1,11 +1,12 @@
 """Tests for the Atag water heater platform."""
+from unittest.mock import patch
 
 from homeassistant.components.atag import DOMAIN, WATER_HEATER
 from homeassistant.components.water_heater import SERVICE_SET_TEMPERATURE
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from tests.async_mock import patch
 from tests.components.atag import UID, init_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -18,7 +19,7 @@ async def test_water_heater(
     """Test the creation of Atag water heater."""
     with patch("pyatag.entities.DHW.status"):
         entry = await init_integration(hass, aioclient_mock)
-        registry = await hass.helpers.entity_registry.async_get_registry()
+        registry = er.async_get(hass)
 
         assert registry.async_is_registered(WATER_HEATER_ID)
         entry = registry.async_get(WATER_HEATER_ID)

@@ -1,6 +1,7 @@
 """Weather component that handles meteorological data for your location."""
 from datetime import timedelta
 import logging
+from typing import final
 
 from homeassistant.const import PRECISION_TENTHS, PRECISION_WHOLE, TEMP_CELSIUS
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -35,6 +36,7 @@ ATTR_FORECAST = "forecast"
 ATTR_FORECAST_CONDITION = "condition"
 ATTR_FORECAST_PRECIPITATION = "precipitation"
 ATTR_FORECAST_PRECIPITATION_PROBABILITY = "precipitation_probability"
+ATTR_FORECAST_PRESSURE = "pressure"
 ATTR_FORECAST_TEMP = "temperature"
 ATTR_FORECAST_TEMP_LOW = "templow"
 ATTR_FORECAST_TIME = "datetime"
@@ -137,6 +139,7 @@ class WeatherEntity(Entity):
             else PRECISION_WHOLE
         )
 
+    @final
     @property
     def state_attributes(self):
         """Return the state attributes."""

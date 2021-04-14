@@ -1,12 +1,35 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "Nem tal\u00e1lhat\u00f3k Google Cast eszk\u00f6z\u00f6k a h\u00e1l\u00f3zaton.",
-            "single_instance_allowed": "Csak egyetlen Google Cast konfigur\u00e1ci\u00f3 sz\u00fcks\u00e9ges."
+            "no_devices_found": "Nem tal\u00e1lhat\u00f3 eszk\u00f6z a h\u00e1l\u00f3zaton",
+            "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges."
+        },
+        "error": {
+            "invalid_known_hosts": "Az ismert hosztoknak vessz\u0151vel elv\u00e1lasztott hosztok list\u00e1j\u00e1nak kell lennie."
         },
         "step": {
+            "config": {
+                "data": {
+                    "known_hosts": "Opcion\u00e1lis lista az ismert hosztokr\u00f3l, ha az mDNS felder\u00edt\u00e9s nem m\u0171k\u00f6dik."
+                },
+                "description": "K\u00e9rj\u00fck, add meg a Google Cast konfigur\u00e1ci\u00f3t.",
+                "title": "Google Cast"
+            },
             "confirm": {
-                "description": "Be szeretn\u00e9d \u00e1ll\u00edtani a Google Cast szolg\u00e1ltat\u00e1st?"
+                "description": "El szeretn\u00e9d kezdeni a be\u00e1ll\u00edt\u00e1st?"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_known_hosts": "Az ismert hosztoknak vessz\u0151vel elv\u00e1lasztott hosztok list\u00e1j\u00e1nak kell lennie."
+        },
+        "step": {
+            "options": {
+                "data": {
+                    "known_hosts": "Opcion\u00e1lis lista az ismert hosztokr\u00f3l, ha az mDNS felder\u00edt\u00e9s nem m\u0171k\u00f6dik."
+                },
+                "description": "K\u00e9rj\u00fck, add meg a Google Cast konfigur\u00e1ci\u00f3t."
             }
         }
     }

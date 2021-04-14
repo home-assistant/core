@@ -1,12 +1,11 @@
 """Support for August sensors."""
 import logging
 
-from august.activity import ActivityType
+from yalexs.activity import ActivityType
 
-from homeassistant.components.sensor import DEVICE_CLASS_BATTERY
-from homeassistant.const import ATTR_ENTITY_PICTURE, PERCENTAGE
+from homeassistant.components.sensor import DEVICE_CLASS_BATTERY, SensorEntity
+from homeassistant.const import ATTR_ENTITY_PICTURE, PERCENTAGE, STATE_UNAVAILABLE
 from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -118,7 +117,7 @@ async def _async_migrate_old_unique_ids(hass, devices):
             registry.async_update_entity(old_entity_id, new_unique_id=device.unique_id)
 
 
-class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, Entity):
+class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, SensorEntity):
     """Representation of an August lock operation sensor."""
 
     def __init__(self, data, device):
@@ -154,11 +153,11 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, Entity):
     def _update_from_data(self):
         """Get the latest state of the sensor and update activity."""
         lock_activity = self._data.activity_stream.get_latest_device_activity(
-            self._device_id, [ActivityType.LOCK_OPERATION]
+            self._device_id, {ActivityType.LOCK_OPERATION}
         )
 
+        self._available = True
         if lock_activity is not None:
-            self._available = True
             self._state = lock_activity.operated_by
             self._operated_remote = lock_activity.operated_remote
             self._operated_keypad = lock_activity.operated_keypad
@@ -166,7 +165,7 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, Entity):
             self._entity_picture = lock_activity.operator_thumbnail_url
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
         attributes = {}
 
@@ -193,7 +192,7 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, Entity):
         await super().async_added_to_hass()
 
         last_state = await self.async_get_last_state()
-        if not last_state:
+        if not last_state or last_state.state == STATE_UNAVAILABLE:
             return
 
         self._state = last_state.state
@@ -217,7 +216,7 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, Entity):
         return f"{self._device_id}_lock_operator"
 
 
-class AugustBatterySensor(AugustEntityMixin, Entity):
+class AugustBatterySensor(AugustEntityMixin, SensorEntity):
     """Representation of an August sensor."""
 
     def __init__(self, data, sensor_type, device, old_device):

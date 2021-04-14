@@ -1,12 +1,25 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Konto on juba seadistatud"
+            "already_configured": "Konto on juba seadistatud",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
         },
         "error": {
-            "invalid_auth": "Tuvastamise viga"
+            "invalid_auth": "Tuvastamise viga",
+            "usercode": "Kasutajakood ei sobi selle kasutaja jaoks selles asukohas"
         },
         "step": {
+            "locations": {
+                "data": {
+                    "location": "Asukoht"
+                },
+                "description": "Sisesta selle kasutaja kood selles asukohas",
+                "title": "Asukoha kasutajakoodid"
+            },
+            "reauth_confirm": {
+                "description": "Total Connect peab konto uuesti autentima",
+                "title": "Taastuvasta sidumine"
+            },
             "user": {
                 "data": {
                     "password": "Salas\u00f5na",

@@ -1,5 +1,6 @@
 """Test Times of the Day Binary Sensor."""
 from datetime import datetime, timedelta
+from unittest.mock import patch
 
 import pytest
 import pytz
@@ -10,7 +11,6 @@ from homeassistant.helpers.sun import get_astral_event_date, get_astral_event_ne
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import assert_setup_component
 
 
@@ -903,7 +903,7 @@ async def test_dst(hass):
 
         await hass.async_block_till_done()
         state = hass.states.get(entity_id)
-        state.attributes["after"] == "2019-03-31T03:30:00+02:00"
-        state.attributes["before"] == "2019-03-31T03:40:00+02:00"
-        state.attributes["next_update"] == "2019-03-31T03:30:00+02:00"
+        assert state.attributes["after"] == "2019-03-31T03:30:00+02:00"
+        assert state.attributes["before"] == "2019-03-31T03:40:00+02:00"
+        assert state.attributes["next_update"] == "2019-03-31T03:30:00+02:00"
         assert state.state == STATE_OFF

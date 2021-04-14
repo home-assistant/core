@@ -1,4 +1,6 @@
 """Trigger an automation when a LiteJet switch is released."""
+from typing import Callable
+
 import voluptuous as vol
 
 from homeassistant.const import CONF_PLATFORM
@@ -7,7 +9,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_point_in_utc_time
 import homeassistant.util.dt as dt_util
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
+from .const import DOMAIN
 
 CONF_NUMBER = "number"
 CONF_HELD_MORE_THAN = "held_more_than"
@@ -29,11 +31,12 @@ TRIGGER_SCHEMA = vol.Schema(
 
 async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for events based on configuration."""
+    trigger_id = automation_info.get("trigger_id") if automation_info else None
     number = config.get(CONF_NUMBER)
     held_more_than = config.get(CONF_HELD_MORE_THAN)
     held_less_than = config.get(CONF_HELD_LESS_THAN)
     pressed_time = None
-    cancel_pressed_more_than = None
+    cancel_pressed_more_than: Callable = None
     job = HassJob(action)
 
     @callback
@@ -48,6 +51,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
                     CONF_HELD_MORE_THAN: held_more_than,
                     CONF_HELD_LESS_THAN: held_less_than,
                     "description": f"litejet switch #{number}",
+                    "id": trigger_id,
                 }
             },
         )
@@ -91,12 +95,15 @@ async def async_attach_trigger(hass, config, action, automation_info):
         ):
             hass.add_job(call_action)
 
-    hass.data["litejet_system"].on_switch_pressed(number, pressed)
-    hass.data["litejet_system"].on_switch_released(number, released)
+    system = hass.data[DOMAIN]
+
+    system.on_switch_pressed(number, pressed)
+    system.on_switch_released(number, released)
 
     @callback
     def async_remove():
         """Remove all subscriptions used for this trigger."""
-        return
+        system.unsubscribe(pressed)
+        system.unsubscribe(released)
 
     return async_remove

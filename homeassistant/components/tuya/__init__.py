@@ -240,9 +240,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         await asyncio.gather(
             *[
                 hass.config_entries.async_forward_entry_unload(
-                    entry, component.split(".", 1)[0]
+                    entry, platform.split(".", 1)[0]
                 )
-                for component in hass.data[DOMAIN][ENTRY_IS_SETUP]
+                for platform in hass.data[DOMAIN][ENTRY_IS_SETUP]
             ]
         )
     )
@@ -392,7 +392,7 @@ class TuyaDevice(Entity):
                 entity_registry.async_remove(self.entity_id)
                 await cleanup_device_registry(self.hass, entity_entry.device_id)
             else:
-                await self.async_remove()
+                await self.async_remove(force_remove=True)
 
     @callback
     def _update_callback(self):

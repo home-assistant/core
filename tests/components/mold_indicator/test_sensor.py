@@ -47,7 +47,7 @@ async def test_setup(hass):
     await hass.async_block_till_done()
     moldind = hass.states.get("sensor.mold_indicator")
     assert moldind
-    assert PERCENTAGE == moldind.attributes.get("unit_of_measurement")
+    assert moldind.attributes.get("unit_of_measurement") == PERCENTAGE
 
 
 async def test_invalidcalib(hass):
@@ -165,8 +165,8 @@ async def test_calculation(hass):
     # assert dewpoint
     dewpoint = moldind.attributes.get(ATTR_DEWPOINT)
     assert dewpoint
-    assert dewpoint > 9.25
-    assert dewpoint < 9.26
+    assert dewpoint > 9.2
+    assert dewpoint < 9.3
 
     # assert temperature estimation
     esttemp = moldind.attributes.get(ATTR_CRITICAL_TEMP)
@@ -246,8 +246,8 @@ async def test_unknown_sensor(hass):
 
     dewpoint = moldind.attributes.get(ATTR_DEWPOINT)
     assert dewpoint
-    assert dewpoint > 4.58
-    assert dewpoint < 4.59
+    assert dewpoint > 4.5
+    assert dewpoint < 4.6
 
     esttemp = moldind.attributes.get(ATTR_CRITICAL_TEMP)
     assert esttemp

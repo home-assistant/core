@@ -1,6 +1,7 @@
 """The tests for MQTT device triggers."""
 import copy
 import json
+from unittest.mock import patch
 
 from hatasmota.switch import TasmotaSwitchTriggerConfig
 import pytest
@@ -12,13 +13,12 @@ from homeassistant.setup import async_setup_component
 
 from .test_common import DEFAULT_CONFIG
 
-from tests.async_mock import patch
 from tests.common import (
     assert_lists_same,
     async_fire_mqtt_message,
     async_get_device_automations,
 )
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
 async def test_get_triggers_btn(hass, device_reg, entity_reg, mqtt_mock, setup_tasmota):

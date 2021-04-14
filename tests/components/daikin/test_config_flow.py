@@ -1,18 +1,14 @@
 # pylint: disable=redefined-outer-name
 """Tests for the Daikin config flow."""
 import asyncio
+from unittest.mock import PropertyMock, patch
 
 from aiohttp import ClientError
 from aiohttp.web_exceptions import HTTPForbidden
 import pytest
 
-from homeassistant.components.daikin.const import KEY_IP, KEY_MAC
-from homeassistant.config_entries import (
-    SOURCE_DISCOVERY,
-    SOURCE_IMPORT,
-    SOURCE_USER,
-    SOURCE_ZEROCONF,
-)
+from homeassistant.components.daikin.const import KEY_MAC
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -20,7 +16,6 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
-from tests.async_mock import PropertyMock, patch
 from tests.common import MockConfigEntry
 
 MAC = "AABBCCDDEEFF"
@@ -132,7 +127,6 @@ async def test_device_abort(hass, mock_daikin, s_effect, reason):
 @pytest.mark.parametrize(
     "source, data, unique_id",
     [
-        (SOURCE_DISCOVERY, {KEY_IP: HOST, KEY_MAC: MAC}, MAC),
         (SOURCE_ZEROCONF, {CONF_HOST: HOST}, MAC),
     ],
 )

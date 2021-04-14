@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN
 from .util import is_invalid_auth_code
 
 _LOGGER = logging.getLogger(__name__)
@@ -78,13 +78,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
-
-    async def async_step_import(self, user_input):
-        """Handle import."""
-        for entry in self._async_current_entries():
-            if entry.data[CONF_USERNAME] == user_input[CONF_USERNAME]:
-                return self.async_abort(reason="already_configured")
-        return await self.async_step_user(user_input)
 
 
 class CannotConnect(exceptions.HomeAssistantError):

@@ -3,6 +3,7 @@
 from datetime import datetime, timedelta
 from os import path
 import unittest
+from unittest.mock import patch
 
 import pytest
 import pytz
@@ -16,7 +17,6 @@ from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component, setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import get_test_home_assistant, init_recorder_component
 
 
@@ -162,12 +162,11 @@ class TestHistoryStatsSensor(unittest.TestCase):
         with patch(
             "homeassistant.components.history.state_changes_during_period",
             return_value=fake_states,
-        ):
-            with patch("homeassistant.components.history.get_state", return_value=None):
-                sensor1.update()
-                sensor2.update()
-                sensor3.update()
-                sensor4.update()
+        ), patch("homeassistant.components.history.get_state", return_value=None):
+            sensor1.update()
+            sensor2.update()
+            sensor3.update()
+            sensor4.update()
 
         assert sensor1.state == 0.5
         assert sensor2.state is None
@@ -246,12 +245,11 @@ class TestHistoryStatsSensor(unittest.TestCase):
         with patch(
             "homeassistant.components.history.state_changes_during_period",
             return_value=fake_states,
-        ):
-            with patch("homeassistant.components.history.get_state", return_value=None):
-                sensor1.update()
-                sensor2.update()
-                sensor3.update()
-                sensor4.update()
+        ), patch("homeassistant.components.history.get_state", return_value=None):
+            sensor1.update()
+            sensor2.update()
+            sensor3.update()
+            sensor4.update()
 
         assert sensor1.state == 0.5
         assert sensor2.state is None

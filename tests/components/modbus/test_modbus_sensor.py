@@ -1,6 +1,4 @@
 """The tests for the Modbus sensor component."""
-from datetime import timedelta
-
 import pytest
 
 from homeassistant.components.modbus.const import (
@@ -8,22 +6,124 @@ from homeassistant.components.modbus.const import (
     CALL_TYPE_REGISTER_INPUT,
     CONF_COUNT,
     CONF_DATA_TYPE,
-    CONF_OFFSET,
+    CONF_INPUT_TYPE,
     CONF_PRECISION,
     CONF_REGISTER,
     CONF_REGISTER_TYPE,
     CONF_REGISTERS,
     CONF_REVERSE_ORDER,
     CONF_SCALE,
+    CONF_SENSORS,
     DATA_TYPE_FLOAT,
     DATA_TYPE_INT,
     DATA_TYPE_STRING,
     DATA_TYPE_UINT,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_NAME
+from homeassistant.const import (
+    CONF_ADDRESS,
+    CONF_DEVICE_CLASS,
+    CONF_NAME,
+    CONF_OFFSET,
+    CONF_SLAVE,
+)
 
-from .conftest import run_base_read_test, setup_base_test
+from .conftest import base_config_test, base_test
+
+
+@pytest.mark.parametrize(
+    "do_discovery, do_config",
+    [
+        (
+            False,
+            {
+                CONF_REGISTER: 51,
+            },
+        ),
+        (
+            False,
+            {
+                CONF_REGISTER: 51,
+                CONF_SLAVE: 10,
+                CONF_COUNT: 1,
+                CONF_DATA_TYPE: "int",
+                CONF_PRECISION: 0,
+                CONF_SCALE: 1,
+                CONF_REVERSE_ORDER: False,
+                CONF_OFFSET: 0,
+                CONF_REGISTER_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                CONF_DEVICE_CLASS: "battery",
+            },
+        ),
+        (
+            False,
+            {
+                CONF_REGISTER: 51,
+                CONF_SLAVE: 10,
+                CONF_COUNT: 1,
+                CONF_DATA_TYPE: "int",
+                CONF_PRECISION: 0,
+                CONF_SCALE: 1,
+                CONF_REVERSE_ORDER: False,
+                CONF_OFFSET: 0,
+                CONF_REGISTER_TYPE: CALL_TYPE_REGISTER_INPUT,
+                CONF_DEVICE_CLASS: "battery",
+            },
+        ),
+        (
+            True,
+            {
+                CONF_ADDRESS: 51,
+            },
+        ),
+        (
+            True,
+            {
+                CONF_ADDRESS: 51,
+                CONF_SLAVE: 10,
+                CONF_COUNT: 1,
+                CONF_DATA_TYPE: "int",
+                CONF_PRECISION: 0,
+                CONF_SCALE: 1,
+                CONF_REVERSE_ORDER: False,
+                CONF_OFFSET: 0,
+                CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                CONF_DEVICE_CLASS: "battery",
+            },
+        ),
+        (
+            True,
+            {
+                CONF_ADDRESS: 51,
+                CONF_SLAVE: 10,
+                CONF_COUNT: 1,
+                CONF_DATA_TYPE: "int",
+                CONF_PRECISION: 0,
+                CONF_SCALE: 1,
+                CONF_REVERSE_ORDER: False,
+                CONF_OFFSET: 0,
+                CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
+                CONF_DEVICE_CLASS: "battery",
+            },
+        ),
+    ],
+)
+async def test_config_sensor(hass, do_discovery, do_config):
+    """Run test for sensor."""
+    sensor_name = "test_sensor"
+    config_sensor = {
+        CONF_NAME: sensor_name,
+        **do_config,
+    }
+    await base_config_test(
+        hass,
+        config_sensor,
+        sensor_name,
+        SENSOR_DOMAIN,
+        CONF_SENSORS,
+        CONF_REGISTERS,
+        method_discovery=do_discovery,
+    )
 
 
 @pytest.mark.parametrize(
@@ -189,7 +289,7 @@ from .conftest import run_base_read_test, setup_base_test
         (
             {
                 CONF_COUNT: 2,
-                CONF_REGISTER_TYPE: CALL_TYPE_REGISTER_INPUT,
+                CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
                 CONF_DATA_TYPE: DATA_TYPE_UINT,
                 CONF_SCALE: 1,
                 CONF_OFFSET: 0,
@@ -201,7 +301,7 @@ from .conftest import run_base_read_test, setup_base_test
         (
             {
                 CONF_COUNT: 2,
-                CONF_REGISTER_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
                 CONF_DATA_TYPE: DATA_TYPE_UINT,
                 CONF_SCALE: 1,
                 CONF_OFFSET: 0,
@@ -213,7 +313,7 @@ from .conftest import run_base_read_test, setup_base_test
         (
             {
                 CONF_COUNT: 2,
-                CONF_REGISTER_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
                 CONF_DATA_TYPE: DATA_TYPE_FLOAT,
                 CONF_SCALE: 1,
                 CONF_OFFSET: 0,
@@ -225,7 +325,7 @@ from .conftest import run_base_read_test, setup_base_test
         (
             {
                 CONF_COUNT: 8,
-                CONF_REGISTER_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
                 CONF_DATA_TYPE: DATA_TYPE_STRING,
                 CONF_SCALE: 1,
                 CONF_OFFSET: 0,
@@ -236,28 +336,19 @@ from .conftest import run_base_read_test, setup_base_test
         ),
     ],
 )
-async def test_all_sensor(hass, mock_hub, cfg, regs, expected):
+async def test_all_sensor(hass, cfg, regs, expected):
     """Run test for sensor."""
     sensor_name = "modbus_test_sensor"
-    scan_interval = 5
-    entity_id, now, device = await setup_base_test(
+    state = await base_test(
+        hass,
+        {CONF_NAME: sensor_name, CONF_ADDRESS: 1234, **cfg},
         sensor_name,
-        hass,
-        mock_hub,
-        {
-            CONF_REGISTERS: [
-                dict(**{CONF_NAME: sensor_name, CONF_REGISTER: 1234}, **cfg)
-            ]
-        },
         SENSOR_DOMAIN,
-        scan_interval,
-    )
-    await run_base_read_test(
-        entity_id,
-        hass,
-        mock_hub,
-        cfg.get(CONF_REGISTER_TYPE),
+        CONF_SENSORS,
+        CONF_REGISTERS,
         regs,
         expected,
-        now + timedelta(seconds=scan_interval + 1),
+        method_discovery=True,
+        scan_interval=5,
     )
+    assert state == expected

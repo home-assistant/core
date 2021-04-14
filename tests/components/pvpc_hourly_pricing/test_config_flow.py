@@ -1,16 +1,16 @@
 """Tests for the pvpc_hourly_pricing config_flow."""
 from datetime import datetime
+from unittest.mock import patch
 
 from pytz import timezone
 
 from homeassistant import data_entry_flow
 from homeassistant.components.pvpc_hourly_pricing import ATTR_TARIFF, DOMAIN
 from homeassistant.const import CONF_NAME
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import check_valid_state
 
-from tests.async_mock import patch
 from tests.common import date_util
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -60,7 +60,7 @@ async def test_config_flow(
         assert pvpc_aioclient_mock.call_count == 1
 
         # Check removal
-        registry = await entity_registry.async_get_registry(hass)
+        registry = er.async_get(hass)
         registry_entity = registry.async_get("sensor.test")
         assert await hass.config_entries.async_remove(registry_entity.config_entry_id)
 

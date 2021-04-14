@@ -40,6 +40,10 @@ from .const import (
     CONF_REMOVE_DEVICE,
     CONF_REPLACE_DEVICE,
     CONF_SIGNAL_REPETITIONS,
+    CONF_VENETIAN_BLIND_MODE,
+    CONST_VENETIAN_BLIND_MODE_DEFAULT,
+    CONST_VENETIAN_BLIND_MODE_EU,
+    CONST_VENETIAN_BLIND_MODE_US,
     DEVICE_PACKET_TYPE_LIGHTING4,
 )
 from .cover import supported as cover_supported
@@ -218,6 +222,10 @@ class OptionsFlow(config_entries.OptionsFlow):
                     device[CONF_COMMAND_ON] = command_on
                 if command_off:
                     device[CONF_COMMAND_OFF] = command_off
+                if user_input.get(CONF_VENETIAN_BLIND_MODE):
+                    device[CONF_VENETIAN_BLIND_MODE] = user_input[
+                        CONF_VENETIAN_BLIND_MODE
+                    ]
 
                 self.update_config_data(
                     global_options=self._global_options, devices=devices
@@ -282,6 +290,23 @@ class OptionsFlow(config_entries.OptionsFlow):
                 }
             )
 
+        if isinstance(self._selected_device_object.device, rfxtrxmod.RfyDevice):
+            data_schema.update(
+                {
+                    vol.Optional(
+                        CONF_VENETIAN_BLIND_MODE,
+                        default=device_data.get(
+                            CONF_VENETIAN_BLIND_MODE, CONST_VENETIAN_BLIND_MODE_DEFAULT
+                        ),
+                    ): vol.In(
+                        [
+                            CONST_VENETIAN_BLIND_MODE_DEFAULT,
+                            CONST_VENETIAN_BLIND_MODE_US,
+                            CONST_VENETIAN_BLIND_MODE_EU,
+                        ]
+                    ),
+                }
+            )
         devices = {
             entry.id: entry.name_by_user if entry.name_by_user else entry.name
             for entry in self._device_entries
@@ -319,7 +344,9 @@ class OptionsFlow(config_entries.OptionsFlow):
         new_device_id = "_".join(x for x in new_device_data[CONF_DEVICE_ID])
 
         entity_registry = await async_get_entity_registry(self.hass)
-        entity_entries = async_entries_for_device(entity_registry, old_device)
+        entity_entries = async_entries_for_device(
+            entity_registry, old_device, include_disabled_entities=True
+        )
         entity_migration_map = {}
         for entry in entity_entries:
             unique_id = entry.unique_id

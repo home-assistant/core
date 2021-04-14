@@ -1,6 +1,7 @@
 """Test sensor of Brother integration."""
 from datetime import datetime, timedelta
 import json
+from unittest.mock import Mock, patch
 
 from homeassistant.components.brother.const import DOMAIN, UNIT_PAGES
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -13,10 +14,10 @@ from homeassistant.const import (
     PERCENTAGE,
     STATE_UNAVAILABLE,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import UTC, utcnow
 
-from tests.async_mock import Mock, patch
 from tests.common import async_fire_time_changed, load_fixture
 from tests.components.brother import init_integration
 
@@ -28,7 +29,7 @@ async def test_sensors(hass):
     """Test states of the sensors."""
     entry = await init_integration(hass, skip_setup=True)
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     # Pre-create registry entries for disabled by default sensors
     registry.async_get_or_create(
@@ -241,7 +242,7 @@ async def test_disabled_by_default_sensors(hass):
     """Test the disabled by default Brother sensors."""
     await init_integration(hass)
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
     state = hass.states.get("sensor.hl_l2340dw_uptime")
     assert state is None
 

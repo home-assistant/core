@@ -21,7 +21,6 @@ from homeassistant.const import (
     CONF_TOKEN,
 )
 
-# pylint:disable=unused-import
 from .bridge import SamsungTVBridge
 from .const import (
     CONF_MANUFACTURER,
@@ -50,8 +49,6 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
-
-    # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
 
     def __init__(self):
         """Initialize flow."""
