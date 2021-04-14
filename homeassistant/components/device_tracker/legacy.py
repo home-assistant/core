@@ -608,6 +608,7 @@ class Device(RestoreEntity):
     battery: int = None
     attributes: dict = None
     icon: str = None
+    _zone_state = None
 
     # Track if the last update of this device was HOME.
     last_update_home = False
@@ -753,15 +754,15 @@ class Device(RestoreEntity):
         if self.location_name:
             self._state = self.location_name
         elif self.gps is not None and self.source_type == SOURCE_TYPE_GPS:
-            zone_state = zone.async_active_zone(
-                self.hass, self.gps[0], self.gps[1], self.gps_accuracy
+            self._zone_state = zone.async_active_zone(
+                self.hass, self.gps[0], self.gps[1], self.gps_accuracy, self._zone_state
             )
-            if zone_state is None:
+            if self._zone_state is None:
                 self._state = STATE_NOT_HOME
-            elif zone_state.entity_id == zone.ENTITY_ID_HOME:
+            elif self._zone_state.entity_id == zone.ENTITY_ID_HOME:
                 self._state = STATE_HOME
             else:
-                self._state = zone_state.name
+                self._state = self._zone_state.name
         elif self.stale():
             self.mark_stale()
         else:

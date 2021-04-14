@@ -110,7 +110,12 @@ async def test_enter_and_exit(hass, gpslogger_client, webhook_id):
     """Test when there is a known zone."""
     url = f"/api/webhook/{webhook_id}"
 
-    data = {"latitude": HOME_LATITUDE, "longitude": HOME_LONGITUDE, "device": "123"}
+    data = {
+        "latitude": HOME_LATITUDE,
+        "longitude": HOME_LONGITUDE,
+        "device": "123",
+        "accuracy": 99,
+    }
 
     # Enter the Home
     req = await gpslogger_client.post(url, data=data)
@@ -177,7 +182,7 @@ async def test_enter_with_attrs(hass, gpslogger_client, webhook_id):
         "latitude": HOME_LATITUDE,
         "longitude": HOME_LONGITUDE,
         "device": "123",
-        "accuracy": 123,
+        "accuracy": 99,
         "battery": 23,
         "speed": 23,
         "direction": 123,
@@ -191,7 +196,7 @@ async def test_enter_with_attrs(hass, gpslogger_client, webhook_id):
     assert req.status == HTTP_OK
     state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['device']}")
     assert state.state == STATE_HOME
-    assert state.attributes["gps_accuracy"] == 123
+    assert state.attributes["gps_accuracy"] == 99
     assert state.attributes["battery_level"] == 23
     assert state.attributes["speed"] == 23
     assert state.attributes["direction"] == 123

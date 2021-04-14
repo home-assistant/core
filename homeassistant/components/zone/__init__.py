@@ -110,6 +110,10 @@ def async_active_zone(
     min_dist = None
     closest = None
 
+    # Update state of current_zone
+    if current_zone:
+        current_zone = hass.states.get(current_zone.entity_id)
+
     if (
         current_zone
         and current_zone.state != STATE_UNAVAILABLE
@@ -122,7 +126,8 @@ def async_active_zone(
             current_zone.attributes[ATTR_LONGITUDE],
         )
         if zone_dist is not None:
-            within_zone = zone_dist < current_zone.attributes[ATTR_RADIUS] + radius
+            # Still within zone if zone and location circles intersect
+            within_zone = zone_dist <= current_zone.attributes[ATTR_RADIUS] + radius
 
             if within_zone:
                 min_dist = zone_dist
@@ -142,7 +147,8 @@ def async_active_zone(
         if zone_dist is None:
             continue
 
-        within_zone = zone_dist + radius < zone.attributes[ATTR_RADIUS]
+        # Within zone if location circle is inside zone
+        within_zone = zone_dist + radius <= zone.attributes[ATTR_RADIUS]
         closer_zone = closest is None or zone_dist < min_dist  # type: ignore
         smaller_zone = (
             zone_dist == min_dist

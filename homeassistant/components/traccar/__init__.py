@@ -28,7 +28,7 @@ from .const import (
 TRACKER_UPDATE = f"{DOMAIN}_tracker_update"
 
 
-DEFAULT_ACCURACY = HTTP_OK
+DEFAULT_ACCURACY = 200
 DEFAULT_BATTERY = -1
 
 

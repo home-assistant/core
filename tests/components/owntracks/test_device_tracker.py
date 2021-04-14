@@ -37,7 +37,7 @@ CONF_REGION_MAPPING = owntracks.CONF_REGION_MAPPING
 
 TEST_ZONE_LAT = 45.0
 TEST_ZONE_LON = 90.0
-TEST_ZONE_DEG_PER_M = 0.0000127
+TEST_ZONE_DEG_PER_M = 0.0000010
 FIVE_M = TEST_ZONE_DEG_PER_M * 5.0
 
 
@@ -69,7 +69,7 @@ DEFAULT_LOCATION_MESSAGE = {
     "_type": "location",
     "lon": OUTER_ZONE["longitude"],
     "lat": OUTER_ZONE["latitude"],
-    "acc": 60,
+    "acc": 10,
     "tid": "user",
     "t": "u",
     "batt": 92,
@@ -89,7 +89,7 @@ DEFAULT_TRANSITION_MESSAGE = {
     "t": "c",
     "lon": INNER_ZONE["longitude"],
     "lat": INNER_ZONE["latitude"] - ZONE_EDGE,
-    "acc": 60,
+    "acc": 10,
     "event": "enter",
     "tid": "user",
     "desc": "inner",

@@ -51,7 +51,7 @@ async def setup_zones(loop, hass):
                 "name": "Home",
                 "latitude": HOME_LATITUDE,
                 "longitude": HOME_LONGITUDE,
-                "radius": 100,
+                "radius": traccar.DEFAULT_ACCURACY + 1,
             }
         },
     )
