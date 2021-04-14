@@ -530,6 +530,7 @@ class HomeAssistant:
                 )
 
         _LOGGER.debug("Starting stage 1 shutdown")
+        _LOGGER.warning("hass.data: %s", self.data)
 
         # stage 1
         self.state = CoreState.stopping
@@ -544,6 +545,7 @@ class HomeAssistant:
             )
 
         _LOGGER.debug("Starting stage 2 shutdown")
+        _LOGGER.warning("hass.data: %s", self.data)
 
         # stage 2
         self.state = CoreState.final_write
