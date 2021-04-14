@@ -1,13 +1,17 @@
 """Test the SSDP integration."""
 import asyncio
+from datetime import timedelta
 from unittest.mock import Mock, patch
 
 import aiohttp
 import pytest
 
 from homeassistant.components import ssdp
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
+from homeassistant.setup import async_setup_component
+import homeassistant.util.dt as dt_util
 
-from tests.common import mock_coro
+from tests.common import async_fire_time_changed, mock_coro
 
 
 async def test_scan_match_st(hass, caplog):
@@ -246,3 +250,21 @@ async def test_invalid_characters(hass, aioclient_mock):
         "deviceType": "ABC",
         "serialNumber": "ÿÿÿÿ",
     }
+
+
+@patch("homeassistant.components.ssdp.async_search")
+async def test_start_stop_scanner(async_search_mock, hass):
+    """Test we start and stop the scanner."""
+    assert await async_setup_component(hass, ssdp.DOMAIN, {ssdp.DOMAIN: {}})
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
+    await hass.async_block_till_done()
+    assert async_search_mock.call_count == 2
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
+    await hass.async_block_till_done()
+    assert async_search_mock.call_count == 2
