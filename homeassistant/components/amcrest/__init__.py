@@ -197,14 +197,17 @@ class AmcrestChecker(Http):
 
 
 def _monitor_events(hass, name, api, event_codes):
-    event_codes = ",".join(event_codes)
+    event_codes = set(event_codes)
     while True:
         api.available_flag.wait()
         try:
-            for code, start in api.event_actions(event_codes, retries=5):
-                signal = service_signal(SERVICE_EVENT, name, code)
-                _LOGGER.debug("Sending signal: '%s': %s", signal, start)
-                dispatcher_send(hass, signal, start)
+            for code, start in api.event_actions("All", retries=5):
+                event_data = {"camera": name, "event": code, "payload": start}
+                hass.bus.fire("amcrest", event_data)
+                if code in event_codes:
+                    signal = service_signal(SERVICE_EVENT, name, code)
+                    _LOGGER.debug("Sending signal: '%s': %s", signal, start)
+                    dispatcher_send(hass, signal, start)
         except AmcrestError as error:
             _LOGGER.warning(
                 "Error while processing events from %s camera: %r", name, error
@@ -259,6 +262,7 @@ def setup(hass, config):
 
         discovery.load_platform(hass, CAMERA, DOMAIN, {CONF_NAME: name}, config)
 
+        event_codes = []
         if binary_sensors:
             discovery.load_platform(
                 hass,
@@ -272,8 +276,8 @@ def setup(hass, config):
                 for sensor_type in binary_sensors
                 if sensor_type not in BINARY_POLLED_SENSORS
             ]
-            if event_codes:
-                _start_event_monitor(hass, name, api, event_codes)
+
+        _start_event_monitor(hass, name, api, event_codes)
 
         if sensors:
             discovery.load_platform(
