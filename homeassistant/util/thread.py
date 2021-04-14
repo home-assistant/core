@@ -5,12 +5,12 @@ import threading
 from typing import Any
 
 
-def _async_raise(tid: int, exctype: Any) -> None:
+def async_raise(tid: int, exctype: Any) -> None:
     """Raise an exception in the threads with id tid."""
     if not inspect.isclass(exctype):
         raise TypeError("Only types can be raised (not instances)")
 
-    c_tid = ctypes.c_long(tid)
+    c_tid = ctypes.c_ulong(tid)  # changed in python 3.7+
     res = ctypes.pythonapi.PyThreadState_SetAsyncExc(c_tid, ctypes.py_object(exctype))
 
     if res == 1:
@@ -33,4 +33,4 @@ class ThreadWithException(threading.Thread):
     def raise_exc(self, exctype: Any) -> None:
         """Raise the given exception type in the context of this thread."""
         assert self.ident
-        _async_raise(self.ident, exctype)
+        async_raise(self.ident, exctype)
