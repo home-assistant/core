@@ -8,7 +8,7 @@
             "not_denonavr_missing": "Geen Denon AVR netwerkontvanger, zoekinformatie niet compleet"
         },
         "error": {
-            "discovery_error": "Kan een Denon AVR netwerkontvanger niet vinden"
+            "discovery_error": "Kan geen Denon AVR netwerkontvanger vinden"
         },
         "flow_title": "Denon AVR Network Receiver: {name}",
         "step": {
