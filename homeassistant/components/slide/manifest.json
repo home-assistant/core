@@ -3,5 +3,6 @@
   "name": "Slide",
   "documentation": "https://www.home-assistant.io/integrations/slide",
   "requirements": ["goslide-api==0.5.1"],
-  "codeowners": ["@ualex73"]
+  "codeowners": ["@ualex73"],
+  "iot_class": "cloud_polling"
 }

@@ -3,5 +3,6 @@
   "name": "Wake on LAN",
   "documentation": "https://www.home-assistant.io/integrations/wake_on_lan",
   "requirements": ["wakeonlan==2.0.1"],
-  "codeowners": ["@ntilley905"]
+  "codeowners": ["@ntilley905"],
+  "iot_class": "local_push"
 }
