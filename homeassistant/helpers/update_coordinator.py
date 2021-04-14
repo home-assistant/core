@@ -24,7 +24,6 @@ REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
 
 T = TypeVar("T")
 
-_LOGGER = logging.getLogger(__name__)
 
 # mypy: disallow-any-generics
 
@@ -125,7 +124,7 @@ class DataUpdateCoordinator(Generic[T]):
     async def _handle_refresh_interval(self, _now: datetime) -> None:
         """Handle a refresh interval occurrence."""
         self._unsub_refresh = None
-        await self.async_refresh()
+        await self._async_refresh(log_failures=True, scheduled=True)
 
     async def async_request_refresh(self) -> None:
         """Request a refresh.
@@ -159,7 +158,10 @@ class DataUpdateCoordinator(Generic[T]):
         await self._async_refresh(log_failures=True)
 
     async def _async_refresh(
-        self, log_failures: bool = True, raise_on_auth_failed: bool = False
+        self,
+        log_failures: bool = True,
+        raise_on_auth_failed: bool = False,
+        scheduled: bool = False,
     ) -> None:
         """Refresh data."""
         if self._unsub_refresh:
@@ -168,7 +170,7 @@ class DataUpdateCoordinator(Generic[T]):
 
         self._debounced_refresh.async_cancel()
 
-        if self.hass.is_stopping:
+        if scheduled and self.hass.is_stopping:
             return
 
         start = monotonic()
@@ -250,10 +252,9 @@ class DataUpdateCoordinator(Generic[T]):
                 self.name,
                 monotonic() - start,
             )
-            if not auth_failed and self._listeners:
+            if not auth_failed and self._listeners and not self.hass.is_stopping:
                 self._schedule_refresh()
 
-        _LOGGER.debug("Listeners for %s: %s", self.name, self._listeners)
         for update_callback in self._listeners:
             update_callback()
 
