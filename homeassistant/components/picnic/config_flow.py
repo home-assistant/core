@@ -98,10 +98,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(info["unique_id"])
             self._abort_if_unique_id_configured()
 
-            return self.async_create_entry(title=info["title"], data={
-                CONF_ACCESS_TOKEN: auth_token,
-                CONF_COUNTRY_CODE: user_input[CONF_COUNTRY_CODE]
-            })
+            return self.async_create_entry(
+                title=info["title"],
+                data={
+                    CONF_ACCESS_TOKEN: auth_token,
+                    CONF_COUNTRY_CODE: user_input[CONF_COUNTRY_CODE],
+                },
+            )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors

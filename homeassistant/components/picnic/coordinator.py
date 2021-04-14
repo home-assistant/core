@@ -7,33 +7,23 @@ import async_timeout
 from python_picnic_api import PicnicAPI
 from python_picnic_api.session import PicnicAuthError
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    ADDRESS,
-    SENSOR_CART_ITEMS_COUNT,
-    SENSOR_CART_TOTAL_PRICE,
-    SENSOR_LAST_ORDER_DELIVERY_TIME,
-    SENSOR_LAST_ORDER_ETA_END,
-    SENSOR_LAST_ORDER_ETA_START,
-    SENSOR_LAST_ORDER_SLOT_END,
-    SENSOR_LAST_ORDER_SLOT_START,
-    SENSOR_LAST_ORDER_STATUS,
-    SENSOR_LAST_ORDER_TOTAL_PRICE,
-    SENSOR_SELECTED_SLOT_END,
-    SENSOR_SELECTED_SLOT_MAX_ORDER_TIME,
-    SENSOR_SELECTED_SLOT_MIN_ORDER_VALUE,
-    SENSOR_SELECTED_SLOT_START,
-)
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN
+from .const import ADDRESS, CART_DATA, LAST_ORDER_DATA, SLOT_DATA
 
 
 class PicnicUpdateCoordinator(DataUpdateCoordinator):
     """The coordinator to fetch data from the Picnic API at a set interval."""
 
-    def __init__(self, hass: HomeAssistant, picnic_api_client: PicnicAPI, config_entry: ConfigEntry):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        picnic_api_client: PicnicAPI,
+        config_entry: ConfigEntry,
+    ):
         """Initialize the coordinator with the given Picnic API client."""
         self.picnic_api_client = picnic_api_client
         self.config_entry = config_entry
@@ -70,27 +60,12 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed("API response doesn't contain expected data.")
 
         slot_data = self._get_slot_data(cart)
-        minimum_order_value = (
-            slot_data["minimum_order_value"] / 100
-            if slot_data.get("minimum_order_value")
-            else None
-        )
-        # Create a flat lookup table to be used in the entities, convert prices from cents to euros
+
         return {
             ADDRESS: self._get_address(),
-            SENSOR_CART_ITEMS_COUNT: cart.get("total_count", 0),
-            SENSOR_CART_TOTAL_PRICE: cart.get("total_price", 0) / 100,
-            SENSOR_SELECTED_SLOT_START: slot_data.get("window_start"),
-            SENSOR_SELECTED_SLOT_END: slot_data.get("window_end"),
-            SENSOR_SELECTED_SLOT_MAX_ORDER_TIME: slot_data.get("cut_off_time"),
-            SENSOR_SELECTED_SLOT_MIN_ORDER_VALUE: minimum_order_value,
-            SENSOR_LAST_ORDER_SLOT_START: last_order["slot"].get("window_start"),
-            SENSOR_LAST_ORDER_SLOT_END: last_order["slot"].get("window_end"),
-            SENSOR_LAST_ORDER_STATUS: last_order.get("status"),
-            SENSOR_LAST_ORDER_ETA_START: last_order["eta"].get("start"),
-            SENSOR_LAST_ORDER_ETA_END: last_order["eta"].get("end"),
-            SENSOR_LAST_ORDER_DELIVERY_TIME: last_order["delivery_time"].get("start"),
-            SENSOR_LAST_ORDER_TOTAL_PRICE: last_order.get("total_price", 0) / 100,
+            CART_DATA: cart,
+            SLOT_DATA: slot_data,
+            LAST_ORDER_DATA: last_order,
         }
 
     def _get_address(self):

@@ -71,7 +71,11 @@ class PicnicSensor(CoordinatorEntity):
     @property
     def state(self) -> StateType:
         """Return the state of the entity."""
-        return self.coordinator.data.get(self.sensor_type)
+        try:
+            data_set = self.coordinator.data.get(self.properties["data_type"])
+            return self.properties["state"](data_set)
+        except (IndexError, KeyError):
+            return None
 
     @property
     def device_class(self) -> Optional[str]:
@@ -86,10 +90,7 @@ class PicnicSensor(CoordinatorEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return (
-            self.coordinator.last_update_success and
-            self.sensor_type in self.coordinator.data
-        )
+        return self.coordinator.last_update_success and self.state is not None
 
     @property
     def entity_registry_enabled_default(self) -> bool:
