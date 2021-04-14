@@ -21,7 +21,6 @@ from .const import (
     DISCOVERY_UDN,
     DOMAIN,
     DOMAIN_CONFIG,
-    DOMAIN_COORDINATORS,
     DOMAIN_DEVICES,
     DOMAIN_LOCAL_IP,
     LOGGER as _LOGGER,
@@ -75,7 +74,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     local_ip = await hass.async_add_executor_job(get_local_ip)
     hass.data[DOMAIN] = {
         DOMAIN_CONFIG: conf,
-        DOMAIN_COORDINATORS: {},
         DOMAIN_DEVICES: {},
         DOMAIN_LOCAL_IP: conf.get(CONF_LOCAL_IP, local_ip),
     }
@@ -149,6 +147,9 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
         hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
     )
 
+    # Start device updater.
+    await device.async_start()
+
     return True
 
 
@@ -160,9 +161,10 @@ async def async_unload_entry(
 
     udn = config_entry.data.get(CONFIG_ENTRY_UDN)
     if udn in hass.data[DOMAIN][DOMAIN_DEVICES]:
+        device = hass.data[DOMAIN][DOMAIN_DEVICES][udn]
+        await device.async_stop()
+
         del hass.data[DOMAIN][DOMAIN_DEVICES][udn]
-    if udn in hass.data[DOMAIN][DOMAIN_COORDINATORS]:
-        del hass.data[DOMAIN][DOMAIN_COORDINATORS][udn]
 
     _LOGGER.debug("Deleting sensors")
     return await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
