@@ -1,12 +1,11 @@
 """Base class for Rituals Perfume Genie diffuser entity."""
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTRIBUTES, DOMAIN, HUB, HUBLOT
+from .const import ATTRIBUTES, DOMAIN, HUB, HUBLOT, SENSORS
 
 MANUFACTURER = "Rituals Cosmetics"
 MODEL = "Diffuser"
 
-SENSORS = "sensors"
 ROOMNAME = "roomnamec"
 VERSION = "versionc"
 
