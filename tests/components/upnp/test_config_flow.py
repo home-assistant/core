@@ -19,15 +19,15 @@ from homeassistant.components.upnp.const import (
     DISCOVERY_UNIQUE_ID,
     DISCOVERY_USN,
     DOMAIN,
-    DOMAIN_COORDINATORS,
 )
 from homeassistant.components.upnp.device import Device
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt
 
 from .mock_device import MockDevice
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_flow_ssdp_discovery(hass: HomeAssistantType):
@@ -325,10 +325,12 @@ async def test_options_flow(hass: HomeAssistantType):
         # Initialisation of component.
         await async_setup_component(hass, "upnp", config)
         await hass.async_block_till_done()
+        mock_device.times_polled = 0  # Reset.
 
-        # DataUpdateCoordinator gets a default of 30 seconds for updates.
-        coordinator = hass.data[DOMAIN][DOMAIN_COORDINATORS][mock_device.udn]
-        assert coordinator.update_interval == timedelta(seconds=DEFAULT_SCAN_INTERVAL)
+        # Forward time, ensure single poll after 30 (default) seconds.
+        async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=31))
+        await hass.async_block_till_done()
+        assert mock_device.times_polled == 1
 
         # Options flow with no input results in form.
         result = await hass.config_entries.options.async_init(
@@ -346,5 +348,18 @@ async def test_options_flow(hass: HomeAssistantType):
             CONFIG_ENTRY_SCAN_INTERVAL: 60,
         }
 
-        # Also updates DataUpdateCoordinator.
-        assert coordinator.update_interval == timedelta(seconds=60)
+        # Forward time, ensure single poll after 60 seconds, still from original setting.
+        async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=61))
+        await hass.async_block_till_done()
+        assert mock_device.times_polled == 2
+
+        # Now the updated interval takes effect.
+        # Forward time, ensure single poll after 120 seconds.
+        async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=121))
+        await hass.async_block_till_done()
+        assert mock_device.times_polled == 3
+
+        # Forward time, ensure single poll after 180 seconds.
+        async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=181))
+        await hass.async_block_till_done()
+        assert mock_device.times_polled == 4
