@@ -39,7 +39,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def _parse_legacy_options(entry: ConfigEntry, sensor_def: pysma.Sensors) -> None:
+def _parse_legacy_options(entry: ConfigEntry, sensor_def: pysma.Sensors) -> None:
     """Parse legacy configuration options.
 
     This will parse the legacy CONF_SENSORS and CONF_CUSTOM configuration options
@@ -71,19 +71,17 @@ async def _parse_legacy_options(entry: ConfigEntry, sensor_def: pysma.Sensors) -
         sensor.enabled = sensor.name in config_sensors
 
 
-async def _migrate_old_unique_ids(
+def _migrate_old_unique_ids(
     hass: HomeAssistant, entry: ConfigEntry, sensor_def: pysma.Sensors
 ) -> None:
     """Migrate legacy sensor entity_id format to new format."""
     entity_registry = er.async_get(hass)
 
     # Create list of all possible sensor names
-    possible_sensors = list(
-        set(
-            entry.data.get(CONF_SENSORS)
-            + [s.name for s in sensor_def]
-            + list(pysma.LEGACY_MAP)
-        )
+    possible_sensors = set(
+        entry.data.get(CONF_SENSORS)
+        + [s.name for s in sensor_def]
+        + list(pysma.LEGACY_MAP)
     )
 
     for sensor in possible_sensors:
@@ -107,7 +105,7 @@ async def _migrate_old_unique_ids(
         if not entity_id:
             continue
 
-        # Change entity_id to new format using the device serial in entry.unique_id
+        # Change unique_id to new format using the device serial in entry.unique_id
         new_unique_id = f"{entry.unique_id}-{pysma_sensor.key}_{pysma_sensor.key_idx}"
         entity_registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
 
@@ -118,15 +116,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     sensor_def = pysma.Sensors()
 
     if entry.source == SOURCE_IMPORT:
-        await _parse_legacy_options(entry, sensor_def)
-        await _migrate_old_unique_ids(hass, entry, sensor_def)
+        _parse_legacy_options(entry, sensor_def)
+        _migrate_old_unique_ids(hass, entry, sensor_def)
 
     # Init the SMA interface
-    protocol = "https" if entry.data.get(CONF_SSL) else "http"
-    url = f"{protocol}://{entry.data.get(CONF_HOST)}"
-    verify_ssl = entry.data.get(CONF_VERIFY_SSL)
-    group = entry.data.get(CONF_GROUP)
-    password = entry.data.get(CONF_PASSWORD)
+    protocol = "https" if entry.data[CONF_SSL] else "http"
+    url = f"{protocol}://{entry.data[CONF_HOST]}"
+    verify_ssl = entry.data[CONF_VERIFY_SSL]
+    group = entry.data[CONF_GROUP]
+    password = entry.data[CONF_PASSWORD]
 
     session = async_get_clientsession(hass, verify_ssl=verify_ssl)
     sma = pysma.SMA(session, url, password, group)
