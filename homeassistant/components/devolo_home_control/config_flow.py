@@ -13,6 +13,7 @@ from .const import (  # pylint:disable=unused-import
     CONF_MYDEVOLO,
     DEFAULT_MYDEVOLO,
     DOMAIN,
+    SUPPORTED_MODEL_TYPES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,7 +48,7 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle zeroconf discovery."""
         try:
             # Check if it is a gateway
-            if discovery_info["properties"]["MT"] in ("2600", "2601"):
+            if discovery_info["properties"]["MT"] in SUPPORTED_MODEL_TYPES:
                 await self._async_handle_discovery_without_unique_id()
                 return await self.async_step_zeroconf_confirm()
             return self.async_abort(reason="Not a devolo Home Control gateway.")
