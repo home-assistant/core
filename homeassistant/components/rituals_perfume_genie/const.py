@@ -6,5 +6,8 @@ DEVICES = "devices"
 
 ACCOUNT_HASH = "account_hash"
 ATTRIBUTES = "attributes"
+BATTERY = "battc"
 HUB = "hub"
 HUBLOT = "hublot"
+ID = "id"
+SENSORS = "sensors"

@@ -1,24 +1,20 @@
 """Support for Rituals Perfume Genie sensors."""
 from homeassistant.const import (
-    ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     PERCENTAGE,
 )
 
-from .const import COORDINATORS, DEVICES, DOMAIN, HUB
-from .entity import SENSORS, DiffuserEntity
+from .const import BATTERY, COORDINATORS, DEVICES, DOMAIN, HUB, ID, SENSORS
+from .entity import DiffuserEntity
 
-ID = "id"
 TITLE = "title"
 ICON = "icon"
 WIFI = "wific"
-BATTERY = "battc"
 PERFUME = "rfidc"
 FILL = "fillc"
 
-BATTERY_CHARGING_ID = 21
 PERFUME_NO_CARTRIDGE_ID = 19
 FILL_NO_CARTRIDGE_ID = 12
 
@@ -107,13 +103,6 @@ class DiffuserBatterySensor(DiffuserEntity):
         }[self.coordinator.data[HUB][SENSORS][BATTERY][ICON]]
 
     @property
-    def _charging(self):
-        """Return battery charging state."""
-        return bool(
-            self.coordinator.data[HUB][SENSORS][BATTERY][ID] == BATTERY_CHARGING_ID
-        )
-
-    @property
     def device_class(self):
         """Return the class of the battery sensor."""
         return DEVICE_CLASS_BATTERY
@@ -123,7 +112,6 @@ class DiffuserBatterySensor(DiffuserEntity):
         """Return the battery state attributes."""
         return {
             ATTR_BATTERY_LEVEL: self.coordinator.data[HUB][SENSORS][BATTERY][TITLE],
-            ATTR_BATTERY_CHARGING: self._charging,
         }
 
     @property
