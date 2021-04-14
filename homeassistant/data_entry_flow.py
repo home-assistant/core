@@ -345,6 +345,7 @@ class FlowHandler:
         data_schema: vol.Schema = None,
         errors: dict[str, str] | None = None,
         description_placeholders: dict[str, Any] | None = None,
+        last_step: bool = True,
     ) -> FlowResultDict:
         """Return the definition of a form to gather user input."""
         return {
@@ -355,6 +356,7 @@ class FlowHandler:
             "data_schema": data_schema,
             "errors": errors,
             "description_placeholders": description_placeholders,
+            "last_step": last_step,  # Display next or submit button in frontend
         }
 
     @callback
