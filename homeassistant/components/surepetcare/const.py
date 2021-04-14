@@ -12,6 +12,7 @@ SUREPY = "surepy"
 
 CONF_HOUSEHOLD_ID = "household_id"
 CONF_FEEDERS = "feeders"
+CONF_FELAQUAS = "felaquas"
 CONF_FLAPS = "flaps"
 CONF_PARENT = "parent"
 CONF_PETS = "pets"
