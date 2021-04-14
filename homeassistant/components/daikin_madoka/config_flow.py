@@ -111,7 +111,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         user_input[CONF_SCAN_INTERVAL], user_input[CONF_DEVICE]
                     )
                     devices = set(devices)
-                    discovered_macs = set(list(map(lambda x: x.address, devices)))
+                    discovered_macs = set(map(lambda x: x.address, devices))
                     not_found = set(macs) - discovered_macs
 
                     # Check if all the devices have been found
