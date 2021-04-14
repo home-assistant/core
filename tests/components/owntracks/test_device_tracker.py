@@ -461,7 +461,7 @@ async def test_event_gps_entry_exit(hass, context):
 
     # Enter uses the zone's gps co-ords
     assert_location_latitude(hass, INNER_ZONE["latitude"])
-    assert_location_accuracy(hass, INNER_ZONE["radius"])
+    assert_location_accuracy(hass, 0.0)
     assert_location_state(hass, "inner")
 
     await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE)
@@ -472,7 +472,7 @@ async def test_event_gps_entry_exit(hass, context):
     #  received a transition message though so I'm still
     #  associated with the inner zone regardless of GPS.
     assert_location_latitude(hass, INNER_ZONE["latitude"])
-    assert_location_accuracy(hass, INNER_ZONE["radius"])
+    assert_location_accuracy(hass, 0.0)
     assert_location_state(hass, "inner")
 
     await send_message(hass, EVENT_TOPIC, REGION_GPS_LEAVE_MESSAGE)
@@ -514,7 +514,7 @@ async def test_event_gps_entry_inaccurate(hass, context):
 
     # I enter the zone even though the message GPS was inaccurate.
     assert_location_latitude(hass, INNER_ZONE["latitude"])
-    assert_location_accuracy(hass, INNER_ZONE["radius"])
+    assert_location_accuracy(hass, 0.0)
     assert_location_state(hass, "inner")
 
 
@@ -524,14 +524,14 @@ async def test_event_gps_entry_exit_inaccurate(hass, context):
 
     # Enter uses the zone's gps co-ords
     assert_location_latitude(hass, INNER_ZONE["latitude"])
-    assert_location_accuracy(hass, INNER_ZONE["radius"])
+    assert_location_accuracy(hass, 0.0)
     assert_location_state(hass, "inner")
 
     await send_message(hass, EVENT_TOPIC, REGION_GPS_LEAVE_MESSAGE_INACCURATE)
 
     # Exit doesn't use inaccurate gps
     assert_location_latitude(hass, INNER_ZONE["latitude"])
-    assert_location_accuracy(hass, INNER_ZONE["radius"])
+    assert_location_accuracy(hass, 0.0)
     assert_location_state(hass, "inner")
 
     # But does exit region correctly
@@ -544,14 +544,14 @@ async def test_event_gps_entry_exit_zero_accuracy(hass, context):
 
     # Enter uses the zone's gps co-ords
     assert_location_latitude(hass, INNER_ZONE["latitude"])
-    assert_location_accuracy(hass, INNER_ZONE["radius"])
+    assert_location_accuracy(hass, 0.0)
     assert_location_state(hass, "inner")
 
     await send_message(hass, EVENT_TOPIC, REGION_GPS_LEAVE_MESSAGE_ZERO)
 
     # Exit doesn't use zero gps
     assert_location_latitude(hass, INNER_ZONE["latitude"])
-    assert_location_accuracy(hass, INNER_ZONE["radius"])
+    assert_location_accuracy(hass, 0.0)
     assert_location_state(hass, "inner")
 
     # But does exit region correctly
@@ -725,7 +725,7 @@ async def test_event_region_entry_exit(hass, context):
 
     # Enter uses the zone's gps co-ords
     assert_location_latitude(hass, INNER_ZONE["latitude"])
-    assert_location_accuracy(hass, INNER_ZONE["radius"])
+    assert_location_accuracy(hass, 0.0)
     assert_location_state(hass, "inner")
 
     await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE)
@@ -736,7 +736,7 @@ async def test_event_region_entry_exit(hass, context):
     #  received a transition message though so I'm still
     #  associated with the inner zone regardless of GPS.
     assert_location_latitude(hass, INNER_ZONE["latitude"])
-    assert_location_accuracy(hass, INNER_ZONE["radius"])
+    assert_location_accuracy(hass, 0.0)
     assert_location_state(hass, "inner")
 
     await send_message(hass, EVENT_TOPIC, REGION_BEACON_LEAVE_MESSAGE)
@@ -745,7 +745,7 @@ async def test_event_region_entry_exit(hass, context):
     # so I am still located at the center of the inner region
     # until I receive a location update.
     assert_location_latitude(hass, INNER_ZONE["latitude"])
-    assert_location_accuracy(hass, INNER_ZONE["radius"])
+    assert_location_accuracy(hass, 0.0)
     assert_location_state(hass, "inner")
 
     # Left clean zone state
@@ -797,7 +797,7 @@ async def test_event_region_entry_exit_right_order(hass, context):
     # coordinates are set to the center of the last region I
     # entered which puts me in the inner zone.
     assert_location_latitude(hass, INNER_ZONE["latitude"])
-    assert_location_accuracy(hass, INNER_ZONE["radius"])
+    assert_location_accuracy(hass, 0.0)
     assert_location_state(hass, "inner")
 
 
@@ -824,7 +824,7 @@ async def test_event_region_entry_exit_wrong_order(hass, context):
     # coordinates are set to the center of the last region I
     # entered which puts me in the inner_2 zone.
     assert_location_latitude(hass, INNER_ZONE["latitude"])
-    assert_location_accuracy(hass, INNER_ZONE["radius"])
+    assert_location_accuracy(hass, 0.0)
     assert_location_state(hass, "inner_2")
 
 

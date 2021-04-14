@@ -101,7 +101,7 @@ def _set_gps_from_zone(kwargs, location, zone):
             zone.attributes[ATTR_LATITUDE],
             zone.attributes[ATTR_LONGITUDE],
         )
-        kwargs["gps_accuracy"] = zone.attributes["radius"]
+        kwargs["gps_accuracy"] = 0.0
         kwargs["location_name"] = location
     return kwargs
 
