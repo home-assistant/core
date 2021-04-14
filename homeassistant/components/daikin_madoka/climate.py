@@ -24,7 +24,6 @@ from homeassistant.components.climate.const import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
-    FAN_OFF,
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_DRY,
@@ -143,7 +142,7 @@ class DaikinMadokaClimate(ClimateEntity):
     def current_temperature(self):
         """Return the current temperature."""
         if self.controller.temperatures.status is None:
-            return MIN_TEMP
+            return None
 
         return self.controller.temperatures.status.indoor
 
@@ -152,7 +151,7 @@ class DaikinMadokaClimate(ClimateEntity):
         """Return the temperature we try to reach."""
 
         if self.controller.set_point.status is None:
-            return MIN_TEMP
+            return None
 
         value = None
 
@@ -210,10 +209,10 @@ class DaikinMadokaClimate(ClimateEntity):
     def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
 
-        if (
-            self.controller.power_state.status is None
-            or self.controller.power_state.status.turn_on is False
-        ):
+        if self.controller.power_state.status is None:
+            return None
+
+        if self.controller.power_state.status.turn_on is False:
             return HVAC_MODE_OFF
 
         return DAIKIN_TO_HA_MODE.get(
@@ -229,10 +228,10 @@ class DaikinMadokaClimate(ClimateEntity):
     def hvac_action(self):
         """Return the HVAC current action."""
 
-        if (
-            self.controller.power_state.status is None
-            or self.controller.power_state.status.turn_on is False
-        ):
+        if self.controller.power_state.status is None:
+            return None
+
+        if self.controller.power_state.status.turn_on is False:
             return CURRENT_HVAC_OFF
 
         if (
@@ -275,7 +274,7 @@ class DaikinMadokaClimate(ClimateEntity):
         """Return the fan setting."""
 
         if self.controller.fan_speed.status is None:
-            return FAN_OFF
+            return None
         # pylint: disable=no-else-return
         if self.hvac_mode == HVAC_MODE_HEAT:
             return DAIKIN_TO_HA_FAN_MODE.get(

@@ -6,11 +6,11 @@ from unittest.mock import MagicMock, patch
 
 from homeassistant import setup
 from homeassistant.components.climate.const import (
+    ATTR_HVAC_ACTION,
     FAN_HIGH,
     HVAC_MODE_DRY,
-    HVAC_MODE_OFF,
 )
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 
 from . import (
     TEST_DISCOVERED_DEVICES,
@@ -152,11 +152,12 @@ async def test_climate_empty_status(hass):
         await async_init_integration(hass, controller_mock)
 
         state = hass.states.get("climate.test")
-        assert state.state == HVAC_MODE_OFF
+        assert state.state == STATE_UNKNOWN
 
         ha_attributes = prepare_fixture(fixture["defaults"])
-        check_attributes = {k: ha_attributes[k] for k in ATTRIBUTE_KEYS}
 
+        check_attributes = {k: ha_attributes[k] for k in ATTRIBUTE_KEYS}
+        check_attributes.pop(ATTR_HVAC_ACTION)
         # Only test for a subset of attributes in case
         # HA changes the implementation and a new one appears
 
