@@ -435,7 +435,7 @@ co2signal==0.4.2
 coinbase==2.1.0
 
 # homeassistant.scripts.check_config
-colorlog==4.8.0
+colorlog==5.0.1
 
 # homeassistant.components.color_extractor
 colorthief==0.2.1
@@ -2126,7 +2126,7 @@ spiderpy==1.4.2
 spotcrime==1.0.4
 
 # homeassistant.components.spotify
-spotipy==2.17.1
+spotipy==2.18.0
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
