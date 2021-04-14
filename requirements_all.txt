@@ -347,6 +347,7 @@ asmog==0.0.6
 asterisk_mbox==0.5.0
 
 # homeassistant.components.dlna_dmr
+# homeassistant.components.dlna_dms
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight

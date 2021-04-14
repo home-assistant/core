@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "no_devices_found": "No devices found on the network",
+            "not_dms": "Device is not a supported Media Server"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "Do you want to start set up?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Choose a device to configure",
+                "title": "Discovered DLNA DMA devices"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "entity_id": "Source ID"
+                },
+                "title": "DLNA Media Server configuration"
+            }
+        }
+    }
+}
