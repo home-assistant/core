@@ -37,7 +37,7 @@ CONF_REGION_MAPPING = owntracks.CONF_REGION_MAPPING
 
 TEST_ZONE_LAT = 45.0
 TEST_ZONE_LON = 90.0
-TEST_ZONE_DEG_PER_M = 0.0000010
+TEST_ZONE_DEG_PER_M = 0.0000127
 FIVE_M = TEST_ZONE_DEG_PER_M * 5.0
 
 
@@ -69,7 +69,7 @@ DEFAULT_LOCATION_MESSAGE = {
     "_type": "location",
     "lon": OUTER_ZONE["longitude"],
     "lat": OUTER_ZONE["latitude"],
-    "acc": 10,
+    "acc": 40,
     "tid": "user",
     "t": "u",
     "batt": 92,
@@ -89,7 +89,7 @@ DEFAULT_TRANSITION_MESSAGE = {
     "t": "c",
     "lon": INNER_ZONE["longitude"],
     "lat": INNER_ZONE["latitude"] - ZONE_EDGE,
-    "acc": 10,
+    "acc": 40,
     "event": "enter",
     "tid": "user",
     "desc": "inner",
@@ -622,9 +622,10 @@ async def test_event_gps_entry_exit_wrong_order(hass, context):
 async def test_event_gps_entry_unknown_zone(hass, context):
     """Test the event for unknown zone."""
     # Just treat as location update
-    message = build_message({"desc": "unknown"}, REGION_GPS_ENTER_MESSAGE)
+    lat = INNER_ZONE["latitude"]
+    message = build_message({"desc": "unknown", "lat": lat}, REGION_GPS_ENTER_MESSAGE)
     await send_message(hass, EVENT_TOPIC, message)
-    assert_location_latitude(hass, REGION_GPS_ENTER_MESSAGE["lat"])
+    assert_location_latitude(hass, lat)
     assert_location_state(hass, "inner")
 
 
