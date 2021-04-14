@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from concurrent.futures import ThreadPoolExecutor
 import dataclasses
 import logging
 from typing import Any
@@ -10,6 +9,7 @@ from typing import Any
 from homeassistant import bootstrap
 from homeassistant.core import callback
 from homeassistant.helpers.frame import warn_use
+from homeassistant.util.executor import InterruptibleThreadPoolExecutor
 
 # mypy: disallow-any-generics
 
@@ -64,7 +64,7 @@ class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):  # type: ignore[valid
         if self.debug:
             loop.set_debug(True)
 
-        executor = ThreadPoolExecutor(
+        executor = InterruptibleThreadPoolExecutor(
             thread_name_prefix="SyncWorker", max_workers=MAX_EXECUTOR_WORKERS
         )
         loop.set_default_executor(executor)
@@ -76,7 +76,7 @@ class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):  # type: ignore[valid
         orig_close = loop.close
 
         def close() -> None:
-            executor.shutdown(wait=True)
+            executor.shutdown(wait=True, cancel_futures=True, interrupt=True)
             orig_close()
 
         loop.close = close  # type: ignore
