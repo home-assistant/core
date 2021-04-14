@@ -84,7 +84,7 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 await self.hass.async_add_executor_job(self._add_vms_to_config)
 
-                self.async_create_entry(title="ProxmoxVE", data=self._config)
+                return self.async_create_entry(title="ProxmoxVE", data=self._config)
 
         if info is None:
             info = {}

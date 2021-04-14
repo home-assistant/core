@@ -1,55 +1,61 @@
 """Binary sensor to read Proxmox VE data."""
 
+import logging
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import COORDINATORS, DOMAIN, PROXMOX_CLIENTS, ProxmoxEntity
+from . import COORDINATORS, DOMAIN, ProxmoxEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
+) -> None:
     """Set up binary sensors."""
-    if discovery_info is None:
-        return
 
     sensors = []
 
-    for host_config in discovery_info["config"][DOMAIN]:
-        host_name = host_config["host"]
-        host_name_coordinators = hass.data[DOMAIN][COORDINATORS][host_name]
+    _LOGGER.info("Setting up ProxmoxVE platform")
 
-        if hass.data[PROXMOX_CLIENTS][host_name] is None:
-            continue
+    host_name = config_entry.data["host"]
+    host_name_coordinators = hass.data[DOMAIN][COORDINATORS][host_name]
 
-        for node_config in host_config["nodes"]:
-            node_name = node_config["name"]
+    for node_config in config_entry.data["nodes"]:
+        node_name = node_config["name"]
 
-            for vm_id in node_config["vms"]:
-                coordinator = host_name_coordinators[node_name][vm_id]
+        for vm_id in node_config["vms"]:
+            coordinator = host_name_coordinators[node_name][vm_id]
+            coordinator_data = coordinator.data
 
-                # unfound vm case
-                if (coordinator_data := coordinator.data) is None:
-                    continue
+            # unfound vm case
+            if (coordinator_data := coordinator.data) is None:
+                continue
 
-                vm_name = coordinator_data["name"]
-                vm_sensor = create_binary_sensor(
-                    coordinator, host_name, node_name, vm_id, vm_name
-                )
-                sensors.append(vm_sensor)
+            vm_name = coordinator_data["name"]
+            vm_sensor = create_binary_sensor(
+                coordinator, host_name, node_name, vm_id, vm_name
+            )
+            sensors.append(vm_sensor)
 
-            for container_id in node_config["containers"]:
-                coordinator = host_name_coordinators[node_name][container_id]
+        for container_id in node_config["containers"]:
+            coordinator = host_name_coordinators[node_name][container_id]
+            coordinator_data = coordinator.data
 
-                # unfound container case
-                if (coordinator_data := coordinator.data) is None:
-                    continue
+            # unfound container case
+            if (coordinator_data := coordinator.data) is None:
+                continue
 
-                container_name = coordinator_data["name"]
-                container_sensor = create_binary_sensor(
-                    coordinator, host_name, node_name, container_id, container_name
-                )
-                sensors.append(container_sensor)
+            container_name = coordinator_data["name"]
+            container_sensor = create_binary_sensor(
+                coordinator, host_name, node_name, container_id, container_name
+            )
+            sensors.append(container_sensor)
 
-    add_entities(sensors)
+    async_add_entities(sensors)
 
 
 def create_binary_sensor(coordinator, host_name, node_name, vm_id, name):

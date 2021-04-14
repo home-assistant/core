@@ -90,6 +90,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the platform."""
+<<<<<<< HEAD
     hass.data.setdefault(DOMAIN, {})
 
     def build_client() -> ProxmoxAPI:
@@ -143,63 +144,33 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     for host_config in config[DOMAIN]:
         host_name = host_config["host"]
         coordinators[host_name] = {}
+=======
+>>>>>>> changed existing code to support config flow
 
-        proxmox_client = hass.data[PROXMOX_CLIENTS][host_name]
+    if DOMAIN not in config:
+        return True  # we are using UI, will be handled by setup_async_entry
 
-        # Skip invalid hosts
-        if proxmox_client is None:
-            continue
-
-        proxmox = proxmox_client.get_api_client()
-
-        for node_config in host_config["nodes"]:
-            node_name = node_config["node"]
-            node_coordinators = coordinators[host_name][node_name] = {}
-
-            for vm_id in node_config["vms"]:
-                coordinator = create_coordinator_container_vm(
-                    hass, proxmox, host_name, node_name, vm_id, TYPE_VM
-                )
-
-                # Fetch initial data
-                await coordinator.async_refresh()
-
-                node_coordinators[vm_id] = coordinator
-
-            for container_id in node_config["containers"]:
-                coordinator = create_coordinator_container_vm(
-                    hass, proxmox, host_name, node_name, container_id, TYPE_CONTAINER
-                )
-
-                # Fetch initial data
-                await coordinator.async_refresh()
-
-                node_coordinators[container_id] = coordinator
-
-    for component in PLATFORMS:
-        await hass.async_create_task(
-            hass.helpers.discovery.async_load_platform(
-                component, DOMAIN, {"config": config}, config
-            )
-        )
-
-    return True
+    for host in config[DOMAIN]:
+        await async_setup_entry(hass, host)
+        return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_devices):
+async def async_setup_entry(hass: HomeAssistant, config_entry):
     """Set up the platform."""
     hass.data.setdefault(DOMAIN, {})
+
+    entry_data = config_entry.data
 
     def build_client() -> ProxmoxAPI:
         """Build the Proxmox client connection."""
         hass.data[PROXMOX_CLIENTS] = {}
 
-        host = config_entry[CONF_HOST]
-        port = config_entry[CONF_PORT]
-        user = config_entry[CONF_USERNAME]
-        realm = config_entry[CONF_REALM]
-        password = config_entry[CONF_PASSWORD]
-        verify_ssl = config_entry[CONF_VERIFY_SSL]
+        host = entry_data[CONF_HOST]
+        port = entry_data[CONF_PORT]
+        user = entry_data[CONF_USERNAME]
+        realm = entry_data[CONF_REALM]
+        password = entry_data[CONF_PASSWORD]
+        verify_ssl = entry_data[CONF_VERIFY_SSL]
 
         hass.data[PROXMOX_CLIENTS][host] = None
 
@@ -213,6 +184,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_devices
             _LOGGER.warning(
                 "Invalid credentials for proxmox instance %s:%d", host, port
             )
+            return False
         except SSLError:
             _LOGGER.error(
                 "Unable to verify proxmox server SSL. "
@@ -220,8 +192,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_devices
                 host,
                 port,
             )
+            return False
         except ConnectTimeout:
             _LOGGER.warning("Connection to host %s timed out during setup", host)
+            return False
 
         hass.data[PROXMOX_CLIENTS][host] = proxmox_client
 
@@ -229,14 +203,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_devices
 
     coordinators = hass.data[DOMAIN][COORDINATORS] = {}
 
-    host_name = config_entry["host"]
+    host_name = entry_data["host"]
     coordinators[host_name] = {}
 
     proxmox_client = hass.data[PROXMOX_CLIENTS][host_name]
 
     proxmox = proxmox_client.get_api_client()
 
-    for node_config in config_entry["nodes"]:
+    for node_config in entry_data["nodes"]:
         node_name = node_config["name"]
         node_coordinators = coordinators[host_name][node_name] = {}
 
@@ -260,11 +234,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_devices
 
             node_coordinators[container_id] = coordinator
 
-    for component in PLATFORMS:
-        await hass.async_create_task(
-            hass.helpers.discovery.async_load_platform(
-                component, DOMAIN, {"config": config_entry}, config_entry
-            )
+    # setup platforms
+    for platform in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(config_entry, platform)
         )
 
     return True
