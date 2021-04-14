@@ -371,8 +371,8 @@ class Recorder(threading.Thread):
     def async_register(self, shutdown_task, hass_started):
         """Post connection initialize."""
 
-        def force_shutdown(event):
-            """Force shutdown."""
+        def _empty_queue(event):
+            """Empty the queue if its still present at final write."""
             self._stop_queue_watcher_and_event_listener()
             # If the queue is full of events to be processed because
             # the database is so broken that every event results in a retry
@@ -388,9 +388,7 @@ class Recorder(threading.Thread):
                     break
             self.queue.put(None)
 
-        cancel_force_shutdown = self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_FINAL_WRITE, force_shutdown
-        )
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_FINAL_WRITE, _empty_queue)
 
         def shutdown(event):
             """Shut down the Recorder."""
@@ -398,7 +396,6 @@ class Recorder(threading.Thread):
                 hass_started.set_result(shutdown_task)
             self.queue.put(None)
             self.join()
-            cancel_force_shutdown()
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
 
