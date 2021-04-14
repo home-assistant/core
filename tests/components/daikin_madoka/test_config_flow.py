@@ -85,55 +85,6 @@ async def test_form(hass):
             }
 
 
-async def test_import(hass):
-    """Test we can import."""
-    process_mock = MagicMock()
-    process_mock.communicate.return_value = (b"bluetoothctl: 5.53", 0)
-    with patch("subprocess.Popen", return_value=process_mock):
-        from homeassistant.components.daikin_madoka.const import DOMAIN, TITLE
-
-        await setup.async_setup_component(hass, "persistent_notification", {})
-        with patch(
-            "homeassistant.components.daikin_madoka.config_flow.force_device_disconnect",
-            return_value=True,
-        ), patch(
-            "homeassistant.components.daikin_madoka.force_device_disconnect",
-            return_value=True,
-        ), patch(
-            "homeassistant.components.daikin_madoka.config_flow.discover_devices",
-            return_value=TEST_DISCOVERED_DEVICES,
-        ), patch(
-            "homeassistant.components.daikin_madoka.discover_devices",
-            return_value=TEST_DISCOVERED_DEVICES,
-        ), patch(
-            "homeassistant.components.daikin_madoka.Controller.start",
-            return_value=True,
-        ):
-
-            result = await hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
-                data={
-                    CONF_DEVICES: TEST_DEVICES,
-                    CONF_DEVICE: TEST_DEVICE,
-                    CONF_SCAN_INTERVAL: TEST_SCAN_INTERVAL,
-                    CONF_DISCOVERY: True,
-                    CONF_FORCE_UPDATE: TEST_FORCE_UPDATE,
-                },
-            )
-            await hass.async_block_till_done()
-
-        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == TITLE
-        assert result["data"] == {
-            CONF_DEVICES: [TEST_DEVICES],
-            CONF_DEVICE: TEST_DEVICE,
-            CONF_DISCOVERY: False,  # This is only used during the configuration, no need to store it
-            CONF_SCAN_INTERVAL: TEST_SCAN_INTERVAL,
-            CONF_FORCE_UPDATE: TEST_FORCE_UPDATE,
-        }
-
-
 async def test_form_wrong_format_devices(hass):
     """Test we handle invalid devices."""
     process_mock = MagicMock()

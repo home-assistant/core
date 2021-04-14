@@ -78,8 +78,6 @@ DAIKIN_TO_HA_CURRENT_HVAC_MODE = {
     OperationModeEnum.HEAT: CURRENT_HVAC_HEAT,
 }
 
-DATA = "data"
-
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Daikin climate based on config_entry."""

@@ -4,7 +4,6 @@ from datetime import timedelta
 import logging
 
 from pymadoka import Controller, discover_devices, force_device_disconnect
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -13,10 +12,8 @@ from homeassistant.const import (
     CONF_FORCE_UPDATE,
     CONF_SCAN_INTERVAL,
 )
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
-from . import config_flow  # noqa: F401
 from .const import CONTROLLERS, DOMAIN
 
 PARALLEL_UPDATES = 0
@@ -25,25 +22,6 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 COMPONENT_TYPES = ["climate"]
 
 _LOGGER = logging.getLogger(__name__)
-
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Required(CONF_DEVICES, default=[]): vol.All(
-                        cv.ensure_list, [cv.string]
-                    ),
-                    vol.Optional(CONF_FORCE_UPDATE, default=True): bool,
-                    vol.Optional(CONF_DEVICE, default="hci0"): cv.string,
-                    vol.Optional(CONF_SCAN_INTERVAL, default=5): cv.positive_int,
-                }
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
 
 
 async def async_setup(hass, config):
@@ -54,7 +32,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Pass conf to all the components."""
 
     controllers = {}
