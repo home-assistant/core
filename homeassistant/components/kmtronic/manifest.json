@@ -3,6 +3,6 @@
     "name": "KMtronic",
     "config_flow": true,
     "documentation": "https://www.home-assistant.io/integrations/kmtronic",
-    "requirements": ["pykmtronic==0.0.3"],
+    "requirements": ["pykmtronic==0.3.0"],
     "codeowners": ["@dgomes"]
 }
