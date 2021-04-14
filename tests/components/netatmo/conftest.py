@@ -9,6 +9,8 @@ from .common import ALL_SCOPES, TEST_TIME, fake_post_request, fake_post_request_
 
 from tests.common import MockConfigEntry
 
+DEFAULT_PLATFORMS = ["camera", "climate", "light", "sensor"]
+
 
 @pytest.fixture(name="config_entry")
 async def mock_config_entry_fixture(hass):
@@ -55,7 +57,7 @@ async def mock_config_entry_fixture(hass):
 
 
 @contextmanager
-def selected_platforms(platforms=["camera", "climate", "light", "sensor"]):
+def selected_platforms(platforms):
     """Restrict loaded platforms to list given."""
     with patch("homeassistant.components.netatmo.PLATFORMS", platforms), patch(
         "homeassistant.components.netatmo.api.ConfigEntryNetatmoAuth"
@@ -71,11 +73,11 @@ def selected_platforms(platforms=["camera", "climate", "light", "sensor"]):
 @pytest.fixture(name="entry")
 async def mock_entry_fixture(hass, config_entry):
     """Mock setup of all platforms."""
-    with selected_platforms():
+    with selected_platforms(DEFAULT_PLATFORMS):
         await hass.config_entries.async_setup(config_entry.entry_id)
 
-    await hass.async_block_till_done()
-    return config_entry
+        await hass.async_block_till_done()
+        yield config_entry
 
 
 @pytest.fixture(name="sensor_entry")
@@ -83,6 +85,7 @@ async def mock_sensor_entry_fixture(hass, config_entry):
     """Mock setup of sensor platform."""
     with patch("time.time", return_value=TEST_TIME), selected_platforms(["sensor"]):
         await hass.config_entries.async_setup(config_entry.entry_id)
+
         await hass.async_block_till_done()
         yield config_entry
 
@@ -93,8 +96,8 @@ async def mock_camera_entry_fixture(hass, config_entry):
     with selected_platforms(["camera"]):
         await hass.config_entries.async_setup(config_entry.entry_id)
 
-    await hass.async_block_till_done()
-    return config_entry
+        await hass.async_block_till_done()
+        yield config_entry
 
 
 @pytest.fixture(name="light_entry")
@@ -103,8 +106,8 @@ async def mock_light_entry_fixture(hass, config_entry):
     with selected_platforms(["light"]):
         await hass.config_entries.async_setup(config_entry.entry_id)
 
-    await hass.async_block_till_done()
-    return config_entry
+        await hass.async_block_till_done()
+        yield config_entry
 
 
 @pytest.fixture(name="climate_entry")
@@ -113,8 +116,8 @@ async def mock_climate_entry_fixture(hass, config_entry):
     with selected_platforms(["climate"]):
         await hass.config_entries.async_setup(config_entry.entry_id)
 
-    await hass.async_block_till_done()
-    return config_entry
+        await hass.async_block_till_done()
+        yield config_entry
 
 
 @pytest.fixture(name="entry_error")

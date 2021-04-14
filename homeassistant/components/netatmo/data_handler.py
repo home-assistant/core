@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections import deque
 from datetime import timedelta
-from functools import partial
 from itertools import islice
 import logging
 from time import time
@@ -91,9 +90,7 @@ class NetatmoDataHandler:
                 time() + data_class["interval"]
             )
 
-            await self.async_fetch_data(
-                data_class["class"], data_class["name"], **data_class["kwargs"]
-            )
+            await self.async_fetch_data(data_class["name"])
 
         self._queue.rotate(BATCH_SIZE)
 
@@ -122,13 +119,13 @@ class NetatmoDataHandler:
             _LOGGER.debug("%s camera reconnected", MANUFACTURER)
             self.async_force_update(CAMERA_DATA_CLASS_NAME)
 
-    async def async_fetch_data(self, data_class, data_class_entry, **kwargs):
+    async def async_fetch_data(self, data_class_entry):
         """Fetch data and notify."""
+        if self.data[data_class_entry] is None:
+            return
+
         try:
-            self.data[data_class_entry] = await self.hass.async_add_executor_job(
-                partial(data_class, **kwargs),
-                self._auth,
-            )
+            await self.hass.async_add_executor_job(self.data[data_class_entry].update)
 
             for update_callback in self._data_classes[data_class_entry][
                 "subscriptions"
@@ -154,17 +151,17 @@ class NetatmoDataHandler:
             return
 
         self._data_classes[data_class_entry] = {
-            "class": DATA_CLASSES[data_class_name],
             "name": data_class_entry,
             "interval": DEFAULT_INTERVALS[data_class_name],
             NEXT_SCAN: time() + DEFAULT_INTERVALS[data_class_name],
-            "kwargs": kwargs,
             "subscriptions": [update_callback],
         }
 
-        await self.async_fetch_data(
-            DATA_CLASSES[data_class_name], data_class_entry, **kwargs
+        self.data[data_class_entry] = DATA_CLASSES[data_class_name](
+            self._auth, **kwargs
         )
+
+        await self.async_fetch_data(data_class_entry)
 
         self._queue.append(self._data_classes[data_class_entry])
         _LOGGER.debug("Data class %s added", data_class_entry)
