@@ -1,10 +1,11 @@
 """Fixtures for Z-Wave tests."""
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
 
 from homeassistant.components.zwave import const
 
-from tests.async_mock import AsyncMock, MagicMock, patch
-from tests.components.light.conftest import mock_light_profiles  # noqa
+from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 from tests.mock.zwave import MockNetwork, MockNode, MockOption, MockValue
 
 

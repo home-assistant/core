@@ -99,7 +99,7 @@
             "on": "roz\u0142adowana"
         },
         "battery_charging": {
-            "off": "nie \u0142aduje",
+            "off": "roz\u0142adowywanie",
             "on": "\u0142adowanie"
         },
         "cold": {

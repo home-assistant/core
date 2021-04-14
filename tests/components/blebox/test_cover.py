@@ -1,6 +1,6 @@
 """BleBox cover entities tests."""
-
 import logging
+from unittest.mock import AsyncMock, PropertyMock
 
 import blebox_uniapi
 import pytest
@@ -29,10 +29,9 @@ from homeassistant.const import (
     SERVICE_STOP_COVER,
     STATE_UNKNOWN,
 )
+from homeassistant.helpers import device_registry as dr
 
 from .conftest import async_setup_entity, mock_feature
-
-from tests.async_mock import AsyncMock, PropertyMock
 
 ALL_COVER_FIXTURES = ["gatecontroller", "shutterbox", "gatebox"]
 FIXTURES_SUPPORTING_STOP = ["gatecontroller", "shutterbox"]
@@ -118,7 +117,7 @@ async def test_init_gatecontroller(gatecontroller, hass, config):
     assert ATTR_CURRENT_POSITION not in state.attributes
     assert state.state == STATE_UNKNOWN
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
 
     assert device.name == "My gate controller"
@@ -148,7 +147,7 @@ async def test_init_shutterbox(shutterbox, hass, config):
     assert ATTR_CURRENT_POSITION not in state.attributes
     assert state.state == STATE_UNKNOWN
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
 
     assert device.name == "My shutter"
@@ -180,7 +179,7 @@ async def test_init_gatebox(gatebox, hass, config):
     assert ATTR_CURRENT_POSITION not in state.attributes
     assert state.state == STATE_UNKNOWN
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
 
     assert device.name == "My gatebox"

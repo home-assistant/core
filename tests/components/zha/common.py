@@ -1,5 +1,7 @@
 """Common test objects."""
+import asyncio
 import time
+from unittest.mock import AsyncMock, Mock
 
 from zigpy.device import Device as zigpy_dev
 from zigpy.endpoint import Endpoint as zigpy_ep
@@ -12,8 +14,6 @@ import zigpy.zdo.types
 
 import homeassistant.components.zha.core.const as zha_const
 from homeassistant.util import slugify
-
-from tests.async_mock import AsyncMock, Mock
 
 
 class FakeEndpoint:
@@ -238,3 +238,11 @@ async def async_test_rejoin(hass, zigpy_device, clusters, report_counts, ep_id=1
         assert cluster.bind.await_count == 1
         assert cluster.configure_reporting.call_count == reports
         assert cluster.configure_reporting.await_count == reports
+
+
+async def async_wait_for_updates(hass):
+    """Wait until all scheduled updates are executed."""
+    await hass.async_block_till_done()
+    await asyncio.sleep(0)
+    await asyncio.sleep(0)
+    await hass.async_block_till_done()

@@ -8,7 +8,7 @@
         "error": {
             "invalid_auth": "Ugyldig godkjenning",
             "send_verification_code": "Kunne ikke sende bekreftelseskode",
-            "validate_verification_code": "Kunne ikke bekrefte bekreftelseskoden din, velg en tillitsenhet og start bekreftelsen p\u00e5 nytt"
+            "validate_verification_code": "Kunne ikke bekrefte bekreftelseskoden, pr\u00f8v p\u00e5 nytt"
         },
         "step": {
             "reauth": {

@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto wurde bereits konfiguriert",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
+        },
+        "error": {
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "installation": {
+                "data": {
+                    "giid": "Installation"
+                }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "email": "E-Mail",
+                    "password": "Passwort"
+                }
+            },
+            "user": {
+                "data": {
+                    "email": "E-Mail",
+                    "password": "Passwort"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "code_format_mismatch": "Der Standard-PIN-Code stimmt nicht mit der erforderlichen Anzahl von Ziffern \u00fcberein"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "lock_code_digits": "Anzahl der Ziffern im PIN-Code f\u00fcr Schl\u00f6sser",
+                    "lock_default_code": "Standard-PIN-Code f\u00fcr Schl\u00f6sser, wird verwendet wenn keiner angegeben wird"
+                }
+            }
+        }
+    }
+}

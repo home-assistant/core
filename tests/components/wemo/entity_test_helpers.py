@@ -4,6 +4,10 @@ This is not a test module. These test methods are used by the platform test modu
 """
 import asyncio
 import threading
+from unittest.mock import patch
+
+import async_timeout
+from pywemo.ouimeaux_device.api.service import ActionException
 
 from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
@@ -12,8 +16,6 @@ from homeassistant.components.homeassistant import (
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import patch
 
 
 def _perform_registry_callback(hass, pywemo_registry, pywemo_device):
@@ -128,7 +130,7 @@ async def test_async_locked_update_with_exception(
     assert hass.states.get(wemo_entity.entity_id).state == STATE_OFF
     await async_setup_component(hass, HA_DOMAIN, {})
     update_polling_method = update_polling_method or pywemo_device.get_state
-    update_polling_method.side_effect = AttributeError
+    update_polling_method.side_effect = ActionException
 
     await hass.services.async_call(
         HA_DOMAIN,
@@ -138,7 +140,6 @@ async def test_async_locked_update_with_exception(
     )
 
     assert hass.states.get(wemo_entity.entity_id).state == STATE_UNAVAILABLE
-    pywemo_device.reconnect_with_device.assert_called_with()
 
 
 async def test_async_update_with_timeout_and_recovery(hass, wemo_entity, pywemo_device):
@@ -146,7 +147,19 @@ async def test_async_update_with_timeout_and_recovery(hass, wemo_entity, pywemo_
     assert hass.states.get(wemo_entity.entity_id).state == STATE_OFF
     await async_setup_component(hass, HA_DOMAIN, {})
 
-    with patch("async_timeout.timeout", side_effect=asyncio.TimeoutError):
+    event = threading.Event()
+
+    def get_state(*args):
+        event.wait()
+        return 0
+
+    if hasattr(pywemo_device, "bridge_update"):
+        pywemo_device.bridge_update.side_effect = get_state
+    else:
+        pywemo_device.get_state.side_effect = get_state
+    timeout = async_timeout.timeout(0)
+
+    with patch("async_timeout.timeout", return_value=timeout):
         await hass.services.async_call(
             HA_DOMAIN,
             SERVICE_UPDATE_ENTITY,
@@ -157,11 +170,6 @@ async def test_async_update_with_timeout_and_recovery(hass, wemo_entity, pywemo_
     assert hass.states.get(wemo_entity.entity_id).state == STATE_UNAVAILABLE
 
     # Check that the entity recovers and is available after the update succeeds.
-    await hass.services.async_call(
-        HA_DOMAIN,
-        SERVICE_UPDATE_ENTITY,
-        {ATTR_ENTITY_ID: [wemo_entity.entity_id]},
-        blocking=True,
-    )
-
+    event.set()
+    await hass.async_block_till_done()
     assert hass.states.get(wemo_entity.entity_id).state == STATE_OFF

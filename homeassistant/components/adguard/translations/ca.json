@@ -10,7 +10,7 @@
         "step": {
             "hassio_confirm": {
                 "description": "Vols configurar Home Assistant perqu\u00e8 es connecti amb l'AdGuard Home proporcionat pel complement de Hass.io: {addon}?",
-                "title": "AdGuard Home (complement de Hass.io)"
+                "title": "AdGuard Home via complement de Hass.io"
             },
             "user": {
                 "data": {

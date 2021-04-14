@@ -1,5 +1,7 @@
 """Test the August config flow."""
-from august.authenticator import ValidationResult
+from unittest.mock import patch
+
+from yalexs.authenticator import ValidationResult
 
 from homeassistant import config_entries, setup
 from homeassistant.components.august.const import (
@@ -16,7 +18,6 @@ from homeassistant.components.august.exceptions import (
 )
 from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -53,9 +54,7 @@ async def test_form(hass):
     assert result2["data"] == {
         CONF_LOGIN_METHOD: "email",
         CONF_USERNAME: "my@email.tld",
-        CONF_PASSWORD: "test-password",
         CONF_INSTALL_ID: None,
-        CONF_TIMEOUT: 10,
         CONF_ACCESS_TOKEN_CACHE_FILE: ".my@email.tld.august.conf",
     }
     assert len(mock_setup.mock_calls) == 1
@@ -214,9 +213,7 @@ async def test_form_needs_validate(hass):
     assert result4["data"] == {
         CONF_LOGIN_METHOD: "email",
         CONF_USERNAME: "my@email.tld",
-        CONF_PASSWORD: "test-password",
         CONF_INSTALL_ID: None,
-        CONF_TIMEOUT: 10,
         CONF_ACCESS_TOKEN_CACHE_FILE: ".my@email.tld.august.conf",
     }
     assert len(mock_setup.mock_calls) == 1
@@ -265,5 +262,77 @@ async def test_form_reauth(hass):
 
     assert result2["type"] == "abort"
     assert result2["reason"] == "reauth_successful"
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_reauth_with_2fa(hass):
+    """Test reauthenticate with 2fa."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_LOGIN_METHOD: "email",
+            CONF_USERNAME: "my@email.tld",
+            CONF_PASSWORD: "test-password",
+            CONF_INSTALL_ID: None,
+            CONF_TIMEOUT: 10,
+            CONF_ACCESS_TOKEN_CACHE_FILE: ".my@email.tld.august.conf",
+        },
+        unique_id="my@email.tld",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "reauth"}, data=entry.data
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.august.config_flow.AugustGateway.async_authenticate",
+        side_effect=RequireValidation,
+    ), patch(
+        "homeassistant.components.august.gateway.AuthenticatorAsync.async_send_verification_code",
+        return_value=True,
+    ) as mock_send_verification_code:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PASSWORD: "new-test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert len(mock_send_verification_code.mock_calls) == 1
+    assert result2["type"] == "form"
+    assert result2["errors"] is None
+    assert result2["step_id"] == "validation"
+
+    # Try with the CORRECT verification code and we setup
+    with patch(
+        "homeassistant.components.august.config_flow.AugustGateway.async_authenticate",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.august.gateway.AuthenticatorAsync.async_validate_verification_code",
+        return_value=ValidationResult.VALIDATED,
+    ) as mock_validate_verification_code, patch(
+        "homeassistant.components.august.gateway.AuthenticatorAsync.async_send_verification_code",
+        return_value=True,
+    ) as mock_send_verification_code, patch(
+        "homeassistant.components.august.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.august.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {VERIFICATION_CODE_KEY: "correct"},
+        )
+        await hass.async_block_till_done()
+
+    assert len(mock_validate_verification_code.mock_calls) == 1
+    assert len(mock_send_verification_code.mock_calls) == 0
+    assert result3["type"] == "abort"
+    assert result3["reason"] == "reauth_successful"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1

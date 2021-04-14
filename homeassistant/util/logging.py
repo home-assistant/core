@@ -1,4 +1,6 @@
 """Logging utilities."""
+from __future__ import annotations
+
 import asyncio
 from functools import partial, wraps
 import inspect
@@ -6,10 +8,10 @@ import logging
 import logging.handlers
 import queue
 import traceback
-from typing import Any, Callable, Coroutine
+from typing import Any, Awaitable, Callable, Coroutine, cast, overload
 
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback, is_callback
 
 
 class HideSensitiveDataFilter(logging.Filter):
@@ -29,15 +31,6 @@ class HideSensitiveDataFilter(logging.Filter):
 
 class HomeAssistantQueueHandler(logging.handlers.QueueHandler):
     """Process the log in another thread."""
-
-    def emit(self, record: logging.LogRecord) -> None:
-        """Emit a log record."""
-        try:
-            self.enqueue(record)
-        except asyncio.CancelledError:
-            raise
-        except Exception:  # pylint: disable=broad-except
-            self.handleError(record)
 
     def handle(self, record: logging.LogRecord) -> Any:
         """
@@ -108,9 +101,23 @@ def log_exception(format_err: Callable[..., Any], *args: Any) -> None:
     logging.getLogger(module_name).error("%s\n%s", friendly_msg, exc_msg)
 
 
+@overload
+def catch_log_exception(  # type: ignore
+    func: Callable[..., Awaitable[Any]], format_err: Callable[..., Any], *args: Any
+) -> Callable[..., Awaitable[None]]:
+    """Overload for Callables that return an Awaitable."""
+
+
+@overload
 def catch_log_exception(
     func: Callable[..., Any], format_err: Callable[..., Any], *args: Any
-) -> Callable[[], None]:
+) -> Callable[..., None]:
+    """Overload for Callables that return Any."""
+
+
+def catch_log_exception(
+    func: Callable[..., Any], format_err: Callable[..., Any], *args: Any
+) -> Callable[..., None] | Callable[..., Awaitable[None]]:
     """Decorate a callback to catch and log exceptions."""
 
     # Check for partials to properly determine if coroutine function
@@ -118,18 +125,20 @@ def catch_log_exception(
     while isinstance(check_func, partial):
         check_func = check_func.func
 
-    wrapper_func = None
+    wrapper_func: Callable[..., None] | Callable[..., Awaitable[None]]
     if asyncio.iscoroutinefunction(check_func):
+        async_func = cast(Callable[..., Awaitable[None]], func)
 
-        @wraps(func)
+        @wraps(async_func)
         async def async_wrapper(*args: Any) -> None:
             """Catch and log exception."""
             try:
-                await func(*args)
+                await async_func(*args)
             except Exception:  # pylint: disable=broad-except
                 log_exception(format_err, *args)
 
         wrapper_func = async_wrapper
+
     else:
 
         @wraps(func)
@@ -139,6 +148,9 @@ def catch_log_exception(
                 func(*args)
             except Exception:  # pylint: disable=broad-except
                 log_exception(format_err, *args)
+
+        if is_callback(check_func):
+            wrapper = callback(wrapper)
 
         wrapper_func = wrapper
     return wrapper_func

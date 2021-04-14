@@ -9,6 +9,10 @@
         },
         "flow_title": "Roku: {name}",
         "step": {
+            "discovery_confirm": {
+                "description": "\u00bfQuieres configurar {name} ?",
+                "title": "Roku"
+            },
             "ssdp_confirm": {
                 "description": "\u00bfQuieres configurar {name}?",
                 "title": "Roku"

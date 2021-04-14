@@ -1,4 +1,6 @@
 """Tests for the Abode lock device."""
+from unittest.mock import patch
+
 from homeassistant.components.abode import ATTR_DEVICE_ID
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.const import (
@@ -8,10 +10,9 @@ from homeassistant.const import (
     SERVICE_UNLOCK,
     STATE_LOCKED,
 )
+from homeassistant.helpers import entity_registry as er
 
 from .common import setup_platform
-
-from tests.async_mock import patch
 
 DEVICE_ID = "lock.test_lock"
 
@@ -19,7 +20,7 @@ DEVICE_ID = "lock.test_lock"
 async def test_entity_registry(hass):
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, LOCK_DOMAIN)
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get(DEVICE_ID)
     assert entry.unique_id == "51cab3b545d2o34ed7fz02731bda5324"

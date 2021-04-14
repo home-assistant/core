@@ -18,6 +18,7 @@ class DevoloDeviceEntity(Entity):
         self._unique_id = element_uid
         self._homecontrol = homecontrol
         self._name = device_instance.settings_property["general_device_settings"].name
+        self._area = device_instance.settings_property["general_device_settings"].zone
         self._device_class = None
         self._value = None
         self._unit = None
@@ -59,6 +60,7 @@ class DevoloDeviceEntity(Entity):
             "name": self._name,
             "manufacturer": self._brand,
             "model": self._model,
+            "suggested_area": self._area,
         }
 
     @property

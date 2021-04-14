@@ -1,10 +1,11 @@
 """Common tradfri test fixtures."""
+from unittest.mock import Mock, patch
+
 import pytest
 
 from . import MOCK_GATEWAY_ID
 
-from tests.async_mock import Mock, patch
-from tests.components.light.conftest import mock_light_profiles  # noqa
+from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 # pylint: disable=protected-access
 

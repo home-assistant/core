@@ -1,5 +1,7 @@
 """Support for Vera lights."""
-from typing import Any, Callable, List, Optional, Tuple
+from __future__ import annotations
+
+from typing import Any, Callable
 
 import pyvera as veraApi
 
@@ -24,7 +26,7 @@ from .common import ControllerData, get_controller_data
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
     """Set up the sensor config entry."""
     controller_data = get_controller_data(hass, entry)
@@ -32,7 +34,8 @@ async def async_setup_entry(
         [
             VeraLight(device, controller_data)
             for device in controller_data.devices.get(PLATFORM_DOMAIN)
-        ]
+        ],
+        True,
     )
 
 
@@ -50,12 +53,12 @@ class VeraLight(VeraDevice[veraApi.VeraDimmer], LightEntity):
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     @property
-    def brightness(self) -> Optional[int]:
+    def brightness(self) -> int | None:
         """Return the brightness of the light."""
         return self._brightness
 
     @property
-    def hs_color(self) -> Optional[Tuple[float, float]]:
+    def hs_color(self) -> tuple[float, float] | None:
         """Return the color of the light."""
         return self._color
 
@@ -92,6 +95,7 @@ class VeraLight(VeraDevice[veraApi.VeraDimmer], LightEntity):
 
     def update(self) -> None:
         """Call to update state."""
+        super().update()
         self._state = self.vera_device.is_switched_on()
         if self.vera_device.is_dimmable:
             # If it is dimmable, both functions exist. In case color

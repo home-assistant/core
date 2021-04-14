@@ -1,10 +1,11 @@
 """Test Home Assistant Cast."""
 
+from unittest.mock import patch
+
 from homeassistant import config_entries
 from homeassistant.components.cast import home_assistant_cast
 from homeassistant.config import async_process_ha_core_config
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_mock_signal
 
 
@@ -101,12 +102,8 @@ async def test_remove_entry(hass, mock_zeroconf):
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.cast.media_player._async_setup_platform"
-    ), patch(
         "pychromecast.discovery.discover_chromecasts", return_value=(True, None)
-    ), patch(
-        "pychromecast.discovery.stop_discovery"
-    ):
+    ), patch("pychromecast.discovery.stop_discovery"):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
     assert "cast" in hass.config.components

@@ -60,13 +60,13 @@ async def async_setup(hass, config):
 
         # Filter out the events that were triggered by publishing
         # to the MQTT topic, or you will end up in an infinite loop.
-        if event.event_type == EVENT_CALL_SERVICE:
-            if (
-                event.data.get("domain") == mqtt.DOMAIN
-                and event.data.get("service") == mqtt.SERVICE_PUBLISH
-                and event.data[ATTR_SERVICE_DATA].get("topic") == pub_topic
-            ):
-                return
+        if (
+            event.event_type == EVENT_CALL_SERVICE
+            and event.data.get("domain") == mqtt.DOMAIN
+            and event.data.get("service") == mqtt.SERVICE_PUBLISH
+            and event.data[ATTR_SERVICE_DATA].get("topic") == pub_topic
+        ):
+            return
 
         event_info = {"event_type": event.event_type, "event_data": event.data}
         msg = json.dumps(event_info, cls=JSONEncoder)

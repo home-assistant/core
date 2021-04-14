@@ -4,7 +4,7 @@ import pytest
 from homeassistant.components.config import device_registry
 
 from tests.common import mock_device_registry
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
 @pytest.fixture

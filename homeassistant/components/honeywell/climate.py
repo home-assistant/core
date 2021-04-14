@@ -1,7 +1,9 @@
 """Support for Honeywell (US) Total Connect Comfort climate systems."""
+from __future__ import annotations
+
 import datetime
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import requests
 import somecomfort
@@ -52,6 +54,8 @@ CONF_LOC_ID = "location"
 
 DEFAULT_COOL_AWAY_TEMPERATURE = 88
 DEFAULT_HEAT_AWAY_TEMPERATURE = 61
+
+ATTR_PERMANENT_HOLD = "permanent_hold"
 
 PLATFORM_SCHEMA = vol.All(
     cv.deprecated(CONF_REGION),
@@ -190,15 +194,16 @@ class HoneywellUSThermostat(ClimateEntity):
         self._supported_features |= SUPPORT_FAN_MODE
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str | None:
         """Return the name of the honeywell, if any."""
         return self._device.name
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device specific state attributes."""
         data = {}
         data[ATTR_FAN_ACTION] = "running" if self._device.fan_running else "idle"
+        data[ATTR_PERMANENT_HOLD] = self._is_permanent_hold()
         if self._device.raw_dr_data:
             data["dr_phase"] = self._device.raw_dr_data.get("Phase")
         return data
@@ -232,7 +237,7 @@ class HoneywellUSThermostat(ClimateEntity):
         return TEMP_CELSIUS if self._device.temperature_unit == "C" else TEMP_FAHRENHEIT
 
     @property
-    def current_humidity(self) -> Optional[int]:
+    def current_humidity(self) -> int | None:
         """Return the current humidity."""
         return self._device.current_humidity
 
@@ -242,24 +247,24 @@ class HoneywellUSThermostat(ClimateEntity):
         return HW_MODE_TO_HVAC_MODE[self._device.system_mode]
 
     @property
-    def hvac_modes(self) -> List[str]:
+    def hvac_modes(self) -> list[str]:
         """Return the list of available hvac operation modes."""
         return list(self._hvac_mode_map)
 
     @property
-    def hvac_action(self) -> Optional[str]:
+    def hvac_action(self) -> str | None:
         """Return the current running hvac operation if supported."""
         if self.hvac_mode == HVAC_MODE_OFF:
             return None
         return HW_MODE_TO_HA_HVAC_ACTION[self._device.equipment_output_status]
 
     @property
-    def current_temperature(self) -> Optional[float]:
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._device.current_temperature
 
     @property
-    def target_temperature(self) -> Optional[float]:
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self.hvac_mode == HVAC_MODE_COOL:
             return self._device.setpoint_cool
@@ -268,43 +273,48 @@ class HoneywellUSThermostat(ClimateEntity):
         return None
 
     @property
-    def target_temperature_high(self) -> Optional[float]:
+    def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         if self.hvac_mode == HVAC_MODE_HEAT_COOL:
             return self._device.setpoint_cool
         return None
 
     @property
-    def target_temperature_low(self) -> Optional[float]:
+    def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         if self.hvac_mode == HVAC_MODE_HEAT_COOL:
             return self._device.setpoint_heat
         return None
 
     @property
-    def preset_mode(self) -> Optional[str]:
+    def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
         return PRESET_AWAY if self._away else None
 
     @property
-    def preset_modes(self) -> Optional[List[str]]:
+    def preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes."""
         return [PRESET_NONE, PRESET_AWAY]
 
     @property
-    def is_aux_heat(self) -> Optional[str]:
+    def is_aux_heat(self) -> str | None:
         """Return true if aux heater."""
         return self._device.system_mode == "emheat"
 
     @property
-    def fan_mode(self) -> Optional[str]:
+    def fan_mode(self) -> str | None:
         """Return the fan setting."""
         return HW_FAN_MODE_TO_HA[self._device.fan_mode]
 
     @property
-    def fan_modes(self) -> Optional[List[str]]:
+    def fan_modes(self) -> list[str] | None:
         """Return the list of available fan modes."""
         return list(self._fan_mode_map)
+
+    def _is_permanent_hold(self) -> bool:
+        heat_status = self._device.raw_ui_data.get("StatusHeat", 0)
+        cool_status = self._device.raw_ui_data.get("StatusCool", 0)
+        return heat_status == 2 or cool_status == 2
 
     def _set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""

@@ -17,6 +17,7 @@ from homeassistant.components.weather import (
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
+    ATTR_ICON,
     CONCENTRATION_PARTS_PER_CUBIC_METER,
     DEVICE_CLASS_TEMPERATURE,
     LENGTH_FEET,
@@ -33,7 +34,6 @@ from homeassistant.const import (
 )
 
 ATTRIBUTION = "Data provided by AccuWeather"
-ATTR_ICON = "icon"
 ATTR_FORECAST = CONF_FORECAST = "forecast"
 ATTR_LABEL = "label"
 ATTR_UNIT_IMPERIAL = "Imperial"
@@ -52,12 +52,12 @@ CONDITION_CLASSES = {
     ATTR_CONDITION_HAIL: [25],
     ATTR_CONDITION_LIGHTNING: [15],
     ATTR_CONDITION_LIGHTNING_RAINY: [16, 17, 41, 42],
-    ATTR_CONDITION_PARTLYCLOUDY: [4, 6, 35, 36],
+    ATTR_CONDITION_PARTLYCLOUDY: [3, 4, 6, 35, 36],
     ATTR_CONDITION_POURING: [18],
     ATTR_CONDITION_RAINY: [12, 13, 14, 26, 39, 40],
     ATTR_CONDITION_SNOWY: [19, 20, 21, 22, 23, 43, 44],
     ATTR_CONDITION_SNOWY_RAINY: [29],
-    ATTR_CONDITION_SUNNY: [1, 2, 3, 5],
+    ATTR_CONDITION_SUNNY: [1, 2, 5],
     ATTR_CONDITION_WINDY: [32],
 }
 

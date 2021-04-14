@@ -1,4 +1,6 @@
 """Configure py.test."""
+from unittest.mock import AsyncMock, patch
+
 import pytest
 from pyvizio.api.apps import AppConfig
 from pyvizio.const import DEVICE_CLASS_SPEAKER, MAX_VOLUME
@@ -21,8 +23,6 @@ from .const import (
     MockCompletePairingResponse,
     MockStartPairingResponse,
 )
-
-from tests.async_mock import AsyncMock, patch
 
 
 class MockInput:
@@ -157,6 +157,9 @@ def vizio_cant_connect_fixture():
     with patch(
         "homeassistant.components.vizio.config_flow.VizioAsync.validate_ha_config",
         AsyncMock(return_value=False),
+    ), patch(
+        "homeassistant.components.vizio.media_player.VizioAsync.get_power_state",
+        return_value=None,
     ):
         yield
 

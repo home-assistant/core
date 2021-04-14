@@ -1,5 +1,6 @@
 """Tests for the WLED light platform."""
 import json
+from unittest.mock import patch
 
 from wled import Device as WLEDDevice, WLEDConnectionError
 
@@ -35,9 +36,9 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed, load_fixture
 from tests.components.wled import init_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -49,7 +50,7 @@ async def test_rgb_light_state(
     """Test the creation and values of the WLED lights."""
     await init_integration(hass, aioclient_mock)
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     # First segment of the strip
     state = hass.states.get("light.wled_rgb_light_segment_0")

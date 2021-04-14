@@ -1,20 +1,18 @@
 """Extend the basic Accessory and Bridge functions."""
-from datetime import timedelta
-from functools import partial, wraps
-from inspect import getmodule
 import logging
 
 from pyhap.accessory import Accessory, Bridge
 from pyhap.accessory_driver import AccessoryDriver
 from pyhap.const import CATEGORY_OTHER
 
-from homeassistant.components import cover, vacuum
+from homeassistant.components import cover
 from homeassistant.components.cover import (
     DEVICE_CLASS_GARAGE,
     DEVICE_CLASS_GATE,
     DEVICE_CLASS_WINDOW,
 )
 from homeassistant.components.media_player import DEVICE_CLASS_TV
+from homeassistant.components.remote import SUPPORT_ACTIVITY
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
@@ -25,6 +23,8 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_TYPE,
+    DEVICE_CLASS_CO,
+    DEVICE_CLASS_CO2,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
@@ -37,11 +37,7 @@ from homeassistant.const import (
     __version__,
 )
 from homeassistant.core import Context, callback as ha_callback, split_entity_id
-from homeassistant.helpers.event import (
-    async_track_state_change_event,
-    track_point_in_utc_time,
-)
-from homeassistant.util import dt as dt_util
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util.decorator import Registry
 
 from .const import (
@@ -60,10 +56,7 @@ from .const import (
     CONF_LINKED_BATTERY_CHARGING_SENSOR,
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LOW_BATTERY_THRESHOLD,
-    DEBOUNCE_TIMEOUT,
     DEFAULT_LOW_BATTERY_THRESHOLD,
-    DEVICE_CLASS_CO,
-    DEVICE_CLASS_CO2,
     DEVICE_CLASS_PM25,
     EVENT_HOMEKIT_CHANGED,
     HK_CHARGING,
@@ -79,6 +72,7 @@ from .const import (
     TYPE_VALVE,
 )
 from .util import (
+    accessory_friendly_name,
     convert_to_float,
     dismiss_setup_message,
     format_sw_version,
@@ -98,37 +92,6 @@ SWITCH_TYPES = {
 TYPES = Registry()
 
 
-def debounce(func):
-    """Decorate function to debounce callbacks from HomeKit."""
-
-    @ha_callback
-    def call_later_listener(self, *args):
-        """Handle call_later callback."""
-        debounce_params = self.debounce.pop(func.__name__, None)
-        if debounce_params:
-            self.hass.async_add_executor_job(func, self, *debounce_params[1:])
-
-    @wraps(func)
-    def wrapper(self, *args):
-        """Start async timer."""
-        debounce_params = self.debounce.pop(func.__name__, None)
-        if debounce_params:
-            debounce_params[0]()  # remove listener
-        remove_listener = track_point_in_utc_time(
-            self.hass,
-            partial(call_later_listener, self),
-            dt_util.utcnow() + timedelta(seconds=DEBOUNCE_TIMEOUT),
-        )
-        self.debounce[func.__name__] = (remove_listener, *args)
-        logger.debug(
-            "%s: Start %s timeout", self.entity_id, func.__name__.replace("set_", "")
-        )
-
-    name = getmodule(func).__name__
-    logger = logging.getLogger(name)
-    return wrapper
-
-
 def get_accessory(hass, driver, state, aid, config):
     """Take state and return an accessory object if supported."""
     if not aid:
@@ -141,6 +104,7 @@ def get_accessory(hass, driver, state, aid, config):
 
     a_type = None
     name = config.get(CONF_NAME, state.name)
+    features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
     if state.domain == "alarm_control_panel":
         a_type = "SecuritySystem"
@@ -153,7 +117,6 @@ def get_accessory(hass, driver, state, aid, config):
 
     elif state.domain == "cover":
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
-        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
         if device_class in (DEVICE_CLASS_GARAGE, DEVICE_CLASS_GATE) and features & (
             cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE
@@ -205,7 +168,7 @@ def get_accessory(hass, driver, state, aid, config):
             a_type = "AirQualitySensor"
         elif device_class == DEVICE_CLASS_CO:
             a_type = "CarbonMonoxideSensor"
-        elif device_class == DEVICE_CLASS_CO2 or DEVICE_CLASS_CO2 in state.entity_id:
+        elif device_class == DEVICE_CLASS_CO2 or "co2" in state.entity_id:
             a_type = "CarbonDioxideSensor"
         elif device_class == DEVICE_CLASS_ILLUMINANCE or unit in ("lm", LIGHT_LUX):
             a_type = "LightSensor"
@@ -215,11 +178,10 @@ def get_accessory(hass, driver, state, aid, config):
         a_type = SWITCH_TYPES[switch_type]
 
     elif state.domain == "vacuum":
-        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        if features & (vacuum.SUPPORT_START | vacuum.SUPPORT_RETURN_HOME):
-            a_type = "DockVacuum"
-        else:
-            a_type = "Switch"
+        a_type = "Vacuum"
+
+    elif state.domain == "remote" and features & SUPPORT_ACTIVITY:
+        a_type = "ActivityRemote"
 
     elif state.domain in ("automation", "input_boolean", "remote", "scene", "script"):
         a_type = "Switch"
@@ -282,7 +244,6 @@ class HomeAccessory(Accessory):
         self.category = category
         self.entity_id = entity_id
         self.hass = hass
-        self.debounce = {}
         self._subscriptions = []
         self._char_battery = None
         self._char_charging = None
@@ -344,17 +305,7 @@ class HomeAccessory(Accessory):
         return state is not None and state.state != STATE_UNAVAILABLE
 
     async def run(self):
-        """Handle accessory driver started event.
-
-        Run inside the HAP-python event loop.
-        """
-        self.hass.add_job(self.run_handler)
-
-    async def run_handler(self):
-        """Handle accessory driver started event.
-
-        Run inside the Home Assistant event loop.
-        """
+        """Handle accessory driver started event."""
         state = self.hass.states.get(self.entity_id)
         self.async_update_state_callback(state)
         self._subscriptions.append(
@@ -485,15 +436,9 @@ class HomeAccessory(Accessory):
         """
         raise NotImplementedError()
 
-    def call_service(self, domain, service, service_data, value=None):
+    @ha_callback
+    def async_call_service(self, domain, service, service_data, value=None):
         """Fire event and call service for changes from HomeKit."""
-        self.hass.add_job(self.async_call_service, domain, service, service_data, value)
-
-    async def async_call_service(self, domain, service, service_data, value=None):
-        """Fire event and call service for changes from HomeKit.
-
-        This method must be run in the event loop.
-        """
         event_data = {
             ATTR_ENTITY_ID: self.entity_id,
             ATTR_DISPLAY_NAME: self.display_name,
@@ -503,8 +448,10 @@ class HomeAccessory(Accessory):
         context = Context()
 
         self.hass.bus.async_fire(EVENT_HOMEKIT_CHANGED, event_data, context=context)
-        await self.hass.services.async_call(
-            domain, service, service_data, context=context
+        self.hass.async_create_task(
+            self.hass.services.async_call(
+                domain, service, service_data, context=context
+            )
         )
 
     @ha_callback
@@ -531,28 +478,29 @@ class HomeBridge(Bridge):
     def setup_message(self):
         """Prevent print of pyhap setup message to terminal."""
 
-    def get_snapshot(self, info):
+    async def async_get_snapshot(self, info):
         """Get snapshot from accessory if supported."""
         acc = self.accessories.get(info["aid"])
         if acc is None:
             raise ValueError("Requested snapshot for missing accessory")
-        if not hasattr(acc, "get_snapshot"):
+        if not hasattr(acc, "async_get_snapshot"):
             raise ValueError(
                 "Got a request for snapshot, but the Accessory "
-                'does not define a "get_snapshot" method'
+                'does not define a "async_get_snapshot" method'
             )
-        return acc.get_snapshot(info)
+        return await acc.async_get_snapshot(info)
 
 
 class HomeDriver(AccessoryDriver):
     """Adapter class for AccessoryDriver."""
 
-    def __init__(self, hass, entry_id, bridge_name, **kwargs):
+    def __init__(self, hass, entry_id, bridge_name, entry_title, **kwargs):
         """Initialize a AccessoryDriver object."""
         super().__init__(**kwargs)
         self.hass = hass
         self._entry_id = entry_id
         self._bridge_name = bridge_name
+        self._entry_title = entry_title
 
     def pair(self, client_uuid, client_public):
         """Override super function to dismiss setup message if paired."""
@@ -564,10 +512,14 @@ class HomeDriver(AccessoryDriver):
     def unpair(self, client_uuid):
         """Override super function to show setup message if unpaired."""
         super().unpair(client_uuid)
+
+        if self.state.paired:
+            return
+
         show_setup_message(
             self.hass,
             self._entry_id,
-            self._bridge_name,
+            accessory_friendly_name(self._entry_title, self.accessory),
             self.state.pincode,
             self.accessory.xhm_uri(),
         )

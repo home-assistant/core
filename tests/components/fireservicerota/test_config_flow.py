@@ -1,11 +1,12 @@
 """Test the FireServiceRota config flow."""
+from unittest.mock import patch
+
 from pyfireservicerota import InvalidAuthError
 
 from homeassistant import data_entry_flow
 from homeassistant.components.fireservicerota.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 MOCK_CONF = {
@@ -77,8 +78,6 @@ async def test_step_user(hass):
     with patch(
         "homeassistant.components.fireservicerota.config_flow.FireServiceRota"
     ) as mock_fsr, patch(
-        "homeassistant.components.fireservicerota.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.fireservicerota.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -107,5 +106,4 @@ async def test_step_user(hass):
             },
         }
 
-        assert len(mock_setup.mock_calls) == 1
         assert len(mock_setup_entry.mock_calls) == 1

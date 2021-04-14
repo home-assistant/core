@@ -1,10 +1,11 @@
 """Support for Ring Doorbell/Chimes."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 from functools import partial
 import logging
 from pathlib import Path
-from typing import Optional
 
 from oauthlib.oauth2 import AccessDeniedError
 import requests
@@ -99,9 +100,9 @@ async def async_setup_entry(hass, entry):
         ),
     }
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     if hass.services.has_service(DOMAIN, "update"):
@@ -126,8 +127,8 @@ async def async_unload_entry(hass, entry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )
@@ -187,7 +188,7 @@ class GlobalDataUpdater:
             self._unsub_interval()
             self._unsub_interval = None
 
-    async def async_refresh_all(self, _now: Optional[int] = None) -> None:
+    async def async_refresh_all(self, _now: int | None = None) -> None:
         """Time to update."""
         if not self.listeners:
             return

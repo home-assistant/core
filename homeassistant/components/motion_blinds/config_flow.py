@@ -1,18 +1,12 @@
 """Config flow to configure Motion Blinds using their WLAN API."""
-import logging
-
 from motionblinds import MotionDiscovery
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 
-# pylint: disable=unused-import
 from .const import DEFAULT_GATEWAY_NAME, DOMAIN
 from .gateway import ConnectMotionGateway
-
-_LOGGER = logging.getLogger(__name__)
-
 
 CONFIG_SCHEMA = vol.Schema(
     {

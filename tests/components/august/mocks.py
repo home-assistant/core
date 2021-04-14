@@ -3,33 +3,34 @@ import json
 import os
 import time
 
-from august.activity import (
+# from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
+
+from yalexs.activity import (
+    ACTIVITY_ACTIONS_BRIDGE_OPERATION,
     ACTIVITY_ACTIONS_DOOR_OPERATION,
     ACTIVITY_ACTIONS_DOORBELL_DING,
     ACTIVITY_ACTIONS_DOORBELL_MOTION,
     ACTIVITY_ACTIONS_DOORBELL_VIEW,
     ACTIVITY_ACTIONS_LOCK_OPERATION,
+    SOURCE_LOCK_OPERATE,
+    SOURCE_LOG,
+    BridgeOperationActivity,
     DoorbellDingActivity,
     DoorbellMotionActivity,
     DoorbellViewActivity,
     DoorOperationActivity,
     LockOperationActivity,
 )
-from august.authenticator import AuthenticationState
-from august.doorbell import Doorbell, DoorbellDetail
-from august.lock import Lock, LockDetail
+from yalexs.authenticator import AuthenticationState
+from yalexs.doorbell import Doorbell, DoorbellDetail
+from yalexs.lock import Lock, LockDetail
+from yalexs.pubnub_async import AugustPubNub
 
-from homeassistant.components.august import (
-    CONF_LOGIN_METHOD,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    DOMAIN,
-)
-from homeassistant.setup import async_setup_component
+from homeassistant.components.august.const import CONF_LOGIN_METHOD, DOMAIN
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-# from tests.async_mock import AsyncMock
-from tests.async_mock import AsyncMock, MagicMock, PropertyMock, patch
-from tests.common import load_fixture
+from tests.common import MockConfigEntry, load_fixture
 
 
 def _mock_get_config():
@@ -52,7 +53,9 @@ def _mock_authenticator(auth_state):
 
 @patch("homeassistant.components.august.gateway.ApiAsync")
 @patch("homeassistant.components.august.gateway.AuthenticatorAsync.async_authenticate")
-async def _mock_setup_august(hass, api_instance, authenticate_mock, api_mock):
+async def _mock_setup_august(
+    hass, api_instance, pubnub_mock, authenticate_mock, api_mock
+):
     """Set up august integration."""
     authenticate_mock.side_effect = MagicMock(
         return_value=_mock_august_authentication(
@@ -60,16 +63,27 @@ async def _mock_setup_august(hass, api_instance, authenticate_mock, api_mock):
         )
     )
     api_mock.return_value = api_instance
-    assert await async_setup_component(hass, DOMAIN, _mock_get_config())
-    await hass.async_block_till_done()
-    return True
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=_mock_get_config()[DOMAIN],
+        options={},
+    )
+    entry.add_to_hass(hass)
+    with patch("homeassistant.components.august.async_create_pubnub"), patch(
+        "homeassistant.components.august.AugustPubNub", return_value=pubnub_mock
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+    return entry
 
 
 async def _create_august_with_devices(
-    hass, devices, api_call_side_effects=None, activities=None
+    hass, devices, api_call_side_effects=None, activities=None, pubnub=None
 ):
     if api_call_side_effects is None:
         api_call_side_effects = {}
+    if pubnub is None:
+        pubnub = AugustPubNub()
 
     device_data = {"doorbells": [], "locks": []}
     for device in devices:
@@ -150,10 +164,12 @@ async def _create_august_with_devices(
             "unlock_return_activities"
         ] = unlock_return_activities_side_effect
 
-    return await _mock_setup_august_with_api_side_effects(hass, api_call_side_effects)
+    return await _mock_setup_august_with_api_side_effects(
+        hass, api_call_side_effects, pubnub
+    )
 
 
-async def _mock_setup_august_with_api_side_effects(hass, api_call_side_effects):
+async def _mock_setup_august_with_api_side_effects(hass, api_call_side_effects, pubnub):
     api_instance = MagicMock(name="Api")
 
     if api_call_side_effects["get_lock_detail"]:
@@ -191,11 +207,13 @@ async def _mock_setup_august_with_api_side_effects(hass, api_call_side_effects):
             side_effect=api_call_side_effects["unlock_return_activities"]
         )
 
-    return await _mock_setup_august(hass, api_instance)
+    api_instance.async_get_user = AsyncMock(return_value={"UserID": "abc"})
+
+    return await _mock_setup_august(hass, api_instance, pubnub)
 
 
 def _mock_august_authentication(token_text, token_timestamp, state):
-    authentication = MagicMock(name="august.authentication")
+    authentication = MagicMock(name="yalexs.authentication")
     type(authentication).state = PropertyMock(return_value=state)
     type(authentication).access_token = PropertyMock(return_value=token_text)
     type(authentication).access_token_expires = PropertyMock(
@@ -299,23 +317,25 @@ async def _mock_doorsense_missing_august_lock_detail(hass):
 
 def _mock_lock_operation_activity(lock, action, offset):
     return LockOperationActivity(
+        SOURCE_LOCK_OPERATE,
         {
             "dateTime": (time.time() + offset) * 1000,
             "deviceID": lock.device_id,
             "deviceType": "lock",
             "action": action,
-        }
+        },
     )
 
 
 def _mock_door_operation_activity(lock, action, offset):
     return DoorOperationActivity(
+        SOURCE_LOCK_OPERATE,
         {
             "dateTime": (time.time() + offset) * 1000,
             "deviceID": lock.device_id,
             "deviceType": "lock",
             "action": action,
-        }
+        },
     )
 
 
@@ -325,13 +345,15 @@ def _activity_from_dict(activity_dict):
     activity_dict["dateTime"] = time.time() * 1000
 
     if action in ACTIVITY_ACTIONS_DOORBELL_DING:
-        return DoorbellDingActivity(activity_dict)
+        return DoorbellDingActivity(SOURCE_LOG, activity_dict)
     if action in ACTIVITY_ACTIONS_DOORBELL_MOTION:
-        return DoorbellMotionActivity(activity_dict)
+        return DoorbellMotionActivity(SOURCE_LOG, activity_dict)
     if action in ACTIVITY_ACTIONS_DOORBELL_VIEW:
-        return DoorbellViewActivity(activity_dict)
+        return DoorbellViewActivity(SOURCE_LOG, activity_dict)
     if action in ACTIVITY_ACTIONS_LOCK_OPERATION:
-        return LockOperationActivity(activity_dict)
+        return LockOperationActivity(SOURCE_LOG, activity_dict)
     if action in ACTIVITY_ACTIONS_DOOR_OPERATION:
-        return DoorOperationActivity(activity_dict)
+        return DoorOperationActivity(SOURCE_LOG, activity_dict)
+    if action in ACTIVITY_ACTIONS_BRIDGE_OPERATION:
+        return BridgeOperationActivity(SOURCE_LOG, activity_dict)
     return None

@@ -1,4 +1,6 @@
 """Test the OVO Energy config flow."""
+from unittest.mock import patch
+
 import aiohttp
 
 from homeassistant import config_entries, data_entry_flow
@@ -6,7 +8,6 @@ from homeassistant.components.ovo_energy.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 FIXTURE_REAUTH_INPUT = {CONF_PASSWORD: "something1"}

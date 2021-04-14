@@ -1,4 +1,6 @@
 """Test the Z-Wave over MQTT config flow."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant import config_entries, setup
@@ -6,7 +8,6 @@ from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.ozw.config_flow import TITLE
 from homeassistant.components.ozw.const import DOMAIN
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 ADDON_DISCOVERY_INFO = {
@@ -78,9 +79,8 @@ def mock_start_addon():
         yield start_addon
 
 
-async def test_user_not_supervisor_create_entry(hass):
+async def test_user_not_supervisor_create_entry(hass, mqtt):
     """Test the user step creates an entry not on Supervisor."""
-    hass.config.components.add("mqtt")
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
@@ -127,9 +127,8 @@ async def test_one_instance_allowed(hass):
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_not_addon(hass, supervisor):
+async def test_not_addon(hass, supervisor, mqtt):
     """Test opting out of add-on on Supervisor."""
-    hass.config.components.add("mqtt")
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
@@ -534,3 +533,52 @@ async def test_discovery_addon_not_installed(
 
     assert result["type"] == "form"
     assert result["step_id"] == "start_addon"
+
+
+async def test_import_addon_installed(
+    hass, supervisor, addon_installed, addon_options, set_addon_options, start_addon
+):
+    """Test add-on already installed but not running on Supervisor."""
+    hass.config.components.add("mqtt")
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={"usb_path": "/test/imported", "network_key": "imported123"},
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "on_supervisor"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"use_addon": True}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "start_addon"
+
+    # the default input should be the imported data
+    default_input = result["data_schema"]({})
+
+    with patch(
+        "homeassistant.components.ozw.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.ozw.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], default_input
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == TITLE
+    assert result["data"] == {
+        "usb_path": "/test/imported",
+        "network_key": "imported123",
+        "use_addon": True,
+        "integration_created_addon": False,
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1

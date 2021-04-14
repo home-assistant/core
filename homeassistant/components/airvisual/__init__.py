@@ -37,7 +37,8 @@ from .const import (
     CONF_INTEGRATION_TYPE,
     DATA_COORDINATOR,
     DOMAIN,
-    INTEGRATION_TYPE_GEOGRAPHY,
+    INTEGRATION_TYPE_GEOGRAPHY_COORDS,
+    INTEGRATION_TYPE_GEOGRAPHY_NAME,
     INTEGRATION_TYPE_NODE_PRO,
     LOGGER,
 )
@@ -78,9 +79,9 @@ def async_get_cloud_api_update_interval(hass, api_key, num_consumers):
     This will shift based on the number of active consumers, thus keeping the user
     under the monthly API limit.
     """
-    # Assuming 10,000 calls per month and a "smallest possible month" of 28 days; note
+    # Assuming 10,000 calls per month and a "largest possible month" of 31 days; note
     # that we give a buffer of 1500 API calls for any drift, restarts, etc.:
-    minutes_between_api_calls = ceil(1 / (8500 / 28 / 24 / 60 / num_consumers))
+    minutes_between_api_calls = ceil(num_consumers * 31 * 24 * 60 / 8500)
 
     LOGGER.debug(
         "Leveling API key usage (%s): %s consumers, %s minutes between updates",
@@ -141,12 +142,21 @@ def _standardize_geography_config_entry(hass, config_entry):
     if not config_entry.options:
         # If the config entry doesn't already have any options set, set defaults:
         entry_updates["options"] = {CONF_SHOW_ON_MAP: True}
-    if CONF_INTEGRATION_TYPE not in config_entry.data:
-        # If the config entry data doesn't contain the integration type, add it:
-        entry_updates["data"] = {
-            **config_entry.data,
-            CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_GEOGRAPHY,
-        }
+    if config_entry.data.get(CONF_INTEGRATION_TYPE) not in [
+        INTEGRATION_TYPE_GEOGRAPHY_COORDS,
+        INTEGRATION_TYPE_GEOGRAPHY_NAME,
+    ]:
+        # If the config entry data doesn't contain an integration type that we know
+        # about, infer it from the data we have:
+        entry_updates["data"] = {**config_entry.data}
+        if CONF_CITY in config_entry.data:
+            entry_updates["data"][
+                CONF_INTEGRATION_TYPE
+            ] = INTEGRATION_TYPE_GEOGRAPHY_NAME
+        else:
+            entry_updates["data"][
+                CONF_INTEGRATION_TYPE
+            ] = INTEGRATION_TYPE_GEOGRAPHY_COORDS
 
     if not entry_updates:
         return
@@ -232,11 +242,6 @@ async def async_setup_entry(hass, config_entry):
             update_method=async_update_data,
         )
 
-        hass.data[DOMAIN][DATA_COORDINATOR][config_entry.entry_id] = coordinator
-        async_sync_geo_coordinator_update_intervals(
-            hass, config_entry.data[CONF_API_KEY]
-        )
-
         # Only geography-based entries have options:
         hass.data[DOMAIN][DATA_LISTENER][
             config_entry.entry_id
@@ -262,13 +267,19 @@ async def async_setup_entry(hass, config_entry):
             update_method=async_update_data,
         )
 
-        hass.data[DOMAIN][DATA_COORDINATOR][config_entry.entry_id] = coordinator
+    await coordinator.async_config_entry_first_refresh()
 
-    await coordinator.async_refresh()
+    hass.data[DOMAIN][DATA_COORDINATOR][config_entry.entry_id] = coordinator
 
-    for component in PLATFORMS:
+    # Reassess the interval between 2 server requests
+    if CONF_API_KEY in config_entry.data:
+        async_sync_geo_coordinator_update_intervals(
+            hass, config_entry.data[CONF_API_KEY]
+        )
+
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
+            hass.config_entries.async_forward_entry_setup(config_entry, platform)
         )
 
     return True
@@ -299,10 +310,14 @@ async def async_migrate_entry(hass, config_entry):
 
         # For any geographies that remain, create a new config entry for each one:
         for geography in geographies:
+            if CONF_LATITUDE in geography:
+                source = "geography_by_coords"
+            else:
+                source = "geography_by_name"
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
                     DOMAIN,
-                    context={"source": "geography"},
+                    context={"source": source},
                     data={CONF_API_KEY: config_entry.data[CONF_API_KEY], **geography},
                 )
             )
@@ -317,8 +332,8 @@ async def async_unload_entry(hass, config_entry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(config_entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(config_entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )
@@ -327,7 +342,7 @@ async def async_unload_entry(hass, config_entry):
         remove_listener = hass.data[DOMAIN][DATA_LISTENER].pop(config_entry.entry_id)
         remove_listener()
 
-        if config_entry.data[CONF_INTEGRATION_TYPE] == INTEGRATION_TYPE_GEOGRAPHY:
+        if CONF_API_KEY in config_entry.data:
             # Re-calculate the update interval period for any remaining consumers of
             # this API key:
             async_sync_geo_coordinator_update_intervals(
@@ -353,7 +368,7 @@ class AirVisualEntity(CoordinatorEntity):
         self._unit = None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         return self._attrs
 

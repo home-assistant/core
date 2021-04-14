@@ -1,18 +1,23 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Enheten er allerede konfigurert"
+            "already_configured": "Enheten er allerede konfigurert",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning",
             "unknown": "Uventet feil",
             "wrong_version": "Powerwall bruker en programvareversjon som ikke st\u00f8ttes. Vennligst vurder \u00e5 oppgradere eller rapportere dette problemet, s\u00e5 det kan l\u00f8ses."
         },
+        "flow_title": "",
         "step": {
             "user": {
                 "data": {
-                    "ip_address": "IP adresse"
+                    "ip_address": "IP adresse",
+                    "password": "Passord"
                 },
+                "description": "Passordet er vanligvis de siste 5 tegnene i serienummeret for Backup Gateway, og kan bli funnet i Tesla-appen eller de siste 5 tegnene i passordet som er funnet inne i d\u00f8ren til Backup Gateway 2.",
                 "title": "Koble til powerwall"
             }
         }

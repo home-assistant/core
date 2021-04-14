@@ -35,7 +35,7 @@ CONDITION_CLASSES = {
         "Hot",
         "Cold",
     ],
-    ATTR_CONDITION_SNOWY: ["Snow", "Sleet", "Blizzard"],
+    ATTR_CONDITION_SNOWY: ["Snow", "Sleet", "Snow/sleet", "Blizzard"],
     ATTR_CONDITION_SNOWY_RAINY: [
         "Rain/snow",
         "Rain/sleet",

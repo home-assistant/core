@@ -4,7 +4,7 @@ import logging
 
 from pyombi import OmbiError
 
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import SensorEntity
 
 from .const import DOMAIN, SENSOR_TYPES
 
@@ -31,7 +31,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class OmbiSensor(Entity):
+class OmbiSensor(SensorEntity):
     """Representation of an Ombi sensor."""
 
     def __init__(self, label, sensor_type, ombi, icon):

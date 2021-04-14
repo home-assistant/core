@@ -12,11 +12,11 @@ from homeassistant.core import callback
 from .const import (
     CONF_MANUAL_RUN_MINS,
     DEFAULT_MANUAL_RUN_MINS,
+    DOMAIN,
     KEY_ID,
     KEY_STATUS,
     KEY_USERNAME,
 )
-from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,10 +93,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
         await self.async_set_unique_id(properties["id"])
         return await self.async_step_user()
-
-    async def async_step_import(self, user_input):
-        """Handle import."""
-        return await self.async_step_user(user_input)
 
     @staticmethod
     @callback

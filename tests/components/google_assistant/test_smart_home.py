@@ -1,4 +1,6 @@
 """Test Google Smart Home."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components import camera
@@ -28,8 +30,12 @@ from homeassistant.setup import async_setup_component
 
 from . import BASIC_CONFIG, MockConfig
 
-from tests.async_mock import patch
-from tests.common import mock_area_registry, mock_device_registry, mock_registry
+from tests.common import (
+    async_capture_events,
+    mock_area_registry,
+    mock_device_registry,
+    mock_registry,
+)
 
 REQ_ID = "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
 
@@ -76,8 +82,7 @@ async def test_sync_message(hass):
         },
     )
 
-    events = []
-    hass.bus.async_listen(EVENT_SYNC_RECEIVED, events.append)
+    events = async_capture_events(hass, EVENT_SYNC_RECEIVED)
 
     result = await sh.async_handle_message(
         hass,
@@ -159,6 +164,9 @@ async def test_sync_in_area(area_on_device, hass, registries):
 
     device = registries.device.async_get_or_create(
         config_entry_id="1234",
+        manufacturer="Someone",
+        model="Some model",
+        sw_version="Some Version",
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     registries.device.async_update_device(
@@ -188,8 +196,7 @@ async def test_sync_in_area(area_on_device, hass, registries):
 
     config = MockConfig(should_expose=lambda _: True, entity_config={})
 
-    events = []
-    hass.bus.async_listen(EVENT_SYNC_RECEIVED, events.append)
+    events = async_capture_events(hass, EVENT_SYNC_RECEIVED)
 
     result = await sh.async_handle_message(
         hass,
@@ -248,6 +255,11 @@ async def test_sync_in_area(area_on_device, hass, registries):
                             "temperatureMaxK": 6535,
                         },
                     },
+                    "deviceInfo": {
+                        "manufacturer": "Someone",
+                        "model": "Some model",
+                        "swVersion": "Some Version",
+                    },
                     "roomHint": "Living Room",
                 }
             ],
@@ -286,8 +298,7 @@ async def test_query_message(hass):
     light3.entity_id = "light.color_temp_light"
     await light3.async_update_ha_state()
 
-    events = []
-    hass.bus.async_listen(EVENT_QUERY_RECEIVED, events.append)
+    events = async_capture_events(hass, EVENT_QUERY_RECEIVED)
 
     result = await sh.async_handle_message(
         hass,
@@ -378,11 +389,8 @@ async def test_execute(hass):
         "light", "turn_off", {"entity_id": "light.ceiling_lights"}, blocking=True
     )
 
-    events = []
-    hass.bus.async_listen(EVENT_COMMAND_RECEIVED, events.append)
-
-    service_events = []
-    hass.bus.async_listen(EVENT_CALL_SERVICE, service_events.append)
+    events = async_capture_events(hass, EVENT_COMMAND_RECEIVED)
+    service_events = async_capture_events(hass, EVENT_CALL_SERVICE)
 
     result = await sh.async_handle_message(
         hass,
@@ -561,8 +569,7 @@ async def test_raising_error_trait(hass):
         {ATTR_MIN_TEMP: 15, ATTR_MAX_TEMP: 30, ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
     )
 
-    events = []
-    hass.bus.async_listen(EVENT_COMMAND_RECEIVED, events.append)
+    events = async_capture_events(hass, EVENT_COMMAND_RECEIVED)
     await hass.async_block_till_done()
 
     result = await sh.async_handle_message(
@@ -651,8 +658,7 @@ async def test_unavailable_state_does_sync(hass):
     light._available = False  # pylint: disable=protected-access
     await light.async_update_ha_state()
 
-    events = []
-    hass.bus.async_listen(EVENT_SYNC_RECEIVED, events.append)
+    events = async_capture_events(hass, EVENT_SYNC_RECEIVED)
 
     result = await sh.async_handle_message(
         hass,
