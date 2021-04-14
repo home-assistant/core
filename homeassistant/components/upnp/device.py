@@ -13,6 +13,7 @@ from async_upnp_client.profiles.igd import IgdDevice
 
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -51,6 +52,7 @@ class Device:
         """Initialize UPnP/IGD device."""
         self._igd_device = igd_device
         self._device_updater = device_updater
+        self.coordinator: DataUpdateCoordinator = None
 
     @classmethod
     async def async_discover(cls, hass: HomeAssistantType) -> list[Mapping]:
