@@ -110,20 +110,6 @@ def get_supported_features(hass: HomeAssistant, entity_id: str) -> int:
     return entry.supported_features or 0
 
 
-def _stringify_state(entity: Entity) -> str:
-    """Convert state to string."""
-    if not entity.available:
-        return STATE_UNAVAILABLE
-    state = entity.state
-    if state is None:
-        return STATE_UNKNOWN
-    if isinstance(state, float):
-        # If the entity's state is a float, limit precision according to machine
-        # epsilon to make the string representation readable
-        return f"{state:.{FLOAT_PRECISION}}"
-    return str(state)
-
-
 class Entity(ABC):
     """An abstract class for Home Assistant entities."""
 
@@ -347,6 +333,19 @@ class Entity(ABC):
 
         self._async_write_ha_state()
 
+    def _stringify_state(self) -> str:
+        """Convert state to string."""
+        if not self.available:
+            return STATE_UNAVAILABLE
+        state = self.state
+        if state is None:
+            return STATE_UNKNOWN
+        if isinstance(state, float):
+            # If the entity's state is a float, limit precision according to machine
+            # epsilon to make the string representation readable
+            return f"{state:.{FLOAT_PRECISION}}"
+        return str(state)
+
     @callback
     def _async_write_ha_state(self) -> None:
         """Write the state to the state machine."""
@@ -366,7 +365,7 @@ class Entity(ABC):
         attr = self.capability_attributes
         attr = dict(attr) if attr else {}
 
-        state = _stringify_state(self)
+        state = self._stringify_state()
         if self.available:
             attr.update(self.state_attributes or {})
             extra_state_attributes = self.extra_state_attributes
