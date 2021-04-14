@@ -339,10 +339,11 @@ class Recorder(threading.Thread):
             "The recorder queue reached the maximum size of %s; Events are no longer being recorded",
             MAX_QUEUE_BACKLOG,
         )
-        self._stop_queue_watcher_and_event_listener()
+        self._async_stop_queue_watcher_and_event_listener()
 
-    def _stop_queue_watcher_and_event_listener(self):
-        """Stop watching the queue."""
+    @callback
+    def _async_stop_queue_watcher_and_event_listener(self):
+        """Stop watching the queue and listening for events."""
         if self._queue_watcher:
             self._queue_watcher()
             self._queue_watcher = None
@@ -373,7 +374,7 @@ class Recorder(threading.Thread):
 
         def _empty_queue(event):
             """Empty the queue if its still present at final write."""
-            self._stop_queue_watcher_and_event_listener()
+
             # If the queue is full of events to be processed because
             # the database is so broken that every event results in a retry
             # we will never be able to get though the events to shutdown in time.
@@ -395,6 +396,7 @@ class Recorder(threading.Thread):
             if not hass_started.done():
                 hass_started.set_result(shutdown_task)
             self.queue.put(None)
+            self.hass.add_job(self._async_stop_queue_watcher_and_event_listener)
             self.join()
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
@@ -419,7 +421,7 @@ class Recorder(threading.Thread):
             "The recorder could not start, check [the logs](/config/logs)",
             "Recorder",
         )
-        self._stop_queue_watcher_and_event_listener()
+        self._async_stop_queue_watcher_and_event_listener()
 
     @callback
     def async_connection_success(self):
@@ -856,6 +858,6 @@ class Recorder(threading.Thread):
 
     def _shutdown(self):
         """Save end time for current run."""
-        self._stop_queue_watcher_and_event_listener()
+        self.hass.add_job(self._async_stop_queue_watcher_and_event_listener)
         self._end_session()
         self._close_connection()
