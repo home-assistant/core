@@ -17,12 +17,75 @@ DOCUMENTATION_URL_EXCEPTIONS = {"https://www.home-assistant.io/hassio"}
 
 SUPPORTED_QUALITY_SCALES = ["gold", "internal", "platinum", "silver"]
 SUPPORTED_IOT_CLASSES = [
-    "Assumed State",
-    "Calculated",
-    "Cloud Polling",
-    "Cloud Push",
-    "Local Polling",
-    "Local Push",
+    "assumed_state",
+    "calculated",
+    "cloud_polling",
+    "cloud_push",
+    "local_polling",
+    "local_push",
+]
+
+# List of integrations that are supposed to have no IoT class
+NO_IOT_CLASS = [
+    "air_quality",
+    "alarm_control_panel",
+    "api",
+    "auth",
+    "automations",
+    "binary_sensor",
+    "blueprint",
+    "calendar",
+    "camera",
+    "climate",
+    "config",
+    "counter",
+    "cover",
+    "default_config",
+    "device_automation",
+    "discovery",
+    "fan",
+    "frontend",
+    "geo_location",
+    "homeassistant",
+    "humidifier",
+    "image_processing",
+    "image",
+    "input_boolean",
+    "input_datetime",
+    "input_number",
+    "input_select",
+    "input_text",
+    "light",
+    "lock",
+    "logbook",
+    "logger",
+    "map",
+    "media_player",
+    "media_source",
+    "my",
+    "notify",
+    "number",
+    "onboarding",
+    "panel_custom",
+    "panel_iframe",
+    "plant",
+    "profiler",
+    "remote",
+    "scene",
+    "search",
+    "sensor",
+    "stt",
+    "switch",
+    "system_health",
+    "system_log",
+    "tag",
+    "timer",
+    "tts",
+    "vacuum",
+    "water_heater",
+    "webhook",
+    "websocket_api",
+    "zone",
 ]
 
 
@@ -139,6 +202,9 @@ def validate_version(integration: Integration):
 
 def validate_manifest(integration: Integration):
     """Validate manifest."""
+    if not integration.manifest:
+        return
+
     try:
         if integration.core:
             MANIFEST_SCHEMA(integration.manifest)
@@ -152,6 +218,18 @@ def validate_manifest(integration: Integration):
     if integration.manifest["domain"] != integration.path.name:
         integration.add_error("manifest", "Domain does not match dir name")
 
+    if (
+        integration.manifest["domain"] in NO_IOT_CLASS
+        and "iot_class" in integration.manifest
+    ):
+        integration.add_error("manifest", "Domain should not have an IoT Class")
+
+    if (
+        integration.manifest["domain"] not in NO_IOT_CLASS
+        and "iot_class" not in integration.manifest
+    ):
+        integration.add_error("manifest", "Domain is missing an IoT Class")
+
     if not integration.core:
         validate_version(integration)
 
@@ -159,5 +237,4 @@ def validate_manifest(integration: Integration):
 def validate(integrations: dict[str, Integration], config):
     """Handle all integrations manifests."""
     for integration in integrations.values():
-        if integration.manifest:
-            validate_manifest(integration)
+        validate_manifest(integration)
