@@ -37,6 +37,7 @@ SUPPORTED_LANGUAGES = [
     "en-IN",
     "en-US",
     "es-ES",
+    "es-US",
     "fi-FI",
     "fil-PH",
     "fr-CA",
