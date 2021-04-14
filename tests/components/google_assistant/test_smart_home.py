@@ -1171,7 +1171,7 @@ async def test_sync_message_recovery(hass, caplog):
         "on",
         {
             "min_mireds": "badvalue",
-            "supported_features": hass.components.light.SUPPORT_COLOR_TEMP,
+            "supported_color_modes": ["color_temp"],
         },
     )
 
@@ -1220,7 +1220,7 @@ async def test_query_recover(hass, caplog):
         "light.good",
         "on",
         {
-            "supported_features": hass.components.light.SUPPORT_BRIGHTNESS,
+            "supported_color_modes": ["brightness"],
             "brightness": 50,
         },
     )
@@ -1228,7 +1228,7 @@ async def test_query_recover(hass, caplog):
         "light.bad",
         "on",
         {
-            "supported_features": hass.components.light.SUPPORT_BRIGHTNESS,
+            "supported_color_modes": ["brightness"],
             "brightness": "shoe",
         },
     )
