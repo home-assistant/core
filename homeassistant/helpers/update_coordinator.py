@@ -24,7 +24,6 @@ REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
 
 T = TypeVar("T")
 
-
 # mypy: disallow-any-generics
 
 
