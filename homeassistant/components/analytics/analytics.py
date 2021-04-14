@@ -1,20 +1,28 @@
 """Analytics helper class for the analytics integration."""
 import asyncio
+from typing import Set
 import uuid
 
 import aiohttp
 import async_timeout
 
+from homeassistant import config as conf_util
 from homeassistant.components import hassio
+from homeassistant.components.alexa.const import DOMAIN as ALEXA_DOMAIN
 from homeassistant.components.api import ATTR_INSTALLATION_TYPE
 from homeassistant.components.automation.const import DOMAIN as AUTOMATION_DOMAIN
+from homeassistant.components.cloud.const import DOMAIN as CLOUD_DOMAIN
+from homeassistant.components.default_config import DOMAIN as DEFAULT_CONFIG_DOMAIN
+from homeassistant.components.google_assistant.const import (
+    DOMAIN as GOOGLE_ASSISTANT_DOMAIN,
+)
 from homeassistant.const import ATTR_DOMAIN, __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.loader import IntegrationNotFound, async_get_integration
-from homeassistant.setup import async_get_loaded_integrations
 
 from .const import (
     ANALYTICS_ENDPOINT_URL,
@@ -115,6 +123,43 @@ class Analytics:
                 self.hass, self.preferences.get(ATTR_DIAGNOSTICS, False)
             )
 
+    async def _gather_configured_domains(self) -> Set:
+        """Return a set of configured_domains."""
+        configured_domains = set()
+        configured_domains.update(self.hass.config_entries.async_domains())
+
+        config_dict = await conf_util.async_hass_config_yaml(self.hass)
+
+        for domain in config_dict:
+            if not config_dict[domain]:
+                configured_domains.add(domain)
+                continue
+
+            for item in config_dict[domain]:
+                if not isinstance(item, str):
+                    for entry in item:
+                        if entry == "platform":
+                            configured_domains.add(item[entry])
+
+                configured_domains.add(domain)
+
+        if DEFAULT_CONFIG_DOMAIN in configured_domains:
+            # Recursively add dependencies of default_config
+            default_config = await async_get_integration(
+                self.hass, DEFAULT_CONFIG_DOMAIN
+            )
+            configured_domains.update(default_config.all_dependencies)
+
+        if CLOUD_DOMAIN in configured_domains:
+            # Get google_assistant and alexa from cloud
+            if self.hass.components.cloud.async_is_logged_in():
+                if self.hass.components.cloud.async_is_alexa_enabled():
+                    configured_domains.add(ALEXA_DOMAIN)
+                if self.hass.components.cloud.async_is_google_enabled():
+                    configured_domains.add(GOOGLE_ASSISTANT_DOMAIN)
+
+        return configured_domains
+
     async def send_analytics(self, _=None) -> None:
         """Send analytics."""
         supervisor_info = None
@@ -131,6 +176,7 @@ class Analytics:
             supervisor_info = hassio.get_supervisor_info(self.hass)
 
         system_info = await async_get_system_info(self.hass)
+
         integrations = []
         custom_integrations = []
         addons = []
@@ -149,20 +195,24 @@ class Analytics:
         if self.preferences.get(ATTR_USAGE, False) or self.preferences.get(
             ATTR_STATISTICS, False
         ):
+
+            try:
+                configured_domains = await self._gather_configured_domains()
+            except HomeAssistantError as err:
+                LOGGER.error(err)
+                return
+
             configured_integrations = await asyncio.gather(
                 *[
                     async_get_integration(self.hass, domain)
-                    for domain in async_get_loaded_integrations(self.hass)
+                    for domain in configured_domains
                 ],
                 return_exceptions=True,
             )
 
             for integration in configured_integrations:
-                if isinstance(integration, IntegrationNotFound):
+                if isinstance(integration, (IntegrationNotFound, BaseException)):
                     continue
-
-                if isinstance(integration, BaseException):
-                    raise integration
 
                 if integration.disabled:
                     continue

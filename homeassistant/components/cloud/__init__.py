@@ -118,6 +118,30 @@ def async_is_logged_in(hass) -> bool:
 
 @bind_hass
 @callback
+def async_is_alexa_enabled(hass) -> bool:
+    """Test if alexa is enabled."""
+    return (
+        async_is_logged_in(hass)
+        and hass.data[DOMAIN].client
+        and hass.data[DOMAIN].client.prefs
+        and hass.data[DOMAIN].client.prefs.alexa_enabled
+    )
+
+
+@bind_hass
+@callback
+def async_is_google_enabled(hass) -> bool:
+    """Test if google is enabled."""
+    return (
+        async_is_logged_in(hass)
+        and hass.data[DOMAIN].client
+        and hass.data[DOMAIN].client.prefs
+        and hass.data[DOMAIN].client.prefs.google_enabled
+    )
+
+
+@bind_hass
+@callback
 def async_active_subscription(hass) -> bool:
     """Test if user has an active subscription."""
     return async_is_logged_in(hass) and not hass.data[DOMAIN].subscription_expired
