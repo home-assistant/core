@@ -103,8 +103,5 @@ def configure_mydevolo(conf: dict) -> Mydevolo:
     mydevolo = Mydevolo()
     mydevolo.user = conf[CONF_USERNAME]
     mydevolo.password = conf[CONF_PASSWORD]
-    try:
-        mydevolo.url = conf[CONF_MYDEVOLO]
-    except KeyError:
-        mydevolo.url = DEFAULT_MYDEVOLO
+    mydevolo.url = conf.get(CONF_MYDEVOLO, DEFAULT_MYDEVOLO)
     return mydevolo
