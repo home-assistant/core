@@ -110,6 +110,14 @@ def async_active_zone(
     min_dist = None
     closest = None
 
+    _LOGGER.debug(
+        "location: %s:%s/%s, current_zone: %s",
+        latitude,
+        longitude,
+        radius,
+        current_zone.entity_id if current_zone else None,
+    )
+
     # Update state of current_zone
     if current_zone:
         current_zone = hass.states.get(current_zone.entity_id)
@@ -143,6 +151,14 @@ def async_active_zone(
             zone.attributes[ATTR_LATITUDE],
             zone.attributes[ATTR_LONGITUDE],
         )
+        _LOGGER.debug(
+            "zone %s: %s:%s/%s, distance: %s",
+            zone.entity_id,
+            zone.attributes[ATTR_LATITUDE],
+            zone.attributes[ATTR_LONGITUDE],
+            zone.attributes[ATTR_RADIUS],
+            zone_dist,
+        )
 
         if zone_dist is None:
             continue
@@ -160,6 +176,7 @@ def async_active_zone(
             min_dist = zone_dist
             closest = zone
 
+    _LOGGER.debug("closest zone: %s", closest.entity_id if closest else None)
     return closest
 
 
