@@ -127,7 +127,7 @@ def async_active_zone(
         )
         if zone_dist is not None:
             # Still within zone if zone and location circles intersect
-            within_zone = zone_dist <= current_zone.attributes[ATTR_RADIUS] + radius
+            within_zone = zone_dist < current_zone.attributes[ATTR_RADIUS] + radius
 
             if within_zone:
                 min_dist = zone_dist
@@ -148,7 +148,7 @@ def async_active_zone(
             continue
 
         # Within zone if location circle is inside zone
-        within_zone = zone_dist + radius <= zone.attributes[ATTR_RADIUS]
+        within_zone = zone_dist + radius < zone.attributes[ATTR_RADIUS]
         closer_zone = closest is None or zone_dist < min_dist  # type: ignore
         smaller_zone = (
             zone_dist == min_dist
