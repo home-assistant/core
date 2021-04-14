@@ -408,7 +408,8 @@ class GoogleEntity:
 
         state = self.state
         domain = state.domain
-        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        attributes = state.attributes
+        features = attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
         if not isinstance(features, int):
             _LOGGER.warning(
@@ -423,7 +424,7 @@ class GoogleEntity:
         self._traits = [
             Trait(self.hass, state, self.config)
             for Trait in trait.TRAITS
-            if Trait.supported(domain, features, device_class)
+            if Trait.supported(domain, features, device_class, attributes)
         ]
         return self._traits
 
