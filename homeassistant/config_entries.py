@@ -12,7 +12,7 @@ import weakref
 import attr
 
 from homeassistant import data_entry_flow, loader
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -331,6 +331,17 @@ class ConfigEntry:
         else:
             self.state = ENTRY_STATE_SETUP_ERROR
 
+    async def async_shutdown(self) -> None:
+        """Call when Home Assistant is stopping."""
+        self.async_cancel_retry_setup()
+
+    @callback
+    def async_cancel_retry_setup(self) -> None:
+        """Cancel retry setup."""
+        if self._async_cancel_retry_setup is not None:
+            self._async_cancel_retry_setup()
+            self._async_cancel_retry_setup = None
+
     async def async_unload(
         self, hass: HomeAssistant, *, integration: loader.Integration | None = None
     ) -> bool:
@@ -360,9 +371,7 @@ class ConfigEntry:
                 return False
 
             if self.state != ENTRY_STATE_LOADED:
-                if self._async_cancel_retry_setup is not None:
-                    self._async_cancel_retry_setup()
-                    self._async_cancel_retry_setup = None
+                self.async_cancel_retry_setup()
 
                 self.state = ENTRY_STATE_NOT_LOADED
                 return True
@@ -778,6 +787,12 @@ class ConfigEntries:
 
         return {"require_restart": not unload_success}
 
+    async def _async_shutdown(self, event: Event) -> None:
+        """Call when Home Assistant is stopping."""
+        await asyncio.gather(
+            *[entry.async_shutdown() for entry in self._entries.values()]
+        )
+
     async def async_initialize(self) -> None:
         """Initialize config entry config."""
         # Migrating for config entries stored before 0.73
@@ -786,6 +801,8 @@ class ConfigEntries:
             self._store,
             old_conf_migrate_func=_old_conf_migrator,
         )
+
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
 
         if config is None:
             self._entries = {}

@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, loader
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -1405,7 +1405,7 @@ async def test_reload_entry_entity_registry_works(hass):
     assert len(mock_unload_entry.mock_calls) == 1
 
 
-async def test_unqiue_id_persisted(hass, manager):
+async def test_unique_id_persisted(hass, manager):
     """Test that a unique ID is stored in the config entry."""
     mock_setup_entry = AsyncMock(return_value=True)
 
@@ -2667,3 +2667,40 @@ async def test_setup_raise_auth_failed_from_future_coordinator_update(hass, capl
     assert entry.state == config_entries.ENTRY_STATE_LOADED
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
+
+
+async def test_initialize_and_shutdown(hass):
+    """Test we call the shutdown function at stop."""
+    manager = config_entries.ConfigEntries(hass, {})
+
+    with patch.object(manager, "_async_shutdown") as mock_async_shutdown:
+        await manager.async_initialize()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+
+    assert mock_async_shutdown.called
+
+
+async def test_setup_retrying_during_shutdown(hass):
+    """Test if we shutdown an entry that is in retry mode."""
+    entry = MockConfigEntry(domain="test")
+
+    mock_setup_entry = AsyncMock(side_effect=ConfigEntryNotReady)
+    mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    with patch("homeassistant.helpers.event.async_call_later") as mock_call:
+        await entry.async_setup(hass)
+
+    assert entry.state == config_entries.ENTRY_STATE_SETUP_RETRY
+    assert len(mock_call.return_value.mock_calls) == 0
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    assert len(mock_call.return_value.mock_calls) == 0
+
+    async_fire_time_changed(hass, dt.utcnow() + timedelta(hours=4))
+    await hass.async_block_till_done()
+
+    assert len(mock_call.return_value.mock_calls) == 0
