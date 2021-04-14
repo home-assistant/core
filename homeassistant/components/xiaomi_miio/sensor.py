@@ -12,7 +12,7 @@ from miio.gateway.gateway import (
 )
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
@@ -30,7 +30,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 from .const import CONF_DEVICE, CONF_FLOW_TYPE, CONF_GATEWAY, DOMAIN, KEY_COORDINATOR
 from .device import XiaomiMiioEntity
@@ -147,7 +146,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, update_before_add=True)
 
 
-class XiaomiAirQualityMonitor(XiaomiMiioEntity):
+class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
     """Representation of a Xiaomi Air Quality Monitor."""
 
     def __init__(self, name, device, entry, unique_id):
@@ -221,7 +220,7 @@ class XiaomiAirQualityMonitor(XiaomiMiioEntity):
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
 
-class XiaomiGatewaySensor(XiaomiGatewayDevice):
+class XiaomiGatewaySensor(XiaomiGatewayDevice, SensorEntity):
     """Representation of a XiaomiGatewaySensor."""
 
     def __init__(self, coordinator, sub_device, entry, data_key):
@@ -252,7 +251,7 @@ class XiaomiGatewaySensor(XiaomiGatewayDevice):
         return self._sub_device.status[self._data_key]
 
 
-class XiaomiGatewayIlluminanceSensor(Entity):
+class XiaomiGatewayIlluminanceSensor(SensorEntity):
     """Representation of the gateway device's illuminance sensor."""
 
     def __init__(self, gateway_device, gateway_name, gateway_device_id):

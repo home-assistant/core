@@ -2,11 +2,14 @@
     "config": {
         "abort": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
-            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt"
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
+            "not_xiaomi_aqara": "Kein Xiaomi Aqara Gateway, gefundenes Ger\u00e4t stimmt nicht mit bekannten Gateways \u00fcberein"
         },
         "error": {
             "discovery_error": "Es konnte kein Xiaomi Aqara Gateway gefunden werden, versuche die IP von Home Assistant als Interface zu nutzen",
             "invalid_host": "Ung\u00fcltiger Hostname oder IP-Adresse, schau unter https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem",
+            "invalid_interface": "Ung\u00fcltige Netzwerkschnittstelle",
+            "invalid_key": "Ung\u00fcltiger Gateway-Schl\u00fcssel",
             "invalid_mac": "Ung\u00fcltige MAC-Adresse"
         },
         "flow_title": "Xiaomi Aqara Gateway: {name}",
@@ -15,17 +18,21 @@
                 "data": {
                     "select_ip": "IP-Adresse"
                 },
-                "description": "F\u00fchre das Setup erneut aus, wenn du zus\u00e4tzliche Gateways verbinden m\u00f6chtest"
+                "description": "F\u00fchre das Setup erneut aus, wenn du zus\u00e4tzliche Gateways verbinden m\u00f6chtest",
+                "title": "W\u00e4hle das Xiaomi Aqara Gateway, das du verbinden m\u00f6chtest"
             },
             "settings": {
                 "data": {
+                    "key": "Der Schl\u00fcssel deines Gateways",
                     "name": "Name des Gateways"
                 },
+                "description": "Der Schl\u00fcssel (das Passwort) kann mithilfe dieser Anleitung abgerufen werden: https://www.domoticz.com/wiki/Xiaomi_Gateway_(Aqara)#Adding_the_Xiaomi_Gateway_to_Domoticz. Wenn der Schl\u00fcssel nicht angegeben wird, sind nur die Sensoren zug\u00e4nglich",
                 "title": "Xiaomi Aqara Gateway, optionale Einstellungen"
             },
             "user": {
                 "data": {
                     "host": "IP-Adresse",
+                    "interface": "Die zu verwendende Netzwerkschnittstelle",
                     "mac": "MAC-Adresse"
                 },
                 "description": "Stelle eine Verbindung zu deinem Xiaomi Aqara Gateway her. Wenn die IP- und MAC-Adressen leer bleiben, wird die automatische Erkennung verwendet",

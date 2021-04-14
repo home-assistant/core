@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any, Callable
 
-from homeassistant.components.sensor import DEVICE_CLASS_CURRENT
+from homeassistant.components.sensor import DEVICE_CLASS_CURRENT, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DATA_BYTES,
@@ -42,7 +42,7 @@ async def async_setup_entry(
     async_add_entities(sensors, True)
 
 
-class WLEDSensor(WLEDDeviceEntity):
+class WLEDSensor(WLEDDeviceEntity, SensorEntity):
     """Defines a WLED sensor."""
 
     def __init__(

@@ -64,7 +64,8 @@
                     "off_delay": "Uitschakelvertraging",
                     "off_delay_enabled": "Schakel uitschakelvertraging in",
                     "replace_device": "Selecteer apparaat dat u wilt vervangen",
-                    "signal_repetitions": "Aantal signaalherhalingen"
+                    "signal_repetitions": "Aantal signaalherhalingen",
+                    "venetian_blind_mode": "Venetiaanse jaloezie modus"
                 },
                 "title": "Configureer apparaatopties"
             }

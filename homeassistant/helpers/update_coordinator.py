@@ -11,8 +11,10 @@ import urllib.error
 import aiohttp
 import requests
 
+from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import entity, event
 from homeassistant.util.dt import utcnow
 
@@ -57,6 +59,7 @@ class DataUpdateCoordinator(Generic[T]):
         self._unsub_refresh: CALLBACK_TYPE | None = None
         self._request_refresh_task: asyncio.TimerHandle | None = None
         self.last_update_success = True
+        self.last_exception: Exception | None = None
 
         if request_refresh_debouncer is None:
             request_refresh_debouncer = Debouncer(
@@ -140,7 +143,27 @@ class DataUpdateCoordinator(Generic[T]):
             raise NotImplementedError("Update method not implemented")
         return await self.update_method()
 
+    async def async_config_entry_first_refresh(self) -> None:
+        """Refresh data for the first time when a config entry is setup.
+
+        Will automatically raise ConfigEntryNotReady if the refresh
+        fails. Additionally logging is handled by config entry setup
+        to ensure that multiple retries do not cause log spam.
+        """
+        await self._async_refresh(log_failures=False, raise_on_auth_failed=True)
+        if self.last_update_success:
+            return
+        ex = ConfigEntryNotReady()
+        ex.__cause__ = self.last_exception
+        raise ex
+
     async def async_refresh(self) -> None:
+        """Refresh data and log errors."""
+        await self._async_refresh(log_failures=True)
+
+    async def _async_refresh(
+        self, log_failures: bool = True, raise_on_auth_failed: bool = False
+    ) -> None:
         """Refresh data."""
         if self._unsub_refresh:
             self._unsub_refresh()
@@ -148,41 +171,72 @@ class DataUpdateCoordinator(Generic[T]):
 
         self._debounced_refresh.async_cancel()
         start = monotonic()
+        auth_failed = False
 
         try:
             self.data = await self._async_update_data()
 
-        except (asyncio.TimeoutError, requests.exceptions.Timeout):
+        except (asyncio.TimeoutError, requests.exceptions.Timeout) as err:
+            self.last_exception = err
             if self.last_update_success:
-                self.logger.error("Timeout fetching %s data", self.name)
+                if log_failures:
+                    self.logger.error("Timeout fetching %s data", self.name)
                 self.last_update_success = False
 
         except (aiohttp.ClientError, requests.exceptions.RequestException) as err:
+            self.last_exception = err
             if self.last_update_success:
-                self.logger.error("Error requesting %s data: %s", self.name, err)
-                self.last_update_success = False
-
-        except urllib.error.URLError as err:
-            if self.last_update_success:
-                if err.reason == "timed out":
-                    self.logger.error("Timeout fetching %s data", self.name)
-                else:
+                if log_failures:
                     self.logger.error("Error requesting %s data: %s", self.name, err)
                 self.last_update_success = False
 
-        except UpdateFailed as err:
+        except urllib.error.URLError as err:
+            self.last_exception = err
             if self.last_update_success:
-                self.logger.error("Error fetching %s data: %s", self.name, err)
+                if log_failures:
+                    if err.reason == "timed out":
+                        self.logger.error("Timeout fetching %s data", self.name)
+                    else:
+                        self.logger.error(
+                            "Error requesting %s data: %s", self.name, err
+                        )
                 self.last_update_success = False
 
+        except UpdateFailed as err:
+            self.last_exception = err
+            if self.last_update_success:
+                if log_failures:
+                    self.logger.error("Error fetching %s data: %s", self.name, err)
+                self.last_update_success = False
+
+        except ConfigEntryAuthFailed as err:
+            auth_failed = True
+            self.last_exception = err
+            if self.last_update_success:
+                if log_failures:
+                    self.logger.error(
+                        "Authentication failed while fetching %s data: %s",
+                        self.name,
+                        err,
+                    )
+                self.last_update_success = False
+            if raise_on_auth_failed:
+                raise
+
+            config_entry = config_entries.current_entry.get()
+            if config_entry:
+                config_entry.async_start_reauth(self.hass)
         except NotImplementedError as err:
+            self.last_exception = err
             raise err
 
         except Exception as err:  # pylint: disable=broad-except
+            self.last_exception = err
             self.last_update_success = False
-            self.logger.exception(
-                "Unexpected error fetching %s data: %s", self.name, err
-            )
+            if log_failures:
+                self.logger.exception(
+                    "Unexpected error fetching %s data: %s", self.name, err
+                )
 
         else:
             if not self.last_update_success:
@@ -195,7 +249,7 @@ class DataUpdateCoordinator(Generic[T]):
                 self.name,
                 monotonic() - start,
             )
-            if self._listeners:
+            if not auth_failed and self._listeners:
                 self._schedule_refresh()
 
         for update_callback in self._listeners:

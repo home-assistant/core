@@ -16,14 +16,13 @@ async def test_waste_drawer_sensor(hass, mock_account):
 
     sensor = hass.states.get(WASTE_DRAWER_ENTITY_ID)
     assert sensor
-    assert sensor.state == "50"
+    assert sensor.state == "50.0"
     assert sensor.attributes["unit_of_measurement"] == PERCENTAGE
 
 
 async def test_sleep_time_sensor_with_none_state(hass):
     """Tests the sleep mode start time sensor where sleep mode is inactive."""
-    robot = create_mock_robot()
-    robot.sleep_mode_active = False
+    robot = create_mock_robot({"sleepModeActive": "0"})
     sensor = LitterRobotSleepTimeSensor(
         robot, "Sleep Mode Start Time", Mock(), "sleep_mode_start_time"
     )

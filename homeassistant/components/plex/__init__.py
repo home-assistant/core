@@ -7,7 +7,6 @@ import plexapi.exceptions
 from plexapi.gdm import GDM
 from plexwebsocket import (
     SIGNAL_CONNECTION_STATE,
-    SIGNAL_DATA,
     STATE_CONNECTED,
     STATE_DISCONNECTED,
     STATE_STOPPED,
@@ -16,18 +15,17 @@ from plexwebsocket import (
 import requests.exceptions
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY, SOURCE_REAUTH
-from homeassistant.const import (
-    CONF_SOURCE,
-    CONF_URL,
-    CONF_VERIFY_SSL,
-    EVENT_HOMEASSISTANT_STOP,
-)
+from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY
+from homeassistant.const import CONF_URL, CONF_VERIFY_SSL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dev_reg, entity_registry as ent_reg
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 
 from .const import (
     CONF_SERVER,
@@ -39,6 +37,7 @@ from .const import (
     PLATFORMS,
     PLATFORMS_COMPLETED,
     PLEX_SERVER_CONFIG,
+    PLEX_UPDATE_LIBRARY_SIGNAL,
     PLEX_UPDATE_PLATFORMS_SIGNAL,
     SERVERS,
     WEBSOCKETS,
@@ -61,12 +60,16 @@ async def async_setup(hass, config):
 
     gdm = hass.data[PLEX_DOMAIN][GDM_SCANNER] = GDM()
 
+    def gdm_scan():
+        _LOGGER.debug("Scanning for GDM clients")
+        gdm.scan(scan_for_clients=True)
+
     hass.data[PLEX_DOMAIN][GDM_DEBOUNCER] = Debouncer(
         hass,
         _LOGGER,
         cooldown=10,
         immediate=True,
-        function=partial(gdm.scan, scan_for_clients=True),
+        function=gdm_scan,
     ).async_call
 
     return True
@@ -112,19 +115,10 @@ async def async_setup_entry(hass, entry):
                 error,
             )
         raise ConfigEntryNotReady from error
-    except plexapi.exceptions.Unauthorized:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                PLEX_DOMAIN,
-                context={CONF_SOURCE: SOURCE_REAUTH},
-                data=entry.data,
-            )
-        )
-        _LOGGER.error(
-            "Token not accepted, please reauthenticate Plex server '%s'",
-            entry.data[CONF_SERVER],
-        )
-        return False
+    except plexapi.exceptions.Unauthorized as ex:
+        raise ConfigEntryAuthFailed(
+            f"Token not accepted, please reauthenticate Plex server '{entry.data[CONF_SERVER]}'"
+        ) from ex
     except (
         plexapi.exceptions.BadRequest,
         plexapi.exceptions.NotFound,
@@ -145,26 +139,22 @@ async def async_setup_entry(hass, entry):
 
     entry.add_update_listener(async_options_updated)
 
-    async def async_update_plex():
-        await hass.data[PLEX_DOMAIN][GDM_DEBOUNCER]()
-        await plex_server.async_update_platforms()
-
     unsub = async_dispatcher_connect(
         hass,
         PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id),
-        async_update_plex,
+        plex_server.async_update_platforms,
     )
     hass.data[PLEX_DOMAIN][DISPATCHERS].setdefault(server_id, [])
     hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
 
     @callback
-    def plex_websocket_callback(signal, data, error):
+    def plex_websocket_callback(msgtype, data, error):
         """Handle callbacks from plexwebsocket library."""
-        if signal == SIGNAL_CONNECTION_STATE:
+        if msgtype == SIGNAL_CONNECTION_STATE:
 
             if data == STATE_CONNECTED:
                 _LOGGER.debug("Websocket to %s successful", entry.data[CONF_SERVER])
-                hass.async_create_task(async_update_plex())
+                hass.async_create_task(plex_server.async_update_platforms())
             elif data == STATE_DISCONNECTED:
                 _LOGGER.debug(
                     "Websocket to %s disconnected, retrying", entry.data[CONF_SERVER]
@@ -178,14 +168,22 @@ async def async_setup_entry(hass, entry):
                 )
                 hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
 
-        elif signal == SIGNAL_DATA:
+        elif msgtype == "playing":
             hass.async_create_task(plex_server.async_update_session(data))
+        elif msgtype == "status":
+            if data["StatusNotification"][0]["title"] == "Library scan complete":
+                async_dispatcher_send(
+                    hass,
+                    PLEX_UPDATE_LIBRARY_SIGNAL.format(server_id),
+                )
 
     session = async_get_clientsession(hass)
+    subscriptions = ["playing", "status"]
     verify_ssl = server_config.get(CONF_VERIFY_SSL)
     websocket = PlexWebsocket(
         plex_server.plex_server,
         plex_websocket_callback,
+        subscriptions=subscriptions,
         session=session,
         verify_ssl=verify_ssl,
     )
@@ -209,6 +207,8 @@ async def async_setup_entry(hass, entry):
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
         task.add_done_callback(partial(start_websocket_session, platform))
+
+    async_cleanup_plex_devices(hass, entry)
 
     def get_plex_account(plex_server):
         try:
@@ -250,3 +250,30 @@ async def async_options_updated(hass, entry):
     # Guard incomplete setup during reauth flows
     if server_id in hass.data[PLEX_DOMAIN][SERVERS]:
         hass.data[PLEX_DOMAIN][SERVERS][server_id].options = entry.options
+
+
+@callback
+def async_cleanup_plex_devices(hass, entry):
+    """Clean up old and invalid devices from the registry."""
+    device_registry = dev_reg.async_get(hass)
+    entity_registry = ent_reg.async_get(hass)
+
+    device_entries = hass.helpers.device_registry.async_entries_for_config_entry(
+        device_registry, entry.entry_id
+    )
+
+    for device_entry in device_entries:
+        if (
+            len(
+                hass.helpers.entity_registry.async_entries_for_device(
+                    entity_registry, device_entry.id, include_disabled_entities=True
+                )
+            )
+            == 0
+        ):
+            _LOGGER.debug(
+                "Removing orphaned device: %s / %s",
+                device_entry.name,
+                device_entry.identifiers,
+            )
+            device_registry.async_remove_device(device_entry.id)

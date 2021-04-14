@@ -2,7 +2,7 @@
 
 import pypck
 
-from homeassistant.components.sensor import DOMAIN as DOMAIN_SENSOR
+from homeassistant.components.sensor import DOMAIN as DOMAIN_SENSOR, SensorEntity
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_DOMAIN,
@@ -51,7 +51,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
 
-class LcnVariableSensor(LcnEntity):
+class LcnVariableSensor(LcnEntity, SensorEntity):
     """Representation of a LCN sensor for variables."""
 
     def __init__(self, config, entry_id, device_connection):
@@ -99,7 +99,7 @@ class LcnVariableSensor(LcnEntity):
         self.async_write_ha_state()
 
 
-class LcnLedLogicSensor(LcnEntity):
+class LcnLedLogicSensor(LcnEntity, SensorEntity):
     """Representation of a LCN sensor for leds and logicops."""
 
     def __init__(self, config, entry_id, device_connection):

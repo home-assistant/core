@@ -9,7 +9,7 @@
             "old_firmware": "Niet-ondersteunde oude firmware op het Bond-apparaat - voer een upgrade uit voordat u doorgaat",
             "unknown": "Onverwachte fout"
         },
-        "flow_title": "Bond: {bond_id} ({host})",
+        "flow_title": "Bond: {name} ({host})",
         "step": {
             "confirm": {
                 "data": {

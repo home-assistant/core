@@ -5,7 +5,7 @@ from abc import abstractmethod
 from datetime import timedelta
 import functools as ft
 import logging
-from typing import Any
+from typing import Any, final
 
 import voluptuous as vol
 
@@ -19,6 +19,7 @@ from homeassistant.const import (
     STATE_ON,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -28,7 +29,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceDataType
+from homeassistant.helpers.typing import ConfigType, ServiceDataType
 from homeassistant.util.temperature import convert as convert_temperature
 
 from .const import (
@@ -102,7 +103,7 @@ SET_TEMPERATURE_SCHEMA = vol.All(
 )
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up climate entities."""
     component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
@@ -156,18 +157,18 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry):
+async def async_setup_entry(hass: HomeAssistant, entry):
     """Set up a config entry."""
     return await hass.data[DOMAIN].async_setup_entry(entry)
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry):
+async def async_unload_entry(hass: HomeAssistant, entry):
     """Unload a config entry."""
     return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
 class ClimateEntity(Entity):
-    """Representation of a climate entity."""
+    """Base class for climate entities."""
 
     @property
     def state(self) -> str:
@@ -213,6 +214,7 @@ class ClimateEntity(Entity):
 
         return data
 
+    @final
     @property
     def state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""

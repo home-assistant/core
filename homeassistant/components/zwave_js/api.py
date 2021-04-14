@@ -46,6 +46,10 @@ FILENAME = "filename"
 ENABLED = "enabled"
 FORCE_CONSOLE = "force_console"
 
+# constants for setting config parameters
+VALUE_ID = "value_id"
+STATUS = "status"
+
 
 @callback
 def async_register_api(hass: HomeAssistant) -> None:
@@ -56,6 +60,7 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_stop_inclusion)
     websocket_api.async_register_command(hass, websocket_remove_node)
     websocket_api.async_register_command(hass, websocket_stop_exclusion)
+    websocket_api.async_register_command(hass, websocket_refresh_node_info)
     websocket_api.async_register_command(hass, websocket_update_log_config)
     websocket_api.async_register_command(hass, websocket_get_log_config)
     websocket_api.async_register_command(hass, websocket_get_config_parameters)
@@ -297,6 +302,32 @@ async def websocket_remove_node(
     )
 
 
+@websocket_api.require_admin  # type: ignore
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/refresh_node_info",
+        vol.Required(ENTRY_ID): str,
+        vol.Required(NODE_ID): int,
+    },
+)
+async def websocket_refresh_node_info(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+) -> None:
+    """Re-interview a node."""
+    entry_id = msg[ENTRY_ID]
+    node_id = msg[NODE_ID]
+    client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
+    node = client.driver.controller.nodes.get(node_id)
+
+    if node is None:
+        connection.send_error(msg[ID], ERR_NOT_FOUND, f"Node {node_id} not found")
+        return
+
+    await node.async_refresh_info()
+    connection.send_result(msg[ID])
+
+
 @websocket_api.require_admin  # type:ignore
 @websocket_api.async_response
 @websocket_api.websocket_command(
@@ -321,7 +352,7 @@ async def websocket_set_config_parameter(
     client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
     node = client.driver.controller.nodes[node_id]
     try:
-        result = await async_set_config_parameter(
+        zwave_value, cmd_status = await async_set_config_parameter(
             node, value, property_, property_key=property_key
         )
     except (InvalidNewValue, NotFoundError, NotImplementedError, SetValueFailed) as err:
@@ -340,7 +371,10 @@ async def websocket_set_config_parameter(
 
     connection.send_result(
         msg[ID],
-        str(result),
+        {
+            VALUE_ID: zwave_value.value_id,
+            STATUS: cmd_status,
+        },
     )
 
 
@@ -395,11 +429,6 @@ def websocket_get_config_parameters(
     )
 
 
-def convert_log_level_to_enum(value: str) -> LogLevel:
-    """Convert log level string to LogLevel enum."""
-    return LogLevel[value.upper()]
-
-
 def filename_is_present_if_logging_to_file(obj: dict) -> dict:
     """Validate that filename is provided if log_to_file is True."""
     if obj.get(LOG_TO_FILE, False) and FILENAME not in obj:
@@ -420,8 +449,8 @@ def filename_is_present_if_logging_to_file(obj: dict) -> dict:
                     vol.Optional(LEVEL): vol.All(
                         cv.string,
                         vol.Lower,
-                        vol.In([log_level.name.lower() for log_level in LogLevel]),
-                        lambda val: LogLevel[val.upper()],
+                        vol.In([log_level.value for log_level in LogLevel]),
+                        lambda val: LogLevel(val),  # pylint: disable=unnecessary-lambda
                     ),
                     vol.Optional(LOG_TO_FILE): cv.boolean,
                     vol.Optional(FILENAME): cv.string,

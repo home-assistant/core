@@ -26,10 +26,12 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_DESCRIPTION,
     CONF_NAME,
     CONF_PLATFORM,
     HTTP_BAD_REQUEST,
     HTTP_NOT_FOUND,
+    PLATFORM_FORMAT,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -61,7 +63,6 @@ CONF_LANG = "language"
 CONF_SERVICE_NAME = "service_name"
 CONF_TIME_MEMORY = "time_memory"
 
-CONF_DESCRIPTION = "description"
 CONF_FIELDS = "fields"
 
 DEFAULT_CACHE = True
@@ -315,6 +316,10 @@ class SpeechManager:
         if provider.name is None:
             provider.name = engine
         self.providers[engine] = provider
+
+        self.hass.config.components.add(
+            PLATFORM_FORMAT.format(domain=engine, platform=DOMAIN)
+        )
 
     async def async_get_url_path(
         self, engine, message, cache=None, language=None, options=None

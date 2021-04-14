@@ -6,7 +6,7 @@ from py17track import Client as SeventeenTrackClient
 from py17track.errors import SeventeenTrackError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_FRIENDLY_NAME,
@@ -16,7 +16,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.helpers import aiohttp_client, config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util import Throttle, slugify
 
@@ -95,7 +94,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     await data.async_update()
 
 
-class SeventeenTrackSummarySensor(Entity):
+class SeventeenTrackSummarySensor(SensorEntity):
     """Define a summary sensor."""
 
     def __init__(self, data, status, initial_state):
@@ -133,7 +132,7 @@ class SeventeenTrackSummarySensor(Entity):
     @property
     def unique_id(self):
         """Return a unique, Home Assistant friendly identifier for this entity."""
-        return "summary_{}_{}".format(self._data.account_id, slugify(self._status))
+        return f"summary_{self._data.account_id}_{slugify(self._status)}"
 
     @property
     def unit_of_measurement(self):
@@ -166,7 +165,7 @@ class SeventeenTrackSummarySensor(Entity):
         self._state = self._data.summary.get(self._status)
 
 
-class SeventeenTrackPackageSensor(Entity):
+class SeventeenTrackPackageSensor(SensorEntity):
     """Define an individual package sensor."""
 
     def __init__(self, data, package):

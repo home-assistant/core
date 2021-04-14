@@ -2,7 +2,7 @@
 from datetime import timedelta
 import functools as ft
 import logging
-from typing import Any
+from typing import Any, final
 
 import voluptuous as vol
 
@@ -165,7 +165,7 @@ async def async_unload_entry(hass, entry):
 
 
 class CoverEntity(Entity):
-    """Representation of a cover."""
+    """Base class for cover entities."""
 
     @property
     def current_cover_position(self):
@@ -196,6 +196,7 @@ class CoverEntity(Entity):
 
         return STATE_CLOSED if closed else STATE_OPEN
 
+    @final
     @property
     def state_attributes(self):
         """Return the state attributes."""

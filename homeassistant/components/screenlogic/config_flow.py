@@ -13,8 +13,7 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import DEFAULT_SCAN_INTERVAL, MIN_SCAN_INTERVAL
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, MIN_SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -120,7 +119,7 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             mac = user_input[GATEWAY_SELECT_KEY]
             selected_gateway = self.discovered_gateways[mac]
-            await self.async_set_unique_id(mac)
+            await self.async_set_unique_id(mac, raise_on_progress=False)
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
                 title=name_for_mac(mac),
@@ -164,7 +163,7 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors[CONF_IP_ADDRESS] = "cannot_connect"
 
             if not errors:
-                await self.async_set_unique_id(mac)
+                await self.async_set_unique_id(mac, raise_on_progress=False)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=name_for_mac(mac),

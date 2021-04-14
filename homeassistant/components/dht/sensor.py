@@ -1,11 +1,12 @@
 """Support for Adafruit DHT temperature and humidity sensor."""
+from contextlib import suppress
 from datetime import timedelta
 import logging
 
 import Adafruit_DHT  # pylint: disable=import-error
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
@@ -14,7 +15,6 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.util.temperature import celsius_to_fahrenheit
 
@@ -75,7 +75,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     dev = []
     name = config[CONF_NAME]
 
-    try:
+    with suppress(KeyError):
         for variable in config[CONF_MONITORED_CONDITIONS]:
             dev.append(
                 DHTSensor(
@@ -87,13 +87,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     humidity_offset,
                 )
             )
-    except KeyError:
-        pass
 
     add_entities(dev, True)
 
 
-class DHTSensor(Entity):
+class DHTSensor(SensorEntity):
     """Implementation of the DHT sensor."""
 
     def __init__(

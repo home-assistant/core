@@ -33,8 +33,7 @@
       "init": {
         "data": {
           "name": "Notification service name (change requires restart)",
-          "recipient": "SMS notification recipients",
-          "track_new_devices": "Track new devices"
+          "recipient": "SMS notification recipients"
         }
       }
     }

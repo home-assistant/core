@@ -147,3 +147,34 @@ async def test_percentage_to_ranged_value_small():
     assert math.ceil(percentage_to_ranged_value(range, 66)) == 4
     assert math.ceil(percentage_to_ranged_value(range, 83)) == 5
     assert math.ceil(percentage_to_ranged_value(range, 100)) == 6
+
+
+async def test_ranged_value_to_percentage_starting_at_one():
+    """Test a range that starts with 1."""
+    range = (1, 4)
+
+    assert ranged_value_to_percentage(range, 1) == 25
+    assert ranged_value_to_percentage(range, 2) == 50
+    assert ranged_value_to_percentage(range, 3) == 75
+    assert ranged_value_to_percentage(range, 4) == 100
+
+
+async def test_ranged_value_to_percentage_starting_high():
+    """Test a range that does not start with 1."""
+    range = (101, 255)
+
+    assert ranged_value_to_percentage(range, 101) == 0
+    assert ranged_value_to_percentage(range, 139) == 25
+    assert ranged_value_to_percentage(range, 178) == 50
+    assert ranged_value_to_percentage(range, 217) == 75
+    assert ranged_value_to_percentage(range, 255) == 100
+
+
+async def test_ranged_value_to_percentage_starting_zero():
+    """Test a range that starts with 0."""
+    range = (0, 3)
+
+    assert ranged_value_to_percentage(range, 0) == 25
+    assert ranged_value_to_percentage(range, 1) == 50
+    assert ranged_value_to_percentage(range, 2) == 75
+    assert ranged_value_to_percentage(range, 3) == 100

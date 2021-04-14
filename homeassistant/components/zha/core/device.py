@@ -56,6 +56,7 @@ from .const import (
     CLUSTER_COMMANDS_SERVER,
     CLUSTER_TYPE_IN,
     CLUSTER_TYPE_OUT,
+    CONF_ENABLE_IDENTIFY_ON_JOIN,
     EFFECT_DEFAULT_VARIANT,
     EFFECT_OKAY,
     POWER_BATTERY_OR_UNKNOWN,
@@ -66,7 +67,7 @@ from .const import (
     UNKNOWN_MANUFACTURER,
     UNKNOWN_MODEL,
 )
-from .helpers import LogMixin
+from .helpers import LogMixin, async_get_zha_config_value
 
 _LOGGER = logging.getLogger(__name__)
 CONSIDER_UNAVAILABLE_MAINS = 60 * 60 * 2  # 2 hours
@@ -395,13 +396,20 @@ class ZHADevice(LogMixin):
 
     async def async_configure(self):
         """Configure the device."""
+        should_identify = async_get_zha_config_value(
+            self._zha_gateway.config_entry, CONF_ENABLE_IDENTIFY_ON_JOIN, True
+        )
         self.debug("started configuration")
         await self._channels.async_configure()
         self.debug("completed configuration")
         entry = self.gateway.zha_storage.async_create_or_update_device(self)
         self.debug("stored in registry: %s", entry)
 
-        if self._channels.identify_ch is not None and not self.skip_configuration:
+        if (
+            should_identify
+            and self._channels.identify_ch is not None
+            and not self.skip_configuration
+        ):
             await self._channels.identify_ch.trigger_effect(
                 EFFECT_OKAY, EFFECT_DEFAULT_VARIANT
             )

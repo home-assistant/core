@@ -5,7 +5,7 @@ import logging
 from qnapstats import QNAPStats
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_NAME,
     CONF_HOST,
@@ -23,7 +23,6 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -200,7 +199,7 @@ class QNAPStatsAPI:
             _LOGGER.exception("Failed to fetch QNAP stats from the NAS")
 
 
-class QNAPSensor(Entity):
+class QNAPSensor(SensorEntity):
     """Base class for a QNAP sensor."""
 
     def __init__(self, api, variable, variable_info, monitor_device=None):

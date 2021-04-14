@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured_device": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_configured_device": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "already_configured_local_device": "\u672c\u5730\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\uff0c\u8acb\u5148\u9032\u884c\u79fb\u9664\u5f8c\u518d\u8a2d\u5b9a\u96f2\u7aef\u88dd\u7f6e\u3002",
             "authorize_url_timeout": "\u7522\u751f\u8a8d\u8b49 URL \u6642\u903e\u6642\u3002",
             "cannot_connect": "\u9023\u7dda\u5931\u6557",

@@ -7,7 +7,7 @@ import re
 import growattServer
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -18,28 +18,28 @@ from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_TIMESTAMP,
     DEVICE_CLASS_VOLTAGE,
     ELECTRICAL_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
     FREQUENCY_HERTZ,
     PERCENTAGE,
+    POWER_KILO_WATT,
     POWER_WATT,
     TEMP_CELSIUS,
     VOLT,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
+from homeassistant.util import Throttle, dt
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_PLANT_ID = "plant_id"
 DEFAULT_PLANT_ID = "0"
 DEFAULT_NAME = "Growatt"
-SCAN_INTERVAL = datetime.timedelta(minutes=5)
+SCAN_INTERVAL = datetime.timedelta(minutes=1)
 
 # Sensor type order is: Sensor name, Unit of measurement, api data name, additional options
-
 TOTAL_SENSOR_TYPES = {
     "total_money_today": ("Total money today", CURRENCY_EURO, "plantMoneyText", {}),
     "total_money_total": ("Money lifetime", CURRENCY_EURO, "totalMoneyText", {}),
@@ -346,7 +346,207 @@ STORAGE_SENSOR_TYPES = {
     ),
 }
 
-SENSOR_TYPES = {**TOTAL_SENSOR_TYPES, **INVERTER_SENSOR_TYPES, **STORAGE_SENSOR_TYPES}
+MIX_SENSOR_TYPES = {
+    # Values from 'mix_info' API call
+    "mix_statement_of_charge": (
+        "Statement of charge",
+        PERCENTAGE,
+        "capacity",
+        {"device_class": DEVICE_CLASS_BATTERY},
+    ),
+    "mix_battery_charge_today": (
+        "Battery charged today",
+        ENERGY_KILO_WATT_HOUR,
+        "eBatChargeToday",
+        {"device_class": DEVICE_CLASS_ENERGY},
+    ),
+    "mix_battery_charge_lifetime": (
+        "Lifetime battery charged",
+        ENERGY_KILO_WATT_HOUR,
+        "eBatChargeTotal",
+        {"device_class": DEVICE_CLASS_ENERGY},
+    ),
+    "mix_battery_discharge_today": (
+        "Battery discharged today",
+        ENERGY_KILO_WATT_HOUR,
+        "eBatDisChargeToday",
+        {"device_class": DEVICE_CLASS_ENERGY},
+    ),
+    "mix_battery_discharge_lifetime": (
+        "Lifetime battery discharged",
+        ENERGY_KILO_WATT_HOUR,
+        "eBatDisChargeTotal",
+        {"device_class": DEVICE_CLASS_ENERGY},
+    ),
+    "mix_solar_generation_today": (
+        "Solar energy today",
+        ENERGY_KILO_WATT_HOUR,
+        "epvToday",
+        {"device_class": DEVICE_CLASS_ENERGY},
+    ),
+    "mix_solar_generation_lifetime": (
+        "Lifetime solar energy",
+        ENERGY_KILO_WATT_HOUR,
+        "epvTotal",
+        {"device_class": DEVICE_CLASS_ENERGY},
+    ),
+    "mix_battery_discharge_w": (
+        "Battery discharging W",
+        POWER_WATT,
+        "pDischarge1",
+        {"device_class": DEVICE_CLASS_POWER},
+    ),
+    "mix_battery_voltage": (
+        "Battery voltage",
+        VOLT,
+        "vbat",
+        {"device_class": DEVICE_CLASS_VOLTAGE},
+    ),
+    "mix_pv1_voltage": (
+        "PV1 voltage",
+        VOLT,
+        "vpv1",
+        {"device_class": DEVICE_CLASS_VOLTAGE},
+    ),
+    "mix_pv2_voltage": (
+        "PV2 voltage",
+        VOLT,
+        "vpv2",
+        {"device_class": DEVICE_CLASS_VOLTAGE},
+    ),
+    # Values from 'mix_totals' API call
+    "mix_load_consumption_today": (
+        "Load consumption today",
+        ENERGY_KILO_WATT_HOUR,
+        "elocalLoadToday",
+        {"device_class": DEVICE_CLASS_ENERGY},
+    ),
+    "mix_load_consumption_lifetime": (
+        "Lifetime load consumption",
+        ENERGY_KILO_WATT_HOUR,
+        "elocalLoadTotal",
+        {"device_class": DEVICE_CLASS_ENERGY},
+    ),
+    "mix_export_to_grid_today": (
+        "Export to grid today",
+        ENERGY_KILO_WATT_HOUR,
+        "etoGridToday",
+        {"device_class": DEVICE_CLASS_ENERGY},
+    ),
+    "mix_export_to_grid_lifetime": (
+        "Lifetime export to grid",
+        ENERGY_KILO_WATT_HOUR,
+        "etogridTotal",
+        {"device_class": DEVICE_CLASS_ENERGY},
+    ),
+    # Values from 'mix_system_status' API call
+    "mix_battery_charge": (
+        "Battery charging",
+        POWER_KILO_WATT,
+        "chargePower",
+        {"device_class": DEVICE_CLASS_POWER},
+    ),
+    "mix_load_consumption": (
+        "Load consumption",
+        POWER_KILO_WATT,
+        "pLocalLoad",
+        {"device_class": DEVICE_CLASS_POWER},
+    ),
+    "mix_wattage_pv_1": (
+        "PV1 Wattage",
+        POWER_WATT,
+        "pPv1",
+        {"device_class": DEVICE_CLASS_POWER},
+    ),
+    "mix_wattage_pv_2": (
+        "PV2 Wattage",
+        POWER_WATT,
+        "pPv2",
+        {"device_class": DEVICE_CLASS_POWER},
+    ),
+    "mix_wattage_pv_all": (
+        "All PV Wattage",
+        POWER_KILO_WATT,
+        "ppv",
+        {"device_class": DEVICE_CLASS_POWER},
+    ),
+    "mix_export_to_grid": (
+        "Export to grid",
+        POWER_KILO_WATT,
+        "pactogrid",
+        {"device_class": DEVICE_CLASS_POWER},
+    ),
+    "mix_import_from_grid": (
+        "Import from grid",
+        POWER_KILO_WATT,
+        "pactouser",
+        {"device_class": DEVICE_CLASS_POWER},
+    ),
+    "mix_battery_discharge_kw": (
+        "Battery discharging kW",
+        POWER_KILO_WATT,
+        "pdisCharge1",
+        {"device_class": DEVICE_CLASS_POWER},
+    ),
+    "mix_grid_voltage": (
+        "Grid voltage",
+        VOLT,
+        "vAc1",
+        {"device_class": DEVICE_CLASS_VOLTAGE},
+    ),
+    # Values from 'mix_detail' API call
+    "mix_system_production_today": (
+        "System production today (self-consumption + export)",
+        ENERGY_KILO_WATT_HOUR,
+        "eCharge",
+        {"device_class": DEVICE_CLASS_ENERGY},
+    ),
+    "mix_load_consumption_solar_today": (
+        "Load consumption today (solar)",
+        ENERGY_KILO_WATT_HOUR,
+        "eChargeToday",
+        {"device_class": DEVICE_CLASS_ENERGY},
+    ),
+    "mix_self_consumption_today": (
+        "Self consumption today (solar + battery)",
+        ENERGY_KILO_WATT_HOUR,
+        "eChargeToday1",
+        {"device_class": DEVICE_CLASS_ENERGY},
+    ),
+    "mix_load_consumption_battery_today": (
+        "Load consumption today (battery)",
+        ENERGY_KILO_WATT_HOUR,
+        "echarge1",
+        {"device_class": DEVICE_CLASS_ENERGY},
+    ),
+    "mix_import_from_grid_today": (
+        "Import from grid today (load)",
+        ENERGY_KILO_WATT_HOUR,
+        "etouser",
+        {"device_class": DEVICE_CLASS_ENERGY},
+    ),
+    # This sensor is manually created using the most recent X-Axis value from the chartData
+    "mix_last_update": (
+        "Last Data Update",
+        None,
+        "lastdataupdate",
+        {"device_class": DEVICE_CLASS_TIMESTAMP},
+    ),
+    # Values from 'dashboard_data' API call
+    "mix_import_from_grid_today_combined": (
+        "Import from grid today (load + charging)",
+        ENERGY_KILO_WATT_HOUR,
+        "etouser_combined",  # This id is not present in the raw API data, it is added by the sensor
+        {"device_class": DEVICE_CLASS_ENERGY},
+    ),
+}
+
+SENSOR_TYPES = {
+    **TOTAL_SENSOR_TYPES,
+    **INVERTER_SENSOR_TYPES,
+    **STORAGE_SENSOR_TYPES,
+    **MIX_SENSOR_TYPES,
+}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -397,6 +597,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         elif device["deviceType"] == "storage":
             probe.plant_id = plant_id
             sensors = STORAGE_SENSOR_TYPES
+        elif device["deviceType"] == "mix":
+            probe.plant_id = plant_id
+            sensors = MIX_SENSOR_TYPES
         else:
             _LOGGER.debug(
                 "Device type %s was found but is not supported right now",
@@ -416,7 +619,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(entities, True)
 
 
-class GrowattInverter(Entity):
+class GrowattInverter(SensorEntity):
     """Representation of a Growatt Sensor."""
 
     def __init__(self, probe, name, sensor, unique_id):
@@ -505,6 +708,45 @@ class GrowattData:
                     self.plant_id, self.device_id
                 )
                 self.data = {**storage_info_detail, **storage_energy_overview}
+            elif self.growatt_type == "mix":
+                mix_info = self.api.mix_info(self.device_id)
+                mix_totals = self.api.mix_totals(self.device_id, self.plant_id)
+                mix_system_status = self.api.mix_system_status(
+                    self.device_id, self.plant_id
+                )
+
+                mix_detail = self.api.mix_detail(
+                    self.device_id, self.plant_id, date=datetime.datetime.now()
+                )
+                # Get the chart data and work out the time of the last entry, use this as the last time data was published to the Growatt Server
+                mix_chart_entries = mix_detail["chartData"]
+                sorted_keys = sorted(mix_chart_entries)
+
+                # Create datetime from the latest entry
+                date_now = dt.now().date()
+                last_updated_time = dt.parse_time(str(sorted_keys[-1]))
+                combined_timestamp = datetime.datetime.combine(
+                    date_now, last_updated_time
+                )
+                # Convert datetime to UTC
+                combined_timestamp_utc = dt.as_utc(combined_timestamp)
+                mix_detail["lastdataupdate"] = combined_timestamp_utc.isoformat()
+
+                # Dashboard data is largely inaccurate for mix system but it is the only call with the ability to return the combined
+                # imported from grid value that is the combination of charging AND load consumption
+                dashboard_data = self.api.dashboard_data(self.plant_id)
+                # Dashboard values have units e.g. "kWh" as part of their returned string, so we remove it
+                dashboard_values_for_mix = {
+                    # etouser is already used by the results from 'mix_detail' so we rebrand it as 'etouser_combined'
+                    "etouser_combined": dashboard_data["etouser"].replace("kWh", "")
+                }
+                self.data = {
+                    **mix_info,
+                    **mix_totals,
+                    **mix_system_status,
+                    **mix_detail,
+                    **dashboard_values_for_mix,
+                }
         except json.decoder.JSONDecodeError:
             _LOGGER.error("Unable to fetch data from Growatt server")
 
