@@ -356,6 +356,17 @@ class DaikinMadokaClimate(ClimateEntity):
     @property
     def device_info(self):
         """Return a device description for device registry."""
+
+        model = (
+            ("BRC1H" + self.dev_info["Model Number String"])
+            if "Model Number String" in self.dev_info
+            else ""
+        )
+        sw_version = (
+            self.dev_info["Software Revision String"]
+            if "Software Revision String" in self.dev_info
+            else ""
+        )
         return {
             "identifiers": {
                 # Serial numbers are unique identifiers within a specific domain
@@ -363,7 +374,7 @@ class DaikinMadokaClimate(ClimateEntity):
             },
             "name": self.name,
             "manufacturer": "DAIKIN",
-            "model": "BRC1H " + self.dev_info["Model Number String"],
-            "sw_version": self.dev_info["Software Revision String"],
+            "model": model,
+            "sw_version": sw_version,
             "via_device": (DOMAIN, self.unique_id),
         }
