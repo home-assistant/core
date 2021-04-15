@@ -1459,6 +1459,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["urlencode"] = urlencode
         self.globals["max"] = max
         self.globals["min"] = min
+        self.tests["match"] = regex_match
+        self.tests["search"] = regex_search
 
         if hass is None:
             return
