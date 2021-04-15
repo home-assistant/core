@@ -1432,8 +1432,10 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["base64_decode"] = base64_decode
         self.filters["ordinal"] = ordinal
         self.filters["regex_match"] = regex_match
+        self.tests["match"] = regex_match
         self.filters["regex_replace"] = regex_replace
         self.filters["regex_search"] = regex_search
+        self.tests["search"] = regex_search
         self.filters["regex_findall_index"] = regex_findall_index
         self.filters["bitwise_and"] = bitwise_and
         self.filters["bitwise_or"] = bitwise_or
