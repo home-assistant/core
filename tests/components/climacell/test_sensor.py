@@ -97,7 +97,8 @@ async def _setup(hass: HomeAssistantType, config: dict[str, Any]) -> State:
 def check_sensor_state(hass: HomeAssistantType, entity_name: str, value: str):
     """Check the state of a ClimaCell sensor."""
     state = hass.states.get(CC_SENSOR_ENTITY_ID.format(entity_name))
-    assert state and state.state == value
+    assert state
+    assert state.state == value
     assert state.attributes[ATTR_ATTRIBUTION] == ATTRIBUTION
 
 

@@ -1,6 +1,7 @@
 """Weather component that handles meteorological data for your location."""
 from __future__ import annotations
 
+from abc import abstractmethod
 from datetime import datetime
 import logging
 from typing import Any, Callable, Mapping
@@ -216,24 +217,24 @@ class BaseClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
         }
 
     @property
+    @abstractmethod
     def cloud_cover(self):
         """Return cloud cover."""
-        raise NotImplementedError
 
     @property
+    @abstractmethod
     def wind_gust(self):
         """Return wind gust speed."""
-        raise NotImplementedError
 
     @property
+    @abstractmethod
     def precipitation_type(self):
         """Return precipitation type."""
-        raise NotImplementedError
 
     @property
+    @abstractmethod
     def _pressure(self):
         """Return the raw pressure."""
-        raise NotImplementedError
 
     @property
     def pressure(self):
@@ -245,9 +246,9 @@ class BaseClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
         return self._pressure
 
     @property
+    @abstractmethod
     def _wind_speed(self):
         """Return the raw wind speed."""
-        raise NotImplementedError
 
     @property
     def wind_speed(self):
@@ -259,9 +260,9 @@ class BaseClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
         return self._wind_speed
 
     @property
+    @abstractmethod
     def _visibility(self):
         """Return the raw visibility."""
-        raise NotImplementedError
 
     @property
     def visibility(self):

@@ -1,6 +1,7 @@
 """Sensor component that handles additional ClimaCell data for your location."""
 from __future__ import annotations
 
+from abc import abstractmethod
 import logging
 from typing import Any, Callable, Mapping
 
