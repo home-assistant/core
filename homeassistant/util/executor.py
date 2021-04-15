@@ -61,8 +61,8 @@ class InterruptibleThreadPoolExecutor(ThreadPoolExecutor):
                     joined.append(thread)
                     continue
 
-                if attempt >= START_LOG_ATTEMPT:
-                    _log_thread_running_at_shutdown(thread.name, ident)
+                # if attempt >= START_LOG_ATTEMPT:
+                _log_thread_running_at_shutdown(thread.name, ident)
 
                 async_raise(ident, SystemExit)
                 thread.join(timeout=1)
