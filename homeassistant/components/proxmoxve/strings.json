@@ -18,7 +18,8 @@
           "auth_error": "[%key:common::config_flow::error::invalid_auth%]",
           "ssl_rejection": "Could not verify the SSL certificate",
           "cant_connect": "[%key:common::config_flow::error::cannot_connect%]",
-          "general_error": "[%key:common::config_flow::error::unknown%]"
+          "general_error": "[%key:common::config_flow::error::unknown%]",
+          "invalid_port": "Invalid port number"
       },
       "abort": {
 

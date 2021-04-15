@@ -1,5 +1,5 @@
 """Config Flow for ProxmoxVE."""
-from proxmoxer.backends.https import AuthenticationError
+import proxmoxer
 from requests.exceptions import ConnectTimeout, SSLError
 import voluptuous as vol
 
@@ -46,48 +46,52 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             realm = info.get(CONF_REALM, CONF_DEFAULT_REALM)
             verify_ssl = info.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
 
-            try:
-                self._proxmox_client = ProxmoxClient(
-                    host,
-                    port=port,
-                    user=username,
-                    realm=realm,
-                    password=password,
-                    verify_ssl=verify_ssl,
-                )
-
-                await self.hass.async_add_executor_job(
-                    self._proxmox_client.build_client
-                )
-
-            except AuthenticationError:
-                errors[CONF_USERNAME] = "auth_error"
-            except SSLError:
-                errors[CONF_VERIFY_SSL] = "ssl_rejection"
-            except ConnectTimeout:
-                errors[CONF_HOST] = "cant_connect"
-            except Exception:  # pylint: disable=broad-except
-                errors[CONF_HOST] = "general_error"
+            if port > 65535 or port <= 0:
+                errors[CONF_PORT] = "invalid_port"
 
             if not errors:
-                # get all vms and containers and add them
 
-                if "nodes" not in self._config:
-                    self._config["nodes"] = []
+                try:
+                    self._proxmox_client = ProxmoxClient(
+                        host,
+                        port=port,
+                        user=username,
+                        realm=realm,
+                        password=password,
+                        verify_ssl=verify_ssl,
+                    )
 
-                self._config[CONF_HOST] = host
-                self._config[CONF_PORT] = port
-                self._config[CONF_USERNAME] = username
-                self._config[CONF_PASSWORD] = password
-                self._config[CONF_REALM] = realm
-                self._config[CONF_VERIFY_SSL] = verify_ssl
+                    await self.hass.async_add_executor_job(
+                        self._proxmox_client.build_client
+                    )
 
-                await self.hass.async_add_executor_job(self._add_vms_to_config)
+                except proxmoxer.backends.https.AuthenticationError:
+                    errors[CONF_USERNAME] = "auth_error"
+                except SSLError:
+                    errors[CONF_VERIFY_SSL] = "ssl_rejection"
+                except ConnectTimeout:
+                    errors[CONF_HOST] = "cant_connect"
+                except Exception:  # pylint: disable=broad-except
+                    errors["base"] = "general_error"
 
-                return self.async_create_entry(title="ProxmoxVE", data=self._config)
+                if not errors:
+                    # get all vms and containers and add them
 
-        if info is None:
-            info = {}
+                    if "nodes" not in self._config:
+                        self._config["nodes"] = []
+
+                    self._config[CONF_HOST] = host
+                    self._config[CONF_PORT] = port
+                    self._config[CONF_USERNAME] = username
+                    self._config[CONF_PASSWORD] = password
+                    self._config[CONF_REALM] = realm
+                    self._config[CONF_VERIFY_SSL] = verify_ssl
+
+                    await self.hass.async_add_executor_job(self._add_vms_to_config)
+
+                    return self.async_create_entry(title="ProxmoxVE", data=self._config)
+
+        info = {}
 
         data_schema = vol.Schema(
             {

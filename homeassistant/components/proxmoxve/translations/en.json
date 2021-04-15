@@ -5,6 +5,7 @@
             "auth_error": "Invalid authentication",
             "cant_connect": "Failed to connect",
             "general_error": "Unexpected error",
+            "invalid_port": "Invalid port number",
             "ssl_rejection": "Could not verify the SSL certificate"
         },
         "step": {
