@@ -12,7 +12,8 @@
                 "data": {
                     "password": "Passwort",
                     "username": "Benutzername"
-                }
+                },
+                "title": "Anmelden mit mijn.ithodaalderop.nl Konto"
             }
         }
     }

@@ -3,5 +3,6 @@
   "name": "Alpha Vantage",
   "documentation": "https://www.home-assistant.io/integrations/alpha_vantage",
   "requirements": ["alpha_vantage==2.3.1"],
-  "codeowners": ["@fabaff"]
+  "codeowners": ["@fabaff"],
+  "iot_class": "cloud_polling"
 }

@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
             "no_uuid": "Kodi \u5be6\u4f8b\u6c92\u6709\u552f\u4e00 ID\u3002\u901a\u5e38\u662f\u56e0\u70ba Kodi \u7248\u672c\u904e\u820a\uff08\u4f4e\u65bc 17.x\uff09\u3002\u53ef\u4ee5\u624b\u52d5\u8a2d\u5b9a\u6574\u5408\u6216\u66f4\u65b0\u81f3\u6700\u65b0\u7248\u672c Kodi\u3002",

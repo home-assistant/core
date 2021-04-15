@@ -330,7 +330,7 @@ class Template:
 
     def ensure_valid(self) -> None:
         """Return if template is valid."""
-        if self._compiled_code is not None:
+        if self.is_static or self._compiled_code is not None:
             return
 
         try:
@@ -1457,6 +1457,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["timedelta"] = timedelta
         self.globals["strptime"] = strptime
         self.globals["urlencode"] = urlencode
+        self.globals["max"] = max
+        self.globals["min"] = min
+
         if hass is None:
             return
 

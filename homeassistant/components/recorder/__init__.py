@@ -36,6 +36,7 @@ from homeassistant.helpers.entityfilter import (
 )
 from homeassistant.helpers.event import async_track_time_interval, track_time_change
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
 
 from . import migration, purge
@@ -130,6 +131,18 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
+
+
+@bind_hass
+async def async_migration_in_progress(hass: HomeAssistant) -> bool:
+    """Determine is a migration is in progress.
+
+    This is a thin wrapper that allows us to change
+    out the implementation later.
+    """
+    if DATA_INSTANCE not in hass.data:
+        return False
+    return hass.data[DATA_INSTANCE].migration_in_progress
 
 
 def run_information(hass, point_in_time: datetime | None = None):
@@ -291,7 +304,8 @@ class Recorder(threading.Thread):
         self.get_session = None
         self._completed_database_setup = None
         self._event_listener = None
-
+        self.async_migration_event = asyncio.Event()
+        self.migration_in_progress = False
         self._queue_watcher = None
 
         self.enabled = True
@@ -418,11 +432,13 @@ class Recorder(threading.Thread):
         schema_is_current = migration.schema_is_current(current_version)
         if schema_is_current:
             self._setup_run()
+        else:
+            self.migration_in_progress = True
 
         self.hass.add_job(self.async_connection_success)
-
         # If shutdown happened before Home Assistant finished starting
         if hass_started.result() is shutdown_task:
+            self.migration_in_progress = False
             # Make sure we cleanly close the run if
             # we restart before startup finishes
             self._shutdown()
@@ -510,6 +526,11 @@ class Recorder(threading.Thread):
 
         return None
 
+    @callback
+    def _async_migration_started(self):
+        """Set the migration started event."""
+        self.async_migration_event.set()
+
     def _migrate_schema_and_setup_run(self, current_version) -> bool:
         """Migrate schema to the latest version."""
         persistent_notification.create(
@@ -518,6 +539,7 @@ class Recorder(threading.Thread):
             "Database upgrade in progress",
             "recorder_database_migration",
         )
+        self.hass.add_job(self._async_migration_started)
 
         try:
             migration.migrate_schema(self, current_version)
@@ -533,6 +555,7 @@ class Recorder(threading.Thread):
             self._setup_run()
             return True
         finally:
+            self.migration_in_progress = False
             persistent_notification.dismiss(self.hass, "recorder_database_migration")
 
     def _run_purge(self, keep_days, repack, apply_filter):

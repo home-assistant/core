@@ -18,6 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import DOMAIN
 
@@ -31,14 +32,18 @@ CONF_SERIAL = "serial"
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
     envoy_reader = EnvoyReader(
-        data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD], inverters=True
+        data[CONF_HOST],
+        data[CONF_USERNAME],
+        data[CONF_PASSWORD],
+        inverters=True,
+        async_client=get_async_client(hass),
     )
 
     try:
         await envoy_reader.getData()
     except httpx.HTTPStatusError as err:
         raise InvalidAuth from err
-    except (AttributeError, httpx.HTTPError) as err:
+    except (RuntimeError, httpx.HTTPError) as err:
         raise CannotConnect from err
 
 
