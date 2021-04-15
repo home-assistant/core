@@ -1,4 +1,6 @@
 """Helpers to check recorder."""
+from __future__ import annotations
+
 import logging
 from typing import TYPE_CHECKING
 
