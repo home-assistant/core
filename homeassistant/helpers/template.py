@@ -6,6 +6,7 @@ import asyncio
 import base64
 import collections.abc
 from contextlib import suppress
+from contextvars import ContextVar
 from datetime import datetime, timedelta
 from functools import partial, wraps
 import json
@@ -32,10 +33,16 @@ from homeassistant.const import (
     LENGTH_METERS,
     STATE_UNKNOWN,
 )
-from homeassistant.core import State, callback, split_entity_id, valid_entity_id
+from homeassistant.core import (
+    HomeAssistant,
+    State,
+    callback,
+    split_entity_id,
+    valid_entity_id,
+)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import entity_registry, location as loc_helper
-from homeassistant.helpers.typing import HomeAssistantType, TemplateVarsType
+from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import convert, dt as dt_util, location as loc_util
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -73,9 +80,11 @@ _COLLECTABLE_STATE_ATTRIBUTES = {
 ALL_STATES_RATE_LIMIT = timedelta(minutes=1)
 DOMAIN_STATES_RATE_LIMIT = timedelta(seconds=1)
 
+template_cv: ContextVar[str | None] = ContextVar("template_cv", default=None)
+
 
 @bind_hass
-def attach(hass: HomeAssistantType, obj: Any) -> None:
+def attach(hass: HomeAssistant, obj: Any) -> None:
     """Recursively attach hass to all template instances in list and dict."""
     if isinstance(obj, list):
         for child in obj:
@@ -293,7 +302,7 @@ class Template:
 
         self.template: str = template.strip()
         self._compiled_code = None
-        self._compiled: Template | None = None
+        self._compiled: jinja2.Template | None = None
         self.hass = hass
         self.is_static = not is_template_string(template)
         self._limited = None
@@ -330,7 +339,7 @@ class Template:
         If limited is True, the template is not allowed to access any function or filter depending on hass or the state machine.
         """
         if self.is_static:
-            if self.hass.config.legacy_templates or not parse_result:
+            if not parse_result or self.hass.config.legacy_templates:
                 return self.template
             return self._parse_result(self.template)
 
@@ -354,7 +363,7 @@ class Template:
         If limited is True, the template is not allowed to access any function or filter depending on hass or the state machine.
         """
         if self.is_static:
-            if self.hass.config.legacy_templates or not parse_result:
+            if not parse_result or self.hass.config.legacy_templates:
                 return self.template
             return self._parse_result(self.template)
 
@@ -364,7 +373,7 @@ class Template:
             kwargs.update(variables)
 
         try:
-            render_result = compiled.render(kwargs)
+            render_result = _render_with_context(self.template, compiled, **kwargs)
         except Exception as err:
             raise TemplateError(err) from err
 
@@ -436,7 +445,7 @@ class Template:
 
         def _render_template() -> None:
             try:
-                compiled.render(kwargs)
+                _render_with_context(self.template, compiled, **kwargs)
             except TimeoutError:
                 pass
             finally:
@@ -518,7 +527,9 @@ class Template:
             variables["value_json"] = json.loads(value)
 
         try:
-            return self._compiled.render(variables).strip()
+            return _render_with_context(
+                self.template, self._compiled, **variables
+            ).strip()
         except jinja2.TemplateError as ex:
             if error_value is _SENTINEL:
                 _LOGGER.error(
@@ -529,7 +540,7 @@ class Template:
                 )
             return value if error_value is _SENTINEL else error_value
 
-    def _ensure_compiled(self, limited: bool = False) -> Template:
+    def _ensure_compiled(self, limited: bool = False) -> jinja2.Template:
         """Bind a template to a specific hass instance."""
         self.ensure_valid()
 
@@ -542,7 +553,7 @@ class Template:
         env = self._env
 
         self._compiled = cast(
-            Template,
+            jinja2.Template,
             jinja2.Template.from_code(env, self._compiled_code, env.globals, None),
         )
 
@@ -568,7 +579,7 @@ class Template:
 class AllStates:
     """Class to expose all HA states as attributes."""
 
-    def __init__(self, hass: HomeAssistantType) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize all states."""
         self._hass = hass
 
@@ -622,7 +633,7 @@ class AllStates:
 class DomainStates:
     """Class to expose a specific HA domain as attributes."""
 
-    def __init__(self, hass: HomeAssistantType, domain: str) -> None:
+    def __init__(self, hass: HomeAssistant, domain: str) -> None:
         """Initialize the domain states."""
         self._hass = hass
         self._domain = domain
@@ -667,9 +678,7 @@ class TemplateState(State):
 
     # Inheritance is done so functions that check against State keep working
     # pylint: disable=super-init-not-called
-    def __init__(
-        self, hass: HomeAssistantType, state: State, collect: bool = True
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, state: State, collect: bool = True) -> None:
         """Initialize template state."""
         self._hass = hass
         self._state = state
@@ -767,33 +776,31 @@ class TemplateState(State):
         return f"<template TemplateState({self._state.__repr__()})>"
 
 
-def _collect_state(hass: HomeAssistantType, entity_id: str) -> None:
+def _collect_state(hass: HomeAssistant, entity_id: str) -> None:
     entity_collect = hass.data.get(_RENDER_INFO)
     if entity_collect is not None:
         entity_collect.entities.add(entity_id)
 
 
-def _state_generator(hass: HomeAssistantType, domain: str | None) -> Generator:
+def _state_generator(hass: HomeAssistant, domain: str | None) -> Generator:
     """State generator for a domain or all states."""
     for state in sorted(hass.states.async_all(domain), key=attrgetter("entity_id")):
         yield TemplateState(hass, state, collect=False)
 
 
-def _get_state_if_valid(
-    hass: HomeAssistantType, entity_id: str
-) -> TemplateState | None:
+def _get_state_if_valid(hass: HomeAssistant, entity_id: str) -> TemplateState | None:
     state = hass.states.get(entity_id)
     if state is None and not valid_entity_id(entity_id):
         raise TemplateError(f"Invalid entity ID '{entity_id}'")  # type: ignore
     return _get_template_state_from_state(hass, entity_id, state)
 
 
-def _get_state(hass: HomeAssistantType, entity_id: str) -> TemplateState | None:
+def _get_state(hass: HomeAssistant, entity_id: str) -> TemplateState | None:
     return _get_template_state_from_state(hass, entity_id, hass.states.get(entity_id))
 
 
 def _get_template_state_from_state(
-    hass: HomeAssistantType, entity_id: str, state: State | None
+    hass: HomeAssistant, entity_id: str, state: State | None
 ) -> TemplateState | None:
     if state is None:
         # Only need to collect if none, if not none collect first actual
@@ -804,7 +811,7 @@ def _get_template_state_from_state(
 
 
 def _resolve_state(
-    hass: HomeAssistantType, entity_id_or_state: Any
+    hass: HomeAssistant, entity_id_or_state: Any
 ) -> State | TemplateState | None:
     """Return state or entity_id if given."""
     if isinstance(entity_id_or_state, State):
@@ -832,7 +839,7 @@ def result_as_boolean(template_result: str | None) -> bool:
         return False
 
 
-def expand(hass: HomeAssistantType, *args: Any) -> Iterable[State]:
+def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
     """Expand out any groups into entity states."""
     search = list(args)
     found = {}
@@ -864,7 +871,7 @@ def expand(hass: HomeAssistantType, *args: Any) -> Iterable[State]:
     return sorted(found.values(), key=lambda a: a.entity_id)
 
 
-def device_entities(hass: HomeAssistantType, device_id: str) -> Iterable[str]:
+def device_entities(hass: HomeAssistant, device_id: str) -> Iterable[str]:
     """Get entity ids for entities tied to a device."""
     entity_reg = entity_registry.async_get(hass)
     entries = entity_registry.async_entries_for_device(entity_reg, device_id)
@@ -998,7 +1005,7 @@ def distance(hass, *args):
     )
 
 
-def is_state(hass: HomeAssistantType, entity_id: str, state: State) -> bool:
+def is_state(hass: HomeAssistant, entity_id: str, state: State) -> bool:
     """Test if a state is a specific value."""
     state_obj = _get_state(hass, entity_id)
     return state_obj is not None and state_obj.state == state
@@ -1312,12 +1319,59 @@ def urlencode(value):
     return urllib_urlencode(value).encode("utf-8")
 
 
+def _render_with_context(
+    template_str: str, template: jinja2.Template, **kwargs: Any
+) -> str:
+    """Store template being rendered in a ContextVar to aid error handling."""
+    template_cv.set(template_str)
+    return template.render(**kwargs)
+
+
+class LoggingUndefined(jinja2.Undefined):
+    """Log on undefined variables."""
+
+    def _log_message(self):
+        template = template_cv.get() or ""
+        _LOGGER.warning(
+            "Template variable warning: %s when rendering '%s'",
+            self._undefined_message,
+            template,
+        )
+
+    def _fail_with_undefined_error(self, *args, **kwargs):
+        try:
+            return super()._fail_with_undefined_error(*args, **kwargs)
+        except self._undefined_exception as ex:
+            template = template_cv.get() or ""
+            _LOGGER.error(
+                "Template variable error: %s when rendering '%s'",
+                self._undefined_message,
+                template,
+            )
+            raise ex
+
+    def __str__(self):
+        """Log undefined __str___."""
+        self._log_message()
+        return super().__str__()
+
+    def __iter__(self):
+        """Log undefined __iter___."""
+        self._log_message()
+        return super().__iter__()
+
+    def __bool__(self):
+        """Log undefined __bool___."""
+        self._log_message()
+        return super().__bool__()
+
+
 class TemplateEnvironment(ImmutableSandboxedEnvironment):
     """The Home Assistant template environment."""
 
     def __init__(self, hass, limited=False):
         """Initialise template environment."""
-        super().__init__(undefined=jinja2.make_logging_undefined(logger=_LOGGER))
+        super().__init__(undefined=LoggingUndefined)
         self.hass = hass
         self.template_cache = weakref.WeakValueDictionary()
         self.filters["round"] = forgiving_round

@@ -13,6 +13,7 @@ from broadlink.exceptions import (
     NetworkTimeoutError,
 )
 
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TIMEOUT, CONF_TYPE
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -95,9 +96,7 @@ class BroadlinkDevice:
 
         update_manager = get_update_manager(self)
         coordinator = update_manager.coordinator
-        await coordinator.async_refresh()
-        if not coordinator.last_update_success:
-            raise ConfigEntryNotReady()
+        await coordinator.async_config_entry_first_refresh()
 
         self.update_manager = update_manager
         self.hass.data[DOMAIN].devices[config.entry_id] = self
@@ -173,7 +172,7 @@ class BroadlinkDevice:
         self.hass.async_create_task(
             self.hass.config_entries.flow.async_init(
                 DOMAIN,
-                context={"source": "reauth"},
+                context={"source": SOURCE_REAUTH},
                 data={CONF_NAME: self.name, **self.config.data},
             )
         )

@@ -1,11 +1,13 @@
 """Provide functionality to interact with Cast devices on the network."""
 from __future__ import annotations
 
+import asyncio
 from contextlib import suppress
 from datetime import timedelta
 import functools as ft
 import json
 import logging
+from urllib.parse import quote
 
 import pychromecast
 from pychromecast.controllers.homeassistant import HomeAssistantController
@@ -185,7 +187,9 @@ class CastDevice(MediaPlayerEntity):
         )
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_stop)
         self.async_set_cast_info(self._cast_info)
-        self.hass.async_create_task(
+        # asyncio.create_task is used to avoid delaying startup wrapup if the device
+        # is discovered already during startup but then fails to respond
+        asyncio.create_task(
             async_create_catching_coro(self.async_connect_to_chromecast())
         )
 
@@ -469,8 +473,8 @@ class CastDevice(MediaPlayerEntity):
                 media_id = async_sign_path(
                     self.hass,
                     refresh_token.id,
-                    media_id,
-                    timedelta(minutes=5),
+                    quote(media_id),
+                    timedelta(seconds=media_source.DEFAULT_EXPIRY_TIME),
                 )
 
             # prepend external URL
@@ -706,15 +710,15 @@ class CastDevice(MediaPlayerEntity):
         support = SUPPORT_CAST
         media_status = self._media_status()[0]
 
-        if self.cast_status:
-            if self.cast_status.volume_control_type != VOLUME_CONTROL_TYPE_FIXED:
-                support |= SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET
+        if (
+            self.cast_status
+            and self.cast_status.volume_control_type != VOLUME_CONTROL_TYPE_FIXED
+        ):
+            support |= SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET
 
         if media_status:
             if media_status.supports_queue_next:
-                support |= SUPPORT_PREVIOUS_TRACK
-            if media_status.supports_queue_next:
-                support |= SUPPORT_NEXT_TRACK
+                support |= SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
             if media_status.supports_seek:
                 support |= SUPPORT_SEEK
 

@@ -6,7 +6,13 @@ from itertools import count
 from typing import Any, Deque
 
 from homeassistant.core import Context
-from homeassistant.helpers.trace import TraceElement, trace_id_set
+from homeassistant.helpers.trace import (
+    TraceElement,
+    script_execution_get,
+    trace_id_get,
+    trace_id_set,
+    trace_set_child_id,
+)
 import homeassistant.util.dt as dt_util
 
 from . import websocket_api
@@ -42,54 +48,55 @@ class ActionTrace:
         self,
         key: tuple[str, str],
         config: dict[str, Any],
+        blueprint_inputs: dict[str, Any],
         context: Context,
     ):
         """Container for script trace."""
-        self._action_trace: dict[str, Deque[TraceElement]] | None = None
+        self._trace: dict[str, Deque[TraceElement]] | None = None
         self._config: dict[str, Any] = config
+        self._blueprint_inputs: dict[str, Any] = blueprint_inputs
         self.context: Context = context
         self._error: Exception | None = None
         self._state: str = "running"
+        self._script_execution: str | None = None
         self.run_id: str = str(next(self._run_ids))
         self._timestamp_finish: dt.datetime | None = None
         self._timestamp_start: dt.datetime = dt_util.utcnow()
         self.key: tuple[str, str] = key
-        self._variables: dict[str, Any] | None = None
+        if trace_id_get():
+            trace_set_child_id(self.key, self.run_id)
         trace_id_set((key, self.run_id))
 
-    def set_action_trace(self, trace: dict[str, Deque[TraceElement]]) -> None:
-        """Set action trace."""
-        self._action_trace = trace
+    def set_trace(self, trace: dict[str, Deque[TraceElement]]) -> None:
+        """Set trace."""
+        self._trace = trace
 
     def set_error(self, ex: Exception) -> None:
         """Set error."""
         self._error = ex
 
-    def set_variables(self, variables: dict[str, Any]) -> None:
-        """Set variables."""
-        self._variables = variables
-
     def finished(self) -> None:
         """Set finish time."""
         self._timestamp_finish = dt_util.utcnow()
         self._state = "stopped"
+        self._script_execution = script_execution_get()
 
     def as_dict(self) -> dict[str, Any]:
         """Return dictionary version of this ActionTrace."""
 
         result = self.as_short_dict()
 
-        action_traces = {}
-        if self._action_trace:
-            for key, trace_list in self._action_trace.items():
-                action_traces[key] = [item.as_dict() for item in trace_list]
+        traces = {}
+        if self._trace:
+            for key, trace_list in self._trace.items():
+                traces[key] = [item.as_dict() for item in trace_list]
 
         result.update(
             {
-                "action_trace": action_traces,
+                "trace": traces,
                 "config": self._config,
+                "blueprint_inputs": self._blueprint_inputs,
                 "context": self.context,
-                "variables": self._variables,
             }
         )
         if self._error is not None:
@@ -99,15 +106,16 @@ class ActionTrace:
     def as_short_dict(self) -> dict[str, Any]:
         """Return a brief dictionary version of this ActionTrace."""
 
-        last_action = None
+        last_step = None
 
-        if self._action_trace:
-            last_action = list(self._action_trace)[-1]
+        if self._trace:
+            last_step = list(self._trace)[-1]
 
         result = {
-            "last_action": last_action,
+            "last_step": last_step,
             "run_id": self.run_id,
             "state": self._state,
+            "script_execution": self._script_execution,
             "timestamp": {
                 "start": self._timestamp_start,
                 "finish": self._timestamp_finish,
@@ -117,72 +125,7 @@ class ActionTrace:
         }
         if self._error is not None:
             result["error"] = str(self._error)
-        if last_action is not None:
-            result["last_action"] = last_action
+        if last_step is not None:
+            result["last_step"] = last_step
 
         return result
-
-
-class AutomationTrace(ActionTrace):
-    """Container for automation trace."""
-
-    def __init__(
-        self,
-        item_id: str,
-        config: dict[str, Any],
-        context: Context,
-    ):
-        """Container for automation trace."""
-        key = ("automation", item_id)
-        super().__init__(key, config, context)
-        self._condition_trace: dict[str, Deque[TraceElement]] | None = None
-
-    def set_condition_trace(self, trace: dict[str, Deque[TraceElement]]) -> None:
-        """Set condition trace."""
-        self._condition_trace = trace
-
-    def as_dict(self) -> dict[str, Any]:
-        """Return dictionary version of this AutomationTrace."""
-
-        result = super().as_dict()
-
-        condition_traces = {}
-
-        if self._condition_trace:
-            for key, trace_list in self._condition_trace.items():
-                condition_traces[key] = [item.as_dict() for item in trace_list]
-        result["condition_trace"] = condition_traces
-
-        return result
-
-    def as_short_dict(self) -> dict[str, Any]:
-        """Return a brief dictionary version of this AutomationTrace."""
-
-        result = super().as_short_dict()
-
-        last_condition = None
-        trigger = None
-
-        if self._condition_trace:
-            last_condition = list(self._condition_trace)[-1]
-        if self._variables:
-            trigger = self._variables.get("trigger", {}).get("description")
-
-        result["trigger"] = trigger
-        result["last_condition"] = last_condition
-
-        return result
-
-
-class ScriptTrace(ActionTrace):
-    """Container for automation trace."""
-
-    def __init__(
-        self,
-        item_id: str,
-        config: dict[str, Any],
-        context: Context,
-    ):
-        """Container for automation trace."""
-        key = ("script", item_id)
-        super().__init__(key, config, context)

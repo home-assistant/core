@@ -11,8 +11,12 @@ from homeassistant.const import (
     ATTR_MODE,
     ATTR_NAME,
     CONF_ALIAS,
+    CONF_DEFAULT,
+    CONF_DESCRIPTION,
     CONF_ICON,
     CONF_MODE,
+    CONF_NAME,
+    CONF_SELECTOR,
     CONF_SEQUENCE,
     CONF_VARIABLES,
     SERVICE_RELOAD,
@@ -35,6 +39,7 @@ from homeassistant.helpers.script import (
     Script,
     make_script_schema,
 )
+from homeassistant.helpers.selector import validate_selector
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.trace import trace_get, trace_path
 from homeassistant.loader import bind_hass
@@ -49,9 +54,10 @@ ATTR_LAST_ACTION = "last_action"
 ATTR_LAST_TRIGGERED = "last_triggered"
 ATTR_VARIABLES = "variables"
 
-CONF_DESCRIPTION = "description"
+CONF_ADVANCED = "advanced"
 CONF_EXAMPLE = "example"
 CONF_FIELDS = "fields"
+CONF_REQUIRED = "required"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
@@ -67,8 +73,13 @@ SCRIPT_ENTRY_SCHEMA = make_script_schema(
         vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
         vol.Optional(CONF_FIELDS, default={}): {
             cv.string: {
+                vol.Optional(CONF_ADVANCED, default=False): cv.boolean,
+                vol.Optional(CONF_DEFAULT): cv.match_all,
                 vol.Optional(CONF_DESCRIPTION): cv.string,
                 vol.Optional(CONF_EXAMPLE): cv.string,
+                vol.Optional(CONF_NAME): cv.string,
+                vol.Optional(CONF_REQUIRED, default=False): cv.boolean,
+                vol.Optional(CONF_SELECTOR): validate_selector,
             }
         },
     },
@@ -152,6 +163,37 @@ def devices_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
         return []
 
     return list(script_entity.script.referenced_devices)
+
+
+@callback
+def scripts_with_area(hass: HomeAssistant, area_id: str) -> list[str]:
+    """Return all scripts that reference the area."""
+    if DOMAIN not in hass.data:
+        return []
+
+    component = hass.data[DOMAIN]
+
+    return [
+        script_entity.entity_id
+        for script_entity in component.entities
+        if area_id in script_entity.script.referenced_areas
+    ]
+
+
+@callback
+def areas_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Return all areas in a script."""
+    if DOMAIN not in hass.data:
+        return []
+
+    component = hass.data[DOMAIN]
+
+    script_entity = component.get_entity(entity_id)
+
+    if script_entity is None:
+        return []
+
+    return list(script_entity.script.referenced_areas)
 
 
 async def async_setup(hass, config):
@@ -245,6 +287,7 @@ async def _async_process_config(hass, config, component):
 
         # Register the service description
         service_desc = {
+            CONF_NAME: script_entity.name,
             CONF_DESCRIPTION: cfg[CONF_DESCRIPTION],
             CONF_FIELDS: cfg[CONF_FIELDS],
         }
@@ -343,9 +386,8 @@ class ScriptEntity(ToggleEntity):
         with trace_script(
             self.hass, self.object_id, self._raw_config, context
         ) as script_trace:
-            script_trace.set_variables(variables)
             # Prepare tracing the execution of the script's sequence
-            script_trace.set_action_trace(trace_get())
+            script_trace.set_trace(trace_get())
             with trace_path("sequence"):
                 return await self.script.async_run(variables, context)
 

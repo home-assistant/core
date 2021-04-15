@@ -6,7 +6,8 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, loader
-from homeassistant.core import callback
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -473,7 +474,7 @@ async def test_entries_gets_entries(manager):
     assert manager.async_entries("test2") == [entry1, entry2]
 
 
-async def test_domains_gets_uniques(manager):
+async def test_domains_gets_domains_uniques(manager):
     """Test we only return each domain once."""
     MockConfigEntry(domain="test").add_to_manager(manager)
     MockConfigEntry(domain="test2").add_to_manager(manager)
@@ -482,6 +483,46 @@ async def test_domains_gets_uniques(manager):
     MockConfigEntry(domain="test3").add_to_manager(manager)
 
     assert manager.async_domains() == ["test", "test2", "test3"]
+
+
+async def test_domains_gets_domains_excludes_ignore_and_disabled(manager):
+    """Test we only return each domain once."""
+    MockConfigEntry(domain="test").add_to_manager(manager)
+    MockConfigEntry(domain="test2").add_to_manager(manager)
+    MockConfigEntry(domain="test2").add_to_manager(manager)
+    MockConfigEntry(
+        domain="ignored", source=config_entries.SOURCE_IGNORE
+    ).add_to_manager(manager)
+    MockConfigEntry(domain="test3").add_to_manager(manager)
+    MockConfigEntry(domain="disabled", disabled_by="user").add_to_manager(manager)
+    assert manager.async_domains() == ["test", "test2", "test3"]
+    assert manager.async_domains(include_ignore=False) == ["test", "test2", "test3"]
+    assert manager.async_domains(include_disabled=False) == ["test", "test2", "test3"]
+    assert manager.async_domains(include_ignore=False, include_disabled=False) == [
+        "test",
+        "test2",
+        "test3",
+    ]
+
+    assert manager.async_domains(include_ignore=True) == [
+        "test",
+        "test2",
+        "ignored",
+        "test3",
+    ]
+    assert manager.async_domains(include_disabled=True) == [
+        "test",
+        "test2",
+        "test3",
+        "disabled",
+    ]
+    assert manager.async_domains(include_ignore=True, include_disabled=True) == [
+        "test",
+        "test2",
+        "ignored",
+        "test3",
+        "disabled",
+    ]
 
 
 async def test_saving_and_loading(hass):
@@ -795,7 +836,9 @@ async def test_setup_raise_not_ready(hass, caplog):
     """Test a setup raising not ready."""
     entry = MockConfigEntry(title="test_title", domain="test")
 
-    mock_setup_entry = AsyncMock(side_effect=ConfigEntryNotReady)
+    mock_setup_entry = AsyncMock(
+        side_effect=ConfigEntryNotReady("The internet connection is offline")
+    )
     mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
     mock_entity_platform(hass, "config_flow.test", None)
 
@@ -803,7 +846,10 @@ async def test_setup_raise_not_ready(hass, caplog):
         await entry.async_setup(hass)
 
     assert len(mock_call.mock_calls) == 1
-    assert "Config entry 'test_title' for test integration not ready yet" in caplog.text
+    assert (
+        "Config entry 'test_title' for test integration not ready yet: The internet connection is offline"
+        in caplog.text
+    )
     p_hass, p_wait_time, p_setup = mock_call.mock_calls[0][1]
 
     assert p_hass is hass
@@ -815,6 +861,28 @@ async def test_setup_raise_not_ready(hass, caplog):
 
     await p_setup(None)
     assert entry.state == config_entries.ENTRY_STATE_LOADED
+
+
+async def test_setup_raise_not_ready_from_exception(hass, caplog):
+    """Test a setup raising not ready from another exception."""
+    entry = MockConfigEntry(title="test_title", domain="test")
+
+    original_exception = HomeAssistantError("The device dropped the connection")
+    config_entry_exception = ConfigEntryNotReady()
+    config_entry_exception.__cause__ = original_exception
+
+    mock_setup_entry = AsyncMock(side_effect=config_entry_exception)
+    mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    with patch("homeassistant.helpers.event.async_call_later") as mock_call:
+        await entry.async_setup(hass)
+
+    assert len(mock_call.mock_calls) == 1
+    assert (
+        "Config entry 'test_title' for test integration not ready yet: The device dropped the connection"
+        in caplog.text
+    )
 
 
 async def test_setup_retrying_during_unload(hass):
@@ -835,6 +903,33 @@ async def test_setup_retrying_during_unload(hass):
 
     assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
     assert len(mock_call.return_value.mock_calls) == 1
+
+
+async def test_setup_retrying_during_unload_before_started(hass):
+    """Test if we unload an entry that is in retry mode before started."""
+    entry = MockConfigEntry(domain="test")
+    hass.state = CoreState.starting
+    initial_listeners = hass.bus.async_listeners()[EVENT_HOMEASSISTANT_STARTED]
+
+    mock_setup_entry = AsyncMock(side_effect=ConfigEntryNotReady)
+    mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    await entry.async_setup(hass)
+    await hass.async_block_till_done()
+
+    assert entry.state == config_entries.ENTRY_STATE_SETUP_RETRY
+    assert (
+        hass.bus.async_listeners()[EVENT_HOMEASSISTANT_STARTED] == initial_listeners + 1
+    )
+
+    await entry.async_unload(hass)
+    await hass.async_block_till_done()
+
+    assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
+    assert (
+        hass.bus.async_listeners()[EVENT_HOMEASSISTANT_STARTED] == initial_listeners + 0
+    )
 
 
 async def test_entry_options(hass, manager):
@@ -1221,12 +1316,11 @@ async def test_init_custom_integration(hass):
         None,
         {"name": "Hue", "dependencies": [], "requirements": [], "domain": "hue"},
     )
-    with pytest.raises(data_entry_flow.UnknownHandler):
-        with patch(
-            "homeassistant.loader.async_get_integration",
-            return_value=integration,
-        ):
-            await hass.config_entries.flow.async_init("bla")
+    with pytest.raises(data_entry_flow.UnknownHandler), patch(
+        "homeassistant.loader.async_get_integration",
+        return_value=integration,
+    ):
+        await hass.config_entries.flow.async_init("bla")
 
 
 async def test_support_entry_unload(hass):

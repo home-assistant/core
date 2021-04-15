@@ -11,7 +11,8 @@ import weakref
 import attr
 
 from homeassistant import data_entry_flow, loader
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.event import Event
@@ -252,32 +253,43 @@ class ConfigEntry:
                     "%s.async_setup_entry did not return boolean", integration.domain
                 )
                 result = False
-        except ConfigEntryNotReady:
+        except ConfigEntryNotReady as ex:
             self.state = ENTRY_STATE_SETUP_RETRY
             wait_time = 2 ** min(tries, 4) * 5
             tries += 1
+            message = str(ex)
+            if not message and ex.__cause__:
+                message = str(ex.__cause__)
+            ready_message = f"ready yet: {message}" if message else "ready yet"
             if tries == 1:
                 _LOGGER.warning(
-                    "Config entry '%s' for %s integration not ready yet. Retrying in background",
+                    "Config entry '%s' for %s integration not %s; Retrying in background",
                     self.title,
                     self.domain,
+                    ready_message,
                 )
             else:
                 _LOGGER.debug(
-                    "Config entry '%s' for %s integration not ready yet. Retrying in %d seconds",
+                    "Config entry '%s' for %s integration not %s; Retrying in %d seconds",
                     self.title,
                     self.domain,
+                    ready_message,
                     wait_time,
                 )
 
-            async def setup_again(now: Any) -> None:
+            async def setup_again(*_: Any) -> None:
                 """Run setup again."""
                 self._async_cancel_retry_setup = None
                 await self.async_setup(hass, integration=integration, tries=tries)
 
-            self._async_cancel_retry_setup = hass.helpers.event.async_call_later(
-                wait_time, setup_again
-            )
+            if hass.state == CoreState.running:
+                self._async_cancel_retry_setup = hass.helpers.event.async_call_later(
+                    wait_time, setup_again
+                )
+            else:
+                self._async_cancel_retry_setup = hass.bus.async_listen_once(
+                    EVENT_HOMEASSISTANT_STARTED, setup_again
+                )
             return
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
@@ -624,17 +636,18 @@ class ConfigEntries:
         EntityRegistryDisabledHandler(hass).async_setup()
 
     @callback
-    def async_domains(self) -> list[str]:
+    def async_domains(
+        self, include_ignore: bool = False, include_disabled: bool = False
+    ) -> list[str]:
         """Return domains for which we have entries."""
-        seen: set[str] = set()
-        result = []
-
-        for entry in self._entries.values():
-            if entry.domain not in seen:
-                seen.add(entry.domain)
-                result.append(entry.domain)
-
-        return result
+        return list(
+            {
+                entry.domain: None
+                for entry in self._entries.values()
+                if (include_ignore or entry.source != SOURCE_IGNORE)
+                and (include_disabled or not entry.disabled_by)
+            }
+        )
 
     @callback
     def async_get_entry(self, entry_id: str) -> ConfigEntry | None:

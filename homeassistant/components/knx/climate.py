@@ -15,12 +15,9 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import (
-    ConfigType,
-    DiscoveryInfoType,
-    HomeAssistantType,
-)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONTROLLER_MODES, DOMAIN, PRESET_MODES
 from .knx_entity import KnxEntity
@@ -30,7 +27,7 @@ PRESET_MODES_INV = {value: key for key, value in PRESET_MODES.items()}
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: Callable[[Iterable[Entity]], None],
     discovery_info: DiscoveryInfoType | None = None,
@@ -72,7 +69,7 @@ class KNXClimate(KnxEntity, ClimateEntity):
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        return self._device.temperature.value  # type: ignore[no-any-return]
+        return self._device.temperature.value
 
     @property
     def target_temperature_step(self) -> float:
@@ -82,7 +79,7 @@ class KNXClimate(KnxEntity, ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        return self._device.target_temperature.value  # type: ignore[no-any-return]
+        return self._device.target_temperature.value
 
     @property
     def min_temp(self) -> float:

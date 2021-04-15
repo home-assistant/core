@@ -14,9 +14,8 @@ from aiohttp.web_exceptions import HTTPBadGateway, HTTPGatewayTimeout
 import async_timeout
 
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, __version__
-from homeassistant.core import Event, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.frame import warn_use
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import bind_hass
 from homeassistant.util import ssl as ssl_util
 
@@ -32,7 +31,7 @@ SERVER_SOFTWARE = "HomeAssistant/{0} aiohttp/{1} Python/{2[0]}.{2[1]}".format(
 @callback
 @bind_hass
 def async_get_clientsession(
-    hass: HomeAssistantType, verify_ssl: bool = True
+    hass: HomeAssistant, verify_ssl: bool = True
 ) -> aiohttp.ClientSession:
     """Return default aiohttp ClientSession.
 
@@ -51,7 +50,7 @@ def async_get_clientsession(
 @callback
 @bind_hass
 def async_create_clientsession(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     verify_ssl: bool = True,
     auto_cleanup: bool = True,
     **kwargs: Any,
@@ -84,7 +83,7 @@ def async_create_clientsession(
 
 @bind_hass
 async def async_aiohttp_proxy_web(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     request: web.BaseRequest,
     web_coro: Awaitable[aiohttp.ClientResponse],
     buffer_size: int = 102400,
@@ -117,7 +116,7 @@ async def async_aiohttp_proxy_web(
 
 @bind_hass
 async def async_aiohttp_proxy_stream(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     request: web.BaseRequest,
     stream: aiohttp.StreamReader,
     content_type: str | None,
@@ -145,7 +144,7 @@ async def async_aiohttp_proxy_stream(
 
 @callback
 def _async_register_clientsession_shutdown(
-    hass: HomeAssistantType, clientsession: aiohttp.ClientSession
+    hass: HomeAssistant, clientsession: aiohttp.ClientSession
 ) -> None:
     """Register ClientSession close on Home Assistant shutdown.
 
@@ -162,7 +161,7 @@ def _async_register_clientsession_shutdown(
 
 @callback
 def _async_get_connector(
-    hass: HomeAssistantType, verify_ssl: bool = True
+    hass: HomeAssistant, verify_ssl: bool = True
 ) -> aiohttp.BaseConnector:
     """Return the connector pool for aiohttp.
 

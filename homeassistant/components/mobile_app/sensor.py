@@ -1,6 +1,4 @@
 """Sensor platform for mobile_app."""
-from functools import partial
-
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID, CONF_WEBHOOK_ID
 from homeassistant.core import callback
@@ -50,7 +48,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
     @callback
-    def handle_sensor_registration(webhook_id, data):
+    def handle_sensor_registration(data):
         if data[CONF_WEBHOOK_ID] != webhook_id:
             return
 
@@ -68,7 +66,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_dispatcher_connect(
         hass,
         f"{DOMAIN}_{ENTITY_TYPE}_register",
-        partial(handle_sensor_registration, webhook_id),
+        handle_sensor_registration,
     )
 
 

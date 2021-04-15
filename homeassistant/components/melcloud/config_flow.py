@@ -17,7 +17,7 @@ from homeassistant.const import (
     HTTP_UNAUTHORIZED,
 )
 
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import DOMAIN
 
 
 class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
