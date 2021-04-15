@@ -10,7 +10,22 @@
     "pollutantO3": 46.53,
     "windGust": 12.64,
     "cloudCover": 100,
-    "precipitationType": 1
+    "precipitationType": 1,
+    "particulateMatter25": 0.15,
+    "particulateMatter10": 0.57,
+    "pollutantNO2": 10.67,
+    "pollutantCO": 0.63,
+    "pollutantSO2": 1.65,
+    "epaIndex": 24,
+    "epaPrimaryPollutant": 0,
+    "epaHealthConcern": 0,
+    "mepIndex": 23,
+    "mepPrimaryPollutant": 1,
+    "mepHealthConcern": 0,
+    "treeIndex": 0,
+    "weedIndex": 0,
+    "grassIndex": 0,
+    "fireIndex": 10
   },
   "forecasts": {
     "nowcast": [
