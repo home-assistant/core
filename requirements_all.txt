@@ -2175,7 +2175,7 @@ sunwatcher==0.2.1
 surepy==0.4.0
 
 # homeassistant.components.swiss_hydrological_data
-swisshydrodata==0.0.3
+swisshydrodata==0.1.0
 
 # homeassistant.components.synology_srm
 synology-srm==0.2.0
