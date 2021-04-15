@@ -792,6 +792,7 @@ class ConfigEntries:
         await asyncio.gather(
             *[entry.async_shutdown() for entry in self._entries.values()]
         )
+        await self.flow.async_shutdown()
 
     async def async_initialize(self) -> None:
         """Initialize config entry config."""

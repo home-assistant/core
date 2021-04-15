@@ -61,6 +61,7 @@ class FlowManager(abc.ABC):
         """Initialize the flow manager."""
         self.hass = hass
         self._initializing: dict[str, list[asyncio.Future]] = {}
+        self._initialize_tasks: dict[str, list[asyncio.Task]] = {}
         self._progress: dict[str, Any] = {}
 
     async def async_wait_init_flow_finish(self, handler: str) -> None:
@@ -118,27 +119,44 @@ class FlowManager(abc.ABC):
         init_done: asyncio.Future = asyncio.Future()
         self._initializing.setdefault(handler, []).append(init_done)
 
-        flow = await self.async_create_flow(handler, context=context, data=data)
-        if not flow:
-            self._initializing[handler].remove(init_done)
-            raise UnknownFlow("Flow was not created")
-        flow.hass = self.hass
-        flow.handler = handler
-        flow.flow_id = uuid.uuid4().hex
-        flow.context = context
-        self._progress[flow.flow_id] = flow
+        task = asyncio.create_task(self._async_init(init_done, handler, context, data))
+        self._initialize_tasks.setdefault(handler, []).append(task)
 
         try:
-            result = await self._async_handle_step(
-                flow, flow.init_step, data, init_done
-            )
+            flow, result = await task
         finally:
+            self._initialize_tasks[handler].remove(task)
             self._initializing[handler].remove(init_done)
 
         if result["type"] != RESULT_TYPE_ABORT:
             await self.async_post_init(flow, result)
 
         return result
+
+    async def _async_init(
+        self,
+        init_done: asyncio.Future,
+        handler: str,
+        context: dict,
+        data: Any,
+    ) -> tuple[FlowHandler, Any]:
+        """Run the init in a task to allow it to be canceled at shutdown."""
+        flow = await self.async_create_flow(handler, context=context, data=data)
+        if not flow:
+            raise UnknownFlow("Flow was not created")
+        flow.hass = self.hass
+        flow.handler = handler
+        flow.flow_id = uuid.uuid4().hex
+        flow.context = context
+        self._progress[flow.flow_id] = flow
+        result = await self._async_handle_step(flow, flow.init_step, data, init_done)
+        return flow, result
+
+    async def async_shutdown(self) -> None:
+        """Cancel any initializing flows."""
+        for task_list in self._initialize_tasks.values():
+            for task in task_list:
+                task.cancel()
 
     async def async_configure(
         self, flow_id: str, user_input: dict | None = None
