@@ -117,7 +117,7 @@ jobs:
           password: ${{ secrets.GIT_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2021.03.4
+        uses: home-assistant/builder@2021.04.2
         with:
           args: |
             $BUILD_ARGS \
@@ -168,7 +168,7 @@ jobs:
           password: ${{ secrets.GIT_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2021.03.4
+        uses: home-assistant/builder@2021.04.2
         with:
           args: |
             $BUILD_ARGS \
