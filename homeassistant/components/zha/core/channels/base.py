@@ -198,6 +198,14 @@ class ZigbeeChannel(LogMixin):
             attr = report["attr"]
             attr_name = self.cluster.attributes.get(attr, [attr])[0]
             min_report_int, max_report_int, reportable_change = report["config"]
+            event_data[attr_name] = {
+                "min": min_report_int,
+                "max": max_report_int,
+                "id": attr,
+                "name": attr_name,
+                "change": reportable_change,
+            }
+
             try:
                 res = await self.cluster.configure_reporting(
                     attr, min_report_int, max_report_int, reportable_change, **kwargs
@@ -211,12 +219,9 @@ class ZigbeeChannel(LogMixin):
                     reportable_change,
                     res,
                 )
-                event_data[attr_name] = {
-                    "min": min_report_int,
-                    "max": max_report_int,
-                    "change": reportable_change,
-                    "success": res[0][0].status == 0 or res[0][0].status == 134,
-                }
+                event_data[attr_name]["success"] = (
+                    res[0][0].status == 0 or res[0][0].status == 134
+                )
             except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
                 self.debug(
                     "failed to set reporting for '%s' attr on '%s' cluster: %s",
@@ -224,12 +229,8 @@ class ZigbeeChannel(LogMixin):
                     self.cluster.ep_attribute,
                     str(ex),
                 )
-                event_data[attr_name] = {
-                    "min": min_report_int,
-                    "max": max_report_int,
-                    "change": reportable_change,
-                    "success": False,
-                }
+                event_data[attr_name]["success"] = False
+
         async_dispatcher_send(
             self._ch_pool.hass,
             ZHA_CHANNEL_MSG,
