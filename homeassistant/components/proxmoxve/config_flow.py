@@ -122,10 +122,11 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         info = {}
 
-        if errors is not None and is_import:
+        if errors and is_import:
             _LOGGER.error(
                 "Could not import ProxmoxVE configuration, please configure it manually from Integrations"
             )
+            return self.async_abort(reason="import_failed")
 
         data_schema = vol.Schema(
             {

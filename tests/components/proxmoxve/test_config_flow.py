@@ -3,7 +3,7 @@ import proxmoxer
 from requests.exceptions import ConnectTimeout, SSLError
 
 from homeassistant.components.proxmoxve.const import CONF_REALM, DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -12,7 +12,11 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import (
+    RESULT_TYPE_ABORT,
+    RESULT_TYPE_CREATE_ENTRY,
+    RESULT_TYPE_FORM,
+)
 
 from tests.common import patch
 
@@ -158,3 +162,41 @@ async def test_flow_unknown_exception(hass: HomeAssistant):
 
         assert result["type"] == RESULT_TYPE_FORM
         assert result["errors"]["base"] == "general_error"
+
+
+async def test_flow_import_ok(hass: HomeAssistant):
+    """Test flow ok."""
+
+    with patch("proxmoxer.ProxmoxResource.get", return_value=MOCK_GET_RESPONSE), patch(
+        "proxmoxer.backends.https.ProxmoxHTTPAuth._getNewTokens",
+        return_value=None,
+    ), patch(
+        "homeassistant.components.proxmoxve.config_flow.ProxmoxVEConfigFlow._async_endpoint_exists",
+        return_value=True,
+    ):
+
+        # imported config is identical to the one generated from config flow
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=USER_INPUT_OK
+        )
+
+        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["reason"] == "already_configured"
+
+
+async def test_flow_import_error(hass: HomeAssistant):
+    """Test flow ok."""
+
+    with patch(
+        "homeassistant.components.proxmoxve.ProxmoxClient.build_client",
+        side_effect=Exception,
+        return_value=None,
+    ):
+
+        # imported config is identical to the one generated from config flow
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=USER_INPUT_OK
+        )
+
+        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["reason"] == "import_failed"
