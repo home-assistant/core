@@ -87,6 +87,7 @@ def setup_internal_discovery(hass: HomeAssistant, config_entry) -> None:
         ChromeCastZeroconf.get_zeroconf(),
         config_entry.data.get(CONF_KNOWN_HOSTS),
     )
+    browser.host_browser.name = "Cast HostBrowser"
     hass.data[CAST_BROWSER_KEY] = browser
     browser.start_discovery()
 
