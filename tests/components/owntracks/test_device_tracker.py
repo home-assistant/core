@@ -1116,10 +1116,7 @@ async def test_complex_movement_sticky_keys_beacon(hass, context):
 
     # gps to inner location and event, as actually happens with OwnTracks
     location_message = build_message(
-        {
-            "lat": REGION_GPS_ENTER_MESSAGE["lat"],
-            "lon": REGION_GPS_ENTER_MESSAGE["lon"],
-        },
+        {"acc": 40, "lat": INNER_ZONE["latitude"], "lon": INNER_ZONE["longitude"]},
         LOCATION_MESSAGE,
     )
     await send_message(hass, LOCATION_TOPIC, location_message)
@@ -1130,6 +1127,7 @@ async def test_complex_movement_sticky_keys_beacon(hass, context):
     # see keys mobile beacon and location message as actually happens
     location_message = build_message(
         {
+            "acc": 40,
             "lat": location_message["lat"] + FIVE_M,
             "lon": location_message["lon"] + FIVE_M,
         },
@@ -1146,6 +1144,7 @@ async def test_complex_movement_sticky_keys_beacon(hass, context):
     # with OwnTracks
     location_message = build_message(
         {
+            "acc": 40,
             "lat": location_message["lat"] + FIVE_M,
             "lon": location_message["lon"] + FIVE_M,
         },
