@@ -5,6 +5,7 @@ Abort login flow if not access from trusted network.
 """
 from __future__ import annotations
 
+from collections.abc import Mapping
 from ipaddress import (
     IPv4Address,
     IPv4Network,
@@ -18,6 +19,7 @@ from typing import Any, Dict, List, Union, cast
 import voluptuous as vol
 
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResultDict
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 
@@ -127,7 +129,7 @@ class TrustedNetworksAuthProvider(AuthProvider):
         )
 
     async def async_get_or_create_credentials(
-        self, flow_result: dict[str, str]
+        self, flow_result: Mapping[str, str]
     ) -> Credentials:
         """Get credentials based on the flow result."""
         user_id = flow_result["user"]
@@ -199,7 +201,7 @@ class TrustedNetworksLoginFlow(LoginFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResultDict:
         """Handle the step of the form."""
         try:
             cast(
