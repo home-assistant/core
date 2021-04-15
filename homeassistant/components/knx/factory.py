@@ -8,7 +8,6 @@ from xknx.devices import (
     ClimateMode as XknxClimateMode,
     Cover as XknxCover,
     Device as XknxDevice,
-    Fan as XknxFan,
     Light as XknxLight,
     Notification as XknxNotification,
     Scene as XknxScene,
@@ -24,7 +23,6 @@ from .schema import (
     BinarySensorSchema,
     ClimateSchema,
     CoverSchema,
-    FanSchema,
     LightSchema,
     SceneSchema,
     SensorSchema,
@@ -61,9 +59,6 @@ def create_knx_device(
 
     if platform is SupportedPlatforms.WEATHER:
         return _create_weather(knx_module, config)
-
-    if platform is SupportedPlatforms.FAN:
-        return _create_fan(knx_module, config)
 
     return None
 
@@ -350,20 +345,3 @@ def _create_weather(knx_module: XKNX, config: ConfigType) -> XknxWeather:
         ),
         group_address_humidity=config.get(WeatherSchema.CONF_KNX_HUMIDITY_ADDRESS),
     )
-
-
-def _create_fan(knx_module: XKNX, config: ConfigType) -> XknxFan:
-    """Return a KNX Fan device to be used within XKNX."""
-
-    fan = XknxFan(
-        knx_module,
-        name=config[CONF_NAME],
-        group_address_speed=config.get(KNX_ADDRESS),
-        group_address_speed_state=config.get(FanSchema.CONF_STATE_ADDRESS),
-        group_address_oscillation=config.get(FanSchema.CONF_OSCILLATION_ADDRESS),
-        group_address_oscillation_state=config.get(
-            FanSchema.CONF_OSCILLATION_STATE_ADDRESS
-        ),
-        max_step=config.get(FanSchema.CONF_MAX_STEP),
-    )
-    return fan
