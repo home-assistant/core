@@ -323,7 +323,7 @@ def get_core_info(hass):
 
 @callback
 @bind_hass
-def is_hassio(hass):
+def is_hassio(hass: HomeAssistant) -> bool:
     """Return true if Hass.io is loaded.
 
     Async friendly.

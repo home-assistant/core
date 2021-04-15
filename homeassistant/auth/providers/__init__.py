@@ -1,6 +1,7 @@
 """Auth providers for Home Assistant."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import importlib
 import logging
 import types
@@ -12,6 +13,7 @@ from voluptuous.humanize import humanize_error
 from homeassistant import data_entry_flow, requirements
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultDict
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
 from homeassistant.util.decorator import Registry
@@ -102,7 +104,7 @@ class AuthProvider:
         raise NotImplementedError
 
     async def async_get_or_create_credentials(
-        self, flow_result: dict[str, str]
+        self, flow_result: Mapping[str, str]
     ) -> Credentials:
         """Get credentials based on the flow result."""
         raise NotImplementedError
@@ -198,7 +200,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResultDict:
         """Handle the first step of login flow.
 
         Return self.async_show_form(step_id='init') if user_input is None.
@@ -208,7 +210,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
 
     async def async_step_select_mfa_module(
         self, user_input: dict[str, str] | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResultDict:
         """Handle the step of select mfa module."""
         errors = {}
 
@@ -233,7 +235,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
 
     async def async_step_mfa(
         self, user_input: dict[str, str] | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResultDict:
         """Handle the step of mfa validation."""
         assert self.credential
         assert self.user
@@ -285,6 +287,6 @@ class LoginFlow(data_entry_flow.FlowHandler):
             errors=errors,
         )
 
-    async def async_finish(self, flow_result: Any) -> dict:
+    async def async_finish(self, flow_result: Any) -> FlowResultDict:
         """Handle the pass of login flow."""
         return self.async_create_entry(title=self._auth_provider.name, data=flow_result)
