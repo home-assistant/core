@@ -25,8 +25,8 @@ from homeassistant.helpers.device_registry import format_mac
 
 from .const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
-    CONF_ALLOW_UPTIME_SENSORS,
     CONF_ALLOW_DBM_SENSORS,
+    CONF_ALLOW_UPTIME_SENSORS,
     CONF_BLOCK_CLIENT,
     CONF_CONTROLLER,
     CONF_DETECTION_TIME,
