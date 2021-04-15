@@ -16,7 +16,7 @@ async def async_setup(hass):
         await hass.services.async_call(DOMAIN, SERVICE_RELOAD)
 
     hass.http.register_view(
-        EditKeyBasedConfigView(
+        EditScriptConfigView(
             DOMAIN,
             "config",
             SCRIPT_CONFIG_PATH,
@@ -27,3 +27,11 @@ async def async_setup(hass):
         )
     )
     return True
+
+
+class EditScriptConfigView(EditKeyBasedConfigView):
+    """Edit script config."""
+
+    def _write_value(self, hass, data, config_key, new_value):
+        """Set value."""
+        data[config_key] = new_value
