@@ -76,7 +76,7 @@ class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):  # type: ignore[valid
         orig_close = loop.close
 
         def close() -> None:
-            executor.shutdown(wait=True, cancel_futures=True, interrupt=True)
+            executor.logged_shutdown()
             orig_close()
 
         loop.close = close  # type: ignore
