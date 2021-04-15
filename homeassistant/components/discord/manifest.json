@@ -3,5 +3,6 @@
   "name": "Discord",
   "documentation": "https://www.home-assistant.io/integrations/discord",
   "requirements": ["discord.py==1.6.0"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "cloud_push"
 }
