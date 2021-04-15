@@ -33,6 +33,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         RX_SENSOR: set(),
         TX_SENSOR: set(),
         UPTIME_SENSOR: set(),
+        DBM_SENSOR: set(),
     }
 
     @callback
@@ -46,7 +47,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if controller.option_allow_uptime_sensors:
             add_uptime_entities(controller, async_add_entities, clients)
 
-        if controller.option_dbm_uptime_sensors:
+        if controller.option_allow_dbm_sensors:
             add_dbm_entities(controller, async_add_entities, clients)
 
     for signal in (controller.signal_update, controller.signal_options_update):
@@ -98,7 +99,8 @@ def add_dbm_entities(controller, async_add_entities, clients):
             continue
 
         client = controller.api.clients[mac]
-        sensors.append(UniFiDbmSensor(client, controller))
+        if not client.is_wired:
+            sensors.append(UniFiDbmSensor(client, controller))
 
     if sensors:
         async_add_entities(sensors)
@@ -204,7 +206,8 @@ class UniFiDbmSensor(UniFiClient, SensorEntity):
     @property
     def state(self) -> int:
         """Return the signal strength of the client."""
-        return self.client.raw.signal
+        print(self.client.raw)
+        return self.client.raw
 
     async def options_updated(self) -> None:
         """Config entry options are updated, remove entity if option is disabled."""

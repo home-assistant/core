@@ -33,10 +33,7 @@ class UniFiBase(Entity):
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         _LOGGER.debug(
-            "New %s entity %s (%s)",
-            self.TYPE,
-            self.entity_id,
-            self.key,
+            "New %s entity %s (%s)", self.TYPE, self.entity_id, self.key,
         )
         for signal, method in (
             (self.controller.signal_reachable, self.async_signal_reachable_callback),
@@ -49,10 +46,7 @@ class UniFiBase(Entity):
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect object when removed."""
         _LOGGER.debug(
-            "Removing %s entity %s (%s)",
-            self.TYPE,
-            self.entity_id,
-            self.key,
+            "Removing %s entity %s (%s)", self.TYPE, self.entity_id, self.key,
         )
         self._item.remove_callback(self.async_update_callback)
         self.controller.entities[self.DOMAIN][self.TYPE].remove(self.key)
@@ -66,10 +60,7 @@ class UniFiBase(Entity):
     def async_update_callback(self) -> None:
         """Update the entity's state."""
         _LOGGER.debug(
-            "Updating %s entity %s (%s)",
-            self.TYPE,
-            self.entity_id,
-            self.key,
+            "Updating %s entity %s (%s)", self.TYPE, self.entity_id, self.key,
         )
         self.async_write_ha_state()
 

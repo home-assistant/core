@@ -9,6 +9,7 @@ from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.unifi.config_flow import async_discover_unifi
 from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
+    CONF_ALLOW_DBM_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
     CONF_BLOCK_CLIENT,
     CONF_CONTROLLER,
@@ -379,9 +380,7 @@ async def test_reauth_flow_update_configuration(hass, aioclient_mock):
     controller.available = False
 
     result = await hass.config_entries.flow.async_init(
-        UNIFI_DOMAIN,
-        context={"source": SOURCE_REAUTH},
-        data=config_entry,
+        UNIFI_DOMAIN, context={"source": SOURCE_REAUTH}, data=config_entry,
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -478,6 +477,7 @@ async def test_advanced_option_flow(hass, aioclient_mock):
         result["flow_id"],
         user_input={
             CONF_ALLOW_BANDWIDTH_SENSORS: True,
+            CONF_ALLOW_DBM_SENSORS: True,
             CONF_ALLOW_UPTIME_SENSORS: True,
         },
     )
@@ -494,6 +494,7 @@ async def test_advanced_option_flow(hass, aioclient_mock):
         CONF_DPI_RESTRICTIONS: False,
         CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
         CONF_ALLOW_BANDWIDTH_SENSORS: True,
+        CONF_ALLOW_DBM_SENSORS: True,
         CONF_ALLOW_UPTIME_SENSORS: True,
     }
 
@@ -565,8 +566,7 @@ async def test_form_ssdp_aborts_if_host_already_exists(hass):
     """Test we abort if the host is already configured."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     entry = MockConfigEntry(
-        domain=UNIFI_DOMAIN,
-        data={"host": "192.168.208.1", "site": "site_id"},
+        domain=UNIFI_DOMAIN, data={"host": "192.168.208.1", "site": "site_id"},
     )
     entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
