@@ -237,7 +237,7 @@ class CastDevice(MediaPlayerEntity):
             ),
             ChromeCastZeroconf.get_zeroconf(),
         )
-        chromecast.name = f"Cast {self._cast_info.friendly_name}"
+        chromecast.socket_client.name = f"Cast {self._cast_info.friendly_name}"
         self._chromecast = chromecast
 
         if CAST_MULTIZONE_MANAGER_KEY not in self.hass.data:
@@ -855,7 +855,7 @@ class DynamicCastGroup:
             ),
             ChromeCastZeroconf.get_zeroconf(),
         )
-        chromecast.name = "Cast Dynamic group"
+        chromecast.socket_client.name = "Cast Dynamic group"
         self._chromecast = chromecast
 
         if CAST_MULTIZONE_MANAGER_KEY not in self.hass.data:
