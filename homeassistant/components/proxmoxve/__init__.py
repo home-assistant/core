@@ -11,6 +11,7 @@ import requests.exceptions
 from requests.exceptions import ConnectTimeout, SSLError
 import voluptuous as vol
 
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -147,17 +148,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 =======
 >>>>>>> changed existing code to support config flow
 
-    if DOMAIN not in config:
-        return True  # we are using UI, will be handled by setup_async_entry
+    hass.data[DOMAIN] = {}
 
-    for host in config[DOMAIN]:
-        await async_setup_entry(hass, host)
-        return True
+    # import to config flow
+    if DOMAIN in config:
+        for conf in config[DOMAIN]:
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
+                )
+            )
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry):
     """Set up the platform."""
-    hass.data.setdefault(DOMAIN, {})
 
     entry_data = config_entry.data
 
