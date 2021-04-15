@@ -10,5 +10,6 @@
       "manufacturer": "ARCAM"
     }
   ],
-  "codeowners": ["@elupus"]
+  "codeowners": ["@elupus"],
+  "iot_class": "local_polling"
 }

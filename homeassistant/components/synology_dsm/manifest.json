@@ -10,5 +10,6 @@
       "manufacturer": "Synology",
       "deviceType": "urn:schemas-upnp-org:device:Basic:1"
     }
-  ]
+  ],
+  "iot_class": "local_polling"
 }
