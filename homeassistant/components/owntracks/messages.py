@@ -97,6 +97,7 @@ def _set_gps_from_zone(kwargs, location, zone):
     Async friendly.
     """
     if zone is not None:
+        # Snap to the center of the zone, with perfect accuracy
         kwargs["gps"] = (
             zone.attributes[ATTR_LATITUDE],
             zone.attributes[ATTR_LONGITUDE],
