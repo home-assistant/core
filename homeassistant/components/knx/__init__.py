@@ -235,7 +235,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # We need to wait until all entities are loaded into the device list since they could also be created from other platforms
     for platform in SupportedPlatforms:
         hass.async_create_task(
-            discovery.async_load_platform(hass, platform.value, DOMAIN, {}, config)
+            discovery.async_load_platform(
+                hass,
+                platform.value,
+                DOMAIN,
+                {
+                    "platform_config": config[DOMAIN].get(platform.value),
+                },
+                config,
+            )
         )
 
     hass.services.async_register(
