@@ -250,6 +250,15 @@ async def test_refresh_node_info(
     assert args["command"] == "node.refresh_info"
     assert args["nodeId"] == 52
 
+    event = Event(
+        type="interview started",
+        data={"source": "node", "event": "interview started", "nodeId": 52},
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "interview started"
+
     client.async_send_command_no_wait.reset_mock()
 
     await ws_client.send_json(
