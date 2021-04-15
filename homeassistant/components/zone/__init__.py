@@ -198,7 +198,8 @@ def in_zone(zone: State, latitude: float, longitude: float, radius: float = 0) -
 
     if zone_dist is None or zone.attributes[ATTR_RADIUS] is None:
         return False
-    return zone_dist - radius < cast(float, zone.attributes[ATTR_RADIUS])
+    # Within zone if location circle is inside zone
+    return zone_dist + radius < cast(float, zone.attributes[ATTR_RADIUS])
 
 
 class ZoneStorageCollection(collection.StorageCollection):

@@ -102,6 +102,7 @@ class IcloudAccount:
         self._devices = {}
         self._retried_fetch = False
         self._config_entry = config_entry
+        self._current_zone = None
 
         self.listeners = []
 
@@ -257,8 +258,10 @@ class IcloudAccount:
                 device.location[DEVICE_LOCATION_LATITUDE],
                 device.location[DEVICE_LOCATION_LONGITUDE],
                 device.location[DEVICE_LOCATION_HORIZONTAL_ACCURACY],
+                self._current_zone,
             ).result()
 
+            self._current_zone = current_zone.entity_id if current_zone else None
             # Max interval if in zone
             if current_zone is not None:
                 continue

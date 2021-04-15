@@ -137,6 +137,7 @@ class Life360Scanner:
         self._dev_data = {}
         self._circles_logged = set()
         self._members_logged = set()
+        self._current_zone = None
 
         _dump_filter(self._circles_filter, "Circles")
         _dump_filter(self._members_filter, "device IDs", self._dev_id)
@@ -317,8 +318,15 @@ class Life360Scanner:
         # location is not in a HA zone, then set location name accordingly.
         loc_name = None
         active_zone = run_callback_threadsafe(
-            self._hass.loop, async_active_zone, self._hass, lat, lon, gps_accuracy
+            self._hass.loop,
+            async_active_zone,
+            self._hass,
+            lat,
+            lon,
+            gps_accuracy,
+            self._current_zone,
         ).result()
+        self._current_zone = active_zone.entity_id if active_zone else None
         if not active_zone:
             if SHOW_DRIVING in self._show_as_state and driving is True:
                 loc_name = SHOW_DRIVING
