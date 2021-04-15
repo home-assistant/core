@@ -389,7 +389,7 @@ async def test_initializing_flows_canceled_on_shutdown(hass, manager):
 
 
 async def test_init_unknown_flow(manager):
-    """Test that UnknownFlow is raised when async_create_flow return None."""
+    """Test that UnknownFlow is raised when async_create_flow returns None."""
 
     with pytest.raises(data_entry_flow.UnknownFlow), patch.object(
         manager, "async_create_flow", return_value=None
