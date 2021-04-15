@@ -175,13 +175,14 @@ class BaseClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
 
         if self.hass.config.units.is_metric:
             if precipitation:
-                precipitation = (
+                precipitation = round(
                     distance_convert(precipitation / 12, LENGTH_FEET, LENGTH_METERS)
-                    * 1000
+                    * 1000,
+                    4,
                 )
             if wind_speed:
-                wind_speed = distance_convert(
-                    wind_speed, LENGTH_MILES, LENGTH_KILOMETERS
+                wind_speed = round(
+                    distance_convert(wind_speed, LENGTH_MILES, LENGTH_KILOMETERS), 4
                 )
 
         data = {
@@ -202,8 +203,8 @@ class BaseClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
         """Return additional state attributes."""
         wind_gust = self.wind_gust
         if wind_gust and self.hass.config.units.is_metric:
-            wind_gust = distance_convert(
-                self.wind_gust, LENGTH_MILES, LENGTH_KILOMETERS
+            wind_gust = round(
+                distance_convert(self.wind_gust, LENGTH_MILES, LENGTH_KILOMETERS), 4
             )
         cloud_cover = self.cloud_cover
         if cloud_cover is not None:
@@ -228,6 +229,48 @@ class BaseClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
     def precipitation_type(self):
         """Return precipitation type."""
         raise NotImplementedError
+
+    @property
+    def _pressure(self):
+        """Return the raw pressure."""
+        raise NotImplementedError
+
+    @property
+    def pressure(self):
+        """Return the pressure."""
+        if self.hass.config.units.is_metric and self._pressure:
+            return round(
+                pressure_convert(self._pressure, PRESSURE_INHG, PRESSURE_HPA), 4
+            )
+        return self._pressure
+
+    @property
+    def _wind_speed(self):
+        """Return the raw wind speed."""
+        raise NotImplementedError
+
+    @property
+    def wind_speed(self):
+        """Return the wind speed."""
+        if self.hass.config.units.is_metric and self._wind_speed:
+            return round(
+                distance_convert(self._wind_speed, LENGTH_MILES, LENGTH_KILOMETERS), 4
+            )
+        return self._wind_speed
+
+    @property
+    def _visibility(self):
+        """Return the raw visibility."""
+        raise NotImplementedError
+
+    @property
+    def visibility(self):
+        """Return the visibility."""
+        if self.hass.config.units.is_metric and self._visibility:
+            return round(
+                distance_convert(self._visibility, LENGTH_MILES, LENGTH_KILOMETERS), 4
+            )
+        return self._visibility
 
 
 class ClimaCellWeatherEntity(BaseClimaCellWeatherEntity):
@@ -259,12 +302,9 @@ class ClimaCellWeatherEntity(BaseClimaCellWeatherEntity):
         return TEMP_FAHRENHEIT
 
     @property
-    def pressure(self):
-        """Return the pressure."""
-        pressure = self._get_current_property(CC_ATTR_PRESSURE)
-        if self.hass.config.units.is_metric and pressure:
-            return pressure_convert(pressure, PRESSURE_INHG, PRESSURE_HPA)
-        return pressure
+    def _pressure(self):
+        """Return the raw pressure."""
+        return self._get_current_property(CC_ATTR_PRESSURE)
 
     @property
     def humidity(self):
@@ -290,12 +330,9 @@ class ClimaCellWeatherEntity(BaseClimaCellWeatherEntity):
         return PrecipitationType(precipitation_type).name.lower()
 
     @property
-    def wind_speed(self):
-        """Return the wind speed."""
-        wind_speed = self._get_current_property(CC_ATTR_WIND_SPEED)
-        if self.hass.config.units.is_metric and wind_speed:
-            return distance_convert(wind_speed, LENGTH_MILES, LENGTH_KILOMETERS)
-        return wind_speed
+    def _wind_speed(self):
+        """Return the raw wind speed."""
+        return self._get_current_property(CC_ATTR_WIND_SPEED)
 
     @property
     def wind_bearing(self):
@@ -316,12 +353,9 @@ class ClimaCellWeatherEntity(BaseClimaCellWeatherEntity):
         )
 
     @property
-    def visibility(self):
-        """Return the visibility."""
-        visibility = self._get_current_property(CC_ATTR_VISIBILITY)
-        if self.hass.config.units.is_metric and visibility:
-            return distance_convert(visibility, LENGTH_MILES, LENGTH_KILOMETERS)
-        return visibility
+    def _visibility(self):
+        """Return the raw visibility."""
+        return self._get_current_property(CC_ATTR_VISIBILITY)
 
     @property
     def forecast(self):
@@ -418,14 +452,9 @@ class ClimaCellV3WeatherEntity(BaseClimaCellWeatherEntity):
         return TEMP_FAHRENHEIT
 
     @property
-    def pressure(self):
+    def _pressure(self):
         """Return the pressure."""
-        pressure = self._get_cc_value(
-            self.coordinator.data[CURRENT], CC_V3_ATTR_PRESSURE
-        )
-        if self.hass.config.units.is_metric and pressure:
-            return pressure_convert(pressure, PRESSURE_INHG, PRESSURE_HPA)
-        return pressure
+        return self._get_cc_value(self.coordinator.data[CURRENT], CC_V3_ATTR_PRESSURE)
 
     @property
     def humidity(self):
@@ -452,14 +481,9 @@ class ClimaCellV3WeatherEntity(BaseClimaCellWeatherEntity):
         )
 
     @property
-    def wind_speed(self):
+    def _wind_speed(self):
         """Return the wind speed."""
-        wind_speed = self._get_cc_value(
-            self.coordinator.data[CURRENT], CC_V3_ATTR_WIND_SPEED
-        )
-        if self.hass.config.units.is_metric and wind_speed:
-            return distance_convert(wind_speed, LENGTH_MILES, LENGTH_KILOMETERS)
-        return wind_speed
+        return self._get_cc_value(self.coordinator.data[CURRENT], CC_V3_ATTR_WIND_SPEED)
 
     @property
     def wind_bearing(self):
@@ -482,14 +506,9 @@ class ClimaCellV3WeatherEntity(BaseClimaCellWeatherEntity):
         )
 
     @property
-    def visibility(self):
-        """Return the visibility."""
-        visibility = self._get_cc_value(
-            self.coordinator.data[CURRENT], CC_V3_ATTR_VISIBILITY
-        )
-        if self.hass.config.units.is_metric and visibility:
-            return distance_convert(visibility, LENGTH_MILES, LENGTH_KILOMETERS)
-        return visibility
+    def _visibility(self):
+        """Return the raw visibility."""
+        return self._get_cc_value(self.coordinator.data[CURRENT], CC_V3_ATTR_VISIBILITY)
 
     @property
     def forecast(self):

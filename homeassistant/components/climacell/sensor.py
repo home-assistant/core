@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 import logging
-from typing import Callable
+from typing import Any, Callable, Mapping
 
 from pyclimacell.const import CURRENT
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_ATTRIBUTION,
     ATTR_NAME,
     CONF_API_VERSION,
     CONF_NAME,
@@ -88,6 +89,11 @@ class BaseClimaCellSensorEntity(ClimaCellEntity, SensorEntity):
         return f"{self._config_entry.unique_id}_{slugify(self.sensor_type[ATTR_NAME])}"
 
     @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return entity specific state attributes."""
+        return {ATTR_ATTRIBUTION: self.attribution}
+
+    @property
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         if CONF_UNIT_OF_MEASUREMENT in self.sensor_type:
@@ -120,7 +126,7 @@ class BaseClimaCellSensorEntity(ClimaCellEntity, SensorEntity):
             and self.hass.config.units.is_metric
             == self.sensor_type[ATTR_IS_METRIC_CHECK]
         ):
-            return self._state * self.sensor_type[ATTR_METRIC_CONVERSION]
+            return round(self._state * self.sensor_type[ATTR_METRIC_CONVERSION], 4)
 
         if ATTR_VALUE_MAP in self.sensor_type:
             return self.sensor_type[ATTR_VALUE_MAP](self._state).name.lower()
