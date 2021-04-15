@@ -422,21 +422,21 @@ class FanEntity(ToggleEntity):
         return self.speed not in [SPEED_OFF, None]
 
     @property
-    def _implemented_percentage(self):
+    def _implemented_percentage(self) -> bool:
         """Return true if percentage has been implemented."""
         return not hasattr(self.set_percentage, _FAN_NATIVE) or not hasattr(
             self.async_set_percentage, _FAN_NATIVE
         )
 
     @property
-    def _implemented_preset_mode(self):
+    def _implemented_preset_mode(self) -> bool:
         """Return true if preset_mode has been implemented."""
         return not hasattr(self.set_preset_mode, _FAN_NATIVE) or not hasattr(
             self.async_set_preset_mode, _FAN_NATIVE
         )
 
     @property
-    def _implemented_speed(self):
+    def _implemented_speed(self) -> bool:
         """Return true if speed has been implemented."""
         return not hasattr(self.set_speed, _FAN_NATIVE) or not hasattr(
             self.async_set_speed, _FAN_NATIVE
@@ -459,9 +459,8 @@ class FanEntity(ToggleEntity):
     @property
     def percentage(self) -> int | None:
         """Return the current speed as a percentage."""
-        if not self._implemented_preset_mode:
-            if self.speed in self.preset_modes:
-                return None
+        if not self._implemented_preset_mode and self.speed in self.preset_modes:
+            return None
         if not self._implemented_percentage:
             return self.speed_to_percentage(self.speed)
         return 0

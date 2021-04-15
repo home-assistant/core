@@ -1,5 +1,6 @@
 """Support for monitoring plants."""
 from collections import deque
+from contextlib import suppress
 from datetime import datetime, timedelta
 import logging
 
@@ -324,12 +325,10 @@ class Plant(Entity):
             for state in states:
                 # filter out all None, NaN and "unknown" states
                 # only keep real values
-                try:
+                with suppress(ValueError):
                     self._brightness_history.add_measurement(
                         int(state.state), state.last_updated
                     )
-                except ValueError:
-                    pass
         _LOGGER.debug("Initializing from database completed")
 
     @property

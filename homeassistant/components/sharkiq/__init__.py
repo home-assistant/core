@@ -1,6 +1,7 @@
 """Shark IQ Integration."""
 
 import asyncio
+from contextlib import suppress
 
 import async_timeout
 from sharkiqpy import (
@@ -59,14 +60,11 @@ async def async_setup_entry(hass, config_entry):
         raise exceptions.ConfigEntryNotReady from exc
 
     shark_vacs = await ayla_api.async_get_devices(False)
-    device_names = ", ".join([d.name for d in shark_vacs])
+    device_names = ", ".join(d.name for d in shark_vacs)
     _LOGGER.debug("Found %d Shark IQ device(s): %s", len(shark_vacs), device_names)
     coordinator = SharkIqUpdateCoordinator(hass, config_entry, ayla_api, shark_vacs)
 
-    await coordinator.async_refresh()
-
-    if not coordinator.last_update_success:
-        raise exceptions.ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
 
     hass.data[DOMAIN][config_entry.entry_id] = coordinator
 
@@ -81,11 +79,10 @@ async def async_setup_entry(hass, config_entry):
 async def async_disconnect_or_timeout(coordinator: SharkIqUpdateCoordinator):
     """Disconnect to vacuum."""
     _LOGGER.debug("Disconnecting from Ayla Api")
-    with async_timeout.timeout(5):
-        try:
-            await coordinator.ayla_api.async_sign_out()
-        except (SharkIqAuthError, SharkIqAuthExpiringError, SharkIqNotAuthedError):
-            pass
+    with async_timeout.timeout(5), suppress(
+        SharkIqAuthError, SharkIqAuthExpiringError, SharkIqNotAuthedError
+    ):
+        await coordinator.ayla_api.async_sign_out()
 
 
 async def async_update_options(hass, config_entry):
@@ -105,10 +102,8 @@ async def async_unload_entry(hass, config_entry):
     )
     if unload_ok:
         domain_data = hass.data[DOMAIN][config_entry.entry_id]
-        try:
+        with suppress(SharkIqAuthError):
             await async_disconnect_or_timeout(coordinator=domain_data)
-        except SharkIqAuthError:
-            pass
         hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return unload_ok

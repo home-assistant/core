@@ -271,6 +271,32 @@ async def test_requires_validation_state(hass):
     assert hass.config_entries.flow.async_progress()[0]["context"]["source"] == "reauth"
 
 
+async def test_unknown_auth_http_401(hass):
+    """Config entry state is ENTRY_STATE_SETUP_ERROR when august gets an http."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=_mock_get_config()[DOMAIN],
+        title="August august",
+    )
+    config_entry.add_to_hass(hass)
+    assert hass.config_entries.flow.async_progress() == []
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    with patch(
+        "yalexs.authenticator_async.AuthenticatorAsync.async_authenticate",
+        return_value=_mock_august_authentication("original_token", 1234, None),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state == ENTRY_STATE_SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+
+    assert flows[0]["step_id"] == "reauth_validate"
+
+
 async def test_load_unload(hass):
     """Config entry can be unloaded."""
 

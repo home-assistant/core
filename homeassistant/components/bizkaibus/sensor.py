@@ -1,4 +1,6 @@
 """Support for Bizkaibus, Biscay (Basque Country, Spain) Bus service."""
+from contextlib import suppress
+
 from bizkaibus.bizkaibus import BizkaibusData
 import voluptuous as vol
 
@@ -61,10 +63,8 @@ class BizkaibusSensor(SensorEntity):
     def update(self):
         """Get the latest data from the webservice."""
         self.data.update()
-        try:
+        with suppress(TypeError):
             self._state = self.data.info[0][ATTR_DUE_IN]
-        except TypeError:
-            pass
 
 
 class Bizkaibus:

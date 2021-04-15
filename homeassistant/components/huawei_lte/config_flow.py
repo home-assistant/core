@@ -1,7 +1,6 @@
 """Config flow for the Huawei LTE platform."""
 from __future__ import annotations
 
-from collections import OrderedDict
 import logging
 from typing import Any
 from urllib.parse import urlparse
@@ -31,10 +30,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 
-from .const import CONNECTION_TIMEOUT, DEFAULT_DEVICE_NAME, DEFAULT_NOTIFY_SERVICE_NAME
-
-# see https://github.com/PyCQA/pylint/issues/3202 about the DOMAIN's pylint issue
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import (
+    CONNECTION_TIMEOUT,
+    DEFAULT_DEVICE_NAME,
+    DEFAULT_NOTIFY_SERVICE_NAME,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,32 +64,21 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
-                OrderedDict(
-                    (
-                        (
-                            vol.Required(
-                                CONF_URL,
-                                default=user_input.get(
-                                    CONF_URL,
-                                    self.context.get(CONF_URL, ""),
-                                ),
-                            ),
-                            str,
+                {
+                    vol.Required(
+                        CONF_URL,
+                        default=user_input.get(
+                            CONF_URL,
+                            self.context.get(CONF_URL, ""),
                         ),
-                        (
-                            vol.Optional(
-                                CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")
-                            ),
-                            str,
-                        ),
-                        (
-                            vol.Optional(
-                                CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
-                            ),
-                            str,
-                        ),
-                    )
-                )
+                    ): str,
+                    vol.Optional(
+                        CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")
+                    ): str,
+                    vol.Optional(
+                        CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
+                    ): str,
+                }
             ),
             errors=errors or {},
         )

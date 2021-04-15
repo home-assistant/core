@@ -87,7 +87,18 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SynoDSMUtilSensor(SynologyDSMBaseEntity, SensorEntity):
+class SynoDSMSensor(SynologyDSMBaseEntity):
+    """Mixin for sensor specific attributes."""
+
+    @property
+    def unit_of_measurement(self) -> str:
+        """Return the unit the value is expressed in."""
+        if self.entity_type in TEMP_SENSORS_KEYS:
+            return self.hass.config.units.temperature_unit
+        return self._unit
+
+
+class SynoDSMUtilSensor(SynoDSMSensor, SensorEntity):
     """Representation a Synology Utilisation sensor."""
 
     @property
@@ -119,7 +130,7 @@ class SynoDSMUtilSensor(SynologyDSMBaseEntity, SensorEntity):
         return bool(self._api.utilisation)
 
 
-class SynoDSMStorageSensor(SynologyDSMDeviceEntity, SensorEntity):
+class SynoDSMStorageSensor(SynologyDSMDeviceEntity, SynoDSMSensor, SensorEntity):
     """Representation a Synology Storage sensor."""
 
     @property
@@ -140,7 +151,7 @@ class SynoDSMStorageSensor(SynologyDSMDeviceEntity, SensorEntity):
         return attr
 
 
-class SynoDSMInfoSensor(SynologyDSMBaseEntity, SensorEntity):
+class SynoDSMInfoSensor(SynoDSMSensor, SensorEntity):
     """Representation a Synology information sensor."""
 
     def __init__(

@@ -13,9 +13,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_REGION
 from homeassistant.helpers import aiohttp_client
 
-# https://github.com/PyCQA/pylint/issues/3202
-from .const import DOMAIN  # pylint: disable=unused-import
-from .const import MAZDA_REGIONS
+from .const import DOMAIN, MAZDA_REGIONS
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -14,9 +14,10 @@ from pyfireservicerota import (
 from homeassistant.components.binary_sensor import DOMAIN as BINARYSENSOR_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -27,12 +28,6 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [SENSOR_DOMAIN, BINARYSENSOR_DOMAIN, SWITCH_DOMAIN]
-
-
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up the FireServiceRota component."""
-
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -57,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_interval=MIN_TIME_BETWEEN_UPDATES,
     )
 
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_CLIENT: client,
@@ -115,19 +110,10 @@ class FireServiceRotaOauth:
                 self._fsr.refresh_tokens
             )
 
-        except (InvalidAuthError, InvalidTokenError):
-            _LOGGER.error("Error refreshing tokens, triggered reauth workflow")
-            self._hass.async_create_task(
-                self._hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": SOURCE_REAUTH},
-                    data={
-                        **self._entry.data,
-                    },
-                )
-            )
-
-            return False
+        except (InvalidAuthError, InvalidTokenError) as err:
+            raise ConfigEntryAuthFailed(
+                "Error refreshing tokens, triggered reauth workflow"
+            ) from err
 
         _LOGGER.debug("Saving new tokens in config entry")
         self._hass.config_entries.async_update_entry(

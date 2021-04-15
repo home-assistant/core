@@ -8,7 +8,6 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
 from homeassistant.helpers.device_registry import format_mac
 
-# pylint: disable=unused-import
 from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,

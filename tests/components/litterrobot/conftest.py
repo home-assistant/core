@@ -1,60 +1,79 @@
 """Configure pytest for Litter-Robot tests."""
-from __future__ import annotations
-
+from typing import Any, Optional
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pylitterbot
-from pylitterbot import Robot
+from pylitterbot import Account, Robot
+from pylitterbot.exceptions import InvalidCommandException
 import pytest
 
 from homeassistant.components import litterrobot
+from homeassistant.core import HomeAssistant
 
 from .common import CONFIG, ROBOT_DATA
 
 from tests.common import MockConfigEntry
 
 
-def create_mock_robot(unit_status_code: str | None = None):
+def create_mock_robot(
+    robot_data: Optional[dict] = None, side_effect: Optional[Any] = None
+) -> Robot:
     """Create a mock Litter-Robot device."""
-    if not (
-        unit_status_code
-        and Robot.UnitStatus(unit_status_code) != Robot.UnitStatus.UNKNOWN
-    ):
-        unit_status_code = ROBOT_DATA["unitStatus"]
+    if not robot_data:
+        robot_data = {}
 
-    with patch.dict(ROBOT_DATA, {"unitStatus": unit_status_code}):
-        robot = Robot(data=ROBOT_DATA)
-        robot.start_cleaning = AsyncMock()
-        robot.set_power_status = AsyncMock()
-        robot.reset_waste_drawer = AsyncMock()
-        robot.set_sleep_mode = AsyncMock()
-        robot.set_night_light = AsyncMock()
-        robot.set_panel_lockout = AsyncMock()
-        return robot
+    robot = Robot(data={**ROBOT_DATA, **robot_data})
+    robot.start_cleaning = AsyncMock(side_effect=side_effect)
+    robot.set_power_status = AsyncMock(side_effect=side_effect)
+    robot.reset_waste_drawer = AsyncMock(side_effect=side_effect)
+    robot.set_sleep_mode = AsyncMock(side_effect=side_effect)
+    robot.set_night_light = AsyncMock(side_effect=side_effect)
+    robot.set_panel_lockout = AsyncMock(side_effect=side_effect)
+    robot.set_wait_time = AsyncMock(side_effect=side_effect)
+    return robot
 
 
-def create_mock_account(unit_status_code: str | None = None):
+def create_mock_account(
+    robot_data: Optional[dict] = None,
+    side_effect: Optional[Any] = None,
+    skip_robots: bool = False,
+) -> MagicMock:
     """Create a mock Litter-Robot account."""
-    account = MagicMock(spec=pylitterbot.Account)
+    account = MagicMock(spec=Account)
     account.connect = AsyncMock()
     account.refresh_robots = AsyncMock()
-    account.robots = [create_mock_robot(unit_status_code)]
+    account.robots = [] if skip_robots else [create_mock_robot(robot_data, side_effect)]
     return account
 
 
 @pytest.fixture
-def mock_account():
+def mock_account() -> MagicMock:
     """Mock a Litter-Robot account."""
     return create_mock_account()
 
 
 @pytest.fixture
-def mock_account_with_error():
+def mock_account_with_no_robots() -> MagicMock:
+    """Mock a Litter-Robot account."""
+    return create_mock_account(skip_robots=True)
+
+
+@pytest.fixture
+def mock_account_with_error() -> MagicMock:
     """Mock a Litter-Robot account with error."""
-    return create_mock_account("BR")
+    return create_mock_account({"unitStatus": "BR"})
 
 
-async def setup_integration(hass, mock_account, platform_domain=None):
+@pytest.fixture
+def mock_account_with_side_effects() -> MagicMock:
+    """Mock a Litter-Robot account with side effects."""
+    return create_mock_account(
+        side_effect=InvalidCommandException("Invalid command: oops")
+    )
+
+
+async def setup_integration(
+    hass: HomeAssistant, mock_account: MagicMock, platform_domain: Optional[str] = None
+) -> MockConfigEntry:
     """Load a Litter-Robot platform with the provided hub."""
     entry = MockConfigEntry(
         domain=litterrobot.DOMAIN,
@@ -62,7 +81,9 @@ async def setup_integration(hass, mock_account, platform_domain=None):
     )
     entry.add_to_hass(hass)
 
-    with patch("pylitterbot.Account", return_value=mock_account), patch(
+    with patch(
+        "homeassistant.components.litterrobot.hub.Account", return_value=mock_account
+    ), patch(
         "homeassistant.components.litterrobot.PLATFORMS",
         [platform_domain] if platform_domain else [],
     ):

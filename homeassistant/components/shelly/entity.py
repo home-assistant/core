@@ -268,11 +268,6 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
         return self.description.value(value)
 
     @property
-    def unit_of_measurement(self):
-        """Return unit of sensor."""
-        return self._unit
-
-    @property
     def device_class(self):
         """Device class of sensor."""
         return self.description.device_class
@@ -347,11 +342,6 @@ class ShellyRestAttributeEntity(update_coordinator.CoordinatorEntity):
             self.wrapper.device.status, self._last_value
         )
         return self._last_value
-
-    @property
-    def unit_of_measurement(self):
-        """Return unit of sensor."""
-        return self.description.unit
 
     @property
     def device_class(self):

@@ -154,11 +154,10 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if step_id == "user":
             return self.async_create_entry(title=self._username, data=data)
 
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if entry.unique_id == self.unique_id:
-                self.hass.config_entries.async_update_entry(entry, data=data)
-                await self.hass.config_entries.async_reload(entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
+        entry = await self.async_set_unique_id(self.unique_id)
+        self.hass.config_entries.async_update_entry(entry, data=data)
+        await self.hass.config_entries.async_reload(entry.entry_id)
+        return self.async_abort(reason="reauth_successful")
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""

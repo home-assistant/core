@@ -6,13 +6,15 @@ from pymodbus.client.sync import ModbusSerialClient, ModbusTcpClient, ModbusUdpC
 from pymodbus.transaction import ModbusRtuFramer
 
 from homeassistant.const import (
-    ATTR_STATE,
+    CONF_BINARY_SENSORS,
     CONF_COVERS,
     CONF_DELAY,
     CONF_HOST,
     CONF_METHOD,
     CONF_NAME,
     CONF_PORT,
+    CONF_SENSORS,
+    CONF_SWITCHES,
     CONF_TIMEOUT,
     CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
@@ -22,15 +24,19 @@ from homeassistant.helpers.discovery import load_platform
 from .const import (
     ATTR_ADDRESS,
     ATTR_HUB,
+    ATTR_STATE,
     ATTR_UNIT,
     ATTR_VALUE,
     CONF_BAUDRATE,
+    CONF_BINARY_SENSOR,
     CONF_BYTESIZE,
     CONF_CLIMATE,
     CONF_CLIMATES,
     CONF_COVER,
     CONF_PARITY,
+    CONF_SENSOR,
     CONF_STOPBITS,
+    CONF_SWITCH,
     MODBUS_DOMAIN as DOMAIN,
     SERVICE_WRITE_COIL,
     SERVICE_WRITE_REGISTER,
@@ -56,6 +62,9 @@ def modbus_setup(
         for component, conf_key in (
             (CONF_CLIMATE, CONF_CLIMATES),
             (CONF_COVER, CONF_COVERS),
+            (CONF_BINARY_SENSOR, CONF_BINARY_SENSORS),
+            (CONF_SENSOR, CONF_SENSORS),
+            (CONF_SWITCH, CONF_SWITCHES),
         ):
             if conf_key in conf_hub:
                 load_platform(hass, component, DOMAIN, conf_hub, config)
@@ -84,7 +93,10 @@ def modbus_setup(
         address = service.data[ATTR_ADDRESS]
         state = service.data[ATTR_STATE]
         client_name = service.data[ATTR_HUB]
-        hub_collect[client_name].write_coil(unit, address, state)
+        if isinstance(state, list):
+            hub_collect[client_name].write_coils(unit, address, state)
+        else:
+            hub_collect[client_name].write_coil(unit, address, state)
 
     # register function to gracefully stop modbus
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_modbus)
@@ -170,8 +182,6 @@ class ModbusHub:
                 port=self._config_port,
                 timeout=self._config_timeout,
             )
-        else:
-            assert False
 
         # Connect device
         self.connect()
@@ -215,6 +225,12 @@ class ModbusHub:
         with self._lock:
             kwargs = {"unit": unit} if unit else {}
             self._client.write_coil(address, value, **kwargs)
+
+    def write_coils(self, unit, address, value):
+        """Write coil."""
+        with self._lock:
+            kwargs = {"unit": unit} if unit else {}
+            self._client.write_coils(address, value, **kwargs)
 
     def write_register(self, unit, address, value):
         """Write register."""

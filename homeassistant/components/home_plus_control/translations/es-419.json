@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La cuenta ya est\u00e1 configurada",
+            "already_in_progress": "El flujo de configuraci\u00f3n ya ha iniciado",
+            "authorize_url_timeout": "Se agot\u00f3 el tiempo al generar el URL de autorizaci\u00f3n",
+            "missing_configuration": "Este componente no est\u00e1 configurado. Por favor sigue la documentaci\u00f3n",
+            "no_url_available": "Ning\u00fan URL disponible. Para m\u00e1s informaci\u00f3n sobre este error [revisa la secci\u00f3n de ayuda] ({docs_url})",
+            "single_instance_allowed": "Previamente configurado. S\u00f3lo es posible una configuraci\u00f3n"
+        },
+        "create_entry": {
+            "default": "Autenticado exitosamente"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Escoja el m\u00e9todo de autenticaci\u00f3n"
+            }
+        }
+    },
+    "title": "Legrand Home+ Control"
+}

@@ -364,11 +364,6 @@ class NestSensorDevice(Entity):
         return self._name
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit
-
-    @property
     def should_poll(self):
         """Do not need poll thanks using Nest streaming API."""
         return False

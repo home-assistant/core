@@ -341,9 +341,8 @@ class AsusWrtRouter:
 
     async def close(self) -> None:
         """Close the connection."""
-        if self._api is not None:
-            if self._protocol == PROTOCOL_TELNET:
-                self._api.connection.disconnect()
+        if self._api is not None and self._protocol == PROTOCOL_TELNET:
+            self._api.connection.disconnect()
         self._api = None
 
         for func in self._on_close:

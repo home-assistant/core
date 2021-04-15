@@ -31,6 +31,12 @@ def assert_element(trace_element, expected_element, path):
         assert trace_element._error is None
 
 
+@pytest.fixture(autouse=True)
+def prepare_condition_trace():
+    """Clear previous trace."""
+    trace.trace_clear()
+
+
 def assert_condition_trace(expected):
     """Assert a trace condition sequence is as expected."""
     condition_trace = trace.trace_get(clear=False)
@@ -231,6 +237,14 @@ async def test_and_condition_with_template(hass):
 
     hass.states.async_set("sensor.temperature", 120)
     assert not test(hass)
+    assert_condition_trace(
+        {
+            "": [{"result": {"result": False}}],
+            "conditions/0": [
+                {"result": {"entities": ["sensor.temperature"], "result": False}}
+            ],
+        }
+    )
 
     hass.states.async_set("sensor.temperature", 105)
     assert not test(hass)

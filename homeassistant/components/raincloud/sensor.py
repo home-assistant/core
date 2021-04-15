@@ -8,7 +8,13 @@ from homeassistant.const import CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.icon import icon_for_battery_level
 
-from . import DATA_RAINCLOUD, ICON_MAP, SENSORS, RainCloudEntity
+from . import (
+    DATA_RAINCLOUD,
+    ICON_MAP,
+    SENSORS,
+    UNIT_OF_MEASUREMENT_MAP,
+    RainCloudEntity,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +51,11 @@ class RainCloudSensor(RainCloudEntity, SensorEntity):
     def state(self):
         """Return the state of the sensor."""
         return self._state
+
+    @property
+    def unit_of_measurement(self):
+        """Return the units of measurement."""
+        return UNIT_OF_MEASUREMENT_MAP.get(self._sensor_type)
 
     def update(self):
         """Get the latest data and updates the states."""

@@ -23,7 +23,7 @@ class HomeAssistantTCPSite(web.BaseSite):
 
     __slots__ = ("_host", "_port", "_reuse_address", "_reuse_port", "_hosturl")
 
-    def __init__(
+    def __init__(  # noqa: D107
         self,
         runner: web.BaseRunner,
         host: None | str | list[str],
@@ -34,7 +34,7 @@ class HomeAssistantTCPSite(web.BaseSite):
         backlog: int = 128,
         reuse_address: bool | None = None,
         reuse_port: bool | None = None,
-    ) -> None:  # noqa: D107
+    ) -> None:
         super().__init__(
             runner,
             shutdown_timeout=shutdown_timeout,

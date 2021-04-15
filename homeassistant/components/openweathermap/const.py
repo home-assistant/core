@@ -245,7 +245,11 @@ FORECAST_SENSOR_TYPES = {
         SENSOR_NAME: "Precipitation probability",
         SENSOR_UNIT: PERCENTAGE,
     },
-    ATTR_FORECAST_PRESSURE: {SENSOR_NAME: "Pressure"},
+    ATTR_FORECAST_PRESSURE: {
+        SENSOR_NAME: "Pressure",
+        SENSOR_UNIT: PRESSURE_HPA,
+        SENSOR_DEVICE_CLASS: DEVICE_CLASS_PRESSURE,
+    },
     ATTR_FORECAST_TEMP: {
         SENSOR_NAME: "Temperature",
         SENSOR_UNIT: TEMP_CELSIUS,

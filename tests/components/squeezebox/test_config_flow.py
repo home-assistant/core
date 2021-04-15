@@ -45,8 +45,6 @@ async def patch_async_query_unauthorized(self, *args):
 async def test_user_form(hass):
     """Test user-initiated flow, including discovery and the edit step."""
     with patch("pysqueezebox.Server.async_query", return_value={"uuid": UUID},), patch(
-        "homeassistant.components.squeezebox.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.squeezebox.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
@@ -77,7 +75,6 @@ async def test_user_form(hass):
         }
 
         await hass.async_block_till_done()
-        assert len(mock_setup.mock_calls) == 1
         assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -111,8 +108,6 @@ async def test_user_form_duplicate(hass):
         "homeassistant.components.squeezebox.config_flow.async_discover",
         mock_discover,
     ), patch("homeassistant.components.squeezebox.config_flow.TIMEOUT", 0.1), patch(
-        "homeassistant.components.squeezebox.async_setup", return_value=True
-    ), patch(
         "homeassistant.components.squeezebox.async_setup_entry",
         return_value=True,
     ):
@@ -204,8 +199,6 @@ async def test_discovery_no_uuid(hass):
 async def test_import(hass):
     """Test handling of configuration imported."""
     with patch("pysqueezebox.Server.async_query", return_value={"uuid": UUID},), patch(
-        "homeassistant.components.squeezebox.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.squeezebox.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -217,7 +210,6 @@ async def test_import(hass):
         assert result["type"] == RESULT_TYPE_CREATE_ENTRY
 
         await hass.async_block_till_done()
-        assert len(mock_setup.mock_calls) == 1
         assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -253,8 +245,6 @@ async def test_import_bad_auth(hass):
 async def test_import_existing(hass):
     """Test handling of configuration import of existing server."""
     with patch(
-        "homeassistant.components.squeezebox.async_setup", return_value=True
-    ), patch(
         "homeassistant.components.squeezebox.async_setup_entry",
         return_value=True,
     ), patch(
