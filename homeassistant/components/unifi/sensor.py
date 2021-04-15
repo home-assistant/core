@@ -82,6 +82,7 @@ def add_uptime_entities(controller, async_add_entities, clients):
     if sensors:
         async_add_entities(sensors)
 
+
 @callback
 def add_dbm_entities(controller, async_add_entities, clients):
     """Add new sensor entities from the controller."""
@@ -184,8 +185,8 @@ class UniFiDbmSensor(UniFiClient, SensorEntity):
     def unit_of_measurement(self) -> str:
         """Return the unit of measurement of this entity."""
         return SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+    
     @property
-
     def device_class(self) -> str:
         """Return device class."""
         return DEVICE_CLASS_SIGNAL_STRENGTH

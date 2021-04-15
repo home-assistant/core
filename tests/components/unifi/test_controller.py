@@ -18,6 +18,7 @@ from homeassistant.components.unifi.const import (
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     DEFAULT_ALLOW_BANDWIDTH_SENSORS,
+    DEFAULT_ALLOW_DBM_SENSORS,    
     DEFAULT_ALLOW_UPTIME_SENSORS,
     DEFAULT_DETECTION_TIME,
     DEFAULT_TRACK_CLIENTS,
@@ -230,8 +231,8 @@ async def test_controller_setup(hass, aioclient_mock):
     assert controller.site_role == SITE[0]["role"]
 
     assert controller.option_allow_bandwidth_sensors == DEFAULT_ALLOW_BANDWIDTH_SENSORS
-    assert controller.option_allow_uptime_sensors == DEFAULT_ALLOW_UPTIME_SENSORS
     assert controller.option_allow_dbm_sensors == DEFAULT_ALLOW_DBM_SENSORS
+    assert controller.option_allow_uptime_sensors == DEFAULT_ALLOW_UPTIME_SENSORS
     assert isinstance(controller.option_block_clients, list)
     assert controller.option_track_clients == DEFAULT_TRACK_CLIENTS
     assert controller.option_track_devices == DEFAULT_TRACK_DEVICES
