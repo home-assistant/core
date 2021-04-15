@@ -5,16 +5,17 @@
         },
         "error": {
             "cannot_connect": "Gagal terhubung",
-            "connection_exception": "Gagal terhubung",
-            "invalid_auth": "Autentikasi tidak valid",
-            "unauthenticated_exception": "Autentikasi tidak valid",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
+        "flow_title": "SiteSage {name}",
         "step": {
+            "confirm": {
+                "description": "Ingin menyiapkan {name} ({host})?",
+                "title": "Siapkan SiteSage Emonitor"
+            },
             "user": {
                 "data": {
-                    "password": "Kata Sandi",
-                    "username": "Nama Pengguna"
+                    "host": "Host"
                 }
             }
         }

@@ -10,6 +10,13 @@
             "unknown": "Kesalahan yang tidak diharapkan"
         },
         "step": {
+            "pair": {
+                "data": {
+                    "pin": "Kode PIN"
+                },
+                "description": "Masukkan PIN yang ditampilkan di TV Anda",
+                "title": "Pasangkan"
+            },
             "user": {
                 "data": {
                     "api_version": "Versi API",

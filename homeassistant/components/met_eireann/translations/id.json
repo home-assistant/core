@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "no_home": "Tidak ada koordinat rumah yang disetel dalam konfigurasi Home Assistant"
-        },
         "error": {
             "already_configured": "Layanan sudah dikonfigurasi"
         },
@@ -14,7 +11,7 @@
                     "longitude": "Bujur",
                     "name": "Nama"
                 },
-                "description": "Meteorologisk institutt",
+                "description": "Masukkan lokasi Anda untuk menggunakan data cuaca dari Met \u00c9ireann Public Weather Forecast API",
                 "title": "Lokasi"
             }
         }
