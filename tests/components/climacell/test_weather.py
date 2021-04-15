@@ -224,7 +224,7 @@ async def test_v3_weather(
     assert weather_state.attributes[ATTR_FRIENDLY_NAME] == "ClimaCell - Daily"
     assert weather_state.attributes[ATTR_WEATHER_HUMIDITY] == 24
     assert weather_state.attributes[ATTR_WEATHER_OZONE] == 52.625
-    assert weather_state.attributes[ATTR_WEATHER_PRESSURE] == 30.3605
+    assert weather_state.attributes[ATTR_WEATHER_PRESSURE] == 1028.1246
     assert weather_state.attributes[ATTR_WEATHER_TEMPERATURE] == 7
     assert weather_state.attributes[ATTR_WEATHER_VISIBILITY] == 9.9940
     assert weather_state.attributes[ATTR_WEATHER_WIND_BEARING] == 320.31
@@ -387,7 +387,7 @@ async def test_v4_weather(
     assert weather_state.attributes[ATTR_FRIENDLY_NAME] == "ClimaCell - Daily"
     assert weather_state.attributes[ATTR_WEATHER_HUMIDITY] == 23
     assert weather_state.attributes[ATTR_WEATHER_OZONE] == 46.53
-    assert weather_state.attributes[ATTR_WEATHER_PRESSURE] == 30.3605
+    assert weather_state.attributes[ATTR_WEATHER_PRESSURE] == 1027.7691
     assert weather_state.attributes[ATTR_WEATHER_TEMPERATURE] == 7
     assert weather_state.attributes[ATTR_WEATHER_VISIBILITY] == 13.1162
     assert weather_state.attributes[ATTR_WEATHER_WIND_BEARING] == 315.14
