@@ -6,7 +6,12 @@ Support for uptime sensors of network clients.
 
 from datetime import datetime, timedelta
 
-from homeassistant.components.sensor import DEVICE_CLASS_SIGNAL_STRENGTH, DEVICE_CLASS_TIMESTAMP, DOMAIN, SensorEntity
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_SIGNAL_STRENGTH,
+    DEVICE_CLASS_TIMESTAMP,
+    DOMAIN,
+    SensorEntity,
+)
 from homeassistant.const import DATA_MEGABYTES, SIGNAL_STRENGTH_DECIBELS_MILLIWATT
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
