@@ -33,8 +33,6 @@ from .const import (
     DOMAIN,
 )
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
-
 _LOGGER = logging.getLogger(__name__)
 
 

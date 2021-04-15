@@ -93,8 +93,6 @@ from .const import (
     MAX_FORECASTS,
 )
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
-
 _LOGGER = logging.getLogger(__name__)
 
 
