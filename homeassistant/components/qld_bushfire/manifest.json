@@ -3,5 +3,6 @@
   "name": "Queensland Bushfire Alert",
   "documentation": "https://www.home-assistant.io/integrations/qld_bushfire",
   "requirements": ["georss_qld_bushfire_alert_client==0.3"],
-  "codeowners": ["@exxamalte"]
+  "codeowners": ["@exxamalte"],
+  "iot_class": "cloud_polling"
 }

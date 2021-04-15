@@ -3,5 +3,6 @@
   "name": "Venstar",
   "documentation": "https://www.home-assistant.io/integrations/venstar",
   "requirements": ["venstarcolortouch==0.13"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "local_polling"
 }
