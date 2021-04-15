@@ -63,11 +63,16 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> dict[str, Any]:
         """Handle a flow initiated by the user."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         if user_input is None:
             return await self._show_setup_form(user_input)
+
+        entries = self._async_current_entries()
+        for entry in entries:
+            if (
+                entry.data[CONF_HOST] == user_input[CONF_HOST]
+                and entry.data[CONF_PORT] == user_input[CONF_PORT]
+            ):
+                return self.async_abort(reason="single_instance_allowed")
 
         errors = {}
 

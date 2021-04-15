@@ -92,10 +92,14 @@ async def test_full_flow_implementation(
 
 async def test_integration_already_exists(hass: HomeAssistant) -> None:
     """Test we only allow a single config flow."""
-    MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
+    MockConfigEntry(
+        domain=DOMAIN, data={"host": "mock-adguard", "port": "3000"}
+    ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN,
+        data={"host": "mock-adguard", "port": "3000"},
+        context={"source": "user"},
     )
     assert result["type"] == "abort"
     assert result["reason"] == "single_instance_allowed"
@@ -104,11 +108,11 @@ async def test_integration_already_exists(hass: HomeAssistant) -> None:
 async def test_hassio_single_instance(hass: HomeAssistant) -> None:
     """Test we only allow a single config flow."""
     MockConfigEntry(
-        domain="adguard", data={"host": "mock-adguard", "port": "3000"}
+        domain=DOMAIN, data={"host": "mock-adguard", "port": "3000"}
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        "adguard",
+        DOMAIN,
         data={"addon": "AdGuard Home Addon", "host": "mock-adguard", "port": "3000"},
         context={"source": "hassio"},
     )
@@ -119,13 +123,13 @@ async def test_hassio_single_instance(hass: HomeAssistant) -> None:
 async def test_hassio_update_instance_not_running(hass: HomeAssistant) -> None:
     """Test we only allow a single config flow."""
     entry = MockConfigEntry(
-        domain="adguard", data={"host": "mock-adguard", "port": "3000"}
+        domain=DOMAIN, data={"host": "mock-adguard", "port": "3000"}
     )
     entry.add_to_hass(hass)
     assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
 
     result = await hass.config_entries.flow.async_init(
-        "adguard",
+        DOMAIN,
         data={
             "addon": "AdGuard Home Addon",
             "host": "mock-adguard-updated",
@@ -153,7 +157,7 @@ async def test_hassio_update_instance_running(
     )
 
     entry = MockConfigEntry(
-        domain="adguard",
+        domain=DOMAIN,
         data={
             "host": "mock-adguard",
             "port": "3000",
@@ -184,7 +188,7 @@ async def test_hassio_update_instance_running(
         return_value=True,
     ) as mock_load:
         result = await hass.config_entries.flow.async_init(
-            "adguard",
+            DOMAIN,
             data={
                 "addon": "AdGuard Home Addon",
                 "host": "mock-adguard-updated",
@@ -211,7 +215,7 @@ async def test_hassio_confirm(
     )
 
     result = await hass.config_entries.flow.async_init(
-        "adguard",
+        DOMAIN,
         data={"addon": "AdGuard Home Addon", "host": "mock-adguard", "port": 3000},
         context={"source": "hassio"},
     )
@@ -239,7 +243,7 @@ async def test_hassio_connection_error(
     )
 
     result = await hass.config_entries.flow.async_init(
-        "adguard",
+        DOMAIN,
         data={"addon": "AdGuard Home Addon", "host": "mock-adguard", "port": 3000},
         context={"source": "hassio"},
     )
