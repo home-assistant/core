@@ -66,6 +66,7 @@ class InterruptibleThreadPoolExecutor(ThreadPoolExecutor):
             joined = []
 
             for thread in remaining_threads:
+                _LOGGER.critical("remaining threads: %s", remaining_threads)
                 thread.join(timeout=0.1)
                 ident = thread.ident
                 if not thread.is_alive() or ident is None:
