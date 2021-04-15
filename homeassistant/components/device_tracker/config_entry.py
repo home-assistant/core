@@ -63,7 +63,7 @@ class BaseTrackerEntity(Entity):
 class TrackerEntity(BaseTrackerEntity):
     """Base class for a tracked device."""
 
-    _zone_state = None
+    _current_zone = None
 
     @property
     def should_poll(self):
@@ -105,19 +105,20 @@ class TrackerEntity(BaseTrackerEntity):
             return self.location_name
 
         if self.latitude is not None:
-            self._zone_state = zone.async_active_zone(
+            zone_state = zone.async_active_zone(
                 self.hass,
                 self.latitude,
                 self.longitude,
                 self.location_accuracy,
-                self._zone_state,
+                self._current_zone,
             )
-            if self._zone_state is None:
+            self._current_zone = zone_state.entity_id if zone_state else None
+            if zone_state is None:
                 state = STATE_NOT_HOME
-            elif self._zone_state.entity_id == zone.ENTITY_ID_HOME:
+            elif zone_state.entity_id == zone.ENTITY_ID_HOME:
                 state = STATE_HOME
             else:
-                state = self._zone_state.name
+                state = zone_state.name
             return state
 
         return None

@@ -95,7 +95,7 @@ def async_active_zone(
     latitude: float,
     longitude: float,
     radius: int = 0,
-    current_zone: State | None = None,
+    current_zone: str | None = None,
 ) -> State | None:
     """Find the active zone for given latitude, longitude.
 
@@ -115,31 +115,32 @@ def async_active_zone(
         latitude,
         longitude,
         radius,
-        current_zone.entity_id if current_zone else None,
+        current_zone,
     )
 
     # Update state of current_zone
-    if current_zone:
-        current_zone = hass.states.get(current_zone.entity_id)
+    current_zone_state = hass.states.get(current_zone) if current_zone else None
 
     if (
-        current_zone
-        and current_zone.state != STATE_UNAVAILABLE
-        and not current_zone.attributes.get(ATTR_PASSIVE)
+        current_zone_state
+        and current_zone_state.state != STATE_UNAVAILABLE
+        and not current_zone_state.attributes.get(ATTR_PASSIVE)
     ):
         zone_dist = distance(
             latitude,
             longitude,
-            current_zone.attributes[ATTR_LATITUDE],
-            current_zone.attributes[ATTR_LONGITUDE],
+            current_zone_state.attributes[ATTR_LATITUDE],
+            current_zone_state.attributes[ATTR_LONGITUDE],
         )
         if zone_dist is not None:
             # Still within zone if zone and location circles intersect
-            within_zone = zone_dist < current_zone.attributes[ATTR_RADIUS] + radius
+            within_zone = (
+                zone_dist < current_zone_state.attributes[ATTR_RADIUS] + radius
+            )
 
             if within_zone:
                 min_dist = zone_dist
-                closest = current_zone
+                closest = current_zone_state
 
     for zone in zones:
         if zone.state == STATE_UNAVAILABLE or zone.attributes.get(ATTR_PASSIVE):

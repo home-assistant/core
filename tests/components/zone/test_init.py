@@ -210,6 +210,11 @@ def calculate_postion_from_distance(position, distance):
     return (lat, lon)
 
 
+def current_zone_entity_id(active):
+    """Return entity_id of active, or None if active is None."""
+    return active.entity_id if active else None
+
+
 async def test_setup_no_zones_still_adds_home_zone(hass):
     """Test if no config is passed in we still get the home zone."""
     assert await setup.async_setup_component(hass, zone.DOMAIN, {"zone": None})
@@ -377,11 +382,13 @@ async def test_zone_smaller_than_accuracy(hass):
     assert active is None
 
     # Should enter zone, accuracy is good enough
-    active = zone.async_active_zone(hass, latitude, longitude, 49, active)
+    current_zone = current_zone_entity_id(active)
+    active = zone.async_active_zone(hass, latitude, longitude, 49, current_zone)
     assert active.entity_id == "zone.smallest_zone"
 
     # Should remain in zone
-    active = zone.async_active_zone(hass, latitude, longitude, 51, active)
+    current_zone = current_zone_entity_id(active)
+    active = zone.async_active_zone(hass, latitude, longitude, 51, current_zone)
     assert active.entity_id == "zone.smallest_zone"
 
 
@@ -485,7 +492,8 @@ async def test_zone_criteria(hass, zone_settings, locations, expected_zones):
         distance, radius = location
         # Calculate new location
         lat, lon = calculate_postion_from_distance(origin, distance)
-        active = zone.async_active_zone(hass, lat, lon, radius, active)
+        current_zone = current_zone_entity_id(active)
+        active = zone.async_active_zone(hass, lat, lon, radius, current_zone)
         expected_zone = expected_zones[idx]
         assert_zone(active, expected_zone, idx)
 
