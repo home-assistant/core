@@ -96,7 +96,7 @@ class AdGuardHomeSensor(AdGuardHomeDeviceEntity, SensorEntity):
 class AdGuardHomeDNSQueriesSensor(AdGuardHomeSensor):
     """Defines a AdGuard Home DNS Queries sensor."""
 
-    def __init__(self, adguard: AdGuardHome, entry: ConfigEntry):
+    def __init__(self, adguard: AdGuardHome, entry: ConfigEntry) -> None:
         """Initialize AdGuard Home sensor."""
         super().__init__(
             adguard,
@@ -115,7 +115,7 @@ class AdGuardHomeDNSQueriesSensor(AdGuardHomeSensor):
 class AdGuardHomeBlockedFilteringSensor(AdGuardHomeSensor):
     """Defines a AdGuard Home blocked by filtering sensor."""
 
-    def __init__(self, adguard: AdGuardHome, entry: ConfigEntry):
+    def __init__(self, adguard: AdGuardHome, entry: ConfigEntry) -> None:
         """Initialize AdGuard Home sensor."""
         super().__init__(
             adguard,
@@ -135,7 +135,7 @@ class AdGuardHomeBlockedFilteringSensor(AdGuardHomeSensor):
 class AdGuardHomePercentageBlockedSensor(AdGuardHomeSensor):
     """Defines a AdGuard Home blocked percentage sensor."""
 
-    def __init__(self, adguard: AdGuardHome, entry: ConfigEntry):
+    def __init__(self, adguard: AdGuardHome, entry: ConfigEntry) -> None:
         """Initialize AdGuard Home sensor."""
         super().__init__(
             adguard,
@@ -155,7 +155,7 @@ class AdGuardHomePercentageBlockedSensor(AdGuardHomeSensor):
 class AdGuardHomeReplacedParentalSensor(AdGuardHomeSensor):
     """Defines a AdGuard Home replaced by parental control sensor."""
 
-    def __init__(self, adguard: AdGuardHome, entry: ConfigEntry):
+    def __init__(self, adguard: AdGuardHome, entry: ConfigEntry) -> None:
         """Initialize AdGuard Home sensor."""
         super().__init__(
             adguard,
@@ -174,7 +174,7 @@ class AdGuardHomeReplacedParentalSensor(AdGuardHomeSensor):
 class AdGuardHomeReplacedSafeBrowsingSensor(AdGuardHomeSensor):
     """Defines a AdGuard Home replaced by safe browsing sensor."""
 
-    def __init__(self, adguard: AdGuardHome, entry: ConfigEntry):
+    def __init__(self, adguard: AdGuardHome, entry: ConfigEntry) -> None:
         """Initialize AdGuard Home sensor."""
         super().__init__(
             adguard,
@@ -193,7 +193,7 @@ class AdGuardHomeReplacedSafeBrowsingSensor(AdGuardHomeSensor):
 class AdGuardHomeReplacedSafeSearchSensor(AdGuardHomeSensor):
     """Defines a AdGuard Home replaced by safe search sensor."""
 
-    def __init__(self, adguard: AdGuardHome, entry: ConfigEntry):
+    def __init__(self, adguard: AdGuardHome, entry: ConfigEntry) -> None:
         """Initialize AdGuard Home sensor."""
         super().__init__(
             adguard,
@@ -212,7 +212,7 @@ class AdGuardHomeReplacedSafeSearchSensor(AdGuardHomeSensor):
 class AdGuardHomeAverageProcessingTimeSensor(AdGuardHomeSensor):
     """Defines a AdGuard Home average processing time sensor."""
 
-    def __init__(self, adguard: AdGuardHome, entry: ConfigEntry):
+    def __init__(self, adguard: AdGuardHome, entry: ConfigEntry) -> None:
         """Initialize AdGuard Home sensor."""
         super().__init__(
             adguard,
@@ -232,7 +232,7 @@ class AdGuardHomeAverageProcessingTimeSensor(AdGuardHomeSensor):
 class AdGuardHomeRulesCountSensor(AdGuardHomeSensor):
     """Defines a AdGuard Home rules count sensor."""
 
-    def __init__(self, adguard: AdGuardHome, entry: ConfigEntry):
+    def __init__(self, adguard: AdGuardHome, entry: ConfigEntry) -> None:
         """Initialize AdGuard Home sensor."""
         super().__init__(
             adguard,
