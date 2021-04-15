@@ -11,10 +11,10 @@ from homeassistant.components.light import (
     ATTR_MAX_MIREDS,
     ATTR_MIN_MIREDS,
     ATTR_SUPPORTED_COLOR_MODES,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODES_BRIGHTNESS,
-    COLOR_MODES_COLOR,
     DOMAIN,
+    brightness_supported,
+    color_supported,
+    color_temp_supported,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -62,15 +62,15 @@ class Light(HomeAccessory):
         state = self.hass.states.get(self.entity_id)
 
         self._features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        self._color_modes = state.attributes.get(ATTR_SUPPORTED_COLOR_MODES, [])
+        self._color_modes = state.attributes.get(ATTR_SUPPORTED_COLOR_MODES)
 
-        if any(mode in self._color_modes for mode in COLOR_MODES_BRIGHTNESS):
+        if brightness_supported(self._color_modes):
             self.chars.append(CHAR_BRIGHTNESS)
 
-        if any(mode in self._color_modes for mode in COLOR_MODES_COLOR):
+        if color_supported(self._color_modes):
             self.chars.append(CHAR_HUE)
             self.chars.append(CHAR_SATURATION)
-        elif COLOR_MODE_COLOR_TEMP in self._color_modes:
+        elif color_temp_supported(self._color_modes):
             # ColorTemperature and Hue characteristic should not be
             # exposed both. Both states are tracked separately in HomeKit,
             # causing "source of truth" problems.
@@ -132,7 +132,7 @@ class Light(HomeAccessory):
             events.append(f"color temperature at {char_values[CHAR_COLOR_TEMPERATURE]}")
 
         if (
-            any(mode in self._color_modes for mode in COLOR_MODES_COLOR)
+            color_supported(self._color_modes)
             and CHAR_HUE in char_values
             and CHAR_SATURATION in char_values
         ):
