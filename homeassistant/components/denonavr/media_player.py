@@ -484,7 +484,7 @@ class DenonDevice(MediaPlayerEntity):
             result = await self._receiver.async_dynamic_eq_on()
         else:
             result = await self._receiver.async_dynamic_eq_off()
-        print(self._update_audyssey)
+
         if self._update_audyssey:
             await self._receiver.async_update_audyssey()
         return result
