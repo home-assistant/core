@@ -29,6 +29,7 @@ from homeassistant.components.weather import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_VERSION,
+    CONF_NAME,
     LENGTH_FEET,
     LENGTH_KILOMETERS,
     LENGTH_METERS,
@@ -44,7 +45,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.distance import convert as distance_convert
 from homeassistant.util.pressure import convert as pressure_convert
 
-from . import ClimaCellEntity
+from . import ClimaCellDataUpdateCoordinator, ClimaCellEntity
 from .const import (
     ATTR_CLOUD_COVER,
     ATTR_PRECIPITATION_TYPE,
@@ -86,6 +87,7 @@ from .const import (
     CONDITIONS,
     CONDITIONS_V3,
     CONF_TIMESTEP,
+    DEFAULT_FORECAST_TYPE,
     DOMAIN,
     MAX_FORECASTS,
 )
@@ -106,7 +108,7 @@ async def async_setup_entry(
 
     api_class = ClimaCellV3WeatherEntity if api_version == 3 else ClimaCellWeatherEntity
     entities = [
-        api_class(config_entry, coordinator, forecast_type, api_version)
+        api_class(config_entry, coordinator, api_version, forecast_type)
         for forecast_type in [DAILY, HOURLY, NOWCAST]
     ]
     async_add_entities(entities)
@@ -114,6 +116,35 @@ async def async_setup_entry(
 
 class BaseClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
     """Base ClimaCell weather entity."""
+
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        coordinator: ClimaCellDataUpdateCoordinator,
+        api_version: int,
+        forecast_type: str,
+    ) -> None:
+        """Initialize ClimaCell Weather Entity."""
+        super().__init__(config_entry, coordinator, api_version)
+        self.forecast_type = forecast_type
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        if self.forecast_type == DEFAULT_FORECAST_TYPE:
+            return True
+
+        return False
+
+    @property
+    def name(self) -> str:
+        """Return the name of the entity."""
+        return f"{self._config_entry.data[CONF_NAME]} - {self.forecast_type.title()}"
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique id of the entity."""
+        return f"{self._config_entry.unique_id}_{self.forecast_type}"
 
     @staticmethod
     def _translate_condition(
@@ -216,10 +247,6 @@ class ClimaCellWeatherEntity(BaseClimaCellWeatherEntity):
                 return CLEAR_CONDITIONS["day"]
             return CLEAR_CONDITIONS["night"]
         return CONDITIONS[condition]
-
-    def _get_current_property(self, property_name: str) -> int | str | float | None:
-        """Get property from current conditions."""
-        return self.coordinator.data.get(CURRENT, {}).get(property_name)
 
     @property
     def temperature(self):
