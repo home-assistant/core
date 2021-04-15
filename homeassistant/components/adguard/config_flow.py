@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.data_entry_flow import FlowResultDict
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -31,7 +32,7 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def _show_setup_form(
         self, errors: dict[str, str] | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResultDict:
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
@@ -50,7 +51,7 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def _show_hassio_form(
         self, errors: dict[str, str] | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResultDict:
         """Show the Hass.io confirmation form to the user."""
         return self.async_show_form(
             step_id="hassio_confirm",
@@ -61,7 +62,7 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResultDict:
         """Handle a flow initiated by the user."""
         if user_input is None:
             return await self._show_setup_form(user_input)
@@ -72,7 +73,7 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
                 entry.data[CONF_HOST] == user_input[CONF_HOST]
                 and entry.data[CONF_PORT] == user_input[CONF_PORT]
             ):
-                return self.async_abort(reason="single_instance_allowed")
+                return self.async_abort(reason="already_configured")
 
         errors = {}
 
@@ -106,7 +107,7 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_hassio(self, discovery_info: dict[str, Any]) -> dict[str, Any]:
+    async def async_step_hassio(self, discovery_info: dict[str, Any]) -> FlowResultDict:
         """Prepare configuration for a Hass.io AdGuard Home add-on.
 
         This flow is triggered by the discovery component.
@@ -124,7 +125,7 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
             cur_entry.data[CONF_HOST] == discovery_info[CONF_HOST]
             and cur_entry.data[CONF_PORT] == discovery_info[CONF_PORT]
         ):
-            return self.async_abort(reason="single_instance_allowed")
+            return self.async_abort(reason="already_configured")
 
         is_loaded = cur_entry.state == config_entries.ENTRY_STATE_LOADED
 
@@ -147,8 +148,8 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_hassio_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
-        """Confirm Hass.io discovery."""
+    ) -> FlowResultDict:
+        """Confirm Supervisor discovery."""
         if user_input is None:
             return await self._show_hassio_form()
 

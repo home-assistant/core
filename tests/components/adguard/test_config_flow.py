@@ -102,10 +102,10 @@ async def test_integration_already_exists(hass: HomeAssistant) -> None:
         context={"source": "user"},
     )
     assert result["type"] == "abort"
-    assert result["reason"] == "single_instance_allowed"
+    assert result["reason"] == "already_configured"
 
 
-async def test_hassio_single_instance(hass: HomeAssistant) -> None:
+async def test_hassio_already_configured(hass: HomeAssistant) -> None:
     """Test we only allow a single config flow."""
     MockConfigEntry(
         domain=DOMAIN, data={"host": "mock-adguard", "port": "3000"}
@@ -117,7 +117,7 @@ async def test_hassio_single_instance(hass: HomeAssistant) -> None:
         context={"source": "hassio"},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "single_instance_allowed"
+    assert result["reason"] == "already_configured"
 
 
 async def test_hassio_update_instance_not_running(hass: HomeAssistant) -> None:
