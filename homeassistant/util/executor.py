@@ -12,7 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 
 _JOIN_ATTEMPTS = 10
 
-START_LOG_ATTEMPT = 5
+START_LOG_ATTEMPT = 0
 
 
 def _log_thread_running_at_shutdown(name: str, ident: int) -> None:
@@ -54,15 +54,14 @@ class InterruptibleThreadPoolExecutor(ThreadPoolExecutor):
             joined = []
 
             for thread in remaining_threads:
-                _LOGGER.critical("remaining threads: %s", remaining_threads)
                 thread.join(timeout=0.1)
                 ident = thread.ident
                 if not thread.is_alive() or ident is None:
                     joined.append(thread)
                     continue
 
-                # if attempt >= START_LOG_ATTEMPT:
-                _log_thread_running_at_shutdown(thread.name, ident)
+                if attempt >= START_LOG_ATTEMPT:
+                    _log_thread_running_at_shutdown(thread.name, ident)
 
                 async_raise(ident, SystemExit)
                 thread.join(timeout=1)
