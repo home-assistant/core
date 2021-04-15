@@ -214,9 +214,9 @@ class BrightnessTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, attributes):
         """Test if state is supported."""
-        color_modes = attributes.get(light.ATTR_SUPPORTED_COLOR_MODES, [])
         if domain == light.DOMAIN:
-            return any(mode in color_modes for mode in light.COLOR_MODES_BRIGHTNESS)
+            color_modes = attributes.get(light.ATTR_SUPPORTED_COLOR_MODES)
+            return light.brightness_supported(color_modes)
 
         return False
 
@@ -368,21 +368,21 @@ class ColorSettingTrait(_Trait):
         if domain != light.DOMAIN:
             return False
 
-        color_modes = attributes.get(light.ATTR_SUPPORTED_COLOR_MODES, [])
-        return light.COLOR_MODE_COLOR_TEMP in color_modes or any(
-            mode in color_modes for mode in light.COLOR_MODES_COLOR
+        color_modes = attributes.get(light.ATTR_SUPPORTED_COLOR_MODES)
+        return light.color_temp_supported(color_modes) or light.color_supported(
+            color_modes
         )
 
     def sync_attributes(self):
         """Return color temperature attributes for a sync request."""
         attrs = self.state.attributes
-        color_modes = attrs.get(light.ATTR_SUPPORTED_COLOR_MODES, [])
+        color_modes = attrs.get(light.ATTR_SUPPORTED_COLOR_MODES)
         response = {}
 
-        if any(mode in color_modes for mode in light.COLOR_MODES_COLOR):
+        if light.color_supported(color_modes):
             response["colorModel"] = "hsv"
 
-        if light.COLOR_MODE_COLOR_TEMP in color_modes:
+        if light.color_temp_supported(color_modes):
             # Max Kelvin is Min Mireds K = 1000000 / mireds
             # Min Kelvin is Max Mireds K = 1000000 / mireds
             response["colorTemperatureRange"] = {
@@ -398,10 +398,10 @@ class ColorSettingTrait(_Trait):
 
     def query_attributes(self):
         """Return color temperature query attributes."""
-        color_modes = self.state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES, [])
+        color_modes = self.state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES)
         color = {}
 
-        if any(mode in color_modes for mode in light.COLOR_MODES_COLOR):
+        if light.color_supported(color_modes):
             color_hs = self.state.attributes.get(light.ATTR_HS_COLOR)
             brightness = self.state.attributes.get(light.ATTR_BRIGHTNESS, 1)
             if color_hs is not None:
@@ -411,7 +411,7 @@ class ColorSettingTrait(_Trait):
                     "value": brightness / 255,
                 }
 
-        if light.COLOR_MODE_COLOR_TEMP in color_modes:
+        if light.color_temp_supported(color_modes):
             temp = self.state.attributes.get(light.ATTR_COLOR_TEMP)
             # Some faulty integrations might put 0 in here, raising exception.
             if temp == 0:
