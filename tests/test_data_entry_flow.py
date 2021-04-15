@@ -1,4 +1,6 @@
 """Test the flow classes."""
+import asyncio
+
 import pytest
 import voluptuous as vol
 
@@ -367,3 +369,19 @@ async def test_abort_flow_exception(manager):
     assert form["type"] == "abort"
     assert form["reason"] == "mock-reason"
     assert form["description_placeholders"] == {"placeholder": "yo"}
+
+
+async def test_initializing_flows_canceled_on_shutdown(hass, manager):
+    """Test that initializing flows are canceled on shutdown."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            await asyncio.sleep(1)
+
+    task = asyncio.create_task(manager.async_init("test"))
+    await hass.async_block_till_done()
+    await manager.async_shutdown()
+
+    with pytest.raises(asyncio.exceptions.CancelledError):
+        await task
