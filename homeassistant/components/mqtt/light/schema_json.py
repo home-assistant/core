@@ -35,6 +35,7 @@ from homeassistant.components.light import (
     SUPPORT_WHITE_VALUE,
     VALID_COLOR_MODES,
     LightEntity,
+    legacy_supported_features,
     valid_supported_color_modes,
 )
 from homeassistant.const import (
@@ -458,7 +459,9 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return self._supported_features
+        return legacy_supported_features(
+            self._supported_features, self._config.get(CONF_SUPPORTED_COLOR_MODES)
+        )
 
     def _set_flash_and_transition(self, message, **kwargs):
         if ATTR_TRANSITION in kwargs:
