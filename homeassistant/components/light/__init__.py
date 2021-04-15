@@ -759,7 +759,7 @@ def legacy_supported_features(
     """Calculate supported features with backwards compatibility."""
     # Backwards compatibility for supported_color_modes added in 2021.4
     if supported_color_modes is None:
-        supported_color_modes = []
+        return supported_features
     if any(mode in supported_color_modes for mode in COLOR_MODES_COLOR):
         supported_features |= SUPPORT_COLOR
     if any(mode in supported_color_modes for mode in COLOR_MODES_BRIGHTNESS):
