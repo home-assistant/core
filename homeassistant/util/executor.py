@@ -4,7 +4,6 @@ from concurrent.futures import ThreadPoolExecutor
 import logging
 import queue
 import sys
-from threading import Thread
 import traceback
 
 from homeassistant.util.thread import async_raise
@@ -19,25 +18,10 @@ def _log_thread_running_at_shutdown(name: str, ident: int) -> None:
     stack = frames.get(ident)
     formatted_stack = traceback.format_stack(stack)
     _LOGGER.critical(
-        "Thread[%s] was still running at shutdown: %s",
+        "Thread[%s] is still running at shutdown: %s",
         name,
-        "".join(formatted_stack),
+        "".join(formatted_stack).strip(),
     )
-
-
-def _join_or_interrupt_thread(thread: Thread) -> None:
-    """Join or interrupt a thread."""
-    thread.join(timeout=1)
-    ident = thread.ident
-    if not thread.is_alive() or ident is None:
-        return
-    _log_thread_running_at_shutdown(thread.name, ident)
-    async_raise(ident, KeyboardInterrupt)
-    thread.join(timeout=5)
-    if thread.is_alive():
-        _LOGGER.critical(
-            "Thread[%s]: failed to interrupt and was left running", thread.name
-        )
 
 
 class InterruptibleThreadPoolExecutor(ThreadPoolExecutor):
@@ -68,8 +52,31 @@ class InterruptibleThreadPoolExecutor(ThreadPoolExecutor):
             # _work_queue.get(block=True) from permanently blocking.
             self._work_queue.put(None)
         if wait:
-            for t in self._threads:  # type: ignore[attr-defined]
-                if interrupt:
-                    _join_or_interrupt_thread(t)
-                else:
+            if interrupt:
+                self._join_or_interrupt_threads()
+            else:
+                for t in self._threads:  # type: ignore[attr-defined]
                     t.join()
+
+    def _join_or_interrupt_threads(self) -> None:
+        """Join or interrupt threads."""
+        remaining_threads = list(self._threads)  # type: ignore[attr-defined]
+
+        while True:
+            joined = []
+
+            for thread in remaining_threads:
+                thread.join(timeout=0.1)
+                ident = thread.ident
+                if not thread.is_alive() or ident is None:
+                    joined.append(thread)
+                    continue
+                _log_thread_running_at_shutdown(thread.name, ident)
+                async_raise(ident, SystemExit)
+                thread.join(timeout=1)
+
+            for thread in joined:
+                remaining_threads.remove(thread)
+
+            if not remaining_threads:
+                return
