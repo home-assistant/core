@@ -117,9 +117,7 @@ class IammeterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         connect_ok = False
         connect_ok = await self._test_connection(host, port)
-        if connect_ok:
-            if self.api:
-                dev_sn = self.api.iammeter.serial_number
-                await self.async_set_unique_id(dev_sn)
-                self._abort_if_unique_id_configured()
+        if connect_ok and self.api:
+            await self.async_set_unique_id(self.api.iammeter.serial_number)
+            self._abort_if_unique_id_configured()
         return await self.async_step_user(user_input)
