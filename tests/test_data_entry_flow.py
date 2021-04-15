@@ -1,5 +1,6 @@
 """Test the flow classes."""
 import asyncio
+from unittest.mock import patch
 
 import pytest
 import voluptuous as vol
@@ -385,3 +386,12 @@ async def test_initializing_flows_canceled_on_shutdown(hass, manager):
 
     with pytest.raises(asyncio.exceptions.CancelledError):
         await task
+
+
+async def test_init_unknown_flow(manager):
+    """Test that UnknownFlow is raised when async_create_flow return None."""
+
+    with pytest.raises(data_entry_flow.UnknownFlow), patch.object(
+        manager, "async_create_flow", return_value=None
+    ):
+        await manager.async_init("test")
