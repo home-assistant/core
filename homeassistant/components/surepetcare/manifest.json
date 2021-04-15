@@ -3,6 +3,5 @@
   "name": "Sure Petcare",
   "documentation": "https://www.home-assistant.io/integrations/surepetcare",
   "codeowners": ["@benleb"],
-  "version": "0.2.0",
-  "requirements": ["surepy>=0.5.3"]
+  "requirements": ["surepy==0.6.0"]
 }
