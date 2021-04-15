@@ -1013,30 +1013,6 @@ def test_match_test(hass):
     )
     assert tpl.async_render() is True
 
-    tpl = template.Template(
-        """
-{{ 'Home Assistant test' is match('home', True) }}
-            """,
-        hass,
-    )
-    assert tpl.async_render() is True
-
-    tpl = template.Template(
-        """
-    {{ 'Another Home Assistant test' is match('Home') }}
-                    """,
-        hass,
-    )
-    assert tpl.async_render() is False
-
-    tpl = template.Template(
-        """
-{{ ['Home Assistant test'] is match('.*Assist') }}
-            """,
-        hass,
-    )
-    assert tpl.async_render() is True
-
 
 def test_regex_search(hass):
     """Test regex_search method."""
@@ -1078,30 +1054,6 @@ def test_search_test(hass):
     tpl = template.Template(
         r"""
 {{ '123-456-7890' is search('(\\d{3})-(\\d{3})-(\\d{4})') }}
-            """,
-        hass,
-    )
-    assert tpl.async_render() is True
-
-    tpl = template.Template(
-        """
-{{ 'Home Assistant test' is search('home', True) }}
-            """,
-        hass,
-    )
-    assert tpl.async_render() is True
-
-    tpl = template.Template(
-        """
-    {{ 'Another Home Assistant test' is search('Home') }}
-                    """,
-        hass,
-    )
-    assert tpl.async_render() is True
-
-    tpl = template.Template(
-        """
-{{ ['Home Assistant test'] is search('Assist') }}
             """,
         hass,
     )
