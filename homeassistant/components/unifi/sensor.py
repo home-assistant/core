@@ -6,8 +6,8 @@ Support for uptime sensors of network clients.
 
 from datetime import datetime, timedelta
 
-from homeassistant.components.sensor import DEVICE_CLASS_TIMESTAMP, DOMAIN, SensorEntity
-from homeassistant.const import DATA_MEGABYTES
+from homeassistant.components.sensor import DEVICE_CLASS_TIMESTAMP, DEVICE_CLASS_SIGNAL_STRENGTH, DOMAIN, SensorEntity
+from homeassistant.const import DATA_MEGABYTES, SIGNAL_STRENGTH_DECIBELS_MILLIWATT
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.dt as dt_util
@@ -18,6 +18,7 @@ from .unifi_client import UniFiClient
 RX_SENSOR = "rx"
 TX_SENSOR = "tx"
 UPTIME_SENSOR = "uptime"
+DBM_SENSOR = "dbm"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -39,6 +40,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         if controller.option_allow_uptime_sensors:
             add_uptime_entities(controller, async_add_entities, clients)
+
+        if controller.option_dbm_uptime_sensors:
+            add_dbm_entities(controller, async_add_entities, clients)
 
     for signal in (controller.signal_update, controller.signal_options_update):
         controller.listeners.append(async_dispatcher_connect(hass, signal, items_added))
@@ -74,6 +78,21 @@ def add_uptime_entities(controller, async_add_entities, clients):
 
         client = controller.api.clients[mac]
         sensors.append(UniFiUpTimeSensor(client, controller))
+
+    if sensors:
+        async_add_entities(sensors)
+
+@callback
+def add_dbm_entities(controller, async_add_entities, clients):
+    """Add new sensor entities from the controller."""
+    sensors = []
+
+    for mac in clients:
+        if mac in controller.entities[DOMAIN][UniFiDbmSensor.TYPE]:
+            continue
+
+        client = controller.api.clients[mac]
+        sensors.append(UniFiDbmSensor(client, controller))
 
     if sensors:
         async_add_entities(sensors)
@@ -152,4 +171,36 @@ class UniFiUpTimeSensor(UniFiClient, SensorEntity):
     async def options_updated(self) -> None:
         """Config entry options are updated, remove entity if option is disabled."""
         if not self.controller.option_allow_uptime_sensors:
+            await self.remove_item({self.client.mac})
+
+
+class UniFiDbmSensor(UniFiClient, SensorEntity):
+    """UniFi dbm sensor."""
+
+    DOMAIN = DOMAIN
+    TYPE = DBM_SENSOR
+
+    @property
+    def unit_of_measurement(self) -> str:
+        """Return the unit of measurement of this entity."""
+        return SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+    @property
+
+    def device_class(self) -> str:
+        """Return device class."""
+        return DEVICE_CLASS_SIGNAL_STRENGTH
+
+    @property
+    def name(self) -> str:
+        """Return the name of the client."""
+        return f"{super().name} {self.TYPE.capitalize()}"
+
+    @property
+    def state(self) -> int:
+        """Return the signal strength of the client."""
+        return self.client.raw.signal
+
+    async def options_updated(self) -> None:
+        """Config entry options are updated, remove entity if option is disabled."""
+        if not self.controller.option_allow_dbm_sensors:
             await self.remove_item({self.client.mac})

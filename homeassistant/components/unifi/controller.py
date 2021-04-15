@@ -164,6 +164,10 @@ class UniFiController:
         self.option_allow_uptime_sensors = options.get(
             CONF_ALLOW_UPTIME_SENSORS, DEFAULT_ALLOW_UPTIME_SENSORS
         )
+        # Config entry option to allow dbm sensors.
+        self.option_allow_dbm_sensors = options.get(
+            CONF_ALLOW_DBM_SENSORS, DEFAULT_ALLOW_DBM_SENSORS
+        )
 
     @property
     def host(self):

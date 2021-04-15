@@ -231,6 +231,7 @@ async def test_controller_setup(hass, aioclient_mock):
 
     assert controller.option_allow_bandwidth_sensors == DEFAULT_ALLOW_BANDWIDTH_SENSORS
     assert controller.option_allow_uptime_sensors == DEFAULT_ALLOW_UPTIME_SENSORS
+    assert controller.option_allow_dbm_sensors == DEFAULT_ALLOW_DBM_SENSORS
     assert isinstance(controller.option_block_clients, list)
     assert controller.option_track_clients == DEFAULT_TRACK_CLIENTS
     assert controller.option_track_devices == DEFAULT_TRACK_DEVICES
