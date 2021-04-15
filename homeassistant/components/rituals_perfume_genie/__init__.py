@@ -3,14 +3,14 @@ import asyncio
 from datetime import timedelta
 import logging
 
-from aiohttp.client_exceptions import ClientConnectorError
+import aiohttp
 from pyrituals import Account
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import ACCOUNT_HASH, COORDINATORS, DEVICES, DOMAIN, HUB, HUBLOT
 
@@ -19,6 +19,7 @@ PLATFORMS = ["binary_sensor", "sensor", "switch"]
 EMPTY_CREDENTIALS = ""
 
 _LOGGER = logging.getLogger(__name__)
+
 UPDATE_INTERVAL = timedelta(seconds=30)
 
 
@@ -30,14 +31,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     try:
         account_devices = await account.get_devices()
-    except ClientConnectorError as ex:
-        raise ConfigEntryNotReady from ex
+    except aiohttp.ClientError as err:
+        raise ConfigEntryNotReady from err
 
-    hublots = []
     devices = {}
     for device in account_devices:
         hublot = device.data[HUB][HUBLOT]
-        hublots.append(hublot)
         devices[hublot] = device
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
@@ -45,12 +44,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         DEVICES: devices,
     }
 
-    for hublot in hublots:
-        device = hass.data[DOMAIN][entry.entry_id][DEVICES][hublot]
+    for hublot, device in devices.items():
 
         async def async_update_data():
-            await device.update_data()
-            return device.data
+            try:
+                await device.update_data()
+            except aiohttp.ClientError as err:
+                raise UpdateFailed(
+                    "Unable to retrieve data from rituals.sense-company.com"
+                ) from err
+            else:
+                return device.data
 
         coordinator = DataUpdateCoordinator(
             hass,
