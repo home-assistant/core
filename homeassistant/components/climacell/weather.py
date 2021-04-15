@@ -453,7 +453,7 @@ class ClimaCellV3WeatherEntity(BaseClimaCellWeatherEntity):
 
     @property
     def _pressure(self):
-        """Return the pressure."""
+        """Return the raw pressure."""
         return self._get_cc_value(self.coordinator.data[CURRENT], CC_V3_ATTR_PRESSURE)
 
     @property
@@ -482,7 +482,7 @@ class ClimaCellV3WeatherEntity(BaseClimaCellWeatherEntity):
 
     @property
     def _wind_speed(self):
-        """Return the wind speed."""
+        """Return the raw wind speed."""
         return self._get_cc_value(self.coordinator.data[CURRENT], CC_V3_ATTR_WIND_SPEED)
 
     @property
