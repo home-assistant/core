@@ -40,7 +40,6 @@ CLIENT_CONNECTED_ATTRIBUTES = [
     "is_guest",
     "noted",
     "qos_policy_applied",
-    "signal",
     "radio",
     "radio_proto",
     "vlan",
