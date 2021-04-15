@@ -5,18 +5,17 @@
         },
         "error": {
             "cannot_connect": "Gagal terhubung",
-            "connection_exception": "Gagal terhubung",
             "invalid_auth": "Autentikasi tidak valid",
-            "unauthenticated_exception": "Autentikasi tidak valid",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
         "step": {
             "user": {
                 "data": {
-                    "password": "Kata Sandi",
-                    "username": "Nama Pengguna"
+                    "host": "Host",
+                    "password": "Kata Sandi"
                 }
             }
         }
-    }
+    },
+    "title": "Solar Inverter Kostal Plenticore"
 }
