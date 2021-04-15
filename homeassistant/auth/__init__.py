@@ -3,9 +3,8 @@ from __future__ import annotations
 
 import asyncio
 from collections import OrderedDict
-from collections.abc import Mapping
 from datetime import timedelta
-from typing import Any, Dict, Optional, Tuple, cast
+from typing import Any, Dict, Mapping, Optional, Tuple, cast
 
 import jwt
 
