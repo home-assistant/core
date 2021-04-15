@@ -219,3 +219,12 @@ def test_select_selector_schema_error(schema):
     """Test select selector."""
     with pytest.raises(vol.Invalid):
         selector.validate_selector({"select": schema})
+
+
+@pytest.mark.parametrize(
+    "schema",
+    ({},),
+)
+def test_tag_selector_schema(schema):
+    """Test tag selector."""
+    selector.validate_selector({"tag": schema})
