@@ -802,3 +802,28 @@ async def test_unavailable_zone(hass):
     assert zone.async_active_zone(hass, 0.0, 0.01) is None
 
     assert zone.in_zone(hass.states.get("zone.bla"), 0, 0) is False
+
+
+async def test_leave_unavailable_zone(hass):
+    """Test we leave a zone which becomes unavailable."""
+    attributes = {"latitude": 0.0, "longitude": 0.01, "radius": 100}
+    assert await setup.async_setup_component(hass, DOMAIN, {"zone": {}})
+    hass.states.async_set("zone.bla", "", attributes)
+    active = zone.async_active_zone(hass, 0.0, 0.01, 0, "zone.bla")
+    assert active.entity_id == "zone.bla"
+
+    hass.states.async_set("zone.bla", "unavailable", attributes)
+    assert zone.async_active_zone(hass, 0.0, 0.01, 0, active.entity_id) is None
+
+
+async def test_leave_passive_zone(hass):
+    """Test we leave a zone which becomes passive."""
+    attributes = {"latitude": 0.0, "longitude": 0.01, "radius": 100}
+    assert await setup.async_setup_component(hass, DOMAIN, {"zone": {}})
+    hass.states.async_set("zone.bla", "", attributes)
+    active = zone.async_active_zone(hass, 0.0, 0.01, 0, "zone.bla")
+    assert active.entity_id == "zone.bla"
+
+    attributes["passive"] = True
+    hass.states.async_set("zone.bla", "", attributes)
+    assert zone.async_active_zone(hass, 0.0, 0.01, 0, active.entity_id) is None
