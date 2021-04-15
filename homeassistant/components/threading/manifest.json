@@ -3,5 +3,6 @@
   "name": "Home Assistant Thread Health",
   "documentation": "https://www.home-assistant.io/integrations/threading",
   "codeowners": ["@home-assistant/core"],
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "iot_class": "calculated"
 }

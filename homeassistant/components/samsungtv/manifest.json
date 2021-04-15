@@ -14,8 +14,7 @@
   "zeroconf": [
     "_airplay._tcp.local."
   ],
-  "codeowners": [
-    "@escoand"
-  ],
-  "config_flow": true
+  "codeowners": ["@escoand"],
+  "config_flow": true,
+  "iot_class": "local_polling"
 }

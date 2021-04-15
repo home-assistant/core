@@ -4,5 +4,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/met",
   "requirements": ["pyMetno==0.8.1"],
-  "codeowners": ["@danielhiversen", "@thimic"]
+  "codeowners": ["@danielhiversen", "@thimic"],
+  "iot_class": "cloud_polling"
 }
