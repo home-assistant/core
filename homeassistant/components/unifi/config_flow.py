@@ -140,9 +140,7 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
         }
 
         return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(data),
-            errors=errors,
+            step_id="user", data_schema=vol.Schema(data), errors=errors,
         )
 
     async def async_step_site(self, user_input=None):
