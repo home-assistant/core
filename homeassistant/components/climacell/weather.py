@@ -148,11 +148,11 @@ class BaseClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
         return f"{self._config_entry.unique_id}_{self.forecast_type}"
 
     @staticmethod
+    @abstractmethod
     def _translate_condition(
         condition: int | None, sun_is_up: bool = True
     ) -> str | None:
         """Translate ClimaCell condition into an HA condition."""
-        raise NotImplementedError()
 
     def _forecast_dict(
         self,
