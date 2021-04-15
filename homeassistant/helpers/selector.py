@@ -192,3 +192,10 @@ class SelectSelector(Selector):
     CONFIG_SCHEMA = vol.Schema(
         {vol.Required("options"): vol.All([str], vol.Length(min=1))}
     )
+
+
+@SELECTORS.register("tag")
+class TagSelector(Selector):
+    """Selector of a tag."""
+
+    CONFIG_SCHEMA = vol.Schema({})
