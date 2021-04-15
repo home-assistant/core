@@ -260,6 +260,45 @@ async def test_state_via_template(hass, mqtt_mock):
     assert state.state == STATE_CLOSED
 
 
+async def test_state_via_template_with_json_value(hass, mqtt_mock, caplog):
+    """Test the controlling state via topic with JSON value."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "state-topic",
+                "command_topic": "command-topic",
+                "qos": 0,
+                "value_template": "{{ value_json.Var1 }}",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_UNKNOWN
+
+    async_fire_mqtt_message(hass, "state-topic", '{ "Var1": "open", "Var2": "other" }')
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_OPEN
+
+    async_fire_mqtt_message(
+        hass, "state-topic", '{ "Var1": "closed", "Var2": "other" }'
+    )
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_CLOSED
+
+    async_fire_mqtt_message(hass, "state-topic", '{ "Var2": "other" }')
+    assert (
+        "Template variable warning: 'dict object' has no attribute 'Var1' when rendering"
+    ) in caplog.text
+
+
 async def test_position_via_template(hass, mqtt_mock):
     """Test the controlling state via topic."""
     assert await async_setup_component(
