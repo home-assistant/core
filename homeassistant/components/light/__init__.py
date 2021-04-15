@@ -87,6 +87,27 @@ def valid_supported_color_modes(color_modes):
     return color_modes
 
 
+def brightness_supported(color_modes):
+    """Test if brightness is supported."""
+    if not color_modes:
+        return False
+    return any(mode in COLOR_MODES_BRIGHTNESS for mode in color_modes)
+
+
+def color_supported(color_modes):
+    """Test if color is supported."""
+    if not color_modes:
+        return False
+    return any(mode in COLOR_MODES_COLOR for mode in color_modes)
+
+
+def color_temp_supported(color_modes):
+    """Test if color temperature is supported."""
+    if not color_modes:
+        return False
+    return COLOR_MODE_COLOR_TEMP in color_modes
+
+
 # Float that represents transition time in seconds to make change.
 ATTR_TRANSITION = "transition"
 
