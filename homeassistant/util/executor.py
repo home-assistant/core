@@ -27,8 +27,10 @@ def _log_thread_running_at_shutdown(name: str, ident: int) -> None:
 
 def _join_or_interrupt_thread(thread: Thread) -> None:
     """Join or interrupt a thread."""
+    _LOGGER.critical("Thread[%s]: attempting join", thread.name)
     thread.join(timeout=1)
     ident = thread.ident
+    _LOGGER.critical("Thread[%s]: did join", thread.name)
     if not thread.is_alive() or ident is None:
         return
     _log_thread_running_at_shutdown(thread.name, ident)
