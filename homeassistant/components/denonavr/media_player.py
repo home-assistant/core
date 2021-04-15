@@ -88,7 +88,9 @@ async def async_setup_entry(
 ):
     """Set up the DenonAVR receiver from a config entry."""
     entities = []
-    receiver = hass.data[DOMAIN][config_entry.entry_id][CONF_RECEIVER]
+    data = hass.data[DOMAIN][config_entry.entry_id]
+    receiver = data[CONF_RECEIVER]
+    update_audyssey = data.get(CONF_UPDATE_AUDYSSEY, DEFAULT_UPDATE_AUDYSSEY)
     for receiver_zone in receiver.zones.values():
         if config_entry.data[CONF_SERIAL_NUMBER] is not None:
             unique_id = f"{config_entry.unique_id}-{receiver_zone.zone}"
@@ -100,9 +102,7 @@ async def async_setup_entry(
                 receiver_zone,
                 unique_id,
                 config_entry,
-                hass.data[DOMAIN][config_entry.entry_id].get(
-                    CONF_UPDATE_AUDYSSEY, DEFAULT_UPDATE_AUDYSSEY
-                ),
+                update_audyssey,
             )
         )
     _LOGGER.debug(
