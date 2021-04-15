@@ -6,5 +6,6 @@
   "after_dependencies": ["zeroconf"],
   "config_flow": true,
   "codeowners": ["@2Fake", "@Shutgun"],
-  "quality_scale": "silver"
+  "quality_scale": "silver",
+  "iot_class": "local_push"
 }

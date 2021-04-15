@@ -3,5 +3,6 @@
   "name": "Proxmox VE",
   "documentation": "https://www.home-assistant.io/integrations/proxmoxve",
   "codeowners": ["@k4ds3", "@jhollowe", "@Corbeno"],
-  "requirements": ["proxmoxer==1.1.1"]
+  "requirements": ["proxmoxer==1.1.1"],
+  "iot_class": "local_polling"
 }

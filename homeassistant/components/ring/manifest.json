@@ -6,5 +6,11 @@
   "dependencies": ["ffmpeg"],
   "codeowners": ["@balloob"],
   "config_flow": true,
-  "dhcp": [{"hostname":"ring*","macaddress":"0CAE7D*"}]
+  "dhcp": [
+    {
+      "hostname": "ring*",
+      "macaddress": "0CAE7D*"
+    }
+  ],
+  "iot_class": "cloud_polling"
 }

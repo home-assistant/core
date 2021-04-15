@@ -11,5 +11,6 @@
       "manufacturer": "Hyperion Open Source Ambient Lighting",
       "st": "urn:hyperion-project.org:device:basic:1"
     }
-  ]
+  ],
+  "iot_class": "local_push"
 }

@@ -6,5 +6,6 @@
   "requirements": ["bond-api==0.1.12"],
   "zeroconf": ["_bond._tcp.local."],
   "codeowners": ["@prystupa"],
-  "quality_scale": "platinum"
+  "quality_scale": "platinum",
+  "iot_class": "local_push"
 }

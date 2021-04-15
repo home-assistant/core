@@ -54,5 +54,6 @@
       "manufacturer": "Marantz",
       "deviceType": "urn:schemas-denon-com:device:AiosDevice:1"
     }
-  ]
+  ],
+  "iot_class": "local_polling"
 }

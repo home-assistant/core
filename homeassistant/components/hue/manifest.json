@@ -22,5 +22,6 @@
     "models": ["BSB002"]
   },
   "codeowners": ["@balloob", "@frenck"],
-  "quality_scale": "platinum"
+  "quality_scale": "platinum",
+  "iot_class": "local_polling"
 }

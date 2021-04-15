@@ -3,5 +3,6 @@
   "name": "Growatt",
   "documentation": "https://www.home-assistant.io/integrations/growatt_server/",
   "requirements": ["growattServer==1.0.0"],
-  "codeowners": ["@indykoning", "@muppet3000"]
+  "codeowners": ["@indykoning", "@muppet3000"],
+  "iot_class": "cloud_polling"
 }

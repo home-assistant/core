@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/zwave_js",
   "requirements": ["zwave-js-server-python==0.23.1"],
   "codeowners": ["@home-assistant/z-wave"],
-  "dependencies": ["http", "websocket_api"]
+  "dependencies": ["http", "websocket_api"],
+  "iot_class": "local_push"
 }

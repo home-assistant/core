@@ -6,8 +6,7 @@
   "requirements": ["gogogate2-api==3.0.0"],
   "codeowners": ["@vangorra"],
   "homekit": {
-    "models": [
-      "iSmartGate"
-    ]
-  }
+    "models": ["iSmartGate"]
+  },
+  "iot_class": "local_polling"
 }

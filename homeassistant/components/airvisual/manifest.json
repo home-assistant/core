@@ -4,5 +4,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/airvisual",
   "requirements": ["pyairvisual==5.0.4"],
-  "codeowners": ["@bachya"]
+  "codeowners": ["@bachya"],
+  "iot_class": "cloud_polling"
 }

@@ -4,5 +4,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/climacell",
   "requirements": ["pyclimacell==0.18.0"],
-  "codeowners": ["@raman325"]
+  "codeowners": ["@raman325"],
+  "iot_class": "cloud_polling"
 }

@@ -3,5 +3,6 @@
   "name": "eQ-3 MAX!",
   "documentation": "https://www.home-assistant.io/integrations/maxcube",
   "requirements": ["maxcube-api==0.4.2"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

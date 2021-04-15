@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/tuya",
   "requirements": ["tuyaha==0.0.10"],
   "codeowners": ["@ollo69"],
-  "config_flow": true
+  "config_flow": true,
+  "iot_class": "cloud_polling"
 }

@@ -3,5 +3,6 @@
   "name": "VLC media player Telnet",
   "documentation": "https://www.home-assistant.io/integrations/vlc-telnet",
   "requirements": ["python-telnet-vlc==2.0.1"],
-  "codeowners": ["@rodripf", "@dmcc"]
+  "codeowners": ["@rodripf", "@dmcc"],
+  "iot_class": "local_polling"
 }
