@@ -110,6 +110,7 @@ class BaseClimaCellSensorEntity(ClimaCellEntity, SensorEntity):
         return None
 
     @property
+    @abstractmethod
     def _state(self) -> str | int | float | None:
         """Return the raw state."""
         raise NotImplementedError
