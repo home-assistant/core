@@ -1144,7 +1144,7 @@ class Script:
                     self._log("Already running", level=LOGSEVERITY[self._max_exceeded])
                 script_execution_set("failed_single")
                 return
-            elif self.script_mode != SCRIPT_MODE_RESTART and self.runs == self.max_runs:
+            if self.script_mode != SCRIPT_MODE_RESTART and self.runs == self.max_runs:
                 if self._max_exceeded != "SILENT":
                     self._log(
                         "Maximum number of runs exceeded",
