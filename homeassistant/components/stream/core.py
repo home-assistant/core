@@ -9,16 +9,16 @@ from typing import TYPE_CHECKING, Any, Callable
 from aiohttp import web
 import attr
 
-if TYPE_CHECKING:
-    import av.container
-    import av.video
-
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.decorator import Registry
 
 from .const import ATTR_STREAMS, DOMAIN
+
+if TYPE_CHECKING:
+    import av.container
+    import av.video
 
 PROVIDERS = Registry()
 
