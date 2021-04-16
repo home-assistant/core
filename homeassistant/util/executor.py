@@ -4,7 +4,6 @@ from concurrent.futures import ThreadPoolExecutor
 import logging
 import queue
 import sys
-import threading
 import traceback
 
 from homeassistant.util.thread import async_raise
@@ -14,8 +13,6 @@ _LOGGER = logging.getLogger(__name__)
 _JOIN_ATTEMPTS = 10
 
 START_LOG_ATTEMPT = 2
-
-SHUTDOWN_TIMEOUT = 10
 
 
 def _log_thread_running_at_shutdown(name: str, ident: int) -> None:
@@ -74,17 +71,3 @@ class InterruptibleThreadPoolExecutor(ThreadPoolExecutor):
 
             if not remaining_threads:
                 return
-
-
-def deadlock_safe_shutdown() -> None:
-    """Shutdown that will not deadlock."""
-    for thread in threading.enumerate():
-        try:
-            if (
-                thread is not threading.main_thread()
-                and thread.is_alive()
-                and not thread.daemon
-            ):
-                thread.join(SHUTDOWN_TIMEOUT)
-        except (AttributeError, ValueError, TypeError, Exception) as err:
-            _LOGGER.warning("Failed to join thread: %s", err)

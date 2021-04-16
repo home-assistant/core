@@ -10,10 +10,7 @@ from typing import Any
 from homeassistant import bootstrap
 from homeassistant.core import callback
 from homeassistant.helpers.frame import warn_use
-from homeassistant.util.executor import (
-    InterruptibleThreadPoolExecutor,
-    deadlock_safe_shutdown,
-)
+from homeassistant.util.executor import InterruptibleThreadPoolExecutor
 
 # mypy: disallow-any-generics
 
@@ -28,6 +25,10 @@ from homeassistant.util.executor import (
 # use case.
 #
 MAX_EXECUTOR_WORKERS = 64
+
+SHUTDOWN_TIMEOUT = 10
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass
@@ -109,8 +110,6 @@ async def setup_and_run_hass(runtime_config: RuntimeConfig) -> int:
         return 1
 
     # threading._shutdown can deadlock forever
-    # Thanks for the explinations in https://github.com/justengel/continuous_threading
-    # about why it can hang forever
     threading._shutdown = deadlock_safe_shutdown  # type: ignore[attr-defined]
 
     return await hass.async_run()
@@ -120,3 +119,20 @@ def run(runtime_config: RuntimeConfig) -> int:
     """Run Home Assistant."""
     asyncio.set_event_loop_policy(HassEventLoopPolicy(runtime_config.debug))
     return asyncio.run(setup_and_run_hass(runtime_config))
+
+
+def deadlock_safe_shutdown() -> None:
+    """Shutdown that will not deadlock."""
+    # threading._shutdown can deadlock forever
+    # see https://github.com/justengel/continuous_threading#shutdown-update
+    # for additional detail
+    for thread in threading.enumerate():
+        try:
+            if (
+                thread is not threading.main_thread()
+                and thread.is_alive()
+                and not thread.daemon
+            ):
+                thread.join(SHUTDOWN_TIMEOUT)
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.warning("Failed to join thread: %s", err)
