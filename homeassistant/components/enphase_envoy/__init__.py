@@ -46,9 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             except httpx.HTTPStatusError as err:
                 raise ConfigEntryAuthFailed from err
             except httpx.HTTPError as err:
-                template = "An exception of type {0} occurred. Arguments:\n{1!r}"
-                message = template.format(type(err).__name__, err.args)
-                raise UpdateFailed(f"Error communicating with API: {message}") from err
+                raise UpdateFailed(f"Error communicating with API: {err}") from err
 
             for condition in SENSORS:
                 if condition != "inverters":
