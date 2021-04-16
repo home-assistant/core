@@ -32,8 +32,6 @@ async def test_full_user_flow_implementation(hass):
     assert result["errors"] == {}
 
     with patch("homeassistant.components.sentry.config_flow.Dsn"), patch(
-        "homeassistant.components.sentry.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.sentry.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -49,7 +47,6 @@ async def test_full_user_flow_implementation(hass):
     }
     await hass.async_block_till_done()
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 

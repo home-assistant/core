@@ -37,13 +37,6 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Network UPS Tools (NUT) component."""
-    hass.data.setdefault(DOMAIN, {})
-
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Network UPS Tools (NUT) from a config entry."""
 
@@ -90,6 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if unique_id is None:
         unique_id = entry.entry_id
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         COORDINATOR: coordinator,
         PYNUT_DATA: data,

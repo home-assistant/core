@@ -33,13 +33,6 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up by configuration file."""
-    hass.data.setdefault(DOMAIN, {})
-
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up upon config entry in user interface."""
     conf = entry.data
@@ -62,6 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if not client.is_valid_credentials():
         raise ConfigEntryAuthFailed("TotalConnect authentication failed")
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = client
 
     for platform in PLATFORMS:

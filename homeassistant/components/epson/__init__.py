@@ -32,12 +32,6 @@ async def validate_projector(hass: HomeAssistant, host, port):
     return epson_proj
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the epson component."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up epson from a config entry."""
     try:
@@ -47,6 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except CannotConnect:
         _LOGGER.warning("Cannot connect to projector %s", entry.data[CONF_HOST])
         return False
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = projector
     for platform in PLATFORMS:
         hass.async_create_task(

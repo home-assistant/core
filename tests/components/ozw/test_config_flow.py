@@ -84,8 +84,6 @@ async def test_user_not_supervisor_create_entry(hass, mqtt):
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
-        "homeassistant.components.ozw.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.ozw.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -102,7 +100,6 @@ async def test_user_not_supervisor_create_entry(hass, mqtt):
         "use_addon": False,
         "integration_created_addon": False,
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -136,8 +133,6 @@ async def test_not_addon(hass, supervisor, mqtt):
     )
 
     with patch(
-        "homeassistant.components.ozw.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.ozw.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -154,7 +149,6 @@ async def test_not_addon(hass, supervisor, mqtt):
         "use_addon": False,
         "integration_created_addon": False,
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -169,8 +163,6 @@ async def test_addon_running(hass, supervisor, addon_running, addon_options):
     )
 
     with patch(
-        "homeassistant.components.ozw.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.ozw.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -187,7 +179,6 @@ async def test_addon_running(hass, supervisor, addon_running, addon_options):
         "use_addon": True,
         "integration_created_addon": False,
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -222,8 +213,6 @@ async def test_addon_installed(
     )
 
     with patch(
-        "homeassistant.components.ozw.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.ozw.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -240,7 +229,6 @@ async def test_addon_installed(
         "use_addon": True,
         "integration_created_addon": False,
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -319,8 +307,6 @@ async def test_addon_not_installed(
     assert result["step_id"] == "start_addon"
 
     with patch(
-        "homeassistant.components.ozw.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.ozw.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -337,7 +323,6 @@ async def test_addon_not_installed(
         "use_addon": True,
         "integration_created_addon": True,
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -379,8 +364,6 @@ async def test_supervisor_discovery(hass, supervisor, addon_running, addon_optio
     )
 
     with patch(
-        "homeassistant.components.ozw.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.ozw.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -395,7 +378,6 @@ async def test_supervisor_discovery(hass, supervisor, addon_running, addon_optio
         "use_addon": True,
         "integration_created_addon": False,
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -421,8 +403,6 @@ async def test_clean_discovery_on_user_create(
     )
 
     with patch(
-        "homeassistant.components.ozw.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.ozw.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -440,7 +420,6 @@ async def test_clean_discovery_on_user_create(
         "use_addon": False,
         "integration_created_addon": False,
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -562,8 +541,6 @@ async def test_import_addon_installed(
     default_input = result["data_schema"]({})
 
     with patch(
-        "homeassistant.components.ozw.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.ozw.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -580,5 +557,4 @@ async def test_import_addon_installed(
         "use_addon": True,
         "integration_created_addon": False,
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1

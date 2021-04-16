@@ -12,13 +12,6 @@ from .oauth_impl import OndiloOauth2Implementation
 PLATFORMS = ["sensor"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Ondilo ICO component."""
-    hass.data.setdefault(DOMAIN, {})
-
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Ondilo ICO from a config entry."""
 
@@ -33,6 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = api.OndiloClient(hass, entry, implementation)
 
     for platform in PLATFORMS:

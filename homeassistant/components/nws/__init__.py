@@ -40,11 +40,6 @@ def base_unique_id(latitude, longitude):
     return f"{latitude}_{longitude}"
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the National Weather Service (NWS) component."""
-    return True
-
-
 class NwsDataUpdateCoordinator(DataUpdateCoordinator):
     """
     NWS data update coordinator.

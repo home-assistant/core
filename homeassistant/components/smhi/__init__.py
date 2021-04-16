@@ -1,18 +1,12 @@
 """Support for the Swedish weather institute weather service."""
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import Config, HomeAssistant
+from homeassistant.core import HomeAssistant
 
 # Have to import for config_flow to work even if they are not used here
 from .config_flow import smhi_locations  # noqa: F401
 from .const import DOMAIN  # noqa: F401
 
 DEFAULT_NAME = "smhi"
-
-
-async def async_setup(hass: HomeAssistant, config: Config) -> bool:
-    """Set up configured SMHI."""
-    # We allow setup only through config flow type of config
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
