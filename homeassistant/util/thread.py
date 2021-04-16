@@ -5,7 +5,7 @@ import logging
 import threading
 from typing import Any
 
-SHUTDOWN_TIMEOUT = 10
+THREADING_SHUTDOWN_TIMEOUT = 10
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -15,14 +15,18 @@ def deadlock_safe_shutdown() -> None:
     # threading._shutdown can deadlock forever
     # see https://github.com/justengel/continuous_threading#shutdown-update
     # for additional detail
-    for thread in threading.enumerate():
+    remaining_threads = [
+        thread
+        for thread in threading.enumerate()
+        if thread is not threading.main_thread()
+        and not thread.daemon
+        and thread.is_alive()
+    ]
+
+    timeout_per_thread = THREADING_SHUTDOWN_TIMEOUT / len(remaining_threads)
+    for thread in remaining_threads:
         try:
-            if (
-                thread is not threading.main_thread()
-                and thread.is_alive()
-                and not thread.daemon
-            ):
-                thread.join(SHUTDOWN_TIMEOUT)
+            thread.join(timeout_per_thread)
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.warning("Failed to join thread: %s", err)
 
