@@ -18,7 +18,7 @@ START_LOG_ATTEMPT = 2
 def _log_thread_running_at_shutdown(name: str, ident: int) -> None:
     """Log the stack of a thread that was still running at shutdown."""
 
-    frames = sys._current_frames()
+    frames = sys._current_frames()  # pylint: disable=protected-access
     stack = frames.get(ident)
     formatted_stack = traceback.format_stack(stack)
     _LOGGER.warning(
