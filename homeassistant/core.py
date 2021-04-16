@@ -69,7 +69,7 @@ from homeassistant.exceptions import (
     ServiceNotFound,
     Unauthorized,
 )
-from homeassistant.helpers.recorder import wait_for_recorder_shutdown
+from homeassistant.helpers.recorder import async_wait_for_recorder_migration
 from homeassistant.util import location
 from homeassistant.util.async_ import (
     fire_coroutine_threadsafe,
@@ -590,7 +590,7 @@ class HomeAssistant:
 
         # If Home Assistant is shutdown by signal we need to wait
         # for any database migrations to finish.
-        wait_for_recorder_shutdown(self)
+        await async_wait_for_recorder_migration(self)
 
 
 @attr.s(slots=True, frozen=True)

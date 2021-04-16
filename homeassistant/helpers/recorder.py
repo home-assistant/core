@@ -21,9 +21,9 @@ async def async_migration_in_progress(hass: HomeAssistant) -> bool:
     return await recorder.async_migration_in_progress(hass)
 
 
-def wait_for_recorder_shutdown(hass: HomeAssistant) -> None:
-    """Wait for recorder to shutdown."""
-    if "recorder" not in hass.config.components:
+async def async_wait_for_recorder_migration(hass: HomeAssistant) -> None:
+    """Wait for recorder to shutdown after migration."""
+    if not await async_migration_in_progress(hass):
         return
     from homeassistant.components.recorder.const import (  # pylint: disable=import-outside-toplevel
         DATA_INSTANCE,
@@ -31,7 +31,7 @@ def wait_for_recorder_shutdown(hass: HomeAssistant) -> None:
 
     instance = hass.data[DATA_INSTANCE]
     while True:
-        instance.join(timeout=10)
         if not instance.is_alive():
             return
+        instance.join(timeout=10)
         _LOGGER.critical("Waiting for the recorder to safely shutdown")
