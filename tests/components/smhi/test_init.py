@@ -14,16 +14,6 @@ TEST_CONFIG = {
 }
 
 
-async def test_setup_always_return_true() -> None:
-    """Test async_setup always returns True."""
-    hass = Mock()
-    # Returns true with empty config
-    assert await smhi.async_setup(hass, {}) is True
-
-    # Returns true with a config provided
-    assert await smhi.async_setup(hass, TEST_CONFIG) is True
-
-
 async def test_forward_async_setup_entry() -> None:
     """Test that it will forward setup entry."""
     hass = Mock()

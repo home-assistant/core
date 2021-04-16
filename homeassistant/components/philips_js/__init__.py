@@ -28,12 +28,6 @@ PLATFORMS = ["media_player", "remote"]
 LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Philips TV component."""
-    hass.data[DOMAIN] = {}
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Philips TV from a config entry."""
 
@@ -47,6 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     coordinator = PhilipsTVDataUpdateCoordinator(hass, tvapi)
 
     await coordinator.async_refresh()
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     for platform in PLATFORMS:

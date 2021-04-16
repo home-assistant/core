@@ -40,15 +40,9 @@ SCAN_INTERVAL = timedelta(seconds=60)
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up the IPP component."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up IPP from a config entry."""
-
+    hass.data.setdefault(DOMAIN, {})
     coordinator = hass.data[DOMAIN].get(entry.entry_id)
     if not coordinator:
         # Create IPP instance for this entry

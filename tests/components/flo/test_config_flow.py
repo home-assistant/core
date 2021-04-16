@@ -20,8 +20,6 @@ async def test_form(hass, aioclient_mock_fixture):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.flo.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.flo.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -32,7 +30,6 @@ async def test_form(hass, aioclient_mock_fixture):
         assert result2["title"] == "Home"
         assert result2["data"] == {"username": TEST_USER_ID, "password": TEST_PASSWORD}
         await hass.async_block_till_done()
-        assert len(mock_setup.mock_calls) == 1
         assert len(mock_setup_entry.mock_calls) == 1
 
 
