@@ -2,14 +2,15 @@
 from __future__ import annotations
 
 import asyncio
-from concurrent.futures import ThreadPoolExecutor
 import dataclasses
 import logging
+import threading
 from typing import Any
 
 from homeassistant import bootstrap
 from homeassistant.core import callback
 from homeassistant.helpers.frame import warn_use
+from homeassistant.util.executor import InterruptibleThreadPoolExecutor
 
 # mypy: disallow-any-generics
 
@@ -24,6 +25,10 @@ from homeassistant.helpers.frame import warn_use
 # use case.
 #
 MAX_EXECUTOR_WORKERS = 64
+
+SHUTDOWN_TIMEOUT = 10
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass
@@ -64,7 +69,7 @@ class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):  # type: ignore[valid
         if self.debug:
             loop.set_debug(True)
 
-        executor = ThreadPoolExecutor(
+        executor = InterruptibleThreadPoolExecutor(
             thread_name_prefix="SyncWorker", max_workers=MAX_EXECUTOR_WORKERS
         )
         loop.set_default_executor(executor)
@@ -76,7 +81,7 @@ class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):  # type: ignore[valid
         orig_close = loop.close
 
         def close() -> None:
-            executor.shutdown(wait=True)
+            executor.logged_shutdown()
             orig_close()
 
         loop.close = close  # type: ignore
@@ -104,6 +109,9 @@ async def setup_and_run_hass(runtime_config: RuntimeConfig) -> int:
     if hass is None:
         return 1
 
+    # threading._shutdown can deadlock forever
+    threading._shutdown = deadlock_safe_shutdown  # type: ignore[attr-defined]
+
     return await hass.async_run()
 
 
@@ -111,3 +119,20 @@ def run(runtime_config: RuntimeConfig) -> int:
     """Run Home Assistant."""
     asyncio.set_event_loop_policy(HassEventLoopPolicy(runtime_config.debug))
     return asyncio.run(setup_and_run_hass(runtime_config))
+
+
+def deadlock_safe_shutdown() -> None:
+    """Shutdown that will not deadlock."""
+    # threading._shutdown can deadlock forever
+    # see https://github.com/justengel/continuous_threading#shutdown-update
+    # for additional detail
+    for thread in threading.enumerate():
+        try:
+            if (
+                thread is not threading.main_thread()
+                and thread.is_alive()
+                and not thread.daemon
+            ):
+                thread.join(SHUTDOWN_TIMEOUT)
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.warning("Failed to join thread: %s", err)
