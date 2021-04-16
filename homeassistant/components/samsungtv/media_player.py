@@ -19,7 +19,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.components.ssdp import ATTR_UPNP_UDN
-from homeassistant.config_entries import SOURCE_REAUTH
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_IP_ADDRESS,
@@ -28,10 +28,11 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     CONF_TOKEN,
+    EVENT_HOMEASSISTANT_STOP,
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
@@ -100,6 +101,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             data.get(CONF_TOKEN),
         )
 
+    async def stop_bridge(event):
+        """Stop SamsungTV bridge connection."""
+        bridge.stop()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_bridge)
+
     async_add_entities([SamsungTVDevice(bridge, config_entry, on_script)])
 
 
@@ -120,6 +127,18 @@ async def _migrate_old_unique_ids(hass, config_entry):
     await entity_registry.async_migrate_entries(
         hass, config_entry.entry_id, _async_migrator
     )
+
+
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+    """Unload Samsung TV config entry."""
+    data = config_entry.data.copy()
+    bridge = SamsungTVBridge.get_bridge(
+        data[CONF_METHOD],
+        data[CONF_HOST],
+        data[CONF_PORT],
+        data.get(CONF_TOKEN),
+    )
+    bridge.stop()
 
 
 class SamsungTVDevice(MediaPlayerEntity):
