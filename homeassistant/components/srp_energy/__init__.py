@@ -16,11 +16,6 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["sensor"]
 
 
-async def async_setup(hass, config):
-    """Old way of setting up the srp_energy component."""
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up the SRP Energy component from a config entry."""
     # Store an SrpEnergyClient object for your srp_energy to access

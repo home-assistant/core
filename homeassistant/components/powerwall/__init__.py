@@ -43,13 +43,6 @@ PLATFORMS = ["binary_sensor", "sensor"]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Tesla Powerwall component."""
-    hass.data.setdefault(DOMAIN, {})
-
-    return True
-
-
 async def _migrate_old_unique_ids(hass, entry_id, powerwall_data):
     serial_numbers = powerwall_data[POWERWALL_API_SERIAL_NUMBERS]
     site_info = powerwall_data[POWERWALL_API_SITE_INFO]
@@ -96,6 +89,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     entry_id = entry.entry_id
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN].setdefault(entry_id, {})
     http_session = requests.Session()
 

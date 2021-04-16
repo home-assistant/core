@@ -45,7 +45,7 @@ async def test_step_user(hass, mock_garmin_connect):
 
     with patch(
         "homeassistant.components.garmin_connect.async_setup_entry", return_value=True
-    ), patch("homeassistant.components.garmin_connect.async_setup", return_value=True):
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "user"}, data=MOCK_CONF
         )

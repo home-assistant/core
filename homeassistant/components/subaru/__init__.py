@@ -37,12 +37,6 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass, base_config):
-    """Do nothing since this integration does not support configuration.yml setup."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
-
-
 async def async_setup_entry(hass, entry):
     """Set up Subaru from a config entry."""
     config = entry.data
@@ -88,6 +82,7 @@ async def async_setup_entry(hass, entry):
 
     await coordinator.async_refresh()
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         ENTRY_CONTROLLER: controller,
         ENTRY_COORDINATOR: coordinator,
