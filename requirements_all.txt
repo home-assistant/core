@@ -762,7 +762,7 @@ hole==0.5.1
 holidays==0.11.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210407.3
+home-assistant-frontend==20210416.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1235,7 +1235,7 @@ pyMetEireann==0.2
 
 # homeassistant.components.met
 # homeassistant.components.norway_air
-pyMetno==0.8.1
+pyMetno==0.8.2
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.26.1
