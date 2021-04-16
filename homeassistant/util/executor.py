@@ -13,7 +13,7 @@ from homeassistant.util.thread import async_raise
 
 _LOGGER = logging.getLogger(__name__)
 
-START_LOG_ATTEMPT = 2
+MAX_LOG_ATTEMPTS = 2
 
 _JOIN_ATTEMPTS = 10
 
@@ -98,11 +98,11 @@ class InterruptibleThreadPoolExecutor(ThreadPoolExecutor):
             remaining_threads -= join_or_interrupt_threads(
                 remaining_threads,
                 timeout_remaining / _JOIN_ATTEMPTS,
-                attempt >= START_LOG_ATTEMPT,
+                attempt <= MAX_LOG_ATTEMPTS,
             )
 
-            timeout_remaining = (
-                EXECUTOR_SHUTDOWN_TIMEOUT - time.monotonic() - start_time
+            timeout_remaining = EXECUTOR_SHUTDOWN_TIMEOUT - (
+                time.monotonic() - start_time
             )
             if timeout_remaining <= 0:
                 return
