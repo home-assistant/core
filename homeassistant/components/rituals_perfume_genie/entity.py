@@ -46,7 +46,9 @@ class DiffuserEntity(CoordinatorEntity):
     @property
     def available(self) -> bool:
         """Return if the entity is available."""
-        return self.coordinator.data[HUB][STATUS] == AVAILABLE_STATE
+        return (
+            super().available and self.coordinator.data[HUB][STATUS] == AVAILABLE_STATE
+        )
 
     @property
     def device_info(self) -> dict[str, Any]:
