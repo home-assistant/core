@@ -1,16 +1,9 @@
 blueprint:
-  name: Random Color
+  name: Random Light Color
   description: Sets given lights to a random color
   domain: script
   source_url: https://github.com/home-assistant/core/blob/dev/homeassistant/components/script/blueprints/random_color.yaml
   input:
-    default_target:
-      name: Default Light(s)
-      description: The default light(s), can be overridden in the script call.
-      selector:
-        target:
-          entity:
-            domain: light
     colors:
       name: Colors
       description: A list of color names to pick random from
@@ -87,7 +80,6 @@ variables:
     - "white"
     - "yellow"
   default_colors: !input colors
-  default_target: !input default_target
   colors: >
     {{ default_colors | default(fallback_colors) }}
 
@@ -95,6 +87,7 @@ fields:
   target:
     name: Light(s)
     description: The lights to give a random color
+    required: true
     selector:
       target:
         entity:
@@ -103,7 +96,7 @@ fields:
 sequence:
   - service: light.turn_on
     target: >
-      {{ target | default(default_target) }}
+      {{ target }}
     data:
       color_name: >
         {{ colors | random }}

@@ -52,7 +52,6 @@ async def test_random_color(hass: HomeAssistant) -> None:
                         "use_blueprint": {
                             "path": "random_color.yaml",
                             "input": {
-                                "default_target": {"entity_id": "light.kitchen"},
                                 "colors": ["red", "white", "blue"],
                             },
                         }
@@ -64,7 +63,12 @@ async def test_random_color(hass: HomeAssistant) -> None:
     turn_on_calls = async_mock_service(hass, "light", "turn_on")
 
     # Trigger random color
-    await hass.services.async_call(script.DOMAIN, "roll_dice", blocking=True)
+    await hass.services.async_call(
+        script.DOMAIN,
+        "roll_dice",
+        {"target": {"entity_id": "light.kitchen"}},
+        blocking=True,
+    )
 
     assert len(turn_on_calls) == 1
     call = turn_on_calls[0]
