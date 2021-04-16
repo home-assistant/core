@@ -68,7 +68,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
 
-async def get_coordinator(hass) -> update_coordinator.DataUpdateCoordinator:
+async def get_coordinator(hass: HomeAssistant) -> update_coordinator.DataUpdateCoordinator:
     """Get the data update coordinator."""
     if DOMAIN in hass.data:
         return hass.data[DOMAIN]
