@@ -1144,10 +1144,7 @@ class Script:
                     self._log("Already running", level=LOGSEVERITY[self._max_exceeded])
                 script_execution_set("failed_single")
                 return
-            if self.script_mode == SCRIPT_MODE_RESTART:
-                self._log("Restarting")
-                await self.async_stop(update_state=False)
-            elif len(self._runs) == self.max_runs:
+            if self.script_mode != SCRIPT_MODE_RESTART and self.runs == self.max_runs:
                 if self._max_exceeded != "SILENT":
                     self._log(
                         "Maximum number of runs exceeded",
@@ -1186,6 +1183,14 @@ class Script:
             self._hass, self, cast(dict, variables), context, self._log_exceptions
         )
         self._runs.append(run)
+        if self.script_mode == SCRIPT_MODE_RESTART:
+            # When script mode is SCRIPT_MODE_RESTART, first add the new run and then
+            # stop any other runs. If we stop other runs first, self.is_running will
+            # return false after the other script runs were stopped until our task
+            # resumes running.
+            self._log("Restarting")
+            await self.async_stop(update_state=False, spare=run)
+
         if started_action:
             self._hass.async_run_job(started_action)
         self.last_triggered = utcnow()
@@ -1198,17 +1203,21 @@ class Script:
             self._changed()
             raise
 
-    async def _async_stop(self, update_state):
-        aws = [asyncio.create_task(run.async_stop()) for run in self._runs]
+    async def _async_stop(self, update_state, spare=None):
+        aws = [
+            asyncio.create_task(run.async_stop()) for run in self._runs if run != spare
+        ]
         if not aws:
             return
         await asyncio.wait(aws)
         if update_state:
             self._changed()
 
-    async def async_stop(self, update_state: bool = True) -> None:
+    async def async_stop(
+        self, update_state: bool = True, spare: _ScriptRun | None = None
+    ) -> None:
         """Stop running script."""
-        await asyncio.shield(self._async_stop(update_state))
+        await asyncio.shield(self._async_stop(update_state, spare))
 
     async def _async_get_condition(self, config):
         if isinstance(config, template.Template):
