@@ -1,11 +1,6 @@
 """The mill component."""
 
 
-async def async_setup(hass, config):
-    """Set up the Mill platform."""
-    return True
-
-
 async def async_setup_entry(hass, entry):
     """Set up the Mill heater."""
     hass.async_create_task(
