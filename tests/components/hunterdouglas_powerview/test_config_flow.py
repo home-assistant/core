@@ -36,9 +36,6 @@ async def test_user_form(hass):
         "homeassistant.components.hunterdouglas_powerview.UserData",
         return_value=mock_powerview_userdata,
     ), patch(
-        "homeassistant.components.hunterdouglas_powerview.async_setup",
-        return_value=True,
-    ) as mock_setup, patch(
         "homeassistant.components.hunterdouglas_powerview.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -53,7 +50,6 @@ async def test_user_form(hass):
     assert result2["data"] == {
         "host": "1.2.3.4",
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
     result3 = await hass.config_entries.flow.async_init(
@@ -103,9 +99,6 @@ async def test_form_homekit(hass):
         "homeassistant.components.hunterdouglas_powerview.UserData",
         return_value=mock_powerview_userdata,
     ), patch(
-        "homeassistant.components.hunterdouglas_powerview.async_setup",
-        return_value=True,
-    ) as mock_setup, patch(
         "homeassistant.components.hunterdouglas_powerview.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -117,7 +110,6 @@ async def test_form_homekit(hass):
     assert result2["data"] == {"host": "1.2.3.4"}
     assert result2["result"].unique_id == "ABC123"
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
     result3 = await hass.config_entries.flow.async_init(
