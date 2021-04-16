@@ -1,0 +1,59 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
+            "no_h264": "No s'han torbat fluxos (streams) H264 disponibles. Comporva la configuraci\u00f3 de perfil en el dispositiu.",
+            "no_mac": "No s'ha pogut configurar un ID \u00fanic pel dispositiu ONVIF.",
+            "onvif_error": "Error durant la configuraci\u00f3 del dispositiu ONVIF. Consulta els registres per a m\u00e9s informaci\u00f3."
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "password": "Contrasenya",
+                    "username": "Nom d'usuari"
+                },
+                "title": "Configuraci\u00f3 d'autenticaci\u00f3"
+            },
+            "configure_profile": {
+                "data": {
+                    "include": "Crea entitat de c\u00e0mera"
+                },
+                "description": "Crear entitat de c\u00e0mera per {profile} amb resoluci\u00f3 {resolution}?",
+                "title": "Configuraci\u00f3 dels perfils"
+            },
+            "device": {
+                "data": {
+                    "host": "Selecciona un dispositiu ONVIF descobert"
+                },
+                "title": "Selecci\u00f3 de dispositiu ONVIF"
+            },
+            "manual_input": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "name": "Nom",
+                    "port": "Port"
+                },
+                "title": "Configura el dispositiu ONVIF"
+            },
+            "user": {
+                "description": "En fer clic a envia, es cercaran a la xarxa dispositius ONVIF que suportin perfils S.\n\nAlguns fabricants han comen\u00e7at a desactivar ONVIF per defecte. Comprova que ONVIF est\u00e0 activat a la configuraci\u00f3 de les c\u00e0meres.",
+                "title": "Configuraci\u00f3 de dispositiu ONVIF"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "onvif_devices": {
+                "data": {
+                    "extra_arguments": "Arguments addicionals FFMPEG",
+                    "rtsp_transport": "Mecanisme de transport RTSP"
+                },
+                "title": "Opcions de dispositiu ONVIF"
+            }
+        }
+    }
+}

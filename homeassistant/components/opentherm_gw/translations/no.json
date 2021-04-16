@@ -1,0 +1,32 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "cannot_connect": "Tilkobling mislyktes",
+            "id_exists": "Gateway ID finnes allerede"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "device": "Bane eller URL-adresse",
+                    "id": "",
+                    "name": "Navn"
+                },
+                "title": ""
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "floor_temperature": "Etasje Temperatur",
+                    "precision": "Presisjon",
+                    "read_precision": "Les presisjon",
+                    "set_precision": "Angi presisjon"
+                },
+                "description": "Alternativer for OpenTherm Gateway"
+            }
+        }
+    }
+}

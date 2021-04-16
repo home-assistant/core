@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "UPnP / IGD est d\u00e9j\u00e0 configur\u00e9",
+            "incomplete_discovery": "D\u00e9couverte incompl\u00e8te",
+            "no_devices_found": "Aucun p\u00e9riph\u00e9rique UPnP / IGD trouv\u00e9 sur le r\u00e9seau."
+        },
+        "error": {
+            "one": "Vide",
+            "other": "Vide"
+        },
+        "flow_title": "UPnP/IGD: {name}",
+        "step": {
+            "init": {
+                "one": "Vide",
+                "other": "Vide"
+            },
+            "ssdp_confirm": {
+                "description": "Voulez-vous configurer ce p\u00e9riph\u00e9rique UPnP/IGD?"
+            },
+            "user": {
+                "data": {
+                    "scan_interval": "Intervalle de mise \u00e0 jour (secondes, minimum 30)",
+                    "usn": "Appareil"
+                }
+            }
+        }
+    }
+}

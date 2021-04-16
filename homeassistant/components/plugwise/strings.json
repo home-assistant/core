@@ -1,0 +1,42 @@
+{
+  "options": {
+    "step": {
+      "init": {
+        "description": "Adjust Plugwise Options",
+        "data": {
+          "scan_interval": "Scan Interval (seconds)"
+        }
+      }
+    }
+  },
+  "config": {
+    "step": {
+      "user": {
+        "title": "Plugwise type",
+        "description": "Product:",
+        "data": {
+          "flow_type": "Connection type"
+        }
+      },
+      "user_gateway": {
+        "title": "Connect to the Smile",
+        "description": "Please enter",
+        "data": {
+          "password": "Smile ID",
+          "host": "[%key:common::config_flow::data::ip%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username" : "Smile Username"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "flow_title": "Smile: {name}"
+  }
+}

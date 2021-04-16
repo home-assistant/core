@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_sensor": "Sensor niedost\u0119pny lub nieprawid\u0142owy"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "show_on_map": "Poka\u017c na mapie",
+                    "station_id": "ID sensora Luftdaten"
+                },
+                "title": "Konfiguracja Luftdaten"
+            }
+        }
+    }
+}

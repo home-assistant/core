@@ -1,99 +1,105 @@
 """Support for Plex media server monitoring."""
-from datetime import timedelta
 import logging
-import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_HOST, CONF_PORT, CONF_TOKEN,
-    CONF_SSL, CONF_VERIFY_SSL)
-from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
-import homeassistant.helpers.config_validation as cv
+from plexapi.exceptions import NotFound
+
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from .const import (
+    CONF_SERVER_IDENTIFIER,
+    DOMAIN as PLEX_DOMAIN,
+    NAME_FORMAT,
+    PLEX_UPDATE_LIBRARY_SIGNAL,
+    PLEX_UPDATE_SENSOR_SIGNAL,
+    SERVERS,
+)
+
+LIBRARY_ATTRIBUTE_TYPES = {
+    "artist": ["artist", "album"],
+    "photo": ["photoalbum"],
+    "show": ["show", "season"],
+}
+
+LIBRARY_PRIMARY_LIBTYPE = {
+    "show": "episode",
+    "artist": "track",
+}
+
+LIBRARY_ICON_LOOKUP = {
+    "artist": "mdi:music",
+    "movie": "mdi:movie",
+    "photo": "mdi:image",
+    "show": "mdi:television",
+}
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_SERVER = 'server'
 
-DEFAULT_HOST = 'localhost'
-DEFAULT_NAME = 'Plex'
-DEFAULT_PORT = 32400
-DEFAULT_SSL = False
-DEFAULT_VERIFY_SSL = True
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Plex sensor from a config entry."""
+    server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
+    plexserver = hass.data[PLEX_DOMAIN][SERVERS][server_id]
+    sensors = [PlexSensor(hass, plexserver)]
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
+    def create_library_sensors():
+        """Create Plex library sensors with sync calls."""
+        for library in plexserver.library.sections():
+            sensors.append(PlexLibrarySectionSensor(hass, plexserver, library))
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_TOKEN): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_SERVER): cv.string,
-    vol.Optional(CONF_USERNAME): cv.string,
-    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-})
+    await hass.async_add_executor_job(create_library_sensors)
+    async_add_entities(sensors)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Plex sensor."""
-    name = config.get(CONF_NAME)
-    plex_user = config.get(CONF_USERNAME)
-    plex_password = config.get(CONF_PASSWORD)
-    plex_server = config.get(CONF_SERVER)
-    plex_host = config.get(CONF_HOST)
-    plex_port = config.get(CONF_PORT)
-    plex_token = config.get(CONF_TOKEN)
-
-    plex_url = '{}://{}:{}'.format('https' if config.get(CONF_SSL) else 'http',
-                                   plex_host, plex_port)
-
-    import plexapi.exceptions
-
-    try:
-        add_entities([PlexSensor(
-            name, plex_url, plex_user, plex_password, plex_server,
-            plex_token, config.get(CONF_VERIFY_SSL))], True)
-    except (plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized,
-            plexapi.exceptions.NotFound) as error:
-        _LOGGER.error(error)
-        return
-
-
-class PlexSensor(Entity):
+class PlexSensor(SensorEntity):
     """Representation of a Plex now playing sensor."""
 
-    def __init__(self, name, plex_url, plex_user, plex_password,
-                 plex_server, plex_token, verify_ssl):
+    def __init__(self, hass, plex_server):
         """Initialize the sensor."""
-        from plexapi.myplex import MyPlexAccount
-        from plexapi.server import PlexServer
-        from requests import Session
+        self._state = None
+        self._server = plex_server
+        self._name = NAME_FORMAT.format(plex_server.friendly_name)
+        self._unique_id = f"sensor-{plex_server.machine_identifier}"
+        self.async_refresh_sensor = Debouncer(
+            hass,
+            _LOGGER,
+            cooldown=3,
+            immediate=False,
+            function=self._async_refresh_sensor,
+        ).async_call
 
-        self._name = name
-        self._state = 0
-        self._now_playing = []
+    async def async_added_to_hass(self):
+        """Run when about to be added to hass."""
+        server_id = self._server.machine_identifier
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                PLEX_UPDATE_SENSOR_SIGNAL.format(server_id),
+                self.async_refresh_sensor,
+            )
+        )
 
-        cert_session = None
-        if not verify_ssl:
-            _LOGGER.info("Ignoring SSL verification")
-            cert_session = Session()
-            cert_session.verify = False
-
-        if plex_token:
-            self._server = PlexServer(plex_url, plex_token, cert_session)
-        elif plex_user and plex_password:
-            user = MyPlexAccount(plex_user, plex_password)
-            server = plex_server if plex_server else user.resources()[0].name
-            self._server = user.resource(server).connect()
-        else:
-            self._server = PlexServer(plex_url, None, cert_session)
+    async def _async_refresh_sensor(self):
+        """Set instance object and trigger an entity state update."""
+        _LOGGER.debug("Refreshing sensor [%s]", self.unique_id)
+        self._state = len(self._server.sensor_attributes)
+        self.async_write_ha_state()
 
     @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return the id of this plex client."""
+        return self._unique_id
+
+    @property
+    def should_poll(self):
+        """Return True if entity has to be polled for state."""
+        return False
 
     @property
     def state(self):
@@ -106,51 +112,136 @@ class PlexSensor(Entity):
         return "Watching"
 
     @property
-    def device_state_attributes(self):
+    def icon(self):
+        """Return the icon of the sensor."""
+        return "mdi:plex"
+
+    @property
+    def extra_state_attributes(self):
         """Return the state attributes."""
-        return {content[0]: content[1] for content in self._now_playing}
+        return self._server.sensor_attributes
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Update method for Plex sensor."""
-        sessions = self._server.sessions()
-        now_playing = []
-        for sess in sessions:
-            user = sess.usernames[0]
-            device = sess.players[0].title
-            now_playing_user = "{0} - {1}".format(user, device)
-            now_playing_title = ""
+    @property
+    def device_info(self):
+        """Return a device description for device registry."""
+        if self.unique_id is None:
+            return None
 
-            if sess.TYPE == 'episode':
-                # example:
-                # "Supernatural (2005) - S01 · E13 - Route 666"
-                season_title = sess.grandparentTitle
-                if sess.show().year is not None:
-                    season_title += " ({0})".format(sess.show().year)
-                season_episode = "S{0}".format(sess.parentIndex)
-                if sess.index is not None:
-                    season_episode += " · E{0}".format(sess.index)
-                episode_title = sess.title
-                now_playing_title = "{0} - {1} - {2}".format(season_title,
-                                                             season_episode,
-                                                             episode_title)
-            elif sess.TYPE == 'track':
-                # example:
-                # "Billy Talent - Afraid of Heights - Afraid of Heights"
-                track_artist = sess.grandparentTitle
-                track_album = sess.parentTitle
-                track_title = sess.title
-                now_playing_title = "{0} - {1} - {2}".format(track_artist,
-                                                             track_album,
-                                                             track_title)
-            else:
-                # example:
-                # "picture_of_last_summer_camp (2015)"
-                # "The Incredible Hulk (2008)"
-                now_playing_title = sess.title
-                if sess.year is not None:
-                    now_playing_title += " ({0})".format(sess.year)
+        return {
+            "identifiers": {(PLEX_DOMAIN, self._server.machine_identifier)},
+            "manufacturer": "Plex",
+            "model": "Plex Media Server",
+            "name": self._server.friendly_name,
+            "sw_version": self._server.version,
+        }
 
-            now_playing.append((now_playing_user, now_playing_title))
-        self._state = len(sessions)
-        self._now_playing = now_playing
+
+class PlexLibrarySectionSensor(SensorEntity):
+    """Representation of a Plex library section sensor."""
+
+    def __init__(self, hass, plex_server, plex_library_section):
+        """Initialize the sensor."""
+        self._server = plex_server
+        self.server_name = plex_server.friendly_name
+        self.server_id = plex_server.machine_identifier
+        self.library_section = plex_library_section
+        self.library_type = plex_library_section.type
+        self._name = f"{self.server_name} Library - {plex_library_section.title}"
+        self._unique_id = f"library-{self.server_id}-{plex_library_section.uuid}"
+        self._state = None
+        self._available = True
+        self._attributes = {}
+
+    async def async_added_to_hass(self):
+        """Run when about to be added to hass."""
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                PLEX_UPDATE_LIBRARY_SIGNAL.format(self.server_id),
+                self.async_refresh_sensor,
+            )
+        )
+        await self.async_refresh_sensor()
+
+    async def async_refresh_sensor(self):
+        """Update state and attributes for the library sensor."""
+        _LOGGER.debug("Refreshing library sensor for '%s'", self.name)
+        try:
+            await self.hass.async_add_executor_job(self._update_state_and_attrs)
+            self._available = True
+        except NotFound:
+            self._available = False
+        self.async_write_ha_state()
+
+    def _update_state_and_attrs(self):
+        """Update library sensor state with sync calls."""
+        primary_libtype = LIBRARY_PRIMARY_LIBTYPE.get(
+            self.library_type, self.library_type
+        )
+
+        self._state = self.library_section.totalViewSize(
+            libtype=primary_libtype, includeCollections=False
+        )
+        for libtype in LIBRARY_ATTRIBUTE_TYPES.get(self.library_type, []):
+            self._attributes[f"{libtype}s"] = self.library_section.totalViewSize(
+                libtype=libtype, includeCollections=False
+            )
+
+    @property
+    def available(self):
+        """Return the availability of the client."""
+        return self._available
+
+    @property
+    def entity_registry_enabled_default(self):
+        """Return if sensor should be enabled by default."""
+        return False
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
+
+    @property
+    def unique_id(self):
+        """Return the id of this plex client."""
+        return self._unique_id
+
+    @property
+    def should_poll(self):
+        """Return True if entity has to be polled for state."""
+        return False
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self._state
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit this state is expressed in."""
+        return "Items"
+
+    @property
+    def icon(self):
+        """Return the icon of the sensor."""
+        return LIBRARY_ICON_LOOKUP.get(self.library_type, "mdi:plex")
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        return self._attributes
+
+    @property
+    def device_info(self):
+        """Return a device description for device registry."""
+        if self.unique_id is None:
+            return None
+
+        return {
+            "identifiers": {(PLEX_DOMAIN, self.server_id)},
+            "manufacturer": "Plex",
+            "model": "Plex Media Server",
+            "name": self.server_name,
+            "sw_version": self._server.version,
+        }

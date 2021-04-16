@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
+            "no_devices_found": "Keine Ger\u00e4te im Netzwerk gefunden",
+            "not_supported": "Verbunden mit AVM FRITZ! Box, kann jedoch keine Smart Home-Ger\u00e4te steuern.",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
+        },
+        "error": {
+            "invalid_auth": "Ung\u00fcltige Zugangsdaten"
+        },
+        "flow_title": "AVM FRITZ! Box: {name}",
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "description": "M\u00f6chtest du {name} einrichten?"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "description": "Aktualisiere deine Anmeldeinformationen f\u00fcr {name}."
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "description": "Gib deine AVM FRITZ! Box-Informationen ein."
+            }
+        }
+    }
+}

@@ -1,0 +1,11 @@
+{
+  "domain": "dhcp",
+  "name": "DHCP Discovery",
+  "documentation": "https://www.home-assistant.io/integrations/dhcp",
+  "requirements": [
+    "scapy==2.4.4", "aiodiscover==1.3.4"
+  ],
+  "codeowners": [
+    "@bdraco"
+  ]
+}

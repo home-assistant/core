@@ -1,35 +1,67 @@
 # Describes the format for available counter services
 
 decrement:
+  name: Decrement
   description: Decrement a counter.
-  fields:
-    entity_id:
-      description: Entity id of the counter to decrement.
-      example: 'counter.count0'
+  target:
+
 increment:
+  name: Increment
   description: Increment a counter.
-  fields:
-    entity_id:
-      description: Entity id of the counter to increment.
-      example: 'counter.count0'
+  target:
+
 reset:
+  name: Reset
   description: Reset a counter.
-  fields:
-    entity_id:
-      description: Entity id of the counter to reset.
-      example: 'counter.count0'
+  target:
+
 configure:
-  description: Change counter parameters
+  name: Configure
+  description: Change counter parameters.
+  target:
   fields:
-    entity_id:
-      description: Entity id of the counter to change.
-      example: 'counter.count0'
     minimum:
-      description: New minimum value for the counter or None to remove minimum
+      name: Minimum
+      description: New minimum value for the counter or None to remove minimum.
       example: 0
+      selector:
+        number:
+          min: -9223372036854775807
+          max: 9223372036854775807
+          mode: box
     maximum:
-      description: New maximum value for the counter or None to remove maximum
+      name: Maximum
+      description: New maximum value for the counter or None to remove maximum.
       example: 100
+      selector:
+        number:
+          min: -9223372036854775807
+          max: 9223372036854775807
+          mode: box
     step:
-      description: New value for step
+      name: Step
+      description: New value for step.
       example: 2
+      selector:
+        number:
+          min: 1
+          max: 9223372036854775807
+          mode: box
+    initial:
+      name: Initial
+      description: New value for initial.
+      example: 6
+      selector:
+        number:
+          min: 0
+          max: 9223372036854775807
+          mode: box
+    value:
+      name: Value
+      description: New state value.
+      example: 3
+      selector:
+        number:
+          min: 0
+          max: 9223372036854775807
+          mode: box

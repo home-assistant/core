@@ -1,0 +1,95 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Bryggan \u00e4r redan konfigurerad",
+            "already_in_progress": "Konfigurations fl\u00f6det f\u00f6r bryggan p\u00e5g\u00e5r redan.",
+            "no_bridges": "Inga deCONZ-bryggor uppt\u00e4cktes",
+            "not_deconz_bridge": "Inte en deCONZ-brygga",
+            "updated_instance": "Uppdaterad deCONZ-instans med ny v\u00e4rdadress"
+        },
+        "error": {
+            "no_key": "Det gick inte att ta emot en API-nyckel"
+        },
+        "flow_title": "deCONZ Zigbee gateway ({host})",
+        "step": {
+            "hassio_confirm": {
+                "description": "Vill du konfigurera Home Assistant att ansluta till den deCONZ-gateway som tillhandah\u00e5lls av Supervisor-till\u00e4gget {addon}?",
+                "title": "deCONZ Zigbee gateway via Supervisor till\u00e4gg"
+            },
+            "link": {
+                "description": "L\u00e5s upp din deCONZ-gateway f\u00f6r att registrera dig med Home Assistant. \n\n 1. G\u00e5 till deCONZ-systeminst\u00e4llningarna \n 2. Tryck p\u00e5 \"L\u00e5s upp gateway\"-knappen",
+                "title": "L\u00e4nka med deCONZ"
+            },
+            "manual_input": {
+                "data": {
+                    "host": "V\u00e4rd",
+                    "port": "Port"
+                }
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "both_buttons": "B\u00e5da knapparna",
+            "button_1": "F\u00f6rsta knappen",
+            "button_2": "Andra knappen",
+            "button_3": "Tredje knappen",
+            "button_4": "Fj\u00e4rde knappen",
+            "close": "St\u00e4ng",
+            "dim_down": "Dimma ned",
+            "dim_up": "Dimma upp",
+            "left": "V\u00e4nster",
+            "open": "\u00d6ppen",
+            "right": "H\u00f6ger",
+            "side_1": "Sida 1",
+            "side_2": "Sida 2",
+            "side_3": "Sida 3",
+            "side_4": "Sida 4",
+            "side_5": "Sida 5",
+            "side_6": "Sida 6",
+            "turn_off": "St\u00e4ng av",
+            "turn_on": "Starta"
+        },
+        "trigger_type": {
+            "remote_awakened": "Enheten v\u00e4cktes",
+            "remote_button_double_press": "\"{subtype}\"-knappen dubbelklickades",
+            "remote_button_long_press": "\"{subtype}\"-knappen kontinuerligt nedtryckt",
+            "remote_button_long_release": "\"{subtype}\"-knappen sl\u00e4pptes efter ett l\u00e5ngttryck",
+            "remote_button_quadruple_press": "\"{subtype}\"-knappen klickades \nfyrfaldigt",
+            "remote_button_quintuple_press": "\"{subtype}\"-knappen klickades \nfemfaldigt",
+            "remote_button_rotated": "Knappen roterade \"{subtype}\"",
+            "remote_button_rotation_stopped": "Knapprotationen \"{subtype}\" stoppades",
+            "remote_button_short_press": "\"{subtype}\"-knappen trycktes in",
+            "remote_button_short_release": "\"{subtype}\"-knappen sl\u00e4ppt",
+            "remote_button_triple_press": "\"{subtype}\"-knappen trippelklickad",
+            "remote_double_tap": "Enheten \"{subtype}\" dubbeltryckt",
+            "remote_double_tap_any_side": "Enheten dubbeltryckt p\u00e5 valfri sida",
+            "remote_falling": "Enhet i fritt fall",
+            "remote_flip_180_degrees": "Enheten v\u00e4nd 180 grader",
+            "remote_flip_90_degrees": "Enheten v\u00e4nd 90 grader",
+            "remote_gyro_activated": "Enhet skakad",
+            "remote_moved": "Enheten flyttades med \"{subtype}\" upp",
+            "remote_moved_any_side": "Enheten flyttades med valfri sida upp\u00e5t",
+            "remote_rotate_from_side_1": "Enheten roterades fr\u00e5n \"sida 1\" till \"{subtype}\"",
+            "remote_rotate_from_side_2": "Enheten roterades fr\u00e5n \"sida 2\" till \"{subtype}\"",
+            "remote_rotate_from_side_3": "Enheten roterades fr\u00e5n \"sida 3\" till \"{subtype}\"",
+            "remote_rotate_from_side_4": "Enheten roterades fr\u00e5n \"sida 4\" till \"{subtype}\"",
+            "remote_rotate_from_side_5": "Enheten roterades fr\u00e5n \"sida 5\" till \"{subtype}\"",
+            "remote_rotate_from_side_6": "Enheten roterades fr\u00e5n \"sida 6\" till \"{subtype}\"",
+            "remote_turned_clockwise": "Enheten vriden medurs",
+            "remote_turned_counter_clockwise": "Enheten v\u00e4nde moturs"
+        }
+    },
+    "options": {
+        "step": {
+            "deconz_devices": {
+                "data": {
+                    "allow_clip_sensor": "Till\u00e5t deCONZ CLIP-sensorer",
+                    "allow_deconz_groups": "Till\u00e5t deCONZ ljusgrupper"
+                },
+                "description": "Konfigurera synlighet f\u00f6r deCONZ-enhetstyper",
+                "title": "deCONZ-inst\u00e4llningar"
+            }
+        }
+    }
+}

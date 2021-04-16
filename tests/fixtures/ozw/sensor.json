@@ -1,0 +1,38 @@
+{
+    "topic": "OpenZWave/1/node/36/instance/1/commandclass/113/value/1407375493578772/",
+    "payload": {
+        "Label": "Instance 1: Water",
+        "Value": {
+            "List": [
+                {
+                    "Value": 0,
+                    "Label": "Clear"
+                },
+                {
+                    "Value": 2,
+                    "Label": "Water Leak at Unknown Location"
+                }
+            ],
+            "Selected": "Clear",
+            "Selected_id": 0
+        },
+        "Units": "",
+        "Min": 0,
+        "Max": 0,
+        "Type": "List",
+        "Instance": 1,
+        "CommandClass": "COMMAND_CLASS_NOTIFICATION",
+        "Index": 5,
+        "Node": 36,
+        "Genre": "User",
+        "Help": "Water Alerts",
+        "ValueIDKey": 1407375493578772,
+        "ReadOnly": false,
+        "WriteOnly": false,
+        "ValueSet": false,
+        "ValuePolled": false,
+        "ChangeVerified": false,
+        "Event": "valueAdded",
+        "TimeStamp": 1579566891
+    }
+}

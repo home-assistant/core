@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "radius": "Radij"
+                },
+                "title": "Izpolnite podrobnosti filtra."
+            }
+        }
+    }
+}

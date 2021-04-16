@@ -1,99 +1,65 @@
 """Support for KNX/IP sensors."""
-import voluptuous as vol
+from __future__ import annotations
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_TYPE
-from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from typing import Callable, Iterable
+
+from xknx.devices import Sensor as XknxSensor
+
+from homeassistant.components.sensor import DEVICE_CLASSES, SensorEntity
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
-from . import ATTR_DISCOVER_DEVICES, DATA_KNX
-
-DEFAULT_NAME = 'KNX Sensor'
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ADDRESS): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_TYPE): cv.string,
-})
+from .const import DOMAIN
+from .knx_entity import KnxEntity
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: Callable[[Iterable[Entity]], None],
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up sensor(s) for KNX platform."""
-    if discovery_info is not None:
-        async_add_entities_discovery(hass, discovery_info, async_add_entities)
-    else:
-        async_add_entities_config(hass, config, async_add_entities)
-
-
-@callback
-def async_add_entities_discovery(hass, discovery_info, async_add_entities):
-    """Set up sensors for KNX platform configured via xknx.yaml."""
     entities = []
-    for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
-        device = hass.data[DATA_KNX].xknx.devices[device_name]
-        entities.append(KNXSensor(device))
+    for device in hass.data[DOMAIN].xknx.devices:
+        if isinstance(device, XknxSensor):
+            entities.append(KNXSensor(device))
     async_add_entities(entities)
 
 
-@callback
-def async_add_entities_config(hass, config, async_add_entities):
-    """Set up sensor for KNX platform configured within platform."""
-    import xknx
-    sensor = xknx.devices.Sensor(
-        hass.data[DATA_KNX].xknx,
-        name=config.get(CONF_NAME),
-        group_address=config.get(CONF_ADDRESS),
-        value_type=config.get(CONF_TYPE))
-    hass.data[DATA_KNX].xknx.devices.add(sensor)
-    async_add_entities([KNXSensor(sensor)])
-
-
-class KNXSensor(Entity):
+class KNXSensor(KnxEntity, SensorEntity):
     """Representation of a KNX sensor."""
 
-    def __init__(self, device):
+    def __init__(self, device: XknxSensor) -> None:
         """Initialize of a KNX sensor."""
-        self.device = device
-
-    @callback
-    def async_register_callbacks(self):
-        """Register callbacks to update hass after device was changed."""
-        async def after_update_callback(device):
-            """Call after device was updated."""
-            await self.async_update_ha_state()
-        self.device.register_device_updated_cb(after_update_callback)
-
-    async def async_added_to_hass(self):
-        """Store register state change callback."""
-        self.async_register_callbacks()
+        self._device: XknxSensor
+        super().__init__(device)
 
     @property
-    def name(self):
-        """Return the name of the KNX device."""
-        return self.device.name
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self.hass.data[DATA_KNX].connected
-
-    @property
-    def should_poll(self):
-        """No polling needed within KNX."""
-        return False
-
-    @property
-    def state(self):
+    def state(self) -> StateType:
         """Return the state of the sensor."""
-        return self.device.resolve_state()
+        return self._device.resolve_state()
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str | None:
         """Return the unit this state is expressed in."""
-        return self.device.unit_of_measurement()
+        return self._device.unit_of_measurement()
 
     @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
+    def device_class(self) -> str | None:
+        """Return the device class of the sensor."""
+        device_class = self._device.ha_device_class()
+        if device_class in DEVICE_CLASSES:
+            return device_class
         return None
+
+    @property
+    def force_update(self) -> bool:
+        """
+        Return True if state updates should be forced.
+
+        If True, a state change will be triggered anytime the state property is
+        updated, not just when the value changes.
+        """
+        return self._device.always_callback

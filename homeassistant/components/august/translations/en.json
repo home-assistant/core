@@ -1,0 +1,48 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "reauth_validate": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "Enter the password for {username}.",
+                "title": "Reauthenticate an August account"
+            },
+            "user": {
+                "data": {
+                    "login_method": "Login Method",
+                    "password": "Password",
+                    "timeout": "Timeout (seconds)",
+                    "username": "Username"
+                },
+                "description": "If the Login Method is 'email', Username is the email address. If the Login Method is 'phone', Username is the phone number in the format '+NNNNNNNNN'.",
+                "title": "Setup an August account"
+            },
+            "user_validate": {
+                "data": {
+                    "login_method": "Login Method",
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "If the Login Method is 'email', Username is the email address. If the Login Method is 'phone', Username is the phone number in the format '+NNNNNNNNN'.",
+                "title": "Setup an August account"
+            },
+            "validation": {
+                "data": {
+                    "code": "Verification code"
+                },
+                "description": "Please check your {login_method} ({username}) and enter the verification code below",
+                "title": "Two factor authentication"
+            }
+        }
+    }
+}

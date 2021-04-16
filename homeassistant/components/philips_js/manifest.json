@@ -1,10 +1,12 @@
 {
   "domain": "philips_js",
-  "name": "Philips js",
-  "documentation": "https://www.home-assistant.io/components/philips_js",
+  "name": "Philips TV",
+  "documentation": "https://www.home-assistant.io/integrations/philips_js",
   "requirements": [
-    "ha-philipsjs==0.0.8"
+    "ha-philipsjs==2.7.0"
   ],
-  "dependencies": [],
-  "codeowners": ["@elupus"]
+  "codeowners": [
+    "@elupus"
+  ],
+  "config_flow": true
 }

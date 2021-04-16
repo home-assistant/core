@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Standuert ass scho konfigur\u00e9iert"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "radius": "Radius"
+                },
+                "title": "F\u00ebllt \u00e4r Filter D\u00e9tailer aus."
+            }
+        }
+    }
+}

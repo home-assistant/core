@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "description": "Bitte gib den Hostnamen oder die IP-Adresse des Ger\u00e4ts ein."
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_on": "{entity_name} wurde zum Einschalten aufgefordert"
+        }
+    }
+}

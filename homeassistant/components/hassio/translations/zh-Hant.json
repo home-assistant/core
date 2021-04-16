@@ -1,0 +1,19 @@
+{
+    "system_health": {
+        "info": {
+            "board": "\u677f",
+            "disk_total": "\u7e3d\u78c1\u789f\u7a7a\u9593",
+            "disk_used": "\u5df2\u4f7f\u7528\u7a7a\u9593",
+            "docker_version": "Docker \u7248\u672c",
+            "healthy": "\u5065\u5eb7\u5ea6",
+            "host_os": "\u4e3b\u6a5f\u4f5c\u696d\u7cfb\u7d71",
+            "installed_addons": "\u5df2\u5b89\u88dd\u9644\u52a0\u5143\u4ef6",
+            "supervisor_api": "Supervisor API",
+            "supervisor_version": "Supervisor \u7248\u672c",
+            "supported": "\u652f\u63f4",
+            "update_channel": "\u66f4\u65b0\u983b\u9053",
+            "version_api": "\u7248\u672c API"
+        }
+    },
+    "title": "Home Assistant Supervisor"
+}

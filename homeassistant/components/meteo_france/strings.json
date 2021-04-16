@@ -1,0 +1,36 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "M\u00e9t\u00e9o-France",
+        "description": "Enter the postal code (only for France, recommended) or city name",
+        "data": {
+          "city": "City"
+        }
+      },
+      "cities": {
+        "title": "M\u00e9t\u00e9o-France",
+        "description": "Choose your city from the list",
+        "data": {
+          "city": "City"
+        }
+      }
+    },
+    "error": {
+      "empty": "No result in city search: please check the city field"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "mode": "Forecast mode"
+        }
+      }
+    }
+  }
+}

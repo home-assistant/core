@@ -1,0 +1,20 @@
+{
+    "config": {
+        "error": {
+            "token_request_failed": "Erro ao solicitar tokens da ecobee; Por favor, tente novamente."
+        },
+        "step": {
+            "authorize": {
+                "description": "Por favor, autorize este aplicativo em https://www.ecobee.com/consumerportal/index.html com c\u00f3digo PIN:\n\n{pin}\n\nEm seguida, pressione Submit.",
+                "title": "Autorizar aplicativo em ecobee.com"
+            },
+            "user": {
+                "data": {
+                    "api_key": "Chave API"
+                },
+                "description": "Por favor, insira a chave de API obtida em ecobee.com.",
+                "title": "chave da API ecobee"
+            }
+        }
+    }
+}

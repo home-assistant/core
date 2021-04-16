@@ -3,38 +3,44 @@ Read temperature information from Eddystone beacons.
 
 Your beacons must be configured to transmit UID (for identification) and TLM
 (for temperature) frames.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.eddystone_temperature/
 """
 import logging
 
+# pylint: disable=import-error
+from beacontools import BeaconScanner, EddystoneFilter, EddystoneTLMFrame
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
-    CONF_NAME, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    STATE_UNKNOWN, TEMP_CELSIUS)
+    CONF_NAME,
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_UNKNOWN,
+    TEMP_CELSIUS,
+)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_BEACONS = 'beacons'
-CONF_BT_DEVICE_ID = 'bt_device_id'
-CONF_INSTANCE = 'instance'
-CONF_NAMESPACE = 'namespace'
+CONF_BEACONS = "beacons"
+CONF_BT_DEVICE_ID = "bt_device_id"
+CONF_INSTANCE = "instance"
+CONF_NAMESPACE = "namespace"
 
-BEACON_SCHEMA = vol.Schema({
-    vol.Required(CONF_NAMESPACE): cv.string,
-    vol.Required(CONF_INSTANCE): cv.string,
-    vol.Optional(CONF_NAME): cv.string
-})
+BEACON_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAMESPACE): cv.string,
+        vol.Required(CONF_INSTANCE): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
+    }
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_BT_DEVICE_ID, default=0): cv.positive_int,
-    vol.Required(CONF_BEACONS): vol.Schema({cv.string: BEACON_SCHEMA}),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_BT_DEVICE_ID, default=0): cv.positive_int,
+        vol.Required(CONF_BEACONS): vol.Schema({cv.string: BEACON_SCHEMA}),
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -52,8 +58,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if instance is None or namespace is None:
             _LOGGER.error("Skipping %s", dev_name)
             continue
-        else:
-            devices.append(EddystoneTemp(name, namespace, instance))
+
+        devices.append(EddystoneTemp(name, namespace, instance))
 
     if devices:
         mon = Monitor(hass, devices, bt_device_id)
@@ -80,13 +86,17 @@ def get_from_conf(config, config_key, length):
     """Retrieve value from config and validate length."""
     string = config.get(config_key)
     if len(string) != length:
-        _LOGGER.error("Error in config parameter %s: Must be exactly %d "
-                      "bytes. Device will not be added", config_key, length/2)
+        _LOGGER.error(
+            "Error in configuration parameter %s: Must be exactly %d "
+            "bytes. Device will not be added",
+            config_key,
+            length / 2,
+        )
         return None
     return string
 
 
-class EddystoneTemp(Entity):
+class EddystoneTemp(SensorEntity):
     """Representation of a temperature sensor."""
 
     def __init__(self, name, namespace, instance):
@@ -133,16 +143,16 @@ class Monitor:
         def callback(bt_addr, _, packet, additional_info):
             """Handle new packets."""
             self.process_packet(
-                additional_info['namespace'], additional_info['instance'],
-                packet.temperature)
+                additional_info["namespace"],
+                additional_info["instance"],
+                packet.temperature,
+            )
 
-        from beacontools import (  # pylint: disable=import-error
-            BeaconScanner, EddystoneFilter, EddystoneTLMFrame)
-        device_filters = [EddystoneFilter(d.namespace, d.instance)
-                          for d in devices]
+        device_filters = [EddystoneFilter(d.namespace, d.instance) for d in devices]
 
         self.scanner = BeaconScanner(
-            callback, bt_device_id, device_filters, EddystoneTLMFrame)
+            callback, bt_device_id, device_filters, EddystoneTLMFrame
+        )
         self.scanning = False
 
     def start(self):
@@ -151,27 +161,29 @@ class Monitor:
             self.scanner.start()
             self.scanning = True
         else:
-            _LOGGER.debug(
-                "start() called, but scanner is already running")
+            _LOGGER.debug("start() called, but scanner is already running")
 
     def process_packet(self, namespace, instance, temperature):
         """Assign temperature to device."""
-        _LOGGER.debug("Received temperature for <%s,%s>: %d",
-                      namespace, instance, temperature)
+        _LOGGER.debug(
+            "Received temperature for <%s,%s>: %d", namespace, instance, temperature
+        )
 
         for dev in self.devices:
-            if dev.namespace == namespace and dev.instance == instance:
-                if dev.temperature != temperature:
-                    dev.temperature = temperature
-                    dev.schedule_update_ha_state()
+            if (
+                dev.namespace == namespace
+                and dev.instance == instance
+                and dev.temperature != temperature
+            ):
+                dev.temperature = temperature
+                dev.schedule_update_ha_state()
 
     def stop(self):
         """Signal runner to stop and join thread."""
         if self.scanning:
-            _LOGGER.debug("Stopping...")
+            _LOGGER.debug("Stopping")
             self.scanner.stop()
             _LOGGER.debug("Stopped")
             self.scanning = False
         else:
-            _LOGGER.debug(
-                "stop() called but scanner was not running")
+            _LOGGER.debug("stop() called but scanner was not running")

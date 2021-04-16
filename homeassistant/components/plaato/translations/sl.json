@@ -1,0 +1,13 @@
+{
+    "config": {
+        "create_entry": {
+            "default": "\u010ce \u017eelite dogodke poslati Home Assistant-u, morate v Plaato Airlock-u nastaviti funkcijo webhook. \n\n Izpolnite naslednje podatke: \n\n - URL: ` {webhook_url} ` \n - Metoda: POST \n\n Za podrobnosti glejte [dokumentacija] ( {docs_url} )."
+        },
+        "step": {
+            "user": {
+                "description": "Ali ste prepri\u010dani, da \u017eelite nastaviti Plaato Webhook?",
+                "title": "Nastavite Plaato Webhook"
+            }
+        }
+    }
+}

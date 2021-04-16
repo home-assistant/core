@@ -3,10 +3,10 @@ from datetime import datetime
 import logging
 import time
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import DEVICE_CLASS_TIMESTAMP
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 
 from . import REPETIER_API, SENSOR_TYPES, UPDATE_SIGNAL
 
@@ -19,28 +19,26 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     sensor_map = {
-        'bed_temperature': RepetierTempSensor,
-        'extruder_temperature': RepetierTempSensor,
-        'chamber_temperature': RepetierTempSensor,
-        'current_state': RepetierSensor,
-        'current_job': RepetierJobSensor,
-        'job_end': RepetierJobEndSensor,
-        'job_start': RepetierJobStartSensor,
+        "bed_temperature": RepetierTempSensor,
+        "extruder_temperature": RepetierTempSensor,
+        "chamber_temperature": RepetierTempSensor,
+        "current_state": RepetierSensor,
+        "current_job": RepetierJobSensor,
+        "job_end": RepetierJobEndSensor,
+        "job_start": RepetierJobStartSensor,
     }
 
     entities = []
     for info in discovery_info:
-        printer_name = info['printer_name']
+        printer_name = info["printer_name"]
         api = hass.data[REPETIER_API][printer_name]
-        printer_id = info['printer_id']
-        sensor_type = info['sensor_type']
-        temp_id = info['temp_id']
-        name = info['name']
+        printer_id = info["printer_id"]
+        sensor_type = info["sensor_type"]
+        temp_id = info["temp_id"]
+        name = f"{info['name']}{SENSOR_TYPES[sensor_type][3]}"
         if temp_id is not None:
-            name = '{}{}{}'.format(
-                name, SENSOR_TYPES[sensor_type][3], temp_id)
-        else:
-            name = '{}{}'.format(name, SENSOR_TYPES[sensor_type][3])
+            _LOGGER.debug("%s Temp_id: %s", sensor_type, temp_id)
+            name = f"{name}{temp_id}"
         sensor_class = sensor_map[sensor_type]
         entity = sensor_class(api, temp_id, name, printer_id, sensor_type)
         entities.append(entity)
@@ -48,7 +46,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(entities, True)
 
 
-class RepetierSensor(Entity):
+class RepetierSensor(SensorEntity):
     """Class to create and populate a Repetier Sensor."""
 
     def __init__(self, api, temp_id, name, printer_id, sensor_type):
@@ -68,7 +66,7 @@ class RepetierSensor(Entity):
         return self._available
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return sensor attributes."""
         return self._attributes
 
@@ -104,17 +102,17 @@ class RepetierSensor(Entity):
 
     async def async_added_to_hass(self):
         """Connect update callbacks."""
-        async_dispatcher_connect(
-            self.hass, UPDATE_SIGNAL, self.update_callback)
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, UPDATE_SIGNAL, self.update_callback)
+        )
 
     def _get_data(self):
         """Return new data from the api cache."""
-        data = self._api.get_data(
-            self._printer_id, self._sensor_type, self._temp_id)
+        data = self._api.get_data(self._printer_id, self._sensor_type, self._temp_id)
         if data is None:
             _LOGGER.debug(
-                "Data not found for %s and %s",
-                self._sensor_type, self._temp_id)
+                "Data not found for %s and %s", self._sensor_type, self._temp_id
+            )
             self._available = False
             return None
         self._available = True
@@ -125,7 +123,7 @@ class RepetierSensor(Entity):
         data = self._get_data()
         if data is None:
             return
-        state = data.pop('state')
+        state = data.pop("state")
         _LOGGER.debug("Printer %s State %s", self._name, state)
         self._attributes.update(data)
         self._state = state
@@ -146,11 +144,9 @@ class RepetierTempSensor(RepetierSensor):
         data = self._get_data()
         if data is None:
             return
-        state = data.pop('state')
-        temp_set = data['temp_set']
-        _LOGGER.debug(
-            "Printer %s Setpoint: %s, Temp: %s",
-            self._name, temp_set, state)
+        state = data.pop("state")
+        temp_set = data["temp_set"]
+        _LOGGER.debug("Printer %s Setpoint: %s, Temp: %s", self._name, temp_set, state)
         self._attributes.update(data)
         self._state = state
 
@@ -179,17 +175,19 @@ class RepetierJobEndSensor(RepetierSensor):
         data = self._get_data()
         if data is None:
             return
-        job_name = data['job_name']
-        start = data['start']
-        print_time = data['print_time']
-        from_start = data['from_start']
+        job_name = data["job_name"]
+        start = data["start"]
+        print_time = data["print_time"]
+        from_start = data["from_start"]
         time_end = start + round(print_time, 0)
         self._state = datetime.utcfromtimestamp(time_end).isoformat()
         remaining = print_time - from_start
         remaining_secs = int(round(remaining, 0))
         _LOGGER.debug(
             "Job %s remaining %s",
-            job_name, time.strftime('%H:%M:%S', time.gmtime(remaining_secs)))
+            job_name,
+            time.strftime("%H:%M:%S", time.gmtime(remaining_secs)),
+        )
 
 
 class RepetierJobStartSensor(RepetierSensor):
@@ -205,11 +203,13 @@ class RepetierJobStartSensor(RepetierSensor):
         data = self._get_data()
         if data is None:
             return
-        job_name = data['job_name']
-        start = data['start']
-        from_start = data['from_start']
+        job_name = data["job_name"]
+        start = data["start"]
+        from_start = data["from_start"]
         self._state = datetime.utcfromtimestamp(start).isoformat()
         elapsed_secs = int(round(from_start, 0))
         _LOGGER.debug(
             "Job %s elapsed %s",
-            job_name, time.strftime('%H:%M:%S', time.gmtime(elapsed_secs)))
+            job_name,
+            time.strftime("%H:%M:%S", time.gmtime(elapsed_secs)),
+        )

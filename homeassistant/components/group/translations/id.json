@@ -1,0 +1,17 @@
+{
+    "state": {
+        "_": {
+            "closed": "Tertutup",
+            "home": "Di Rumah",
+            "locked": "Terkunci",
+            "not_home": "Keluar",
+            "off": "Mati",
+            "ok": "Oke",
+            "on": "Nyala",
+            "open": "Terbuka",
+            "problem": "Bermasalah",
+            "unlocked": "Terbuka"
+        }
+    },
+    "title": "Grup"
+}

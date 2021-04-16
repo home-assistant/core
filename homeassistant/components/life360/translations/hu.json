@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "create_entry": {
+            "default": "A speci\u00e1lis be\u00e1ll\u00edt\u00e1sok megad\u00e1s\u00e1hoz l\u00e1sd: [Life360 dokument\u00e1ci\u00f3]({docs_url})."
+        },
+        "error": {
+            "already_configured": "A fi\u00f3k m\u00e1r konfigur\u00e1lva van",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "invalid_username": "\u00c9rv\u00e9nytelen felhaszn\u00e1l\u00f3n\u00e9v",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Jelsz\u00f3",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                }
+            }
+        }
+    }
+}

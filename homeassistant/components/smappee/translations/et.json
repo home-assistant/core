@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_device": "Seade on juba h\u00e4\u00e4lestatud",
+            "already_configured_local_device": "Kohalikud seadmed on juba seadistatud. Enne pilveseadme seadistamist eemaldage need.",
+            "authorize_url_timeout": "Autentimise URL-i loomise ajal\u00f5pp.",
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_mdns": "Seade ei toeta Smappee'ga sidumist.",
+            "missing_configuration": "Osis pole seadistatud. Palun vaata dokumentatsiooni.",
+            "no_url_available": "URL pole saadaval. Rohkem teavet [check the help section]({docs_url})"
+        },
+        "flow_title": "",
+        "step": {
+            "environment": {
+                "data": {
+                    "environment": "Keskkond"
+                },
+                "description": "Seadista oma Smappee Home Assistant-iga sidumiseks."
+            },
+            "local": {
+                "data": {
+                    "host": ""
+                },
+                "description": "Smappee kohaliku sidumise algatamiseks sisesta hostinimi"
+            },
+            "pick_implementation": {
+                "title": "Vali tuvastusmeetod"
+            },
+            "zeroconf_confirm": {
+                "description": "Kas soovid lisada Home Assistanti Smappee seadme seerianumbriga \" {serial_number} \"?",
+                "title": "Avastatud Smappee seade"
+            }
+        }
+    }
+}

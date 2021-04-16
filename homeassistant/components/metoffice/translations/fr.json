@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "cannot_connect": "Echec de connexion",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Cl\u00e9 API Met Office DataPoint",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude"
+                },
+                "description": "La latitude et la longitude seront utilis\u00e9es pour trouver la station m\u00e9t\u00e9o la plus proche.",
+                "title": "Connectez-vous au UK Met Office"
+            }
+        }
+    }
+}

@@ -1,44 +1,33 @@
-"""Support for the Hive sensors."""
-from homeassistant.const import TEMP_CELSIUS
-from homeassistant.helpers.entity import Entity
+"""Support for the Hive sesnors."""
 
-from . import DATA_HIVE, DOMAIN
+from datetime import timedelta
 
-FRIENDLY_NAMES = {
-    'Hub_OnlineStatus': 'Hive Hub Status',
-    'Hive_OutsideTemperature': 'Outside Temperature',
+from homeassistant.components.sensor import DEVICE_CLASS_BATTERY, SensorEntity
+
+from . import HiveEntity
+from .const import DOMAIN
+
+PARALLEL_UPDATES = 0
+SCAN_INTERVAL = timedelta(seconds=15)
+DEVICETYPE = {
+    "Battery": {"unit": " % ", "type": DEVICE_CLASS_BATTERY},
 }
 
-DEVICETYPE_ICONS = {
-    'Hub_OnlineStatus': 'mdi:switch',
-    'Hive_OutsideTemperature': 'mdi:thermometer',
-}
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up Hive thermostat based on a config entry."""
+
+    hive = hass.data[DOMAIN][entry.entry_id]
+    devices = hive.session.deviceList.get("sensor")
+    entities = []
+    if devices:
+        for dev in devices:
+            entities.append(HiveSensorEntity(hive, dev))
+    async_add_entities(entities, True)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up Hive sensor devices."""
-    if discovery_info is None:
-        return
-    session = hass.data.get(DATA_HIVE)
-
-    if (discovery_info["HA_DeviceType"] == "Hub_OnlineStatus" or
-            discovery_info["HA_DeviceType"] == "Hive_OutsideTemperature"):
-        add_entities([HiveSensorEntity(session, discovery_info)])
-
-
-class HiveSensorEntity(Entity):
+class HiveSensorEntity(HiveEntity, SensorEntity):
     """Hive Sensor Entity."""
-
-    def __init__(self, hivesession, hivedevice):
-        """Initialize the sensor."""
-        self.node_id = hivedevice["Hive_NodeID"]
-        self.device_type = hivedevice["HA_DeviceType"]
-        self.node_device_type = hivedevice["Hive_DeviceType"]
-        self.session = hivesession
-        self.data_updatesource = '{}.{}'.format(
-            self.device_type, self.node_id)
-        self._unique_id = '{}-{}'.format(self.node_id, self.device_type)
-        self.session.entities.append(self)
 
     @property
     def unique_id(self):
@@ -49,43 +38,40 @@ class HiveSensorEntity(Entity):
     def device_info(self):
         """Return device information."""
         return {
-            'identifiers': {
-                (DOMAIN, self.unique_id)
-            },
-            'name': self.name
+            "identifiers": {(DOMAIN, self.device["device_id"])},
+            "name": self.device["device_name"],
+            "model": self.device["deviceData"]["model"],
+            "manufacturer": self.device["deviceData"]["manufacturer"],
+            "sw_version": self.device["deviceData"]["version"],
+            "via_device": (DOMAIN, self.device["parentDevice"]),
         }
 
-    def handle_update(self, updatesource):
-        """Handle the new update request."""
-        if '{}.{}'.format(self.device_type, self.node_id) not in updatesource:
-            self.schedule_update_ha_state()
+    @property
+    def available(self):
+        """Return if sensor is available."""
+        return self.device.get("deviceData", {}).get("online")
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return FRIENDLY_NAMES.get(self.device_type)
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        if self.device_type == "Hub_OnlineStatus":
-            return self.session.sensor.hub_online_status(self.node_id)
-        if self.device_type == "Hive_OutsideTemperature":
-            return self.session.weather.temperature()
+    def device_class(self):
+        """Device class of the entity."""
+        return DEVICETYPE[self.device["hiveType"]].get("type")
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        if self.device_type == "Hive_OutsideTemperature":
-            return TEMP_CELSIUS
+        return DEVICETYPE[self.device["hiveType"]].get("unit")
 
     @property
-    def icon(self):
-        """Return the icon to use."""
-        return DEVICETYPE_ICONS.get(self.device_type)
+    def name(self):
+        """Return the name of the sensor."""
+        return self.device["haName"]
 
-    def update(self):
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self.device["status"]["state"]
+
+    async def async_update(self):
         """Update all Node data from Hive."""
-        if self.session.core.update_data(self.node_id):
-            for entity in self.session.entities:
-                entity.handle_update(self.data_updatesource)
+        await self.hive.session.updateData(self.device)
+        self.device = await self.hive.sensor.getSensor(self.device)

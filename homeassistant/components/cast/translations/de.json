@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Keine Ger\u00e4te im Netzwerk gefunden.",
+            "single_instance_allowed": "Bereits konfiguriert. Es ist nur eine Konfiguration m\u00f6glich."
+        },
+        "error": {
+            "invalid_known_hosts": "Bekannte Hosts m\u00fcssen eine durch Kommata getrennte Liste von Hosts sein."
+        },
+        "step": {
+            "config": {
+                "data": {
+                    "known_hosts": "Optionale Liste bekannter Hosts, wenn die mDNS-Erkennung nicht funktioniert."
+                },
+                "description": "Bitte die Google Cast-Konfiguration eingeben.",
+                "title": "Google Cast"
+            },
+            "confirm": {
+                "description": "M\u00f6chtest du Google Cast einrichten?"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_known_hosts": "Bekannte Hosts m\u00fcssen eine durch Kommata getrennte Liste von Hosts sein."
+        },
+        "step": {
+            "options": {
+                "data": {
+                    "known_hosts": "Optionale Liste bekannter Hosts, wenn die mDNS-Erkennung nicht funktioniert."
+                },
+                "description": "Bitte die Google Cast-Konfiguration eingeben."
+            }
+        }
+    }
+}

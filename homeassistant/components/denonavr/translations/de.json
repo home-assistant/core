@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
+            "cannot_connect": "Verbindung fehlgeschlagen. Bitte versuchen Sie es noch einmal. Trennen Sie ggf. Strom- und Ethernetkabel und verbinden Sie diese erneut."
+        },
+        "step": {
+            "select": {
+                "data": {
+                    "select_host": "IP-Adresse des Empf\u00e4ngers"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "IP-Adresse"
+                }
+            }
+        }
+    }
+}

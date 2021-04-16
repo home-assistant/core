@@ -1,21 +1,28 @@
 # Describes the format for available Blink services
 
 blink_update:
-    description: Force a refresh.
+  description: Force a refresh.
 
 trigger_camera:
-    description: Request named camera to take new image.
-    fields:
-        name:
-            description: Name of camera to take new image.
-            example: 'Living Room'
+  description: Request camera to take new image.
+  fields:
+    entity_id:
+      description: Name(s) of camera entities to take new image.
+      example: "camera.living_room_camera"
 
 save_video:
-    description: Save last recorded video clip to local file.
-    fields:
-        name:
-            description: Name of camera to grab video from.
-            example: 'Living Room'
-        filename:
-            description: Filename to writable path (directory may need to be included in whitelist_dirs in config)
-            example: '/tmp/video.mp4'
+  description: Save last recorded video clip to local file.
+  fields:
+    name:
+      description: Name of camera to grab video from.
+      example: "Living Room"
+    filename:
+      description: Filename to writable path (directory may need to be included in whitelist_dirs in config)
+      example: "/tmp/video.mp4"
+
+send_pin:
+  description: Send a new PIN to blink for 2FA.
+  fields:
+    pin:
+      description: PIN received from blink. Leave empty if you only received a verification email.
+      example: "abc123"

@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "already_in_progress": "Konfiguracja jest ju\u017c w toku",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
+        },
+        "error": {
+            "few": "kilka",
+            "many": "wiele",
+            "one": "jeden",
+            "other": "inne"
+        },
+        "flow_title": "Arcam FMJ na {host}",
+        "step": {
+            "confirm": {
+                "description": "Czy chcesz doda\u0107 Arcam FMJ na \"{host}\" do Home Assistanta?"
+            },
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "port": "Port"
+                },
+                "description": "Wpisz nazw\u0119 hosta lub adres IP urz\u0105dzenia."
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_on": "{entity_name} zostanie poproszony o w\u0142\u0105czenie"
+        }
+    }
+}

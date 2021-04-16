@@ -1,0 +1,21 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u8fde\u63a5\u5931\u8d25"
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "username": "\u7528\u6237\u540d"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "onvif_devices": {
+                "title": "ONVIF \u8bbe\u5907\u9009\u9879"
+            }
+        }
+    }
+}

@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "already_in_progress": "A konfigur\u00e1ci\u00f3 m\u00e1r folyamatban van.",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "IP c\u00edm",
+                    "port": "Port"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "options_binary": {
+                "data": {
+                    "name": "N\u00e9v (nem k\u00f6telez\u0151)"
+                }
+            },
+            "options_digital": {
+                "data": {
+                    "name": "N\u00e9v (nem k\u00f6telez\u0151)",
+                    "poll_interval": "Lek\u00e9rdez\u00e9si id\u0151k\u00f6z (perc) (opcion\u00e1lis)",
+                    "type": "\u00c9rz\u00e9kel\u0151 t\u00edpusa"
+                }
+            },
+            "options_switch": {
+                "data": {
+                    "name": "N\u00e9v (nem k\u00f6telez\u0151)"
+                }
+            }
+        }
+    }
+}

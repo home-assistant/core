@@ -1,0 +1,19 @@
+{
+    "system_health": {
+        "info": {
+            "board": "Seade",
+            "disk_total": "Kettaruum kokku",
+            "disk_used": "Kasutatud kettaruum",
+            "docker_version": "Dockeri versioon",
+            "healthy": "Korras",
+            "host_os": "Host-i operatsioonis\u00fcsteem",
+            "installed_addons": "Paigaldatud lisandmoodulid",
+            "supervisor_api": "Superviisori API",
+            "supervisor_version": "Superviisori j\u00e4rk",
+            "supported": "Toetatud",
+            "update_channel": "V\u00e4rskenduskanal",
+            "version_api": "API versioon"
+        }
+    },
+    "title": "Home Assistant Supervisor"
+}

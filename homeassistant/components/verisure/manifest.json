@@ -1,11 +1,9 @@
 {
   "domain": "verisure",
   "name": "Verisure",
-  "documentation": "https://www.home-assistant.io/components/verisure",
-  "requirements": [
-    "jsonpath==0.75",
-    "vsure==1.5.2"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "documentation": "https://www.home-assistant.io/integrations/verisure",
+  "requirements": ["vsure==1.7.3"],
+  "codeowners": ["@frenck"],
+  "config_flow": true,
+  "dhcp": [{ "macaddress": "0023C1*" }]
 }

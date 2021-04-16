@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "unauthorized": "Parring nektet, sjekk enheten for autorisasjonsforesp\u00f8rsel"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "E-post",
+                    "host": "Vert",
+                    "port": "Port"
+                },
+                "title": "Koble til enheten"
+            }
+        }
+    }
+}

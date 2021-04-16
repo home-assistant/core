@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "A szolg\u00e1ltat\u00e1s m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API kulcs",
+                    "latitude": "Sz\u00e9less\u00e9g",
+                    "longitude": "Hossz\u00fas\u00e1g"
+                },
+                "title": "Csatlakoz\u00e1s a UK Met Office-hoz"
+            }
+        }
+    }
+}

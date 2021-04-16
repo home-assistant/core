@@ -1,0 +1,71 @@
+{
+    "config": {
+        "abort": {
+            "accessory_not_found_error": "Nie mo\u017cna rozpocz\u0105\u0107 parowania, poniewa\u017c nie znaleziono urz\u0105dzenia",
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "already_in_progress": "Konfiguracja jest ju\u017c w toku",
+            "already_paired": "To akcesorium jest ju\u017c sparowane z innym urz\u0105dzeniem. Zresetuj akcesorium i spr\u00f3buj ponownie.",
+            "ignored_model": "Obs\u0142uga HomeKit dla tego modelu jest zablokowana, poniewa\u017c dost\u0119pna jest pe\u0142niejsza integracja natywna",
+            "invalid_config_entry": "To urz\u0105dzenie jest wy\u015bwietlane jako gotowe do sparowania, ale istnieje ju\u017c konfliktowy wpis konfiguracyjny dla niego w Home Assistant, kt\u00f3ry musi zosta\u0107 najpierw usuni\u0119ty.",
+            "invalid_properties": "Urz\u0105dzenie zg\u0142osi\u0142o nieprawid\u0142owe w\u0142a\u015bciwo\u015bci",
+            "no_devices": "Nie znaleziono niesparowanych urz\u0105dze\u0144"
+        },
+        "error": {
+            "authentication_error": "Niepoprawny kod parowania HomeKit. Sprawd\u017a go i spr\u00f3buj ponownie.",
+            "max_peers_error": "Urz\u0105dzenie odm\u00f3wi\u0142o parowania, poniewa\u017c nie ma wolnej pami\u0119ci parowania",
+            "pairing_failed": "Wyst\u0105pi\u0142 nieobs\u0142ugiwany b\u0142\u0105d podczas pr\u00f3by sparowania z tym urz\u0105dzeniem. Mo\u017ce to by\u0107 tymczasowa awaria lub urz\u0105dzenie mo\u017ce nie by\u0107 obecnie obs\u0142ugiwane.",
+            "unable_to_pair": "Nie mo\u017cna sparowa\u0107, spr\u00f3buj ponownie",
+            "unknown_error": "Urz\u0105dzenie zg\u0142osi\u0142o nieznany b\u0142\u0105d. Parowanie nie powiod\u0142o si\u0119."
+        },
+        "flow_title": "{name} poprzez akcesorium HomeKit",
+        "step": {
+            "busy_error": {
+                "description": "Przerwij parowanie we wszystkich kontrolerach lub spr\u00f3buj ponownie uruchomi\u0107 urz\u0105dzenie, a nast\u0119pnie wzn\u00f3w parowanie",
+                "title": "Urz\u0105dzenie jest ju\u017c sparowane z innym kontrolerem"
+            },
+            "max_tries_error": {
+                "description": "Urz\u0105dzenie otrzyma\u0142o ponad 100 nieudanych pr\u00f3b uwierzytelnienia. Spr\u00f3buj ponownie uruchomi\u0107 urz\u0105dzenie, a nast\u0119pnie wzn\u00f3w parowanie.",
+                "title": "Przekroczono maksymaln\u0105 liczb\u0119 pr\u00f3b uwierzytelnienia"
+            },
+            "pair": {
+                "data": {
+                    "pairing_code": "Kod parowania"
+                },
+                "description": "Kontroler HomeKit komunikuje si\u0119 z {name} poprzez sie\u0107 lokaln\u0105 za pomoc\u0105 bezpiecznego, szyfrowanego po\u0142\u0105czenia bez oddzielnego kontrolera HomeKit lub iCloud. Wprowad\u017a kod parowania (w formacie XXX-XX-XXX), aby u\u017cy\u0107 tego akcesorium. Ten kod zazwyczaj znajduje si\u0119 na samym urz\u0105dzeniu lub w jego opakowaniu.",
+                "title": "Sparuj z urz\u0105dzeniem poprzez akcesorium HomeKit"
+            },
+            "protocol_error": {
+                "description": "Urz\u0105dzenie mo\u017ce nie by\u0107 w trybie parowania i mo\u017ce wymaga\u0107 fizycznego lub wirtualnego naci\u015bni\u0119cia przycisku. Upewnij si\u0119, \u017ce urz\u0105dzenie jest w trybie parowania lub spr\u00f3buj je ponownie uruchomi\u0107, a nast\u0119pnie wzn\u00f3w parowanie.",
+                "title": "B\u0142\u0105d komunikacji z akcesorium"
+            },
+            "user": {
+                "data": {
+                    "device": "Urz\u0105dzenie"
+                },
+                "description": "Kontroler HomeKit komunikuje si\u0119 poprzez sie\u0107 lokaln\u0105 za pomoc\u0105 bezpiecznego, szyfrowanego po\u0142\u0105czenia bez oddzielnego kontrolera HomeKit lub iCloud. Wybierz urz\u0105dzenie, kt\u00f3re chcesz sparowa\u0107:",
+                "title": "Wyb\u00f3r urz\u0105dzenia"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button1": "przycisk 1",
+            "button10": "przycisk 10",
+            "button2": "przycisk 2",
+            "button3": "przycisk 3",
+            "button4": "przycisk 4",
+            "button5": "przycisk 5",
+            "button6": "przycisk 6",
+            "button7": "przycisk 7",
+            "button8": "przycisk 8",
+            "button9": "przycisk 9",
+            "doorbell": "dzwonek do drzwi"
+        },
+        "trigger_type": {
+            "double_press": "przycisk \"{subtype}\" zostanie naci\u015bni\u0119ty dwukrotnie",
+            "long_press": "przycisk \"{subtype}\" zostanie naci\u015bni\u0119ty i przytrzymany",
+            "single_press": "przycisk \"{subtype}\" zostanie naci\u015bni\u0119ty"
+        }
+    },
+    "title": "Kontroler HomeKit"
+}

@@ -1,0 +1,32 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Gateway ya configurado",
+            "cannot_connect": "No se pudo conectar",
+            "id_exists": "El ID del Gateway ya existe"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "device": "Ruta o URL",
+                    "id": "ID",
+                    "name": "Nombre"
+                },
+                "title": "Gateway OpenTherm"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "floor_temperature": "Temperatura del suelo",
+                    "precision": "Precisi\u00f3n",
+                    "read_precision": "Leer precisi\u00f3n",
+                    "set_precision": "Establecer precisi\u00f3n"
+                },
+                "description": "Opciones para OpenTherm Gateway"
+            }
+        }
+    }
+}

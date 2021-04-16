@@ -1,26 +1,28 @@
 """Merging of policies."""
-from typing import (  # noqa: F401
-    cast, Dict, List, Set)
+from __future__ import annotations
 
-from .types import PolicyType, CategoryType
+from typing import cast
+
+from .types import CategoryType, PolicyType
 
 
-def merge_policies(policies: List[PolicyType]) -> PolicyType:
+def merge_policies(policies: list[PolicyType]) -> PolicyType:
     """Merge policies."""
-    new_policy = {}  # type: Dict[str, CategoryType]
-    seen = set()  # type: Set[str]
+    new_policy: dict[str, CategoryType] = {}
+    seen: set[str] = set()
     for policy in policies:
         for category in policy:
             if category in seen:
                 continue
             seen.add(category)
-            new_policy[category] = _merge_policies([
-                policy.get(category) for policy in policies])
+            new_policy[category] = _merge_policies(
+                [policy.get(category) for policy in policies]
+            )
     cast(PolicyType, new_policy)
     return new_policy
 
 
-def _merge_policies(sources: List[CategoryType]) -> CategoryType:
+def _merge_policies(sources: list[CategoryType]) -> CategoryType:
     """Merge a policy."""
     # When merging policies, the most permissive wins.
     # This means we order it like this:
@@ -33,8 +35,8 @@ def _merge_policies(sources: List[CategoryType]) -> CategoryType:
     # If there are multiple sources with a dict as policy, we recursively
     # merge each key in the source.
 
-    policy = None  # type: CategoryType
-    seen = set()  # type: Set[str]
+    policy: CategoryType = None
+    seen: set[str] = set()
     for source in sources:
         if source is None:
             continue

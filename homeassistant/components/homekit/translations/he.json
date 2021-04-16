@@ -1,0 +1,20 @@
+{
+    "options": {
+        "step": {
+            "include_exclude": {
+                "data": {
+                    "mode": "\u05de\u05e6\u05d1"
+                },
+                "title": "\u05d1\u05d7\u05e8 \u05d9\u05e9\u05d5\u05d9\u05d5\u05ea \u05e9\u05d9\u05d9\u05db\u05dc\u05dc\u05d5"
+            },
+            "init": {
+                "data": {
+                    "mode": "\u05de\u05e6\u05d1"
+                }
+            },
+            "yaml": {
+                "description": "\u05d9\u05e9\u05d5\u05ea \u05d6\u05d5 \u05e0\u05e9\u05dc\u05d8\u05ea \u05d1\u05d0\u05de\u05e6\u05e2\u05d5\u05ea YAML"
+            }
+        }
+    }
+}

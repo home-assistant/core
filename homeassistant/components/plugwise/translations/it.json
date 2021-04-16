@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il servizio \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida",
+            "unknown": "Errore imprevisto"
+        },
+        "flow_title": "Smile: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "flow_type": "Tipo di connessione"
+                },
+                "description": "Prodotto:",
+                "title": "Tipo di Plugwise"
+            },
+            "user_gateway": {
+                "data": {
+                    "host": "Indirizzo IP",
+                    "password": "ID Smile",
+                    "port": "Porta",
+                    "username": "Nome utente Smile"
+                },
+                "description": "Si prega di inserire",
+                "title": "Connettiti allo Smile"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Intervallo di scansione (secondi)"
+                },
+                "description": "Regolare le opzioni Plugwise"
+            }
+        }
+    }
+}

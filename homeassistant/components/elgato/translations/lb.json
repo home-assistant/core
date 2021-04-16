@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
+            "cannot_connect": "Feeler beim verbannen"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen"
+        },
+        "flow_title": "Elgato Key Light: {serial_number}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "description": "\u00c4ren Elgator Key Light als Integratioun mam Home Assistant ariichten."
+            },
+            "zeroconf_confirm": {
+                "description": "W\u00ebllt dir den Elgato Key Light mat der Seriennummer  `{serial_number}` am Home Assistant dob\u00e4isetzen?",
+                "title": "Entdeckten Elgato Key Light Apparat"
+            }
+        }
+    }
+}

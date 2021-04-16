@@ -2,36 +2,37 @@
 from datetime import timedelta
 import logging
 
+import socialbladeclient
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-CHANNEL_ID = 'channel_id'
+CHANNEL_ID = "channel_id"
 
 DEFAULT_NAME = "Social Blade"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(hours=2)
 
-SUBSCRIBERS = 'subscribers'
+SUBSCRIBERS = "subscribers"
 
-TOTAL_VIEWS = 'total_views'
+TOTAL_VIEWS = "total_views"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CHANNEL_ID): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CHANNEL_ID): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Social Blade sensor."""
-    social_blade = SocialBladeSensor(
-        config[CHANNEL_ID], config[CONF_NAME])
+    social_blade = SocialBladeSensor(config[CHANNEL_ID], config[CONF_NAME])
 
     social_blade.update()
     if social_blade.valid_channel_id is False:
@@ -40,7 +41,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([social_blade])
 
 
-class SocialBladeSensor(Entity):
+class SocialBladeSensor(SensorEntity):
     """Representation of a Social Blade Sensor."""
 
     def __init__(self, case, name):
@@ -62,7 +63,7 @@ class SocialBladeSensor(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self._attributes:
             return self._attributes
@@ -70,7 +71,7 @@ class SocialBladeSensor(Entity):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from Social Blade."""
-        import socialbladeclient
+
         try:
             data = socialbladeclient.get_data(self.channel_id)
             self._attributes = {TOTAL_VIEWS: data[TOTAL_VIEWS]}

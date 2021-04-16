@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dieser Vilfo Router ist bereits konfiguriert."
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung. Bitte \u00fcberpr\u00fcfe den Zugriffstoken und versuche es erneut.",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Zugriffstoken",
+                    "host": "Host"
+                },
+                "description": "Richten Sie die Vilfo Router-Integration ein. Sie ben\u00f6tigen Ihren Vilfo Router-Hostnamen / Ihre IP-Adresse und ein API-Zugriffstoken. Weitere Informationen zu dieser Integration und wie Sie diese Details erhalten, finden Sie unter: https://www.home-assistant.io/integrations/vilfo",
+                "title": "Stellen Sie eine Verbindung zum Vilfo Router her"
+            }
+        }
+    }
+}

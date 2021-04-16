@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "invalid_sensor": "Sensor n\u00e3o dispon\u00edvel ou inv\u00e1lido"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "show_on_map": "Mostrar no mapa",
+                    "station_id": "ID do Sensor Luftdaten"
+                },
+                "title": "Definir Luftdaten"
+            }
+        }
+    }
+}

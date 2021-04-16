@@ -1,0 +1,53 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Id\u0151t\u00fall\u00e9p\u00e9s a hiteles\u00edt\u00e9si URL gener\u00e1l\u00e1sa sor\u00e1n.",
+            "missing_configuration": "A komponens nincs konfigur\u00e1lva. K\u00e9rlek, k\u00f6vesd a dokument\u00e1ci\u00f3t.",
+            "no_url_available": "Nincs el\u00e9rhet\u0151 URL. A hib\u00e1r\u00f3l tov\u00e1bbi inform\u00e1ci\u00f3t [a s\u00fag\u00f3ban]({docs_url}) tal\u00e1lsz.",
+            "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges."
+        },
+        "create_entry": {
+            "default": "Sikeres hiteles\u00edt\u00e9s"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "V\u00e1lassz hiteles\u00edt\u00e9si m\u00f3dszert"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "away": "t\u00e1vol"
+        },
+        "trigger_type": {
+            "alarm_started": "{entity_name} riaszt\u00e1st \u00e9szlelt",
+            "animal": "{entity_name} \u00e9szlelt egy \u00e1llatot",
+            "cancel_set_point": "{entity_name} folytatta \u00fctemez\u00e9s\u00e9t",
+            "human": "{entity_name} embert \u00e9szlelt",
+            "movement": "{entity_name} mozg\u00e1st \u00e9szlelt",
+            "outdoor": "{entity_name} k\u00fclt\u00e9ri esem\u00e9nyt \u00e9szlelt",
+            "person": "{entity_name} szem\u00e9lyt \u00e9szlelt",
+            "person_away": "{entity_name} \u00e9szlelte, hogy egy szem\u00e9ly t\u00e1vozott",
+            "set_point": "A(z) {entity_name} c\u00e9lh\u0151m\u00e9rs\u00e9klet manu\u00e1lisan lett be\u00e1ll\u00edtva",
+            "therm_mode": "{entity_name} \u00e1tv\u00e1ltott erre: \"{subtype}\"",
+            "turned_off": "{entity_name} ki lett kapcsolva",
+            "turned_on": "{entity_name} be lett kapcsolva",
+            "vehicle": "{entity_name} j\u00e1rm\u0171vet \u00e9szlelt"
+        }
+    },
+    "options": {
+        "step": {
+            "public_weather": {
+                "data": {
+                    "area_name": "A ter\u00fclet neve"
+                }
+            },
+            "public_weather_areas": {
+                "data": {
+                    "new_area": "Ter\u00fclet neve",
+                    "weather_areas": "Id\u0151j\u00e1r\u00e1si ter\u00fcletek"
+                }
+            }
+        }
+    }
+}

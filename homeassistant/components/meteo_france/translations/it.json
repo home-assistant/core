@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La posizione \u00e8 gi\u00e0 configurata",
+            "unknown": "Errore imprevisto"
+        },
+        "error": {
+            "empty": "Nessun risultato nella ricerca della citt\u00e0: si prega di controllare il campo citt\u00e0"
+        },
+        "step": {
+            "cities": {
+                "data": {
+                    "city": "Citt\u00e0"
+                },
+                "description": "Scegli la tua citt\u00e0 dall'elenco",
+                "title": "M\u00e9t\u00e9o-France"
+            },
+            "user": {
+                "data": {
+                    "city": "Citt\u00e0"
+                },
+                "description": "Inserisci il codice postale (solo per la Francia, consigliato) o il nome della citt\u00e0",
+                "title": "M\u00e9t\u00e9o-France"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "mode": "Modalit\u00e0 previsione"
+                }
+            }
+        }
+    }
+}

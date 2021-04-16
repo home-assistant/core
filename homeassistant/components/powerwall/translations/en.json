@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error",
+            "wrong_version": "Your powerwall uses a software version that is not supported. Please consider upgrading or reporting this issue so it can be resolved."
+        },
+        "flow_title": "Tesla Powerwall ({ip_address})",
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP Address",
+                    "password": "Password"
+                },
+                "description": "The password is usually the last 5 characters of the serial number for Backup Gateway and can be found in the Tesla app or the last 5 characters of the password found inside the door for Backup Gateway 2.",
+                "title": "Connect to the powerwall"
+            }
+        }
+    }
+}

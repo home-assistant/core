@@ -1,0 +1,75 @@
+{
+    "config": {
+        "abort": {
+            "port_name_in_use": "Une passerelle avec le m\u00eame nom ou port est d\u00e9j\u00e0 configur\u00e9e."
+        },
+        "step": {
+            "accessory_mode": {
+                "data": {
+                    "entity_id": "Entit\u00e9"
+                },
+                "description": "Choisissez l'entit\u00e9 \u00e0 inclure. En mode accessoire, une seule entit\u00e9 est incluse.",
+                "title": "S\u00e9lectionnez l'entit\u00e9 \u00e0 inclure"
+            },
+            "bridge_mode": {
+                "data": {
+                    "include_domains": "Domaines \u00e0 inclure"
+                },
+                "description": "Choisissez les domaines \u00e0 inclure. Toutes les entit\u00e9s prises en charge dans le domaine seront incluses.",
+                "title": "S\u00e9lectionnez les domaines \u00e0 inclure"
+            },
+            "pairing": {
+                "description": "Pour compl\u00e9ter l'appariement, suivez les instructions dans les \"Notifications\" sous \"Appariement HomeKit\".",
+                "title": "Appairage de la Passerelle Homekit"
+            },
+            "user": {
+                "data": {
+                    "auto_start": "D\u00e9marrage automatique (d\u00e9sactiver si vous utilisez Z-Wave ou un autre syst\u00e8me de d\u00e9marrage diff\u00e9r\u00e9)",
+                    "include_domains": "Domaines \u00e0 inclure",
+                    "mode": "Mode"
+                },
+                "description": "Choisissez les domaines \u00e0 inclure. Toutes les entit\u00e9s prises en charge dans le domaine seront incluses. Une instance HomeKit distincte en mode accessoire sera cr\u00e9\u00e9e pour chaque lecteur multim\u00e9dia TV et cam\u00e9ra.",
+                "title": "S\u00e9lectionnez les domaines \u00e0 inclure"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "advanced": {
+                "data": {
+                    "auto_start": "D\u00e9marrage automatique (d\u00e9sactiver si vous utilisez Z-Wave ou un autre syst\u00e8me de d\u00e9marrage diff\u00e9r\u00e9)",
+                    "safe_mode": "Mode sans \u00e9chec (activez uniquement si le jumelage \u00e9choue)"
+                },
+                "description": "Ces param\u00e8tres ne doivent \u00eatre ajust\u00e9s que si le pont HomeKit n'est pas fonctionnel.",
+                "title": "Configuration avanc\u00e9e"
+            },
+            "cameras": {
+                "data": {
+                    "camera_copy": "Cam\u00e9ras prenant en charge les flux H.264 natifs"
+                },
+                "description": "V\u00e9rifiez toutes les cam\u00e9ras prenant en charge les flux H.264 natifs. Si la cam\u00e9ra ne produit pas de flux H.264, le syst\u00e8me transcodera la vid\u00e9o en H.264 pour HomeKit. Le transcodage n\u00e9cessite un processeur performant et il est peu probable qu'il fonctionne sur des ordinateurs \u00e0 carte unique.",
+                "title": "S\u00e9lectionnez le codec vid\u00e9o de la cam\u00e9ra."
+            },
+            "include_exclude": {
+                "data": {
+                    "entities": "Entit\u00e9s",
+                    "mode": "Mode"
+                },
+                "description": "Choisissez les entit\u00e9s \u00e0 inclure. En mode accessoire, une seule entit\u00e9 est incluse. En mode d'inclusion de pont, toutes les entit\u00e9s du domaine seront incluses \u00e0 moins que des entit\u00e9s sp\u00e9cifiques ne soient s\u00e9lectionn\u00e9es. En mode d'exclusion de pont, toutes les entit\u00e9s du domaine seront incluses \u00e0 l'exception des entit\u00e9s exclues. Pour de meilleures performances, un accessoire HomeKit distinct sera cr\u00e9\u00e9 pour chaque lecteur multim\u00e9dia TV et cam\u00e9ra.",
+                "title": "S\u00e9lectionnez les entit\u00e9s \u00e0 exposer"
+            },
+            "init": {
+                "data": {
+                    "include_domains": "Domaines \u00e0 inclure",
+                    "mode": "Mode"
+                },
+                "description": "Les entit\u00e9s des \u00abdomaines \u00e0 inclure\u00bb seront pont\u00e9es vers HomeKit. Vous pourrez s\u00e9lectionner les entit\u00e9s \u00e0 exclure de cette liste sur l'\u00e9cran suivant.",
+                "title": "S\u00e9lectionnez les domaines \u00e0 relier."
+            },
+            "yaml": {
+                "description": "Cette entr\u00e9e est contr\u00f4l\u00e9e via YAML",
+                "title": "Ajuster les options de la passerelle HomeKit"
+            }
+        }
+    }
+}

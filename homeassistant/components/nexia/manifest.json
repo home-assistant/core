@@ -1,0 +1,9 @@
+{
+  "domain": "nexia",
+  "name": "Nexia",
+  "requirements": ["nexia==0.9.6"],
+  "codeowners": ["@bdraco"],
+  "documentation": "https://www.home-assistant.io/integrations/nexia",
+  "config_flow": true,
+  "dhcp": [{"hostname":"xl857-*","macaddress":"000231*"}]
+}

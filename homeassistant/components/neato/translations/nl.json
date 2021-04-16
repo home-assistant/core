@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "authorize_url_timeout": "Time-out tijdens genereren autorisatie url.",
+            "invalid_auth": "Ongeldige authenticatie",
+            "missing_configuration": "De Netatmo-component is niet geconfigureerd. Gelieve de documentatie volgen.",
+            "no_url_available": "Geen URL beschikbaar. Voor informatie over deze fout, [check de helpsectie]({docs_url})",
+            "reauth_successful": "Herauthenticatie was succesvol"
+        },
+        "create_entry": {
+            "default": "Succesvol geauthenticeerd"
+        },
+        "error": {
+            "invalid_auth": "Ongeldige authenticatie",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Kies een authenticatie methode"
+            },
+            "reauth_confirm": {
+                "title": "Wil je beginnen met instellen?"
+            },
+            "user": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam",
+                    "vendor": "Leverancier"
+                },
+                "description": "Zie [Neato-documentatie] ({docs_url}).",
+                "title": "Neato-account info"
+            }
+        }
+    },
+    "title": "Neato Botvac"
+}

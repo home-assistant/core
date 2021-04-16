@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie",
+            "invalid_thermostat": "Het serienummer van de thermostaat is ongeldig.",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "serial_number": "Serienummer van de thermostaat.",
+                    "username": "Gebruikersnaam"
+                },
+                "description": "U moet het numerieke serienummer of de ID van uw thermostaat verkrijgen door in te loggen op https://MyNuHeat.com en uw thermostaat (thermostaten) te selecteren.",
+                "title": "Maak verbinding met de NuHeat"
+            }
+        }
+    }
+}

@@ -1,0 +1,19 @@
+{
+    "system_health": {
+        "info": {
+            "board": "Uk\u0142ad",
+            "disk_total": "Pojemno\u015b\u0107 dysku",
+            "disk_used": "Pojemno\u015b\u0107 u\u017cyta",
+            "docker_version": "Wersja Dockera",
+            "healthy": "Zdrowy",
+            "host_os": "System operacyjny hosta",
+            "installed_addons": "Zainstalowane dodatki",
+            "supervisor_api": "API Supervisora",
+            "supervisor_version": "Wersja Supervisora",
+            "supported": "Wspierany",
+            "update_channel": "Kana\u0142 aktualizacji",
+            "version_api": "Wersja API"
+        }
+    },
+    "title": "Home Assistant Supervisor"
+}

@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La posizione \u00e8 gi\u00e0 configurata"
+        },
+        "error": {
+            "invalid_api_key": "Chiave API non valida"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Chiave API",
+                    "elevation": "Altitudine",
+                    "latitude": "Latitudine",
+                    "longitude": "Logitudine"
+                },
+                "title": "Inserisci i tuoi dati"
+            }
+        }
+    }
+}

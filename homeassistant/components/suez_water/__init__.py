@@ -1,0 +1,1 @@
+"""France Suez Water integration."""

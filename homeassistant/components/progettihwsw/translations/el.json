@@ -1,0 +1,32 @@
+{
+    "config": {
+        "step": {
+            "relay_modes": {
+                "data": {
+                    "relay_10": "\u03a1\u03b5\u03bb\u03ad 10",
+                    "relay_11": "\u03a1\u03b5\u03bb\u03ad 11",
+                    "relay_12": "\u03a1\u03b5\u03bb\u03ad 12",
+                    "relay_13": "\u03a1\u03b5\u03bb\u03ad 13",
+                    "relay_14": "\u03a1\u03b5\u03bb\u03ad 14",
+                    "relay_15": "\u03a1\u03b5\u03bb\u03ad 15",
+                    "relay_16": "\u03a1\u03b5\u03bb\u03ad 16",
+                    "relay_2": "\u03a1\u03b5\u03bb\u03ad 2",
+                    "relay_3": "\u03a1\u03b5\u03bb\u03ad 3",
+                    "relay_4": "\u03a1\u03b5\u03bb\u03ad 4",
+                    "relay_5": "\u03a1\u03b5\u03bb\u03ad 5",
+                    "relay_6": "\u03a1\u03b5\u03bb\u03ad 6",
+                    "relay_7": "\u03a1\u03b5\u03bb\u03ad 7",
+                    "relay_8": "\u03a1\u03b5\u03bb\u03ad 8",
+                    "relay_9": "\u03a1\u03b5\u03bb\u03ad 9"
+                },
+                "title": "\u03a1\u03cd\u03b8\u03bc\u03b9\u03c3\u03b7 \u03c1\u03b5\u03bb\u03ad"
+            },
+            "user": {
+                "data": {
+                    "port": "\u0398\u03cd\u03c1\u03b1"
+                },
+                "title": "\u03a1\u03cd\u03b8\u03bc\u03b9\u03c3\u03b7 \u03c0\u03af\u03bd\u03b1\u03ba\u03b1"
+            }
+        }
+    }
+}

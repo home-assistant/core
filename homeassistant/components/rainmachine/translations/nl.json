@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "error": {
+            "invalid_auth": "Ongeldige authenticatie"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Hostnaam of IP-adres",
+                    "password": "Wachtwoord",
+                    "port": "Poort"
+                },
+                "title": "Vul uw gegevens in"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "zone_run_time": "Standaardlooptijd van de zone (in seconden)"
+                },
+                "title": "Configureer RainMachine"
+            }
+        }
+    }
+}

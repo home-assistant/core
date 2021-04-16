@@ -1,0 +1,43 @@
+{
+    "config": {
+        "step": {
+            "pairing": {
+                "title": "Emparelhar HomeKit"
+            },
+            "user": {
+                "data": {
+                    "include_domains": "Dom\u00ednios a incluir"
+                },
+                "title": "Activar o HomeKit"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "advanced": {
+                "title": "Configura\u00e7\u00e3o avan\u00e7ada"
+            },
+            "cameras": {
+                "title": "Selecione o codec de v\u00eddeo da c\u00e2mera."
+            },
+            "include_exclude": {
+                "data": {
+                    "entities": "Entidades",
+                    "mode": "Modo"
+                },
+                "title": "Selecione as entidades a serem expostas"
+            },
+            "init": {
+                "data": {
+                    "include_domains": "Dom\u00ednios a incluir",
+                    "mode": "Modo"
+                },
+                "title": "Selecione os dom\u00ednios a serem expostos."
+            },
+            "yaml": {
+                "description": "Esta entrada \u00e9 controlada via YAML",
+                "title": "Ajustar as op\u00e7\u00f5es do HomeKit"
+            }
+        }
+    }
+}

@@ -1,0 +1,9 @@
+{
+    "state": {
+        "_": {
+            "active": "aktiivne",
+            "idle": "ootel",
+            "paused": "peatatud"
+        }
+    }
+}

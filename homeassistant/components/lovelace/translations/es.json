@@ -1,0 +1,10 @@
+{
+    "system_health": {
+        "info": {
+            "dashboards": "Paneles de control",
+            "mode": "Modo",
+            "resources": "Recursos",
+            "views": "Vistas"
+        }
+    }
+}

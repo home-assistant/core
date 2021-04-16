@@ -1,0 +1,54 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is al geconfigureerd",
+            "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk.",
+            "webhook_not_internet_accessible": "Uw Home Assistant-instantie moet toegankelijk zijn via internet om webhook-berichten te ontvangen."
+        },
+        "create_entry": {
+            "default": "Uw Plaato {device_type} met naam **{device_name}** is succesvol ingesteld!"
+        },
+        "error": {
+            "invalid_webhook_device": "U heeft een apparaat geselecteerd dat het verzenden van gegevens naar een webhook niet ondersteunt. Het is alleen beschikbaar voor de Airlock",
+            "no_api_method": "U moet een verificatie token toevoegen of selecteer een webhook",
+            "no_auth_token": "U moet een verificatie token toevoegen"
+        },
+        "step": {
+            "api_method": {
+                "data": {
+                    "token": "Plak hier de verificatie-token",
+                    "use_webhook": "Webhook gebruiken"
+                },
+                "description": "Om de API te kunnenopvragen is een `auth_token` nodig, die kan worden verkregen door [deze] (https://plaato.zendesk.com/hc/en-us/articles/360003234717-Auth-token) instructies te volgen\n\n Geselecteerd apparaat: **{device_type}** \n\nIndien u liever de ingebouwde webhook methode gebruikt (alleen Airlock) vink dan het vakje hieronder aan en laat Auth Token leeg",
+                "title": "Selecteer API-methode"
+            },
+            "user": {
+                "data": {
+                    "device_name": "Geef uw apparaat een naam",
+                    "device_type": "Type Plaato-apparaat"
+                },
+                "description": "Wil je beginnen met instellen?",
+                "title": "Stel de Plaato-apparaten in"
+            },
+            "webhook": {
+                "description": "Om evenementen naar de Home Assistant te sturen, moet u de webhook-functie instellen in Plaato Airlock. \n\n Vul de volgende info in: \n\n - URL: ` {webhook_url} ` \n - Methode: POST \n\n Zie [de documentatie] ({docs_url}) voor meer informatie.",
+                "title": "Webhook om te gebruiken"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "update_interval": "Update-interval (minuten)"
+                },
+                "description": "Stel het update-interval in (minuten)",
+                "title": "Opties voor Plaato"
+            },
+            "webhook": {
+                "description": "Webhook-informatie: \n\n - URL: ' {webhook_url} '\n - Methode: POST\n\n",
+                "title": "Opties voor Plaato Airlock"
+            }
+        }
+    }
+}

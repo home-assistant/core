@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt"
+        },
+        "error": {
+            "identifier_exists": "Fi\u00f3k m\u00e1r regisztr\u00e1lva van",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Jelsz\u00f3"
+                },
+                "title": "Integr\u00e1ci\u00f3 \u00fajrahiteles\u00edt\u00e9se"
+            },
+            "user": {
+                "data": {
+                    "code": "K\u00f3d (a Home Assistant felhaszn\u00e1l\u00f3i fel\u00fclet\u00e9n haszn\u00e1latos)",
+                    "password": "Jelsz\u00f3",
+                    "username": "E-mail"
+                },
+                "title": "T\u00f6ltsd ki az adataid"
+            }
+        }
+    }
+}

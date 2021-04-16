@@ -1,0 +1,12 @@
+{
+  "domain": "flume",
+  "name": "Flume",
+  "documentation": "https://www.home-assistant.io/integrations/flume/",
+  "requirements": ["pyflume==0.5.5"],
+  "codeowners": ["@ChrisMandich", "@bdraco"],
+  "config_flow": true,
+  "dhcp": [
+   {"hostname":"flume-gw-*","macaddress":"ECFABC*"},
+   {"hostname":"flume-gw-*","macaddress":"B4E62D*"}
+  ]
+}

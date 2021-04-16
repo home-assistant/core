@@ -1,0 +1,50 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "resources": {
+                "data": {
+                    "resources": "Ressourcen"
+                },
+                "title": "W\u00e4hlen Sie die zu \u00fcberwachenden Ressourcen aus"
+            },
+            "ups": {
+                "data": {
+                    "alias": "Alias",
+                    "resources": "Ressourcen"
+                },
+                "title": "W\u00e4hle die zu \u00fcberwachende USV"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Passwort",
+                    "port": "Port",
+                    "username": "Benutzername"
+                },
+                "title": "Stellen Sie eine Verbindung zum NUT-Server her"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "resources": "Ressourcen",
+                    "scan_interval": "Scan-Intervall (Sekunden)"
+                },
+                "description": "W\u00e4hlen Sie Sensorressourcen."
+            }
+        }
+    }
+}

@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto wurde bereits konfiguriert",
+            "external_error": "Es ist eine Ausnahme in einem anderen Flow aufgetreten.",
+            "external_setup": "Logi Circle wurde erfolgreich aus einem anderen Flow konfiguriert.",
+            "missing_configuration": "Die Komponente ist nicht konfiguriert. Bitte der Dokumentation folgen."
+        },
+        "error": {
+            "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL.",
+            "follow_link": "Bitte folge dem Link und authentifiziere dich, bevor du auf Senden klickst.",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung"
+        },
+        "step": {
+            "auth": {
+                "description": "Folge dem Link unten und klicke <b> Akzeptieren </b> um auf dein Logi Circle-Konto zuzugreifen. Kehre dann zur\u00fcck und dr\u00fccke unten auf <b> Senden </b> . \n\n [Link] ({authorization_url})",
+                "title": "Authentifizierung mit Logi Circle"
+            },
+            "user": {
+                "data": {
+                    "flow_impl": "Anbieter"
+                },
+                "description": "W\u00e4hle aus, \u00fcber welchen Anbieter du dich bei Logi Circle authentifizieren m\u00f6chtest.",
+                "title": "Authentifizierungsanbieter"
+            }
+        }
+    }
+}

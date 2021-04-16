@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Service is al geconfigureerd"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "elevation": "Hoogte",
+                    "latitude": "Breedtegraad",
+                    "longitude": "Lengtegraad",
+                    "name": "Naam"
+                },
+                "description": "Meteorologisch institutt",
+                "title": "Locatie"
+            }
+        }
+    }
+}

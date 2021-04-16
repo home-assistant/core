@@ -1,10 +1,7 @@
 {
   "domain": "input_number",
-  "name": "Input number",
-  "documentation": "https://www.home-assistant.io/components/input_number",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": [
-    "@home-assistant/core"
-  ]
+  "name": "Input Number",
+  "documentation": "https://www.home-assistant.io/integrations/input_number",
+  "codeowners": ["@home-assistant/core"],
+  "quality_scale": "internal"
 }

@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "advertise_ip": "IP-adres zichtbaar",
+                    "advertise_port": "Adverteer Poort",
+                    "host_ip": "Host IP",
+                    "listen_port": "Luisterpoort",
+                    "name": "Naam",
+                    "upnp_bind_multicast": "Bind multicast (waar/niet waar)"
+                },
+                "title": "Serverconfiguratie defini\u00ebren"
+            }
+        }
+    },
+    "title": "Emulated Roku"
+}

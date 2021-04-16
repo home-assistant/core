@@ -1,11 +1,11 @@
 {
   "domain": "lcn",
-  "name": "Lcn",
-  "documentation": "https://www.home-assistant.io/components/lcn",
+  "name": "LCN",
+  "config_flow": false,
+  "documentation": "https://www.home-assistant.io/integrations/lcn",
   "requirements": [
-    "pypck==0.6.1"
+    "pypck==0.7.9"
   ],
-  "dependencies": [],
   "codeowners": [
     "@alengwenus"
   ]

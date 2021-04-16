@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "existing_instance_updated": "Uppdaterade existerande konfiguration.",
+            "single_instance_allowed": "Endast en enda konfiguration av AdGuard Home \u00e4r till\u00e5ten."
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "Vill du konfigurera Home Assistant f\u00f6r att ansluta till AdGuard Home som tillhandah\u00e5lls av Supervisor Add-on: {addon}?",
+                "title": "AdGuard Home via Supervisor-till\u00e4gget"
+            },
+            "user": {
+                "data": {
+                    "password": "L\u00f6senord",
+                    "ssl": "AdGuard Home anv\u00e4nder ett SSL-certifikat",
+                    "username": "Anv\u00e4ndarnamn",
+                    "verify_ssl": "AdGuard Home anv\u00e4nder ett korrekt certifikat"
+                },
+                "description": "St\u00e4ll in din AdGuard Home-instans f\u00f6r att till\u00e5ta \u00f6vervakning och kontroll."
+            }
+        }
+    }
+}

@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El compte ja ha estat configurat"
+        },
+        "error": {
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrasenya",
+                    "username": "Correu electr\u00f2nic"
+                },
+                "title": "Configura Tile"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_inactive": "Mostra 'Tiles' inactives"
+                },
+                "title": "Configura Tile"
+            }
+        }
+    }
+}

@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
+            "unknown": "Uventet feil"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes"
+        },
+        "flow_title": "",
+        "step": {
+            "discovery_confirm": {
+                "description": "Vil du konfigurere {name}?",
+                "title": ""
+            },
+            "ssdp_confirm": {
+                "description": "Vil du sette opp {name} ?",
+                "title": ""
+            },
+            "user": {
+                "data": {
+                    "host": "Vert"
+                },
+                "description": "Fyll inn Roku-informasjonen din."
+            }
+        }
+    }
+}

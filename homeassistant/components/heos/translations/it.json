@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Inserire il nome host o l'indirizzo IP di un dispositivo Heos (preferibilmente uno connesso alla rete tramite cavo).",
+                "title": "Collegamento a Heos"
+            }
+        }
+    }
+}

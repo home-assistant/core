@@ -1,74 +1,100 @@
 """Support for Dyson Pure Hot+Cool link fan."""
 import logging
 
-from homeassistant.components.climate import ClimateDevice
+from libpurecool.const import (
+    AutoMode,
+    FanPower,
+    FanSpeed,
+    FanState,
+    FocusMode,
+    HeatMode,
+    HeatState,
+    HeatTarget,
+)
+from libpurecool.dyson_pure_hotcool import DysonPureHotCool
+from libpurecool.dyson_pure_hotcool_link import DysonPureHotCoolLink
+from libpurecool.dyson_pure_state import DysonPureHotCoolState
+from libpurecool.dyson_pure_state_v2 import DysonPureHotCoolV2State
+
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
-    STATE_COOL, STATE_HEAT, STATE_IDLE, SUPPORT_FAN_MODE,
-    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
+    CURRENT_HVAC_COOL,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
+    CURRENT_HVAC_OFF,
+    FAN_AUTO,
+    FAN_DIFFUSE,
+    FAN_FOCUS,
+    FAN_HIGH,
+    FAN_LOW,
+    FAN_MEDIUM,
+    FAN_OFF,
+    HVAC_MODE_COOL,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_OFF,
+    SUPPORT_FAN_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
+)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
-from . import DYSON_DEVICES
+
+from . import DYSON_DEVICES, DysonEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-STATE_DIFFUSE = "Diffuse Mode"
-STATE_FOCUS = "Focus Mode"
-FAN_LIST = [STATE_FOCUS, STATE_DIFFUSE]
-OPERATION_LIST = [STATE_HEAT, STATE_COOL]
+SUPPORT_FAN = [FAN_FOCUS, FAN_DIFFUSE]
+SUPPORT_FAN_PCOOL = [FAN_OFF, FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
+SUPPORT_HVAC = [HVAC_MODE_COOL, HVAC_MODE_HEAT]
+SUPPORT_HVAC_PCOOL = [HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF]
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
 
-SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
-                 | SUPPORT_OPERATION_MODE)
+DYSON_KNOWN_CLIMATE_DEVICES = "dyson_known_climate_devices"
+
+SPEED_MAP = {
+    FanSpeed.FAN_SPEED_1.value: FAN_LOW,
+    FanSpeed.FAN_SPEED_2.value: FAN_LOW,
+    FanSpeed.FAN_SPEED_3.value: FAN_LOW,
+    FanSpeed.FAN_SPEED_4.value: FAN_LOW,
+    FanSpeed.FAN_SPEED_AUTO.value: FAN_AUTO,
+    FanSpeed.FAN_SPEED_5.value: FAN_MEDIUM,
+    FanSpeed.FAN_SPEED_6.value: FAN_MEDIUM,
+    FanSpeed.FAN_SPEED_7.value: FAN_MEDIUM,
+    FanSpeed.FAN_SPEED_8.value: FAN_HIGH,
+    FanSpeed.FAN_SPEED_9.value: FAN_HIGH,
+    FanSpeed.FAN_SPEED_10.value: FAN_HIGH,
+}
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Dyson fan components."""
     if discovery_info is None:
         return
 
-    from libpurecool.dyson_pure_hotcool_link import DysonPureHotCoolLink
-    # Get Dyson Devices from parent component.
-    add_devices(
-        [DysonPureHotCoolLinkDevice(device)
-         for device in hass.data[DYSON_DEVICES]
-         if isinstance(device, DysonPureHotCoolLink)]
-    )
+    known_devices = hass.data.setdefault(DYSON_KNOWN_CLIMATE_DEVICES, set())
+
+    # Get Dyson Devices from parent component
+    new_entities = []
+
+    for device in hass.data[DYSON_DEVICES]:
+        if device.serial not in known_devices:
+            if isinstance(device, DysonPureHotCool):
+                dyson_entity = DysonPureHotCoolEntity(device)
+                new_entities.append(dyson_entity)
+                known_devices.add(device.serial)
+            elif isinstance(device, DysonPureHotCoolLink):
+                dyson_entity = DysonPureHotCoolLinkEntity(device)
+                new_entities.append(dyson_entity)
+                known_devices.add(device.serial)
+
+    add_entities(new_entities)
 
 
-class DysonPureHotCoolLinkDevice(ClimateDevice):
+class DysonClimateEntity(DysonEntity, ClimateEntity):
     """Representation of a Dyson climate fan."""
-
-    def __init__(self, device):
-        """Initialize the fan."""
-        self._device = device
-        self._current_temp = None
-
-    async def async_added_to_hass(self):
-        """Call when entity is added to hass."""
-        self.hass.async_add_job(self._device.add_message_listener,
-                                self.on_message)
-
-    def on_message(self, message):
-        """Call when new messages received from the climate."""
-        from libpurecool.dyson_pure_state import DysonPureHotCoolState
-
-        if isinstance(message, DysonPureHotCoolState):
-            _LOGGER.debug("Message received for climate device %s : %s",
-                          self.name, message)
-            self.schedule_update_ha_state()
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def supported_features(self):
         """Return the list of supported features."""
         return SUPPORT_FLAGS
-
-    @property
-    def name(self):
-        """Return the display name of this climate."""
-        return self._device.name
 
     @property
     def temperature_unit(self):
@@ -78,12 +104,13 @@ class DysonPureHotCoolLinkDevice(ClimateDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        if self._device.environmental_state:
+        if (
+            self._device.environmental_state
+            and self._device.environmental_state.temperature
+        ):
             temperature_kelvin = self._device.environmental_state.temperature
-            if temperature_kelvin != 0:
-                self._current_temp = float("{0:.1f}".format(
-                    temperature_kelvin - 273))
-        return self._current_temp
+            return float("{:.1f}".format(temperature_kelvin - 273))
+        return None
 
     @property
     def target_temperature(self):
@@ -94,72 +121,14 @@ class DysonPureHotCoolLinkDevice(ClimateDevice):
     @property
     def current_humidity(self):
         """Return the current humidity."""
-        if self._device.environmental_state:
-            if self._device.environmental_state.humidity == 0:
-                return None
+        # Humidity equaling to 0 means invalid value so we don't check for None here
+        # https://github.com/home-assistant/core/pull/45172#discussion_r559069756
+        if (
+            self._device.environmental_state
+            and self._device.environmental_state.humidity
+        ):
             return self._device.environmental_state.humidity
         return None
-
-    @property
-    def current_operation(self):
-        """Return current operation ie. heat, cool, idle."""
-        from libpurecool.const import HeatMode, HeatState
-        if self._device.state.heat_mode == HeatMode.HEAT_ON.value:
-            if self._device.state.heat_state == HeatState.HEAT_STATE_ON.value:
-                return STATE_HEAT
-            return STATE_IDLE
-        return STATE_COOL
-
-    @property
-    def operation_list(self):
-        """Return the list of available operation modes."""
-        return OPERATION_LIST
-
-    @property
-    def current_fan_mode(self):
-        """Return the fan setting."""
-        from libpurecool.const import FocusMode
-        if self._device.state.focus_mode == FocusMode.FOCUS_ON.value:
-            return STATE_FOCUS
-        return STATE_DIFFUSE
-
-    @property
-    def fan_list(self):
-        """Return the list of available fan modes."""
-        return FAN_LIST
-
-    def set_temperature(self, **kwargs):
-        """Set new target temperature."""
-        target_temp = kwargs.get(ATTR_TEMPERATURE)
-        if target_temp is None:
-            return
-        target_temp = int(target_temp)
-        _LOGGER.debug("Set %s temperature %s", self.name, target_temp)
-        # Limit the target temperature into acceptable range.
-        target_temp = min(self.max_temp, target_temp)
-        target_temp = max(self.min_temp, target_temp)
-        from libpurecool.const import HeatTarget, HeatMode
-        self._device.set_configuration(
-            heat_target=HeatTarget.celsius(target_temp),
-            heat_mode=HeatMode.HEAT_ON)
-
-    def set_fan_mode(self, fan_mode):
-        """Set new fan mode."""
-        _LOGGER.debug("Set %s focus mode %s", self.name, fan_mode)
-        from libpurecool.const import FocusMode
-        if fan_mode == STATE_FOCUS:
-            self._device.set_configuration(focus_mode=FocusMode.FOCUS_ON)
-        elif fan_mode == STATE_DIFFUSE:
-            self._device.set_configuration(focus_mode=FocusMode.FOCUS_OFF)
-
-    def set_operation_mode(self, operation_mode):
-        """Set operation mode."""
-        _LOGGER.debug("Set %s heat mode %s", self.name, operation_mode)
-        from libpurecool.const import HeatMode
-        if operation_mode == STATE_HEAT:
-            self._device.set_configuration(heat_mode=HeatMode.HEAT_ON)
-        elif operation_mode == STATE_COOL:
-            self._device.set_configuration(heat_mode=HeatMode.HEAT_OFF)
 
     @property
     def min_temp(self):
@@ -170,3 +139,179 @@ class DysonPureHotCoolLinkDevice(ClimateDevice):
     def max_temp(self):
         """Return the maximum temperature."""
         return 37
+
+    def set_temperature(self, **kwargs):
+        """Set new target temperature."""
+        target_temp = kwargs.get(ATTR_TEMPERATURE)
+        if target_temp is None:
+            _LOGGER.error("Missing target temperature %s", kwargs)
+            return
+        target_temp = int(target_temp)
+        _LOGGER.debug("Set %s temperature %s", self.name, target_temp)
+        # Limit the target temperature into acceptable range.
+        target_temp = min(self.max_temp, target_temp)
+        target_temp = max(self.min_temp, target_temp)
+        self.set_heat_target(HeatTarget.celsius(target_temp))
+
+    def set_heat_target(self, heat_target):
+        """Set heating target temperature."""
+
+
+class DysonPureHotCoolLinkEntity(DysonClimateEntity):
+    """Representation of a Dyson climate fan."""
+
+    def __init__(self, device):
+        """Initialize the fan."""
+        super().__init__(device, DysonPureHotCoolState)
+
+    @property
+    def hvac_mode(self):
+        """Return hvac operation ie. heat, cool mode.
+
+        Need to be one of HVAC_MODE_*.
+        """
+        if self._device.state.heat_mode == HeatMode.HEAT_ON.value:
+            return HVAC_MODE_HEAT
+        return HVAC_MODE_COOL
+
+    @property
+    def hvac_modes(self):
+        """Return the list of available hvac operation modes.
+
+        Need to be a subset of HVAC_MODES.
+        """
+        return SUPPORT_HVAC
+
+    @property
+    def hvac_action(self):
+        """Return the current running hvac operation if supported.
+
+        Need to be one of CURRENT_HVAC_*.
+        """
+        if self._device.state.heat_mode == HeatMode.HEAT_ON.value:
+            if self._device.state.heat_state == HeatState.HEAT_STATE_ON.value:
+                return CURRENT_HVAC_HEAT
+            return CURRENT_HVAC_IDLE
+        return CURRENT_HVAC_COOL
+
+    @property
+    def fan_mode(self):
+        """Return the fan setting."""
+        if self._device.state.focus_mode == FocusMode.FOCUS_ON.value:
+            return FAN_FOCUS
+        return FAN_DIFFUSE
+
+    @property
+    def fan_modes(self):
+        """Return the list of available fan modes."""
+        return SUPPORT_FAN
+
+    def set_heat_target(self, heat_target):
+        """Set heating target temperature."""
+        self._device.set_configuration(
+            heat_target=heat_target, heat_mode=HeatMode.HEAT_ON
+        )
+
+    def set_fan_mode(self, fan_mode):
+        """Set new fan mode."""
+        _LOGGER.debug("Set %s focus mode %s", self.name, fan_mode)
+        if fan_mode == FAN_FOCUS:
+            self._device.set_configuration(focus_mode=FocusMode.FOCUS_ON)
+        elif fan_mode == FAN_DIFFUSE:
+            self._device.set_configuration(focus_mode=FocusMode.FOCUS_OFF)
+
+    def set_hvac_mode(self, hvac_mode):
+        """Set new target hvac mode."""
+        _LOGGER.debug("Set %s heat mode %s", self.name, hvac_mode)
+        if hvac_mode == HVAC_MODE_HEAT:
+            self._device.set_configuration(heat_mode=HeatMode.HEAT_ON)
+        elif hvac_mode == HVAC_MODE_COOL:
+            self._device.set_configuration(heat_mode=HeatMode.HEAT_OFF)
+
+
+class DysonPureHotCoolEntity(DysonClimateEntity):
+    """Representation of a Dyson climate hot+cool fan."""
+
+    def __init__(self, device):
+        """Initialize the fan."""
+        super().__init__(device, DysonPureHotCoolV2State)
+
+    @property
+    def hvac_mode(self):
+        """Return hvac operation ie. heat, cool mode.
+
+        Need to be one of HVAC_MODE_*.
+        """
+        if self._device.state.fan_power == FanPower.POWER_OFF.value:
+            return HVAC_MODE_OFF
+        if self._device.state.heat_mode == HeatMode.HEAT_ON.value:
+            return HVAC_MODE_HEAT
+        return HVAC_MODE_COOL
+
+    @property
+    def hvac_modes(self):
+        """Return the list of available hvac operation modes.
+
+        Need to be a subset of HVAC_MODES.
+        """
+        return SUPPORT_HVAC_PCOOL
+
+    @property
+    def hvac_action(self):
+        """Return the current running hvac operation if supported.
+
+        Need to be one of CURRENT_HVAC_*.
+        """
+        if self._device.state.fan_power == FanPower.POWER_OFF.value:
+            return CURRENT_HVAC_OFF
+        if self._device.state.heat_mode == HeatMode.HEAT_ON.value:
+            if self._device.state.heat_state == HeatState.HEAT_STATE_ON.value:
+                return CURRENT_HVAC_HEAT
+            return CURRENT_HVAC_IDLE
+        return CURRENT_HVAC_COOL
+
+    @property
+    def fan_mode(self):
+        """Return the fan setting."""
+        if (
+            self._device.state.auto_mode != AutoMode.AUTO_ON.value
+            and self._device.state.fan_state == FanState.FAN_OFF.value
+        ):
+            return FAN_OFF
+
+        return SPEED_MAP[self._device.state.speed]
+
+    @property
+    def fan_modes(self):
+        """Return the list of available fan modes."""
+        return SUPPORT_FAN_PCOOL
+
+    def set_heat_target(self, heat_target):
+        """Set heating target temperature."""
+        self._device.set_heat_target(heat_target)
+
+    def set_fan_mode(self, fan_mode):
+        """Set new fan mode."""
+        _LOGGER.debug("Set %s focus mode %s", self.name, fan_mode)
+        if fan_mode == FAN_OFF:
+            self._device.turn_off()
+        elif fan_mode == FAN_LOW:
+            self._device.set_fan_speed(FanSpeed.FAN_SPEED_4)
+        elif fan_mode == FAN_MEDIUM:
+            self._device.set_fan_speed(FanSpeed.FAN_SPEED_7)
+        elif fan_mode == FAN_HIGH:
+            self._device.set_fan_speed(FanSpeed.FAN_SPEED_10)
+        elif fan_mode == FAN_AUTO:
+            self._device.enable_auto_mode()
+
+    def set_hvac_mode(self, hvac_mode):
+        """Set new target hvac mode."""
+        _LOGGER.debug("Set %s heat mode %s", self.name, hvac_mode)
+        if hvac_mode == HVAC_MODE_OFF:
+            self._device.turn_off()
+        elif self._device.state.fan_power == FanPower.POWER_OFF.value:
+            self._device.turn_on()
+        if hvac_mode == HVAC_MODE_HEAT:
+            self._device.enable_heat_mode()
+        elif hvac_mode == HVAC_MODE_COOL:
+            self._device.disable_heat_mode()

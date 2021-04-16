@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Plasseringen er allerede konfigurert"
+        },
+        "error": {
+            "invalid_api_key": "Ugyldig API-n\u00f8kkel"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel",
+                    "elevation": "Elevasjon",
+                    "latitude": "Breddegrad",
+                    "longitude": "Lengdegrad"
+                },
+                "title": "Fyll ut informasjonen din"
+            }
+        }
+    }
+}

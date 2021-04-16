@@ -1,0 +1,66 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges."
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Br\u00f3ker",
+                    "discovery": "Felfedez\u00e9s enged\u00e9lyez\u00e9se",
+                    "password": "Jelsz\u00f3",
+                    "port": "Port",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                },
+                "description": "K\u00e9rlek, add meg az MQTT br\u00f3ker kapcsol\u00f3d\u00e1si adatait."
+            },
+            "hassio_confirm": {
+                "data": {
+                    "discovery": "Felfedez\u00e9s enged\u00e9lyez\u00e9se"
+                },
+                "description": "Be szeretn\u00e9d konfigru\u00e1lni, hogy a Home Assistant a(z) {addon} Supervisor add-on \u00e1ltal biztos\u00edtott MQTT br\u00f3kerhez csatlakozzon?",
+                "title": "MQTT Br\u00f3ker a Supervisor b\u0151v\u00edtm\u00e9nnyel"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "Els\u0151 gomb",
+            "button_2": "M\u00e1sodik gomb",
+            "button_3": "Harmadik gomb",
+            "button_4": "Negyedik gomb",
+            "button_5": "\u00d6t\u00f6dik gomb",
+            "button_6": "Hatodik gomb",
+            "turn_off": "Kikapcsol\u00e1s",
+            "turn_on": "Bekapcsol\u00e1s"
+        },
+        "trigger_type": {
+            "button_double_press": "\"{subtype}\" dupla kattint\u00e1s",
+            "button_long_press": "\"{subtype}\" folyamatosan nyomva tartva",
+            "button_long_release": "\"{subtype}\" nyomva tart\u00e1s ut\u00e1n felengedve",
+            "button_quadruple_press": "\"{subtype}\" n\u00e9gyszeres kattint\u00e1s",
+            "button_quintuple_press": "\"{subtype}\" \u00f6tsz\u00f6r\u00f6s kattint\u00e1s",
+            "button_short_press": "\"{subtype}\" lenyomva",
+            "button_short_release": "\"{subtype}\" felengedve",
+            "button_triple_press": "\"{subtype}\" tripla kattint\u00e1s"
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Br\u00f3ker",
+                    "password": "Jelsz\u00f3",
+                    "port": "Port",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                }
+            }
+        }
+    }
+}

@@ -1,10 +1,7 @@
 {
   "domain": "watson_iot",
-  "name": "Watson iot",
-  "documentation": "https://www.home-assistant.io/components/watson_iot",
-  "requirements": [
-    "ibmiotf==0.3.4"
-  ],
-  "dependencies": [],
+  "name": "IBM Watson IoT Platform",
+  "documentation": "https://www.home-assistant.io/integrations/watson_iot",
+  "requirements": ["ibmiotf==0.3.4"],
   "codeowners": []
 }

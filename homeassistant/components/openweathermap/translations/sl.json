@@ -1,0 +1,20 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "mode": "Na\u010din"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "mode": "Na\u010din"
+                }
+            }
+        }
+    }
+}

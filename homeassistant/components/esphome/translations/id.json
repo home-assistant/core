@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "already_in_progress": "Alur konfigurasi sedang berlangsung"
+        },
+        "error": {
+            "connection_error": "Tidak dapat terhubung ke ESP. Pastikan file YAML Anda mengandung baris 'api:'.",
+            "invalid_auth": "Autentikasi tidak valid",
+            "resolve_error": "Tidak dapat menemukan alamat ESP. Jika kesalahan ini terus terjadi, atur alamat IP statis: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
+        },
+        "flow_title": "ESPHome: {name}",
+        "step": {
+            "authenticate": {
+                "data": {
+                    "password": "Kata Sandi"
+                },
+                "description": "Masukkan kata sandi yang ditetapkan di konfigurasi Anda untuk {name}."
+            },
+            "discovery_confirm": {
+                "description": "Ingin menambahkan node ESPHome `{name}` ke Home Assistant?",
+                "title": "Perangkat node ESPHome yang ditemukan"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "description": "Masukkan pengaturan koneksi node [ESPHome](https://esphomelib.com/)."
+            }
+        }
+    }
+}

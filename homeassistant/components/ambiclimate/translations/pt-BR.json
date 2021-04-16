@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "access_token": "Erro desconhecido ao gerar um token de acesso."
+        },
+        "create_entry": {
+            "default": "Autenticado com sucesso no Ambiclimate"
+        },
+        "error": {
+            "follow_link": "Por favor, siga o link e autentique-se antes de pressionar Enviar",
+            "no_token": "N\u00e3o autenticado com o Ambiclimate"
+        },
+        "step": {
+            "auth": {
+                "description": "Por favor, siga este [link]({authorization_url}) e <b>Permitir</b> acesso \u00e0 sua conta Ambiclimate, em seguida, volte e pressione <b>Enviar</b> abaixo. \n (Verifique se a URL de retorno de chamada especificada \u00e9 {cb_url})",
+                "title": "Autenticar Ambiclimate"
+            }
+        }
+    }
+}

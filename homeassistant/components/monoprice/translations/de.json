@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Port",
+                    "source_1": "Name der Quelle #1",
+                    "source_2": "Name der Quelle #2",
+                    "source_3": "Name der Quelle #3",
+                    "source_4": "Name der Quelle #4",
+                    "source_5": "Name der Quelle #5",
+                    "source_6": "Name der Quelle #6"
+                },
+                "title": "Stellen Sie eine Verbindung zum Ger\u00e4t her"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "source_1": "Name der Quelle #1",
+                    "source_2": "Name der Quelle #2",
+                    "source_3": "Name der Quelle #3",
+                    "source_4": "Name der Quelle #4",
+                    "source_5": "Name der Quelle #5",
+                    "source_6": "Name der Quelle #6"
+                },
+                "title": "Quellen konfigurieren"
+            }
+        }
+    }
+}

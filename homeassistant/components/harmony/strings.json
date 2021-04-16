@@ -1,0 +1,36 @@
+{
+  "config": {
+    "flow_title": "Logitech Harmony Hub {name}",
+    "step": {
+      "user": {
+        "title": "Setup Logitech Harmony Hub",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "name": "Hub Name"
+        }
+      },
+      "link": {
+        "title": "Setup Logitech Harmony Hub",
+        "description": "Do you want to setup {name} ({host})?"
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Adjust Harmony Hub Options",
+        "data": {
+          "activity": "The default activity to execute when none is specified.",
+          "delay_secs": "The delay between sending commands."
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto jest ju\u017c skonfigurowane",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "step": {
+            "reauth_validate": {
+                "data": {
+                    "password": "Has\u0142o"
+                },
+                "description": "Wprowad\u017a has\u0142o dla {username}",
+                "title": "Ponownie uwierzytelnij konto August"
+            },
+            "user": {
+                "data": {
+                    "login_method": "Metoda logowania",
+                    "password": "Has\u0142o",
+                    "timeout": "Limit czasu (sekundy)",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "description": "Je\u015bli metod\u0105 logowania jest 'e-mail', nazw\u0105 u\u017cytkownika b\u0119dzie adres e-mail. Je\u015bli metod\u0105 logowania jest 'telefon', nazw\u0105 u\u017cytkownika b\u0119dzie numer telefonu w formacie '+NNNNNNNNN'.",
+                "title": "Konfiguracja konta August"
+            },
+            "user_validate": {
+                "data": {
+                    "login_method": "Metoda logowania",
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "description": "Je\u015bli metod\u0105 logowania jest 'e-mail', nazw\u0105 u\u017cytkownika b\u0119dzie adres e-mail. Je\u015bli metod\u0105 logowania jest 'telefon', nazw\u0105 u\u017cytkownika b\u0119dzie numer telefonu w formacie '+NNNNNNNNN'.",
+                "title": "Konfiguracja konta August"
+            },
+            "validation": {
+                "data": {
+                    "code": "Kod weryfikacyjny"
+                },
+                "description": "Sprawd\u017a {login_method} ({username}) i wprowad\u017a kod weryfikacyjny poni\u017cej",
+                "title": "Uwierzytelnianie dwusk\u0142adnikowe"
+            }
+        }
+    }
+}

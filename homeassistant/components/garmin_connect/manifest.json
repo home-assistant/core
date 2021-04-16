@@ -1,0 +1,8 @@
+{
+  "domain": "garmin_connect",
+  "name": "Garmin Connect",
+  "documentation": "https://www.home-assistant.io/integrations/garmin_connect",
+  "requirements": ["garminconnect==0.1.19"],
+  "codeowners": ["@cyberjunky"],
+  "config_flow": true
+}

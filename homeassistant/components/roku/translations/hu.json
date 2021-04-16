@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "already_in_progress": "A konfigur\u00e1ci\u00f3 m\u00e1r folyamatban van.",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+        },
+        "flow_title": "Roku: {name}",
+        "step": {
+            "discovery_confirm": {
+                "data": {
+                    "one": "Egy",
+                    "other": "Egy\u00e9b"
+                },
+                "description": "Be szeretn\u00e9d \u00e1ll\u00edtani a(z) {name}-t?",
+                "title": "Roku"
+            },
+            "ssdp_confirm": {
+                "description": "Be szeretn\u00e9d \u00e1ll\u00edtani a {name}-t?",
+                "title": "Roku"
+            },
+            "user": {
+                "data": {
+                    "host": "Hoszt"
+                }
+            }
+        }
+    }
+}

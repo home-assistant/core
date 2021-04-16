@@ -1,12 +1,9 @@
 {
   "domain": "blink",
   "name": "Blink",
-  "documentation": "https://www.home-assistant.io/components/blink",
-  "requirements": [
-    "blinkpy==0.14.0"
-  ],
-  "dependencies": [],
-  "codeowners": [
-    "@fronzbot"
-  ]
+  "documentation": "https://www.home-assistant.io/integrations/blink",
+  "requirements": ["blinkpy==0.17.0"],
+  "codeowners": ["@fronzbot"],
+  "dhcp": [{"hostname":"blink*","macaddress":"B85F98*"}],
+  "config_flow": true
 }

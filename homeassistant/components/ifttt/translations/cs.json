@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Ji\u017e nastaveno. Je mo\u017en\u00e1 pouze jedin\u00e1 konfigurace.",
+            "webhook_not_internet_accessible": "V\u00e1\u0161 Home Assistant mus\u00ed b\u00fdt p\u0159\u00edstupn\u00fd z internetu, aby mohl p\u0159ij\u00edmat zpr\u00e1vy webhook."
+        },
+        "create_entry": {
+            "default": "Chcete-li odeslat ud\u00e1losti do Home Assistant, budete muset pou\u017e\u00edt akci \"Vytvo\u0159it webovou \u017e\u00e1dost\" z [IFTTT Webhook appletu]({applet_url}). \n\nVypl\u0148te n\u00e1sleduj\u00edc\u00ed informace: \n\n - URL: ` {webhook_url} ' \n - Metoda: POST \n - Typ obsahu: aplikace/json \n\nViz [dokumentace]({docs_url}), jak konfigurovat automatizace pro zpracov\u00e1n\u00ed p\u0159\u00edchoz\u00edch dat."
+        },
+        "step": {
+            "user": {
+                "description": "Opravdu chcete nastavit IFTTT?",
+                "title": "Nastavte applet IFTTT Webhook"
+            }
+        }
+    }
+}

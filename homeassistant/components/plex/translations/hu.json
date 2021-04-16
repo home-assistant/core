@@ -1,0 +1,53 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "Az \u00f6sszes \u00f6sszekapcsolt szerver m\u00e1r konfigur\u00e1lva van",
+            "already_configured": "Ez a Plex szerver m\u00e1r konfigur\u00e1lva van",
+            "already_in_progress": "A konfigur\u00e1ci\u00f3 m\u00e1r folyamatban van.",
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt",
+            "token_request_timeout": "Token k\u00e9r\u00e9sre sz\u00e1nt id\u0151 lej\u00e1rt",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "error": {
+            "faulty_credentials": "A hiteles\u00edt\u00e9s sikertelen",
+            "no_servers": "Nincs szerver csatlakoztatva a fi\u00f3khoz",
+            "not_found": "A Plex szerver nem tal\u00e1lhat\u00f3"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "manual_setup": {
+                "data": {
+                    "host": "Hoszt",
+                    "port": "Port",
+                    "ssl": "SSL tan\u00fas\u00edtv\u00e1ny haszn\u00e1lata",
+                    "token": "Token (opcion\u00e1lis)",
+                    "verify_ssl": "SSL-tan\u00fas\u00edtv\u00e1ny ellen\u0151rz\u00e9se"
+                }
+            },
+            "select_server": {
+                "data": {
+                    "server": "Szerver"
+                },
+                "description": "T\u00f6bb szerver el\u00e9rhet\u0151, v\u00e1lasszon egyet:",
+                "title": "Plex-kiszolg\u00e1l\u00f3 kiv\u00e1laszt\u00e1sa"
+            },
+            "user": {
+                "title": "Plex Media Server"
+            },
+            "user_advanced": {
+                "title": "Plex Media Server"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "plex_mp_settings": {
+                "data": {
+                    "ignore_plex_web_clients": "Plex Web kliensek figyelmen k\u00edv\u00fcl hagy\u00e1sa",
+                    "use_episode_art": "Haszn\u00e1lja az epiz\u00f3d bor\u00edt\u00f3j\u00e1t"
+                },
+                "description": "Plex media lej\u00e1tsz\u00f3k be\u00e1ll\u00edt\u00e1sai"
+            }
+        }
+    }
+}

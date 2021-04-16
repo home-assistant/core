@@ -1,0 +1,14 @@
+{
+    "state": {
+        "_": {
+            "dead": "Dood",
+            "initializing": "Inisialiseer",
+            "ready": "Gereed",
+            "sleeping": "Aan die slaap"
+        },
+        "query_stage": {
+            "dead": "Dood ({query_stage})",
+            "initializing": "Inisialiseer ({query_stage})"
+        }
+    }
+}

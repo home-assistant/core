@@ -1,0 +1,33 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "id_exists": "L'identificador de passarel\u00b7la ja existeix"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "device": "Ruta o URL",
+                    "id": "ID",
+                    "name": "Nom"
+                },
+                "title": "Passarel\u00b7la d'OpenTherm"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "floor_temperature": "Temperatura de la planta",
+                    "precision": "Precisi\u00f3",
+                    "read_precision": "Llegeix precisi\u00f3",
+                    "set_precision": "Defineix precisi\u00f3",
+                    "temporary_override_mode": "Mode de sobreescriptura temporal"
+                },
+                "description": "Opcions del la passarel\u00b7la d'enlla\u00e7 d'OpenTherm"
+            }
+        }
+    }
+}

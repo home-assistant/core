@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Naprava je \u017ee name\u0161\u010dena",
+            "already_in_progress": "Name\u0161\u010danje se \u017ee izvaja",
+            "mqtt_required": "Integracija MQTT ni nastavljena"
+        },
+        "progress": {
+            "install_addon": "Po\u010dakajte, da se namestitev dodatka OpenZWave zaklju\u010di. To lahko traja ve\u010d minut."
+        },
+        "step": {
+            "hassio_confirm": {
+                "title": "Namestite OpenZWave integracijo z OpenZWave dodatkom."
+            },
+            "install_addon": {
+                "title": "Namestitev dodatka OpenZWave se je za\u010dela"
+            },
+            "on_supervisor": {
+                "title": "Izberite na\u010din povezave"
+            }
+        }
+    }
+}

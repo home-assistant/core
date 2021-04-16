@@ -1,0 +1,85 @@
+{
+    "state": {
+        "_": {
+            "off": "T\u1eaft",
+            "on": "B\u1eadt"
+        },
+        "battery": {
+            "off": "B\u00ecnh th\u01b0\u1eddng",
+            "on": "Th\u1ea5p"
+        },
+        "cold": {
+            "off": "B\u00ecnh th\u01b0\u1eddng",
+            "on": "L\u1ea1nh"
+        },
+        "connectivity": {
+            "off": "\u0110\u00e3 ng\u1eaft k\u1ebft n\u1ed1i",
+            "on": "\u0110\u00e3 k\u1ebft n\u1ed1i"
+        },
+        "door": {
+            "off": "\u0110\u00f3ng",
+            "on": "M\u1edf"
+        },
+        "garage_door": {
+            "off": "\u0110\u00f3ng",
+            "on": "M\u1edf"
+        },
+        "gas": {
+            "off": "Tr\u00f4\u0341ng tra\u0309i",
+            "on": "Ph\u00e1t hi\u1ec7n"
+        },
+        "heat": {
+            "off": "B\u00ecnh th\u01b0\u1eddng",
+            "on": "N\u00f3ng"
+        },
+        "lock": {
+            "off": "\u0110\u00e3 kho\u00e1",
+            "on": "M\u1edf kho\u00e1"
+        },
+        "moisture": {
+            "off": "Kh\u00f4",
+            "on": "\u01af\u1edbt"
+        },
+        "motion": {
+            "off": "Tr\u00f4\u0341ng tra\u0309i",
+            "on": "Ph\u00e1t hi\u1ec7n"
+        },
+        "occupancy": {
+            "off": "Tr\u00f4\u0341ng tra\u0309i",
+            "on": "Ph\u00e1t hi\u1ec7n"
+        },
+        "opening": {
+            "off": "\u0110\u00e3 \u0111\u00f3ng",
+            "on": "M\u1edf"
+        },
+        "presence": {
+            "off": "\u0110i v\u1eafng",
+            "on": "\u1ede nh\u00e0"
+        },
+        "problem": {
+            "off": "OK",
+            "on": "C\u00f3 v\u1ea5n \u0111\u1ec1"
+        },
+        "safety": {
+            "off": "An to\u00e0n",
+            "on": "Kh\u00f4ng an to\u00e0n"
+        },
+        "smoke": {
+            "off": "Tr\u00f4\u0341ng tra\u0309i",
+            "on": "Ph\u00e1t hi\u1ec7n"
+        },
+        "sound": {
+            "off": "Tr\u00f4\u0341ng tra\u0309i",
+            "on": "Ph\u00e1t hi\u1ec7n"
+        },
+        "vibration": {
+            "off": "Tr\u00f4\u0341ng tra\u0309i",
+            "on": "Ph\u00e1t hi\u1ec7n"
+        },
+        "window": {
+            "off": "\u0110\u00f3ng",
+            "on": "M\u1edf"
+        }
+    },
+    "title": "C\u1ea3m bi\u1ebfn nh\u1ecb ph\u00e2n"
+}

@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Service is already configured"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "elevation": "Elevation",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "name": "Name"
+                },
+                "description": "Meteorologisk institutt",
+                "title": "Location"
+            }
+        }
+    }
+}

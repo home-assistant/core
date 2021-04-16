@@ -1,63 +1,89 @@
 """Support for the Hive climate devices."""
-from homeassistant.components.climate import ClimateDevice
-from homeassistant.components.climate.const import (
-    STATE_AUTO, STATE_HEAT, SUPPORT_AUX_HEAT, SUPPORT_OPERATION_MODE,
-    SUPPORT_TARGET_TEMPERATURE)
-from homeassistant.const import (
-    ATTR_TEMPERATURE, STATE_OFF, STATE_ON, TEMP_CELSIUS)
+from datetime import timedelta
 
-from . import DATA_HIVE, DOMAIN
+import voluptuous as vol
+
+from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate.const import (
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
+    CURRENT_HVAC_OFF,
+    HVAC_MODE_AUTO,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_OFF,
+    PRESET_BOOST,
+    PRESET_NONE,
+    SUPPORT_PRESET_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
+)
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.helpers import config_validation as cv, entity_platform
+
+from . import HiveEntity, refresh_system
+from .const import ATTR_TIME_PERIOD, DOMAIN, SERVICE_BOOST_HEATING
 
 HIVE_TO_HASS_STATE = {
-    'SCHEDULE': STATE_AUTO,
-    'MANUAL': STATE_HEAT,
-    'ON': STATE_ON,
-    'OFF': STATE_OFF,
+    "SCHEDULE": HVAC_MODE_AUTO,
+    "MANUAL": HVAC_MODE_HEAT,
+    "OFF": HVAC_MODE_OFF,
 }
 
 HASS_TO_HIVE_STATE = {
-    STATE_AUTO: 'SCHEDULE',
-    STATE_HEAT: 'MANUAL',
-    STATE_ON: 'ON',
-    STATE_OFF: 'OFF',
+    HVAC_MODE_AUTO: "SCHEDULE",
+    HVAC_MODE_HEAT: "MANUAL",
+    HVAC_MODE_OFF: "OFF",
 }
 
-SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE |
-                 SUPPORT_OPERATION_MODE |
-                 SUPPORT_AUX_HEAT)
+HIVE_TO_HASS_HVAC_ACTION = {
+    "UNKNOWN": CURRENT_HVAC_OFF,
+    False: CURRENT_HVAC_IDLE,
+    True: CURRENT_HVAC_HEAT,
+}
+
+TEMP_UNIT = {"C": TEMP_CELSIUS, "F": TEMP_FAHRENHEIT}
+
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
+SUPPORT_HVAC = [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF]
+SUPPORT_PRESET = [PRESET_NONE, PRESET_BOOST]
+PARALLEL_UPDATES = 0
+SCAN_INTERVAL = timedelta(seconds=15)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up Hive climate devices."""
-    if discovery_info is None:
-        return
-    session = hass.data.get(DATA_HIVE)
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up Hive thermostat based on a config entry."""
 
-    add_entities([HiveClimateEntity(session, discovery_info)])
+    hive = hass.data[DOMAIN][entry.entry_id]
+    devices = hive.session.deviceList.get("climate")
+    entities = []
+    if devices:
+        for dev in devices:
+            entities.append(HiveClimateEntity(hive, dev))
+    async_add_entities(entities, True)
+
+    platform = entity_platform.current_platform.get()
+
+    platform.async_register_entity_service(
+        SERVICE_BOOST_HEATING,
+        {
+            vol.Required(ATTR_TIME_PERIOD): vol.All(
+                cv.time_period,
+                cv.positive_timedelta,
+                lambda td: td.total_seconds() // 60,
+            ),
+            vol.Optional(ATTR_TEMPERATURE, default="25.0"): vol.Coerce(float),
+        },
+        "async_heating_boost",
+    )
 
 
-class HiveClimateEntity(ClimateDevice):
+class HiveClimateEntity(HiveEntity, ClimateEntity):
     """Hive Climate Device."""
 
-    def __init__(self, hivesession, hivedevice):
+    def __init__(self, hive_session, hive_device):
         """Initialize the Climate device."""
-        self.node_id = hivedevice["Hive_NodeID"]
-        self.node_name = hivedevice["Hive_NodeName"]
-        self.device_type = hivedevice["HA_DeviceType"]
-        if self.device_type == "Heating":
-            self.thermostat_node_id = hivedevice["Thermostat_NodeID"]
-        self.session = hivesession
-        self.attributes = {}
-        self.data_updatesource = '{}.{}'.format(
-            self.device_type, self.node_id)
-        self._unique_id = '{}-{}'.format(self.node_id, self.device_type)
-
-        if self.device_type == "Heating":
-            self.modes = [STATE_AUTO, STATE_HEAT, STATE_OFF]
-        elif self.device_type == "HotWater":
-            self.modes = [STATE_AUTO, STATE_ON, STATE_OFF]
-
-        self.session.entities.append(self)
+        super().__init__(hive_session, hive_device)
+        self.thermostat_node_id = hive_device["device_id"]
+        self.temperature_type = TEMP_UNIT.get(hive_device["temperatureunit"])
 
     @property
     def unique_id(self):
@@ -68,10 +94,12 @@ class HiveClimateEntity(ClimateDevice):
     def device_info(self):
         """Return device information."""
         return {
-            'identifiers': {
-                (DOMAIN, self.unique_id)
-            },
-            'name': self.name
+            "identifiers": {(DOMAIN, self.device["device_id"])},
+            "name": self.device["device_name"],
+            "model": self.device["deviceData"]["model"],
+            "manufacturer": self.device["deviceData"]["manufacturer"],
+            "sw_version": self.device["deviceData"]["version"],
+            "via_device": (DOMAIN, self.device["parentDevice"]),
         }
 
     @property
@@ -79,135 +107,103 @@ class HiveClimateEntity(ClimateDevice):
         """Return the list of supported features."""
         return SUPPORT_FLAGS
 
-    def handle_update(self, updatesource):
-        """Handle the new update request."""
-        if '{}.{}'.format(self.device_type, self.node_id) not in updatesource:
-            self.schedule_update_ha_state()
-
     @property
     def name(self):
         """Return the name of the Climate device."""
-        friendly_name = "Climate Device"
-        if self.device_type == "Heating":
-            friendly_name = "Heating"
-            if self.node_name is not None:
-                friendly_name = '{} {}'.format(self.node_name, friendly_name)
-        elif self.device_type == "HotWater":
-            friendly_name = "Hot Water"
-        return friendly_name
+        return self.device["haName"]
 
     @property
-    def device_state_attributes(self):
-        """Show Device Attributes."""
-        return self.attributes
+    def available(self):
+        """Return if the device is available."""
+        return self.device["deviceData"]["online"]
+
+    @property
+    def hvac_modes(self):
+        """Return the list of available hvac operation modes.
+
+        Need to be a subset of HVAC_MODES.
+        """
+        return SUPPORT_HVAC
+
+    @property
+    def hvac_mode(self):
+        """Return hvac operation ie. heat, cool mode.
+
+        Need to be one of HVAC_MODE_*.
+        """
+        return HIVE_TO_HASS_STATE[self.device["status"]["mode"]]
+
+    @property
+    def hvac_action(self):
+        """Return current HVAC action."""
+        return HIVE_TO_HASS_HVAC_ACTION[self.device["status"]["action"]]
 
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return TEMP_CELSIUS
+        return self.temperature_type
 
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        if self.device_type == "Heating":
-            return self.session.heating.current_temperature(self.node_id)
+        return self.device["status"]["current_temperature"]
 
     @property
     def target_temperature(self):
         """Return the target temperature."""
-        if self.device_type == "Heating":
-            return self.session.heating.get_target_temperature(self.node_id)
+        return self.device["status"]["target_temperature"]
 
     @property
     def min_temp(self):
         """Return minimum temperature."""
-        if self.device_type == "Heating":
-            return self.session.heating.min_temperature(self.node_id)
+        return self.device["min_temp"]
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        if self.device_type == "Heating":
-            return self.session.heating.max_temperature(self.node_id)
+        return self.device["max_temp"]
 
     @property
-    def operation_list(self):
-        """List of the operation modes."""
-        return self.modes
+    def preset_mode(self):
+        """Return the current preset mode, e.g., home, away, temp."""
+        if self.device["status"]["boost"] == "ON":
+            return PRESET_BOOST
+        return None
 
     @property
-    def current_operation(self):
-        """Return current mode."""
-        if self.device_type == "Heating":
-            currentmode = self.session.heating.get_mode(self.node_id)
-        elif self.device_type == "HotWater":
-            currentmode = self.session.hotwater.get_mode(self.node_id)
-        return HIVE_TO_HASS_STATE.get(currentmode)
+    def preset_modes(self):
+        """Return a list of available preset modes."""
+        return SUPPORT_PRESET
 
-    def set_operation_mode(self, operation_mode):
-        """Set new Heating mode."""
-        new_mode = HASS_TO_HIVE_STATE.get(operation_mode)
-        if self.device_type == "Heating":
-            self.session.heating.set_mode(self.node_id, new_mode)
-        elif self.device_type == "HotWater":
-            self.session.hotwater.set_mode(self.node_id, new_mode)
+    @refresh_system
+    async def async_set_hvac_mode(self, hvac_mode):
+        """Set new target hvac mode."""
+        new_mode = HASS_TO_HIVE_STATE[hvac_mode]
+        await self.hive.heating.setMode(self.device, new_mode)
 
-        for entity in self.session.entities:
-            entity.handle_update(self.data_updatesource)
-
-    def set_temperature(self, **kwargs):
+    @refresh_system
+    async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
         new_temperature = kwargs.get(ATTR_TEMPERATURE)
         if new_temperature is not None:
-            if self.device_type == "Heating":
-                self.session.heating.set_target_temperature(self.node_id,
-                                                            new_temperature)
+            await self.hive.heating.setTargetTemperature(self.device, new_temperature)
 
-            for entity in self.session.entities:
-                entity.handle_update(self.data_updatesource)
+    @refresh_system
+    async def async_set_preset_mode(self, preset_mode):
+        """Set new preset mode."""
+        if preset_mode == PRESET_NONE and self.preset_mode == PRESET_BOOST:
+            await self.hive.heating.turnBoostOff(self.device)
+        elif preset_mode == PRESET_BOOST:
+            curtemp = round(self.current_temperature * 2) / 2
+            temperature = curtemp + 0.5
+            await self.hive.heating.turnBoostOn(self.device, 30, temperature)
 
-    @property
-    def is_aux_heat_on(self):
-        """Return true if auxiliary heater is on."""
-        boost_status = None
-        if self.device_type == "Heating":
-            boost_status = self.session.heating.get_boost(self.node_id)
-        elif self.device_type == "HotWater":
-            boost_status = self.session.hotwater.get_boost(self.node_id)
-        return boost_status == "ON"
+    @refresh_system
+    async def async_heating_boost(self, time_period, temperature):
+        """Handle boost heating service call."""
+        await self.hive.heating.turnBoostOn(self.device, time_period, temperature)
 
-    def turn_aux_heat_on(self):
-        """Turn auxiliary heater on."""
-        target_boost_time = 30
-        if self.device_type == "Heating":
-            curtemp = self.session.heating.current_temperature(self.node_id)
-            curtemp = round(curtemp * 2) / 2
-            target_boost_temperature = curtemp + 0.5
-            self.session.heating.turn_boost_on(self.node_id,
-                                               target_boost_time,
-                                               target_boost_temperature)
-        elif self.device_type == "HotWater":
-            self.session.hotwater.turn_boost_on(self.node_id,
-                                                target_boost_time)
-
-        for entity in self.session.entities:
-            entity.handle_update(self.data_updatesource)
-
-    def turn_aux_heat_off(self):
-        """Turn auxiliary heater off."""
-        if self.device_type == "Heating":
-            self.session.heating.turn_boost_off(self.node_id)
-        elif self.device_type == "HotWater":
-            self.session.hotwater.turn_boost_off(self.node_id)
-
-        for entity in self.session.entities:
-            entity.handle_update(self.data_updatesource)
-
-    def update(self):
+    async def async_update(self):
         """Update all Node data from Hive."""
-        node = self.node_id
-        if self.device_type == "Heating":
-            node = self.thermostat_node_id
-
-        self.session.core.update_data(self.node_id)
-        self.attributes = self.session.attributes.state_attributes(node)
+        await self.hive.session.updateData(self.device)
+        self.device = await self.hive.heating.getHeating(self.device)

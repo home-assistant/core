@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "MyQ est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "cannot_connect": "Impossible de se connecter, veuillez r\u00e9essayer",
+            "invalid_auth": "Authentification invalide",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur"
+                },
+                "title": "Connectez-vous \u00e0 la passerelle MyQ"
+            }
+        }
+    }
+}

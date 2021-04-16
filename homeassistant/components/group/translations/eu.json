@@ -1,0 +1,15 @@
+{
+    "state": {
+        "_": {
+            "closed": "Itxita",
+            "home": "Etxean",
+            "not_home": "Kanpoan",
+            "off": "Itzalita",
+            "ok": "Itzalita",
+            "on": "Piztuta",
+            "open": "Ireki",
+            "problem": "Arazoa"
+        }
+    },
+    "title": "Taldea"
+}

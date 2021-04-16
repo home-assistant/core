@@ -1,95 +1,96 @@
 # Describes the format for available camera services
 
 turn_off:
+  name: Turn off
   description: Turn off camera.
-  fields:
-    entity_id:
-      description: Entity id.
-      example: 'camera.living_room'
+  target:
 
 turn_on:
+  name: Turn on
   description: Turn on camera.
-  fields:
-    entity_id:
-      description: Entity id.
-      example: 'camera.living_room'
+  target:
 
 enable_motion_detection:
+  name: Enable motion detection
   description: Enable the motion detection in a camera.
-  fields:
-    entity_id:
-      description: Name(s) of entities to enable motion detection.
-      example: 'camera.living_room_camera'
+  target:
 
 disable_motion_detection:
+  name: Disable motion detection
   description: Disable the motion detection in a camera.
-  fields:
-    entity_id:
-      description: Name(s) of entities to disable motion detection.
-      example: 'camera.living_room_camera'
+  target:
 
 snapshot:
+  name: Take snapshot
   description: Take a snapshot from a camera.
+  target:
   fields:
-    entity_id:
-      description: Name(s) of entities to create snapshots from.
-      example: 'camera.living_room_camera'
     filename:
+      name: Filename
       description: Template of a Filename. Variable is entity_id.
-      example: '/tmp/snapshot_{{ entity_id }}'
+      required: true
+      example: "/tmp/snapshot_{{ entity_id.name }}.jpg"
+      selector:
+        text:
 
 play_stream:
+  name: Play stream
   description: Play camera stream on supported media player.
+  target:
   fields:
-    entity_id:
-      description: Name(s) of entities to stream from.
-      example: 'camera.living_room_camera'
     media_player:
+      name: Media Player
       description: Name(s) of media player to stream to.
-      example: 'media_player.living_room_tv'
+      required: true
+      example: "media_player.living_room_tv"
+      selector:
+        entity:
+          domain: media_player
     format:
-      description: (Optional) Stream format supported by media player.
-      example: 'hls'
+      name: Format
+      description: Stream format supported by media player.
+      default: "hls"
+      example: "hls"
+      selector:
+        select:
+          options:
+            - "hls"
 
 record:
+  name: Record
   description: Record live camera feed.
+  target:
   fields:
-    entity_id:
-      description: Name of entities to record.
-      example: 'camera.living_room_camera'
     filename:
-      description: Template of a Filename. Variable is entity_id.  Must be mp4.
-      example: '/tmp/snapshot_{{ entity_id }}.mp4'
+      name: Filename
+      description: Template of a Filename. Variable is entity_id. Must be mp4.
+      required: true
+      example: "/tmp/snapshot_{{ entity_id.name }}.mp4"
+      selector:
+        text:
     duration:
-      description: (Optional) Target recording length (in seconds).
+      name: Duration
+      description: Target recording length.
       default: 30
       example: 30
+      selector:
+        number:
+          min: 1
+          max: 3600
+          step: 1
+          unit_of_measurement: seconds
+          mode: slider
     lookback:
-      description: (Optional) Target lookback period (in seconds) to include in addition to duration.  Only available if there is currently an active HLS stream.
+      name: Lookback
+      description:
+        Target lookback period to include in addition to duration. Only
+        available if there is currently an active HLS stream.
+      default: 0
       example: 4
-
-local_file_update_file_path:
-  description: Update the file_path for a local_file camera.
-  fields:
-    entity_id:
-      description: Name(s) of entities to update.
-      example: 'camera.local_file'
-    file_path:
-      description: Path to the new image file.
-      example: '/images/newimage.jpg'
-
-onvif_ptz:
-  description: Pan/Tilt/Zoom service for ONVIF camera.
-  fields:
-    entity_id:
-      description: Name(s) of entities to pan, tilt or zoom.
-      example: 'camera.living_room_camera'
-    pan:
-      description: "Direction of pan. Allowed values: LEFT, RIGHT."
-      example: 'LEFT'
-    tilt:
-      description: "Direction of tilt. Allowed values: DOWN, UP."
-      example: 'DOWN'
-    zoom:
-      description: "Zoom. Allowed values: ZOOM_IN, ZOOM_OUT"
-      example: "ZOOM_IN"
+      selector:
+        number:
+          min: 0
+          max: 300
+          step: 1
+          unit_of_measurement: seconds
+          mode: slider

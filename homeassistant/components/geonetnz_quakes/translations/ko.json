@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\uc11c\ube44\uc2a4\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "mmi": "MMI",
+                    "radius": "\ubc18\uacbd"
+                },
+                "title": "\ud544\ud130 \uc138\ubd80 \uc0ac\ud56d\uc744 \uc785\ub825\ud574\uc8fc\uc138\uc694."
+            }
+        }
+    }
+}

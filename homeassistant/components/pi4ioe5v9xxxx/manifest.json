@@ -1,0 +1,7 @@
+{
+    "domain": "pi4ioe5v9xxxx",
+    "name": "pi4ioe5v9xxxx IO Expander",
+    "documentation": "https://www.home-assistant.io/integrations/pi4ioe5v9xxxx",
+    "requirements": ["pi4ioe5v9xxxx==0.0.2"],
+    "codeowners": ["@antonverburg"]
+}

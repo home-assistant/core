@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is al geconfigureerd",
+            "external_error": "Uitzondering opgetreden uit een andere stroom.",
+            "external_setup": "Logi Circle is met succes geconfigureerd vanuit een andere stroom.",
+            "missing_configuration": "De Netatmo-component is niet geconfigureerd. Gelieve de documentatie volgen."
+        },
+        "error": {
+            "authorize_url_timeout": "Time-out tijdens genereren autorisatie url.",
+            "follow_link": "Volg de link en authenticeer voordat u op Verzenden drukt.",
+            "invalid_auth": "Ongeldige authenticatie"
+        },
+        "step": {
+            "auth": {
+                "description": "Volg de onderstaande link en **Accepteer** toegang tot uw Logi Circle-account, kom dan terug en druk hieronder op **Verzenden** . \n\n [Link] ({authorization_url})",
+                "title": "Authenticeren met Logi Circle"
+            },
+            "user": {
+                "data": {
+                    "flow_impl": "Provider"
+                },
+                "description": "Kies met welke authenticatieprovider u wilt authenticeren met Logi Circle.",
+                "title": "Authenticatieprovider"
+            }
+        }
+    }
+}

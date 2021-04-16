@@ -1,0 +1,76 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "cannot_connect": "Tilkobling mislyktes",
+            "not_lutron_device": "Oppdaget enhet er ikke en Lutron-enhet"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes"
+        },
+        "flow_title": "Lutron Cas\u00e9ta {name} ({host})",
+        "step": {
+            "import_failed": {
+                "description": "Kunne ikke konfigurere bridge (host: {host} ) importert fra configuration.yaml.",
+                "title": "Kan ikke importere Cas\u00e9ta bridge-konfigurasjon."
+            },
+            "link": {
+                "description": "Hvis du vil pare med {name} ({host}), trykker du den svarte knappen p\u00e5 baksiden av broen etter at du har sendt dette skjemaet.",
+                "title": "Par med broen"
+            },
+            "user": {
+                "data": {
+                    "host": "Vert"
+                },
+                "description": "Skriv inn IP-adressen til enheten.",
+                "title": "Koble automatisk til broen"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "F\u00f8rste knapp",
+            "button_2": "Andre knapp",
+            "button_3": "Tredje knapp",
+            "button_4": "Fjerde knapp",
+            "close_1": "Lukk 1",
+            "close_2": "Lukk 2",
+            "close_3": "Lukk 3",
+            "close_4": "Lukk 4",
+            "close_all": "Lukk alle",
+            "group_1_button_1": "F\u00f8rste gruppe f\u00f8rste knapp",
+            "group_1_button_2": "F\u00f8rste gruppe andre knapp",
+            "group_2_button_1": "Andre gruppe f\u00f8rste knapp",
+            "group_2_button_2": "Andre gruppeknapp",
+            "lower": "Senk",
+            "lower_1": "Senk 1",
+            "lower_2": "Senk 2",
+            "lower_3": "Senk 3",
+            "lower_4": "Senk 4",
+            "lower_all": "Senk alle",
+            "off": "Av",
+            "on": "P\u00e5",
+            "open_1": "\u00c5pne 1",
+            "open_2": "\u00c5pne 2",
+            "open_3": "\u00c5pne 3",
+            "open_4": "\u00c5pne 4",
+            "open_all": "\u00c5pne alle",
+            "raise": "Hev",
+            "raise_1": "Hev 1",
+            "raise_2": "Hev 2",
+            "raise_3": "Hev 3",
+            "raise_4": "Hev 4",
+            "raise_all": "Hev alle",
+            "stop": "Stopp (favoritt)",
+            "stop_1": "Stopp 1",
+            "stop_2": "Stopp 2",
+            "stop_3": "Stopp 3",
+            "stop_4": "Stopp 4",
+            "stop_all": "Stopp alle"
+        },
+        "trigger_type": {
+            "press": "\"{subtype}\" trykket",
+            "release": "\"{subtype}\" utgitt"
+        }
+    }
+}

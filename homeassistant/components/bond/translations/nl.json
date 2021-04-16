@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Kon niet verbinden",
+            "invalid_auth": "Ongeldige authenticatie",
+            "old_firmware": "Niet-ondersteunde oude firmware op het Bond-apparaat - voer een upgrade uit voordat u doorgaat",
+            "unknown": "Onverwachte fout"
+        },
+        "flow_title": "Bond: {name} ({host})",
+        "step": {
+            "confirm": {
+                "data": {
+                    "access_token": "Toegangstoken"
+                },
+                "description": "Wilt u {name} instellen?"
+            },
+            "user": {
+                "data": {
+                    "access_token": "Toegangstoken",
+                    "host": "Host"
+                }
+            }
+        }
+    }
+}

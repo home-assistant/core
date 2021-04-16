@@ -1,0 +1,8 @@
+{
+  "domain": "motion_blinds",
+  "name": "Motion Blinds",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/motion_blinds",
+  "requirements": ["motionblinds==0.4.10"],
+  "codeowners": ["@starkillerOG"]
+}

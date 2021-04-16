@@ -1,0 +1,90 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "step": {
+            "pick_radio": {
+                "data": {
+                    "radio_type": "Funktyp"
+                },
+                "description": "W\u00e4hlen Sie einen Typ Ihres Zigbee-Funks",
+                "title": "Funktyp"
+            },
+            "port_config": {
+                "data": {
+                    "baudrate": "Port-Geschwindigkeit",
+                    "flow_control": "Datenflusskontrolle",
+                    "path": "Serieller Ger\u00e4tepfad"
+                },
+                "description": "Geben Sie die portspezifischen Einstellungen ein",
+                "title": "Einstellungen"
+            },
+            "user": {
+                "data": {
+                    "path": "Serieller Ger\u00e4tepfad"
+                },
+                "description": "W\u00e4hlen Sie die serielle Schnittstelle f\u00fcr den ZigBee-Funk",
+                "title": "ZHA"
+            }
+        }
+    },
+    "device_automation": {
+        "action_type": {
+            "squawk": "Kreischen",
+            "warn": "Warnen"
+        },
+        "trigger_subtype": {
+            "both_buttons": "Beide Tasten",
+            "button_1": "Erste Taste",
+            "button_2": "Zweite Taste",
+            "button_3": "Dritte Taste",
+            "button_4": "Vierte Taste",
+            "button_5": "F\u00fcnfte Taste",
+            "button_6": "Sechste Taste",
+            "close": "Schlie\u00dfen",
+            "dim_down": "Dimmer runter",
+            "dim_up": "Dimmer hoch",
+            "face_1": "mit Fl\u00e4che 1 aktiviert",
+            "face_2": "mit Fl\u00e4che 2 aktiviert",
+            "face_3": "mit Fl\u00e4che 3 aktiviert",
+            "face_4": "mit Fl\u00e4che 4 aktiviert",
+            "face_5": "mit Fl\u00e4che 5 aktiviert",
+            "face_6": "mit Fl\u00e4che 6 aktiviert",
+            "face_any": "Mit einer beliebigen/festgelegten Fl\u00e4che(n) aktiviert",
+            "left": "Links",
+            "open": "Offen",
+            "right": "Rechts",
+            "turn_off": "Ausschalten",
+            "turn_on": "Einschalten"
+        },
+        "trigger_type": {
+            "device_dropped": "Ger\u00e4t ist gefallen",
+            "device_flipped": "Ger\u00e4t umgedreht \"{subtype}\"",
+            "device_knocked": "Ger\u00e4t klopfte \"{subtype}\"",
+            "device_rotated": "Ger\u00e4t wurde gedreht \"{subtype}\"",
+            "device_shaken": "Ger\u00e4t ersch\u00fcttert",
+            "device_slid": "Ger\u00e4t gerutscht \"{subtype}\"",
+            "device_tilted": "Ger\u00e4t gekippt",
+            "remote_button_alt_double_press": "\"{subtype}\" Taste doppelt geklickt (Alternativer Modus)",
+            "remote_button_alt_long_press": "\"{subtype}\" Taste kontinuierlich gedr\u00fcckt (Alternativer Modus)",
+            "remote_button_alt_long_release": "\"{subtype}\" Taste nach langem Dr\u00fccken losgelassen (Alternativer Modus)",
+            "remote_button_alt_quadruple_press": "\"{subtype}\" Taste vierfach geklickt (Alternativer Modus)",
+            "remote_button_alt_quintuple_press": "\"{subtype}\" Taste f\u00fcnffach geklickt (Alternativer Modus)",
+            "remote_button_alt_short_press": "\"{subtype}\" Taste gedr\u00fcckt (Alternativer Modus)",
+            "remote_button_alt_short_release": "\"{subtype}\" Taste losgelassen (Alternativer Modus)",
+            "remote_button_alt_triple_press": "\"{subtype}\" Taste dreimal geklickt (Alternativer Modus)",
+            "remote_button_double_press": "\"{subtype}\" Taste doppelt angeklickt",
+            "remote_button_long_press": "\"{subtype}\" Taste kontinuierlich gedr\u00fcckt",
+            "remote_button_long_release": "\"{subtype}\" Taste nach langem Dr\u00fccken losgelassen",
+            "remote_button_quadruple_press": "\"{subtype}\" Taste vierfach geklickt",
+            "remote_button_quintuple_press": "\"{subtype}\" Taste f\u00fcnffach geklickt",
+            "remote_button_short_press": "\"{subtype}\" Taste gedr\u00fcckt",
+            "remote_button_short_release": "\"{subtype}\" Taste losgelassen",
+            "remote_button_triple_press": "\"{subtype}\" Taste dreimal geklickt"
+        }
+    }
+}

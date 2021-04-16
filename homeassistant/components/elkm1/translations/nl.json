@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "address_already_configured": "Een ElkM1 met dit adres is al geconfigureerd",
+            "already_configured": "Een ElkM1 met dit voorvoegsel is al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "address": "Het IP-adres of domein of seri\u00eble poort bij verbinding via serieel.",
+                    "password": "Wachtwoord",
+                    "prefix": "Een uniek voorvoegsel (laat dit leeg als u maar \u00e9\u00e9n ElkM1 heeft).",
+                    "protocol": "Protocol",
+                    "temperature_unit": "De temperatuureenheid die ElkM1 gebruikt.",
+                    "username": "Gebruikersnaam"
+                },
+                "description": "De adresreeks moet de vorm 'adres [: poort]' hebben voor 'veilig' en 'niet-beveiligd'. Voorbeeld: '192.168.1.1'. De poort is optioneel en is standaard 2101 voor 'niet beveiligd' en 2601 voor 'beveiligd'. Voor het seri\u00eble protocol moet het adres de vorm 'tty [: baud]' hebben. Voorbeeld: '/ dev / ttyS1'. De baud is optioneel en is standaard ingesteld op 115200.",
+                "title": "Maak verbinding met Elk-M1 Control"
+            }
+        }
+    }
+}

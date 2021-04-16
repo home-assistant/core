@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "E-Mail",
+                    "password": "Passwort"
+                }
+            }
+        }
+    }
+}

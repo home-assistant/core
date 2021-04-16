@@ -1,0 +1,76 @@
+{
+  "config": {
+    "flow_title": "Lutron Caséta {name} ({host})",
+    "step": {
+      "import_failed": {
+        "title": "Failed to import Caséta bridge configuration.",
+        "description": "Couldn’t setup bridge (host: {host}) imported from configuration.yaml."
+      },
+      "user": {
+        "title": "Automatically connect to the bridge",
+        "description": "Enter the IP address of the device.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        }
+      },
+      "link": {
+        "title": "Pair with the bridge",
+        "description": "To pair with {name} ({host}), after submitting this form, press the black button on the back of the bridge."
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "not_lutron_device": "Discovered device is not a Lutron device",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  },
+  "device_automation": {
+    "trigger_subtype": {
+      "button_1": "First button",
+      "button_2": "Second button",
+      "button_3": "Third button",
+      "button_4": "Fourth button",
+      "group_1_button_1": "First Group first button",
+      "group_1_button_2": "First Group second button",
+      "group_2_button_1": "Second Group first button",
+      "group_2_button_2": "Second Group second button",
+      "on": "On",
+      "stop": "Stop (favorite)",
+      "off": "Off",
+      "raise": "Raise",
+      "lower": "Lower",
+      "open_all": "Open all",
+      "stop_all": "Stop all",
+      "close_all": "Close all",
+      "raise_all": "Raise all",
+      "lower_all": "Lower all",
+      "open_1": "Open 1",
+      "stop_1": "Stop 1",
+      "close_1": "Close 1",
+      "raise_1": "Raise 1",
+      "lower_1": "Lower 1",
+      "open_2": "Open 2",
+      "stop_2": "Stop 2",
+      "close_2": "Close 2",
+      "raise_2": "Raise 2",
+      "lower_2": "Lower 2",
+      "open_3": "Open 3",
+      "stop_3": "Stop 3",
+      "close_3": "Close 3",
+      "raise_3": "Raise 3",
+      "lower_3": "Lower 3",
+      "open_4": "Open 4",
+      "stop_4": "Stop 4",
+      "close_4": "Close 4",
+      "raise_4": "Raise 4",
+      "lower_4": "Lower 4"
+    },
+    "trigger_type": {
+      "press": "\"{subtype}\" pressed",
+      "release": "\"{subtype}\" released"
+    }
+  }
+}

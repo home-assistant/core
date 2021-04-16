@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "No s'han trobat dispositius a la xarxa",
+            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
+        },
+        "error": {
+            "invalid_known_hosts": "Els amfitrions coneguts han de ser una llista d'amfitrions separats per comes."
+        },
+        "step": {
+            "config": {
+                "data": {
+                    "known_hosts": "Llista opcional d'amfitrions coneguts per si el descobriment mDNS deixa de funcionar."
+                },
+                "description": "Introdueix la configuraci\u00f3 de Google Cast.",
+                "title": "Google Cast"
+            },
+            "confirm": {
+                "description": "Vols comen\u00e7ar la configuraci\u00f3?"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_known_hosts": "Els amfitrions coneguts han de ser una llista d'amfitrions separats per comes."
+        },
+        "step": {
+            "options": {
+                "data": {
+                    "ignore_cec": "Llista opcional que es passar\u00e0 a pychromecast.IGNORE_CEC.",
+                    "known_hosts": "Llista opcional d'amfitrions coneguts per si el descobriment mDNS deixa de funcionar.",
+                    "uuid": "Llista opcional d'UUIDs. No s'afegiran 'casts' que no siguin a la llista."
+                },
+                "description": "Introdueix la configuraci\u00f3 de Google Cast."
+            }
+        }
+    }
+}

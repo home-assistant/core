@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "No se encontraron dispositivos Google Cast en la red.",
+            "single_instance_allowed": "S\u00f3lo es necesaria una \u00fanica configuraci\u00f3n de Google Cast."
+        },
+        "step": {
+            "confirm": {
+                "description": "\u00bfDesea configurar Google Cast?"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "options": {
+                "data": {
+                    "ignore_cec": "Lista opcional que se pasar\u00e1 a pychromecast.IGNORE_CEC.",
+                    "uuid": "Lista opcional de UUID. No se agregar\u00e1n los dispositivos Cast que no est\u00e9n listados."
+                }
+            }
+        }
+    }
+}

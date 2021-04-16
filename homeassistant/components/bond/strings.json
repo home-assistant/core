@@ -1,0 +1,28 @@
+{
+  "config": {
+    "flow_title": "Bond: {name} ({host})",
+    "step": {
+      "confirm": {
+        "description": "Do you want to set up {name}?",
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]"
+        }
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "access_token": "[%key:common::config_flow::data::access_token%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "old_firmware": "Unsupported old firmware on the Bond device - please upgrade before continuing",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}

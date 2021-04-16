@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor",
+            "cannot_connect": "Ba\u011flanma hatas\u0131"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Ana Bilgisayar",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

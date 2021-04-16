@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Airly",
+        "description": "Set up Airly air quality integration. To generate API key go to https://developer.airly.eu/register",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]"
+        }
+      }
+    },
+    "error": {
+      "wrong_location": "No Airly measuring stations in this area.",
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+    }
+  },
+  "system_health": {
+    "info": {
+      "can_reach_server": "Reach Airly server",
+      "requests_remaining": "Remaining allowed requests",
+      "requests_per_day": "Allowed requests per day"
+    }
+  }
+}

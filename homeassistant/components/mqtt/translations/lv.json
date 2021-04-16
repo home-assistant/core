@@ -1,0 +1,14 @@
+{
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "Pirm\u0101 poga",
+            "button_2": "Otr\u0101 poga",
+            "button_3": "Tre\u0161\u0101 poga",
+            "button_4": "Ceturt\u0101 poga",
+            "button_5": "Piekt\u0101 poga",
+            "button_6": "Sest\u0101 poga",
+            "turn_off": "Iesl\u0113gt",
+            "turn_on": "Iesl\u0113gt"
+        }
+    }
+}

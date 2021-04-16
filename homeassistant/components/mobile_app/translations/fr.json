@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "install_app": "Ouvrez l'application mobile pour configurer l'int\u00e9gration avec Home Assistant. Voir [la documentation] ( {apps_url} ) pour obtenir une liste des applications compatibles."
+        },
+        "step": {
+            "confirm": {
+                "description": "Voulez-vous configurer le composant Application mobile?"
+            }
+        }
+    },
+    "device_automation": {
+        "action_type": {
+            "notify": "Envoyer une notification"
+        }
+    },
+    "title": "Application mobile"
+}

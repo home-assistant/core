@@ -1,0 +1,55 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida",
+            "missing_data": "Dati mancanti: si prega di riprovare pi\u00f9 tardi o un'altra configurazione",
+            "otp_failed": "Autenticazione in due fasi fallita, riprovare con un nuovo codice di accesso",
+            "unknown": "Errore imprevisto"
+        },
+        "flow_title": "Synology DSM {name} ({host})",
+        "step": {
+            "2sa": {
+                "data": {
+                    "otp_code": "Codice"
+                },
+                "title": "Synology DSM: autenticazione in due fasi"
+            },
+            "link": {
+                "data": {
+                    "password": "Password",
+                    "port": "Porta",
+                    "ssl": "Utilizza un certificato SSL",
+                    "username": "Nome utente",
+                    "verify_ssl": "Verificare il certificato SSL"
+                },
+                "description": "Vuoi impostare {name} ({host})?",
+                "title": "Synology DSM"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Porta",
+                    "ssl": "Utilizza un certificato SSL",
+                    "username": "Nome utente",
+                    "verify_ssl": "Verificare il certificato SSL"
+                },
+                "title": "Synology DSM"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Minuti tra una scansione e l'altra",
+                    "timeout": "Timeout (in secondi)"
+                }
+            }
+        }
+    }
+}

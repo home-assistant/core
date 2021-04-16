@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "invalid_webhook_url": "Home Assistant non \u00e8 configurato correttamente per ricevere gli aggiornamenti da SmartThings. L'URL del webhook non \u00e8 valido:\n> {webhook_url}\n\nSi prega di aggiornare la configurazione secondo le [istruzioni]({component_url}), riavviare Home Assistant e riprovare.",
+            "no_available_locations": "Non ci sono posizioni SmartThings disponibili da configurare in Home Assistant."
+        },
+        "error": {
+            "app_setup_error": "Impossibile configurare SmartApp. Riprovare.",
+            "token_forbidden": "Il token non dispone degli ambiti OAuth necessari.",
+            "token_invalid_format": "Il token deve essere nel formato UID/GUID",
+            "token_unauthorized": "Il token non \u00e8 valido o non \u00e8 pi\u00f9 autorizzato.",
+            "webhook_error": "SmartThings non \u00e8 riuscito a convalidare l'URL del webhook. Assicurati che l'URL del webhook sia raggiungibile da Internet e riprova."
+        },
+        "step": {
+            "authorize": {
+                "title": "Autorizza Home Assistant"
+            },
+            "pat": {
+                "data": {
+                    "access_token": "Token di accesso"
+                },
+                "description": "Si prega di inserire un SmartThings [Personal Access Token]({token_url}) che \u00e8 stato creato secondo le [istruzioni]({component_url}).  Questo verr\u00e0 utilizzato per creare l'integrazione Home Assistant all'interno del vostro account SmartThings.",
+                "title": "Inserisci il Token di Accesso Personale"
+            },
+            "select_location": {
+                "data": {
+                    "location_id": "Posizione"
+                },
+                "description": "Selezionare la posizione SmartThings che si desidera aggiungere a Home Assistant.  Apriremo quindi una nuova finestra e vi chiederemo di effettuare il login e di autorizzare l'installazione dell'integrazione dell'Home Assistant nella posizione selezionata.",
+                "title": "Seleziona posizione"
+            },
+            "user": {
+                "description": "SmartThings sar\u00e0 configurato per inviare aggiornamenti push a Home Assistant su: \n > {webhook_url} \n\nSe ci\u00f2 non fosse corretto, aggiornare la configurazione, riavviare Home Assistant e riprovare.",
+                "title": "Confermare l'URL di richiamo"
+            }
+        }
+    }
+}

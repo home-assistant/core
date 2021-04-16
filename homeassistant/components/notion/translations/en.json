@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured"
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication",
+            "no_devices": "No devices found in account"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "title": "Fill in your information"
+            }
+        }
+    }
+}

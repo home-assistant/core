@@ -1,32 +1,29 @@
 """Support for the Hive switches."""
-from homeassistant.components.switch import SwitchDevice
+from datetime import timedelta
 
-from . import DATA_HIVE, DOMAIN
+from homeassistant.components.switch import SwitchEntity
 
+from . import HiveEntity, refresh_system
+from .const import ATTR_MODE, DOMAIN
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up Hive switches."""
-    if discovery_info is None:
-        return
-    session = hass.data.get(DATA_HIVE)
-
-    add_entities([HiveDevicePlug(session, discovery_info)])
+PARALLEL_UPDATES = 0
+SCAN_INTERVAL = timedelta(seconds=15)
 
 
-class HiveDevicePlug(SwitchDevice):
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up Hive thermostat based on a config entry."""
+
+    hive = hass.data[DOMAIN][entry.entry_id]
+    devices = hive.session.deviceList.get("switch")
+    entities = []
+    if devices:
+        for dev in devices:
+            entities.append(HiveDevicePlug(hive, dev))
+    async_add_entities(entities, True)
+
+
+class HiveDevicePlug(HiveEntity, SwitchEntity):
     """Hive Active Plug."""
-
-    def __init__(self, hivesession, hivedevice):
-        """Initialize the Switch device."""
-        self.node_id = hivedevice["Hive_NodeID"]
-        self.node_name = hivedevice["Hive_NodeName"]
-        self.device_type = hivedevice["HA_DeviceType"]
-        self.session = hivesession
-        self.attributes = {}
-        self.data_updatesource = '{}.{}'.format(
-            self.device_type, self.node_id)
-        self._unique_id = '{}-{}'.format(self.node_id, self.device_type)
-        self.session.entities.append(self)
 
     @property
     def unique_id(self):
@@ -36,52 +33,54 @@ class HiveDevicePlug(SwitchDevice):
     @property
     def device_info(self):
         """Return device information."""
-        return {
-            'identifiers': {
-                (DOMAIN, self.unique_id)
-            },
-            'name': self.name
-        }
-
-    def handle_update(self, updatesource):
-        """Handle the new update request."""
-        if '{}.{}'.format(self.device_type, self.node_id) not in updatesource:
-            self.schedule_update_ha_state()
+        if self.device["hiveType"] == "activeplug":
+            return {
+                "identifiers": {(DOMAIN, self.device["device_id"])},
+                "name": self.device["device_name"],
+                "model": self.device["deviceData"]["model"],
+                "manufacturer": self.device["deviceData"]["manufacturer"],
+                "sw_version": self.device["deviceData"]["version"],
+                "via_device": (DOMAIN, self.device["parentDevice"]),
+            }
 
     @property
     def name(self):
         """Return the name of this Switch device if any."""
-        return self.node_name
+        return self.device["haName"]
 
     @property
-    def device_state_attributes(self):
+    def available(self):
+        """Return if the device is available."""
+        return self.device["deviceData"].get("online")
+
+    @property
+    def extra_state_attributes(self):
         """Show Device Attributes."""
-        return self.attributes
+        return {
+            ATTR_MODE: self.attributes.get(ATTR_MODE),
+        }
 
     @property
     def current_power_w(self):
         """Return the current power usage in W."""
-        return self.session.switch.get_power_usage(self.node_id)
+        return self.device["status"]["power_usage"]
 
     @property
     def is_on(self):
         """Return true if switch is on."""
-        return self.session.switch.get_state(self.node_id)
+        return self.device["status"]["state"]
 
-    def turn_on(self, **kwargs):
+    @refresh_system
+    async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
-        self.session.switch.turn_on(self.node_id)
-        for entity in self.session.entities:
-            entity.handle_update(self.data_updatesource)
+        await self.hive.switch.turnOn(self.device)
 
-    def turn_off(self, **kwargs):
+    @refresh_system
+    async def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        self.session.switch.turn_off(self.node_id)
-        for entity in self.session.entities:
-            entity.handle_update(self.data_updatesource)
+        await self.hive.switch.turnOff(self.device)
 
-    def update(self):
+    async def async_update(self):
         """Update all Node data from Hive."""
-        self.session.core.update_data(self.node_id)
-        self.attributes = self.session.attributes.state_attributes(
-            self.node_id)
+        await self.hive.session.updateData(self.device)
+        self.device = await self.hive.switch.getPlug(self.device)

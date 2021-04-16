@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "cannot_connect": "Impossibile connettersi"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi"
+        },
+        "flow_title": "WLED: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Configura WLED per l'integrazione con Home Assistant."
+            },
+            "zeroconf_confirm": {
+                "description": "Vuoi aggiungere il WLED chiamato `{name}` a Home Assistant?",
+                "title": "Dispositivo WLED rilevato"
+            }
+        }
+    }
+}

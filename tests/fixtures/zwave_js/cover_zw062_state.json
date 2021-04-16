@@ -1,0 +1,921 @@
+{
+  "nodeId": 12,
+  "index": 0,
+  "installerIcon": 7680,
+  "userIcon": 7680,
+  "status": 4,
+  "ready": true,
+  "deviceClass": {
+    "basic": {"key": 4, "label":"Routing Slave"},
+    "generic": {"key": 64, "label":"Entry Control"},
+    "specific": {"key": 7, "label":"Secure Barrier Add-on"},
+    "mandatorySupportedCCs": [],
+    "mandatoryControlCCs": []
+  },
+  "isListening": true,
+  "isFrequentListening": false,
+  "isRouting": true,
+  "maxBaudRate": 40000,
+  "isSecure": true,
+  "version": 4,
+  "isBeaming": true,
+  "manufacturerId": 134,
+  "productId": 62,
+  "productType": 259,
+  "firmwareVersion": "1.12",
+  "zwavePlusVersion": 1,
+  "nodeType": 0,
+  "roleType": 5,
+  "deviceConfig": {
+    "manufacturerId": 134,
+    "manufacturer": "AEON Labs",
+    "label": "ZW062",
+    "description": "Aeon Labs Garage Door Controller Gen5",
+    "devices": [
+      {
+        "productType": "0x0003",
+        "productId": "0x003e"
+      },
+      {
+        "productType": "0x0103",
+        "productId": "0x003e"
+      },
+      {
+        "productType": "0x0203",
+        "productId": "0x003e"
+      }
+    ],
+    "firmwareVersion": {
+      "min": "0.0",
+      "max": "255.255"
+    },
+    "associations": {},
+    "paramInformation": {
+      "_map": {}
+    }
+  },
+  "label": "ZW062",
+  "neighbors": [
+    1,
+    8,
+    11,
+    15,
+    19,
+    21,
+    22,
+    24,
+    25,
+    26,
+    27,
+    29
+  ],
+  "interviewAttempts": 1,
+  "endpoints": [
+    {
+      "nodeId": 12,
+      "index": 0,
+      "installerIcon": 7680,
+      "userIcon": 7680
+    }
+  ],
+  "commandClasses": [],
+  "values": [
+    {
+      "endpoint": 0,
+      "commandClass": 37,
+      "commandClassName": "Binary Switch",
+      "property": "currentValue",
+      "propertyName": "currentValue",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": false,
+        "label": "Current value"
+      },
+      "value": false
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 37,
+      "commandClassName": "Binary Switch",
+      "property": "targetValue",
+      "propertyName": "targetValue",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": true,
+        "label": "Target value"
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 102,
+      "commandClassName": "Barrier Operator",
+      "property": "currentState",
+      "propertyName": "currentState",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 255,
+        "label": "Current Barrier State",
+        "states": {
+          "0": "Closed",
+          "252": "Closing",
+          "253": "Stopped",
+          "254": "Opening",
+          "255": "Open"
+        }
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 102,
+      "commandClassName": "Barrier Operator",
+      "property": "position",
+      "propertyName": "position",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 100,
+        "label": "Barrier Position",
+        "unit": "%"
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 102,
+      "commandClassName": "Barrier Operator",
+      "property": "signalingState",
+      "propertyKey": 1,
+      "propertyName": "signalingState",
+      "propertyKeyName": "1",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "min": 0,
+        "max": 255,
+        "label": "Signaling State (Audible)",
+        "states": {
+          "0": "Off",
+          "255": "On"
+        }
+      },
+      "value": 255
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 102,
+      "commandClassName": "Barrier Operator",
+      "property": "signalingState",
+      "propertyKey": 2,
+      "propertyName": "signalingState",
+      "propertyKeyName": "2",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "min": 0,
+        "max": 255,
+        "label": "Signaling State (Visual)",
+        "states": {
+          "0": "Off",
+          "255": "On"
+        }
+      },
+      "value": 255
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 102,
+      "commandClassName": "Barrier Operator",
+      "property": "targetState",
+      "propertyName": "targetState",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "min": 0,
+        "max": 255,
+        "label": "Target Barrier State",
+        "states": {
+          "0": "Closed",
+          "255": "Open"
+        }
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 32,
+      "propertyName": "Startup ringtone",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 1,
+        "min": 1,
+        "max": 100,
+        "default": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "label": "Startup ringtone",
+        "description": "Configure the default startup ringtone",
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 35,
+      "propertyName": "Calibration timout",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 2,
+        "min": 1,
+        "max": 255,
+        "default": 60,
+        "format": 0,
+        "allowManualEntry": true,
+        "label": "Calibration timout",
+        "description": "Set the timeout of all calibration steps for the Sensor.",
+        "isFromConfig": true
+      },
+      "value": 13
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 36,
+      "propertyName": "Number of alarm musics",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "valueSize": 1,
+        "min": 1,
+        "max": 100,
+        "default": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "label": "Number of alarm musics",
+        "description": "Get the number of alarm musics",
+        "isFromConfig": true
+      },
+      "value": 5
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 39,
+      "propertyName": "Unknown state alarm mode",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 4,
+        "min": 0,
+        "max": 0,
+        "default": 0,
+        "format": 0,
+        "allowManualEntry": true,
+        "label": "Unknown state alarm mode",
+        "description": "Configuration alarm mode when the garage door is in \"unknown\" state",
+        "isFromConfig": true
+      },
+      "value": 100927488
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 40,
+      "propertyName": "Closed alarm mode",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 4,
+        "min": 0,
+        "max": 0,
+        "default": 0,
+        "format": 0,
+        "allowManualEntry": true,
+        "label": "Closed alarm mode",
+        "description": "Configure the alarm mode when the garage door is in closed position.",
+        "isFromConfig": true
+      },
+      "value": 33883392
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 41,
+      "propertyName": "Tamper switch configuration",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 1,
+        "min": 0,
+        "max": 255,
+        "default": 0,
+        "format": 1,
+        "allowManualEntry": true,
+        "label": "Tamper switch configuration",
+        "description": "Configuration report for the tamper switch State",
+        "isFromConfig": true
+      },
+      "value": 15
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 42,
+      "propertyName": "Battery state",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "valueSize": 1,
+        "min": 0,
+        "max": 16,
+        "default": 0,
+        "format": 0,
+        "allowManualEntry": true,
+        "label": "Battery state",
+        "description": "Configuration report for the battery state of Sensor",
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 45,
+      "propertyName": "Temperature",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "valueSize": 2,
+        "min": 0,
+        "max": 500,
+        "default": 0,
+        "format": 0,
+        "allowManualEntry": true,
+        "label": "Temperature",
+        "description": "Get the environment temperature",
+        "isFromConfig": true
+      },
+      "value": 550
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 47,
+      "propertyName": "Button definition",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 1,
+        "min": 0,
+        "max": 1,
+        "default": 0,
+        "format": 0,
+        "allowManualEntry": false,
+        "states": {
+          "0": "Mode 0",
+          "1": "Mode 1"
+        },
+        "label": "Button definition",
+        "description": "Define the function of Button- or Button+.",
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 80,
+      "propertyName": "Door state change report type",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 1,
+        "min": 1,
+        "max": 2,
+        "default": 2,
+        "format": 0,
+        "allowManualEntry": false,
+        "states": {
+          "1": "Send hail CC",
+          "2": "Send barrier operator report CC"
+        },
+        "label": "Door state change report type",
+        "description": "Configure the door state change report type",
+        "isFromConfig": true
+      },
+      "value": 2
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 241,
+      "propertyName": "Pair the Sensor",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 4,
+        "min": 0,
+        "max": 1431655681,
+        "default": 0,
+        "format": 0,
+        "allowManualEntry": false,
+        "states": {
+          "0": "Stop sensor pairing",
+          "1431655681": "Start sensor pairing"
+        },
+        "label": "Pair the Sensor",
+        "description": "Pair the Sensor with Garage Door Controller",
+        "isFromConfig": true
+      },
+      "value": 33554943
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 252,
+      "propertyName": "Lock Configuration",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 1,
+        "min": 0,
+        "max": 1,
+        "default": 0,
+        "format": 0,
+        "allowManualEntry": false,
+        "states": {
+          "0": "Configuration enabled",
+          "1": "Configuration disabled (locked)"
+        },
+        "label": "Lock Configuration",
+        "description": "Enable/disable configuration",
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 37,
+      "propertyKey": 255,
+      "propertyName": "Disable opening alarm",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 4,
+        "min": 0,
+        "max": 1,
+        "default": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "states": {
+          "0": "Disable alarm prompt",
+          "1": "Enable alarm prompt"
+        },
+        "label": "Disable opening alarm",
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 37,
+      "propertyKey": 65280,
+      "propertyName": "Opening alarm volume",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 4,
+        "min": 1,
+        "max": 10,
+        "default": 8,
+        "format": 0,
+        "allowManualEntry": true,
+        "label": "Opening alarm volume",
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 37,
+      "propertyKey": 16711680,
+      "propertyName": "Opening alarm choice",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 4,
+        "min": 1,
+        "max": 4,
+        "default": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "label": "Opening alarm choice",
+        "description": "Alarm mode when the garage door is opening",
+        "isFromConfig": true
+      },
+      "value": 2
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 37,
+      "propertyKey": 251658240,
+      "propertyName": "Opening alarm LED mode",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 4,
+        "min": 1,
+        "max": 10,
+        "default": 10,
+        "format": 0,
+        "allowManualEntry": true,
+        "label": "Opening alarm LED mode",
+        "isFromConfig": true
+      },
+      "value": 5
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 38,
+      "propertyKey": 255,
+      "propertyName": "Disable closing alarm",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 4,
+        "min": 0,
+        "max": 1,
+        "default": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "states": {
+          "0": "Disable alarm prompt",
+          "1": "Enable alarm prompt"
+        },
+        "label": "Disable closing alarm",
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 38,
+      "propertyKey": 65280,
+      "propertyName": "Closing alarm volume",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 4,
+        "min": 1,
+        "max": 10,
+        "default": 8,
+        "format": 0,
+        "allowManualEntry": true,
+        "label": "Closing alarm volume",
+        "isFromConfig": true
+      },
+      "value": 8
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 38,
+      "propertyKey": 16711680,
+      "propertyName": "Closing alarm choice",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 4,
+        "min": 1,
+        "max": 4,
+        "default": 2,
+        "format": 0,
+        "allowManualEntry": true,
+        "label": "Closing alarm choice",
+        "description": "Alarm mode when the garage door is closing",
+        "isFromConfig": true
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 38,
+      "propertyKey": 251658240,
+      "propertyName": "Closing alarm LED mode",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 4,
+        "min": 1,
+        "max": 10,
+        "default": 6,
+        "format": 0,
+        "allowManualEntry": true,
+        "label": "Closing alarm LED mode",
+        "isFromConfig": true
+      },
+      "value": 8
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 34,
+      "propertyName": "Sensor Calibration",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": false,
+        "writeable": true,
+        "valueSize": 1,
+        "min": 0,
+        "max": 1,
+        "default": 0,
+        "format": 0,
+        "allowManualEntry": false,
+        "states": {
+          "0": "Calibration not active",
+          "1": "Begin calibration"
+        },
+        "label": "Sensor Calibration",
+        "description": "Perform Sensor Calibration",
+        "isFromConfig": true
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 43,
+      "propertyName": "Play or Pause ringtone",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": false,
+        "writeable": true,
+        "valueSize": 1,
+        "min": 1,
+        "max": 255,
+        "default": 1,
+        "format": 1,
+        "allowManualEntry": true,
+        "label": "Play or Pause ringtone",
+        "description": "Start playing or Stop playing the ringtone",
+        "isFromConfig": true
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 44,
+      "propertyName": "Ringtone test volume",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": false,
+        "writeable": true,
+        "valueSize": 1,
+        "min": 1,
+        "max": 10,
+        "default": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "label": "Ringtone test volume",
+        "description": "Set volume for test of ringtone",
+        "isFromConfig": true
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "alarmType",
+      "propertyName": "alarmType",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 255,
+        "label": "Alarm Type"
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "alarmLevel",
+      "propertyName": "alarmLevel",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 255,
+        "label": "Alarm Level"
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "manufacturerId",
+      "propertyName": "manufacturerId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 65535,
+        "label": "Manufacturer ID"
+      },
+      "value": 134
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productType",
+      "propertyName": "productType",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 65535,
+        "label": "Product type"
+      },
+      "value": 259
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productId",
+      "propertyName": "productId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 65535,
+        "label": "Product ID"
+      },
+      "value": 62
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "libraryType",
+      "propertyName": "libraryType",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Library type"
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "protocolVersion",
+      "propertyName": "protocolVersion",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave protocol version"
+      },
+      "value": "3.99"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "firmwareVersions",
+      "propertyName": "firmwareVersions",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip firmware versions"
+      },
+      "value": [
+        "1.12"
+      ]
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "hardwareVersion",
+      "propertyName": "hardwareVersion",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip hardware version"
+      }
+    }
+  ]
+}

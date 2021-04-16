@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges.",
+            "webhook_not_internet_accessible": "A Home Assistant rendszerednek el\u00e9rhet\u0151nek kell lennie az internetr\u0151l a webhook \u00fczenetek fogad\u00e1s\u00e1hoz."
+        },
+        "create_entry": {
+            "default": "Ha esem\u00e9nyeket szeretne k\u00fcldeni a Home Assistant programnak, be kell \u00e1ll\u00edtania a [Webhooks with Mailgun]({mailgun_url}) alkalmaz\u00e1st. \n\n T\u00f6ltse ki a k\u00f6vetkez\u0151 inform\u00e1ci\u00f3kat: \n\n - URL: `{webhook_url}`\n - M\u00f3dszer: POST\n - Tartalom t\u00edpusa: application/json \n\n L\u00e1sd [a dokument\u00e1ci\u00f3]({docs_url}), hogyan konfigur\u00e1lhatja az automatiz\u00e1l\u00e1sokat a bej\u00f6v\u0151 adatok kezel\u00e9s\u00e9re."
+        },
+        "step": {
+            "user": {
+                "description": "Biztosan be szeretn\u00e9d \u00e1ll\u00edtani a Mailgunt?",
+                "title": "Mailgun Webhook be\u00e1ll\u00edt\u00e1sa"
+            }
+        }
+    }
+}

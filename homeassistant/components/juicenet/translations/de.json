@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto wurde bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_token": "API-Token"
+                },
+                "description": "Sie ben\u00f6tigen das API-Token von https://home.juice.net/Manage.",
+                "title": "Stelle eine Verbindung zu JuiceNet her"
+            }
+        }
+    }
+}

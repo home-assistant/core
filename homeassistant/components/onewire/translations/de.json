@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_path": "Verzeichnis nicht gefunden."
+        },
+        "step": {
+            "owserver": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "title": "owserver-Details einstellen"
+            },
+            "user": {
+                "data": {
+                    "type": "Verbindungstyp"
+                },
+                "title": "1-Wire einrichten"
+            }
+        }
+    }
+}

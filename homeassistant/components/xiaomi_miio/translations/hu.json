@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "already_in_progress": "A konfigur\u00e1ci\u00f3 m\u00e1r folyamatban van."
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "no_device_selected": "Nincs kiv\u00e1lasztva eszk\u00f6z, k\u00e9rj\u00fck, v\u00e1lasszon egyet."
+        },
+        "flow_title": "Xiaomi Miio: {name}",
+        "step": {
+            "device": {
+                "data": {
+                    "host": "IP c\u00edm",
+                    "model": "Eszk\u00f6z modell (opcion\u00e1lis)",
+                    "name": "Eszk\u00f6z neve",
+                    "token": "API Token"
+                },
+                "description": "Sz\u00fcks\u00e9ged lesz a 32 karakteres API Tokenre, k\u00f6vesd a https://www.home-assistant.io/integrations/xiaomi_miio#retrieving-the-access-token oldal instrukci\u00f3it. Vedd figyelembe, hogy ez az API Token k\u00fcl\u00f6nb\u00f6zik a Xiaomi Aqara integr\u00e1ci\u00f3 \u00e1ltal haszn\u00e1lt kulcst\u00f3l.",
+                "title": "Csatlakoz\u00e1s Xiaomi Miio eszk\u00f6zh\u00f6z vagy Xiaomi Gateway-hez"
+            },
+            "gateway": {
+                "data": {
+                    "host": "IP c\u00edm",
+                    "name": "K\u00f6zponti egys\u00e9g neve",
+                    "token": "API Token"
+                },
+                "description": "Sz\u00fcks\u00e9ge lesz az API Tokenre, tov\u00e1bbi inforaciok: https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token. K\u00e9rj\u00fck, vegye figyelembe, hogy ez az API Token k\u00fcl\u00f6nb\u00f6zik a Xiaomi Aqara integr\u00e1ci\u00f3 \u00e1ltal haszn\u00e1lt kulcst\u00f3l.",
+                "title": "Csatlakozzon egy Xiaomi K\u00f6zponti egys\u00e9ghez"
+            },
+            "user": {
+                "data": {
+                    "gateway": "Csatlakozzon egy Xiaomi K\u00f6zponti egys\u00e9ghez"
+                },
+                "description": "V\u00e1lassza ki, melyik k\u00e9sz\u00fcl\u00e9khez szeretne csatlakozni.",
+                "title": "Xiaomi Miio"
+            }
+        }
+    }
+}

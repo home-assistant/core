@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "device_exists": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Twinkly \u88dd\u7f6e\u4e3b\u6a5f\u540d\u7a31\uff08\u6216 IP \u4f4d\u5740\uff09"
+                },
+                "description": "\u8a2d\u5b9a Twinkly LED \u71c8\u4e32",
+                "title": "Twinkly"
+            }
+        }
+    }
+}

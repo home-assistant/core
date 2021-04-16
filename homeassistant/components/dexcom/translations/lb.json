@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kont ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
+            "unknown": "Onerwaarte"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwuert",
+                    "server": "Server",
+                    "username": "Benotzernumm"
+                },
+                "description": "F\u00ebll deng Desxcom Share Umeldungs Informatiounen aus",
+                "title": "Dexcom Integration ariichten"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "unit_of_measurement": "Moosseenheet"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "unsupported_model": "Seda printeri mudelit ei toetata."
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "snmp_error": "SNMP-server on v\u00e4lja l\u00fclitatud v\u00f5i printerit ei toetata.",
+            "wrong_host": "Sobimatu hostinimi v\u00f5i IP-aadress."
+        },
+        "flow_title": "Brotheri printer: {model} {serial_number}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "type": "Printeri t\u00fc\u00fcp"
+                },
+                "description": "Seadista Brotheri printeri sidumine. Kui seadistamisega on probleeme mine aadressile https://www.home-assistant.io/integrations/brother"
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "type": "Printeri t\u00fc\u00fcp"
+                },
+                "description": "Kas soovite lisada Home Assistanti Brotheri printeri {model} seerianumbriga \" {serial_number} \"?",
+                "title": "Avastatud Brotheri printer"
+            }
+        }
+    }
+}

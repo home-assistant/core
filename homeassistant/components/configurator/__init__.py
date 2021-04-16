@@ -6,54 +6,64 @@ This will return a request id that has to be used for future calls.
 A callback has to be provided to `request_config` which will be called when
 the user has submitted configuration information.
 """
+from contextlib import suppress
 import functools as ft
-import logging
 
-from homeassistant.core import callback as async_callback
-from homeassistant.const import EVENT_TIME_CHANGED, ATTR_FRIENDLY_NAME, \
-    ATTR_ENTITY_PICTURE
-from homeassistant.loader import bind_hass
+from homeassistant.const import (
+    ATTR_ENTITY_PICTURE,
+    ATTR_FRIENDLY_NAME,
+    EVENT_TIME_CHANGED,
+)
+from homeassistant.core import Event, callback as async_callback
 from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import run_callback_threadsafe
 
-_LOGGER = logging.getLogger(__name__)
-_KEY_INSTANCE = 'configurator'
+_KEY_INSTANCE = "configurator"
 
-DATA_REQUESTS = 'configurator_requests'
+DATA_REQUESTS = "configurator_requests"
 
-ATTR_CONFIGURE_ID = 'configure_id'
-ATTR_DESCRIPTION = 'description'
-ATTR_DESCRIPTION_IMAGE = 'description_image'
-ATTR_ERRORS = 'errors'
-ATTR_FIELDS = 'fields'
-ATTR_LINK_NAME = 'link_name'
-ATTR_LINK_URL = 'link_url'
-ATTR_SUBMIT_CAPTION = 'submit_caption'
+ATTR_CONFIGURE_ID = "configure_id"
+ATTR_DESCRIPTION = "description"
+ATTR_DESCRIPTION_IMAGE = "description_image"
+ATTR_ERRORS = "errors"
+ATTR_FIELDS = "fields"
+ATTR_LINK_NAME = "link_name"
+ATTR_LINK_URL = "link_url"
+ATTR_SUBMIT_CAPTION = "submit_caption"
 
-DOMAIN = 'configurator'
+DOMAIN = "configurator"
 
-ENTITY_ID_FORMAT = DOMAIN + '.{}'
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-SERVICE_CONFIGURE = 'configure'
-STATE_CONFIGURE = 'configure'
-STATE_CONFIGURED = 'configured'
+SERVICE_CONFIGURE = "configure"
+STATE_CONFIGURE = "configure"
+STATE_CONFIGURED = "configured"
 
 
 @bind_hass
 @async_callback
 def async_request_config(
-        hass, name, callback=None, description=None, description_image=None,
-        submit_caption=None, fields=None, link_name=None, link_url=None,
-        entity_picture=None):
+    hass,
+    name,
+    callback=None,
+    description=None,
+    description_image=None,
+    submit_caption=None,
+    fields=None,
+    link_name=None,
+    link_url=None,
+    entity_picture=None,
+):
     """Create a new request for configuration.
 
     Will return an ID to be used for sequent calls.
     """
     if link_name is not None and link_url is not None:
-        description += '\n\n[{}]({})'.format(link_name, link_url)
+        description += f"\n\n[{link_name}]({link_url})"
 
     if description_image is not None:
-        description += '\n\n![Description image]({})'.format(description_image)
+        description += f"\n\n![Description image]({description_image})"
 
     instance = hass.data.get(_KEY_INSTANCE)
 
@@ -61,7 +71,8 @@ def async_request_config(
         instance = hass.data[_KEY_INSTANCE] = Configurator(hass)
 
     request_id = instance.async_request_config(
-        name, callback, description, submit_caption, fields, entity_picture)
+        name, callback, description, submit_caption, fields, entity_picture
+    )
 
     if DATA_REQUESTS not in hass.data:
         hass.data[DATA_REQUESTS] = {}
@@ -86,12 +97,8 @@ def request_config(hass, *args, **kwargs):
 @async_callback
 def async_notify_errors(hass, request_id, error):
     """Add errors to a config request."""
-    try:
-        hass.data[DATA_REQUESTS][request_id].async_notify_errors(
-            request_id, error)
-    except KeyError:
-        # If request_id does not exist
-        pass
+    with suppress(KeyError):  # If request_id does not exist
+        hass.data[DATA_REQUESTS][request_id].async_notify_errors(request_id, error)
 
 
 @bind_hass
@@ -106,11 +113,8 @@ def notify_errors(hass, request_id, error):
 @async_callback
 def async_request_done(hass, request_id):
     """Mark a configuration request as done."""
-    try:
+    with suppress(KeyError):  # If request_id does not exist
         hass.data[DATA_REQUESTS].pop(request_id).async_request_done(request_id)
-    except KeyError:
-        # If request_id does not exist
-        pass
 
 
 @bind_hass
@@ -135,15 +139,15 @@ class Configurator:
         self._cur_id = 0
         self._requests = {}
         hass.services.async_register(
-            DOMAIN, SERVICE_CONFIGURE, self.async_handle_service_call)
+            DOMAIN, SERVICE_CONFIGURE, self.async_handle_service_call
+        )
 
     @async_callback
     def async_request_config(
-            self, name, callback, description, submit_caption, fields,
-            entity_picture):
+        self, name, callback, description, submit_caption, fields, entity_picture
+    ):
         """Set up a request for configuration."""
-        entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT, name, hass=self.hass)
+        entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, name, hass=self.hass)
 
         if fields is None:
             fields = []
@@ -159,12 +163,16 @@ class Configurator:
             ATTR_ENTITY_PICTURE: entity_picture,
         }
 
-        data.update({
-            key: value for key, value in [
-                (ATTR_DESCRIPTION, description),
-                (ATTR_SUBMIT_CAPTION, submit_caption),
-            ] if value is not None
-        })
+        data.update(
+            {
+                key: value
+                for key, value in [
+                    (ATTR_DESCRIPTION, description),
+                    (ATTR_SUBMIT_CAPTION, submit_caption),
+                ]
+                if value is not None
+            }
+        )
 
         self.hass.states.async_set(entity_id, STATE_CONFIGURE, data)
 
@@ -194,14 +202,14 @@ class Configurator:
         entity_id = self._requests.pop(request_id)[0]
 
         # If we remove the state right away, it will not be included with
-        # the result fo the service call (current design limitation).
+        # the result of the service call (current design limitation).
         # Instead, we will set it to configured to give as feedback but delete
         # it shortly after so that it is deleted when the client updates.
         self.hass.states.async_set(entity_id, STATE_CONFIGURED)
 
-        def deferred_remove(event):
+        def deferred_remove(event: Event):
             """Remove the request state."""
-            self.hass.states.async_remove(entity_id)
+            self.hass.states.async_remove(entity_id, context=event.context)
 
         self.hass.bus.async_listen_once(EVENT_TIME_CHANGED, deferred_remove)
 
@@ -217,13 +225,12 @@ class Configurator:
 
         # field validation goes here?
         if callback:
-            await self.hass.async_add_job(callback,
-                                          call.data.get(ATTR_FIELDS, {}))
+            await self.hass.async_add_job(callback, call.data.get(ATTR_FIELDS, {}))
 
     def _generate_unique_id(self):
         """Generate a unique configurator ID."""
         self._cur_id += 1
-        return "{}-{}".format(id(self), self._cur_id)
+        return f"{id(self)}-{self._cur_id}"
 
     def _validate_request_id(self, request_id):
         """Validate that the request belongs to this instance."""

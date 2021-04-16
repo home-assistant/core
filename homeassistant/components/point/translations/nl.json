@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Al geconfigureerd. Slechts een enkele configuratie mogelijk.",
+            "authorize_url_fail": "Onbekende fout bij het genereren van een autoriseer-URL.",
+            "authorize_url_timeout": "Time-out tijdens genereren autorisatie url.",
+            "external_setup": "Punt succesvol geconfigureerd vanuit een andere stroom.",
+            "no_flows": "De Netatmo-component is niet geconfigureerd. Gelieve de documentatie volgen.",
+            "unknown_authorize_url_generation": "Onbekende fout bij het genereren van een autorisatie-URL."
+        },
+        "create_entry": {
+            "default": "Succesvol geauthenticeerd"
+        },
+        "error": {
+            "follow_link": "Volg de link en verifieer voordat je op Verzenden klikt",
+            "no_token": "Ongeldig toegangstoken"
+        },
+        "step": {
+            "auth": {
+                "description": "Ga naar onderstaande link en **Accepteer** toegang tot je Minut account, kom dan hier terug en klik op **Verzenden** hier onder.\n\n[Link]({authorization_url})",
+                "title": "Verificatie Point"
+            },
+            "user": {
+                "data": {
+                    "flow_impl": "Leverancier"
+                },
+                "description": "Wil je beginnen met instellen?",
+                "title": "Kies een authenticatie methode"
+            }
+        }
+    }
+}

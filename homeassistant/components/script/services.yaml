@@ -1,25 +1,20 @@
 # Describes the format for available python_script services
 
 reload:
+  name: Reload
   description: Reload all the available scripts
 
 turn_on:
+  name: Turn on
   description: Turn on script
-  fields:
-    entity_id:
-      description: Name(s) of script to be turned on.
-      example: 'script.arrive_home'
+  target:
 
 turn_off:
+  name: Turn off
   description: Turn off script
-  fields:
-    entity_id:
-      description: Name(s) of script to be turned off.
-      example: 'script.arrive_home'
+  target:
 
 toggle:
+  name: Toggle
   description: Toggle script
-  fields:
-    entity_id:
-      description: Name(s) of script to be toggled.
-      example: 'script.arrive_home'
+  target:

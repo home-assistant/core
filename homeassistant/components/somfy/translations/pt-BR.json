@@ -1,0 +1,11 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Excedido tempo limite gerando a URL de autoriza\u00e7\u00e3o.",
+            "missing_configuration": "O componente Somfy n\u00e3o est\u00e1 configurado. Por favor, siga a documenta\u00e7\u00e3o."
+        },
+        "create_entry": {
+            "default": "Autenticado com sucesso pela Somfy."
+        }
+    }
+}

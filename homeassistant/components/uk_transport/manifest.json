@@ -1,8 +1,6 @@
 {
   "domain": "uk_transport",
-  "name": "Uk transport",
-  "documentation": "https://www.home-assistant.io/components/uk_transport",
-  "requirements": [],
-  "dependencies": [],
+  "name": "UK Transport",
+  "documentation": "https://www.home-assistant.io/integrations/uk_transport",
   "codeowners": []
 }

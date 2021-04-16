@@ -1,0 +1,24 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "wrong_server_id": "Server ID is not valid"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "scan_interval": "Update frequency (minutes)",
+          "manual": "Disable auto update",
+          "server_name": "Select test server"
+        }
+      }
+    }
+  }
+}

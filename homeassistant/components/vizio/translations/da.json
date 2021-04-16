@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "updated_entry": "Denne post er allerede konfigureret, men navnet og/eller indstillingerne, der er defineret i konfigurationen, stemmer ikke overens med den tidligere importerede konfiguration, s\u00e5 konfigurationsposten er blevet opdateret i overensstemmelse hermed."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Adgangstoken",
+                    "device_class": "Enhedstype",
+                    "host": "<V\u00e6rt/IP>:<Port>",
+                    "name": "Navn"
+                },
+                "title": "Ops\u00e6t Vizio SmartCast-enhed"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "volume_step": "Lydstyrkestrinst\u00f8rrelse"
+                },
+                "title": "Opdater Vizo SmartCast-indstillinger"
+            }
+        }
+    }
+}

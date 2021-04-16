@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "V\u00e4rden \u00e4r redan konfigurerad."
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta, f\u00f6rs\u00f6k igen",
+            "register_failed": "Misslyckades med att registrera, v\u00e4nligen f\u00f6rs\u00f6k igen",
+            "unknown": "Ok\u00e4nt fel: f\u00f6rs\u00f6k igen senare"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "V\u00e4rd",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

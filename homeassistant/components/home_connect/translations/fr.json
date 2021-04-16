@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "missing_configuration": "Le composant Home Connect n'est pas configur\u00e9. Veuillez suivre la documentation.",
+            "no_url_available": "Aucune URL disponible. Pour plus d'informations sur cette erreur, [consultez la section d'aide] ( {docs_url} )"
+        },
+        "create_entry": {
+            "default": "Authentification r\u00e9ussie avec Home Connect."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Choisissez la m\u00e9thode d'authentification"
+            }
+        }
+    }
+}

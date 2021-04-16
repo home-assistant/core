@@ -1,46 +1,69 @@
 """Light support for switch entities."""
-import logging
+from __future__ import annotations
+
+from typing import Any, Callable, Sequence, cast
 
 import voluptuous as vol
 
 from homeassistant.components import switch
+from homeassistant.components.light import PLATFORM_SCHEMA, LightEntity
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_ENTITY_ID, CONF_NAME, STATE_ON, STATE_UNAVAILABLE)
-from homeassistant.core import State, callback
+    ATTR_ENTITY_ID,
+    CONF_ENTITY_ID,
+    CONF_NAME,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
+from homeassistant.core import HomeAssistant, State, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_track_state_change
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from homeassistant.components.light import PLATFORM_SCHEMA, Light
+# mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
-_LOGGER = logging.getLogger(__name__)
+DEFAULT_NAME = "Light Switch"
 
-DEFAULT_NAME = 'Light Switch'
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Required(CONF_ENTITY_ID): cv.entity_domain(switch.DOMAIN),
+    }
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Required(CONF_ENTITY_ID): cv.entity_domain(switch.DOMAIN)
-})
 
-
-async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
-                               async_add_entities,
-                               discovery_info=None) -> None:
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: Callable[[Sequence[Entity]], None],
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Initialize Light Switch platform."""
-    async_add_entities([LightSwitch(config.get(CONF_NAME),
-                                    config[CONF_ENTITY_ID])], True)
+
+    registry = await hass.helpers.entity_registry.async_get_registry()
+    wrapped_switch = registry.async_get(config[CONF_ENTITY_ID])
+    unique_id = wrapped_switch.unique_id if wrapped_switch else None
+
+    async_add_entities(
+        [
+            LightSwitch(
+                cast(str, config.get(CONF_NAME)),
+                config[CONF_ENTITY_ID],
+                unique_id,
+            )
+        ]
+    )
 
 
-class LightSwitch(Light):
+class LightSwitch(LightEntity):
     """Represents a Switch as a Light."""
 
-    def __init__(self, name: str, switch_entity_id: str) -> None:
+    def __init__(self, name: str, switch_entity_id: str, unique_id: str) -> None:
         """Initialize Light Switch."""
-        self._name = name  # type: str
-        self._switch_entity_id = switch_entity_id  # type: str
-        self._is_on = False  # type: bool
-        self._available = False  # type: bool
-        self._async_unsub_state_changed = None
+        self._name = name
+        self._switch_entity_id = switch_entity_id
+        self._unique_id = unique_id
+        self._switch_state: State | None = None
 
     @property
     def name(self) -> str:
@@ -50,55 +73,61 @@ class LightSwitch(Light):
     @property
     def is_on(self) -> bool:
         """Return true if light switch is on."""
-        return self._is_on
+        assert self._switch_state is not None
+        return self._switch_state.state == STATE_ON
 
     @property
     def available(self) -> bool:
         """Return true if light switch is on."""
-        return self._available
+        return (
+            self._switch_state is not None
+            and self._switch_state.state != STATE_UNAVAILABLE
+        )
 
     @property
     def should_poll(self) -> bool:
         """No polling needed for a light switch."""
         return False
 
+    @property
+    def unique_id(self):
+        """Return the unique id of the light switch."""
+        return self._unique_id
+
     async def async_turn_on(self, **kwargs):
         """Forward the turn_on command to the switch in this light switch."""
         data = {ATTR_ENTITY_ID: self._switch_entity_id}
         await self.hass.services.async_call(
-            switch.DOMAIN, switch.SERVICE_TURN_ON, data, blocking=True)
+            switch.DOMAIN,
+            switch.SERVICE_TURN_ON,
+            data,
+            blocking=True,
+            context=self._context,
+        )
 
     async def async_turn_off(self, **kwargs):
         """Forward the turn_off command to the switch in this light switch."""
         data = {ATTR_ENTITY_ID: self._switch_entity_id}
         await self.hass.services.async_call(
-            switch.DOMAIN, switch.SERVICE_TURN_OFF, data, blocking=True)
-
-    async def async_update(self):
-        """Query the switch in this light switch and determine the state."""
-        switch_state = self.hass.states.get(self._switch_entity_id)
-
-        if switch_state is None:
-            self._available = False
-            return
-
-        self._is_on = switch_state.state == STATE_ON
-        self._available = switch_state.state != STATE_UNAVAILABLE
+            switch.DOMAIN,
+            switch.SERVICE_TURN_OFF,
+            data,
+            blocking=True,
+            context=self._context,
+        )
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
+        self._switch_state = self.hass.states.get(self._switch_entity_id)
+
         @callback
-        def async_state_changed_listener(entity_id: str, old_state: State,
-                                         new_state: State):
+        def async_state_changed_listener(*_: Any) -> None:
             """Handle child updates."""
-            self.async_schedule_update_ha_state(True)
+            self._switch_state = self.hass.states.get(self._switch_entity_id)
+            self.async_write_ha_state()
 
-        self._async_unsub_state_changed = async_track_state_change(
-            self.hass, self._switch_entity_id, async_state_changed_listener)
-
-    async def async_will_remove_from_hass(self):
-        """Handle removal from Home Assistant."""
-        if self._async_unsub_state_changed is not None:
-            self._async_unsub_state_changed()
-            self._async_unsub_state_changed = None
-            self._available = False
+        self.async_on_remove(
+            async_track_state_change_event(
+                self.hass, [self._switch_entity_id], async_state_changed_listener
+            )
+        )

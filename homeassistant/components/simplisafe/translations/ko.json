@@ -1,0 +1,45 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\uc774 SimpliSafe \uacc4\uc815\uc740 \uc774\ubbf8 \uc0ac\uc6a9 \uc911\uc785\ub2c8\ub2e4.",
+            "reauth_successful": "\uc7ac\uc778\uc99d\uc5d0 \uc131\uacf5\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "error": {
+            "identifier_exists": "\uacc4\uc815\uc774 \uc774\ubbf8 \ub4f1\ub85d\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "invalid_auth": "\uc778\uc99d\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "still_awaiting_mfa": "\uc544\uc9c1 \ub2e4\ub2e8\uacc4 \uc778\uc99d(MFA) \uc774\uba54\uc77c\uc758 \ub9c1\ud06c \ud074\ub9ad\uc744 \uae30\ub2e4\ub9ac\uace0\uc788\uc2b5\ub2c8\ub2e4",
+            "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "step": {
+            "mfa": {
+                "description": "\uc774\uba54\uc77c\uc5d0\uc11c SimpliSafe\uc758 \ub9c1\ud06c\ub97c \ud655\uc778\ud574\uc8fc\uc138\uc694. \ub9c1\ud06c\ub97c \ud655\uc778\ud55c \ud6c4 \uc5ec\uae30\ub85c \ub3cc\uc544\uc640 \ud1b5\ud569 \uad6c\uc131\uc694\uc18c\uc758 \uc124\uce58\ub97c \uc644\ub8cc\ud574\uc8fc\uc138\uc694.",
+                "title": "SimpliSafe \ub2e4\ub2e8\uacc4 \uc778\uc99d"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "\ube44\ubc00\ubc88\ud638"
+                },
+                "description": "\uc561\uc138\uc2a4 \ud1a0\ud070\uc774 \ub9cc\ub8cc\ub418\uc5c8\uac70\ub098 \ud574\uc9c0\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \uacc4\uc815\uc744 \ub2e4\uc2dc \uc5f0\uacb0\ud558\ub824\uba74 \ube44\ubc00\ubc88\ud638\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694.",
+                "title": "\ud1b5\ud569 \uad6c\uc131\uc694\uc18c \uc7ac\uc778\uc99d\ud558\uae30"
+            },
+            "user": {
+                "data": {
+                    "code": "\ucf54\ub4dc (Home Assistant UI \uc5d0\uc11c \uc0ac\uc6a9\ub428)",
+                    "password": "\ube44\ubc00\ubc88\ud638",
+                    "username": "\uc774\uba54\uc77c"
+                },
+                "title": "\uc0ac\uc6a9\uc790 \uc815\ubcf4\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "code": "\ucf54\ub4dc (Home Assistant UI \uc5d0\uc11c \uc0ac\uc6a9\ub428)"
+                },
+                "title": "SimpliSafe \uad6c\uc131\ud558\uae30"
+            }
+        }
+    }
+}

@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Autenticazione non valida",
+            "service": "Errore durante il tentativo di raggiungere SmartHab. Il servizio potrebbe non essere attivo. Controllare la connessione.",
+            "unknown": "Errore imprevisto"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "E-mail",
+                    "password": "Password"
+                },
+                "description": "Per motivi tecnici, assicurati di utilizzare un account secondario specifico per la tua configurazione di Home Assistant. \u00c8 possibile crearne uno dall'applicazione SmartHab.",
+                "title": "Configurazione SmartHab"
+            }
+        }
+    }
+}

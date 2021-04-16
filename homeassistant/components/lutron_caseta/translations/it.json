@@ -1,0 +1,76 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "cannot_connect": "Impossibile connettersi",
+            "not_lutron_device": "Il dispositivo rilevato non \u00e8 un dispositivo Lutron"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi"
+        },
+        "flow_title": "Lutron Cas\u00e9ta {name} ({host})",
+        "step": {
+            "import_failed": {
+                "description": "Impossibile impostare il bridge (host: {host}) importato da configuration.yaml.",
+                "title": "Impossibile importare la configurazione del bridge Cas\u00e9ta."
+            },
+            "link": {
+                "description": "Per eseguire l'associazione con {name} ({host}), dopo aver inviato questo modulo, premere il pulsante nero sul retro del bridge.",
+                "title": "Associa con il bridge"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Immettere l'indirizzo IP del dispositivo.",
+                "title": "Connetti automaticamente al bridge"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "Primo pulsante",
+            "button_2": "Secondo pulsante",
+            "button_3": "Terzo pulsante",
+            "button_4": "Quarto pulsante",
+            "close_1": "Chiudi 1",
+            "close_2": "Chiudi 2",
+            "close_3": "Chiudi 3",
+            "close_4": "Chiudi 4",
+            "close_all": "Chiudi tutti",
+            "group_1_button_1": "Primo Gruppo primo pulsante",
+            "group_1_button_2": "Primo Gruppo secondo pulsante",
+            "group_2_button_1": "Secondo Gruppo primo pulsante",
+            "group_2_button_2": "Secondo Gruppo secondo pulsante",
+            "lower": "Abbassa",
+            "lower_1": "Abbassa 1",
+            "lower_2": "Abbassa 2",
+            "lower_3": "Abbassa 3",
+            "lower_4": "Abbassa 4",
+            "lower_all": "Abbassa tutti",
+            "off": "Spento",
+            "on": "Acceso",
+            "open_1": "Apri 1",
+            "open_2": "Apri 2",
+            "open_3": "Apri 3",
+            "open_4": "Apri 4",
+            "open_all": "Apri tutti",
+            "raise": "Alza",
+            "raise_1": "Alza 1",
+            "raise_2": "Alza 2",
+            "raise_3": "Alza 3",
+            "raise_4": "Alza 4",
+            "raise_all": "Alza tutti",
+            "stop": "Ferma (preferito)",
+            "stop_1": "Ferma 1",
+            "stop_2": "Ferma 2",
+            "stop_3": "Ferma 3",
+            "stop_4": "Ferma 4",
+            "stop_all": "Fermare tutti"
+        },
+        "trigger_type": {
+            "press": "\"{subtype}\" premuto",
+            "release": "\"{subtype}\" rilasciato"
+        }
+    }
+}
