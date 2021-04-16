@@ -57,6 +57,27 @@ class _EmptyClass:
     """An empty class."""
 
 
+async def test_deadlock_safe_shutdown_no_threads():
+    """Test we can shutdown without deadlock without any threads to join."""
+
+    dead_thread_mock = Mock(
+        join=Mock(), daemon=False, is_alive=Mock(return_value=False)
+    )
+    daemon_thread_mock = Mock(
+        join=Mock(), daemon=True, is_alive=Mock(return_value=True)
+    )
+    mock_threads = [
+        dead_thread_mock,
+        daemon_thread_mock,
+    ]
+
+    with patch("homeassistant.util.threading.enumerate", return_value=mock_threads):
+        thread.deadlock_safe_shutdown()
+
+    assert not dead_thread_mock.join.called
+    assert not daemon_thread_mock.join.called
+
+
 async def test_deadlock_safe_shutdown():
     """Test we can shutdown without deadlock."""
 
