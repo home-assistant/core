@@ -79,7 +79,6 @@ class ScriptConfig(dict):
 
 async def _try_async_validate_config_item(hass, object_id, config, full_config=None):
     """Validate config item."""
-
     raw_config = None
     with suppress(ValueError):  # Invalid config
         raw_config = dict(config)
