@@ -16,13 +16,6 @@ from .data import HarmonyData
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Logitech Harmony Hub component."""
-    hass.data.setdefault(DOMAIN, {})
-
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Logitech Harmony Hub from a config entry."""
     # As there currently is no way to import options from yaml
@@ -42,6 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if not connected_ok:
         raise ConfigEntryNotReady
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = data
 
     await _migrate_old_unique_ids(hass, entry.entry_id, data)
