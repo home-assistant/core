@@ -50,3 +50,24 @@ async def test_executor_shutdown_without_interrupt(caplog):
 
     assert "is still running at shutdown" not in caplog.text
     assert "time.sleep(0.1)" not in caplog.text
+
+
+async def test_overall_timeout_reached(caplog):
+    """Test that shutdown moves on when the overall timeout is reached."""
+
+    iexecutor = InterruptibleThreadPoolExecutor()
+
+    def _loop_sleep_in_executor():
+        time.sleep(1)
+
+    for _ in range(6):
+        iexecutor.submit(_loop_sleep_in_executor)
+
+    start = time.monotonic()
+    with patch.object(executor, "EXECUTOR_SHUTDOWN_TIMEOUT", 0.5):
+        iexecutor.logged_shutdown()
+    finish = time.monotonic()
+
+    assert finish - start < 1
+
+    iexecutor.logged_shutdown()
