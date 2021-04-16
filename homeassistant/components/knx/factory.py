@@ -6,7 +6,6 @@ from xknx.devices import (
     Climate as XknxClimate,
     ClimateMode as XknxClimateMode,
     Device as XknxDevice,
-    Notification as XknxNotification,
     Sensor as XknxSensor,
     Weather as XknxWeather,
 )
@@ -14,7 +13,7 @@ from xknx.devices import (
 from homeassistant.const import CONF_NAME, CONF_TYPE
 from homeassistant.helpers.typing import ConfigType
 
-from .const import KNX_ADDRESS, SupportedPlatforms
+from .const import SupportedPlatforms
 from .schema import ClimateSchema, SensorSchema, WeatherSchema
 
 
@@ -29,9 +28,6 @@ def create_knx_device(
 
     if platform is SupportedPlatforms.SENSOR:
         return _create_sensor(knx_module, config)
-
-    if platform is SupportedPlatforms.NOTIFY:
-        return _create_notify(knx_module, config)
 
     if platform is SupportedPlatforms.WEATHER:
         return _create_weather(knx_module, config)
@@ -123,15 +119,6 @@ def _create_sensor(knx_module: XKNX, config: ConfigType) -> XknxSensor:
         sync_state=config[SensorSchema.CONF_SYNC_STATE],
         always_callback=config[SensorSchema.CONF_ALWAYS_CALLBACK],
         value_type=config[CONF_TYPE],
-    )
-
-
-def _create_notify(knx_module: XKNX, config: ConfigType) -> XknxNotification:
-    """Return a KNX notification to be used within XKNX."""
-    return XknxNotification(
-        knx_module,
-        name=config[CONF_NAME],
-        group_address=config[KNX_ADDRESS],
     )
 
 
