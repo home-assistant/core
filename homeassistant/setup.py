@@ -27,6 +27,7 @@ BASE_PLATFORMS = {
     "air_quality",
     "alarm_control_panel",
     "binary_sensor",
+    "camera",
     "climate",
     "cover",
     "device_tracker",
