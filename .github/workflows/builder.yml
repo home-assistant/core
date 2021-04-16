@@ -50,9 +50,9 @@ jobs:
     name: Build PyPi package
     needs: init
     runs-on: ubuntu-latest
+    if: needs.init.outputs.publish == "true"
     steps:
       - name: Checkout the repository
-        if: needs.init.outputs.publish == "true"
         uses: actions/checkout@v2
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
@@ -62,14 +62,12 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
       - name: Build package
-        if: needs.init.outputs.publish == "true"
         shell: bash
         run: |
           pip install twine wheel
           python setup.py sdist bdist_wheel
 
       - name: Upload package
-        if: needs.init.outputs.publish == "true"
         shell: bash
         run: |
           export TWINE_USERNAME="__token__"
