@@ -148,6 +148,13 @@ def verify_version(value: str):
     return value
 
 
+def verify_wildcard(value: str):
+    """Verify the matcher contains a wildcard."""
+    if "*" not in value:
+        raise vol.Invalid(f"'{value}' needs to contain a wildcard matcher")
+    return value
+
+
 MANIFEST_SCHEMA = vol.Schema(
     {
         vol.Required("domain"): str,
@@ -160,7 +167,9 @@ MANIFEST_SCHEMA = vol.Schema(
                 vol.Schema(
                     {
                         vol.Required("type"): str,
-                        vol.Optional("macaddress"): vol.All(str, verify_uppercase),
+                        vol.Optional("macaddress"): vol.All(
+                            str, verify_uppercase, verify_wildcard
+                        ),
                         vol.Optional("manufacturer"): vol.All(str, verify_lowercase),
                         vol.Optional("name"): vol.All(str, verify_lowercase),
                     }
@@ -174,7 +183,9 @@ MANIFEST_SCHEMA = vol.Schema(
         vol.Optional("dhcp"): [
             vol.Schema(
                 {
-                    vol.Optional("macaddress"): vol.All(str, verify_uppercase),
+                    vol.Optional("macaddress"): vol.All(
+                        str, verify_uppercase, verify_wildcard
+                    ),
                     vol.Optional("hostname"): vol.All(str, verify_lowercase),
                 }
             )

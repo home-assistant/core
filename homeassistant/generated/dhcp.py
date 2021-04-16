@@ -75,17 +75,17 @@ DHCP = [
     {
         "domain": "lyric",
         "hostname": "lyric-*",
-        "macaddress": "48A2E6"
+        "macaddress": "48A2E6*"
     },
     {
         "domain": "lyric",
         "hostname": "lyric-*",
-        "macaddress": "B82CA0"
+        "macaddress": "B82CA0*"
     },
     {
         "domain": "lyric",
         "hostname": "lyric-*",
-        "macaddress": "00D02D"
+        "macaddress": "00D02D*"
     },
     {
         "domain": "myq",
