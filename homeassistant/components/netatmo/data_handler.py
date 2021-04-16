@@ -126,7 +126,7 @@ class NetatmoDataHandler:
             return
 
         try:
-            await self.hass.async_add_executor_job(self.data[data_class_entry].update)
+            await self.data[data_class_entry].async_update()
 
             for update_callback in self._data_classes[data_class_entry][
                 "subscriptions"
