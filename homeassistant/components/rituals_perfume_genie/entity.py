@@ -25,7 +25,7 @@ class DiffuserEntity(CoordinatorEntity):
 
     def __init__(
         self, diffuser: Diffuser, coordinator: CoordinatorEntity, entity_suffix: str
-    ):
+    ) -> None:
         """Init from config, hookup diffuser and coordinator."""
         super().__init__(coordinator)
         self._diffuser = diffuser
