@@ -3,7 +3,9 @@
         "abort": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
-            "cannot_connect": "Verbindung fehlgeschlagen. Bitte versuchen Sie es noch einmal. Trennen Sie ggf. Strom- und Ethernetkabel und verbinden Sie diese erneut."
+            "cannot_connect": "Verbindung fehlgeschlagen. Bitte versuchen Sie es noch einmal. Trennen Sie ggf. Strom- und Ethernetkabel und verbinden Sie diese erneut.",
+            "not_denonavr_manufacturer": "Kein Denon AVR-Netzwerkempf\u00e4nger, entdeckter Hersteller stimmte nicht \u00fcberein",
+            "not_denonavr_missing": "Kein Denon AVR-Netzwerk-Receiver, Erkennungsinformationen nicht vollst\u00e4ndig"
         },
         "error": {
             "discovery_error": "Denon AVR-Netzwerk-Receiver konnte nicht gefunden werden"
@@ -34,7 +36,9 @@
         "step": {
             "init": {
                 "data": {
-                    "show_all_sources": "Alle Quellen anzeigen"
+                    "show_all_sources": "Alle Quellen anzeigen",
+                    "zone2": "Zone 2 einrichten",
+                    "zone3": "Zone 3 einrichten"
                 },
                 "description": "Optionale Einstellungen festlegen",
                 "title": "Denon AVR-Netzwerk-Receiver"

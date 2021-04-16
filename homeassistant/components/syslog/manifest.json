@@ -2,5 +2,6 @@
   "domain": "syslog",
   "name": "Syslog",
   "documentation": "https://www.home-assistant.io/integrations/syslog",
-  "codeowners": ["@fabaff"]
+  "codeowners": ["@fabaff"],
+  "iot_class": "local_push"
 }

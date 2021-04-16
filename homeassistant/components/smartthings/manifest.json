@@ -6,5 +6,6 @@
   "requirements": ["pysmartapp==0.3.3", "pysmartthings==0.7.6"],
   "dependencies": ["webhook"],
   "after_dependencies": ["cloud"],
-  "codeowners": ["@andrewsayre"]
+  "codeowners": ["@andrewsayre"],
+  "iot_class": "cloud_push"
 }

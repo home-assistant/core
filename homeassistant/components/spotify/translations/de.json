@@ -3,7 +3,8 @@
         "abort": {
             "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL.",
             "missing_configuration": "Die Spotify-Integration ist nicht konfiguriert. Bitte folgen Sie der Dokumentation.",
-            "no_url_available": "Keine URL verf\u00fcgbar. Informationen zu diesem Fehler findest du [im Hilfebereich]({docs_url})."
+            "no_url_available": "Keine URL verf\u00fcgbar. Informationen zu diesem Fehler findest du [im Hilfebereich]({docs_url}).",
+            "reauth_account_mismatch": "Das Spotify-Konto, mit dem Sie sich authentifiziert haben, stimmt nicht mit dem Konto \u00fcberein, f\u00fcr das Sie sich erneut authentifizieren m\u00fcssen."
         },
         "create_entry": {
             "default": "Erfolgreich mit Spotify authentifiziert."

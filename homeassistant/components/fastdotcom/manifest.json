@@ -3,5 +3,6 @@
   "name": "Fast.com",
   "documentation": "https://www.home-assistant.io/integrations/fastdotcom",
   "requirements": ["fastdotcom==0.0.3"],
-  "codeowners": ["@rohankapoorcom"]
+  "codeowners": ["@rohankapoorcom"],
+  "iot_class": "cloud_polling"
 }

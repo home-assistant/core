@@ -2,5 +2,6 @@
   "domain": "tcp",
   "name": "TCP",
   "documentation": "https://www.home-assistant.io/integrations/tcp",
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

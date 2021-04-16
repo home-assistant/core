@@ -21,7 +21,9 @@ class _BaseFlowManagerView(HomeAssistantView):
         self._flow_mgr = flow_mgr
 
     # pylint: disable=no-self-use
-    def _prepare_result_json(self, result: dict[str, Any]) -> dict[str, Any]:
+    def _prepare_result_json(
+        self, result: data_entry_flow.FlowResultDict
+    ) -> data_entry_flow.FlowResultDict:
         """Convert result to JSON."""
         if result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
             data = result.copy()

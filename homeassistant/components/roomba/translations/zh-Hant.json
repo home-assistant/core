@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "not_irobot_device": "\u6240\u767c\u73fe\u7684\u88dd\u7f6e\u4e26\u975e iRobot \u88dd\u7f6e",
             "short_blid": "BLID \u906d\u622a\u77ed"

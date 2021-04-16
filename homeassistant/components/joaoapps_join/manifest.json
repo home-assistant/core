@@ -3,5 +3,6 @@
   "name": "Joaoapps Join",
   "documentation": "https://www.home-assistant.io/integrations/joaoapps_join",
   "requirements": ["python-join-api==0.0.6"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "cloud_push"
 }

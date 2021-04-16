@@ -18,6 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import DOMAIN
 
@@ -31,14 +32,18 @@ CONF_SERIAL = "serial"
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
     envoy_reader = EnvoyReader(
-        data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD], inverters=True
+        data[CONF_HOST],
+        data[CONF_USERNAME],
+        data[CONF_PASSWORD],
+        inverters=False,
+        async_client=get_async_client(hass),
     )
 
     try:
         await envoy_reader.getData()
     except httpx.HTTPStatusError as err:
         raise InvalidAuth from err
-    except (AttributeError, httpx.HTTPError) as err:
+    except (RuntimeError, httpx.HTTPError) as err:
         raise CannotConnect from err
 
 
@@ -54,6 +59,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.name = None
         self.username = None
         self.serial = None
+        self._reauth_entry = None
 
     @callback
     def _async_generate_schema(self):
@@ -116,6 +122,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
+    async def async_step_reauth(self, user_input):
+        """Handle configuration by re-auth."""
+        self._reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        return await self.async_step_user()
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> dict[str, Any]:
@@ -123,7 +136,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            if user_input[CONF_HOST] in self._async_current_hosts():
+            if (
+                not self._reauth_entry
+                and user_input[CONF_HOST] in self._async_current_hosts()
+            ):
                 return self.async_abort(reason="already_configured")
             try:
                 await validate_input(self.hass, user_input)
@@ -140,6 +156,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data[CONF_NAME] = f"{ENVOY} {self.serial}"
                 else:
                     data[CONF_NAME] = self.name or ENVOY
+                if self._reauth_entry:
+                    self.hass.config_entries.async_update_entry(
+                        self._reauth_entry,
+                        data=data,
+                    )
+                    return self.async_abort(reason="reauth_successful")
                 return self.async_create_entry(title=data[CONF_NAME], data=data)
 
         if self.serial:

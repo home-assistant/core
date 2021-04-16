@@ -185,7 +185,7 @@ async def test_hue_activate_scene(hass, mock_api):
     call = Mock()
     call.data = {"group_name": "Group 1", "scene_name": "Cozy dinner"}
     with patch("aiohue.Bridge", return_value=mock_api):
-        assert await hue_bridge.hue_activate_scene(call) is None
+        assert await hue_bridge.hue_activate_scene(call.data) is None
 
     assert len(mock_api.mock_requests) == 3
     assert mock_api.mock_requests[2]["json"]["scene"] == "scene_1"
@@ -220,7 +220,7 @@ async def test_hue_activate_scene_transition(hass, mock_api):
     call = Mock()
     call.data = {"group_name": "Group 1", "scene_name": "Cozy dinner", "transition": 30}
     with patch("aiohue.Bridge", return_value=mock_api):
-        assert await hue_bridge.hue_activate_scene(call) is None
+        assert await hue_bridge.hue_activate_scene(call.data) is None
 
     assert len(mock_api.mock_requests) == 3
     assert mock_api.mock_requests[2]["json"]["scene"] == "scene_1"
@@ -255,7 +255,7 @@ async def test_hue_activate_scene_group_not_found(hass, mock_api):
     call = Mock()
     call.data = {"group_name": "Group 1", "scene_name": "Cozy dinner"}
     with patch("aiohue.Bridge", return_value=mock_api):
-        assert await hue_bridge.hue_activate_scene(call) is False
+        assert await hue_bridge.hue_activate_scene(call.data) is False
 
 
 async def test_hue_activate_scene_scene_not_found(hass, mock_api):
@@ -285,4 +285,4 @@ async def test_hue_activate_scene_scene_not_found(hass, mock_api):
     call = Mock()
     call.data = {"group_name": "Group 1", "scene_name": "Cozy dinner"}
     with patch("aiohue.Bridge", return_value=mock_api):
-        assert await hue_bridge.hue_activate_scene(call) is False
+        assert await hue_bridge.hue_activate_scene(call.data) is False

@@ -223,7 +223,8 @@ async def test_get_trace(
     assert len(trace["trace"].get("condition/0", [])) == len(condition_results)
     for idx, condition_result in enumerate(condition_results):
         assert trace["trace"]["condition/0"][idx]["result"] == {
-            "result": condition_result
+            "result": condition_result,
+            "entities": [],
         }
     contexts[trace["context"]["id"]] = {
         "run_id": trace["run_id"],
@@ -261,7 +262,10 @@ async def test_get_trace(
     trace = response["result"]
     assert set(trace["trace"]) == extra_trace_keys[2]
     assert len(trace["trace"]["condition/0"]) == 1
-    assert trace["trace"]["condition/0"][0]["result"] == {"result": False}
+    assert trace["trace"]["condition/0"][0]["result"] == {
+        "result": False,
+        "entities": [],
+    }
     assert trace["config"] == moon_config
     assert trace["context"]
     assert "error" not in trace
@@ -303,7 +307,10 @@ async def test_get_trace(
     assert "error" not in trace["trace"][f"{prefix}/0"][0]
     assert trace["trace"][f"{prefix}/0"][0]["result"] == moon_action
     assert len(trace["trace"]["condition/0"]) == 1
-    assert trace["trace"]["condition/0"][0]["result"] == {"result": True}
+    assert trace["trace"]["condition/0"][0]["result"] == {
+        "result": True,
+        "entities": [],
+    }
     assert trace["config"] == moon_config
     assert trace["context"]
     assert "error" not in trace

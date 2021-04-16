@@ -29,7 +29,8 @@
                     "host": "Host",
                     "port": "Port",
                     "ssl": "Verwendet ein SSL Zertifikat"
-                }
+                },
+                "description": "Kodi-Verbindungsinformationen. Bitte stellen Sie sicher, dass Sie \"Steuerung von Kodi \u00fcber HTTP zulassen\" in System/Einstellungen/Netzwerk/Dienste aktivieren."
             },
             "ws_port": {
                 "data": {
