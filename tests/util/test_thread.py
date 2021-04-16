@@ -82,7 +82,9 @@ async def test_deadlock_safe_shutdown():
     with patch("homeassistant.util.threading.enumerate", return_value=mock_threads):
         thread.deadlock_safe_shutdown()
 
-    assert normal_thread_mock.join.called
+    expected_timeout = thread.THREADING_SHUTDOWN_TIMEOUT / 2
+
+    assert normal_thread_mock.join.call_args[0] == (expected_timeout,)
     assert not dead_thread_mock.join.called
     assert not daemon_thread_mock.join.called
-    assert exception_thread_mock.join.called
+    assert exception_thread_mock.join.call_args[0] == (expected_timeout,)
