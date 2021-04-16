@@ -34,17 +34,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except aiohttp.ClientError as err:
         raise ConfigEntryNotReady from err
 
-    devices = {}
-    for device in account_devices:
-        hublot = device.data[HUB][HUBLOT]
-        devices[hublot] = device
-
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         COORDINATORS: {},
-        DEVICES: devices,
+        DEVICES: {},
     }
 
-    for hublot, device in devices.items():
+    for device in account_devices:
+        hublot = device.data[HUB][HUBLOT]
 
         async def async_update_data():
             await device.update_data()
@@ -60,6 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
         await coordinator.async_refresh()
 
+        hass.data[DOMAIN][entry.entry_id][DEVICES][hublot] = device
         hass.data[DOMAIN][entry.entry_id][COORDINATORS][hublot] = coordinator
 
     for platform in PLATFORMS:
