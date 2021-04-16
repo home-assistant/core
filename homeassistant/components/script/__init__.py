@@ -235,7 +235,6 @@ async def _async_process_config(hass, config, component) -> bool:
     blueprints_used = False
 
     for config_key in extract_domain_configs(config, DOMAIN):
-        LOGGER.error(config_key)
         conf: dict[str, dict[str, Any] | BlueprintInputs] = config[config_key]
 
         for object_id, config_block in conf.items():
