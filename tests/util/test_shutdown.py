@@ -18,8 +18,15 @@ async def test_deadlock_safe_shutdown():
     daemon_thread_mock = Mock(
         join=Mock(), daemon=True, is_alive=Mock(return_value=True)
     )
-
-    mock_threads = [normal_thread_mock, dead_thread_mock, daemon_thread_mock]
+    exception_thread_mock = Mock(
+        join=Mock(side_effect=Exception), daemon=False, is_alive=Mock(return_value=True)
+    )
+    mock_threads = [
+        normal_thread_mock,
+        dead_thread_mock,
+        daemon_thread_mock,
+        exception_thread_mock,
+    ]
 
     with patch("homeassistant.util.threading.enumerate", return_value=mock_threads):
         shutdown.deadlock_safe_shutdown()
@@ -27,3 +34,4 @@ async def test_deadlock_safe_shutdown():
     assert normal_thread_mock.join.called
     assert not dead_thread_mock.join.called
     assert not daemon_thread_mock.join.called
+    assert exception_thread_mock.join.called

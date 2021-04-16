@@ -27,10 +27,6 @@ from homeassistant.util.shutdown import deadlock_safe_shutdown
 #
 MAX_EXECUTOR_WORKERS = 64
 
-SHUTDOWN_TIMEOUT = 10
-
-_LOGGER = logging.getLogger(__name__)
-
 
 @dataclasses.dataclass
 class RuntimeConfig:
