@@ -11,7 +11,7 @@ from homeassistant import bootstrap
 from homeassistant.core import callback
 from homeassistant.helpers.frame import warn_use
 from homeassistant.util.executor import InterruptibleThreadPoolExecutor
-from homeassistant.util.shutdown import deadlock_safe_shutdown
+from homeassistant.util.thread import deadlock_safe_shutdown
 
 # mypy: disallow-any-generics
 
