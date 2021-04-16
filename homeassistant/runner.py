@@ -4,12 +4,16 @@ from __future__ import annotations
 import asyncio
 import dataclasses
 import logging
+import threading
 from typing import Any
 
 from homeassistant import bootstrap
 from homeassistant.core import callback
 from homeassistant.helpers.frame import warn_use
-from homeassistant.util.executor import InterruptibleThreadPoolExecutor
+from homeassistant.util.executor import (
+    InterruptibleThreadPoolExecutor,
+    deadlock_safe_shutdown,
+)
 
 # mypy: disallow-any-generics
 
@@ -103,6 +107,11 @@ async def setup_and_run_hass(runtime_config: RuntimeConfig) -> int:
 
     if hass is None:
         return 1
+
+    # threading._shutdown can deadlock forever
+    # Thanks for the explinations in https://github.com/justengel/continuous_threading
+    # about why it can hang forever
+    threading._shutdown = deadlock_safe_shutdown  # type: ignore[attr-defined]
 
     return await hass.async_run()
 
