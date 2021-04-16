@@ -7,6 +7,11 @@ from homeassistant.components.image_processing import (
     ATTR_AGE,
     ATTR_GENDER,
     ATTR_GLASSES,
+    ATTR_HAIR,
+    ATTR_SMILE,
+    ATTR_FACIALHAIR,
+    ATTR_EMOTION,
+    ATTR_ACCESSORIES,
     CONF_ENTITY_ID,
     CONF_NAME,
     CONF_SOURCE,
@@ -20,7 +25,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORTED_ATTRIBUTES = [ATTR_AGE, ATTR_GENDER, ATTR_GLASSES]
+SUPPORTED_ATTRIBUTES = [ATTR_AGE, ATTR_GENDER, ATTR_GLASSES, ATTR_HAIR, ATTR_SMILE, ATTR_FACIALHAIR, ATTR_EMOTION, ATTR_ACCESSORIES]
 
 CONF_ATTRIBUTES = "attributes"
 DEFAULT_ATTRIBUTES = [ATTR_AGE, ATTR_GENDER]
