@@ -194,6 +194,11 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
         """Send the key using legacy protocol."""
         self._get_remote().control(key)
 
+    def stop(self):
+        """Stop Bridge."""
+        LOGGER.warning("Stopping SamsungRemote")
+        self.close_remote()
+
 
 class SamsungTVWSBridge(SamsungTVBridge):
     """The Bridge for WebSocket TVs."""
@@ -279,3 +284,8 @@ class SamsungTVWSBridge(SamsungTVBridge):
             except (WebSocketException, OSError):
                 self._remote = None
         return self._remote
+
+    def stop(self):
+        """Stop Bridge."""
+        LOGGER.warning("Stopping SamsungTVWS")
+        self.close_remote()
