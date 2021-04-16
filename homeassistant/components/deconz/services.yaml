@@ -64,25 +64,3 @@ remove_orphaned_entries:
         It can be found as part of the integration name.
         Useful if you run multiple deCONZ integrations.
       example: "00212EFFFF012345"
-
-alarm_custom_action:
-  name: Custom alarm action
-  description: Put keypad in an intermediate state.
-  target:
-    entity:
-      integration: deconz
-      domain: alarm_control_panel
-  fields:
-    alarm_action:
-      name: Intermediate state
-      description: Communicate that a transition between primary states is happening.
-      required: true
-      selector:
-        select:
-          options:
-            - "Arming away"
-            - "Arming home"
-            - "Arming night"
-            - "Entry delay"
-            - "Exit delay"
-            - "Alarm not ready"

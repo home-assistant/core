@@ -206,6 +206,7 @@ async def test_deconz_alarm_events(hass, aioclient_mock, mock_deconz_websocket):
                     "armed": "disarmed",
                     "enrolled": 0,
                     "on": True,
+                    "panel": "disarmed",
                     "pending": [],
                     "reachable": True,
                 },
@@ -219,7 +220,6 @@ async def test_deconz_alarm_events(hass, aioclient_mock, mock_deconz_websocket):
                     "action": "armed_away,1111,55",
                     "lastupdated": "2021-04-02T13:08:18.937",
                     "lowbattery": False,
-                    "panel": "disarmed",
                     "tampered": True,
                 },
                 "type": "ZHAAncillaryControl",
@@ -272,7 +272,7 @@ async def test_deconz_alarm_events(hass, aioclient_mock, mock_deconz_websocket):
         "e": "changed",
         "r": "sensors",
         "id": "1",
-        "state": {"panel": "armed_away"},
+        "config": {"panel": "armed_away"},
     }
     await mock_deconz_websocket(data=event_changed_sensor)
     await hass.async_block_till_done()
