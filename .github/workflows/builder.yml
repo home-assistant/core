@@ -72,7 +72,7 @@ jobs:
         if: needs.init.outputs.publish == "true"
         shell: bash
         run: |
-          export TWINE_USERNAME="$(twineUser)"
+          export TWINE_USERNAME="__token__"
           export TWINE_PASSWORD="$(twinePassword)"
 
           twine upload dist/* --skip-existing
@@ -113,8 +113,8 @@ jobs:
         uses: docker/login-action@v1
         with:
           registry: ghcr.io
-          username: ${{ secrets.GIT_USER }}
-          password: ${{ secrets.GIT_TOKEN }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
         uses: home-assistant/builder@2021.04.2
@@ -164,8 +164,8 @@ jobs:
         uses: docker/login-action@v1
         with:
           registry: ghcr.io
-          username: ${{ secrets.GIT_USER }}
-          password: ${{ secrets.GIT_TOKEN }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
         uses: home-assistant/builder@2021.04.2
@@ -228,8 +228,8 @@ jobs:
         uses: docker/login-action@v1
         with:
           registry: ghcr.io
-          username: ${{ secrets.GIT_USER }}
-          password: ${{ secrets.GIT_TOKEN }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Meta Image
         shell: bash
