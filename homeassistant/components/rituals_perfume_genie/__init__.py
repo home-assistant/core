@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import ACCOUNT_HASH, COORDINATORS, DEVICES, DOMAIN, HUB, HUBLOT
 
@@ -47,14 +47,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     for hublot, device in devices.items():
 
         async def async_update_data():
-            try:
-                await device.update_data()
-            except aiohttp.ClientError as err:
-                raise UpdateFailed(
-                    "Unable to retrieve data from rituals.sense-company.com"
-                ) from err
-            else:
-                return device.data
+            await device.update_data()
+            return device.data
 
         coordinator = DataUpdateCoordinator(
             hass,
