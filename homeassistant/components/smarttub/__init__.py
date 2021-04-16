@@ -10,18 +10,11 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["binary_sensor", "climate", "light", "sensor", "switch"]
 
 
-async def async_setup(hass, config):
-    """Set up smarttub component."""
-
-    hass.data.setdefault(DOMAIN, {})
-
-    return True
-
-
 async def async_setup_entry(hass, entry):
     """Set up a smarttub config entry."""
 
     controller = SmartTubController(hass)
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         SMARTTUB_CONTROLLER: controller,
     }
