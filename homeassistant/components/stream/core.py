@@ -4,12 +4,14 @@ from __future__ import annotations
 import asyncio
 from collections import deque
 import io
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any, Callable
 
 from aiohttp import web
 import attr
-import av.container
-import av.video
+
+if TYPE_CHECKING:
+    import av.container
+    import av.video
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
