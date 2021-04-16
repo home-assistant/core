@@ -10,7 +10,6 @@ from xknx.devices import (
     Device as XknxDevice,
     Fan as XknxFan,
     Light as XknxLight,
-    Notification as XknxNotification,
     Scene as XknxScene,
     Sensor as XknxSensor,
     Weather as XknxWeather,
@@ -49,9 +48,6 @@ def create_knx_device(
 
     if platform is SupportedPlatforms.SENSOR:
         return _create_sensor(knx_module, config)
-
-    if platform is SupportedPlatforms.NOTIFY:
-        return _create_notify(knx_module, config)
 
     if platform is SupportedPlatforms.SCENE:
         return _create_scene(knx_module, config)
@@ -276,15 +272,6 @@ def _create_sensor(knx_module: XKNX, config: ConfigType) -> XknxSensor:
         sync_state=config[SensorSchema.CONF_SYNC_STATE],
         always_callback=config[SensorSchema.CONF_ALWAYS_CALLBACK],
         value_type=config[CONF_TYPE],
-    )
-
-
-def _create_notify(knx_module: XKNX, config: ConfigType) -> XknxNotification:
-    """Return a KNX notification to be used within XKNX."""
-    return XknxNotification(
-        knx_module,
-        name=config[CONF_NAME],
-        group_address=config[KNX_ADDRESS],
     )
 
 
