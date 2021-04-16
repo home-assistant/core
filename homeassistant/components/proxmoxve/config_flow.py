@@ -15,13 +15,7 @@ from homeassistant.const import (
 )
 
 from . import ProxmoxClient
-from .const import (
-    CONF_DEFAULT_REALM,
-    CONF_REALM,
-    DEFAULT_PORT,
-    DEFAULT_VERIFY_SSL,
-    DOMAIN,
-)
+from .const import CONF_REALM, DEFAULT_PORT, DEFAULT_REALM, DEFAULT_VERIFY_SSL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,7 +55,7 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             port = info.get(CONF_PORT, DEFAULT_PORT)
             username = info.get(CONF_USERNAME, "")
             password = info.get(CONF_PASSWORD, "")
-            realm = info.get(CONF_REALM, CONF_DEFAULT_REALM)
+            realm = info.get(CONF_REALM, DEFAULT_REALM)
             verify_ssl = info.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
 
             if await self._async_endpoint_exists(f"{host}/{port}"):
@@ -134,7 +128,7 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_USERNAME, default=info.get(CONF_USERNAME, "")): str,
                 vol.Required(CONF_PASSWORD, default=info.get(CONF_PASSWORD, "")): str,
                 vol.Required(
-                    CONF_REALM, default=info.get(CONF_REALM, CONF_DEFAULT_REALM)
+                    CONF_REALM, default=info.get(CONF_REALM, DEFAULT_REALM)
                 ): str,
                 vol.Required(CONF_PORT, default=info.get(CONF_PORT, DEFAULT_PORT)): int,
                 vol.Required(

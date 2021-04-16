@@ -27,25 +27,23 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN
-
-PLATFORMS = ["binary_sensor"]
-PROXMOX_CLIENTS = "proxmox_clients"
-CONF_REALM = "realm"
-CONF_NODE = "node"
-CONF_NODES = "nodes"
-CONF_VMS = "vms"
-CONF_CONTAINERS = "containers"
-
-COORDINATORS = "coordinators"
-API_DATA = "api_data"
-
-DEFAULT_PORT = 8006
-DEFAULT_REALM = "pam"
-DEFAULT_VERIFY_SSL = True
-TYPE_VM = 0
-TYPE_CONTAINER = 1
-UPDATE_INTERVAL = 60
+from .const import (
+    CONF_CONTAINERS,
+    CONF_NODE,
+    CONF_NODES,
+    CONF_REALM,
+    CONF_VMS,
+    COORDINATORS,
+    DEFAULT_PORT,
+    DEFAULT_REALM,
+    DEFAULT_VERIFY_SSL,
+    DOMAIN,
+    PLATFORMS,
+    PROXMOX_CLIENTS,
+    TYPE_CONTAINER,
+    TYPE_VM,
+    UPDATE_INTERVAL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
