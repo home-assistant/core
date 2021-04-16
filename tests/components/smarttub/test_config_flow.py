@@ -16,8 +16,6 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.smarttub.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.smarttub.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -33,7 +31,6 @@ async def test_form(hass):
         "password": "test-password",
     }
     await hass.async_block_till_done()
-    mock_setup.assert_called_once()
     mock_setup_entry.assert_called_once()
 
     result = await hass.config_entries.flow.async_init(

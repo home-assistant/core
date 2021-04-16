@@ -21,8 +21,6 @@ async def test_form(hass):
     with patch(
         "homeassistant.components.srp_energy.config_flow.SrpEnergyClient"
     ), patch(
-        "homeassistant.components.srp_energy.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.srp_energy.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -36,7 +34,6 @@ async def test_form(hass):
         assert result["title"] == "Test"
         assert result["data"][CONF_IS_TOU] is False
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 

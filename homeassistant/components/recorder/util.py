@@ -14,8 +14,13 @@ from sqlalchemy.orm.session import Session
 from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.dt as dt_util
 
-from .const import CONF_DB_INTEGRITY_CHECK, DATA_INSTANCE, SQLITE_URL_PREFIX
-from .models import ALL_TABLES, process_timestamp
+from .const import DATA_INSTANCE, SQLITE_URL_PREFIX
+from .models import (
+    ALL_TABLES,
+    TABLE_RECORDER_RUNS,
+    TABLE_SCHEMA_CHANGES,
+    process_timestamp,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -117,7 +122,7 @@ def execute(qry, to_native=False, validate_entity_ids=True):
             time.sleep(QUERY_RETRY_WAIT)
 
 
-def validate_or_move_away_sqlite_database(dburl: str, db_integrity_check: bool) -> bool:
+def validate_or_move_away_sqlite_database(dburl: str) -> bool:
     """Ensure that the database is valid or move it away."""
     dbpath = dburl_to_path(dburl)
 
@@ -125,7 +130,7 @@ def validate_or_move_away_sqlite_database(dburl: str, db_integrity_check: bool) 
         # Database does not exist yet, this is OK
         return True
 
-    if not validate_sqlite_database(dbpath, db_integrity_check):
+    if not validate_sqlite_database(dbpath):
         move_away_broken_database(dbpath)
         return False
 
@@ -161,18 +166,21 @@ def basic_sanity_check(cursor):
     """Check tables to make sure select does not fail."""
 
     for table in ALL_TABLES:
-        cursor.execute(f"SELECT * FROM {table} LIMIT 1;")  # nosec # not injection
+        if table in (TABLE_RECORDER_RUNS, TABLE_SCHEMA_CHANGES):
+            cursor.execute(f"SELECT * FROM {table};")  # nosec # not injection
+        else:
+            cursor.execute(f"SELECT * FROM {table} LIMIT 1;")  # nosec # not injection
 
     return True
 
 
-def validate_sqlite_database(dbpath: str, db_integrity_check: bool) -> bool:
+def validate_sqlite_database(dbpath: str) -> bool:
     """Run a quick check on an sqlite database to see if it is corrupt."""
     import sqlite3  # pylint: disable=import-outside-toplevel
 
     try:
         conn = sqlite3.connect(dbpath)
-        run_checks_on_open_db(dbpath, conn.cursor(), db_integrity_check)
+        run_checks_on_open_db(dbpath, conn.cursor())
         conn.close()
     except sqlite3.DatabaseError:
         _LOGGER.exception("The database at %s is corrupt or malformed", dbpath)
@@ -181,24 +189,14 @@ def validate_sqlite_database(dbpath: str, db_integrity_check: bool) -> bool:
     return True
 
 
-def run_checks_on_open_db(dbpath, cursor, db_integrity_check):
+def run_checks_on_open_db(dbpath, cursor):
     """Run checks that will generate a sqlite3 exception if there is corruption."""
     sanity_check_passed = basic_sanity_check(cursor)
     last_run_was_clean = last_run_was_recently_clean(cursor)
 
     if sanity_check_passed and last_run_was_clean:
         _LOGGER.debug(
-            "The quick_check will be skipped as the system was restarted cleanly and passed the basic sanity check"
-        )
-        return
-
-    if not db_integrity_check:
-        # Always warn so when it does fail they remember it has
-        # been manually disabled
-        _LOGGER.warning(
-            "The quick_check on the sqlite3 database at %s was skipped because %s was disabled",
-            dbpath,
-            CONF_DB_INTEGRITY_CHECK,
+            "The system was restarted cleanly and passed the basic sanity check"
         )
         return
 
@@ -213,11 +211,6 @@ def run_checks_on_open_db(dbpath, cursor, db_integrity_check):
             "The system could not validate that the sqlite3 database at %s was shutdown cleanly",
             dbpath,
         )
-
-    _LOGGER.info(
-        "A quick_check is being performed on the sqlite3 database at %s", dbpath
-    )
-    cursor.execute("PRAGMA QUICK_CHECK")
 
 
 def move_away_broken_database(dbfile: str) -> None:

@@ -3,5 +3,6 @@
   "name": "Velux",
   "documentation": "https://www.home-assistant.io/integrations/velux",
   "requirements": ["pyvlx==0.2.18"],
-  "codeowners": ["@Julius2342"]
+  "codeowners": ["@Julius2342"],
+  "iot_class": "local_polling"
 }

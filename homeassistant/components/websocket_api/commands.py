@@ -1,5 +1,6 @@
 """Commands part of Websocket API."""
 import asyncio
+import json
 
 import voluptuous as vol
 
@@ -7,7 +8,7 @@ from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_READ
 from homeassistant.bootstrap import SIGNAL_BOOTSTRAP_INTEGRATONS
 from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
 from homeassistant.const import EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL
-from homeassistant.core import DOMAIN as HASS_DOMAIN, callback
+from homeassistant.core import callback
 from homeassistant.exceptions import (
     HomeAssistantError,
     ServiceNotFound,
@@ -17,6 +18,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import config_validation as cv, entity, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import TrackTemplate, async_track_template_result
+from homeassistant.helpers.json import ExtendedJSONEncoder
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 from homeassistant.setup import DATA_SETUP_TIME, async_get_loaded_integrations
@@ -155,9 +157,6 @@ def handle_unsubscribe_events(hass, connection, msg):
 async def handle_call_service(hass, connection, msg):
     """Handle call service command."""
     blocking = True
-    if msg["domain"] == HASS_DOMAIN and msg["service"] in ["restart", "stop"]:
-        blocking = False
-
     # We do not support templates.
     target = msg.get("target")
     if template.is_complex(target):
@@ -290,6 +289,7 @@ def handle_ping(hass, connection, msg):
         vol.Optional("entity_ids"): cv.entity_ids,
         vol.Optional("variables"): dict,
         vol.Optional("timeout"): vol.Coerce(float),
+        vol.Optional("strict", default=False): bool,
     }
 )
 @decorators.async_response
@@ -303,7 +303,9 @@ async def handle_render_template(hass, connection, msg):
 
     if timeout:
         try:
-            timed_out = await template_obj.async_render_will_timeout(timeout)
+            timed_out = await template_obj.async_render_will_timeout(
+                timeout, strict=msg["strict"]
+            )
         except TemplateError as ex:
             connection.send_error(msg["id"], const.ERR_TEMPLATE_ERROR, str(ex))
             return
@@ -337,6 +339,7 @@ async def handle_render_template(hass, connection, msg):
             [TrackTemplate(template_obj, variables)],
             _template_listener,
             raise_on_template_error=True,
+            strict=msg["strict"],
         )
     except TemplateError as ex:
         connection.send_error(msg["id"], const.ERR_TEMPLATE_ERROR, str(ex))
@@ -413,10 +416,11 @@ async def handle_subscribe_trigger(hass, connection, msg):
     @callback
     def forward_triggers(variables, context=None):
         """Forward events to websocket."""
+        message = messages.event_message(
+            msg["id"], {"variables": variables, "context": context}
+        )
         connection.send_message(
-            messages.event_message(
-                msg["id"], {"variables": variables, "context": context}
-            )
+            json.dumps(message, cls=ExtendedJSONEncoder, allow_nan=False)
         )
 
     connection.subscriptions[msg["id"]] = (

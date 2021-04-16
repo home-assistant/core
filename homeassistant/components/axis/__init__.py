@@ -26,7 +26,9 @@ async def async_setup_entry(hass, config_entry):
 
     await device.async_update_device_registry()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device.shutdown)
+    device.listeners.append(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device.shutdown)
+    )
 
     return True
 

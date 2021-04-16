@@ -77,6 +77,9 @@ def async_activate_log_queue_handler(hass: HomeAssistant) -> None:
     @callback
     def _async_stop_queue_handler(_: Any) -> None:
         """Cleanup handler."""
+        # Ensure any messages that happen after close still get logged
+        for original_handler in migrated_handlers:
+            logging.root.addHandler(original_handler)
         logging.root.removeHandler(queue_handler)
         listener.stop()
 
@@ -85,7 +88,7 @@ def async_activate_log_queue_handler(hass: HomeAssistant) -> None:
 
 def log_exception(format_err: Callable[..., Any], *args: Any) -> None:
     """Log an exception with additional context."""
-    module = inspect.getmodule(inspect.stack()[1][0])
+    module = inspect.getmodule(inspect.stack(context=0)[1].frame)
     if module is not None:
         module_name = module.__name__
     else:

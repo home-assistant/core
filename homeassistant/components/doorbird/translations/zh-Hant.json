@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "link_local_address": "\u4e0d\u652f\u63f4\u9023\u7d50\u672c\u5730\u7aef\u4f4d\u5740",
             "not_doorbird_device": "\u6b64\u88dd\u7f6e\u4e26\u975e DoorBird"
         },

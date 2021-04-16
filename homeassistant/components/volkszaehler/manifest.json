@@ -3,5 +3,6 @@
   "name": "Volkszaehler",
   "documentation": "https://www.home-assistant.io/integrations/volkszaehler",
   "requirements": ["volkszaehler==0.2.1"],
-  "codeowners": ["@fabaff"]
+  "codeowners": ["@fabaff"],
+  "iot_class": "local_polling"
 }

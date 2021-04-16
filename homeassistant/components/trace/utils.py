@@ -1,9 +1,5 @@
 """Helpers for script and automation tracing and debugging."""
 from collections import OrderedDict
-from datetime import timedelta
-from typing import Any
-
-from homeassistant.helpers.json import JSONEncoder as HAJSONEncoder
 
 
 class LimitedSizeDict(OrderedDict):
@@ -25,19 +21,3 @@ class LimitedSizeDict(OrderedDict):
         if self.size_limit is not None:
             while len(self) > self.size_limit:
                 self.popitem(last=False)
-
-
-class TraceJSONEncoder(HAJSONEncoder):
-    """JSONEncoder that supports Home Assistant objects and falls back to repr(o)."""
-
-    def default(self, o: Any) -> Any:
-        """Convert certain objects.
-
-        Fall back to repr(o).
-        """
-        if isinstance(o, timedelta):
-            return {"__type": str(type(o)), "total_seconds": o.total_seconds()}
-        try:
-            return super().default(o)
-        except TypeError:
-            return {"__type": str(type(o)), "repr": repr(o)}

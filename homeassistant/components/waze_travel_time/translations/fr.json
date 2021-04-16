@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'emplacement est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "cannot_connect": "Echec de la connection"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "destination": "Destination",
+                    "origin": "Point de d\u00e9part",
+                    "region": "R\u00e9gion"
+                },
+                "description": "Pour le Point de D\u00e9part et la Destination, entrez l'adresse ou les coordonn\u00e9es GPS de l'emplacement (les coordonn\u00e9es GPS doivent \u00eatre s\u00e9par\u00e9es par une virgule). Vous pouvez \u00e9galement entrer l'ID d'une entit\u00e9 qui fournit ces informations dans son \u00e9tat, un ID d'entit\u00e9 avec des attributs de latitude et de longitude ou un nom de zone."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "avoid_ferries": "\u00c9viter les ferries?",
+                    "avoid_subscription_roads": "\u00c9viter les routes n\u00e9cessitant une vignette / un abonnement?",
+                    "avoid_toll_roads": "\u00c9viter les routes \u00e0 p\u00e9age ?",
+                    "excl_filter": "Sous-cha\u00eene NON dans la description de l'itin\u00e9raire s\u00e9lectionn\u00e9",
+                    "incl_filter": "Sous-cha\u00eene dans la description de l'itin\u00e9raire s\u00e9lectionn\u00e9",
+                    "realtime": "Temps de trajet en temps r\u00e9el?",
+                    "units": "Unit\u00e9s",
+                    "vehicle_type": "Type de v\u00e9hicule"
+                },
+                "description": "Les entr\u00e9es `substring` vous permettront de forcer l'int\u00e9gration \u00e0 utiliser un itin\u00e9raire particulier ou d'\u00e9viter un itin\u00e9raire particulier dans son calcul de voyage dans le temps."
+            }
+        }
+    },
+    "title": "Temps de trajet Waze"
+}

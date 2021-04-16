@@ -18,7 +18,11 @@ from zwave_js_server.const import (
 )
 from zwave_js_server.model.value import Value as ZwaveValue
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import (
+    DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_TEMP,
+    ClimateEntity,
+)
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
@@ -49,6 +53,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.temperature import convert_temperature
 
 from .const import DATA_CLIENT, DATA_UNSUBSCRIBE, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
@@ -150,6 +155,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             THERMOSTAT_OPERATING_STATE_PROPERTY,
             command_class=CommandClass.THERMOSTAT_OPERATING_STATE,
             add_to_watched_value_ids=True,
+            check_all_endpoints=True,
         )
         self._current_temp = self.get_zwave_value(
             THERMOSTAT_CURRENT_TEMP_PROPERTY,
@@ -373,6 +379,38 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     def supported_features(self) -> int:
         """Return the list of supported features."""
         return self._supported_features
+
+    @property
+    def min_temp(self) -> float:
+        """Return the minimum temperature."""
+        min_temp = DEFAULT_MIN_TEMP
+        base_unit = TEMP_CELSIUS
+        try:
+            temp = self._setpoint_value(self._current_mode_setpoint_enums[0])
+            if temp.metadata.min:
+                min_temp = temp.metadata.min
+                base_unit = self.temperature_unit
+        # In case of any error, we fallback to the default
+        except (IndexError, ValueError, TypeError):
+            pass
+
+        return convert_temperature(min_temp, base_unit, self.temperature_unit)
+
+    @property
+    def max_temp(self) -> float:
+        """Return the maximum temperature."""
+        max_temp = DEFAULT_MAX_TEMP
+        base_unit = TEMP_CELSIUS
+        try:
+            temp = self._setpoint_value(self._current_mode_setpoint_enums[0])
+            if temp.metadata.max:
+                max_temp = temp.metadata.max
+                base_unit = self.temperature_unit
+        # In case of any error, we fallback to the default
+        except (IndexError, ValueError, TypeError):
+            pass
+
+        return convert_temperature(max_temp, base_unit, self.temperature_unit)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""

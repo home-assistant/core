@@ -126,7 +126,7 @@ async def test_call_service_blocking(hass, websocket_client, command):
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
     mock_call.assert_called_once_with(
-        ANY, "homeassistant", "restart", ANY, blocking=False, context=ANY, target=ANY
+        ANY, "homeassistant", "restart", ANY, blocking=True, context=ANY, target=ANY
     )
 
 
@@ -697,10 +697,19 @@ async def test_render_template_manual_entity_ids_no_longer_needed(
     }
 
 
-async def test_render_template_with_error(hass, websocket_client, caplog):
+@pytest.mark.parametrize(
+    "template",
+    [
+        "{{ my_unknown_func() + 1 }}",
+        "{{ my_unknown_var }}",
+        "{{ my_unknown_var + 1 }}",
+        "{{ now() | unknown_filter }}",
+    ],
+)
+async def test_render_template_with_error(hass, websocket_client, caplog, template):
     """Test a template with an error."""
     await websocket_client.send_json(
-        {"id": 5, "type": "render_template", "template": "{{ my_unknown_var() + 1 }}"}
+        {"id": 5, "type": "render_template", "template": template, "strict": True}
     )
 
     msg = await websocket_client.receive_json()
@@ -709,17 +718,30 @@ async def test_render_template_with_error(hass, websocket_client, caplog):
     assert not msg["success"]
     assert msg["error"]["code"] == const.ERR_TEMPLATE_ERROR
 
+    assert "Template variable error" not in caplog.text
     assert "TemplateError" not in caplog.text
 
 
-async def test_render_template_with_timeout_and_error(hass, websocket_client, caplog):
+@pytest.mark.parametrize(
+    "template",
+    [
+        "{{ my_unknown_func() + 1 }}",
+        "{{ my_unknown_var }}",
+        "{{ my_unknown_var + 1 }}",
+        "{{ now() | unknown_filter }}",
+    ],
+)
+async def test_render_template_with_timeout_and_error(
+    hass, websocket_client, caplog, template
+):
     """Test a template with an error with a timeout."""
     await websocket_client.send_json(
         {
             "id": 5,
             "type": "render_template",
-            "template": "{{ now() | rando }}",
+            "template": template,
             "timeout": 5,
+            "strict": True,
         }
     )
 
@@ -729,6 +751,7 @@ async def test_render_template_with_timeout_and_error(hass, websocket_client, ca
     assert not msg["success"]
     assert msg["error"]["code"] == const.ERR_TEMPLATE_ERROR
 
+    assert "Template variable error" not in caplog.text
     assert "TemplateError" not in caplog.text
 
 

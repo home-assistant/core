@@ -39,8 +39,6 @@ async def test_user_flow(hass):
         "homeassistant.components.hvv_departures.hub.GTI.stationInformation",
         return_value=FIXTURE_STATION_INFORMATION,
     ), patch(
-        "homeassistant.components.hvv_departures.async_setup", return_value=True
-    ), patch(
         "homeassistant.components.hvv_departures.async_setup_entry",
         return_value=True,
     ):
@@ -101,8 +99,6 @@ async def test_user_flow_no_results(hass):
     ), patch(
         "homeassistant.components.hvv_departures.hub.GTI.checkName",
         return_value={"returnCode": "OK", "results": []},
-    ), patch(
-        "homeassistant.components.hvv_departures.async_setup", return_value=True
     ), patch(
         "homeassistant.components.hvv_departures.async_setup_entry",
         return_value=True,

@@ -27,7 +27,9 @@
         "step": {
             "options": {
                 "data": {
-                    "known_hosts": "Daftar opsional host yang diketahui jika penemuan mDNS tidak berfungsi."
+                    "ignore_cec": "Daftar opsional yang akan diteruskan ke pychromecast.IGNORE_CEC.",
+                    "known_hosts": "Daftar opsional host yang diketahui jika penemuan mDNS tidak berfungsi.",
+                    "uuid": "Daftar opsional UUID. Cast yang tidak tercantum tidak akan ditambahkan."
                 },
                 "description": "Masukkan konfigurasi Google Cast."
             }
