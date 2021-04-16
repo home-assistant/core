@@ -8,7 +8,9 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.device_tracker.const import (
     CONF_CONSIDER_HOME,
+    CONF_TRACK_NEW,
     DEFAULT_CONSIDER_HOME,
+    DEFAULT_TRACK_NEW,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -201,6 +203,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
                     ),
                 ): vol.All(vol.Coerce(int), vol.Clamp(min=0, max=900)),
+                vol.Optional(
+                    CONF_TRACK_NEW,
+                    default=self.config_entry.options.get(
+                        CONF_TRACK_NEW, DEFAULT_TRACK_NEW
+                    ),
+                ): bool,
                 vol.Optional(
                     CONF_TRACK_UNKNOWN,
                     default=self.config_entry.options.get(

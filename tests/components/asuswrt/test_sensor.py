@@ -20,7 +20,7 @@ from homeassistant.const import (
     STATE_NOT_HOME,
 )
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.dt import utcnow
+from homeassistant.util.dt import now
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -44,6 +44,11 @@ MOCK_BYTES_TOTAL = [60000000000, 50000000000]
 MOCK_CURRENT_TRANSFER_RATES = [20000000, 10000000]
 
 
+def get_devices():
+    """Return mock devices for test."""
+    return MOCK_DEVICES.copy()
+
+
 @pytest.fixture(name="connect")
 def mock_controller_connect():
     """Mock a successful connection."""
@@ -52,7 +57,7 @@ def mock_controller_connect():
         service_mock.return_value.is_connected = True
         service_mock.return_value.connection.disconnect = Mock()
         service_mock.return_value.async_get_connected_devices = AsyncMock(
-            return_value=MOCK_DEVICES
+            side_effect=get_devices
         )
         service_mock.return_value.async_get_bytes_total = AsyncMock(
             return_value=MOCK_BYTES_TOTAL
@@ -122,7 +127,7 @@ async def test_sensors(hass, connect):
     # initial devices setup
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+    async_fire_time_changed(hass, now() + timedelta(seconds=30))
     await hass.async_block_till_done()
 
     assert hass.states.get(f"{device_tracker.DOMAIN}.test").state == STATE_HOME
@@ -138,7 +143,7 @@ async def test_sensors(hass, connect):
     MOCK_DEVICES["a3:b3:c3:d3:e3:f3"] = Device(
         "a3:b3:c3:d3:e3:f3", "192.168.1.4", "TestThree"
     )
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+    async_fire_time_changed(hass, now() + timedelta(seconds=30))
     await hass.async_block_till_done()
 
     # consider home option set, all devices still home
@@ -151,7 +156,7 @@ async def test_sensors(hass, connect):
         config_entry, options={CONF_CONSIDER_HOME: 0}
     )
     await hass.async_block_till_done()
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+    async_fire_time_changed(hass, now() + timedelta(seconds=30))
     await hass.async_block_till_done()
 
     # consider home option not set, device "test" not home

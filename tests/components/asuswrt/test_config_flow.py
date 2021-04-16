@@ -13,7 +13,10 @@ from homeassistant.components.asuswrt.const import (
     CONF_TRACK_UNKNOWN,
     DOMAIN,
 )
-from homeassistant.components.device_tracker.const import CONF_CONSIDER_HOME
+from homeassistant.components.device_tracker.const import (
+    CONF_CONSIDER_HOME,
+    CONF_TRACK_NEW,
+)
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
@@ -281,6 +284,7 @@ async def test_options_flow(hass):
             result["flow_id"],
             user_input={
                 CONF_CONSIDER_HOME: 20,
+                CONF_TRACK_NEW: True,
                 CONF_TRACK_UNKNOWN: True,
                 CONF_INTERFACE: "aaa",
                 CONF_DNSMASQ: "bbb",
@@ -290,6 +294,7 @@ async def test_options_flow(hass):
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert config_entry.options[CONF_CONSIDER_HOME] == 20
+        assert config_entry.options[CONF_TRACK_NEW] is True
         assert config_entry.options[CONF_TRACK_UNKNOWN] is True
         assert config_entry.options[CONF_INTERFACE] == "aaa"
         assert config_entry.options[CONF_DNSMASQ] == "bbb"

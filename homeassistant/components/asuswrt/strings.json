@@ -34,6 +34,7 @@
         "title": "AsusWRT Options",
         "data": {
           "consider_home": "Seconds to wait before considering a device away",
+          "track_new_devices": "Track new detected devices",
           "track_unknown": "Track unknown / unamed devices",
           "interface": "The interface that you want statistics from (e.g. eth0,eth1 etc)",
           "dnsmasq": "The location in the router of the dnsmasq.leases files",
