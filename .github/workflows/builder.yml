@@ -56,7 +56,6 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        if: needs.init.outputs.publish == "true"
         uses: actions/setup-python@v2.2.1
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -71,7 +70,7 @@ jobs:
         shell: bash
         run: |
           export TWINE_USERNAME="__token__"
-          export TWINE_PASSWORD="$(twinePassword)"
+          export TWINE_PASSWORD="${{ secrets.TWINE_TOKEN }}"
 
           twine upload dist/* --skip-existing
 
