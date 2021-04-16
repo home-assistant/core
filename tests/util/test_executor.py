@@ -42,14 +42,11 @@ async def test_executor_shutdown_without_interrupt(caplog):
 
     def _loop_sleep_in_executor():
         time.sleep(0.1)
-        return 50
 
-    future = iexecutor.submit(_loop_sleep_in_executor)
+    iexecutor.submit(_loop_sleep_in_executor)
 
-    with patch.object(executor, "START_LOG_ATTEMPT", 1):
+    with patch.object(executor, "START_LOG_ATTEMPT", 2):
         iexecutor.logged_shutdown()
-
-    assert future.result() == 50
 
     assert "is still running at shutdown" not in caplog.text
     assert "time.sleep(0.1)" not in caplog.text
