@@ -298,6 +298,8 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 self._state = True
             elif values["state"] == "OFF":
                 self._state = False
+            else:
+                self._state = last_state.state
 
             if self._supported_features and SUPPORT_COLOR and "color" in values:
                 if values["color"] is None:
