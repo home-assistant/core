@@ -391,7 +391,12 @@ class ScriptEntity(ToggleEntity):
 
     async def _async_run(self, variables, context):
         with trace_script(
-            self.hass, self.object_id, self._raw_config, context, self._trace_config
+            self.hass,
+            self.object_id,
+            self._raw_config,
+            self._blueprint_inputs,
+            context,
+            self._trace_config,
         ) as script_trace:
             # Prepare tracing the execution of the script's sequence
             script_trace.set_trace(trace_get())
