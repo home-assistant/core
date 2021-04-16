@@ -39,14 +39,6 @@ SCAN_INTERVAL = timedelta(minutes=5)
 CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Tado component."""
-
-    hass.data.setdefault(DOMAIN, {})
-
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Tado from a config entry."""
 
@@ -86,6 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     update_listener = entry.add_update_listener(_async_update_listener)
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         DATA: tadoconnector,
         UPDATE_TRACK: update_track,

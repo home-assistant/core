@@ -39,8 +39,6 @@ async def test_form(hass):
         "homeassistant.components.mazda.config_flow.MazdaAPI.validate_credentials",
         return_value=True,
     ), patch(
-        "homeassistant.components.mazda.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.mazda.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -53,7 +51,6 @@ async def test_form(hass):
     assert result2["type"] == "create_entry"
     assert result2["title"] == FIXTURE_USER_INPUT[CONF_EMAIL]
     assert result2["data"] == FIXTURE_USER_INPUT
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 

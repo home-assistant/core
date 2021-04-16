@@ -38,12 +38,6 @@ async def with_timeout(task, timeout_seconds=10):
         return await task
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Mazda Connected Services component."""
-    hass.data[DOMAIN] = {}
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Mazda Connected Services from a config entry."""
     email = entry.data[CONF_EMAIL]
@@ -111,6 +105,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         update_interval=timedelta(seconds=60),
     )
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_CLIENT: mazda_client,
         DATA_COORDINATOR: coordinator,

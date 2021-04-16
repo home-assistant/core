@@ -23,11 +23,6 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["sensor", "weather"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Met Office weather component."""
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up a Met Office entry."""
 

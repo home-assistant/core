@@ -21,8 +21,6 @@ async def test_form(hass):
     with patch("vilfo.Client.ping", return_value=None), patch(
         "vilfo.Client.get_board_information", return_value=None
     ), patch("vilfo.Client.resolve_mac_address", return_value=mock_mac), patch(
-        "homeassistant.components.vilfo.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.vilfo.async_setup_entry"
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -38,7 +36,6 @@ async def test_form(hass):
         "access_token": "test-token",
     }
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 

@@ -23,11 +23,6 @@ PLATFORMS = ["media_player"]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Monoprice 6-Zone Amplifier component."""
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Monoprice 6-Zone Amplifier from a config entry."""
     port = entry.data[CONF_PORT]
