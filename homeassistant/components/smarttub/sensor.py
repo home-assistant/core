@@ -5,6 +5,7 @@ import logging
 import smarttub
 import voluptuous as vol
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.helpers import config_validation as cv, entity_platform
 
 from .const import DOMAIN, SMARTTUB_CONTROLLER
@@ -82,7 +83,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     )
 
 
-class SmartTubSensor(SmartTubSensorBase):
+class SmartTubSensor(SmartTubSensorBase, SensorEntity):
     """Generic class for SmartTub status sensors."""
 
     @property
@@ -108,7 +109,7 @@ class SmartTubPrimaryFiltrationCycle(SmartTubSensor):
         return self._state.status.name.lower()
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         state = self._state
         return {
@@ -141,7 +142,7 @@ class SmartTubSecondaryFiltrationCycle(SmartTubSensor):
         return self._state.status.name.lower()
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         state = self._state
         return {

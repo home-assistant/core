@@ -68,7 +68,7 @@ PTZ_GOTO_PRESET_COMMAND = "ptz_goto_preset"
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up a Foscam IP Camera."""
     LOGGER.warning(
-        "Loading foscam via platform config is deprecated, it will be automatically imported. Please remove it afterwards."
+        "Loading foscam via platform config is deprecated, it will be automatically imported; Please remove it afterwards"
     )
 
     config_new = {

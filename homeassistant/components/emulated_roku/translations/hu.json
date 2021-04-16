@@ -1,9 +1,12 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
         "step": {
             "user": {
                 "data": {
-                    "host_ip": "Hoszt IP",
+                    "host_ip": "Hoszt IP c\u00edm",
                     "listen_port": "Port figyel\u00e9se",
                     "name": "N\u00e9v"
                 },
@@ -11,5 +14,5 @@
             }
         }
     },
-    "title": "EmulatedRoku"
+    "title": "Emulated Roku"
 }

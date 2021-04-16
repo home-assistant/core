@@ -363,7 +363,7 @@ class AbodeDevice(AbodeEntity):
         return self._device.name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
@@ -411,7 +411,7 @@ class AbodeAutomation(AbodeEntity):
         return self._automation.name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION, "type": "CUE automation"}
 

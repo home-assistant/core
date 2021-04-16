@@ -429,7 +429,7 @@ class ElkEntity(Entity):
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the default attributes of the element."""
         return {**self._element.as_dict(), **self.initial_attrs()}
 

@@ -31,12 +31,12 @@ from .const import (
     DEFAULT_INTERFACE,
     DEFAULT_SSH_PORT,
     DEFAULT_TRACK_UNKNOWN,
+    DOMAIN,
     MODE_AP,
     MODE_ROUTER,
     PROTOCOL_SSH,
     PROTOCOL_TELNET,
 )
-from .const import DOMAIN  # pylint:disable=unused-import
 from .router import get_api
 
 RESULT_CONN_ERROR = "cannot_connect"
@@ -127,7 +127,7 @@ class AsusWrtFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         conf_protocol = user_input[CONF_PROTOCOL]
         if conf_protocol == PROTOCOL_TELNET:
-            await api.connection.disconnect()
+            api.connection.disconnect()
         return RESULT_SUCCESS
 
     async def async_step_user(self, user_input=None):

@@ -23,7 +23,7 @@ from homeassistant.components.unifi.const import (
     DOMAIN as UNIFI_DOMAIN,
 )
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.util.dt as dt_util
 
 from .test_controller import ENTRY_CONFIG, setup_unifi_integration
@@ -335,9 +335,9 @@ async def test_tracked_devices(hass, aioclient_mock, mock_unifi_websocket):
     await hass.async_block_till_done()
 
     # Verify device registry has been updated
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get("device_tracker.device_2")
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
     assert device.sw_version == event["version_to"]
 
@@ -949,7 +949,7 @@ async def test_restoring_client(hass, aioclient_mock):
         entry_id=1,
     )
 
-    registry = await entity_registry.async_get_registry(hass)
+    registry = er.async_get(hass)
     registry.async_get_or_create(
         TRACKER_DOMAIN,
         UNIFI_DOMAIN,

@@ -1,8 +1,10 @@
 """Component to allow numeric input for platforms."""
+from __future__ import annotations
+
 from abc import abstractmethod
 from datetime import timedelta
 import logging
-from typing import Any, Dict
+from typing import Any
 
 import voluptuous as vol
 
@@ -66,7 +68,7 @@ class NumberEntity(Entity):
     """Representation of a Number entity."""
 
     @property
-    def capability_attributes(self) -> Dict[str, Any]:
+    def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
         return {
             ATTR_MIN: self.min_value,
@@ -110,5 +112,4 @@ class NumberEntity(Entity):
 
     async def async_set_value(self, value: float) -> None:
         """Set new value."""
-        assert self.hass is not None
         await self.hass.async_add_executor_job(self.set_value, value)

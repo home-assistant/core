@@ -5,7 +5,6 @@ DEBOUNCE_TIMEOUT = 0.5
 DEVICE_PRECISION_LEEWAY = 6
 DOMAIN = "homekit"
 HOMEKIT_FILE = ".homekit.state"
-AID_STORAGE = "homekit-aid-allocations"
 HOMEKIT_PAIRING_QR = "homekit-pairing-qr"
 HOMEKIT_PAIRING_QR_SECRET = "homekit-pairing-qr-secret"
 HOMEKIT = "homekit"
@@ -238,8 +237,6 @@ PROP_CELSIUS = {"minValue": -273, "maxValue": 999}
 PROP_VALID_VALUES = "ValidValues"
 
 # #### Device Classes ####
-DEVICE_CLASS_CO = "co"
-DEVICE_CLASS_CO2 = "co2"
 DEVICE_CLASS_DOOR = "door"
 DEVICE_CLASS_GARAGE_DOOR = "garage_door"
 DEVICE_CLASS_GAS = "gas"

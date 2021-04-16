@@ -135,7 +135,7 @@ def setup(hass, config):
 
     def setup_leaf(car_config):
         """Set up a car."""
-        _LOGGER.debug("Logging into You+Nissan...")
+        _LOGGER.debug("Logging into You+Nissan")
 
         username = car_config[CONF_USERNAME]
         password = car_config[CONF_PASSWORD]
@@ -450,7 +450,7 @@ class LeafEntity(Entity):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return default attributes for Nissan leaf entities."""
         return {
             "next_update": self.car.next_update,

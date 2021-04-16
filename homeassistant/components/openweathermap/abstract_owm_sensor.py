@@ -1,12 +1,12 @@
 """Abstraction form OWM sensors."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import ATTRIBUTION, SENSOR_DEVICE_CLASS, SENSOR_NAME, SENSOR_UNIT
 
 
-class AbstractOpenWeatherMapSensor(Entity):
+class AbstractOpenWeatherMapSensor(SensorEntity):
     """Abstract class for an OpenWeatherMap sensor."""
 
     def __init__(
@@ -57,7 +57,7 @@ class AbstractOpenWeatherMapSensor(Entity):
         return self._unit_of_measurement
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 

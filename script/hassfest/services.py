@@ -1,7 +1,8 @@
 """Validate dependencies."""
+from __future__ import annotations
+
 import pathlib
 import re
-from typing import Dict
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -93,7 +94,7 @@ def validate_services(integration: Integration):
         )
 
 
-def validate(integrations: Dict[str, Integration], config):
+def validate(integrations: dict[str, Integration], config):
     """Handle dependencies for integrations."""
     # check services.yaml is cool
     for integration in integrations.values():

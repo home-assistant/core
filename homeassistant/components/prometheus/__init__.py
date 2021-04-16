@@ -29,6 +29,7 @@ from homeassistant.const import (
     PERCENTAGE,
     STATE_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
@@ -154,9 +155,11 @@ class PrometheusMetrics:
         if not self._filter(state.entity_id):
             return
 
+        ignored_states = (STATE_UNAVAILABLE, STATE_UNKNOWN)
+
         handler = f"_handle_{domain}"
 
-        if hasattr(self, handler) and state.state != STATE_UNAVAILABLE:
+        if hasattr(self, handler) and state.state not in ignored_states:
             getattr(self, handler)(state)
 
         labels = self._labels(state)
@@ -168,9 +171,9 @@ class PrometheusMetrics:
         entity_available = self._metric(
             "entity_available",
             self.prometheus_cli.Gauge,
-            "Entity is available (not in the unavailable state)",
+            "Entity is available (not in the unavailable or unknown state)",
         )
-        entity_available.labels(**labels).set(float(state.state != STATE_UNAVAILABLE))
+        entity_available.labels(**labels).set(float(state.state not in ignored_states))
 
         last_updated_time_seconds = self._metric(
             "last_updated_time_seconds",

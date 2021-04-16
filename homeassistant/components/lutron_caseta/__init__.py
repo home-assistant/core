@@ -349,7 +349,7 @@ class LutronCasetaDevice(Entity):
         }
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {"device_id": self.device_id, "zone_id": self._device["zone"]}
 

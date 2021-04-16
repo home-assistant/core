@@ -1,5 +1,6 @@
 """Alexa configuration for Home Assistant Cloud."""
 import asyncio
+from contextlib import suppress
 from datetime import timedelta
 import logging
 
@@ -322,7 +323,5 @@ class AlexaConfig(alexa_config.AbstractConfig):
             if "old_entity_id" in event.data:
                 to_remove.append(event.data["old_entity_id"])
 
-        try:
+        with suppress(alexa_errors.NoTokenAvailable):
             await self._sync_helper(to_update, to_remove)
-        except alexa_errors.NoTokenAvailable:
-            pass

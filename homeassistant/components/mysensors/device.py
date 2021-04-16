@@ -1,7 +1,9 @@
 """Handle MySensors devices."""
+from __future__ import annotations
+
 from functools import partial
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from mysensors import BaseAsyncGateway, Sensor
 from mysensors.sensor import ChildSensor
@@ -107,7 +109,7 @@ class MySensorsDevice:
         return f"{self.gateway_id}-{self.node_id}-{self.child_id}-{self.value_type}"
 
     @property
-    def device_info(self) -> Optional[Dict[str, Any]]:
+    def device_info(self) -> dict[str, Any] | None:
         """Return a dict that allows home assistant to puzzle all entities belonging to a node together."""
         return {
             "identifiers": {(DOMAIN, f"{self.gateway_id}-{self.node_id}")},
@@ -122,7 +124,7 @@ class MySensorsDevice:
         return f"{self.node_name} {self.child_id}"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         node = self.gateway.sensors[self.node_id]
         child = node.children[self.child_id]
@@ -196,7 +198,7 @@ class MySensorsDevice:
         self.hass.loop.call_later(UPDATE_DELAY, delayed_update)
 
 
-def get_mysensors_devices(hass, domain: str) -> Dict[DevId, MySensorsDevice]:
+def get_mysensors_devices(hass, domain: str) -> dict[DevId, MySensorsDevice]:
     """Return MySensors devices for a hass platform name."""
     if MYSENSORS_PLATFORM_DEVICES.format(domain) not in hass.data[DOMAIN]:
         hass.data[DOMAIN][MYSENSORS_PLATFORM_DEVICES.format(domain)] = {}

@@ -1,28 +1,28 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Jalur akses sudah dikonfigurasi",
-            "connection_aborted": "Tidak dapat terhubung ke server HMIP",
-            "unknown": "Kesalahan tidak dikenal terjadi."
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "connection_aborted": "Gagal terhubung",
+            "unknown": "Kesalahan yang tidak diharapkan"
         },
         "error": {
-            "invalid_sgtin_or_pin": "PIN tidak valid, silakan coba lagi.",
-            "press_the_button": "Silakan tekan tombol biru.",
-            "register_failed": "Gagal mendaftar, silakan coba lagi.",
-            "timeout_button": "Batas waktu tekan tombol biru berakhir, silakan coba lagi."
+            "invalid_sgtin_or_pin": "SGTIN atau Kode PIN tidak valid, coba lagi.",
+            "press_the_button": "Tekan tombol biru.",
+            "register_failed": "Gagal mendaftar, coba lagi.",
+            "timeout_button": "Tenggang waktu penekanan tombol biru berakhir, coba lagi."
         },
         "step": {
             "init": {
                 "data": {
                     "hapid": "Titik akses ID (SGTIN)",
-                    "name": "Nama (opsional, digunakan sebagai awalan nama untuk semua perangkat)",
-                    "pin": "Kode Pin (opsional)"
+                    "name": "Nama (opsional, digunakan sebagai prefiks nama untuk semua perangkat)",
+                    "pin": "Kode PIN"
                 },
-                "title": "Pilih HomematicIP Access point"
+                "title": "Pilih Access Point HomematicIP"
             },
             "link": {
-                "description": "Tekan tombol biru pada access point dan tombol submit untuk mendaftarkan HomematicIP dengan rumah asisten.\n\n! [Lokasi tombol di bridge] (/ static/images/config_flows/config_homematicip_cloud.png)",
-                "title": "Tautkan jalur akses"
+                "description": "Tekan tombol biru pada access point dan tombol sukirimbmit untuk mendaftarkan HomematicIP dengan Home Assistant.\n\n![Lokasi tombol di bridge](/static/images/config_flows/config_homematicip_cloud.png)",
+                "title": "Tautkan Titik akses"
             }
         }
     }

@@ -713,7 +713,7 @@ async def test_temperature_setting_climate_onoff(hass):
         BASIC_CONFIG,
     )
     assert trt.sync_attributes() == {
-        "availableThermostatModes": "off,cool,heat,heatcool,on",
+        "availableThermostatModes": ["off", "cool", "heat", "heatcool", "on"],
         "thermostatTemperatureUnit": "F",
     }
     assert trt.can_execute(trait.COMMAND_THERMOSTAT_SET_MODE, {})
@@ -752,7 +752,7 @@ async def test_temperature_setting_climate_no_modes(hass):
         BASIC_CONFIG,
     )
     assert trt.sync_attributes() == {
-        "availableThermostatModes": "heat",
+        "availableThermostatModes": ["heat"],
         "thermostatTemperatureUnit": "C",
     }
 
@@ -788,7 +788,7 @@ async def test_temperature_setting_climate_range(hass):
         BASIC_CONFIG,
     )
     assert trt.sync_attributes() == {
-        "availableThermostatModes": "off,cool,heat,auto,on",
+        "availableThermostatModes": ["off", "cool", "heat", "auto", "on"],
         "thermostatTemperatureUnit": "F",
     }
     assert trt.query_attributes() == {
@@ -862,7 +862,7 @@ async def test_temperature_setting_climate_setpoint(hass):
         BASIC_CONFIG,
     )
     assert trt.sync_attributes() == {
-        "availableThermostatModes": "off,cool,on",
+        "availableThermostatModes": ["off", "cool", "on"],
         "thermostatTemperatureUnit": "C",
     }
     assert trt.query_attributes() == {
@@ -920,7 +920,7 @@ async def test_temperature_setting_climate_setpoint_auto(hass):
         BASIC_CONFIG,
     )
     assert trt.sync_attributes() == {
-        "availableThermostatModes": "off,heatcool,on",
+        "availableThermostatModes": ["off", "heatcool", "on"],
         "thermostatTemperatureUnit": "C",
     }
     assert trt.query_attributes() == {

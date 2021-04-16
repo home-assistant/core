@@ -1,14 +1,16 @@
 """Support for OVO Energy."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Dict
+from typing import Any
 
 import aiohttp
 import async_timeout
 from ovoenergy import OVODailyUsage
 from ovoenergy.ovoenergy import OVOEnergy
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -44,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     if not authenticated:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": "reauth"}, data=entry.data
+                DOMAIN, context={"source": SOURCE_REAUTH}, data=entry.data
             )
         )
         return False
@@ -61,7 +63,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
             if not authenticated:
                 hass.async_create_task(
                     hass.config_entries.flow.async_init(
-                        DOMAIN, context={"source": "reauth"}, data=entry.data
+                        DOMAIN, context={"source": SOURCE_REAUTH}, data=entry.data
                     )
                 )
                 raise UpdateFailed("Not authenticated with OVO Energy")
@@ -84,7 +86,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     }
 
     # Fetch initial data so we have data when entities subscribe
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
     # Setup components
     hass.async_create_task(
@@ -148,7 +150,7 @@ class OVOEnergyDeviceEntity(OVOEnergyEntity):
     """Defines a OVO Energy device entity."""
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> dict[str, Any]:
         """Return device information about this OVO Energy instance."""
         return {
             "identifiers": {(DOMAIN, self._client.account_id)},

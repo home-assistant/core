@@ -14,6 +14,7 @@
                     "longitude": "Lengtegraad",
                     "name": "Naam van de integratie"
                 },
+                "description": "Stel AEMET OpenData-integratie in. Ga naar https://opendata.aemet.es/centrodedescargas/altaUsuario om een API-sleutel te genereren",
                 "title": "AEMET OpenData"
             }
         }

@@ -21,8 +21,8 @@ save_video:
       example: "/tmp/video.mp4"
 
 send_pin:
-  description: Send a new pin to blink for 2FA.
+  description: Send a new PIN to blink for 2FA.
   fields:
     pin:
-      description: Pin received from blink. Leave empty if you only received a verification email.
+      description: PIN received from blink. Leave empty if you only received a verification email.
       example: "abc123"

@@ -4,6 +4,7 @@
             "already_configured": "L'appareil est d\u00e9ja configur\u00e9 "
         },
         "error": {
+            "cannot_connect": "[%key::common::config_flow::error::cannot_connect%]",
             "connection_exception": "\u00c9chec de la connexion ",
             "invalid_auth": "Authentification invalide ",
             "unauthenticated_exception": "Authentification invalide ",

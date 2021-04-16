@@ -1,6 +1,8 @@
 """Config flow for Philips TV integration."""
+from __future__ import annotations
+
 import platform
-from typing import Any, Dict, Optional, Tuple
+from typing import Any
 
 from haphilipsjs import ConnectionFailure, PairingFailure, PhilipsTV
 import voluptuous as vol
@@ -15,17 +17,12 @@ from homeassistant.const import (
 )
 
 from . import LOGGER
-from .const import (  # pylint:disable=unused-import
-    CONF_SYSTEM,
-    CONST_APP_ID,
-    CONST_APP_NAME,
-    DOMAIN,
-)
+from .const import CONF_SYSTEM, CONST_APP_ID, CONST_APP_NAME, DOMAIN
 
 
 async def validate_input(
     hass: core.HomeAssistant, host: str, api_version: int
-) -> Tuple[Dict, PhilipsTV]:
+) -> tuple[dict, PhilipsTV]:
     """Validate the user input allows us to connect."""
     hub = PhilipsTV(host, api_version)
 
@@ -48,7 +45,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize flow."""
         super().__init__()
         self._current = {}
-        self._hub: Optional[PhilipsTV] = None
+        self._hub: PhilipsTV | None = None
         self._pair_state: Any = None
 
     async def async_step_import(self, conf: dict) -> dict:
@@ -72,7 +69,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data=self._current,
         )
 
-    async def async_step_pair(self, user_input: Optional[dict] = None) -> dict:
+    async def async_step_pair(self, user_input: dict | None = None) -> dict:
         """Attempt to pair with device."""
         assert self._hub
 
@@ -123,7 +120,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._current[CONF_PASSWORD] = password
         return await self._async_create_current()
 
-    async def async_step_user(self, user_input: Optional[dict] = None) -> dict:
+    async def async_step_user(self, user_input: dict | None = None) -> dict:
         """Handle the initial step."""
         errors = {}
         if user_input:

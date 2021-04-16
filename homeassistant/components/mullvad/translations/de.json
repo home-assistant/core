@@ -14,7 +14,8 @@
                     "host": "Host",
                     "password": "Passwort",
                     "username": "Benutzername"
-                }
+                },
+                "description": "Mullvad VPN Integration einrichten?"
             }
         }
     }

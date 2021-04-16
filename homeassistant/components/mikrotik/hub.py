@@ -276,9 +276,8 @@ class MikrotikData:
 
     def update(self):
         """Update device_tracker from Mikrotik API."""
-        if not self.available or not self.api:
-            if not self.connect_to_hub():
-                return
+        if (not self.available or not self.api) and not self.connect_to_hub():
+            return
         _LOGGER.debug("updating network devices for host: %s", self._host)
         self.update_devices()
 

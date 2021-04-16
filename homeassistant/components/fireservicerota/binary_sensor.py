@@ -62,7 +62,7 @@ class ResponseBinarySensor(CoordinatorEntity, BinarySensorEntity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return available attributes for binary sensor."""
         attr = {}
         if not self.coordinator.data:

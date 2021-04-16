@@ -141,16 +141,16 @@ async def test_minio_listen(hass, caplog, minio_client_event):
     while not events:
         await asyncio.sleep(0)
 
-    assert 1 == len(events)
+    assert len(events) == 1
     event = events[0]
 
-    assert DOMAIN == event.event_type
-    assert "s3:ObjectCreated:Put" == event.data["event_name"]
-    assert "5jJkTAo.jpg" == event.data["file_name"]
-    assert "test" == event.data["bucket"]
-    assert "5jJkTAo.jpg" == event.data["key"]
-    assert "http://url" == event.data["presigned_url"]
-    assert 0 == len(event.data["metadata"])
+    assert event.event_type == DOMAIN
+    assert event.data["event_name"] == "s3:ObjectCreated:Put"
+    assert event.data["file_name"] == "5jJkTAo.jpg"
+    assert event.data["bucket"] == "test"
+    assert event.data["key"] == "5jJkTAo.jpg"
+    assert event.data["presigned_url"] == "http://url"
+    assert len(event.data["metadata"]) == 0
 
 
 async def test_queue_listener():
@@ -183,7 +183,7 @@ async def test_queue_listener():
         "metadata": {},
     }
 
-    assert DOMAIN == call_domain
+    assert call_domain == DOMAIN
     assert json.dumps(expected_event, sort_keys=True) == json.dumps(
         call_event, sort_keys=True
     )

@@ -17,5 +17,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "reverse": "P\u00f6\u00f6rdl\u00fcliti loogika (kasuta NC-d)"
+                }
+            }
+        }
     }
 }

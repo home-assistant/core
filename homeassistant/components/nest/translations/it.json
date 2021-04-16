@@ -30,7 +30,7 @@
                 "data": {
                     "code": "Codice PIN"
                 },
-                "description": "Per collegare l'account Nido, [autorizzare l'account]({url}).\n\nDopo l'autorizzazione, copia-incolla il codice PIN fornito di seguito.",
+                "description": "Per collegare il tuo account Nest, [autorizza il tuo account] ({url}). \n\nDopo l'autorizzazione, copia e incolla il codice PIN fornito di seguito.",
                 "title": "Collega un account Nest"
             },
             "pick_implementation": {

@@ -78,7 +78,7 @@ async def test_check_loop_async():
 
 async def test_check_loop_async_integration(caplog):
     """Test check_loop detects when called from event loop from integration context."""
-    with patch(
+    with pytest.raises(RuntimeError), patch(
         "homeassistant.util.async_.extract_stack",
         return_value=[
             Mock(
@@ -107,7 +107,7 @@ async def test_check_loop_async_integration(caplog):
 
 async def test_check_loop_async_custom(caplog):
     """Test check_loop detects when called from event loop with custom component context."""
-    with patch(
+    with pytest.raises(RuntimeError), patch(
         "homeassistant.util.async_.extract_stack",
         return_value=[
             Mock(
@@ -206,8 +206,9 @@ async def test_callback_is_always_scheduled(hass):
     callback = MagicMock()
     hasync.shutdown_run_callback_threadsafe(hass.loop)
 
-    with patch.object(hass.loop, "call_soon_threadsafe") as mock_call_soon_threadsafe:
-        with pytest.raises(RuntimeError):
-            hasync.run_callback_threadsafe(hass.loop, callback)
+    with patch.object(
+        hass.loop, "call_soon_threadsafe"
+    ) as mock_call_soon_threadsafe, pytest.raises(RuntimeError):
+        hasync.run_callback_threadsafe(hass.loop, callback)
 
     mock_call_soon_threadsafe.assert_called_once()

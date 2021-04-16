@@ -1,49 +1,49 @@
 """Support for LCN switches."""
+
 import pypck
 
-from homeassistant.components.switch import SwitchEntity
-from homeassistant.const import CONF_ADDRESS
+from homeassistant.components.switch import DOMAIN as DOMAIN_SWITCH, SwitchEntity
+from homeassistant.const import CONF_ADDRESS, CONF_DOMAIN, CONF_ENTITIES
 
 from . import LcnEntity
-from .const import CONF_CONNECTIONS, CONF_OUTPUT, DATA_LCN, OUTPUT_PORTS
-from .helpers import get_connection
+from .const import CONF_DOMAIN_DATA, CONF_OUTPUT, OUTPUT_PORTS
+from .helpers import get_device_connection
 
 PARALLEL_UPDATES = 0
 
 
-async def async_setup_platform(
-    hass, hass_config, async_add_entities, discovery_info=None
-):
-    """Set up the LCN switch platform."""
-    if discovery_info is None:
-        return
+def create_lcn_switch_entity(hass, entity_config, config_entry):
+    """Set up an entity for this domain."""
+    device_connection = get_device_connection(
+        hass, tuple(entity_config[CONF_ADDRESS]), config_entry
+    )
 
-    devices = []
-    for config in discovery_info:
-        address, connection_id = config[CONF_ADDRESS]
-        addr = pypck.lcn_addr.LcnAddr(*address)
-        connections = hass.data[DATA_LCN][CONF_CONNECTIONS]
-        connection = get_connection(connections, connection_id)
-        address_connection = connection.get_address_conn(addr)
+    if entity_config[CONF_DOMAIN_DATA][CONF_OUTPUT] in OUTPUT_PORTS:
+        return LcnOutputSwitch(entity_config, config_entry.entry_id, device_connection)
+    # in RELAY_PORTS
+    return LcnRelaySwitch(entity_config, config_entry.entry_id, device_connection)
 
-        if config[CONF_OUTPUT] in OUTPUT_PORTS:
-            device = LcnOutputSwitch(config, address_connection)
-        else:  # in RELAY_PORTS
-            device = LcnRelaySwitch(config, address_connection)
 
-        devices.append(device)
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up LCN switch entities from a config entry."""
 
-    async_add_entities(devices)
+    entities = []
+
+    for entity_config in config_entry.data[CONF_ENTITIES]:
+        if entity_config[CONF_DOMAIN] == DOMAIN_SWITCH:
+            entities.append(create_lcn_switch_entity(hass, entity_config, config_entry))
+
+    async_add_entities(entities)
 
 
 class LcnOutputSwitch(LcnEntity, SwitchEntity):
     """Representation of a LCN switch for output ports."""
 
-    def __init__(self, config, device_connection):
+    def __init__(self, config, entry_id, device_connection):
         """Initialize the LCN switch."""
-        super().__init__(config, device_connection)
+        super().__init__(config, entry_id, device_connection)
 
-        self.output = pypck.lcn_defs.OutputPort[config[CONF_OUTPUT]]
+        self.output = pypck.lcn_defs.OutputPort[config[CONF_DOMAIN_DATA][CONF_OUTPUT]]
 
         self._is_on = None
 
@@ -52,6 +52,12 @@ class LcnOutputSwitch(LcnEntity, SwitchEntity):
         await super().async_added_to_hass()
         if not self.device_connection.is_group:
             await self.device_connection.activate_status_request_handler(self.output)
+
+    async def async_will_remove_from_hass(self):
+        """Run when entity will be removed from hass."""
+        await super().async_will_remove_from_hass()
+        if not self.device_connection.is_group:
+            await self.device_connection.cancel_status_request_handler(self.output)
 
     @property
     def is_on(self):
@@ -87,11 +93,11 @@ class LcnOutputSwitch(LcnEntity, SwitchEntity):
 class LcnRelaySwitch(LcnEntity, SwitchEntity):
     """Representation of a LCN switch for relay ports."""
 
-    def __init__(self, config, device_connection):
+    def __init__(self, config, entry_id, device_connection):
         """Initialize the LCN switch."""
-        super().__init__(config, device_connection)
+        super().__init__(config, entry_id, device_connection)
 
-        self.output = pypck.lcn_defs.RelayPort[config[CONF_OUTPUT]]
+        self.output = pypck.lcn_defs.RelayPort[config[CONF_DOMAIN_DATA][CONF_OUTPUT]]
 
         self._is_on = None
 
@@ -100,6 +106,12 @@ class LcnRelaySwitch(LcnEntity, SwitchEntity):
         await super().async_added_to_hass()
         if not self.device_connection.is_group:
             await self.device_connection.activate_status_request_handler(self.output)
+
+    async def async_will_remove_from_hass(self):
+        """Run when entity will be removed from hass."""
+        await super().async_will_remove_from_hass()
+        if not self.device_connection.is_group:
+            await self.device_connection.cancel_status_request_handler(self.output)
 
     @property
     def is_on(self):
