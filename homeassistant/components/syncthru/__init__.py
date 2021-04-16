@@ -10,23 +10,18 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry as dr
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
-    """Set up."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Set up config entry."""
 
     session = aiohttp_client.async_get_clientsession(hass)
+    hass.data.setdefault(DOMAIN, {})
     printer = hass.data[DOMAIN][entry.entry_id] = SyncThru(
         entry.data[CONF_URL], session
     )

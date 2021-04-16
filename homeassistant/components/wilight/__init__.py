@@ -14,14 +14,6 @@ DOMAIN = "wilight"
 PLATFORMS = ["cover", "fan", "light"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the WiLight with Config Flow component."""
-
-    hass.data[DOMAIN] = {}
-
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up a wilight config entry."""
 
@@ -30,6 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if not await parent.async_setup():
         raise ConfigEntryNotReady
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = parent
 
     # Set up all platforms for this device/entry.
