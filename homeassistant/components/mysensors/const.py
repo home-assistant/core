@@ -29,7 +29,7 @@ CONF_GATEWAY_TYPE_ALL: list[str] = [
     CONF_GATEWAY_TYPE_TCP,
 ]
 
-
+DATA_HASS_CONFIG = "hass_config"
 DOMAIN: str = "mysensors"
 MYSENSORS_GATEWAY_START_TASK: str = "mysensors_gateway_start_task_{}"
 MYSENSORS_GATEWAYS: str = "mysensors_gateways"

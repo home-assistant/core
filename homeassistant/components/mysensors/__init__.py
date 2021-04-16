@@ -34,6 +34,7 @@ from .const import (
     CONF_TOPIC_IN_PREFIX,
     CONF_TOPIC_OUT_PREFIX,
     CONF_VERSION,
+    DATA_HASS_CONFIG,
     DOMAIN,
     MYSENSORS_DISCOVERY,
     MYSENSORS_GATEWAYS,
@@ -50,8 +51,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_DEBUG = "debug"
 CONF_NODE_NAME = "name"
-
-DATA_HASS_CONFIG = "hass_config"
 
 DEFAULT_BAUD_RATE = 115200
 DEFAULT_TCP_PORT = 5003

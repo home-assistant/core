@@ -17,6 +17,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.setup import async_setup_component
 
 from .const import (
     CONF_BAUD_RATE,
@@ -27,6 +28,7 @@ from .const import (
     CONF_TOPIC_IN_PREFIX,
     CONF_TOPIC_OUT_PREFIX,
     CONF_VERSION,
+    DATA_HASS_CONFIG,
     DOMAIN,
     MYSENSORS_GATEWAY_START_TASK,
     MYSENSORS_GATEWAYS,
@@ -162,9 +164,11 @@ async def _get_gateway(
         persistence_file = hass.config.path(persistence_file)
 
     if device == MQTT_COMPONENT:
-        # what is the purpose of this?
-        # if not await async_setup_component(hass, MQTT_COMPONENT, entry):
-        #    return None
+        # make sure the mqtt integration is set up
+        if not await async_setup_component(
+            hass, MQTT_COMPONENT, hass.data[DOMAIN][DATA_HASS_CONFIG]
+        ):
+            return None
         mqtt = hass.components.mqtt
 
         def pub_callback(topic, payload, qos, retain):
