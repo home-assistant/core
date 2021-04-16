@@ -11,6 +11,7 @@ from homeassistant import bootstrap
 from homeassistant.core import callback
 from homeassistant.helpers.frame import warn_use
 from homeassistant.util.executor import InterruptibleThreadPoolExecutor
+from homeassistant.util.shutdown import deadlock_safe_shutdown
 
 # mypy: disallow-any-generics
 
@@ -119,20 +120,3 @@ def run(runtime_config: RuntimeConfig) -> int:
     """Run Home Assistant."""
     asyncio.set_event_loop_policy(HassEventLoopPolicy(runtime_config.debug))
     return asyncio.run(setup_and_run_hass(runtime_config))
-
-
-def deadlock_safe_shutdown() -> None:
-    """Shutdown that will not deadlock."""
-    # threading._shutdown can deadlock forever
-    # see https://github.com/justengel/continuous_threading#shutdown-update
-    # for additional detail
-    for thread in threading.enumerate():
-        try:
-            if (
-                thread is not threading.main_thread()
-                and thread.is_alive()
-                and not thread.daemon
-            ):
-                thread.join(SHUTDOWN_TIMEOUT)
-        except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.warning("Failed to join thread: %s", err)
