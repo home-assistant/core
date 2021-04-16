@@ -23,6 +23,9 @@ def deadlock_safe_shutdown() -> None:
         and thread.is_alive()
     ]
 
+    if not remaining_threads:
+        return
+
     timeout_per_thread = THREADING_SHUTDOWN_TIMEOUT / len(remaining_threads)
     for thread in remaining_threads:
         try:
