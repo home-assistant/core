@@ -8,5 +8,6 @@
   "homekit": {
     "models": ["819LMB"]
   },
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "dhcp": [{ "macaddress": "645299*" }]
 }

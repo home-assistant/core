@@ -88,6 +88,10 @@ DHCP = [
         "macaddress": "00D02D"
     },
     {
+        "domain": "myq",
+        "macaddress": "645299*"
+    },
+    {
         "domain": "nest",
         "macaddress": "18B430*"
     },
