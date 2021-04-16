@@ -47,13 +47,9 @@ class AbstractOpenWeatherMapSensor(SensorEntity):
     @property
     def device_info(self):
         """Return the device info."""
+        split_unique_id = self._unique_id.split("-")
         return {
-            "identifiers": {
-                (
-                    DOMAIN,
-                    f"{self._coordinator._latitude}-{self._coordinator._longitude}",
-                )
-            },
+            "identifiers": {(DOMAIN, f"{split_unique_id[0]}-{split_unique_id[1]}")},
             "name": DEFAULT_NAME,
             "manufacturer": MANUFACTURER,
             "entry_type": "service",
