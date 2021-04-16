@@ -8,6 +8,7 @@
         "error": {
             "cannot_connect": "Failed to connect"
         },
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {

@@ -9,7 +9,7 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import keenetic_ndms2 as keenetic, ssdp
 from homeassistant.components.keenetic_ndms2 import const
-from homeassistant.const import CONF_SOURCE
+from homeassistant.const import CONF_HOST, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 
 from . import MOCK_DATA, MOCK_NAME, MOCK_OPTIONS, MOCK_SSDP_DISCOVERY_INFO
@@ -179,9 +179,12 @@ async def test_ssdp_works(hass: HomeAssistant, connect):
     ) as mock_setup, patch(
         "homeassistant.components.keenetic_ndms2.async_setup_entry", return_value=True
     ) as mock_setup_entry:
+        user_input = MOCK_DATA.copy()
+        user_input.pop(CONF_HOST)
+
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input=MOCK_DATA,
+            user_input=user_input,
         )
         await hass.async_block_till_done()
 

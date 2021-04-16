@@ -1,6 +1,7 @@
 """Config flow for Keenetic NDMS2."""
 from __future__ import annotations
 
+from typing import Any
 from urllib.parse import urlparse
 
 from ndms2_client import Client, ConnectionException, InterfaceInfo, TelnetConnection
@@ -49,16 +50,17 @@ class KeeneticFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return KeeneticOptionsFlowHandler(config_entry)
 
     async def async_step_user(
-        self, user_input: dict[str, any] | None = None
-    ) -> dict[str, any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
-            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+            host = self.context.get(CONF_HOST, user_input.get(CONF_HOST))
+            self._async_abort_entries_match({CONF_HOST: host})
 
             _client = Client(
                 TelnetConnection(
-                    user_input[CONF_HOST],
+                    host,
                     user_input[CONF_PORT],
                     user_input[CONF_USERNAME],
                     user_input[CONF_PASSWORD],
@@ -73,15 +75,19 @@ class KeeneticFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except ConnectionException:
                 errors["base"] = "cannot_connect"
             else:
-                return self.async_create_entry(title=router_info.name, data=user_input)
+                return self.async_create_entry(
+                    title=router_info.name, data={CONF_HOST: host, **user_input}
+                )
+
+        host_schema = (
+            {vol.Required(CONF_HOST): str} if CONF_HOST not in self.context else {}
+        )
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(
-                        CONF_HOST, default=self.context.get(CONF_HOST, vol.UNDEFINED)
-                    ): str,
+                    **host_schema,
                     vol.Required(CONF_USERNAME): str,
                     vol.Required(CONF_PASSWORD): str,
                     vol.Optional(CONF_PORT, default=DEFAULT_TELNET_PORT): int,
@@ -91,32 +97,33 @@ class KeeneticFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_import(
-        self, user_input: dict[str, any] | None = None
-    ) -> dict[str, any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Import a config entry."""
         return await self.async_step_user(user_input)
 
-    async def async_step_ssdp(self, discovery_info: dict[str, any]) -> dict[str, any]:
+    async def async_step_ssdp(self, discovery_info: dict[str, Any]) -> dict[str, Any]:
         """Handle a discovered device."""
-        # Filter out items not having "keenetic' in their name
-        if (
-            "keenetic"
-            not in discovery_info.get(ssdp.ATTR_UPNP_FRIENDLY_NAME, "").lower()
-        ):
+        friendly_name = discovery_info.get(ssdp.ATTR_UPNP_FRIENDLY_NAME, "")
+
+        # Filter out items not having "keenetic" in their name
+        if "keenetic" not in friendly_name.lower():
             return self.async_abort(reason="not_keenetic_ndms2")
 
-        # filters out items having no/empty UDN
+        # Filters out items having no/empty UDN
         if not discovery_info.get(ssdp.ATTR_UPNP_UDN):
             return self.async_abort(reason="no_udn")
 
         host = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname
-        unique_id = discovery_info[ssdp.ATTR_UPNP_UDN]
-
-        await self.async_set_unique_id(unique_id)
+        await self.async_set_unique_id(discovery_info[ssdp.ATTR_UPNP_UDN])
 
         self._async_abort_entries_match({CONF_HOST: host})
 
         self.context[CONF_HOST] = host
+        self.context["title_placeholders"] = {
+            "name": friendly_name,
+            "host": host,
+        }
 
         return await self.async_step_user()
 
@@ -130,8 +137,8 @@ class KeeneticOptionsFlowHandler(config_entries.OptionsFlow):
         self._interface_options = {}
 
     async def async_step_init(
-        self, _user_input: dict[str, any] | None = None
-    ) -> dict[str, any]:
+        self, _user_input: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Manage the options."""
         router: KeeneticRouter = self.hass.data[DOMAIN][self.config_entry.entry_id][
             ROUTER
@@ -149,8 +156,8 @@ class KeeneticOptionsFlowHandler(config_entries.OptionsFlow):
         return await self.async_step_user()
 
     async def async_step_user(
-        self, user_input: dict[str, any] | None = None
-    ) -> dict[str, any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Manage the device tracker options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
