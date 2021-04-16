@@ -12,6 +12,7 @@ from homeassistant.components.modbus.const import (
     CONF_REGISTERS,
     CONF_REVERSE_ORDER,
     CONF_SCALE,
+    DATA_TYPE_CUSTOM,
     DATA_TYPE_FLOAT,
     DATA_TYPE_INT,
     DATA_TYPE_STRING,
@@ -26,6 +27,7 @@ from homeassistant.const import (
     CONF_OFFSET,
     CONF_SENSORS,
     CONF_SLAVE,
+    CONF_STRUCTURE,
 )
 
 from .conftest import base_config_test, base_test
@@ -338,6 +340,7 @@ async def test_config_sensor(hass, do_discovery, do_config):
 )
 async def test_all_sensor(hass, cfg, regs, expected):
     """Run test for sensor."""
+
     sensor_name = "modbus_test_sensor"
     state = await base_test(
         hass,
@@ -349,6 +352,44 @@ async def test_all_sensor(hass, cfg, regs, expected):
         regs,
         expected,
         method_discovery=True,
+        scan_interval=5,
+    )
+    assert state == expected
+
+
+async def test_struct_sensor(hass):
+    """Run test for sensor struct."""
+
+    sensor_name = "modbus_test_sensor"
+    # floats: 7.931250095367432, 10.600000381469727,
+    #         1.000879611487865e-28, 10.566553115844727
+    expected = "7.93,10.60,0.00,10.57"
+    state = await base_test(
+        hass,
+        {
+            CONF_NAME: sensor_name,
+            CONF_REGISTER: 1234,
+            CONF_COUNT: 8,
+            CONF_PRECISION: 2,
+            CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+            CONF_STRUCTURE: ">4f",
+        },
+        sensor_name,
+        SENSOR_DOMAIN,
+        CONF_SENSORS,
+        CONF_REGISTERS,
+        [
+            0x40FD,
+            0xCCCD,
+            0x4129,
+            0x999A,
+            0x10FD,
+            0xC0CD,
+            0x4129,
+            0x109A,
+        ],
+        expected,
+        method_discovery=False,
         scan_interval=5,
     )
     assert state == expected
