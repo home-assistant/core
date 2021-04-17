@@ -125,8 +125,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         arepr = reprlib.aRepr
         original_maxstring = arepr.maxstring
         original_maxother = arepr.maxother
-        arepr.maxstring = 100
-        arepr.maxother = 50
+        arepr.maxstring = 300
+        arepr.maxother = 300
         try:
             for handle in hass.loop._scheduled:  # pylint: disable=protected-access
                 if handle.cancelled():
