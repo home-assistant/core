@@ -15,17 +15,14 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Component setup, run import config flow for each entry in config."""
-    conf = config.get(DOMAIN)
-    if conf is None:
+    if DOMAIN not in config:
         return True
 
-    if DOMAIN in config:
-        for entry in config[DOMAIN]:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=entry
-                )
-            )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN]
+        )
+    )
 
     return True
 

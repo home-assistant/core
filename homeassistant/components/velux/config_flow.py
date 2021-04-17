@@ -47,6 +47,10 @@ class VeluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
+    async def async_step_import(self, import_config):
+        """Import config from configuration.yaml."""
+        return await self.async_step_user(import_config)
+
 
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
