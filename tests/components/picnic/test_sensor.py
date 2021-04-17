@@ -344,8 +344,9 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
 
         # Change mock responses to empty data and refresh the coordinator
         self.picnic_mock().get_user.return_value = {}
-        self.picnic_mock().get_cart.return_value = {}
-        self.picnic_mock().get_deliveries.side_effect = ValueError
+        self.picnic_mock().get_cart.return_value = None
+        self.picnic_mock().get_deliveries.return_value = None
+        self.picnic_mock().get_delivery_position.side_effect = ValueError
         await self._coordinator.async_refresh()
 
         # Assert all default-enabled sensors have STATE_UNAVAILABLE because the last update failed

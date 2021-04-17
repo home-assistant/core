@@ -28,14 +28,16 @@ async def test_form(hass):
         },
     }
     with patch(
-        "homeassistant.components.picnic.config_flow.PicnicHub.authenticate",
-        return_value=(auth_token, auth_data),
-    ), patch(
+        "homeassistant.components.picnic.config_flow.PicnicAPI",
+    ) as mock_picnic, patch(
         "homeassistant.components.picnic.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.picnic.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
+        mock_picnic().session.auth_token = auth_token
+        mock_picnic().get_user.return_value = auth_data
+
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -100,3 +102,26 @@ async def test_form_cannot_connect(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_exception(hass):
+    """Test we handle random exceptions."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.picnic.config_flow.PicnicHub.authenticate",
+        side_effect=Exception,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "test-username",
+                "password": "test-password",
+                "country_code": "NL",
+            },
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "unknown"}
