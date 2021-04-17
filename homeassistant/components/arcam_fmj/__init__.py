@@ -9,8 +9,9 @@ import async_timeout
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     DEFAULT_SCAN_INTERVAL,
@@ -33,7 +34,7 @@ async def _await_cancel(task):
         await task
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType):
+async def async_setup(hass: HomeAssistant, config: ConfigType):
     """Set up the component."""
     hass.data[DOMAIN_DATA_ENTRIES] = {}
     hass.data[DOMAIN_DATA_TASKS] = {}
@@ -48,7 +49,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: config_entries.ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEntry):
     """Set up config entry."""
     entries = hass.data[DOMAIN_DATA_ENTRIES]
     tasks = hass.data[DOMAIN_DATA_TASKS]

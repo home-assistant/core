@@ -1,14 +1,14 @@
 """Platform for switch integration."""
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 from .devolo_device import DevoloDeviceEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Get all devices and setup the switch devices via config entry."""
     entities = []

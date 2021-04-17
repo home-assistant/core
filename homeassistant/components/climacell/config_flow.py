@@ -21,10 +21,9 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_NAME,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     CC_ATTR_TEMPERATURE,
@@ -72,7 +71,7 @@ def _get_config_schema(
     )
 
 
-def _get_unique_id(hass: HomeAssistantType, input_dict: dict[str, Any]):
+def _get_unique_id(hass: HomeAssistant, input_dict: dict[str, Any]):
     """Return unique ID from config data."""
     return (
         f"{input_dict[CONF_API_KEY]}"
