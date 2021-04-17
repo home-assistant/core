@@ -134,7 +134,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="manual", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_hassio(self, discovery_info: dict[str, Any]) -> FlowResultDict:  # type: ignore[override]
+    async def async_step_hassio(self, discovery_info: dict[str, Any]) -> FlowResultDict:
         """Receive configuration from add-on discovery info.
 
         This flow is triggered by the Z-Wave JS add-on.

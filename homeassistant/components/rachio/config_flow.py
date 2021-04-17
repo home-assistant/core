@@ -78,7 +78,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_homekit(self, homekit_info):
+    async def async_step_homekit(self, discovery_info):
         """Handle HomeKit discovery."""
         if self._async_current_entries():
             # We can see rachio on the network to tell them to configure
@@ -89,7 +89,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # add a new one via "+"
             return self.async_abort(reason="already_configured")
         properties = {
-            key.lower(): value for (key, value) in homekit_info["properties"].items()
+            key.lower(): value for (key, value) in discovery_info["properties"].items()
         }
         await self.async_set_unique_id(properties["id"])
         return await self.async_step_user()

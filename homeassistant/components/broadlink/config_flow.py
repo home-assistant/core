@@ -56,10 +56,10 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             "host": device.host[0],
         }
 
-    async def async_step_dhcp(self, dhcp_discovery):
+    async def async_step_dhcp(self, discovery_info):
         """Handle dhcp discovery."""
-        host = dhcp_discovery[IP_ADDRESS]
-        unique_id = dhcp_discovery[MAC_ADDRESS].lower().replace(":", "")
+        host = discovery_info[IP_ADDRESS]
+        unique_id = discovery_info[MAC_ADDRESS].lower().replace(":", "")
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
         try:

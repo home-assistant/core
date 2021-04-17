@@ -1229,12 +1229,41 @@ class ConfigFlow(data_entry_flow.FlowHandler):
             reason=reason, description_placeholders=description_placeholders
         )
 
-    async_step_hassio = async_step_discovery
-    async_step_homekit = async_step_discovery
-    async_step_mqtt = async_step_discovery
-    async_step_ssdp = async_step_discovery
-    async_step_zeroconf = async_step_discovery
-    async_step_dhcp = async_step_discovery
+    async def async_step_hassio(
+        self, discovery_info: DiscoveryInfoType
+    ) -> data_entry_flow.FlowResultDict:
+        """Handle a flow initialized by HASS IO discovery."""
+        return await self.async_step_discovery(discovery_info)
+
+    async def async_step_homekit(
+        self, discovery_info: DiscoveryInfoType
+    ) -> data_entry_flow.FlowResultDict:
+        """Handle a flow initialized by Homekit discovery."""
+        return await self.async_step_discovery(discovery_info)
+
+    async def async_step_mqtt(
+        self, discovery_info: DiscoveryInfoType
+    ) -> data_entry_flow.FlowResultDict:
+        """Handle a flow initialized by MQTT discovery."""
+        return await self.async_step_discovery(discovery_info)
+
+    async def async_step_ssdp(
+        self, discovery_info: DiscoveryInfoType
+    ) -> data_entry_flow.FlowResultDict:
+        """Handle a flow initialized by SSDP discovery."""
+        return await self.async_step_discovery(discovery_info)
+
+    async def async_step_zeroconf(
+        self, discovery_info: DiscoveryInfoType
+    ) -> data_entry_flow.FlowResultDict:
+        """Handle a flow initialized by Zeroconf discovery."""
+        return await self.async_step_discovery(discovery_info)
+
+    async def async_step_dhcp(
+        self, discovery_info: DiscoveryInfoType
+    ) -> data_entry_flow.FlowResultDict:
+        """Handle a flow initialized by DHCP discovery."""
+        return await self.async_step_discovery(discovery_info)
 
 
 class OptionsFlowManager(data_entry_flow.FlowManager):
