@@ -3,7 +3,6 @@ from typing import Any, Dict, Optional
 
 from systembridge import Bridge
 
-from homeassistant.components.zeroconf import ATTR_HOSTNAME
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_VOLTAGE,
@@ -33,6 +32,7 @@ ATTR_DISTRO = "distro"
 ATTR_FILESYSTEM = "filesystem"
 ATTR_FQDN = "fqdn"
 ATTR_GOVERNOR = "governor"
+ATTR_HOSTNAME = "hostname"
 ATTR_KERNEL = "kernel"
 ATTR_LOAD_AVERAGE = "load_average"
 ATTR_LOAD_IDLE = "load_idle"
