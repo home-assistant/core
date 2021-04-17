@@ -3,7 +3,10 @@ import asyncio
 import cProfile
 from datetime import timedelta
 import logging
+import sys
+import threading
 import time
+import traceback
 
 from guppy import hpy
 import objgraph
@@ -23,6 +26,9 @@ SERVICE_MEMORY = "memory"
 SERVICE_START_LOG_OBJECTS = "start_log_objects"
 SERVICE_STOP_LOG_OBJECTS = "stop_log_objects"
 SERVICE_DUMP_LOG_OBJECTS = "dump_log_objects"
+SERVICE_LOG_THREAD_FRAMES = "log_thread_frames"
+SERVICE_LOG_EVENT_LOOP_SCHEDULED = "log_event_loop_scheduled"
+
 
 SERVICES = (
     SERVICE_START,
@@ -30,6 +36,8 @@ SERVICES = (
     SERVICE_START_LOG_OBJECTS,
     SERVICE_STOP_LOG_OBJECTS,
     SERVICE_DUMP_LOG_OBJECTS,
+    SERVICE_LOG_THREAD_FRAMES,
+    SERVICE_LOG_EVENT_LOOP_SCHEDULED,
 )
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
@@ -93,6 +101,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             notification_id="profile_object_dump",
         )
 
+    async def _async_dump_thread_frames(call: ServiceCall):
+        """Log all thread frames."""
+        frames = sys._current_frames()  # pylint: disable=protected-access
+        info = {}
+        main_thread = threading.main_thread()
+        for thread in threading.enumerate():
+            if thread == main_thread:
+                continue
+            if thread.name in info:
+                name = f"{thread.name} {thread.ident}"
+            else:
+                name = thread.name
+            info[name] = "".join(
+                traceback.format_stack(frames.get(thread.ident))
+            ).strip()
+        _LOGGER.critical("Thread frames: %s", info)
+
+    async def _async_dump_scheduled(call: ServiceCall):
+        """Log all scheduled in the event loop."""
+        _LOGGER.critical(
+            "Scheduled: %s", hass.loop._scheduled
+        )  # pylint: disable=protected-access
+
     async_register_admin_service(
         hass,
         DOMAIN,
@@ -141,6 +172,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         SERVICE_DUMP_LOG_OBJECTS,
         _dump_log_objects,
         schema=vol.Schema({vol.Required(CONF_TYPE): str}),
+    )
+
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_LOG_THREAD_FRAMES,
+        _async_dump_thread_frames,
+        schema=vol.Schema({}),
+    )
+
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_LOG_EVENT_LOOP_SCHEDULED,
+        _async_dump_scheduled,
+        schema=vol.Schema({}),
     )
 
     return True
