@@ -49,18 +49,12 @@ def fc_class_mock(mocker):
     yield result
 
 
-async def test_user(hass: HomeAssistantType):
+async def test_user(hass: HomeAssistantType, fc_class_mock):
     """Test starting a flow by user."""
     with patch(
         "homeassistant.components.fritz.common.FritzConnection",
         return_value=fc_class_mock,
-    ), patch(
-        "homeassistant.components.fritz.common.FritzStatus", return_value=fc_class_mock
-    ):
-        # , patch(
-        #     "homeassistant.components.fritz.common.FritzStatus.call_action",
-        #     return_value=MOCK_DEVICE_INFO,
-        # ):
+    ), patch("homeassistant.components.fritz.common.FritzStatus"):
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}

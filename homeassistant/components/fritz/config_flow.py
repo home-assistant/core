@@ -13,6 +13,7 @@ from homeassistant.components.ssdp import (
 )
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.core import callback
 
 from .common import FritzBoxTools
 from .const import (
@@ -63,7 +64,8 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
 
         return None
 
-    async def _async_create_entry(self):
+    @callback
+    def _async_create_entry(self):
         """Async create flow handler entry."""
         return self.async_create_entry(
             title=self._name,
