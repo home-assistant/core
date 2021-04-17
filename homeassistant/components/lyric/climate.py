@@ -248,19 +248,27 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
 
         device = self.device
         if device.hasDualSetpointStatus:
-            if target_temp_low is not None and target_temp_high is not None:
-                temp = (target_temp_low, target_temp_high)
-            else:
+            if target_temp_low is None or target_temp_high is None:
                 raise HomeAssistantError(
                     "Could not find target_temp_low and/or target_temp_high in arguments"
                 )
+            _LOGGER.debug("Set temperature: %s - %s", target_temp_low, target_temp_high)
+            try:
+                await self._update_thermostat(
+                    self.location,
+                    device,
+                    coolSetpoint=target_temp_low,
+                    heatSetpoint=target_temp_high,
+                )
+            except LYRIC_EXCEPTIONS as exception:
+                _LOGGER.error(exception)
         else:
             temp = kwargs.get(ATTR_TEMPERATURE)
-        _LOGGER.debug("Set temperature: %s", temp)
-        try:
-            await self._update_thermostat(self.location, device, heatSetpoint=temp)
-        except LYRIC_EXCEPTIONS as exception:
-            _LOGGER.error(exception)
+            _LOGGER.debug("Set temperature: %s", temp)
+            try:
+                await self._update_thermostat(self.location, device, heatSetpoint=temp)
+            except LYRIC_EXCEPTIONS as exception:
+                _LOGGER.error(exception)
         await self.coordinator.async_refresh()
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
