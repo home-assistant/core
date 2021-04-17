@@ -166,7 +166,7 @@ async def test_log_thread_frames(hass, caplog):
     await hass.services.async_call(DOMAIN, SERVICE_LOG_THREAD_FRAMES, {})
     await hass.async_block_till_done()
 
-    assert "Thread frames" in caplog.text
+    assert "SyncWorker_0" in caplog.text
     caplog.clear()
 
     assert await hass.config_entries.async_unload(entry.entry_id)
