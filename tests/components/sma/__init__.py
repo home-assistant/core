@@ -38,6 +38,25 @@ MOCK_IMPORT = {
     },
 }
 
+MOCK_IMPORT_DICT = {
+    "platform": "sma",
+    "host": "1.1.1.1",
+    "ssl": True,
+    "verify_ssl": False,
+    "group": "user",
+    "password": "password",
+    "sensors": {
+        "pv_power": [],
+        "pv_gen_meter": [],
+        "solar_daily": ["daily_yield", "total_yield"],
+        "status": ["grid_power", "frequency", "voltage_l1", "operating_time"],
+    },
+    "custom": {
+        "operating_time": {"key": "6400_00462E00", "unit": "uur", "factor": 3600},
+        "solar_daily": {"key": "6400_00262200", "unit": "kWh", "factor": 1000},
+    },
+}
+
 MOCK_CUSTOM_SENSOR = {
     "name": "yesterday_consumption",
     "key": "6400_00543A01",
@@ -103,9 +122,7 @@ async def init_integration(hass):
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.helpers.update_coordinator.DataUpdateCoordinator.async_config_entry_first_refresh"
-    ):
+    with patch("pysma.SMA.read"):
         await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     return entry
