@@ -213,7 +213,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=title, data=user_input)
 
-    async def async_step_ssdp(  # type: ignore[override]
+    async def async_step_ssdp(
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResultDict:
         """Handle SSDP initiated config flow."""
