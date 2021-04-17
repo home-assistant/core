@@ -64,6 +64,8 @@ class VeluxCover(CoverEntity):
     @property
     def name(self):
         """Return the name of the Velux device."""
+        if not self.node.name:
+            return "Cover #" + str(self.node.node_id)
         return self.node.name
 
     @property

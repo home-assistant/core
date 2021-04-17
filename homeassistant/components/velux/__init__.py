@@ -10,7 +10,7 @@ import homeassistant.helpers.config_validation as cv
 
 DOMAIN = "velux"
 DATA_VELUX = "data_velux"
-PLATFORMS = ["cover", "scene"]
+PLATFORMS = ["cover", "light", "scene"]
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
