@@ -29,7 +29,7 @@ from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor"]
+PLATFORMS = ["device_tracker", "sensor"]
 
 
 async def with_timeout(task, timeout_seconds=10):
