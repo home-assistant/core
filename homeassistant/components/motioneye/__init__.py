@@ -57,18 +57,6 @@ def get_motioneye_device_unique_id(config_entry_id: str, camera_id: int) -> str:
     return f"{config_entry_id}_{camera_id}"
 
 
-def _split_motioneye_device_unique_id(
-    device_unique_id: str,
-) -> tuple[str, int] | None:
-    """Split a unique_id into a (config_entry_id, camera index) tuple."""
-    data = device_unique_id.split("_", 1)
-    try:
-        return (data[0], int(data[1])) if data else None
-    except (ValueError, IndexError):
-        pass
-    return None
-
-
 def get_motioneye_entity_unique_id(
     config_entry_id: str, camera_id: int, entity_type: str
 ) -> str:
@@ -157,11 +145,6 @@ async def _add_camera(
         SIGNAL_CAMERA_ADD.format(entry.entry_id),
         camera,
     )
-
-
-async def _async_entry_updated(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
-    """Handle entry updates."""
-    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -256,9 +239,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             coordinator.async_add_listener(_async_process_motioneye_cameras)
         )
         await coordinator.async_refresh()
-        hass.data[DOMAIN][entry.entry_id][CONF_ON_UNLOAD].append(
-            entry.add_update_listener(_async_entry_updated)
-        )
 
     hass.async_create_task(setup_then_listen())
     return True
