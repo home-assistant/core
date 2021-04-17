@@ -23,10 +23,8 @@ from homeassistant.components.mjpeg.camera import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_AUTHENTICATION,
-    CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
-    CONF_PORT,
     CONF_USERNAME,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
@@ -71,8 +69,7 @@ async def async_setup_entry(
         async_add_entities(
             [
                 MotionEyeMjpegCamera(
-                    entry.data[CONF_HOST],
-                    entry.data[CONF_PORT],
+                    entry.entry_id,
                     entry.data.get(
                         CONF_SURVEILLANCE_USERNAME, DEFAULT_SURVEILLANCE_USERNAME
                     ),
@@ -93,8 +90,7 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
 
     def __init__(
         self,
-        host: str,
-        port: int,
+        config_entry_id: str,
         username: str,
         password: str,
         camera: dict[str, Any],
@@ -106,15 +102,16 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
         self._surveillance_password = password
         self._client = client
         self._camera_id = camera[KEY_ID]
-        self._device_id = get_motioneye_device_unique_id(host, port, self._camera_id)
+        self._device_id = get_motioneye_device_unique_id(
+            config_entry_id, self._camera_id
+        )
         self._unique_id = get_motioneye_entity_unique_id(
-            host, port, self._camera_id, TYPE_MOTIONEYE_MJPEG_CAMERA
+            config_entry_id, self._camera_id, TYPE_MOTIONEYE_MJPEG_CAMERA
         )
         self._motion_detection_enabled: bool = camera.get(KEY_MOTION_DETECTION, False)
         self._available = MotionEyeMjpegCamera._is_acceptable_streaming_camera(camera)
 
-        # motionEye cameras are always streaming. If streaming is stopped on the
-        # motionEye side, the camera is automatically removed from HomeAssistant.
+        # motionEye cameras are always streaming or unavailable.
         self.is_streaming = True
 
         MjpegCamera.__init__(
@@ -141,7 +138,7 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
             CONF_NAME: camera[KEY_NAME],
             CONF_USERNAME: self._surveillance_username if auth is not None else None,
             CONF_PASSWORD: self._surveillance_password if auth is not None else None,
-            CONF_MJPEG_URL: self._client.get_camera_steam_url(camera),
+            CONF_MJPEG_URL: self._client.get_camera_steam_url(camera) or "",
             CONF_STILL_IMAGE_URL: self._client.get_camera_snapshot_url(camera),
             CONF_AUTHENTICATION: auth,
         }

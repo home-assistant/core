@@ -3,28 +3,24 @@ import logging
 from unittest.mock import AsyncMock, patch
 
 from motioneye_client.client import (
-    MotionEyeClientConnectionFailure,
-    MotionEyeClientInvalidAuth,
-    MotionEyeClientRequestFailed,
+    MotionEyeClientConnectionError,
+    MotionEyeClientInvalidAuthError,
+    MotionEyeClientRequestError,
 )
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.motioneye.const import (
     CONF_ADMIN_PASSWORD,
     CONF_ADMIN_USERNAME,
+    CONF_CONFIG_ENTRY,
     CONF_SURVEILLANCE_PASSWORD,
     CONF_SURVEILLANCE_USERNAME,
     DOMAIN,
 )
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_URL
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import (
-    TEST_HOST,
-    TEST_PORT,
-    create_mock_motioneye_client,
-    create_mock_motioneye_config_entry,
-)
+from . import TEST_URL, create_mock_motioneye_client, create_mock_motioneye_config_entry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +32,7 @@ async def test_user_success(hass: HomeAssistantType) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "form"
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     mock_client = create_mock_motioneye_client()
 
@@ -52,8 +48,7 @@ async def test_user_success(hass: HomeAssistantType) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_HOST: TEST_HOST,
-                CONF_PORT: TEST_PORT,
+                CONF_URL: TEST_URL,
                 CONF_ADMIN_USERNAME: "admin-username",
                 CONF_ADMIN_PASSWORD: "admin-password",
                 CONF_SURVEILLANCE_USERNAME: "surveillance-username",
@@ -63,10 +58,9 @@ async def test_user_success(hass: HomeAssistantType) -> None:
         await hass.async_block_till_done()
 
     assert result["type"] == "create_entry"
-    assert result["title"] == f"{TEST_HOST}:{TEST_PORT}"
+    assert result["title"] == f"{TEST_URL}"
     assert result["data"] == {
-        CONF_HOST: TEST_HOST,
-        CONF_PORT: TEST_PORT,
+        CONF_URL: TEST_URL,
         CONF_ADMIN_USERNAME: "admin-username",
         CONF_ADMIN_PASSWORD: "admin-password",
         CONF_SURVEILLANCE_USERNAME: "surveillance-username",
@@ -83,7 +77,9 @@ async def test_user_invalid_auth(hass: HomeAssistantType) -> None:
     )
 
     mock_client = create_mock_motioneye_client()
-    mock_client.async_client_login = AsyncMock(side_effect=MotionEyeClientInvalidAuth)
+    mock_client.async_client_login = AsyncMock(
+        side_effect=MotionEyeClientInvalidAuthError
+    )
 
     with patch(
         "homeassistant.components.motioneye.config_flow.MotionEyeClient",
@@ -92,8 +88,7 @@ async def test_user_invalid_auth(hass: HomeAssistantType) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_HOST: TEST_HOST,
-                CONF_PORT: TEST_PORT,
+                CONF_URL: TEST_URL,
                 CONF_ADMIN_USERNAME: "admin-username",
                 CONF_ADMIN_PASSWORD: "admin-password",
                 CONF_SURVEILLANCE_USERNAME: "surveillance-username",
@@ -114,7 +109,7 @@ async def test_user_cannot_connect(hass: HomeAssistantType) -> None:
 
     mock_client = create_mock_motioneye_client()
     mock_client.async_client_login = AsyncMock(
-        side_effect=MotionEyeClientConnectionFailure
+        side_effect=MotionEyeClientConnectionError,
     )
 
     with patch(
@@ -124,8 +119,7 @@ async def test_user_cannot_connect(hass: HomeAssistantType) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_HOST: TEST_HOST,
-                CONF_PORT: TEST_PORT,
+                CONF_URL: TEST_URL,
                 CONF_ADMIN_USERNAME: "admin-username",
                 CONF_ADMIN_PASSWORD: "admin-password",
                 CONF_SURVEILLANCE_USERNAME: "surveillance-username",
@@ -145,7 +139,7 @@ async def test_user_request_error(hass: HomeAssistantType) -> None:
     )
 
     mock_client = create_mock_motioneye_client()
-    mock_client.async_client_login = AsyncMock(side_effect=MotionEyeClientRequestFailed)
+    mock_client.async_client_login = AsyncMock(side_effect=MotionEyeClientRequestError)
 
     with patch(
         "homeassistant.components.motioneye.config_flow.MotionEyeClient",
@@ -154,8 +148,7 @@ async def test_user_request_error(hass: HomeAssistantType) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_HOST: TEST_HOST,
-                CONF_PORT: TEST_PORT,
+                CONF_URL: TEST_URL,
                 CONF_ADMIN_USERNAME: "admin-username",
                 CONF_ADMIN_PASSWORD: "admin-password",
                 CONF_SURVEILLANCE_USERNAME: "surveillance-username",
@@ -171,24 +164,26 @@ async def test_user_request_error(hass: HomeAssistantType) -> None:
 async def test_reauth(hass: HomeAssistantType) -> None:
     """Test a reauth."""
     config_data = {
-        CONF_HOST: TEST_HOST,
-        CONF_PORT: TEST_PORT,
+        CONF_URL: TEST_URL,
     }
 
     config_entry = create_mock_motioneye_config_entry(hass, data=config_data)
 
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            CONF_CONFIG_ENTRY: config_entry,
+        },
     )
     assert result["type"] == "form"
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     mock_client = create_mock_motioneye_client()
 
     new_data = {
-        CONF_HOST: TEST_HOST,
-        CONF_PORT: TEST_PORT,
+        CONF_URL: TEST_URL,
         CONF_ADMIN_USERNAME: "admin-username",
         CONF_ADMIN_PASSWORD: "admin-password",
         CONF_SURVEILLANCE_USERNAME: "surveillance-username",

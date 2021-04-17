@@ -6,7 +6,10 @@ from unittest.mock import AsyncMock, Mock
 
 from aiohttp import web  # type: ignore
 from aiohttp.web_exceptions import HTTPBadGateway
-from motioneye_client.client import MotionEyeClientError, MotionEyeClientInvalidAuth
+from motioneye_client.client import (
+    MotionEyeClientError,
+    MotionEyeClientInvalidAuthError,
+)
 from motioneye_client.const import (
     KEY_CAMERAS,
     KEY_MOTION_DETECTION,
@@ -23,7 +26,7 @@ from homeassistant.components.motioneye.const import (
     DOMAIN,
     MOTIONEYE_MANUFACTURER,
 )
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_URL
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import async_get_registry
@@ -37,8 +40,6 @@ from . import (
     TEST_CAMERA_NAME,
     TEST_CAMERAS,
     TEST_CONFIG_ENTRY_ID,
-    TEST_HOST,
-    TEST_PORT,
     TEST_SURVEILLANCE_USERNAME,
     create_mock_motioneye_client,
     create_mock_motioneye_config_entry,
@@ -64,7 +65,7 @@ async def test_setup_camera(hass: HomeAssistantType) -> None:
 async def test_setup_camera_auth_fail(hass: HomeAssistantType) -> None:
     """Test a successful camera."""
     client = create_mock_motioneye_client()
-    client.async_client_login = AsyncMock(side_effect=MotionEyeClientInvalidAuth)
+    client.async_client_login = AsyncMock(side_effect=MotionEyeClientInvalidAuthError)
     await setup_mock_motioneye_config_entry(hass, client=client)
     assert not hass.states.get(TEST_CAMERA_ENTITY_ID)
 
@@ -218,8 +219,7 @@ async def test_get_still_image_from_camera(
     config_entry = create_mock_motioneye_config_entry(
         hass,
         data={
-            CONF_HOST: "localhost",
-            CONF_PORT: server.port,
+            CONF_URL: f"http://localhost:{server.port}",
             CONF_SURVEILLANCE_USERNAME: TEST_SURVEILLANCE_USERNAME,
         },
     )
@@ -253,9 +253,8 @@ async def test_get_stream_from_camera(
     config_entry = create_mock_motioneye_config_entry(
         hass,
         data={
-            CONF_HOST: "localhost",
+            CONF_URL: f"http://localhost:{stream_server.port}",
             # The port won't be used as the client is a mock.
-            CONF_PORT: 0,
             CONF_SURVEILLANCE_USERNAME: TEST_SURVEILLANCE_USERNAME,
         },
     )
@@ -297,9 +296,9 @@ async def test_state_attributes(hass: HomeAssistantType) -> None:
 async def test_device_info(hass: HomeAssistantType) -> None:
     """Verify device information includes expected details."""
     client = create_mock_motioneye_client()
-    await setup_mock_motioneye_config_entry(hass, client=client)
+    entry = await setup_mock_motioneye_config_entry(hass, client=client)
 
-    device_id = get_motioneye_device_unique_id(TEST_HOST, TEST_PORT, TEST_CAMERA_ID)
+    device_id = get_motioneye_device_unique_id(entry.entry_id, TEST_CAMERA_ID)
     device_registry = dr.async_get(hass)
 
     device = device_registry.async_get_device({(DOMAIN, device_id)})
