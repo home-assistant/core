@@ -43,7 +43,13 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
             async with async_timeout.timeout(10):
-                return await self.hass.async_add_executor_job(self.fetch_data)
+                data = await self.hass.async_add_executor_job(self.fetch_data)
+
+            # Update the auth token in the config entry if applicable
+            await self._update_auth_token()
+
+            # Return the fetched data
+            return data
         except ValueError as error:
             raise UpdateFailed(f"API response was malformed: {error}") from error
         except PicnicAuthError as error:
@@ -54,7 +60,6 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
         # Fetch from the API and pre-process the data
         cart = self.picnic_api_client.get_cart()
         last_order = self._get_last_order()
-        self._update_auth_token()
 
         if not cart or not last_order:
             raise UpdateFailed("API response doesn't contain expected data.")
@@ -133,8 +138,13 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
         # Make a copy because some references are local
         return last_order
 
-    def _update_auth_token(self):
+    async def _update_auth_token(self):
         """Set the updated authentication token."""
         updated_token = self.picnic_api_client.session.auth_token
         if self.config_entry.data.get(CONF_ACCESS_TOKEN) != updated_token:
-            self.config_entry.data[CONF_ACCESS_TOKEN] = updated_token
+            # Create an updated data dict
+            data = self.config_entry.data.copy()
+            data.update({CONF_ACCESS_TOKEN: updated_token})
+
+            # Update the config entry
+            self.hass.config_entries.async_update_entry(self.config_entry, data=data)

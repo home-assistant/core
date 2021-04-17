@@ -5,7 +5,8 @@ from python_picnic_api.session import PicnicAuthError
 import requests
 
 from homeassistant import config_entries, setup
-from homeassistant.components.picnic.const import DOMAIN
+from homeassistant.components.picnic.const import CONF_COUNTRY_CODE, DOMAIN
+from homeassistant.const import CONF_ACCESS_TOKEN
 
 
 async def test_form(hass):
@@ -17,6 +18,7 @@ async def test_form(hass):
     assert result["type"] == "form"
     assert result["errors"] is None
 
+    auth_token = "af3wh738j3fa28l9fa23lhiufahu7l"
     auth_data = {
         "user_id": "f29-2a6-o32n",
         "address": {
@@ -27,7 +29,7 @@ async def test_form(hass):
     }
     with patch(
         "homeassistant.components.picnic.config_flow.PicnicHub.authenticate",
-        return_value=auth_data,
+        return_value=(auth_token, auth_data),
     ), patch(
         "homeassistant.components.picnic.async_setup", return_value=True
     ) as mock_setup, patch(
@@ -47,9 +49,8 @@ async def test_form(hass):
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Teststreet 123b"
     assert result2["data"] == {
-        "username": "test-username",
-        "password": "test-password",
-        "country_code": "NL",
+        CONF_ACCESS_TOKEN: auth_token,
+        CONF_COUNTRY_CODE: "NL",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1

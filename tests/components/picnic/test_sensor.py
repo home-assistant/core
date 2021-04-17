@@ -9,9 +9,14 @@ import requests
 
 from homeassistant import config_entries
 from homeassistant.components.picnic import const
-from homeassistant.components.picnic.const import SENSOR_TYPES
+from homeassistant.components.picnic.const import CONF_COUNTRY_CODE, SENSOR_TYPES
 from homeassistant.config_entries import CONN_CLASS_CLOUD_POLL
-from homeassistant.const import CURRENCY_EURO, DEVICE_CLASS_TIMESTAMP, STATE_UNKNOWN
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CURRENCY_EURO,
+    DEVICE_CLASS_TIMESTAMP,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.util import dt
 
 from tests.common import (
@@ -99,9 +104,8 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
 
         # Add a config entry and setup the integration
         config_data = {
-            "username": "test-user",
-            "password": "pass",
-            "country_code": "NL",
+            CONF_ACCESS_TOKEN: "x-original-picnic-auth-token",
+            CONF_COUNTRY_CODE: "NL",
         }
         self.config_entry = MockConfigEntry(
             domain=const.DOMAIN,
@@ -274,11 +278,13 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         await self._setup_platform()
 
         # Assert sensors are unknown
-        self._assert_sensor("sensor.picnic_selected_slot_start", STATE_UNKNOWN)
-        self._assert_sensor("sensor.picnic_selected_slot_end", STATE_UNKNOWN)
-        self._assert_sensor("sensor.picnic_selected_slot_max_order_time", STATE_UNKNOWN)
+        self._assert_sensor("sensor.picnic_selected_slot_start", STATE_UNAVAILABLE)
+        self._assert_sensor("sensor.picnic_selected_slot_end", STATE_UNAVAILABLE)
         self._assert_sensor(
-            "sensor.picnic_selected_slot_min_order_value", STATE_UNKNOWN
+            "sensor.picnic_selected_slot_max_order_time", STATE_UNAVAILABLE
+        )
+        self._assert_sensor(
+            "sensor.picnic_selected_slot_min_order_value", STATE_UNAVAILABLE
         )
 
     async def test_sensors_last_order_in_future(self):
@@ -295,7 +301,7 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         await self._setup_platform()
 
         # Assert delivery time is not available, but eta is
-        self._assert_sensor("sensor.picnic_last_order_delivery_time", STATE_UNKNOWN)
+        self._assert_sensor("sensor.picnic_last_order_delivery_time", STATE_UNAVAILABLE)
         self._assert_sensor(
             "sensor.picnic_last_order_eta_start", "2021-02-26T20:54:00.000+01:00"
         )
@@ -342,14 +348,20 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         self.picnic_mock().get_deliveries.side_effect = ValueError
         await self._coordinator.async_refresh()
 
-        # Assert all states are the same while the last update failed
+        # Assert all default-enabled sensors have STATE_UNAVAILABLE because the last update failed
         assert self._coordinator.last_update_success is False
+        self._assert_sensor("sensor.picnic_cart_total_price", STATE_UNAVAILABLE)
+        self._assert_sensor("sensor.picnic_selected_slot_start", STATE_UNAVAILABLE)
+        self._assert_sensor("sensor.picnic_selected_slot_end", STATE_UNAVAILABLE)
         self._assert_sensor(
-            "sensor.picnic_selected_slot_max_order_time",
-            "2021-03-02T22:00:00.000+01:00",
+            "sensor.picnic_selected_slot_max_order_time", STATE_UNAVAILABLE
         )
-        self._assert_sensor("sensor.picnic_last_order_status", "COMPLETED")
-        self._assert_sensor("sensor.picnic_last_order_total_price", "41.33")
+        self._assert_sensor(
+            "sensor.picnic_selected_slot_min_order_value", STATE_UNAVAILABLE
+        )
+        self._assert_sensor("sensor.picnic_last_order_eta_start", STATE_UNAVAILABLE)
+        self._assert_sensor("sensor.picnic_last_order_eta_end", STATE_UNAVAILABLE)
+        self._assert_sensor("sensor.picnic_last_order_delivery_time", STATE_UNAVAILABLE)
 
     async def test_sensors_malformed_response(self):
         """Test coordinator update fails when API yields ValueError."""
@@ -376,3 +388,19 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         assert picnic_service.model == DEFAULT_USER_RESPONSE["user_id"]
         assert picnic_service.name == "Picnic: Commonstreet 123a"
         assert picnic_service.entry_type == "service"
+
+    async def test_auth_token_is_saved_on_update(self):
+        """Test that auth-token changes in the session object are reflected by the config entry."""
+        # Setup platform and default mock responses
+        await self._setup_platform(use_default_responses=True)
+
+        # Set a different auth token in the session mock
+        updated_auth_token = "x-updated-picnic-auth-token"
+        self.picnic_mock().session.auth_token = updated_auth_token
+
+        # Verify the updated auth token is not set and fetch data using the coordinator
+        assert self.config_entry.data.get(CONF_ACCESS_TOKEN) != updated_auth_token
+        await self._coordinator.async_refresh()
+
+        # Verify that the updated auth token is saved in the config entry
+        assert self.config_entry.data.get(CONF_ACCESS_TOKEN) == updated_auth_token
