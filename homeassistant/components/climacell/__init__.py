@@ -26,8 +26,8 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_NAME,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -79,9 +79,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [SENSOR_DOMAIN, WEATHER_DOMAIN]
 
 
-def _set_update_interval(
-    hass: HomeAssistantType, current_entry: ConfigEntry
-) -> timedelta:
+def _set_update_interval(hass: HomeAssistant, current_entry: ConfigEntry) -> timedelta:
     """Recalculate update_interval based on existing ClimaCell instances and update them."""
     api_calls = 4 if current_entry.data[CONF_API_VERSION] == 3 else 2
     # We check how many ClimaCell configured instances are using the same API key and
@@ -111,7 +109,7 @@ def _set_update_interval(
     return interval
 
 
-async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up ClimaCell API from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
@@ -172,9 +170,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
     return True
 
 
-async def async_unload_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = all(
         await asyncio.gather(
@@ -197,7 +193,7 @@ class ClimaCellDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(
         self,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         config_entry: ConfigEntry,
         api: ClimaCellV3 | ClimaCellV4,
         update_interval: timedelta,
