@@ -72,9 +72,10 @@ class VeluxLight(LightEntity):
     async def async_turn_on(self, **kwargs):
         """Instruct the light to turn on."""
         if ATTR_BRIGHTNESS in kwargs:
-            intensityPercent = int(100 - kwargs[ATTR_BRIGHTNESS] / 255 * 100)
+            intensity_percent = int(100 - kwargs[ATTR_BRIGHTNESS] / 255 * 100)
             await self.node.set_intensity(
-                Intensity(intensity_percent=intensityPercent), wait_for_completion=False
+                Intensity(intensity_percent=intensity_percent),
+                wait_for_completion=False,
             )
         else:
             await self.node.turn_on(wait_for_completion=False)
