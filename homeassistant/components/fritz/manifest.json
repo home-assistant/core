@@ -1,6 +1,6 @@
 {
   "domain": "fritz",
-  "name": "AVM FRITZ!Box",
+  "name": "AVM FRITZ!Box Tools",
   "documentation": "https://www.home-assistant.io/integrations/fritz",
   "requirements": ["fritzconnection==1.4.2"],
   "codeowners": [],
