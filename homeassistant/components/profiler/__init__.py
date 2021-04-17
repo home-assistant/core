@@ -113,16 +113,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 name = f"{thread.name} {thread.ident}"
             else:
                 name = thread.name
-            info[name] = "".join(
-                traceback.format_stack(frames.get(thread.ident))
-            ).strip()
-        _LOGGER.critical("Thread frames: %s", info)
+            _LOGGER.critical(
+                "Thread [%s]: %s",
+                name,
+                "".join(traceback.format_stack(frames.get(thread.ident))).strip(),
+            )
 
     async def _async_dump_scheduled(call: ServiceCall):
         """Log all scheduled in the event loop."""
-        _LOGGER.critical(
-            "Scheduled: %s", hass.loop._scheduled
-        )  # pylint: disable=protected-access
+        for handle in hass.loop._scheduled:  # pylint: disable=protected-access
+            if handle.cancelled():
+                continue
+            _LOGGER.critical("Scheduled: %s", handle)
 
     async_register_admin_service(
         hass,
