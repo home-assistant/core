@@ -19,8 +19,7 @@ from homeassistant.const import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_CUSTOM, CONF_GROUP, DEVICE_INFO, GROUPS
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import CONF_CUSTOM, CONF_GROUP, DEVICE_INFO, DOMAIN, GROUPS
 
 _LOGGER = logging.getLogger(__name__)
 
