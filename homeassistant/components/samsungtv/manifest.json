@@ -18,5 +18,6 @@
     "@escoand",
     "@chemelli74"
   ],
-  "config_flow": true
+  "config_flow": true,
+  "iot_class": "local_polling"
 }
