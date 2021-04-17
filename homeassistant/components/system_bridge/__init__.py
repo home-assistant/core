@@ -12,7 +12,7 @@ from systembridge.exceptions import BridgeAuthenticationException
 from systembridge.objects.command.response import CommandResponse
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_COMMAND,
@@ -21,7 +21,7 @@ from homeassistant.const import (
     CONF_PORT,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
     config_validation as cv,
@@ -138,22 +138,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         entry.data[CONF_API_KEY],
     )
 
-    try:
-        await client.async_get_system()
-    except BridgeAuthenticationException as exception:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_REAUTH},
-                data=entry.data,
-            )
-        )
-        _LOGGER.warning(exception)
-        return False
-    except BRIDGE_CONNECTION_ERRORS as exception:
-        _LOGGER.warning(exception)
-        raise ConfigEntryNotReady from exception
-
     async def async_update_data() -> Bridge:
         """Fetch data from Bridge."""
         try:
@@ -171,18 +155,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 )
             return client
         except BridgeAuthenticationException as exception:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": SOURCE_REAUTH},
-                    data=entry.data,
-                )
-            )
-            raise UpdateFailed(
-                "Authentication failed when connecting to System Bridge."
-            ) from exception
+            raise ConfigEntryAuthFailed from exception
         except BRIDGE_CONNECTION_ERRORS as exception:
-            _LOGGER.warning(exception)
             raise UpdateFailed("Could not connect to System Bridge.") from exception
 
     coordinator = DataUpdateCoordinator(
