@@ -12,9 +12,9 @@ from nettigo_air_monitor import ApiError, InvalidSensorData, NettigoAirMonitor
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_NAME, DEFAULT_UPDATE_INTERVAL, DOMAIN, MANUFACTURER
@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["air_quality", "sensor"]
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Nettigo as config entry."""
     host = entry.data[CONF_HOST]
 
@@ -44,7 +44,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = all(
         await asyncio.gather(
@@ -65,7 +65,7 @@ class NAMUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching Nettigo Air Monitor data."""
 
     def __init__(
-        self, hass: HomeAssistantType, session: ClientSession, host: str, unique_id: str
+        self, hass: HomeAssistant, session: ClientSession, host: str, unique_id: str
     ):
         """Initialize."""
         self.host = host
