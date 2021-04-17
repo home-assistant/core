@@ -317,7 +317,7 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.yeelight.*",
     "homeassistant.components.zerproc.*",
     "homeassistant.components.zha.*",
-    "homeassistant.components.zwave.*",
+    # "homeassistant.components.zwave.*",
 ]
 
 HEADER: Final = """
