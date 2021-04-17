@@ -5,7 +5,7 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import CONF_NAME
 
 from .connection_state import ConnectionStateMixin
-from .const import DOMAIN
+from .const import DOMAIN, HARMONY_DATA
 from .data import HarmonyData
 from .subscriber import HarmonyCallback
 
@@ -14,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up harmony activity switches."""
-    data = hass.data[DOMAIN][entry.entry_id]
+    data = hass.data[DOMAIN][entry.entry_id][HARMONY_DATA]
     activities = data.activities
 
     switches = []
