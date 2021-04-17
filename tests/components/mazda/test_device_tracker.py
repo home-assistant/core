@@ -27,4 +27,4 @@ async def test_device_tracker(hass):
     assert state.attributes.get(ATTR_SOURCE_TYPE) == SOURCE_TYPE_GPS
     entry = entity_registry.async_get("device_tracker.my_mazda3_device_tracker")
     assert entry
-    assert entry.unique_id == "JM000000000000000_device_tracker"
+    assert entry.unique_id == "JM000000000000000"

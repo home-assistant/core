@@ -30,7 +30,7 @@ class MazdaDeviceTracker(MazdaEntity, TrackerEntity):
     @property
     def unique_id(self):
         """Return a unique identifier for this entity."""
-        return f"{self.vin}_device_tracker"
+        return self.vin
 
     @property
     def icon(self):
