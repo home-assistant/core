@@ -1085,7 +1085,10 @@ omit =
     homeassistant/components/velbus/light.py
     homeassistant/components/velbus/sensor.py
     homeassistant/components/velbus/switch.py
-    homeassistant/components/velux/*
+    homeassistant/components/velux/__init__.py
+    homeassistant/components/velux/const.py
+    homeassistant/components/velux/cover.py
+    homeassistant/components/velux/scene.py
     homeassistant/components/venstar/climate.py
     homeassistant/components/verisure/__init__.py
     homeassistant/components/verisure/alarm_control_panel.py
