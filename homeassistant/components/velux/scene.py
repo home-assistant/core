@@ -1,10 +1,9 @@
 """Support for VELUX scenes."""
-from typing import Any, Callable
+from typing import Any
 
 from homeassistant.components.scene import Scene
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
 
 from . import _LOGGER, DATA_VELUX
 
@@ -12,7 +11,7 @@ from . import _LOGGER, DATA_VELUX
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list[Entity], bool], None],
+    async_add_entities,
 ) -> None:
     """Set up the scenes for Velux platform."""
     entities = [VeluxScene(scene) for scene in hass.data[DATA_VELUX].pyvlx.scenes]

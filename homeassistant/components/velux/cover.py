@@ -1,6 +1,4 @@
 """Support for Velux covers."""
-from typing import Callable
-
 from pyvlx import OpeningDevice, Position
 from pyvlx.opening_device import Awning, Blind, GarageDoor, Gate, RollerShutter, Window
 
@@ -25,7 +23,6 @@ from homeassistant.components.cover import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import Entity
 
 from . import DATA_VELUX
 
@@ -33,7 +30,7 @@ from . import DATA_VELUX
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list[Entity], bool], None],
+    async_add_entities,
 ) -> None:
     """Set up cover(s) for Velux platform."""
     entities = []
