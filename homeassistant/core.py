@@ -784,7 +784,9 @@ class EventBus:
 
         return remove_listener
 
-    def listen_once(self, event_type: str, listener: Callable) -> CALLBACK_TYPE:
+    def listen_once(
+        self, event_type: str, listener: Callable[[Event], None]
+    ) -> CALLBACK_TYPE:
         """Listen once for event of a specific type.
 
         To listen to all events specify the constant ``MATCH_ALL``
