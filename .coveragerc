@@ -255,6 +255,7 @@ omit =
     homeassistant/components/envirophat/sensor.py
     homeassistant/components/envisalink/*
     homeassistant/components/ephember/climate.py
+    homeassistant/components/epson/__init__.py
     homeassistant/components/epson/const.py
     homeassistant/components/epson/media_player.py
     homeassistant/components/epsonworkforce/sensor.py
