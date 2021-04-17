@@ -972,6 +972,9 @@ async def test_temperature_control(hass):
         "temperatureSetpointCelsius": 18,
         "temperatureAmbientCelsius": 18,
     }
+    with pytest.raises(helpers.SmartHomeError) as err:
+        await trt.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": False}, {})
+    assert err.value.code == const.ERR_NOT_SUPPORTED
 
 
 async def test_humidity_setting_humidifier_setpoint(hass):
