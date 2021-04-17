@@ -1200,7 +1200,7 @@ SCRIPT_ACTION_WAIT_FOR_TRIGGER = "wait_for_trigger"
 SCRIPT_ACTION_VARIABLES = "variables"
 
 
-def determine_script_action(action: dict) -> str:
+def determine_script_action(action: dict[str, Any]) -> str:
     """Determine action type."""
     if CONF_DELAY in action:
         return SCRIPT_ACTION_DELAY
