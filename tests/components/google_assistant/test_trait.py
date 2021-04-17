@@ -955,7 +955,7 @@ async def test_temperature_setting_climate_setpoint_auto(hass):
 
 
 async def test_temperature_control(hass):
-    """Test TemperatureControl trait support for climate domain."""
+    """Test TemperatureControl trait support for sensor domain."""
     hass.config.units.temperature_unit = TEMP_CELSIUS
 
     trt = trait.TemperatureControlTrait(
@@ -2400,7 +2400,7 @@ async def test_media_player_mute(hass):
     }
 
 
-async def test_temperature_setting_sensor(hass):
+async def test_temperature_control_sensor(hass):
     """Test TemperatureControl trait support for temperature sensor."""
     assert (
         helpers.get_google_type(sensor.DOMAIN, sensor.DEVICE_CLASS_TEMPERATURE)
@@ -2423,8 +2423,8 @@ async def test_temperature_setting_sensor(hass):
         (TEMP_FAHRENHEIT, "F", "unknown", None),
     ],
 )
-async def test_temperature_setting_sensor_data(hass, unit_in, unit_out, state, ambient):
-    """Test TemperatureSetting trait support for temperature sensor."""
+async def test_temperature_control_sensor_data(hass, unit_in, unit_out, state, ambient):
+    """Test TemperatureControl trait support for temperature sensor."""
     hass.config.units.temperature_unit = unit_in
 
     trt = trait.TemperatureControlTrait(
