@@ -59,7 +59,7 @@ async def test_init_auth_failure(hass: HomeAssistant):
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
-    assert flows[0]["step_id"] == "reauth"
+    assert flows[0]["step_id"] == "user"
 
 
 async def test_update_auth_failure(hass: HomeAssistant):
@@ -98,7 +98,7 @@ async def test_update_auth_failure(hass: HomeAssistant):
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
-    assert flows[0]["step_id"] == "reauth"
+    assert flows[0]["step_id"] == "user"
 
 
 async def test_unload_config_entry(hass: HomeAssistant) -> None:
