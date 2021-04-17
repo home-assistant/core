@@ -3,6 +3,7 @@ import asyncio
 import cProfile
 from datetime import timedelta
 import logging
+import reprlib
 import sys
 import threading
 import time
@@ -121,10 +122,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     async def _async_dump_scheduled(call: ServiceCall):
         """Log all scheduled in the event loop."""
-        for handle in hass.loop._scheduled:  # pylint: disable=protected-access
-            if handle.cancelled():
-                continue
-            _LOGGER.critical("Scheduled: %s", handle)
+        arepr = reprlib.aRepr
+        original_maxstring = arepr.maxstring
+        original_maxother = arepr.maxother
+        arepr.maxstring = 100
+        arepr.maxother = 50
+        try:
+            for handle in hass.loop._scheduled:  # pylint: disable=protected-access
+                if handle.cancelled():
+                    continue
+                _LOGGER.critical("Scheduled: %s", handle)
+        finally:
+            arepr.max_string = original_maxstring
+            arepr.max_other = original_maxother
 
     async_register_admin_service(
         hass,
