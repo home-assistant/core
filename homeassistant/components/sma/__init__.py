@@ -61,7 +61,7 @@ def _parse_legacy_options(entry: ConfigEntry, sensor_def: pysma.Sensors) -> List
         return []
 
     # Support import of legacy config that should have been removed from 0.99, but was still functional
-    # See also #25880 and #26306. Function support was dropped in #48003
+    # See also #25880 and #26306. Functional support was dropped in #48003
     if isinstance(config_sensors, dict):
         config_sensors_list = []
 
