@@ -105,18 +105,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     async def _async_dump_thread_frames(call: ServiceCall):
         """Log all thread frames."""
         frames = sys._current_frames()  # pylint: disable=protected-access
-        info = {}
         main_thread = threading.main_thread()
         for thread in threading.enumerate():
             if thread == main_thread:
                 continue
-            if thread.name in info:
-                name = f"{thread.name} {thread.ident}"
-            else:
-                name = thread.name
             _LOGGER.critical(
                 "Thread [%s]: %s",
-                name,
+                thread.name,
                 "".join(traceback.format_stack(frames.get(thread.ident))).strip(),
             )
 
@@ -129,9 +124,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         arepr.maxother = 300
         try:
             for handle in hass.loop._scheduled:  # pylint: disable=protected-access
-                if handle.cancelled():
-                    continue
-                _LOGGER.critical("Scheduled: %s", handle)
+                if not handle.cancelled():
+                    _LOGGER.critical("Scheduled: %s", handle)
         finally:
             arepr.max_string = original_maxstring
             arepr.max_other = original_maxother
