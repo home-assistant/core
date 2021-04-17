@@ -24,7 +24,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResultDict:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if self._options is None:
             coordinator = await get_coordinator(self.hass)
@@ -32,10 +32,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="cannot_connect")
 
             self._options = {OPTION_WORLDWIDE: "Worldwide"}
-            for case in sorted(
-                coordinator.data.values(), key=lambda case: case.country
-            ):
-                self._options[case.country] = case.country
+            if coordinator.data is not None:
+                for case in sorted(
+                    coordinator.data.values(), key=lambda case: case.country
+                ):
+                    self._options[case.country] = case.country
 
         if user_input is not None:
             await self.async_set_unique_id(user_input["country"])
