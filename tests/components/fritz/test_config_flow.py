@@ -1,6 +1,7 @@
 """Tests for AVM Fritz!Box config flow."""
 from unittest.mock import Mock, patch
 
+import pytest
 from requests.exceptions import HTTPError
 
 from homeassistant.components.fritz.const import ATTR_HOST, DOMAIN
@@ -18,7 +19,7 @@ from homeassistant.data_entry_flow import (
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import MOCK_CONFIG
+from . import MOCK_CONFIG, FritzConnectionMock
 
 from tests.common import MockConfigEntry
 
@@ -40,14 +41,26 @@ MOCK_SSDP_DATA = {
 }
 
 
+@pytest.fixture()
+def fc_class_mock(mocker):
+    """Fixture that sets up a mocked FritzConnection class."""
+    result = mocker.patch("fritzconnection.FritzConnection", autospec=True)
+    result.return_value = FritzConnectionMock()
+    yield result
+
+
 async def test_user(hass: HomeAssistantType):
     """Test starting a flow by user."""
-    with patch("homeassistant.components.fritz.common.FritzConnection",), patch(
-        "homeassistant.components.fritz.common.FritzStatus"
-    ), patch("homeassistant.components.fritz.common.FritzHosts"), patch(
-        "homeassistant.components.fritz.common.FritzConnection.call_action",
-        return_value=MOCK_DEVICE_INFO,
+    with patch(
+        "homeassistant.components.fritz.common.FritzConnection",
+        return_value=fc_class_mock,
+    ), patch(
+        "homeassistant.components.fritz.common.FritzStatus", return_value=fc_class_mock
     ):
+        # , patch(
+        #     "homeassistant.components.fritz.common.FritzStatus.call_action",
+        #     return_value=MOCK_DEVICE_INFO,
+        # ):
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -254,22 +267,24 @@ async def test_ssdp_auth_failed(hass: HomeAssistantType, fritz: Mock):
     assert result["errors"]["base"] == "invalid_auth"
 
 
-async def test_ssdp_not_successful(hass: HomeAssistantType, fritz: Mock):
+async def test_ssdp_not_successful(hass: HomeAssistantType):
     """Test starting a flow from discovery but no device found."""
-    fritz().login.side_effect = OSError("Boom")
+    with patch("homeassistant.components.fritz.common.FritzConnection"), patch(
+        "homeassistant.components.fritz.common.FritzStatus"
+    ), patch("homeassistant.components.fritz.common.FritzHosts"):
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA
-    )
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "confirm"
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA
+        )
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "confirm"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_PASSWORD: "whatever", CONF_USERNAME: "whatever"},
-    )
-    assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "no_devices_found"
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_PASSWORD: "whatever", CONF_USERNAME: "whatever"},
+        )
+        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["reason"] == "no_devices_found"
 
 
 async def test_ssdp_not_supported(hass: HomeAssistantType, fritz: Mock):

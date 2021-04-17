@@ -79,8 +79,12 @@ class FritzBoxTools:
             self._unique_id = self.connection.call_action("DeviceInfo:1", "GetInfo")[
                 "NewSerialNumber"
             ]
-        self.fritzhosts = FritzHosts(fc=self.connection)
+
         self._device_info = self._fetch_device_info()
+
+    def start(self):
+        """Start FritzHosts connection."""
+        self.fritzhosts = FritzHosts(fc=self.connection)
 
         self.scan_devices()
 
