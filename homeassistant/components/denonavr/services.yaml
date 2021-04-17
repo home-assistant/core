@@ -21,7 +21,7 @@ set_dynamic_eq:
       default: true
       example: true
       selector:
-        boolean:      
+        boolean:
 update_audyssey:
   description: "Update Audyssey settings."
   target:
