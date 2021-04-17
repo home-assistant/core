@@ -1,6 +1,4 @@
 """Support for Velux lights."""
-import logging
-
 from pyvlx import Intensity, LighteningDevice
 
 from homeassistant.components.light import (
@@ -11,8 +9,6 @@ from homeassistant.components.light import (
 from homeassistant.core import callback
 
 from . import DATA_VELUX
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -85,5 +81,4 @@ class VeluxLight(LightEntity):
 
     async def async_turn_off(self, **kwargs):
         """Instruct the light to turn off."""
-        # _LOGGER.debug("Turn off")
         await self.node.turn_off(wait_for_completion=False)
