@@ -130,6 +130,36 @@ async def test_last_run_was_recently_clean(hass):
         )
 
 
+def test_setup_connection_for_dialect_mysql():
+    """Test setting up the connection for a mysql dialect."""
+    execute_mock = MagicMock()
+    close_mock = MagicMock()
+
+    def _make_cursor_mock(*_):
+        return MagicMock(execute=execute_mock, close=close_mock)
+
+    dbapi_connection = MagicMock(cursor=_make_cursor_mock)
+
+    assert util.setup_connection_for_dialect("mysql", dbapi_connection) is False
+
+    assert execute_mock.call_args[0][0] == "SET session wait_timeout=28800"
+
+
+def test_setup_connection_for_dialect_sqlite():
+    """Test setting up the connection for a sqlite dialect."""
+    execute_mock = MagicMock()
+    close_mock = MagicMock()
+
+    def _make_cursor_mock(*_):
+        return MagicMock(execute=execute_mock, close=close_mock)
+
+    dbapi_connection = MagicMock(cursor=_make_cursor_mock)
+
+    assert util.setup_connection_for_dialect("sqlite", dbapi_connection) is True
+
+    assert execute_mock.call_args[0][0] == "PRAGMA journal_mode=WAL"
+
+
 def test_basic_sanity_check(hass_recorder):
     """Test the basic sanity checks with a missing table."""
     hass = hass_recorder()
