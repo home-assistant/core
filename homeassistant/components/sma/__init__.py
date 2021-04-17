@@ -2,6 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+from typing import List
 
 import pysma
 
@@ -39,7 +40,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def _parse_legacy_options(entry: ConfigEntry, sensor_def: pysma.Sensors) -> None:
+def _parse_legacy_options(entry: ConfigEntry, sensor_def: pysma.Sensors) -> List[str]:
     """Parse legacy configuration options.
 
     This will parse the legacy CONF_SENSORS and CONF_CUSTOM configuration options
@@ -57,7 +58,18 @@ def _parse_legacy_options(entry: ConfigEntry, sensor_def: pysma.Sensors) -> None
     # Parsing of sensors configuration
     config_sensors = entry.data.get(CONF_SENSORS)
     if not config_sensors:
-        return
+        return []
+
+    # Support import of legacy config that should have been removed from 0.99, but was still functional
+    # See also #25880 and #26306. Function support was dropped in #48003
+    if isinstance(config_sensors, dict):
+        config_sensors_list = []
+
+        for name, attr in config_sensors.items():
+            config_sensors_list.append(name)
+            config_sensors_list.extend(attr)
+
+        config_sensors = config_sensors_list
 
     # Find and replace sensors removed from pysma
     # This only alters the config, the actual sensor migration takes place in _migrate_old_unique_ids
@@ -70,18 +82,21 @@ def _parse_legacy_options(entry: ConfigEntry, sensor_def: pysma.Sensors) -> None
     for sensor in sensor_def:
         sensor.enabled = sensor.name in config_sensors
 
+    return config_sensors
+
 
 def _migrate_old_unique_ids(
-    hass: HomeAssistant, entry: ConfigEntry, sensor_def: pysma.Sensors
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    sensor_def: pysma.Sensors,
+    config_sensors: List[str],
 ) -> None:
     """Migrate legacy sensor entity_id format to new format."""
     entity_registry = er.async_get(hass)
 
     # Create list of all possible sensor names
     possible_sensors = set(
-        entry.data.get(CONF_SENSORS)
-        + [s.name for s in sensor_def]
-        + list(pysma.LEGACY_MAP)
+        config_sensors + [s.name for s in sensor_def] + list(pysma.LEGACY_MAP)
     )
 
     for sensor in possible_sensors:
@@ -116,8 +131,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     sensor_def = pysma.Sensors()
 
     if entry.source == SOURCE_IMPORT:
-        _parse_legacy_options(entry, sensor_def)
-        _migrate_old_unique_ids(hass, entry, sensor_def)
+        config_sensors = _parse_legacy_options(entry, sensor_def)
+        _migrate_old_unique_ids(hass, entry, sensor_def, config_sensors)
 
     # Init the SMA interface
     protocol = "https" if entry.data[CONF_SSL] else "http"
