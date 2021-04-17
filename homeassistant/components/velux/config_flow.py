@@ -16,7 +16,7 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class VeluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for youless."""
 
     VERSION = 1
