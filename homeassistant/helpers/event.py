@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 import functools as ft
 import logging
 import time
-from typing import Any, Awaitable, Callable, Iterable, List
+from typing import Any, Awaitable, Callable, Iterable, List, cast
 
 import attr
 
@@ -1453,10 +1453,10 @@ def process_state_match(parameter: None | str | Iterable[str]) -> Callable[[str]
 @callback
 def _entities_domains_from_render_infos(
     render_infos: Iterable[RenderInfo],
-) -> tuple[set, set]:
+) -> tuple[set[str], set[str]]:
     """Combine from multiple RenderInfo."""
-    entities = set()
-    domains = set()
+    entities: set[str] = set()
+    domains: set[str] = set()
 
     for render_info in render_infos:
         if render_info.entities:
@@ -1497,7 +1497,7 @@ def _render_infos_to_track_states(render_infos: Iterable[RenderInfo]) -> TrackSt
 @callback
 def _event_triggers_rerender(event: Event, info: RenderInfo) -> bool:
     """Determine if a template should be re-rendered from an event."""
-    entity_id = event.data.get(ATTR_ENTITY_ID)
+    entity_id = cast(str, event.data.get(ATTR_ENTITY_ID))
 
     if info.filter(entity_id):
         return True
