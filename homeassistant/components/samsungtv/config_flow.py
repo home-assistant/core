@@ -167,7 +167,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self._async_get_and_check_device_info()
 
             await self.async_set_unique_id(self._id)
-            await self._abort_if_unique_id_configured()
+            self._abort_if_unique_id_configured()
 
             return self._get_entry()
 
@@ -211,7 +211,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason=RESULT_ID_MISSING)
 
         await self.async_set_unique_id(self._id)
-        self._async_abort_if_already_configured()
+        await self._async_abort_if_already_configured()
 
         await self._async_get_and_check_device_info()
 

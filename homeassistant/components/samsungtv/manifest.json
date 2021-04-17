@@ -12,9 +12,12 @@
     }
   ],
   "zeroconf": [
-    "_airplay._tcp.local."
+    {"type":"_airplay._tcp.local.","manufacturer":"samsung*"}
   ],
-  "codeowners": ["@escoand"],
+  "codeowners": [
+    "@escoand",
+    "@chemelli74"
+  ],
   "config_flow": true,
   "iot_class": "local_polling"
 }
