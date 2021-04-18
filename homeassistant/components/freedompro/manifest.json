@@ -6,5 +6,6 @@
   "codeowners": [
     "@stefano055415"
   ],
-  "requirements": ["pyfreedompro==1.1.0"]
+  "requirements": ["pyfreedompro==1.1.0"],
+  "iot_class": "cloud_polling"
 }
