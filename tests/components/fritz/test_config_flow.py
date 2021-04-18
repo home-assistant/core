@@ -73,7 +73,31 @@ async def test_user(hass: HomeAssistantType, fc_class_mock):
         assert not result["result"].unique_id
 
 
-async def test_exception_1(hass: HomeAssistantType, fc_class_mock):
+async def test_user_already_configured(hass: HomeAssistantType, fc_class_mock):
+    """Test starting a flow by user."""
+
+    mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    mock_config.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.fritz.common.FritzConnection",
+        side_effect=fc_class_mock,
+    ), patch("homeassistant.components.fritz.common.FritzStatus"):
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "start_config"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_DATA
+        )
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "start_config"
+
+
+async def test_exception_1(hass: HomeAssistantType):
     """Test starting a flow by user."""
     with patch(
         "homeassistant.components.fritz.common.FritzConnection",
@@ -94,7 +118,7 @@ async def test_exception_1(hass: HomeAssistantType, fc_class_mock):
         assert result["step_id"] == "start_config"
 
 
-async def test_exception_2(hass: HomeAssistantType, fc_class_mock):
+async def test_exception_2(hass: HomeAssistantType):
     """Test starting a flow by user."""
     with patch(
         "homeassistant.components.fritz.common.FritzConnection",
@@ -145,6 +169,38 @@ async def test_reauth_successful(hass: HomeAssistantType, fc_class_mock):
 
         assert result["type"] == RESULT_TYPE_ABORT
         assert result["reason"] == "reauth_successful"
+
+
+async def test_reauth_not_successful(hass: HomeAssistantType, fc_class_mock):
+    """Test starting a reauthentication flow but no connection found."""
+
+    mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    mock_config.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.fritz.common.FritzConnection",
+        side_effect=FritzConnectionException,
+    ), patch("homeassistant.components.fritz.common.FritzStatus"):
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_REAUTH, "entry_id": mock_config.entry_id},
+            data=mock_config,
+        )
+
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "reauth_confirm"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_USERNAME: "other_fake_user",
+                CONF_PASSWORD: "other_fake_password",
+            },
+        )
+
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "reauth_confirm"
 
 
 async def test_ssdp_already_configured(hass: HomeAssistantType, fc_class_mock):
