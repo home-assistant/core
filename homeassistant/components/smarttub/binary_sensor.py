@@ -33,6 +33,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     entities = []
     for spa in controller.spas:
         entities.append(SmartTubOnline(controller.coordinator, spa))
+        entities.append(SmartTubError(controller.coordinator, spa))
         entities.extend(
             SmartTubReminder(controller.coordinator, spa, reminder)
             for reminder in controller.coordinator.data[spa.id][ATTR_REMINDERS].values()
@@ -99,7 +100,7 @@ class SmartTubReminder(SmartTubEntity, BinarySensorEntity):
         return DEVICE_CLASS_PROBLEM
 
 
-class SmartTubError(SmartTubSensorBase):
+class SmartTubError(SmartTubEntity, BinarySensorEntity):
     """Indicates whether an error code is present.
 
     There may be 0 or more errors. If there are >0, we show the first one.
@@ -122,7 +123,7 @@ class SmartTubError(SmartTubSensorBase):
         return errors[0]
 
     @property
-    def state(self) -> str:
+    def is_on(self) -> bool:
         """Return true if an error is signaled."""
         return self.error is not None
 
@@ -130,16 +131,18 @@ class SmartTubError(SmartTubSensorBase):
     def extra_state_attributes(self):
         """Return the state attributes."""
 
-        if self.error is None:
+        error = self.error
+
+        if error is None:
             return {}
 
         return {
-            ATTR_ERROR_CODE: self.error.code,
-            ATTR_ERROR_TITLE: self.error.title,
-            ATTR_ERROR_DESCRIPTION: self.error.description,
-            ATTR_ERROR_TYPE: self.error.error_type,
-            ATTR_CREATED_AT: self.error.created_at.isoformat(),
-            ATTR_UPDATED_AT: self.error.updated_at.isoformat(),
+            ATTR_ERROR_CODE: error.code,
+            ATTR_ERROR_TITLE: error.title,
+            ATTR_ERROR_DESCRIPTION: error.description,
+            ATTR_ERROR_TYPE: error.error_type,
+            ATTR_CREATED_AT: error.created_at.isoformat(),
+            ATTR_UPDATED_AT: error.updated_at.isoformat(),
         }
 
     @property

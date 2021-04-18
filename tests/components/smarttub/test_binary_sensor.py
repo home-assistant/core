@@ -51,14 +51,10 @@ def mock_error(spa):
     return error
 
 
-@pytest.mark.parametrize(
-    "errors",
-    [[], [mock_error]],
-)
-async def test_errors(spa, hass, config_entry, errors):
+async def test_error(spa, hass, config_entry, mock_error):
     """Test the error sensor."""
 
-    spa.get_errors.return_value = errors
+    spa.get_errors.return_value = [mock_error]
 
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -66,10 +62,7 @@ async def test_errors(spa, hass, config_entry, errors):
 
     entity_id = f"binary_sensor.{spa.brand}_{spa.model}_error"
     state = hass.states.get(entity_id)
+    assert state is not None
 
-    if len(errors) == 0:
-        assert state is not None
-        assert state.state == STATE_OFF
-    else:
-        assert state.state == STATE_ON
-        assert state.attributes["error_code"] == 11
+    assert state.state == STATE_ON
+    assert state.attributes["error_code"] == 11
