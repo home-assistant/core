@@ -1,6 +1,10 @@
 """Constants for the MusicCast integration."""
 import voluptuous as vol
 
+from homeassistant.components.media_player import MEDIA_CLASS_DIRECTORY
+from homeassistant.components.media_player.const import REPEAT_MODE_OFF, REPEAT_MODE_ONE, REPEAT_MODE_ALL, \
+    MEDIA_CLASS_TRACK
+
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.helpers import config_validation as cv
 
@@ -57,3 +61,14 @@ JOIN_SERVICE_SCHEMA = UNJOIN_SERVICE_SCHEMA.extend(
 NULL_GROUP = "00000000000000000000000000000000"
 
 ATTR_MUSICCAST_GROUP = DOMAIN + "_group"
+DEFAULT_ZONE = "main"
+REPEAT_MODE_MAPPING = {
+    REPEAT_MODE_OFF: "off",
+    REPEAT_MODE_ONE: "one",
+    REPEAT_MODE_ALL: "all"
+}
+MEDIA_CLASS_MAPPING = {
+    "track": MEDIA_CLASS_TRACK,
+    "directory": MEDIA_CLASS_DIRECTORY,
+    "categories": "categories"
+}

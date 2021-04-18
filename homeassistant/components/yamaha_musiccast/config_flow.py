@@ -84,9 +84,8 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_ssdp(self, discovery_info):
-        """
-        """
-        if not MusicCastDevice.check_yamaha_ssdp(
+        """Handle ssdp discoveries."""
+        if not await MusicCastDevice.check_yamaha_ssdp(
                 discovery_info[ssdp.ATTR_SSDP_LOCATION],
                 async_get_clientsession(self.hass)
         ):
