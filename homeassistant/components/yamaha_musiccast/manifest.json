@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/yamaha_musiccast",
   "requirements": [
-    "pyamaha==0.3"
+    "aiomusiccast==0.1"
   ],
   "ssdp": [
     {
@@ -16,6 +16,7 @@
   "homekit": {},
   "dependencies": [],
   "codeowners": [
-    "@vigonotion"
+    "@vigonotion",
+    "@micha91"
   ]
 }
