@@ -83,7 +83,14 @@ class FritzConnectionMock:  # pylint: disable=too-few-public-methods
                 "NewHkrIsValid": "INVALID",
             },
             {},
-        ]
+        ],
+        ("Hosts1", "GetGenericHostEntry"): [
+            {
+                "NewSerialNumber": 1234,
+                "NewName": "TheName",
+                "NewModelName": "FRITZ!Box 7490",
+            },
+        ],
     }
 
     MODELNAME = "FRITZ!Box 7490"

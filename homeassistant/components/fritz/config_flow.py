@@ -96,7 +96,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
             if progress.get("context", {}).get(CONF_HOST) == self._host:
                 return self.async_abort(reason="already_in_progress")
 
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
+        for entry in self._async_current_entries(include_ignore=False):
             if entry.data[CONF_HOST] == self._host:
                 if uuid and not entry.unique_id:
                     self.hass.config_entries.async_update_entry(entry, unique_id=uuid)
