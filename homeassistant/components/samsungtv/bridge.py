@@ -251,7 +251,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
 
     def device_info(self):
         """Try to gather infos of this TV."""
-        remote = self._get_remote()
+        remote = self._get_remote(avoid_open=True)
         if not remote:
             return None
         with contextlib.suppress(HttpApiError):
@@ -263,7 +263,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
             key = "KEY_POWER"
         self._get_remote().send_key(key)
 
-    def _get_remote(self):
+    def _get_remote(self, avoid_open: bool = False):
         """Create or return a remote control instance."""
         if self._remote is None:
             # We need to create a new instance to reconnect.
@@ -276,7 +276,8 @@ class SamsungTVWSBridge(SamsungTVBridge):
                     timeout=8,
                     name=VALUE_CONF_NAME,
                 )
-                self._remote.open()
+                if not avoid_open:
+                    self._remote.open()
             # This is only happening when the auth was switched to DENY
             # A removed auth will lead to socket timeout because waiting for auth popup is just an open socket
             except ConnectionFailure:

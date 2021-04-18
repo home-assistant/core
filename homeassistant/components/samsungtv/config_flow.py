@@ -163,7 +163,6 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._name = user_input[CONF_NAME]
             self._title = self._name
 
-            await self.hass.async_add_executor_job(self._try_connect)
             await self._async_get_and_check_device_info()
 
             await self.async_set_unique_id(self._id)
