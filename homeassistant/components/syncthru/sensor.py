@@ -86,18 +86,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     supp_output_tray = printer.output_tray_status()
 
     name = config_entry.data[CONF_NAME]
-    devices = [SyncThruMainSensor(printer, name)]
+    entities = [SyncThruMainSensor(printer, name)]
 
     for key in supp_toner:
-        devices.append(SyncThruTonerSensor(printer, name, key))
+        entities.append(SyncThruTonerSensor(printer, name, key))
     for key in supp_drum:
-        devices.append(SyncThruDrumSensor(printer, name, key))
+        entities.append(SyncThruDrumSensor(printer, name, key))
     for key in supp_tray:
-        devices.append(SyncThruInputTraySensor(printer, name, key))
+        entities.append(SyncThruInputTraySensor(printer, name, key))
     for key in supp_output_tray:
-        devices.append(SyncThruOutputTraySensor(printer, name, key))
+        entities.append(SyncThruOutputTraySensor(printer, name, key))
 
-    async_add_entities(devices, True)
+    async_add_entities(entities, True)
 
 
 class SyncThruSensor(SensorEntity):
@@ -183,6 +183,7 @@ class SyncThruMainSensor(SyncThruSensor):
             "display_text": self.syncthru.device_status_details(),
         }
 
+    @property
     def entity_registry_enabled_default(self) -> bool:
         """Disable entity by default."""
         return False
