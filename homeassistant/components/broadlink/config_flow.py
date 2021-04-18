@@ -70,9 +70,6 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except OSError as err:
             if err.errno == errno.ENETUNREACH:
                 return self.async_abort(reason="cannot_connect")
-            return self.async_abort(reason="invalid_host")
-        except Exception as ex:  # pylint: disable=broad-except
-            _LOGGER.error("Failed to connect to the device at %s", host, exc_info=ex)
             return self.async_abort(reason="unknown")
 
         await self.async_set_device(device)
