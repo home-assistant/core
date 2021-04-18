@@ -977,9 +977,9 @@ omit =
     homeassistant/components/overkiz/cover.py
     homeassistant/components/overkiz/light.py
     homeassistant/components/overkiz/lock.py
-    homeassistant/components/overkiz/overkiz_executor.py
+    homeassistant/components/overkiz/executor.py
     homeassistant/components/overkiz/scene.py
-    homeassistant/components/overkiz/overkiz_entity.py
+    homeassistant/components/overkiz/entity.py
     homeassistant/components/tank_utility/sensor.py
     homeassistant/components/tankerkoenig/*
     homeassistant/components/tapsaff/binary_sensor.py
