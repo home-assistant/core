@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "El servei ja est\u00e0 configurat",
             "existing_instance_updated": "S'ha actualitzat la configuraci\u00f3 existent.",
             "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
         },
