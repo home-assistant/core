@@ -11,11 +11,6 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from .const import DOMAIN  # pylint: disable=unused-import
 from .controller import SmartTubController
 
-DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
-)
-
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -35,9 +30,13 @@ class SmartTubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
         errors = {}
 
+        data_schema = vol.Schema(
+            {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
+        )
+
         if user_input is None:
             return self.async_show_form(
-                step_id="user", data_schema=DATA_SCHEMA, errors=errors
+                step_id="user", data_schema=data_schema, errors=errors
             )
 
         controller = SmartTubController(self.hass)
@@ -48,7 +47,7 @@ class SmartTubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except LoginFailed:
             errors["base"] = "invalid_auth"
             return self.async_show_form(
-                step_id="user", data_schema=DATA_SCHEMA, errors=errors
+                step_id="user", data_schema=data_schema, errors=errors
             )
 
         await self.async_set_unique_id(account.id)
@@ -77,9 +76,17 @@ class SmartTubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_reauth_confirm(self, user_input=None):
         """Dialog that informs the user that reauth is required."""
         if user_input is None:
+            # same as DATA_SCHEMA, but with the previous values as defaults
+            data_schema = vol.Schema(
+                {
+                    vol.Required(
+                        CONF_EMAIL, default=self._reauth_input.get(CONF_EMAIL)
+                    ): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            )
             return self.async_show_form(
                 step_id="reauth_confirm",
-                description_placeholders={"email": self._reauth_input[CONF_EMAIL]},
-                data_schema=DATA_SCHEMA,
+                data_schema=data_schema,
             )
         return await self.async_step_user()
