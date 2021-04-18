@@ -1,4 +1,4 @@
-"""Parent class for every Somfy TaHoma device."""
+"""Parent class for every Overkiz device."""
 import logging
 from typing import Any, Dict
 
@@ -8,7 +8,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import TahomaDataUpdateCoordinator
+from .coordinator import OverkizDataUpdateCoordinator
 from .overkiz_executor import OverkizExecutor
 
 ATTR_RSSI_LEVEL = "rssi_level"
@@ -22,10 +22,10 @@ CORE_STATUS_STATE = "core:StatusState"
 _LOGGER = logging.getLogger(__name__)
 
 
-class TahomaEntity(CoordinatorEntity, Entity):
-    """Representation of a TaHoma device entity."""
+class OverkizEntity(CoordinatorEntity, Entity):
+    """Representation of a Overkiz device entity."""
 
-    def __init__(self, device_url: str, coordinator: TahomaDataUpdateCoordinator):
+    def __init__(self, device_url: str, coordinator: OverkizDataUpdateCoordinator):
         """Initialize the device."""
         super().__init__(coordinator)
         self.device_url = device_url
@@ -33,7 +33,7 @@ class TahomaEntity(CoordinatorEntity, Entity):
 
     @property
     def device(self) -> Device:
-        """Return TaHoma device linked to this entity."""
+        """Return Overkiz device linked to this entity."""
         return self.coordinator.data[self.device_url]
 
     @property

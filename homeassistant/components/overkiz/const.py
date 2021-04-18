@@ -1,10 +1,10 @@
-"""Constants for the Somfy TaHoma integration."""
+"""Constants for the Overkiz integration."""
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
 from homeassistant.components.cover import DOMAIN as COVER
 from homeassistant.components.light import DOMAIN as LIGHT
 from homeassistant.components.lock import DOMAIN as LOCK
 
-DOMAIN = "tahoma"
+DOMAIN = "overkiz"
 
 CONF_HUB = "hub"
 DEFAULT_HUB = "Somfy (Europe)"
@@ -18,7 +18,7 @@ SUPPORTED_ENDPOINTS = {
     "Hi Kumo": "https://ha117-1.overkiz.com/enduser-mobile-web/enduserAPI/",
     "Rexel Energeasy Connect": "https://ha112-1.overkiz.com/enduser-mobile-web/enduserAPI/",
     "Somfy (Australia)": "https://ha201-1.overkiz.com/enduser-mobile-web/enduserAPI/",
-    "Somfy (Europe)": "https://tahomalink.com/enduser-mobile-web/enduserAPI/",
+    "Somfy (Europe)": "https://overkizlink.com/enduser-mobile-web/enduserAPI/",
     "Somfy (North America)": "https://ha401-1.overkiz.com/enduser-mobile-web/enduserAPI/",
 }
 

@@ -1,4 +1,4 @@
-"""The Somfy TaHoma integration."""
+"""The Overkiz integration."""
 import asyncio
 from collections import defaultdict
 from datetime import timedelta
@@ -29,18 +29,18 @@ from .const import (
     SUPPORTED_ENDPOINTS,
     TAHOMA_DEVICE_TO_PLATFORM,
 )
-from .coordinator import TahomaDataUpdateCoordinator
+from .coordinator import OverkizDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Somfy TaHoma component."""
+    """Set up the Overkiz component."""
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Set up Somfy TaHoma from a config entry."""
+    """Set up Overkiz from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
     username = entry.data.get(CONF_USERNAME)
@@ -81,7 +81,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         seconds=entry.options.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL)
     )
 
-    tahoma_coordinator = TahomaDataUpdateCoordinator(
+    overkiz_coordinator = OverkizDataUpdateCoordinator(
         hass,
         _LOGGER,
         name="device events",
@@ -95,18 +95,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         "Initialized DataUpdateCoordinator with %s interval", str(update_interval)
     )
 
-    await tahoma_coordinator.async_refresh()
+    await overkiz_coordinator.async_refresh()
 
     platforms = defaultdict(list)
     platforms[SCENE] = scenarios
 
     hass.data[DOMAIN][entry.entry_id] = {
         "platforms": platforms,
-        "coordinator": tahoma_coordinator,
+        "coordinator": overkiz_coordinator,
         "update_listener": entry.add_update_listener(update_listener),
     }
 
-    for device in tahoma_coordinator.data.values():
+    for device in overkiz_coordinator.data.values():
         platform = TAHOMA_DEVICE_TO_PLATFORM.get(
             device.widget
         ) or TAHOMA_DEVICE_TO_PLATFORM.get(device.ui_class)
@@ -117,7 +117,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             and device.ui_class not in IGNORED_TAHOMA_DEVICES
         ):
             _LOGGER.debug(
-                "Unsupported TaHoma device detected (%s - %s - %s)",
+                "Unsupported Overkiz device detected (%s - %s - %s)",
                 device.controllable_name,
                 device.ui_class,
                 device.widget,

@@ -1,4 +1,4 @@
-"""Config flow for Somfy TaHoma integration."""
+"""Config flow for Overkiz integration."""
 import logging
 
 from aiohttp import ClientError
@@ -37,7 +37,7 @@ DATA_SCHEMA = vol.Schema(
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Somfy TaHoma."""
+    """Handle a config flow for Overkiz."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
@@ -95,7 +95,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         self.config_entry = config_entry
 
     async def async_step_init(self, user_input=None):
-        """Manage the Somfy TaHoma options."""
+        """Manage the Overkiz options."""
         return await self.async_step_update_interval()
 
     async def async_step_update_interval(self, user_input=None):

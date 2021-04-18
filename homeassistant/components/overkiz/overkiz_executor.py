@@ -4,7 +4,7 @@ from typing import Any, Optional
 
 from pyhoma.models import Command, Device
 
-from .coordinator import TahomaDataUpdateCoordinator
+from .coordinator import OverkizDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -12,14 +12,14 @@ _LOGGER = logging.getLogger(__name__)
 class OverkizExecutor:
     """Representation of an Overkiz device with execution handler."""
 
-    def __init__(self, device_url: str, coordinator: TahomaDataUpdateCoordinator):
+    def __init__(self, device_url: str, coordinator: OverkizDataUpdateCoordinator):
         """Initialize the executor."""
         self.device_url = device_url
         self.coordinator = coordinator
 
     @property
     def device(self) -> Device:
-        """Return TaHoma device linked to this entity."""
+        """Return Overkiz device linked to this entity."""
         return self.coordinator.data[self.device_url]
 
     def select_command(self, *commands: str) -> Optional[str]:

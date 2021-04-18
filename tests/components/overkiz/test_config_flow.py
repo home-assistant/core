@@ -1,4 +1,4 @@
-"""Test the Somfy TaHoma config flow."""
+"""Test the Overkiz config flow."""
 from unittest.mock import patch
 
 from aiohttp import ClientError
@@ -10,8 +10,8 @@ from pyhoma.exceptions import (
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.tahoma import config_flow
-from homeassistant.components.tahoma.const import DOMAIN
+from homeassistant.components.overkiz import config_flow
+from homeassistant.components.overkiz.const import DOMAIN
 from homeassistant.config_entries import ENTRY_STATE_LOADED
 
 from tests.common import MockConfigEntry
@@ -31,9 +31,9 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch("pyhoma.client.TahomaClient.login", return_value=True), patch(
-        "homeassistant.components.tahoma.async_setup", return_value=True
+        "homeassistant.components.overkiz.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.tahoma.async_setup_entry", return_value=True
+        "homeassistant.components.overkiz.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -94,8 +94,8 @@ async def test_abort_on_duplicate_entry(hass):
     )
 
     with patch("pyhoma.client.TahomaClient.login", return_value=True), patch(
-        "homeassistant.components.tahoma.async_setup", return_value=True
-    ), patch("homeassistant.components.tahoma.async_setup_entry", return_value=True):
+        "homeassistant.components.overkiz.async_setup", return_value=True
+    ), patch("homeassistant.components.overkiz.async_setup_entry", return_value=True):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"username": TEST_EMAIL, "password": TEST_PASSWORD},
@@ -118,8 +118,8 @@ async def test_allow_multiple_unique_entries(hass):
     )
 
     with patch("pyhoma.client.TahomaClient.login", return_value=True), patch(
-        "homeassistant.components.tahoma.async_setup", return_value=True
-    ), patch("homeassistant.components.tahoma.async_setup_entry", return_value=True):
+        "homeassistant.components.overkiz.async_setup", return_value=True
+    ), patch("homeassistant.components.overkiz.async_setup_entry", return_value=True):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"username": TEST_EMAIL, "password": TEST_PASSWORD, "hub": TEST_HUB},
@@ -144,8 +144,8 @@ async def test_options_flow(hass):
     )
 
     with patch("pyhoma.client.TahomaClient.login", return_value=True), patch(
-        "homeassistant.components.tahoma.async_setup", return_value=True
-    ), patch("homeassistant.components.tahoma.async_setup_entry", return_value=True):
+        "homeassistant.components.overkiz.async_setup", return_value=True
+    ), patch("homeassistant.components.overkiz.async_setup_entry", return_value=True):
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

@@ -1,8 +1,8 @@
 {
-  "domain": "tahoma",
-  "name": "Somfy TaHoma",
+  "domain": "overkiz",
+  "name": "Overkiz by Somfy",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/tahoma",
+  "documentation": "https://www.home-assistant.io/integrations/overkiz",
   "requirements": [
     "pyhoma==0.5.9"
   ],
