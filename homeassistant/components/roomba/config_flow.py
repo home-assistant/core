@@ -328,9 +328,8 @@ async def _async_discover_roombas(hass, host):
             discovery = _async_get_roomba_discovery()
             try:
                 if host:
-                    discovered = [
-                        await hass.async_add_executor_job(discovery.get, host)
-                    ]
+                    device = await hass.async_add_executor_job(discovery.get, host)
+                    discovered = [device] if device else []
                 else:
                     discovered = await hass.async_add_executor_job(discovery.get_all)
             except OSError:
