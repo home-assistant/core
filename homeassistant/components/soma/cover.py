@@ -72,17 +72,15 @@ class SomaTilt(SomaEntity, CoverEntity):
         """Return if the cover tilt is closed."""
         return self.current_position == 0
 
-    def log_device_unreachable(self, name, msg):
-        """Log device unreachable."""
-        _LOGGER.error("Unable to reach device %s (%s)", name, msg)
-
     def close_cover_tilt(self, **kwargs):
         """Close the cover tilt."""
         response = self.api.set_shade_position(self.device["mac"], 100)
         if response["result"] == "success":
             self.current_position = 0
         else:
-            self.log_device_unreachable(self.device["name"], response["msg"])
+            super().log_device_unreachable(
+                _LOGGER, self.device["name"], response["msg"]
+            )
 
     def open_cover_tilt(self, **kwargs):
         """Open the cover tilt."""
@@ -90,7 +88,9 @@ class SomaTilt(SomaEntity, CoverEntity):
         if response["result"] == "success":
             self.current_position = 100
         else:
-            self.log_device_unreachable(self.device["name"], response["msg"])
+            super().log_device_unreachable(
+                _LOGGER, self.device["name"], response["msg"]
+            )
 
     def stop_cover_tilt(self, **kwargs):
         """Stop the cover tilt."""
@@ -99,7 +99,9 @@ class SomaTilt(SomaEntity, CoverEntity):
             # Set cover position to some value where up/down are both enabled
             self.current_position = 50
         else:
-            self.log_device_unreachable(self.device["name"], response["msg"])
+            super().log_device_unreachable(
+                _LOGGER, self.device["name"], response["msg"]
+            )
 
     def set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
@@ -111,7 +113,9 @@ class SomaTilt(SomaEntity, CoverEntity):
         if response["result"] == "success":
             self.current_position = kwargs[ATTR_TILT_POSITION]
         else:
-            self.log_device_unreachable(self.device["name"], response["msg"])
+            super().log_device_unreachable(
+                _LOGGER, self.device["name"], response["msg"]
+            )
 
     async def async_update(self):
         """Update the entity with the latest data."""
@@ -126,7 +130,9 @@ class SomaTilt(SomaEntity, CoverEntity):
             return
 
         if response["result"] != "success":
-            self.log_device_unreachable(self.device["name"], response["msg"])
+            super().log_device_unreachable(
+                _LOGGER, self.device["name"], response["msg"]
+            )
             self.is_available = False
             return
 
@@ -173,13 +179,17 @@ class SomaShade(SomaEntity, CoverEntity):
         """Close the cover."""
         response = self.api.set_shade_position(self.device["mac"], 100)
         if response["result"] != "success":
-            self.log_device_unreachable(self.device["name"], response["msg"])
+            super().log_device_unreachable(
+                _LOGGER, self.device["name"], response["msg"]
+            )
 
     def open_cover(self, **kwargs):
         """Open the cover."""
         response = self.api.set_shade_position(self.device["mac"], 0)
         if response["result"] != "success":
-            self.log_device_unreachable(self.device["name"], response["msg"])
+            super().log_device_unreachable(
+                _LOGGER, self.device["name"], response["msg"]
+            )
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
@@ -188,7 +198,9 @@ class SomaShade(SomaEntity, CoverEntity):
             # Set cover position to some value where up/down are both enabled
             self.current_position = 50
         else:
-            self.log_device_unreachable(self.device["name"], response["msg"])
+            super().log_device_unreachable(
+                _LOGGER, self.device["name"], response["msg"]
+            )
 
     def set_cover_position(self, **kwargs):
         """Move the cover shutter to a specific position."""
@@ -197,7 +209,9 @@ class SomaShade(SomaEntity, CoverEntity):
             self.device["mac"], 100 - kwargs[ATTR_POSITION]
         )
         if response["result"] != "success":
-            self.log_device_unreachable(self.device["name"], response["msg"])
+            super().log_device_unreachable(
+                _LOGGER, self.device["name"], response["msg"]
+            )
 
     async def async_update(self):
         """Update the cover with the latest data."""
@@ -211,7 +225,9 @@ class SomaShade(SomaEntity, CoverEntity):
             self.is_available = False
             return
         if response["result"] != "success":
-            self.log_device_unreachable(self.device["name"], response["msg"])
+            super().log_device_unreachable(
+                _LOGGER, self.device["name"], response["msg"]
+            )
             self.is_available = False
             return
         self.current_position = 100 - int(response["position"])

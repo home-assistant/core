@@ -99,3 +99,7 @@ class SomaEntity(Entity):
             manufacturer="Wazombi Labs",
             name=self.name,
         )
+
+    def log_device_unreachable(self, logger, name, msg):
+        """Log device unreachable."""
+        logger.error("Unable to reach device %s (%s)", name, msg)
