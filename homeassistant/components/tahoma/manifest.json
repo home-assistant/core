@@ -10,5 +10,11 @@
     "@imicknl",
     "@vlebourl",
     "@tetienne"
+  ],
+  "dhcp": [
+    {
+      "hostname": "gateway*",
+      "macaddress": "F8811A*"
+    }
   ]
 }
