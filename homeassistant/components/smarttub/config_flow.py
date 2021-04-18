@@ -54,18 +54,14 @@ class SmartTubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         existing_entry = await self.async_set_unique_id(account.id)
         if self._reauth_input is not None:
             # this is a reauth attempt
-            if existing_entry:
-                if (
-                    existing_entry.unique_id
-                    != self._reauth_input[CONF_CONFIG_ENTRY].unique_id
-                ):
-                    # there is a config entry matching this account, but it is not the one we were trying to reauth
-                    return self.async_abort(reason="already_configured")
-                self.hass.config_entries.async_update_entry(
-                    existing_entry, data=user_input
-                )
-                await self.hass.config_entries.async_reload(existing_entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
+            if self._reauth_entry.unique_id != account.id:
+                # there is a config entry matching this account, but it is not the one we were trying to reauth
+                return self.async_abort(reason="already_configured")
+            self.hass.config_entries.async_update_entry(
+                self._reauth_entry, data=user_input
+            )
+            await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
+            return self.async_abort(reason="reauth_successful")
 
         return self.async_create_entry(title=user_input[CONF_EMAIL], data=user_input)
 
