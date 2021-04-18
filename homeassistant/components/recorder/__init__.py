@@ -45,6 +45,7 @@ from .const import CONF_DB_INTEGRITY_CHECK, DATA_INSTANCE, DOMAIN, SQLITE_URL_PR
 from .models import Base, Events, RecorderRuns, States
 from .util import (
     dburl_to_path,
+    end_incomplete_runs,
     move_away_broken_database,
     session_scope,
     setup_connection_for_dialect,
@@ -809,17 +810,9 @@ class Recorder(threading.Thread):
     def _setup_run(self):
         """Log the start of the current run."""
         with session_scope(session=self.get_session()) as session:
-            for run in session.query(RecorderRuns).filter_by(end=None):
-                run.closed_incorrect = True
-                run.end = self.recording_start
-                _LOGGER.warning(
-                    "Ended unfinished session (id=%s from %s)", run.run_id, run.start
-                )
-                session.add(run)
-
-            self.run_info = RecorderRuns(
-                start=self.recording_start, created=dt_util.utcnow()
-            )
+            start = self.recording_start
+            end_incomplete_runs(session, start)
+            self.run_info = RecorderRuns(start=start, created=dt_util.utcnow())
             session.add(self.run_info)
             session.flush()
             session.expunge(self.run_info)
