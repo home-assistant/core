@@ -6,16 +6,29 @@ from homeassistant.components.lock import DOMAIN as LOCK
 
 DOMAIN = "tahoma"
 
+CONF_HUB = "hub"
+DEFAULT_HUB = "Somfy (Europe)"
+
 MIN_UPDATE_INTERVAL = 30
 DEFAULT_UPDATE_INTERVAL = 30
 
-IGNORED_TAHOMA_TYPES = [
+SUPPORTED_ENDPOINTS = {
+    "Cozytouch": "https://ha110-1.overkiz.com/enduser-mobile-web/enduserAPI/",
+    "eedomus": "https://ha101-1.overkiz.com/enduser-mobile-web/enduserAPI/",
+    "Hi Kumo": "https://ha117-1.overkiz.com/enduser-mobile-web/enduserAPI/",
+    "Rexel Energeasy Connect": "https://ha112-1.overkiz.com/enduser-mobile-web/enduserAPI/",
+    "Somfy (Australia)": "https://ha201-1.overkiz.com/enduser-mobile-web/enduserAPI/",
+    "Somfy (Europe)": "https://tahomalink.com/enduser-mobile-web/enduserAPI/",
+    "Somfy (North America)": "https://ha401-1.overkiz.com/enduser-mobile-web/enduserAPI/",
+}
+
+IGNORED_TAHOMA_DEVICES = [
     "ProtocolGateway",
     "Pod",
 ]
 
 # Used to map the Somfy widget and ui_class to the Home Assistant platform
-TAHOMA_TYPES = {
+TAHOMA_DEVICE_TO_PLATFORM = {
     "AdjustableSlatsRollerShutter": COVER,
     "AirFlowSensor": BINARY_SENSOR,  # widgetName, uiClass is AirSensor (sensor)
     "Awning": COVER,

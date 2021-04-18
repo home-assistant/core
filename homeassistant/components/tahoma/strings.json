@@ -5,7 +5,8 @@
         "description": "Enter your TaHoma credentials for the TaHoma App or the tahomalink.com platform.",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "hub": "Hub"
         }
       }
     },

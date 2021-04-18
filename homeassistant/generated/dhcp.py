@@ -180,6 +180,11 @@ DHCP = [
         "macaddress": "000420*"
     },
     {
+        "domain": "tahoma",
+        "hostname": "gateway*",
+        "macaddress": "F8811A*"
+    },
+    {
         "domain": "tesla",
         "hostname": "tesla_*",
         "macaddress": "4CFCAA*"
