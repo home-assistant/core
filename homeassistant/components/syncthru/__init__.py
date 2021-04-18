@@ -3,14 +3,13 @@ from __future__ import annotations
 
 import logging
 
-from pysyncthru import SyncThru
-
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry as dr
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from pysyncthru import SyncThru
 
 from .const import DOMAIN
 

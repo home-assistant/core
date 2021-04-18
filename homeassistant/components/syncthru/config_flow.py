@@ -3,7 +3,6 @@
 import re
 from urllib.parse import urlparse
 
-from pysyncthru import SyncThru
 from url_normalize import url_normalize
 import voluptuous as vol
 
@@ -11,6 +10,7 @@ from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.helpers import aiohttp_client
+from pysyncthru import SyncThru
 
 # pylint: disable=unused-import # for DOMAIN https://github.com/PyCQA/pylint/issues/3202
 from .const import DEFAULT_MODEL, DEFAULT_NAME_TEMPLATE, DOMAIN

@@ -2,14 +2,11 @@
 
 import logging
 
-from pysyncthru import SyncThru, SyncthruState
-
+from homeassistant.components.binary_sensor import (DEVICE_CLASS_CONNECTIVITY,
+                                                    DEVICE_CLASS_PROBLEM,
+                                                    BinarySensorEntity)
 from homeassistant.const import CONF_NAME
-from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
-    DEVICE_CLASS_PROBLEM,
-    BinarySensorEntity,
-)
+from pysyncthru import SyncThru, SyncthruState
 
 from . import device_identifiers
 from .const import DOMAIN
