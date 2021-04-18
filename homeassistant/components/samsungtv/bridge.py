@@ -255,7 +255,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
 
     def device_info(self):
         """Try to gather infos of this TV."""
-        remote = self._get_remote()
+        remote = self._get_remote(avoid_open=True)
         if not remote:
             return None
         with contextlib.suppress(HttpApiError):
