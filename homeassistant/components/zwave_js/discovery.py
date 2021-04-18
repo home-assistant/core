@@ -164,9 +164,10 @@ DISCOVERY_SCHEMAS = [
             type={"number"},
         ),
     ),
-    # Fibaro Shutter Fibaro FGS222
+    # Fibaro Shutter Fibaro FGR-222
     ZWaveDiscoverySchema(
         platform="cover",
+        hint="fibaro_fgr222",
         manufacturer_id={0x010F},
         product_id={0x1000},
         product_type={0x0302},
