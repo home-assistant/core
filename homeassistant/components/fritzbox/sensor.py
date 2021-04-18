@@ -2,7 +2,12 @@
 import requests
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import CONF_DEVICES, TEMP_CELSIUS
+from homeassistant.const import (
+    CONF_DEVICES,
+    DEVICE_CLASS_BATTERY,
+    PERCENTAGE,
+    TEMP_CELSIUS,
+)
 
 from .const import (
     ATTR_STATE_DEVICE_LOCKED,
@@ -29,7 +34,56 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             entities.append(FritzBoxTempSensor(device, fritz))
             devices.add(device.ain)
 
+        if device.battery_level is not None:
+            entities.append(FritzBoxBatterySensor(device, fritz))
+            devices.add(f"{device.ain}_battery")
+
     async_add_entities(entities)
+
+
+class FritzBoxBatterySensor(SensorEntity):
+    """The entity class for Fritzbox battery sensors."""
+
+    def __init__(self, device, fritz):
+        """Initialize the sensor."""
+        self._device = device
+        self._fritz = fritz
+
+    @property
+    def device_info(self):
+        """Return device specific attributes."""
+        return {
+            "name": self.name,
+            "identifiers": {(FRITZBOX_DOMAIN, self._device.ain)},
+            "manufacturer": self._device.manufacturer,
+            "model": self._device.productname,
+            "sw_version": self._device.fw_version,
+        }
+
+    @property
+    def unique_id(self):
+        """Return the unique ID of the device."""
+        return f"{self._device.ain}_battery"
+
+    @property
+    def name(self):
+        """Return the name of the device."""
+        return f"{self._device.name} Battery"
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self._device.battery_level
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement."""
+        return PERCENTAGE
+
+    @property
+    def device_class(self):
+        """Return the device class."""
+        return DEVICE_CLASS_BATTERY
 
 
 class FritzBoxTempSensor(SensorEntity):
