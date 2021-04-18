@@ -45,22 +45,21 @@ class SmartTubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 await self.async_set_unique_id(account.id)
 
-                if self._reauth_input is not None:
-                    # this is a reauth attempt
-                    if self._reauth_entry.unique_id != self.unique_id:
-                        # there is a config entry matching this account, but it is not the one we were trying to reauth
-                        return self.async_abort(reason="already_configured")
-                    self.hass.config_entries.async_update_entry(
-                        self._reauth_entry, data=user_input
+                if self._reauth_input is None:
+                    self._abort_if_unique_id_configured()
+                    return self.async_create_entry(
+                        title=user_input[CONF_EMAIL], data=user_input
                     )
-                    await self.hass.config_entries.async_reload(
-                        self._reauth_entry.entry_id
-                    )
-                    return self.async_abort(reason="reauth_successful")
 
-                return self.async_create_entry(
-                    title=user_input[CONF_EMAIL], data=user_input
+                # this is a reauth attempt
+                if self._reauth_entry.unique_id != self.unique_id:
+                    # there is a config entry matching this account, but it is not the one we were trying to reauth
+                    return self.async_abort(reason="already_configured")
+                self.hass.config_entries.async_update_entry(
+                    self._reauth_entry, data=user_input
                 )
+                await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="user", data_schema=data_schema, errors=errors
