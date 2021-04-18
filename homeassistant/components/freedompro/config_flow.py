@@ -6,7 +6,7 @@ from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers import aiohttp_client
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN
 
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
 
