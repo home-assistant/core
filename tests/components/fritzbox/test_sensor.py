@@ -13,7 +13,6 @@ from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
-    DEVICE_CLASS_BATTERY,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
@@ -49,7 +48,7 @@ async def test_setup(hass: HomeAssistantType, fritz: Mock):
     assert state.attributes[ATTR_STATE_LOCKED] == "fake_locked"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
 
-    state = hass.states.get(f"{ENTITY_ID}_{DEVICE_CLASS_BATTERY}")
+    state = hass.states.get(f"{ENTITY_ID}_battery")
 
     assert state
     assert state.state == "23"

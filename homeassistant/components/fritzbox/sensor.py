@@ -36,7 +36,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         if device.battery_level is not None:
             entities.append(FritzBoxBatterySensor(device, fritz))
-            devices.add(f"{device.ain}_{DEVICE_CLASS_BATTERY}")
+            devices.add(f"{device.ain}_battery")
 
     async_add_entities(entities)
 
@@ -63,7 +63,7 @@ class FritzBoxBatterySensor(SensorEntity):
     @property
     def unique_id(self):
         """Return the unique ID of the device."""
-        return f"{self._device.ain}_{DEVICE_CLASS_BATTERY}"
+        return f"{self._device.ain}_battery"
 
     @property
     def name(self):
