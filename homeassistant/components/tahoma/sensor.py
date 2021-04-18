@@ -29,6 +29,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
+from .coordinator import TahomaDataUpdateCoordinator
 from .tahoma_entity import TahomaEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -109,10 +110,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class TahomaSensor(TahomaEntity, Entity):
     """Representation of a TaHoma Sensor."""
 
-    @property
-    def state(self):
-        """Return the value of the sensor."""
-        state = self.executor.select_state(
+    def __init__(self, device_url: str, coordinator: TahomaDataUpdateCoordinator):
+        """Initialize the device."""
+        super().__init__(device_url, coordinator)
+
+        self._state_key = self.executor.select_state_key(
             CORE_CO2_CONCENTRATION_STATE,
             CORE_CO_CONCENTRATION_STATE,
             CORE_ELECTRIC_ENERGY_CONSUMPTION_STATE,
@@ -127,6 +129,11 @@ class TahomaSensor(TahomaEntity, Entity):
             CORE_WINDSPEED_STATE,
             CORE_WATER_CONSUMPTION_STATE,
         )
+
+    @property
+    def state(self):
+        """Return the value of the sensor."""
+        state = self.executor.select_state(self._state_key)
 
         return round(state, 2) if state else None
 

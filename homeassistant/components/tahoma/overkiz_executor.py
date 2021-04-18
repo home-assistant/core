@@ -44,6 +44,19 @@ class OverkizExecutor:
             )
         return None
 
+    def select_state_key(self, *states) -> Optional[str]:
+        """Select first existing active state key in a list of states."""
+        if self.device.states:
+            return next(
+                (
+                    state.name
+                    for state in self.device.states
+                    if state.name in list(states)
+                ),
+                None,
+            )
+        return None
+
     def has_state(self, *states: str) -> bool:
         """Return True if a state exists in self."""
         return self.select_state(*states) is not None
