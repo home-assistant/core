@@ -70,8 +70,8 @@ class SmartTubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, user_input=None):
         """Get new credentials if the current ones don't work anymore."""
-        if user_input is not None:
-            self._reauth_input = dict(user_input)
+        self._reauth_input = dict(user_input)
+        self._reauth_entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(self, user_input=None):
