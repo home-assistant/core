@@ -15,6 +15,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
+from homeassistant.helpers import entity_platform
 
 from .const import (
     ADVANTAGE_AIR_STATE_CLOSE,
@@ -49,6 +50,7 @@ AC_HVAC_MODES = [
     HVAC_MODE_FAN_ONLY,
     HVAC_MODE_DRY,
 ]
+ADVANTAGE_AIR_SERVICE_SET_MYZONE = "set_myzone"
 ZONE_HVAC_MODES = [HVAC_MODE_OFF, HVAC_MODE_FAN_ONLY]
 
 PARALLEL_UPDATES = 0
@@ -67,6 +69,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             if zone["type"] != 0:
                 entities.append(AdvantageAirZone(instance, ac_key, zone_key))
     async_add_entities(entities)
+
+    platform = entity_platform.current_platform.get()
+    platform.async_register_entity_service(
+        ADVANTAGE_AIR_SERVICE_SET_MYZONE,
+        {},
+        "set_myzone",
+    )
 
 
 class AdvantageAirClimateEntity(AdvantageAirEntity, ClimateEntity):
@@ -232,4 +241,10 @@ class AdvantageAirZone(AdvantageAirClimateEntity):
         temp = kwargs.get(ATTR_TEMPERATURE)
         await self.async_change(
             {self.ac_key: {"zones": {self.zone_key: {"setTemp": temp}}}}
+        )
+
+    async def set_myzone(self, **kwargs):
+        """Set this zone as the 'MyZone'."""
+        await self.async_change(
+            {self.ac_key: {"info": {"myZone": self._zone["number"]}}}
         )
