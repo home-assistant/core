@@ -253,7 +253,8 @@ def setup_connection_for_dialect(dialect_name, dbapi_connection):
         # instead of every time we open the sqlite connection
         # as its persistent and isn't free to call every time.
         return True
-    elif dialect_name == "mysql":
+
+    if dialect_name == "mysql":
         execute_on_connection(dbapi_connection, "SET session wait_timeout=28800")
 
     return False
