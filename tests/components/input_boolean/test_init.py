@@ -109,13 +109,13 @@ async def test_config_options(hass):
     assert state_1 is not None
     assert state_2 is not None
 
-    assert STATE_OFF == state_1.state
+    assert state_1.state == STATE_OFF
     assert ATTR_ICON not in state_1.attributes
     assert ATTR_FRIENDLY_NAME not in state_1.attributes
 
-    assert STATE_ON == state_2.state
-    assert "Hello World" == state_2.attributes.get(ATTR_FRIENDLY_NAME)
-    assert "mdi:work" == state_2.attributes.get(ATTR_ICON)
+    assert state_2.state == STATE_ON
+    assert state_2.attributes.get(ATTR_FRIENDLY_NAME) == "Hello World"
+    assert state_2.attributes.get(ATTR_ICON) == "mdi:work"
 
 
 async def test_restore_state(hass):
@@ -218,7 +218,7 @@ async def test_reload(hass, hass_admin_user):
     assert state_1 is not None
     assert state_2 is not None
     assert state_3 is None
-    assert STATE_ON == state_2.state
+    assert state_2.state == STATE_ON
 
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_1") is not None
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_2") is not None
@@ -259,9 +259,9 @@ async def test_reload(hass, hass_admin_user):
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_2") is not None
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_3") is not None
 
-    assert STATE_ON == state_2.state  # reload is not supposed to change entity state
-    assert "Hello World reloaded" == state_2.attributes.get(ATTR_FRIENDLY_NAME)
-    assert "mdi:work_reloaded" == state_2.attributes.get(ATTR_ICON)
+    assert state_2.state == STATE_ON  # reload is not supposed to change entity state
+    assert state_2.attributes.get(ATTR_FRIENDLY_NAME) == "Hello World reloaded"
+    assert state_2.attributes.get(ATTR_ICON) == "mdi:work_reloaded"
 
 
 async def test_load_from_storage(hass, storage_setup):

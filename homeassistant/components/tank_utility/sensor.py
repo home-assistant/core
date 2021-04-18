@@ -7,10 +7,9 @@ import requests
 from tank_utility import auth, device as tank_monitor
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_DEVICES, CONF_EMAIL, CONF_PASSWORD, PERCENTAGE
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,7 +61,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(all_sensors, True)
 
 
-class TankUtilitySensor(Entity):
+class TankUtilitySensor(SensorEntity):
     """Representation of a Tank Utility sensor."""
 
     def __init__(self, email, password, token, device):

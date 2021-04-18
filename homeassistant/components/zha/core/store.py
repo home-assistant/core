@@ -93,7 +93,7 @@ class ZhaStorage:
         """Load the registry of zha device entries."""
         data = await self._store.async_load()
 
-        devices: "OrderedDict[str, ZhaDeviceEntry]" = OrderedDict()
+        devices: OrderedDict[str, ZhaDeviceEntry] = OrderedDict()
 
         if data is not None:
             for device in data["devices"]:

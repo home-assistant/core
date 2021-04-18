@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "Kan geen verbinding maken"
         },
+        "flow_title": "ZHA: {name}",
         "step": {
             "pick_radio": {
                 "data": {

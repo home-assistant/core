@@ -14,8 +14,8 @@
         "flow_title": "deCONZ Zigbee \u9598\u9053\u5668\uff08{host}\uff09",
         "step": {
             "hassio_confirm": {
-                "description": "\u662f\u5426\u8981\u8a2d\u5b9a Home Assistant \u4ee5\u9023\u7dda\u81f3 Hass.io \u9644\u52a0\u5143\u4ef6 {addon} \u4e4b deCONZ \u9598\u9053\u5668\uff1f",
-                "title": "\u4f7f\u7528 Hass.io \u9644\u52a0\u5143\u4ef6 deCONZ Zigbee \u9598\u9053\u5668"
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a Home Assistant \u4ee5\u9023\u7dda\u81f3 deCONZ \u9598\u9053\u5668\u3002\u9644\u52a0\u5143\u4ef6\u70ba\uff1a{addon} \uff1f",
+                "title": "\u4f7f\u7528 Home Assistant \u9644\u52a0\u5143\u4ef6 deCONZ Zigbee \u9598\u9053\u5668"
             },
             "link": {
                 "description": "\u89e3\u9664 deCONZ \u9598\u9053\u5668\u9396\u5b9a\uff0c\u4ee5\u65bc Home Assistant \u9032\u884c\u8a3b\u518a\u3002\n\n1. \u9032\u5165 deCONZ \u7cfb\u7d71\u8a2d\u5b9a -> \u9598\u9053\u5668 -> \u9032\u968e\u8a2d\u5b9a\n2. \u6309\u4e0b\u300c\u8a8d\u8b49\u7a0b\u5f0f\uff08Authenticate app\uff09\u300d\u6309\u9215",
@@ -42,6 +42,10 @@
             "button_2": "\u7b2c\u4e8c\u500b\u6309\u9215",
             "button_3": "\u7b2c\u4e09\u500b\u6309\u9215",
             "button_4": "\u7b2c\u56db\u500b\u6309\u9215",
+            "button_5": "\u7b2c\u4e94\u500b\u6309\u9215",
+            "button_6": "\u7b2c\u516d\u500b\u6309\u9215",
+            "button_7": "\u7b2c\u4e03\u500b\u6309\u9215",
+            "button_8": "\u7b2c\u516b\u500b\u6309\u9215",
             "close": "\u95dc\u9589",
             "dim_down": "\u8abf\u6697",
             "dim_up": "\u8abf\u4eae",

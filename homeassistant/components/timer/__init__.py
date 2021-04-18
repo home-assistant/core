@@ -232,7 +232,7 @@ class Timer(RestoreEntity):
         return self._state
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {
             ATTR_DURATION: _format_timedelta(self._duration),
@@ -327,7 +327,9 @@ class Timer(RestoreEntity):
         if self._state != STATUS_ACTIVE:
             return
 
-        self._listener = None
+        if self._listener:
+            self._listener()
+            self._listener = None
         self._state = STATUS_IDLE
         self._end = None
         self._remaining = None

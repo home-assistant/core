@@ -13,14 +13,17 @@ from homeassistant.const import (
     LENGTH_FEET,
     LENGTH_METERS,
 )
-from homeassistant.core import Config, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.distance import convert as convert_distance
 import homeassistant.util.dt as dt_util
 
-from .const import CONF_TRACK_HOME, DOMAIN
+from .const import (
+    CONF_TRACK_HOME,
+    DEFAULT_HOME_LATITUDE,
+    DEFAULT_HOME_LONGITUDE,
+    DOMAIN,
+)
 
 URL = "https://aa015h6buqvih86i1.api.met.no/weatherapi/locationforecast/2.0/complete"
 
@@ -28,23 +31,29 @@ URL = "https://aa015h6buqvih86i1.api.met.no/weatherapi/locationforecast/2.0/comp
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: Config) -> bool:
-    """Set up configured Met."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
-
-
 async def async_setup_entry(hass, config_entry):
     """Set up Met as config entry."""
-    coordinator = MetDataUpdateCoordinator(hass, config_entry)
-    await coordinator.async_refresh()
+    # Don't setup if tracking home location and latitude or longitude isn't set.
+    # Also, filters out our onboarding default location.
+    if config_entry.data.get(CONF_TRACK_HOME, False) and (
+        (not hass.config.latitude and not hass.config.longitude)
+        or (
+            hass.config.latitude == DEFAULT_HOME_LATITUDE
+            and hass.config.longitude == DEFAULT_HOME_LONGITUDE
+        )
+    ):
+        _LOGGER.warning(
+            "Skip setting up met.no integration; No Home location has been set"
+        )
+        return False
 
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    coordinator = MetDataUpdateCoordinator(hass, config_entry)
+    await coordinator.async_config_entry_first_refresh()
 
     if config_entry.data.get(CONF_TRACK_HOME, False):
         coordinator.track_home()
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = coordinator
 
     hass.async_create_task(
@@ -72,7 +81,7 @@ class MetDataUpdateCoordinator(DataUpdateCoordinator):
         self.weather = MetWeatherData(
             hass, config_entry.data, hass.config.units.is_metric
         )
-        self.weather.init_data()
+        self.weather.set_coordinates()
 
         update_interval = timedelta(minutes=randrange(55, 65))
 
@@ -92,8 +101,8 @@ class MetDataUpdateCoordinator(DataUpdateCoordinator):
 
         async def _async_update_weather_data(_event=None):
             """Update weather data."""
-            self.weather.init_data()
-            await self.async_refresh()
+            if self.weather.set_coordinates():
+                await self.async_refresh()
 
         self._unsub_track_home = self.hass.bus.async_listen(
             EVENT_CORE_CONFIG_UPDATE, _async_update_weather_data
@@ -118,9 +127,10 @@ class MetWeatherData:
         self.current_weather_data = {}
         self.daily_forecast = None
         self.hourly_forecast = None
+        self._coordinates = None
 
-    def init_data(self):
-        """Weather data inialization - get the coordinates."""
+    def set_coordinates(self):
+        """Weather data inialization - set the coordinates."""
         if self._config.get(CONF_TRACK_HOME, False):
             latitude = self.hass.config.latitude
             longitude = self.hass.config.longitude
@@ -140,10 +150,14 @@ class MetWeatherData:
             "lon": str(longitude),
             "msl": str(elevation),
         }
+        if coordinates == self._coordinates:
+            return False
+        self._coordinates = coordinates
 
         self._weather_data = metno.MetWeatherData(
             coordinates, async_get_clientsession(self.hass), api_url=URL
         )
+        return True
 
     async def fetch_data(self):
         """Fetch data from API - (current weather and forecast)."""

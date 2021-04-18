@@ -4,9 +4,8 @@ import asyncio
 import upb_lib
 
 from homeassistant.const import ATTR_COMMAND, CONF_FILE_PATH, CONF_HOST
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_ADDRESS,
@@ -17,11 +16,6 @@ from .const import (
 )
 
 PLATFORMS = ["light", "scene"]
-
-
-async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
-    """Set up the UPB platform."""
-    return True
 
 
 async def async_setup_entry(hass, config_entry):

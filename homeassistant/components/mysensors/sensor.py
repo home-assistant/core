@@ -1,10 +1,12 @@
 """Support for MySensors sensors."""
 from typing import Callable
 
+from awesomeversion import AwesomeVersion
+
 from homeassistant.components import mysensors
 from homeassistant.components.mysensors import on_unload
 from homeassistant.components.mysensors.const import MYSENSORS_DISCOVERY
-from homeassistant.components.sensor import DOMAIN
+from homeassistant.components.sensor import DOMAIN, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONDUCTIVITY,
@@ -87,7 +89,7 @@ async def async_setup_entry(
     )
 
 
-class MySensorsSensor(mysensors.device.MySensorsEntity):
+class MySensorsSensor(mysensors.device.MySensorsEntity, SensorEntity):
     """Representation of a MySensors Sensor child node."""
 
     @property
@@ -115,7 +117,7 @@ class MySensorsSensor(mysensors.device.MySensorsEntity):
         """Return the unit of measurement of this entity."""
         set_req = self.gateway.const.SetReq
         if (
-            float(self.gateway.protocol_version) >= 1.5
+            AwesomeVersion(self.gateway.protocol_version) >= AwesomeVersion("1.5")
             and set_req.V_UNIT_PREFIX in self._values
         ):
             return self._values[set_req.V_UNIT_PREFIX]

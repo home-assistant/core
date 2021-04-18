@@ -170,9 +170,8 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     @property
     def state(self):
         """Get the device state. An exception means OFF state."""
-        if self._tv.on:
-            if self._tv.powerstate == "On" or self._tv.powerstate is None:
-                return STATE_ON
+        if self._tv.on and (self._tv.powerstate == "On" or self._tv.powerstate is None):
+            return STATE_ON
         return STATE_OFF
 
     @property

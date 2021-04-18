@@ -42,6 +42,7 @@ from .const import (
     DATA_SCHEDULES,
     DOMAIN,
     EVENT_TYPE_CANCEL_SET_POINT,
+    EVENT_TYPE_SCHEDULE,
     EVENT_TYPE_SET_POINT,
     EVENT_TYPE_THERM_MODE,
     MANUFACTURER,
@@ -123,10 +124,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
         entities = []
 
         for home_id in get_all_home_ids(home_data):
-            _LOGGER.debug("Setting up home %s ...", home_id)
+            _LOGGER.debug("Setting up home %s", home_id)
             for room_id in home_data.rooms[home_id].keys():
                 room_name = home_data.rooms[home_id][room_id]["name"]
-                _LOGGER.debug("Setting up room %s (%s) ...", room_name, room_id)
+                _LOGGER.debug("Setting up room %s (%s)", room_name, room_id)
                 signal_name = f"{HOMESTATUS_DATA_CLASS_NAME}-{home_id}"
                 await data_handler.register_data_class(
                     HOMESTATUS_DATA_CLASS_NAME, signal_name, None, home_id=home_id
@@ -236,6 +237,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             EVENT_TYPE_SET_POINT,
             EVENT_TYPE_THERM_MODE,
             EVENT_TYPE_CANCEL_SET_POINT,
+            EVENT_TYPE_SCHEDULE,
         ):
             self._listeners.append(
                 async_dispatcher_connect(
@@ -253,7 +255,15 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         """Handle webhook events."""
         data = event["data"]
 
-        if data.get("home") is None:
+        if self._home_id != data["home_id"]:
+            return
+
+        if data["event_type"] == EVENT_TYPE_SCHEDULE and "schedule_id" in data:
+            self._selected_schedule = self.hass.data[DOMAIN][DATA_SCHEDULES][
+                self._home_id
+            ].get(data["schedule_id"])
+            self.async_write_ha_state()
+            self.data_handler.async_force_update(self._home_status_class)
             return
 
         home = data["home"]
@@ -270,35 +280,37 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                 self._target_temperature = self._away_temperature
             elif self._preset == PRESET_SCHEDULE:
                 self.async_update_callback()
+                self.data_handler.async_force_update(self._home_status_class)
             self.async_write_ha_state()
             return
 
-        if not home.get("rooms"):
-            return
-
-        for room in home["rooms"]:
-            if data["event_type"] == EVENT_TYPE_SET_POINT:
-                if self._id == room["id"]:
-                    if room["therm_setpoint_mode"] == STATE_NETATMO_OFF:
-                        self._hvac_mode = HVAC_MODE_OFF
-                    elif room["therm_setpoint_mode"] == STATE_NETATMO_MAX:
+        for room in home.get("rooms", []):
+            if data["event_type"] == EVENT_TYPE_SET_POINT and self._id == room["id"]:
+                if room["therm_setpoint_mode"] == STATE_NETATMO_OFF:
+                    self._hvac_mode = HVAC_MODE_OFF
+                    self._preset = STATE_NETATMO_OFF
+                    self._target_temperature = 0
+                elif room["therm_setpoint_mode"] == STATE_NETATMO_MAX:
+                    self._hvac_mode = HVAC_MODE_HEAT
+                    self._preset = PRESET_MAP_NETATMO[PRESET_BOOST]
+                    self._target_temperature = DEFAULT_MAX_TEMP
+                elif room["therm_setpoint_mode"] == STATE_NETATMO_MANUAL:
+                    self._hvac_mode = HVAC_MODE_HEAT
+                    self._target_temperature = room["therm_setpoint_temperature"]
+                else:
+                    self._target_temperature = room["therm_setpoint_temperature"]
+                    if self._target_temperature == DEFAULT_MAX_TEMP:
                         self._hvac_mode = HVAC_MODE_HEAT
-                        self._target_temperature = DEFAULT_MAX_TEMP
-                    elif room["therm_setpoint_mode"] == STATE_NETATMO_MANUAL:
-                        self._hvac_mode = HVAC_MODE_HEAT
-                        self._target_temperature = room["therm_setpoint_temperature"]
-                    else:
-                        self._target_temperature = room["therm_setpoint_temperature"]
-                        if self._target_temperature == DEFAULT_MAX_TEMP:
-                            self._hvac_mode = HVAC_MODE_HEAT
-                    self.async_write_ha_state()
-                    break
+                self.async_write_ha_state()
+                return
 
-            elif data["event_type"] == EVENT_TYPE_CANCEL_SET_POINT:
-                if self._id == room["id"]:
-                    self.async_update_callback()
-                    self.async_write_ha_state()
-                    break
+            if (
+                data["event_type"] == EVENT_TYPE_CANCEL_SET_POINT
+                and self._id == room["id"]
+            ):
+                self.async_update_callback()
+                self.async_write_ha_state()
+                return
 
     @property
     def supported_features(self):

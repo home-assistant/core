@@ -7,6 +7,7 @@ documentation as possible to keep it understandable.
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 import functools as ft
 import importlib
 import json
@@ -48,10 +49,9 @@ CUSTOM_WARNING = (
 )
 CUSTOM_WARNING_VERSION_MISSING = (
     "No 'version' key in the manifest file for "
-    "custom integration '%s'. This will not be "
-    "allowed in a future version of Home "
-    "Assistant. Please report this to the "
-    "maintainer of '%s'"
+    "custom integration '%s'. As of Home Assistant "
+    "2021.6, this integration will no longer be "
+    "loaded. Please report this to the maintainer of '%s'"
 )
 CUSTOM_WARNING_VERSION_TYPE = (
     "'%s' is not a valid version for "
@@ -81,6 +81,7 @@ class Manifest(TypedDict, total=False):
     documentation: str
     issue_tracker: str
     quality_scale: str
+    iot_class: str
     mqtt: list[str]
     ssdp: list[dict[str, str]]
     zeroconf: list[str | dict[str, str]]
@@ -391,6 +392,11 @@ class Integration:
         return self.manifest.get("quality_scale")
 
     @property
+    def iot_class(self) -> str | None:
+        """Return the integration IoT Class."""
+        return self.manifest.get("iot_class")
+
+    @property
     def mqtt(self) -> list[str] | None:
         """Return Integration MQTT entries."""
         return self.manifest.get("mqtt")
@@ -587,10 +593,8 @@ def _load_file(
     Only returns it if also found to be valid.
     Async friendly.
     """
-    try:
+    with suppress(KeyError):
         return hass.data[DATA_COMPONENTS][comp_or_platform]  # type: ignore
-    except KeyError:
-        pass
 
     cache = hass.data.get(DATA_COMPONENTS)
     if cache is None:

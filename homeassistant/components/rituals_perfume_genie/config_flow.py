@@ -7,9 +7,10 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.data_entry_flow import FlowResultDict
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import ACCOUNT_HASH, DOMAIN  # pylint:disable=unused-import
+from .const import ACCOUNT_HASH, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input=None) -> FlowResultDict:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)

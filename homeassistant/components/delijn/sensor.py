@@ -5,11 +5,10 @@ from pydelijn.api import Passages
 from pydelijn.common import HttpException
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, DEVICE_CLASS_TIMESTAMP
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,7 +57,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(sensors, True)
 
 
-class DeLijnPublicTransportSensor(Entity):
+class DeLijnPublicTransportSensor(SensorEntity):
     """Representation of a Ruter sensor."""
 
     def __init__(self, line):

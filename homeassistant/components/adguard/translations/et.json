@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Teenus on juba seadistatud",
             "existing_instance_updated": "Olemasolevad seaded v\u00e4rskendatud.",
             "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
         },
@@ -9,8 +10,8 @@
         },
         "step": {
             "hassio_confirm": {
-                "description": "Kas soovid seadistada Home Assistant-i \u00fchenduse AdGuard Home'iga mida pakub Hass.io lisandmoodul: {addon} ?",
-                "title": "AdGuard Home Hass.io lisandmooduli abil"
+                "description": "Kas soovid seadistada Home Assistant-i \u00fchenduse AdGuard Home'iga mida pakub lisandmoodul: {addon} ?",
+                "title": "AdGuard Home  Home Assistanti lisandmooduli abil"
             },
             "user": {
                 "data": {

@@ -116,7 +116,7 @@ class StarlineAccount:
 
     def unload(self):
         """Unload StarLine API."""
-        _LOGGER.debug("Unloading StarLine API.")
+        _LOGGER.debug("Unloading StarLine API")
         if self._unsubscribe_auto_updater is not None:
             self._unsubscribe_auto_updater()
             self._unsubscribe_auto_updater = None

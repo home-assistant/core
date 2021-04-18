@@ -162,6 +162,16 @@ async def async_get_addon_info(hass: HomeAssistantType, slug: str) -> dict:
 
 
 @bind_hass
+async def async_update_diagnostics(hass: HomeAssistantType, diagnostics: bool) -> dict:
+    """Update Supervisor diagnostics toggle.
+
+    The caller of the function should handle HassioAPIError.
+    """
+    hassio = hass.data[DOMAIN]
+    return await hassio.update_diagnostics(diagnostics)
+
+
+@bind_hass
 @api_data
 async def async_install_addon(hass: HomeAssistantType, slug: str) -> dict:
     """Install add-on.
@@ -313,7 +323,7 @@ def get_core_info(hass):
 
 @callback
 @bind_hass
-def is_hassio(hass):
+def is_hassio(hass: HomeAssistant) -> bool:
     """Return true if Hass.io is loaded.
 
     Async friendly.

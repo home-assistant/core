@@ -21,7 +21,6 @@ from homeassistant.components.webhook import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
@@ -121,9 +120,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     data_manager = await async_get_data_manager(hass, entry)
 
     _LOGGER.debug("Confirming %s is authenticated to withings", data_manager.profile)
-    await data_manager.poll_data_update_coordinator.async_refresh()
-    if not data_manager.poll_data_update_coordinator.last_update_success:
-        raise ConfigEntryNotReady()
+    await data_manager.poll_data_update_coordinator.async_config_entry_first_refresh()
 
     webhook.async_register(
         hass,

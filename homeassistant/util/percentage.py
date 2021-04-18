@@ -8,7 +8,7 @@ def ordered_list_item_to_percentage(ordered_list: list[str], item: str) -> int:
     When using this utility for fan speeds, do not include "off"
 
     Given the list: ["low", "medium", "high", "very_high"], this
-    function will return the following when when the item is passed
+    function will return the following when the item is passed
     in:
 
         low: 25
@@ -66,7 +66,8 @@ def ranged_value_to_percentage(
     (1,255), 127: 50
     (1,255), 10: 4
     """
-    return int((value * 100) // states_in_range(low_high_range))
+    offset = low_high_range[0] - 1
+    return int(((value - offset) * 100) // states_in_range(low_high_range))
 
 
 def percentage_to_ranged_value(
@@ -83,7 +84,8 @@ def percentage_to_ranged_value(
     (1,255), 50: 127.5
     (1,255), 4: 10.2
     """
-    return states_in_range(low_high_range) * percentage / 100
+    offset = low_high_range[0] - 1
+    return states_in_range(low_high_range) * percentage / 100 + offset
 
 
 def states_in_range(low_high_range: tuple[float, float]) -> float:

@@ -299,7 +299,7 @@ async def test_device_info_is_set_from_status_correctly(hass, patch_get_status):
     # Reformat mock status-sw_version for assertion.
     mock_version = MOCK_STATUS_STANDBY["system-version"]
     mock_version = mock_version[1:4]
-    mock_version = "{}.{}".format(mock_version[0], mock_version[1:])
+    mock_version = f"{mock_version[0]}.{mock_version[1:]}"
 
     mock_state = hass.states.get(mock_entity_id).state
 

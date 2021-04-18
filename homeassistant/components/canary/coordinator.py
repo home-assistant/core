@@ -6,7 +6,7 @@ from async_timeout import timeout
 from canary.api import Api
 from requests import ConnectTimeout, HTTPError
 
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 class CanaryDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching Canary data."""
 
-    def __init__(self, hass: HomeAssistantType, *, api: Api):
+    def __init__(self, hass: HomeAssistant, *, api: Api):
         """Initialize global Canary data updater."""
         self.canary = api
         update_interval = timedelta(seconds=30)

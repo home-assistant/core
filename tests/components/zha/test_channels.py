@@ -415,10 +415,11 @@ async def test_ep_channels_configure(channel):
     claimed = {ch_1.id: ch_1, ch_2.id: ch_2, ch_3.id: ch_3}
     client_chans = {ch_4.id: ch_4, ch_5.id: ch_5}
 
-    with mock.patch.dict(ep_channels.claimed_channels, claimed, clear=True):
-        with mock.patch.dict(ep_channels.client_channels, client_chans, clear=True):
-            await ep_channels.async_configure()
-            await ep_channels.async_initialize(mock.sentinel.from_cache)
+    with mock.patch.dict(
+        ep_channels.claimed_channels, claimed, clear=True
+    ), mock.patch.dict(ep_channels.client_channels, client_chans, clear=True):
+        await ep_channels.async_configure()
+        await ep_channels.async_initialize(mock.sentinel.from_cache)
 
     for ch in [*claimed.values(), *client_chans.values()]:
         assert ch.async_initialize.call_count == 1
@@ -489,6 +490,38 @@ async def test_poll_control_cluster_command(hass, poll_control_device):
     assert data["args"][2] is mock.sentinel.args3
     assert data["unique_id"] == "00:11:22:33:44:55:66:77:1:0x0020"
     assert data["device_id"] == poll_control_device.device_id
+
+
+async def test_poll_control_ignore_list(hass, poll_control_device):
+    """Test poll control channel ignore list."""
+    set_long_poll_mock = AsyncMock()
+    poll_control_ch = poll_control_device.channels.pools[0].all_channels["1:0x0020"]
+    cluster = poll_control_ch.cluster
+
+    with mock.patch.object(cluster, "set_long_poll_interval", set_long_poll_mock):
+        await poll_control_ch.check_in_response(33)
+
+    assert set_long_poll_mock.call_count == 1
+
+    set_long_poll_mock.reset_mock()
+    poll_control_ch.skip_manufacturer_id(4151)
+    with mock.patch.object(cluster, "set_long_poll_interval", set_long_poll_mock):
+        await poll_control_ch.check_in_response(33)
+
+    assert set_long_poll_mock.call_count == 0
+
+
+async def test_poll_control_ikea(hass, poll_control_device):
+    """Test poll control channel ignore list for ikea."""
+    set_long_poll_mock = AsyncMock()
+    poll_control_ch = poll_control_device.channels.pools[0].all_channels["1:0x0020"]
+    cluster = poll_control_ch.cluster
+
+    poll_control_device.device.node_desc.manufacturer_code = 4476
+    with mock.patch.object(cluster, "set_long_poll_interval", set_long_poll_mock):
+        await poll_control_ch.check_in_response(33)
+
+    assert set_long_poll_mock.call_count == 0
 
 
 @pytest.fixture

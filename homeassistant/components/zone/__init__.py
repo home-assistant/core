@@ -315,7 +315,7 @@ class Zone(entity.Entity):
         return self._config.get(CONF_ICON)
 
     @property
-    def state_attributes(self) -> dict | None:
+    def extra_state_attributes(self) -> dict | None:
         """Return the state attributes of the zone."""
         return self._attrs
 

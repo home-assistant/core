@@ -6,10 +6,9 @@ from datetime import timedelta
 from pyessent import PyEssent
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, ENERGY_KILO_WATT_HOUR
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 SCAN_INTERVAL = timedelta(hours=1)
@@ -82,7 +81,7 @@ class EssentBase:
                 self._meter_data[possible_meter] = meter_data
 
 
-class EssentMeter(Entity):
+class EssentMeter(SensorEntity):
     """Representation of Essent measurements."""
 
     def __init__(self, essent_base, meter, meter_type, tariff, unit):

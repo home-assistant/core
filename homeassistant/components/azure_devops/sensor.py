@@ -17,9 +17,10 @@ from homeassistant.components.azure_devops.const import (
     DATA_PROJECT,
     DOMAIN,
 )
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.typing import HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +31,7 @@ BUILDS_QUERY = "?queryOrder=queueTimeDescending&maxBuildsPerDefinition=1"
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up Azure DevOps sensor based on a config entry."""
     instance_key = f"{DOMAIN}_{entry.data[CONF_ORG]}_{entry.data[CONF_PROJECT]}"
@@ -55,7 +56,7 @@ async def async_setup_entry(
     async_add_entities(sensors, True)
 
 
-class AzureDevOpsSensor(AzureDevOpsDeviceEntity):
+class AzureDevOpsSensor(AzureDevOpsDeviceEntity, SensorEntity):
     """Defines a Azure DevOps sensor."""
 
     def __init__(

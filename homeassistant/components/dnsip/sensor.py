@@ -6,10 +6,9 @@ import aiodns
 from aiodns.error import DNSError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,7 +54,7 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
     async_add_devices([WanIpSensor(hass, name, hostname, resolver, ipv6)], True)
 
 
-class WanIpSensor(Entity):
+class WanIpSensor(SensorEntity):
     """Implementation of a DNS IP sensor."""
 
     def __init__(self, hass, name, hostname, resolver, ipv6):

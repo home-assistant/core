@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from time import gmtime, strftime, time
+from time import localtime, strftime, time
 
 from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
@@ -82,7 +82,7 @@ SCHEMA_HOLD_TIME = {
     vol.Required(ATTR_TIME_PERIOD, default="01:00:00"): vol.All(
         cv.time_period,
         cv.positive_timedelta,
-        lambda td: strftime("%H:%M:%S", gmtime(time() + td.total_seconds())),
+        lambda td: strftime("%H:%M:%S", localtime(time() + td.total_seconds())),
     )
 }
 
@@ -248,19 +248,27 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
 
         device = self.device
         if device.hasDualSetpointStatus:
-            if target_temp_low is not None and target_temp_high is not None:
-                temp = (target_temp_low, target_temp_high)
-            else:
+            if target_temp_low is None or target_temp_high is None:
                 raise HomeAssistantError(
                     "Could not find target_temp_low and/or target_temp_high in arguments"
                 )
+            _LOGGER.debug("Set temperature: %s - %s", target_temp_low, target_temp_high)
+            try:
+                await self._update_thermostat(
+                    self.location,
+                    device,
+                    coolSetpoint=target_temp_low,
+                    heatSetpoint=target_temp_high,
+                )
+            except LYRIC_EXCEPTIONS as exception:
+                _LOGGER.error(exception)
         else:
             temp = kwargs.get(ATTR_TEMPERATURE)
-        _LOGGER.debug("Set temperature: %s", temp)
-        try:
-            await self._update_thermostat(self.location, device, heatSetpoint=temp)
-        except LYRIC_EXCEPTIONS as exception:
-            _LOGGER.error(exception)
+            _LOGGER.debug("Set temperature: %s", temp)
+            try:
+                await self._update_thermostat(self.location, device, heatSetpoint=temp)
+            except LYRIC_EXCEPTIONS as exception:
+                _LOGGER.error(exception)
         await self.coordinator.async_refresh()
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:

@@ -11,7 +11,7 @@
         },
         "step": {
             "pick_implementation": {
-                "title": "Kies de authenticatie methode"
+                "title": "Kies een authenticatie methode"
             }
         }
     }

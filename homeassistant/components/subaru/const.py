@@ -36,12 +36,7 @@ PLATFORMS = [
 
 ICONS = {
     "Avg Fuel Consumption": "mdi:leaf",
-    "EV Time to Full Charge": "mdi:car-electric",
     "EV Range": "mdi:ev-station",
     "Odometer": "mdi:road-variant",
     "Range": "mdi:gas-station",
-    "Tire Pressure FL": "mdi:gauge",
-    "Tire Pressure FR": "mdi:gauge",
-    "Tire Pressure RL": "mdi:gauge",
-    "Tire Pressure RR": "mdi:gauge",
 }

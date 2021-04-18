@@ -15,14 +15,14 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     SERVICE_RELOAD,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceCallType
+from homeassistant.helpers.typing import ConfigType, ServiceCallType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -112,7 +112,7 @@ STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an input slider."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     id_manager = collection.IDManager()
@@ -256,7 +256,7 @@ class InputNumber(RestoreEntity):
         return self._config[CONF_ID]
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             ATTR_INITIAL: self._config.get(CONF_INITIAL),

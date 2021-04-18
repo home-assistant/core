@@ -711,7 +711,7 @@ def deprecated(
         - No warning if neither key nor replacement_key are provided
             - Adds replacement_key with default value in this case
     """
-    module = inspect.getmodule(inspect.stack()[1][0])
+    module = inspect.getmodule(inspect.stack(context=0)[1].frame)
     if module is not None:
         module_name = module.__name__
     else:
@@ -916,7 +916,7 @@ SERVICE_SCHEMA = vol.All(
             vol.Optional("data"): vol.All(dict, template_complex),
             vol.Optional("data_template"): vol.All(dict, template_complex),
             vol.Optional(CONF_ENTITY_ID): comp_entity_ids,
-            vol.Optional(CONF_TARGET): ENTITY_SERVICE_FIELDS,
+            vol.Optional(CONF_TARGET): vol.Any(ENTITY_SERVICE_FIELDS, dynamic_template),
         }
     ),
     has_at_least_one_key(CONF_SERVICE, CONF_SERVICE_TEMPLATE),
@@ -1200,7 +1200,7 @@ SCRIPT_ACTION_WAIT_FOR_TRIGGER = "wait_for_trigger"
 SCRIPT_ACTION_VARIABLES = "variables"
 
 
-def determine_script_action(action: dict) -> str:
+def determine_script_action(action: dict[str, Any]) -> str:
     """Determine action type."""
     if CONF_DELAY in action:
         return SCRIPT_ACTION_DELAY
