@@ -117,20 +117,26 @@ async def test_discovery(hass, pywemo_registry):
     with patch(
         "pywemo.discover_devices", return_value=pywemo_devices
     ) as mock_discovery:
-        assert await async_setup_component(
-            hass, DOMAIN, {DOMAIN: {CONF_DISCOVERY: True}}
-        )
-        await pywemo_registry.semaphore.acquire()  # Returns after platform setup.
-        mock_discovery.assert_called()
-        pywemo_devices.append(create_device(2))
+        with patch(
+            "homeassistant.components.wemo.WemoDiscovery.discover_statics"
+        ) as mock_discover_statics:
+            assert await async_setup_component(
+                hass, DOMAIN, {DOMAIN: {CONF_DISCOVERY: True}}
+            )
+            await pywemo_registry.semaphore.acquire()  # Returns after platform setup.
+            mock_discovery.assert_called()
+            mock_discover_statics.assert_called()
+            pywemo_devices.append(create_device(2))
 
-        # Test that discovery runs periodically and the async_dispatcher_send code works.
-        async_fire_time_changed(
-            hass,
-            dt.utcnow()
-            + timedelta(seconds=WemoDiscovery.ADDITIONAL_SECONDS_BETWEEN_SCANS + 1),
-        )
-        await hass.async_block_till_done()
+            # Test that discovery runs periodically and the async_dispatcher_send code works.
+            async_fire_time_changed(
+                hass,
+                dt.utcnow()
+                + timedelta(seconds=WemoDiscovery.ADDITIONAL_SECONDS_BETWEEN_SCANS + 1),
+            )
+            await hass.async_block_till_done()
+            # Test that discover_statics runs during discovery
+            assert mock_discover_statics.call_count == 3
 
     # Verify that the expected number of devices were setup.
     entity_reg = er.async_get(hass)
