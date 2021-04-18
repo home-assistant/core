@@ -644,14 +644,11 @@ class Thermostat(ClimateEntity):
             _LOGGER.error(error)
             return
 
-        cool_temp = self.thermostat["runtime"]["desiredCool"] / 10.0
-        heat_temp = self.thermostat["runtime"]["desiredHeat"] / 10.0
         self.data.ecobee.set_fan_mode(
             self.thermostat_index,
             fan_mode,
-            cool_temp,
-            heat_temp,
             self.hold_preference(),
+            holdHours=self.hold_hours(),
         )
 
         _LOGGER.info("Setting fan mode to: %s", fan_mode)
