@@ -5,11 +5,6 @@ import logging
 from pysyncthru import SyncThru, SyncthruState
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
-    DEVICE_CLASS_PROBLEM,
-    BinarySensorEntity,
-)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_NAME, CONF_RESOURCE, CONF_URL, PERCENTAGE
@@ -156,33 +151,6 @@ class SyncThruSensor(Entity):
         return {"identifiers": device_identifiers(self.syncthru)}
 
 
-class SyncThruBinarySensor(BinarySensorEntity):
-    """Implementation of an abstract Samsung Printer sensor platform."""
-
-    def __init__(self, syncthru, name):
-        """Initialize the sensor."""
-        self.syncthru: SyncThru = syncthru
-        self._state = None
-        self._name = name
-        self._id_suffix = ""
-
-    @property
-    def unique_id(self):
-        """Return unique ID for the sensor."""
-        serial = self.syncthru.serial_number()
-        return serial + self._id_suffix if serial else super().unique_id
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def device_info(self):
-        """Return device information."""
-        return {"identifiers": device_identifiers(self.syncthru)}
-
-
 class SyncThruMainSensor(SyncThruSensor):
     """
     Implementation of the main sensor, conducting the actual polling.
@@ -222,48 +190,6 @@ class SyncThruMainSensor(SyncThruSensor):
         self._attributes = {
             "display_text": self.syncthru.device_status_details(),
         }
-
-
-class SyncThruOnlineSensor(SyncThruBinarySensor):
-    """Implementation of a sensor that checks whether is turned on/online."""
-
-    def __init__(self, syncthru, name):
-        """Initialize the sensor."""
-        super().__init__(syncthru, name)
-        self._id_suffix = "_online"
-
-    def is_on(self):
-        """Whether the printer is online."""
-        return self._state
-
-    def device_class(self):
-        """Class of the sensor."""
-        return DEVICE_CLASS_CONNECTIVITY
-
-    async def async_update(self):
-        """Get the latest data from SyncThru and update the state."""
-        self._state = self.syncthru.is_online()
-
-
-class SyncThruProblemSensor(SyncThruBinarySensor):
-    """Implementation of a sensor that checks whether the printer works correctly."""
-
-    def __init__(self, syncthru, name):
-        """Initialize the sensor."""
-        super().__init__(syncthru, name)
-        self._id_suffix = "_problem"
-
-    def is_on(self):
-        """Whether there is a problem with the printer."""
-        return self._state
-
-    def device_class(self):
-        """Class of the sensor."""
-        return DEVICE_CLASS_PROBLEM
-
-    async def async_update(self):
-        """Get the latest data from SyncThru and update the state."""
-        self._state = SYNCTHRU_STATE_PROBLEM[self.syncthru.device_status()]
 
 
 class SyncThruTonerSensor(SyncThruSensor):
