@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime, timedelta
 import enum
-from functools import wraps
+from functools import lru_cache, wraps
 import random
 import re
 import socket
@@ -129,6 +129,7 @@ def ensure_unique_string(
 
 
 # Taken from: http://stackoverflow.com/a/11735897
+@lru_cache(maxsize=None)
 def get_local_ip() -> str:
     """Try to determine the local IP address of the machine."""
     try:
