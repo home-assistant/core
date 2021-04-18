@@ -29,6 +29,7 @@ from .const import (
     ATTR_DEVICES_LIST,
     ATTR_LAST_ACTIVITY,
     DOMAIN,
+    HARMONY_DATA,
     HARMONY_OPTIONS_UPDATE,
     PREVIOUS_ACTIVE_ACTIVITY,
     SERVICE_CHANGE_CHANNEL,
@@ -58,7 +59,7 @@ async def async_setup_entry(
 ):
     """Set up the Harmony config entry."""
 
-    data = hass.data[DOMAIN][entry.entry_id]
+    data = hass.data[DOMAIN][entry.entry_id][HARMONY_DATA]
 
     _LOGGER.debug("HarmonyData : %s", data)
 
