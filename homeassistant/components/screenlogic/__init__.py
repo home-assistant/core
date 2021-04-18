@@ -11,20 +11,30 @@ from screenlogicpy.const import (
     SL_GATEWAY_NAME,
     SL_GATEWAY_PORT,
 )
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
     UpdateFailed,
 )
+from homeassistant.util import slugify
 
-from .config_flow import async_discover_gateways_by_unique_id, name_for_mac
-from .const import DEFAULT_SCAN_INTERVAL, DISCOVERED_GATEWAYS, DOMAIN
+from .config_flow import async_discover_gateways_by_unique_id, name_for_mac, short_mac
+from .const import (
+    ATTR_COLOR_MODE,
+    DEFAULT_SCAN_INTERVAL,
+    DISCOVERED_GATEWAYS,
+    DOMAIN,
+    SET_COLOR_MODE_SERVICE_DESCRIPTION,
+    SUPPORTED_COLOR_MODES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,9 +78,43 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass, config_entry=entry, gateway=gateway, api_lock=api_lock
     )
 
-    device_data = defaultdict(list)
+    color_mode_service_name = slugify(f"{short_mac(mac)}_set_color_mode")
+
+    async def _set_color_mode(service):
+        _LOGGER.debug("Service %s called", color_mode_service_name)
+        if (color_mode := service.data.get(ATTR_COLOR_MODE, None)) is None:
+            raise ValueError(f"Failed to call service '{color_mode_service_name}'")
+        try:
+            color_num = SUPPORTED_COLOR_MODES[color_mode]
+            async with api_lock:
+                if not await hass.async_add_executor_job(
+                    gateway.set_color_lights, color_num
+                ):
+                    raise HomeAssistantError(
+                        f"Failed to call service '{color_mode_service_name}'"
+                    )
+        except ScreenLogicError as error:
+            raise HomeAssistantError(error) from error
+
+    await hass.async_add_executor_job(
+        hass.services.register,
+        DOMAIN,
+        color_mode_service_name,
+        _set_color_mode,
+        vol.Schema(
+            {
+                vol.Required(ATTR_COLOR_MODE): vol.In(SUPPORTED_COLOR_MODES),
+            }
+        ),
+    )
+
+    async_set_service_schema(
+        hass, DOMAIN, color_mode_service_name, SET_COLOR_MODE_SERVICE_DESCRIPTION
+    )
 
     await coordinator.async_config_entry_first_refresh()
+
+    device_data = defaultdict(list)
 
     for circuit in coordinator.data["circuits"]:
         device_data["switch"].append(circuit)
@@ -137,6 +181,7 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
         self.gateway = gateway
         self.api_lock = api_lock
         self.screenlogic_data = {}
+
         interval = timedelta(
             seconds=config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         )
