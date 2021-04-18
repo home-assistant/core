@@ -52,9 +52,9 @@ class SmartTubController:
             self._account = await self.login(
                 entry.data[CONF_EMAIL], entry.data[CONF_PASSWORD]
             )
-        except LoginFailed:
+        except LoginFailed as ex:
             # credentials were changed or invalidated, we need new ones
-            raise ConfigEntryAuthFailed
+            raise ConfigEntryAuthFailed from ex
         except (
             asyncio.TimeoutError,
             client_exceptions.ClientOSError,
