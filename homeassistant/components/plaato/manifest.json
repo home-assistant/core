@@ -6,5 +6,6 @@
   "dependencies": ["webhook"],
   "after_dependencies": ["cloud"],
   "codeowners": ["@JohNan"],
-  "requirements": ["pyplaato==0.0.15"]
+  "requirements": ["pyplaato==0.0.15"],
+  "iot_class": "cloud_push"
 }

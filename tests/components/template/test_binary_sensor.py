@@ -26,13 +26,19 @@ async def test_setup(hass):
             "sensors": {
                 "test": {
                     "friendly_name": "virtual thingy",
-                    "value_template": "{{ foo }}",
+                    "value_template": "{{ True }}",
                     "device_class": "motion",
                 }
             },
         }
     }
     assert await setup.async_setup_component(hass, binary_sensor.DOMAIN, config)
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test")
+    assert state is not None
+    assert state.name == "virtual thingy"
+    assert state.state == "on"
+    assert state.attributes["device_class"] == "motion"
 
 
 async def test_setup_no_sensors(hass):
@@ -40,6 +46,8 @@ async def test_setup_no_sensors(hass):
     assert await setup.async_setup_component(
         hass, binary_sensor.DOMAIN, {"binary_sensor": {"platform": "template"}}
     )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids()) == 0
 
 
 async def test_setup_invalid_device(hass):
@@ -49,6 +57,8 @@ async def test_setup_invalid_device(hass):
         binary_sensor.DOMAIN,
         {"binary_sensor": {"platform": "template", "sensors": {"foo bar": {}}}},
     )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids()) == 0
 
 
 async def test_setup_invalid_device_class(hass):
@@ -68,6 +78,8 @@ async def test_setup_invalid_device_class(hass):
             }
         },
     )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids()) == 0
 
 
 async def test_setup_invalid_missing_template(hass):
@@ -82,6 +94,8 @@ async def test_setup_invalid_missing_template(hass):
             }
         },
     )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids()) == 0
 
 
 async def test_icon_template(hass):

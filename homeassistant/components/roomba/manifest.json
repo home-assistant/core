@@ -6,14 +6,14 @@
   "requirements": ["roombapy==1.6.2"],
   "codeowners": ["@pschmitt", "@cyr-ius", "@shenxn"],
   "dhcp": [
-      {
-        "hostname" : "irobot-*",
-        "macaddress" : "501479*"
-      },
-      {
-        "hostname" : "roomba-*",
-        "macaddress" : "80A589*"
-      }
-   ]
+    {
+      "hostname": "irobot-*",
+      "macaddress": "501479*"
+    },
+    {
+      "hostname": "roomba-*",
+      "macaddress": "80A589*"
+    }
+  ],
+  "iot_class": "local_push"
 }
-

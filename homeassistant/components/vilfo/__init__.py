@@ -10,7 +10,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util import Throttle
 
 from .const import ATTR_BOOT_TIME, ATTR_LOAD, DOMAIN, ROUTER_DEFAULT_HOST
@@ -20,12 +19,6 @@ PLATFORMS = ["sensor"]
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup(hass: HomeAssistantType, config: ConfigType):
-    """Set up the Vilfo Router component."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -40,6 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if not vilfo_router.available:
         raise ConfigEntryNotReady
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = vilfo_router
 
     for platform in PLATFORMS:

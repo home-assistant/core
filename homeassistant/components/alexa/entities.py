@@ -504,12 +504,12 @@ class LightCapabilities(AlexaEntity):
         """Yield the supported interfaces."""
         yield AlexaPowerController(self.entity)
 
-        supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        if supported & light.SUPPORT_BRIGHTNESS:
+        color_modes = self.entity.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES)
+        if light.brightness_supported(color_modes):
             yield AlexaBrightnessController(self.entity)
-        if supported & light.SUPPORT_COLOR:
+        if light.color_supported(color_modes):
             yield AlexaColorController(self.entity)
-        if supported & light.SUPPORT_COLOR_TEMP:
+        if light.color_temp_supported(color_modes):
             yield AlexaColorTemperatureController(self.entity)
 
         yield AlexaEndpointHealth(self.hass, self.entity)

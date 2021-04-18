@@ -47,6 +47,7 @@ from .core.const import (
     CHANNEL_COLOR,
     CHANNEL_LEVEL,
     CHANNEL_ON_OFF,
+    CONF_DEFAULT_LIGHT_TRANSITION,
     DATA_ZHA,
     DATA_ZHA_DISPATCHERS,
     EFFECT_BLINK,
@@ -56,7 +57,7 @@ from .core.const import (
     SIGNAL_ATTR_UPDATED,
     SIGNAL_SET_LEVEL,
 )
-from .core.helpers import LogMixin
+from .core.helpers import LogMixin, async_get_zha_config_value
 from .core.registries import ZHA_ENTITIES
 from .core.typing import ZhaDeviceType
 from .entity import ZhaEntity, ZhaGroupEntity
@@ -139,6 +140,7 @@ class BaseLight(LogMixin, light.LightEntity):
         self._level_channel = None
         self._color_channel = None
         self._identify_channel = None
+        self._default_transition = None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -207,7 +209,13 @@ class BaseLight(LogMixin, light.LightEntity):
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
         transition = kwargs.get(light.ATTR_TRANSITION)
-        duration = transition * 10 if transition else DEFAULT_TRANSITION
+        duration = (
+            transition * 10
+            if transition
+            else self._default_transition * 10
+            if self._default_transition
+            else DEFAULT_TRANSITION
+        )
         brightness = kwargs.get(light.ATTR_BRIGHTNESS)
         effect = kwargs.get(light.ATTR_EFFECT)
         flash = kwargs.get(light.ATTR_FLASH)
@@ -389,6 +397,10 @@ class Light(BaseLight, ZhaEntity):
         if effect_list:
             self._effect_list = effect_list
 
+        self._default_transition = async_get_zha_config_value(
+            zha_device.gateway.config_entry, CONF_DEFAULT_LIGHT_TRANSITION, 0
+        )
+
     @callback
     def async_set_state(self, attr_id, attr_name, value):
         """Set the state."""
@@ -521,7 +533,7 @@ class HueLight(Light):
 @STRICT_MATCH(
     channel_names=CHANNEL_ON_OFF,
     aux_channels={CHANNEL_COLOR, CHANNEL_LEVEL},
-    manufacturers="Jasco",
+    manufacturers={"Jasco", "Quotra-Vision"},
 )
 class ForceOnLight(Light):
     """Representation of a light which does not respect move_to_level_with_on_off."""
@@ -544,6 +556,9 @@ class LightGroup(BaseLight, ZhaGroupEntity):
         self._color_channel = group.endpoint[Color.cluster_id]
         self._identify_channel = group.endpoint[Identify.cluster_id]
         self._debounced_member_refresh = None
+        self._default_transition = async_get_zha_config_value(
+            zha_device.gateway.config_entry, CONF_DEFAULT_LIGHT_TRANSITION, 0
+        )
 
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""

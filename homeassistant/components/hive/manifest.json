@@ -3,11 +3,7 @@
   "name": "Hive",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hive",
-  "requirements": [
-    "pyhiveapi==0.4.1"
-  ],
-  "codeowners": [
-    "@Rendili",
-    "@KJonline"
-  ]
+  "requirements": ["pyhiveapi==0.4.1"],
+  "codeowners": ["@Rendili", "@KJonline"],
+  "iot_class": "cloud_polling"
 }

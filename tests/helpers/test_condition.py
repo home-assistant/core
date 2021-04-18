@@ -237,6 +237,14 @@ async def test_and_condition_with_template(hass):
 
     hass.states.async_set("sensor.temperature", 120)
     assert not test(hass)
+    assert_condition_trace(
+        {
+            "": [{"result": {"result": False}}],
+            "conditions/0": [
+                {"result": {"entities": ["sensor.temperature"], "result": False}}
+            ],
+        }
+    )
 
     hass.states.async_set("sensor.temperature", 105)
     assert not test(hass)

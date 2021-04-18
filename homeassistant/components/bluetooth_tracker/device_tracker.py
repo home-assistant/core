@@ -21,9 +21,9 @@ from homeassistant.components.device_tracker.legacy import (
     async_load_config,
 )
 from homeassistant.const import CONF_DEVICE_ID
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN, SERVICE_UPDATE
 
@@ -65,7 +65,7 @@ def discover_devices(device_id: int) -> list[tuple[str, str]]:
 
 
 async def see_device(
-    hass: HomeAssistantType, async_see, mac: str, device_name: str, rssi=None
+    hass: HomeAssistant, async_see, mac: str, device_name: str, rssi=None
 ) -> None:
     """Mark a device as seen."""
     attributes = {}
@@ -80,7 +80,7 @@ async def see_device(
     )
 
 
-async def get_tracking_devices(hass: HomeAssistantType) -> tuple[set[str], set[str]]:
+async def get_tracking_devices(hass: HomeAssistant) -> tuple[set[str], set[str]]:
     """
     Load all known devices.
 
@@ -108,7 +108,7 @@ def lookup_name(mac: str) -> str | None:
 
 
 async def async_setup_scanner(
-    hass: HomeAssistantType, config: dict, async_see, discovery_info=None
+    hass: HomeAssistant, config: dict, async_see, discovery_info=None
 ):
     """Set up the Bluetooth Scanner."""
     device_id: int = config[CONF_DEVICE_ID]
