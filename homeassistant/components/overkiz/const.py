@@ -21,6 +21,16 @@ SUPPORTED_ENDPOINTS = {
     "Somfy (North America)": "https://ha401-1.overkiz.com/enduser-mobile-web/enduserAPI/",
 }
 
+HUB_MANUFACTURER = {
+    "Atlantic Cozytouch": "Atlantic",
+    "Hitachi Hi Kumo": "Hitachi",
+    "Rexel Energeasy Connect": "Rexel",
+    "Somfy (Australia)": "Somfy",
+    "Somfy (Europe)": "Somfy",
+    "Somfy (North America)": "Somfy",
+}
+
+
 IGNORED_OVERKIZ_DEVICES = [
     "ProtocolGateway",
     "Pod",
