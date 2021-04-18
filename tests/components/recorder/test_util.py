@@ -39,6 +39,16 @@ def hass_recorder():
     hass.stop()
 
 
+def test_session_scope_not_setup(hass_recorder):
+    """Try to create a session scope when not setup."""
+    hass = hass_recorder()
+    with patch.object(
+        hass.data[DATA_INSTANCE], "get_session", return_value=None
+    ), pytest.raises(RuntimeError):
+        with util.session_scope(hass=hass):
+            pass
+
+
 def test_recorder_bad_commit(hass_recorder):
     """Bad _commit should retry 3 times."""
     hass = hass_recorder()
