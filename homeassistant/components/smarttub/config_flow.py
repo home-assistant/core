@@ -29,6 +29,7 @@ class SmartTubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Instantiate config flow."""
         super().__init__()
         self._reauth_input = None
+        self._reauth_entry = None
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
