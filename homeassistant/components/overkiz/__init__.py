@@ -25,9 +25,9 @@ from .const import (
     DEFAULT_HUB,
     DEFAULT_UPDATE_INTERVAL,
     DOMAIN,
-    IGNORED_TAHOMA_DEVICES,
+    IGNORED_OVERKIZ_DEVICES,
+    OVERKIZ_DEVICE_TO_PLATFORM,
     SUPPORTED_ENDPOINTS,
-    TAHOMA_DEVICE_TO_PLATFORM,
 )
 from .coordinator import OverkizDataUpdateCoordinator
 
@@ -107,14 +107,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     }
 
     for device in overkiz_coordinator.data.values():
-        platform = TAHOMA_DEVICE_TO_PLATFORM.get(
+        platform = OVERKIZ_DEVICE_TO_PLATFORM.get(
             device.widget
-        ) or TAHOMA_DEVICE_TO_PLATFORM.get(device.ui_class)
+        ) or OVERKIZ_DEVICE_TO_PLATFORM.get(device.ui_class)
         if platform:
             platforms[platform].append(device)
         elif (
-            device.widget not in IGNORED_TAHOMA_DEVICES
-            and device.ui_class not in IGNORED_TAHOMA_DEVICES
+            device.widget not in IGNORED_OVERKIZ_DEVICES
+            and device.ui_class not in IGNORED_OVERKIZ_DEVICES
         ):
             _LOGGER.debug(
                 "Unsupported Overkiz device detected (%s - %s - %s)",

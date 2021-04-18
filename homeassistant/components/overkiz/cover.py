@@ -79,7 +79,7 @@ IO_PRIORITY_LOCK_LEVEL_STATE = "io:PriorityLockLevelState"
 
 STATE_CLOSED = "closed"
 
-TAHOMA_COVER_DEVICE_CLASSES = {
+OVERKIZ_COVER_DEVICE_CLASSES = {
     "Awning": DEVICE_CLASS_AWNING,
     "Blind": DEVICE_CLASS_BLIND,
     "Curtain": DEVICE_CLASS_CURTAIN,
@@ -192,8 +192,8 @@ class OverkizCover(OverkizEntity, CoverEntity):
     def device_class(self):
         """Return the class of the device."""
         return (
-            TAHOMA_COVER_DEVICE_CLASSES.get(self.device.widget)
-            or TAHOMA_COVER_DEVICE_CLASSES.get(self.device.ui_class)
+            OVERKIZ_COVER_DEVICE_CLASSES.get(self.device.widget)
+            or OVERKIZ_COVER_DEVICE_CLASSES.get(self.device.ui_class)
             or DEVICE_CLASS_BLIND
         )
 

@@ -33,7 +33,7 @@ STATE_PERSON_INSIDE = "personInside"
 STATE_DETECTED = "detected"
 STATE_PRESSED = "pressed"
 
-TAHOMA_BINARY_SENSOR_DEVICE_CLASSES = {
+OVERKIZ_BINARY_SENSOR_DEVICE_CLASSES = {
     "AirFlowSensor": DEVICE_CLASS_GAS,
     "CarButtonSensor": None,
     "ContactSensor": DEVICE_CLASS_OPENING,
@@ -89,6 +89,6 @@ class OverkizBinarySensor(OverkizEntity, BinarySensorEntity):
     @property
     def device_class(self):
         """Return the class of the device."""
-        return TAHOMA_BINARY_SENSOR_DEVICE_CLASSES.get(
+        return OVERKIZ_BINARY_SENSOR_DEVICE_CLASSES.get(
             self.device.widget
-        ) or TAHOMA_BINARY_SENSOR_DEVICE_CLASSES.get(self.device.ui_class)
+        ) or OVERKIZ_BINARY_SENSOR_DEVICE_CLASSES.get(self.device.ui_class)

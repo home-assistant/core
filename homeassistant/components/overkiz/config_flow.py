@@ -88,7 +88,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle a option flow for TaHoma."""
+    """Handle a option flow for Overkiz."""
 
     def __init__(self, config_entry):
         """Initialize options flow."""
