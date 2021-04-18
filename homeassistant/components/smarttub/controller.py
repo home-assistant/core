@@ -16,6 +16,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
+    ATTR_ERRORS,
     ATTR_LIGHTS,
     ATTR_PUMPS,
     ATTR_REMINDERS,
@@ -94,17 +95,19 @@ class SmartTubController:
         return data
 
     async def _get_spa_data(self, spa):
-        status, pumps, lights, reminders = await asyncio.gather(
+        status, pumps, lights, reminders, errors = await asyncio.gather(
             spa.get_status(),
             spa.get_pumps(),
             spa.get_lights(),
             spa.get_reminders(),
+            spa.get_errors(),
         )
         return {
             ATTR_STATUS: status,
             ATTR_PUMPS: {pump.id: pump for pump in pumps},
             ATTR_LIGHTS: {light.zone: light for light in lights},
             ATTR_REMINDERS: {reminder.id: reminder for reminder in reminders},
+            ATTR_ERRORS: errors,
         }
 
     async def async_register_devices(self, entry):
