@@ -34,36 +34,37 @@ class SmartTubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
         )
 
-        if user_input is None:
-            return self.async_show_form(
-                step_id="user", data_schema=data_schema, errors=errors
-            )
+        if user_input is not None:
+            controller = SmartTubController(self.hass)
+            try:
+                account = await controller.login(
+                    user_input[CONF_EMAIL], user_input[CONF_PASSWORD]
+                )
 
-        controller = SmartTubController(self.hass)
-        try:
-            account = await controller.login(
-                user_input[CONF_EMAIL], user_input[CONF_PASSWORD]
-            )
-        except LoginFailed:
-            errors["base"] = "invalid_auth"
-            return self.async_show_form(
-                step_id="user", data_schema=data_schema, errors=errors
-            )
+                await self.async_set_unique_id(account.id)
 
-        await self.async_set_unique_id(account.id)
+                if self._reauth_input is not None:
+                    # this is a reauth attempt
+                    if self._reauth_entry.unique_id != self.unique_id:
+                        # there is a config entry matching this account, but it is not the one we were trying to reauth
+                        return self.async_abort(reason="already_configured")
+                    self.hass.config_entries.async_update_entry(
+                        self._reauth_entry, data=user_input
+                    )
+                    await self.hass.config_entries.async_reload(
+                        self._reauth_entry.entry_id
+                    )
+                    return self.async_abort(reason="reauth_successful")
 
-        if self._reauth_input is not None:
-            # this is a reauth attempt
-            if self._reauth_entry.unique_id != self.unique_id:
-                # there is a config entry matching this account, but it is not the one we were trying to reauth
-                return self.async_abort(reason="already_configured")
-            self.hass.config_entries.async_update_entry(
-                self._reauth_entry, data=user_input
-            )
-            await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
+                return self.async_create_entry(
+                    title=user_input[CONF_EMAIL], data=user_input
+                )
+            except LoginFailed:
+                errors["base"] = "invalid_auth"
 
-        return self.async_create_entry(title=user_input[CONF_EMAIL], data=user_input)
+        return self.async_show_form(
+            step_id="user", data_schema=data_schema, errors=errors
+        )
 
     async def async_step_reauth(self, user_input=None):
         """Get new credentials if the current ones don't work anymore."""
