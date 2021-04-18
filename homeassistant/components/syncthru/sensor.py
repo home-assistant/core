@@ -164,13 +164,6 @@ class SyncThruMainSensor(SyncThruSensor):
         super().__init__(syncthru, name)
         self._id_suffix = "_main"
         self._active = True
-        # per default disabled
-        self._enabled = False
-
-    @property
-    def enabled(self) -> bool:
-        """Whether this sensor is enabled or not."""
-        return self._enabled
 
     async def async_update(self):
         """Get the latest data from SyncThru and update the state."""
@@ -190,6 +183,9 @@ class SyncThruMainSensor(SyncThruSensor):
         self._attributes = {
             "display_text": self.syncthru.device_status_details(),
         }
+
+    def entity_registry_enabled_default(self) -> bool:
+        return False
 
 
 class SyncThruTonerSensor(SyncThruSensor):
