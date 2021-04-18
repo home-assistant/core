@@ -45,6 +45,7 @@
         "step": {
             "init": {
                 "data": {
+                    "effect_show_list": "\ucd9c\ub825\ud560 Hyperion \ud6a8\uacfc",
                     "priority": "\uc0c9\uc0c1 \ubc0f \ud6a8\uacfc\uc5d0 \uc0ac\uc6a9\ud560 Hyperion \uc6b0\uc120 \uc21c\uc704"
                 }
             }

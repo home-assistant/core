@@ -20,8 +20,8 @@ async def test_number(hass, client, aeotec_radiator_thermostat, integration):
         blocking=True,
     )
 
-    assert len(client.async_send_command_no_wait.call_args_list) == 1
-    args = client.async_send_command_no_wait.call_args[0][0]
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 4
     assert args["valueId"] == {
@@ -43,7 +43,7 @@ async def test_number(hass, client, aeotec_radiator_thermostat, integration):
     }
     assert args["value"] == 30.0
 
-    client.async_send_command_no_wait.reset_mock()
+    client.async_send_command.reset_mock()
 
     # Test value update from value updated event
     event = Event(

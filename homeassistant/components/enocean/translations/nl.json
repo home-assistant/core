@@ -16,8 +16,9 @@
             },
             "manual": {
                 "data": {
-                    "path": "USB-dongle-pad"
-                }
+                    "path": "USB-dongle pad"
+                },
+                "title": "Voer het pad naar uw ENOcean dongle in"
             }
         }
     }

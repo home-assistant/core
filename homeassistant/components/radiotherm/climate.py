@@ -372,6 +372,6 @@ class RadioThermostat(ClimateEntity):
             self.device.program_mode = PRESET_MODE_TO_CODE[preset_mode]
         else:
             _LOGGER.error(
-                "preset_mode  %s not in PRESET_MODES",
+                "Preset_mode %s not in PRESET_MODES",
                 preset_mode,
             )

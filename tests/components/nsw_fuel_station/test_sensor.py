@@ -99,5 +99,5 @@ async def test_sensor_values(hass):
     assert await async_setup_component(hass, sensor.DOMAIN, {"sensor": VALID_CONFIG})
     await hass.async_block_till_done()
 
-    assert "140.0" == hass.states.get("sensor.my_fake_station_e10").state
-    assert "150.0" == hass.states.get("sensor.my_fake_station_p95").state
+    assert hass.states.get("sensor.my_fake_station_e10").state == "140.0"
+    assert hass.states.get("sensor.my_fake_station_p95").state == "150.0"

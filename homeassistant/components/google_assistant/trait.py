@@ -1,6 +1,7 @@
 """Implement the Google Smart Home traits."""
+from __future__ import annotations
+
 import logging
-from typing import List, Optional
 
 from homeassistant.components import (
     alarm_control_panel,
@@ -153,7 +154,7 @@ def _google_temp_unit(units):
     return "C"
 
 
-def _next_selected(items: List[str], selected: Optional[str]) -> Optional[str]:
+def _next_selected(items: list[str], selected: str | None) -> str | None:
     """Return the next item in a item list starting at given value.
 
     If selected is missing in items, None is returned
@@ -211,10 +212,11 @@ class BrightnessTrait(_Trait):
     commands = [COMMAND_BRIGHTNESS_ABSOLUTE]
 
     @staticmethod
-    def supported(domain, features, device_class):
+    def supported(domain, features, device_class, attributes):
         """Test if state is supported."""
         if domain == light.DOMAIN:
-            return features & light.SUPPORT_BRIGHTNESS
+            color_modes = attributes.get(light.ATTR_SUPPORTED_COLOR_MODES)
+            return light.brightness_supported(color_modes)
 
         return False
 
@@ -266,7 +268,7 @@ class CameraStreamTrait(_Trait):
     stream_info = None
 
     @staticmethod
-    def supported(domain, features, device_class):
+    def supported(domain, features, device_class, _):
         """Test if state is supported."""
         if domain == camera.DOMAIN:
             return features & camera.SUPPORT_STREAM
@@ -307,7 +309,7 @@ class OnOffTrait(_Trait):
     commands = [COMMAND_ONOFF]
 
     @staticmethod
-    def supported(domain, features, device_class):
+    def supported(domain, features, device_class, _):
         """Test if state is supported."""
         return domain in (
             group.DOMAIN,
@@ -361,23 +363,26 @@ class ColorSettingTrait(_Trait):
     commands = [COMMAND_COLOR_ABSOLUTE]
 
     @staticmethod
-    def supported(domain, features, device_class):
+    def supported(domain, features, device_class, attributes):
         """Test if state is supported."""
         if domain != light.DOMAIN:
             return False
 
-        return features & light.SUPPORT_COLOR_TEMP or features & light.SUPPORT_COLOR
+        color_modes = attributes.get(light.ATTR_SUPPORTED_COLOR_MODES)
+        return light.color_temp_supported(color_modes) or light.color_supported(
+            color_modes
+        )
 
     def sync_attributes(self):
         """Return color temperature attributes for a sync request."""
         attrs = self.state.attributes
-        features = attrs.get(ATTR_SUPPORTED_FEATURES, 0)
+        color_modes = attrs.get(light.ATTR_SUPPORTED_COLOR_MODES)
         response = {}
 
-        if features & light.SUPPORT_COLOR:
+        if light.color_supported(color_modes):
             response["colorModel"] = "hsv"
 
-        if features & light.SUPPORT_COLOR_TEMP:
+        if light.color_temp_supported(color_modes):
             # Max Kelvin is Min Mireds K = 1000000 / mireds
             # Min Kelvin is Max Mireds K = 1000000 / mireds
             response["colorTemperatureRange"] = {
@@ -393,10 +398,10 @@ class ColorSettingTrait(_Trait):
 
     def query_attributes(self):
         """Return color temperature query attributes."""
-        features = self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        color_modes = self.state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES)
         color = {}
 
-        if features & light.SUPPORT_COLOR:
+        if light.color_supported(color_modes):
             color_hs = self.state.attributes.get(light.ATTR_HS_COLOR)
             brightness = self.state.attributes.get(light.ATTR_BRIGHTNESS, 1)
             if color_hs is not None:
@@ -406,7 +411,7 @@ class ColorSettingTrait(_Trait):
                     "value": brightness / 255,
                 }
 
-        if features & light.SUPPORT_COLOR_TEMP:
+        if light.color_temp_supported(color_modes):
             temp = self.state.attributes.get(light.ATTR_COLOR_TEMP)
             # Some faulty integrations might put 0 in here, raising exception.
             if temp == 0:
@@ -494,7 +499,7 @@ class SceneTrait(_Trait):
     commands = [COMMAND_ACTIVATE_SCENE]
 
     @staticmethod
-    def supported(domain, features, device_class):
+    def supported(domain, features, device_class, _):
         """Test if state is supported."""
         return domain in (scene.DOMAIN, script.DOMAIN)
 
@@ -530,7 +535,7 @@ class DockTrait(_Trait):
     commands = [COMMAND_DOCK]
 
     @staticmethod
-    def supported(domain, features, device_class):
+    def supported(domain, features, device_class, _):
         """Test if state is supported."""
         return domain == vacuum.DOMAIN
 
@@ -564,7 +569,7 @@ class StartStopTrait(_Trait):
     commands = [COMMAND_STARTSTOP, COMMAND_PAUSEUNPAUSE]
 
     @staticmethod
-    def supported(domain, features, device_class):
+    def supported(domain, features, device_class, _):
         """Test if state is supported."""
         if domain == vacuum.DOMAIN:
             return True
@@ -708,7 +713,7 @@ class TemperatureSettingTrait(_Trait):
     google_to_preset = {value: key for key, value in preset_to_google.items()}
 
     @staticmethod
-    def supported(domain, features, device_class):
+    def supported(domain, features, device_class, _):
         """Test if state is supported."""
         if domain == climate.DOMAIN:
             return True
@@ -763,7 +768,7 @@ class TemperatureSettingTrait(_Trait):
                 mode in modes for mode in ("heatcool", "heat", "cool")
             ):
                 modes.append("on")
-            response["availableThermostatModes"] = ",".join(modes)
+            response["availableThermostatModes"] = modes
 
         return response
 
@@ -975,7 +980,7 @@ class HumiditySettingTrait(_Trait):
     commands = [COMMAND_SET_HUMIDITY]
 
     @staticmethod
-    def supported(domain, features, device_class):
+    def supported(domain, features, device_class, _):
         """Test if state is supported."""
         if domain == humidifier.DOMAIN:
             return True
@@ -1058,7 +1063,7 @@ class LockUnlockTrait(_Trait):
     commands = [COMMAND_LOCKUNLOCK]
 
     @staticmethod
-    def supported(domain, features, device_class):
+    def supported(domain, features, device_class, _):
         """Test if state is supported."""
         return domain == lock.DOMAIN
 
@@ -1119,7 +1124,7 @@ class ArmDisArmTrait(_Trait):
     }
 
     @staticmethod
-    def supported(domain, features, device_class):
+    def supported(domain, features, device_class, _):
         """Test if state is supported."""
         return domain == alarm_control_panel.DOMAIN
 
@@ -1235,7 +1240,7 @@ class FanSpeedTrait(_Trait):
     }
 
     @staticmethod
-    def supported(domain, features, device_class):
+    def supported(domain, features, device_class, _):
         """Test if state is supported."""
         if domain == fan.DOMAIN:
             return features & fan.SUPPORT_SET_SPEED
@@ -1348,7 +1353,7 @@ class ModesTrait(_Trait):
     }
 
     @staticmethod
-    def supported(domain, features, device_class):
+    def supported(domain, features, device_class, _):
         """Test if state is supported."""
         if domain == input_select.DOMAIN:
             return True
@@ -1427,9 +1432,8 @@ class ModesTrait(_Trait):
         elif self.state.domain == humidifier.DOMAIN:
             if ATTR_MODE in attrs:
                 mode_settings["mode"] = attrs.get(ATTR_MODE)
-        elif self.state.domain == light.DOMAIN:
-            if light.ATTR_EFFECT in attrs:
-                mode_settings["effect"] = attrs.get(light.ATTR_EFFECT)
+        elif self.state.domain == light.DOMAIN and light.ATTR_EFFECT in attrs:
+            mode_settings["effect"] = attrs.get(light.ATTR_EFFECT)
 
         if mode_settings:
             response["on"] = self.state.state not in (STATE_OFF, STATE_UNKNOWN)
@@ -1518,7 +1522,7 @@ class InputSelectorTrait(_Trait):
     SYNONYMS = {}
 
     @staticmethod
-    def supported(domain, features, device_class):
+    def supported(domain, features, device_class, _):
         """Test if state is supported."""
         if domain == media_player.DOMAIN and (
             features & media_player.SUPPORT_SELECT_SOURCE
@@ -1591,7 +1595,7 @@ class OpenCloseTrait(_Trait):
     commands = [COMMAND_OPENCLOSE, COMMAND_OPENCLOSE_RELATIVE]
 
     @staticmethod
-    def supported(domain, features, device_class):
+    def supported(domain, features, device_class, _):
         """Test if state is supported."""
         if domain == cover.DOMAIN:
             return True
@@ -1617,15 +1621,17 @@ class OpenCloseTrait(_Trait):
         if self.state.domain == binary_sensor.DOMAIN:
             response["queryOnlyOpenClose"] = True
             response["discreteOnlyOpenClose"] = True
-        elif self.state.domain == cover.DOMAIN:
-            if features & cover.SUPPORT_SET_POSITION == 0:
-                response["discreteOnlyOpenClose"] = True
+        elif (
+            self.state.domain == cover.DOMAIN
+            and features & cover.SUPPORT_SET_POSITION == 0
+        ):
+            response["discreteOnlyOpenClose"] = True
 
-                if (
-                    features & cover.SUPPORT_OPEN == 0
-                    and features & cover.SUPPORT_CLOSE == 0
-                ):
-                    response["queryOnlyOpenClose"] = True
+            if (
+                features & cover.SUPPORT_OPEN == 0
+                and features & cover.SUPPORT_CLOSE == 0
+            ):
+                response["queryOnlyOpenClose"] = True
 
         if self.state.attributes.get(ATTR_ASSUMED_STATE):
             response["commandOnlyOpenClose"] = True
@@ -1725,7 +1731,7 @@ class VolumeTrait(_Trait):
     commands = [COMMAND_SET_VOLUME, COMMAND_VOLUME_RELATIVE, COMMAND_MUTE]
 
     @staticmethod
-    def supported(domain, features, device_class):
+    def supported(domain, features, device_class, _):
         """Test if trait is supported."""
         if domain == media_player.DOMAIN:
             return features & (
@@ -1913,7 +1919,7 @@ class TransportControlTrait(_Trait):
     ]
 
     @staticmethod
-    def supported(domain, features, device_class):
+    def supported(domain, features, device_class, _):
         """Test if state is supported."""
         if domain == media_player.DOMAIN:
             for feature in MEDIA_COMMAND_SUPPORT_MAPPING.values():
@@ -2032,7 +2038,7 @@ class MediaStateTrait(_Trait):
     }
 
     @staticmethod
-    def supported(domain, features, device_class):
+    def supported(domain, features, device_class, _):
         """Test if state is supported."""
         return domain == media_player.DOMAIN
 

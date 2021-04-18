@@ -1,4 +1,6 @@
 """Provide functionality for TTS."""
+from __future__ import annotations
+
 import asyncio
 import functools as ft
 import hashlib
@@ -7,7 +9,7 @@ import logging
 import mimetypes
 import os
 import re
-from typing import Dict, Optional, cast
+from typing import cast
 
 from aiohttp import web
 import mutagen
@@ -24,10 +26,12 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_DESCRIPTION,
     CONF_NAME,
     CONF_PLATFORM,
     HTTP_BAD_REQUEST,
     HTTP_NOT_FOUND,
+    PLATFORM_FORMAT,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -59,7 +63,6 @@ CONF_LANG = "language"
 CONF_SERVICE_NAME = "service_name"
 CONF_TIME_MEMORY = "time_memory"
 
-CONF_DESCRIPTION = "description"
 CONF_FIELDS = "fields"
 
 DEFAULT_CACHE = True
@@ -243,7 +246,7 @@ async def async_setup(hass, config):
     return True
 
 
-def _hash_options(options: Dict) -> str:
+def _hash_options(options: dict) -> str:
     """Hashes an options dictionary."""
     opts_hash = hashlib.blake2s(digest_size=5)
     for key, value in sorted(options.items()):
@@ -313,6 +316,10 @@ class SpeechManager:
         if provider.name is None:
             provider.name = engine
         self.providers[engine] = provider
+
+        self.hass.config.components.add(
+            PLATFORM_FORMAT.format(domain=engine, platform=DOMAIN)
+        )
 
     async def async_get_url_path(
         self, engine, message, cache=None, language=None, options=None
@@ -512,8 +519,8 @@ class SpeechManager:
 class Provider:
     """Represent a single TTS provider."""
 
-    hass: Optional[HomeAssistantType] = None
-    name: Optional[str] = None
+    hass: HomeAssistantType | None = None
+    name: str | None = None
 
     @property
     def default_language(self):

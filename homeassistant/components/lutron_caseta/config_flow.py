@@ -10,7 +10,6 @@ from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.zeroconf import ATTR_HOSTNAME
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
 
@@ -21,10 +20,10 @@ from .const import (
     CONF_CA_CERTS,
     CONF_CERTFILE,
     CONF_KEYFILE,
+    DOMAIN,
     ERROR_CANNOT_CONNECT,
     STEP_IMPORT_FAILED,
 )
-from .const import DOMAIN  # pylint: disable=unused-import
 
 HOSTNAME = "hostname"
 
@@ -66,7 +65,7 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(self, discovery_info):
         """Handle a flow initialized by zeroconf discovery."""
-        hostname = discovery_info[ATTR_HOSTNAME]
+        hostname = discovery_info["hostname"]
         if hostname is None or not hostname.startswith("lutron-"):
             return self.async_abort(reason="not_lutron_device")
 

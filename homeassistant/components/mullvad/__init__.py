@@ -8,17 +8,11 @@ from mullvad_api import MullvadAPI
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import update_coordinator
 
 from .const import DOMAIN
 
 PLATFORMS = ["binary_sensor"]
-
-
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Mullvad VPN integration."""
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: dict):
@@ -36,10 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: dict):
         update_method=async_get_mullvad_api_data,
         update_interval=timedelta(minutes=1),
     )
-    await coordinator.async_refresh()
-
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
 
     hass.data[DOMAIN] = coordinator
 

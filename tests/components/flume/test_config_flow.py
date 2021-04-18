@@ -37,8 +37,6 @@ async def test_form(hass):
         "homeassistant.components.flume.config_flow.FlumeDeviceList",
         return_value=mock_flume_device_list,
     ), patch(
-        "homeassistant.components.flume.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.flume.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -61,7 +59,6 @@ async def test_form(hass):
         CONF_CLIENT_ID: "client_id",
         CONF_CLIENT_SECRET: "client_secret",
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -77,8 +74,6 @@ async def test_form_import(hass):
         "homeassistant.components.flume.config_flow.FlumeDeviceList",
         return_value=mock_flume_device_list,
     ), patch(
-        "homeassistant.components.flume.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.flume.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -102,7 +97,6 @@ async def test_form_import(hass):
         CONF_CLIENT_ID: "client_id",
         CONF_CLIENT_SECRET: "client_secret",
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 

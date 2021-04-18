@@ -1,11 +1,13 @@
 """Asuswrt status sensors."""
+from __future__ import annotations
+
 import logging
 from numbers import Number
-from typing import Dict
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DATA_GIGABYTES, DATA_RATE_MEGABITS_PER_SECOND
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -76,7 +78,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the sensors."""
     router: AsusWrtRouter = hass.data[DOMAIN][entry.entry_id][DATA_ASUSWRT]
@@ -96,7 +98,7 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class AsusWrtSensor(CoordinatorEntity):
+class AsusWrtSensor(CoordinatorEntity, SensorEntity):
     """Representation of a AsusWrt sensor."""
 
     def __init__(
@@ -104,7 +106,7 @@ class AsusWrtSensor(CoordinatorEntity):
         coordinator: DataUpdateCoordinator,
         router: AsusWrtRouter,
         sensor_type: str,
-        sensor: Dict[str, any],
+        sensor: dict[str, any],
     ) -> None:
         """Initialize a AsusWrt sensor."""
         super().__init__(coordinator)
@@ -159,11 +161,11 @@ class AsusWrtSensor(CoordinatorEntity):
         return self._device_class
 
     @property
-    def extra_state_attributes(self) -> Dict[str, any]:
+    def extra_state_attributes(self) -> dict[str, any]:
         """Return the attributes."""
         return {"hostname": self._router.host}
 
     @property
-    def device_info(self) -> Dict[str, any]:
+    def device_info(self) -> dict[str, any]:
         """Return the device information."""
         return self._router.device_info

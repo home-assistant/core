@@ -1,7 +1,9 @@
 {
     "config": {
         "abort": {
+            "addon_info_failed": "Fehler beim Abrufen von Z-Wave JS Add-on Informationen.",
             "addon_install_failed": "Installation des Z-Wave JS Add-Ons fehlgeschlagen.",
+            "addon_set_config_failed": "Setzen der Z-Wave JS Konfiguration fehlgeschlagen",
             "addon_start_failed": "Starten des Z-Wave JS Add-ons fehlgeschlagen.",
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
@@ -10,6 +12,7 @@
         "error": {
             "addon_start_failed": "Fehler beim Starten des Z-Wave JS Add-Ons. \u00dcberpr\u00fcfe die Konfiguration.",
             "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_ws_url": "Ung\u00fcltige Websocket-URL",
             "unknown": "Unerwarteter Fehler"
         },
         "progress": {
@@ -19,6 +22,7 @@
         "step": {
             "configure_addon": {
                 "data": {
+                    "network_key": "Netzwerk-Schl\u00fcssel",
                     "usb_path": "USB-Ger\u00e4te-Pfad"
                 },
                 "title": "Gib die Konfiguration des Z-Wave JS Add-ons ein"
@@ -50,5 +54,6 @@
                 }
             }
         }
-    }
+    },
+    "title": ""
 }

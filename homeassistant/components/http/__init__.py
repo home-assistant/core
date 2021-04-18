@@ -1,25 +1,23 @@
 """Support to serve the Home Assistant API as WSGI application."""
+from __future__ import annotations
+
 from contextvars import ContextVar
 from ipaddress import ip_network
 import logging
 import os
 import ssl
-from typing import Dict, Optional, cast
+from typing import Any, Optional, cast
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPMovedPermanently
 import voluptuous as vol
 
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP,
-    SERVER_PORT,
-)
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, SERVER_PORT
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import storage
 import homeassistant.helpers.config_validation as cv
 from homeassistant.loader import bind_hass
-from homeassistant.setup import ATTR_COMPONENT, EVENT_COMPONENT_LOADED
+from homeassistant.setup import async_start_setup, async_when_setup_or_start
 import homeassistant.util as hass_util
 from homeassistant.util import ssl as ssl_util
 
@@ -102,7 +100,7 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: HTTP_SCHEMA}, extra=vol.ALLOW_EXTRA)
 
 
 @bind_hass
-async def async_get_last_config(hass: HomeAssistant) -> Optional[dict]:
+async def async_get_last_config(hass: HomeAssistant) -> dict | None:
     """Return the last known working config."""
     store = storage.Store(hass, STORAGE_VERSION, STORAGE_KEY)
     return cast(Optional[dict], await store.async_load())
@@ -115,7 +113,7 @@ class ApiConfig:
         self,
         local_ip: str,
         host: str,
-        port: Optional[int] = SERVER_PORT,
+        port: int | None = SERVER_PORT,
         use_ssl: bool = False,
     ) -> None:
         """Initialize a new API config object."""
@@ -159,36 +157,17 @@ async def async_setup(hass, config):
         ssl_profile=ssl_profile,
     )
 
-    startup_listeners = []
-
     async def stop_server(event: Event) -> None:
         """Stop the server."""
         await server.stop()
 
-    async def start_server(event: Event) -> None:
+    async def start_server(*_: Any) -> None:
         """Start the server."""
+        with async_start_setup(hass, ["http"]):
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_server)
+            await start_http_server_and_save_config(hass, dict(conf), server)
 
-        for listener in startup_listeners:
-            listener()
-
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_server)
-
-        await start_http_server_and_save_config(hass, dict(conf), server)
-
-    async def async_wait_frontend_load(event: Event) -> None:
-        """Wait for the frontend to load."""
-
-        if event.data[ATTR_COMPONENT] != "frontend":
-            return
-
-        await start_server(event)
-
-    startup_listeners.append(
-        hass.bus.async_listen(EVENT_COMPONENT_LOADED, async_wait_frontend_load)
-    )
-    startup_listeners.append(
-        hass.bus.async_listen(EVENT_HOMEASSISTANT_START, start_server)
-    )
+    async_when_setup_or_start(hass, "frontend", start_server)
 
     hass.http = server
 
@@ -379,7 +358,7 @@ class HomeAssistantHTTP:
 
 
 async def start_http_server_and_save_config(
-    hass: HomeAssistant, conf: Dict, server: HomeAssistantHTTP
+    hass: HomeAssistant, conf: dict, server: HomeAssistantHTTP
 ) -> None:
     """Startup the http server and save the config."""
     await server.start()  # type: ignore
@@ -395,6 +374,6 @@ async def start_http_server_and_save_config(
     await store.async_save(conf)
 
 
-current_request: ContextVar[Optional[web.Request]] = ContextVar(
+current_request: ContextVar[web.Request | None] = ContextVar(
     "current_request", default=None
 )

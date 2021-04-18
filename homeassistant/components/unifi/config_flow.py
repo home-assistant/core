@@ -192,8 +192,11 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, config_entry: dict):
+    async def async_step_reauth(self, data: dict):
         """Trigger a reauthentication flow."""
+        config_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
         self.reauth_config_entry = config_entry
 
         self.context["title_placeholders"] = {
@@ -319,7 +322,7 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                 if "name" in wlan
             }
         )
-        ssid_filter = {ssid: ssid for ssid in sorted(list(ssids))}
+        ssid_filter = {ssid: ssid for ssid in sorted(ssids)}
 
         return self.async_show_form(
             step_id="device_tracker",

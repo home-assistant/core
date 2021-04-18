@@ -1,92 +1,80 @@
 """Support for Rituals Perfume Genie switches."""
-from datetime import timedelta
+from __future__ import annotations
+
+from typing import Any, Callable
+
+from pyrituals import Diffuser
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import ATTRIBUTES, COORDINATORS, DEVICES, DOMAIN, HUB
+from .entity import DiffuserEntity
 
-SCAN_INTERVAL = timedelta(seconds=30)
+FAN = "fanc"
+SPEED = "speedc"
+ROOM = "roomc"
 
 ON_STATE = "1"
-AVAILABLE_STATE = 1
-
-MANUFACTURER = "Rituals Cosmetics"
-MODEL = "Diffuser"
-ICON = "mdi:fan"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable
+) -> None:
     """Set up the diffuser switch."""
-    account = hass.data[DOMAIN][config_entry.entry_id]
-    diffusers = await account.get_devices()
-
+    diffusers = hass.data[DOMAIN][config_entry.entry_id][DEVICES]
+    coordinators = hass.data[DOMAIN][config_entry.entry_id][COORDINATORS]
     entities = []
-    for diffuser in diffusers:
-        entities.append(DiffuserSwitch(diffuser))
+    for hublot, diffuser in diffusers.items():
+        coordinator = coordinators[hublot]
+        entities.append(DiffuserSwitch(diffuser, coordinator))
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
-class DiffuserSwitch(SwitchEntity):
+class DiffuserSwitch(SwitchEntity, DiffuserEntity):
     """Representation of a diffuser switch."""
 
-    def __init__(self, diffuser):
-        """Initialize the switch."""
-        self._diffuser = diffuser
+    def __init__(self, diffuser: Diffuser, coordinator: CoordinatorEntity) -> None:
+        """Initialize the diffuser switch."""
+        super().__init__(diffuser, coordinator, "")
+        self._is_on = self.coordinator.data[HUB][ATTRIBUTES][FAN] == ON_STATE
 
     @property
-    def device_info(self):
-        """Return information about the device."""
-        return {
-            "name": self._diffuser.data["hub"]["attributes"]["roomnamec"],
-            "identifiers": {(DOMAIN, self._diffuser.data["hub"]["hublot"])},
-            "manufacturer": MANUFACTURER,
-            "model": MODEL,
-            "sw_version": self._diffuser.data["hub"]["sensors"]["versionc"],
-        }
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the device."""
-        return self._diffuser.data["hub"]["hublot"]
-
-    @property
-    def available(self):
-        """Return if the device is available."""
-        return self._diffuser.data["hub"]["status"] == AVAILABLE_STATE
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._diffuser.data["hub"]["attributes"]["roomnamec"]
-
-    @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the icon of the device."""
-        return ICON
+        return "mdi:fan"
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         attributes = {
-            "fan_speed": self._diffuser.data["hub"]["attributes"]["speedc"],
-            "room_size": self._diffuser.data["hub"]["attributes"]["roomc"],
+            "fan_speed": self.coordinator.data[HUB][ATTRIBUTES][SPEED],
+            "room_size": self.coordinator.data[HUB][ATTRIBUTES][ROOM],
         }
         return attributes
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """If the device is currently on or off."""
-        return self._diffuser.data["hub"]["attributes"]["fanc"] == ON_STATE
+        return self._is_on
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self._diffuser.turn_on()
+        self._is_on = True
+        self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self._diffuser.turn_off()
+        self._is_on = False
+        self.async_write_ha_state()
 
-    async def async_update(self):
-        """Update the data of the device."""
-        await self._diffuser.update_data()
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._is_on = self.coordinator.data[HUB][ATTRIBUTES][FAN] == ON_STATE
+        self.async_write_ha_state()

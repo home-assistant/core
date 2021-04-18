@@ -5,7 +5,7 @@ import logging
 import github
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_NAME,
     CONF_ACCESS_TOKEN,
@@ -14,7 +14,6 @@ from homeassistant.const import (
     CONF_URL,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,7 +71,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class GitHubSensor(Entity):
+class GitHubSensor(SensorEntity):
     """Representation of a GitHub sensor."""
 
     def __init__(self, github_data):

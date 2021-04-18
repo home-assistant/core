@@ -13,10 +13,10 @@ from pymazda import (
     MazdaTokenExpiredException,
 )
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_REGION
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -29,19 +29,13 @@ from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor"]
+PLATFORMS = ["device_tracker", "sensor"]
 
 
 async def with_timeout(task, timeout_seconds=10):
     """Run an async task with a timeout."""
     async with async_timeout.timeout(timeout_seconds):
         return await task
-
-
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Mazda Connected Services component."""
-    hass.data[DOMAIN] = {}
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -55,15 +49,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     try:
         await mazda_client.validate_credentials()
-    except MazdaAuthenticationException:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_REAUTH},
-                data=entry.data,
-            )
-        )
-        return False
+    except MazdaAuthenticationException as ex:
+        raise ConfigEntryAuthFailed from ex
     except (
         MazdaException,
         MazdaAccountLockedException,
@@ -89,14 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
             return vehicles
         except MazdaAuthenticationException as ex:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": SOURCE_REAUTH},
-                    data=entry.data,
-                )
-            )
-            raise UpdateFailed("Not authenticated with Mazda API") from ex
+            raise ConfigEntryAuthFailed("Not authenticated with Mazda API") from ex
         except Exception as ex:
             _LOGGER.exception(
                 "Unknown error occurred during Mazda update request: %s", ex
@@ -111,15 +91,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         update_interval=timedelta(seconds=60),
     )
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_CLIENT: mazda_client,
         DATA_COORDINATOR: coordinator,
     }
 
     # Fetch initial data so we have data when entities subscribe
-    await coordinator.async_refresh()
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
 
     # Setup components
     for platform in PLATFORMS:

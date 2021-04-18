@@ -1,7 +1,10 @@
 """Test data purging."""
 from datetime import datetime, timedelta
 import json
+import sqlite3
+from unittest.mock import patch
 
+from sqlalchemy.exc import DatabaseError
 from sqlalchemy.orm.session import Session
 
 from homeassistant.components import recorder
@@ -16,6 +19,7 @@ from .common import (
     async_recorder_block_till_done,
     async_wait_purge_done,
     async_wait_recording_done,
+    async_wait_recording_done_without_instance,
 )
 from .conftest import SetupRecorderInstanceT
 
@@ -50,6 +54,38 @@ async def test_purge_old_states(
         finished = purge_old_data(instance, 4, repack=False)
         assert finished
         assert states.count() == 2
+
+
+async def test_purge_old_states_encouters_database_corruption(
+    hass: HomeAssistantType, async_setup_recorder_instance: SetupRecorderInstanceT
+):
+    """Test database image image is malformed while deleting old states."""
+    instance = await async_setup_recorder_instance(hass)
+
+    await _add_test_states(hass, instance)
+    await async_wait_recording_done_without_instance(hass)
+
+    sqlite3_exception = DatabaseError("statement", {}, [])
+    sqlite3_exception.__cause__ = sqlite3.DatabaseError()
+
+    with patch(
+        "homeassistant.components.recorder.move_away_broken_database"
+    ) as move_away, patch(
+        "homeassistant.components.recorder.purge.purge_old_data",
+        side_effect=sqlite3_exception,
+    ):
+        await hass.services.async_call(
+            recorder.DOMAIN, recorder.SERVICE_PURGE, {"keep_days": 0}
+        )
+        await hass.async_block_till_done()
+        await async_wait_recording_done_without_instance(hass)
+
+    assert move_away.called
+
+    # Ensure the whole database was reset due to the database error
+    with session_scope(hass=hass) as session:
+        states_after_purge = session.query(States)
+        assert states_after_purge.count() == 0
 
 
 async def test_purge_old_events(
@@ -157,7 +193,7 @@ async def test_purge_method(
         assert runs[1] == runs_before_purge[5]
         assert runs[2] == runs_before_purge[6]
 
-        assert not ("EVENT_TEST_PURGE" in (event.event_type for event in events.all()))
+        assert "EVENT_TEST_PURGE" not in (event.event_type for event in events.all())
 
         # run purge method - correct service data, with repack
         service_data["repack"] = True
@@ -364,9 +400,9 @@ async def test_purge_filtered_states(
         )
         assert states_sensor_excluded.count() == 0
 
-        session.query(States).get(71).old_state_id is None
-        session.query(States).get(72).old_state_id is None
-        session.query(States).get(73).old_state_id == 62  # should have been keeped
+        assert session.query(States).get(72).old_state_id is None
+        assert session.query(States).get(73).old_state_id is None
+        assert session.query(States).get(74).old_state_id == 62  # should have been kept
 
 
 async def test_purge_filtered_events(
@@ -550,9 +586,9 @@ async def test_purge_filtered_events_state_changed(
         assert events_purge.count() == 0
         assert states.count() == 3
 
-        session.query(States).get(61).old_state_id is None
-        session.query(States).get(62).old_state_id is None
-        session.query(States).get(63).old_state_id == 62  # should have been keeped
+        assert session.query(States).get(61).old_state_id is None
+        assert session.query(States).get(62).old_state_id is None
+        assert session.query(States).get(63).old_state_id == 62  # should have been kept
 
 
 async def _add_test_states(hass: HomeAssistantType, instance: recorder.Recorder):
