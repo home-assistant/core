@@ -11,6 +11,7 @@
     "@vlebourl",
     "@tetienne"
   ],
+  "iot_class": "cloud_polling",
   "dhcp": [
     {
       "hostname": "gateway*",
