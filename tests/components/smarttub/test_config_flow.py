@@ -7,6 +7,8 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.smarttub.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
+from tests.common import MockConfigEntry
+
 
 async def test_form(hass):
     """Test we get the form."""
@@ -52,27 +54,23 @@ async def test_form_invalid_auth(hass, smarttub_api):
     assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_reauth_success(hass, smarttub_api):
+async def test_reauth_success(hass, smarttub_api, account):
     """Test reauthentication flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_EMAIL: "test-email", CONF_PASSWORD: "test-password"},
+        unique_id=account.id,
     )
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_EMAIL: "test-email", CONF_PASSWORD: "test-password"}
-    )
-    assert result["type"] == "create_entry"
-    assert result["title"] == "test-email"
-    config_entry = result["result"]
+    mock_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
             "source": config_entries.SOURCE_REAUTH,
-            "unique_id": config_entry.unique_id,
-            "entry_id": config_entry.entry_id,
+            "unique_id": mock_entry.unique_id,
+            "entry_id": mock_entry.entry_id,
         },
-        data=config_entry.data,
+        data=mock_entry.data,
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -92,8 +90,8 @@ async def test_reauth_success(hass, smarttub_api):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "reauth_successful"
-    assert config_entry.data[CONF_EMAIL] == "test-email3"
-    assert config_entry.data[CONF_PASSWORD] == "test-password3"
+    assert mock_entry.data[CONF_EMAIL] == "test-email3"
+    assert mock_entry.data[CONF_PASSWORD] == "test-password3"
 
 
 async def test_reauth_wrong_account(hass, smarttub_api, account):

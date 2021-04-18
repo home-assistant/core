@@ -77,7 +77,6 @@ class SmartTubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_reauth_confirm(self, user_input=None):
         """Dialog that informs the user that reauth is required."""
         if user_input is None:
-            # same as DATA_SCHEMA, but with the previous values as defaults
             data_schema = vol.Schema(
                 {
                     vol.Required(
