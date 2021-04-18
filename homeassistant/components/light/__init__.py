@@ -287,7 +287,7 @@ async def async_setup(hass, config):
 
             preprocess_turn_on_alternatives(hass, params)
 
-        if ATTR_PROFILE not in params:
+        if not params or not light.is_on:
             profiles.apply_default(light.entity_id, params)
 
         supported_color_modes = light.supported_color_modes
