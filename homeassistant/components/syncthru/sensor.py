@@ -26,16 +26,6 @@ DEFAULT_MONITORED_CONDITIONS.extend([f"drum_{key}" for key in DRUM_COLORS])
 DEFAULT_MONITORED_CONDITIONS.extend([f"tray_{key}" for key in TRAYS])
 DEFAULT_MONITORED_CONDITIONS.extend([f"output_tray_{key}" for key in OUTPUT_TRAYS])
 
-SYNCTHRU_STATE_PROBLEM = {
-    SyncthruState.INVALID: True,
-    SyncthruState.OFFLINE: None,
-    SyncthruState.NORMAL: False,
-    SyncthruState.UNKNOWN: True,
-    SyncthruState.WARNING: True,
-    SyncthruState.TESTING: False,
-    SyncthruState.ERROR: True,
-}
-
 SYNCTHRU_STATE_HUMAN = {
     SyncthruState.INVALID: "invalid",
     SyncthruState.OFFLINE: "unreachable",
