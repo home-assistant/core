@@ -1,0 +1,62 @@
+# Describes the format for RESTful Command services
+
+service_name:
+  name: Service Name
+  description: >-
+    The name used to expose the service. E.g., in the above example, it would be ‘rest_command.example_request’.
+  fields:
+    url:
+      name: Url
+      description: The URL (supports template) for sending request.
+      required: true
+      selector:
+        text:
+    method:
+      name: Method
+      description: HTTP method to use (get, patch, post, put, or delete).
+      selector:
+        select:
+          options:
+            - "get"
+            - "patch"
+            - "post"
+            - "put"
+            - "delete"
+    headers:
+      name: Headers
+      description: The headers for the requests.
+      selector:
+        object:
+    payload:
+      name: Payload
+      description: A string/template to send with request.
+      selector:
+        text:
+    username:
+      name: Username
+      description: The username for HTTP authentication.
+      selector:
+        text:
+    password:
+      name: Password
+      description: The password for HTTP authentication.
+      selector:
+        text:
+    timeout:
+      name: Timeout
+      description: Timeout for requests in seconds
+      selector:
+        number:
+          min: 1
+          max: 3600
+          unit_of_measurement: seconds
+    content_type:
+      name: Content Type
+      description: Content type for the request.
+      selector:
+        text:
+    verify_ssl:
+      name: Verify SSL
+      description: Verify the SSL certificate of the endpoint.
+      selector:
+        boolean:
