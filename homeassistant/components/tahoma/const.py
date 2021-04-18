@@ -3,6 +3,7 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
 from homeassistant.components.cover import DOMAIN as COVER
 from homeassistant.components.light import DOMAIN as LIGHT
 from homeassistant.components.lock import DOMAIN as LOCK
+from homeassistant.components.sensor import DOMAIN as SENSOR
 
 DOMAIN = "tahoma"
 
@@ -31,16 +32,23 @@ IGNORED_TAHOMA_DEVICES = [
 TAHOMA_DEVICE_TO_PLATFORM = {
     "AdjustableSlatsRollerShutter": COVER,
     "AirFlowSensor": BINARY_SENSOR,  # widgetName, uiClass is AirSensor (sensor)
+    "AirSensor": SENSOR,
     "Awning": COVER,
     "CarButtonSensor": BINARY_SENSOR,
+    "ConsumptionSensor": SENSOR,
     "ContactSensor": BINARY_SENSOR,
     "Curtain": COVER,
     "DoorLock": LOCK,
+    "ElectricitySensor": SENSOR,
     "ExteriorScreen": COVER,
     "ExteriorVenetianBlind": COVER,
     "GarageDoor": COVER,
+    "GasSensor": SENSOR,
     "Gate": COVER,
+    "GenericSensor": SENSOR,
+    "HumiditySensor": SENSOR,
     "Light": LIGHT,
+    "LightSensor": SENSOR,
     "MotionSensor": BINARY_SENSOR,
     "MyFoxSecurityCamera": COVER,  # widgetName, uiClass is Camera (not supported)
     "OccupancySensor": BINARY_SENSOR,
@@ -51,9 +59,16 @@ TAHOMA_DEVICE_TO_PLATFORM = {
     "Shutter": COVER,
     "SirenStatus": BINARY_SENSOR,  # widgetName, uiClass is Siren (switch)
     "SmokeSensor": BINARY_SENSOR,
+    "SunIntensitySensor": SENSOR,
+    "SunSensor": SENSOR,
     "SwingingShutter": COVER,
+    "TemperatureSensor": SENSOR,
+    "ThermalEnergySensor": SENSOR,
     "VenetianBlind": COVER,
     "WaterDetectionSensor": BINARY_SENSOR,  # widgetName, uiClass is HumiditySensor (sensor)
+    "WaterSensor": SENSOR,
+    "WeatherSensor": SENSOR,
+    "WindSensor": SENSOR,
     "Window": COVER,
     "WindowHandle": BINARY_SENSOR,
 }
