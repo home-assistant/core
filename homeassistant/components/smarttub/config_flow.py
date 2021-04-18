@@ -40,6 +40,9 @@ class SmartTubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     user_input[CONF_EMAIL], user_input[CONF_PASSWORD]
                 )
 
+            except LoginFailed:
+                errors["base"] = "invalid_auth"
+            else:
                 await self.async_set_unique_id(account.id)
 
                 if self._reauth_input is not None:
@@ -58,8 +61,6 @@ class SmartTubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=user_input[CONF_EMAIL], data=user_input
                 )
-            except LoginFailed:
-                errors["base"] = "invalid_auth"
 
         return self.async_show_form(
             step_id="user", data_schema=data_schema, errors=errors
