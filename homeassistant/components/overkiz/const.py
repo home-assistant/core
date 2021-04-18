@@ -1,10 +1,10 @@
-"""Constants for the Somfy TaHoma integration."""
+"""Constants for the Overkiz integration."""
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
 from homeassistant.components.cover import DOMAIN as COVER
 from homeassistant.components.light import DOMAIN as LIGHT
 from homeassistant.components.lock import DOMAIN as LOCK
 
-DOMAIN = "tahoma"
+DOMAIN = "overkiz"
 
 CONF_HUB = "hub"
 DEFAULT_HUB = "Somfy (Europe)"
@@ -22,13 +22,13 @@ SUPPORTED_ENDPOINTS = {
     "Somfy (North America)": "https://ha401-1.overkiz.com/enduser-mobile-web/enduserAPI/",
 }
 
-IGNORED_TAHOMA_DEVICES = [
+IGNORED_OVERKIZ_DEVICES = [
     "ProtocolGateway",
     "Pod",
 ]
 
 # Used to map the Somfy widget and ui_class to the Home Assistant platform
-TAHOMA_DEVICE_TO_PLATFORM = {
+OVERKIZ_DEVICE_TO_PLATFORM = {
     "AdjustableSlatsRollerShutter": COVER,
     "AirFlowSensor": BINARY_SENSOR,  # widgetName, uiClass is AirSensor (sensor)
     "Awning": COVER,

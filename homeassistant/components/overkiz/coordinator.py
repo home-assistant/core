@@ -33,8 +33,8 @@ TYPES = {
 _LOGGER = logging.getLogger(__name__)
 
 
-class TahomaDataUpdateCoordinator(DataUpdateCoordinator):
-    """Class to manage fetching TaHoma data."""
+class OverkizDataUpdateCoordinator(DataUpdateCoordinator):
+    """Class to manage fetching Overkiz data."""
 
     def __init__(
         self,
@@ -63,7 +63,7 @@ class TahomaDataUpdateCoordinator(DataUpdateCoordinator):
         self.areas = self._places_to_area(places)
 
     async def _async_update_data(self) -> Dict[str, Device]:
-        """Fetch TaHoma data via event listener."""
+        """Fetch Overkiz data via event listener."""
         try:
             events = await self.client.fetch_events()
         except BadCredentialsException as exception:

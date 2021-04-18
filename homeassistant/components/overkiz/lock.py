@@ -1,11 +1,11 @@
-"""Support for TaHoma locks."""
+"""Support for Overkiz locks."""
 import logging
 
 from homeassistant.components.lock import DOMAIN as LOCK, LockEntity
 from homeassistant.const import STATE_LOCKED
 
 from .const import DOMAIN
-from .tahoma_entity import TahomaEntity
+from .overkiz_entity import OverkizEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,19 +16,19 @@ CORE_LOCKED_UNLOCKED_STATE = "core:LockedUnlockedState"
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up the TaHoma locks from a config entry."""
+    """Set up the Overkiz locks from a config entry."""
     data = hass.data[DOMAIN][entry.entry_id]
     coordinator = data["coordinator"]
 
     entities = [
-        TahomaLock(device.deviceurl, coordinator) for device in data["platforms"][LOCK]
+        OverkizLock(device.deviceurl, coordinator) for device in data["platforms"][LOCK]
     ]
 
     async_add_entities(entities)
 
 
-class TahomaLock(TahomaEntity, LockEntity):
-    """Representation of a TaHoma Lock."""
+class OverkizLock(OverkizEntity, LockEntity):
+    """Representation of a Overkiz Lock."""
 
     async def async_unlock(self, **_):
         """Unlock method."""

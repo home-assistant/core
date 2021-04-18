@@ -1,4 +1,4 @@
-"""Support for TaHoma cover - shutters etc."""
+"""Support for Overkiz cover - shutters etc."""
 import logging
 
 from homeassistant.components.cover import (
@@ -24,7 +24,7 @@ from homeassistant.components.cover import (
 )
 
 from .const import DOMAIN
-from .tahoma_entity import TahomaEntity
+from .overkiz_entity import OverkizEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,7 +79,7 @@ IO_PRIORITY_LOCK_LEVEL_STATE = "io:PriorityLockLevelState"
 
 STATE_CLOSED = "closed"
 
-TAHOMA_COVER_DEVICE_CLASSES = {
+OVERKIZ_COVER_DEVICE_CLASSES = {
     "Awning": DEVICE_CLASS_AWNING,
     "Blind": DEVICE_CLASS_BLIND,
     "Curtain": DEVICE_CLASS_CURTAIN,
@@ -97,20 +97,20 @@ TAHOMA_COVER_DEVICE_CLASSES = {
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up the TaHoma covers from a config entry."""
+    """Set up the Overkiz covers from a config entry."""
     data = hass.data[DOMAIN][entry.entry_id]
     coordinator = data["coordinator"]
 
     entities = [
-        TahomaCover(device.deviceurl, coordinator)
+        OverkizCover(device.deviceurl, coordinator)
         for device in data["platforms"][COVER]
     ]
 
     async_add_entities(entities)
 
 
-class TahomaCover(TahomaEntity, CoverEntity):
-    """Representation of a TaHoma Cover."""
+class OverkizCover(OverkizEntity, CoverEntity):
+    """Representation of a Overkiz Cover."""
 
     @property
     def current_cover_position(self):
@@ -192,8 +192,8 @@ class TahomaCover(TahomaEntity, CoverEntity):
     def device_class(self):
         """Return the class of the device."""
         return (
-            TAHOMA_COVER_DEVICE_CLASSES.get(self.device.widget)
-            or TAHOMA_COVER_DEVICE_CLASSES.get(self.device.ui_class)
+            OVERKIZ_COVER_DEVICE_CLASSES.get(self.device.widget)
+            or OVERKIZ_COVER_DEVICE_CLASSES.get(self.device.ui_class)
             or DEVICE_CLASS_BLIND
         )
 

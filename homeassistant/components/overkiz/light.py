@@ -1,4 +1,4 @@
-"""Support for TaHoma lights."""
+"""Support for Overkiz lights."""
 import logging
 
 from homeassistant.components.light import (
@@ -13,7 +13,7 @@ from homeassistant.const import STATE_ON
 import homeassistant.util.color as color_util
 
 from .const import COMMAND_OFF, COMMAND_ON, CORE_ON_OFF_STATE, DOMAIN
-from .tahoma_entity import TahomaEntity
+from .overkiz_entity import OverkizEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,20 +28,20 @@ CORE_RED_COLOR_INTENSITY_STATE = "core:RedColorIntensityState"
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up the TaHoma lights from a config entry."""
+    """Set up the Overkiz lights from a config entry."""
     data = hass.data[DOMAIN][entry.entry_id]
     coordinator = data["coordinator"]
 
     entities = [
-        TahomaLight(device.deviceurl, coordinator)
+        OverkizLight(device.deviceurl, coordinator)
         for device in data["platforms"][LIGHT]
     ]
 
     async_add_entities(entities)
 
 
-class TahomaLight(TahomaEntity, LightEntity):
-    """Representation of a TaHoma Light."""
+class OverkizLight(OverkizEntity, LightEntity):
+    """Representation of a Overkiz Light."""
 
     @property
     def brightness(self) -> int:

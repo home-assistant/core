@@ -971,15 +971,15 @@ omit =
     homeassistant/components/systemmonitor/sensor.py
     homeassistant/components/tado/*
     homeassistant/components/tado/device_tracker.py
-    homeassistant/components/tahoma/__init__.py
-    homeassistant/components/tahoma/binary_sensor.py
-    homeassistant/components/tahoma/coordinator.py
-    homeassistant/components/tahoma/cover.py
-    homeassistant/components/tahoma/light.py
-    homeassistant/components/tahoma/lock.py
-    homeassistant/components/tahoma/overkiz_executor.py
-    homeassistant/components/tahoma/scene.py
-    homeassistant/components/tahoma/tahoma_entity.py
+    homeassistant/components/overkiz/__init__.py
+    homeassistant/components/overkiz/binary_sensor.py
+    homeassistant/components/overkiz/coordinator.py
+    homeassistant/components/overkiz/cover.py
+    homeassistant/components/overkiz/light.py
+    homeassistant/components/overkiz/lock.py
+    homeassistant/components/overkiz/overkiz_executor.py
+    homeassistant/components/overkiz/scene.py
+    homeassistant/components/overkiz/overkiz_entity.py
     homeassistant/components/tank_utility/sensor.py
     homeassistant/components/tankerkoenig/*
     homeassistant/components/tapsaff/binary_sensor.py

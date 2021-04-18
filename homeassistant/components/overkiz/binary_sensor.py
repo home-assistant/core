@@ -1,4 +1,4 @@
-"""Support for Somfy TaHoma binary sensors."""
+"""Support for Overkiz binary sensors."""
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_GAS,
     DEVICE_CLASS_MOISTURE,
@@ -11,7 +11,7 @@ from homeassistant.components.binary_sensor import (
 )
 
 from .const import DOMAIN
-from .tahoma_entity import TahomaEntity
+from .overkiz_entity import OverkizEntity
 
 CORE_ASSEMBLY_STATE = "core:AssemblyState"
 CORE_BUTTON_STATE = "core:ButtonState"
@@ -33,7 +33,7 @@ STATE_PERSON_INSIDE = "personInside"
 STATE_DETECTED = "detected"
 STATE_PRESSED = "pressed"
 
-TAHOMA_BINARY_SENSOR_DEVICE_CLASSES = {
+OVERKIZ_BINARY_SENSOR_DEVICE_CLASSES = {
     "AirFlowSensor": DEVICE_CLASS_GAS,
     "CarButtonSensor": None,
     "ContactSensor": DEVICE_CLASS_OPENING,
@@ -49,19 +49,19 @@ TAHOMA_BINARY_SENSOR_DEVICE_CLASSES = {
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up the TaHoma sensors from a config entry."""
+    """Set up the Overkiz sensors from a config entry."""
     data = hass.data[DOMAIN][entry.entry_id]
     coordinator = data["coordinator"]
 
     entities = [
-        TahomaBinarySensor(device.deviceurl, coordinator)
+        OverkizBinarySensor(device.deviceurl, coordinator)
         for device in data["platforms"][BINARY_SENSOR]
     ]
     async_add_entities(entities)
 
 
-class TahomaBinarySensor(TahomaEntity, BinarySensorEntity):
-    """Representation of a TaHoma Binary Sensor."""
+class OverkizBinarySensor(OverkizEntity, BinarySensorEntity):
+    """Representation of a Overkiz Binary Sensor."""
 
     @property
     def is_on(self):
@@ -89,6 +89,6 @@ class TahomaBinarySensor(TahomaEntity, BinarySensorEntity):
     @property
     def device_class(self):
         """Return the class of the device."""
-        return TAHOMA_BINARY_SENSOR_DEVICE_CLASSES.get(
+        return OVERKIZ_BINARY_SENSOR_DEVICE_CLASSES.get(
             self.device.widget
-        ) or TAHOMA_BINARY_SENSOR_DEVICE_CLASSES.get(self.device.ui_class)
+        ) or OVERKIZ_BINARY_SENSOR_DEVICE_CLASSES.get(self.device.ui_class)

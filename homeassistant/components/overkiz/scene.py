@@ -1,4 +1,4 @@
-"""Support for TaHoma scenes."""
+"""Support for Overkiz scenes."""
 import logging
 from typing import Any
 
@@ -13,18 +13,18 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up the TaHoma scenes from a config entry."""
+    """Set up the Overkiz scenes from a config entry."""
     data = hass.data[DOMAIN][entry.entry_id]
     coordinator = data["coordinator"]
 
     entities = [
-        TahomaScene(scene, coordinator.client) for scene in data["platforms"][SCENE]
+        OverkizScene(scene, coordinator.client) for scene in data["platforms"][SCENE]
     ]
     async_add_entities(entities)
 
 
-class TahomaScene(Scene):
-    """Representation of a TaHoma Scene."""
+class OverkizScene(Scene):
+    """Representation of a Overkiz Scene."""
 
     def __init__(self, scenario: Scenario, client: TahomaClient):
         """Initialize the scene."""

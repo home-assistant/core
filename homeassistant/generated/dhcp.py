@@ -110,6 +110,11 @@ DHCP = [
         "hostname": "nuki_bridge_*"
     },
     {
+        "domain": "overkiz",
+        "hostname": "gateway*",
+        "macaddress": "F8811A*"
+    },
+    {
         "domain": "powerwall",
         "hostname": "1118431-*",
         "macaddress": "88DA1A*"
@@ -178,11 +183,6 @@ DHCP = [
         "domain": "squeezebox",
         "hostname": "squeezebox*",
         "macaddress": "000420*"
-    },
-    {
-        "domain": "tahoma",
-        "hostname": "gateway*",
-        "macaddress": "F8811A*"
     },
     {
         "domain": "tesla",
