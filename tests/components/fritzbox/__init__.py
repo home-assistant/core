@@ -64,6 +64,7 @@ class FritzDeviceSensorMock(Mock):
     """Mock of a AVM Fritz!Box sensor device."""
 
     ain = "fake_ain"
+    battery_level = 23
     device_lock = "fake_locked_device"
     fw_version = "1.2.3"
     has_alarm = False
