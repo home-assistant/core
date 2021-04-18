@@ -1073,7 +1073,7 @@ samsungtvws==1.6.0
 scapy==2.4.4
 
 # homeassistant.components.screenlogic
-screenlogicpy==0.2.1
+screenlogicpy==0.3.0
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
