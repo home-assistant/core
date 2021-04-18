@@ -958,6 +958,9 @@ omit =
     homeassistant/components/tahoma/overkiz_executor.py
     homeassistant/components/tahoma/scene.py
     homeassistant/components/tahoma/tahoma_entity.py
+    homeassistant/components/tahoma/water_heater.py
+    homeassistant/components/tahoma/water_heater_devices/domestic_hot_water_production.py
+    homeassistant/components/tahoma/water_heater_devices/hitachi_dhw.py
     homeassistant/components/tank_utility/sensor.py
     homeassistant/components/tankerkoenig/*
     homeassistant/components/tapsaff/binary_sensor.py

@@ -3,6 +3,7 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
 from homeassistant.components.cover import DOMAIN as COVER
 from homeassistant.components.light import DOMAIN as LIGHT
 from homeassistant.components.lock import DOMAIN as LOCK
+from homeassistant.components.water_heater import DOMAIN as WATER_HEATER
 
 DOMAIN = "tahoma"
 
@@ -22,11 +23,13 @@ TAHOMA_TYPES = {
     "CarButtonSensor": BINARY_SENSOR,
     "ContactSensor": BINARY_SENSOR,
     "Curtain": COVER,
+    "DomesticHotWaterProduction": WATER_HEATER,  # widgetName, uiClass is WaterHeatingSystem (not supported)
     "DoorLock": LOCK,
     "ExteriorScreen": COVER,
     "ExteriorVenetianBlind": COVER,
     "GarageDoor": COVER,
     "Gate": COVER,
+    "HitachiDHW": WATER_HEATER,  # widgetName, uiClass is HitachiHeatingSystem (not supported)
     "Light": LIGHT,
     "MotionSensor": BINARY_SENSOR,
     "MyFoxSecurityCamera": COVER,  # widgetName, uiClass is Camera (not supported)
