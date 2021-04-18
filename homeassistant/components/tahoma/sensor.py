@@ -5,6 +5,8 @@ from typing import Optional
 from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
+    DEVICE_CLASS_CO,
+    DEVICE_CLASS_CO2,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
@@ -12,6 +14,7 @@ from homeassistant.const import (
     ELECTRICAL_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
+    LIGHT_LUX,
     PERCENTAGE,
     POWER_KILO_WATT,
     POWER_WATT,
@@ -45,11 +48,9 @@ CORE_THERMAL_ENERGY_CONSUMPTION_STATE = "core:ThermalEnergyConsumptionState"
 CORE_WATER_CONSUMPTION_STATE = "core:WaterConsumptionState"
 CORE_WINDSPEED_STATE = "core:WindSpeedState"
 
-UNIT_LX = "lx"
-
 TAHOMA_SENSOR_DEVICE_CLASSES = {
-    "CO2Sensor": None,  # co2
-    "COSensor": None,  # co
+    "CO2Sensor": DEVICE_CLASS_CO2,
+    "COSensor": DEVICE_CLASS_CO,
     "ElectricitySensor": DEVICE_CLASS_POWER,
     "HumiditySensor": DEVICE_CLASS_HUMIDITY,
     "LightSensor": DEVICE_CLASS_ILLUMINANCE,
@@ -65,7 +66,7 @@ UNITS = {
     "core:TemperatureInCelsius": TEMP_CELSIUS,
     "core:TemperatureInKelvin": TEMP_KELVIN,
     "core:TemperatureInFahrenheit": TEMP_FAHRENHEIT,
-    "core:LuminanceInLux": UNIT_LX,
+    "core:LuminanceInLux": LIGHT_LUX,
     "core:ElectricCurrentInAmpere": ELECTRICAL_CURRENT_AMPERE,
     "core:VoltageInVolt": VOLT,
     "core:ElectricalEnergyInWh": ENERGY_WATT_HOUR,
