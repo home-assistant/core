@@ -23,7 +23,7 @@ DATA_CONNECTOR = "aiohttp_connector"
 DATA_CONNECTOR_NOTVERIFY = "aiohttp_connector_notverify"
 DATA_CLIENTSESSION = "aiohttp_clientsession"
 DATA_CLIENTSESSION_NOTVERIFY = "aiohttp_clientsession_notverify"
-SERVER_SOFTWARE = "HomeAssistant/{0} aiohttp/{1} Python/{2[0]}.{2[1]}".format(
+SERVER_SOFTWARE = "AIS/{0} aiohttp/{1} Python/{2[0]}.{2[1]}".format(
     __version__, aiohttp.__version__, sys.version_info
 )
 
