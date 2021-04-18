@@ -8,7 +8,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
 # pylint complains because DOMAIN is only used in a keyword arg in the class declaration
-from .const import CONF_CONFIG_ENTRY, DOMAIN  # pylint: disable=unused-import
+from .const import DOMAIN  # pylint: disable=unused-import
 from .controller import SmartTubController
 
 DATA_SCHEMA = vol.Schema(
@@ -51,10 +51,11 @@ class SmartTubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=DATA_SCHEMA, errors=errors
             )
 
-        existing_entry = await self.async_set_unique_id(account.id)
+        await self.async_set_unique_id(account.id)
+
         if self._reauth_input is not None:
             # this is a reauth attempt
-            if self._reauth_entry.unique_id != account.id:
+            if self._reauth_entry.unique_id != self.unique_id:
                 # there is a config entry matching this account, but it is not the one we were trying to reauth
                 return self.async_abort(reason="already_configured")
             self.hass.config_entries.async_update_entry(
@@ -68,7 +69,9 @@ class SmartTubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_reauth(self, user_input=None):
         """Get new credentials if the current ones don't work anymore."""
         self._reauth_input = dict(user_input)
-        self._reauth_entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        self._reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(self, user_input=None):

@@ -4,7 +4,7 @@ from unittest.mock import patch
 from smarttub import LoginFailed
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.smarttub.const import CONF_CONFIG_ENTRY, DOMAIN
+from homeassistant.components.smarttub.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
 
@@ -68,7 +68,7 @@ async def test_reauth_success(hass, smarttub_api):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_REAUTH},
-        data={CONF_CONFIG_ENTRY: config_entry, **config_entry.data},
+        data=config_entry.data,
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -124,7 +124,7 @@ async def test_reauth_wrong_account(hass, smarttub_api, account):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_REAUTH},
-        data={CONF_CONFIG_ENTRY: config_entry, **config_entry.data},
+        data=config_entry.data,
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
