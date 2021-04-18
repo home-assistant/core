@@ -36,7 +36,6 @@ from .const import (
     CONNECTION,
     DEFAULT_NAME,
     DOMAIN,
-    PLATFORMS,
 )
 
 # Regex for address validation
@@ -65,7 +64,6 @@ def get_device_connection(hass, address, config_entry):
 
 def get_resource(domain_name, domain_data):
     """Return the resource for the specified domain_data."""
-    assert domain_name in PLATFORMS
     if domain_name in ["switch", "light"]:
         return domain_data["output"]
     if domain_name in ["binary_sensor", "sensor"]:
@@ -76,6 +74,7 @@ def get_resource(domain_name, domain_data):
         return f'{domain_data["source"]}.{domain_data["setpoint"]}'
     if domain_name == "scene":
         return f'{domain_data["register"]}.{domain_data["scene"]}'
+    raise ValueError("Unknown domain")
 
 
 def generate_unique_id(address):
@@ -220,16 +219,17 @@ def is_address(value):
         myhome.s0.g11
     """
     matcher = PATTERN_ADDRESS.match(value)
-    assert matcher
     if matcher:
         is_group = matcher.group("type") == "g"
         addr = (int(matcher.group("seg_id")), int(matcher.group("id")), is_group)
         conn_id = matcher.group("conn_id")
         return addr, conn_id
+    raise ValueError(f"{value} is not a valid address string")
 
 
 def is_states_string(states_string):
     """Validate the given states string and return states list."""
-    assert len(states_string) == 8
+    if len(states_string) != 8:
+        raise ValueError("Invalid length of states string")
     states = {"1": "ON", "0": "OFF", "T": "TOGGLE", "-": "NOCHANGE"}
     return [states[state_string] for state_string in states_string]
