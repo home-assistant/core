@@ -13,6 +13,11 @@ from .controller import SmartTubController
 _LOGGER = logging.getLogger(__name__)
 
 
+DATA_SCHEMA = vol.Schema(
+    {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
+)
+
+
 class SmartTubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """SmartTub configuration flow."""
 
@@ -28,10 +33,6 @@ class SmartTubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
         errors = {}
-
-        data_schema = vol.Schema(
-            {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
-        )
 
         if user_input is not None:
             controller = SmartTubController(self.hass)
@@ -62,7 +63,7 @@ class SmartTubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
-            step_id="user", data_schema=data_schema, errors=errors
+            step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
     async def async_step_reauth(self, user_input=None):
@@ -76,6 +77,7 @@ class SmartTubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_reauth_confirm(self, user_input=None):
         """Dialog that informs the user that reauth is required."""
         if user_input is None:
+            # same as DATA_SCHEMA but with default email
             data_schema = vol.Schema(
                 {
                     vol.Required(
