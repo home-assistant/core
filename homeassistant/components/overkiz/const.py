@@ -13,9 +13,8 @@ MIN_UPDATE_INTERVAL = 30
 DEFAULT_UPDATE_INTERVAL = 30
 
 SUPPORTED_ENDPOINTS = {
-    "Cozytouch": "https://ha110-1.overkiz.com/enduser-mobile-web/enduserAPI/",
-    "eedomus": "https://ha101-1.overkiz.com/enduser-mobile-web/enduserAPI/",
-    "Hi Kumo": "https://ha117-1.overkiz.com/enduser-mobile-web/enduserAPI/",
+    "Atlantic Cozytouch": "https://ha110-1.overkiz.com/enduser-mobile-web/enduserAPI/",
+    "Hitachi Hi Kumo": "https://ha117-1.overkiz.com/enduser-mobile-web/enduserAPI/",
     "Rexel Energeasy Connect": "https://ha112-1.overkiz.com/enduser-mobile-web/enduserAPI/",
     "Somfy (Australia)": "https://ha201-1.overkiz.com/enduser-mobile-web/enduserAPI/",
     "Somfy (Europe)": "https://tahomalink.com/enduser-mobile-web/enduserAPI/",
