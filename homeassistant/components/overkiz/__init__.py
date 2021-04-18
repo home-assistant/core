@@ -34,11 +34,6 @@ from .coordinator import OverkizDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Overkiz component."""
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Overkiz from a config entry."""
     hass.data.setdefault(DOMAIN, {})
