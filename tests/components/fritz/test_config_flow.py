@@ -1,6 +1,7 @@
 """Tests for AVM Fritz!Box config flow."""
 from unittest.mock import patch
 
+from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
 import pytest
 
 from homeassistant.components.fritz.const import ATTR_HOST, DOMAIN
@@ -18,7 +19,7 @@ from homeassistant.data_entry_flow import (
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import MOCK_CONFIG, FritzConnectionMock
+from . import MOCK_CONFIG, MOCK_CONFIG_HOST, FritzConnectionMock
 
 from tests.common import MockConfigEntry
 
@@ -29,6 +30,7 @@ MOCK_SERIAL_NUMBER = "fake_serial_number"
 
 
 MOCK_USER_DATA = MOCK_CONFIG[DOMAIN][CONF_DEVICES][0]
+MOCK_USER_DATA_HOST = MOCK_CONFIG_HOST[DOMAIN][CONF_DEVICES][0]
 MOCK_DEVICE_INFO = {
     ATTR_HOST: MOCK_HOST,
     ATTR_NEW_SERIAL_NUMBER: MOCK_SERIAL_NUMBER,
@@ -71,6 +73,48 @@ async def test_user(hass: HomeAssistantType, fc_class_mock):
         assert not result["result"].unique_id
 
 
+async def test_exception_1(hass: HomeAssistantType, fc_class_mock):
+    """Test starting a flow by user."""
+    with patch(
+        "homeassistant.components.fritz.common.FritzConnection",
+        side_effect=FritzSecurityError,
+    ), patch("homeassistant.components.fritz.common.FritzStatus"):
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "start_config"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_DATA
+        )
+
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "start_config"
+
+
+async def test_exception_2(hass: HomeAssistantType, fc_class_mock):
+    """Test starting a flow by user."""
+    with patch(
+        "homeassistant.components.fritz.common.FritzConnection",
+        side_effect=FritzConnectionException,
+    ), patch("homeassistant.components.fritz.common.FritzStatus"):
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "start_config"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_DATA
+        )
+
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "start_config"
+
+
 async def test_reauth_successful(hass: HomeAssistantType, fc_class_mock):
     """Test starting a reauthentication flow but no connection found."""
 
@@ -110,6 +154,52 @@ async def test_ssdp_already_configured(hass: HomeAssistantType, fc_class_mock):
         domain=DOMAIN,
         data=MOCK_USER_DATA,
         unique_id="only-a-test",
+    )
+    mock_config.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.fritz.common.FritzConnection",
+        side_effect=fc_class_mock,
+    ), patch("homeassistant.components.fritz.common.FritzStatus"):
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA
+        )
+        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["reason"] == "already_configured"
+
+
+async def test_ssdp_already_configured_host(hass: HomeAssistantType, fc_class_mock):
+    """Test starting a flow from discovery but no device found."""
+
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_USER_DATA,
+        unique_id="different-test",
+    )
+    mock_config.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.fritz.common.FritzConnection",
+        side_effect=fc_class_mock,
+    ), patch("homeassistant.components.fritz.common.FritzStatus"):
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA
+        )
+        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["reason"] == "already_configured"
+
+
+async def test_ssdp_already_configured_host_uuid(
+    hass: HomeAssistantType, fc_class_mock
+):
+    """Test starting a flow from discovery but no device found."""
+
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_USER_DATA,
+        unique_id=None,
     )
     mock_config.add_to_hass(hass)
 

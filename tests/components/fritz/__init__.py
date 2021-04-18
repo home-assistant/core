@@ -15,6 +15,17 @@ MOCK_CONFIG = {
         ]
     }
 }
+MOCK_CONFIG_HOST = {
+    DOMAIN: {
+        CONF_DEVICES: [
+            {
+                CONF_HOST: "fake_host_2",
+                CONF_PASSWORD: "fake_pass",
+                CONF_USERNAME: "fake_user",
+            }
+        ]
+    }
+}
 
 
 class FritzConnectionMock:  # pylint: disable=too-few-public-methods
@@ -90,6 +101,7 @@ class FritzConnectionMock:  # pylint: disable=too-few-public-methods
                 "NewName": "TheName",
                 "NewModelName": "FRITZ!Box 7490",
             },
+            {},
         ],
     }
 
