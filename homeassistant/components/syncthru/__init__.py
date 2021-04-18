@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -53,6 +54,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, SENSOR_DOMAIN)
+    )
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setup(entry, BINARY_SENSOR_DOMAIN)
     )
     return True
 
