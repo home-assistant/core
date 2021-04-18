@@ -95,42 +95,31 @@ async def test_reauth_success(hass, smarttub_api, account):
 
 
 async def test_reauth_wrong_account(hass, smarttub_api, account):
-    """Test reauthentication flow."""
-    account.id = "mockaccount1"
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    """Test reauthentication flow if the user enters credentials for a different already-configured account."""
+    mock_entry1 = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_EMAIL: "test-email", CONF_PASSWORD: "test-password"},
+        unique_id=account.id,
     )
+    mock_entry1.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_EMAIL: "test-email", CONF_PASSWORD: "test-password"}
+    mock_entry2 = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_EMAIL: "test-email", CONF_PASSWORD: "test-password"},
+        unique_id="mockaccount2",
     )
-    assert result["type"] == "create_entry"
-    assert result["title"] == "test-email"
-    config_entry = result["result"]
+    mock_entry2.add_to_hass(hass)
 
-    # second entry with a different account
-    account.id = "mockaccount2"
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_EMAIL: "test-email", CONF_PASSWORD: "test-password"}
-    )
-    assert result["type"] == "create_entry"
-    assert result["title"] == "test-email"
-    config_entry = result["result"]
-
-    # we try to reauth this account, and the user successfully authenticates to the other account
-    account.id = "mockaccount1"
+    # we try to reauth account #2, and the user successfully authenticates to account #1
+    account.id = mock_entry1.unique_id
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
             "source": config_entries.SOURCE_REAUTH,
-            "unique_id": config_entry.unique_id,
-            "entry_id": config_entry.entry_id,
+            "unique_id": mock_entry2.unique_id,
+            "entry_id": mock_entry2.entry_id,
         },
-        data=config_entry.data,
+        data=mock_entry2.data,
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
