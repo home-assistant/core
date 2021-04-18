@@ -8,7 +8,7 @@ from homeassistant.const import STATE_LOCKED
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-from .overkiz_entity import OverkizEntity
+from .entity import OverkizEntity
 
 _LOGGER = logging.getLogger(__name__)
 

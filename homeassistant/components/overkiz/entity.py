@@ -11,8 +11,6 @@ from .const import DOMAIN
 from .coordinator import OverkizDataUpdateCoordinator
 from .overkiz_executor import OverkizExecutor
 
-ATTR_RSSI_LEVEL = "rssi_level"
-
 CORE_AVAILABILITY_STATE = "core:AvailabilityState"
 CORE_MANUFACTURER_NAME_STATE = "core:ManufacturerNameState"
 CORE_MODEL_STATE = "core:ModelState"

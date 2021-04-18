@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 import homeassistant.util.color as color_util
 
 from .const import COMMAND_OFF, COMMAND_ON, CORE_ON_OFF_STATE, DOMAIN
-from .overkiz_entity import OverkizEntity
+from .entity import OverkizEntity
 
 _LOGGER = logging.getLogger(__name__)
 
