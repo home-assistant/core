@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
     CONF_NAME,
+    CONF_UNIQUE_ID,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
@@ -32,6 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -44,6 +46,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     mac_address = config[CONF_MAC]
     name = config[CONF_NAME]
     off_action = config.get(CONF_OFF_ACTION)
+    unique_id = config.get(CONF_UNIQUE_ID)
 
     add_entities(
         [
@@ -55,6 +58,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 off_action,
                 broadcast_address,
                 broadcast_port,
+                unique_id,
             )
         ],
         host is not None,
@@ -73,6 +77,7 @@ class WolSwitch(SwitchEntity):
         off_action,
         broadcast_address,
         broadcast_port,
+        unique_id,
     ):
         """Initialize the WOL switch."""
         self._hass = hass
@@ -87,6 +92,7 @@ class WolSwitch(SwitchEntity):
         )
         self._state = False
         self._assumed_state = host is None
+        self._unique_id = unique_id
 
     @property
     def is_on(self):
@@ -107,6 +113,11 @@ class WolSwitch(SwitchEntity):
     def should_poll(self):
         """Return false if assumed state is true."""
         return not self._assumed_state
+
+    @property
+    def unique_id(self):
+        """Return the unique id of this switch."""
+        return self._unique_id
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
