@@ -143,6 +143,7 @@ async def test_purge_old_states_encouters_operational_error(
         )
         await hass.async_block_till_done()
         await async_wait_recording_done_without_instance(hass)
+        await async_wait_recording_done_without_instance(hass)
 
     assert "retrying" not in caplog.text
     assert "Error purging history" in caplog.text
