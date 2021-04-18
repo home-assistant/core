@@ -56,13 +56,7 @@ class SmartTubController:
             )
         except LoginFailed:
             # credentials were changed or invalidated, we need new ones
-            self._hass.async_create_task(
-                self._hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": SOURCE_REAUTH},
-                    data={CONF_CONFIG_ENTRY: entry, **entry.data},
-                )
-            )
+            raise ConfigEntryAuthFailed
             return False
         except (
             asyncio.TimeoutError,
