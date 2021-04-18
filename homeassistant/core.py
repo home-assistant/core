@@ -87,7 +87,7 @@ if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntries
 
 
-STAGE_1_SHUTDOWN_TIMEOUT = 120
+STAGE_1_SHUTDOWN_TIMEOUT = 100
 STAGE_2_SHUTDOWN_TIMEOUT = 60
 STAGE_3_SHUTDOWN_TIMEOUT = 30
 
