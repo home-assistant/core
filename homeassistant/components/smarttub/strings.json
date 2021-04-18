@@ -11,7 +11,7 @@
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The SmartTub integration needs to re-authenticate your account: {email}"
+        "description": "The SmartTub integration needs to re-authenticate your account"
       }
     },
     "error": {

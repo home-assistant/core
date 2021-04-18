@@ -67,7 +67,11 @@ async def test_reauth_success(hass, smarttub_api):
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_REAUTH},
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "unique_id": config_entry.unique_id,
+            "entry_id": config_entry.entry_id,
+        },
         data=config_entry.data,
     )
 
@@ -123,7 +127,11 @@ async def test_reauth_wrong_account(hass, smarttub_api, account):
     account.id = "mockaccount1"
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_REAUTH},
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "unique_id": config_entry.unique_id,
+            "entry_id": config_entry.entry_id,
+        },
         data=config_entry.data,
     )
 
