@@ -19,7 +19,7 @@ from homeassistant.data_entry_flow import (
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import MOCK_CONFIG, MOCK_CONFIG_HOST, FritzConnectionMock
+from . import MOCK_CONFIG, FritzConnectionMock
 
 from tests.common import MockConfigEntry
 
@@ -30,7 +30,6 @@ MOCK_SERIAL_NUMBER = "fake_serial_number"
 
 
 MOCK_USER_DATA = MOCK_CONFIG[DOMAIN][CONF_DEVICES][0]
-MOCK_USER_DATA_HOST = MOCK_CONFIG_HOST[DOMAIN][CONF_DEVICES][0]
 MOCK_DEVICE_INFO = {
     ATTR_HOST: MOCK_HOST,
     ATTR_NEW_SERIAL_NUMBER: MOCK_SERIAL_NUMBER,
@@ -291,3 +290,55 @@ async def test_ssdp_already_in_progress_host(hass: HomeAssistantType, fc_class_m
         )
         assert result["type"] == RESULT_TYPE_ABORT
         assert result["reason"] == "already_in_progress"
+
+
+async def test_ssdp(hass: HomeAssistantType, fc_class_mock):
+    """Test starting a flow from discovery but no device found."""
+    with patch(
+        "homeassistant.components.fritz.common.FritzConnection",
+        side_effect=fc_class_mock,
+    ), patch("homeassistant.components.fritz.common.FritzStatus"):
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA
+        )
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "confirm"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_USERNAME: "fake_user",
+                CONF_PASSWORD: "fake_pass",
+            },
+        )
+
+        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert result["data"][CONF_HOST] == "fake_host"
+        assert result["data"][CONF_PASSWORD] == "fake_pass"
+        assert result["data"][CONF_USERNAME] == "fake_user"
+
+
+async def test_ssdp_exception(hass: HomeAssistantType):
+    """Test starting a flow from discovery but no device found."""
+    with patch(
+        "homeassistant.components.fritz.common.FritzConnection",
+        side_effect=FritzConnectionException,
+    ), patch("homeassistant.components.fritz.common.FritzStatus"):
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA
+        )
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "confirm"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_USERNAME: "fake_user",
+                CONF_PASSWORD: "fake_pass",
+            },
+        )
+
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "confirm"
