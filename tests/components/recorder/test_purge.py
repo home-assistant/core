@@ -88,7 +88,7 @@ async def test_purge_old_states_encouters_database_corruption(
         assert states_after_purge.count() == 0
 
 
-async def test_purge_old_states_encouters_temporary_mysql_error(
+async def test_purge_old_states_encounters_temporary_mysql_error(
     hass: HomeAssistantType,
     async_setup_recorder_instance: SetupRecorderInstanceT,
     caplog,
@@ -121,7 +121,7 @@ async def test_purge_old_states_encouters_temporary_mysql_error(
     assert sleep_mock.called
 
 
-async def test_purge_old_states_encouters_operational_error(
+async def test_purge_old_states_encounters_operational_error(
     hass: HomeAssistantType,
     async_setup_recorder_instance: SetupRecorderInstanceT,
     caplog,
