@@ -92,14 +92,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         hostname = discovery_info[HOSTNAME]
         gateway_id = hostname[8:22]
 
-        if await self._gateway_already_configured(gateway_id):
+        if self._gateway_already_configured(gateway_id):
             return self.async_abort(reason="already_configured")
 
         return await self.async_step_user()
 
-    async def _gateway_already_configured(self, gateway_id: str):
+    def _gateway_already_configured(self, gateway_id: str):
         """See if we already have a gateway matching the id."""
-        device_registry = await dr.async_get(self.hass)
+        device_registry = dr.async_get(self.hass)
         device = device_registry.async_get_device(
             identifiers={(DOMAIN, gateway_id)}, connections=set()
         )
