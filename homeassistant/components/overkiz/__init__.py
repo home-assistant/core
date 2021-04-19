@@ -65,7 +65,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         ]
         devices, scenarios, gateways, places = await asyncio.gather(*tasks)
     except BadCredentialsException as exception:
-        _LOGGER.error("Invalid authentication")
         raise ConfigEntryAuthFailed from exception
     except TooManyRequestsException as exception:
         _LOGGER.error("Too many requests, try again later")

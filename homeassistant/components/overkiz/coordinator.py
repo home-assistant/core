@@ -68,7 +68,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             events = await self.client.fetch_events()
         except BadCredentialsException as exception:
-            raise ConfigEntryAuthFailed("Invalid authentication.") from exception
+            raise ConfigEntryAuthFailed() from exception
         except TooManyRequestsException as exception:
             raise UpdateFailed("Too many requests, try again later.") from exception
         except MaintenanceException as exception:
