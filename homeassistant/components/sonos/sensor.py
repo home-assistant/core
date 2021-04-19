@@ -106,7 +106,7 @@ class SonosBatteryEntity(Entity):
     def name(self) -> str:
         """Return the name of the sensor."""
         speaker_info = self.hass.data[DATA_SONOS].speaker_info[self._soco.uid]
-        return speaker_info["zone_name"] + " Battery"
+        return f"{speaker_info['zone_name']} Battery"
 
     @property
     def device_info(self) -> Dict[str, Any]:
