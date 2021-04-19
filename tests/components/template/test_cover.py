@@ -251,8 +251,8 @@ async def test_template_out_of_bounds(hass, calls):
 
 
 async def test_template_mutex(hass, calls):
-    """Test that only value or position template can be used."""
-    with assert_setup_component(0, "cover"):
+    """Test that value and position template can be used."""
+    with assert_setup_component(1, "cover"):
         assert await setup.async_setup_component(
             hass,
             "cover",
@@ -261,7 +261,7 @@ async def test_template_mutex(hass, calls):
                     "platform": "template",
                     "covers": {
                         "test_template_cover": {
-                            "value_template": "{{ 1 == 1 }}",
+                            "value_template": "{{ 'opening' }}",
                             "position_template": "{{ 42 }}",
                             "open_cover": {
                                 "service": "cover.open_cover",
@@ -284,7 +284,9 @@ async def test_template_mutex(hass, calls):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    assert hass.states.async_all() == []
+    state = hass.states.get("cover.test_template_cover")
+    assert state.state == STATE_OPENING
+    assert state.attributes.get("current_position") == 42.0
 
 
 async def test_template_open_or_position(hass, caplog):
