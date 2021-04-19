@@ -90,4 +90,4 @@ class SmartTubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="reauth_confirm",
                 data_schema=data_schema,
             )
-        return await self.async_step_user()
+        return await self.async_step_user(user_input)
