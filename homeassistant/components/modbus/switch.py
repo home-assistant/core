@@ -21,10 +21,11 @@ from homeassistant.const import (
     CONF_SWITCHES,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CALL_TYPE_COIL,
@@ -88,7 +89,7 @@ PLATFORM_SCHEMA = vol.All(
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
 ):
     """Read configuration and create Modbus switches."""
     switches = []
