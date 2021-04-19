@@ -40,7 +40,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except PoweredOff:
                 _LOGGER.warning(
-                    "You need to turn ON projector for initial configuration."
+                    "You need to turn ON projector for initial configuration"
                 )
                 errors["base"] = "powered_off"
             else:
