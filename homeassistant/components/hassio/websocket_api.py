@@ -95,7 +95,6 @@ async def websocket_supervisor_api(
 ):
     """Websocket handler to call Supervisor API."""
     supervisor: HassIO = hass.data[DOMAIN]
-    result = {}
     try:
         result = await supervisor.send_command(
             msg[ATTR_ENDPOINT],
