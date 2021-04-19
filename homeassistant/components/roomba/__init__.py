@@ -3,7 +3,7 @@ import asyncio
 import logging
 
 import async_timeout
-from roombapy import RoombaFactory, RoombaConnectionError
+from roombapy import RoombaConnectionError, RoombaFactory
 
 from homeassistant import exceptions
 from homeassistant.const import (
