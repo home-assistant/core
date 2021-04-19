@@ -4,9 +4,6 @@ turn_on:
   description: Sends the Power On Command.
   target:
   fields:
-    entity_id:
-      description: Name(s) of entities to turn on.
-      example: "remote.family_room"
     activity:
       description: Activity ID or Activity Name to start.
       example: "BedroomTV"
@@ -34,9 +31,6 @@ send_command:
   description: Sends a command or a list of commands to a device.
   target:
   fields:
-    entity_id:
-      description: Name(s) of entities to send command from.
-      example: "remote.family_room"
     device:
       name: Device
       description: Device ID to send command to.
@@ -82,9 +76,6 @@ learn_command:
   description: Learns a command or a list of commands from a device.
   target:
   fields:
-    entity_id:
-      description: Name(s) of entities to learn command from.
-      example: "remote.bedroom"
     device:
       description: Device ID to learn command from.
       example: "television"
@@ -124,9 +115,6 @@ delete_command:
   description: Deletes a command or a list of commands from the database.
   target:
   fields:
-    entity_id:
-      description: Name(s) of the remote entities holding the database.
-      example: "remote.bedroom"
     device:
       description: Name of the device from which commands will be deleted.
       example: "television"
