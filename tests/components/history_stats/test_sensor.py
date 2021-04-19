@@ -118,7 +118,7 @@ class TestHistoryStatsSensor(unittest.TestCase):
         assert sensor2_end.minute == 0
         assert sensor2_end.second == 0
 
-    def test_measure(self):
+    async def async_test_measure(self):
         """Test the history statistics sensor measure."""
         t0 = dt_util.utcnow() - timedelta(minutes=40)
         t1 = t0 + timedelta(minutes=20)
@@ -163,17 +163,17 @@ class TestHistoryStatsSensor(unittest.TestCase):
             "homeassistant.components.history.state_changes_during_period",
             return_value=fake_states,
         ), patch("homeassistant.components.history.get_state", return_value=None):
-            sensor1.update()
-            sensor2.update()
-            sensor3.update()
-            sensor4.update()
+            await sensor1.async_update()
+            await sensor2.async_update()
+            await sensor3.async_update()
+            await sensor4.async_update()
 
         assert sensor1.state == 0.5
         assert sensor2.state is None
         assert sensor3.state == 2
         assert sensor4.state == 50
 
-    def test_measure_multiple(self):
+    async def test_measure_multiple(self):
         """Test the history statistics sensor measure for multiple states."""
         t0 = dt_util.utcnow() - timedelta(minutes=40)
         t1 = t0 + timedelta(minutes=20)
@@ -246,10 +246,10 @@ class TestHistoryStatsSensor(unittest.TestCase):
             "homeassistant.components.history.state_changes_during_period",
             return_value=fake_states,
         ), patch("homeassistant.components.history.get_state", return_value=None):
-            sensor1.update()
-            sensor2.update()
-            sensor3.update()
-            sensor4.update()
+            await sensor1.async_update()
+            await sensor2.async_update()
+            await sensor3.async_update()
+            await sensor4.async_update()
 
         assert sensor1.state == 0.5
         assert sensor2.state is None
