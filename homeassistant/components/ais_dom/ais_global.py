@@ -304,7 +304,7 @@ def has_front_clock():
             "su -c 'ls /data/local/ais_screen_control'", shell=True  # nosec
         )
     except Exception as e:
-        _LOGGER.error("No front clock")
+        _LOGGER.info("No front clock")
         return False
     return True
 
