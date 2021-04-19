@@ -1,6 +1,7 @@
 """Handle the frontend for Home Assistant."""
 from __future__ import annotations
 
+from functools import lru_cache
 import json
 import logging
 import mimetypes
@@ -253,10 +254,7 @@ def async_remove_panel(hass, frontend_url_path):
 def add_extra_js_url(hass, url, es5=False):
     """Register extra js or module url to load."""
     key = DATA_EXTRA_JS_URL_ES5 if es5 else DATA_EXTRA_MODULE_URL
-    url_set = hass.data.get(key)
-    if url_set is None:
-        url_set = hass.data[key] = set()
-    url_set.add(url)
+    hass.data[key] = frozenset(*hass.data[key], url)
 
 
 def _frontend_root(dev_repo_path):
@@ -337,13 +335,13 @@ async def async_setup(hass, config):
     )
 
     if DATA_EXTRA_MODULE_URL not in hass.data:
-        hass.data[DATA_EXTRA_MODULE_URL] = set()
+        hass.data[DATA_EXTRA_MODULE_URL] = frozenset()
 
     for url in conf.get(CONF_EXTRA_MODULE_URL, []):
         add_extra_js_url(hass, url)
 
     if DATA_EXTRA_JS_URL_ES5 not in hass.data:
-        hass.data[DATA_EXTRA_JS_URL_ES5] = set()
+        hass.data[DATA_EXTRA_JS_URL_ES5] = frozenset()
 
     for url in conf.get(CONF_EXTRA_JS_URL_ES5, []):
         add_extra_js_url(hass, url, True)
@@ -455,6 +453,12 @@ async def _async_setup_themes(hass, themes):
     )
 
 
+@callback
+@lru_cache(maxsize=1)
+def _async_render_cached(template, **kwargs):
+    return template.render(**kwargs)
+
+
 class IndexView(web_urldispatcher.AbstractResource):
     """Serve the frontend."""
 
@@ -533,13 +537,13 @@ class IndexView(web_urldispatcher.AbstractResource):
         if not hass.components.onboarding.async_is_onboarded():
             return web.Response(status=302, headers={"location": "/onboarding.html"})
 
-        template = self._template_cache
-
-        if template is None:
-            template = await hass.async_add_executor_job(self.get_template)
+        template = self._template_cache or await hass.async_add_executor_job(
+            self.get_template
+        )
 
         return web.Response(
-            text=template.render(
+            text=_async_render_cached(
+                template,
                 theme_color=MANIFEST["theme_color"],
                 extra_modules=hass.data[DATA_EXTRA_MODULE_URL],
                 extra_js_es5=hass.data[DATA_EXTRA_JS_URL_ES5],
