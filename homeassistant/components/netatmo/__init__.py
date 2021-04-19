@@ -62,8 +62,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-# PLATFORMS = ["camera", "climate", "light", "sensor"]
-PLATFORMS = ["camera"]
+PLATFORMS = ["camera", "climate", "light", "sensor"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):

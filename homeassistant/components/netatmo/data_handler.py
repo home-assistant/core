@@ -19,22 +19,22 @@ from .const import AUTH, DOMAIN, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 
-CAMERA_DATA_CLASS_NAME = "CameraData"
-WEATHERSTATION_DATA_CLASS_NAME = "WeatherStationData"
-HOMECOACH_DATA_CLASS_NAME = "HomeCoachData"
-HOMEDATA_DATA_CLASS_NAME = "HomeData"
-HOMESTATUS_DATA_CLASS_NAME = "HomeStatus"
-PUBLICDATA_DATA_CLASS_NAME = "PublicData"
+CAMERA_DATA_CLASS_NAME = "AsyncCameraData"
+WEATHERSTATION_DATA_CLASS_NAME = "AsyncWeatherStationData"
+HOMECOACH_DATA_CLASS_NAME = "AsyncHomeCoachData"
+HOMEDATA_DATA_CLASS_NAME = "AsyncHomeData"
+HOMESTATUS_DATA_CLASS_NAME = "AsyncHomeStatus"
+PUBLICDATA_DATA_CLASS_NAME = "AsyncPublicData"
 
 NEXT_SCAN = "next_scan"
 
 DATA_CLASSES = {
-    WEATHERSTATION_DATA_CLASS_NAME: pyatmo.WeatherStationData,
-    HOMECOACH_DATA_CLASS_NAME: pyatmo.HomeCoachData,
-    CAMERA_DATA_CLASS_NAME: pyatmo.CameraData,
-    HOMEDATA_DATA_CLASS_NAME: pyatmo.HomeData,
-    HOMESTATUS_DATA_CLASS_NAME: pyatmo.HomeStatus,
-    PUBLICDATA_DATA_CLASS_NAME: pyatmo.PublicData,
+    WEATHERSTATION_DATA_CLASS_NAME: pyatmo.AsyncWeatherStationData,
+    HOMECOACH_DATA_CLASS_NAME: pyatmo.AsyncHomeCoachData,
+    CAMERA_DATA_CLASS_NAME: pyatmo.AsyncCameraData,
+    HOMEDATA_DATA_CLASS_NAME: pyatmo.AsyncHomeData,
+    HOMESTATUS_DATA_CLASS_NAME: pyatmo.AsyncHomeStatus,
+    PUBLICDATA_DATA_CLASS_NAME: pyatmo.AsyncPublicData,
 }
 
 BATCH_SIZE = 3

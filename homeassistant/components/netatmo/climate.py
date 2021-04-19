@@ -164,7 +164,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         platform.async_register_entity_service(
             SERVICE_SET_SCHEDULE,
             {vol.Required(ATTR_SCHEDULE_NAME): cv.string},
-            "_service_set_schedule",
+            "_async_service_set_schedule",
         )
 
 
@@ -357,24 +357,24 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             return CURRENT_HVAC_HEAT
         return CURRENT_HVAC_IDLE
 
-    def set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
         if hvac_mode == HVAC_MODE_OFF:
-            self.turn_off()
+            await self.async_turn_off()
         elif hvac_mode == HVAC_MODE_AUTO:
             if self.hvac_mode == HVAC_MODE_OFF:
-                self.turn_on()
-            self.set_preset_mode(PRESET_SCHEDULE)
+                await self.async_turn_on()
+            await self.async_set_preset_mode(PRESET_SCHEDULE)
         elif hvac_mode == HVAC_MODE_HEAT:
-            self.set_preset_mode(PRESET_BOOST)
+            await self.async_set_preset_mode(PRESET_BOOST)
 
-    def set_preset_mode(self, preset_mode: str) -> None:
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if self.hvac_mode == HVAC_MODE_OFF:
-            self.turn_on()
+            await self.async_turn_on()
 
         if self.target_temperature == 0:
-            self._home_status.set_room_thermpoint(
+            await self._home_status.async_set_room_thermpoint(
                 self._id,
                 STATE_NETATMO_HOME,
             )
@@ -384,14 +384,14 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             and self._model == NA_VALVE
             and self.hvac_mode == HVAC_MODE_HEAT
         ):
-            self._home_status.set_room_thermpoint(
+            await self._home_status.async_set_room_thermpoint(
                 self._id,
                 STATE_NETATMO_HOME,
             )
         elif (
             preset_mode in [PRESET_BOOST, STATE_NETATMO_MAX] and self._model == NA_VALVE
         ):
-            self._home_status.set_room_thermpoint(
+            await self._home_status.async_set_room_thermpoint(
                 self._id,
                 STATE_NETATMO_MANUAL,
                 DEFAULT_MAX_TEMP,
@@ -400,13 +400,15 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             preset_mode in [PRESET_BOOST, STATE_NETATMO_MAX]
             and self.hvac_mode == HVAC_MODE_HEAT
         ):
-            self._home_status.set_room_thermpoint(self._id, STATE_NETATMO_HOME)
+            await self._home_status.async_set_room_thermpoint(
+                self._id, STATE_NETATMO_HOME
+            )
         elif preset_mode in [PRESET_BOOST, STATE_NETATMO_MAX]:
-            self._home_status.set_room_thermpoint(
+            await self._home_status.async_set_room_thermpoint(
                 self._id, PRESET_MAP_NETATMO[preset_mode]
             )
         elif preset_mode in [PRESET_SCHEDULE, PRESET_FROST_GUARD, PRESET_AWAY]:
-            self._home_status.set_thermmode(PRESET_MAP_NETATMO[preset_mode])
+            await self._home_status.async_set_thermmode(PRESET_MAP_NETATMO[preset_mode])
         else:
             _LOGGER.error("Preset mode '%s' not available", preset_mode)
 
@@ -422,12 +424,14 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         """Return a list of available preset modes."""
         return SUPPORT_PRESET
 
-    def set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs):
         """Set new target temperature for 2 hours."""
         temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is None:
             return
-        self._home_status.set_room_thermpoint(self._id, STATE_NETATMO_MANUAL, temp)
+        await self._home_status.async_set_room_thermpoint(
+            self._id, STATE_NETATMO_MANUAL, temp
+        )
 
         self.async_write_ha_state()
 
@@ -449,21 +453,23 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
 
         return attr
 
-    def turn_off(self):
+    async def async_turn_off(self):
         """Turn the entity off."""
         if self._model == NA_VALVE:
-            self._home_status.set_room_thermpoint(
+            await self._home_status.async_set_room_thermpoint(
                 self._id,
                 STATE_NETATMO_MANUAL,
                 DEFAULT_MIN_TEMP,
             )
         elif self.hvac_mode != HVAC_MODE_OFF:
-            self._home_status.set_room_thermpoint(self._id, STATE_NETATMO_OFF)
+            await self._home_status.async_set_room_thermpoint(
+                self._id, STATE_NETATMO_OFF
+            )
         self.async_write_ha_state()
 
-    def turn_on(self):
+    async def async_turn_on(self):
         """Turn the entity on."""
-        self._home_status.set_room_thermpoint(self._id, STATE_NETATMO_HOME)
+        await self._home_status.async_set_room_thermpoint(self._id, STATE_NETATMO_HOME)
         self.async_write_ha_state()
 
     @property
@@ -570,7 +576,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
 
         return {}
 
-    def _service_set_schedule(self, **kwargs):
+    async def _async_service_set_schedule(self, **kwargs):
         schedule_name = kwargs.get(ATTR_SCHEDULE_NAME)
         schedule_id = None
         for sid, name in self.hass.data[DOMAIN][DATA_SCHEDULES][self._home_id].items():
@@ -583,7 +589,9 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             )
             return
 
-        self._data.switch_home_schedule(home_id=self._home_id, schedule_id=schedule_id)
+        await self._data.async_switch_home_schedule(
+            home_id=self._home_id, schedule_id=schedule_id
+        )
         _LOGGER.debug(
             "Setting %s schedule to %s (%s)",
             self._home_id,
