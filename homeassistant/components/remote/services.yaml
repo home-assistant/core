@@ -1,6 +1,7 @@
 # Describes the format for available remote services
 
 turn_on:
+  name: Turn On
   description: Sends the Power On Command.
   target:
   fields:
@@ -11,20 +12,14 @@ turn_on:
         text:
 
 toggle:
+  name: Toggle
   description: Toggles a device.
   target:
-  fields:
-    entity_id:
-      description: Name(s) of entities to toggle.
-      example: "remote.family_room"
 
 turn_off:
+  name: Turn Off
   description: Sends the Power Off Command.
   target:
-  fields:
-    entity_id:
-      description: Name(s) of entities to turn off.
-      example: "remote.family_room"
 
 send_command:
   name: Send Command
@@ -44,8 +39,9 @@ send_command:
         text:
     num_repeats:
       name: Repeats
-      description: An optional value that specifies the number of times you want to repeat the command(s). If not specified, the command(s) will not be repeated.
+      description: An optional value that specifies the number of times you want to repeat the command(s).
       example: "5"
+      default: 1
       selector:
         number:
           min: 0
@@ -54,26 +50,29 @@ send_command:
           mode: slider
     delay_secs:
       name: Delay Seconds
-      description: An optional value that specifies that number of seconds you want to wait in between repeated commands. If not specified, the default of 0.4 seconds will be used.
+      description: Specify the number of seconds you want to wait in between repeated commands.
       example: "0.75"
+      default: 0.4
       selector:
         number:
           min: 0
-          max: 255
-          step: 0.01
+          max: 60
+          step: 0.1
           mode: slider
     hold_secs:
       name: Hold Seconds
-      description: An optional value that specifies that number of seconds you want to have it held before the release is send. If not specified, the release will be send immediately after the press.
+      description: An optional value that specifies the number of seconds you want to have it held before the release is send.
       example: "2.5"
+      default: 0
       selector:
         number:
           min: 0
-          max: 255
-          step: 0.01
+          max: 60
+          step: 0.1
           mode: slider
 
 learn_command:
+  name: Learn Command
   description: Learns a command or a list of commands from a device.
   target:
   fields:
@@ -85,11 +84,12 @@ learn_command:
       description: A single command or a list of commands to learn.
       example: "Turn on"
       selector:
-        text:
+        object:
     command_type:
       name: Command Type
       description: The type of command to be learned.
       example: "rf"
+      default: "ir"
       selector:
         select:
           options:
@@ -113,6 +113,7 @@ learn_command:
           mode: slider
 
 delete_command:
+  name: Delete Command
   description: Deletes a command or a list of commands from the database.
   target:
   fields:
@@ -125,4 +126,4 @@ delete_command:
       required: true
       example: "Mute"
       selector:
-        text:
+        object:
