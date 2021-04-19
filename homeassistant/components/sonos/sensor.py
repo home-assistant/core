@@ -39,18 +39,18 @@ def fetch_batery_info_or_none(soco: SoCo) -> Optional[Dict[str, Any]]:
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Sonos from a config entry."""
 
-    def _async_create_entity(soco: SoCo) -> Optional[SonosBatteryEntity]:
+    async def _async_create_entity(soco: SoCo) -> Optional[SonosBatteryEntity]:
         if not soco or soco.uid in hass.data[DATA_SONOS].battery_entities:
             return None
         hass.data[DATA_SONOS].battery_entities[soco.uid] = None
-        battery_info = hass.async_add_executor_job(fetch_batery_info_or_none, soco)
-        if not battery_info:
-            return None
-        return SonosBatteryEntity(soco, battery_info)
+        if battery_info := await hass.async_add_executor_job(
+            fetch_batery_info_or_none, soco
+        ):
+            return SonosBatteryEntity(soco, battery_info)
+        return None
 
-    def _async_create_entities(event: Event):
-        entity = _async_create_entity(event.data.get("soco"))
-        if entity:
+    async def _async_create_entities(event: Event):
+        if entity := await _async_create_entity(event.data.get("soco")):
             async_add_entities([entity])
 
     hass.bus.async_listen(SONOS_DISCOVERY_UPDATE, _async_create_entities)
@@ -58,8 +58,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities = []
     # create any entities for devices that exist already
     for soco in hass.data[DATA_SONOS].discovered.values():
-        entity = _async_create_entity(soco)
-        if entity:
+        if entity := await _async_create_entity(soco):
             entities.append(entity)
 
     if entities:
