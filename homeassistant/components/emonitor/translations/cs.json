@@ -1,0 +1,15 @@
+{
+    "config": {
+        "flow_title": "SiteSage {name}",
+        "step": {
+            "confirm": {
+                "description": "Chcete nastavit {name} ({host})?"
+            },
+            "user": {
+                "data": {
+                    "host": "Hostitel"
+                }
+            }
+        }
+    }
+}
