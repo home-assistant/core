@@ -57,7 +57,8 @@ VALUE_ID = "value_id"
 STATUS = "status"
 
 # constants for data collection
-IS_STATISTICS_ENABLED = "is_statistics_enabled"
+ENABLED = "enabled"
+OPTED_IN = "opted_in"
 
 
 @callback
@@ -74,6 +75,10 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_get_log_config)
     websocket_api.async_register_command(hass, websocket_get_config_parameters)
     websocket_api.async_register_command(hass, websocket_set_config_parameter)
+    websocket_api.async_register_command(
+        hass, websocket_update_data_collection_preference
+    )
+    websocket_api.async_register_command(hass, websocket_data_collection_status)
     hass.http.register_view(DumpView)  # type: ignore
 
 
@@ -510,47 +515,32 @@ async def websocket_get_log_config(
 @websocket_api.async_response
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/opt_in_data_collection",
+        vol.Required(TYPE): "zwave_js/update_data_collection_preference",
         vol.Required(ENTRY_ID): str,
+        vol.Required(OPTED_IN): bool,
     },
 )
-async def websocket_opt_in_data_collection(
+async def websocket_update_data_collection_preference(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict
 ) -> None:
     """Opt in to statistics collection."""
     entry_id = msg[ENTRY_ID]
+    opted_in = msg[OPTED_IN]
     try:
-        update_data_collection_preference(hass, entry_id, True)
+        update_data_collection_preference(hass, entry_id, opted_in)
     except NotFoundError as err:
         connection.send_error(msg[ID], ERR_NOT_FOUND, err.args[0])
         return
-    await async_enable_statistics(hass.data[DOMAIN][entry_id][DATA_CLIENT])
+
+    client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
+    if opted_in:
+        await async_enable_statistics(client)
+    else:
+        await client.driver.async_disable_statistics()
+
     connection.send_result(
         msg[ID],
     )
-
-
-@websocket_api.require_admin  # type: ignore
-@websocket_api.async_response
-@websocket_api.websocket_command(
-    {
-        vol.Required(TYPE): "zwave_js/opt_out_data_collection",
-        vol.Required(ENTRY_ID): str,
-    },
-)
-async def websocket_opt_out_data_collection(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
-) -> None:
-    """Opt out to statistics collection."""
-    entry_id = msg[ENTRY_ID]
-    try:
-        update_data_collection_preference(hass, entry_id, False)
-    except NotFoundError as err:
-        connection.send_error(msg[ID], ERR_NOT_FOUND, err.args[0])
-        return
-    client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
-    await client.driver.async_disable_statistics()
-    connection.send_result(msg[ID])
 
 
 @websocket_api.require_admin  # type: ignore
@@ -566,16 +556,16 @@ async def websocket_data_collection_status(
 ) -> None:
     """Opt out to statistics collection."""
     entry_id = msg[ENTRY_ID]
-    client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
     entry = hass.config_entries.async_get_entry(entry_id)
     if not entry:
         connection.send_error(
             msg[ID], ERR_NOT_FOUND, "Specified config entry cannot be found"
         )
         return
+    client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
     result = {
-        CONF_DATA_COLLECTION_OPTED_IN: entry.data.get(CONF_DATA_COLLECTION_OPTED_IN),
-        IS_STATISTICS_ENABLED: await client.driver.async_is_statistics_enabled(),
+        OPTED_IN: entry.data.get(CONF_DATA_COLLECTION_OPTED_IN),
+        ENABLED: await client.driver.async_is_statistics_enabled(),
     }
     connection.send_result(msg[ID], result)
 
