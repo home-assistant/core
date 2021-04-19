@@ -12,8 +12,9 @@ from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_PLATFOR
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import DOMAIN, HTTP
 from .exceptions import CannotConnect, PoweredOff
 
 PLATFORMS = [MEDIA_PLAYER_PLATFORM]
@@ -23,7 +24,12 @@ _LOGGER = logging.getLogger(__name__)
 
 async def validate_projector(hass: HomeAssistant, host, check_powered_on=True):
     """Validate the given host and port allows us to connect."""
-    epson_proj = Projector(host=host, loop=hass.loop, type="tcp")
+    epson_proj = Projector(
+        host=host,
+        loop=hass.loop,
+        websession=async_get_clientsession(hass, verify_ssl=False),
+        type=HTTP,
+    )
     if check_powered_on:
         _power = await epson_proj.get_power()
         if not _power or _power == EPSON_STATE_UNAVAILABLE:
