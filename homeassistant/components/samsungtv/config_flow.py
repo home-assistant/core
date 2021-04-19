@@ -111,6 +111,9 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _try_connect(self):
         """Try to connect and check auth."""
+        if self._bridge:
+            return
+
         for method in SUPPORTED_METHODS:
             self._bridge = SamsungTVBridge.get_bridge(method, self._host)
             result = self._bridge.try_connect()
@@ -163,6 +166,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._name = user_input[CONF_NAME]
             self._title = self._name
 
+            await self.hass.async_add_executor_job(self._try_connect)
             await self._async_get_and_check_device_info()
 
             await self.async_set_unique_id(self._id)
@@ -228,9 +232,9 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle user-confirmation of discovered node."""
         if user_input is not None:
 
+            await self.hass.async_add_executor_job(self._try_connect)
             return self._get_entry()
 
-        await self.hass.async_add_executor_job(self._try_connect)
         self._set_confirm_only()
         return self.async_show_form(
             step_id="confirm", description_placeholders={"model": self._model}
