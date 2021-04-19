@@ -6,8 +6,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.recorder import util
+from homeassistant.components.recorder import run_information_with_session, util
 from homeassistant.components.recorder.const import DATA_INSTANCE, SQLITE_URL_PREFIX
+from homeassistant.components.recorder.models import RecorderRuns
+from homeassistant.components.recorder.util import end_incomplete_runs, session_scope
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.util import dt as dt_util
 
@@ -35,6 +37,16 @@ def hass_recorder():
 
     yield setup_recorder
     hass.stop()
+
+
+def test_session_scope_not_setup(hass_recorder):
+    """Try to create a session scope when not setup."""
+    hass = hass_recorder()
+    with patch.object(
+        hass.data[DATA_INSTANCE], "get_session", return_value=None
+    ), pytest.raises(RuntimeError):
+        with util.session_scope(hass=hass):
+            pass
 
 
 def test_recorder_bad_commit(hass_recorder):
@@ -130,6 +142,36 @@ async def test_last_run_was_recently_clean(hass):
         )
 
 
+def test_setup_connection_for_dialect_mysql():
+    """Test setting up the connection for a mysql dialect."""
+    execute_mock = MagicMock()
+    close_mock = MagicMock()
+
+    def _make_cursor_mock(*_):
+        return MagicMock(execute=execute_mock, close=close_mock)
+
+    dbapi_connection = MagicMock(cursor=_make_cursor_mock)
+
+    assert util.setup_connection_for_dialect("mysql", dbapi_connection) is False
+
+    assert execute_mock.call_args[0][0] == "SET session wait_timeout=28800"
+
+
+def test_setup_connection_for_dialect_sqlite():
+    """Test setting up the connection for a sqlite dialect."""
+    execute_mock = MagicMock()
+    close_mock = MagicMock()
+
+    def _make_cursor_mock(*_):
+        return MagicMock(execute=execute_mock, close=close_mock)
+
+    dbapi_connection = MagicMock(cursor=_make_cursor_mock)
+
+    assert util.setup_connection_for_dialect("sqlite", dbapi_connection) is True
+
+    assert execute_mock.call_args[0][0] == "PRAGMA journal_mode=WAL"
+
+
 def test_basic_sanity_check(hass_recorder):
     """Test the basic sanity checks with a missing table."""
     hass = hass_recorder()
@@ -194,3 +236,28 @@ def test_combined_checks(hass_recorder, caplog):
     caplog.clear()
     with pytest.raises(sqlite3.DatabaseError):
         util.run_checks_on_open_db("fake_db_path", cursor)
+
+
+def test_end_incomplete_runs(hass_recorder, caplog):
+    """Ensure we can end incomplete runs."""
+    hass = hass_recorder()
+
+    with session_scope(hass=hass) as session:
+        run_info = run_information_with_session(session)
+        assert isinstance(run_info, RecorderRuns)
+        assert run_info.closed_incorrect is False
+
+        now = dt_util.utcnow()
+        now_without_tz = now.replace(tzinfo=None)
+        end_incomplete_runs(session, now)
+        run_info = run_information_with_session(session)
+        assert run_info.closed_incorrect is True
+        assert run_info.end == now_without_tz
+        session.flush()
+
+        later = dt_util.utcnow()
+        end_incomplete_runs(session, later)
+        run_info = run_information_with_session(session)
+        assert run_info.end == now_without_tz
+
+    assert "Ended unfinished session" in caplog.text

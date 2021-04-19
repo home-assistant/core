@@ -45,8 +45,10 @@ from .const import CONF_DB_INTEGRITY_CHECK, DATA_INSTANCE, DOMAIN, SQLITE_URL_PR
 from .models import Base, Events, RecorderRuns, States
 from .util import (
     dburl_to_path,
+    end_incomplete_runs,
     move_away_broken_database,
     session_scope,
+    setup_connection_for_dialect,
     validate_or_move_away_sqlite_database,
 )
 
@@ -92,6 +94,9 @@ CONF_PURGE_KEEP_DAYS = "purge_keep_days"
 CONF_PURGE_INTERVAL = "purge_interval"
 CONF_EVENT_TYPES = "event_types"
 CONF_COMMIT_INTERVAL = "commit_interval"
+
+INVALIDATED_ERR = "Database connection invalidated"
+CONNECTIVITY_ERR = "Error in database connectivity during commit"
 
 EXCLUDE_SCHEMA = INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER.extend(
     {vol.Optional(CONF_EVENT_TYPES): vol.All(cv.ensure_list, [cv.string])}
@@ -667,13 +672,9 @@ class Recorder(threading.Thread):
                 self._commit_event_session()
                 return
             except (exc.InternalError, exc.OperationalError) as err:
-                if err.connection_invalidated:
-                    message = "Database connection invalidated"
-                else:
-                    message = "Error in database connectivity during commit"
                 _LOGGER.error(
                     "%s: Error executing query: %s. (retrying in %s seconds)",
-                    message,
+                    INVALIDATED_ERR if err.connection_invalidated else CONNECTIVITY_ERR,
                     err,
                     self.db_retry_wait,
                 )
@@ -771,25 +772,9 @@ class Recorder(threading.Thread):
             """Dbapi specific connection settings."""
             if self._completed_database_setup:
                 return
-
-            # We do not import sqlite3 here so mysql/other
-            # users do not have to pay for it to be loaded in
-            # memory
-            if self.db_url.startswith(SQLITE_URL_PREFIX):
-                old_isolation = dbapi_connection.isolation_level
-                dbapi_connection.isolation_level = None
-                cursor = dbapi_connection.cursor()
-                cursor.execute("PRAGMA journal_mode=WAL")
-                cursor.close()
-                dbapi_connection.isolation_level = old_isolation
-                # WAL mode only needs to be setup once
-                # instead of every time we open the sqlite connection
-                # as its persistent and isn't free to call every time.
-                self._completed_database_setup = True
-            elif self.db_url.startswith("mysql"):
-                cursor = dbapi_connection.cursor()
-                cursor.execute("SET session wait_timeout=28800")
-                cursor.close()
+            self._completed_database_setup = setup_connection_for_dialect(
+                self.engine.dialect.name, dbapi_connection
+            )
 
         if self.db_url == SQLITE_URL_PREFIX or ":memory:" in self.db_url:
             kwargs["connect_args"] = {"check_same_thread": False}
@@ -825,17 +810,9 @@ class Recorder(threading.Thread):
     def _setup_run(self):
         """Log the start of the current run."""
         with session_scope(session=self.get_session()) as session:
-            for run in session.query(RecorderRuns).filter_by(end=None):
-                run.closed_incorrect = True
-                run.end = self.recording_start
-                _LOGGER.warning(
-                    "Ended unfinished session (id=%s from %s)", run.run_id, run.start
-                )
-                session.add(run)
-
-            self.run_info = RecorderRuns(
-                start=self.recording_start, created=dt_util.utcnow()
-            )
+            start = self.recording_start
+            end_incomplete_runs(session, start)
+            self.run_info = RecorderRuns(start=start, created=dt_util.utcnow())
             session.add(self.run_info)
             session.flush()
             session.expunge(self.run_info)
