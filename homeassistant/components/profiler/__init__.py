@@ -169,7 +169,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         DOMAIN,
         SERVICE_STOP_LOG_OBJECTS,
         _async_stop_log_objects,
-        schema=vol.Schema({}),
     )
 
     async_register_admin_service(
@@ -185,7 +184,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         DOMAIN,
         SERVICE_LOG_THREAD_FRAMES,
         _async_dump_thread_frames,
-        schema=vol.Schema({}),
     )
 
     async_register_admin_service(
@@ -193,7 +191,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         DOMAIN,
         SERVICE_LOG_EVENT_LOOP_SCHEDULED,
         _async_dump_scheduled,
-        schema=vol.Schema({}),
     )
 
     return True
