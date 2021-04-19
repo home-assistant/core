@@ -1,5 +1,6 @@
 """Support for Overkiz lights."""
 import logging
+from typing import Callable
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -9,11 +10,13 @@ from homeassistant.components.light import (
     SUPPORT_COLOR,
     LightEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
+from homeassistant.core import HomeAssistant
 import homeassistant.util.color as color_util
 
 from .const import COMMAND_OFF, COMMAND_ON, CORE_ON_OFF_STATE, DOMAIN
-from .overkiz_entity import OverkizEntity
+from .entity import OverkizEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +30,9 @@ CORE_LIGHT_INTENSITY_STATE = "core:LightIntensityState"
 CORE_RED_COLOR_INTENSITY_STATE = "core:RedColorIntensityState"
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
+) -> None:
     """Set up the Overkiz lights from a config entry."""
     data = hass.data[DOMAIN][entry.entry_id]
     coordinator = data["coordinator"]

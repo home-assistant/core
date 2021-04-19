@@ -34,11 +34,6 @@ from .coordinator import OverkizDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Overkiz component."""
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Overkiz from a config entry."""
     hass.data.setdefault(DOMAIN, {})
@@ -58,9 +53,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     try:
         await client.login()
-        devices = await client.get_devices()
-        scenarios = await client.get_scenarios()
-        places = await client.get_places()
+
+        tasks = [
+            client.get_devices(),
+            client.get_scenarios(),
+            client.get_places(),
+        ]
+        devices, scenarios, places = await asyncio.gather(*tasks)
     except BadCredentialsException:
         _LOGGER.error("Invalid authentication")
         return False

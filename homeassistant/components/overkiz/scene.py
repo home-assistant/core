@@ -1,18 +1,22 @@
 """Support for Overkiz scenes."""
 import logging
-from typing import Any
+from typing import Any, Callable
 
 from pyhoma.client import TahomaClient
 from pyhoma.models import Scenario
 
 from homeassistant.components.scene import DOMAIN as SCENE, Scene
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
+) -> None:
     """Set up the Overkiz scenes from a config entry."""
     data = hass.data[DOMAIN][entry.entry_id]
     coordinator = data["coordinator"]

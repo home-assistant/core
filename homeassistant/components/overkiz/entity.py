@@ -9,9 +9,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import OverkizDataUpdateCoordinator
-from .overkiz_executor import OverkizExecutor
-
-ATTR_RSSI_LEVEL = "rssi_level"
+from .executor import OverkizExecutor
 
 CORE_AVAILABILITY_STATE = "core:AvailabilityState"
 CORE_MANUFACTURER_NAME_STATE = "core:ManufacturerNameState"

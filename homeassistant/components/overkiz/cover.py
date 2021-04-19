@@ -1,5 +1,6 @@
 """Support for Overkiz cover - shutters etc."""
 import logging
+from typing import Callable
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -22,9 +23,11 @@ from homeassistant.components.cover import (
     SUPPORT_STOP_TILT,
     CoverEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-from .overkiz_entity import OverkizEntity
+from .entity import OverkizEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,7 +99,9 @@ OVERKIZ_COVER_DEVICE_CLASSES = {
 }
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
+) -> None:
     """Set up the Overkiz covers from a config entry."""
     data = hass.data[DOMAIN][entry.entry_id]
     coordinator = data["coordinator"]

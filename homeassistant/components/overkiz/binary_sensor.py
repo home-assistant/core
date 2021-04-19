@@ -1,4 +1,6 @@
 """Support for Overkiz binary sensors."""
+from typing import Callable
+
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_GAS,
     DEVICE_CLASS_MOISTURE,
@@ -9,9 +11,11 @@ from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-from .overkiz_entity import OverkizEntity
+from .entity import OverkizEntity
 
 CORE_ASSEMBLY_STATE = "core:AssemblyState"
 CORE_BUTTON_STATE = "core:ButtonState"
@@ -48,7 +52,9 @@ OVERKIZ_BINARY_SENSOR_DEVICE_CLASSES = {
 }
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
+) -> None:
     """Set up the Overkiz sensors from a config entry."""
     data = hass.data[DOMAIN][entry.entry_id]
     coordinator = data["coordinator"]

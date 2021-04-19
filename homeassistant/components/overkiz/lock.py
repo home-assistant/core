@@ -1,11 +1,14 @@
 """Support for Overkiz locks."""
 import logging
+from typing import Callable
 
 from homeassistant.components.lock import DOMAIN as LOCK, LockEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_LOCKED
+from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-from .overkiz_entity import OverkizEntity
+from .entity import OverkizEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -15,7 +18,9 @@ COMMAND_UNLOCK = "unlock"
 CORE_LOCKED_UNLOCKED_STATE = "core:LockedUnlockedState"
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
+) -> None:
     """Set up the Overkiz locks from a config entry."""
     data = hass.data[DOMAIN][entry.entry_id]
     coordinator = data["coordinator"]
