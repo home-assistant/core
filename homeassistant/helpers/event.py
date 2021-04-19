@@ -1170,12 +1170,10 @@ def async_track_point_in_utc_time(
 
     # Since this is called once, we accept a HassJob so we can avoid
     # having to figure out how to call the action every time its called.
-    job = action if isinstance(action, HassJob) else HassJob(action)
-
     cancel_callback: asyncio.TimerHandle | None = None
 
     @callback
-    def run_action() -> None:
+    def run_action(job: HassJob) -> None:
         """Call the action."""
         nonlocal cancel_callback
 
@@ -1190,13 +1188,14 @@ def async_track_point_in_utc_time(
         if delta > 0:
             _LOGGER.debug("Called %f seconds too early, rearming", delta)
 
-            cancel_callback = hass.loop.call_later(delta, run_action)
+            cancel_callback = hass.loop.call_later(delta, run_action, job)
             return
 
         hass.async_run_hass_job(job, utc_point_in_time)
 
+    job = action if isinstance(action, HassJob) else HassJob(action)
     delta = utc_point_in_time.timestamp() - time.time()
-    cancel_callback = hass.loop.call_later(delta, run_action)
+    cancel_callback = hass.loop.call_later(delta, run_action, job)
 
     @callback
     def unsub_point_in_time_listener() -> None:
