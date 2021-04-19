@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+import logging
 from typing import Any
 
 from pymodbus.exceptions import ConnectionException, ModbusException
@@ -35,6 +36,8 @@ from .const import (
 )
 from .modbus import ModbusHub
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -44,6 +47,11 @@ async def async_setup_platform(
 ):
     """Read configuration and create Modbus cover."""
     if discovery_info is None:
+        _LOGGER.warning(
+            "You're trying to init Modbus Cover in an unsupported way."
+            " Check https://www.home-assistant.io/integrations/modbus/#configuring-platform-cover"
+            " and fix your configuration"
+        )
         return
 
     covers = []
