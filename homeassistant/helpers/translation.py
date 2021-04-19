@@ -219,13 +219,18 @@ class _TranslationCache:
         cached = self.cache.get(language, {})
         return [cached.get(component, {}).get(category, {}) for component in components]
 
+    @callback
+    def async_components_to_load(self, language: str, components: set) -> set:
+        """Return components that have not been loaded into the cache for a language."""
+        return components - self.loaded.setdefault(language, set())
+
     async def async_populate_cache(
         self,
         language: str,
         components: set,
     ) -> None:
         """Load resources into the cache."""
-        components_to_load = components - self.loaded.setdefault(language, set())
+        components_to_load = self.async_components_to_load(language, components)
         if components_to_load:
             await self._async_load(language, components_to_load)
 
@@ -298,6 +303,7 @@ async def async_get_translations(
     integrations if config_flow is true.
     """
     lock = hass.data.setdefault(TRANSLATION_LOAD_LOCK, asyncio.Lock())
+    cache = hass.data.setdefault(TRANSLATION_FLATTEN_CACHE, _TranslationCache(hass))
 
     if integration is not None:
         components = {integration}
@@ -311,8 +317,12 @@ async def async_get_translations(
             component for component in hass.config.components if "." not in component
         }
 
-    async with lock:
-        cache = hass.data.setdefault(TRANSLATION_FLATTEN_CACHE, _TranslationCache(hass))
-        await cache.async_populate_cache(language, components)
+    # Since translations are never removed from the cache
+    # we can check before without getting the lock as long
+    # as we check again once we have it in the event we do
+    # need to load them
+    if cache.async_components_to_load(language, components):
+        async with lock:
+            await cache.async_populate_cache(language, components)
 
     return dict(ChainMap(*cache.async_fetch(language, category, components)))
