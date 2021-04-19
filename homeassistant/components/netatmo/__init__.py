@@ -111,7 +111,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         AUTH: api.AsyncConfigEntryNetatmoAuth(
             aiohttp_client.async_get_clientsession(hass), session
         )
-        # AUTH: api.AsyncConfigEntryNetatmoAuth(hass, entry, implementation)
     }
 
     data_handler = NetatmoDataHandler(hass, entry)
