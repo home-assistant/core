@@ -140,7 +140,8 @@ class FritzBoxTracker(ScannerEntity):
             "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
             "identifiers": {(DOMAIN, self.unique_id)},
             "name": self.name,
-            "manufacturer": "FRITZ!Box Tracked device",
+            "manufacturer": "AVM",
+            "model": "FRITZ!Box Tracked device",
         }
 
     @property
