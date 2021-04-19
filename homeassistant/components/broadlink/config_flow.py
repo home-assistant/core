@@ -77,7 +77,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         supported_types = set.union(*DOMAINS_AND_TYPES.values())
         if device.type not in supported_types:
-            raise data_entry_flow.AbortFlow("not_supported")
+            return self.async_abort("not_supported")
 
         await self.async_set_device(device)
         return await self.async_step_auth()
