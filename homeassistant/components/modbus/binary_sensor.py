@@ -4,8 +4,6 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from pymodbus.exceptions import ConnectionException, ModbusException
-from pymodbus.pdu import ExceptionResponse
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -165,16 +163,11 @@ class ModbusBinarySensor(BinarySensorEntity):
 
     def _update(self):
         """Update the state of the sensor."""
-        try:
-            if self._input_type == CALL_TYPE_COIL:
-                result = self._hub.read_coils(self._slave, self._address, 1)
-            else:
-                result = self._hub.read_discrete_inputs(self._slave, self._address, 1)
-        except ConnectionException:
-            self._available = False
-            return
-
-        if isinstance(result, (ModbusException, ExceptionResponse)):
+        if self._input_type == CALL_TYPE_COIL:
+            result = self._hub.read_coils(self._slave, self._address, 1)
+        else:
+            result = self._hub.read_discrete_inputs(self._slave, self._address, 1)
+        if result is None:
             self._available = False
             return
 

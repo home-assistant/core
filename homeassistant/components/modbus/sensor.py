@@ -6,8 +6,6 @@ import logging
 import struct
 from typing import Any
 
-from pymodbus.exceptions import ConnectionException, ModbusException
-from pymodbus.pdu import ExceptionResponse
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -285,20 +283,15 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
 
     def _update(self):
         """Update the state of the sensor."""
-        try:
-            if self._register_type == CALL_TYPE_REGISTER_INPUT:
-                result = self._hub.read_input_registers(
-                    self._slave, self._register, self._count
-                )
-            else:
-                result = self._hub.read_holding_registers(
-                    self._slave, self._register, self._count
-                )
-        except ConnectionException:
-            self._available = False
-            return
-
-        if isinstance(result, (ModbusException, ExceptionResponse)):
+        if self._register_type == CALL_TYPE_REGISTER_INPUT:
+            result = self._hub.read_input_registers(
+                self._slave, self._register, self._count
+            )
+        else:
+            result = self._hub.read_holding_registers(
+                self._slave, self._register, self._count
+            )
+        if result is None:
             self._available = False
             return
 
