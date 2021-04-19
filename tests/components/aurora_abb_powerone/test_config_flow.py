@@ -48,8 +48,6 @@ async def test_form(hass):
     ), patch(
         "homeassistant.components.aurora_abb_powerone.config_flow._LOGGER.getEffectiveLevel",
         return_value=INFO,
-    ), patch(
-        "homeassistant.components.aurora_abb_powerone.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.aurora_abb_powerone.async_setup_entry",
         return_value=True,
