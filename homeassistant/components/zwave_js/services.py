@@ -94,9 +94,7 @@ class ZWaveServices:
                 {
                     vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
                     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-                    vol.Required(const.ATTR_CONFIG_PARAMETER): vol.Any(
-                        vol.Coerce(int), cv.string
-                    ),
+                    vol.Required(const.ATTR_CONFIG_PARAMETER): vol.Coerce(int),
                     vol.Required(const.ATTR_CONFIG_VALUE): vol.Any(
                         vol.Coerce(int),
                         {
