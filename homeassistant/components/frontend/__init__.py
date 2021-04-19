@@ -163,9 +163,9 @@ class UrlManager:
     on hass.data
     """
 
-    def __init__(self):
+    def __init__(self, urls):
         """Init the url manager."""
-        self.urls = frozenset()
+        self.urls = frozenset(urls)
 
     def add(self, url):
         """Add a url to the set."""
@@ -355,15 +355,8 @@ async def async_setup(hass, config):
         sidebar_icon="hass:hammer",
     )
 
-    hass.data[DATA_EXTRA_MODULE_URL] = UrlManager()
-
-    for url in conf.get(CONF_EXTRA_MODULE_URL, []):
-        add_extra_js_url(hass, url)
-
-    hass.data[DATA_EXTRA_JS_URL_ES5] = UrlManager()
-
-    for url in conf.get(CONF_EXTRA_JS_URL_ES5, []):
-        add_extra_js_url(hass, url, True)
+    hass.data[DATA_EXTRA_MODULE_URL] = UrlManager(conf.get(CONF_EXTRA_MODULE_URL, []))
+    hass.data[DATA_EXTRA_JS_URL_ES5] = UrlManager(conf.get(CONF_EXTRA_JS_URL_ES5, []))
 
     await _async_setup_themes(hass, conf.get(CONF_THEMES))
 
