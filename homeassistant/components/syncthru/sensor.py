@@ -227,10 +227,12 @@ class SyncThruInputTraySensor(SyncThruSensor):
     @property
     def state(self):
         """Display ready unless there is some error, then display error."""
-        s = self.syncthru.input_tray_status().get(self._number, {}).get("newError")
-        if s == "":
-            s = "Ready"
-        return s
+        tray_state = (
+            self.syncthru.input_tray_status().get(self._number, {}).get("newError")
+        )
+        if tray_state == "":
+            tray_state = "Ready"
+        return tray_state
 
 
 class SyncThruOutputTraySensor(SyncThruSensor):
@@ -251,7 +253,9 @@ class SyncThruOutputTraySensor(SyncThruSensor):
     @property
     def state(self):
         """Display ready unless there is some error, then display error."""
-        s = self.syncthru.output_tray_status().get(self._number, {}).get("status")
-        if s == "":
-            s = "Ready"
-        return s
+        tray_state = (
+            self.syncthru.output_tray_status().get(self._number, {}).get("status")
+        )
+        if tray_state == "":
+            tray_state = "Ready"
+        return tray_state
