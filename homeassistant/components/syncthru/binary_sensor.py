@@ -10,6 +10,10 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.const import CONF_NAME
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from . import device_identifiers
 from .const import DOMAIN
@@ -30,31 +34,26 @@ SYNCTHRU_STATE_PROBLEM = {
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up from config entry."""
 
-    printer = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     name = config_entry.data[CONF_NAME]
     entities = [
-        SyncThruOnlineSensor(printer, name),
-        SyncThruProblemSensor(printer, name),
+        SyncThruOnlineSensor(coordinator, name),
+        SyncThruProblemSensor(coordinator, name),
     ]
 
     async_add_entities(entities, True)
 
 
-class SyncThruBinarySensor(BinarySensorEntity):
+class SyncThruBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """Implementation of an abstract Samsung Printer binary sensor platform."""
 
-    def __init__(self, syncthru, name):
+    def __init__(self, coordinator, name):
         """Initialize the sensor."""
-        self.syncthru: SyncThru = syncthru
-        self._state = None
+        super().__init__(coordinator)
+        self.syncthru: SyncThru = coordinator.data
         self._name = name
         self._id_suffix = ""
-
-    @property
-    def is_on(self):
-        """Return whether this sensor is activated."""
-        return self._state
 
     @property
     def unique_id(self):
@@ -86,9 +85,10 @@ class SyncThruOnlineSensor(SyncThruBinarySensor):
         """Class of the sensor."""
         return DEVICE_CLASS_CONNECTIVITY
 
-    async def async_update(self):
+    @property
+    def is_on(self):
         """Set the state to whether the printer is online."""
-        self._state = self.syncthru.is_online()
+        return self.syncthru.is_online()
 
 
 class SyncThruProblemSensor(SyncThruBinarySensor):
@@ -104,6 +104,7 @@ class SyncThruProblemSensor(SyncThruBinarySensor):
         """Class of the sensor."""
         return DEVICE_CLASS_PROBLEM
 
-    async def async_update(self):
+    @property
+    def is_on(self):
         """Set the state to whether there is a problem with the printer."""
-        self._state = SYNCTHRU_STATE_PROBLEM[self.syncthru.device_status()]
+        return SYNCTHRU_STATE_PROBLEM[self.syncthru.device_status()]
