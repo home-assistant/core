@@ -67,7 +67,7 @@ async def test_form_user(hass):
         },
     ), patch("homeassistant.components.bosch_shc.config_flow.write_tls_asset",), patch(
         "boschshcpy.session.SHCSession.authenticate"
-    ) as mock_setup, patch(
+    ) as mock_authenticate, patch(
         "homeassistant.components.bosch_shc.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -87,7 +87,7 @@ async def test_form_user(hass):
         "hostname": "123",
     }
 
-    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_authenticate.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -510,8 +510,6 @@ async def test_zeroconf(hass):
     ), patch("homeassistant.components.bosch_shc.config_flow.write_tls_asset",), patch(
         "boschshcpy.session.SHCSession.authenticate",
     ), patch(
-        "homeassistant.components.bosch_shc.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.bosch_shc.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -530,7 +528,6 @@ async def test_zeroconf(hass):
         "token": "abc:123",
         "hostname": "123",
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 

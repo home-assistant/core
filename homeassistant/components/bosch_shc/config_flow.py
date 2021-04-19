@@ -22,8 +22,8 @@ from .const import (
     CONF_SHC_KEY,
     CONF_SSL_CERTIFICATE,
     CONF_SSL_KEY,
+    DOMAIN,
 )
-from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +34,9 @@ HOST_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: core.HomeAssistant, host, cert, key):
+async def validate_input(
+    hass: core.HomeAssistant, host: str, cert: str, key: str
+) -> None:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -54,7 +56,7 @@ async def validate_input(hass: core.HomeAssistant, host, cert, key):
     await hass.async_add_executor_job(session.authenticate)
 
 
-def write_tls_asset(hass: core.HomeAssistant, filename: str, asset: bytes):
+def write_tls_asset(hass: core.HomeAssistant, filename: str, asset: bytes) -> None:
     """Write the tls assets to disk."""
     makedirs(hass.config.path(DOMAIN), exist_ok=True)
     with open(hass.config.path(DOMAIN, filename), "w") as file_handle:
@@ -175,7 +177,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except SHCConnectionError:
             return self.async_abort(reason="cannot_connect")
         except SHCmDNSError:
-            _LOGGER.exception("Error looking up mDNS entry")
+            _LOGGER.debug("Error looking up mDNS entry")
             return self.async_abort(reason="cannot_connect")
 
         local_name = zeroconf_info["hostname"][:-1]
@@ -184,7 +186,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(info["unique_id"])
         self._abort_if_unique_id_configured({CONF_HOST: zeroconf_info["host"]})
         self.host = zeroconf_info["host"]
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {"name": node_name}
         return await self.async_step_confirm_discovery()
 
