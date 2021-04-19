@@ -1,6 +1,7 @@
 """Websocket API for Z-Wave JS."""
 from __future__ import annotations
 
+import asyncio
 import dataclasses
 from functools import wraps
 import json
@@ -13,6 +14,7 @@ from zwave_js_server.client import Client
 from zwave_js_server.const import LogLevel
 from zwave_js_server.exceptions import InvalidNewValue, NotFoundError, SetValueFailed
 from zwave_js_server.model.log_config import LogConfig
+from zwave_js_server.model.log_message import LogMessage
 from zwave_js_server.util.node import async_set_config_parameter
 
 from homeassistant.components import websocket_api
@@ -29,7 +31,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntry
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 
 from .const import (
     CONF_DATA_COLLECTION_OPTED_IN,
@@ -486,6 +491,78 @@ def filename_is_present_if_logging_to_file(obj: dict) -> dict:
     if obj.get(LOG_TO_FILE, False) and FILENAME not in obj:
         raise vol.Invalid("`filename` must be provided if logging to file")
     return obj
+
+
+@websocket_api.require_admin  # type: ignore
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/start_listening_logs",
+        vol.Required(ENTRY_ID): str,
+    }
+)
+async def websocket_start_listening_logs(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+) -> None:
+    """Start listening to logging messages from the server."""
+    entry_id = msg[ENTRY_ID]
+    client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
+    driver = client.driver
+
+    @callback
+    def async_cleanup() -> None:
+        """Remove signal listeners."""
+        asyncio.run_coroutine_threadsafe(
+            driver.async_stop_listening_logs(), hass.loop
+        ).result()
+        for unsub in unsubs:
+            unsub()
+
+    @callback
+    def forward_event(event: dict) -> None:
+        log_msg: LogMessage = event["log_message"]
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    "timestamp": log_msg.timestamp,
+                    "level": log_msg.level,
+                    "primary_tags": log_msg.primary_tags,
+                    "formatted_message": log_msg.formatted_message,
+                },
+            )
+        )
+
+    connection.subscriptions[msg["id"]] = async_cleanup
+    unsubs = [
+        driver.on("logging", forward_event),
+        async_dispatcher_connect(
+            hass, f"{entry_id}_stop_listening_logs", async_cleanup
+        ),
+    ]
+
+    await driver.async_start_listening_logs()
+    connection.send_result(msg[ID])
+
+
+@websocket_api.require_admin  # type: ignore
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/stop_listening_logs",
+        vol.Required(ENTRY_ID): str,
+    }
+)
+async def websocket_stop_listening_logs(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+) -> None:
+    """Stop listening to logging messages from the server."""
+    entry_id = msg[ENTRY_ID]
+    client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
+    driver = client.driver
+    await driver.async_stop_listening_logs()
+    async_dispatcher_send(hass, f"{entry_id}_stop_listening_logs")
+    connection.send_result(msg[ID])
 
 
 @websocket_api.require_admin  # type: ignore
