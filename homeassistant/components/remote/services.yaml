@@ -38,6 +38,7 @@ send_command:
     command:
       name: Command
       description: A single command or a list of commands to send.
+      required: true
       example: "Play"
       selector:
         text:
@@ -121,6 +122,7 @@ delete_command:
     command:
       name: Command
       description: A single command or a list of commands to delete.
+      required: true
       example: "Mute"
       selector:
         text:
