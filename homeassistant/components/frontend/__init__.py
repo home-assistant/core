@@ -155,6 +155,22 @@ MANIFEST_JSON = Manifest(
 )
 
 
+class UrlManager:
+    """Manage urls to be used on the frontend."""
+
+    def __init__(self):
+        """Init the url manager."""
+        self.urls = frozenset()
+
+    def add(self, url):
+        """Add a url to the set."""
+        self.urls = frozenset(self.urls + url)
+
+    def remove(self, url):
+        """Remove a url from the set."""
+        self.urls = frozenset(self.urls - url)
+
+
 class Panel:
     """Abstract class for panels."""
 
@@ -254,7 +270,7 @@ def async_remove_panel(hass, frontend_url_path):
 def add_extra_js_url(hass, url, es5=False):
     """Register extra js or module url to load."""
     key = DATA_EXTRA_JS_URL_ES5 if es5 else DATA_EXTRA_MODULE_URL
-    hass.data[key] = frozenset(*hass.data[key], url)
+    hass.data[key].add(url)
 
 
 def _frontend_root(dev_repo_path):
@@ -334,14 +350,12 @@ async def async_setup(hass, config):
         sidebar_icon="hass:hammer",
     )
 
-    if DATA_EXTRA_MODULE_URL not in hass.data:
-        hass.data[DATA_EXTRA_MODULE_URL] = frozenset()
+    hass.data[DATA_EXTRA_MODULE_URL] = UrlManager()
 
     for url in conf.get(CONF_EXTRA_MODULE_URL, []):
         add_extra_js_url(hass, url)
 
-    if DATA_EXTRA_JS_URL_ES5 not in hass.data:
-        hass.data[DATA_EXTRA_JS_URL_ES5] = frozenset()
+    hass.data[DATA_EXTRA_JS_URL_ES5] = UrlManager()
 
     for url in conf.get(CONF_EXTRA_JS_URL_ES5, []):
         add_extra_js_url(hass, url, True)
@@ -545,8 +559,8 @@ class IndexView(web_urldispatcher.AbstractResource):
             text=_async_render_cached(
                 template,
                 theme_color=MANIFEST_JSON["theme_color"],
-                extra_modules=hass.data[DATA_EXTRA_MODULE_URL],
-                extra_js_es5=hass.data[DATA_EXTRA_JS_URL_ES5],
+                extra_modules=hass.data[DATA_EXTRA_MODULE_URL].urls,
+                extra_js_es5=hass.data[DATA_EXTRA_JS_URL_ES5].urls,
             ),
             content_type="text/html",
         )
