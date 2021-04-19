@@ -218,23 +218,27 @@ async def test_pb_connect(hass, modbus_hub):
         assert mock_logger.error.called
 
 
-async def test_pb_close(hass, modbus_hub):
+async def test_pb_close(hass, caplog, modbus_hub):
     """Run general test of class modbusHub."""
 
+    caplog.set_level(logging.DEBUG)
     mock_pb = mock.MagicMock()
-    with mock.patch.object(modbus, "_LOGGER") as mock_logger, mock.patch(
+    with mock.patch(
         "homeassistant.components.modbus.modbus.ModbusTcpClient", return_value=mock_pb
     ):
+        caplog.clear()
         modbus_hub.setup()
         modbus_hub.close()
         assert mock_pb.close.called
-        assert not mock_logger.error.called
+        assert len(caplog.records) == 0
 
         mock_pb.close.side_effect = ModbusException("test failed close()")
         modbus_hub.setup()
+        caplog.clear()
         modbus_hub.close()
         assert mock_pb.close.called
-        assert mock_logger.error.called
+        assert len(caplog.records) == 1
+        assert caplog.records[0].levelname == "ERROR"
 
 
 async def test_pb_read_coils(hass, modbus_hub):
