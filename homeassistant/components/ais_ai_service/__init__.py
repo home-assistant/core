@@ -3141,9 +3141,22 @@ async def async_setup(hass, config):
             "ais_ai_service", "check_night_mode", {"timer": True}
         )
 
+    async def ais_run_each_minute2(now):
+        await hass.services.async_call(
+            "ais_ai_service", "check_night_mode", {"timer": True}
+        )
+        current_time = now.strftime("%H%M")
+        _LOGGER.error("current_time: " + current_time)
+        await hass.services.async_call(
+            "ais_shell_command", "set_clock_display_text", {"text": current_time}
+        )
+
     # run each minute at first second
     _dt = dt_util.utcnow()
-    event.async_track_utc_time_change(hass, ais_run_each_minute, second=1)
+    if ais_global.has_front_clock():
+        event.async_track_utc_time_change(hass, ais_run_each_minute2, second=1)
+    else:
+        event.async_track_utc_time_change(hass, ais_run_each_minute, second=1)
 
     # AIS agent
     agent = AisAgent(hass)

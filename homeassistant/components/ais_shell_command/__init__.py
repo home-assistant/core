@@ -82,6 +82,9 @@ async def async_setup(hass, config):
     async def set_io_scheduler(service):
         await _set_io_scheduler(hass, service)
 
+    async def set_clock_display_text(service):
+        await _set_clock_display_text(hass, service)
+
     # register services
     hass.services.async_register(DOMAIN, "change_host_name", change_host_name)
     hass.services.async_register(DOMAIN, "cec_command", cec_command)
@@ -104,6 +107,11 @@ async def async_setup(hass, config):
     hass.services.async_register(DOMAIN, "disable_irda_remote", disable_irda_remote)
     hass.services.async_register(DOMAIN, "set_scaling_governor", set_scaling_governor)
     hass.services.async_register(DOMAIN, "set_io_scheduler", set_io_scheduler)
+    if ais_global.has_front_clock():
+        hass.services.async_register(
+            DOMAIN, "set_clock_display_text", set_clock_display_text
+        )
+        await set_clock_display_text("AIS")
     return True
 
 
@@ -549,3 +557,12 @@ async def _set_io_scheduler(hass, call):
     if scheduler in available_io_schedulers:
         comm = r'su -c "echo ' + scheduler + ' > /sys/block/mmcblk0/queue/scheduler"'
         await _run(comm)
+
+
+async def _set_clock_display_text(hass, call):
+    if not ais_global.has_root():
+        return
+    text = call.data["text"]
+
+    comm = r'su -c "echo ' + text + ' > /sys/class/fd655/panel"'
+    await _run(comm)

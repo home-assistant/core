@@ -293,4 +293,20 @@ def has_root():
     return True
 
 
+def has_front_clock():
+    if platform.machine() == "x86_64":
+        return False
+
+    import subprocess
+
+    try:
+        subprocess.check_output(
+            "su -c 'ls /data/local/ais_screen_control'", shell=True  # nosec
+        )
+    except Exception as e:
+        _LOGGER.error("No front clock")
+        return False
+    return True
+
+
 set_global_my_ip(None)
