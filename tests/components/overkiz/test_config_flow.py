@@ -9,12 +9,13 @@ from pyhoma.exceptions import (
 )
 import pytest
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
+from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
 from homeassistant.components.overkiz import config_flow
 from homeassistant.components.overkiz.const import DOMAIN
 from homeassistant.config_entries import ENTRY_STATE_LOADED
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, mock_device_registry
 
 TEST_EMAIL = "test@testdomain.com"
 TEST_PASSWORD = "test-password"
@@ -166,3 +167,48 @@ async def test_options_flow(hass):
     )
 
     assert entry.options == {"update_interval": 12000}
+
+
+async def test_dhcp_flow(hass):
+    """Test that DHCP discovery for new bridge works."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data={
+            HOSTNAME: "gateway-1234-5678-9123",
+            IP_ADDRESS: "192.168.1.4",
+            MAC_ADDRESS: "F8811A000000",
+        },
+        context={"source": config_entries.SOURCE_DHCP},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == config_entries.SOURCE_USER
+
+
+async def test_dhcp_flow_already_configured(hass):
+    """Test that DHCP doesn't setup already configured gateways."""
+    config_entry = MockConfigEntry(
+        domain=config_flow.DOMAIN,
+        unique_id=TEST_EMAIL,
+        data={"username": TEST_EMAIL, "password": TEST_PASSWORD},
+    )
+    config_entry.add_to_hass(hass)
+
+    device_registry = mock_device_registry(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "1234-5678-9123")},
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data={
+            HOSTNAME: "gateway-1234-5678-9123",
+            IP_ADDRESS: "192.168.1.4",
+            MAC_ADDRESS: "F8811A000000",
+        },
+        context={"source": config_entries.SOURCE_DHCP},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
