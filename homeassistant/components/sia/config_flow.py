@@ -12,7 +12,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_PORT, CONF_PROTOCOL
-from homeassistant.data_entry_flow import AbortFlow
 
 from .const import (
     CONF_ACCOUNT,
@@ -114,11 +113,8 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=HUB_SCHEMA, errors=errors
             )
         self.update_data(user_input)
-        await self.async_set_unique_id(f"{DOMAIN}_{self.data[CONF_PORT]}")
-        try:
-            self._abort_if_unique_id_configured()
-        except AbortFlow:
-            return self.async_abort(reason="already_configured")
+        await self.async_set_unique_id(str(self.data[CONF_PORT]))
+        self._abort_if_unique_id_configured()
 
         if user_input[CONF_ADDITIONAL_ACCOUNTS]:
             return await self.async_step_add_account()
@@ -128,25 +124,25 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     def update_data(self, user_input):
-        """Parse the user_input and store in self.data."""
-        if not self.data:
-            self.data = {
-                CONF_PORT: user_input[CONF_PORT],
-                CONF_PROTOCOL: user_input[CONF_PROTOCOL],
-                CONF_ACCOUNTS: [
-                    {
-                        CONF_ACCOUNT: user_input[CONF_ACCOUNT],
-                        CONF_ENCRYPTION_KEY: user_input.get(CONF_ENCRYPTION_KEY),
-                        CONF_PING_INTERVAL: user_input[CONF_PING_INTERVAL],
-                        CONF_ZONES: user_input[CONF_ZONES],
-                        CONF_IGNORE_TIMESTAMPS: user_input[CONF_IGNORE_TIMESTAMPS],
-                    }
-                ],
-            }
-        else:
+        """Parse the user_input and store in data attribute. If there is a port in the input, assume it is fully new and overwrite."""
+        if self.data and not user_input.get(CONF_PORT):
             add_data = user_input.copy()
             add_data.pop(CONF_ADDITIONAL_ACCOUNTS)
             self.data[CONF_ACCOUNTS].append(add_data)
+            return
+        self.data = {
+            CONF_PORT: user_input[CONF_PORT],
+            CONF_PROTOCOL: user_input[CONF_PROTOCOL],
+            CONF_ACCOUNTS: [
+                {
+                    CONF_ACCOUNT: user_input[CONF_ACCOUNT],
+                    CONF_ENCRYPTION_KEY: user_input.get(CONF_ENCRYPTION_KEY),
+                    CONF_PING_INTERVAL: user_input[CONF_PING_INTERVAL],
+                    CONF_ZONES: user_input[CONF_ZONES],
+                    CONF_IGNORE_TIMESTAMPS: user_input[CONF_IGNORE_TIMESTAMPS],
+                }
+            ],
+        }
 
 
 class InvalidPing(exceptions.HomeAssistantError):

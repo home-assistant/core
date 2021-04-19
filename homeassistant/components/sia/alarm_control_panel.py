@@ -115,7 +115,8 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
         self._port = port
         self._account = account
         self._zone = zone
-        self._ping_interval = get_ping_interval(ping_interval)
+        self._ping_interval_int = ping_interval
+        self._ping_interval = None
         self._event_listener_str = f"{SIA_EVENT}_{port}_{account}"
         self._unsub = None
 
@@ -137,6 +138,7 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
 
     async def async_added_to_hass(self):
         """Once the panel is added, see if it was there before and pull in that state."""
+        self._ping_interval = get_ping_interval(self._ping_interval_int)
         await super().async_added_to_hass()
         state = await self.async_get_last_state()
         _LOGGER.debug(

@@ -34,8 +34,13 @@ class SIAHub:
         self.entry_id = entry_id
         self._title = title
         self._accounts = hub_config[CONF_ACCOUNTS]
-
+        self._protocol = hub_config[CONF_PROTOCOL]
         self._remove_shutdown_listener = None
+        self.sia_accounts = None
+        self.sia_client = None
+
+    async def async_setup_hub(self):
+        """Add a device to the device_registry, register shutdown listener, load reactions."""
         self.sia_accounts = [
             SIAAccount(
                 account_id=a[CONF_ACCOUNT],
@@ -51,19 +56,15 @@ class SIAHub:
             port=self._port,
             accounts=self.sia_accounts,
             function=self.async_create_and_fire_event,
-            protocol=CommunicationsProtocol(hub_config[CONF_PROTOCOL]),
+            protocol=CommunicationsProtocol(self._protocol),
         )
-
-    async def async_setup_hub(self):
-        """Add a device to the device_registry, register shutdown listener, load reactions."""
         device_registry = await dr.async_get_registry(self._hass)
-        port = self._port
         for acc in self._accounts:
             account = acc[CONF_ACCOUNT]
             device_registry.async_get_or_create(
                 config_entry_id=self.entry_id,
-                identifiers={(DOMAIN, port, account)},
-                name=f"{port} - {account}",
+                identifiers={(DOMAIN, self._port, account)},
+                name=f"{self._port} - {account}",
             )
         self._remove_shutdown_listener = self._hass.bus.async_listen(
             EVENT_HOMEASSISTANT_STOP, self.async_shutdown
@@ -76,7 +77,11 @@ class SIAHub:
         await self.sia_client.stop()
 
     async def async_create_and_fire_event(self, event: SIAEvent):
-        """Create a event on HA's bus, with the data from the SIAEvent."""
+        """Create a event on HA's bus, with the data from the SIAEvent.
+
+        The created event is handled by default for only a small subset for each platform (there are about 320 SIA Codes defined, only 22 of those are used in the alarm_control_panel), a user can choose to build other automation or even entities on the same event for SIA codes not handled by the built-in platforms.
+
+        """
         _LOGGER.debug(
             "Adding event to bus for code %s for account %s and port %s",
             event.code,

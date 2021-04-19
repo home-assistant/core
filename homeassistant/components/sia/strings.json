@@ -35,9 +35,6 @@
       "invalid_ping": "The ping interval needs to be between 1 and 1440 minutes.",
       "invalid_zones": "There needs to be at least 1 zone.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
   }
 }
