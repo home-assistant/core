@@ -100,7 +100,7 @@ class SonosBatteryEntity(Entity):
     @property
     def unique_id(self) -> str:
         """Return the unique ID of the sensor."""
-        return self._soco.uid + "-battery"
+        return f"{self._soco.uid}-battery"
 
     @property
     def name(self) -> str:
