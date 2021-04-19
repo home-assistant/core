@@ -254,9 +254,7 @@ def async_remove_panel(hass, frontend_url_path):
 def add_extra_js_url(hass, url, es5=False):
     """Register extra js or module url to load."""
     key = DATA_EXTRA_JS_URL_ES5 if es5 else DATA_EXTRA_MODULE_URL
-    url_set = set(hass.data[key])
-    url_set.add(url)
-    hass.data[key] = frozenset(url_set)
+    hass.data[key] = frozenset(*hass.data[key], url)
 
 
 def _frontend_root(dev_repo_path):
