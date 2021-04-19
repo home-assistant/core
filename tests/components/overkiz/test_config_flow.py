@@ -144,6 +144,7 @@ async def test_options_flow(hass):
         "homeassistant.components.overkiz.async_setup_entry", return_value=True
     ):
         entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
