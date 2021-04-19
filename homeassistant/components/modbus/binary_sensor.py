@@ -89,10 +89,11 @@ async def async_setup_platform(
     for entry in discovery_info[CONF_BINARY_SENSORS]:
         if CONF_HUB in entry:
             # from old config!
-            discovery_info[CONF_NAME] = entry[CONF_HUB]
+            hub: ModbusHub = hass.data[MODBUS_DOMAIN][entry[CONF_HUB]]
+        else:
+            hub: ModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
         if CONF_SCAN_INTERVAL not in entry:
             entry[CONF_SCAN_INTERVAL] = DEFAULT_SCAN_INTERVAL
-        hub: ModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
         sensors.append(
             ModbusBinarySensor(
                 hub,
