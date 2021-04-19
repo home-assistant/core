@@ -819,7 +819,7 @@ class TemperatureSettingTrait(_Trait):
         if preset in self.preset_to_google:
             response["thermostatMode"] = self.preset_to_google[preset]
         else:
-            response["thermostatMode"] = self.hvac_to_google.get(operation)
+            response["thermostatMode"] = self.hvac_to_google.get(operation, "none")
 
         current_temp = attrs.get(climate.ATTR_CURRENT_TEMPERATURE)
         if current_temp is not None:
