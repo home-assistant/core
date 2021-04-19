@@ -18,7 +18,12 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     # Fill submit form data for config entry
-    with patch("homeassistant.components.srp_energy.config_flow.SrpEnergyClient"):
+    with patch(
+        "homeassistant.components.srp_energy.config_flow.SrpEnergyClient"
+    ), patch(
+        "homeassistant.components.srp_energy.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -28,6 +33,8 @@ async def test_form(hass):
         assert result["type"] == "create_entry"
         assert result["title"] == "Test"
         assert result["data"][CONF_IS_TOU] is False
+
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_invalid_auth(hass):

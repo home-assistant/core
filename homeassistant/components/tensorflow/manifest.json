@@ -6,8 +6,9 @@
     "tensorflow==2.3.0",
     "tf-models-official==2.3.0",
     "pycocotools==2.0.1",
-    "numpy==1.19.2",
-    "pillow==7.2.0"
+    "numpy==1.20.2",
+    "pillow==8.1.2"
   ],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

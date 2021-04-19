@@ -1,0 +1,19 @@
+{
+    "device_automation": {
+        "action_type": {
+            "turn_off": "Matikan {entity_name}",
+            "turn_on": "Nyalakan {entity_name}"
+        }
+    },
+    "state": {
+        "_": {
+            "eco": "Eco",
+            "electric": "Listrik",
+            "gas": "Gas",
+            "heat_pump": "Pompa Pemanas",
+            "high_demand": "Permintaan Tinggi",
+            "off": "Mati",
+            "performance": "Kinerja"
+        }
+    }
+}

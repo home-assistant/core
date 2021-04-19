@@ -6,7 +6,7 @@ from pydeconz import DeconzSession, errors
 
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.core import callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -19,13 +19,13 @@ from .const import (
     DEFAULT_ALLOW_CLIP_SENSOR,
     DEFAULT_ALLOW_DECONZ_GROUPS,
     DEFAULT_ALLOW_NEW_DEVICES,
-    DOMAIN,
+    DOMAIN as DECONZ_DOMAIN,
     LOGGER,
     NEW_GROUP,
     NEW_LIGHT,
     NEW_SCENE,
     NEW_SENSOR,
-    SUPPORTED_PLATFORMS,
+    PLATFORMS,
 )
 from .deconz_event import async_setup_events, async_unload_events
 from .errors import AuthenticationRequired, CannotConnect
@@ -34,7 +34,7 @@ from .errors import AuthenticationRequired, CannotConnect
 @callback
 def get_gateway_from_config_entry(hass, config_entry):
     """Return gateway with a matching bridge id."""
-    return hass.data[DOMAIN][config_entry.unique_id]
+    return hass.data[DECONZ_DOMAIN][config_entry.unique_id]
 
 
 class DeconzGateway:
@@ -152,7 +152,7 @@ class DeconzGateway:
         # Gateway service
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
-            identifiers={(DOMAIN, self.api.config.bridgeid)},
+            identifiers={(DECONZ_DOMAIN, self.api.config.bridgeid)},
             manufacturer="Dresden Elektronik",
             model=self.api.config.modelid,
             name=self.api.config.name,
@@ -173,14 +173,13 @@ class DeconzGateway:
         except CannotConnect as err:
             raise ConfigEntryNotReady from err
 
-        except Exception as err:  # pylint: disable=broad-except
-            LOGGER.error("Error connecting with deCONZ gateway: %s", err, exc_info=True)
-            return False
+        except AuthenticationRequired as err:
+            raise ConfigEntryAuthFailed from err
 
-        for component in SUPPORTED_PLATFORMS:
+        for platform in PLATFORMS:
             self.hass.async_create_task(
                 self.hass.config_entries.async_forward_entry_setup(
-                    self.config_entry, component
+                    self.config_entry, platform
                 )
             )
 
@@ -252,9 +251,9 @@ class DeconzGateway:
         self.api.async_connection_status_callback = None
         self.api.close()
 
-        for component in SUPPORTED_PLATFORMS:
+        for platform in PLATFORMS:
             await self.hass.config_entries.async_forward_entry_unload(
-                self.config_entry, component
+                self.config_entry, platform
             )
 
         for unsub_dispatcher in self.listeners:

@@ -1,8 +1,10 @@
 """Models for manifest validator."""
+from __future__ import annotations
+
 import importlib
 import json
 import pathlib
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import attr
 
@@ -24,12 +26,12 @@ class Error:
 class Config:
     """Config for the run."""
 
-    specific_integrations: Optional[pathlib.Path] = attr.ib()
+    specific_integrations: pathlib.Path | None = attr.ib()
     root: pathlib.Path = attr.ib()
     action: str = attr.ib()
     requirements: bool = attr.ib()
-    errors: List[Error] = attr.ib(factory=list)
-    cache: Dict[str, Any] = attr.ib(factory=dict)
+    errors: list[Error] = attr.ib(factory=list)
+    cache: dict[str, Any] = attr.ib(factory=dict)
 
     def add_error(self, *args, **kwargs):
         """Add an error."""
@@ -65,9 +67,9 @@ class Integration:
         return integrations
 
     path: pathlib.Path = attr.ib()
-    manifest: Optional[dict] = attr.ib(default=None)
-    errors: List[Error] = attr.ib(factory=list)
-    warnings: List[Error] = attr.ib(factory=list)
+    manifest: dict[str, Any] | None = attr.ib(default=None)
+    errors: list[Error] = attr.ib(factory=list)
+    warnings: list[Error] = attr.ib(factory=list)
 
     @property
     def domain(self) -> str:
@@ -75,17 +77,22 @@ class Integration:
         return self.path.name
 
     @property
-    def disabled(self) -> Optional[str]:
+    def core(self) -> bool:
+        """Core integration."""
+        return self.path.as_posix().startswith("homeassistant/components")
+
+    @property
+    def disabled(self) -> str | None:
         """List of disabled."""
         return self.manifest.get("disabled")
 
     @property
-    def requirements(self) -> List[str]:
+    def requirements(self) -> list[str]:
         """List of requirements."""
         return self.manifest.get("requirements", [])
 
     @property
-    def dependencies(self) -> List[str]:
+    def dependencies(self) -> list[str]:
         """List of dependencies."""
         return self.manifest.get("dependencies", [])
 

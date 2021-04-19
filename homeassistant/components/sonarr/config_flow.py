@@ -1,6 +1,8 @@
 """Config flow for Sonarr."""
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from sonarr import Sonarr, SonarrAccessRestricted, SonarrError
 import voluptuous as vol
@@ -27,13 +29,13 @@ from .const import (
     DEFAULT_UPCOMING_DAYS,
     DEFAULT_VERIFY_SSL,
     DEFAULT_WANTED_MAX_ITEMS,
+    DOMAIN,
 )
-from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_input(hass: HomeAssistantType, data: dict) -> Dict[str, Any]:
+async def validate_input(hass: HomeAssistantType, data: dict) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -73,19 +75,18 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return SonarrOptionsFlowHandler(config_entry)
 
-    async def async_step_reauth(
-        self, data: Optional[ConfigType] = None
-    ) -> Dict[str, Any]:
+    async def async_step_reauth(self, data: ConfigType | None = None) -> dict[str, Any]:
         """Handle configuration by re-auth."""
         self._reauth = True
         self._entry_data = dict(data)
-        self._entry_id = self._entry_data.pop("config_entry_id")
+        entry = await self.async_set_unique_id(self.unique_id)
+        self._entry_id = entry.entry_id
 
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
-        self, user_input: Optional[ConfigType] = None
-    ) -> Dict[str, Any]:
+        self, user_input: ConfigType | None = None
+    ) -> dict[str, Any]:
         """Confirm reauth dialog."""
         if user_input is None:
             return self.async_show_form(
@@ -98,8 +99,8 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_user()
 
     async def async_step_user(
-        self, user_input: Optional[ConfigType] = None
-    ) -> Dict[str, Any]:
+        self, user_input: ConfigType | None = None
+    ) -> dict[str, Any]:
         """Handle a flow initiated by the user."""
         errors = {}
 
@@ -138,7 +139,7 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_reauth_update_entry(
         self, entry_id: str, data: dict
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Update existing config entry."""
         entry = self.hass.config_entries.async_get_entry(entry_id)
         self.hass.config_entries.async_update_entry(entry, data=data)
@@ -146,7 +147,7 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_abort(reason="reauth_successful")
 
-    def _get_user_data_schema(self) -> Dict[str, Any]:
+    def _get_user_data_schema(self) -> dict[str, Any]:
         """Get the data schema to display user form."""
         if self._reauth:
             return {vol.Required(CONF_API_KEY): str}
@@ -174,7 +175,7 @@ class SonarrOptionsFlowHandler(OptionsFlow):
         """Initialize options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input: Optional[ConfigType] = None):
+    async def async_step_init(self, user_input: ConfigType | None = None):
         """Manage Sonarr options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

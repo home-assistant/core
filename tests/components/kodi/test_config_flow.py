@@ -47,8 +47,6 @@ async def test_user_flow(hass, user_flow):
         "homeassistant.components.kodi.config_flow.get_kodi_connection",
         return_value=MockConnection(),
     ), patch(
-        "homeassistant.components.kodi.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.kodi.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -66,7 +64,6 @@ async def test_user_flow(hass, user_flow):
         "timeout": DEFAULT_TIMEOUT,
     }
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -92,8 +89,6 @@ async def test_form_valid_auth(hass, user_flow):
         "homeassistant.components.kodi.config_flow.get_kodi_connection",
         return_value=MockConnection(),
     ), patch(
-        "homeassistant.components.kodi.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.kodi.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -112,7 +107,6 @@ async def test_form_valid_auth(hass, user_flow):
         "timeout": DEFAULT_TIMEOUT,
     }
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -142,8 +136,6 @@ async def test_form_valid_ws_port(hass, user_flow):
         "homeassistant.components.kodi.config_flow.get_kodi_connection",
         return_value=MockConnection(),
     ), patch(
-        "homeassistant.components.kodi.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.kodi.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -163,7 +155,6 @@ async def test_form_valid_ws_port(hass, user_flow):
         "timeout": DEFAULT_TIMEOUT,
     }
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -187,8 +178,6 @@ async def test_form_empty_ws_port(hass, user_flow):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.kodi.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.kodi.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -208,7 +197,6 @@ async def test_form_empty_ws_port(hass, user_flow):
         "timeout": DEFAULT_TIMEOUT,
     }
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -430,8 +418,6 @@ async def test_discovery(hass):
     assert result["step_id"] == "discovery_confirm"
 
     with patch(
-        "homeassistant.components.kodi.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.kodi.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -451,7 +437,6 @@ async def test_discovery(hass):
         "timeout": DEFAULT_TIMEOUT,
     }
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -594,8 +579,6 @@ async def test_form_import(hass):
         "homeassistant.components.kodi.config_flow.get_kodi_connection",
         return_value=MockConnection(),
     ), patch(
-        "homeassistant.components.kodi.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.kodi.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -610,7 +593,6 @@ async def test_form_import(hass):
     assert result["title"] == TEST_IMPORT["name"]
     assert result["data"] == TEST_IMPORT
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 

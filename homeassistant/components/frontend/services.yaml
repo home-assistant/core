@@ -11,4 +11,4 @@ set_theme:
       example: "dark"
 
 reload_themes:
-  description: Reload themes from yaml configuration.
+  description: Reload themes from YAML configuration.

@@ -29,12 +29,6 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["media_player"]
 
 
-async def async_setup(hass, config):
-    """Set up the Kodi integration."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Kodi from a config entry."""
     conn = get_kodi_connection(
@@ -66,15 +60,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     remove_stop_listener = hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close)
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_CONNECTION: conn,
         DATA_KODI: kodi,
         DATA_REMOVE_LISTENER: remove_stop_listener,
     }
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -85,8 +80,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

@@ -1,0 +1,35 @@
+{
+    "config": {
+        "step": {
+            "installation": {
+                "data": {
+                    "giid": "Instalaci\u00f3n"
+                },
+                "description": "Home Assistant encontr\u00f3 varias instalaciones de Verisure en su cuenta de Mis p\u00e1ginas. Por favor, seleccione la instalaci\u00f3n para agregar a Home Assistant."
+            },
+            "reauth_confirm": {
+                "data": {
+                    "description": "Vuelva a autenticarse con su cuenta Verisure My Pages."
+                }
+            },
+            "user": {
+                "data": {
+                    "description": "Inicia sesi\u00f3n con tu cuenta Verisure My Pages."
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "code_format_mismatch": "El c\u00f3digo PIN predeterminado no coincide con el n\u00famero necesario de d\u00edgitos"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "lock_code_digits": "N\u00famero de d\u00edgitos del c\u00f3digo PIN de las cerraduras",
+                    "lock_default_code": "C\u00f3digo PIN por defecto para las cerraduras, utilizado si no se indica ninguno"
+                }
+            }
+        }
+    }
+}

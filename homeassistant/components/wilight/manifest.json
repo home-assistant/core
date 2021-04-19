@@ -3,12 +3,13 @@
   "name": "WiLight",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/wilight",
-  "requirements": ["pywilight==0.0.65"],
+  "requirements": ["pywilight==0.0.68"],
   "ssdp": [
     {
       "manufacturer": "All Automacao Ltda"
     }
   ],
   "codeowners": ["@leofig-rj"],
-  "quality_scale": "silver"
+  "quality_scale": "silver",
+  "iot_class": "local_polling"
 }

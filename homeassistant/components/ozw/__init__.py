@@ -1,5 +1,6 @@
 """The ozw integration."""
 import asyncio
+from contextlib import suppress
 import json
 import logging
 
@@ -21,7 +22,7 @@ from openzwavemqtt.util.mqtt_client import MQTTClient
 
 from homeassistant.components import mqtt
 from homeassistant.components.hassio.handler import HassioAPIError
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ENTRY_STATE_LOADED, ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -55,14 +56,9 @@ DATA_DEVICES = "zwave-mqtt-devices"
 DATA_STOP_MQTT_CLIENT = "ozw_stop_mqtt_client"
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Initialize basic config of ozw component."""
-    hass.data[DOMAIN] = {}
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up ozw from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
     ozw_data = hass.data[DOMAIN][entry.entry_id] = {}
     ozw_data[DATA_UNSUBSCRIBE] = []
 
@@ -95,12 +91,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         manager_options["send_message"] = mqtt_client.send_message
 
     else:
-        if "mqtt" not in hass.config.components:
+        mqtt_entries = hass.config_entries.async_entries("mqtt")
+        if not mqtt_entries or mqtt_entries[0].state != ENTRY_STATE_LOADED:
             _LOGGER.error("MQTT integration is not set up")
             return False
 
+        mqtt_entry = mqtt_entries[0]  # MQTT integration only has one entry.
+
         @callback
         def send_message(topic, payload):
+            if mqtt_entry.state != ENTRY_STATE_LOADED:
+                _LOGGER.error("MQTT integration is not set up")
+                return
+
             mqtt.async_publish(hass, topic, json.dumps(payload))
 
         manager_options["send_message"] = send_message
@@ -260,8 +263,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     async def start_platforms():
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_setup(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_setup(entry, platform)
+                for platform in PLATFORMS
             ]
         )
         if entry.data.get(CONF_USE_ADDON):
@@ -273,10 +276,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 Do not unsubscribe the manager topic.
                 """
                 mqtt_client_task.cancel()
-                try:
+                with suppress(asyncio.CancelledError):
                     await mqtt_client_task
-                except asyncio.CancelledError:
-                    pass
 
             ozw_data[DATA_UNSUBSCRIBE].append(
                 hass.bus.async_listen_once(
@@ -303,8 +304,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

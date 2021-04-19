@@ -173,7 +173,7 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
         return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Attributes of the area."""
         attrs = self.initial_attrs()
         elmt = self._element

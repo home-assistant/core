@@ -1,8 +1,10 @@
 """Pluggable auth modules for Home Assistant."""
+from __future__ import annotations
+
 import importlib
 import logging
 import types
-from typing import Any, Dict, Optional
+from typing import Any
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -10,6 +12,7 @@ from voluptuous.humanize import humanize_error
 from homeassistant import data_entry_flow, requirements
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultDict
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.decorator import Registry
 
@@ -36,7 +39,7 @@ class MultiFactorAuthModule:
     DEFAULT_TITLE = "Unnamed auth module"
     MAX_RETRY_TIME = 3
 
-    def __init__(self, hass: HomeAssistant, config: Dict[str, Any]) -> None:
+    def __init__(self, hass: HomeAssistant, config: dict[str, Any]) -> None:
         """Initialize an auth module."""
         self.hass = hass
         self.config = config
@@ -66,7 +69,7 @@ class MultiFactorAuthModule:
         """Return a voluptuous schema to define mfa auth module's input."""
         raise NotImplementedError
 
-    async def async_setup_flow(self, user_id: str) -> "SetupFlow":
+    async def async_setup_flow(self, user_id: str) -> SetupFlow:
         """Return a data entry flow handler for setup module.
 
         Mfa module should extend SetupFlow
@@ -85,7 +88,7 @@ class MultiFactorAuthModule:
         """Return whether user is setup."""
         raise NotImplementedError
 
-    async def async_validate(self, user_id: str, user_input: Dict[str, Any]) -> bool:
+    async def async_validate(self, user_id: str, user_input: dict[str, Any]) -> bool:
         """Return True if validation passed."""
         raise NotImplementedError
 
@@ -102,14 +105,14 @@ class SetupFlow(data_entry_flow.FlowHandler):
         self._user_id = user_id
 
     async def async_step_init(
-        self, user_input: Optional[Dict[str, str]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, str] | None = None
+    ) -> FlowResultDict:
         """Handle the first step of setup flow.
 
         Return self.async_show_form(step_id='init') if user_input is None.
         Return self.async_create_entry(data={'result': result}) if finish.
         """
-        errors: Dict[str, str] = {}
+        errors: dict[str, str] = {}
 
         if user_input:
             result = await self._auth_module.async_setup_user(self._user_id, user_input)
@@ -123,7 +126,7 @@ class SetupFlow(data_entry_flow.FlowHandler):
 
 
 async def auth_mfa_module_from_config(
-    hass: HomeAssistant, config: Dict[str, Any]
+    hass: HomeAssistant, config: dict[str, Any]
 ) -> MultiFactorAuthModule:
     """Initialize an auth module from a config."""
     module_name = config[CONF_TYPE]

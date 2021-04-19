@@ -19,9 +19,9 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     CONF_ALT_NIGHT_MODE,
@@ -41,7 +41,7 @@ ATTR_KEYPRESS = "keypress"
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ):
     """Set up for AlarmDecoder alarm panels."""
     options = entry.options
@@ -163,7 +163,7 @@ class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
         return self._code_arm_required
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             "ac_power": self._ac_power,

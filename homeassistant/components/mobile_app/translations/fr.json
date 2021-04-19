@@ -8,5 +8,11 @@
                 "description": "Voulez-vous configurer le composant Application mobile?"
             }
         }
-    }
+    },
+    "device_automation": {
+        "action_type": {
+            "notify": "Envoyer une notification"
+        }
+    },
+    "title": "Application mobile"
 }

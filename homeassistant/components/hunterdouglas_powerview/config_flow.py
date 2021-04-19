@@ -10,8 +10,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import async_get_device_info
-from .const import DEVICE_NAME, DEVICE_SERIAL_NUMBER, HUB_EXCEPTIONS
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DEVICE_NAME, DEVICE_SERIAL_NUMBER, DOMAIN, HUB_EXCEPTIONS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,34 +78,30 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_import(self, user_input=None):
-        """Handle the initial step."""
-        return await self.async_step_user(user_input)
-
-    async def async_step_homekit(self, homekit_info):
+    async def async_step_homekit(self, discovery_info):
         """Handle HomeKit discovery."""
 
         # If we already have the host configured do
         # not open connections to it if we can avoid it.
-        if self._host_already_configured(homekit_info[CONF_HOST]):
+        if self._host_already_configured(discovery_info[CONF_HOST]):
             return self.async_abort(reason="already_configured")
 
         try:
-            info = await validate_input(self.hass, homekit_info)
+            info = await validate_input(self.hass, discovery_info)
         except CannotConnect:
             return self.async_abort(reason="cannot_connect")
         except Exception:  # pylint: disable=broad-except
             return self.async_abort(reason="unknown")
 
         await self.async_set_unique_id(info["unique_id"], raise_on_progress=False)
-        self._abort_if_unique_id_configured({CONF_HOST: homekit_info["host"]})
+        self._abort_if_unique_id_configured({CONF_HOST: discovery_info["host"]})
 
-        name = homekit_info["name"]
+        name = discovery_info["name"]
         if name.endswith(HAP_SUFFIX):
             name = name[: -len(HAP_SUFFIX)]
 
         self.powerview_config = {
-            CONF_HOST: homekit_info["host"],
+            CONF_HOST: discovery_info["host"],
             CONF_NAME: name,
         }
         return await self.async_step_link()
@@ -126,7 +121,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def _host_already_configured(self, host):
         """See if we already have a hub with the host address configured."""
         existing_hosts = {
-            entry.data[CONF_HOST]
+            entry.data.get(CONF_HOST)
             for entry in self._async_current_entries()
             if CONF_HOST in entry.data
         }

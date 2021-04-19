@@ -1,19 +1,28 @@
 """Representation of Z-Wave sensors."""
+from __future__ import annotations
 
 import logging
-from typing import Callable, Dict, List, Optional
+from typing import Callable, cast
 
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import CommandClass
+from zwave_js_server.const import CommandClass, ConfigurationValueType
+from zwave_js_server.model.value import ConfigurationValue
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
     DOMAIN as SENSOR_DOMAIN,
+    SensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_TEMPERATURE,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -33,12 +42,16 @@ async def async_setup_entry(
     @callback
     def async_add_sensor(info: ZwaveDiscoveryInfo) -> None:
         """Add Z-Wave Sensor."""
-        entities: List[ZWaveBaseEntity] = []
+        entities: list[ZWaveBaseEntity] = []
 
         if info.platform_hint == "string_sensor":
             entities.append(ZWaveStringSensor(config_entry, client, info))
         elif info.platform_hint == "numeric_sensor":
             entities.append(ZWaveNumericSensor(config_entry, client, info))
+        elif info.platform_hint == "list_sensor":
+            entities.append(ZWaveListSensor(config_entry, client, info))
+        elif info.platform_hint == "config_parameter":
+            entities.append(ZWaveConfigParameterSensor(config_entry, client, info))
         else:
             LOGGER.warning(
                 "Sensor not implemented for %s/%s",
@@ -58,21 +71,49 @@ async def async_setup_entry(
     )
 
 
-class ZwaveSensorBase(ZWaveBaseEntity):
+class ZwaveSensorBase(ZWaveBaseEntity, SensorEntity):
     """Basic Representation of a Z-Wave sensor."""
 
-    @property
-    def device_class(self) -> Optional[str]:
-        """Return the device class of the sensor."""
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        client: ZwaveClient,
+        info: ZwaveDiscoveryInfo,
+    ) -> None:
+        """Initialize a ZWaveSensorBase entity."""
+        super().__init__(config_entry, client, info)
+        self._name = self.generate_name(include_value_name=True)
+        self._device_class = self._get_device_class()
+
+    def _get_device_class(self) -> str | None:
+        """
+        Get the device class of the sensor.
+
+        This should be run once during initialization so we don't have to calculate
+        this value on every state update.
+        """
         if self.info.primary_value.command_class == CommandClass.BATTERY:
             return DEVICE_CLASS_BATTERY
         if self.info.primary_value.command_class == CommandClass.METER:
-            if self.info.primary_value.property_key_name == "kWh_Consumed":
+            if self.info.primary_value.metadata.unit == "kWh":
                 return DEVICE_CLASS_ENERGY
             return DEVICE_CLASS_POWER
-        if self.info.primary_value.property_ == "Air temperature":
-            return DEVICE_CLASS_TEMPERATURE
+        if isinstance(self.info.primary_value.property_, str):
+            property_lower = self.info.primary_value.property_.lower()
+            if "humidity" in property_lower:
+                return DEVICE_CLASS_HUMIDITY
+            if "temperature" in property_lower:
+                return DEVICE_CLASS_TEMPERATURE
+        if self.info.primary_value.metadata.unit == "W":
+            return DEVICE_CLASS_POWER
+        if self.info.primary_value.metadata.unit == "Lux":
+            return DEVICE_CLASS_ILLUMINANCE
         return None
+
+    @property
+    def device_class(self) -> str | None:
+        """Return the device class of the sensor."""
+        return self._device_class
 
     @property
     def entity_registry_enabled_default(self) -> bool:
@@ -80,6 +121,7 @@ class ZwaveSensorBase(ZWaveBaseEntity):
         # We hide some of the more advanced sensors by default to not overwhelm users
         if self.info.primary_value.command_class in [
             CommandClass.BASIC,
+            CommandClass.CONFIGURATION,
             CommandClass.INDICATOR,
             CommandClass.NOTIFICATION,
         ]:
@@ -96,14 +138,14 @@ class ZWaveStringSensor(ZwaveSensorBase):
     """Representation of a Z-Wave String sensor."""
 
     @property
-    def state(self) -> Optional[str]:
+    def state(self) -> str | None:
         """Return state of the sensor."""
         if self.info.primary_value.value is None:
             return None
         return str(self.info.primary_value.value)
 
     @property
-    def unit_of_measurement(self) -> Optional[str]:
+    def unit_of_measurement(self) -> str | None:
         """Return unit of measurement the value is expressed in."""
         if self.info.primary_value.metadata.unit is None:
             return None
@@ -113,6 +155,20 @@ class ZWaveStringSensor(ZwaveSensorBase):
 class ZWaveNumericSensor(ZwaveSensorBase):
     """Representation of a Z-Wave Numeric sensor."""
 
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        client: ZwaveClient,
+        info: ZwaveDiscoveryInfo,
+    ) -> None:
+        """Initialize a ZWaveNumericSensor entity."""
+        super().__init__(config_entry, client, info)
+        if self.info.primary_value.command_class == CommandClass.BASIC:
+            self._name = self.generate_name(
+                include_value_name=True,
+                alternate_value_name=self.info.primary_value.command_class_name,
+            )
+
     @property
     def state(self) -> float:
         """Return state of the sensor."""
@@ -121,7 +177,7 @@ class ZWaveNumericSensor(ZwaveSensorBase):
         return round(float(self.info.primary_value.value), 2)
 
     @property
-    def unit_of_measurement(self) -> Optional[str]:
+    def unit_of_measurement(self) -> str | None:
         """Return unit of measurement the value is expressed in."""
         if self.info.primary_value.metadata.unit is None:
             return None
@@ -132,18 +188,85 @@ class ZWaveNumericSensor(ZwaveSensorBase):
 
         return str(self.info.primary_value.metadata.unit)
 
-    @property
-    def device_state_attributes(self) -> Optional[Dict[str, str]]:
-        """Return the device specific state attributes."""
-        if (
-            self.info.primary_value.value is None
-            or not self.info.primary_value.metadata.states
-        ):
-            return None
-        # add the value's label as property for multi-value (list) items
-        label = self.info.primary_value.metadata.states.get(
-            self.info.primary_value.value
-        ) or self.info.primary_value.metadata.states.get(
-            str(self.info.primary_value.value)
+
+class ZWaveListSensor(ZwaveSensorBase):
+    """Representation of a Z-Wave Numeric sensor with multiple states."""
+
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        client: ZwaveClient,
+        info: ZwaveDiscoveryInfo,
+    ) -> None:
+        """Initialize a ZWaveListSensor entity."""
+        super().__init__(config_entry, client, info)
+        self._name = self.generate_name(
+            include_value_name=True,
+            alternate_value_name=self.info.primary_value.property_name,
+            additional_info=[self.info.primary_value.property_key_name],
         )
-        return {"label": label}
+
+    @property
+    def state(self) -> str | None:
+        """Return state of the sensor."""
+        if self.info.primary_value.value is None:
+            return None
+        if (
+            str(self.info.primary_value.value)
+            not in self.info.primary_value.metadata.states
+        ):
+            return str(self.info.primary_value.value)
+        return str(
+            self.info.primary_value.metadata.states[str(self.info.primary_value.value)]
+        )
+
+    @property
+    def extra_state_attributes(self) -> dict[str, str] | None:
+        """Return the device specific state attributes."""
+        # add the value's int value as property for multi-value (list) items
+        return {"value": self.info.primary_value.value}
+
+
+class ZWaveConfigParameterSensor(ZwaveSensorBase):
+    """Representation of a Z-Wave config parameter sensor."""
+
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        client: ZwaveClient,
+        info: ZwaveDiscoveryInfo,
+    ) -> None:
+        """Initialize a ZWaveConfigParameterSensor entity."""
+        super().__init__(config_entry, client, info)
+        self._name = self.generate_name(
+            include_value_name=True,
+            alternate_value_name=self.info.primary_value.property_name,
+            additional_info=[self.info.primary_value.property_key_name],
+            name_suffix="Config Parameter",
+        )
+        self._primary_value = cast(ConfigurationValue, self.info.primary_value)
+
+    @property
+    def state(self) -> str | None:
+        """Return state of the sensor."""
+        if self.info.primary_value.value is None:
+            return None
+        if (
+            self._primary_value.configuration_value_type == ConfigurationValueType.RANGE
+            or (
+                not str(self.info.primary_value.value)
+                in self.info.primary_value.metadata.states
+            )
+        ):
+            return str(self.info.primary_value.value)
+        return str(
+            self.info.primary_value.metadata.states[str(self.info.primary_value.value)]
+        )
+
+    @property
+    def extra_state_attributes(self) -> dict[str, str] | None:
+        """Return the device specific state attributes."""
+        if self._primary_value.configuration_value_type == ConfigurationValueType.RANGE:
+            return None
+        # add the value's int value as property for multi-value (list) items
+        return {"value": self.info.primary_value.value}

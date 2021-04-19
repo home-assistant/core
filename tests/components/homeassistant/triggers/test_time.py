@@ -51,7 +51,8 @@ async def test_if_fires_using_at(hass, calls):
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "{{ trigger.platform }} - {{ trigger.now.hour }}"
+                            "some": "{{ trigger.platform }} - {{ trigger.now.hour }}",
+                            "id": "{{ trigger.id}}",
                         },
                     },
                 }
@@ -64,6 +65,7 @@ async def test_if_fires_using_at(hass, calls):
 
     assert len(calls) == 1
     assert calls[0].data["some"] == "time - 5"
+    assert calls[0].data["id"] == 0
 
 
 @pytest.mark.parametrize(

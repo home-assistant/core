@@ -6,26 +6,25 @@ import async_timeout
 from roombapy import Roomba, RoombaConnectionError
 
 from homeassistant import exceptions
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.const import (
+    CONF_DELAY,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    EVENT_HOMEASSISTANT_STOP,
+)
 
 from .const import (
     BLID,
-    COMPONENTS,
+    CANCEL_STOP,
     CONF_BLID,
     CONF_CONTINUOUS,
-    CONF_DELAY,
-    CONF_NAME,
     DOMAIN,
+    PLATFORMS,
     ROOMBA_SESSION,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup(hass, config):
-    """Set up the roomba environment."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
 
 
 async def async_setup_entry(hass, config_entry):
@@ -55,14 +54,23 @@ async def async_setup_entry(hass, config_entry):
     except CannotConnect as err:
         raise exceptions.ConfigEntryNotReady from err
 
+    async def _async_disconnect_roomba(event):
+        await async_disconnect_or_timeout(hass, roomba)
+
+    cancel_stop = hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, _async_disconnect_roomba
+    )
+
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = {
         ROOMBA_SESSION: roomba,
         BLID: config_entry.data[CONF_BLID],
+        CANCEL_STOP: cancel_stop,
     }
 
-    for component in COMPONENTS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
+            hass.config_entries.async_forward_entry_setup(config_entry, platform)
         )
 
     if not config_entry.update_listeners:
@@ -85,12 +93,12 @@ async def async_connect_or_timeout(hass, roomba):
                     break
                 await asyncio.sleep(1)
     except RoombaConnectionError as err:
-        _LOGGER.error("Error to connect to vacuum")
+        _LOGGER.debug("Error to connect to vacuum: %s", err)
         raise CannotConnect from err
     except asyncio.TimeoutError as err:
         # api looping if user or password incorrect and roomba exist
         await async_disconnect_or_timeout(hass, roomba)
-        _LOGGER.error("Timeout expired")
+        _LOGGER.debug("Timeout expired: %s", err)
         raise CannotConnect from err
 
     return {ROOMBA_SESSION: roomba, CONF_NAME: name}
@@ -114,13 +122,14 @@ async def async_unload_entry(hass, config_entry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(config_entry, component)
-                for component in COMPONENTS
+                hass.config_entries.async_forward_entry_unload(config_entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )
     if unload_ok:
         domain_data = hass.data[DOMAIN][config_entry.entry_id]
+        domain_data[CANCEL_STOP]()
         await async_disconnect_or_timeout(hass, roomba=domain_data[ROOMBA_SESSION])
         hass.data[DOMAIN].pop(config_entry.entry_id)
 

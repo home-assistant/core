@@ -7,22 +7,15 @@ import logging
 from advantage_air import ApiError, advantage_air
 
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import ADVANTAGE_AIR_RETRY, DOMAIN
 
 ADVANTAGE_AIR_SYNC_INTERVAL = 15
-ADVANTAGE_AIR_PLATFORMS = ["climate", "cover", "binary_sensor", "sensor", "switch"]
+PLATFORMS = ["climate", "cover", "binary_sensor", "sensor", "switch"]
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup(hass, config):
-    """Set up Advantage Air integration."""
-    hass.data[DOMAIN] = {}
-    return True
 
 
 async def async_setup_entry(hass, entry):
@@ -57,17 +50,15 @@ async def async_setup_entry(hass, entry):
         except ApiError as err:
             _LOGGER.warning(err)
 
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
-    if not coordinator.data:
-        raise ConfigEntryNotReady
-
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         "coordinator": coordinator,
         "async_change": async_change,
     }
 
-    for platform in ADVANTAGE_AIR_PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
@@ -80,8 +71,8 @@ async def async_unload_entry(hass, entry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in ADVANTAGE_AIR_PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

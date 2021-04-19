@@ -3,7 +3,7 @@
   "name": "Denon AVR Network Receivers",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/denonavr",
-  "requirements": ["denonavr==0.9.10", "getmac==0.8.2"],
+  "requirements": ["denonavr==0.10.5"],
   "codeowners": ["@scarface-4711", "@starkillerOG"],
   "ssdp": [
     {
@@ -54,5 +54,6 @@
       "manufacturer": "Marantz",
       "deviceType": "urn:schemas-denon-com:device:AiosDevice:1"
     }
-  ]
+  ],
+  "iot_class": "local_polling"
 }

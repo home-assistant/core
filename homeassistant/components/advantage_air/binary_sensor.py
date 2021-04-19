@@ -24,6 +24,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             # Only add motion sensor when motion is enabled
             if zone["motionConfig"] >= 2:
                 entities.append(AdvantageAirZoneMotion(instance, ac_key, zone_key))
+            # Only add MyZone if it is available
+            if zone["type"] != 0:
+                entities.append(AdvantageAirZoneMyZone(instance, ac_key, zone_key))
     async_add_entities(entities)
 
 
@@ -73,3 +76,27 @@ class AdvantageAirZoneMotion(AdvantageAirEntity, BinarySensorEntity):
     def is_on(self):
         """Return if motion is detect."""
         return self._zone["motion"]
+
+
+class AdvantageAirZoneMyZone(AdvantageAirEntity, BinarySensorEntity):
+    """Advantage Air Zone MyZone."""
+
+    @property
+    def name(self):
+        """Return the name."""
+        return f'{self._zone["name"]} MyZone'
+
+    @property
+    def unique_id(self):
+        """Return a unique id."""
+        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-{self.zone_key}-myzone'
+
+    @property
+    def is_on(self):
+        """Return if this zone is the myZone."""
+        return self._zone["number"] == self._ac["myZone"]
+
+    @property
+    def entity_registry_enabled_default(self):
+        """Return false to disable this entity by default."""
+        return False

@@ -77,9 +77,9 @@ async def test_get_device_name(mock_ssh, hass):
     mock_ssh.return_value.before = load_fixture("unifi_direct.txt")
     scanner = get_scanner(hass, conf_dict)
     devices = scanner.scan_devices()
-    assert 23 == len(devices)
-    assert "iPhone" == scanner.get_device_name("98:00:c6:56:34:12")
-    assert "iPhone" == scanner.get_device_name("98:00:C6:56:34:12")
+    assert len(devices) == 23
+    assert scanner.get_device_name("98:00:c6:56:34:12") == "iPhone"
+    assert scanner.get_device_name("98:00:C6:56:34:12") == "iPhone"
 
 
 @patch("pexpect.pxssh.pxssh.logout")

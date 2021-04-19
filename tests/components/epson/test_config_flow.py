@@ -25,8 +25,6 @@ async def test_form(hass):
         "homeassistant.components.epson.Projector.get_serial_number",
         return_value="ABABAB",
     ), patch(
-        "homeassistant.components.epson.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.epson.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -39,7 +37,6 @@ async def test_form(hass):
     assert result2["title"] == "test-epson"
     assert result2["data"] == {CONF_HOST: "1.1.1.1"}
     await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 

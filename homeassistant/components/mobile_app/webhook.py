@@ -1,5 +1,6 @@
 """Webhook handlers for mobile_app."""
 import asyncio
+from contextlib import suppress
 from functools import wraps
 import logging
 import secrets
@@ -23,6 +24,7 @@ from homeassistant.components.frontend import MANIFEST_JSON
 from homeassistant.components.sensor import DEVICE_CLASSES as SENSOR_CLASSES
 from homeassistant.components.zone.const import DOMAIN as ZONE_DOMAIN
 from homeassistant.const import (
+    ATTR_DEVICE_ID,
     ATTR_DOMAIN,
     ATTR_SERVICE,
     ATTR_SERVICE_DATA,
@@ -36,6 +38,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceNotFound
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
+    entity_registry as er,
     template,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -48,7 +51,6 @@ from .const import (
     ATTR_APP_VERSION,
     ATTR_CAMERA_ENTITY_ID,
     ATTR_COURSE,
-    ATTR_DEVICE_ID,
     ATTR_DEVICE_NAME,
     ATTR_EVENT_DATA,
     ATTR_EVENT_TYPE,
@@ -79,7 +81,6 @@ from .const import (
     CONF_SECRET,
     DATA_CONFIG_ENTRIES,
     DATA_DELETED_IDS,
-    DATA_STORE,
     DOMAIN,
     ERR_ENCRYPTION_ALREADY_ENABLED,
     ERR_ENCRYPTION_NOT_AVAILABLE,
@@ -95,7 +96,6 @@ from .helpers import (
     error_response,
     registration_context,
     safe_registration,
-    savable_state,
     supports_encryption,
     webhook_response,
 )
@@ -415,7 +415,10 @@ async def webhook_register_sensor(hass, config_entry, data):
     device_name = config_entry.data[ATTR_DEVICE_NAME]
 
     unique_store_key = f"{config_entry.data[CONF_WEBHOOK_ID]}_{unique_id}"
-    existing_sensor = unique_store_key in hass.data[DOMAIN][entity_type]
+    entity_registry = await er.async_get_registry(hass)
+    existing_sensor = entity_registry.async_get_entity_id(
+        entity_type, DOMAIN, unique_store_key
+    )
 
     data[CONF_WEBHOOK_ID] = config_entry.data[CONF_WEBHOOK_ID]
 
@@ -424,16 +427,7 @@ async def webhook_register_sensor(hass, config_entry, data):
         _LOGGER.debug(
             "Re-register for %s of existing sensor %s", device_name, unique_id
         )
-        entry = hass.data[DOMAIN][entity_type][unique_store_key]
-        data = {**entry, **data}
 
-    hass.data[DOMAIN][entity_type][unique_store_key] = data
-
-    hass.data[DOMAIN][DATA_STORE].async_delay_save(
-        lambda: savable_state(hass), DELAY_SAVE
-    )
-
-    if existing_sensor:
         async_dispatcher_send(hass, SIGNAL_SENSOR_UPDATE, data)
     else:
         register_signal = f"{DOMAIN}_{data[ATTR_SENSOR_TYPE]}_register"
@@ -478,6 +472,7 @@ async def webhook_update_sensor_states(hass, config_entry, data):
 
     device_name = config_entry.data[ATTR_DEVICE_NAME]
     resp = {}
+
     for sensor in data:
         entity_type = sensor[ATTR_SENSOR_TYPE]
 
@@ -485,7 +480,10 @@ async def webhook_update_sensor_states(hass, config_entry, data):
 
         unique_store_key = f"{config_entry.data[CONF_WEBHOOK_ID]}_{unique_id}"
 
-        if unique_store_key not in hass.data[DOMAIN][entity_type]:
+        entity_registry = await er.async_get_registry(hass)
+        if not entity_registry.async_get_entity_id(
+            entity_type, DOMAIN, unique_store_key
+        ):
             _LOGGER.error(
                 "Refusing to update %s non-registered sensor: %s",
                 device_name,
@@ -497,8 +495,6 @@ async def webhook_update_sensor_states(hass, config_entry, data):
                 "error": {"code": ERR_SENSOR_NOT_REGISTERED, "message": err_msg},
             }
             continue
-
-        entry = hass.data[DOMAIN][entity_type][unique_store_key]
 
         try:
             sensor = sensor_schema_full(sensor)
@@ -516,17 +512,10 @@ async def webhook_update_sensor_states(hass, config_entry, data):
             }
             continue
 
-        new_state = {**entry, **sensor}
-
-        hass.data[DOMAIN][entity_type][unique_store_key] = new_state
-
-        async_dispatcher_send(hass, SIGNAL_SENSOR_UPDATE, new_state)
+        sensor[CONF_WEBHOOK_ID] = config_entry.data[CONF_WEBHOOK_ID]
+        async_dispatcher_send(hass, SIGNAL_SENSOR_UPDATE, sensor)
 
         resp[unique_id] = {"success": True}
-
-    hass.data[DOMAIN][DATA_STORE].async_delay_save(
-        lambda: savable_state(hass), DELAY_SAVE
-    )
 
     return webhook_response(resp, registration=config_entry.data)
 
@@ -561,10 +550,8 @@ async def webhook_get_config(hass, config_entry, data):
     if CONF_CLOUDHOOK_URL in config_entry.data:
         resp[CONF_CLOUDHOOK_URL] = config_entry.data[CONF_CLOUDHOOK_URL]
 
-    try:
+    with suppress(hass.components.cloud.CloudNotAvailable):
         resp[CONF_REMOTE_UI_URL] = hass.components.cloud.async_remote_ui_url()
-    except hass.components.cloud.CloudNotAvailable:
-        pass
 
     return webhook_response(resp, registration=config_entry.data)
 

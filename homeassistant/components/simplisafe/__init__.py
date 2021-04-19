@@ -10,14 +10,13 @@ from simplipy.websocket import (
     EVENT_CONNECTION_LOST,
     EVENT_CONNECTION_RESTORED,
     EVENT_DOORBELL_DETECTED,
-    EVENT_ENTRY_DETECTED,
+    EVENT_ENTRY_DELAY,
     EVENT_LOCK_LOCKED,
     EVENT_LOCK_UNLOCKED,
-    EVENT_MOTION_DETECTED,
+    EVENT_SECRET_ALERT_TRIGGERED,
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     ATTR_CODE,
     CONF_CODE,
@@ -26,7 +25,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import CoreState, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
     config_validation as cv,
@@ -71,7 +70,7 @@ EVENT_SIMPLISAFE_NOTIFICATION = "SIMPLISAFE_NOTIFICATION"
 
 DEFAULT_SOCKET_MIN_RETRY = 15
 
-SUPPORTED_PLATFORMS = (
+PLATFORMS = (
     "alarm_control_panel",
     "binary_sensor",
     "lock",
@@ -82,8 +81,8 @@ WEBSOCKET_EVENTS_REQUIRING_SERIAL = [EVENT_LOCK_LOCKED, EVENT_LOCK_UNLOCKED]
 WEBSOCKET_EVENTS_TO_TRIGGER_HASS_EVENT = [
     EVENT_CAMERA_MOTION_DETECTED,
     EVENT_DOORBELL_DETECTED,
-    EVENT_ENTRY_DETECTED,
-    EVENT_MOTION_DETECTED,
+    EVENT_ENTRY_DELAY,
+    EVENT_SECRET_ALERT_TRIGGERED,
 ]
 
 ATTR_CATEGORY = "category"
@@ -219,7 +218,7 @@ async def async_setup_entry(hass, config_entry):
     )
     await simplisafe.async_init()
 
-    for platform in SUPPORTED_PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, platform)
         )
@@ -327,8 +326,8 @@ async def async_unload_entry(hass, entry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in SUPPORTED_PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )
@@ -514,27 +513,9 @@ class SimpliSafe:
         for result in results:
             if isinstance(result, InvalidCredentialsError):
                 if self._emergency_refresh_token_used:
-                    matching_flows = [
-                        flow
-                        for flow in self._hass.config_entries.flow.async_progress()
-                        if flow["context"].get("source") == SOURCE_REAUTH
-                        and flow["context"].get("unique_id")
-                        == self.config_entry.unique_id
-                    ]
-
-                    if not matching_flows:
-                        self._hass.async_create_task(
-                            self._hass.config_entries.flow.async_init(
-                                DOMAIN,
-                                context={
-                                    "source": SOURCE_REAUTH,
-                                    "unique_id": self.config_entry.unique_id,
-                                },
-                                data=self.config_entry.data,
-                            )
-                        )
-
-                    raise UpdateFailed("Update failed with stored refresh token")
+                    raise ConfigEntryAuthFailed(
+                        "Update failed with stored refresh token"
+                    )
 
                 LOGGER.warning("SimpliSafe cloud error; trying stored refresh token")
                 self._emergency_refresh_token_used = True
@@ -634,7 +615,7 @@ class SimpliSafeEntity(CoordinatorEntity):
         return self._device_info
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._attrs
 
