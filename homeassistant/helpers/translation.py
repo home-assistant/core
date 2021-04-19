@@ -208,21 +208,26 @@ class _TranslationCache:
         self.loaded: dict[str, set[str]] = {}
         self.cache: dict[str, dict[str, dict[str, Any]]] = {}
 
-    async def async_fetch(
+    @callback
+    def async_fetch(
         self,
         language: str,
         category: str,
         components: set,
     ) -> list[dict[str, dict[str, Any]]]:
         """Load resources into the cache."""
-        components_to_load = components - self.loaded.setdefault(language, set())
+        cached = self.cache.get(language, {})
+        return [cached.get(component, {}).get(category, {}) for component in components]
 
+    async def async_populate_cache(
+        self,
+        language: str,
+        components: set,
+    ) -> None:
+        """Load resources into the cache."""
+        components_to_load = components - self.loaded.setdefault(language, set())
         if components_to_load:
             await self._async_load(language, components_to_load)
-
-        cached = self.cache.get(language, {})
-
-        return [cached.get(component, {}).get(category, {}) for component in components]
 
     async def _async_load(self, language: str, components: set) -> None:
         """Populate the cache for a given set of components."""
@@ -308,6 +313,6 @@ async def async_get_translations(
 
     async with lock:
         cache = hass.data.setdefault(TRANSLATION_FLATTEN_CACHE, _TranslationCache(hass))
-        cached = await cache.async_fetch(language, category, components)
+        await cache.async_populate_cache(language, components)
 
-    return dict(ChainMap(*cached))
+    return dict(ChainMap(*cache.async_fetch(language, category, components)))
