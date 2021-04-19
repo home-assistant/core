@@ -100,9 +100,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def _gateway_already_configured(self, gateway_id: str):
         """See if we already have a gateway matching the id."""
         device_registry = dr.async_get(self.hass)
-        return bool(device_registry.async_get_device(
-            identifiers={(DOMAIN, gateway_id)}, connections=set()
-        ))
+        return bool(
+            device_registry.async_get_device(
+                identifiers={(DOMAIN, gateway_id)}, connections=set()
+            )
+        )
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
