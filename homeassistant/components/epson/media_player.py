@@ -128,6 +128,17 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
             self._state = STATE_OFF
 
     @property
+    def device_info(self):
+        """Get attributes about the device."""
+        return {
+            "identifiers": {(DOMAIN, self._unique_id)},
+            "manufacturer": "Epson",
+            "name": "Epson projector",
+            "model": "Epson",
+            "via_hub": (DOMAIN, self._unique_id),
+        }
+
+    @property
     def name(self):
         """Return the name of the device."""
         return self._name
