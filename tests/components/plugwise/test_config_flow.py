@@ -216,9 +216,6 @@ async def test_form_username(hass):
     with patch(
         "homeassistant.components.plugwise.config_flow.Smile",
     ) as smile_mock, patch(
-        "homeassistant.components.plugwise.async_setup",
-        return_value=True,
-    ) as mock_setup, patch(
         "homeassistant.components.plugwise.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -247,7 +244,6 @@ async def test_form_username(hass):
             PW_TYPE: API,
         }
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
     result3 = await hass.config_entries.flow.async_init(
@@ -260,9 +256,6 @@ async def test_form_username(hass):
     with patch(
         "homeassistant.components.plugwise.config_flow.Smile",
     ) as smile_mock, patch(
-        "homeassistant.components.plugwise.async_setup",
-        return_value=True,
-    ) as mock_setup, patch(
         "homeassistant.components.plugwise.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
