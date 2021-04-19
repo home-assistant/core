@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from surepy import Surepy
 from surepy.enums import EntityType, LockState
@@ -66,7 +68,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
     conf = config[DOMAIN]
 
-    ids: Dict[str, List[int]] = {
+    ids: Dict[str, list[int]] = {
         EntityType.PET.name: conf[CONF_PETS],
         EntityType.PET_FLAP.name: conf[CONF_FLAPS],
         EntityType.FEEDER.name: conf[CONF_FEEDERS],
