@@ -13,7 +13,7 @@
       "cannot_connect": "Unable to connect, please check serial port, address, electrical connection and that inverter is on (in daylight)",
       "invalid_serial_port": "Serial port is not a valid device or could not be openned",
       "cannot_open_serial_port": "Cannot open serial port, please check and try again",
-      "unknown": "Unexpected error"
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "Device is already configured",
