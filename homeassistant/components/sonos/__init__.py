@@ -1,19 +1,32 @@
 """Support to embed Sonos."""
+from __future__ import annotations
+
 import asyncio
+import datetime
 import logging
 import socket
 
 import pysonos
+from pysonos import events_asyncio
+from pysonos.core import SoCo
 from pysonos.exceptions import SoCoException
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOSTS, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import config_validation as cv
 
-from .const import DATA_SONOS, DISCOVERY_INTERVAL, DOMAIN, SONOS_DISCOVERY_UPDATE
+from .const import (
+    DATA_SONOS,
+    DISCOVERY_INTERVAL,
+    DOMAIN,
+    SEEN_EXPIRE_TIME,
+    SONOS_DISCOVERY_UPDATE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,8 +84,10 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up Sonos from a config entry."""
+    pysonos.config.EVENTS_MODULE = events_asyncio
+
     if DATA_SONOS not in hass.data:
         hass.data[DATA_SONOS] = SonosData()
 
@@ -83,7 +98,7 @@ async def async_setup_entry(hass, entry):
     if advertise_addr:
         pysonos.config.EVENT_ADVERTISE_IP = advertise_addr
 
-    def _stop_discovery(event):
+    def _stop_discovery(event: Event) -> None:
         data = hass.data[DATA_SONOS]
         if data.discovery_thread:
             data.discovery_thread.stop()
@@ -92,17 +107,19 @@ async def async_setup_entry(hass, entry):
             data.hosts_heartbeat()
             data.hosts_heartbeat = None
 
-    def _discovery(now=None):
+    def _discovery(now: datetime.datetime | None = None) -> None:
         """Discover players from network or configuration."""
         hosts = config.get(CONF_HOSTS)
 
-        def _discovered_player(soco):
+        def _discovered_player(soco: SoCo) -> None:
             """Handle a (re)discovered player."""
             try:
+                _LOGGER.debug("Reached _discovered_player, soco=%s", soco)
 
                 data = hass.data[DATA_SONOS]
 
                 if soco.uid not in data.discovered:
+                    _LOGGER.debug("Adding new entity")
                     data.discovered[soco.uid] = soco
                     # Set these early since device_info() needs them
                     data.speaker_info[soco.uid] = soco.get_speaker_info(True)
@@ -122,13 +139,13 @@ async def async_setup_entry(hass, entry):
                 if soco.uid in seen_timers:
                     seen_timers[soco.uid]()
                 seen_timers[soco.uid] = hass.helpers.event.async_call_later(
-                    2.5 * DISCOVERY_INTERVAL.seconds, lambda: _disappeared_player(soco)
+                    SEEN_EXPIRE_TIME.seconds, lambda: _disappeared_player(soco)
                 )
 
             except SoCoException as ex:
                 _LOGGER.debug("SoCoException, ex=%s", ex)
 
-        def _disappeared_player(soco):
+        def _disappeared_player(soco: SoCo) -> None:
             """Handle a player that has disappeared."""
             data = hass.data[DATA_SONOS]
             del data.seen_timers[soco.uid]
@@ -165,6 +182,7 @@ async def async_setup_entry(hass, entry):
                 interval=DISCOVERY_INTERVAL.seconds,
                 interface_addr=config.get(CONF_INTERFACE_ADDR),
             )
+            hass.data[DATA_SONOS].discovery_thread.name = "Sonos-Discovery"
 
     # register the entity classes
     hass.async_create_task(

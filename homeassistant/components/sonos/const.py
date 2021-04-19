@@ -128,3 +128,4 @@ SONOS_DISCOVERY_UPDATE = "sonos_discovery_update"
 
 SCAN_INTERVAL = datetime.timedelta(seconds=10)
 DISCOVERY_INTERVAL = datetime.timedelta(seconds=60)
+SEEN_EXPIRE_TIME = 3.5 * DISCOVERY_INTERVAL
