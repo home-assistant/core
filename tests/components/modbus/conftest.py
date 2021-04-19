@@ -44,6 +44,7 @@ async def base_test(
     check_config_only=False,
     config_modbus=None,
     scan_interval=None,
+    expect_init_to_fail=False,
 ):
     """Run test on device for given config."""
 
@@ -107,7 +108,10 @@ async def base_test(
         if config_device is not None:
             entity_id = f"{entity_domain}.{device_name}"
             device = hass.states.get(entity_id)
-            if device is None:
+
+            if expect_init_to_fail:
+                assert device is None
+            elif device is None:
                 pytest.fail("CONFIG failed, see output")
         if check_config_only:
             return
@@ -132,6 +136,7 @@ async def base_config_test(
     array_name_old_config,
     method_discovery=False,
     config_modbus=None,
+    expect_init_to_fail=False,
 ):
     """Check config of device for given config."""
 
@@ -147,4 +152,5 @@ async def base_config_test(
         method_discovery=method_discovery,
         check_config_only=True,
         config_modbus=config_modbus,
+        expect_init_to_fail=expect_init_to_fail,
     )

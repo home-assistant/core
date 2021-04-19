@@ -5,7 +5,6 @@ import pytest
 
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.modbus.const import CALL_TYPE_COIL, CONF_REGISTER
-from homeassistant.components.modbus.cover import async_setup_platform
 from homeassistant.const import (
     CONF_COVERS,
     CONF_NAME,
@@ -142,13 +141,30 @@ async def test_register_cover(hass, regs, expected):
     assert state == expected
 
 
-async def test_unsupported_config(hass, caplog):
-    """When user tries to run this component without discovery_info, print an error."""
+@pytest.mark.parametrize("read_type", [CALL_TYPE_COIL, CONF_REGISTER])
+async def test_unsupported_config_cover(hass, read_type, caplog):
+    """
+    Run test for cover.
+
+    Initialize the Cover in the legacy manner via platform.
+    This test expects that the Cover won't be initialized, and that we get a config warning.
+    """
+    device_name = "test_cover"
+    device_config = {CONF_NAME: device_name, read_type: 1234}
+
     caplog.set_level(logging.WARNING)
     caplog.clear()
 
-    await async_setup_platform(hass, {}, None, None)
-    await hass.async_block_till_done()
+    await base_config_test(
+        hass,
+        device_config,
+        device_name,
+        COVER_DOMAIN,
+        CONF_COVERS,
+        None,
+        method_discovery=False,
+        expect_init_to_fail=True,
+    )
 
     assert len(caplog.records) == 1
     assert caplog.records[0].levelname == "WARNING"
