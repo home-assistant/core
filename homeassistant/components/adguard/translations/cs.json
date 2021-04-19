@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Slu\u017eba je ji\u017e nastavena",
             "existing_instance_updated": "St\u00e1vaj\u00edc\u00ed nastaven\u00ed aktualizov\u00e1no.",
             "single_instance_allowed": "Ji\u017e nastaveno. Je mo\u017en\u00e1 pouze jedin\u00e1 konfigurace."
         },
