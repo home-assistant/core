@@ -17,7 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 
-from .const import (  # pylint: disable=unused-import
+from .const import (
     ATTR_SERIAL,
     ATTR_TYPE_CAMERA,
     ATTR_TYPE_CLOUD,

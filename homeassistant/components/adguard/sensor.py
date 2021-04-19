@@ -14,7 +14,7 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
 
 from . import AdGuardHomeDeviceEntity
-from .const import DATA_ADGUARD_CLIENT, DATA_ADGUARD_VERION, DOMAIN
+from .const import DATA_ADGUARD_CLIENT, DATA_ADGUARD_VERSION, DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=300)
 PARALLEL_UPDATES = 4
@@ -26,24 +26,24 @@ async def async_setup_entry(
     async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
     """Set up AdGuard Home sensor based on a config entry."""
-    adguard = hass.data[DOMAIN][DATA_ADGUARD_CLIENT]
+    adguard = hass.data[DOMAIN][entry.entry_id][DATA_ADGUARD_CLIENT]
 
     try:
         version = await adguard.version()
     except AdGuardHomeConnectionError as exception:
         raise PlatformNotReady from exception
 
-    hass.data[DOMAIN][DATA_ADGUARD_VERION] = version
+    hass.data[DOMAIN][entry.entry_id][DATA_ADGUARD_VERSION] = version
 
     sensors = [
-        AdGuardHomeDNSQueriesSensor(adguard),
-        AdGuardHomeBlockedFilteringSensor(adguard),
-        AdGuardHomePercentageBlockedSensor(adguard),
-        AdGuardHomeReplacedParentalSensor(adguard),
-        AdGuardHomeReplacedSafeBrowsingSensor(adguard),
-        AdGuardHomeReplacedSafeSearchSensor(adguard),
-        AdGuardHomeAverageProcessingTimeSensor(adguard),
-        AdGuardHomeRulesCountSensor(adguard),
+        AdGuardHomeDNSQueriesSensor(adguard, entry),
+        AdGuardHomeBlockedFilteringSensor(adguard, entry),
+        AdGuardHomePercentageBlockedSensor(adguard, entry),
+        AdGuardHomeReplacedParentalSensor(adguard, entry),
+        AdGuardHomeReplacedSafeBrowsingSensor(adguard, entry),
+        AdGuardHomeReplacedSafeSearchSensor(adguard, entry),
+        AdGuardHomeAverageProcessingTimeSensor(adguard, entry),
+        AdGuardHomeRulesCountSensor(adguard, entry),
     ]
 
     async_add_entities(sensors, True)
@@ -55,6 +55,7 @@ class AdGuardHomeSensor(AdGuardHomeDeviceEntity, SensorEntity):
     def __init__(
         self,
         adguard: AdGuardHome,
+        entry: ConfigEntry,
         name: str,
         icon: str,
         measurement: str,
@@ -66,7 +67,7 @@ class AdGuardHomeSensor(AdGuardHomeDeviceEntity, SensorEntity):
         self._unit_of_measurement = unit_of_measurement
         self.measurement = measurement
 
-        super().__init__(adguard, name, icon, enabled_default)
+        super().__init__(adguard, entry, name, icon, enabled_default)
 
     @property
     def unique_id(self) -> str:
@@ -95,10 +96,15 @@ class AdGuardHomeSensor(AdGuardHomeDeviceEntity, SensorEntity):
 class AdGuardHomeDNSQueriesSensor(AdGuardHomeSensor):
     """Defines a AdGuard Home DNS Queries sensor."""
 
-    def __init__(self, adguard: AdGuardHome) -> None:
+    def __init__(self, adguard: AdGuardHome, entry: ConfigEntry) -> None:
         """Initialize AdGuard Home sensor."""
         super().__init__(
-            adguard, "AdGuard DNS Queries", "mdi:magnify", "dns_queries", "queries"
+            adguard,
+            entry,
+            "AdGuard DNS Queries",
+            "mdi:magnify",
+            "dns_queries",
+            "queries",
         )
 
     async def _adguard_update(self) -> None:
@@ -109,10 +115,11 @@ class AdGuardHomeDNSQueriesSensor(AdGuardHomeSensor):
 class AdGuardHomeBlockedFilteringSensor(AdGuardHomeSensor):
     """Defines a AdGuard Home blocked by filtering sensor."""
 
-    def __init__(self, adguard: AdGuardHome) -> None:
+    def __init__(self, adguard: AdGuardHome, entry: ConfigEntry) -> None:
         """Initialize AdGuard Home sensor."""
         super().__init__(
             adguard,
+            entry,
             "AdGuard DNS Queries Blocked",
             "mdi:magnify-close",
             "blocked_filtering",
@@ -128,10 +135,11 @@ class AdGuardHomeBlockedFilteringSensor(AdGuardHomeSensor):
 class AdGuardHomePercentageBlockedSensor(AdGuardHomeSensor):
     """Defines a AdGuard Home blocked percentage sensor."""
 
-    def __init__(self, adguard: AdGuardHome) -> None:
+    def __init__(self, adguard: AdGuardHome, entry: ConfigEntry) -> None:
         """Initialize AdGuard Home sensor."""
         super().__init__(
             adguard,
+            entry,
             "AdGuard DNS Queries Blocked Ratio",
             "mdi:magnify-close",
             "blocked_percentage",
@@ -147,10 +155,11 @@ class AdGuardHomePercentageBlockedSensor(AdGuardHomeSensor):
 class AdGuardHomeReplacedParentalSensor(AdGuardHomeSensor):
     """Defines a AdGuard Home replaced by parental control sensor."""
 
-    def __init__(self, adguard: AdGuardHome) -> None:
+    def __init__(self, adguard: AdGuardHome, entry: ConfigEntry) -> None:
         """Initialize AdGuard Home sensor."""
         super().__init__(
             adguard,
+            entry,
             "AdGuard Parental Control Blocked",
             "mdi:human-male-girl",
             "blocked_parental",
@@ -165,10 +174,11 @@ class AdGuardHomeReplacedParentalSensor(AdGuardHomeSensor):
 class AdGuardHomeReplacedSafeBrowsingSensor(AdGuardHomeSensor):
     """Defines a AdGuard Home replaced by safe browsing sensor."""
 
-    def __init__(self, adguard: AdGuardHome) -> None:
+    def __init__(self, adguard: AdGuardHome, entry: ConfigEntry) -> None:
         """Initialize AdGuard Home sensor."""
         super().__init__(
             adguard,
+            entry,
             "AdGuard Safe Browsing Blocked",
             "mdi:shield-half-full",
             "blocked_safebrowsing",
@@ -183,10 +193,11 @@ class AdGuardHomeReplacedSafeBrowsingSensor(AdGuardHomeSensor):
 class AdGuardHomeReplacedSafeSearchSensor(AdGuardHomeSensor):
     """Defines a AdGuard Home replaced by safe search sensor."""
 
-    def __init__(self, adguard: AdGuardHome) -> None:
+    def __init__(self, adguard: AdGuardHome, entry: ConfigEntry) -> None:
         """Initialize AdGuard Home sensor."""
         super().__init__(
             adguard,
+            entry,
             "AdGuard Safe Searches Enforced",
             "mdi:shield-search",
             "enforced_safesearch",
@@ -201,10 +212,11 @@ class AdGuardHomeReplacedSafeSearchSensor(AdGuardHomeSensor):
 class AdGuardHomeAverageProcessingTimeSensor(AdGuardHomeSensor):
     """Defines a AdGuard Home average processing time sensor."""
 
-    def __init__(self, adguard: AdGuardHome) -> None:
+    def __init__(self, adguard: AdGuardHome, entry: ConfigEntry) -> None:
         """Initialize AdGuard Home sensor."""
         super().__init__(
             adguard,
+            entry,
             "AdGuard Average Processing Speed",
             "mdi:speedometer",
             "average_speed",
@@ -220,10 +232,11 @@ class AdGuardHomeAverageProcessingTimeSensor(AdGuardHomeSensor):
 class AdGuardHomeRulesCountSensor(AdGuardHomeSensor):
     """Defines a AdGuard Home rules count sensor."""
 
-    def __init__(self, adguard: AdGuardHome) -> None:
+    def __init__(self, adguard: AdGuardHome, entry: ConfigEntry) -> None:
         """Initialize AdGuard Home sensor."""
         super().__init__(
             adguard,
+            entry,
             "AdGuard Rules Count",
             "mdi:counter",
             "rules_count",

@@ -72,9 +72,6 @@ async def test_form(hass):
         "homeassistant.components.plugwise.config_flow.Smile.connect",
         return_value=True,
     ), patch(
-        "homeassistant.components.plugwise.async_setup",
-        return_value=True,
-    ) as mock_setup, patch(
         "homeassistant.components.plugwise.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -93,7 +90,6 @@ async def test_form(hass):
         CONF_USERNAME: TEST_USERNAME,
     }
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -112,9 +108,6 @@ async def test_zeroconf_form(hass):
         "homeassistant.components.plugwise.config_flow.Smile.connect",
         return_value=True,
     ), patch(
-        "homeassistant.components.plugwise.async_setup",
-        return_value=True,
-    ) as mock_setup, patch(
         "homeassistant.components.plugwise.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -133,7 +126,6 @@ async def test_zeroconf_form(hass):
         CONF_USERNAME: TEST_USERNAME,
     }
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -149,9 +141,6 @@ async def test_form_username(hass):
         "homeassistant.components.plugwise.config_flow.Smile.connect",
         return_value=True,
     ), patch(
-        "homeassistant.components.plugwise.async_setup",
-        return_value=True,
-    ) as mock_setup, patch(
         "homeassistant.components.plugwise.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -174,7 +163,6 @@ async def test_form_username(hass):
         CONF_USERNAME: TEST_USERNAME2,
     }
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
     result3 = await hass.config_entries.flow.async_init(
@@ -189,9 +177,6 @@ async def test_form_username(hass):
         "homeassistant.components.plugwise.config_flow.Smile.connect",
         return_value=True,
     ), patch(
-        "homeassistant.components.plugwise.async_setup",
-        return_value=True,
-    ) as mock_setup, patch(
         "homeassistant.components.plugwise.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:

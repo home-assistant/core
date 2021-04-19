@@ -12,9 +12,11 @@ from .const import (
     ATTR_API_WIND_BEARING,
     ATTR_API_WIND_SPEED,
     ATTRIBUTION,
+    DEFAULT_NAME,
     DOMAIN,
     ENTRY_NAME,
     ENTRY_WEATHER_COORDINATOR,
+    MANUFACTURER,
 )
 from .weather_update_coordinator import WeatherUpdateCoordinator
 
@@ -54,6 +56,16 @@ class OpenWeatherMapWeather(WeatherEntity):
     def unique_id(self):
         """Return a unique_id for this entity."""
         return self._unique_id
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "identifiers": {(DOMAIN, self._unique_id)},
+            "name": DEFAULT_NAME,
+            "manufacturer": MANUFACTURER,
+            "entry_type": "service",
+        }
 
     @property
     def should_poll(self):

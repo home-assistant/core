@@ -6,6 +6,7 @@ from aioharmony.const import SendCommandDevice
 
 from homeassistant.components.harmony.const import (
     DOMAIN,
+    HARMONY_DATA,
     SERVICE_CHANGE_CHANNEL,
     SERVICE_SYNC,
 )
@@ -159,7 +160,7 @@ async def test_async_send_command(mock_hc, hass, mock_write_config):
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    data = hass.data[DOMAIN][entry.entry_id]
+    data = hass.data[DOMAIN][entry.entry_id][HARMONY_DATA]
     send_commands_mock = data._client.send_commands
 
     # No device provided
@@ -297,7 +298,7 @@ async def test_async_send_command_custom_delay(mock_hc, hass, mock_write_config)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    data = hass.data[DOMAIN][entry.entry_id]
+    data = hass.data[DOMAIN][entry.entry_id][HARMONY_DATA]
     send_commands_mock = data._client.send_commands
 
     # Tell the TV to play by id
@@ -333,7 +334,7 @@ async def test_change_channel(mock_hc, hass, mock_write_config):
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    data = hass.data[DOMAIN][entry.entry_id]
+    data = hass.data[DOMAIN][entry.entry_id][HARMONY_DATA]
     change_channel_mock = data._client.change_channel
 
     # Tell the remote to change channels
@@ -358,7 +359,7 @@ async def test_sync(mock_hc, mock_write_config, hass):
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    data = hass.data[DOMAIN][entry.entry_id]
+    data = hass.data[DOMAIN][entry.entry_id][HARMONY_DATA]
     sync_mock = data._client.sync
 
     # Tell the remote to change channels

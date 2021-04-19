@@ -43,6 +43,59 @@
       "value": 100,
       "units": "%"
   },
+  "fire_index": {
+    "value": 9
+  },
+  "epa_aqi": {
+    "value": 22.3125
+  },
+  "epa_primary_pollutant": {
+    "value": "pm25"
+  },
+  "china_aqi": {
+    "value": 27
+  },
+  "china_primary_pollutant": {
+    "value": "pm10"
+  },
+  "pm25": {
+    "value": 5.3125,
+    "units": "\u00b5g/m3"
+  },
+  "pm10": {
+    "value": 27,
+    "units": "\u00b5g/m3"
+  },
+  "no2": {
+    "value": 14.1875,
+    "units": "ppb"
+  },
+  "co": {
+    "value": 0.875,
+    "units": "ppm"
+  },
+  "so2": {
+    "value": 2,
+    "units": "ppb"
+  },
+  "epa_health_concern": {
+    "value": "Good"
+  },
+  "china_health_concern": {
+    "value": "Good"
+  },
+  "pollen_tree": {
+    "value": 0,
+    "units": "Climacell Pollen Index"
+  },
+  "pollen_weed": {
+    "value": 0,
+    "units": "Climacell Pollen Index"
+  },
+  "pollen_grass": {
+    "value": 0,
+    "units": "Climacell Pollen Index"
+  },
   "observation_time": {
     "value": "2021-03-07T18:54:06.055Z"
   }
