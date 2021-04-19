@@ -24,12 +24,6 @@ PLATFORMS = ["sensor"]
 MIN_SCAN_INTERVAL = timedelta(minutes=10)
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Garmin Connect component."""
-    hass.data[DOMAIN] = {}
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Garmin Connect from a config entry."""
     username = entry.data[CONF_USERNAME]
@@ -55,11 +49,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         return False
 
     garmin_data = GarminConnectData(hass, garmin_client)
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = garmin_data
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -70,8 +65,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

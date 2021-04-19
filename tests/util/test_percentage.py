@@ -28,15 +28,6 @@ SMALL_ORDERED_LIST = [SPEED_1, SPEED_2, SPEED_3, SPEED_4]
 LARGE_ORDERED_LIST = [SPEED_1, SPEED_2, SPEED_3, SPEED_4, SPEED_5, SPEED_6, SPEED_7]
 
 
-async def test_ordered_list_percentage_round_trip():
-    """Test we can round trip."""
-    for ordered_list in (SMALL_ORDERED_LIST, LARGE_ORDERED_LIST):
-        for i in range(1, 100):
-            ordered_list_item_to_percentage(
-                ordered_list, percentage_to_ordered_list_item(ordered_list, i)
-            ) == i
-
-
 async def test_ordered_list_item_to_percentage():
     """Test percentage of an item in an ordered list."""
 
@@ -156,3 +147,34 @@ async def test_percentage_to_ranged_value_small():
     assert math.ceil(percentage_to_ranged_value(range, 66)) == 4
     assert math.ceil(percentage_to_ranged_value(range, 83)) == 5
     assert math.ceil(percentage_to_ranged_value(range, 100)) == 6
+
+
+async def test_ranged_value_to_percentage_starting_at_one():
+    """Test a range that starts with 1."""
+    range = (1, 4)
+
+    assert ranged_value_to_percentage(range, 1) == 25
+    assert ranged_value_to_percentage(range, 2) == 50
+    assert ranged_value_to_percentage(range, 3) == 75
+    assert ranged_value_to_percentage(range, 4) == 100
+
+
+async def test_ranged_value_to_percentage_starting_high():
+    """Test a range that does not start with 1."""
+    range = (101, 255)
+
+    assert ranged_value_to_percentage(range, 101) == 0
+    assert ranged_value_to_percentage(range, 139) == 25
+    assert ranged_value_to_percentage(range, 178) == 50
+    assert ranged_value_to_percentage(range, 217) == 75
+    assert ranged_value_to_percentage(range, 255) == 100
+
+
+async def test_ranged_value_to_percentage_starting_zero():
+    """Test a range that starts with 0."""
+    range = (0, 3)
+
+    assert ranged_value_to_percentage(range, 0) == 25
+    assert ranged_value_to_percentage(range, 1) == 50
+    assert ranged_value_to_percentage(range, 2) == 75
+    assert ranged_value_to_percentage(range, 3) == 100

@@ -12,11 +12,15 @@
                 "data": {
                     "access_token": "Hozz\u00e1f\u00e9r\u00e9si token"
                 },
-                "description": "K\u00e9rj\u00fck, adjon meg egy SmartThings [Szem\u00e9lyes hozz\u00e1f\u00e9r\u00e9si tokent] ( {token_url} ), amelyet az [utas\u00edt\u00e1sok] ( {component_url} ) alapj\u00e1n hoztak l\u00e9tre. Ezt haszn\u00e1ljuk a Home Assistant integr\u00e1ci\u00f3j\u00e1nak l\u00e9trehoz\u00e1s\u00e1hoz a SmartThings-fi\u00f3kban."
+                "description": "K\u00e9rj\u00fck, adjon meg egy SmartThings [Szem\u00e9lyes hozz\u00e1f\u00e9r\u00e9si tokent]({token_url}), amelyet az [utas\u00edt\u00e1sok]({component_url}) alapj\u00e1n hoztak l\u00e9tre. Ezt haszn\u00e1ljuk a Home Assistant integr\u00e1ci\u00f3j\u00e1nak l\u00e9trehoz\u00e1s\u00e1hoz a SmartThings-fi\u00f3kban."
+            },
+            "select_location": {
+                "data": {
+                    "location_id": "Elhelyezked\u00e9s"
+                }
             },
             "user": {
-                "description": "K\u00e9rlek add meg a SmartThings [Personal Access Tokent]({token_url}), amit az [instrukci\u00f3k] ({component_url}) alapj\u00e1n hozt\u00e1l l\u00e9tre.",
-                "title": "Adja meg a szem\u00e9lyes hozz\u00e1f\u00e9r\u00e9si Tokent"
+                "title": "Callback URL meger\u0151s\u00edt\u00e9se"
             }
         }
     }

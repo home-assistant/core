@@ -2,6 +2,7 @@
   "domain": "sighthound",
   "name": "Sighthound",
   "documentation": "https://www.home-assistant.io/integrations/sighthound",
-  "requirements": ["pillow==8.1.0", "simplehound==0.3"],
-  "codeowners": ["@robmarkcole"]
+  "requirements": ["pillow==8.1.2", "simplehound==0.3"],
+  "codeowners": ["@robmarkcole"],
+  "iot_class": "cloud_polling"
 }

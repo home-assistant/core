@@ -1,18 +1,22 @@
 """Support for Synology DSM cameras."""
+from __future__ import annotations
+
 import logging
-from typing import Dict
 
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
-from synology_dsm.exceptions import SynologyDSMAPIErrorException
+from synology_dsm.exceptions import (
+    SynologyDSMAPIErrorException,
+    SynologyDSMRequestException,
+)
 
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import SynoApi, SynologyDSMCoordinatorEntity
+from . import SynoApi, SynologyDSMBaseEntity
 from .const import (
-    COORDINATOR_SURVEILLANCE,
+    COORDINATOR_CAMERAS,
     DOMAIN,
     ENTITY_CLASS,
     ENTITY_ENABLE,
@@ -37,7 +41,7 @@ async def async_setup_entry(
         return
 
     # initial data fetch
-    coordinator = data[COORDINATOR_SURVEILLANCE]
+    coordinator = data[COORDINATOR_CAMERAS]
     await coordinator.async_refresh()
 
     async_add_entities(
@@ -46,7 +50,7 @@ async def async_setup_entry(
     )
 
 
-class SynoDSMCamera(SynologyDSMCoordinatorEntity, Camera):
+class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
     """Representation a Synology camera."""
 
     def __init__(
@@ -76,7 +80,7 @@ class SynoDSMCamera(SynologyDSMCoordinatorEntity, Camera):
         return self.coordinator.data["cameras"][self._camera_id]
 
     @property
-    def device_info(self) -> Dict[str, any]:
+    def device_info(self) -> dict[str, any]:
         """Return the device information."""
         return {
             "identifiers": {
@@ -125,7 +129,11 @@ class SynoDSMCamera(SynologyDSMCoordinatorEntity, Camera):
             return None
         try:
             return self._api.surveillance_station.get_camera_image(self._camera_id)
-        except (SynologyDSMAPIErrorException) as err:
+        except (
+            SynologyDSMAPIErrorException,
+            SynologyDSMRequestException,
+            ConnectionRefusedError,
+        ) as err:
             _LOGGER.debug(
                 "SynoDSMCamera.camera_image(%s) - Exception:%s",
                 self.camera_data.name,

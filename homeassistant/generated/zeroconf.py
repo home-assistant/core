@@ -54,9 +54,23 @@ ZEROCONF = {
             "domain": "elgato"
         }
     ],
+    "_enphase-envoy._tcp.local.": [
+        {
+            "domain": "enphase_envoy"
+        }
+    ],
     "_esphomelib._tcp.local.": [
         {
             "domain": "esphome"
+        },
+        {
+            "domain": "zha",
+            "name": "tube*"
+        }
+    ],
+    "_fbx-api._tcp.local.": [
+        {
+            "domain": "freebox"
         }
     ],
     "_googlecast._tcp.local.": [
@@ -180,6 +194,7 @@ HOMEKIT = {
     "Healty Home Coach": "netatmo",
     "Iota": "abode",
     "LIFX": "lifx",
+    "MYQ": "myq",
     "Netatmo Relay": "netatmo",
     "PowerView": "hunterdouglas_powerview",
     "Presence": "netatmo",

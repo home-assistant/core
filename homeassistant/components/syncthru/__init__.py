@@ -1,7 +1,7 @@
 """The syncthru component."""
+from __future__ import annotations
 
 import logging
-from typing import Set, Tuple
 
 from pysyncthru import SyncThru
 
@@ -10,23 +10,18 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry as dr
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
-    """Set up."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Set up config entry."""
 
     session = aiohttp_client.async_get_clientsession(hass)
+    hass.data.setdefault(DOMAIN, {})
     printer = hass.data[DOMAIN][entry.entry_id] = SyncThru(
         entry.data[CONF_URL], session
     )
@@ -65,12 +60,12 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
     return True
 
 
-def device_identifiers(printer: SyncThru) -> Set[Tuple[str, str]]:
+def device_identifiers(printer: SyncThru) -> set[tuple[str, str]]:
     """Get device identifiers for device registry."""
     return {(DOMAIN, printer.serial_number())}
 
 
-def device_connections(printer: SyncThru) -> Set[Tuple[str, str]]:
+def device_connections(printer: SyncThru) -> set[tuple[str, str]]:
     """Get device connections for device registry."""
     connections = set()
     try:

@@ -1,6 +1,4 @@
 """Constants for Met component."""
-import logging
-
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,
@@ -35,6 +33,9 @@ DOMAIN = "met"
 HOME_LOCATION_NAME = "Home"
 
 CONF_TRACK_HOME = "track_home"
+
+DEFAULT_HOME_LATITUDE = 52.3731339
+DEFAULT_HOME_LONGITUDE = 4.8903147
 
 ENTITY_ID_SENSOR_FORMAT_HOME = f"{WEATHER_DOMAIN}.met_{HOME_LOCATION_NAME}"
 
@@ -191,5 +192,3 @@ ATTR_MAP = {
     ATTR_WEATHER_WIND_BEARING: "wind_bearing",
     ATTR_WEATHER_WIND_SPEED: "wind_speed",
 }
-
-_LOGGER = logging.getLogger(".")

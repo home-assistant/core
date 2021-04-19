@@ -4,8 +4,13 @@
   "config_flow": true,
   "dependencies": ["ffmpeg", "http"],
   "documentation": "https://www.home-assistant.io/integrations/nest",
-  "requirements": ["python-nest==4.1.0", "google-nest-sdm==0.2.9"],
+  "requirements": ["python-nest==4.1.0", "google-nest-sdm==0.2.12"],
   "codeowners": ["@allenporter"],
   "quality_scale": "platinum",
-  "dhcp": [{"macaddress":"18B430*"}]
+  "dhcp": [
+    {
+      "macaddress": "18B430*"
+    }
+  ],
+  "iot_class": "cloud_push"
 }

@@ -23,7 +23,7 @@ async def test_async_browse_media(hass):
         await media_source.async_browse_media(
             hass, f"{const.URI_SCHEME}{const.DOMAIN}/local/test/not/exist"
         )
-    assert str(excinfo.value) == "Invalid path."
+    assert str(excinfo.value) == "Path does not exist."
 
     # Test browse file
     with pytest.raises(media_source.BrowseError) as excinfo:
@@ -93,6 +93,9 @@ async def test_media_view(hass, hass_client):
 
     # Fetch available media
     resp = await client.get("/media/local/test.mp3")
+    assert resp.status == 200
+
+    resp = await client.get("/media/local/Epic Sax Guy 10 Hours.mp4")
     assert resp.status == 200
 
     resp = await client.get("/media/recordings/test.mp3")

@@ -6,19 +6,20 @@ from homeassistant.components import fan
 from homeassistant.components.fan import FanEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.util.percentage import (
+    ordered_list_item_to_percentage,
+    percentage_to_ordered_list_item,
+)
 
 from .const import DATA_REMOVE_DISCOVER_COMPONENT
 from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW
 from .mixins import TasmotaAvailability, TasmotaDiscoveryUpdate
 
-HA_TO_TASMOTA_SPEED_MAP = {
-    fan.SPEED_OFF: tasmota_const.FAN_SPEED_OFF,
-    fan.SPEED_LOW: tasmota_const.FAN_SPEED_LOW,
-    fan.SPEED_MEDIUM: tasmota_const.FAN_SPEED_MEDIUM,
-    fan.SPEED_HIGH: tasmota_const.FAN_SPEED_HIGH,
-}
-
-TASMOTA_TO_HA_SPEED_MAP = {v: k for k, v in HA_TO_TASMOTA_SPEED_MAP.items()}
+ORDERED_NAMED_FAN_SPEEDS = [
+    tasmota_const.FAN_SPEED_LOW,
+    tasmota_const.FAN_SPEED_MEDIUM,
+    tasmota_const.FAN_SPEED_HIGH,
+]  # off is not included
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -56,42 +57,45 @@ class TasmotaFan(
         )
 
     @property
-    def speed(self):
-        """Return the current speed."""
-        return TASMOTA_TO_HA_SPEED_MAP.get(self._state)
+    def speed_count(self) -> int:
+        """Return the number of speeds the fan supports."""
+        return len(ORDERED_NAMED_FAN_SPEEDS)
 
     @property
-    def speed_list(self):
-        """Get the list of available speeds."""
-        return list(HA_TO_TASMOTA_SPEED_MAP)
+    def percentage(self):
+        """Return the current speed percentage."""
+        if self._state is None:
+            return None
+        if self._state == 0:
+            return 0
+        return ordered_list_item_to_percentage(ORDERED_NAMED_FAN_SPEEDS, self._state)
 
     @property
     def supported_features(self):
         """Flag supported features."""
         return fan.SUPPORT_SET_SPEED
 
-    async def async_set_speed(self, speed):
+    async def async_set_percentage(self, percentage):
         """Set the speed of the fan."""
-        if speed not in HA_TO_TASMOTA_SPEED_MAP:
-            raise ValueError(f"Unsupported speed {speed}")
-        if speed == fan.SPEED_OFF:
+        if percentage == 0:
             await self.async_turn_off()
         else:
-            self._tasmota_entity.set_speed(HA_TO_TASMOTA_SPEED_MAP[speed])
+            tasmota_speed = percentage_to_ordered_list_item(
+                ORDERED_NAMED_FAN_SPEEDS, percentage
+            )
+            self._tasmota_entity.set_speed(tasmota_speed)
 
-    #
-    # The fan entity model has changed to use percentages and preset_modes
-    # instead of speeds.
-    #
-    # Please review
-    # https://developers.home-assistant.io/docs/core/entity/fan/
-    #
     async def async_turn_on(
         self, speed=None, percentage=None, preset_mode=None, **kwargs
     ):
         """Turn the fan on."""
         # Tasmota does not support turning a fan on with implicit speed
-        await self.async_set_speed(speed or fan.SPEED_MEDIUM)
+        await self.async_set_percentage(
+            percentage
+            or ordered_list_item_to_percentage(
+                ORDERED_NAMED_FAN_SPEEDS, tasmota_const.FAN_SPEED_MEDIUM
+            )
+        )
 
     async def async_turn_off(self, **kwargs):
         """Turn the fan off."""

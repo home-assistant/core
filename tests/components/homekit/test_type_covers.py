@@ -40,7 +40,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import CoreState
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import async_mock_service
 
@@ -52,7 +52,7 @@ async def test_garage_door_open_close(hass, hk_driver, events):
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
     acc = GarageDoorOpener(hass, hk_driver, "Garage Door", entity_id, 2, None)
-    await acc.run_handler()
+    await acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -136,7 +136,7 @@ async def test_windowcovering_set_cover_position(hass, hk_driver, events):
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
     acc = WindowCovering(hass, hk_driver, "Cover", entity_id, 2, None)
-    await acc.run_handler()
+    await acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -206,7 +206,7 @@ async def test_window_instantiate(hass, hk_driver, events):
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
     acc = Window(hass, hk_driver, "Window", entity_id, 2, None)
-    await acc.run_handler()
+    await acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -225,7 +225,7 @@ async def test_windowcovering_cover_set_tilt(hass, hk_driver, events):
     )
     await hass.async_block_till_done()
     acc = WindowCovering(hass, hk_driver, "Cover", entity_id, 2, None)
-    await acc.run_handler()
+    await acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -289,7 +289,7 @@ async def test_windowcovering_open_close(hass, hk_driver, events):
 
     hass.states.async_set(entity_id, STATE_UNKNOWN, {ATTR_SUPPORTED_FEATURES: 0})
     acc = WindowCoveringBasic(hass, hk_driver, "Cover", entity_id, 2, None)
-    await acc.run_handler()
+    await acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -372,7 +372,7 @@ async def test_windowcovering_open_close_stop(hass, hk_driver, events):
         entity_id, STATE_UNKNOWN, {ATTR_SUPPORTED_FEATURES: SUPPORT_STOP}
     )
     acc = WindowCoveringBasic(hass, hk_driver, "Cover", entity_id, 2, None)
-    await acc.run_handler()
+    await acc.run()
     await hass.async_block_till_done()
 
     # Set from HomeKit
@@ -423,7 +423,7 @@ async def test_windowcovering_open_close_with_position_and_stop(
         {ATTR_SUPPORTED_FEATURES: SUPPORT_STOP | SUPPORT_SET_POSITION},
     )
     acc = WindowCovering(hass, hk_driver, "Cover", entity_id, 2, None)
-    await acc.run_handler()
+    await acc.run()
     await hass.async_block_till_done()
 
     # Set from HomeKit
@@ -446,7 +446,7 @@ async def test_windowcovering_basic_restore(hass, hk_driver, events):
     """Test setting up an entity from state in the event registry."""
     hass.state = CoreState.not_running
 
-    registry = await entity_registry.async_get_registry(hass)
+    registry = er.async_get(hass)
 
     registry.async_get_or_create(
         "cover",
@@ -484,7 +484,7 @@ async def test_windowcovering_restore(hass, hk_driver, events):
     """Test setting up an entity from state in the event registry."""
     hass.state = CoreState.not_running
 
-    registry = await entity_registry.async_get_registry(hass)
+    registry = er.async_get(hass)
 
     registry.async_get_or_create(
         "cover",
@@ -534,7 +534,7 @@ async def test_garage_door_with_linked_obstruction_sensor(hass, hk_driver, event
         2,
         {CONF_LINKED_OBSTRUCTION_SENSOR: linked_obstruction_sensor_entity_id},
     )
-    await acc.run_handler()
+    await acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2

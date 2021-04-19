@@ -5,11 +5,10 @@ import logging
 from pysyncthru import SYNCTHRU_STATE_HUMAN, SyncThru
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_NAME, CONF_RESOURCE, CONF_URL, PERCENTAGE
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 from . import device_identifiers
 from .const import DEFAULT_MODEL, DEFAULT_NAME_TEMPLATE, DOMAIN
@@ -41,7 +40,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the SyncThru component."""
     _LOGGER.warning(
         "Loading syncthru via platform config is deprecated and no longer "
-        "necessary as of 0.113. Please remove it from your configuration YAML."
+        "necessary as of 0.113; Please remove it from your configuration YAML"
     )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
@@ -81,7 +80,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(devices, True)
 
 
-class SyncThruSensor(Entity):
+class SyncThruSensor(SensorEntity):
     """Implementation of an abstract Samsung Printer sensor platform."""
 
     def __init__(self, syncthru, name):
@@ -121,7 +120,7 @@ class SyncThruSensor(Entity):
         return self._unit_of_measurement
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
         return self._attributes
 

@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Hesap zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu"
+        },
+        "error": {
+            "invalid_access_token": "Ge\u00e7ersiz eri\u015fim belirteci",
+            "unknown": "Beklenmeyen hata"
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "access_token": "Eri\u015fim Belirteci",
+                    "email": "E-posta"
+                }
+            },
+            "user": {
+                "data": {
+                    "access_token": "Eri\u015fim Belirteci",
+                    "email": "E-posta"
+                },
+                "description": "Awair geli\u015ftirici eri\u015fim belirteci i\u00e7in \u015fu adresten kaydolmal\u0131s\u0131n\u0131z: https://developer.getawair.com/onboard/login"
+            }
+        }
+    }
+}

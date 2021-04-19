@@ -2,5 +2,6 @@
   "domain": "smtp",
   "name": "SMTP",
   "documentation": "https://www.home-assistant.io/integrations/smtp",
-  "codeowners": ["@fabaff"]
+  "codeowners": ["@fabaff"],
+  "iot_class": "cloud_push"
 }

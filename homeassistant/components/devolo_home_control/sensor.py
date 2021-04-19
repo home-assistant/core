@@ -5,10 +5,12 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_VOLTAGE,
+    SensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 from .devolo_device import DevoloDeviceEntity
@@ -20,11 +22,12 @@ DEVICE_CLASS_MAPPING = {
     "humidity": DEVICE_CLASS_HUMIDITY,
     "current": DEVICE_CLASS_POWER,
     "total": DEVICE_CLASS_POWER,
+    "voltage": DEVICE_CLASS_VOLTAGE,
 }
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Get all sensor devices and setup them via config entry."""
     entities = []
@@ -63,7 +66,7 @@ async def async_setup_entry(
     async_add_entities(entities, False)
 
 
-class DevoloMultiLevelDeviceEntity(DevoloDeviceEntity):
+class DevoloMultiLevelDeviceEntity(DevoloDeviceEntity, SensorEntity):
     """Abstract representation of a multi level sensor within devolo Home Control."""
 
     @property

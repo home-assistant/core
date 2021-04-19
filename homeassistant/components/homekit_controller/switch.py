@@ -39,7 +39,7 @@ class HomeKitSwitch(HomeKitEntity, SwitchEntity):
         await self.async_put_characteristics({CharacteristicsTypes.ON: False})
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the optional state attributes."""
         outlet_in_use = self.service.value(CharacteristicsTypes.OUTLET_IN_USE)
         if outlet_in_use is not None:
@@ -77,7 +77,7 @@ class HomeKitValve(HomeKitEntity, SwitchEntity):
         return self.service.value(CharacteristicsTypes.ACTIVE)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the optional state attributes."""
         attrs = {}
 

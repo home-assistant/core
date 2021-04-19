@@ -9,14 +9,31 @@
             "unknown": "Ov\u00e4ntat fel"
         },
         "step": {
+            "reauth_validate": {
+                "data": {
+                    "password": "L\u00f6senord"
+                }
+            },
             "user": {
                 "data": {
                     "login_method": "Inloggningsmetod",
+                    "password": "L\u00f6senord",
+                    "timeout": "Timeout (sekunder)",
+                    "username": "Anv\u00e4ndarnamn"
+                },
+                "description": "Om inloggningsmetoden \u00e4r \"e-post\" \u00e4r anv\u00e4ndarnamnet e-postadressen. Om inloggningsmetoden \u00e4r \"telefon\" \u00e4r anv\u00e4ndarnamnet telefonnumret i formatet \"+ NNNNNNNN\".",
+                "title": "St\u00e4ll in ett August-konto"
+            },
+            "user_validate": {
+                "data": {
                     "password": "L\u00f6senord",
                     "username": "Anv\u00e4ndarnamn"
                 }
             },
             "validation": {
+                "data": {
+                    "code": "Verifieringskod"
+                },
                 "title": "Tv\u00e5faktorsautentisering"
             }
         }

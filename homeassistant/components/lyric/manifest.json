@@ -4,21 +4,22 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/lyric",
   "dependencies": ["http"],
-  "requirements": ["aiolyric==1.0.5"],
+  "requirements": ["aiolyric==1.0.6"],
   "codeowners": ["@timmo001"],
   "quality_scale": "silver",
   "dhcp": [
     {
       "hostname": "lyric-*",
-      "macaddress": "48A2E6"
+      "macaddress": "48A2E6*"
     },
     {
       "hostname": "lyric-*",
-      "macaddress": "B82CA0"
+      "macaddress": "B82CA0*"
     },
     {
       "hostname": "lyric-*",
-      "macaddress": "00D02D"
+      "macaddress": "00D02D*"
     }
-  ]
+  ],
+  "iot_class": "cloud_polling"
 }

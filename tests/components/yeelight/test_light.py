@@ -85,7 +85,7 @@ from homeassistant.components.yeelight.light import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.color import (
     color_hs_to_RGB,
@@ -376,7 +376,7 @@ async def test_device_types(hass: HomeAssistant):
 
         await hass.config_entries.async_unload(config_entry.entry_id)
         await config_entry.async_remove(hass)
-        registry = await entity_registry.async_get_registry(hass)
+        registry = er.async_get(hass)
         registry.async_clear_config_entry(config_entry.entry_id)
 
         # nightlight
@@ -430,6 +430,8 @@ async def test_device_types(hass: HomeAssistant):
             "effect_list": YEELIGHT_MONO_EFFECT_LIST,
             "supported_features": SUPPORT_YEELIGHT,
             "brightness": bright,
+            "color_mode": "brightness",
+            "supported_color_modes": ["brightness"],
         },
     )
 
@@ -441,6 +443,8 @@ async def test_device_types(hass: HomeAssistant):
             "effect_list": YEELIGHT_MONO_EFFECT_LIST,
             "supported_features": SUPPORT_YEELIGHT,
             "brightness": bright,
+            "color_mode": "brightness",
+            "supported_color_modes": ["brightness"],
         },
     )
 
@@ -463,8 +467,14 @@ async def test_device_types(hass: HomeAssistant):
             "hs_color": hs_color,
             "rgb_color": rgb_color,
             "xy_color": xy_color,
+            "color_mode": "hs",
+            "supported_color_modes": ["color_temp", "hs"],
         },
-        {"supported_features": 0},
+        {
+            "supported_features": 0,
+            "color_mode": "onoff",
+            "supported_color_modes": ["onoff"],
+        },
     )
 
     # WhiteTemp
@@ -483,11 +493,15 @@ async def test_device_types(hass: HomeAssistant):
             ),
             "brightness": current_brightness,
             "color_temp": ct,
+            "color_mode": "color_temp",
+            "supported_color_modes": ["color_temp"],
         },
         {
             "effect_list": YEELIGHT_TEMP_ONLY_EFFECT_LIST,
             "supported_features": SUPPORT_YEELIGHT,
             "brightness": nl_br,
+            "color_mode": "brightness",
+            "supported_color_modes": ["brightness"],
         },
     )
 
@@ -512,11 +526,15 @@ async def test_device_types(hass: HomeAssistant):
             ),
             "brightness": current_brightness,
             "color_temp": ct,
+            "color_mode": "color_temp",
+            "supported_color_modes": ["color_temp"],
         },
         {
             "effect_list": YEELIGHT_TEMP_ONLY_EFFECT_LIST,
             "supported_features": SUPPORT_YEELIGHT,
             "brightness": nl_br,
+            "color_mode": "brightness",
+            "supported_color_modes": ["brightness"],
         },
     )
     await _async_test(
@@ -532,6 +550,8 @@ async def test_device_types(hass: HomeAssistant):
             "hs_color": bg_hs_color,
             "rgb_color": bg_rgb_color,
             "xy_color": bg_xy_color,
+            "color_mode": "hs",
+            "supported_color_modes": ["color_temp", "hs"],
         },
         name=f"{UNIQUE_NAME} ambilight",
         entity_id=f"{ENTITY_LIGHT}_ambilight",

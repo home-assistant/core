@@ -2,12 +2,12 @@
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import Config, HomeAssistant
+from homeassistant.const import CONF_SCAN_INTERVAL
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .account import StarlineAccount
 from .const import (
-    CONF_SCAN_INTERVAL,
     CONF_SCAN_OBD_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SCAN_OBD_INTERVAL,
@@ -17,11 +17,6 @@ from .const import (
     SERVICE_SET_SCAN_OBD_INTERVAL,
     SERVICE_UPDATE_STATE,
 )
-
-
-async def async_setup(hass: HomeAssistant, config: Config) -> bool:
-    """Set up configured StarLine."""
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:

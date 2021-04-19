@@ -1,11 +1,13 @@
 """Support for Actions on Google Assistant Smart Home Control."""
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict
+from typing import Any
 
 import voluptuous as vol
 
 # Typing imports
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 
@@ -35,7 +37,6 @@ from .const import EVENT_COMMAND_RECEIVED, EVENT_SYNC_RECEIVED  # noqa: F401, is
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ALLOW_UNLOCK = "allow_unlock"
-CONF_API_KEY = "api_key"
 
 ENTITY_SCHEMA = vol.Schema(
     {
@@ -85,12 +86,17 @@ GOOGLE_ASSISTANT_SCHEMA = vol.All(
     _check_report_state,
 )
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: GOOGLE_ASSISTANT_SCHEMA}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {vol.Optional(DOMAIN): GOOGLE_ASSISTANT_SCHEMA}, extra=vol.ALLOW_EXTRA
+)
 
 
-async def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
+async def async_setup(hass: HomeAssistant, yaml_config: dict[str, Any]):
     """Activate Google Actions component."""
-    config = yaml_config.get(DOMAIN, {})
+    if DOMAIN not in yaml_config:
+        return True
+
+    config = yaml_config[DOMAIN]
 
     google_config = GoogleConfig(hass, config)
     await google_config.async_initialize()

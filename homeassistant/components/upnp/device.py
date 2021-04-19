@@ -3,20 +3,24 @@ from __future__ import annotations
 
 import asyncio
 from ipaddress import IPv4Address
-from typing import List, Mapping
+from typing import Mapping
+from urllib.parse import urlparse
 
 from async_upnp_client import UpnpFactory
 from async_upnp_client.aiohttp import AiohttpSessionRequester
+from async_upnp_client.device_updater import DeviceUpdater
 from async_upnp_client.profiles.igd import IgdDevice
 
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 import homeassistant.util.dt as dt_util
 
 from .const import (
     BYTES_RECEIVED,
     BYTES_SENT,
     CONF_LOCAL_IP,
+    DISCOVERY_HOSTNAME,
     DISCOVERY_LOCATION,
     DISCOVERY_NAME,
     DISCOVERY_ST,
@@ -32,23 +36,29 @@ from .const import (
 )
 
 
+def _get_local_ip(hass: HomeAssistantType) -> IPv4Address | None:
+    """Get the configured local ip."""
+    if DOMAIN in hass.data and DOMAIN_CONFIG in hass.data[DOMAIN]:
+        local_ip = hass.data[DOMAIN][DOMAIN_CONFIG].get(CONF_LOCAL_IP)
+        if local_ip:
+            return IPv4Address(local_ip)
+    return None
+
+
 class Device:
     """Home Assistant representation of a UPnP/IGD device."""
 
-    def __init__(self, igd_device):
+    def __init__(self, igd_device: IgdDevice, device_updater: DeviceUpdater) -> None:
         """Initialize UPnP/IGD device."""
-        self._igd_device: IgdDevice = igd_device
+        self._igd_device = igd_device
+        self._device_updater = device_updater
+        self.coordinator: DataUpdateCoordinator = None
 
     @classmethod
-    async def async_discover(cls, hass: HomeAssistantType) -> List[Mapping]:
+    async def async_discover(cls, hass: HomeAssistantType) -> list[Mapping]:
         """Discover UPnP/IGD devices."""
         _LOGGER.debug("Discovering UPnP/IGD devices")
-        local_ip = None
-        if DOMAIN in hass.data and DOMAIN_CONFIG in hass.data[DOMAIN]:
-            local_ip = hass.data[DOMAIN][DOMAIN_CONFIG].get(CONF_LOCAL_IP)
-        if local_ip:
-            local_ip = IPv4Address(local_ip)
-
+        local_ip = _get_local_ip(hass)
         discoveries = await IgdDevice.async_search(source_ip=local_ip, timeout=10)
 
         # Supplement/standardize discovery.
@@ -66,10 +76,10 @@ class Device:
         cls, hass: HomeAssistantType, discovery: Mapping
     ) -> Mapping:
         """Get additional data from device and supplement discovery."""
-        device = await Device.async_create_device(hass, discovery[DISCOVERY_LOCATION])
+        location = discovery[DISCOVERY_LOCATION]
+        device = await Device.async_create_device(hass, location)
         discovery[DISCOVERY_NAME] = device.name
-
-        # Set unique_id.
+        discovery[DISCOVERY_HOSTNAME] = device.hostname
         discovery[DISCOVERY_UNIQUE_ID] = discovery[DISCOVERY_USN]
 
         return discovery
@@ -79,17 +89,32 @@ class Device:
         cls, hass: HomeAssistantType, ssdp_location: str
     ) -> Device:
         """Create UPnP/IGD device."""
-        # build async_upnp_client requester
+        # Build async_upnp_client requester.
         session = async_get_clientsession(hass)
         requester = AiohttpSessionRequester(session, True, 10)
 
-        # create async_upnp_client device
+        # Create async_upnp_client device.
         factory = UpnpFactory(requester, disable_state_variable_validation=True)
         upnp_device = await factory.async_create_device(ssdp_location)
 
+        # Create profile wrapper.
         igd_device = IgdDevice(upnp_device, None)
 
-        return cls(igd_device)
+        # Create updater.
+        local_ip = _get_local_ip(hass)
+        device_updater = DeviceUpdater(
+            device=upnp_device, factory=factory, source_ip=local_ip
+        )
+
+        return cls(igd_device, device_updater)
+
+    async def async_start(self) -> None:
+        """Start the device updater."""
+        await self._device_updater.async_start()
+
+    async def async_stop(self) -> None:
+        """Stop the device updater."""
+        await self._device_updater.async_stop()
 
     @property
     def udn(self) -> str:
@@ -125,6 +150,13 @@ class Device:
     def unique_id(self) -> str:
         """Get the unique id."""
         return self.usn
+
+    @property
+    def hostname(self) -> str:
+        """Get the hostname."""
+        url = self._igd_device.device.device_url
+        parsed = urlparse(url)
+        return parsed.hostname
 
     def __str__(self) -> str:
         """Get string representation."""

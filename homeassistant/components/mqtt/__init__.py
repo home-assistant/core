@@ -1,4 +1,6 @@
 """Support for MQTT message handling."""
+from __future__ import annotations
+
 import asyncio
 from functools import lru_cache, partial, wraps
 import inspect
@@ -8,7 +10,7 @@ from operator import attrgetter
 import os
 import ssl
 import time
-from typing import Any, Callable, List, Optional, Union
+from typing import Any, Callable, Union
 import uuid
 
 import attr
@@ -19,6 +21,7 @@ from homeassistant import config_entries
 from homeassistant.components import websocket_api
 from homeassistant.const import (
     CONF_CLIENT_ID,
+    CONF_DISCOVERY,
     CONF_PASSWORD,
     CONF_PAYLOAD,
     CONF_PORT,
@@ -28,7 +31,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.const import CONF_UNIQUE_ID  # noqa: F401
 from homeassistant.core import CoreState, Event, HassJob, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import config_validation as cv, event, template
@@ -40,7 +42,6 @@ from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.logging import catch_log_exception
 
 # Loading the config flow file will register the flow
-from . import config_flow  # noqa: F401 pylint: disable=unused-import
 from . import debug_info, discovery
 from .const import (
     ATTR_PAYLOAD,
@@ -49,7 +50,6 @@ from .const import (
     ATTR_TOPIC,
     CONF_BIRTH_MESSAGE,
     CONF_BROKER,
-    CONF_DISCOVERY,
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
@@ -312,7 +312,7 @@ async def async_subscribe(
     topic: str,
     msg_callback: MessageCallbackType,
     qos: int = DEFAULT_QOS,
-    encoding: Optional[str] = "utf-8",
+    encoding: str | None = "utf-8",
 ):
     """Subscribe to an MQTT topic.
 
@@ -387,7 +387,7 @@ async def _async_setup_discovery(
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Start the MQTT protocol service."""
-    conf: Optional[ConfigType] = config.get(DOMAIN)
+    conf: ConfigType | None = config.get(DOMAIN)
 
     websocket_api.async_register_command(hass, websocket_subscribe)
     websocket_api.async_register_command(hass, websocket_remove_device)
@@ -554,7 +554,7 @@ class MQTT:
         self.hass = hass
         self.config_entry = config_entry
         self.conf = conf
-        self.subscriptions: List[Subscription] = []
+        self.subscriptions: list[Subscription] = []
         self.connected = False
         self._ha_started = asyncio.Event()
         self._last_subscribe = time.time()
@@ -670,7 +670,7 @@ class MQTT:
             will_message = None
 
         if will_message is not None:
-            self._mqttc.will_set(  # pylint: disable=no-value-for-parameter
+            self._mqttc.will_set(
                 topic=will_message.topic,
                 payload=will_message.payload,
                 qos=will_message.qos,
@@ -732,7 +732,7 @@ class MQTT:
         topic: str,
         msg_callback: MessageCallbackType,
         qos: int,
-        encoding: Optional[str] = None,
+        encoding: str | None = None,
     ) -> Callable[[], None]:
         """Set up a subscription to a topic with the provided qos.
 
@@ -835,7 +835,7 @@ class MQTT:
             async def publish_birth_message(birth_message):
                 await self._ha_started.wait()  # Wait for Home Assistant to start
                 await self._discovery_cooldown()  # Wait for MQTT discovery to cool down
-                await self.async_publish(  # pylint: disable=no-value-for-parameter
+                await self.async_publish(
                     topic=birth_message.topic,
                     payload=birth_message.payload,
                     qos=birth_message.qos,
@@ -931,7 +931,9 @@ class MQTT:
         try:
             await asyncio.wait_for(self._pending_operations[mid].wait(), TIMEOUT_ACK)
         except asyncio.TimeoutError:
-            _LOGGER.error("Timed out waiting for mid %s", mid)
+            _LOGGER.warning(
+                "No ACK from MQTT server in %s seconds (mid: %s)", TIMEOUT_ACK, mid
+            )
         finally:
             del self._pending_operations[mid]
 
@@ -1054,7 +1056,6 @@ async def websocket_subscribe(hass, connection, msg):
 @callback
 def async_subscribe_connection_status(hass, connection_status_callback):
     """Subscribe to MQTT connection changes."""
-
     connection_status_callback_job = HassJob(connection_status_callback)
 
     async def connected():

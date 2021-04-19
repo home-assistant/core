@@ -5,16 +5,18 @@ from homeassistant.const import (
     ATTR_STATE,
     CONF_DEVICES,
     CONF_NAME,
+    CONF_REPEAT,
     CONF_SWITCHES,
     CONF_ZONE,
 )
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import ToggleEntity
 
 from .const import (
     CONF_ACTIVATION,
     CONF_MOMENTARY,
     CONF_PAUSE,
-    CONF_REPEAT,
     DOMAIN as KONNECTED_DOMAIN,
     STATE_HIGH,
     STATE_LOW,
@@ -130,6 +132,16 @@ class KonnectedSwitch(ToggleEntity):
             state,
         )
 
+    @callback
+    def async_set_state(self, state):
+        """Update the switch state."""
+        self._set_state(state)
+
     async def async_added_to_hass(self):
-        """Store entity_id."""
+        """Store entity_id and register state change callback."""
         self._data["entity_id"] = self.entity_id
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, f"konnected.{self.entity_id}.update", self.async_set_state
+            )
+        )

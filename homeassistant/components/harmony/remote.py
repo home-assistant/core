@@ -12,6 +12,7 @@ from homeassistant.components.remote import (
     ATTR_HOLD_SECS,
     ATTR_NUM_REPEATS,
     DEFAULT_DELAY_SECS,
+    SUPPORT_ACTIVITY,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID
@@ -24,12 +25,11 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from .connection_state import ConnectionStateMixin
 from .const import (
     ACTIVITY_POWER_OFF,
-    ATTR_ACTIVITY_LIST,
     ATTR_ACTIVITY_STARTING,
-    ATTR_CURRENT_ACTIVITY,
     ATTR_DEVICES_LIST,
     ATTR_LAST_ACTIVITY,
     DOMAIN,
+    HARMONY_DATA,
     HARMONY_OPTIONS_UPDATE,
     PREVIOUS_ACTIVE_ACTIVITY,
     SERVICE_CHANGE_CHANNEL,
@@ -59,7 +59,7 @@ async def async_setup_entry(
 ):
     """Set up the Harmony config entry."""
 
-    data = hass.data[DOMAIN][entry.entry_id]
+    data = hass.data[DOMAIN][entry.entry_id][HARMONY_DATA]
 
     _LOGGER.debug("HarmonyData : %s", data)
 
@@ -99,6 +99,11 @@ class HarmonyRemote(ConnectionStateMixin, remote.RemoteEntity, RestoreEntity):
         self._unique_id = data.unique_id
         self._last_activity = None
         self._config_path = out_path
+
+    @property
+    def supported_features(self):
+        """Supported features for the remote."""
+        return SUPPORT_ACTIVITY
 
     async def _async_update_options(self, data):
         """Change options when the options flow does."""
@@ -161,7 +166,7 @@ class HarmonyRemote(ConnectionStateMixin, remote.RemoteEntity, RestoreEntity):
     @property
     def device_info(self):
         """Return device info."""
-        self._data.device_info(DOMAIN)
+        return self._data.device_info(DOMAIN)
 
     @property
     def unique_id(self):
@@ -179,12 +184,20 @@ class HarmonyRemote(ConnectionStateMixin, remote.RemoteEntity, RestoreEntity):
         return False
 
     @property
-    def device_state_attributes(self):
+    def current_activity(self):
+        """Return the current activity."""
+        return self._current_activity
+
+    @property
+    def activity_list(self):
+        """Return the available activities."""
+        return self._data.activity_names
+
+    @property
+    def extra_state_attributes(self):
         """Add platform specific attributes."""
         return {
             ATTR_ACTIVITY_STARTING: self._activity_starting,
-            ATTR_CURRENT_ACTIVITY: self._current_activity,
-            ATTR_ACTIVITY_LIST: self._data.activity_names,
             ATTR_DEVICES_LIST: self._data.device_names,
             ATTR_LAST_ACTIVITY: self._last_activity,
         }

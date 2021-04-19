@@ -1,15 +1,14 @@
 """Percentage util functions."""
+from __future__ import annotations
 
-from typing import List, Tuple
 
-
-def ordered_list_item_to_percentage(ordered_list: List[str], item: str) -> int:
+def ordered_list_item_to_percentage(ordered_list: list[str], item: str) -> int:
     """Determine the percentage of an item in an ordered list.
 
     When using this utility for fan speeds, do not include "off"
 
     Given the list: ["low", "medium", "high", "very_high"], this
-    function will return the following when when the item is passed
+    function will return the following when the item is passed
     in:
 
         low: 25
@@ -19,14 +18,14 @@ def ordered_list_item_to_percentage(ordered_list: List[str], item: str) -> int:
 
     """
     if item not in ordered_list:
-        raise ValueError
+        raise ValueError(f'The item "{item}"" is not in "{ordered_list}"')
 
     list_len = len(ordered_list)
     list_position = ordered_list.index(item) + 1
     return (list_position * 100) // list_len
 
 
-def percentage_to_ordered_list_item(ordered_list: List[str], percentage: int) -> str:
+def percentage_to_ordered_list_item(ordered_list: list[str], percentage: int) -> str:
     """Find the item that most closely matches the percentage in an ordered list.
 
     When using this utility for fan speeds, do not include "off"
@@ -42,7 +41,7 @@ def percentage_to_ordered_list_item(ordered_list: List[str], percentage: int) ->
     """
     list_len = len(ordered_list)
     if not list_len:
-        raise ValueError
+        raise ValueError("The ordered list is empty")
 
     for offset, speed in enumerate(ordered_list):
         list_position = offset + 1
@@ -54,7 +53,7 @@ def percentage_to_ordered_list_item(ordered_list: List[str], percentage: int) ->
 
 
 def ranged_value_to_percentage(
-    low_high_range: Tuple[float, float], value: float
+    low_high_range: tuple[float, float], value: float
 ) -> int:
     """Given a range of low and high values convert a single value to a percentage.
 
@@ -67,11 +66,12 @@ def ranged_value_to_percentage(
     (1,255), 127: 50
     (1,255), 10: 4
     """
-    return int((value * 100) // (low_high_range[1] - low_high_range[0] + 1))
+    offset = low_high_range[0] - 1
+    return int(((value - offset) * 100) // states_in_range(low_high_range))
 
 
 def percentage_to_ranged_value(
-    low_high_range: Tuple[float, float], percentage: int
+    low_high_range: tuple[float, float], percentage: int
 ) -> float:
     """Given a range of low and high values convert a percentage to a single value.
 
@@ -84,4 +84,15 @@ def percentage_to_ranged_value(
     (1,255), 50: 127.5
     (1,255), 4: 10.2
     """
-    return (low_high_range[1] - low_high_range[0] + 1) * percentage / 100
+    offset = low_high_range[0] - 1
+    return states_in_range(low_high_range) * percentage / 100 + offset
+
+
+def states_in_range(low_high_range: tuple[float, float]) -> float:
+    """Given a range of low and high values return how many states exist."""
+    return low_high_range[1] - low_high_range[0] + 1
+
+
+def int_states_in_range(low_high_range: tuple[float, float]) -> int:
+    """Given a range of low and high values return how many integer states exist."""
+    return int(states_in_range(low_high_range))
