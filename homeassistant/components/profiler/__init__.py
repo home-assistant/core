@@ -115,7 +115,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 "".join(traceback.format_stack(frames.get(thread.ident))).strip(),
             )
 
-    async def _async_dump_scheduled(call: ServiceCall):
+    async def _async_dump_scheduled(call: ServiceCall) -> None:
         """Log all scheduled in the event loop."""
         arepr = reprlib.aRepr
         original_maxstring = arepr.maxstring
