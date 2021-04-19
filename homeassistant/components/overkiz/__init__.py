@@ -128,7 +128,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             and device.ui_class not in IGNORED_OVERKIZ_DEVICES
         ):
             _LOGGER.debug(
-                "Unsupported Overkiz device detected (%s - %s - %s)",
+                "Unsupported Overkiz device detected (%s - %s - %s - %s)",
                 device.controllable_name,
                 device.ui_class,
                 device.widget,
