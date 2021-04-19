@@ -97,11 +97,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
-    async def _gateway_already_configured(self, gateway_id):
+    async def _gateway_already_configured(self, gateway_id: str):
         """See if we already have a gateway matching the id."""
         device_registry = await dr.async_get(self.hass)
         device = device_registry.async_get_device(
-            identifiers=set(), connections={(DOMAIN, gateway_id)}
+            identifiers={(DOMAIN, gateway_id)}, connections=set()
         )
 
         if device is None:
