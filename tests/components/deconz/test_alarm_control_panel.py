@@ -160,7 +160,10 @@ async def test_alarm_control_panel(hass, aioclient_mock, mock_deconz_websocket):
         {ATTR_ENTITY_ID: "alarm_control_panel.keypad"},
         blocking=True,
     )
-    assert aioclient_mock.mock_calls[1][2] == {"armed": ANCILLARY_CONTROL_ARMED_AWAY}
+    assert aioclient_mock.mock_calls[1][2] == {
+        "armed": ANCILLARY_CONTROL_ARMED_AWAY,
+        "panel": ANCILLARY_CONTROL_ARMED_AWAY,
+    }
 
     # Service set alarm to home mode
 
@@ -170,7 +173,10 @@ async def test_alarm_control_panel(hass, aioclient_mock, mock_deconz_websocket):
         {ATTR_ENTITY_ID: "alarm_control_panel.keypad"},
         blocking=True,
     )
-    assert aioclient_mock.mock_calls[2][2] == {"armed": ANCILLARY_CONTROL_ARMED_STAY}
+    assert aioclient_mock.mock_calls[2][2] == {
+        "armed": ANCILLARY_CONTROL_ARMED_STAY,
+        "panel": ANCILLARY_CONTROL_ARMED_STAY,
+    }
 
     # Service set alarm to night mode
 
@@ -180,7 +186,10 @@ async def test_alarm_control_panel(hass, aioclient_mock, mock_deconz_websocket):
         {ATTR_ENTITY_ID: "alarm_control_panel.keypad"},
         blocking=True,
     )
-    assert aioclient_mock.mock_calls[3][2] == {"armed": ANCILLARY_CONTROL_ARMED_NIGHT}
+    assert aioclient_mock.mock_calls[3][2] == {
+        "armed": ANCILLARY_CONTROL_ARMED_NIGHT,
+        "panel": ANCILLARY_CONTROL_ARMED_NIGHT,
+    }
 
     # Service set alarm to disarmed
 
@@ -190,7 +199,10 @@ async def test_alarm_control_panel(hass, aioclient_mock, mock_deconz_websocket):
         {ATTR_ENTITY_ID: "alarm_control_panel.keypad"},
         blocking=True,
     )
-    assert aioclient_mock.mock_calls[4][2] == {"armed": ANCILLARY_CONTROL_DISARMED}
+    assert aioclient_mock.mock_calls[4][2] == {
+        "armed": ANCILLARY_CONTROL_DISARMED,
+        "panel": ANCILLARY_CONTROL_DISARMED,
+    }
 
     await hass.config_entries.async_unload(config_entry.entry_id)
 
