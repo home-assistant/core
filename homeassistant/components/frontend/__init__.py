@@ -278,6 +278,11 @@ def add_extra_js_url(hass, url, es5=False):
     hass.data[key].add(url)
 
 
+def add_manifest_json_key(key, val):
+    """Add a keyval to the manifest.json."""
+    MANIFEST_JSON.update_key(key, val)
+
+
 def _frontend_root(dev_repo_path):
     """Return root path to the frontend files."""
     if dev_repo_path is not None:
