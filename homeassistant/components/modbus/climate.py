@@ -24,12 +24,9 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import (
-    ConfigType,
-    DiscoveryInfoType,
-    HomeAssistantType,
-)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     ATTR_TEMPERATURE,
@@ -56,7 +53,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config: ConfigType,
     async_add_entities,
     discovery_info: DiscoveryInfoType | None = None,
