@@ -91,6 +91,7 @@ from .const import (
     CONF_SWAP_WORD_BYTE,
     CONF_TARGET_TEMP,
     CONF_VERIFY,
+    CONF_VIRTUAL_COUNT,
     CONF_WRITE_TYPE,
     DEFAULT_HUB,
     DEFAULT_SCAN_INTERVAL,
@@ -270,6 +271,7 @@ BINARY_SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         vol.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_COIL): vol.In(
             [CALL_TYPE_COIL, CALL_TYPE_DISCRETE]
         ),
+        vol.Optional(CONF_VIRTUAL_COUNT, default=0): cv.positive_int,
     }
 )
 
