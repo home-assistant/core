@@ -96,6 +96,8 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_remove_node)
     websocket_api.async_register_command(hass, websocket_stop_exclusion)
     websocket_api.async_register_command(hass, websocket_refresh_node_info)
+    websocket_api.async_register_command(hass, websocket_start_listening_logs)
+    websocket_api.async_register_command(hass, websocket_stop_listening_logs)
     websocket_api.async_register_command(hass, websocket_update_log_config)
     websocket_api.async_register_command(hass, websocket_get_log_config)
     websocket_api.async_register_command(hass, websocket_get_config_parameters)
