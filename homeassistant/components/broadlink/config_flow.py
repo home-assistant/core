@@ -64,10 +64,9 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
         try:
-            hello = partial(blk.discover, discover_ip_address=host)
-            device = (await self.hass.async_add_executor_job(hello))[0]
+            device = await self.hass.async_add_executor_job(blk.hello, host)
 
-        except IndexError:
+        except NetworkTimeoutError:
             return self.async_abort(reason="cannot_connect")
 
         except OSError as err:
@@ -91,10 +90,10 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             timeout = user_input.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
 
             try:
-                hello = partial(blk.discover, discover_ip_address=host, timeout=timeout)
-                device = (await self.hass.async_add_executor_job(hello))[0]
+                hello = partial(blk.hello, host, timeout=timeout)
+                device = await self.hass.async_add_executor_job(hello)
 
-            except IndexError:
+            except NetworkTimeoutError:
                 errors["base"] = "cannot_connect"
                 err_msg = "Device not found"
 
