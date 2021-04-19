@@ -783,12 +783,12 @@ def key_value_schemas(
 
         key_value = value.get(key)
 
-        if key_value not in value_schemas:
-            raise vol.Invalid(
-                f"Unexpected value for {key}: '{key_value}'. Expected {', '.join(value_schemas)}"
-            )
+        if isinstance(key_value, str) and key_value in value_schemas:
+            return cast(Dict[str, Any], value_schemas[key_value](value))
 
-        return cast(Dict[str, Any], value_schemas[key_value](value))
+        raise vol.Invalid(
+            f"Unexpected value for {key}: '{key_value}'. Expected {', '.join(value_schemas)}"
+        )
 
     return key_value_validator
 
