@@ -9,6 +9,7 @@ from fritzconnection import FritzConnection
 from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import FritzStatus
 
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import dt as dt_util
@@ -82,17 +83,18 @@ class FritzBoxTools:
 
         self._device_info = self._fetch_device_info()
 
-    def start(self):
+    async def async_start(self):
         """Start FritzHosts connection."""
         self.fritzhosts = FritzHosts(fc=self.connection)
 
-        self.scan_devices()
+        await self.hass.async_add_executor_job(self.scan_devices)
 
         self._cancel_scan = async_track_time_interval(
             self.hass, self.scan_devices, timedelta(seconds=TRACKER_SCAN_INTERVAL)
         )
 
-    def unload(self):
+    @callback
+    async def async_unload(self):
         """Unload FritzboxTools class."""
         _LOGGER.debug("Unloading FRITZ!Box router integration")
         if self._cancel_scan is not None:

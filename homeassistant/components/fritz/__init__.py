@@ -37,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     except FritzConnectionException as ex:
         raise ConfigEntryNotReady from ex
 
-    fritz_tools.start()
+    await fritz_tools.async_start()
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = fritz_tools
@@ -54,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigType) -> bool:
     """Unload FRITZ!Box Tools config entry."""
     fritzbox: FritzBoxTools = hass.data[DOMAIN][entry.entry_id]
-    fritzbox.unload()
+    fritzbox.async_unload()
 
     hass.data[DOMAIN].pop(entry.entry_id)
 

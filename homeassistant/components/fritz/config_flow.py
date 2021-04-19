@@ -176,7 +176,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
         if not error:
             self._name = self.fritz_tools.device_info["model"]
 
-            for entry in self.hass.config_entries.async_entries(DOMAIN):
+            for entry in self._async_current_entries(include_ignore=False):
                 if entry.data[CONF_HOST] == self._host:
                     error = "already_configured"
 

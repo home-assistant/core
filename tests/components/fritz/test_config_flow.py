@@ -96,7 +96,7 @@ async def test_user_already_configured(hass: HomeAssistantType, fc_class_mock):
         assert result["step_id"] == "start_config"
 
 
-async def test_exception_1(hass: HomeAssistantType):
+async def test_exception_security(hass: HomeAssistantType):
     """Test starting a flow by user."""
     with patch(
         "homeassistant.components.fritz.common.FritzConnection",
@@ -115,9 +115,10 @@ async def test_exception_1(hass: HomeAssistantType):
 
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "start_config"
+        assert result["errors"]["base"] == "invalid_auth"
 
 
-async def test_exception_2(hass: HomeAssistantType):
+async def test_exception_connection(hass: HomeAssistantType):
     """Test starting a flow by user."""
     with patch(
         "homeassistant.components.fritz.common.FritzConnection",
@@ -136,6 +137,7 @@ async def test_exception_2(hass: HomeAssistantType):
 
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "start_config"
+        assert result["errors"]["base"] == "connection_error"
 
 
 async def test_reauth_successful(hass: HomeAssistantType, fc_class_mock):
