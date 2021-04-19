@@ -35,25 +35,20 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
         if self.show_advanced_options:
-            self.data_schema.update(
-                {
-                    vol.Required(CONF_MYDEVOLO, default=DEFAULT_MYDEVOLO): str,
-                }
-            )
+            self.data_schema[
+                vol.Required(CONF_MYDEVOLO, default=DEFAULT_MYDEVOLO)
+            ] = str
         if user_input is None:
             return self._show_form(user_input)
         return await self._connect_mydevolo(user_input)
 
     async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType):
         """Handle zeroconf discovery."""
-        try:
-            # Check if it is a gateway
-            if discovery_info["properties"]["MT"] in SUPPORTED_MODEL_TYPES:
-                await self._async_handle_discovery_without_unique_id()
-                return await self.async_step_zeroconf_confirm()
-            return self.async_abort(reason="Not a devolo Home Control gateway.")
-        except KeyError:
-            return self.async_abort(reason="Not a devolo Home Control gateway.")
+        # Check if it is a gateway
+        if discovery_info.get("properties", {}).get("MT") in SUPPORTED_MODEL_TYPES:
+            await self._async_handle_discovery_without_unique_id()
+            return await self.async_step_zeroconf_confirm()
+        return self.async_abort(reason="Not a devolo Home Control gateway.")
 
     async def async_step_zeroconf_confirm(self, user_input=None):
         """Handle a flow initiated by zeroconf."""
