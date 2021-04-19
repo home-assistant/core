@@ -24,3 +24,7 @@ dump_log_objects:
     type:
       description: The type of objects to dump to the log
       example: State
+log_thread_frames:
+  description: Log the current frames for all threads
+log_event_loop_scheduled:
+  description: Log what is scheduled in the event loop
