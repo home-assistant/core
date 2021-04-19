@@ -919,6 +919,27 @@ async def test_dhcp_connect_unknown_error(hass):
     assert result["reason"] == "unknown"
 
 
+async def test_dhcp_device_not_supported(hass):
+    """Test DHCP discovery flow that fails because the device is not supported."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    device = get_device("Kitchen")
+    mock_api = device.get_mock_api()
+
+    with patch(DEVICE_DISCOVERY, return_value=[mock_api]):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "dhcp"},
+            data={
+                HOSTNAME: "broadlink",
+                IP_ADDRESS: device.host,
+                MAC_ADDRESS: device_registry.format_mac(device.mac),
+            },
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_supported"
+
+
 async def test_dhcp_already_exists(hass):
     """Test DHCP discovery flow that fails to connect."""
     await setup.async_setup_component(hass, "persistent_notification", {})
