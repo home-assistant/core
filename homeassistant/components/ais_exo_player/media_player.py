@@ -659,6 +659,7 @@ class ExoPlayerDevice(MediaPlayerEntity):
                     try:
                         response_text = requests.get(url_to_call, timeout=2).text
                         response_text = response_text.split("\n")[0]
+                        media_content_id = response_text
                         if response_text.endswith(".pls"):
                             response_text = requests.get(response_text, timeout=2).text
                             media_content_id = response_text.split("\n")[1].replace(
