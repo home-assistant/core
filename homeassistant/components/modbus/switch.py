@@ -123,8 +123,9 @@ async def async_setup_platform(
     for entry in discovery_info[CONF_SWITCHES]:
         if CONF_HUB in entry:
             # from old config!
-            discovery_info[CONF_NAME] = entry[CONF_HUB]
-        hub: ModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
+            hub: ModbusHub = hass.data[MODBUS_DOMAIN][entry[CONF_HUB]]
+        else:
+            hub: ModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
         if entry[CONF_INPUT_TYPE] == CALL_TYPE_COIL:
             switches.append(ModbusCoilSwitch(hub, entry))
         else:
