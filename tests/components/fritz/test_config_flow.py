@@ -98,16 +98,17 @@ async def test_user_already_configured(hass: HomeAssistantType, fc_class_mock):
 
 async def test_exception_security(hass: HomeAssistantType):
     """Test starting a flow by user."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "start_config"
+
     with patch(
         "homeassistant.components.fritz.common.FritzConnection",
         side_effect=FritzSecurityError,
     ), patch("homeassistant.components.fritz.common.FritzStatus"):
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-        assert result["type"] == RESULT_TYPE_FORM
-        assert result["step_id"] == "start_config"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_USER_DATA
@@ -120,16 +121,17 @@ async def test_exception_security(hass: HomeAssistantType):
 
 async def test_exception_connection(hass: HomeAssistantType):
     """Test starting a flow by user."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "start_config"
+
     with patch(
         "homeassistant.components.fritz.common.FritzConnection",
         side_effect=FritzConnectionException,
     ), patch("homeassistant.components.fritz.common.FritzStatus"):
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-        assert result["type"] == RESULT_TYPE_FORM
-        assert result["step_id"] == "start_config"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_USER_DATA
