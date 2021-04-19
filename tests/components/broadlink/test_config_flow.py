@@ -900,29 +900,10 @@ async def test_dhcp_unreachable(hass):
     assert result["reason"] == "cannot_connect"
 
 
-async def test_dhcp_connect_einval(hass):
-    """Test DHCP discovery flow that fails to connect with EINVAL."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-    with patch(DEVICE_DISCOVERY, side_effect=OSError(errno.EINVAL, None)):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": "dhcp"},
-            data={
-                HOSTNAME: "broadlink",
-                IP_ADDRESS: "1.2.3.4",
-                MAC_ADDRESS: "34:ea:34:b4:3b:5a",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "invalid_host"
-
-
 async def test_dhcp_connect_unknown_error(hass):
-    """Test DHCP discovery flow that fails to connect with an unknown error."""
+    """Test DHCP discovery flow that fails to connect with an OSError."""
     await setup.async_setup_component(hass, "persistent_notification", {})
-    with patch(DEVICE_DISCOVERY, side_effect=ValueError("Unknown failure")):
+    with patch(DEVICE_DISCOVERY, side_effect=OSError()):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": "dhcp"},
@@ -936,6 +917,27 @@ async def test_dhcp_connect_unknown_error(hass):
 
     assert result["type"] == "abort"
     assert result["reason"] == "unknown"
+
+
+async def test_dhcp_device_not_supported(hass):
+    """Test DHCP discovery flow that fails because the device is not supported."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    device = get_device("Kitchen")
+    mock_api = device.get_mock_api()
+
+    with patch(DEVICE_DISCOVERY, return_value=[mock_api]):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "dhcp"},
+            data={
+                HOSTNAME: "broadlink",
+                IP_ADDRESS: device.host,
+                MAC_ADDRESS: device_registry.format_mac(device.mac),
+            },
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_supported"
 
 
 async def test_dhcp_already_exists(hass):
