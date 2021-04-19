@@ -79,9 +79,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if not self._reauth_entry:
                 self._abort_if_unique_id_configured()
-
-            if self._reauth_entry.unique_id != self.unique_id:
-                # There is a config entry matching this account, but it is not the one we were trying to reauth
+            elif self._reauth_entry.unique_id != self.unique_id:
                 return self.async_abort(reason="already_configured")
 
             try:
