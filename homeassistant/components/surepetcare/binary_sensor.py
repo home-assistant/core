@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, List, Union
+from typing import Any
 
 from surepy.entities import SurepyEntity
 from surepy.enums import EntityType, Location, SureEnum
@@ -28,7 +28,7 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    entities: List[SurepyEntity] = []
+    entities: list[SurepyEntity] = []
 
     spc: SurePetcareAPI = hass.data[DOMAIN][SPC]
 
@@ -74,7 +74,7 @@ class SurePetcareBinarySensor(BinarySensorEntity):
         self._spapi: SurePetcareAPI = spc
 
         self._entity: SurepyEntity = self._spapi._states.get(self._id, {})
-        self._state: Union[SureEnum, dict[str, Any]] = None
+        self._state: SureEnum | dict[str, Any] = None
 
         # cover special case where a device has no name set
         if self._entity.name:

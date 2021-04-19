@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, List
+from typing import Any
 
 from surepy.entities import SurepyEntity
 from surepy.enums import EntityType, LockState
@@ -29,7 +29,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if discovery_info is None:
         return
 
-    entities: List[SurepyEntity] = []
+    entities: list[SurepyEntity] = []
 
     spc: SurePetcareAPI = hass.data[DOMAIN][SPC]
 
