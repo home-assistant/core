@@ -1,10 +1,9 @@
 """The tests for the Modbus cover component."""
-from unittest import mock
+import logging
 
 import pytest
 
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
-from homeassistant.components.modbus import cover
 from homeassistant.components.modbus.const import CALL_TYPE_COIL, CONF_REGISTER
 from homeassistant.components.modbus.cover import async_setup_platform
 from homeassistant.const import (
@@ -143,9 +142,13 @@ async def test_register_cover(hass, regs, expected):
     assert state == expected
 
 
-async def test_unsupported_config(hass):
+async def test_unsupported_config(hass, caplog):
     """When user tries to run this component without discovery_info, print an error."""
-    with mock.patch.object(cover, "_LOGGER") as mock_logger:
-        await async_setup_platform(hass, {}, None, None)
-        await hass.async_block_till_done()
-        assert mock_logger.error.called
+    caplog.set_level(logging.WARNING)
+    caplog.clear()
+
+    await async_setup_platform(hass, {}, None, None)
+    await hass.async_block_till_done()
+
+    assert len(caplog.records) == 1
+    assert caplog.records[0].levelname == "WARNING"
