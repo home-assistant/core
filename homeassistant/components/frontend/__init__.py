@@ -45,37 +45,6 @@ EVENT_PANELS_UPDATED = "panels_updated"
 
 DEFAULT_THEME_COLOR = "#03A9F4"
 
-MANIFEST_JSON = {
-    "background_color": "#FFFFFF",
-    "description": "Home automation platform that puts local control and privacy first.",
-    "dir": "ltr",
-    "display": "standalone",
-    "icons": [
-        {
-            "src": f"/static/icons/favicon-{size}x{size}.png",
-            "sizes": f"{size}x{size}",
-            "type": "image/png",
-            "purpose": "maskable any",
-        }
-        for size in (192, 384, 512, 1024)
-    ],
-    "screenshots": [
-        {
-            "src": "/static/images/screenshots/screenshot-1.png",
-            "sizes": "413x792",
-            "type": "image/png",
-        }
-    ],
-    "lang": "en-US",
-    "name": "Home Assistant",
-    "short_name": "Assistant",
-    "start_url": "/?homescreen=1",
-    "theme_color": DEFAULT_THEME_COLOR,
-    "prefer_related_applications": True,
-    "related_applications": [
-        {"platform": "play", "id": "io.homeassistant.companion.android"}
-    ],
-}
 
 DATA_PANELS = "frontend_panels"
 DATA_JS_VERSION = "frontend_js_version"
@@ -122,6 +91,67 @@ CONFIG_SCHEMA = vol.Schema(
 
 SERVICE_SET_THEME = "set_theme"
 SERVICE_RELOAD_THEMES = "reload_themes"
+
+
+class Manifest:
+    """Manage the manifest.json contents."""
+
+    def __init__(self, data: dict) -> None:
+        """Init the manifest manager."""
+        self.manifest = data
+        self._serialize()
+
+    def __getitem__(self, key: str) -> Any:
+        """Return an item in the manifest."""
+        return self.manifest[key]
+
+    @property
+    def json(self) -> str:
+        """Return the serialized manifest."""
+        return self._serialized
+
+    def _serialize(self) -> None:
+        self._serialized = json.dumps(self.manifest, sort_keys=True)
+
+    def update_key(self, key: str, val: str) -> None:
+        """Add a keyval to the manifest.json."""
+        self.manifest[key] = val
+        self._serialize()
+
+
+MANIFEST = Manifest(
+    {
+        "background_color": "#FFFFFF",
+        "description": "Home automation platform that puts local control and privacy first.",
+        "dir": "ltr",
+        "display": "standalone",
+        "icons": [
+            {
+                "src": f"/static/icons/favicon-{size}x{size}.png",
+                "sizes": f"{size}x{size}",
+                "type": "image/png",
+                "purpose": "maskable any",
+            }
+            for size in (192, 384, 512, 1024)
+        ],
+        "screenshots": [
+            {
+                "src": "/static/images/screenshots/screenshot-1.png",
+                "sizes": "413x792",
+                "type": "image/png",
+            }
+        ],
+        "lang": "en-US",
+        "name": "Home Assistant",
+        "short_name": "Assistant",
+        "start_url": "/?homescreen=1",
+        "theme_color": DEFAULT_THEME_COLOR,
+        "prefer_related_applications": True,
+        "related_applications": [
+            {"platform": "play", "id": "io.homeassistant.companion.android"}
+        ],
+    }
+)
 
 
 class Panel:
@@ -227,11 +257,6 @@ def add_extra_js_url(hass, url, es5=False):
     if url_set is None:
         url_set = hass.data[key] = set()
     url_set.add(url)
-
-
-def add_manifest_json_key(key, val):
-    """Add a keyval to the manifest.json."""
-    MANIFEST_JSON[key] = val
 
 
 def _frontend_root(dev_repo_path):
@@ -353,12 +378,16 @@ async def _async_setup_themes(hass, themes):
         """Update theme_color in manifest."""
         name = hass.data[DATA_DEFAULT_THEME]
         themes = hass.data[DATA_THEMES]
-        MANIFEST_JSON["theme_color"] = DEFAULT_THEME_COLOR
         if name != DEFAULT_THEME:
-            MANIFEST_JSON["theme_color"] = themes[name].get(
-                "app-header-background-color",
-                themes[name].get(PRIMARY_COLOR, DEFAULT_THEME_COLOR),
+            MANIFEST.update_key(
+                "theme_color",
+                themes[name].get(
+                    "app-header-background-color",
+                    themes[name].get(PRIMARY_COLOR, DEFAULT_THEME_COLOR),
+                ),
             )
+        else:
+            MANIFEST.update_key("theme_color", DEFAULT_THEME_COLOR)
         hass.bus.async_fire(EVENT_THEMES_UPDATED)
 
     @callback
@@ -511,7 +540,7 @@ class IndexView(web_urldispatcher.AbstractResource):
 
         return web.Response(
             text=template.render(
-                theme_color=MANIFEST_JSON["theme_color"],
+                theme_color=MANIFEST["theme_color"],
                 extra_modules=hass.data[DATA_EXTRA_MODULE_URL],
                 extra_js_es5=hass.data[DATA_EXTRA_JS_URL_ES5],
             ),
@@ -537,8 +566,9 @@ class ManifestJSONView(HomeAssistantView):
     @callback
     def get(self, request):  # pylint: disable=no-self-use
         """Return the manifest.json."""
-        msg = json.dumps(MANIFEST_JSON, sort_keys=True)
-        return web.Response(text=msg, content_type="application/manifest+json")
+        return web.Response(
+            text=MANIFEST.json, content_type="application/manifest+json"
+        )
 
 
 @callback
