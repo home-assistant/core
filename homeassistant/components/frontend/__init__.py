@@ -169,11 +169,11 @@ class UrlManager:
 
     def add(self, url):
         """Add a url to the set."""
-        self.urls = frozenset(self.urls + url)
+        self.urls = frozenset([*self.urls, url])
 
     def remove(self, url):
         """Remove a url from the set."""
-        self.urls = frozenset(self.urls - url)
+        self.urls = self.urls - {url}
 
 
 class Panel:
