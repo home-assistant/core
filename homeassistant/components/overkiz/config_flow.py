@@ -104,10 +104,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             identifiers={(DOMAIN, gateway_id)}, connections=set()
         )
 
-        if device is None:
-            return False
+        if device:
+            return True
 
-        return True
+        return False
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
