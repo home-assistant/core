@@ -1,4 +1,5 @@
 """Entity representing a Sonos Move battery level."""
+import contextlib
 import logging
 from typing import Any, Dict, Optional
 
@@ -25,27 +26,43 @@ ATTR_BATTERY_CHARGING = "charging"
 ATTR_BATTERY_POWERSOURCE = "power_source"
 
 
+def fetch_batery_info_or_none(soco: SoCo) -> Optional[Dict[str, Any]]:
+    """Fetch battery_info from the given SoCo object.
+
+    Returns None if the device doesn't support battery info
+    or if the device is offline.
+    """
+    with contextlib.suppress(ConnectionError, TimeoutError, SoCoException):
+        return soco.get_battery_info()
+
+
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Sonos from a config entry."""
 
-    def _async_create_entities(event: Event):
-        soco = event.data.get("soco")
-        if soco and soco.uid not in hass.data[DATA_SONOS].battery_entities:
-            hass.data[DATA_SONOS].battery_entities[soco.uid] = None
-            hass.async_add_executor_job(_discover_battery, hass, soco)
+    async def _async_create_entity(soco: SoCo) -> Optional[SonosBatteryEntity]:
+        if not soco or soco.uid in hass.data[DATA_SONOS].battery_entities:
+            return None
+        hass.data[DATA_SONOS].battery_entities[soco.uid] = None
+        if battery_info := await hass.async_add_executor_job(
+            fetch_batery_info_or_none, soco
+        ):
+            return SonosBatteryEntity(soco, battery_info)
+        return None
 
-    def _discover_battery(hass, soco):
-        battery_info = SonosBatteryEntity.fetch(soco)
-        if battery_info is not None:
-            hass.add_job(async_add_entities, [SonosBatteryEntity(soco, battery_info)])
+    async def _async_create_entities(event: Event):
+        if entity := await _async_create_entity(event.data.get("soco")):
+            async_add_entities([entity])
 
     hass.bus.async_listen(SONOS_DISCOVERY_UPDATE, _async_create_entities)
 
+    entities = []
     # create any entities for devices that exist already
-    for uid, soco in hass.data[DATA_SONOS].discovered.items():
-        if uid not in hass.data[DATA_SONOS].battery_entities:
-            hass.data[DATA_SONOS].battery_entities[soco.uid] = None
-            hass.async_add_executor_job(_discover_battery, hass, soco)
+    for soco in hass.data[DATA_SONOS].discovered.values():
+        if entity := await _async_create_entity(soco):
+            entities.append(entity)
+
+    if entities:
+        async_add_entities(entities)
 
 
 class SonosBatteryEntity(Entity):
@@ -56,19 +73,6 @@ class SonosBatteryEntity(Entity):
         self._soco = soco
         self._battery_info = battery_info
         self._available = True
-
-    @staticmethod
-    def fetch(soco: SoCo) -> Optional[Dict[str, Any]]:
-        """Fetch battery_info from the given SoCo object.
-
-        Returns None if the device doesn't support battery info
-        or if the device is offline.
-        """
-        try:
-            return soco.get_battery_info()
-        except (ConnectionError, TimeoutError, SoCoException):
-            pass
-        return None
 
     async def async_added_to_hass(self) -> None:
         """Register polling callback when added to hass."""
@@ -134,7 +138,7 @@ class SonosBatteryEntity(Entity):
         if not self.available:
             # wait for the Sonos device to come back online
             return
-        battery_info = SonosBatteryEntity.fetch(self._soco)
+        battery_info = fetch_batery_info_or_none(self._soco)
         if battery_info is not None:
             self._battery_info = battery_info
             self.schedule_update_ha_state()
