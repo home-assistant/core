@@ -39,6 +39,8 @@ from .conftest import ReadResult
 async def _config_helper(hass, do_config):
     """Run test for modbus."""
 
+    config = {DOMAIN: do_config}
+
     with mock.patch(
         "homeassistant.components.modbus.modbus.ModbusTcpClient"
     ), mock.patch(
@@ -46,7 +48,7 @@ async def _config_helper(hass, do_config):
     ), mock.patch(
         "homeassistant.components.modbus.modbus.ModbusUdpClient"
     ):
-        assert await async_setup_component(hass, DOMAIN, do_config) is True
+        assert await async_setup_component(hass, DOMAIN, config) is True
         await hass.async_block_till_done()
 
 
@@ -54,96 +56,64 @@ async def _config_helper(hass, do_config):
     "do_config",
     [
         {
-            DOMAIN: [
-                {
-                    CONF_TYPE: "tcp",
-                    CONF_HOST: "modbusTestHost",
-                    CONF_PORT: 5501,
-                }
-            ]
+            CONF_TYPE: "tcp",
+            CONF_HOST: "modbusTestHost",
+            CONF_PORT: 5501,
         },
         {
-            DOMAIN: [
-                {
-                    CONF_TYPE: "tcp",
-                    CONF_HOST: "modbusTestHost",
-                    CONF_PORT: 5501,
-                    CONF_NAME: "modbusTest",
-                    CONF_TIMEOUT: 30,
-                    CONF_DELAY: 10,
-                }
-            ]
+            CONF_TYPE: "tcp",
+            CONF_HOST: "modbusTestHost",
+            CONF_PORT: 5501,
+            CONF_NAME: "modbusTest",
+            CONF_TIMEOUT: 30,
+            CONF_DELAY: 10,
         },
         {
-            DOMAIN: [
-                {
-                    CONF_TYPE: "udp",
-                    CONF_HOST: "modbusTestHost",
-                    CONF_PORT: 5501,
-                }
-            ]
+            CONF_TYPE: "udp",
+            CONF_HOST: "modbusTestHost",
+            CONF_PORT: 5501,
         },
         {
-            DOMAIN: [
-                {
-                    CONF_TYPE: "udp",
-                    CONF_HOST: "modbusTestHost",
-                    CONF_PORT: 5501,
-                    CONF_NAME: "modbusTest",
-                    CONF_TIMEOUT: 30,
-                    CONF_DELAY: 10,
-                }
-            ]
+            CONF_TYPE: "udp",
+            CONF_HOST: "modbusTestHost",
+            CONF_PORT: 5501,
+            CONF_NAME: "modbusTest",
+            CONF_TIMEOUT: 30,
+            CONF_DELAY: 10,
         },
         {
-            DOMAIN: [
-                {
-                    CONF_TYPE: "rtuovertcp",
-                    CONF_HOST: "modbusTestHost",
-                    CONF_PORT: 5501,
-                }
-            ]
+            CONF_TYPE: "rtuovertcp",
+            CONF_HOST: "modbusTestHost",
+            CONF_PORT: 5501,
         },
         {
-            DOMAIN: [
-                {
-                    CONF_TYPE: "rtuovertcp",
-                    CONF_HOST: "modbusTestHost",
-                    CONF_PORT: 5501,
-                    CONF_NAME: "modbusTest",
-                    CONF_TIMEOUT: 30,
-                    CONF_DELAY: 10,
-                }
-            ]
+            CONF_TYPE: "rtuovertcp",
+            CONF_HOST: "modbusTestHost",
+            CONF_PORT: 5501,
+            CONF_NAME: "modbusTest",
+            CONF_TIMEOUT: 30,
+            CONF_DELAY: 10,
         },
         {
-            DOMAIN: [
-                {
-                    CONF_TYPE: "serial",
-                    CONF_BAUDRATE: 9600,
-                    CONF_BYTESIZE: 8,
-                    CONF_METHOD: "rtu",
-                    CONF_PORT: "usb01",
-                    CONF_PARITY: "E",
-                    CONF_STOPBITS: 1,
-                }
-            ]
+            CONF_TYPE: "serial",
+            CONF_BAUDRATE: 9600,
+            CONF_BYTESIZE: 8,
+            CONF_METHOD: "rtu",
+            CONF_PORT: "usb01",
+            CONF_PARITY: "E",
+            CONF_STOPBITS: 1,
         },
         {
-            DOMAIN: [
-                {
-                    CONF_TYPE: "serial",
-                    CONF_BAUDRATE: 9600,
-                    CONF_BYTESIZE: 8,
-                    CONF_METHOD: "rtu",
-                    CONF_PORT: "usb01",
-                    CONF_PARITY: "E",
-                    CONF_STOPBITS: 1,
-                    CONF_NAME: "modbusTest",
-                    CONF_TIMEOUT: 30,
-                    CONF_DELAY: 10,
-                }
-            ]
+            CONF_TYPE: "serial",
+            CONF_BAUDRATE: 9600,
+            CONF_BYTESIZE: 8,
+            CONF_METHOD: "rtu",
+            CONF_PORT: "usb01",
+            CONF_PARITY: "E",
+            CONF_STOPBITS: 1,
+            CONF_NAME: "modbusTest",
+            CONF_TIMEOUT: 30,
+            CONF_DELAY: 10,
         },
     ],
 )
@@ -155,43 +125,37 @@ async def test_config_modbus(hass, do_config):
     assert len(hass.data[DOMAIN]) == 1
 
 
-@pytest.mark.parametrize(
-    "do_config",
-    [
-        {
-            DOMAIN: [
-                {
-                    CONF_TYPE: "tcp",
-                    CONF_HOST: "modbusTestHost",
-                    CONF_PORT: 5501,
-                    CONF_NAME: "modbusTest1",
-                },
-                {
-                    CONF_TYPE: "tcp",
-                    CONF_HOST: "modbusTestHost",
-                    CONF_PORT: 5501,
-                    CONF_NAME: "modbusTest2",
-                },
-                {
-                    CONF_TYPE: "serial",
-                    CONF_BAUDRATE: 9600,
-                    CONF_BYTESIZE: 8,
-                    CONF_METHOD: "rtu",
-                    CONF_PORT: "usb01",
-                    CONF_PARITY: "E",
-                    CONF_STOPBITS: 1,
-                    CONF_NAME: "modbusTest3",
-                },
-            ]
-        },
-    ],
-)
-async def test_config_multiple_modbus(hass, do_config):
+async def test_config_multiple_modbus(hass):
     """Run test for multiple modbus."""
+
+    do_config = [
+        {
+            CONF_TYPE: "tcp",
+            CONF_HOST: "modbusTestHost",
+            CONF_PORT: 5501,
+            CONF_NAME: "modbusTest1",
+        },
+        {
+            CONF_TYPE: "tcp",
+            CONF_HOST: "modbusTestHost",
+            CONF_PORT: 5501,
+            CONF_NAME: "modbusTest2",
+        },
+        {
+            CONF_TYPE: "serial",
+            CONF_BAUDRATE: 9600,
+            CONF_BYTESIZE: 8,
+            CONF_METHOD: "rtu",
+            CONF_PORT: "usb01",
+            CONF_PARITY: "E",
+            CONF_STOPBITS: 1,
+            CONF_NAME: "modbusTest3",
+        },
+    ]
 
     await _config_helper(hass, do_config)
     assert DOMAIN in hass.data
-    assert len(hass.data[DOMAIN]) == len(do_config[DOMAIN])
+    assert len(hass.data[DOMAIN]) == len(do_config)
 
 
 def _config_entry():
