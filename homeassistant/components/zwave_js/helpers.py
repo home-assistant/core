@@ -4,14 +4,34 @@ from __future__ import annotations
 from typing import cast
 
 from zwave_js_server.client import Client as ZwaveClient
+from zwave_js_server.exceptions import NotFoundError
 from zwave_js_server.model.node import Node as ZwaveNode
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
 from homeassistant.helpers.entity_registry import async_get as async_get_ent_reg
 
-from .const import DATA_CLIENT, DOMAIN
+from .const import CONF_DATA_COLLECTION_OPTED_IN, DATA_CLIENT, DOMAIN
+
+
+async def async_enable_statistics(client: ZwaveClient) -> None:
+    """Enable statistics on the driver."""
+    await client.driver.async_enable_statistics("Home Assistant", HA_VERSION)
+
+
+@callback
+def update_data_collection_preference(
+    hass: HomeAssistant, entry_id: str, preference: bool
+) -> None:
+    """Update data collection preference on config entry."""
+    entry = hass.config_entries.async_get_entry(entry_id)
+    if not entry:
+        raise NotFoundError("Config entry cannot be found")
+    new_data = entry.data.copy()
+    new_data[CONF_DATA_COLLECTION_OPTED_IN] = preference
+    hass.config_entries.async_update_entry(entry, data=new_data)
 
 
 @callback

@@ -27,7 +27,13 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import DATA_CLIENT, DOMAIN, EVENT_DEVICE_ADDED_TO_REGISTRY
+from .const import (
+    CONF_DATA_COLLECTION_OPTED_IN,
+    DATA_CLIENT,
+    DOMAIN,
+    EVENT_DEVICE_ADDED_TO_REGISTRY,
+)
+from .helpers import async_enable_statistics, update_data_collection_preference
 
 # general API constants
 ID = "id"
@@ -49,6 +55,9 @@ FORCE_CONSOLE = "force_console"
 # constants for setting config parameters
 VALUE_ID = "value_id"
 STATUS = "status"
+
+# constants for data collection
+IS_STATISTICS_ENABLED = "is_statistics_enabled"
 
 
 @callback
@@ -495,6 +504,80 @@ async def websocket_get_log_config(
         msg[ID],
         dataclasses.asdict(result),
     )
+
+
+@websocket_api.require_admin  # type: ignore
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/opt_in_data_collection",
+        vol.Required(ENTRY_ID): str,
+    },
+)
+async def websocket_opt_in_data_collection(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+) -> None:
+    """Opt in to statistics collection."""
+    entry_id = msg[ENTRY_ID]
+    try:
+        update_data_collection_preference(hass, entry_id, True)
+    except NotFoundError as err:
+        connection.send_error(msg[ID], ERR_NOT_FOUND, err.args[0])
+        return
+    await async_enable_statistics(hass.data[DOMAIN][entry_id][DATA_CLIENT])
+    connection.send_result(
+        msg[ID],
+    )
+
+
+@websocket_api.require_admin  # type: ignore
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/opt_out_data_collection",
+        vol.Required(ENTRY_ID): str,
+    },
+)
+async def websocket_opt_out_data_collection(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+) -> None:
+    """Opt out to statistics collection."""
+    entry_id = msg[ENTRY_ID]
+    try:
+        update_data_collection_preference(hass, entry_id, False)
+    except NotFoundError as err:
+        connection.send_error(msg[ID], ERR_NOT_FOUND, err.args[0])
+        return
+    client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
+    await client.driver.async_disable_statistics()
+    connection.send_result(msg[ID])
+
+
+@websocket_api.require_admin  # type: ignore
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/data_collection_status",
+        vol.Required(ENTRY_ID): str,
+    },
+)
+async def websocket_data_collection_status(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+) -> None:
+    """Opt out to statistics collection."""
+    entry_id = msg[ENTRY_ID]
+    client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
+    entry = hass.config_entries.async_get_entry(entry_id)
+    if not entry:
+        connection.send_error(
+            msg[ID], ERR_NOT_FOUND, "Specified config entry cannot be found"
+        )
+        return
+    result = {
+        CONF_DATA_COLLECTION_OPTED_IN: entry.data.get(CONF_DATA_COLLECTION_OPTED_IN),
+        IS_STATISTICS_ENABLED: await client.driver.async_is_statistics_enabled(),
+    }
+    connection.send_result(msg[ID], result)
 
 
 class DumpView(HomeAssistantView):
