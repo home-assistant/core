@@ -45,9 +45,7 @@ class AuroraDevice(Entity):
         """Return device specific attributes."""
         return {
             "config_entry_id": self.config_entry.entry_id,
-            "identifiers": {
-                (DOMAIN, self.config_entry.data.get(ATTR_SERIAL_NUMBER, "dummy sn"))
-            },
+            "identifiers": {(DOMAIN, self.config_entry.data.get(ATTR_SERIAL_NUMBER))},
             "manufacturer": MANUFACTURER,
             "model": self.config_entry.data.get(ATTR_MODEL, "Model unknown"),
             "name": self.config_entry.data.get(ATTR_DEVICE_NAME, DEFAULT_DEVICE_NAME),
