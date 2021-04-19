@@ -14,6 +14,7 @@ from homeassistant.data_entry_flow import (
 from homeassistant.helpers import entity_registry as er
 
 from . import (
+    MOCK_CONFIG_ENTRY,
     MOCK_DEVICE,
     MOCK_IMPORT,
     MOCK_IMPORT_DICT,
@@ -21,8 +22,6 @@ from . import (
     MOCK_SETUP_DATA,
     MOCK_USER_INPUT,
     _patch_async_setup_entry,
-    _patch_validate_input,
-    init_integration,
 )
 
 
@@ -59,13 +58,15 @@ async def test_form_cannot_connect(hass, aioclient_mock):
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        MOCK_USER_INPUT,
-    )
+    with _patch_async_setup_entry() as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            MOCK_USER_INPUT,
+        )
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] == {"base": "cannot_connect"}
+    assert len(mock_setup_entry.mock_calls) == 0
 
 
 async def test_form_invalid_auth(hass, aioclient_mock):
@@ -74,7 +75,9 @@ async def test_form_invalid_auth(hass, aioclient_mock):
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    with patch("pysma.SMA.new_session", return_value=False):
+    with patch(
+        "pysma.SMA.new_session", return_value=False
+    ), _patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             MOCK_USER_INPUT,
@@ -82,6 +85,7 @@ async def test_form_invalid_auth(hass, aioclient_mock):
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] == {"base": "invalid_auth"}
+    assert len(mock_setup_entry.mock_calls) == 0
 
 
 async def test_form_cannot_retrieve_device_info(hass, aioclient_mock):
@@ -92,7 +96,7 @@ async def test_form_cannot_retrieve_device_info(hass, aioclient_mock):
 
     with patch("pysma.SMA.new_session", return_value=True), patch(
         "pysma.SMA.read", return_value=False
-    ):
+    ), _patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             MOCK_USER_INPUT,
@@ -100,6 +104,7 @@ async def test_form_cannot_retrieve_device_info(hass, aioclient_mock):
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] == {"base": "cannot_retrieve_device_info"}
+    assert len(mock_setup_entry.mock_calls) == 0
 
 
 async def test_form_unexpected_exception(hass):
@@ -108,7 +113,9 @@ async def test_form_unexpected_exception(hass):
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    with _patch_validate_input(side_effect=Exception):
+    with patch(
+        "pysma.SMA.new_session", side_effect=Exception
+    ), _patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             MOCK_USER_INPUT,
@@ -116,17 +123,23 @@ async def test_form_unexpected_exception(hass):
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] == {"base": "unknown"}
+    assert len(mock_setup_entry.mock_calls) == 0
 
 
 async def test_form_already_configured(hass):
     """Test starting a flow by user when already configured."""
-    await init_integration(hass)
+    MOCK_CONFIG_ENTRY.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    with _patch_validate_input():
+    with patch("pysma.SMA.new_session", return_value=True), patch(
+        "pysma.SMA.device_info", return_value=MOCK_DEVICE
+    ), patch(
+        "pysma.SMA.close_session", return_value=True
+    ), _patch_async_setup_entry() as mock_setup_entry:
+
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             MOCK_USER_INPUT,
@@ -134,6 +147,7 @@ async def test_form_already_configured(hass):
 
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
+    assert len(mock_setup_entry.mock_calls) == 0
 
 
 async def test_import(hass):
@@ -143,7 +157,11 @@ async def test_import(hass):
 
     await setup.async_setup_component(hass, "persistent_notification", {})
 
-    with _patch_validate_input():
+    with patch("pysma.SMA.new_session", return_value=True), patch(
+        "pysma.SMA.device_info", return_value=MOCK_DEVICE
+    ), patch(
+        "pysma.SMA.close_session", return_value=True
+    ), _patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
@@ -153,12 +171,7 @@ async def test_import(hass):
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == MOCK_USER_INPUT["host"]
     assert result["data"] == MOCK_IMPORT
-
-    assert MOCK_LEGACY_ENTRY.original_name not in result["data"]["sensors"]
-    assert "pv_power_a" in result["data"]["sensors"]
-
-    entity = entity_registry.async_get(MOCK_LEGACY_ENTRY.entity_id)
-    assert entity.unique_id == f"{MOCK_DEVICE['serial']}-6380_40251E00_0"
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_import_sensor_dict(hass):
@@ -168,7 +181,11 @@ async def test_import_sensor_dict(hass):
 
     await setup.async_setup_component(hass, "persistent_notification", {})
 
-    with _patch_validate_input():
+    with patch("pysma.SMA.new_session", return_value=True), patch(
+        "pysma.SMA.device_info", return_value=MOCK_DEVICE
+    ), patch(
+        "pysma.SMA.close_session", return_value=True
+    ), _patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
@@ -178,6 +195,4 @@ async def test_import_sensor_dict(hass):
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == MOCK_USER_INPUT["host"]
     assert result["data"] == MOCK_IMPORT_DICT
-
-    entity = entity_registry.async_get(MOCK_LEGACY_ENTRY.entity_id)
-    assert entity.unique_id == f"{MOCK_DEVICE['serial']}-6380_40251E00_0"
+    assert len(mock_setup_entry.mock_calls) == 1

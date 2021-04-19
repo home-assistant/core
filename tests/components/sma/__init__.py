@@ -110,30 +110,23 @@ MOCK_LEGACY_ENTRY = er.RegistryEntry(
     original_name="pv_power",
 )
 
+MOCK_CONFIG_ENTRY = MockConfigEntry(
+    domain=DOMAIN,
+    title=MOCK_DEVICE["name"],
+    unique_id=MOCK_DEVICE["serial"],
+    data=MOCK_CUSTOM_SETUP_DATA,
+    source="import",
+)
+
 
 async def init_integration(hass):
     """Create a fake SMA Config Entry."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title=MOCK_DEVICE["name"],
-        unique_id=MOCK_DEVICE["serial"],
-        data=MOCK_CUSTOM_SETUP_DATA,
-        source="import",
-    )
-    entry.add_to_hass(hass)
+    MOCK_CONFIG_ENTRY.add_to_hass(hass)
 
     with patch("pysma.SMA.read"):
-        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.config_entries.async_setup(MOCK_CONFIG_ENTRY.entry_id)
     await hass.async_block_till_done()
-    return entry
-
-
-def _patch_validate_input(return_value=MOCK_DEVICE, side_effect=None):
-    return patch(
-        "homeassistant.components.sma.config_flow.validate_input",
-        return_value=return_value,
-        side_effect=side_effect,
-    )
+    return MOCK_CONFIG_ENTRY
 
 
 def _patch_async_setup_entry(return_value=True):
