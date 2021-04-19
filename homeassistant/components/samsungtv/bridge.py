@@ -196,7 +196,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
 
     def stop(self):
         """Stop Bridge."""
-        LOGGER.warning("Stopping SamsungRemote")
+        LOGGER.debug("Stopping SamsungRemote")
         self.close_remote()
 
 
@@ -288,5 +288,5 @@ class SamsungTVWSBridge(SamsungTVBridge):
 
     def stop(self):
         """Stop Bridge."""
-        LOGGER.warning("Stopping SamsungTVWS")
+        LOGGER.debug("Stopping SamsungTVWS")
         self.close_remote()
