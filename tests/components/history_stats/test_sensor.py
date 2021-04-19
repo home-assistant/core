@@ -118,144 +118,6 @@ class TestHistoryStatsSensor(unittest.TestCase):
         assert sensor2_end.minute == 0
         assert sensor2_end.second == 0
 
-    def test_measure(self):
-        """Test the history statistics sensor measure."""
-        t0 = dt_util.utcnow() - timedelta(minutes=40)
-        t1 = t0 + timedelta(minutes=20)
-        t2 = dt_util.utcnow() - timedelta(minutes=10)
-
-        # Start     t0        t1        t2        End
-        # |--20min--|--20min--|--10min--|--10min--|
-        # |---off---|---on----|---off---|---on----|
-
-        fake_states = {
-            "binary_sensor.test_id": [
-                ha.State("binary_sensor.test_id", "on", last_changed=t0),
-                ha.State("binary_sensor.test_id", "off", last_changed=t1),
-                ha.State("binary_sensor.test_id", "on", last_changed=t2),
-            ]
-        }
-
-        start = Template("{{ as_timestamp(now()) - 3600 }}", self.hass)
-        end = Template("{{ now() }}", self.hass)
-
-        sensor1 = HistoryStatsSensor(
-            self.hass, "binary_sensor.test_id", "on", start, end, None, "time", "Test"
-        )
-
-        sensor2 = HistoryStatsSensor(
-            self.hass, "unknown.id", "on", start, end, None, "time", "Test"
-        )
-
-        sensor3 = HistoryStatsSensor(
-            self.hass, "binary_sensor.test_id", "on", start, end, None, "count", "test"
-        )
-
-        sensor4 = HistoryStatsSensor(
-            self.hass, "binary_sensor.test_id", "on", start, end, None, "ratio", "test"
-        )
-
-        assert sensor1._type == "time"
-        assert sensor3._type == "count"
-        assert sensor4._type == "ratio"
-
-        with patch(
-            "homeassistant.components.history.state_changes_during_period",
-            return_value=fake_states,
-        ), patch("homeassistant.components.history.get_state", return_value=None):
-            sensor1.update()
-            sensor2.update()
-            sensor3.update()
-            sensor4.update()
-
-        assert sensor1.state == 0.5
-        assert sensor2.state is None
-        assert sensor3.state == 2
-        assert sensor4.state == 50
-
-    def test_measure_multiple(self):
-        """Test the history statistics sensor measure for multiple states."""
-        t0 = dt_util.utcnow() - timedelta(minutes=40)
-        t1 = t0 + timedelta(minutes=20)
-        t2 = dt_util.utcnow() - timedelta(minutes=10)
-
-        # Start     t0        t1        t2        End
-        # |--20min--|--20min--|--10min--|--10min--|
-        # |---------|--orange-|-default-|---blue--|
-
-        fake_states = {
-            "input_select.test_id": [
-                ha.State("input_select.test_id", "orange", last_changed=t0),
-                ha.State("input_select.test_id", "default", last_changed=t1),
-                ha.State("input_select.test_id", "blue", last_changed=t2),
-            ]
-        }
-
-        start = Template("{{ as_timestamp(now()) - 3600 }}", self.hass)
-        end = Template("{{ now() }}", self.hass)
-
-        sensor1 = HistoryStatsSensor(
-            self.hass,
-            "input_select.test_id",
-            ["orange", "blue"],
-            start,
-            end,
-            None,
-            "time",
-            "Test",
-        )
-
-        sensor2 = HistoryStatsSensor(
-            self.hass,
-            "unknown.id",
-            ["orange", "blue"],
-            start,
-            end,
-            None,
-            "time",
-            "Test",
-        )
-
-        sensor3 = HistoryStatsSensor(
-            self.hass,
-            "input_select.test_id",
-            ["orange", "blue"],
-            start,
-            end,
-            None,
-            "count",
-            "test",
-        )
-
-        sensor4 = HistoryStatsSensor(
-            self.hass,
-            "input_select.test_id",
-            ["orange", "blue"],
-            start,
-            end,
-            None,
-            "ratio",
-            "test",
-        )
-
-        assert sensor1._type == "time"
-        assert sensor3._type == "count"
-        assert sensor4._type == "ratio"
-
-        with patch(
-            "homeassistant.components.history.state_changes_during_period",
-            return_value=fake_states,
-        ), patch("homeassistant.components.history.get_state", return_value=None):
-            sensor1.update()
-            sensor2.update()
-            sensor3.update()
-            sensor4.update()
-
-        assert sensor1.state == 0.5
-        assert sensor2.state is None
-        assert sensor3.state == 2
-        assert sensor4.state == 50
-
     def test_wrong_date(self):
         """Test when start or end value is not a timestamp or a date."""
         good = Template("{{ now() }}", self.hass)
@@ -413,6 +275,146 @@ async def test_reload(hass):
 
     assert hass.states.get("sensor.test") is None
     assert hass.states.get("sensor.second_test")
+
+
+async def test_measure_multiple(hass):
+    """Test the history statistics sensor measure for multiple states."""
+    t0 = dt_util.utcnow() - timedelta(minutes=40)
+    t1 = t0 + timedelta(minutes=20)
+    t2 = dt_util.utcnow() - timedelta(minutes=10)
+
+    # Start     t0        t1        t2        End
+    # |--20min--|--20min--|--10min--|--10min--|
+    # |---------|--orange-|-default-|---blue--|
+
+    fake_states = {
+        "input_select.test_id": [
+            ha.State("input_select.test_id", "orange", last_changed=t0),
+            ha.State("input_select.test_id", "default", last_changed=t1),
+            ha.State("input_select.test_id", "blue", last_changed=t2),
+        ]
+    }
+
+    start = Template("{{ as_timestamp(now()) - 3600 }}", hass)
+    end = Template("{{ now() }}", hass)
+
+    sensor1 = HistoryStatsSensor(
+        hass,
+        "input_select.test_id",
+        ["orange", "blue"],
+        start,
+        end,
+        None,
+        "time",
+        "Test",
+    )
+
+    sensor2 = HistoryStatsSensor(
+        hass,
+        "unknown.id",
+        ["orange", "blue"],
+        start,
+        end,
+        None,
+        "time",
+        "Test",
+    )
+
+    sensor3 = HistoryStatsSensor(
+        hass,
+        "input_select.test_id",
+        ["orange", "blue"],
+        start,
+        end,
+        None,
+        "count",
+        "test",
+    )
+
+    sensor4 = HistoryStatsSensor(
+        hass,
+        "input_select.test_id",
+        ["orange", "blue"],
+        start,
+        end,
+        None,
+        "ratio",
+        "test",
+    )
+
+    assert sensor1._type == "time"
+    assert sensor3._type == "count"
+    assert sensor4._type == "ratio"
+
+    with patch(
+        "homeassistant.components.history.state_changes_during_period",
+        return_value=fake_states,
+    ), patch("homeassistant.components.history.get_state", return_value=None):
+        await sensor1.async_update()
+        await sensor2.async_update()
+        await sensor3.async_update()
+        await sensor4.async_update()
+
+    assert sensor1.state == 0.5
+    assert sensor2.state is None
+    assert sensor3.state == 2
+    assert sensor4.state == 50
+
+
+async def async_test_measure(hass):
+    """Test the history statistics sensor measure."""
+    t0 = dt_util.utcnow() - timedelta(minutes=40)
+    t1 = t0 + timedelta(minutes=20)
+    t2 = dt_util.utcnow() - timedelta(minutes=10)
+
+    # Start     t0        t1        t2        End
+    # |--20min--|--20min--|--10min--|--10min--|
+    # |---off---|---on----|---off---|---on----|
+
+    fake_states = {
+        "binary_sensor.test_id": [
+            ha.State("binary_sensor.test_id", "on", last_changed=t0),
+            ha.State("binary_sensor.test_id", "off", last_changed=t1),
+            ha.State("binary_sensor.test_id", "on", last_changed=t2),
+        ]
+    }
+
+    start = Template("{{ as_timestamp(now()) - 3600 }}", hass)
+    end = Template("{{ now() }}", hass)
+
+    sensor1 = HistoryStatsSensor(
+        hass, "binary_sensor.test_id", "on", start, end, None, "time", "Test"
+    )
+
+    sensor2 = HistoryStatsSensor(
+        hass, "unknown.id", "on", start, end, None, "time", "Test"
+    )
+
+    sensor3 = HistoryStatsSensor(
+        hass, "binary_sensor.test_id", "on", start, end, None, "count", "test"
+    )
+
+    sensor4 = HistoryStatsSensor(
+        hass, "binary_sensor.test_id", "on", start, end, None, "ratio", "test"
+    )
+
+    assert sensor1._type == "time"
+    assert sensor3._type == "count"
+    assert sensor4._type == "ratio"
+
+    with patch(
+        "homeassistant.components.history.state_changes_during_period",
+        return_value=fake_states,
+    ), patch("homeassistant.components.history.get_state", return_value=None):
+        await sensor1.async_update()
+        await sensor2.async_update()
+        await sensor3.async_update()
+        await sensor4.async_update()
+
+    assert sensor1.state == 0.5
+    assert sensor2.state is None
+    assert sensor3.state == 2
+    assert sensor4.state == 50
 
 
 def _get_fixtures_base_path():
