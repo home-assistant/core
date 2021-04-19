@@ -6,8 +6,6 @@ import logging
 import struct
 from typing import Any
 
-from pymodbus.exceptions import ConnectionException, ModbusException
-from pymodbus.pdu import ExceptionResponse
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -169,10 +167,11 @@ async def async_setup_platform(
 
         if CONF_HUB in entry:
             # from old config!
-            discovery_info[CONF_NAME] = entry[CONF_HUB]
+            hub: ModbusHub = hass.data[MODBUS_DOMAIN][entry[CONF_HUB]]
+        else:
+            hub: ModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
         if CONF_SCAN_INTERVAL not in entry:
             entry[CONF_SCAN_INTERVAL] = DEFAULT_SCAN_INTERVAL
-        hub: ModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
         sensors.append(
             ModbusRegisterSensor(
                 hub,
@@ -285,20 +284,15 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
 
     def _update(self):
         """Update the state of the sensor."""
-        try:
-            if self._register_type == CALL_TYPE_REGISTER_INPUT:
-                result = self._hub.read_input_registers(
-                    self._slave, self._register, self._count
-                )
-            else:
-                result = self._hub.read_holding_registers(
-                    self._slave, self._register, self._count
-                )
-        except ConnectionException:
-            self._available = False
-            return
-
-        if isinstance(result, (ModbusException, ExceptionResponse)):
+        if self._register_type == CALL_TYPE_REGISTER_INPUT:
+            result = self._hub.read_input_registers(
+                self._slave, self._register, self._count
+            )
+        else:
+            result = self._hub.read_holding_registers(
+                self._slave, self._register, self._count
+            )
+        if result is None:
             self._available = False
             return
 

@@ -506,7 +506,7 @@ doorbirdpy==2.1.0
 dovado==0.4.1
 
 # homeassistant.components.dsmr
-dsmr_parser==0.28
+dsmr_parser==0.29
 
 # homeassistant.components.dwd_weather_warnings
 dwdwfsapi==1.0.3
@@ -623,7 +623,7 @@ freesms==0.1.2
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
 # homeassistant.components.fritzbox_netmonitor
-fritzconnection==1.4.0
+fritzconnection==1.4.2
 
 # homeassistant.components.google_translate
 gTTS==2.2.2
@@ -2021,7 +2021,7 @@ samsungtvws[websocket]==1.6.0
 satel_integra==0.3.4
 
 # homeassistant.components.dhcp
-scapy==2.4.4
+scapy==2.4.5
 
 # homeassistant.components.deutsche_bahn
 schiene==0.23

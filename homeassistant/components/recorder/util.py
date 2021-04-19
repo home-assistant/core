@@ -19,6 +19,7 @@ from .models import (
     ALL_TABLES,
     TABLE_RECORDER_RUNS,
     TABLE_SCHEMA_CHANGES,
+    RecorderRuns,
     process_timestamp,
 )
 
@@ -258,3 +259,14 @@ def setup_connection_for_dialect(dialect_name, dbapi_connection):
         execute_on_connection(dbapi_connection, "SET session wait_timeout=28800")
 
     return False
+
+
+def end_incomplete_runs(session, start_time):
+    """End any incomplete recorder runs."""
+    for run in session.query(RecorderRuns).filter_by(end=None):
+        run.closed_incorrect = True
+        run.end = start_time
+        _LOGGER.warning(
+            "Ended unfinished session (id=%s from %s)", run.run_id, run.start
+        )
+        session.add(run)

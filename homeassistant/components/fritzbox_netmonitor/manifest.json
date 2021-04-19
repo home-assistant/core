@@ -2,7 +2,7 @@
   "domain": "fritzbox_netmonitor",
   "name": "AVM FRITZ!Box Net Monitor",
   "documentation": "https://www.home-assistant.io/integrations/fritzbox_netmonitor",
-  "requirements": ["fritzconnection==1.4.0"],
+  "requirements": ["fritzconnection==1.4.2"],
   "codeowners": [],
   "iot_class": "local_polling"
 }

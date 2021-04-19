@@ -279,7 +279,7 @@ distro==1.5.0
 doorbirdpy==2.1.0
 
 # homeassistant.components.dsmr
-dsmr_parser==0.28
+dsmr_parser==0.29
 
 # homeassistant.components.dynalite
 dynalite_devices==0.1.46
@@ -329,7 +329,7 @@ freebox-api==0.0.10
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
 # homeassistant.components.fritzbox_netmonitor
-fritzconnection==1.4.0
+fritzconnection==1.4.2
 
 # homeassistant.components.google_translate
 gTTS==2.2.2
@@ -1073,7 +1073,7 @@ samsungctl[websocket]==0.7.1
 samsungtvws[websocket]==1.6.0
 
 # homeassistant.components.dhcp
-scapy==2.4.4
+scapy==2.4.5
 
 # homeassistant.components.screenlogic
 screenlogicpy==0.2.1
