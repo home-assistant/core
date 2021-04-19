@@ -21,8 +21,6 @@ async def test_form(hass):
 
     fakecomports = []
     fakecomports.append(list_ports_common.ListPortInfo("/dev/ttyUSB7"))
-    for p in fakecomports:
-        print("fake port = %s" % p)
     with patch(
         "serial.tools.list_ports.comports",
         return_value=fakecomports,
@@ -84,7 +82,6 @@ async def test_form_no_comports(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-    print("result=%s" % result)
     assert result["type"] == "abort"
     assert result["reason"] == "no_serial_ports"
 
@@ -101,7 +98,6 @@ async def test_form_invalid_com_ports(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-    print("result=%s" % result)
     assert result["type"] == "form"
     assert result["errors"] == {}
 
