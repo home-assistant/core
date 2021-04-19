@@ -47,7 +47,7 @@ class AuroraDevice(Entity):
             "config_entry_id": self.config_entry.entry_id,
             "identifiers": {(DOMAIN, self.config_entry.data.get(ATTR_SERIAL_NUMBER))},
             "manufacturer": MANUFACTURER,
-            "model": self.config_entry.data.get(ATTR_MODEL, "Model unknown"),
+            "model": self.config_entry.data.get(ATTR_MODEL),
             "name": self.config_entry.data.get(ATTR_DEVICE_NAME, DEFAULT_DEVICE_NAME),
-            "sw_version": self.config_entry.data.get(ATTR_FIRMWARE, "0.0.0"),
+            "sw_version": self.config_entry.data.get(ATTR_FIRMWARE),
         }
