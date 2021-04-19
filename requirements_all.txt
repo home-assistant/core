@@ -562,7 +562,7 @@ envoy_reader==0.18.3
 ephem==3.7.7.0
 
 # homeassistant.components.epson
-epson-projector==0.3.6
+epson-projector==0.4.0
 
 # homeassistant.components.epsonworkforce
 epsonprinter==0.0.9
