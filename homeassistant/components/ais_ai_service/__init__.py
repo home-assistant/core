@@ -2368,6 +2368,12 @@ async def async_setup(hass, config):
             )
         _say_it(hass, text)
 
+        # display time on screen
+        if hass.services.has_service("ais_shell_command", "set_clock_display_text"):
+            hass.services.call(
+                "ais_shell_command", "set_clock_display_text", {"text": "AI53"}
+            )
+
         # set the flag to info that the AIS start part is done - this is needed to don't say some info before this flag
         ais_global.G_AIS_START_IS_DONE = True
 
