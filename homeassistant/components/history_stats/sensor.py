@@ -108,6 +108,7 @@ class HistoryStatsSensor(SensorEntity):
         self, hass, entity_id, entity_states, start, end, duration, sensor_type, name
     ):
         """Initialize the HistoryStats sensor."""
+        self.hass = hass
         self._entity_id = entity_id
         self._entity_states = entity_states
         self._duration = duration
