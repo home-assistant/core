@@ -102,7 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             notification_id="profile_object_dump",
         )
 
-    async def _async_dump_thread_frames(call: ServiceCall):
+    async def _async_dump_thread_frames(call: ServiceCall) -> None:
         """Log all thread frames."""
         frames = sys._current_frames()  # pylint: disable=protected-access
         main_thread = threading.main_thread()
@@ -115,7 +115,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 "".join(traceback.format_stack(frames.get(thread.ident))).strip(),
             )
 
-    async def _async_dump_scheduled(call: ServiceCall):
+    async def _async_dump_scheduled(call: ServiceCall) -> None:
         """Log all scheduled in the event loop."""
         arepr = reprlib.aRepr
         original_maxstring = arepr.maxstring
@@ -169,7 +169,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         DOMAIN,
         SERVICE_STOP_LOG_OBJECTS,
         _async_stop_log_objects,
-        schema=vol.Schema({}),
     )
 
     async_register_admin_service(
@@ -185,7 +184,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         DOMAIN,
         SERVICE_LOG_THREAD_FRAMES,
         _async_dump_thread_frames,
-        schema=vol.Schema({}),
     )
 
     async_register_admin_service(
@@ -193,7 +191,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         DOMAIN,
         SERVICE_LOG_EVENT_LOOP_SCHEDULED,
         _async_dump_scheduled,
-        schema=vol.Schema({}),
     )
 
     return True
