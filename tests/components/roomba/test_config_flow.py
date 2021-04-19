@@ -2,8 +2,7 @@
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
-from roombapy import RoombaConnectionError
-from roombapy.roomba import RoombaInfo
+from roombapy import RoombaConnectionError, RoombaInfo
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
