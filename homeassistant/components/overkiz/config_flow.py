@@ -28,20 +28,18 @@ from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_HUB, default=DEFAULT_HUB): vol.In(SUPPORTED_ENDPOINTS.keys()),
-    }
-)
-
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Overkiz."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
+
+    def __init__(self):
+        """Start the Somfy TaHoma config flow."""
+        self._reauth_entry = None
+        self._username = None
+        self._hub = DEFAULT_HUB
 
     @staticmethod
     @callback
@@ -59,7 +57,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         async with TahomaClient(username, password, api_url=endpoint) as client:
             await client.login()
-            return self.async_create_entry(title=username, data=user_input)
+
+            if self._reauth_entry is None:
+                return self.async_create_entry(title=username, data=user_input)
+
+            # Modify existing entry in reauth scenario
+            self.hass.config_entries.async_update_entry(
+                self._reauth_entry, data=user_input
+            )
+
+            await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
+
+            return self.async_abort(reason="reauth_successful")
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step via config flow."""
@@ -67,7 +76,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input:
             await self.async_set_unique_id(user_input.get(CONF_USERNAME))
-            self._abort_if_unique_id_configured()
+
+            if not self._reauth_entry:
+                self._abort_if_unique_id_configured()
+
+            if self._reauth_entry.unique_id != self.unique_id:
+                # There is a config entry matching this account, but it is not the one we were trying to reauth
+                return self.async_abort(reason="already_configured")
 
             try:
                 return await self.async_validate_input(user_input)
@@ -84,8 +99,28 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception(exception)
 
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_USERNAME, default=self._username): str,
+                    vol.Required(CONF_PASSWORD): str,
+                    vol.Required(CONF_HUB, default=self._hub): vol.In(
+                        SUPPORTED_ENDPOINTS.keys()
+                    ),
+                }
+            ),
+            errors=errors,
         )
+
+    async def async_step_reauth(self, user_input=None):
+        """Perform reauth if the user credentials have changed."""
+        self._reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        self._username = user_input[CONF_USERNAME]
+        self._hub = user_input[CONF_HUB]
+
+        return await self.async_step_user()
 
     async def async_step_dhcp(self, discovery_info):
         """Handle DHCP discovery."""
