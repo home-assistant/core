@@ -220,7 +220,7 @@ class HueLight(CoordinatorEntity, LightEntity):
             self.is_osram = light.manufacturername == "OSRAM"
             self.is_philips = light.manufacturername == "Philips"
             self.is_innr = light.manufacturername == "innr"
-            self.is_livarno = light.manufacturername == "_TZ3000_49qchf10"
+            self.is_livarno = light.manufacturername.startswith("_TZ3000_")
             self.gamut_typ = self.light.colorgamuttype
             self.gamut = self.light.colorgamut
             _LOGGER.debug("Color gamut of %s: %s", self.name, str(self.gamut))
@@ -314,10 +314,10 @@ class HueLight(CoordinatorEntity, LightEntity):
         if self.is_group:
             return super().max_mireds
 
-        max_mireds = self.light.controlcapabilities.get("ct", {}).get("max")
-
         if self.is_livarno:
-            max_mireds = 500
+            return 500
+
+        max_mireds = self.light.controlcapabilities.get("ct", {}).get("max")
 
         if not max_mireds:
             return super().max_mireds
