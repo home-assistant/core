@@ -120,7 +120,7 @@ class Manifest:
         self._serialize()
 
 
-MANIFEST = Manifest(
+MANIFEST_JSON = Manifest(
     {
         "background_color": "#FFFFFF",
         "description": "Home automation platform that puts local control and privacy first.",
@@ -377,7 +377,7 @@ async def _async_setup_themes(hass, themes):
         name = hass.data[DATA_DEFAULT_THEME]
         themes = hass.data[DATA_THEMES]
         if name != DEFAULT_THEME:
-            MANIFEST.update_key(
+            MANIFEST_JSON.update_key(
                 "theme_color",
                 themes[name].get(
                     "app-header-background-color",
@@ -385,7 +385,7 @@ async def _async_setup_themes(hass, themes):
                 ),
             )
         else:
-            MANIFEST.update_key("theme_color", DEFAULT_THEME_COLOR)
+            MANIFEST_JSON.update_key("theme_color", DEFAULT_THEME_COLOR)
         hass.bus.async_fire(EVENT_THEMES_UPDATED)
 
     @callback
@@ -544,7 +544,7 @@ class IndexView(web_urldispatcher.AbstractResource):
         return web.Response(
             text=_async_render_cached(
                 template,
-                theme_color=MANIFEST["theme_color"],
+                theme_color=MANIFEST_JSON["theme_color"],
                 extra_modules=hass.data[DATA_EXTRA_MODULE_URL],
                 extra_js_es5=hass.data[DATA_EXTRA_JS_URL_ES5],
             ),
@@ -571,7 +571,7 @@ class ManifestJSONView(HomeAssistantView):
     def get(self, request):  # pylint: disable=no-self-use
         """Return the manifest.json."""
         return web.Response(
-            text=MANIFEST.json, content_type="application/manifest+json"
+            text=MANIFEST_JSON.json, content_type="application/manifest+json"
         )
 
 
