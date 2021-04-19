@@ -1,7 +1,6 @@
 """Websocket API for Z-Wave JS."""
 from __future__ import annotations
 
-import asyncio
 import dataclasses
 from functools import wraps
 import json
@@ -514,9 +513,7 @@ async def websocket_start_listening_logs(
     @callback
     def async_cleanup() -> None:
         """Remove signal listeners."""
-        asyncio.run_coroutine_threadsafe(
-            driver.async_stop_listening_logs(), hass.loop
-        ).result()
+        hass.async_create_task(driver.async_stop_listening_logs())
         for unsub in unsubs:
             unsub()
 
