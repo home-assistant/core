@@ -36,10 +36,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
-        """Start the Somfy TaHoma config flow."""
+        """Start the Overkiz config flow."""
         self._reauth_entry = None
-        self._username = None
-        self._hub = DEFAULT_HUB
+        self._default_username = None
+        self._default_hub = DEFAULT_HUB
 
     @staticmethod
     @callback
@@ -100,9 +100,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_USERNAME, default=self._username): str,
+                    vol.Required(CONF_USERNAME, default=self._default_username): str,
                     vol.Required(CONF_PASSWORD): str,
-                    vol.Required(CONF_HUB, default=self._hub): vol.In(
+                    vol.Required(CONF_HUB, default=self._default_hub): vol.In(
                         SUPPORTED_ENDPOINTS.keys()
                     ),
                 }
@@ -115,8 +115,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
-        self._username = user_input[CONF_USERNAME]
-        self._hub = user_input[CONF_HUB]
+        self._default_username = user_input[CONF_USERNAME]
+        self._default_hub = user_input[CONF_HUB]
 
         return await self.async_step_user()
 
