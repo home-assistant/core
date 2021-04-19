@@ -102,7 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             notification_id="profile_object_dump",
         )
 
-    async def _async_dump_thread_frames(call: ServiceCall):
+    async def _async_dump_thread_frames(call: ServiceCall) -> None:
         """Log all thread frames."""
         frames = sys._current_frames()  # pylint: disable=protected-access
         main_thread = threading.main_thread()
