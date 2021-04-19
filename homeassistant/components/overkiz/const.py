@@ -15,11 +15,23 @@ DEFAULT_UPDATE_INTERVAL = 30
 SUPPORTED_ENDPOINTS = {
     "Atlantic Cozytouch": "https://ha110-1.overkiz.com/enduser-mobile-web/enduserAPI/",
     "Hitachi Hi Kumo": "https://ha117-1.overkiz.com/enduser-mobile-web/enduserAPI/",
+    "Nexity Eugénie": "https://ha106-1.overkiz.com/enduser-mobile-web/enduserAPI",
     "Rexel Energeasy Connect": "https://ha112-1.overkiz.com/enduser-mobile-web/enduserAPI/",
     "Somfy (Australia)": "https://ha201-1.overkiz.com/enduser-mobile-web/enduserAPI/",
     "Somfy (Europe)": "https://tahomalink.com/enduser-mobile-web/enduserAPI/",
     "Somfy (North America)": "https://ha401-1.overkiz.com/enduser-mobile-web/enduserAPI/",
 }
+
+HUB_MANUFACTURER = {
+    "Atlantic Cozytouch": "Atlantic",
+    "Hitachi Hi Kumo": "Hitachi",
+    "Nexity Eugénie": "Nexity",
+    "Rexel Energeasy Connect": "Rexel",
+    "Somfy (Australia)": "Somfy",
+    "Somfy (Europe)": "Somfy",
+    "Somfy (North America)": "Somfy",
+}
+
 
 IGNORED_OVERKIZ_DEVICES = [
     "ProtocolGateway",

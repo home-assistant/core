@@ -69,4 +69,5 @@ class OverkizEntity(CoordinatorEntity, Entity):
             "model": model,
             "sw_version": self.device.controllable_name,
             "suggested_area": self.coordinator.areas[self.device.placeoid],
+            "via_device": self.executor.get_gateway_id(),
         }

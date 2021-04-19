@@ -1,6 +1,7 @@
 """Class for helpers and community with the OverKiz API."""
 import logging
 from typing import Any, Optional
+from urllib.parse import urlparse
 
 from pyhoma.models import Command, Device
 
@@ -71,3 +72,12 @@ class OverkizExecutor:
     async def async_cancel_command(self, exec_id: str):
         """Cancel device command in async context."""
         await self.coordinator.client.cancel_command(exec_id)
+
+    def get_gateway_id(self):
+        """
+        Retrieve gateway id from device url.
+
+        device URL (<protocol>://<gatewayId>/<deviceAddress>[#<subsystemId>])
+        """
+        url = urlparse(self.device_url)
+        return url.netloc

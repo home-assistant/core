@@ -2,6 +2,7 @@
 import asyncio
 from collections import defaultdict
 from datetime import timedelta
+from enum import Enum
 import logging
 
 from aiohttp import ClientError, ServerDisconnectedError
@@ -17,7 +18,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     CONF_HUB,
@@ -25,6 +27,7 @@ from .const import (
     DEFAULT_HUB,
     DEFAULT_UPDATE_INTERVAL,
     DOMAIN,
+    HUB_MANUFACTURER,
     IGNORED_OVERKIZ_DEVICES,
     OVERKIZ_DEVICE_TO_PLATFORM,
     SUPPORTED_ENDPOINTS,
@@ -43,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hub = entry.data.get(CONF_HUB, DEFAULT_HUB)
     endpoint = SUPPORTED_ENDPOINTS[hub]
 
-    session = aiohttp_client.async_create_clientsession(hass)
+    session = async_get_clientsession(hass)
     client = TahomaClient(
         username,
         password,
@@ -57,9 +60,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         tasks = [
             client.get_devices(),
             client.get_scenarios(),
+            client.get_gateways(),
             client.get_places(),
         ]
-        devices, scenarios, places = await asyncio.gather(*tasks)
+        devices, scenarios, gateways, places = await asyncio.gather(*tasks)
     except BadCredentialsException:
         _LOGGER.error("Invalid authentication")
         return False
@@ -109,22 +113,60 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         platform = OVERKIZ_DEVICE_TO_PLATFORM.get(
             device.widget
         ) or OVERKIZ_DEVICE_TO_PLATFORM.get(device.ui_class)
+
         if platform:
             platforms[platform].append(device)
+            _LOGGER.debug(
+                "Added device (%s - %s - %s - %s)",
+                device.controllable_name,
+                device.ui_class,
+                device.widget,
+                device.deviceurl,
+            )
         elif (
             device.widget not in IGNORED_OVERKIZ_DEVICES
             and device.ui_class not in IGNORED_OVERKIZ_DEVICES
         ):
             _LOGGER.debug(
-                "Unsupported Overkiz device detected (%s - %s - %s)",
+                "Unsupported Overkiz device detected (%s - %s - %s - %s)",
                 device.controllable_name,
                 device.ui_class,
                 device.widget,
+                device.deviceurl,
             )
 
     for platform in platforms:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
+        )
+
+    device_registry = dr.async_get(hass)
+
+    for gateway in gateways:
+        _LOGGER.debug(
+            "Added gateway (%s - %s - %s)",
+            gateway.id,
+            gateway.type,
+            gateway.sub_type,
+        )
+
+        if isinstance(gateway.type, Enum):
+            gateway_name = f"{beautify_name(gateway.type.name)} hub"
+        else:
+            gateway_name = gateway.type
+
+        if isinstance(gateway.sub_type, Enum):
+            gateway_model = beautify_name(gateway.sub_type.name)
+        else:
+            gateway_model = None
+
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, gateway.id)},
+            model=gateway_model,
+            manufacturer=HUB_MANUFACTURER[hub],
+            name=gateway_name,
+            sw_version=gateway.connectivity.protocol_version,
         )
 
     return True
@@ -159,3 +201,8 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
         coordinator.original_update_interval = new_update_interval
 
         await coordinator.async_refresh()
+
+
+def beautify_name(name: str):
+    """Return human readable string."""
+    return name.replace("_", " ").title()

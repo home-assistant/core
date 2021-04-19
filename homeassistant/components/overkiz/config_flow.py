@@ -11,9 +11,10 @@ from pyhoma.exceptions import (
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.dhcp import HOSTNAME
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import (
     CONF_HUB,
@@ -84,6 +85,25 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
+        )
+
+    async def async_step_dhcp(self, discovery_info):
+        """Handle DHCP discovery."""
+        hostname = discovery_info[HOSTNAME]
+        gateway_id = hostname[8:22]
+
+        if self._gateway_already_configured(gateway_id):
+            return self.async_abort(reason="already_configured")
+
+        return await self.async_step_user()
+
+    def _gateway_already_configured(self, gateway_id: str):
+        """See if we already have a gateway matching the id."""
+        device_registry = dr.async_get(self.hass)
+        return bool(
+            device_registry.async_get_device(
+                identifiers={(DOMAIN, gateway_id)}, connections=set()
+            )
         )
 
 
