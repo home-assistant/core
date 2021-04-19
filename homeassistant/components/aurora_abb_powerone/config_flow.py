@@ -100,7 +100,7 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=info["title"], data=info)
 
             except OSError as error:
-                if "no such device" in str(error):
+                if error.errno == 19:  # No such device.
                     errors["base"] = "invalid_serial_port"
             except AuroraError as error:
                 if "could not open port" in str(error):

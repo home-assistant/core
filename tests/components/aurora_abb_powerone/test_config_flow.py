@@ -107,7 +107,7 @@ async def test_form_invalid_com_ports(hass):
 
     with patch(
         "aurorapy.client.AuroraSerialClient.connect",
-        side_effect=OSError("...no such device..."),
+        side_effect=OSError(19, "...no such device..."),
         return_value=None,
     ):
         result2 = await hass.config_entries.flow.async_configure(
