@@ -1,1 +1,41 @@
-# Empty file, ScreenLogic _set_color_mode service is dynamically created (gateway-specific)
+# ScreenLogic Services
+set_color_mode:
+  name: Set Color Mode
+  description: Sets the color mode for all color-capable lights attached to this ScreenLogic gateway.
+  fields:
+    device_id:
+      name: Gateway Device ID
+      description: The Home Assistant device_id of the ScreenLogic Gateway device
+      required: true
+      selector:
+        device:
+          integration: screenlogic
+    color_mode:
+      name: Color Mode
+      description: The ScreenLogic color mode to set
+      required: true
+      example: "romance"
+      selector:
+        select:
+          options:
+            - all_off
+            - all_on
+            - color_set
+            - color_swim
+            - party
+            - romance
+            - caribbean
+            - american
+            - sunset
+            - royal
+            - save
+            - recall
+            - blue
+            - green
+            - red
+            - white
+            - magenta
+            - thumper
+            - next_mode
+            - reset
+            - hold
