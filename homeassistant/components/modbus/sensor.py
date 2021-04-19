@@ -27,14 +27,11 @@ from homeassistant.const import (
     CONF_STRUCTURE,
     CONF_UNIT_OF_MEASUREMENT,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import (
-    ConfigType,
-    DiscoveryInfoType,
-    HomeAssistantType,
-)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     CALL_TYPE_REGISTER_HOLDING,
@@ -117,7 +114,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config: ConfigType,
     async_add_entities,
     discovery_info: DiscoveryInfoType | None = None,
@@ -319,7 +316,19 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
             # If unpack() returns a tuple greater than 1, don't try to process the value.
             # Instead, return the values of unpack(...) separated by commas.
             if len(val) > 1:
-                self._value = ",".join(map(str, val))
+                # Apply scale and precision to floats and ints
+                v_result = []
+                for entry in val:
+                    v_temp = self._scale * entry + self._offset
+
+                    # We could convert int to float, and the code would still work; however
+                    # we lose some precision, and unit tests will fail. Therefore, we do
+                    # the conversion only when it's absolutely necessary.
+                    if isinstance(v_temp, int) and self._precision == 0:
+                        v_result.append(str(v_temp))
+                    else:
+                        v_result.append(f"{float(v_temp):.{self._precision}f}")
+                self._value = ",".join(map(str, v_result))
             else:
                 val = val[0]
 

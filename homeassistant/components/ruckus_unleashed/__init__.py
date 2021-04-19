@@ -27,12 +27,6 @@ from .const import (
 from .coordinator import RuckusUnleashedDataUpdateCoordinator
 
 
-async def async_setup(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up the Ruckus Unleashed component."""
-    hass.data[DOMAIN] = {}
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Ruckus Unleashed from a config entry."""
     try:
@@ -64,6 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             sw_version=system_info[API_SYSTEM_OVERVIEW][API_VERSION],
         )
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         COORDINATOR: coordinator,
         UNDO_UPDATE_LISTENERS: [],

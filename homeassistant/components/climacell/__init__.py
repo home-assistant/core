@@ -16,6 +16,7 @@ from pyclimacell.exceptions import (
     UnknownException,
 )
 
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -25,8 +26,8 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_NAME,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -34,6 +35,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import (
+    ATTR_FIELD,
     ATTRIBUTION,
     CC_ATTR_CLOUD_COVER,
     CC_ATTR_CONDITION,
@@ -50,6 +52,7 @@ from .const import (
     CC_ATTR_WIND_DIRECTION,
     CC_ATTR_WIND_GUST,
     CC_ATTR_WIND_SPEED,
+    CC_SENSOR_TYPES,
     CC_V3_ATTR_CLOUD_COVER,
     CC_V3_ATTR_CONDITION,
     CC_V3_ATTR_HUMIDITY,
@@ -64,8 +67,8 @@ from .const import (
     CC_V3_ATTR_WIND_DIRECTION,
     CC_V3_ATTR_WIND_GUST,
     CC_V3_ATTR_WIND_SPEED,
+    CC_V3_SENSOR_TYPES,
     CONF_TIMESTEP,
-    DEFAULT_FORECAST_TYPE,
     DEFAULT_TIMESTEP,
     DOMAIN,
     MAX_REQUESTS_PER_DAY,
@@ -73,12 +76,10 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [WEATHER_DOMAIN]
+PLATFORMS = [SENSOR_DOMAIN, WEATHER_DOMAIN]
 
 
-def _set_update_interval(
-    hass: HomeAssistantType, current_entry: ConfigEntry
-) -> timedelta:
+def _set_update_interval(hass: HomeAssistant, current_entry: ConfigEntry) -> timedelta:
     """Recalculate update_interval based on existing ClimaCell instances and update them."""
     api_calls = 4 if current_entry.data[CONF_API_VERSION] == 3 else 2
     # We check how many ClimaCell configured instances are using the same API key and
@@ -108,7 +109,7 @@ def _set_update_interval(
     return interval
 
 
-async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up ClimaCell API from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
@@ -169,9 +170,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
     return True
 
 
-async def async_unload_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = all(
         await asyncio.gather(
@@ -194,7 +193,7 @@ class ClimaCellDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(
         self,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         config_entry: ConfigEntry,
         api: ClimaCellV3 | ClimaCellV4,
         update_interval: timedelta,
@@ -232,6 +231,10 @@ class ClimaCellDataUpdateCoordinator(DataUpdateCoordinator):
                         CC_V3_ATTR_WIND_GUST,
                         CC_V3_ATTR_CLOUD_COVER,
                         CC_V3_ATTR_PRECIPITATION_TYPE,
+                        *[
+                            sensor_type[ATTR_FIELD]
+                            for sensor_type in CC_V3_SENSOR_TYPES
+                        ],
                     ]
                 )
                 data[FORECASTS][HOURLY] = await self._api.forecast_hourly(
@@ -288,6 +291,7 @@ class ClimaCellDataUpdateCoordinator(DataUpdateCoordinator):
                         CC_ATTR_WIND_GUST,
                         CC_ATTR_CLOUD_COVER,
                         CC_ATTR_PRECIPITATION_TYPE,
+                        *[sensor_type[ATTR_FIELD] for sensor_type in CC_SENSOR_TYPES],
                     ],
                     [
                         CC_ATTR_TEMPERATURE_LOW,
@@ -317,20 +321,22 @@ class ClimaCellEntity(CoordinatorEntity):
         self,
         config_entry: ConfigEntry,
         coordinator: ClimaCellDataUpdateCoordinator,
-        forecast_type: str,
         api_version: int,
     ) -> None:
         """Initialize ClimaCell Entity."""
         super().__init__(coordinator)
         self.api_version = api_version
-        self.forecast_type = forecast_type
         self._config_entry = config_entry
 
     @staticmethod
     def _get_cc_value(
         weather_dict: dict[str, Any], key: str
     ) -> int | float | str | None:
-        """Return property from weather_dict."""
+        """
+        Return property from weather_dict.
+
+        Used for V3 API.
+        """
         items = weather_dict.get(key, {})
         # Handle cases where value returned is a list.
         # Optimistically find the best value to return.
@@ -347,23 +353,13 @@ class ClimaCellEntity(CoordinatorEntity):
 
         return items.get("value")
 
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        if self.forecast_type == DEFAULT_FORECAST_TYPE:
-            return True
+    def _get_current_property(self, property_name: str) -> int | str | float | None:
+        """
+        Get property from current conditions.
 
-        return False
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return f"{self._config_entry.data[CONF_NAME]} - {self.forecast_type.title()}"
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique id of the entity."""
-        return f"{self._config_entry.unique_id}_{self.forecast_type}"
+        Used for V4 API.
+        """
+        return self.coordinator.data.get(CURRENT, {}).get(property_name)
 
     @property
     def attribution(self):
@@ -377,6 +373,6 @@ class ClimaCellEntity(CoordinatorEntity):
             "identifiers": {(DOMAIN, self._config_entry.data[CONF_API_KEY])},
             "name": "ClimaCell",
             "manufacturer": "ClimaCell",
-            "sw_version": "v3",
+            "sw_version": f"v{self.api_version}",
             "entry_type": "service",
         }

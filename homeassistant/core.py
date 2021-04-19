@@ -87,7 +87,7 @@ if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntries
 
 
-STAGE_1_SHUTDOWN_TIMEOUT = 120
+STAGE_1_SHUTDOWN_TIMEOUT = 100
 STAGE_2_SHUTDOWN_TIMEOUT = 60
 STAGE_3_SHUTDOWN_TIMEOUT = 30
 
@@ -784,7 +784,9 @@ class EventBus:
 
         return remove_listener
 
-    def listen_once(self, event_type: str, listener: Callable) -> CALLBACK_TYPE:
+    def listen_once(
+        self, event_type: str, listener: Callable[[Event], None]
+    ) -> CALLBACK_TYPE:
         """Listen once for event of a specific type.
 
         To listen to all events specify the constant ``MATCH_ALL``
