@@ -21,6 +21,7 @@ ATTR_UUID = "uuid"
 ATTR_WS_EVENT = "event"
 ATTR_ENDPOINT = "endpoint"
 ATTR_METHOD = "method"
+ATTR_RESULT = "result"
 ATTR_TIMEOUT = "timeout"
 
 
