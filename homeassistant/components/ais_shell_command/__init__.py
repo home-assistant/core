@@ -111,7 +111,8 @@ async def async_setup(hass, config):
         hass.services.async_register(
             DOMAIN, "set_clock_display_text", set_clock_display_text
         )
-        await set_clock_display_text("AIS")
+        comm = r'su -c "echo AIS > /sys/class/fd655/panel"'
+        await _run(comm)
     return True
 
 
