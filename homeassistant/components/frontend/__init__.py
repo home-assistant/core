@@ -156,7 +156,12 @@ MANIFEST_JSON = Manifest(
 
 
 class UrlManager:
-    """Manage urls to be used on the frontend."""
+    """Manage urls to be used on the frontend.
+
+    This is abstracted into a class because
+    some integrations add a remove these directly
+    on hass.data
+    """
 
     def __init__(self):
         """Init the url manager."""
