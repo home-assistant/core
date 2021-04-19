@@ -100,9 +100,9 @@ class ZWaveServices:
                     vol.Required(const.ATTR_CONFIG_VALUE): vol.Any(
                         vol.Coerce(int),
                         {
-                            vol.Any(vol.Coerce(int), BITMASK_SCHEMA): vol.Any(
-                                vol.Coerce(int), cv.string
-                            )
+                            vol.Any(
+                                vol.Coerce(int), BITMASK_SCHEMA, cv.string
+                            ): vol.Any(vol.Coerce(int), cv.string)
                         },
                     ),
                 },
