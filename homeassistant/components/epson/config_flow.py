@@ -25,6 +25,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
+        for entry in self._async_current_entries(include_ignore=True):
+            if import_config[CONF_HOST] == entry.data[CONF_HOST]:
+                return self.async_abort(reason="already_configured")
         return await self.async_step_user(import_config)
 
     async def async_step_user(self, user_input=None):

@@ -78,6 +78,9 @@ async def test_form_powered_off(hass):
 async def test_import(hass):
     """Test config.yaml import."""
     with patch(
+        "homeassistant.components.epson.Projector.get_power",
+        return_value="01",
+    ), patch(
         "homeassistant.components.epson.Projector.get_property",
         return_value="04",
     ), patch(
@@ -108,6 +111,27 @@ async def test_import_cannot_connect(hass):
             result["flow_id"],
             {CONF_HOST: "1.1.1.1", CONF_NAME: "test-epson"},
         )
-
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_already_imported(hass):
+    """Test config.yaml imported twice."""
+    await test_import(hass)
+    with patch(
+        "homeassistant.components.epson.Projector.get_power",
+        return_value="01",
+    ), patch(
+        "homeassistant.components.epson.Projector.get_property",
+        return_value="04",
+    ), patch(
+        "homeassistant.components.epson.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={CONF_HOST: "1.1.1.1", CONF_NAME: "test-epson"},
+        )
+        assert result["type"] == "abort"
+        assert result["reason"] == "already_configured"
