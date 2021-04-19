@@ -467,7 +467,7 @@ async def _async_setup_themes(hass, themes):
 
 @callback
 @lru_cache(maxsize=1)
-def _async_render_cached(template, **kwargs):
+def _async_render_index_cached(template, **kwargs):
     return template.render(**kwargs)
 
 
@@ -554,7 +554,7 @@ class IndexView(web_urldispatcher.AbstractResource):
         )
 
         return web.Response(
-            text=_async_render_cached(
+            text=_async_render_index_cached(
                 template,
                 theme_color=MANIFEST_JSON["theme_color"],
                 extra_modules=hass.data[DATA_EXTRA_MODULE_URL].urls,
