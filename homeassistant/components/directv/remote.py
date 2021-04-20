@@ -1,9 +1,10 @@
 """Support for the DIRECTV remote."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import timedelta
 import logging
-from typing import Any, Callable, Iterable
+from typing import Any, Callable
 
 from directv import DIRECTV, DIRECTVError
 

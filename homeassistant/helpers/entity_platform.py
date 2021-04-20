@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Coroutine, Iterable
 from contextvars import ContextVar
 from datetime import datetime, timedelta
 import logging
 from logging import Logger
 from types import ModuleType
-from typing import TYPE_CHECKING, Callable, Coroutine, Iterable
+from typing import TYPE_CHECKING, Callable
 
 from homeassistant import config_entries
 from homeassistant.const import (

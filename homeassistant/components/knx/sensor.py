@@ -1,7 +1,8 @@
 """Support for KNX/IP sensors."""
 from __future__ import annotations
 
-from typing import Any, Callable, Iterable
+from collections.abc import Iterable
+from typing import Any, Callable
 
 from xknx.devices import Sensor as XknxSensor
 

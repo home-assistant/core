@@ -1,8 +1,8 @@
 """Shark IQ Wrapper."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 import logging
-from typing import Iterable
 
 from sharkiqpy import OperatingModes, PowerModes, Properties, SharkIqVacuum
 

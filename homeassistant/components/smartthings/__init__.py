@@ -1,8 +1,10 @@
 """Support for SmartThings Cloud."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Iterable
 import importlib
 import logging
-from typing import Iterable
 
 from aiohttp.client_exceptions import ClientConnectionError, ClientResponseError
 from pysmartapp.event import EVENT_TYPE_DEVICE

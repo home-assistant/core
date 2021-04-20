@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Sequence
 from contextlib import asynccontextmanager, suppress
 from datetime import datetime, timedelta
 from functools import partial
 import itertools
 import logging
 from types import MappingProxyType
-from typing import Any, Callable, Dict, Sequence, TypedDict, Union, cast
+from typing import Any, Callable, Dict, TypedDict, Union, cast
 
 import async_timeout
 import voluptuous as vol
