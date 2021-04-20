@@ -101,7 +101,6 @@ class UniFiController:
         self.progress = None
         self.wireless_clients = None
 
-        self.listeners = []
         self.site_id: str = ""
         self._site_name = None
         self._site_role = None
@@ -465,10 +464,6 @@ class UniFiController:
         )
         if not unload_ok:
             return False
-
-        for unsub_dispatcher in self.listeners:
-            unsub_dispatcher()
-        self.listeners = []
 
         if self._cancel_heartbeat_check:
             self._cancel_heartbeat_check()
