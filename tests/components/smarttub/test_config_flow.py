@@ -77,15 +77,7 @@ async def test_reauth_success(hass, smarttub_api, account):
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_EMAIL: "test-email", CONF_PASSWORD: "test-password"}
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_EMAIL: "test-email3", CONF_PASSWORD: "test-password3"},
+        result["flow_id"], {CONF_EMAIL: "test-email3", CONF_PASSWORD: "test-password3"}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -98,14 +90,14 @@ async def test_reauth_wrong_account(hass, smarttub_api, account):
     """Test reauthentication flow if the user enters credentials for a different already-configured account."""
     mock_entry1 = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_EMAIL: "test-email", CONF_PASSWORD: "test-password"},
+        data={CONF_EMAIL: "test-email1", CONF_PASSWORD: "test-password1"},
         unique_id=account.id,
     )
     mock_entry1.add_to_hass(hass)
 
     mock_entry2 = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_EMAIL: "test-email", CONF_PASSWORD: "test-password"},
+        data={CONF_EMAIL: "test-email2", CONF_PASSWORD: "test-password2"},
         unique_id="mockaccount2",
     )
     mock_entry2.add_to_hass(hass)
@@ -126,15 +118,7 @@ async def test_reauth_wrong_account(hass, smarttub_api, account):
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_EMAIL: "test-email", CONF_PASSWORD: "test-password"}
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_EMAIL: "test-email3", CONF_PASSWORD: "test-password3"},
+        result["flow_id"], {CONF_EMAIL: "test-email1", CONF_PASSWORD: "test-password1"}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
