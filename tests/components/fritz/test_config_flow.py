@@ -4,6 +4,7 @@ from unittest.mock import patch
 from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
 import pytest
 
+from homeassistant.components.fritz import config_flow
 from homeassistant.components.fritz.const import ATTR_HOST, DOMAIN
 from homeassistant.components.ssdp import (
     ATTR_SSDP_LOCATION,
@@ -34,6 +35,7 @@ MOCK_DEVICE_INFO = {
     ATTR_HOST: MOCK_HOST,
     ATTR_NEW_SERIAL_NUMBER: MOCK_SERIAL_NUMBER,
 }
+MOCK_IMPORT_CONFIG = {CONF_HOST: "yaml_host"}
 MOCK_SSDP_DATA = {
     ATTR_SSDP_LOCATION: "https://fake_host:12345/test",
     ATTR_UPNP_FRIENDLY_NAME: "fake_name",
@@ -346,3 +348,14 @@ async def test_ssdp_exception(hass: HomeAssistantType):
 
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "confirm"
+
+
+async def test_import(hass: HomeAssistantType):
+    """Test importing."""
+
+    flow = config_flow.FritzBoxToolsFlowHandler()
+    flow.hass = hass
+
+    result = await flow.async_step_import(MOCK_IMPORT_CONFIG)
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "start_config"

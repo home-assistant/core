@@ -4,10 +4,14 @@ from typing import Dict
 
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import PLATFORM_SCHEMA, SOURCE_TYPE_ROUTER
+from homeassistant.components.device_tracker import (
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+    PLATFORM_SCHEMA,
+    SOURCE_TYPE_ROUTER,
+)
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
@@ -38,16 +42,22 @@ PLATFORM_SCHEMA = vol.All(
 
 async def async_get_scanner(hass: HomeAssistantType, config: ConfigType):
     """Import legacy FRITZ!Box configuration."""
-    if DOMAIN not in config:
-        return True
 
     _LOGGER.debug("Import legacy FRITZ!Box configuration from YAML")
-    for entry_config in config[DOMAIN][CONF_DEVICES]:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=entry_config
-            )
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config[DEVICE_TRACKER_DOMAIN],
         )
+    )
+
+    _LOGGER.warning(
+        "Your Fritz configuration has been imported into the UI, "
+        "please remove it from configuration.yaml. "
+        "Loading Fritz via scanner setup is now deprecated"
+    )
 
     return None
 

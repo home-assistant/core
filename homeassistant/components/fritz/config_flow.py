@@ -242,3 +242,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
         )
         await self.hass.config_entries.async_reload(self._entry.entry_id)
         return self.async_abort(reason="reauth_successful")
+
+    async def async_step_import(self, import_config):
+        """Import a config entry from configuration.yaml."""
+        return await self.async_step_user(import_config)
