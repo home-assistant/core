@@ -1,4 +1,4 @@
-"""Representation of a deCONZ remote."""
+"""Representation of a deCONZ remote or keypad."""
 
 from pydeconz.sensor import (
     ANCILLARY_CONTROL_ARMED_AWAY,
