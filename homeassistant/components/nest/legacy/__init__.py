@@ -249,7 +249,9 @@ async def async_setup_legacy_entry(hass, entry):
         """Stop Nest update event listener."""
         nest.update_event.set()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shut_down)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shut_down)
+    )
 
     _LOGGER.debug("async_setup_nest is done")
 
