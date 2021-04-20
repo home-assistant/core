@@ -5,7 +5,6 @@ from unittest import mock
 from pymodbus.exceptions import ModbusException
 import pytest
 
-from homeassistant.components.modbus import modbus
 from homeassistant.components.modbus.const import (
     ATTR_ADDRESS,
     ATTR_HUB,
@@ -190,32 +189,37 @@ async def test_class_ModbusHub_logger(hass, caplog, modbus_hub):
     assert caplog.records[1].levelname == "DEBUG"
 
 
-async def test_pb_create_exception(hass, modbus_hub):
+async def test_pb_create_exception(hass, caplog, modbus_hub):
     """Run general test of class modbusHub."""
 
-    with mock.patch.object(modbus, "_LOGGER") as mock_logger, mock.patch(
+    with mock.patch(
         "homeassistant.components.modbus.modbus.ModbusTcpClient"
     ) as mock_pb:
+        caplog.set_level(logging.DEBUG)
         mock_pb.side_effect = ModbusException("test no class")
         modbus_hub.setup()
-        assert mock_logger.error.called
+        assert len(caplog.records) == 1
+        assert caplog.records[0].levelname == "ERROR"
 
 
-async def test_pb_connect(hass, modbus_hub):
+async def test_pb_connect(hass, caplog, modbus_hub):
     """Run general test of class modbusHub."""
 
     mock_pb = mock.MagicMock()
-    with mock.patch.object(modbus, "_LOGGER") as mock_logger, mock.patch(
+    with mock.patch(
         "homeassistant.components.modbus.modbus.ModbusTcpClient", return_value=mock_pb
     ):
+        caplog.set_level(logging.DEBUG)
         modbus_hub.setup()
         assert mock_pb.connect.called
-        assert not mock_logger.error.called
+        assert len(caplog.records) == 0
+        caplog.clear()
 
         mock_pb.connect.side_effect = ModbusException("test failed connect()")
         modbus_hub.setup()
         assert mock_pb.connect.called
-        assert mock_logger.error.called
+        assert len(caplog.records) == 1
+        assert caplog.records[0].levelname == "ERROR"
 
 
 async def test_pb_close(hass, caplog, modbus_hub):
