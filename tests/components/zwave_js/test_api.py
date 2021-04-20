@@ -625,27 +625,3 @@ async def test_data_collection(hass, client, integration, hass_ws_client):
     assert not entry.data[CONF_DATA_COLLECTION_OPTED_IN]
 
     client.async_send_command.reset_mock()
-
-    # Test invalid ID
-    await ws_client.send_json(
-        {
-            ID: 4,
-            TYPE: "zwave_js/update_data_collection_preference",
-            ENTRY_ID: "invalid_id",
-            OPTED_IN: False,
-        }
-    )
-    msg = await ws_client.receive_json()
-    assert not msg["success"]
-    assert msg["error"]["code"] == "not_found"
-
-    await ws_client.send_json(
-        {
-            ID: 5,
-            TYPE: "zwave_js/data_collection_status",
-            ENTRY_ID: "invalid_id",
-        }
-    )
-    msg = await ws_client.receive_json()
-    assert not msg["success"]
-    assert msg["error"]["code"] == "not_found"
