@@ -93,7 +93,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device.async_stop)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device.async_stop)
+    )
 
     return True
 
