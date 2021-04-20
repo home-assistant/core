@@ -127,7 +127,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not await coordinator.async_login():
         raise ConfigEntryAuthFailed
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, coordinator.async_logout)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, coordinator.async_logout)
+    )
 
     await coordinator.async_config_entry_first_refresh()
 
