@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 from collections import OrderedDict
+from collections.abc import Mapping, MutableMapping
 import logging
-from typing import Any, Mapping, MutableMapping
+from typing import Any
 
 import voluptuous as vol
 

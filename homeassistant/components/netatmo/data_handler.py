@@ -7,7 +7,6 @@ from functools import partial
 from itertools import islice
 import logging
 from time import time
-from typing import Deque
 
 import pyatmo
 
@@ -60,7 +59,7 @@ class NetatmoDataHandler:
         self.listeners: list[CALLBACK_TYPE] = []
         self._data_classes: dict = {}
         self.data = {}
-        self._queue: Deque = deque()
+        self._queue = deque()
         self._webhook: bool = False
 
     async def async_setup(self):

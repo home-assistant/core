@@ -1,9 +1,10 @@
 """Support for Denon AVR receivers using their HTTP interface."""
+from __future__ import annotations
 
+from collections.abc import Coroutine
 from datetime import timedelta
 from functools import wraps
 import logging
-from typing import Coroutine
 
 from denonavr import DenonAVR
 from denonavr.const import POWER_ON

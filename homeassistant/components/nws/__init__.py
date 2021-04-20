@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable
 import datetime
 import logging
-from typing import Awaitable, Callable
+from typing import Callable
 
 from pynws import SimpleNWS
 
