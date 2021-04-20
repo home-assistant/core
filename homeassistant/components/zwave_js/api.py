@@ -579,7 +579,7 @@ async def websocket_update_data_collection_preference(
     entry: ConfigEntry,
     client: Client,
 ) -> None:
-    """Opt in to statistics collection."""
+    """Update preference for data collection and enable/disable collection."""
     opted_in = msg[OPTED_IN]
     update_data_collection_preference(hass, entry, opted_in)
 
@@ -609,7 +609,7 @@ async def websocket_data_collection_status(
     entry: ConfigEntry,
     client: Client,
 ) -> None:
-    """Opt out to statistics collection."""
+    """Return data collection preference and status."""
     result = {
         OPTED_IN: entry.data.get(CONF_DATA_COLLECTION_OPTED_IN),
         ENABLED: await client.driver.async_is_statistics_enabled(),
