@@ -14,7 +14,11 @@ from awesomeversion import (
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.mqtt import valid_publish_topic, valid_subscribe_topic
+from homeassistant.components.mqtt import (
+    DOMAIN as MQTT_DOMAIN,
+    valid_publish_topic,
+    valid_subscribe_topic,
+)
 from homeassistant.components.mysensors import (
     CONF_DEVICE,
     DEFAULT_BAUD_RATE,
@@ -141,11 +145,8 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             gw_type = self._gw_type = user_input[CONF_GATEWAY_TYPE]
             input_pass = user_input if CONF_DEVICE in user_input else None
             if gw_type == CONF_GATEWAY_TYPE_MQTT:
-                mqtt_entries = self.hass.config_entries.async_entries("mqtt")
-                if (
-                    mqtt_entries
-                    and mqtt_entries[0].state == config_entries.ENTRY_STATE_LOADED
-                ):
+                # Naive check that doesn't consider config entry state.
+                if MQTT_DOMAIN in self.hass.config.components:
                     return await self.async_step_gw_mqtt(input_pass)
 
                 errors["base"] = "mqtt_required"
