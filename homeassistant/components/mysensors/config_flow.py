@@ -14,7 +14,11 @@ from awesomeversion import (
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.mqtt import valid_publish_topic, valid_subscribe_topic
+from homeassistant.components.mqtt import (
+    DOMAIN as MQTT_DOMAIN,
+    valid_publish_topic,
+    valid_subscribe_topic,
+)
 from homeassistant.components.mysensors import (
     CONF_DEVICE,
     DEFAULT_BAUD_RATE,
@@ -135,18 +139,23 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Create a config entry from frontend user input."""
         schema = {vol.Required(CONF_GATEWAY_TYPE): vol.In(CONF_GATEWAY_TYPE_ALL)}
         schema = vol.Schema(schema)
+        errors = {}
 
         if user_input is not None:
             gw_type = self._gw_type = user_input[CONF_GATEWAY_TYPE]
             input_pass = user_input if CONF_DEVICE in user_input else None
             if gw_type == CONF_GATEWAY_TYPE_MQTT:
-                return await self.async_step_gw_mqtt(input_pass)
+                # Naive check that doesn't consider config entry state.
+                if MQTT_DOMAIN in self.hass.config.components:
+                    return await self.async_step_gw_mqtt(input_pass)
+
+                errors["base"] = "mqtt_required"
             if gw_type == CONF_GATEWAY_TYPE_TCP:
                 return await self.async_step_gw_tcp(input_pass)
             if gw_type == CONF_GATEWAY_TYPE_SERIAL:
                 return await self.async_step_gw_serial(input_pass)
 
-        return self.async_show_form(step_id="user", data_schema=schema)
+        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
     async def async_step_gw_serial(self, user_input: dict[str, str] | None = None):
         """Create config entry for a serial gateway."""
