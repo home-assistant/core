@@ -4,7 +4,6 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 import struct
-from typing import Any
 
 import voluptuous as vol
 
@@ -31,6 +30,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import number
 from .const import (
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
@@ -56,25 +56,6 @@ from .const import (
 from .modbus import ModbusHub
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def number(value: Any) -> int | float:
-    """Coerce a value to number without losing precision."""
-    if isinstance(value, int):
-        return value
-
-    if isinstance(value, str):
-        try:
-            value = int(value)
-            return value
-        except (TypeError, ValueError):
-            pass
-
-    try:
-        value = float(value)
-        return value
-    except (TypeError, ValueError) as err:
-        raise vol.Invalid(f"invalid number {value}") from err
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
