@@ -83,14 +83,14 @@ async def test_target_temperature_low(ecobee_fixture, thermostat):
     """Test target low temperature."""
     assert thermostat.target_temperature_low == 40
     ecobee_fixture["runtime"]["desiredHeat"] = 502
-    assert thermostat.target_temperature_low == 50.2
+    assert thermostat.target_temperature_low == 50
 
 
 async def test_target_temperature_high(ecobee_fixture, thermostat):
     """Test target high temperature."""
     assert thermostat.target_temperature_high == 20
-    ecobee_fixture["runtime"]["desiredCool"] = 103
-    assert thermostat.target_temperature_high == 10.3
+    ecobee_fixture["runtime"]["desiredCool"] = 679
+    assert thermostat.target_temperature_high == 68
 
 
 async def test_target_temperature(ecobee_fixture, thermostat):
