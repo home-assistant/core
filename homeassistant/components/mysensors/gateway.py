@@ -13,6 +13,7 @@ import async_timeout
 from mysensors import BaseAsyncGateway, Message, Sensor, mysensors
 import voluptuous as vol
 
+from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, callback
@@ -163,9 +164,10 @@ async def _get_gateway(
         persistence_file = hass.config.path(persistence_file)
 
     if device == MQTT_COMPONENT:
-        # what is the purpose of this?
-        # if not await async_setup_component(hass, MQTT_COMPONENT, entry):
-        #    return None
+        # Make sure the mqtt integration is set up.
+        # Naive check that doesn't consider config entry state.
+        if MQTT_DOMAIN not in hass.config.components:
+            return None
         mqtt = hass.components.mqtt
 
         def pub_callback(topic, payload, qos, retain):
