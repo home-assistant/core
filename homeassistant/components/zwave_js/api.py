@@ -532,13 +532,7 @@ async def websocket_start_listening_logs(
             )
         )
 
-    connection.subscriptions[msg["id"]] = async_cleanup
-    unsubs = [
-        driver.on("logging", forward_event),
-        async_dispatcher_connect(
-            hass, f"{entry_id}_stop_listening_logs", async_cleanup
-        ),
-    ]
+    connection.subscriptions[msg["id"]] = driver.on("logging", forward_event)
 
     await driver.async_start_listening_logs()
     connection.send_result(msg[ID])
