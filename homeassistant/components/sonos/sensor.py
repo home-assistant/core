@@ -8,6 +8,7 @@ from pysonos.exceptions import SoCoException
 
 from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE, STATE_UNKNOWN
 from homeassistant.core import Event, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 
@@ -51,7 +52,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if entity := await _async_create_entity(event.data.get("soco")):
             async_add_entities([entity])
 
-    hass.bus.async_listen(SONOS_DISCOVERY_UPDATE, _async_create_entities)
+    async_dispatcher_connect(hass, SONOS_DISCOVERY_UPDATE, _async_create_entities)
 
     entities = []
     # create any entities for devices that exist already
