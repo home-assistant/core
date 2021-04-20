@@ -522,7 +522,7 @@ async def websocket_subscribe_logs(
                     "timestamp": log_msg.timestamp,
                     "level": log_msg.level,
                     "primary_tags": log_msg.primary_tags,
-                    "formatted_message": log_msg.formatted_message,
+                    "message": log_msg.formatted_message,
                 },
             )
         )
