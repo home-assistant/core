@@ -16,10 +16,14 @@ from homeassistant import config_entries
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOSTS, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.const import (
+    CONF_HOSTS,
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP,
+)
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 
 from .const import (
     DATA_SONOS,
@@ -27,12 +31,16 @@ from .const import (
     DOMAIN,
     SEEN_EXPIRE_TIME,
     SONOS_DISCOVERY_UPDATE,
+    SONOS_GROUP_UPDATE,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ADVERTISE_ADDR = "advertise_addr"
 CONF_INTERFACE_ADDR = "interface_addr"
+
+PLATFORMS = [MP_DOMAIN, SENSOR_DOMAIN]
+
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -185,16 +193,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
             )
             hass.data[DATA_SONOS].discovery_thread.name = "Sonos-Discovery"
 
+    @callback
+    def _async_signal_update_groups(event):
+        async_dispatcher_send(hass, SONOS_GROUP_UPDATE)
+
     # register the entity classes
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, MP_DOMAIN)
-    )
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, SENSOR_DOMAIN)
-    )
+    for platform in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, platform)
+        )
 
     _LOGGER.debug("Adding discovery job")
     hass.async_add_executor_job(_discovery)
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_discovery)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_signal_update_groups)
 
     return True
