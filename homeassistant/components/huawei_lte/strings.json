@@ -33,7 +33,8 @@
       "init": {
         "data": {
           "name": "Notification service name (change requires restart)",
-          "recipient": "SMS notification recipients"
+          "recipient": "SMS notification recipients",
+          "track_wired_clients": "Track wired network clients"
         }
       }
     }
