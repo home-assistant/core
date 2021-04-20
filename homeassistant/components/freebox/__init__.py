@@ -61,7 +61,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         """Close Freebox connection on HA Stop."""
         await router.close()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_close_connection)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_close_connection)
+    )
 
     return True
 
