@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import dataclasses
+from functools import wraps
 import json
+from typing import Callable
 
 from aiohttp import hdrs, web, web_exceptions
 import voluptuous as vol
@@ -20,6 +22,7 @@ from homeassistant.components.websocket_api.const import (
     ERR_NOT_SUPPORTED,
     ERR_UNKNOWN_ERROR,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -59,6 +62,27 @@ STATUS = "status"
 # constants for data collection
 ENABLED = "enabled"
 OPTED_IN = "opted_in"
+
+
+def async_get_entry(orig_func: Callable) -> Callable:
+    """Decorate async function to get entry."""
+
+    @wraps(orig_func)
+    async def async_get_entry_func(
+        hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    ) -> None:
+        """Provide user specific data and store to function."""
+        entry_id = msg[ENTRY_ID]
+        entry = hass.config_entries.async_get_entry(entry_id)
+        if not entry:
+            connection.send_error(
+                msg[ID], ERR_NOT_FOUND, "Specified config entry cannot be found"
+            )
+            return
+
+        await orig_func(hass, connection, msg, entry_id, entry)
+
+    return async_get_entry_func
 
 
 @callback
@@ -520,17 +544,17 @@ async def websocket_get_log_config(
         vol.Required(OPTED_IN): bool,
     },
 )
+@async_get_entry
 async def websocket_update_data_collection_preference(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    entry_id: str,
+    entry: ConfigEntry,
 ) -> None:
     """Opt in to statistics collection."""
-    entry_id = msg[ENTRY_ID]
     opted_in = msg[OPTED_IN]
-    try:
-        update_data_collection_preference(hass, entry_id, opted_in)
-    except NotFoundError as err:
-        connection.send_error(msg[ID], ERR_NOT_FOUND, err.args[0])
-        return
+    update_data_collection_preference(hass, entry_id, opted_in)
 
     client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
     if opted_in:
@@ -551,17 +575,15 @@ async def websocket_update_data_collection_preference(
         vol.Required(ENTRY_ID): str,
     },
 )
+@async_get_entry
 async def websocket_data_collection_status(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    entry_id: str,
+    entry: ConfigEntry,
 ) -> None:
     """Opt out to statistics collection."""
-    entry_id = msg[ENTRY_ID]
-    entry = hass.config_entries.async_get_entry(entry_id)
-    if not entry:
-        connection.send_error(
-            msg[ID], ERR_NOT_FOUND, "Specified config entry cannot be found"
-        )
-        return
     client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
     result = {
         OPTED_IN: entry.data.get(CONF_DATA_COLLECTION_OPTED_IN),
