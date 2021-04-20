@@ -3155,7 +3155,8 @@ async def async_setup(hass, config):
         await hass.services.async_call(
             "ais_ai_service", "check_night_mode", {"timer": True}
         )
-        current_time = now.strftime("%H%M")
+        time_now = datetime.datetime.now()
+        current_time = time_now.strftime("%H%M")
         await hass.services.async_call(
             "ais_shell_command", "set_clock_display_text", {"text": current_time + "0"}
         )
