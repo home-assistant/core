@@ -10,7 +10,7 @@ from boschshcpy.exceptions import (
 )
 
 from homeassistant.components.zeroconf import async_get_instance
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -39,9 +39,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             False,
             zeroconf,
         )
-    except SHCAuthenticationError as err:
+    except SHCAuthenticationError:
         _LOGGER.warning("Unable to authenticate on Bosch Smart Home Controller API")
-        raise ConfigEntryNotReady from err
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_REAUTH},
+                data=entry.data,
+            )
+        )
+        return False
     except (SHCConnectionError, SHCmDNSError) as err:
         raise ConfigEntryNotReady from err
 

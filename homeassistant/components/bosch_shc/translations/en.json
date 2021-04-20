@@ -17,6 +17,13 @@
                 "data": {
                     "host": "Host"
                 }
+            },
+            "reauth_confirm": {
+                "title": "SHC authentication parameters",
+                "description": "The bosch_shc integration needs to re-authenticate your account",
+                "data": {
+                    "host": "Host"
+                }
             }
         },
         "error": {
@@ -25,7 +32,8 @@
             "unknown": "Unexpected error"
         },
         "abort": {
-            "already_configured": "Device is already configured"
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful"
         }
     }
 }

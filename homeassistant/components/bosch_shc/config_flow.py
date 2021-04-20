@@ -72,6 +72,28 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     host = None
     hostname = None
 
+    async def async_step_reauth(self, user_input=None):
+        """Perform reauth upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(self, user_input=None):
+        """Dialog that informs the user that reauth is required."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=vol.Schema({}),
+            )
+        return await self.async_step_user()
+
+    async def async_create_entry(self, title: str, data: dict) -> dict:
+        """Create a config entry or update existing entry for reauth."""
+        existing_entry = await self.async_set_unique_id(DOMAIN)
+        if existing_entry:
+            self.hass.config_entries.async_update_entry(existing_entry, data=data)
+            await self.hass.config_entries.async_reload(existing_entry.entry_id)
+            return self.async_abort(reason="reauth_successful")
+        return await super().async_create_entry(title, data)
+
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         errors = {}
@@ -89,7 +111,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(info["unique_id"])
-                self._abort_if_unique_id_configured({CONF_HOST: host})
+                # self._abort_if_unique_id_configured({CONF_HOST: host})
                 self.host = host
                 return await self.async_step_credentials()
 
