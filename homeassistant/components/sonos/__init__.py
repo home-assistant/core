@@ -148,7 +148,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
                 if soco.uid in seen_timers:
                     seen_timers[soco.uid]()
                 seen_timers[soco.uid] = hass.helpers.event.async_call_later(
-                    SEEN_EXPIRE_TIME.seconds, lambda: _disappeared_player(soco)
+                    SEEN_EXPIRE_TIME.total_seconds(), lambda: _disappeared_player(soco)
                 )
 
             except SoCoException as ex:
@@ -182,13 +182,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
             _LOGGER.debug("Tested all hosts")
             hass.data[DATA_SONOS].hosts_heartbeat = hass.helpers.event.call_later(
-                DISCOVERY_INTERVAL.seconds, _discovery
+                DISCOVERY_INTERVAL.total_seconds(), _discovery
             )
         else:
             _LOGGER.debug("Starting discovery thread")
             hass.data[DATA_SONOS].discovery_thread = pysonos.discover_thread(
                 _discovered_player,
-                interval=DISCOVERY_INTERVAL.seconds,
+                interval=DISCOVERY_INTERVAL.total_seconds(),
                 interface_addr=config.get(CONF_INTERFACE_ADDR),
             )
             hass.data[DATA_SONOS].discovery_thread.name = "Sonos-Discovery"

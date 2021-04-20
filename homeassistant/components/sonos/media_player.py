@@ -434,7 +434,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             self._seen_timer()
 
         self._seen_timer = self.hass.helpers.event.async_call_later(
-            SEEN_EXPIRE_TIME.seconds, self.async_unseen
+            SEEN_EXPIRE_TIME.total_seconds(), self.async_unseen
         )
 
         if was_available:
