@@ -383,7 +383,7 @@ async def async_test_measure(hass):
             "sensor": [
                 {
                     "platform": "history_stats",
-                    "entity_id": "input_select.test_id",
+                    "entity_id": "binary_sensor.test_id",
                     "name": "sensor1",
                     "state": "on",
                     "start": "{{ as_timestamp(now()) - 3600 }}",
@@ -392,7 +392,7 @@ async def async_test_measure(hass):
                 },
                 {
                     "platform": "history_stats",
-                    "entity_id": "unknown.test_id",
+                    "entity_id": "binary_sensor.test_id",
                     "name": "sensor2",
                     "state": "on",
                     "start": "{{ as_timestamp(now()) - 3600 }}",
@@ -401,7 +401,7 @@ async def async_test_measure(hass):
                 },
                 {
                     "platform": "history_stats",
-                    "entity_id": "input_select.test_id",
+                    "entity_id": "binary_sensor.test_id",
                     "name": "sensor3",
                     "state": "on",
                     "start": "{{ as_timestamp(now()) - 3600 }}",
@@ -410,7 +410,7 @@ async def async_test_measure(hass):
                 },
                 {
                     "platform": "history_stats",
-                    "entity_id": "input_select.test_id",
+                    "entity_id": "binary_sensor.test_id",
                     "name": "sensor4",
                     "state": "on",
                     "start": "{{ as_timestamp(now()) - 3600 }}",
