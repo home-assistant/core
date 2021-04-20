@@ -19,6 +19,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOSTS, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import (
     DATA_SONOS,
@@ -124,7 +125,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
                     # Set these early since device_info() needs them
                     data.speaker_info[soco.uid] = soco.get_speaker_info(True)
 
-                    hass.bus.fire(SONOS_DISCOVERY_UPDATE, {"soco": soco})
+                    dispatcher_send(hass, SONOS_DISCOVERY_UPDATE, {"soco": soco})
                 else:
                     entity = data.media_player_entities.get(soco.uid)
                     if entity and (entity.soco == soco or not entity.available):

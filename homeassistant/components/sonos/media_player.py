@@ -60,6 +60,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TIME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, entity_platform, service
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.network import is_internal_request
 from homeassistant.util.dt import utcnow
 
@@ -185,7 +186,7 @@ async def async_setup_entry(
                 hass, entities, service_call.data[ATTR_WITH_GROUP]  # type: ignore[arg-type]
             )
 
-    hass.bus.async_listen(SONOS_DISCOVERY_UPDATE, async_create_entities)
+    async_dispatcher_connect(hass, SONOS_DISCOVERY_UPDATE, async_create_entities)
 
     # create any entities for devices that exist already
     for uid, soco in hass.data[DATA_SONOS].discovered.items():
