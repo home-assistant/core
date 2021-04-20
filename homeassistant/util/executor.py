@@ -62,7 +62,7 @@ class InterruptibleThreadPoolExecutor(ThreadPoolExecutor):
         _LOGGER.debug(
             "Calling executor with function: %s, args: %s, kwargs: %s", fn, args, kwargs
         )
-        super().submit(fn, *args, **kwargs)
+        return super().submit(fn, *args, **kwargs)
 
     def logged_shutdown(self) -> None:
         """Shutdown backport from cpython 3.9 with interrupt support added."""
