@@ -170,6 +170,7 @@ class ModbusBinarySensor(BinarySensorEntity):
             result = self._hub.read_discrete_inputs(self._slave, self._address, 1)
         if result is None:
             self._available = False
+            self.schedule_update_ha_state()
             return
 
         self._value = result.bits[0] & 1
