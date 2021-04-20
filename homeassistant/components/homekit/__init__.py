@@ -95,6 +95,7 @@ from .const import (
     SERVICE_HOMEKIT_RESET_ACCESSORY,
     SERVICE_HOMEKIT_START,
     SHUTDOWN_TIMEOUT,
+    UNDO_STOP_LISTENER,
     UNDO_UPDATE_LISTENER,
 )
 from .util import (
@@ -276,12 +277,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         entry.title,
     )
 
+    stop_listener = hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, homekit.async_stop
+    )
+
     hass.data[DOMAIN][entry.entry_id] = {
         HOMEKIT: homekit,
         UNDO_UPDATE_LISTENER: entry.add_update_listener(_async_update_listener),
+        UNDO_STOP_LISTENER: stop_listener,
     }
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, homekit.async_stop)
 
     if hass.state == CoreState.running:
         await homekit.async_start()
@@ -301,10 +305,11 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     dismiss_setup_message(hass, entry.entry_id)
+    entry_data = hass.data[DOMAIN][entry.entry_id]
+    entry_data[UNDO_UPDATE_LISTENER]()
+    entry_data[UNDO_STOP_LISTENER]()
 
-    hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
-
-    homekit = hass.data[DOMAIN][entry.entry_id][HOMEKIT]
+    homekit = entry_data[HOMEKIT]
 
     if homekit.status == STATUS_RUNNING:
         await homekit.async_stop()
