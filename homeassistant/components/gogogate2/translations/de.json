@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP-Adresse",
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "description": "Gib die erforderlichen Informationen unten an.",
+                "title": "GogoGate2 oder iSmartGate einrichten"
+            }
+        }
+    }
+}

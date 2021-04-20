@@ -14,7 +14,7 @@ schedules:
     always: true
 variables:
   - name: versionBuilder
-    value: '6.3'
+    value: '2021.02.0'
   - group: docker
   - group: github
   - group: twine
@@ -41,9 +41,9 @@ stages:
           jq curl
 
         release="$(Build.SourceBranchName)"
-        created_by="$(curl -s https://api.github.com/repos/home-assistant/home-assistant/releases/tags/${release} | jq --raw-output '.author.login')"
+        created_by="$(curl -s https://api.github.com/repos/home-assistant/core/releases/tags/${release} | jq --raw-output '.author.login')"
 
-        if [[ "${created_by}" =~ ^(balloob|pvizeli|fabaff|robbiet480|bramkragten)$ ]]; then
+        if [[ "${created_by}" =~ ^(balloob|pvizeli|fabaff|robbiet480|bramkragten|frenck)$ ]]; then
           exit 0
         fi
 
@@ -60,9 +60,9 @@ stages:
       vmImage: 'ubuntu-latest'
     steps:
     - task: UsePythonVersion@0
-      displayName: 'Use Python 3.7'
+      displayName: 'Use Python 3.8'
       inputs:
-        versionSpec: '3.7'
+        versionSpec: '3.8'
     - script: pip install twine wheel
       displayName: 'Install tools'
     - script: python setup.py sdist bdist_wheel
@@ -82,19 +82,14 @@ stages:
       matrix:
         amd64:
           buildArch: 'amd64'
-          buildMachine: 'qemux86-64,intel-nuc'
         i386:
           buildArch: 'i386'
-          buildMachine: 'qemux86'
         armhf:
           buildArch: 'armhf'
-          buildMachine: 'qemuarm,raspberrypi'
         armv7:
           buildArch: 'armv7'
-          buildMachine: 'raspberrypi2,raspberrypi3,raspberrypi4,odroid-xu,tinker'
         aarch64:
           buildArch: 'aarch64'
-          buildMachine: 'qemuarm-64,raspberrypi3-64,raspberrypi4-64,odroid-c2,orangepi-prime'
     steps:
     - template: templates/azp-step-ha-version.yaml@azure
     - script: |
@@ -108,20 +103,71 @@ stages:
         docker run --rm --privileged \
           -v ~/.docker:/root/.docker:rw \
           -v /run/docker.sock:/run/docker.sock:rw \
-          -v $(pwd):/homeassistant:ro \
+          -v $(pwd):/data:ro \
           homeassistant/amd64-builder:$(versionBuilder) \
-          --homeassistant $(homeassistantRelease) "--$(buildArch)" \
-          -r https://github.com/home-assistant/hassio-homeassistant \
-          -t generic --docker-hub homeassistant
+          --generic $(homeassistantRelease) "--$(buildArch)" -t /data \
+      displayName: 'Build Release'
+  - job: 'ReleaseMachine'
+    dependsOn:
+    - ReleaseDocker
+    timeoutInMinutes: 240
+    pool:
+      vmImage: 'ubuntu-latest'
+    strategy:
+      maxParallel: 17
+      matrix:
+        qemux86-64:
+          buildMachine: 'qemux86-64'
+        generic-x86-64:
+          buildMachine: 'generic-x86-64'
+        intel-nuc:
+          buildMachine: 'intel-nuc'
+        qemux86:
+          buildMachine: 'qemux86'
+        qemuarm:
+          buildMachine: 'qemuarm'
+        raspberrypi:
+          buildMachine: 'raspberrypi'
+        raspberrypi2:
+          buildMachine: 'raspberrypi2'
+        raspberrypi3:
+          buildMachine: 'raspberrypi3'
+        raspberrypi4:
+          buildMachine: 'raspberrypi4'
+        odroid-xu:
+          buildMachine: 'odroid-xu'
+        tinker:
+          buildMachine: 'tinker'
+        qemuarm-64:
+          buildMachine: 'qemuarm-64'
+        raspberrypi3-64:
+          buildMachine: 'raspberrypi3-64'
+        raspberrypi4-64:
+          buildMachine: 'raspberrypi4-64'
+        odroid-c2:
+          buildMachine: 'odroid-c2'
+        odroid-c4:
+          buildMachine: 'odroid-c4'
+        odroid-n2:
+          buildMachine: 'odroid-n2'
+    steps:
+    - template: templates/azp-step-ha-version.yaml@azure
+    - script: |
+        docker login -u $(dockerUser) -p $(dockerPassword)
+      displayName: 'Docker hub login'
+    - script: docker pull homeassistant/amd64-builder:$(versionBuilder)
+      displayName: 'Install Builder'
+    - script: |
+        set -e
 
         docker run --rm --privileged \
           -v ~/.docker:/root/.docker \
           -v /run/docker.sock:/run/docker.sock:rw \
+          -v $(pwd):/data:ro \
           homeassistant/amd64-builder:$(versionBuilder) \
           --homeassistant-machine "$(homeassistantRelease)=$(buildMachine)" \
-          -r https://github.com/home-assistant/hassio-homeassistant \
-          -t machine --docker-hub homeassistant
-      displayName: 'Build Release'
+          -t /data/machine --docker-hub homeassistant
+      displayName: 'Build Machine'
 
 - stage: 'Publish'
   jobs:
@@ -145,8 +191,8 @@ stages:
 
         version="$(homeassistantRelease)"
 
-        git clone https://github.com/home-assistant/hassio-version
-        cd hassio-version
+        git clone https://github.com/home-assistant/version
+        cd version
 
         dev_version="$(jq --raw-output '.homeassistant.default' dev.json)"
         beta_version="$(jq --raw-output '.homeassistant.default' beta.json)"
@@ -163,7 +209,7 @@ stages:
 
         git commit -am "Bump Home Assistant $version"
         git push
-      displayName: 'Update version files'
+      displayName: "Update version files"
   - job: 'ReleaseDocker'
     pool:
       vmImage: 'ubuntu-latest'

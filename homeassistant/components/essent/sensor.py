@@ -1,13 +1,14 @@
 """Support for Essent API."""
+from __future__ import annotations
+
 from datetime import timedelta
 
 from pyessent import PyEssent
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, ENERGY_KILO_WATT_HOUR
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 SCAN_INTERVAL = timedelta(hours=1)
@@ -26,7 +27,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     meters = []
     for meter in essent.retrieve_meters():
         data = essent.retrieve_meter_data(meter)
-        for tariff in data["values"]["LVR"].keys():
+        for tariff in data["values"]["LVR"]:
             meters.append(
                 EssentMeter(
                     essent,
@@ -73,14 +74,14 @@ class EssentBase:
     def update(self):
         """Retrieve the latest meter data from Essent."""
         essent = PyEssent(self._username, self._password)
-        eans = essent.get_EANs()
+        eans = set(essent.get_EANs())
         for possible_meter in eans:
             meter_data = essent.read_meter(possible_meter, only_last_meter_reading=True)
             if meter_data:
                 self._meter_data[possible_meter] = meter_data
 
 
-class EssentMeter(Entity):
+class EssentMeter(SensorEntity):
     """Representation of Essent measurements."""
 
     def __init__(self, essent_base, meter, meter_type, tariff, unit):
@@ -91,6 +92,11 @@ class EssentMeter(Entity):
         self._type = meter_type
         self._tariff = tariff
         self._unit = unit
+
+    @property
+    def unique_id(self) -> str | None:
+        """Return a unique ID."""
+        return f"{self._meter}-{self._type}-{self._tariff}"
 
     @property
     def name(self):

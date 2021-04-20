@@ -1,18 +1,24 @@
 """Define tests for the Airly config flow."""
-import json
-
 from airly.exceptions import AirlyError
-from asynctest import patch
 
 from homeassistant import data_entry_flow
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
-from homeassistant.components.airly import config_flow
-from homeassistant.components.airly.const import DOMAIN
+from homeassistant.components.airly.const import CONF_USE_NEAREST, DOMAIN
+from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_NAME,
+    HTTP_NOT_FOUND,
+    HTTP_UNAUTHORIZED,
+)
 
-from tests.common import load_fixture, MockConfigEntry
+from . import API_NEAREST_URL, API_POINT_URL
+
+from tests.common import MockConfigEntry, load_fixture, patch
 
 CONFIG = {
-    CONF_NAME: "abcd",
+    CONF_NAME: "Home",
     CONF_API_KEY: "foo",
     CONF_LATITUDE: 123,
     CONF_LONGITUDE: 456,
@@ -21,73 +27,91 @@ CONFIG = {
 
 async def test_show_form(hass):
     """Test that the form is served with no input."""
-    flow = config_flow.AirlyFlowHandler()
-    flow.hass = hass
-
-    result = await flow.async_step_user(user_input=None)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == SOURCE_USER
 
 
-async def test_invalid_api_key(hass):
+async def test_invalid_api_key(hass, aioclient_mock):
     """Test that errors are shown when API key is invalid."""
-    with patch(
-        "airly._private._RequestsHandler.get",
-        side_effect=AirlyError(403, {"message": "Invalid authentication credentials"}),
-    ):
-        flow = config_flow.AirlyFlowHandler()
-        flow.hass = hass
+    aioclient_mock.get(
+        API_POINT_URL,
+        exc=AirlyError(
+            HTTP_UNAUTHORIZED, {"message": "Invalid authentication credentials"}
+        ),
+    )
 
-        result = await flow.async_step_user(user_input=CONFIG)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+    )
 
-        assert result["errors"] == {"base": "auth"}
+    assert result["errors"] == {"base": "invalid_api_key"}
 
 
-async def test_invalid_location(hass):
+async def test_invalid_location(hass, aioclient_mock):
     """Test that errors are shown when location is invalid."""
-    with patch(
-        "airly._private._RequestsHandler.get",
-        return_value=json.loads(load_fixture("airly_no_station.json")),
-    ):
-        flow = config_flow.AirlyFlowHandler()
-        flow.hass = hass
+    aioclient_mock.get(API_POINT_URL, text=load_fixture("airly_no_station.json"))
 
-        result = await flow.async_step_user(user_input=CONFIG)
+    aioclient_mock.get(
+        API_NEAREST_URL,
+        exc=AirlyError(HTTP_NOT_FOUND, {"message": "Installation was not found"}),
+    )
 
-        assert result["errors"] == {"base": "wrong_location"}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+    )
+
+    assert result["errors"] == {"base": "wrong_location"}
 
 
-async def test_duplicate_error(hass):
+async def test_duplicate_error(hass, aioclient_mock):
     """Test that errors are shown when duplicates are added."""
+    aioclient_mock.get(API_POINT_URL, text=load_fixture("airly_valid_station.json"))
+    MockConfigEntry(domain=DOMAIN, unique_id="123-456", data=CONFIG).add_to_hass(hass)
 
-    with patch(
-        "airly._private._RequestsHandler.get",
-        return_value=json.loads(load_fixture("airly_valid_station.json")),
-    ):
-        MockConfigEntry(domain=DOMAIN, data=CONFIG).add_to_hass(hass)
-        flow = config_flow.AirlyFlowHandler()
-        flow.hass = hass
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+    )
 
-        result = await flow.async_step_user(user_input=CONFIG)
-
-        assert result["errors"] == {CONF_NAME: "name_exists"}
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
 
 
-async def test_create_entry(hass):
+async def test_create_entry(hass, aioclient_mock):
     """Test that the user step works."""
+    aioclient_mock.get(API_POINT_URL, text=load_fixture("airly_valid_station.json"))
 
-    with patch(
-        "airly._private._RequestsHandler.get",
-        return_value=json.loads(load_fixture("airly_valid_station.json")),
-    ):
-        flow = config_flow.AirlyFlowHandler()
-        flow.hass = hass
+    with patch("homeassistant.components.airly.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+        )
 
-        result = await flow.async_step_user(user_input=CONFIG)
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == CONFIG[CONF_NAME]
+    assert result["data"][CONF_LATITUDE] == CONFIG[CONF_LATITUDE]
+    assert result["data"][CONF_LONGITUDE] == CONFIG[CONF_LONGITUDE]
+    assert result["data"][CONF_API_KEY] == CONFIG[CONF_API_KEY]
+    assert result["data"][CONF_USE_NEAREST] is False
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == CONFIG[CONF_NAME]
-        assert result["data"][CONF_LATITUDE] == CONFIG[CONF_LATITUDE]
-        assert result["data"][CONF_LONGITUDE] == CONFIG[CONF_LONGITUDE]
-        assert result["data"][CONF_API_KEY] == CONFIG[CONF_API_KEY]
+
+async def test_create_entry_with_nearest_method(hass, aioclient_mock):
+    """Test that the user step works with nearest method."""
+
+    aioclient_mock.get(API_POINT_URL, text=load_fixture("airly_no_station.json"))
+
+    aioclient_mock.get(API_NEAREST_URL, text=load_fixture("airly_valid_station.json"))
+
+    with patch("homeassistant.components.airly.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+        )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == CONFIG[CONF_NAME]
+    assert result["data"][CONF_LATITUDE] == CONFIG[CONF_LATITUDE]
+    assert result["data"][CONF_LONGITUDE] == CONFIG[CONF_LONGITUDE]
+    assert result["data"][CONF_API_KEY] == CONFIG[CONF_API_KEY]
+    assert result["data"][CONF_USE_NEAREST] is True

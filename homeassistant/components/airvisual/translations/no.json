@@ -1,0 +1,77 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Plasseringen er allerede konfigurert eller Node / Pro ID er allerede registrert.",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "general_error": "Uventet feil",
+            "invalid_api_key": "Ugyldig API-n\u00f8kkel",
+            "location_not_found": "Stedet ble ikke funnet"
+        },
+        "step": {
+            "geography": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel",
+                    "latitude": "Breddegrad",
+                    "longitude": "Lengdegrad"
+                },
+                "description": "Bruk AirVisual cloud API til \u00e5 overv\u00e5ke en geografisk plassering.",
+                "title": "Konfigurer en Geography"
+            },
+            "geography_by_coords": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel",
+                    "latitude": "Breddegrad",
+                    "longitude": "Lengdegrad"
+                },
+                "description": "Bruk AirVisual cloud API til \u00e5 overv\u00e5ke en breddegrad/lengdegrad.",
+                "title": "Konfigurer en Geography"
+            },
+            "geography_by_name": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel",
+                    "city": "By",
+                    "country": "Land",
+                    "state": "stat"
+                },
+                "description": "Bruk AirVisual cloud API til \u00e5 overv\u00e5ke en by/stat/land.",
+                "title": "Konfigurer en Geography"
+            },
+            "node_pro": {
+                "data": {
+                    "ip_address": "Vert",
+                    "password": "Passord"
+                },
+                "description": "Overv\u00e5ke en personlig AirVisual-enhet. Passordet kan hentes fra enhetens brukergrensesnitt.",
+                "title": "Konfigurer en AirVisual Node / Pro"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel"
+                },
+                "title": "Godkjenne integrering p\u00e5 nytt"
+            },
+            "user": {
+                "data": {
+                    "cloud_api": "Geografisk plassering",
+                    "node_pro": "",
+                    "type": "Integrasjonstype"
+                },
+                "description": "Velg hvilken type AirVisual-data du vil overv\u00e5ke.",
+                "title": "Konfigurer AirVisual"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Vis overv\u00e5ket geografi p\u00e5 kartet"
+                },
+                "title": "Konfigurer AirVisual"
+            }
+        }
+    }
+}

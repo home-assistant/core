@@ -1,34 +1,34 @@
 """Basic checks for HomeKitalarm_control_panel."""
-from tests.components.homekit_controller.common import FakeService, setup_test_component
+from aiohomekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.services import ServicesTypes
+
+from tests.components.homekit_controller.common import setup_test_component
 
 CURRENT_STATE = ("security-system", "security-system-state.current")
 TARGET_STATE = ("security-system", "security-system-state.target")
 
 
-def create_security_system_service():
+def create_security_system_service(accessory):
     """Define a security-system characteristics as per page 219 of HAP spec."""
-    service = FakeService("public.hap.service.security-system")
+    service = accessory.add_service(ServicesTypes.SECURITY_SYSTEM)
 
-    cur_state = service.add_characteristic("security-system-state.current")
+    cur_state = service.add_char(CharacteristicsTypes.SECURITY_SYSTEM_STATE_CURRENT)
     cur_state.value = 0
 
-    targ_state = service.add_characteristic("security-system-state.target")
+    targ_state = service.add_char(CharacteristicsTypes.SECURITY_SYSTEM_STATE_TARGET)
     targ_state.value = 0
 
     # According to the spec, a battery-level characteristic is normally
-    # part of a seperate service. However as the code was written (which
+    # part of a separate service. However as the code was written (which
     # predates this test) the battery level would have to be part of the lock
     # service as it is here.
-    targ_state = service.add_characteristic("battery-level")
+    targ_state = service.add_char(CharacteristicsTypes.BATTERY_LEVEL)
     targ_state.value = 50
-
-    return service
 
 
 async def test_switch_change_alarm_state(hass, utcnow):
     """Test that we can turn a HomeKit alarm on and off again."""
-    alarm_control_panel = create_security_system_service()
-    helper = await setup_test_component(hass, [alarm_control_panel])
+    helper = await setup_test_component(hass, create_security_system_service)
 
     await hass.services.async_call(
         "alarm_control_panel",
@@ -65,8 +65,7 @@ async def test_switch_change_alarm_state(hass, utcnow):
 
 async def test_switch_read_alarm_state(hass, utcnow):
     """Test that we can read the state of a HomeKit alarm accessory."""
-    alarm_control_panel = create_security_system_service()
-    helper = await setup_test_component(hass, [alarm_control_panel])
+    helper = await setup_test_component(hass, create_security_system_service)
 
     helper.characteristics[CURRENT_STATE].value = 0
     state = await helper.poll_and_get_state()

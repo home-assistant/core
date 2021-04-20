@@ -1,10 +1,11 @@
 """Support to export sensor values via RSS feed."""
 from html import escape
-from aiohttp import web
 
+from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.const import HTTP_OK
 import homeassistant.helpers.config_validation as cv
 
 CONTENT_TYPE_XML = "text/xml"
@@ -82,20 +83,24 @@ class RssView(HomeAssistantView):
 
         response += "<rss>\n"
         if self._title is not None:
-            response += "  <title>%s</title>\n" % escape(self._title.async_render())
+            response += "  <title>%s</title>\n" % escape(
+                self._title.async_render(parse_result=False)
+            )
 
         for item in self._items:
             response += "  <item>\n"
             if "title" in item:
                 response += "    <title>"
-                response += escape(item["title"].async_render())
+                response += escape(item["title"].async_render(parse_result=False))
                 response += "</title>\n"
             if "description" in item:
                 response += "    <description>"
-                response += escape(item["description"].async_render())
+                response += escape(item["description"].async_render(parse_result=False))
                 response += "</description>\n"
             response += "  </item>\n"
 
         response += "</rss>\n"
 
-        return web.Response(body=response, content_type=CONTENT_TYPE_XML, status=200)
+        return web.Response(
+            body=response, content_type=CONTENT_TYPE_XML, status=HTTP_OK
+        )

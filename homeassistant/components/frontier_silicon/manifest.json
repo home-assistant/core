@@ -1,10 +1,8 @@
 {
   "domain": "frontier_silicon",
-  "name": "Frontier silicon",
+  "name": "Frontier Silicon",
   "documentation": "https://www.home-assistant.io/integrations/frontier_silicon",
-  "requirements": [
-    "afsapi==0.0.4"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "requirements": ["afsapi==0.0.4"],
+  "codeowners": [],
+  "iot_class": "local_push"
 }

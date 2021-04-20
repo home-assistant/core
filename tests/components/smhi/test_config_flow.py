@@ -3,19 +3,17 @@ from unittest.mock import Mock, patch
 
 from smhi.smhi_lib import Smhi as SmhiApi, SmhiForecastException
 
-from tests.common import mock_coro
-
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.components.smhi import config_flow
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 
 
-# pylint: disable=W0212
+# pylint: disable=protected-access
 async def test_homeassistant_location_exists() -> None:
-    """Test if homeassistant location exists it should return True."""
+    """Test if Home Assistant location exists it should return True."""
     hass = Mock()
     flow = config_flow.SmhiFlowHandler()
     flow.hass = hass
-    with patch.object(flow, "_check_location", return_value=mock_coro(True)):
+    with patch.object(flow, "_check_location", return_value=True):
         # Test exists
         hass.config.location_name = "Home"
         hass.config.latitude = 17.8419
@@ -100,7 +98,7 @@ async def test_flow_with_home_location(hass) -> None:
     flow = config_flow.SmhiFlowHandler()
     flow.hass = hass
 
-    with patch.object(flow, "_check_location", return_value=mock_coro(True)):
+    with patch.object(flow, "_check_location", return_value=True):
         hass.config.location_name = "Home"
         hass.config.latitude = 17.8419
         hass.config.longitude = 59.3262
@@ -119,12 +117,12 @@ async def test_flow_show_form() -> None:
     flow = config_flow.SmhiFlowHandler()
     flow.hass = hass
 
-    # Test show form when home assistant config exists and
+    # Test show form when Home Assistant config exists and
     # home is already configured, then new config is allowed
     with patch.object(
-        flow, "_show_config_form", return_value=mock_coro()
+        flow, "_show_config_form", return_value=None
     ) as config_form, patch.object(
-        flow, "_homeassistant_location_exists", return_value=mock_coro(True)
+        flow, "_homeassistant_location_exists", return_value=True
     ), patch.object(
         config_flow,
         "smhi_locations",
@@ -133,12 +131,12 @@ async def test_flow_show_form() -> None:
         await flow.async_step_user()
         assert len(config_form.mock_calls) == 1
 
-    # Test show form when home assistant config not and
+    # Test show form when Home Assistant config not and
     # home is not configured
     with patch.object(
-        flow, "_show_config_form", return_value=mock_coro()
+        flow, "_show_config_form", return_value=None
     ) as config_form, patch.object(
-        flow, "_homeassistant_location_exists", return_value=mock_coro(False)
+        flow, "_homeassistant_location_exists", return_value=False
     ), patch.object(
         config_flow,
         "smhi_locations",
@@ -158,10 +156,10 @@ async def test_flow_show_form_name_exists() -> None:
     flow = config_flow.SmhiFlowHandler()
     flow.hass = hass
     test_data = {"name": "home", CONF_LONGITUDE: "0", CONF_LATITUDE: "0"}
-    # Test show form when home assistant config exists and
+    # Test show form when Home Assistant config exists and
     # home is already configured, then new config is allowed
     with patch.object(
-        flow, "_show_config_form", return_value=mock_coro()
+        flow, "_show_config_form", return_value=None
     ) as config_form, patch.object(
         flow, "_name_in_configuration_exists", return_value=True
     ), patch.object(
@@ -169,7 +167,7 @@ async def test_flow_show_form_name_exists() -> None:
         "smhi_locations",
         return_value={"test": "something", "name_exist": "config"},
     ), patch.object(
-        flow, "_check_location", return_value=mock_coro(True)
+        flow, "_check_location", return_value=True
     ):
 
         await flow.async_step_user(user_input=test_data)
@@ -191,17 +189,17 @@ async def test_flow_entry_created_from_user_input() -> None:
 
     # Test that entry created when user_input name not exists
     with patch.object(
-        flow, "_show_config_form", return_value=mock_coro()
+        flow, "_show_config_form", return_value=None
     ) as config_form, patch.object(
         flow, "_name_in_configuration_exists", return_value=False
     ), patch.object(
-        flow, "_homeassistant_location_exists", return_value=mock_coro(False)
+        flow, "_homeassistant_location_exists", return_value=False
     ), patch.object(
         config_flow,
         "smhi_locations",
         return_value={"test": "something", "name_exist": "config"},
     ), patch.object(
-        flow, "_check_location", return_value=mock_coro(True)
+        flow, "_check_location", return_value=True
     ):
 
         result = await flow.async_step_user(user_input=test_data)
@@ -224,20 +222,18 @@ async def test_flow_entry_created_user_input_faulty() -> None:
     test_data = {"name": "home", CONF_LONGITUDE: "0", CONF_LATITUDE: "0"}
 
     # Test that entry created when user_input name not exists
-    with patch.object(
-        flow, "_check_location", return_value=mock_coro(True)
-    ), patch.object(
-        flow, "_show_config_form", return_value=mock_coro()
+    with patch.object(flow, "_check_location", return_value=True), patch.object(
+        flow, "_show_config_form", return_value=None
     ) as config_form, patch.object(
         flow, "_name_in_configuration_exists", return_value=False
     ), patch.object(
-        flow, "_homeassistant_location_exists", return_value=mock_coro(False)
+        flow, "_homeassistant_location_exists", return_value=False
     ), patch.object(
         config_flow,
         "smhi_locations",
         return_value={"test": "something", "name_exist": "config"},
     ), patch.object(
-        flow, "_check_location", return_value=mock_coro(False)
+        flow, "_check_location", return_value=False
     ):
 
         await flow.async_step_user(user_input=test_data)
@@ -254,7 +250,7 @@ async def test_check_location_correct() -> None:
 
     with patch.object(
         config_flow.aiohttp_client, "async_get_clientsession"
-    ), patch.object(SmhiApi, "async_get_forecast", return_value=mock_coro()):
+    ), patch.object(SmhiApi, "async_get_forecast", return_value=None):
 
         assert await flow._check_location("58", "17") is True
 

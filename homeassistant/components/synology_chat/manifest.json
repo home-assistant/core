@@ -1,8 +1,7 @@
 {
   "domain": "synology_chat",
-  "name": "Synology chat",
+  "name": "Synology Chat",
   "documentation": "https://www.home-assistant.io/integrations/synology_chat",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "cloud_push"
 }

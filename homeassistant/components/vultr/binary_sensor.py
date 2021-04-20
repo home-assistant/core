@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([VultrBinarySensor(vultr, subscription, name)], True)
 
 
-class VultrBinarySensor(BinarySensorDevice):
+class VultrBinarySensor(BinarySensorEntity):
     """Representation of a Vultr subscription sensor."""
 
     def __init__(self, vultr, subscription, name):
@@ -86,7 +86,7 @@ class VultrBinarySensor(BinarySensorDevice):
         return DEFAULT_DEVICE_CLASS
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the Vultr subscription."""
         return {
             ATTR_ALLOWED_BANDWIDTH: self.data.get("allowed_bandwidth_gb"),

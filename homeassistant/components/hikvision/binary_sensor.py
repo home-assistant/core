@@ -1,29 +1,36 @@
 """Support for Hikvision event stream events represented as binary sensors."""
-import logging
 from datetime import timedelta
+import logging
+
+from pyhik.hikvision import HikCamera
 import voluptuous as vol
 
-from homeassistant.helpers.event import track_point_in_utc_time
-from homeassistant.util.dt import utcnow
-from homeassistant.components.binary_sensor import BinarySensorDevice, PLATFORM_SCHEMA
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_CONNECTIVITY,
+    DEVICE_CLASS_MOTION,
+    PLATFORM_SCHEMA,
+    BinarySensorEntity,
+)
 from homeassistant.const import (
-    CONF_HOST,
-    CONF_PORT,
-    CONF_NAME,
-    CONF_USERNAME,
-    CONF_PASSWORD,
-    CONF_SSL,
-    EVENT_HOMEASSISTANT_STOP,
-    EVENT_HOMEASSISTANT_START,
     ATTR_LAST_TRIP_TIME,
     CONF_CUSTOMIZE,
+    CONF_DELAY,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_USERNAME,
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP,
 )
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import track_point_in_utc_time
+from homeassistant.util.dt import utcnow
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_IGNORED = "ignored"
-CONF_DELAY = "delay"
 
 DEFAULT_PORT = 80
 DEFAULT_IGNORED = False
@@ -32,28 +39,28 @@ DEFAULT_DELAY = 0
 ATTR_DELAY = "delay"
 
 DEVICE_CLASS_MAP = {
-    "Motion": "motion",
-    "Line Crossing": "motion",
-    "Field Detection": "motion",
+    "Motion": DEVICE_CLASS_MOTION,
+    "Line Crossing": DEVICE_CLASS_MOTION,
+    "Field Detection": DEVICE_CLASS_MOTION,
     "Video Loss": None,
-    "Tamper Detection": "motion",
+    "Tamper Detection": DEVICE_CLASS_MOTION,
     "Shelter Alarm": None,
     "Disk Full": None,
     "Disk Error": None,
-    "Net Interface Broken": "connectivity",
-    "IP Conflict": "connectivity",
+    "Net Interface Broken": DEVICE_CLASS_CONNECTIVITY,
+    "IP Conflict": DEVICE_CLASS_CONNECTIVITY,
     "Illegal Access": None,
     "Video Mismatch": None,
     "Bad Video": None,
-    "PIR Alarm": "motion",
-    "Face Detection": "motion",
-    "Scene Change Detection": "motion",
+    "PIR Alarm": DEVICE_CLASS_MOTION,
+    "Face Detection": DEVICE_CLASS_MOTION,
+    "Scene Change Detection": DEVICE_CLASS_MOTION,
     "I/O": None,
-    "Unattended Baggage": "motion",
-    "Attended Baggage": "motion",
+    "Unattended Baggage": DEVICE_CLASS_MOTION,
+    "Attended Baggage": DEVICE_CLASS_MOTION,
     "Recording Failure": None,
-    "Exiting Region": "motion",
-    "Entering Region": "motion",
+    "Exiting Region": DEVICE_CLASS_MOTION,
+    "Entering Region": DEVICE_CLASS_MOTION,
 }
 
 CUSTOMIZE_SCHEMA = vol.Schema(
@@ -88,10 +95,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     customize = config.get(CONF_CUSTOMIZE)
 
-    if config.get(CONF_SSL):
-        protocol = "https"
-    else:
-        protocol = "http"
+    protocol = "https" if config[CONF_SSL] else "http"
 
     url = f"{protocol}://{host}"
 
@@ -107,7 +111,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         for channel in channel_list:
             # Build sensor name, then parse customize config.
             if data.type == "NVR":
-                sensor_name = "{}_{}".format(sensor.replace(" ", "_"), channel[1])
+                sensor_name = f"{sensor.replace(' ', '_')}_{channel[1]}"
             else:
                 sensor_name = sensor.replace(" ", "_")
 
@@ -135,8 +139,6 @@ class HikvisionData:
 
     def __init__(self, hass, url, port, name, username, password):
         """Initialize the data object."""
-        from pyhik.hikvision import HikCamera
-
         self._url = url
         self._port = port
         self._name = name
@@ -185,7 +187,7 @@ class HikvisionData:
         return self.camdata.fetch_attributes(sensor, channel)
 
 
-class HikvisionBinarySensor(BinarySensorDevice):
+class HikvisionBinarySensor(BinarySensorEntity):
     """Representation of a Hikvision binary sensor."""
 
     def __init__(self, hass, sensor, channel, cam, delay):
@@ -250,10 +252,9 @@ class HikvisionBinarySensor(BinarySensorDevice):
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
-        attr = {}
-        attr[ATTR_LAST_TRIP_TIME] = self._sensor_last_update()
+        attr = {ATTR_LAST_TRIP_TIME: self._sensor_last_update()}
 
         if self._delay != 0:
             attr[ATTR_DELAY] = self._delay

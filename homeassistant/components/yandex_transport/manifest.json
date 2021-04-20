@@ -2,11 +2,7 @@
   "domain": "yandex_transport",
   "name": "Yandex Transport",
   "documentation": "https://www.home-assistant.io/integrations/yandex_transport",
-  "requirements": [
-    "ya_ma==0.3.8"
-  ],
-  "dependencies": [],
-  "codeowners": [
-    "@rishatik92"
-  ]
+  "requirements": ["aioymaps==1.1.0"],
+  "codeowners": ["@rishatik92", "@devbis"],
+  "iot_class": "cloud_polling"
 }

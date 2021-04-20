@@ -1,0 +1,59 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_in_progress": "\u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d",
+            "no_h264": "\u8a72\u88dd\u7f6e\u4e0d\u652f\u63f4 H264 \u4e32\u6d41\uff0c\u8acb\u6aa2\u67e5\u88dd\u7f6e\u8a2d\u5b9a\u3002",
+            "no_mac": "\u7121\u6cd5\u70ba ONVIF \u88dd\u7f6e\u8a2d\u5b9a\u552f\u4e00 ID\u3002",
+            "onvif_error": "\u8a2d\u5b9a ONVIF \u88dd\u7f6e\u932f\u8aa4\uff0c\u8acb\u53c3\u95b1\u65e5\u8a8c\u4ee5\u7372\u5f97\u66f4\u8a73\u7d30\u8cc7\u8a0a\u3002"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557"
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "password": "\u5bc6\u78bc",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                },
+                "title": "\u8a2d\u5b9a\u9a57\u8b49"
+            },
+            "configure_profile": {
+                "data": {
+                    "include": "\u65b0\u589e\u651d\u5f71\u6a5f\u5be6\u9ad4"
+                },
+                "description": "\u4ee5 {profile} \u4f7f\u7528\u89e3\u6790\u5ea6 {resolution} \u65b0\u589e\u651d\u5f71\u6a5f\u5be6\u9ad4\uff1f",
+                "title": "\u8a2d\u5b9a Profiles"
+            },
+            "device": {
+                "data": {
+                    "host": "\u9078\u64c7\u6240\u63a2\u7d22\u5230\u7684 ONVIF \u88dd\u7f6e"
+                },
+                "title": "\u9078\u64c7 ONVIF \u88dd\u7f6e"
+            },
+            "manual_input": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef",
+                    "name": "\u540d\u7a31",
+                    "port": "\u901a\u8a0a\u57e0"
+                },
+                "title": "\u8a2d\u5b9a ONVIF \u88dd\u7f6e"
+            },
+            "user": {
+                "description": "\u9ede\u4e0b\u50b3\u9001\u5f8c\u3001\u5c07\u6703\u641c\u5c0b\u7db2\u8def\u4e2d\u652f\u63f4 Profile S \u7684 ONVIF \u88dd\u7f6e\u3002\n\n\u67d0\u4e9b\u5ee0\u5546\u9810\u8a2d\u7684\u6a21\u5f0f\u70ba ONVIF \u95dc\u9589\u6a21\u5f0f\uff0c\u8acb\u518d\u6b21\u78ba\u8a8d\u651d\u5f71\u6a5f\u5df2\u7d93\u958b\u555f ONVIF\u3002",
+                "title": "ONVIF \u88dd\u7f6e\u8a2d\u5b9a"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "onvif_devices": {
+                "data": {
+                    "extra_arguments": "\u984d\u5916 FFMPEG \u53c3\u6578",
+                    "rtsp_transport": "RTSP \u50b3\u8f38\u5354\u5b9a"
+                },
+                "title": "ONVIF \u88dd\u7f6e\u9078\u9805"
+            }
+        }
+    }
+}

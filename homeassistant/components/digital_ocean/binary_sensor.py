@@ -3,7 +3,11 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOVING,
+    PLATFORM_SCHEMA,
+    BinarySensorEntity,
+)
 from homeassistant.const import ATTR_ATTRIBUTION
 import homeassistant.helpers.config_validation as cv
 
@@ -25,7 +29,6 @@ from . import (
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Droplet"
-DEFAULT_DEVICE_CLASS = "moving"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_DROPLETS): vol.All(cv.ensure_list, [cv.string])}
 )
@@ -37,7 +40,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if not digital:
         return False
 
-    droplets = config.get(CONF_DROPLETS)
+    droplets = config[CONF_DROPLETS]
 
     dev = []
     for droplet in droplets:
@@ -50,7 +53,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev, True)
 
 
-class DigitalOceanBinarySensor(BinarySensorDevice):
+class DigitalOceanBinarySensor(BinarySensorEntity):
     """Representation of a Digital Ocean droplet sensor."""
 
     def __init__(self, do, droplet_id):
@@ -73,10 +76,10 @@ class DigitalOceanBinarySensor(BinarySensorDevice):
     @property
     def device_class(self):
         """Return the class of this sensor."""
-        return DEFAULT_DEVICE_CLASS
+        return DEVICE_CLASS_MOVING
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the Digital Ocean droplet."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,

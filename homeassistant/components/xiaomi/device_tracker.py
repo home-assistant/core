@@ -4,13 +4,13 @@ import logging
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN,
     PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, HTTP_OK
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,12 +85,12 @@ class XiaomiDeviceScanner(DeviceScanner):
 
         Return the list if successful.
         """
-        _LOGGER.info("Refreshing device list")
+        _LOGGER.debug("Refreshing device list")
         result = _retrieve_list(self.host, self.token)
         if result:
             return result
 
-        _LOGGER.info("Refreshing token and retrying device list refresh")
+        _LOGGER.debug("Refreshing token and retrying device list refresh")
         self.token = _get_token(self.host, self.username, self.password)
         return _retrieve_list(self.host, self.token)
 
@@ -112,7 +112,7 @@ def _retrieve_list(host, token, **kwargs):
     except requests.exceptions.Timeout:
         _LOGGER.exception("Connection to the router timed out at URL %s", url)
         return
-    if res.status_code != 200:
+    if res.status_code != HTTP_OK:
         _LOGGER.exception("Connection failed with http code %s", res.status_code)
         return
     try:
@@ -150,7 +150,7 @@ def _get_token(host, username, password):
     except requests.exceptions.Timeout:
         _LOGGER.exception("Connection to the router timed out")
         return
-    if res.status_code == 200:
+    if res.status_code == HTTP_OK:
         try:
             result = res.json()
         except ValueError:

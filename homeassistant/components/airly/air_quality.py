@@ -1,11 +1,12 @@
 """Support for the Airly air_quality service."""
 from homeassistant.components.air_quality import (
-    AirQualityEntity,
     ATTR_AQI,
-    ATTR_PM_10,
     ATTR_PM_2_5,
+    ATTR_PM_10,
+    AirQualityEntity,
 )
 from homeassistant.const import CONF_NAME
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_API_ADVICE,
@@ -18,27 +19,30 @@ from .const import (
     ATTR_API_PM25,
     ATTR_API_PM25_LIMIT,
     ATTR_API_PM25_PERCENT,
-    DATA_CLIENT,
+    ATTRIBUTION,
+    DEFAULT_NAME,
     DOMAIN,
+    LABEL_ADVICE,
+    MANUFACTURER,
 )
 
-ATTRIBUTION = "Data provided by Airly"
-
-LABEL_ADVICE = "advice"
+LABEL_AQI_DESCRIPTION = f"{ATTR_AQI}_description"
 LABEL_AQI_LEVEL = f"{ATTR_AQI}_level"
 LABEL_PM_2_5_LIMIT = f"{ATTR_PM_2_5}_limit"
 LABEL_PM_2_5_PERCENT = f"{ATTR_PM_2_5}_percent_of_limit"
 LABEL_PM_10_LIMIT = f"{ATTR_PM_10}_limit"
 LABEL_PM_10_PERCENT = f"{ATTR_PM_10}_percent_of_limit"
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Airly air_quality entity based on a config entry."""
     name = config_entry.data[CONF_NAME]
 
-    data = hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    async_add_entities([AirlyAirQuality(data, name)], True)
+    async_add_entities([AirlyAirQuality(coordinator, name)], False)
 
 
 def round_state(func):
@@ -53,19 +57,14 @@ def round_state(func):
     return _decorator
 
 
-class AirlyAirQuality(AirQualityEntity):
+class AirlyAirQuality(CoordinatorEntity, AirQualityEntity):
     """Define an Airly air quality."""
 
-    def __init__(self, airly, name):
+    def __init__(self, coordinator, name):
         """Initialize."""
-        self.airly = airly
-        self.data = airly.data
+        super().__init__(coordinator)
         self._name = name
-        self._pm_2_5 = None
-        self._pm_10 = None
-        self._aqi = None
         self._icon = "mdi:blur"
-        self._attrs = {}
 
     @property
     def name(self):
@@ -81,19 +80,19 @@ class AirlyAirQuality(AirQualityEntity):
     @round_state
     def air_quality_index(self):
         """Return the air quality index."""
-        return self._aqi
+        return self.coordinator.data[ATTR_API_CAQI]
 
     @property
     @round_state
     def particulate_matter_2_5(self):
         """Return the particulate matter 2.5 level."""
-        return self._pm_2_5
+        return self.coordinator.data.get(ATTR_API_PM25)
 
     @property
     @round_state
     def particulate_matter_10(self):
         """Return the particulate matter 10 level."""
-        return self._pm_10
+        return self.coordinator.data.get(ATTR_API_PM10)
 
     @property
     def attribution(self):
@@ -101,38 +100,38 @@ class AirlyAirQuality(AirQualityEntity):
         return ATTRIBUTION
 
     @property
-    def state(self):
-        """Return the CAQI description."""
-        return self.data[ATTR_API_CAQI_DESCRIPTION]
-
-    @property
     def unique_id(self):
         """Return a unique_id for this entity."""
-        return f"{self.airly.latitude}-{self.airly.longitude}"
+        return f"{self.coordinator.latitude}-{self.coordinator.longitude}"
 
     @property
-    def available(self):
-        """Return True if entity is available."""
-        return bool(self.airly.data)
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "identifiers": {
+                (DOMAIN, self.coordinator.latitude, self.coordinator.longitude)
+            },
+            "name": DEFAULT_NAME,
+            "manufacturer": MANUFACTURER,
+            "entry_type": "service",
+        }
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
-        self._attrs[LABEL_ADVICE] = self.data[ATTR_API_ADVICE]
-        self._attrs[LABEL_AQI_LEVEL] = self.data[ATTR_API_CAQI_LEVEL]
-        self._attrs[LABEL_PM_2_5_LIMIT] = self.data[ATTR_API_PM25_LIMIT]
-        self._attrs[LABEL_PM_2_5_PERCENT] = round(self.data[ATTR_API_PM25_PERCENT])
-        self._attrs[LABEL_PM_10_LIMIT] = self.data[ATTR_API_PM10_LIMIT]
-        self._attrs[LABEL_PM_10_PERCENT] = round(self.data[ATTR_API_PM10_PERCENT])
-        return self._attrs
-
-    async def async_update(self):
-        """Update the entity."""
-        await self.airly.async_update()
-
-        if self.airly.data:
-            self.data = self.airly.data
-
-        self._pm_10 = self.data[ATTR_API_PM10]
-        self._pm_2_5 = self.data[ATTR_API_PM25]
-        self._aqi = self.data[ATTR_API_CAQI]
+        attrs = {
+            LABEL_AQI_DESCRIPTION: self.coordinator.data[ATTR_API_CAQI_DESCRIPTION],
+            LABEL_ADVICE: self.coordinator.data[ATTR_API_ADVICE],
+            LABEL_AQI_LEVEL: self.coordinator.data[ATTR_API_CAQI_LEVEL],
+        }
+        if ATTR_API_PM25 in self.coordinator.data:
+            attrs[LABEL_PM_2_5_LIMIT] = self.coordinator.data[ATTR_API_PM25_LIMIT]
+            attrs[LABEL_PM_2_5_PERCENT] = round(
+                self.coordinator.data[ATTR_API_PM25_PERCENT]
+            )
+        if ATTR_API_PM10 in self.coordinator.data:
+            attrs[LABEL_PM_10_LIMIT] = self.coordinator.data[ATTR_API_PM10_LIMIT]
+            attrs[LABEL_PM_10_PERCENT] = round(
+                self.coordinator.data[ATTR_API_PM10_PERCENT]
+            )
+        return attrs

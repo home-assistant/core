@@ -1,21 +1,16 @@
-"""Support for UK public transport data provided by transportapi.com.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.uk_transport/
-"""
+"""Support for UK public transport data provided by transportapi.com."""
+from datetime import datetime, timedelta
 import logging
 import re
-from datetime import datetime, timedelta
 
 import requests
 import voluptuous as vol
 
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import CONF_MODE, HTTP_OK, TIME_MINUTES
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_MODE
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,9 +31,7 @@ CONF_DESTINATION = "destination"
 
 _QUERY_SCHEME = vol.Schema(
     {
-        vol.Required(CONF_MODE): vol.All(
-            cv.ensure_list, [vol.In(list(["bus", "train"]))]
-        ),
+        vol.Required(CONF_MODE): vol.All(cv.ensure_list, [vol.In(["bus", "train"])]),
         vol.Required(CONF_ORIGIN): cv.string,
         vol.Required(CONF_DESTINATION): cv.string,
     }
@@ -89,7 +82,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class UkTransportSensor(Entity):
+class UkTransportSensor(SensorEntity):
     """
     Sensor that reads the UK transport web API.
 
@@ -123,7 +116,7 @@ class UkTransportSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return "min"
+        return TIME_MINUTES
 
     @property
     def icon(self):
@@ -137,7 +130,7 @@ class UkTransportSensor(Entity):
         )
 
         response = requests.get(self._url, params=request_params)
-        if response.status_code != 200:
+        if response.status_code != HTTP_OK:
             _LOGGER.warning("Invalid response from API")
         elif "error" in response.json():
             if "exceeded" in response.json()["error"]:
@@ -195,7 +188,7 @@ class UkTransportLiveBusTimeSensor(UkTransportSensor):
                 self._state = None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return other details about the sensor state."""
         attrs = {}
         if self._data is not None:
@@ -265,7 +258,7 @@ class UkTransportLiveTrainTimeSensor(UkTransportSensor):
                     self._state = None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return other details about the sensor state."""
         attrs = {}
         if self._data is not None:

@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "already_in_progress": "Alur konfigurasi sedang berlangsung",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung"
+        },
+        "flow_title": "Roku: {name}",
+        "step": {
+            "discovery_confirm": {
+                "description": "Ingin menyiapkan {name}?",
+                "title": "Roku"
+            },
+            "ssdp_confirm": {
+                "description": "Ingin menyiapkan {name}?",
+                "title": "Roku"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Masukkan informasi Roku Anda."
+            }
+        }
+    }
+}

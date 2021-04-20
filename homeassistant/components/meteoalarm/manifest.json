@@ -1,10 +1,8 @@
 {
   "domain": "meteoalarm",
-  "name": "meteoalarm",
+  "name": "MeteoAlarm",
   "documentation": "https://www.home-assistant.io/integrations/meteoalarm",
-  "requirements": [
-    "meteoalertapi==0.1.6"
-  ],
-  "dependencies": [],
-  "codeowners": ["@rolfberkenbosch"]
+  "requirements": ["meteoalertapi==0.1.6"],
+  "codeowners": ["@rolfberkenbosch"],
+  "iot_class": "local_polling"
 }

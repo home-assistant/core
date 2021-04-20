@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "\uc11c\ube44\uc2a4\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "invalid_sensor": "\uc13c\uc11c\ub97c \uc0ac\uc6a9\ud560 \uc218 \uc5c6\uac70\ub098 \uc720\ud6a8\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "show_on_map": "\uc9c0\ub3c4\uc5d0 \ud45c\uc2dc\ud558\uae30",
+                    "station_id": "Luftdaten \uc13c\uc11c ID"
+                },
+                "title": "Luftdaten \uc815\uc758\ud558\uae30"
+            }
+        }
+    }
+}

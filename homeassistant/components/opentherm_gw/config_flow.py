@@ -1,8 +1,9 @@
 """OpenTherm Gateway config flow."""
 import asyncio
-from serial import SerialException
 
 import pyotgw
+from pyotgw import vars as gw_vars
+from serial import SerialException
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -15,11 +16,15 @@ from homeassistant.const import (
     PRECISION_WHOLE,
 )
 from homeassistant.core import callback
-
 import homeassistant.helpers.config_validation as cv
 
 from . import DOMAIN
-from .const import CONF_FLOOR_TEMP, CONF_PRECISION
+from .const import (
+    CONF_FLOOR_TEMP,
+    CONF_READ_PRECISION,
+    CONF_SET_PRECISION,
+    CONF_TEMPORARY_OVRD_MODE,
+)
 
 
 class OpenThermGwConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -54,23 +59,21 @@ class OpenThermGwConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 otgw = pyotgw.pyotgw()
                 status = await otgw.connect(self.hass.loop, device)
                 await otgw.disconnect()
-                return status.get(pyotgw.OTGW_ABOUT)
+                return status[gw_vars.OTGW].get(gw_vars.OTGW_ABOUT)
 
             try:
                 res = await asyncio.wait_for(test_connection(), timeout=10)
-            except asyncio.TimeoutError:
-                return self._show_form({"base": "timeout"})
-            except SerialException:
-                return self._show_form({"base": "serial_error"})
+            except (asyncio.TimeoutError, SerialException):
+                return self._show_form({"base": "cannot_connect"})
 
             if res:
                 return self._create_entry(gw_id, name, device)
 
         return self._show_form()
 
-    async def async_step_user(self, info=None):
+    async def async_step_user(self, user_input=None):
         """Handle manual initiation of the config flow."""
-        return await self.async_step_init(info)
+        return await self.async_step_init(user_input)
 
     async def async_step_import(self, import_config):
         """
@@ -116,8 +119,6 @@ class OpenThermGwOptionsFlow(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Manage the opentherm_gw options."""
         if user_input is not None:
-            if user_input.get(CONF_PRECISION) == 0:
-                user_input[CONF_PRECISION] = None
             return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_form(
@@ -125,14 +126,29 @@ class OpenThermGwOptionsFlow(config_entries.OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Optional(
-                        CONF_PRECISION,
-                        default=self.config_entry.options.get(CONF_PRECISION, 0),
+                        CONF_READ_PRECISION,
+                        default=self.config_entry.options.get(CONF_READ_PRECISION, 0),
                     ): vol.All(
                         vol.Coerce(float),
                         vol.In(
                             [0, PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]
                         ),
                     ),
+                    vol.Optional(
+                        CONF_SET_PRECISION,
+                        default=self.config_entry.options.get(CONF_SET_PRECISION, 0),
+                    ): vol.All(
+                        vol.Coerce(float),
+                        vol.In(
+                            [0, PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]
+                        ),
+                    ),
+                    vol.Optional(
+                        CONF_TEMPORARY_OVRD_MODE,
+                        default=self.config_entry.options.get(
+                            CONF_TEMPORARY_OVRD_MODE, True
+                        ),
+                    ): bool,
                     vol.Optional(
                         CONF_FLOOR_TEMP,
                         default=self.config_entry.options.get(CONF_FLOOR_TEMP, False),

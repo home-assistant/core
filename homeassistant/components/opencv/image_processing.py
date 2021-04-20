@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+import numpy
 import requests
 import voluptuous as vol
 
@@ -15,6 +16,15 @@ from homeassistant.components.image_processing import (
 from homeassistant.core import split_entity_id
 import homeassistant.helpers.config_validation as cv
 
+try:
+    # Verify that the OpenCV python package is pre-installed
+    import cv2
+
+    CV2_IMPORTED = True
+except ImportError:
+    CV2_IMPORTED = False
+
+
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_MATCHES = "matches"
@@ -22,7 +32,7 @@ ATTR_TOTAL_MATCHES = "total_matches"
 
 CASCADE_URL = (
     "https://raw.githubusercontent.com/opencv/opencv/master/data/"
-    + "lbpcascades/lbpcascade_frontalface.xml"
+    "lbpcascades/lbpcascade_frontalface.xml"
 )
 
 CONF_CLASSIFIER = "classifier"
@@ -52,7 +62,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                             CONF_NEIGHBORS, DEFAULT_NEIGHBORS
                         ): cv.positive_int,
                         vol.Optional(CONF_MIN_SIZE, DEFAULT_MIN_SIZE): vol.Schema(
-                            (int, int)
+                            vol.All(vol.ExactSequence([int, int]), vol.Coerce(tuple))
                         ),
                     }
                 ),
@@ -65,9 +75,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def _create_processor_from_config(hass, camera_entity, config):
     """Create an OpenCV processor from configuration."""
     classifier_config = config.get(CONF_CLASSIFIER)
-    name = "{} {}".format(
-        config[CONF_NAME], split_entity_id(camera_entity)[1].replace("_", " ")
-    )
+    name = f"{config[CONF_NAME]} {split_entity_id(camera_entity)[1].replace('_', ' ')}"
 
     processor = OpenCVImageProcessor(hass, camera_entity, name, classifier_config)
 
@@ -86,11 +94,7 @@ def _get_default_classifier(dest_path):
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the OpenCV image processing platform."""
-    try:
-        # Verify that the OpenCV python package is pre-installed
-        # pylint: disable=unused-import,unused-variable
-        import cv2  # noqa
-    except ImportError:
+    if not CV2_IMPORTED:
         _LOGGER.error(
             "No OpenCV library found! Install or compile for your system "
             "following instructions here: http://opencv.org/releases.html"
@@ -126,7 +130,7 @@ class OpenCVImageProcessor(ImageProcessingEntity):
         if name:
             self._name = name
         else:
-            self._name = "OpenCV {0}".format(split_entity_id(camera_entity)[1])
+            self._name = f"OpenCV {split_entity_id(camera_entity)[1]}"
         self._classifiers = classifiers
         self._matches = {}
         self._total_matches = 0
@@ -148,16 +152,16 @@ class OpenCVImageProcessor(ImageProcessingEntity):
         return self._total_matches
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         return {ATTR_MATCHES: self._matches, ATTR_TOTAL_MATCHES: self._total_matches}
 
     def process_image(self, image):
         """Process the image."""
-        import cv2  # pylint: disable=import-error
-        import numpy
-
         cv_image = cv2.imdecode(numpy.asarray(bytearray(image)), cv2.IMREAD_UNCHANGED)
+
+        matches = {}
+        total_matches = 0
 
         for name, classifier in self._classifiers.items():
             scale = DEFAULT_SCALE
@@ -176,8 +180,6 @@ class OpenCVImageProcessor(ImageProcessingEntity):
             detections = cascade.detectMultiScale(
                 cv_image, scaleFactor=scale, minNeighbors=neighbors, minSize=min_size
             )
-            matches = {}
-            total_matches = 0
             regions = []
             # pylint: disable=invalid-name
             for (x, y, w, h) in detections:

@@ -1,28 +1,30 @@
 """Support for Vivotek IP Cameras."""
-
-import logging
-
-import voluptuous as vol
 from libpyvivotek import VivotekCamera
+import voluptuous as vol
 
+from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
 from homeassistant.const import (
+    CONF_AUTHENTICATION,
     CONF_IP_ADDRESS,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    HTTP_BASIC_AUTHENTICATION,
+    HTTP_DIGEST_AUTHENTICATION,
 )
-from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
 from homeassistant.helpers import config_validation as cv
 
-_LOGGER = logging.getLogger(__name__)
-
 CONF_FRAMERATE = "framerate"
+CONF_SECURITY_LEVEL = "security_level"
+CONF_STREAM_PATH = "stream_path"
 
-DEFAULT_CAMERA_BRAND = "Vivotek"
-DEFAULT_NAME = "Vivotek Camera"
+DEFAULT_CAMERA_BRAND = "VIVOTEK"
+DEFAULT_NAME = "VIVOTEK Camera"
 DEFAULT_EVENT_0_KEY = "event_i0_enable"
+DEFAULT_SECURITY_LEVEL = "admin"
+DEFAULT_STREAM_SOURCE = "live.sdp"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -30,31 +32,34 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION): vol.In(
+            [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
+        ),
         vol.Optional(CONF_SSL, default=False): cv.boolean,
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
         vol.Optional(CONF_FRAMERATE, default=2): cv.positive_int,
+        vol.Optional(CONF_SECURITY_LEVEL, default=DEFAULT_SECURITY_LEVEL): cv.string,
+        vol.Optional(CONF_STREAM_PATH, default=DEFAULT_STREAM_SOURCE): cv.string,
     }
 )
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a Vivotek IP Camera."""
-    args = dict(
-        config=config,
-        cam=VivotekCamera(
+    creds = f"{config[CONF_USERNAME]}:{config[CONF_PASSWORD]}"
+    args = {
+        "config": config,
+        "cam": VivotekCamera(
             host=config[CONF_IP_ADDRESS],
             port=(443 if config[CONF_SSL] else 80),
             verify_ssl=config[CONF_VERIFY_SSL],
             usr=config[CONF_USERNAME],
             pwd=config[CONF_PASSWORD],
+            digest_auth=config[CONF_AUTHENTICATION] == HTTP_DIGEST_AUTHENTICATION,
+            sec_lvl=config[CONF_SECURITY_LEVEL],
         ),
-        stream_source=(
-            "rtsp://%s:%s@%s:554/live.sdp",
-            config[CONF_USERNAME],
-            config[CONF_PASSWORD],
-            config[CONF_IP_ADDRESS],
-        ),
-    )
+        "stream_source": f"rtsp://{creds}@{config[CONF_IP_ADDRESS]}:554/{config[CONF_STREAM_PATH]}",
+    }
     add_entities([VivotekCam(**args)], True)
 
 

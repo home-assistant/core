@@ -1,22 +1,83 @@
 # Describes the format for available scene services
 
 turn_on:
+  name: Activate
   description: Activate a scene.
+  target:
   fields:
-    entity_id:
-      description: Name(s) of scenes to turn on
-      example: "scene.romantic"
+    transition:
+      name: Transition
+      description:
+        Transition duration in seconds it takes to bring devices to the state
+        defined in the scene.
+      example: 2.5
+      selector:
+        number:
+          min: 0
+          max: 300
+          step: 1
+          unit_of_measurement: seconds
+          mode: slider
 
 reload:
-  description: Reload the scene configuration
+  name: Reload
+  description: Reload the scene configuration.
 
 apply:
-  description: Activate a scene. Takes same data as the entities field from a single scene in the config.
+  name: Apply
+  description: Activate a scene with configuration.
   fields:
     entities:
+      name: Entities state
       description: The entities and the state that they need to be.
+      required: true
       example:
         light.kitchen: "on"
         light.ceiling:
           state: "on"
           brightness: 80
+      selector:
+        object:
+    transition:
+      name: Transition
+      description:
+        Transition duration in seconds it takes to bring devices to the state
+        defined in the scene.
+      example: 2.5
+      selector:
+        number:
+          min: 0
+          max: 300
+          step: 1
+          unit_of_measurement: seconds
+          mode: slider
+
+create:
+  name: Create
+  description: Creates a new scene.
+  fields:
+    scene_id:
+      name: Scene entity ID
+      description: The entity_id of the new scene.
+      required: true
+      example: all_lights
+      selector:
+        text:
+    entities:
+      name: Entities state
+      description: The entities to control with the scene.
+      example:
+        light.tv_back_light: "on"
+        light.ceiling:
+          state: "on"
+          brightness: 200
+      selector:
+        object:
+    snapshot_entities:
+      name: Snapshot entities
+      description: The entities of which a snapshot is to be taken
+      example:
+        - light.ceiling
+        - light.kitchen
+      selector:
+        object:

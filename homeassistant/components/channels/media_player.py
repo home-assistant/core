@@ -1,11 +1,9 @@
 """Support for interfacing with an instance of getchannels.com."""
-import logging
-
+from pychannels import Channels
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
-    DOMAIN,
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_EPISODE,
     MEDIA_TYPE_MOVIE,
@@ -20,7 +18,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
+    ATTR_SECONDS,
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
@@ -28,9 +26,9 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_platform
 
-_LOGGER = logging.getLogger(__name__)
+from .const import SERVICE_SEEK_BACKWARD, SERVICE_SEEK_BY, SERVICE_SEEK_FORWARD
 
 DATA_CHANNELS = "channels"
 DEFAULT_NAME = "Channels"
@@ -55,76 +53,36 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-SERVICE_SEEK_FORWARD = "channels_seek_forward"
-SERVICE_SEEK_BACKWARD = "channels_seek_backward"
-SERVICE_SEEK_BY = "channels_seek_by"
 
-# Service call validation schemas
-ATTR_SECONDS = "seconds"
-
-CHANNELS_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_id})
-
-CHANNELS_SEEK_BY_SCHEMA = CHANNELS_SCHEMA.extend(
-    {vol.Required(ATTR_SECONDS): vol.Coerce(int)}
-)
-
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Channels platform."""
-    device = ChannelsPlayer(
-        config.get(CONF_NAME), config.get(CONF_HOST), config.get(CONF_PORT)
+    device = ChannelsPlayer(config[CONF_NAME], config[CONF_HOST], config[CONF_PORT])
+    async_add_entities([device], True)
+
+    platform = entity_platform.current_platform.get()
+
+    platform.async_register_entity_service(
+        SERVICE_SEEK_FORWARD,
+        {},
+        "seek_forward",
     )
-
-    if DATA_CHANNELS not in hass.data:
-        hass.data[DATA_CHANNELS] = []
-
-    add_entities([device], True)
-    hass.data[DATA_CHANNELS].append(device)
-
-    def service_handler(service):
-        """Handle service."""
-        entity_id = service.data.get(ATTR_ENTITY_ID)
-
-        device = next(
-            (
-                device
-                for device in hass.data[DATA_CHANNELS]
-                if device.entity_id == entity_id
-            ),
-            None,
-        )
-
-        if device is None:
-            _LOGGER.warning("Unable to find Channels with entity_id: %s", entity_id)
-            return
-
-        if service.service == SERVICE_SEEK_FORWARD:
-            device.seek_forward()
-        elif service.service == SERVICE_SEEK_BACKWARD:
-            device.seek_backward()
-        elif service.service == SERVICE_SEEK_BY:
-            seconds = service.data.get("seconds")
-            device.seek_by(seconds)
-
-    hass.services.register(
-        DOMAIN, SERVICE_SEEK_FORWARD, service_handler, schema=CHANNELS_SCHEMA
+    platform.async_register_entity_service(
+        SERVICE_SEEK_BACKWARD,
+        {},
+        "seek_backward",
     )
-
-    hass.services.register(
-        DOMAIN, SERVICE_SEEK_BACKWARD, service_handler, schema=CHANNELS_SCHEMA
-    )
-
-    hass.services.register(
-        DOMAIN, SERVICE_SEEK_BY, service_handler, schema=CHANNELS_SEEK_BY_SCHEMA
+    platform.async_register_entity_service(
+        SERVICE_SEEK_BY,
+        {vol.Required(ATTR_SECONDS): vol.Coerce(int)},
+        "seek_by",
     )
 
 
-class ChannelsPlayer(MediaPlayerDevice):
+class ChannelsPlayer(MediaPlayerEntity):
     """Representation of a Channels instance."""
 
     def __init__(self, name, host, port):
         """Initialize the Channels app."""
-        from pychannels import Channels
 
         self._name = name
         self._host = host

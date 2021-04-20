@@ -1,11 +1,9 @@
 {
   "domain": "hangouts",
-  "name": "Hangouts",
+  "name": "Google Hangouts",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hangouts",
-  "requirements": [
-    "hangups==0.4.9"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "requirements": ["hangups==0.4.11"],
+  "codeowners": [],
+  "iot_class": "cloud_push"
 }

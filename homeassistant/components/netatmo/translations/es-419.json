@@ -1,0 +1,7 @@
+{
+    "config": {
+        "create_entry": {
+            "default": "Autenticado con \u00e9xito con Netatmo."
+        }
+    }
+}

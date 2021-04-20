@@ -1,25 +1,30 @@
 """The test for sensor device automation."""
 from datetime import timedelta
+
 import pytest
 
+import homeassistant.components.automation as automation
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.components.sensor.device_trigger import ENTITY_TRIGGERS
-from homeassistant.const import STATE_UNKNOWN, CONF_PLATFORM
-from homeassistant.setup import async_setup_component
-import homeassistant.components.automation as automation
+from homeassistant.const import CONF_PLATFORM, PERCENTAGE, STATE_UNKNOWN
 from homeassistant.helpers import device_registry
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
+    async_get_device_automation_capabilities,
+    async_get_device_automations,
     async_mock_service,
     mock_device_registry,
     mock_registry,
-    async_get_device_automations,
-    async_get_device_automation_capabilities,
 )
-from tests.testing_config.custom_components.test.sensor import DEVICE_CLASSES
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
+from tests.testing_config.custom_components.test.sensor import (
+    DEVICE_CLASSES,
+    UNITS_OF_MEASUREMENT,
+)
 
 
 @pytest.fixture
@@ -36,7 +41,7 @@ def entity_reg(hass):
 
 @pytest.fixture
 def calls(hass):
-    """Track calls to a mock serivce."""
+    """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
@@ -60,6 +65,7 @@ async def test_get_triggers(hass, device_reg, entity_reg):
         )
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     expected_triggers = [
         {
@@ -70,11 +76,12 @@ async def test_get_triggers(hass, device_reg, entity_reg):
             "entity_id": platform.ENTITIES[device_class].entity_id,
         }
         for device_class in DEVICE_CLASSES
+        if device_class in UNITS_OF_MEASUREMENT
         for trigger in ENTITY_TRIGGERS[device_class]
         if device_class != "none"
     ]
     triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
-    assert len(triggers) == 8
+    assert len(triggers) == 13
     assert triggers == expected_triggers
 
 
@@ -97,17 +104,18 @@ async def test_get_trigger_capabilities(hass, device_reg, entity_reg):
     )
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     expected_capabilities = {
         "extra_fields": [
             {
-                "description": {"unit_of_measurement": "%"},
+                "description": {"suffix": PERCENTAGE},
                 "name": "above",
                 "optional": True,
                 "type": "float",
             },
             {
-                "description": {"unit_of_measurement": "%"},
+                "description": {"suffix": PERCENTAGE},
                 "name": "below",
                 "optional": True,
                 "type": "float",
@@ -124,11 +132,48 @@ async def test_get_trigger_capabilities(hass, device_reg, entity_reg):
         assert capabilities == expected_capabilities
 
 
+async def test_get_trigger_capabilities_none(hass, device_reg, entity_reg):
+    """Test we get the expected capabilities from a sensor trigger."""
+    platform = getattr(hass.components, f"test.{DOMAIN}")
+    platform.init()
+
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    triggers = [
+        {
+            "platform": "device",
+            "device_id": "8770c43885354d5fa27604db6817f63f",
+            "domain": "sensor",
+            "entity_id": "sensor.beer",
+            "type": "is_battery_level",
+        },
+        {
+            "platform": "device",
+            "device_id": "8770c43885354d5fa27604db6817f63f",
+            "domain": "sensor",
+            "entity_id": platform.ENTITIES["none"].entity_id,
+            "type": "is_battery_level",
+        },
+    ]
+
+    expected_capabilities = {}
+    for trigger in triggers:
+        capabilities = await async_get_device_automation_capabilities(
+            hass, "trigger", trigger
+        )
+        assert capabilities == expected_capabilities
+
+
 async def test_if_fires_not_on_above_below(hass, calls, caplog):
     """Test for value triggers firing."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     sensor1 = platform.ENTITIES["battery"]
 
@@ -158,6 +203,7 @@ async def test_if_fires_on_state_above(hass, calls):
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     sensor1 = platform.ENTITIES["battery"]
 
@@ -215,6 +261,7 @@ async def test_if_fires_on_state_below(hass, calls):
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     sensor1 = platform.ENTITIES["battery"]
 
@@ -272,6 +319,7 @@ async def test_if_fires_on_state_between(hass, calls):
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     sensor1 = platform.ENTITIES["battery"]
 
@@ -342,6 +390,7 @@ async def test_if_fires_on_state_change_with_for(hass, calls):
 
     platform.init()
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     sensor1 = platform.ENTITIES["battery"]
 
@@ -383,6 +432,7 @@ async def test_if_fires_on_state_change_with_for(hass, calls):
     assert hass.states.get(sensor1.entity_id).state == STATE_UNKNOWN
     assert len(calls) == 0
 
+    hass.states.async_set(sensor1.entity_id, 10)
     hass.states.async_set(sensor1.entity_id, 11)
     await hass.async_block_till_done()
     assert len(calls) == 0
@@ -390,6 +440,7 @@ async def test_if_fires_on_state_change_with_for(hass, calls):
     await hass.async_block_till_done()
     assert len(calls) == 1
     await hass.async_block_till_done()
-    assert calls[0].data[
-        "some"
-    ] == "turn_off device - {} - unknown - 11 - 0:00:05".format(sensor1.entity_id)
+    assert (
+        calls[0].data["some"]
+        == f"turn_off device - {sensor1.entity_id} - 10 - 11 - 0:00:05"
+    )

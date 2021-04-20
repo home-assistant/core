@@ -1,1 +1,1 @@
-"""The sendgrid component."""
+"""The sendgrid integration."""

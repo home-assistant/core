@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_host": "Ung\u00fcltiger Hostname oder IP Adresse",
+            "not_supported": "Ger\u00e4t nicht unterst\u00fctzt",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_host": "Ung\u00fcltiger Hostname oder IP Adresse",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "auth": {
+                "title": "Authentifiziere dich beim Ger\u00e4t"
+            },
+            "finish": {
+                "data": {
+                    "name": "Name"
+                },
+                "title": "W\u00e4hle einen Namen f\u00fcr das Ger\u00e4t"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "timeout": "Zeit\u00fcberschreitung"
+                }
+            }
+        }
+    }
+}

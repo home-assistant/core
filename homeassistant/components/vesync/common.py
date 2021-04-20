@@ -1,7 +1,9 @@
 """Common utilities for VeSync Component."""
 import logging
+
 from homeassistant.helpers.entity import ToggleEntity
-from .const import VS_SWITCHES
+
+from .const import VS_FANS, VS_LIGHTS, VS_SWITCHES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -10,8 +12,14 @@ async def async_process_devices(hass, manager):
     """Assign devices to proper component."""
     devices = {}
     devices[VS_SWITCHES] = []
+    devices[VS_FANS] = []
+    devices[VS_LIGHTS] = []
 
     await hass.async_add_executor_job(manager.update)
+
+    if manager.fans:
+        devices[VS_FANS].extend(manager.fans)
+        _LOGGER.info("%d VeSync fans found", len(manager.fans))
 
     if manager.outlets:
         devices[VS_SWITCHES].extend(manager.outlets)
@@ -21,7 +29,9 @@ async def async_process_devices(hass, manager):
         for switch in manager.switches:
             if not switch.is_dimmable():
                 devices[VS_SWITCHES].append(switch)
-        _LOGGER.info("%d VeSync standard switches found", len(manager.switches))
+            else:
+                devices[VS_LIGHTS].append(switch)
+        _LOGGER.info("%d VeSync switches found", len(manager.switches))
 
     return devices
 
@@ -37,7 +47,7 @@ class VeSyncDevice(ToggleEntity):
     def unique_id(self):
         """Return the ID of this device."""
         if isinstance(self.device.sub_device_no, int):
-            return "{}{}".format(self.device.cid, str(self.device.sub_device_no))
+            return f"{self.device.cid}{str(self.device.sub_device_no)}"
         return self.device.cid
 
     @property
@@ -47,17 +57,13 @@ class VeSyncDevice(ToggleEntity):
 
     @property
     def is_on(self):
-        """Return True if switch is on."""
+        """Return True if device is on."""
         return self.device.device_status == "on"
 
     @property
     def available(self) -> bool:
         """Return True if device is available."""
         return self.device.connection_status == "online"
-
-    def turn_on(self, **kwargs):
-        """Turn the device on."""
-        self.device.turn_on()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""

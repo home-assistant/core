@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "time_between_update": "\u5be6\u9ad4\u66f4\u65b0\u9593\u9694\u6700\u5c0f\u6642\u9593"
+                },
+                "title": "DSMR \u9078\u9805"
+            }
+        }
+    }
+}

@@ -1,33 +1,32 @@
 """Support for GPSLogger."""
-import logging
-
-import voluptuous as vol
 from aiohttp import web
+import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.device_tracker import ATTR_BATTERY
+from homeassistant.components.device_tracker import (
+    ATTR_BATTERY,
+    DOMAIN as DEVICE_TRACKER,
+)
 from homeassistant.const import (
-    HTTP_UNPROCESSABLE_ENTITY,
-    HTTP_OK,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     CONF_WEBHOOK_ID,
+    HTTP_OK,
+    HTTP_UNPROCESSABLE_ENTITY,
 )
 from homeassistant.helpers import config_entry_flow
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
+
 from .const import (
-    DOMAIN,
-    ATTR_ALTITUDE,
     ATTR_ACCURACY,
     ATTR_ACTIVITY,
+    ATTR_ALTITUDE,
     ATTR_DEVICE,
     ATTR_DIRECTION,
     ATTR_PROVIDER,
     ATTR_SPEED,
+    DOMAIN,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 TRACKER_UPDATE = f"{DOMAIN}_tracker_update"
 
@@ -113,5 +112,4 @@ async def async_unload_entry(hass, entry):
     return True
 
 
-# pylint: disable=invalid-name
 async_remove_entry = config_entry_flow.webhook_async_remove_entry

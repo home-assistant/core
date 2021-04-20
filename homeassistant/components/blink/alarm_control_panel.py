@@ -1,33 +1,32 @@
 """Support for Blink Alarm Control Panel."""
 import logging
 
-from homeassistant.components.alarm_control_panel import AlarmControlPanel
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
+from homeassistant.components.alarm_control_panel.const import SUPPORT_ALARM_ARM_AWAY
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_DISARMED,
 )
 
-from . import BLINK_DATA, DEFAULT_ATTRIBUTION
+from .const import DEFAULT_ATTRIBUTION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 ICON = "mdi:security"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Arlo Alarm Control Panels."""
-    if discovery_info is None:
-        return
-    data = hass.data[BLINK_DATA]
+async def async_setup_entry(hass, config, async_add_entities):
+    """Set up the Blink Alarm Control Panels."""
+    data = hass.data[DOMAIN][config.entry_id]
 
     sync_modules = []
     for sync_name, sync_module in data.sync.items():
         sync_modules.append(BlinkSyncModule(data, sync_name, sync_module))
-    add_entities(sync_modules, True)
+    async_add_entities(sync_modules)
 
 
-class BlinkSyncModule(AlarmControlPanel):
+class BlinkSyncModule(AlarmControlPanelEntity):
     """Representation of a Blink Alarm Control Panel."""
 
     def __init__(self, data, name, sync):
@@ -53,16 +52,21 @@ class BlinkSyncModule(AlarmControlPanel):
         return self._state
 
     @property
-    def name(self):
-        """Return the name of the panel."""
-        return f"{BLINK_DATA} {self._name}"
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return SUPPORT_ALARM_ARM_AWAY
 
     @property
-    def device_state_attributes(self):
+    def name(self):
+        """Return the name of the panel."""
+        return f"{DOMAIN} {self._name}"
+
+    @property
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attr = self.sync.attributes
         attr["network_info"] = self.data.networks
-        attr["associated_cameras"] = list(self.sync.cameras.keys())
+        attr["associated_cameras"] = list(self.sync.cameras)
         attr[ATTR_ATTRIBUTION] = DEFAULT_ATTRIBUTION
         return attr
 

@@ -4,7 +4,7 @@ import telnetlib
 
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -80,13 +80,13 @@ MEDIA_MODES = {
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Denon platform."""
-    denon = DenonDevice(config.get(CONF_NAME), config.get(CONF_HOST))
+    denon = DenonDevice(config[CONF_NAME], config[CONF_HOST])
 
     if denon.update():
         add_entities([denon])
 
 
-class DenonDevice(MediaPlayerDevice):
+class DenonDevice(MediaPlayerEntity):
     """Representation of a Denon device."""
 
     def __init__(self, name, host):
@@ -111,10 +111,18 @@ class DenonDevice(MediaPlayerDevice):
         if nsfrn:
             self._name = nsfrn
 
-        # SSFUN - Configured sources with names
+        # SSFUN - Configured sources with (optional) names
         self._source_list = {}
         for line in self.telnet_request(telnet, "SSFUN ?", all_lines=True):
-            source, configured_name = line[len("SSFUN") :].split(" ", 1)
+            ssfun = line[len("SSFUN") :].split(" ", 1)
+
+            source = ssfun[0]
+            if len(ssfun) == 2 and ssfun[1]:
+                configured_name = ssfun[1]
+            else:
+                # No name configured, reusing the source name
+                configured_name = source
+
             self._source_list[configured_name] = source
 
         # SSSOD - Deleted sources
@@ -187,7 +195,7 @@ class DenonDevice(MediaPlayerDevice):
                 "NSE8",
             ]
             for line in self.telnet_request(telnet, "NSE", all_lines=True):
-                self._mediainfo += line[len(answer_codes.pop(0)) :] + "\n"
+                self._mediainfo += f"{line[len(answer_codes.pop(0)) :]}\n"
         else:
             self._mediainfo = self.source
 
@@ -222,7 +230,7 @@ class DenonDevice(MediaPlayerDevice):
     @property
     def source_list(self):
         """Return the list of available input sources."""
-        return sorted(list(self._source_list.keys()))
+        return sorted(self._source_list)
 
     @property
     def media_title(self):
@@ -257,11 +265,12 @@ class DenonDevice(MediaPlayerDevice):
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        self.telnet_command("MV" + str(round(volume * self._volume_max)).zfill(2))
+        self.telnet_command(f"MV{round(volume * self._volume_max):02}")
 
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
-        self.telnet_command("MU" + ("ON" if mute else "OFF"))
+        mute_status = "ON" if mute else "OFF"
+        self.telnet_command(f"MU{mute_status})")
 
     def media_play(self):
         """Play media player."""
@@ -289,4 +298,4 @@ class DenonDevice(MediaPlayerDevice):
 
     def select_source(self, source):
         """Select input source."""
-        self.telnet_command("SI" + self._source_list.get(source))
+        self.telnet_command(f"SI{self._source_list.get(source)}")

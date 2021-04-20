@@ -1,12 +1,15 @@
 """This component provides HA switch support for Ring Door Bell/Chimes."""
-import logging
 from datetime import timedelta
-from homeassistant.components.switch import SwitchDevice
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+import logging
+
+import requests
+
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import callback
 import homeassistant.util.dt as dt_util
 
-from . import DATA_RING_STICKUP_CAMS, SIGNAL_UPDATE_RING
+from . import DOMAIN
+from .entity import RingEntityMixin
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,35 +24,26 @@ SIREN_ICON = "mdi:alarm-bell"
 SKIP_UPDATES_DELAY = timedelta(seconds=5)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Create the switches for the Ring devices."""
-    cameras = hass.data[DATA_RING_STICKUP_CAMS]
+    devices = hass.data[DOMAIN][config_entry.entry_id]["devices"]
     switches = []
-    for device in cameras:
+
+    for device in devices["stickup_cams"]:
         if device.has_capability("siren"):
-            switches.append(SirenSwitch(device))
+            switches.append(SirenSwitch(config_entry.entry_id, device))
 
-    add_entities(switches, True)
+    async_add_entities(switches)
 
 
-class BaseRingSwitch(SwitchDevice):
+class BaseRingSwitch(RingEntityMixin, SwitchEntity):
     """Represents a switch for controlling an aspect of a ring device."""
 
-    def __init__(self, device, device_type):
+    def __init__(self, config_entry_id, device, device_type):
         """Initialize the switch."""
-        self._device = device
+        super().__init__(config_entry_id, device)
         self._device_type = device_type
         self._unique_id = f"{self._device.id}-{self._device_type}"
-
-    async def async_added_to_hass(self):
-        """Register callbacks."""
-        async_dispatcher_connect(self.hass, SIGNAL_UPDATE_RING, self._update_callback)
-
-    @callback
-    def _update_callback(self):
-        """Call update method."""
-        _LOGGER.debug("Updating Ring sensor %s (callback)", self.name)
-        self.async_schedule_update_ha_state(True)
 
     @property
     def name(self):
@@ -61,24 +55,33 @@ class BaseRingSwitch(SwitchDevice):
         """Return a unique ID."""
         return self._unique_id
 
-    @property
-    def should_poll(self):
-        """Update controlled via the hub."""
-        return False
-
 
 class SirenSwitch(BaseRingSwitch):
     """Creates a switch to turn the ring cameras siren on and off."""
 
-    def __init__(self, device):
+    def __init__(self, config_entry_id, device):
         """Initialize the switch for a device with a siren."""
-        super().__init__(device, "siren")
+        super().__init__(config_entry_id, device, "siren")
         self._no_updates_until = dt_util.utcnow()
-        self._siren_on = False
+        self._siren_on = device.siren > 0
+
+    @callback
+    def _update_callback(self):
+        """Call update method."""
+        if self._no_updates_until > dt_util.utcnow():
+            return
+
+        self._siren_on = self._device.siren > 0
+        self.async_write_ha_state()
 
     def _set_switch(self, new_state):
-        """Update switch state, and causes HASS to correctly update."""
-        self._device.siren = new_state
+        """Update switch state, and causes Home Assistant to correctly update."""
+        try:
+            self._device.siren = new_state
+        except requests.Timeout:
+            _LOGGER.error("Time out setting %s siren to %s", self.entity_id, new_state)
+            return
+
         self._siren_on = new_state > 0
         self._no_updates_until = dt_util.utcnow() + SKIP_UPDATES_DELAY
         self.schedule_update_ha_state()
@@ -100,10 +103,3 @@ class SirenSwitch(BaseRingSwitch):
     def icon(self):
         """Return the icon."""
         return SIREN_ICON
-
-    def update(self):
-        """Update state of the siren."""
-        if self._no_updates_until > dt_util.utcnow():
-            _LOGGER.debug("Skipping update...")
-            return
-        self._siren_on = self._device.siren > 0

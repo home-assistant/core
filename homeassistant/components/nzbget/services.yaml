@@ -10,5 +10,5 @@ set_speed:
   description: Set download speed limit
   fields:
     speed:
-      description: Speed limit in KB/s. 0 is unlimited.
+      description: Speed limit in kB/s. 0 is unlimited.
       example: 1000

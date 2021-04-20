@@ -7,11 +7,17 @@ import async_timeout
 import voluptuous as vol
 import xmltodict
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_API_KEY, CONF_MONITORED_VARIABLES, CONF_NAME
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_MONITORED_VARIABLES,
+    CONF_NAME,
+    DATA_GIGABYTES,
+    HTTP_OK,
+    PERCENTAGE,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -19,25 +25,22 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "Start.ca"
 CONF_TOTAL_BANDWIDTH = "total_bandwidth"
 
-GIGABYTES = "GB"
-PERCENT = "%"
-
 MIN_TIME_BETWEEN_UPDATES = timedelta(hours=1)
 REQUEST_TIMEOUT = 5  # seconds
 
 SENSOR_TYPES = {
-    "usage": ["Usage Ratio", PERCENT, "mdi:percent"],
-    "usage_gb": ["Usage", GIGABYTES, "mdi:download"],
-    "limit": ["Data limit", GIGABYTES, "mdi:download"],
-    "used_download": ["Used Download", GIGABYTES, "mdi:download"],
-    "used_upload": ["Used Upload", GIGABYTES, "mdi:upload"],
-    "used_total": ["Used Total", GIGABYTES, "mdi:download"],
-    "grace_download": ["Grace Download", GIGABYTES, "mdi:download"],
-    "grace_upload": ["Grace Upload", GIGABYTES, "mdi:upload"],
-    "grace_total": ["Grace Total", GIGABYTES, "mdi:download"],
-    "total_download": ["Total Download", GIGABYTES, "mdi:download"],
-    "total_upload": ["Total Upload", GIGABYTES, "mdi:download"],
-    "used_remaining": ["Remaining", GIGABYTES, "mdi:download"],
+    "usage": ["Usage Ratio", PERCENTAGE, "mdi:percent"],
+    "usage_gb": ["Usage", DATA_GIGABYTES, "mdi:download"],
+    "limit": ["Data limit", DATA_GIGABYTES, "mdi:download"],
+    "used_download": ["Used Download", DATA_GIGABYTES, "mdi:download"],
+    "used_upload": ["Used Upload", DATA_GIGABYTES, "mdi:upload"],
+    "used_total": ["Used Total", DATA_GIGABYTES, "mdi:download"],
+    "grace_download": ["Grace Download", DATA_GIGABYTES, "mdi:download"],
+    "grace_upload": ["Grace Upload", DATA_GIGABYTES, "mdi:upload"],
+    "grace_total": ["Grace Total", DATA_GIGABYTES, "mdi:download"],
+    "total_download": ["Total Download", DATA_GIGABYTES, "mdi:download"],
+    "total_upload": ["Total Upload", DATA_GIGABYTES, "mdi:download"],
+    "used_remaining": ["Remaining", DATA_GIGABYTES, "mdi:download"],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -71,7 +74,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(sensors, True)
 
 
-class StartcaSensor(Entity):
+class StartcaSensor(SensorEntity):
     """Representation of Start.ca Bandwidth sensor."""
 
     def __init__(self, startcadata, sensor_type, name):
@@ -140,10 +143,10 @@ class StartcaData:
     async def async_update(self):
         """Get the Start.ca bandwidth data from the web service."""
         _LOGGER.debug("Updating Start.ca usage data")
-        url = "https://www.start.ca/support/usage/api?key=" + self.api_key
+        url = f"https://www.start.ca/support/usage/api?key={self.api_key}"
         with async_timeout.timeout(REQUEST_TIMEOUT):
             req = await self.websession.get(url)
-        if req.status != 200:
+        if req.status != HTTP_OK:
             _LOGGER.error("Request failed with status: %u", req.status)
             return False
 

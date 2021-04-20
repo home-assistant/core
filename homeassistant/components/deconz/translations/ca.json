@@ -1,0 +1,109 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'enlla\u00e7 ja est\u00e0 configurat",
+            "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
+            "no_bridges": "No s'han descobert enlla\u00e7os amb deCONZ",
+            "no_hardware_available": "No hi ha cap maquinari r\u00e0dio connectat a deCONZ",
+            "not_deconz_bridge": "No \u00e9s un enlla\u00e7 deCONZ",
+            "updated_instance": "S'ha actualitzat la inst\u00e0ncia de deCONZ amb una nova adre\u00e7a"
+        },
+        "error": {
+            "no_key": "No s'ha pogut obtenir una clau API"
+        },
+        "flow_title": "Passarel\u00b7la d'enlla\u00e7 deCONZ Zigbee ({host})",
+        "step": {
+            "hassio_confirm": {
+                "description": "Vols configurar Home Assistant perqu\u00e8 es connecti amb la passarel\u00b7la deCONZ proporcionada pel complement {addon}?",
+                "title": "Passarel\u00b7la d'enlla\u00e7 deCONZ Zigbee via complement de Home Assistant"
+            },
+            "link": {
+                "description": "Desbloqueja la teva passarel\u00b7la d'enlla\u00e7 deCONZ per a registrar-te amb Home Assistant.\n\n1. V\u00e9s a la configuraci\u00f3 del sistema deCONZ -> Passarel\u00b7la -> Avan\u00e7at\n2. Prem el bot\u00f3 \"Autenticar applicaci\u00f3\"",
+                "title": "Vincular amb deCONZ"
+            },
+            "manual_input": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "port": "Port"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Selecciona la passarel\u00b7la deCONZ descoberta"
+                }
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "both_buttons": "Ambd\u00f3s botons",
+            "bottom_buttons": "Botons inferiors",
+            "button_1": "Primer bot\u00f3",
+            "button_2": "Segon bot\u00f3",
+            "button_3": "Tercer bot\u00f3",
+            "button_4": "Quart bot\u00f3",
+            "button_5": "Cinqu\u00e8 bot\u00f3",
+            "button_6": "Sis\u00e8 bot\u00f3",
+            "button_7": "Set\u00e8 bot\u00f3",
+            "button_8": "Vuit\u00e8 bot\u00f3",
+            "close": "Tanca",
+            "dim_down": "Atenua la brillantor",
+            "dim_up": "Augmenta la brillantor",
+            "left": "Esquerra",
+            "open": "Obert",
+            "right": "Dreta",
+            "side_1": "cara 1",
+            "side_2": "cara 2",
+            "side_3": "cara 3",
+            "side_4": "cara 4",
+            "side_5": "cara 5",
+            "side_6": "cara 6",
+            "top_buttons": "Botons superiors",
+            "turn_off": "Desactiva",
+            "turn_on": "Activa"
+        },
+        "trigger_type": {
+            "remote_awakened": "Dispositiu despertat",
+            "remote_button_double_press": "Bot\u00f3 \"{subtype}\" clicat dues vegades",
+            "remote_button_long_press": "Bot\u00f3 \"{subtype}\" premut cont\u00ednuament",
+            "remote_button_long_release": "Bot\u00f3 \"{subtype}\" alliberat despr\u00e9s d'una estona premut",
+            "remote_button_quadruple_press": "Bot\u00f3 \"{subtype}\" clicat quatre vegades",
+            "remote_button_quintuple_press": "Bot\u00f3 \"{subtype}\" clicat cinc vegades",
+            "remote_button_rotated": "Bot\u00f3 \"{subtype}\" girat",
+            "remote_button_rotated_fast": "Bot\u00f3 \"{subtype}\" girat r\u00e0pidament",
+            "remote_button_rotation_stopped": "La rotaci\u00f3 del bot\u00f3 \"{subtype}\" s'ha aturat",
+            "remote_button_short_press": "Bot\u00f3 \"{subtype}\" premut",
+            "remote_button_short_release": "Bot\u00f3 \"{subtype}\" alliberat",
+            "remote_button_triple_press": "Bot\u00f3 \"{subtype}\" clicat tres vegades",
+            "remote_double_tap": "Dispositiu \"{subtype}\" tocat dues vegades",
+            "remote_double_tap_any_side": "Dispositiu tocat dues vegades a alguna cara",
+            "remote_falling": "Dispositiu en caiguda lliure",
+            "remote_flip_180_degrees": "Dispositiu voltejat 180 graus",
+            "remote_flip_90_degrees": "Dispositiu voltejat 90 graus",
+            "remote_gyro_activated": "Dispositiu sacsejat",
+            "remote_moved": "Dispositiu mogut amb la \"{subtype}\" amunt",
+            "remote_moved_any_side": "Dispositiu mogut amb alguna cara amunt",
+            "remote_rotate_from_side_1": "Dispositiu rotat de la \"cara 1\" a la \"{subtype}\"",
+            "remote_rotate_from_side_2": "Dispositiu rotat de la \"cara 2\" a la \"{subtype}\"",
+            "remote_rotate_from_side_3": "Dispositiu rotat de la \"cara 3\" a la \"{subtype}\"",
+            "remote_rotate_from_side_4": "Dispositiu rotat de la \"cara 4\" a la \"{subtype}\"",
+            "remote_rotate_from_side_5": "Dispositiu rotat de la \"cara 5\" a la \"{subtype}\"",
+            "remote_rotate_from_side_6": "Dispositiu rotat de la \"cara 6\" a la \"{subtype}\"",
+            "remote_turned_clockwise": "Dispositiu girat en sentit horari",
+            "remote_turned_counter_clockwise": "Dispositiu girat en sentit antihorari"
+        }
+    },
+    "options": {
+        "step": {
+            "deconz_devices": {
+                "data": {
+                    "allow_clip_sensor": "Permet sensors deCONZ CLIP",
+                    "allow_deconz_groups": "Permet grups de llums deCONZ",
+                    "allow_new_devices": "Permet l'addici\u00f3 autom\u00e0tica de nous dispositius"
+                },
+                "description": "Configura la visibilitat dels tipus dels dispositius deCONZ",
+                "title": "Opcions de deCONZ"
+            }
+        }
+    }
+}

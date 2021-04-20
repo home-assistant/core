@@ -1,24 +1,27 @@
 """Support for SolarEdge-local Monitoring API."""
-import logging
-from datetime import timedelta
-import statistics
+from contextlib import suppress
 from copy import deepcopy
+from datetime import timedelta
+import logging
+import statistics
 
-from requests.exceptions import HTTPError, ConnectTimeout
+from requests.exceptions import ConnectTimeout, HTTPError
 from solaredge_local import SolarEdge
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_NAME,
-    POWER_WATT,
+    ELECTRICAL_CURRENT_AMPERE,
     ENERGY_WATT_HOUR,
+    FREQUENCY_HERTZ,
+    POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    VOLT,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 DOMAIN = "solaredge_local"
@@ -40,12 +43,12 @@ INVERTER_MODES = (
 # Supported sensor types:
 # Key: ['json_key', 'name', unit, icon, attribute name]
 SENSOR_TYPES = {
-    "current_AC_voltage": ["gridvoltage", "Grid Voltage", "V", "mdi:current-ac", None],
-    "current_DC_voltage": ["dcvoltage", "DC Voltage", "V", "mdi:current-dc", None],
+    "current_AC_voltage": ["gridvoltage", "Grid Voltage", VOLT, "mdi:current-ac", None],
+    "current_DC_voltage": ["dcvoltage", "DC Voltage", VOLT, "mdi:current-dc", None],
     "current_frequency": [
         "gridfrequency",
         "Grid Frequency",
-        "Hz",
+        FREQUENCY_HERTZ,
         "mdi:current-ac",
         None,
     ],
@@ -101,7 +104,7 @@ SENSOR_TYPES = {
     "optimizer_current": [
         "optimizercurrent",
         "Average Optimizer Current",
-        "A",
+        ELECTRICAL_CURRENT_AMPERE,
         "mdi:solar-panel",
         None,
     ],
@@ -122,7 +125,7 @@ SENSOR_TYPES = {
     "optimizer_voltage": [
         "optimizervoltage",
         "Average Optimizer Voltage",
-        "V",
+        VOLT,
         "mdi:solar-panel",
         None,
     ],
@@ -228,7 +231,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(entities, True)
 
 
-class SolarEdgeSensor(Entity):
+class SolarEdgeSensor(SensorEntity):
     """Representation of an SolarEdge Monitoring API sensor."""
 
     def __init__(self, platform_name, data, json_key, name, unit, icon, attr):
@@ -254,7 +257,7 @@ class SolarEdgeSensor(Entity):
         return self._unit_of_measurement
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self._attr:
             try:
@@ -348,19 +351,15 @@ class SolarEdgeData:
             self.info["optimizers"] = status.optimizersStatus.total
             self.info["invertertemperature"] = INVERTER_MODES[status.status]
 
-            try:
+            with suppress(IndexError):
                 if status.metersList[1]:
                     self.data["currentPowerimport"] = status.metersList[1].currentPower
                     self.data["totalEnergyimport"] = status.metersList[1].totalEnergy
-            except IndexError:
-                pass
 
-            try:
+            with suppress(IndexError):
                 if status.metersList[0]:
                     self.data["currentPowerexport"] = status.metersList[0].currentPower
                     self.data["totalEnergyexport"] = status.metersList[0].totalEnergy
-            except IndexError:
-                pass
 
         if maintenance.system.name:
             self.data["optimizertemperature"] = round(statistics.mean(temperature), 2)

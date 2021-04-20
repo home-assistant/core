@@ -1,12 +1,12 @@
 """Support for LIFX."""
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_PORT
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from .const import DOMAIN
+from homeassistant.const import CONF_PORT
+import homeassistant.helpers.config_validation as cv
 
+from .const import DOMAIN
 
 CONF_SERVER = "server"
 CONF_BROADCAST = "broadcast"

@@ -2,17 +2,19 @@
 from datetime import datetime, timedelta
 import logging
 
+import noaa_coops as coops
+import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_NAME,
     CONF_TIME_ZONE,
     CONF_UNIT_SYSTEM,
 )
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,24 +52,35 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     else:
         unit_system = UNIT_SYSTEMS[0]
 
-    noaa_sensor = NOAATidesAndCurrentsSensor(name, station_id, timezone, unit_system)
-
-    noaa_sensor.update()
-    if noaa_sensor.data is None:
-        _LOGGER.error("Unable to setup NOAA Tides Sensor")
+    try:
+        station = coops.Station(station_id, unit_system)
+    except KeyError:
+        _LOGGER.error("NOAA Tides Sensor station_id %s does not exist", station_id)
         return
+    except requests.exceptions.ConnectionError as exception:
+        _LOGGER.error(
+            "Connection error during setup in NOAA Tides Sensor for station_id: %s",
+            station_id,
+        )
+        raise PlatformNotReady from exception
+
+    noaa_sensor = NOAATidesAndCurrentsSensor(
+        name, station_id, timezone, unit_system, station
+    )
+
     add_entities([noaa_sensor], True)
 
 
-class NOAATidesAndCurrentsSensor(Entity):
+class NOAATidesAndCurrentsSensor(SensorEntity):
     """Representation of a NOAA Tides and Currents sensor."""
 
-    def __init__(self, name, station_id, timezone, unit_system):
+    def __init__(self, name, station_id, timezone, unit_system, station):
         """Initialize the sensor."""
         self._name = name
         self._station_id = station_id
         self._timezone = timezone
         self._unit_system = unit_system
+        self._station = station
         self.data = None
 
     @property
@@ -76,7 +89,7 @@ class NOAATidesAndCurrentsSensor(Entity):
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of this device."""
         attr = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         if self.data is None:
@@ -109,16 +122,13 @@ class NOAATidesAndCurrentsSensor(Entity):
 
     def update(self):
         """Get the latest data from NOAA Tides and Currents API."""
-        from py_noaa import coops  # pylint: disable=import-error
-
         begin = datetime.now()
         delta = timedelta(days=2)
         end = begin + delta
         try:
-            df_predictions = coops.get_data(
+            df_predictions = self._station.get_data(
                 begin_date=begin.strftime("%Y%m%d %H:%M"),
                 end_date=end.strftime("%Y%m%d %H:%M"),
-                stationid=self._station_id,
                 product="predictions",
                 datum="MLLW",
                 interval="hilo",

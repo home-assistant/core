@@ -1,0 +1,64 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_device": "El dispositiu ja est\u00e0 configurat",
+            "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
+            "backoff": "En aquests moments el dispositiu no accepta sol\u00b7licituds de vinculaci\u00f3 (\u00e9s possible que hagis introdu\u00eft un codi PIN inv\u00e0lid massa vegades), torna-ho a provar m\u00e9s tard.",
+            "device_did_not_pair": "No s'ha fet cap intent d'acabar el proc\u00e9s de vinculaci\u00f3 des del dispositiu.",
+            "invalid_config": "La configuraci\u00f3 d'aquest dispositiu no est\u00e0 completa. Intenta'l tornar a afegir.",
+            "no_devices_found": "No s'han trobat dispositius a la xarxa",
+            "unknown": "Error inesperat"
+        },
+        "error": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "no_devices_found": "No s'han trobat dispositius a la xarxa",
+            "no_usable_service": "S'ha trobat un dispositiu per\u00f2 no ha pogut identificar cap manera d'establir-hi una connexi\u00f3. Si continues veient aquest missatge, prova d'especificar-ne l'adre\u00e7a IP o reinicia l'Apple TV.",
+            "unknown": "Error inesperat"
+        },
+        "flow_title": "Apple TV: {name}",
+        "step": {
+            "confirm": {
+                "description": "Est\u00e0s a punt d'afegir l'Apple TV amb nom \"{name}\" a Home Assistant.\n\n **Per completar el proc\u00e9s, \u00e9s possible que hagis d'introduir alguns codis PIN.** \n\n Tingues en compte que *no* pots apagar la teva Apple TV a trav\u00e9s d'aquesta integraci\u00f3. Nom\u00e9s es desactivar\u00e0 el reproductor de Home Assistant.",
+                "title": "Confirma l'addici\u00f3 de l'Apple TV"
+            },
+            "pair_no_pin": {
+                "description": "Vinculaci\u00f3 necess\u00e0ria amb el servei `{protocol}`. Per continuar, introdueix el PIN {pin} a la teva Apple TV.",
+                "title": "Vinculaci\u00f3"
+            },
+            "pair_with_pin": {
+                "data": {
+                    "pin": "Codi PIN"
+                },
+                "description": "Amb el protocol \"{protocol}\" \u00e9s necess\u00e0ria la vinculaci\u00f3. Introdueix el codi PIN que es mostra en pantalla. Els zeros a l'inici, si n'hi ha, s'han d'ometre; per exemple: introdueix 123 si el codi mostrat \u00e9s 0123.",
+                "title": "Vinculaci\u00f3"
+            },
+            "reconfigure": {
+                "description": "Aquesta Apple TV est\u00e0 tenint problemes de connexi\u00f3 i s'ha de tornar a configurar.",
+                "title": "Reconfiguraci\u00f3 de dispositiu"
+            },
+            "service_problem": {
+                "description": "S'ha produ\u00eft un problema en la vinculaci\u00f3 protocol \"{protocol}\". S'ignorar\u00e0.",
+                "title": "No s'ha pogut afegir el servei"
+            },
+            "user": {
+                "data": {
+                    "device_input": "Dispositiu"
+                },
+                "description": "Comen\u00e7a introduint el nom del dispositiu (per exemple, cuina o dormitori) o l'adre\u00e7a IP de l'Apple TV que vulguis afegir. Si autom\u00e0ticament es troben dispositius a la teva xarxa, es mostra a continuaci\u00f3. \n\n Si no veus el teu dispositiu o tens problemes, prova d'especificar l'adre\u00e7a IP del dispositiu. \n\n {devices}",
+                "title": "Configuraci\u00f3 d'una nova Apple TV"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "start_off": "No engeguis el dispositiu en iniciar Home Assistant"
+                },
+                "description": "Configuraci\u00f3 dels par\u00e0metres generals del dispositiu"
+            }
+        }
+    },
+    "title": "Apple TV"
+}

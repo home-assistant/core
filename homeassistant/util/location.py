@@ -3,10 +3,12 @@ Module with location helpers.
 
 detect_location_info and elevation are mocked by default during tests.
 """
+from __future__ import annotations
+
 import asyncio
 import collections
 import math
-from typing import Any, Optional, Tuple, Dict, cast
+from typing import Any
 
 import aiohttp
 
@@ -46,8 +48,8 @@ LocationInfo = collections.namedtuple(
 
 
 async def async_detect_location_info(
-    session: aiohttp.ClientSession
-) -> Optional[LocationInfo]:
+    session: aiohttp.ClientSession,
+) -> LocationInfo | None:
     """Detect location information."""
     data = await _get_ipapi(session)
 
@@ -63,8 +65,8 @@ async def async_detect_location_info(
 
 
 def distance(
-    lat1: Optional[float], lon1: Optional[float], lat2: float, lon2: float
-) -> Optional[float]:
+    lat1: float | None, lon1: float | None, lat2: float, lon2: float
+) -> float | None:
     """Calculate the distance in meters between two points.
 
     Async friendly.
@@ -80,10 +82,9 @@ def distance(
 # Author: https://github.com/maurycyp
 # Source: https://github.com/maurycyp/vincenty
 # License: https://github.com/maurycyp/vincenty/blob/master/LICENSE
-# pylint: disable=invalid-name
 def vincenty(
-    point1: Tuple[float, float], point2: Tuple[float, float], miles: bool = False
-) -> Optional[float]:
+    point1: tuple[float, float], point2: tuple[float, float], miles: bool = False
+) -> float | None:
     """
     Vincenty formula (inverse method) to calculate the distance.
 
@@ -96,6 +97,7 @@ def vincenty(
     if point1[0] == point2[0] and point1[1] == point2[1]:
         return 0.0
 
+    # pylint: disable=invalid-name
     U1 = math.atan((1 - FLATTENING) * math.tan(math.radians(point1[0])))
     U2 = math.atan((1 - FLATTENING) * math.tan(math.radians(point2[0])))
     L = math.radians(point2[1] - point1[1])
@@ -159,10 +161,10 @@ def vincenty(
     if miles:
         s *= MILES_PER_KILOMETER  # kilometers to miles
 
-    return round(cast(float, s), 6)
+    return round(s, 6)
 
 
-async def _get_ipapi(session: aiohttp.ClientSession) -> Optional[Dict[str, Any]]:
+async def _get_ipapi(session: aiohttp.ClientSession) -> dict[str, Any] | None:
     """Query ipapi.co for location data."""
     try:
         resp = await session.get(IPAPI, timeout=5)
@@ -172,6 +174,10 @@ async def _get_ipapi(session: aiohttp.ClientSession) -> Optional[Dict[str, Any]]
     try:
         raw_info = await resp.json()
     except (aiohttp.ClientError, ValueError):
+        return None
+
+    # ipapi allows 30k free requests/month. Some users exhaust those.
+    if raw_info.get("latitude") == "Sign up to access":
         return None
 
     return {
@@ -188,7 +194,7 @@ async def _get_ipapi(session: aiohttp.ClientSession) -> Optional[Dict[str, Any]]
     }
 
 
-async def _get_ip_api(session: aiohttp.ClientSession) -> Optional[Dict[str, Any]]:
+async def _get_ip_api(session: aiohttp.ClientSession) -> dict[str, Any] | None:
     """Query ip-api.com for location data."""
     try:
         resp = await session.get(IP_API, timeout=5)

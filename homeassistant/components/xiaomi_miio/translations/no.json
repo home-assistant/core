@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "no_device_selected": "Ingen enhet valgt, vennligst velg en enhet.",
+            "unknown_device": "Enhetsmodellen er ikke kjent, kan ikke konfigurere enheten ved hjelp av konfigurasjonsflyt."
+        },
+        "flow_title": "",
+        "step": {
+            "device": {
+                "data": {
+                    "host": "IP adresse",
+                    "model": "Enhetsmodell (valgfritt)",
+                    "name": "Navnet p\u00e5 enheten",
+                    "token": "API-token"
+                },
+                "description": "Du trenger 32 tegn API-token , se https://www.home-assistant.io/integrations/xiaomi_miio#retrieving-the-access-token for instruksjoner. V\u00e6r oppmerksom p\u00e5 at denne API-token er forskjellig fra n\u00f8kkelen som brukes av Xiaomi Aqara-integrasjonen.",
+                "title": "Koble til en Xiaomi Miio-enhet eller Xiaomi Gateway"
+            },
+            "gateway": {
+                "data": {
+                    "host": "IP adresse",
+                    "name": "Navnet p\u00e5 gatewayen",
+                    "token": "API-token"
+                },
+                "description": "Du trenger 32 tegn API-token , se https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token for instruksjoner. V\u00e6r oppmerksom p\u00e5 at denne API-token er forskjellig fra n\u00f8kkelen som brukes av Xiaomi Aqara-integrasjonen.",
+                "title": "Koble til en Xiaomi Gateway"
+            },
+            "user": {
+                "data": {
+                    "gateway": "Koble til en Xiaomi Gateway"
+                },
+                "description": "Velg hvilken enhet du vil koble til.",
+                "title": ""
+            }
+        }
+    }
+}

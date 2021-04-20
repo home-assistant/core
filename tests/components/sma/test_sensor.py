@@ -1,33 +1,19 @@
-"""SMA sensor tests."""
-import logging
+"""Test the sma sensor platform."""
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    ENERGY_KILO_WATT_HOUR,
+    POWER_WATT,
+)
 
-from homeassistant.components.sensor import DOMAIN
-from homeassistant.setup import async_setup_component
-
-from tests.common import assert_setup_component
-
-_LOGGER = logging.getLogger(__name__)
-BASE_CFG = {
-    "platform": "sma",
-    "host": "1.1.1.1",
-    "password": "",
-    "custom": {"my_sensor": {"key": "1234567890123", "unit": "V"}},
-}
+from . import MOCK_CUSTOM_SENSOR
 
 
-async def test_sma_config(hass):
-    """Test new config."""
-    sensors = ["current_consumption"]
-
-    with assert_setup_component(1):
-        assert await async_setup_component(
-            hass, DOMAIN, {DOMAIN: dict(BASE_CFG, sensors=sensors)}
-        )
-
+async def test_sensors(hass, init_integration):
+    """Test states of the sensors."""
     state = hass.states.get("sensor.current_consumption")
     assert state
-    assert "unit_of_measurement" in state.attributes
-    assert "current_consumption" not in state.attributes
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
 
-    state = hass.states.get("sensor.my_sensor")
+    state = hass.states.get(f"sensor.{MOCK_CUSTOM_SENSOR['name']}")
     assert state
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR

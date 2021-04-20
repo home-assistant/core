@@ -1,10 +1,8 @@
 {
   "domain": "itach",
-  "name": "Itach",
+  "name": "Global Cach\u00e9 iTach TCP/IP to IR",
   "documentation": "https://www.home-assistant.io/integrations/itach",
-  "requirements": [
-    "pyitachip2ir==0.0.7"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "requirements": ["pyitachip2ir==0.0.7"],
+  "codeowners": [],
+  "iot_class": "assumed_state"
 }

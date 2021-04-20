@@ -1,10 +1,12 @@
 """Support for the Amazon Polly text to speech service."""
 import logging
-import boto3
 
+import boto3
+import botocore
 import voluptuous as vol
 
 from homeassistant.components.tts import PLATFORM_SCHEMA, Provider
+from homeassistant.const import ATTR_CREDENTIALS, CONF_PROFILE_NAME
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -12,8 +14,6 @@ _LOGGER = logging.getLogger(__name__)
 CONF_REGION = "region_name"
 CONF_ACCESS_KEY_ID = "aws_access_key_id"
 CONF_SECRET_ACCESS_KEY = "aws_secret_access_key"
-CONF_PROFILE_NAME = "profile_name"
-ATTR_CREDENTIALS = "credentials"
 
 DEFAULT_REGION = "us-east-1"
 SUPPORTED_REGIONS = [
@@ -41,6 +41,7 @@ CONF_SAMPLE_RATE = "sample_rate"
 CONF_TEXT_TYPE = "text_type"
 
 SUPPORTED_VOICES = [
+    "Olivia",  # Female, Australian, Neural
     "Zhiyu",  # Chinese
     "Mads",
     "Naja",  # Danish
@@ -94,8 +95,9 @@ SUPPORTED_VOICES = [
     "Conchita",
     "Lucia",  # Spanish European
     "Mia",  # Spanish Mexican
-    "Miguel",
+    "Miguel",  # Spanish US
     "Penelope",  # Spanish US
+    "Lupe",  # Spanish US
     "Astrid",  # Swedish
     "Filiz",  # Turkish
     "Gwyneth",  # Welsh
@@ -124,6 +126,10 @@ DEFAULT_TEXT_TYPE = "text"
 
 DEFAULT_SAMPLE_RATES = {"mp3": "22050", "ogg_vorbis": "22050", "pcm": "16000"}
 
+AWS_CONF_CONNECT_TIMEOUT = 10
+AWS_CONF_READ_TIMEOUT = 5
+AWS_CONF_MAX_POOL_CONNECTIONS = 1
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_REGION, default=DEFAULT_REGION): vol.In(SUPPORTED_REGIONS),
@@ -145,9 +151,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_engine(hass, config):
+def get_engine(hass, config, discovery_info=None):
     """Set up Amazon Polly speech component."""
-    output_format = config.get(CONF_OUTPUT_FORMAT)
+    output_format = config[CONF_OUTPUT_FORMAT]
     sample_rate = config.get(CONF_SAMPLE_RATE, DEFAULT_SAMPLE_RATES[output_format])
     if sample_rate not in SUPPORTED_SAMPLE_RATES_MAP.get(output_format):
         _LOGGER.error(
@@ -163,9 +169,14 @@ def get_engine(hass, config):
         boto3.setup_default_session(profile_name=profile)
 
     aws_config = {
-        CONF_REGION: config.get(CONF_REGION),
+        CONF_REGION: config[CONF_REGION],
         CONF_ACCESS_KEY_ID: config.get(CONF_ACCESS_KEY_ID),
         CONF_SECRET_ACCESS_KEY: config.get(CONF_SECRET_ACCESS_KEY),
+        "config": botocore.config.Config(
+            connect_timeout=AWS_CONF_CONNECT_TIMEOUT,
+            read_timeout=AWS_CONF_READ_TIMEOUT,
+            max_pool_connections=AWS_CONF_MAX_POOL_CONNECTIONS,
+        ),
     }
 
     del config[CONF_REGION]
@@ -197,7 +208,7 @@ class AmazonPollyProvider(Provider):
         self.config = config
         self.supported_langs = supported_languages
         self.all_voices = all_voices
-        self.default_voice = self.config.get(CONF_VOICE)
+        self.default_voice = self.config[CONF_VOICE]
         self.name = "Amazon Polly"
 
     @property
@@ -228,6 +239,7 @@ class AmazonPollyProvider(Provider):
             _LOGGER.error("%s does not support the %s language", voice_id, language)
             return None, None
 
+        _LOGGER.debug("Requesting TTS file for text: %s", message)
         resp = self.client.synthesize_speech(
             Engine=self.config[CONF_ENGINE],
             OutputFormat=self.config[CONF_OUTPUT_FORMAT],
@@ -237,6 +249,7 @@ class AmazonPollyProvider(Provider):
             VoiceId=voice_id,
         )
 
+        _LOGGER.debug("Reply received for TTS: %s", message)
         return (
             CONTENT_TYPE_EXTENSIONS[resp.get("ContentType")],
             resp.get("AudioStream").read(),

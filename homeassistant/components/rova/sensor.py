@@ -3,16 +3,17 @@
 from datetime import datetime, timedelta
 import logging
 
+from requests.exceptions import ConnectTimeout, HTTPError
+from rova.rova import Rova
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     DEVICE_CLASS_TIMESTAMP,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 # Config for rova requests.
@@ -28,8 +29,8 @@ SCAN_INTERVAL = timedelta(hours=12)
 SENSOR_TYPES = {
     "bio": ["gft", "Biowaste", "mdi:recycle"],
     "paper": ["papier", "Paper", "mdi:recycle"],
-    "plastic": ["plasticplus", "PET", "mdi:recycle"],
-    "residual": ["rest", "Residual", "mdi:recycle"],
+    "plastic": ["pmd", "PET", "mdi:recycle"],
+    "residual": ["restafval", "Residual", "mdi:recycle"],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -49,8 +50,6 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Create the Rova data service and sensors."""
-    from rova.rova import Rova
-    from requests.exceptions import HTTPError, ConnectTimeout
 
     zip_code = config[CONF_ZIP_CODE]
     house_number = config[CONF_HOUSE_NUMBER]
@@ -80,7 +79,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(entities, True)
 
 
-class RovaSensor(Entity):
+class RovaSensor(SensorEntity):
     """Representation of a Rova sensor."""
 
     def __init__(self, platform_name, sensor_key, data_service):
@@ -132,7 +131,6 @@ class RovaData:
     @Throttle(UPDATE_DELAY)
     def update(self):
         """Update the data from the Rova API."""
-        from requests.exceptions import HTTPError, ConnectTimeout
 
         try:
             items = self.api.get_calendar_items()

@@ -1,23 +1,23 @@
 """Use serial protocol of Acer projector to obtain state of the projector."""
 import logging
 import re
-import serial
 
+import serial
 import voluptuous as vol
 
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import (
-    STATE_ON,
-    STATE_OFF,
-    STATE_UNKNOWN,
-    CONF_NAME,
     CONF_FILENAME,
+    CONF_NAME,
+    CONF_TIMEOUT,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNKNOWN,
 )
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_TIMEOUT = "timeout"
 CONF_WRITE_TIMEOUT = "write_timeout"
 
 DEFAULT_NAME = "Acer Projector"
@@ -61,20 +61,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Connect with serial port and return Acer Projector."""
-    serial_port = config.get(CONF_FILENAME)
-    name = config.get(CONF_NAME)
-    timeout = config.get(CONF_TIMEOUT)
-    write_timeout = config.get(CONF_WRITE_TIMEOUT)
+    serial_port = config[CONF_FILENAME]
+    name = config[CONF_NAME]
+    timeout = config[CONF_TIMEOUT]
+    write_timeout = config[CONF_WRITE_TIMEOUT]
 
     add_entities([AcerSwitch(serial_port, name, timeout, write_timeout)], True)
 
 
-class AcerSwitch(SwitchDevice):
+class AcerSwitch(SwitchEntity):
     """Represents an Acer Projector as a switch."""
 
     def __init__(self, serial_port, name, timeout, write_timeout, **kwargs):
         """Init of the Acer projector."""
-
         self.ser = serial.Serial(
             port=serial_port, timeout=timeout, write_timeout=write_timeout, **kwargs
         )
@@ -90,7 +89,6 @@ class AcerSwitch(SwitchDevice):
 
     def _write_read(self, msg):
         """Write to the projector and read the return."""
-
         ret = ""
         # Sometimes the projector won't answer for no reason or the projector
         # was disconnected during runtime.
@@ -134,7 +132,7 @@ class AcerSwitch(SwitchDevice):
         return self._state
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return state attributes."""
         return self._attributes
 
@@ -152,7 +150,7 @@ class AcerSwitch(SwitchDevice):
             self._available = False
 
         for key in self._attributes:
-            msg = CMD_DICT.get(key, None)
+            msg = CMD_DICT.get(key)
             if msg:
                 awns = self._write_read_format(msg)
                 self._attributes[key] = awns

@@ -1,6 +1,9 @@
 """Support for Qwikswitch Sensors."""
 import logging
 
+from pyqwikswitch.qwikswitch import SENSORS
+
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import callback
 
 from . import DOMAIN as QWIKSWITCH, QSEntity
@@ -19,22 +22,23 @@ async def async_setup_platform(hass, _, add_entities, discovery_info=None):
     add_entities(devs)
 
 
-class QSSensor(QSEntity):
+class QSSensor(QSEntity, SensorEntity):
     """Sensor based on a Qwikswitch relay/dimmer module."""
 
     _val = None
 
     def __init__(self, sensor):
         """Initialize the sensor."""
-        from pyqwikswitch.qwikswitch import SENSORS
 
         super().__init__(sensor["id"], sensor["name"])
         self.channel = sensor["channel"]
         sensor_type = sensor["type"]
 
         self._decode, self.unit = SENSORS[sensor_type]
-        if isinstance(self.unit, type):
-            self.unit = f"{sensor_type}:{self.channel}"
+        # this cannot happen because it only happens in bool and this should be redirected to binary_sensor
+        assert not isinstance(
+            self.unit, type
+        ), f"boolean sensor id={sensor['id']} name={sensor['name']}"
 
     @callback
     def update_packet(self, packet):
@@ -50,7 +54,7 @@ class QSSensor(QSEntity):
         )
         if val is not None:
             self._val = val
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     @property
     def state(self):

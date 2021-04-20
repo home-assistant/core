@@ -1,13 +1,8 @@
 {
   "domain": "solaredge_local",
-  "name": "Solar Edge Local",
+  "name": "SolarEdge Local",
   "documentation": "https://www.home-assistant.io/integrations/solaredge_local",
-  "requirements": [
-    "solaredge-local==0.2.0"
-  ],
-  "dependencies": [],
-  "codeowners": [
-    "@drobtravels",
-    "@scheric"
-  ]
+  "requirements": ["solaredge-local==0.2.0"],
+  "codeowners": ["@drobtravels", "@scheric"],
+  "iot_class": "local_polling"
 }

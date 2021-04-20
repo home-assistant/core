@@ -1,14 +1,15 @@
 """Entity permissions."""
+from __future__ import annotations
+
 from collections import OrderedDict
-from typing import Callable, Optional
+from typing import Callable
 
 import voluptuous as vol
 
-from .const import SUBCAT_ALL, POLICY_READ, POLICY_CONTROL, POLICY_EDIT
+from .const import POLICY_CONTROL, POLICY_EDIT, POLICY_READ, SUBCAT_ALL
 from .models import PermissionLookup
 from .types import CategoryType, SubCategoryDict, ValueType
-
-from .util import SubCatLookupType, lookup_all, compile_policy
+from .util import SubCatLookupType, compile_policy, lookup_all
 
 SINGLE_ENTITY_SCHEMA = vol.Any(
     True,
@@ -44,14 +45,14 @@ ENTITY_POLICY_SCHEMA = vol.Any(
 
 def _lookup_domain(
     perm_lookup: PermissionLookup, domains_dict: SubCategoryDict, entity_id: str
-) -> Optional[ValueType]:
+) -> ValueType | None:
     """Look up entity permissions by domain."""
     return domains_dict.get(entity_id.split(".", 1)[0])
 
 
 def _lookup_area(
     perm_lookup: PermissionLookup, area_dict: SubCategoryDict, entity_id: str
-) -> Optional[ValueType]:
+) -> ValueType | None:
     """Look up entity permissions by area."""
     entity_entry = perm_lookup.entity_registry.async_get(entity_id)
 
@@ -68,7 +69,7 @@ def _lookup_area(
 
 def _lookup_device(
     perm_lookup: PermissionLookup, devices_dict: SubCategoryDict, entity_id: str
-) -> Optional[ValueType]:
+) -> ValueType | None:
     """Look up entity permissions by device."""
     entity_entry = perm_lookup.entity_registry.async_get(entity_id)
 
@@ -80,7 +81,7 @@ def _lookup_device(
 
 def _lookup_entity_id(
     perm_lookup: PermissionLookup, entities_dict: SubCategoryDict, entity_id: str
-) -> Optional[ValueType]:
+) -> ValueType | None:
     """Look up entity permission by entity id."""
     return entities_dict.get(entity_id)
 

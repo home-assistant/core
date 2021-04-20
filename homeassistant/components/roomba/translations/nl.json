@@ -1,0 +1,63 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "cannot_connect": "Kan geen verbinding maken",
+            "not_irobot_device": "Het gevonden apparaat is geen iRobot-apparaat",
+            "short_blid": "De BLID is afgekapt"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken"
+        },
+        "flow_title": "iRobot {name} ({host})",
+        "step": {
+            "init": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Kies een Roomba of Braava.",
+                "title": "Automatisch verbinding maken met het apparaat"
+            },
+            "link": {
+                "description": "Houd de Home-knop op {name} ingedrukt totdat het apparaat een geluid genereert (ongeveer twee seconden).",
+                "title": "Wachtwoord opvragen"
+            },
+            "link_manual": {
+                "data": {
+                    "password": "Wachtwoord"
+                },
+                "description": "Het wachtwoord kon niet automatisch van het apparaat worden opgehaald. Volg de stappen zoals beschreven in de documentatie op: {auth_help_url}",
+                "title": "Voer wachtwoord in"
+            },
+            "manual": {
+                "data": {
+                    "blid": "BLID",
+                    "host": "Host"
+                },
+                "description": "Er is geen Roomba of Braava ontdekt op uw netwerk. De BLID is het gedeelte van de hostnaam van het apparaat na `iRobot-`. Volg de stappen die worden beschreven in de documentatie op: {auth_help_url}",
+                "title": "Handmatig verbinding maken met het apparaat"
+            },
+            "user": {
+                "data": {
+                    "blid": "BLID",
+                    "continuous": "Doorlopend",
+                    "delay": "Vertraging",
+                    "host": "Host",
+                    "password": "Wachtwoord"
+                },
+                "description": "Het ophalen van de BLID en het wachtwoord is momenteel een handmatig proces. Volg de stappen in de documentatie op: https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials",
+                "title": "Verbinding maken met het apparaat"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "continuous": "Doorlopend",
+                    "delay": "Vertraging"
+                }
+            }
+        }
+    }
+}

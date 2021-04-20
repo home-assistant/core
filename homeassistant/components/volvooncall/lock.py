@@ -1,11 +1,7 @@
 """Support for Volvo On Call locks."""
-import logging
-
-from homeassistant.components.lock import LockDevice
+from homeassistant.components.lock import LockEntity
 
 from . import DATA_KEY, VolvoEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -16,7 +12,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([VolvoLock(hass.data[DATA_KEY], *discovery_info)])
 
 
-class VolvoLock(VolvoEntity, LockDevice):
+class VolvoLock(VolvoEntity, LockEntity):
     """Represents a car lock."""
 
     @property

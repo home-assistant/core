@@ -1,15 +1,25 @@
 """ZHA device automation trigger tests."""
+from datetime import timedelta
+import time
+
 import pytest
+import zigpy.profiles.zha
+import zigpy.zcl.clusters.general as general
 
 import homeassistant.components.automation as automation
-from homeassistant.components.switch import DOMAIN
-from homeassistant.components.zha.core.const import CHANNEL_ON_OFF
-from homeassistant.helpers.device_registry import async_get_registry
+import homeassistant.components.zha.core.device as zha_core_device
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
+import homeassistant.util.dt as dt_util
 
-from .common import async_enable_traffic, async_init_zigpy_device
+from .common import async_enable_traffic
 
-from tests.common import async_mock_service, async_get_device_automations
+from tests.common import (
+    async_fire_time_changed,
+    async_get_device_automations,
+    async_mock_service,
+)
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 ON = 1
 OFF = 0
@@ -37,18 +47,34 @@ def _same_lists(list_a, list_b):
 
 @pytest.fixture
 def calls(hass):
-    """Track calls to a mock serivce."""
+    """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_triggers(hass, config_entry, zha_gateway):
-    """Test zha device triggers."""
-    from zigpy.zcl.clusters.general import OnOff, Basic
+@pytest.fixture
+async def mock_devices(hass, zigpy_device_mock, zha_device_joined_restored):
+    """IAS device fixture."""
 
-    # create zigpy device
-    zigpy_device = await async_init_zigpy_device(
-        hass, [Basic.cluster_id], [OnOff.cluster_id], None, zha_gateway
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                "in_clusters": [general.Basic.cluster_id],
+                "out_clusters": [general.OnOff.cluster_id],
+                "device_type": zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
+            }
+        }
     )
+
+    zha_device = await zha_device_joined_restored(zigpy_device)
+    zha_device.update_available(True)
+    await hass.async_block_till_done()
+    return zigpy_device, zha_device
+
+
+async def test_triggers(hass, mock_devices):
+    """Test zha device triggers."""
+
+    zigpy_device, zha_device = mock_devices
 
     zigpy_device.device_automation_triggers = {
         (SHAKEN, SHAKEN): {COMMAND: COMMAND_SHAKE},
@@ -58,19 +84,21 @@ async def test_triggers(hass, config_entry, zha_gateway):
         (LONG_RELEASE, LONG_RELEASE): {COMMAND: COMMAND_HOLD},
     }
 
-    await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
-    await hass.async_block_till_done()
-    hass.config_entries._entries.append(config_entry)
-
-    zha_device = zha_gateway.get_device(zigpy_device.ieee)
     ieee_address = str(zha_device.ieee)
 
-    ha_device_registry = await async_get_registry(hass)
-    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)}, set())
+    ha_device_registry = dr.async_get(hass)
+    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
 
     triggers = await async_get_device_automations(hass, "trigger", reg_device.id)
 
     expected_triggers = [
+        {
+            "device_id": reg_device.id,
+            "domain": "zha",
+            "platform": "device",
+            "type": "device_offline",
+            "subtype": "device_offline",
+        },
         {
             "device_id": reg_device.id,
             "domain": "zha",
@@ -110,37 +138,31 @@ async def test_triggers(hass, config_entry, zha_gateway):
     assert _same_lists(triggers, expected_triggers)
 
 
-async def test_no_triggers(hass, config_entry, zha_gateway):
+async def test_no_triggers(hass, mock_devices):
     """Test zha device with no triggers."""
-    from zigpy.zcl.clusters.general import OnOff, Basic
 
-    # create zigpy device
-    zigpy_device = await async_init_zigpy_device(
-        hass, [Basic.cluster_id], [OnOff.cluster_id], None, zha_gateway
-    )
-
-    await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
-    await hass.async_block_till_done()
-    hass.config_entries._entries.append(config_entry)
-
-    zha_device = zha_gateway.get_device(zigpy_device.ieee)
+    _, zha_device = mock_devices
     ieee_address = str(zha_device.ieee)
 
-    ha_device_registry = await async_get_registry(hass)
-    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)}, set())
+    ha_device_registry = dr.async_get(hass)
+    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
 
     triggers = await async_get_device_automations(hass, "trigger", reg_device.id)
-    assert triggers == []
+    assert triggers == [
+        {
+            "device_id": reg_device.id,
+            "domain": "zha",
+            "platform": "device",
+            "type": "device_offline",
+            "subtype": "device_offline",
+        }
+    ]
 
 
-async def test_if_fires_on_event(hass, config_entry, zha_gateway, calls):
+async def test_if_fires_on_event(hass, mock_devices, calls):
     """Test for remote triggers firing."""
-    from zigpy.zcl.clusters.general import OnOff, Basic
 
-    # create zigpy device
-    zigpy_device = await async_init_zigpy_device(
-        hass, [Basic.cluster_id], [OnOff.cluster_id], None, zha_gateway
-    )
+    zigpy_device, zha_device = mock_devices
 
     zigpy_device.device_automation_triggers = {
         (SHAKEN, SHAKEN): {COMMAND: COMMAND_SHAKE},
@@ -150,18 +172,9 @@ async def test_if_fires_on_event(hass, config_entry, zha_gateway, calls):
         (LONG_RELEASE, LONG_RELEASE): {COMMAND: COMMAND_HOLD},
     }
 
-    await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
-    await hass.async_block_till_done()
-    hass.config_entries._entries.append(config_entry)
-
-    zha_device = zha_gateway.get_device(zigpy_device.ieee)
-
-    # allow traffic to flow through the gateway and device
-    await async_enable_traffic(hass, zha_gateway, [zha_device])
-
     ieee_address = str(zha_device.ieee)
-    ha_device_registry = await async_get_registry(hass)
-    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)}, set())
+    ha_device_registry = dr.async_get(hass)
+    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
 
     assert await async_setup_component(
         hass,
@@ -187,35 +200,90 @@ async def test_if_fires_on_event(hass, config_entry, zha_gateway, calls):
 
     await hass.async_block_till_done()
 
-    on_off_channel = zha_device.cluster_channels[CHANNEL_ON_OFF]
-    on_off_channel.zha_send_event(on_off_channel.cluster, COMMAND_SINGLE, [])
+    channel = zha_device.channels.pools[0].client_channels["1:0x0006"]
+    channel.zha_send_event(COMMAND_SINGLE, [])
     await hass.async_block_till_done()
 
     assert len(calls) == 1
     assert calls[0].data["message"] == "service called"
 
 
-async def test_exception_no_triggers(hass, config_entry, zha_gateway, calls, caplog):
-    """Test for exception on event triggers firing."""
-    from zigpy.zcl.clusters.general import OnOff, Basic
+async def test_device_offline_fires(
+    hass, zigpy_device_mock, zha_device_restored, calls
+):
+    """Test for device offline triggers firing."""
 
-    # create zigpy device
-    zigpy_device = await async_init_zigpy_device(
-        hass, [Basic.cluster_id], [OnOff.cluster_id], None, zha_gateway
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                "in_clusters": [general.Basic.cluster_id],
+                "out_clusters": [general.OnOff.cluster_id],
+                "device_type": 0,
+            }
+        }
     )
 
-    await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
+    zha_device = await zha_device_restored(zigpy_device, last_seen=time.time())
+    await async_enable_traffic(hass, [zha_device])
     await hass.async_block_till_done()
-    hass.config_entries._entries.append(config_entry)
 
-    zha_device = zha_gateway.get_device(zigpy_device.ieee)
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "device_id": zha_device.device_id,
+                        "domain": "zha",
+                        "platform": "device",
+                        "type": "device_offline",
+                        "subtype": "device_offline",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data": {"message": "service called"},
+                    },
+                }
+            ]
+        },
+    )
 
-    # allow traffic to flow through the gateway and device
-    await async_enable_traffic(hass, zha_gateway, [zha_device])
+    await hass.async_block_till_done()
+    assert zha_device.available is True
+
+    zigpy_device.last_seen = (
+        time.time() - zha_core_device.CONSIDER_UNAVAILABLE_BATTERY - 2
+    )
+
+    # there are 3 checkins to perform before marking the device unavailable
+    future = dt_util.utcnow() + timedelta(seconds=90)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+
+    future = dt_util.utcnow() + timedelta(seconds=90)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+
+    future = dt_util.utcnow() + timedelta(
+        seconds=zha_core_device.CONSIDER_UNAVAILABLE_BATTERY + 100
+    )
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+
+    assert zha_device.available is False
+    assert len(calls) == 1
+    assert calls[0].data["message"] == "service called"
+
+
+async def test_exception_no_triggers(hass, mock_devices, calls, caplog):
+    """Test for exception on event triggers firing."""
+
+    _, zha_device = mock_devices
 
     ieee_address = str(zha_device.ieee)
-    ha_device_registry = await async_get_registry(hass)
-    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)}, set())
+    ha_device_registry = dr.async_get(hass)
+    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
 
     await async_setup_component(
         hass,
@@ -242,14 +310,10 @@ async def test_exception_no_triggers(hass, config_entry, zha_gateway, calls, cap
     assert "Invalid config for [automation]" in caplog.text
 
 
-async def test_exception_bad_trigger(hass, config_entry, zha_gateway, calls, caplog):
+async def test_exception_bad_trigger(hass, mock_devices, calls, caplog):
     """Test for exception on event triggers firing."""
-    from zigpy.zcl.clusters.general import OnOff, Basic
 
-    # create zigpy device
-    zigpy_device = await async_init_zigpy_device(
-        hass, [Basic.cluster_id], [OnOff.cluster_id], None, zha_gateway
-    )
+    zigpy_device, zha_device = mock_devices
 
     zigpy_device.device_automation_triggers = {
         (SHAKEN, SHAKEN): {COMMAND: COMMAND_SHAKE},
@@ -259,18 +323,9 @@ async def test_exception_bad_trigger(hass, config_entry, zha_gateway, calls, cap
         (LONG_RELEASE, LONG_RELEASE): {COMMAND: COMMAND_HOLD},
     }
 
-    await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
-    await hass.async_block_till_done()
-    hass.config_entries._entries.append(config_entry)
-
-    zha_device = zha_gateway.get_device(zigpy_device.ieee)
-
-    # allow traffic to flow through the gateway and device
-    await async_enable_traffic(hass, zha_gateway, [zha_device])
-
     ieee_address = str(zha_device.ieee)
-    ha_device_registry = await async_get_registry(hass)
-    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)}, set())
+    ha_device_registry = dr.async_get(hass)
+    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
 
     await async_setup_component(
         hass,

@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Hesap zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "no_device": "Hi\u00e7bir cihaz\u0131n\u0131zda \"iPhone'umu bul\" etkin de\u011fil",
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu"
+        },
+        "error": {
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "validate_verification_code": "Do\u011frulama kodunuzu do\u011frulamay\u0131 ba\u015faramad\u0131n\u0131z, bir g\u00fcven ayg\u0131t\u0131 se\u00e7in ve do\u011frulamay\u0131 yeniden ba\u015flat\u0131n"
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "password": "Parola"
+                },
+                "description": "{username} i\u00e7in \u00f6nceden girdi\u011finiz \u015fifreniz art\u0131k \u00e7al\u0131\u015fm\u0131yor. Bu entegrasyonu kullanmaya devam etmek i\u00e7in \u015fifrenizi g\u00fcncelleyin."
+            },
+            "user": {
+                "data": {
+                    "password": "Parola",
+                    "username": "E-posta",
+                    "with_family": "Aileyle"
+                }
+            }
+        }
+    }
+}

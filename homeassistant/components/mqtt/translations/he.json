@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "\u05e8\u05e7 \u05d4\u05d2\u05d3\u05e8\u05d4 \u05d0\u05d7\u05ea \u05e9\u05dc MQTT \u05de\u05d5\u05ea\u05e8\u05ea."
+        },
+        "error": {
+            "cannot_connect": "\u05dc\u05d0 \u05e0\u05d9\u05ea\u05df \u05dc\u05d4\u05ea\u05d7\u05d1\u05e8 \u05dc\u05d1\u05e8\u05d5\u05e7\u05e8."
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "\u05d1\u05e8\u05d5\u05e7\u05e8",
+                    "discovery": "\u05d0\u05e4\u05e9\u05e8 \u05d2\u05d9\u05dc\u05d5\u05d9",
+                    "password": "\u05e1\u05d9\u05e1\u05de\u05d4",
+                    "port": "\u05e4\u05d5\u05e8\u05d8",
+                    "username": "\u05e9\u05dd \u05de\u05e9\u05ea\u05de\u05e9"
+                },
+                "description": "\u05e0\u05d0 \u05dc\u05d4\u05d6\u05d9\u05df \u05d0\u05ea \u05e4\u05e8\u05d8\u05d9 \u05d4\u05d7\u05d9\u05d1\u05d5\u05e8 \u05e9\u05dc \u05d4\u05d1\u05e8\u05d5\u05e7\u05e8 MQTT \u05e9\u05dc\u05da."
+            }
+        }
+    }
+}

@@ -1,17 +1,18 @@
 """Support for Velbus devices."""
 import asyncio
 import logging
+
 import velbus
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_PORT, CONF_NAME
+from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PORT
 from homeassistant.exceptions import ConfigEntryNotReady
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import DOMAIN
+from .const import CONF_MEMO_TEXT, DOMAIN, SERVICE_SET_MEMO_TEXT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +22,7 @@ CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema({vol.Required(CONF_PORT): cv.string})}, extra=vol.ALLOW_EXTRA
 )
 
-COMPONENT_TYPES = ["switch", "sensor", "binary_sensor", "cover", "climate"]
+PLATFORMS = ["switch", "sensor", "binary_sensor", "cover", "climate", "light"]
 
 
 async def async_setup(hass, config):
@@ -29,13 +30,11 @@ async def async_setup(hass, config):
     # Import from the configuration file if needed
     if DOMAIN not in config:
         return True
-
     port = config[DOMAIN].get(CONF_PORT)
     data = {}
 
     if port:
         data = {CONF_PORT: port, CONF_NAME: "Velbus import"}
-
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=data
@@ -52,30 +51,26 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     def callback():
         modules = controller.get_modules()
         discovery_info = {"cntrl": controller}
-        for category in COMPONENT_TYPES:
-            discovery_info[category] = []
-
+        for platform in PLATFORMS:
+            discovery_info[platform] = []
         for module in modules:
             for channel in range(1, module.number_of_channels() + 1):
-                for category in COMPONENT_TYPES:
-                    if category in module.get_categories(channel):
-                        discovery_info[category].append(
+                for platform in PLATFORMS:
+                    if platform in module.get_categories(channel):
+                        discovery_info[platform].append(
                             (module.get_module_address(), channel)
                         )
-
         hass.data[DOMAIN][entry.entry_id] = discovery_info
 
-        for category in COMPONENT_TYPES:
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(entry, category)
-            )
+        for platform in PLATFORMS:
+            hass.add_job(hass.config_entries.async_forward_entry_setup(entry, platform))
 
     try:
         controller = velbus.Controller(entry.data[CONF_PORT])
         controller.scan(callback)
     except velbus.util.VelbusException as err:
         _LOGGER.error("An error occurred: %s", err)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from err
 
     def syn_clock(self, service=None):
         try:
@@ -85,6 +80,32 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
     hass.services.async_register(DOMAIN, "sync_clock", syn_clock, schema=vol.Schema({}))
 
+    def set_memo_text(service):
+        """Handle Memo Text service call."""
+        module_address = service.data[CONF_ADDRESS]
+        memo_text = service.data[CONF_MEMO_TEXT]
+        memo_text.hass = hass
+        try:
+            controller.get_module(module_address).set_memo_text(
+                memo_text.async_render()
+            )
+        except velbus.util.VelbusException as err:
+            _LOGGER.error("An error occurred while setting memo text: %s", err)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_MEMO_TEXT,
+        set_memo_text,
+        vol.Schema(
+            {
+                vol.Required(CONF_ADDRESS): vol.All(
+                    vol.Coerce(int), vol.Range(min=0, max=255)
+                ),
+                vol.Optional(CONF_MEMO_TEXT, default=""): cv.template,
+            }
+        ),
+    )
+
     return True
 
 
@@ -92,8 +113,8 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Remove the velbus connection."""
     await asyncio.wait(
         [
-            hass.config_entries.async_forward_entry_unload(entry, component)
-            for component in COMPONENT_TYPES
+            hass.config_entries.async_forward_entry_unload(entry, platform)
+            for platform in PLATFORMS
         ]
     )
     hass.data[DOMAIN][entry.entry_id]["cntrl"].stop()
@@ -145,11 +166,11 @@ class VelbusEntity(Entity):
             "identifiers": {
                 (DOMAIN, self._module.get_module_address(), self._module.serial)
             },
-            "name": "{} {}".format(
-                self._module.get_module_address(), self._module.get_module_name()
+            "name": "{} ({})".format(
+                self._module.get_module_name(), self._module.get_module_address()
             ),
             "manufacturer": "Velleman",
-            "model": self._module.get_module_name(),
+            "model": self._module.get_module_type_name(),
             "sw_version": "{}.{}-{}".format(
                 self._module.memory_map_version,
                 self._module.build_year,

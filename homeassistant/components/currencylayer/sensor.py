@@ -5,16 +5,15 @@ import logging
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_NAME,
-    CONF_BASE,
-    CONF_QUOTE,
     ATTR_ATTRIBUTION,
+    CONF_API_KEY,
+    CONF_BASE,
+    CONF_NAME,
+    CONF_QUOTE,
 )
-from homeassistant.helpers.entity import Entity
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = "http://apilayer.net/api/live"
@@ -26,7 +25,7 @@ DEFAULT_NAME = "CurrencyLayer Sensor"
 
 ICON = "mdi:currency"
 
-SCAN_INTERVAL = timedelta(hours=2)
+SCAN_INTERVAL = timedelta(hours=4)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -40,22 +39,22 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Currencylayer sensor."""
-    base = config.get(CONF_BASE)
-    api_key = config.get(CONF_API_KEY)
+    base = config[CONF_BASE]
+    api_key = config[CONF_API_KEY]
     parameters = {"source": base, "access_key": api_key, "format": 1}
 
     rest = CurrencylayerData(_RESOURCE, parameters)
 
     response = requests.get(_RESOURCE, params=parameters, timeout=10)
     sensors = []
-    for variable in config["quote"]:
+    for variable in config[CONF_QUOTE]:
         sensors.append(CurrencylayerSensor(rest, base, variable))
     if "error" in response.json():
         return False
     add_entities(sensors, True)
 
 
-class CurrencylayerSensor(Entity):
+class CurrencylayerSensor(SensorEntity):
     """Implementing the Currencylayer sensor."""
 
     def __init__(self, rest, base, quote):
@@ -86,7 +85,7 @@ class CurrencylayerSensor(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 

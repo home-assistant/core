@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Invalid authentication",
+            "service": "Error while trying to reach SmartHab. Service might be down. Check your connection.",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "Email",
+                    "password": "Password"
+                },
+                "description": "For technical reasons, be sure to use a secondary account specific to your Home Assistant setup. You can create one from the SmartHab application.",
+                "title": "Setup SmartHab"
+            }
+        }
+    }
+}

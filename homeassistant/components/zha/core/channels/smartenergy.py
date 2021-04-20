@@ -1,151 +1,136 @@
-"""
-Smart energy channels module for Zigbee Home Automation.
+"""Smart energy channels module for Zigbee Home Automation."""
+from __future__ import annotations
 
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/integrations/zha/
-"""
-import logging
+from collections.abc import Coroutine
 
 import zigpy.zcl.clusters.smartenergy as smartenergy
 
+from homeassistant.const import (
+    POWER_WATT,
+    TIME_HOURS,
+    TIME_SECONDS,
+    VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
+    VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
+)
 from homeassistant.core import callback
 
-from .. import registries
-from ..channels import AttributeListeningChannel, ZigbeeChannel
+from .. import registries, typing as zha_typing
 from ..const import REPORT_CONFIG_DEFAULT
-
-_LOGGER = logging.getLogger(__name__)
+from .base import ZigbeeChannel
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.Calendar.cluster_id)
 class Calendar(ZigbeeChannel):
     """Calendar channel."""
 
-    pass
-
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.DeviceManagement.cluster_id)
 class DeviceManagement(ZigbeeChannel):
     """Device Management channel."""
-
-    pass
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.Drlc.cluster_id)
 class Drlc(ZigbeeChannel):
     """Demand Response and Load Control channel."""
 
-    pass
-
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.EnergyManagement.cluster_id)
 class EnergyManagement(ZigbeeChannel):
     """Energy Management channel."""
-
-    pass
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.Events.cluster_id)
 class Events(ZigbeeChannel):
     """Event channel."""
 
-    pass
-
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.KeyEstablishment.cluster_id)
 class KeyEstablishment(ZigbeeChannel):
     """Key Establishment channel."""
-
-    pass
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.MduPairing.cluster_id)
 class MduPairing(ZigbeeChannel):
     """Pairing channel."""
 
-    pass
-
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.Messaging.cluster_id)
 class Messaging(ZigbeeChannel):
     """Messaging channel."""
 
-    pass
-
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.Metering.cluster_id)
-class Metering(AttributeListeningChannel):
+class Metering(ZigbeeChannel):
     """Metering channel."""
 
     REPORT_CONFIG = [{"attr": "instantaneous_demand", "config": REPORT_CONFIG_DEFAULT}]
 
     unit_of_measure_map = {
-        0x00: "kW",
-        0x01: "m³/h",
-        0x02: "ft³/h",
-        0x03: "ccf/h",
-        0x04: "US gal/h",
-        0x05: "IMP gal/h",
-        0x06: "BTU/h",
-        0x07: "l/h",
+        0x00: POWER_WATT,
+        0x01: VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
+        0x02: VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
+        0x03: f"ccf/{TIME_HOURS}",
+        0x04: f"US gal/{TIME_HOURS}",
+        0x05: f"IMP gal/{TIME_HOURS}",
+        0x06: f"BTU/{TIME_HOURS}",
+        0x07: f"l/{TIME_HOURS}",
         0x08: "kPa",
         0x09: "kPa",
-        0x0A: "mcf/h",
+        0x0A: f"mcf/{TIME_HOURS}",
         0x0B: "unitless",
-        0x0C: "MJ/s",
+        0x0C: f"MJ/{TIME_SECONDS}",
     }
 
-    def __init__(self, cluster, device):
+    def __init__(
+        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
+    ) -> None:
         """Initialize Metering."""
-        super().__init__(cluster, device)
-        self._divisor = None
-        self._multiplier = None
-        self._unit_enum = None
+        super().__init__(cluster, ch_pool)
         self._format_spec = None
 
-    async def async_configure(self):
-        """Configure channel."""
-        await self.fetch_config(False)
-        await super().async_configure()
-
-    async def async_initialize(self, from_cache):
-        """Initialize channel."""
-        await self.fetch_config(True)
-        await super().async_initialize(from_cache)
-
-    @callback
-    def attribute_updated(self, attrid, value):
-        """Handle attribute update from Metering cluster."""
-        super().attribute_updated(attrid, value * self._multiplier / self._divisor)
+    @property
+    def divisor(self) -> int:
+        """Return divisor for the value."""
+        return self.cluster.get("divisor") or 1
 
     @property
-    def unit_of_measurement(self):
+    def multiplier(self) -> int:
+        """Return multiplier for the value."""
+        return self.cluster.get("multiplier") or 1
+
+    def async_configure_channel_specific(self) -> Coroutine:
+        """Configure channel."""
+        return self.fetch_config(False)
+
+    def async_initialize_channel_specific(self, from_cache: bool) -> Coroutine:
+        """Initialize channel."""
+        return self.fetch_config(True)
+
+    @callback
+    def attribute_updated(self, attrid: int, value: int) -> None:
+        """Handle attribute update from Metering cluster."""
+        if None in (self.multiplier, self.divisor, self._format_spec):
+            return
+        super().attribute_updated(attrid, value)
+
+    @property
+    def unit_of_measurement(self) -> str:
         """Return unit of measurement."""
-        return self.unit_of_measure_map.get(self._unit_enum & 0x7F, "unknown")
+        uom = self.cluster.get("unit_of_measure", 0x7F)
+        return self.unit_of_measure_map.get(uom & 0x7F, "unknown")
 
-    async def fetch_config(self, from_cache):
+    async def fetch_config(self, from_cache: bool) -> None:
         """Fetch config from device and updates format specifier."""
-        self._divisor = await self.get_attribute_value("divisor", from_cache=from_cache)
-        self._multiplier = await self.get_attribute_value(
-            "multiplier", from_cache=from_cache
-        )
-        self._unit_enum = await self.get_attribute_value(
-            "unit_of_measure", from_cache=from_cache
-        )
-        fmting = await self.get_attribute_value(
-            "demand_formatting", from_cache=from_cache
+        results = await self.get_attributes(
+            ["divisor", "multiplier", "unit_of_measure", "demand_formatting"],
+            from_cache=from_cache,
         )
 
-        if self._divisor is None or self._divisor == 0:
-            self._divisor = 1
-        if self._multiplier is None or self._multiplier == 0:
-            self._multiplier = 1
-        if self._unit_enum is None:
-            self._unit_enum = 0x7F  # unknown
-        if fmting is None:
-            fmting = 0xF9  # 1 digit to the right, 15 digits to the left
+        fmting = results.get(
+            "demand_formatting", 0xF9
+        )  # 1 digit to the right, 15 digits to the left
 
-        r_digits = fmting & 0x07  # digits to the right of decimal point
+        r_digits = int(fmting & 0x07)  # digits to the right of decimal point
         l_digits = (fmting >> 3) & 0x0F  # digits to the left of decimal point
         if l_digits == 0:
             l_digits = 15
@@ -156,8 +141,15 @@ class Metering(AttributeListeningChannel):
         else:
             self._format_spec = "{:0" + str(width) + "." + str(r_digits) + "f}"
 
-    def formatter_function(self, value):
+    def formatter_function(self, value: int) -> int | float:
         """Return formatted value for display."""
+        value = value * self.multiplier / self.divisor
+        if self.unit_of_measurement == POWER_WATT:
+            # Zigbee spec power unit is kW, but we show the value in W
+            value_watt = value * 1000
+            if value_watt < 100:
+                return round(value_watt, 1)
+            return round(value_watt)
         return self._format_spec.format(value).lstrip()
 
 
@@ -165,18 +157,12 @@ class Metering(AttributeListeningChannel):
 class Prepayment(ZigbeeChannel):
     """Prepayment channel."""
 
-    pass
-
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.Price.cluster_id)
 class Price(ZigbeeChannel):
     """Price channel."""
 
-    pass
-
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.Tunneling.cluster_id)
 class Tunneling(ZigbeeChannel):
     """Tunneling channel."""
-
-    pass

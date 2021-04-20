@@ -1,9 +1,10 @@
 """Configuration for Sonos tests."""
-from asynctest.mock import Mock, patch as patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch as patch
+
 import pytest
 
-from homeassistant.components.sonos import DOMAIN
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
+from homeassistant.components.sonos import DOMAIN
 from homeassistant.const import CONF_HOSTS
 
 from tests.common import MockConfigEntry
@@ -23,22 +24,28 @@ def soco_fixture(music_library, speaker_info, dummy_soco_service):
     ):
         mock_soco = mock.return_value
         mock_soco.uid = "RINCON_test"
+        mock_soco.play_mode = "NORMAL"
         mock_soco.music_library = music_library
         mock_soco.get_speaker_info.return_value = speaker_info
         mock_soco.avTransport = dummy_soco_service
         mock_soco.renderingControl = dummy_soco_service
         mock_soco.zoneGroupTopology = dummy_soco_service
         mock_soco.contentDirectory = dummy_soco_service
+        mock_soco.mute = False
+        mock_soco.night_mode = True
+        mock_soco.dialog_mode = True
+        mock_soco.volume = 19
 
         yield mock_soco
 
 
-@pytest.fixture(name="discover")
+@pytest.fixture(name="discover", autouse=True)
 def discover_fixture(soco):
     """Create a mock pysonos discover fixture."""
 
     def do_callback(callback, **kwargs):
         callback(soco)
+        return MagicMock()
 
     with patch("pysonos.discover_thread", side_effect=do_callback) as mock:
         yield mock
@@ -54,7 +61,7 @@ def config_fixture():
 def dummy_soco_service_fixture():
     """Create dummy_soco_service fixture."""
     service = Mock()
-    service.subscribe = Mock()
+    service.subscribe = AsyncMock()
     return service
 
 
@@ -69,4 +76,9 @@ def music_library_fixture():
 @pytest.fixture(name="speaker_info")
 def speaker_info_fixture():
     """Create speaker_info fixture."""
-    return {"zone_name": "Zone A", "model_name": "Model Name"}
+    return {
+        "zone_name": "Zone A",
+        "model_name": "Model Name",
+        "software_version": "49.2-64250",
+        "mac_address": "00-11-22-33-44-55",
+    }

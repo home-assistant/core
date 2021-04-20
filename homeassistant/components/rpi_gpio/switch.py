@@ -1,15 +1,14 @@
 """Allows to configure a switch using RPi GPIO."""
-import logging
-
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.components import rpi_gpio
+from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.const import DEVICE_DEFAULT_NAME
-from homeassistant.helpers.entity import ToggleEntity
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.reload import setup_reload_service
 
-_LOGGER = logging.getLogger(__name__)
+from . import DOMAIN, PLATFORMS
 
 CONF_PULL_MODE = "pull_mode"
 CONF_PORTS = "ports"
@@ -29,6 +28,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Raspberry PI GPIO devices."""
+    setup_reload_service(hass, DOMAIN, PLATFORMS)
+
     invert_logic = config.get(CONF_INVERT_LOGIC)
 
     switches = []

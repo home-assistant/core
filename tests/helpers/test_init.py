@@ -15,7 +15,7 @@ def test_extract_domain_configs():
         "zone 100": None,
     }
 
-    assert set(["zone", "zone Hallo", "zone 100"]) == set(
+    assert {"zone", "zone Hallo", "zone 100"} == set(
         helpers.extract_domain_configs(config, "zone")
     )
 

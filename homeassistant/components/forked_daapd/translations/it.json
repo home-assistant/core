@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "not_forked_daapd": "Il dispositivo non \u00e8 un server forked-daapd."
+        },
+        "error": {
+            "forbidden": "Impossibile connettersi. Si prega di controllare i permessi di rete forked-daapd.",
+            "unknown_error": "Errore imprevisto",
+            "websocket_not_enabled": "websocket del server forked-daapd non abilitato.",
+            "wrong_host_or_port": "Impossibile connettersi. Si prega di controllare host e porta.",
+            "wrong_password": "Password errata",
+            "wrong_server_type": "L'integrazione forked-daapd richiede un server forked-daapd con versione >= 27.0."
+        },
+        "flow_title": "server forked-daapd: {name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Nome descrittivo",
+                    "password": "Password API (lasciare vuota se non c'\u00e8 password)",
+                    "port": "Porta API"
+                },
+                "title": "Configurare il dispositivo forked-daapd"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "librespot_java_port": "Porta per il controllo pipe librespot-java (se utilizzata)",
+                    "max_playlists": "Numero massimo di playlist utilizzate come origini",
+                    "tts_pause_time": "Secondi di pausa prima e dopo il TTS",
+                    "tts_volume": "Volume TTS (variabile nell'intervallo [0,1])"
+                },
+                "description": "Impostare le varie opzioni per l'integrazione forked-daapd.",
+                "title": "Configura le opzioni forked-daapd"
+            }
+        }
+    }
+}

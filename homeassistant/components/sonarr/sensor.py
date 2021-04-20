@@ -1,255 +1,362 @@
-"""Support for Sonarr."""
+"""Support for Sonarr sensors."""
+from __future__ import annotations
+
+from datetime import timedelta
 import logging
-import time
-from datetime import datetime
+from typing import Any, Callable
 
-import requests
-import voluptuous as vol
+from sonarr import Sonarr, SonarrConnectionError, SonarrError
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_HOST,
-    CONF_PORT,
-    CONF_MONITORED_CONDITIONS,
-    CONF_SSL,
-)
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import DATA_GIGABYTES
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import HomeAssistantType
+import homeassistant.util.dt as dt_util
+
+from . import SonarrEntity
+from .const import CONF_UPCOMING_DAYS, CONF_WANTED_MAX_ITEMS, DATA_SONARR, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_DAYS = "days"
-CONF_INCLUDED = "include_paths"
-CONF_UNIT = "unit"
-CONF_URLBASE = "urlbase"
 
-DEFAULT_HOST = "localhost"
-DEFAULT_PORT = 8989
-DEFAULT_URLBASE = ""
-DEFAULT_DAYS = "1"
-DEFAULT_UNIT = "GB"
+async def async_setup_entry(
+    hass: HomeAssistantType,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[list[Entity], bool], None],
+) -> None:
+    """Set up Sonarr sensors based on a config entry."""
+    options = entry.options
+    sonarr = hass.data[DOMAIN][entry.entry_id][DATA_SONARR]
 
-SENSOR_TYPES = {
-    "diskspace": ["Disk Space", "GB", "mdi:harddisk"],
-    "queue": ["Queue", "Episodes", "mdi:download"],
-    "upcoming": ["Upcoming", "Episodes", "mdi:television"],
-    "wanted": ["Wanted", "Episodes", "mdi:television"],
-    "series": ["Series", "Shows", "mdi:television"],
-    "commands": ["Commands", "Commands", "mdi:code-braces"],
-    "status": ["Status", "Status", "mdi:information"],
-}
-
-ENDPOINTS = {
-    "diskspace": "http{0}://{1}:{2}/{3}api/diskspace",
-    "queue": "http{0}://{1}:{2}/{3}api/queue",
-    "upcoming": "http{0}://{1}:{2}/{3}api/calendar?start={4}&end={5}",
-    "wanted": "http{0}://{1}:{2}/{3}api/wanted/missing",
-    "series": "http{0}://{1}:{2}/{3}api/series",
-    "commands": "http{0}://{1}:{2}/{3}api/command",
-    "status": "http{0}://{1}:{2}/{3}api/system/status",
-}
-
-# Support to Yottabytes for the future, why not
-BYTE_SIZES = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_DAYS, default=DEFAULT_DAYS): cv.string,
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_INCLUDED, default=[]): cv.ensure_list,
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=["upcoming"]): vol.All(
-            cv.ensure_list, [vol.In(list(SENSOR_TYPES))]
+    entities = [
+        SonarrCommandsSensor(sonarr, entry.entry_id),
+        SonarrDiskspaceSensor(sonarr, entry.entry_id),
+        SonarrQueueSensor(sonarr, entry.entry_id),
+        SonarrSeriesSensor(sonarr, entry.entry_id),
+        SonarrUpcomingSensor(sonarr, entry.entry_id, days=options[CONF_UPCOMING_DAYS]),
+        SonarrWantedSensor(
+            sonarr, entry.entry_id, max_items=options[CONF_WANTED_MAX_ITEMS]
         ),
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_SSL, default=False): cv.boolean,
-        vol.Optional(CONF_UNIT, default=DEFAULT_UNIT): vol.In(BYTE_SIZES),
-        vol.Optional(CONF_URLBASE, default=DEFAULT_URLBASE): cv.string,
-    }
-)
+    ]
+
+    async_add_entities(entities, True)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Sonarr platform."""
-    conditions = config.get(CONF_MONITORED_CONDITIONS)
-    add_entities([SonarrSensor(hass, config, sensor) for sensor in conditions], True)
+def sonarr_exception_handler(func):
+    """Decorate Sonarr calls to handle Sonarr exceptions.
+
+    A decorator that wraps the passed in function, catches Sonarr errors,
+    and handles the availability of the entity.
+    """
+
+    async def handler(self, *args, **kwargs):
+        try:
+            await func(self, *args, **kwargs)
+            self.last_update_success = True
+        except SonarrConnectionError as error:
+            if self.available:
+                _LOGGER.error("Error communicating with API: %s", error)
+            self.last_update_success = False
+        except SonarrError as error:
+            if self.available:
+                _LOGGER.error("Invalid response from API: %s", error)
+                self.last_update_success = False
+
+    return handler
 
 
-class SonarrSensor(Entity):
+class SonarrSensor(SonarrEntity, SensorEntity):
     """Implementation of the Sonarr sensor."""
 
-    def __init__(self, hass, conf, sensor_type):
-        """Create Sonarr entity."""
-        from pytz import timezone
+    def __init__(
+        self,
+        *,
+        sonarr: Sonarr,
+        entry_id: str,
+        enabled_default: bool = True,
+        icon: str,
+        key: str,
+        name: str,
+        unit_of_measurement: str | None = None,
+    ) -> None:
+        """Initialize Sonarr sensor."""
+        self._unit_of_measurement = unit_of_measurement
+        self._key = key
+        self._unique_id = f"{entry_id}_{key}"
+        self.last_update_success = False
 
-        self.conf = conf
-        self.host = conf.get(CONF_HOST)
-        self.port = conf.get(CONF_PORT)
-        self.urlbase = conf.get(CONF_URLBASE)
-        if self.urlbase:
-            self.urlbase = "{}/".format(self.urlbase.strip("/"))
-        self.apikey = conf.get(CONF_API_KEY)
-        self.included = conf.get(CONF_INCLUDED)
-        self.days = int(conf.get(CONF_DAYS))
-        self.ssl = "s" if conf.get(CONF_SSL) else ""
-        self._state = None
-        self.data = []
-        self._tz = timezone(str(hass.config.time_zone))
-        self.type = sensor_type
-        self._name = SENSOR_TYPES[self.type][0]
-        if self.type == "diskspace":
-            self._unit = conf.get(CONF_UNIT)
-        else:
-            self._unit = SENSOR_TYPES[self.type][1]
-        self._icon = SENSOR_TYPES[self.type][2]
-        self._available = False
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return "{} {}".format("Sonarr", self._name)
+        super().__init__(
+            sonarr=sonarr,
+            entry_id=entry_id,
+            device_id=entry_id,
+            name=name,
+            icon=icon,
+            enabled_default=enabled_default,
+        )
 
     @property
-    def state(self):
-        """Return sensor state."""
-        return self._state
+    def unique_id(self) -> str:
+        """Return the unique ID for this sensor."""
+        return self._unique_id
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return sensor availability."""
-        return self._available
+        return self.last_update_success
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit of the sensor."""
-        return self._unit
+    def unit_of_measurement(self) -> str:
+        """Return the unit this state is expressed in."""
+        return self._unit_of_measurement
+
+
+class SonarrCommandsSensor(SonarrSensor):
+    """Defines a Sonarr Commands sensor."""
+
+    def __init__(self, sonarr: Sonarr, entry_id: str) -> None:
+        """Initialize Sonarr Commands sensor."""
+        self._commands = []
+
+        super().__init__(
+            sonarr=sonarr,
+            entry_id=entry_id,
+            icon="mdi:code-braces",
+            key="commands",
+            name=f"{sonarr.app.info.app_name} Commands",
+            unit_of_measurement="Commands",
+            enabled_default=False,
+        )
+
+    @sonarr_exception_handler
+    async def async_update(self) -> None:
+        """Update entity."""
+        self._commands = await self.sonarr.commands()
 
     @property
-    def device_state_attributes(self):
-        """Return the state attributes of the sensor."""
-        attributes = {}
-        if self.type == "upcoming":
-            for show in self.data:
-                attributes[show["series"]["title"]] = "S{:02d}E{:02d}".format(
-                    show["seasonNumber"], show["episodeNumber"]
-                )
-        elif self.type == "queue":
-            for show in self.data:
-                remaining = 1 if show["size"] == 0 else show["sizeleft"] / show["size"]
-                attributes[
-                    show["series"]["title"]
-                    + " S{:02d}E{:02d}".format(
-                        show["episode"]["seasonNumber"],
-                        show["episode"]["episodeNumber"],
-                    )
-                ] = "{:.2f}%".format(100 * (1 - (remaining)))
-        elif self.type == "wanted":
-            for show in self.data:
-                attributes[
-                    show["series"]["title"]
-                    + " S{:02d}E{:02d}".format(
-                        show["seasonNumber"], show["episodeNumber"]
-                    )
-                ] = show["airDate"]
-        elif self.type == "commands":
-            for command in self.data:
-                attributes[command["name"]] = command["state"]
-        elif self.type == "diskspace":
-            for data in self.data:
-                attributes[data["path"]] = "{:.2f}/{:.2f}{} ({:.2f}%)".format(
-                    to_unit(data["freeSpace"], self._unit),
-                    to_unit(data["totalSpace"], self._unit),
-                    self._unit,
-                    (
-                        to_unit(data["freeSpace"], self._unit)
-                        / to_unit(data["totalSpace"], self._unit)
-                        * 100
-                    ),
-                )
-        elif self.type == "series":
-            for show in self.data:
-                if "episodeFileCount" not in show or "episodeCount" not in show:
-                    attributes[show["title"]] = "N/A"
-                else:
-                    attributes[show["title"]] = "{}/{} Episodes".format(
-                        show["episodeFileCount"], show["episodeCount"]
-                    )
-        elif self.type == "status":
-            attributes = self.data
-        return attributes
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the state attributes of the entity."""
+        attrs = {}
+
+        for command in self._commands:
+            attrs[command.name] = command.state
+
+        return attrs
 
     @property
-    def icon(self):
-        """Return the icon of the sensor."""
-        return self._icon
-
-    def update(self):
-        """Update the data for the sensor."""
-        start = get_date(self._tz)
-        end = get_date(self._tz, self.days)
-        try:
-            res = requests.get(
-                ENDPOINTS[self.type].format(
-                    self.ssl, self.host, self.port, self.urlbase, start, end
-                ),
-                headers={"X-Api-Key": self.apikey},
-                timeout=10,
-            )
-        except OSError:
-            _LOGGER.warning("Host %s is not available", self.host)
-            self._available = False
-            self._state = None
-            return
-
-        if res.status_code == 200:
-            if self.type in ["upcoming", "queue", "series", "commands"]:
-                if self.days == 1 and self.type == "upcoming":
-                    # Sonarr API returns an empty array if start and end dates
-                    # are the same, so we need to filter to just today
-                    self.data = list(
-                        filter(lambda x: x["airDate"] == str(start), res.json())
-                    )
-                else:
-                    self.data = res.json()
-                self._state = len(self.data)
-            elif self.type == "wanted":
-                data = res.json()
-                res = requests.get(
-                    "{}?pageSize={}".format(
-                        ENDPOINTS[self.type].format(
-                            self.ssl, self.host, self.port, self.urlbase
-                        ),
-                        data["totalRecords"],
-                    ),
-                    headers={"X-Api-Key": self.apikey},
-                    timeout=10,
-                )
-                self.data = res.json()["records"]
-                self._state = len(self.data)
-            elif self.type == "diskspace":
-                # If included paths are not provided, use all data
-                if self.included == []:
-                    self.data = res.json()
-                else:
-                    # Filter to only show lists that are included
-                    self.data = list(
-                        filter(lambda x: x["path"] in self.included, res.json())
-                    )
-                self._state = "{:.2f}".format(
-                    to_unit(sum([data["freeSpace"] for data in self.data]), self._unit)
-                )
-            elif self.type == "status":
-                self.data = res.json()
-                self._state = self.data["version"]
-            self._available = True
+    def state(self) -> int:
+        """Return the state of the sensor."""
+        return len(self._commands)
 
 
-def get_date(zone, offset=0):
-    """Get date based on timezone and offset of days."""
-    day = 60 * 60 * 24
-    return datetime.date(datetime.fromtimestamp(time.time() + day * offset, tz=zone))
+class SonarrDiskspaceSensor(SonarrSensor):
+    """Defines a Sonarr Disk Space sensor."""
+
+    def __init__(self, sonarr: Sonarr, entry_id: str) -> None:
+        """Initialize Sonarr Disk Space sensor."""
+        self._disks = []
+        self._total_free = 0
+
+        super().__init__(
+            sonarr=sonarr,
+            entry_id=entry_id,
+            icon="mdi:harddisk",
+            key="diskspace",
+            name=f"{sonarr.app.info.app_name} Disk Space",
+            unit_of_measurement=DATA_GIGABYTES,
+            enabled_default=False,
+        )
+
+    @sonarr_exception_handler
+    async def async_update(self) -> None:
+        """Update entity."""
+        app = await self.sonarr.update()
+        self._disks = app.disks
+        self._total_free = sum([disk.free for disk in self._disks])
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the state attributes of the entity."""
+        attrs = {}
+
+        for disk in self._disks:
+            free = disk.free / 1024 ** 3
+            total = disk.total / 1024 ** 3
+            usage = free / total * 100
+
+            attrs[
+                disk.path
+            ] = f"{free:.2f}/{total:.2f}{self._unit_of_measurement} ({usage:.2f}%)"
+
+        return attrs
+
+    @property
+    def state(self) -> str:
+        """Return the state of the sensor."""
+        free = self._total_free / 1024 ** 3
+        return f"{free:.2f}"
 
 
-def to_unit(value, unit):
-    """Convert bytes to give unit."""
-    return value / 1024 ** BYTE_SIZES.index(unit)
+class SonarrQueueSensor(SonarrSensor):
+    """Defines a Sonarr Queue sensor."""
+
+    def __init__(self, sonarr: Sonarr, entry_id: str) -> None:
+        """Initialize Sonarr Queue sensor."""
+        self._queue = []
+
+        super().__init__(
+            sonarr=sonarr,
+            entry_id=entry_id,
+            icon="mdi:download",
+            key="queue",
+            name=f"{sonarr.app.info.app_name} Queue",
+            unit_of_measurement="Episodes",
+            enabled_default=False,
+        )
+
+    @sonarr_exception_handler
+    async def async_update(self) -> None:
+        """Update entity."""
+        self._queue = await self.sonarr.queue()
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the state attributes of the entity."""
+        attrs = {}
+
+        for item in self._queue:
+            remaining = 1 if item.size == 0 else item.size_remaining / item.size
+            remaining_pct = 100 * (1 - remaining)
+            name = f"{item.episode.series.title} {item.episode.identifier}"
+            attrs[name] = f"{remaining_pct:.2f}%"
+
+        return attrs
+
+    @property
+    def state(self) -> int:
+        """Return the state of the sensor."""
+        return len(self._queue)
+
+
+class SonarrSeriesSensor(SonarrSensor):
+    """Defines a Sonarr Series sensor."""
+
+    def __init__(self, sonarr: Sonarr, entry_id: str) -> None:
+        """Initialize Sonarr Series sensor."""
+        self._items = []
+
+        super().__init__(
+            sonarr=sonarr,
+            entry_id=entry_id,
+            icon="mdi:television",
+            key="series",
+            name=f"{sonarr.app.info.app_name} Shows",
+            unit_of_measurement="Series",
+            enabled_default=False,
+        )
+
+    @sonarr_exception_handler
+    async def async_update(self) -> None:
+        """Update entity."""
+        self._items = await self.sonarr.series()
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the state attributes of the entity."""
+        attrs = {}
+
+        for item in self._items:
+            attrs[item.series.title] = f"{item.downloaded}/{item.episodes} Episodes"
+
+        return attrs
+
+    @property
+    def state(self) -> int:
+        """Return the state of the sensor."""
+        return len(self._items)
+
+
+class SonarrUpcomingSensor(SonarrSensor):
+    """Defines a Sonarr Upcoming sensor."""
+
+    def __init__(self, sonarr: Sonarr, entry_id: str, days: int = 1) -> None:
+        """Initialize Sonarr Upcoming sensor."""
+        self._days = days
+        self._upcoming = []
+
+        super().__init__(
+            sonarr=sonarr,
+            entry_id=entry_id,
+            icon="mdi:television",
+            key="upcoming",
+            name=f"{sonarr.app.info.app_name} Upcoming",
+            unit_of_measurement="Episodes",
+        )
+
+    @sonarr_exception_handler
+    async def async_update(self) -> None:
+        """Update entity."""
+        local = dt_util.start_of_local_day().replace(microsecond=0)
+        start = dt_util.as_utc(local)
+        end = start + timedelta(days=self._days)
+        self._upcoming = await self.sonarr.calendar(
+            start=start.isoformat(), end=end.isoformat()
+        )
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the state attributes of the entity."""
+        attrs = {}
+
+        for episode in self._upcoming:
+            attrs[episode.series.title] = episode.identifier
+
+        return attrs
+
+    @property
+    def state(self) -> int:
+        """Return the state of the sensor."""
+        return len(self._upcoming)
+
+
+class SonarrWantedSensor(SonarrSensor):
+    """Defines a Sonarr Wanted sensor."""
+
+    def __init__(self, sonarr: Sonarr, entry_id: str, max_items: int = 10) -> None:
+        """Initialize Sonarr Wanted sensor."""
+        self._max_items = max_items
+        self._results = None
+        self._total: int | None = None
+
+        super().__init__(
+            sonarr=sonarr,
+            entry_id=entry_id,
+            icon="mdi:television",
+            key="wanted",
+            name=f"{sonarr.app.info.app_name} Wanted",
+            unit_of_measurement="Episodes",
+            enabled_default=False,
+        )
+
+    @sonarr_exception_handler
+    async def async_update(self) -> None:
+        """Update entity."""
+        self._results = await self.sonarr.wanted(page_size=self._max_items)
+        self._total = self._results.total
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the state attributes of the entity."""
+        attrs = {}
+
+        if self._results is not None:
+            for episode in self._results.episodes:
+                name = f"{episode.series.title} {episode.identifier}"
+                attrs[name] = episode.airdate
+
+        return attrs
+
+    @property
+    def state(self) -> int | None:
+        """Return the state of the sensor."""
+        return self._total

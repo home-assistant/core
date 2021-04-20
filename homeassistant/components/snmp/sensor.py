@@ -2,9 +2,20 @@
 from datetime import timedelta
 import logging
 
+import pysnmp.hlapi.asyncio as hlapi
+from pysnmp.hlapi.asyncio import (
+    CommunityData,
+    ContextData,
+    ObjectIdentity,
+    ObjectType,
+    SnmpEngine,
+    UdpTransportTarget,
+    UsmUserData,
+    getCmd,
+)
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -15,7 +26,6 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 from .const import (
     CONF_ACCEPT_ERRORS,
@@ -70,17 +80,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the SNMP sensor."""
-    from pysnmp.hlapi.asyncio import (
-        getCmd,
-        CommunityData,
-        SnmpEngine,
-        UdpTransportTarget,
-        ContextData,
-        ObjectType,
-        ObjectIdentity,
-        UsmUserData,
-    )
-
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -101,7 +100,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         value_template.hass = hass
 
     if version == "3":
-        import pysnmp.hlapi.asyncio as hlapi
 
         if not authkey:
             authproto = "none"
@@ -140,7 +138,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([SnmpSensor(data, name, unit, value_template)], True)
 
 
-class SnmpSensor(Entity):
+class SnmpSensor(SensorEntity):
     """Representation of a SNMP sensor."""
 
     def __init__(self, data, name, unit_of_measurement, value_template):
@@ -194,7 +192,6 @@ class SnmpData:
 
     async def async_update(self):
         """Get the latest data from the remote SNMP capable host."""
-        from pysnmp.hlapi.asyncio import getCmd, ObjectType, ObjectIdentity
 
         errindication, errstatus, errindex, restable = await getCmd(
             *self._request_args, ObjectType(ObjectIdentity(self._baseoid))
@@ -212,4 +209,4 @@ class SnmpData:
             self.value = self._default_value
         else:
             for resrow in restable:
-                self.value = str(resrow[-1])
+                self.value = resrow[-1].prettyPrint()

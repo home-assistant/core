@@ -1,41 +1,26 @@
 """The test for the version sensor platform."""
-import asyncio
-import unittest
 from unittest.mock import patch
 
-from homeassistant.setup import setup_component
-
-from tests.common import get_test_home_assistant
+from homeassistant.setup import async_setup_component
 
 MOCK_VERSION = "10.0"
 
 
-class TestVersionSensor(unittest.TestCase):
+async def test_version_sensor(hass):
     """Test the Version sensor."""
+    config = {"sensor": {"platform": "version"}}
 
-    def setup_method(self, method):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
+    assert await async_setup_component(hass, "sensor", config)
 
-    def teardown_method(self, method):
-        """Stop everything that was started."""
-        self.hass.stop()
 
-    def test_version_sensor(self):
-        """Test the Version sensor."""
-        config = {"sensor": {"platform": "version"}}
+async def test_version(hass):
+    """Test the Version sensor."""
+    config = {"sensor": {"platform": "version", "name": "test"}}
 
-        assert setup_component(self.hass, "sensor", config)
+    with patch("homeassistant.const.__version__", MOCK_VERSION):
+        assert await async_setup_component(hass, "sensor", config)
+        await hass.async_block_till_done()
 
-    @asyncio.coroutine
-    def test_version(self):
-        """Test the Version sensor."""
-        config = {"sensor": {"platform": "version", "name": "test"}}
+    state = hass.states.get("sensor.test")
 
-        with patch("homeassistant.const.__version__", MOCK_VERSION):
-            assert setup_component(self.hass, "sensor", config)
-            self.hass.block_till_done()
-
-        state = self.hass.states.get("sensor.test")
-
-        assert state.state == "10.0"
+    assert state.state == "10.0"

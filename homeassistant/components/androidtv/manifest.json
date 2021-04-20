@@ -1,11 +1,12 @@
 {
   "domain": "androidtv",
-  "name": "Androidtv",
+  "name": "Android TV",
   "documentation": "https://www.home-assistant.io/integrations/androidtv",
   "requirements": [
-    "adb-shell==0.0.7",
-    "androidtv==0.0.32"
+    "adb-shell[async]==0.3.1",
+    "androidtv[async]==0.0.58",
+    "pure-python-adb[async]==0.3.0.dev0"
   ],
-  "dependencies": [],
-  "codeowners": ["@JeffLIrion"]
+  "codeowners": ["@JeffLIrion"],
+  "iot_class": "local_polling"
 }

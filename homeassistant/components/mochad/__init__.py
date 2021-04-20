@@ -2,15 +2,18 @@
 import logging
 import threading
 
+from pymochad import controller, exceptions
 import voluptuous as vol
 
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PORT,
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP,
+)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
-from homeassistant.const import CONF_HOST, CONF_PORT
 
 _LOGGER = logging.getLogger(__name__)
-
-CONTROLLER = None
 
 CONF_COMM_TYPE = "comm_type"
 
@@ -37,24 +40,22 @@ def setup(hass, config):
     host = conf.get(CONF_HOST)
     port = conf.get(CONF_PORT)
 
-    from pymochad import exceptions
-
-    global CONTROLLER
     try:
-        CONTROLLER = MochadCtrl(host, port)
+        mochad_controller = MochadCtrl(host, port)
     except exceptions.ConfigurationError:
         _LOGGER.exception()
         return False
 
     def stop_mochad(event):
         """Stop the Mochad service."""
-        CONTROLLER.disconnect()
+        mochad_controller.disconnect()
 
     def start_mochad(event):
         """Start the Mochad service."""
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_mochad)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_mochad)
+    hass.data[DOMAIN] = mochad_controller
 
     return True
 
@@ -67,8 +68,6 @@ class MochadCtrl:
         super().__init__()
         self._host = host
         self._port = port
-
-        from pymochad import controller
 
         self.ctrl = controller.PyMochad(server=self._host, port=self._port)
 

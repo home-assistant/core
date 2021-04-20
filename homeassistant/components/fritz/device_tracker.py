@@ -1,26 +1,28 @@
 """Support for FRITZ!Box routers."""
 import logging
 
-from fritzconnection import FritzHosts  # pylint: disable=import-error
+from fritzconnection.core import exceptions as fritzexceptions
+from fritzconnection.lib.fritzhosts import FritzHosts
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN,
     PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_DEFAULT_IP = "169.254.1.1"  # This IP is valid for all FRITZ!Box routers.
+DEFAULT_HOST = "169.254.1.1"  # This IP is valid for all FRITZ!Box routers.
+DEFAULT_USERNAME = "admin"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_HOST, default=CONF_DEFAULT_IP): cv.string,
-        vol.Optional(CONF_PASSWORD, default="admin"): cv.string,
-        vol.Optional(CONF_USERNAME, default=""): cv.string,
+        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
+        vol.Optional(CONF_PASSWORD): cv.string,
     }
 )
 
@@ -39,7 +41,7 @@ class FritzBoxScanner(DeviceScanner):
         self.last_results = []
         self.host = config[CONF_HOST]
         self.username = config[CONF_USERNAME]
-        self.password = config[CONF_PASSWORD]
+        self.password = config.get(CONF_PASSWORD)
         self.success_init = True
 
         # Establish a connection to the FRITZ!Box.
@@ -60,7 +62,7 @@ class FritzBoxScanner(DeviceScanner):
             self._update_info()
         else:
             _LOGGER.error(
-                "Failed to establish connection to FRITZ!Box " "with IP: %s", self.host
+                "Failed to establish connection to FRITZ!Box with IP: %s", self.host
             )
 
     def scan_devices(self):
@@ -68,7 +70,7 @@ class FritzBoxScanner(DeviceScanner):
         self._update_info()
         active_hosts = []
         for known_host in self.last_results:
-            if known_host["status"] == "1" and known_host.get("mac"):
+            if known_host["status"] and known_host.get("mac"):
                 active_hosts.append(known_host["mac"])
         return active_hosts
 
@@ -78,6 +80,22 @@ class FritzBoxScanner(DeviceScanner):
         if ret == {}:
             return None
         return ret
+
+    def get_extra_attributes(self, device):
+        """Return the attributes (ip, mac) of the given device or None if is not known."""
+        ip_device = None
+        try:
+            ip_device = self.fritz_box.get_specific_host_entry(device).get(
+                "NewIPAddress"
+            )
+        except fritzexceptions.FritzLookUpError as fritz_lookup_error:
+            _LOGGER.warning(
+                "Host entry for %s not found: %s", device, fritz_lookup_error
+            )
+
+        if not ip_device:
+            return {}
+        return {"ip": ip_device, "mac": device}
 
     def _update_info(self):
         """Retrieve latest information from the FRITZ!Box."""

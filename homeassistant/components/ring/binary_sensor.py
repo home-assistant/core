@@ -1,79 +1,94 @@
 """This component provides HA sensor support for Ring Door Bell/Chimes."""
-from datetime import timedelta
-import logging
+from datetime import datetime
 
-import voluptuous as vol
-
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_ENTITY_NAMESPACE,
-    CONF_MONITORED_CONDITIONS,
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_OCCUPANCY,
+    BinarySensorEntity,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import callback
 
-from . import (
-    ATTRIBUTION,
-    DATA_RING_DOORBELLS,
-    DATA_RING_STICKUP_CAMS,
-    DEFAULT_ENTITY_NAMESPACE,
-)
-
-_LOGGER = logging.getLogger(__name__)
-
-SCAN_INTERVAL = timedelta(seconds=10)
+from . import DOMAIN
+from .entity import RingEntityMixin
 
 # Sensor types: Name, category, device_class
 SENSOR_TYPES = {
-    "ding": ["Ding", ["doorbell"], "occupancy"],
-    "motion": ["Motion", ["doorbell", "stickup_cams"], "motion"],
+    "ding": ["Ding", ["doorbots", "authorized_doorbots"], DEVICE_CLASS_OCCUPANCY],
+    "motion": [
+        "Motion",
+        ["doorbots", "authorized_doorbots", "stickup_cams"],
+        DEVICE_CLASS_MOTION,
+    ],
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(
-            CONF_ENTITY_NAMESPACE, default=DEFAULT_ENTITY_NAMESPACE
-        ): cv.string,
-        vol.Required(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
-        ),
-    }
-)
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up a sensor for a Ring device."""
-    ring_doorbells = hass.data[DATA_RING_DOORBELLS]
-    ring_stickup_cams = hass.data[DATA_RING_STICKUP_CAMS]
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Ring binary sensors from a config entry."""
+    ring = hass.data[DOMAIN][config_entry.entry_id]["api"]
+    devices = hass.data[DOMAIN][config_entry.entry_id]["devices"]
 
     sensors = []
-    for device in ring_doorbells:  # ring.doorbells is doing I/O
-        for sensor_type in config[CONF_MONITORED_CONDITIONS]:
-            if "doorbell" in SENSOR_TYPES[sensor_type][1]:
-                sensors.append(RingBinarySensor(hass, device, sensor_type))
 
-    for device in ring_stickup_cams:  # ring.stickup_cams is doing I/O
-        for sensor_type in config[CONF_MONITORED_CONDITIONS]:
-            if "stickup_cams" in SENSOR_TYPES[sensor_type][1]:
-                sensors.append(RingBinarySensor(hass, device, sensor_type))
+    for device_type in ("doorbots", "authorized_doorbots", "stickup_cams"):
+        for sensor_type in SENSOR_TYPES:
+            if device_type not in SENSOR_TYPES[sensor_type][1]:
+                continue
 
-    add_entities(sensors, True)
+            for device in devices[device_type]:
+                sensors.append(
+                    RingBinarySensor(config_entry.entry_id, ring, device, sensor_type)
+                )
+
+    async_add_entities(sensors)
 
 
-class RingBinarySensor(BinarySensorDevice):
+class RingBinarySensor(RingEntityMixin, BinarySensorEntity):
     """A binary sensor implementation for Ring device."""
 
-    def __init__(self, hass, data, sensor_type):
+    _active_alert = None
+
+    def __init__(self, config_entry_id, ring, device, sensor_type):
         """Initialize a sensor for Ring device."""
-        super().__init__()
+        super().__init__(config_entry_id, device)
+        self._ring = ring
         self._sensor_type = sensor_type
-        self._data = data
-        self._name = "{0} {1}".format(
-            self._data.name, SENSOR_TYPES.get(self._sensor_type)[0]
-        )
-        self._device_class = SENSOR_TYPES.get(self._sensor_type)[2]
+        self._name = f"{self._device.name} {SENSOR_TYPES.get(sensor_type)[0]}"
+        self._device_class = SENSOR_TYPES.get(sensor_type)[2]
         self._state = None
-        self._unique_id = f"{self._data.id}-{self._sensor_type}"
+        self._unique_id = f"{device.id}-{sensor_type}"
+        self._update_alert()
+
+    async def async_added_to_hass(self):
+        """Register callbacks."""
+        await super().async_added_to_hass()
+        self.ring_objects["dings_data"].async_add_listener(self._dings_update_callback)
+        self._dings_update_callback()
+
+    async def async_will_remove_from_hass(self):
+        """Disconnect callbacks."""
+        await super().async_will_remove_from_hass()
+        self.ring_objects["dings_data"].async_remove_listener(
+            self._dings_update_callback
+        )
+
+    @callback
+    def _dings_update_callback(self):
+        """Call update method."""
+        self._update_alert()
+        self.async_write_ha_state()
+
+    @callback
+    def _update_alert(self):
+        """Update active alert."""
+        self._active_alert = next(
+            (
+                alert
+                for alert in self._ring.active_alerts()
+                if alert["kind"] == self._sensor_type
+                and alert["doorbot_id"] == self._device.id
+            ),
+            None,
+        )
 
     @property
     def name(self):
@@ -83,7 +98,7 @@ class RingBinarySensor(BinarySensorDevice):
     @property
     def is_on(self):
         """Return True if the binary sensor is on."""
-        return self._state
+        return self._active_alert is not None
 
     @property
     def device_class(self):
@@ -96,29 +111,16 @@ class RingBinarySensor(BinarySensorDevice):
         return self._unique_id
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
-        attrs = {}
-        attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
+        attrs = super().extra_state_attributes
 
-        attrs["device_id"] = self._data.id
-        attrs["firmware"] = self._data.firmware
-        attrs["timezone"] = self._data.timezone
+        if self._active_alert is None:
+            return attrs
 
-        if self._data.alert and self._data.alert_expires_at:
-            attrs["expires_at"] = self._data.alert_expires_at
-            attrs["state"] = self._data.alert.get("state")
+        attrs["state"] = self._active_alert["state"]
+        attrs["expires_at"] = datetime.fromtimestamp(
+            self._active_alert.get("now") + self._active_alert.get("expires_in")
+        ).isoformat()
 
         return attrs
-
-    def update(self):
-        """Get the latest data and updates the state."""
-        self._data.check_alerts()
-
-        if self._data.alert:
-            if self._sensor_type == self._data.alert.get(
-                "kind"
-            ) and self._data.account_id == self._data.alert.get("doorbot_id"):
-                self._state = True
-        else:
-            self._state = False

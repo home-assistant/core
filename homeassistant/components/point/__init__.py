@@ -2,11 +2,17 @@
 import asyncio
 import logging
 
+from pypoint import PointSession
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_TOKEN, CONF_WEBHOOK_ID
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_TOKEN,
+    CONF_WEBHOOK_ID,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -17,7 +23,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.dt import as_local, parse_datetime, utc_from_timestamp
 
-from . import config_flow  # noqa  pylint_disable=unused-import
+from . import config_flow
 from .const import (
     CONF_WEBHOOK_URL,
     DOMAIN,
@@ -30,11 +36,10 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_CLIENT_ID = "client_id"
-CONF_CLIENT_SECRET = "client_secret"
-
 DATA_CONFIG_ENTRY_LOCK = "point_config_entry_lock"
 CONFIG_ENTRY_IS_SETUP = "point_config_entry_is_setup"
+
+PLATFORMS = ["binary_sensor", "sensor"]
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -71,23 +76,23 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Set up Point from a config entry."""
-    from pypoint import PointSession
 
-    def token_saver(token):
-        _LOGGER.debug("Saving updated token")
-        entry.data[CONF_TOKEN] = token
-        hass.config_entries.async_update_entry(entry, data={**entry.data})
+    async def token_saver(token, **kwargs):
+        _LOGGER.debug("Saving updated token %s", token)
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_TOKEN: token}
+        )
 
-    # Force token update.
-    entry.data[CONF_TOKEN]["expires_in"] = -1
     session = PointSession(
-        entry.data["refresh_args"]["client_id"],
+        hass.helpers.aiohttp_client.async_get_clientsession(),
+        entry.data["refresh_args"][CONF_CLIENT_ID],
+        entry.data["refresh_args"][CONF_CLIENT_SECRET],
         token=entry.data[CONF_TOKEN],
-        auto_refresh_kwargs=entry.data["refresh_args"],
         token_saver=token_saver,
     )
-
-    if not session.is_authorized:
+    try:
+        await session.ensure_active_token()
+    except Exception:  # pylint: disable=broad-except
         _LOGGER.error("Authentication Error")
         return False
 
@@ -105,14 +110,19 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 async def async_setup_webhook(hass: HomeAssistantType, entry: ConfigEntry, session):
     """Set up a webhook to handle binary sensor events."""
     if CONF_WEBHOOK_ID not in entry.data:
-        entry.data[CONF_WEBHOOK_ID] = hass.components.webhook.async_generate_id()
-        entry.data[CONF_WEBHOOK_URL] = hass.components.webhook.async_generate_url(
-            entry.data[CONF_WEBHOOK_ID]
+        webhook_id = hass.components.webhook.async_generate_id()
+        webhook_url = hass.components.webhook.async_generate_url(webhook_id)
+        _LOGGER.info("Registering new webhook at: %s", webhook_url)
+
+        hass.config_entries.async_update_entry(
+            entry,
+            data={
+                **entry.data,
+                CONF_WEBHOOK_ID: webhook_id,
+                CONF_WEBHOOK_URL: webhook_url,
+            },
         )
-        _LOGGER.info("Registering new webhook at: %s", entry.data[CONF_WEBHOOK_URL])
-        hass.config_entries.async_update_entry(entry, data={**entry.data})
-    await hass.async_add_executor_job(
-        session.update_webhook,
+    await session.update_webhook(
         entry.data[CONF_WEBHOOK_URL],
         entry.data[CONF_WEBHOOK_ID],
         ["*"],
@@ -127,13 +137,13 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Unload a config entry."""
     hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
     session = hass.data[DOMAIN].pop(entry.entry_id)
-    await hass.async_add_executor_job(session.remove_webhook)
+    await session.remove_webhook()
+
+    for platform in PLATFORMS:
+        await hass.config_entries.async_forward_entry_unload(entry, platform)
 
     if not hass.data[DOMAIN]:
         hass.data.pop(DOMAIN)
-
-    for component in ("binary_sensor", "sensor"):
-        await hass.config_entries.async_forward_entry_unload(entry, component)
 
     return True
 
@@ -172,26 +182,24 @@ class MinutPointClient:
 
     async def _sync(self):
         """Update local list of devices."""
-        if (
-            not await self._hass.async_add_executor_job(self._client.update)
-            and self._is_available
-        ):
+        if not await self._client.update() and self._is_available:
             self._is_available = False
             _LOGGER.warning("Device is unavailable")
+            async_dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY)
             return
 
-        async def new_device(device_id, component):
+        async def new_device(device_id, platform):
             """Load new device."""
-            config_entries_key = f"{component}.{DOMAIN}"
+            config_entries_key = f"{platform}.{DOMAIN}"
             async with self._hass.data[DATA_CONFIG_ENTRY_LOCK]:
                 if config_entries_key not in self._hass.data[CONFIG_ENTRY_IS_SETUP]:
                     await self._hass.config_entries.async_forward_entry_setup(
-                        self._config_entry, component
+                        self._config_entry, platform
                     )
                     self._hass.data[CONFIG_ENTRY_IS_SETUP].add(config_entries_key)
 
             async_dispatcher_send(
-                self._hass, POINT_DISCOVERY_NEW.format(component, DOMAIN), device_id
+                self._hass, POINT_DISCOVERY_NEW.format(platform, DOMAIN), device_id
             )
 
         self._is_available = True
@@ -201,8 +209,8 @@ class MinutPointClient:
                 self._known_homes.add(home_id)
         for device in self._client.devices:
             if device.device_id not in self._known_devices:
-                for component in ("sensor", "binary_sensor"):
-                    await new_device(device.device_id, component)
+                for platform in PLATFORMS:
+                    await new_device(device.device_id, platform)
                 self._known_devices.add(device.device_id)
         async_dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY)
 
@@ -212,24 +220,26 @@ class MinutPointClient:
 
     def is_available(self, device_id):
         """Return device availability."""
+        if not self._is_available:
+            return False
         return device_id in self._client.device_ids
 
-    def remove_webhook(self):
+    async def remove_webhook(self):
         """Remove the session webhook."""
-        return self._client.remove_webhook()
+        return await self._client.remove_webhook()
 
     @property
     def homes(self):
         """Return known homes."""
         return self._client.homes
 
-    def alarm_disarm(self, home_id):
+    async def async_alarm_disarm(self, home_id):
         """Send alarm disarm command."""
-        return self._client.alarm_disarm(home_id)
+        return await self._client.alarm_disarm(home_id)
 
-    def alarm_arm(self, home_id):
+    async def async_alarm_arm(self, home_id):
         """Send alarm arm command."""
-        return self._client.alarm_arm(home_id)
+        return await self._client.alarm_arm(home_id)
 
 
 class MinutPointEntity(Entity):
@@ -264,7 +274,6 @@ class MinutPointEntity(Entity):
 
     async def _update_callback(self):
         """Update the value of the sensor."""
-        pass
 
     @property
     def available(self):
@@ -287,7 +296,7 @@ class MinutPointEntity(Entity):
         return self._id
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return status of device."""
         attrs = self.device.device_status
         attrs["last_heard_from"] = as_local(self.last_update).strftime(
@@ -303,7 +312,7 @@ class MinutPointEntity(Entity):
             "connections": {("mac", device["device_mac"])},
             "identifieres": device["device_id"],
             "manufacturer": "Minut",
-            "model": "Point v{}".format(device["hardware_version"]),
+            "model": f"Point v{device['hardware_version']}",
             "name": device["description"],
             "sw_version": device["firmware"]["installed"],
             "via_device": (DOMAIN, device["home"]),
@@ -312,7 +321,7 @@ class MinutPointEntity(Entity):
     @property
     def name(self):
         """Return the display name of this device."""
-        return "{} {}".format(self._name, self.device_class.capitalize())
+        return f"{self._name} {self.device_class.capitalize()}"
 
     @property
     def is_updated(self):

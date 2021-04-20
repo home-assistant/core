@@ -1,24 +1,24 @@
 """The tests for the Google Assistant component."""
 # pylint: disable=protected-access
-import asyncio
 import json
 
 from aiohttp.hdrs import AUTHORIZATION
 import pytest
 
-from homeassistant import core, const, setup
+from homeassistant import const, core, setup
 from homeassistant.components import (
-    fan,
+    alarm_control_panel,
     cover,
+    fan,
+    google_assistant as ga,
     light,
-    switch,
     lock,
     media_player,
-    alarm_control_panel,
+    switch,
 )
 from homeassistant.components.climate import const as climate
+from homeassistant.components.humidifier import const as humidifier
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
-from homeassistant.components import google_assistant as ga
 
 from . import DEMO_DEVICES
 
@@ -32,7 +32,7 @@ ACCESS_TOKEN = "superdoublesecret"
 @pytest.fixture
 def auth_header(hass_access_token):
     """Generate an HTTP header with bearer token authorization."""
-    return {AUTHORIZATION: "Bearer {}".format(hass_access_token)}
+    return {AUTHORIZATION: f"Bearer {hass_access_token}"}
 
 
 @pytest.fixture
@@ -98,6 +98,12 @@ def hass_fixture(loop, hass):
     )
 
     loop.run_until_complete(
+        setup.async_setup_component(
+            hass, humidifier.DOMAIN, {"humidifier": [{"platform": "demo"}]}
+        )
+    )
+
+    loop.run_until_complete(
         setup.async_setup_component(hass, lock.DOMAIN, {"lock": [{"platform": "demo"}]})
     )
 
@@ -115,18 +121,17 @@ def hass_fixture(loop, hass):
 # pylint: disable=redefined-outer-name
 
 
-@asyncio.coroutine
-def test_sync_request(hass_fixture, assistant_client, auth_header):
+async def test_sync_request(hass_fixture, assistant_client, auth_header):
     """Test a sync request."""
     reqid = "5711642932632160983"
     data = {"requestId": reqid, "inputs": [{"intent": "action.devices.SYNC"}]}
-    result = yield from assistant_client.post(
+    result = await assistant_client.post(
         ga.const.GOOGLE_ASSISTANT_API_ENDPOINT,
         data=json.dumps(data),
         headers=auth_header,
     )
     assert result.status == 200
-    body = yield from result.json()
+    body = await result.json()
     assert body.get("requestId") == reqid
     devices = body["payload"]["devices"]
     assert sorted([dev["id"] for dev in devices]) == sorted(
@@ -145,8 +150,7 @@ def test_sync_request(hass_fixture, assistant_client, auth_header):
         assert dev["type"] == demo["type"]
 
 
-@asyncio.coroutine
-def test_query_request(hass_fixture, assistant_client, auth_header):
+async def test_query_request(hass_fixture, assistant_client, auth_header):
     """Test a query request."""
     reqid = "5711642932632160984"
     data = {
@@ -165,30 +169,29 @@ def test_query_request(hass_fixture, assistant_client, auth_header):
             }
         ],
     }
-    result = yield from assistant_client.post(
+    result = await assistant_client.post(
         ga.const.GOOGLE_ASSISTANT_API_ENDPOINT,
         data=json.dumps(data),
         headers=auth_header,
     )
     assert result.status == 200
-    body = yield from result.json()
+    body = await result.json()
     assert body.get("requestId") == reqid
     devices = body["payload"]["devices"]
     assert len(devices) == 4
     assert devices["light.bed_light"]["on"] is False
     assert devices["light.ceiling_lights"]["on"] is True
     assert devices["light.ceiling_lights"]["brightness"] == 70
+    assert devices["light.ceiling_lights"]["color"]["temperatureK"] == 2631
     assert devices["light.kitchen_lights"]["color"]["spectrumHsv"] == {
         "hue": 345,
         "saturation": 0.75,
         "value": 0.7058823529411765,
     }
-    assert devices["light.kitchen_lights"]["color"]["temperatureK"] == 4166
     assert devices["media_player.lounge_room"]["on"] is True
 
 
-@asyncio.coroutine
-def test_query_climate_request(hass_fixture, assistant_client, auth_header):
+async def test_query_climate_request(hass_fixture, assistant_client, auth_header):
     """Test a query request."""
     reqid = "5711642932632160984"
     data = {
@@ -206,13 +209,13 @@ def test_query_climate_request(hass_fixture, assistant_client, auth_header):
             }
         ],
     }
-    result = yield from assistant_client.post(
+    result = await assistant_client.post(
         ga.const.GOOGLE_ASSISTANT_API_ENDPOINT,
         data=json.dumps(data),
         headers=auth_header,
     )
     assert result.status == 200
-    body = yield from result.json()
+    body = await result.json()
     assert body.get("requestId") == reqid
     devices = body["payload"]["devices"]
     assert len(devices) == 3
@@ -228,6 +231,7 @@ def test_query_climate_request(hass_fixture, assistant_client, auth_header):
         "thermostatTemperatureAmbient": 23,
         "thermostatMode": "heatcool",
         "thermostatTemperatureSetpointLow": 21,
+        "currentFanSpeedSetting": "Auto Low",
     }
     assert devices["climate.hvac"] == {
         "online": True,
@@ -235,11 +239,11 @@ def test_query_climate_request(hass_fixture, assistant_client, auth_header):
         "thermostatTemperatureAmbient": 22,
         "thermostatMode": "cool",
         "thermostatHumidityAmbient": 54,
+        "currentFanSpeedSetting": "On High",
     }
 
 
-@asyncio.coroutine
-def test_query_climate_request_f(hass_fixture, assistant_client, auth_header):
+async def test_query_climate_request_f(hass_fixture, assistant_client, auth_header):
     """Test a query request."""
     # Mock demo devices as fahrenheit to see if we convert to celsius
     hass_fixture.config.units.temperature_unit = const.TEMP_FAHRENHEIT
@@ -264,13 +268,13 @@ def test_query_climate_request_f(hass_fixture, assistant_client, auth_header):
             }
         ],
     }
-    result = yield from assistant_client.post(
+    result = await assistant_client.post(
         ga.const.GOOGLE_ASSISTANT_API_ENDPOINT,
         data=json.dumps(data),
         headers=auth_header,
     )
     assert result.status == 200
-    body = yield from result.json()
+    body = await result.json()
     assert body.get("requestId") == reqid
     devices = body["payload"]["devices"]
     assert len(devices) == 3
@@ -286,6 +290,7 @@ def test_query_climate_request_f(hass_fixture, assistant_client, auth_header):
         "thermostatTemperatureAmbient": -5,
         "thermostatMode": "heatcool",
         "thermostatTemperatureSetpointLow": -6.1,
+        "currentFanSpeedSetting": "Auto Low",
     }
     assert devices["climate.hvac"] == {
         "online": True,
@@ -293,12 +298,58 @@ def test_query_climate_request_f(hass_fixture, assistant_client, auth_header):
         "thermostatTemperatureAmbient": -5.6,
         "thermostatMode": "cool",
         "thermostatHumidityAmbient": 54,
+        "currentFanSpeedSetting": "On High",
     }
     hass_fixture.config.units.temperature_unit = const.TEMP_CELSIUS
 
 
-@asyncio.coroutine
-def test_execute_request(hass_fixture, assistant_client, auth_header):
+async def test_query_humidifier_request(hass_fixture, assistant_client, auth_header):
+    """Test a query request."""
+    reqid = "5711642932632160984"
+    data = {
+        "requestId": reqid,
+        "inputs": [
+            {
+                "intent": "action.devices.QUERY",
+                "payload": {
+                    "devices": [
+                        {"id": "humidifier.humidifier"},
+                        {"id": "humidifier.dehumidifier"},
+                        {"id": "humidifier.hygrostat"},
+                    ]
+                },
+            }
+        ],
+    }
+    result = await assistant_client.post(
+        ga.const.GOOGLE_ASSISTANT_API_ENDPOINT,
+        data=json.dumps(data),
+        headers=auth_header,
+    )
+    assert result.status == 200
+    body = await result.json()
+    assert body.get("requestId") == reqid
+    devices = body["payload"]["devices"]
+    assert len(devices) == 3
+    assert devices["humidifier.humidifier"] == {
+        "on": True,
+        "online": True,
+        "humiditySetpointPercent": 68,
+    }
+    assert devices["humidifier.dehumidifier"] == {
+        "on": True,
+        "online": True,
+        "humiditySetpointPercent": 54,
+    }
+    assert devices["humidifier.hygrostat"] == {
+        "on": True,
+        "online": True,
+        "humiditySetpointPercent": 50,
+        "currentModeSettings": {"mode": "home"},
+    }
+
+
+async def test_execute_request(hass_fixture, assistant_client, auth_header):
     """Test an execute request."""
     reqid = "5711642932632160985"
     data = {
@@ -352,21 +403,48 @@ def test_execute_request(hass_fixture, assistant_client, auth_header):
                                 },
                             ],
                         },
+                        {
+                            "devices": [{"id": "humidifier.humidifier"}],
+                            "execution": [
+                                {
+                                    "command": "action.devices.commands.OnOff",
+                                    "params": {"on": False},
+                                }
+                            ],
+                        },
+                        {
+                            "devices": [{"id": "humidifier.dehumidifier"}],
+                            "execution": [
+                                {
+                                    "command": "action.devices.commands.SetHumidity",
+                                    "params": {"humidity": 45},
+                                }
+                            ],
+                        },
+                        {
+                            "devices": [{"id": "humidifier.hygrostat"}],
+                            "execution": [
+                                {
+                                    "command": "action.devices.commands.SetModes",
+                                    "params": {"updateModeSettings": {"mode": "eco"}},
+                                }
+                            ],
+                        },
                     ]
                 },
             }
         ],
     }
-    result = yield from assistant_client.post(
+    result = await assistant_client.post(
         ga.const.GOOGLE_ASSISTANT_API_ENDPOINT,
         data=json.dumps(data),
         headers=auth_header,
     )
     assert result.status == 200
-    body = yield from result.json()
+    body = await result.json()
     assert body.get("requestId") == reqid
     commands = body["payload"]["commands"]
-    assert len(commands) == 6
+    assert len(commands) == 9
 
     assert not any(result["status"] == "ERROR" for result in commands)
 
@@ -378,7 +456,6 @@ def test_execute_request(hass_fixture, assistant_client, auth_header):
 
     bed = hass_fixture.states.get("light.bed_light")
     assert bed.attributes.get(light.ATTR_COLOR_TEMP) == 212
-    assert bed.attributes.get(light.ATTR_RGB_COLOR) == (0, 255, 0)
 
     assert hass_fixture.states.get("switch.decorative_lights").state == "off"
 
@@ -388,3 +465,12 @@ def test_execute_request(hass_fixture, assistant_client, auth_header):
 
     lounge = hass_fixture.states.get("media_player.lounge_room")
     assert lounge.state == "off"
+
+    humidifier_state = hass_fixture.states.get("humidifier.humidifier")
+    assert humidifier_state.state == "off"
+
+    dehumidifier = hass_fixture.states.get("humidifier.dehumidifier")
+    assert dehumidifier.attributes.get(humidifier.ATTR_HUMIDITY) == 45
+
+    hygrostat = hass_fixture.states.get("humidifier.hygrostat")
+    assert hygrostat.attributes.get(const.ATTR_MODE) == "eco"

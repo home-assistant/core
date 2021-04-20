@@ -1,12 +1,12 @@
-"""Suppoort for Amcrest IP camera sensors."""
+"""Support for Amcrest IP camera sensors."""
 from datetime import timedelta
 import logging
 
 from amcrest import AmcrestError
 
-from homeassistant.const import CONF_NAME, CONF_SENSORS
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import CONF_NAME, CONF_SENSORS, PERCENTAGE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 
 from .const import DATA_AMCREST, DEVICES, SENSOR_SCAN_INTERVAL_SECS, SERVICE_UPDATE
 from .helpers import log_update_error, service_signal
@@ -15,14 +15,12 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=SENSOR_SCAN_INTERVAL_SECS)
 
-SENSOR_MOTION_DETECTOR = "motion_detector"
 SENSOR_PTZ_PRESET = "ptz_preset"
 SENSOR_SDCARD = "sdcard"
 # Sensor types are defined like: Name, units, icon
 SENSORS = {
-    SENSOR_MOTION_DETECTOR: ["Motion Detected", None, "mdi:run"],
     SENSOR_PTZ_PRESET: ["PTZ Preset", None, "mdi:camera-iris"],
-    SENSOR_SDCARD: ["SD Used", "%", "mdi:sd"],
+    SENSOR_SDCARD: ["SD Used", PERCENTAGE, "mdi:sd"],
 }
 
 
@@ -42,12 +40,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class AmcrestSensor(Entity):
+class AmcrestSensor(SensorEntity):
     """A sensor implementation for Amcrest IP camera."""
 
     def __init__(self, name, device, sensor_type):
         """Initialize a sensor for Amcrest camera."""
-        self._name = "{} {}".format(name, SENSORS[sensor_type][0])
+        self._name = f"{name} {SENSORS[sensor_type][0]}"
         self._signal_name = name
         self._api = device.api
         self._sensor_type = sensor_type
@@ -68,7 +66,7 @@ class AmcrestSensor(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._attrs
 
@@ -94,25 +92,27 @@ class AmcrestSensor(Entity):
         _LOGGER.debug("Updating %s sensor", self._name)
 
         try:
-            if self._sensor_type == SENSOR_MOTION_DETECTOR:
-                self._state = self._api.is_motion_detected
-                self._attrs["Record Mode"] = self._api.record_mode
-
-            elif self._sensor_type == SENSOR_PTZ_PRESET:
+            if self._sensor_type == SENSOR_PTZ_PRESET:
                 self._state = self._api.ptz_presets_count
 
             elif self._sensor_type == SENSOR_SDCARD:
                 storage = self._api.storage_all
                 try:
-                    self._attrs["Total"] = "{:.2f} {}".format(*storage["total"])
+                    self._attrs[
+                        "Total"
+                    ] = f"{storage['total'][0]:.2f} {storage['total'][1]}"
                 except ValueError:
-                    self._attrs["Total"] = "{} {}".format(*storage["total"])
+                    self._attrs[
+                        "Total"
+                    ] = f"{storage['total'][0]} {storage['total'][1]}"
                 try:
-                    self._attrs["Used"] = "{:.2f} {}".format(*storage["used"])
+                    self._attrs[
+                        "Used"
+                    ] = f"{storage['used'][0]:.2f} {storage['used'][1]}"
                 except ValueError:
-                    self._attrs["Used"] = "{} {}".format(*storage["used"])
+                    self._attrs["Used"] = f"{storage['used'][0]} {storage['used'][1]}"
                 try:
-                    self._state = "{:.2f}".format(storage["used_percent"])
+                    self._state = f"{storage['used_percent']:.2f}"
                 except ValueError:
                     self._state = storage["used_percent"]
         except AmcrestError as error:

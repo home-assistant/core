@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "error": {
+            "option_error": "Z-Wave validation failed. Is the path to the USB stick correct?"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "network_key": "Network Key (leave blank to auto-generate)",
+                    "usb_path": "USB Device Path"
+                },
+                "description": "This integration is no longer maintained. For new installations, use Z-Wave JS instead.\n\nSee https://www.home-assistant.io/docs/z-wave/installation/ for information on the configuration variables",
+                "title": "Set up Z-Wave"
+            }
+        }
+    },
+    "state": {
+        "_": {
+            "dead": "Dead",
+            "initializing": "Initializing",
+            "ready": "Ready",
+            "sleeping": "Sleeping"
+        },
+        "query_stage": {
+            "dead": "Dead",
+            "initializing": "Initializing"
+        }
+    }
+}

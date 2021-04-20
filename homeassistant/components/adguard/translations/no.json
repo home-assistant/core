@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Tjenesten er allerede konfigurert",
+            "existing_instance_updated": "Oppdatert eksisterende konfigurasjon.",
+            "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes"
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "Vil du konfigurere Home Assistant til \u00e5 koble til AdGuard Home levert av tillegget: {addon} ?",
+                "title": "AdGuard Home via Home Assistant-tillegg"
+            },
+            "user": {
+                "data": {
+                    "host": "Vert",
+                    "password": "Passord",
+                    "port": "Port",
+                    "ssl": "Bruker et SSL-sertifikat",
+                    "username": "Brukernavn",
+                    "verify_ssl": "Verifisere SSL-sertifikat"
+                },
+                "description": "Sett opp din AdGuard Hjem instans for \u00e5 tillate overv\u00e5king og kontroll."
+            }
+        }
+    }
+}

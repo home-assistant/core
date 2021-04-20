@@ -1,7 +1,5 @@
 """Support for Homematic thermostats."""
-import logging
-
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
     HVAC_MODE_HEAT,
@@ -9,14 +7,14 @@ from homeassistant.components.climate.const import (
     PRESET_BOOST,
     PRESET_COMFORT,
     PRESET_ECO,
+    PRESET_NONE,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
-from . import ATTR_DISCOVER_DEVICES, HM_ATTRIBUTE_SUPPORT, HMDevice
-
-_LOGGER = logging.getLogger(__name__)
+from .const import ATTR_DISCOVER_DEVICES, HM_ATTRIBUTE_SUPPORT
+from .entity import HMDevice
 
 HM_TEMP_MAP = ["ACTUAL_TEMPERATURE", "TEMPERATURE"]
 
@@ -44,10 +42,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         new_device = HMThermostat(conf)
         devices.append(new_device)
 
-    add_entities(devices)
+    add_entities(devices, True)
 
 
-class HMThermostat(HMDevice, ClimateDevice):
+class HMThermostat(HMDevice, ClimateEntity):
     """Representation of a Homematic thermostat."""
 
     @property
@@ -95,14 +93,14 @@ class HMThermostat(HMDevice, ClimateDevice):
             return "boost"
 
         if not self._hm_control_mode:
-            return None
+            return PRESET_NONE
 
         mode = HM_ATTRIBUTE_SUPPORT[HM_CONTROL_MODE][1][self._hm_control_mode]
         mode = mode.lower()
 
         # Filter HVAC states
         if mode not in (HVAC_MODE_AUTO, HVAC_MODE_HEAT):
-            return None
+            return PRESET_NONE
         return mode
 
     @property

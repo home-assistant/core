@@ -1,0 +1,33 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "L\u00fc\u00fcs on juba m\u00e4\u00e4ratud",
+            "cannot_connect": "\u00dchendamine nurjus",
+            "id_exists": "L\u00fc\u00fcsi ID on juba olemas"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "device": "Rada v\u00f5i URL",
+                    "id": "",
+                    "name": "Nimi"
+                },
+                "title": ""
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "floor_temperature": "P\u00f5randa temperatuur",
+                    "precision": "T\u00e4psus",
+                    "read_precision": "Lugemi t\u00e4psus",
+                    "set_precision": "M\u00e4\u00e4ra lugemi t\u00e4psus",
+                    "temporary_override_mode": "Ajutine seadepunkti alistamine"
+                },
+                "description": "OpenTherm Gateway suvandid"
+            }
+        }
+    }
+}

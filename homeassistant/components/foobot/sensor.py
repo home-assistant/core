@@ -1,25 +1,31 @@
 """Support for the Foobot indoor air quality monitor."""
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 
 import aiohttp
+from foobot_async import FoobotClient
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
-    ATTR_TIME,
     ATTR_TEMPERATURE,
+    ATTR_TIME,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_BILLION,
+    CONCENTRATION_PARTS_PER_MILLION,
     CONF_TOKEN,
     CONF_USERNAME,
+    PERCENTAGE,
     TEMP_CELSIUS,
+    TIME_SECONDS,
 )
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,13 +36,17 @@ ATTR_VOLATILE_ORGANIC_COMPOUNDS = "VOC"
 ATTR_FOOBOT_INDEX = "index"
 
 SENSOR_TYPES = {
-    "time": [ATTR_TIME, "s"],
-    "pm": [ATTR_PM2_5, "µg/m3", "mdi:cloud"],
+    "time": [ATTR_TIME, TIME_SECONDS],
+    "pm": [ATTR_PM2_5, CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, "mdi:cloud"],
     "tmp": [ATTR_TEMPERATURE, TEMP_CELSIUS, "mdi:thermometer"],
-    "hum": [ATTR_HUMIDITY, "%", "mdi:water-percent"],
-    "co2": [ATTR_CARBON_DIOXIDE, "ppm", "mdi:periodic-table-co2"],
-    "voc": [ATTR_VOLATILE_ORGANIC_COMPOUNDS, "ppb", "mdi:cloud"],
-    "allpollu": [ATTR_FOOBOT_INDEX, "%", "mdi:percent"],
+    "hum": [ATTR_HUMIDITY, PERCENTAGE, "mdi:water-percent"],
+    "co2": [ATTR_CARBON_DIOXIDE, CONCENTRATION_PARTS_PER_MILLION, "mdi:molecule-co2"],
+    "voc": [
+        ATTR_VOLATILE_ORGANIC_COMPOUNDS,
+        CONCENTRATION_PARTS_PER_BILLION,
+        "mdi:cloud",
+    ],
+    "allpollu": [ATTR_FOOBOT_INDEX, PERCENTAGE, "mdi:percent"],
 }
 
 SCAN_INTERVAL = timedelta(minutes=10)
@@ -51,8 +61,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the devices associated with the account."""
-    from foobot_async import FoobotClient
-
     token = config.get(CONF_TOKEN)
     username = config.get(CONF_USERNAME)
 
@@ -75,23 +83,23 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         asyncio.TimeoutError,
         FoobotClient.TooManyRequests,
         FoobotClient.InternalError,
-    ):
-        _LOGGER.exception("Failed to connect to foobot servers.")
-        raise PlatformNotReady
+    ) as err:
+        _LOGGER.exception("Failed to connect to foobot servers")
+        raise PlatformNotReady from err
     except FoobotClient.ClientError:
-        _LOGGER.error("Failed to fetch data from foobot servers.")
+        _LOGGER.error("Failed to fetch data from foobot servers")
         return
     async_add_entities(dev, True)
 
 
-class FoobotSensor(Entity):
+class FoobotSensor(SensorEntity):
     """Implementation of a Foobot sensor."""
 
     def __init__(self, data, device, sensor_type):
         """Initialize the sensor."""
         self._uuid = device["uuid"]
         self.foobot_data = data
-        self._name = "Foobot {} {}".format(device["name"], SENSOR_TYPES[sensor_type][0])
+        self._name = f"Foobot {device['name']} {SENSOR_TYPES[sensor_type][0]}"
         self.type = sensor_type
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
 

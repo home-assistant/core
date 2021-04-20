@@ -1,12 +1,12 @@
 """Test Home Assistant location util methods."""
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 import aiohttp
 import pytest
 
 import homeassistant.util.location as location_util
 
-from tests.common import load_fixture, mock_coro
+from tests.common import load_fixture
 
 # Paris
 COORDINATES_PARIS = (48.864716, 2.349014)
@@ -92,11 +92,24 @@ async def test_detect_location_info_ipapi(aioclient_mock, session):
     assert info.use_metric
 
 
+async def test_detect_location_info_ipapi_exhaust(aioclient_mock, session):
+    """Test detect location info using ipapi.co."""
+    aioclient_mock.get(location_util.IPAPI, json={"latitude": "Sign up to access"})
+    aioclient_mock.get(location_util.IP_API, text=load_fixture("ip-api.com.json"))
+
+    info = await location_util.async_detect_location_info(session, _test_real=True)
+
+    assert info is not None
+    # ip_api result because ipapi got skipped
+    assert info.country_code == "US"
+    assert len(aioclient_mock.mock_calls) == 2
+
+
 async def test_detect_location_info_ip_api(aioclient_mock, session):
     """Test detect location info using ip-api.com."""
     aioclient_mock.get(location_util.IP_API, text=load_fixture("ip-api.com.json"))
 
-    with patch("homeassistant.util.location._get_ipapi", return_value=mock_coro(None)):
+    with patch("homeassistant.util.location._get_ipapi", return_value=None):
         info = await location_util.async_detect_location_info(session, _test_real=True)
 
     assert info is not None
@@ -115,9 +128,9 @@ async def test_detect_location_info_ip_api(aioclient_mock, session):
 
 async def test_detect_location_info_both_queries_fail(session):
     """Ensure we return None if both queries fail."""
-    with patch(
-        "homeassistant.util.location._get_ipapi", return_value=mock_coro(None)
-    ), patch("homeassistant.util.location._get_ip_api", return_value=mock_coro(None)):
+    with patch("homeassistant.util.location._get_ipapi", return_value=None), patch(
+        "homeassistant.util.location._get_ip_api", return_value=None
+    ):
         info = await location_util.async_detect_location_info(session, _test_real=True)
     assert info is None
 

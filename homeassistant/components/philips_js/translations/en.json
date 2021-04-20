@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_pin": "Invalid PIN",
+            "pairing_failure": "Unable to pair: {error_id}",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "pair": {
+                "data": {
+                    "pin": "PIN Code"
+                },
+                "description": "Enter the PIN displayed on your TV",
+                "title": "Pair"
+            },
+            "user": {
+                "data": {
+                    "api_version": "API Version",
+                    "host": "Host"
+                }
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_on": "Device is requested to turn on"
+        }
+    }
+}

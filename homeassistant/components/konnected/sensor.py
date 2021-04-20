@@ -1,37 +1,31 @@
 """Support for DHT and DS18B20 sensors attached to a Konnected device."""
-import logging
-
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     CONF_DEVICES,
     CONF_NAME,
-    CONF_PIN,
     CONF_SENSORS,
     CONF_TYPE,
+    CONF_ZONE,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
     TEMP_CELSIUS,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN as KONNECTED_DOMAIN, SIGNAL_DS18B20_NEW, SIGNAL_SENSOR_UPDATE
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN as KONNECTED_DOMAIN, SIGNAL_DS18B20_NEW
 
 SENSOR_TYPES = {
     DEVICE_CLASS_TEMPERATURE: ["Temperature", TEMP_CELSIUS],
-    DEVICE_CLASS_HUMIDITY: ["Humidity", "%"],
+    DEVICE_CLASS_HUMIDITY: ["Humidity", PERCENTAGE],
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up sensors attached to a Konnected device."""
-    if discovery_info is None:
-        return
-
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up sensors attached to a Konnected device from a config entry."""
     data = hass.data[KONNECTED_DOMAIN]
-    device_id = discovery_info["device_id"]
+    device_id = config_entry.data["id"]
     sensors = []
 
     # Initialize all DHT sensors.
@@ -53,7 +47,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             (
                 s
                 for s in data[CONF_DEVICES][device_id][CONF_SENSORS]
-                if s[CONF_TYPE] == "ds18b20" and s[CONF_PIN] == attrs.get(CONF_PIN)
+                if s[CONF_TYPE] == "ds18b20" and s[CONF_ZONE] == attrs.get(CONF_ZONE)
             ),
             None,
         )
@@ -76,7 +70,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_dispatcher_connect(hass, SIGNAL_DS18B20_NEW, async_add_ds18b20)
 
 
-class KonnectedSensor(Entity):
+class KonnectedSensor(SensorEntity):
     """Represents a Konnected DHT Sensor."""
 
     def __init__(self, device_id, data, sensor_type, addr=None, initial_state=None):
@@ -85,11 +79,9 @@ class KonnectedSensor(Entity):
         self._data = data
         self._device_id = device_id
         self._type = sensor_type
-        self._pin_num = self._data.get(CONF_PIN)
+        self._zone_num = self._data.get(CONF_ZONE)
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self._unique_id = addr or "{}-{}-{}".format(
-            device_id, self._pin_num, sensor_type
-        )
+        self._unique_id = addr or f"{device_id}-{self._zone_num}-{sensor_type}"
 
         # set initial state if known at initialization
         self._state = initial_state
@@ -99,7 +91,7 @@ class KonnectedSensor(Entity):
         # set entity name if given
         self._name = self._data.get(CONF_NAME)
         if self._name:
-            self._name += " " + SENSOR_TYPES[sensor_type][0]
+            self._name += f" {SENSOR_TYPES[sensor_type][0]}"
 
     @property
     def unique_id(self) -> str:
@@ -121,12 +113,17 @@ class KonnectedSensor(Entity):
         """Return the unit of measurement."""
         return self._unit_of_measurement
 
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {"identifiers": {(KONNECTED_DOMAIN, self._device_id)}}
+
     async def async_added_to_hass(self):
         """Store entity_id and register state change callback."""
         entity_id_key = self._addr or self._type
         self._data[entity_id_key] = self.entity_id
         async_dispatcher_connect(
-            self.hass, SIGNAL_SENSOR_UPDATE.format(self.entity_id), self.async_set_state
+            self.hass, f"konnected.{self.entity_id}.update", self.async_set_state
         )
 
     @callback
@@ -136,4 +133,4 @@ class KonnectedSensor(Entity):
             self._state = int(float(state))
         else:
             self._state = round(float(state), 1)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()

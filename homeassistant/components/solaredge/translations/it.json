@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "site_exists": "Questo site_id \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "could_not_connect": "Impossibile connettersi all'API Solaredge",
+            "invalid_api_key": "Chiave API non valida",
+            "site_exists": "Questo site_id \u00e8 gi\u00e0 configurato",
+            "site_not_active": "Il sito non \u00e8 attivo"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Chiave API",
+                    "name": "Il nome di questa installazione",
+                    "site_id": "Il sito-id di SolarEdge"
+                },
+                "title": "Definire i parametri API per questa installazione"
+            }
+        }
+    }
+}

@@ -1,0 +1,76 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "cannot_connect": "No se pudo conectar",
+            "not_lutron_device": "El dispositivo descubierto no es un dispositivo de Lutron"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar"
+        },
+        "flow_title": "Lutron Cas\u00e9ta {name} ({host})",
+        "step": {
+            "import_failed": {
+                "description": "No se puede configurar bridge (host: {host}) importado desde configuration.yaml.",
+                "title": "Error al importar la configuraci\u00f3n del bridge Cas\u00e9ta."
+            },
+            "link": {
+                "description": "Para emparejar con {name} ({host}), despu\u00e9s de enviar este formulario, presione el bot\u00f3n negro en la parte posterior del puente.",
+                "title": "Emparejar con el puente"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Introduzca la direcci\u00f3n ip del dispositivo.",
+                "title": "Conectar autom\u00e1ticamente con el dispositivo"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "Primer bot\u00f3n",
+            "button_2": "Segundo bot\u00f3n",
+            "button_3": "Tercer bot\u00f3n",
+            "button_4": "Cuarto bot\u00f3n",
+            "close_1": "Cerrar 1",
+            "close_2": "Cerrar 2",
+            "close_3": "Cerrar 3",
+            "close_4": "Cerrar 4",
+            "close_all": "Cerrar todo",
+            "group_1_button_1": "Primer bot\u00f3n de primer grupo",
+            "group_1_button_2": "Segundo bot\u00f3n del primer grupo",
+            "group_2_button_1": "Primer bot\u00f3n del segundo grupo",
+            "group_2_button_2": "Segundo bot\u00f3n del segundo grupo",
+            "lower": "Inferior",
+            "lower_1": "Inferior 1",
+            "lower_2": "Inferior 2",
+            "lower_3": "Inferior 3",
+            "lower_4": "Inferior 4",
+            "lower_all": "Bajar todo",
+            "off": "Apagado",
+            "on": "Encendido",
+            "open_1": "Abrir 1",
+            "open_2": "Abrir 2",
+            "open_3": "Abrir 3",
+            "open_4": "Abrir 4",
+            "open_all": "Abrir todo",
+            "raise": "Levantar",
+            "raise_1": "Levantar 1",
+            "raise_2": "Levantar 2",
+            "raise_3": "Levantar 3",
+            "raise_4": "Levantar 4",
+            "raise_all": "Levantar todo",
+            "stop": "Detener (favorito)",
+            "stop_1": "Detener 1",
+            "stop_2": "Detener 2",
+            "stop_3": "Detener 3",
+            "stop_4": "Detener 4",
+            "stop_all": "Detener todo"
+        },
+        "trigger_type": {
+            "press": "\"{subtipo}\" presionado",
+            "release": "\"{subtipo}\" liberado"
+        }
+    }
+}

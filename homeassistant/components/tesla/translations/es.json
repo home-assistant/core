@@ -1,0 +1,29 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "La cuenta ya ha sido configurada",
+            "cannot_connect": "No se pudo conectar",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrase\u00f1a",
+                    "username": "Correo electr\u00f3nico"
+                },
+                "description": "Por favor, introduzca su informaci\u00f3n.",
+                "title": "Tesla - Configuraci\u00f3n"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "enable_wake_on_start": "Forzar autom\u00f3viles despiertos al inicio",
+                    "scan_interval": "Segundos entre escaneos"
+                }
+            }
+        }
+    }
+}

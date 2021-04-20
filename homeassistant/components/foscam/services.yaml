@@ -3,10 +3,20 @@ ptz:
   fields:
     entity_id:
       description: Name(s) of entities to move.
-      example: 'camera.living_room_camera'
+      example: "camera.living_room_camera"
     movement:
       description: "Direction of the movement. Allowed values: up, down, left, right, top_left, top_right, bottom_left, bottom_right."
-      example: 'up'
+      example: "up"
     travel_time:
       description: "(Optional) Travel time in seconds. Allowed values: float from 0 to 1. Default: 0.125"
       example: 0.125
+
+ptz_preset:
+  description: PTZ Preset service for Foscam camera.
+  fields:
+    entity_id:
+      description: Name(s) of entities to move.
+      example: "camera.living_room_camera"
+    preset_name:
+      description: "The name of the preset to move to.  Presets can be created from within the official Foscam apps."
+      example: "TopMost"

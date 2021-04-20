@@ -88,7 +88,7 @@ venv
 .venv
 Pipfile*
 share/*
-Scripts/
+/Scripts/
 
 # vimmy stuff
 *.swp
@@ -106,6 +106,7 @@ virtualization/vagrant/config
 !.vscode/cSpell.json
 !.vscode/extensions.json
 !.vscode/tasks.json
+.env
 
 # Built docs
 docs/build
@@ -128,3 +129,6 @@ monkeytype.sqlite3
 
 # This is left behind by Azure Restore Cache
 tmp_cache
+
+# python-language-server / Rope
+.ropeproject

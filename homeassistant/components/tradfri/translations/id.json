@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "already_in_progress": "Alur konfigurasi sedang berlangsung"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "invalid_key": "Gagal mendaftar dengan kunci yang disediakan. Jika ini terus terjadi, coba mulai ulang gateway.",
+            "timeout": "Waktu tunggu memvalidasi kode telah habis."
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "host": "Host",
+                    "security_code": "Kode Keamanan"
+                },
+                "description": "Anda dapat menemukan kode keamanan di belakang gateway Anda.",
+                "title": "Masukkan kode keamanan"
+            }
+        }
+    }
+}

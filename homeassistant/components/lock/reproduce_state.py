@@ -1,14 +1,17 @@
 """Reproduce an Lock state."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Iterable
 import logging
-from typing import Iterable, Optional
+from typing import Any
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    STATE_LOCKED,
-    STATE_UNLOCKED,
     SERVICE_LOCK,
     SERVICE_UNLOCK,
+    STATE_LOCKED,
+    STATE_UNLOCKED,
 )
 from homeassistant.core import Context, State
 from homeassistant.helpers.typing import HomeAssistantType
@@ -21,7 +24,11 @@ VALID_STATES = {STATE_LOCKED, STATE_UNLOCKED}
 
 
 async def _async_reproduce_state(
-    hass: HomeAssistantType, state: State, context: Optional[Context] = None
+    hass: HomeAssistantType,
+    state: State,
+    *,
+    context: Context | None = None,
+    reproduce_options: dict[str, Any] | None = None,
 ) -> None:
     """Reproduce a single state."""
     cur_state = hass.states.get(state.entity_id)
@@ -53,9 +60,18 @@ async def _async_reproduce_state(
 
 
 async def async_reproduce_states(
-    hass: HomeAssistantType, states: Iterable[State], context: Optional[Context] = None
+    hass: HomeAssistantType,
+    states: Iterable[State],
+    *,
+    context: Context | None = None,
+    reproduce_options: dict[str, Any] | None = None,
 ) -> None:
     """Reproduce Lock states."""
     await asyncio.gather(
-        *(_async_reproduce_state(hass, state, context) for state in states)
+        *(
+            _async_reproduce_state(
+                hass, state, context=context, reproduce_options=reproduce_options
+            )
+            for state in states
+        )
     )

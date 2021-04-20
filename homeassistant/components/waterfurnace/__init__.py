@@ -1,21 +1,20 @@
 """Support for Waterfurnaces."""
 from datetime import timedelta
 import logging
-import time
 import threading
+import time
 
 import voluptuous as vol
 from waterfurnace.waterfurnace import WaterFurnace, WFCredentialError, WFException
 
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import discovery
+from homeassistant.helpers import config_validation as cv, discovery
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "waterfurnace"
-UPDATE_TOPIC = DOMAIN + "_update"
+UPDATE_TOPIC = f"{DOMAIN}_update"
 SCAN_INTERVAL = timedelta(seconds=10)
 ERROR_INTERVAL = timedelta(seconds=300)
 MAX_FAILS = 10
@@ -50,7 +49,7 @@ def setup(hass, base_config):
     try:
         wfconn.login()
     except WFCredentialError:
-        _LOGGER.error("Invalid credentials for waterfurnace login.")
+        _LOGGER.error("Invalid credentials for waterfurnace login")
         return False
 
     hass.data[DOMAIN] = WaterFurnaceData(hass, wfconn)
@@ -86,10 +85,10 @@ class WaterFurnaceData(threading.Thread):
 
         self._fails += 1
         if self._fails > MAX_FAILS:
-            _LOGGER.error("Failed to refresh login credentials. Thread stopped.")
+            _LOGGER.error("Failed to refresh login credentials. Thread stopped")
             self.hass.components.persistent_notification.create(
                 "Error:<br/>Connection to waterfurnace website failed "
-                "the maximum number of times. Thread has stopped.",
+                "the maximum number of times. Thread has stopped",
                 title=NOTIFICATION_TITLE,
                 notification_id=NOTIFICATION_ID,
             )
@@ -119,7 +118,7 @@ class WaterFurnaceData(threading.Thread):
 
             def shutdown(event):
                 """Shutdown the thread."""
-                _LOGGER.debug("Signaled to shutdown.")
+                _LOGGER.debug("Signaled to shutdown")
                 self._shutdown = True
                 self.join()
 

@@ -2,18 +2,21 @@
 import logging
 
 import requests
+from ritassist import API
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_INCLUDE,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_utc_time_change
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_CLIENT_ID = "client_id"
-CONF_CLIENT_SECRET = "client_secret"
-CONF_INCLUDE = "include"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -40,8 +43,6 @@ class FleetGoDeviceScanner:
 
     def __init__(self, config, see):
         """Initialize FleetGoDeviceScanner."""
-        from ritassist import API
-
         self._include = config.get(CONF_INCLUDE)
         self._see = see
 

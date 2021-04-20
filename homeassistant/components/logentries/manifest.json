@@ -2,7 +2,6 @@
   "domain": "logentries",
   "name": "Logentries",
   "documentation": "https://www.home-assistant.io/integrations/logentries",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "cloud_push"
 }

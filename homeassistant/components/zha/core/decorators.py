@@ -1,14 +1,16 @@
 """Decorators for ZHA core registries."""
-from typing import Callable, TypeVar, Union
+from __future__ import annotations
 
-CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)  # noqa pylint: disable=invalid-name
+from typing import Callable, TypeVar
+
+CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)  # pylint: disable=invalid-name
 
 
 class DictRegistry(dict):
     """Dict Registry of items."""
 
     def register(
-        self, name: Union[int, str], item: Union[str, CALLABLE_T] = None
+        self, name: int | str, item: str | CALLABLE_T = None
     ) -> Callable[[CALLABLE_T], CALLABLE_T]:
         """Return decorator to register item with a specific name."""
 
@@ -26,7 +28,7 @@ class DictRegistry(dict):
 class SetRegistry(set):
     """Set Registry of items."""
 
-    def register(self, name: Union[int, str]) -> Callable[[CALLABLE_T], CALLABLE_T]:
+    def register(self, name: int | str) -> Callable[[CALLABLE_T], CALLABLE_T]:
         """Return decorator to register item with a specific name."""
 
         def decorator(channel: CALLABLE_T) -> CALLABLE_T:

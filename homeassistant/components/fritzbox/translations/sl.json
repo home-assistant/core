@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ta AVM FRITZ! Box je \u017ee konfiguriran.",
+            "already_in_progress": "Konfiguracija AVM FRITZ! Box je \u017ee v teku.",
+            "not_supported": "Povezani z AVM FRITZ! Box, vendar ne morete upravljati pametnih naprav."
+        },
+        "flow_title": "AVM FRITZ!Box: {name}",
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "Geslo",
+                    "username": "Uporabni\u0161ko ime"
+                },
+                "description": "Ali \u017eelite nastaviti {name} ?"
+            },
+            "user": {
+                "data": {
+                    "host": "Gostitelj ali IP naslov",
+                    "password": "Geslo",
+                    "username": "Uporabni\u0161ko ime"
+                },
+                "description": "Vnesite svoje podatke za AVM FRITZ! Box."
+            }
+        }
+    }
+}

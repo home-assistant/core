@@ -1,12 +1,7 @@
 """Support for file notification."""
-import logging
 import os
 
 import voluptuous as vol
-
-from homeassistant.const import CONF_FILENAME
-import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
 
 from homeassistant.components.notify import (
     ATTR_TITLE,
@@ -14,6 +9,9 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.const import CONF_FILENAME
+import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 
 CONF_TIMESTAMP = "timestamp"
 
@@ -23,8 +21,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_TIMESTAMP, default=False): cv.boolean,
     }
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def get_service(hass, config, discovery_info=None):
@@ -47,15 +43,11 @@ class FileNotificationService(BaseNotificationService):
         """Send a message to a file."""
         with open(self.filepath, "a") as file:
             if os.stat(self.filepath).st_size == 0:
-                title = "{} notifications (Log started: {})\n{}\n".format(
-                    kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT),
-                    dt_util.utcnow().isoformat(),
-                    "-" * 80,
-                )
+                title = f"{kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)} notifications (Log started: {dt_util.utcnow().isoformat()})\n{'-' * 80}\n"
                 file.write(title)
 
             if self.add_timestamp:
-                text = "{} {}\n".format(dt_util.utcnow().isoformat(), message)
+                text = f"{dt_util.utcnow().isoformat()} {message}\n"
             else:
                 text = f"{message}\n"
             file.write(text)

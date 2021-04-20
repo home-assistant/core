@@ -1,18 +1,19 @@
 """Support for the Lyft API."""
-import logging
 from datetime import timedelta
+import logging
 
+from lyft_rides.auth import ClientCredentialGrant
+from lyft_rides.client import LyftRidesClient
+from lyft_rides.errors import APIError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, TIME_MINUTES
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_CLIENT_ID = "client_id"
-CONF_CLIENT_SECRET = "client_secret"
 CONF_END_LATITUDE = "end_latitude"
 CONF_END_LONGITUDE = "end_longitude"
 CONF_PRODUCT_IDS = "product_ids"
@@ -38,8 +39,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Lyft sensor."""
-    from lyft_rides.auth import ClientCredentialGrant
-    from lyft_rides.errors import APIError
 
     auth_flow = ClientCredentialGrant(
         client_id=config.get(CONF_CLIENT_ID),
@@ -74,7 +73,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev, True)
 
 
-class LyftSensor(Entity):
+class LyftSensor(SensorEntity):
     """Implementation of an Lyft sensor."""
 
     def __init__(self, sensorType, products, product_id, product):
@@ -83,11 +82,11 @@ class LyftSensor(Entity):
         self._product_id = product_id
         self._product = product
         self._sensortype = sensorType
-        self._name = "{} {}".format(self._product["display_name"], self._sensortype)
+        self._name = f"{self._product['display_name']} {self._sensortype}"
         if "lyft" not in self._name.lower():
             self._name = f"Lyft{self._name}"
         if self._sensortype == "time":
-            self._unit_of_measurement = "min"
+            self._unit_of_measurement = TIME_MINUTES
         elif self._sensortype == "price":
             estimate = self._product["estimate"]
             if estimate is not None:
@@ -110,7 +109,7 @@ class LyftSensor(Entity):
         return self._unit_of_measurement
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         params = {
             "Product ID": self._product["ride_type"],
@@ -208,7 +207,6 @@ class LyftEstimate:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest product info and estimates from the Lyft API."""
-        from lyft_rides.errors import APIError
 
         try:
             self.fetch_data()
@@ -217,7 +215,6 @@ class LyftEstimate:
 
     def fetch_data(self):
         """Get the latest product info and estimates from the Lyft API."""
-        from lyft_rides.client import LyftRidesClient
 
         client = LyftRidesClient(self._session)
 

@@ -2,22 +2,27 @@
 import datetime
 import logging
 
+from concord232 import client as concord232_client
 import requests
 import voluptuous as vol
 
 import homeassistant.components.alarm_control_panel as alarm
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
+from homeassistant.components.alarm_control_panel.const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
+)
 from homeassistant.const import (
+    CONF_CODE,
     CONF_HOST,
+    CONF_MODE,
     CONF_NAME,
     CONF_PORT,
-    CONF_CODE,
-    CONF_MODE,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_DISARMED,
 )
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,11 +46,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Concord232 alarm control panel platform."""
-    name = config.get(CONF_NAME)
+    name = config[CONF_NAME]
     code = config.get(CONF_CODE)
-    mode = config.get(CONF_MODE)
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
+    mode = config[CONF_MODE]
+    host = config[CONF_HOST]
+    port = config[CONF_PORT]
 
     url = f"http://{host}:{port}"
 
@@ -55,12 +60,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Unable to connect to Concord232: %s", str(ex))
 
 
-class Concord232Alarm(alarm.AlarmControlPanel):
+class Concord232Alarm(alarm.AlarmControlPanelEntity):
     """Representation of the Concord232-based alarm panel."""
 
     def __init__(self, url, name, code, mode):
         """Initialize the Concord232 alarm panel."""
-        from concord232 import client as concord232_client
 
         self._state = None
         self._name = name
@@ -85,6 +89,11 @@ class Concord232Alarm(alarm.AlarmControlPanel):
         """Return the state of the device."""
         return self._state
 
+    @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
+
     def update(self):
         """Update values from API."""
         try:
@@ -92,7 +101,7 @@ class Concord232Alarm(alarm.AlarmControlPanel):
         except requests.exceptions.ConnectionError as ex:
             _LOGGER.error(
                 "Unable to connect to %(host)s: %(reason)s",
-                dict(host=self._url, reason=ex),
+                {"host": self._url, "reason": ex},
             )
             return
         except IndexError:

@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Nome do host ou endere\u00e7o IP",
+                    "password": "Senha",
+                    "port": "Porta"
+                },
+                "title": "Preencha suas informa\u00e7\u00f5es"
+            }
+        }
+    }
+}

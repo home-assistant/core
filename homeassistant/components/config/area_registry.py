@@ -9,7 +9,6 @@ from homeassistant.components.websocket_api.decorators import (
 from homeassistant.core import callback
 from homeassistant.helpers.area_registry import async_get_registry
 
-
 WS_TYPE_LIST = "config/area_registry/list"
 SCHEMA_WS_LIST = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
     {vol.Required("type"): WS_TYPE_LIST}
@@ -91,7 +90,7 @@ async def websocket_delete_area(hass, connection, msg):
     registry = await async_get_registry(hass)
 
     try:
-        await registry.async_delete(msg["area_id"])
+        registry.async_delete(msg["area_id"])
     except KeyError:
         connection.send_message(
             websocket_api.error_message(

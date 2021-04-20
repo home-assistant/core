@@ -2,16 +2,19 @@
 import asyncio
 from datetime import timedelta
 import json
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_FINAL_WRITE,
+    EVENT_HOMEASSISTANT_STOP,
+)
+from homeassistant.core import CoreState
 from homeassistant.helpers import storage
 from homeassistant.util import dt
 
-from tests.common import async_fire_time_changed, mock_coro
-
+from tests.common import async_fire_time_changed
 
 MOCK_VERSION = 1
 MOCK_KEY = "storage-test"
@@ -21,7 +24,7 @@ MOCK_DATA2 = {"goodbye": "cruel world"}
 
 @pytest.fixture
 def store(hass):
-    """Fixture of a store that prevents writing on HASS stop."""
+    """Fixture of a store that prevents writing on Home Assistant stop."""
     yield storage.Store(hass, MOCK_VERSION, MOCK_KEY)
 
 
@@ -63,7 +66,7 @@ async def test_loading_parallel(hass, store, hass_storage, caplog):
 
     assert results[0] is MOCK_DATA
     assert results[1] is MOCK_DATA
-    assert caplog.text.count("Loading data for {}".format(store.key))
+    assert caplog.text.count(f"Loading data for {store.key}")
 
 
 async def test_saving_with_delay(hass, store, hass_storage):
@@ -80,19 +83,64 @@ async def test_saving_with_delay(hass, store, hass_storage):
     }
 
 
-async def test_saving_on_stop(hass, hass_storage):
+async def test_saving_on_final_write(hass, hass_storage):
     """Test delayed saves trigger when we quit Home Assistant."""
     store = storage.Store(hass, MOCK_VERSION, MOCK_KEY)
-    store.async_delay_save(lambda: MOCK_DATA, 1)
+    store.async_delay_save(lambda: MOCK_DATA, 5)
     assert store.key not in hass_storage
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    hass.state = CoreState.stopping
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+    assert store.key not in hass_storage
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
     await hass.async_block_till_done()
     assert hass_storage[store.key] == {
         "version": MOCK_VERSION,
         "key": MOCK_KEY,
         "data": MOCK_DATA,
     }
+
+
+async def test_not_delayed_saving_while_stopping(hass, hass_storage):
+    """Test delayed saves don't write after the stop event has fired."""
+    store = storage.Store(hass, MOCK_VERSION, MOCK_KEY)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    hass.state = CoreState.stopping
+
+    store.async_delay_save(lambda: MOCK_DATA, 1)
+    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=2))
+    await hass.async_block_till_done()
+    assert store.key not in hass_storage
+
+
+async def test_not_delayed_saving_after_stopping(hass, hass_storage):
+    """Test delayed saves don't write after stop if issued before stopping Home Assistant."""
+    store = storage.Store(hass, MOCK_VERSION, MOCK_KEY)
+    store.async_delay_save(lambda: MOCK_DATA, 10)
+    assert store.key not in hass_storage
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    hass.state = CoreState.stopping
+    await hass.async_block_till_done()
+    assert store.key not in hass_storage
+
+    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=15))
+    await hass.async_block_till_done()
+    assert store.key not in hass_storage
+
+
+async def test_not_saving_while_stopping(hass, hass_storage):
+    """Test saves don't write when stopping Home Assistant."""
+    store = storage.Store(hass, MOCK_VERSION, MOCK_KEY)
+    hass.state = CoreState.stopping
+    await store.async_save(MOCK_DATA)
+    assert store.key not in hass_storage
 
 
 async def test_loading_while_delay(hass, store, hass_storage):
@@ -138,10 +186,53 @@ async def test_writing_while_writing_delay(hass, store, hass_storage):
     assert data == {"delay": "no"}
 
 
+async def test_multiple_delay_save_calls(hass, store, hass_storage):
+    """Test a write while a write with changing delays."""
+    store.async_delay_save(lambda: {"delay": "yes"}, 1)
+    store.async_delay_save(lambda: {"delay": "yes"}, 2)
+    store.async_delay_save(lambda: {"delay": "yes"}, 3)
+
+    assert store.key not in hass_storage
+    await store.async_save({"delay": "no"})
+    assert hass_storage[store.key] == {
+        "version": MOCK_VERSION,
+        "key": MOCK_KEY,
+        "data": {"delay": "no"},
+    }
+
+    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=1))
+    await hass.async_block_till_done()
+    assert hass_storage[store.key] == {
+        "version": MOCK_VERSION,
+        "key": MOCK_KEY,
+        "data": {"delay": "no"},
+    }
+
+    data = await store.async_load()
+    assert data == {"delay": "no"}
+
+
+async def test_multiple_save_calls(hass, store, hass_storage):
+    """Test multiple write tasks."""
+
+    assert store.key not in hass_storage
+
+    tasks = [store.async_save({"savecount": savecount}) for savecount in range(6)]
+    await asyncio.gather(*tasks)
+    assert hass_storage[store.key] == {
+        "version": MOCK_VERSION,
+        "key": MOCK_KEY,
+        "data": {"savecount": 5},
+    }
+
+    data = await store.async_load()
+    assert data == {"savecount": 5}
+
+
 async def test_migrator_no_existing_config(hass, store, hass_storage):
     """Test migrator with no existing config."""
     with patch("os.path.isfile", return_value=False), patch.object(
-        store, "async_load", return_value=mock_coro({"cur": "config"})
+        store, "async_load", return_value={"cur": "config"}
     ):
         data = await storage.async_migrator(hass, "old-path", store)
 

@@ -1,0 +1,10 @@
+{
+  "domain": "gios",
+  "name": "GIO\u015a",
+  "documentation": "https://www.home-assistant.io/integrations/gios",
+  "codeowners": ["@bieniu"],
+  "requirements": ["gios==0.2.1"],
+  "config_flow": true,
+  "quality_scale": "platinum",
+  "iot_class": "cloud_polling"
+}

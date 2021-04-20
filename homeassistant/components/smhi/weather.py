@@ -1,13 +1,30 @@
 """Support for the Swedish weather institute weather service."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Dict, List
 
 import aiohttp
 import async_timeout
+from smhi import Smhi
+from smhi.smhi_lib import SmhiForecastException
 
 from homeassistant.components.weather import (
+    ATTR_CONDITION_CLOUDY,
+    ATTR_CONDITION_EXCEPTIONAL,
+    ATTR_CONDITION_FOG,
+    ATTR_CONDITION_HAIL,
+    ATTR_CONDITION_LIGHTNING,
+    ATTR_CONDITION_LIGHTNING_RAINY,
+    ATTR_CONDITION_PARTLYCLOUDY,
+    ATTR_CONDITION_POURING,
+    ATTR_CONDITION_RAINY,
+    ATTR_CONDITION_SNOWY,
+    ATTR_CONDITION_SNOWY_RAINY,
+    ATTR_CONDITION_SUNNY,
+    ATTR_CONDITION_WINDY,
+    ATTR_CONDITION_WINDY_VARIANT,
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_PRECIPITATION,
     ATTR_FORECAST_TEMP,
@@ -27,35 +44,26 @@ _LOGGER = logging.getLogger(__name__)
 
 # Used to map condition from API results
 CONDITION_CLASSES = {
-    "cloudy": [5, 6],
-    "fog": [7],
-    "hail": [],
-    "lightning": [21],
-    "lightning-rainy": [11],
-    "partlycloudy": [3, 4],
-    "pouring": [10, 20],
-    "rainy": [8, 9, 18, 19],
-    "snowy": [15, 16, 17, 25, 26, 27],
-    "snowy-rainy": [12, 13, 14, 22, 23, 24],
-    "sunny": [1, 2],
-    "windy": [],
-    "windy-variant": [],
-    "exceptional": [],
+    ATTR_CONDITION_CLOUDY: [5, 6],
+    ATTR_CONDITION_FOG: [7],
+    ATTR_CONDITION_HAIL: [],
+    ATTR_CONDITION_LIGHTNING: [21],
+    ATTR_CONDITION_LIGHTNING_RAINY: [11],
+    ATTR_CONDITION_PARTLYCLOUDY: [3, 4],
+    ATTR_CONDITION_POURING: [10, 20],
+    ATTR_CONDITION_RAINY: [8, 9, 18, 19],
+    ATTR_CONDITION_SNOWY: [15, 16, 17, 25, 26, 27],
+    ATTR_CONDITION_SNOWY_RAINY: [12, 13, 14, 22, 23, 24],
+    ATTR_CONDITION_SUNNY: [1, 2],
+    ATTR_CONDITION_WINDY: [],
+    ATTR_CONDITION_WINDY_VARIANT: [],
+    ATTR_CONDITION_EXCEPTIONAL: [],
 }
 
 # 5 minutes between retrying connect to API again
 RETRY_TIMEOUT = 5 * 60
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=31)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up components.
-
-    Can only be called when a user accidentally mentions smhi in the
-    config. In that case it will be ignored.
-    """
-    pass
 
 
 async def async_setup_entry(
@@ -90,7 +98,6 @@ class SmhiWeather(WeatherEntity):
         session: aiohttp.ClientSession = None,
     ) -> None:
         """Initialize the SMHI weather entity."""
-        from smhi import Smhi
 
         self._name = name
         self._latitude = latitude
@@ -107,16 +114,6 @@ class SmhiWeather(WeatherEntity):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
         """Refresh the forecast data from SMHI weather API."""
-        from smhi.smhi_lib import SmhiForecastException
-
-        def fail():
-            """Postpone updates."""
-            self._fail_count += 1
-            if self._fail_count < 3:
-                self.hass.helpers.event.async_call_later(
-                    RETRY_TIMEOUT, self.retry_update()
-                )
-
         try:
             with async_timeout.timeout(10):
                 self._forecasts = await self.get_weather_forecast()
@@ -124,11 +121,15 @@ class SmhiWeather(WeatherEntity):
 
         except (asyncio.TimeoutError, SmhiForecastException):
             _LOGGER.error("Failed to connect to SMHI API, retry in 5 minutes")
-            fail()
+            self._fail_count += 1
+            if self._fail_count < 3:
+                self.hass.helpers.event.async_call_later(
+                    RETRY_TIMEOUT, self.retry_update
+                )
 
-    async def retry_update(self):
+    async def retry_update(self, _):
         """Retry refresh weather forecast."""
-        self.async_update()
+        await self.async_update()
 
     async def get_weather_forecast(self) -> []:
         """Return the current forecasts from SMHI API."""
@@ -210,7 +211,7 @@ class SmhiWeather(WeatherEntity):
         return "Swedish weather institute (SMHI)"
 
     @property
-    def forecast(self) -> List:
+    def forecast(self) -> list:
         """Return the forecast."""
         if self._forecasts is None or len(self._forecasts) < 2:
             return None
@@ -235,7 +236,7 @@ class SmhiWeather(WeatherEntity):
         return data
 
     @property
-    def device_state_attributes(self) -> Dict:
+    def extra_state_attributes(self) -> dict:
         """Return SMHI specific attributes."""
         if self.cloudiness:
             return {ATTR_SMHI_CLOUDINESS: self.cloudiness}

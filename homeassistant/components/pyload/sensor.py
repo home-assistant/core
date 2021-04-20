@@ -6,19 +6,19 @@ from aiohttp.hdrs import CONTENT_TYPE
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
-    CONF_SSL,
     CONF_HOST,
+    CONF_MONITORED_VARIABLES,
     CONF_NAME,
-    CONF_PORT,
     CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SSL,
     CONF_USERNAME,
     CONTENT_TYPE_JSON,
-    CONF_MONITORED_VARIABLES,
+    DATA_RATE_MEGABYTES_PER_SECOND,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ DEFAULT_PORT = 8000
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
 
-SENSOR_TYPES = {"speed": ["speed", "Speed", "MB/s"]}
+SENSOR_TYPES = {"speed": ["speed", "Speed", DATA_RATE_MEGABYTES_PER_SECOND]}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -50,16 +50,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the pyLoad sensors."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
-    ssl = "s" if config.get(CONF_SSL) else ""
+    protocol = "https" if config[CONF_SSL] else "http"
     name = config.get(CONF_NAME)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     monitored_types = config.get(CONF_MONITORED_VARIABLES)
-    url = f"http{ssl}://{host}:{port}/api/"
+    url = f"{protocol}://{host}:{port}/api/"
 
     try:
         pyloadapi = PyLoadAPI(api_url=url, username=username, password=password)
-        pyloadapi.update()
     except (
         requests.exceptions.ConnectionError,
         requests.exceptions.HTTPError,
@@ -77,12 +76,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class PyLoadSensor(Entity):
+class PyLoadSensor(SensorEntity):
     """Representation of a pyLoad sensor."""
 
     def __init__(self, api, sensor_type, client_name):
         """Initialize a new pyLoad sensor."""
-        self._name = "{} {}".format(client_name, sensor_type[1])
+        self._name = f"{client_name} {sensor_type[1]}"
         self.type = sensor_type[0]
         self.api = api
         self._state = None
@@ -140,22 +139,14 @@ class PyLoadAPI:
 
         if username is not None and password is not None:
             self.payload = {"username": username, "password": password}
-            self.login = requests.post(
-                "{}{}".format(api_url, "login"), data=self.payload, timeout=5
-            )
+            self.login = requests.post(f"{api_url}login", data=self.payload, timeout=5)
         self.update()
 
-    def post(self, method, params=None):
+    def post(self):
         """Send a POST request and return the response as a dict."""
-        payload = {"method": method}
-
-        if params:
-            payload["params"] = params
-
         try:
             response = requests.post(
-                "{}{}".format(self.api_url, "statusServer"),
-                json=payload,
+                f"{self.api_url}statusServer",
                 cookies=self.login.cookies,
                 headers=self.headers,
                 timeout=5,
@@ -171,4 +162,4 @@ class PyLoadAPI:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update cached response."""
-        self.status = self.post("speed")
+        self.status = self.post()

@@ -16,7 +16,7 @@ import homeassistant.helpers.config_validation as cv
 
 CONF_ZONES = "zones"
 
-SUPPORTED_PLATFORMS = [switch.DOMAIN, sensor.DOMAIN, binary_sensor.DOMAIN]
+PLATFORMS = [switch.DOMAIN, sensor.DOMAIN, binary_sensor.DOMAIN]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,12 +75,12 @@ def _setup_controller(hass, controller_config, config):
     position = len(hass.data[DATA_RAINBIRD])
     try:
         controller.get_serial_number()
-    except Exception as exc:  # pylint: disable=W0703
+    except Exception as exc:  # pylint: disable=broad-except
         _LOGGER.error("Unable to setup controller: %s", exc)
         return False
     hass.data[DATA_RAINBIRD].append(controller)
     _LOGGER.debug("Rain Bird Controller %d set to: %s", position, server)
-    for platform in SUPPORTED_PLATFORMS:
+    for platform in PLATFORMS:
         discovery.load_platform(
             hass,
             platform,

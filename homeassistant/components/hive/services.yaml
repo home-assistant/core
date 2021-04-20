@@ -1,27 +1,94 @@
 boost_heating:
-  description: "Set the boost mode ON defining the period of time and the desired target temperature
-  for the boost."
+  name: Boost Heating (To be deprecated)
+  description: To be deprecated please use boost_heating_on.
   fields:
     entity_id:
-      {
-        description: Enter the entity_id for the device required to set the boost mode.,
-        example: "climate.heating",
-      }
+      name: Entity ID
+      description: Select entity_id to boost.
+      required: true
+      example: climate.heating
     time_period:
-      { description: Set the time period for the boost., example: "01:30:00"  }
+      name: Time Period
+      description: Set the time period for the boost.
+      required: true
+      example: 01:30:00
     temperature:
-      {
-        description: Set the target temperature for the boost period.,
-        example: "20.5",
-      }
-boost_hot_water:
-  description:
-    "Set the boost mode ON or OFF defining the period of time for the boost."
+      name: Temperature
+      description: Set the target temperature for the boost period.
+      required: true
+      example: 20.5
+boost_heating_on:
+  name: Boost Heating On
+  description: Set the boost mode ON defining the period of time and the desired target temperature for the boost.
   fields:
     entity_id:
-      {
-        description: Enter the entity_id for the device reuired to set the boost mode.,
-        example: "water_heater.hot_water",
-      }
-    time_period: { description: Set the time period for the boost., example: "01:30:00" }
-    on_off: { description: Set the boost function on or off., example: "on" }
+      name: Entity ID
+      description: Select entity_id to boost.
+      required: true
+      example: climate.heating
+      selector:
+        entity:
+          integration: hive
+          domain: climate
+    time_period:
+      name: Time Period
+      description: Set the time period for the boost.
+      required: true
+      example: 01:30:00
+      selector:
+        time:
+    temperature:
+      name: Temperature
+      description: Set the target temperature for the boost period.
+      required: true
+      example: 20.5
+      selector:
+        number:
+          min: 7
+          max: 35
+          step: 0.5
+          unit_of_measurement: degrees
+          mode: slider
+boost_heating_off:
+  name: Boost Heating Off
+  description: Set the boost mode OFF.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Select entity_id to turn boost off.
+      required: true
+      example: climate.heating
+      selector:
+        entity:
+          integration: hive
+          domain: climate
+boost_hot_water:
+  name: Boost Hotwater
+  description: Set the boost mode ON or OFF defining the period of time for the boost.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Select entity_id to boost.
+      required: true
+      example: water_heater.hot_water
+      selector:
+        entity:
+          integration: hive
+          domain: water_heater
+    time_period:
+      name: Time Period
+      description: Set the time period for the boost.
+      required: true
+      example: 01:30:00
+      selector:
+        time:
+    on_off:
+      name: Mode
+      description: Set the boost function on or off.
+      required: true
+      example: "on"
+      selector:
+        select:
+          options:
+            - "on"
+            - "off"

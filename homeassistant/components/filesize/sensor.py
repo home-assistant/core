@@ -5,9 +5,12 @@ import os
 
 import voluptuous as vol
 
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import DATA_MEGABYTES
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.helpers.reload import setup_reload_service
+
+from . import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,6 +25,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the file size sensor."""
+
+    setup_reload_service(hass, DOMAIN, PLATFORMS)
+
     sensors = []
     for path in config.get(CONF_FILE_PATHS):
         if not hass.config.is_allowed_path(path):
@@ -33,7 +39,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         add_entities(sensors, True)
 
 
-class Filesize(Entity):
+class Filesize(SensorEntity):
     """Encapsulates file size information."""
 
     def __init__(self, path):
@@ -42,7 +48,7 @@ class Filesize(Entity):
         self._size = None
         self._last_updated = None
         self._name = path.split("/")[-1]
-        self._unit_of_measurement = "MB"
+        self._unit_of_measurement = DATA_MEGABYTES
 
     def update(self):
         """Update the sensor."""
@@ -69,14 +75,13 @@ class Filesize(Entity):
         return ICON
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return other details about the sensor state."""
-        attr = {
+        return {
             "path": self._path,
             "last_updated": self._last_updated,
             "bytes": self._size,
         }
-        return attr
 
     @property
     def unit_of_measurement(self):

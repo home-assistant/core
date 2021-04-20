@@ -1,0 +1,84 @@
+{
+    "state": {
+        "_": {
+            "off": "\u0c06\u0c2b\u0c4d",
+            "on": "\u0c06\u0c28\u0c4d"
+        },
+        "battery": {
+            "off": "\u0c38\u0c3e\u0c27\u0c3e\u0c30\u0c23",
+            "on": "\u0c24\u0c15\u0c4d\u0c15\u0c41\u0c35"
+        },
+        "cold": {
+            "on": "\u0c1a\u0c32\u0c4d\u0c32\u0c28\u0c3f"
+        },
+        "connectivity": {
+            "off": "\u0c21\u0c3f\u0c38\u0c4d\u0c15\u0c28\u0c46\u0c15\u0c4d\u0c1f\u0c4d",
+            "on": "\u0c15\u0c28\u0c46\u0c15\u0c4d\u0c1f\u0c4d"
+        },
+        "door": {
+            "off": "\u0c2e\u0c42\u0c38\u0c41\u0c15\u0c41\u0c02\u0c26\u0c3f",
+            "on": "\u0c24\u0c46\u0c30\u0c3f\u0c1a\u0c3f\u0c35\u0c41\u0c02\u0c26\u0c3f"
+        },
+        "garage_door": {
+            "off": "\u0c2e\u0c42\u0c38\u0c41\u0c15\u0c41\u0c02\u0c26\u0c3f",
+            "on": "\u0c24\u0c46\u0c30\u0c3f\u0c1a\u0c3f\u0c35\u0c41\u0c02\u0c26\u0c3f"
+        },
+        "gas": {
+            "off": "\u0c17\u0c4d\u0c2f\u0c3e\u0c38\u0c4d \u0c06\u0c2b\u0c4d",
+            "on": "\u0c17\u0c4d\u0c2f\u0c3e\u0c38\u0c4d \u0c06\u0c28\u0c4d"
+        },
+        "heat": {
+            "off": "\u0c38\u0c3e\u0c27\u0c3e\u0c30\u0c23",
+            "on": "\u0c35\u0c47\u0c21\u0c3f"
+        },
+        "lock": {
+            "off": "\u0c32\u0c3e\u0c15\u0c4d \u0c1a\u0c47\u0c2f\u0c2c\u0c21\u0c3f\u0c02\u0c26\u0c3f",
+            "on": "\u0c32\u0c3e\u0c15\u0c4d \u0c1a\u0c47\u0c2f\u0c2c\u0c21\u0c32\u0c47\u0c26\u0c41"
+        },
+        "moisture": {
+            "off": "\u0c2a\u0c4a\u0c21\u0c3f",
+            "on": "\u0c24\u0c21\u0c3f"
+        },
+        "motion": {
+            "off": "\u0c15\u0c26\u0c32\u0c3f\u0c15 \u0c32\u0c47\u0c26\u0c41",
+            "on": "\u0c15\u0c26\u0c32\u0c3f\u0c15 \u0c35\u0c41\u0c02\u0c26\u0c3f"
+        },
+        "occupancy": {
+            "off": "\u0c09\u0c28\u0c3f\u0c15\u0c3f\u0c21\u0c3f \u0c32\u0c47\u0c26\u0c41",
+            "on": "\u0c09\u0c28\u0c3f\u0c15\u0c3f\u0c21\u0c3f \u0c09\u0c02\u0c26\u0c3f"
+        },
+        "opening": {
+            "off": "\u0c2e\u0c42\u0c38\u0c3f\u0c35\u0c41\u0c02\u0c26\u0c3f",
+            "on": "\u0c24\u0c46\u0c30\u0c41\u0c1a\u0c41\u0c15\u0c41\u0c02\u0c1f\u0c4b\u0c02\u0c26\u0c3f"
+        },
+        "presence": {
+            "off": "\u0c2c\u0c2f\u0c1f",
+            "on": "\u0c07\u0c02\u0c1f"
+        },
+        "problem": {
+            "off": "OK",
+            "on": "\u0c38\u0c2e\u0c38\u0c4d\u0c2f"
+        },
+        "safety": {
+            "off": "\u0c15\u0c4d\u0c37\u0c47\u0c2e\u0c02",
+            "on": "\u0c15\u0c4d\u0c37\u0c47\u0c2e\u0c02 \u0c15\u0c3e\u0c26\u0c41"
+        },
+        "smoke": {
+            "off": "\u0c2a\u0c4a\u0c17 \u0c32\u0c47\u0c26\u0c41",
+            "on": "\u0c2a\u0c4a\u0c17 \u0c35\u0c41\u0c02\u0c26\u0c3f"
+        },
+        "sound": {
+            "off": "\u0c36\u0c2c\u0c4d\u0c27\u0c02 \u0c32\u0c47\u0c26\u0c41",
+            "on": "\u0c36\u0c2c\u0c4d\u0c27\u0c02 \u0c35\u0c41\u0c02\u0c26\u0c3f"
+        },
+        "vibration": {
+            "off": "\u0c15\u0c26\u0c32\u0c1f\u0c4d\u0c32\u0c47\u0c26\u0c41",
+            "on": "\u0c15\u0c26\u0c41\u0c32\u0c41\u0c24\u0c4b\u0c02\u0c26\u0c3f"
+        },
+        "window": {
+            "off": "\u0c2e\u0c42\u0c38\u0c41\u0c15\u0c41\u0c02\u0c26\u0c3f",
+            "on": "\u0c24\u0c46\u0c30\u0c3f\u0c1a\u0c3f\u0c35\u0c41\u0c02\u0c26\u0c3f"
+        }
+    },
+    "title": "\u0c2c\u0c48\u0c28\u0c30\u0c40 \u0c38\u0c46\u0c28\u0c4d\u0c38\u0c3e\u0c30\u0c4d"
+}

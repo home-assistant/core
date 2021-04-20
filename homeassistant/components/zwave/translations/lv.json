@@ -1,0 +1,14 @@
+{
+    "state": {
+        "_": {
+            "dead": "Beigta",
+            "initializing": "Inicializ\u0113",
+            "ready": "Gatavs",
+            "sleeping": "Gu\u013c"
+        },
+        "query_stage": {
+            "dead": "Beigta ({query_stage})",
+            "initializing": "Inicializ\u0113 ({query_stage})"
+        }
+    }
+}

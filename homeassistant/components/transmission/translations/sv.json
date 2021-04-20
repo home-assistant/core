@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "V\u00e4rden \u00e4r redan konfigurerad."
+        },
+        "error": {
+            "cannot_connect": "Det g\u00e5r inte att ansluta till v\u00e4rden",
+            "name_exists": "Namnet finns redan"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "V\u00e4rd",
+                    "name": "Namn",
+                    "password": "L\u00f6senord",
+                    "port": "Port",
+                    "username": "Anv\u00e4ndarnamn"
+                },
+                "title": "St\u00e4ll in Transmission-klienten"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "limit": "Gr\u00e4ns",
+                    "order": "Ordning",
+                    "scan_interval": "Uppdateringsfrekvens"
+                },
+                "title": "Konfigurera alternativ f\u00f6r Transmission"
+            }
+        }
+    }
+}

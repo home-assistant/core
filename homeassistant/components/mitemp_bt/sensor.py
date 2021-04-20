@@ -1,21 +1,32 @@
 """Support for Xiaomi Mi Temp BLE environmental sensor."""
 import logging
 
+import btlewrap
+from btlewrap.base import BluetoothBackendException
+from mitemp_bt import mitemp_bt_poller
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.helpers.entity import Entity
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_FORCE_UPDATE,
+    CONF_MAC,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
-    CONF_MAC,
+    CONF_TIMEOUT,
+    DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_BATTERY,
+    PERCENTAGE,
+    TEMP_CELSIUS,
 )
+import homeassistant.helpers.config_validation as cv
 
+try:
+    import bluepy.btle  # noqa: F401 pylint: disable=unused-import
+
+    BACKEND = btlewrap.BluepyBackend
+except ImportError:
+    BACKEND = btlewrap.GatttoolBackend
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,7 +34,6 @@ CONF_ADAPTER = "adapter"
 CONF_CACHE = "cache_value"
 CONF_MEDIAN = "median"
 CONF_RETRIES = "retries"
-CONF_TIMEOUT = "timeout"
 
 DEFAULT_ADAPTER = "hci0"
 DEFAULT_UPDATE_INTERVAL = 300
@@ -36,9 +46,9 @@ DEFAULT_TIMEOUT = 10
 
 # Sensor types are defined like: Name, units
 SENSOR_TYPES = {
-    "temperature": [DEVICE_CLASS_TEMPERATURE, "Temperature", "°C"],
-    "humidity": [DEVICE_CLASS_HUMIDITY, "Humidity", "%"],
-    "battery": [DEVICE_CLASS_BATTERY, "Battery", "%"],
+    "temperature": [DEVICE_CLASS_TEMPERATURE, "Temperature", TEMP_CELSIUS],
+    "humidity": [DEVICE_CLASS_HUMIDITY, "Humidity", PERCENTAGE],
+    "battery": [DEVICE_CLASS_BATTERY, "Battery", PERCENTAGE],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -60,18 +70,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the MiTempBt sensor."""
-    from mitemp_bt import mitemp_bt_poller
-
-    try:
-        import bluepy.btle  # noqa: F401 pylint: disable=unused-import
-        from btlewrap import BluepyBackend
-
-        backend = BluepyBackend
-    except ImportError:
-        from btlewrap import GatttoolBackend
-
-        backend = GatttoolBackend
-    _LOGGER.debug("MiTempBt is using %s backend.", backend.__name__)
+    backend = BACKEND
+    _LOGGER.debug("MiTempBt is using %s backend", backend.__name__)
 
     cache = config.get(CONF_CACHE)
     poller = mitemp_bt_poller.MiTempBtPoller(
@@ -103,7 +103,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devs)
 
 
-class MiTempBtSensor(Entity):
+class MiTempBtSensor(SensorEntity):
     """Implementing the MiTempBt sensor."""
 
     def __init__(self, poller, parameter, device, name, unit, force_update, median):
@@ -152,8 +152,6 @@ class MiTempBtSensor(Entity):
 
         This uses a rolling median over 3 values to filter out outliers.
         """
-        from btlewrap.base import BluetoothBackendException
-
         try:
             _LOGGER.debug("Polling data for %s", self.name)
             data = self.poller.parameter_value(self.parameter)

@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
+            "credential_error": "Feeler beim ausliesen vun den Umeldungs Informatiounen.",
+            "no_devices_found": "Keng Apparater am Netzwierk fonnt.",
+            "port_987_bind_error": "Konnt sech net mam Port 987 verbannen. Liest [Dokumentatioun](https://www.home-assistant.io/components/ps4/) fir w\u00e9ider Informatiounen.",
+            "port_997_bind_error": "Konnt sech net mam Port 997 verbannen. Liest [Dokumentatioun](https://www.home-assistant.io/components/ps4/) fir w\u00e9ider Informatiounen."
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen",
+            "credential_timeout": "Z\u00e4it Iwwerschreidung beim Service vun den Umeldungsinformatiounen. Dr\u00e9ck op ofsch\u00e9cke fir nach emol ze starten.",
+            "login_failed": "Feeler beim verbanne mat der Playstation 4. Iwwerpr\u00e9if op de PIN Code korrekt ass.",
+            "no_ipaddress": "G\u00ebff d'IP Adresse vun der Playstation 4 d\u00e9i soll konfigur\u00e9iert ginn an:"
+        },
+        "step": {
+            "creds": {
+                "description": "Umeldungsinformatioun sinn n\u00e9ideg. Dr\u00e9ckt op 'Ofsch\u00e9cken' , dann an der PS4 App, 2ten Ecran, erneiert Apparater an wielt den Home-Assistant Apparat aus fir weider ze fueren.",
+                "title": "PlayStation 4"
+            },
+            "link": {
+                "data": {
+                    "code": "PIN Code",
+                    "ip_address": "IP Adresse",
+                    "name": "Numm",
+                    "region": "Regioun"
+                },
+                "description": "G\u00ebff deng Playstation 4 Informatiounen an. Fir 'PIN Code', g\u00e9i an d'Astellunge vun der Playstation 4 Konsole. Dann op 'Mobile App Verbindungs Astellungen' a wiel \"Apparat dob\u00e4isetzen' aus. G\u00ebff de PIN  Code an deen ugewise g\u00ebtt. Lies [Dokumentatioun](https://www.home-assistant.io/components/ps4/) fir w\u00e9ider Informatiounen.",
+                "title": "PlayStation 4"
+            },
+            "mode": {
+                "data": {
+                    "ip_address": "IP Address (Eidel loossen falls Auto Discovery benotzt g\u00ebtt)",
+                    "mode": "Konfiguratioun's Modus"
+                },
+                "description": "Konfiguratioun's Modus auswielen. D'Feld IP Adress kann eidel bl\u00e9iwen wann Auto Discovery benotzt g\u00ebtt, well d'Apparaten automatesch entdeckt ginn.",
+                "title": "PlayStation 4"
+            }
+        }
+    }
+}

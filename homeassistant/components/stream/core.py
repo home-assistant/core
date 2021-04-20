@@ -1,18 +1,24 @@
 """Provides core stream functionality."""
+from __future__ import annotations
+
 import asyncio
 from collections import deque
 import io
-from typing import Any, List
+from typing import TYPE_CHECKING, Any, Callable
 
 from aiohttp import web
 import attr
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.decorator import Registry
 
 from .const import ATTR_STREAMS, DOMAIN
+
+if TYPE_CHECKING:
+    import av.container
+    import av.video
 
 PROVIDERS = Registry()
 
@@ -21,35 +27,77 @@ PROVIDERS = Registry()
 class StreamBuffer:
     """Represent a segment."""
 
-    segment = attr.ib(type=io.BytesIO)
-    output = attr.ib()  # type=av.OutputContainer
-    vstream = attr.ib()  # type=av.VideoStream
-    astream = attr.ib(default=None)  # type=av.AudioStream
+    segment: io.BytesIO = attr.ib()
+    output: av.container.OutputContainer = attr.ib()
+    vstream: av.video.VideoStream = attr.ib()
+    astream = attr.ib(default=None)  # type=Optional[av.audio.AudioStream]
 
 
 @attr.s
 class Segment:
     """Represent a segment."""
 
-    sequence = attr.ib(type=int)
-    segment = attr.ib(type=io.BytesIO)
-    duration = attr.ib(type=float)
+    sequence: int = attr.ib()
+    segment: io.BytesIO = attr.ib()
+    duration: float = attr.ib()
+    # For detecting discontinuities across stream restarts
+    stream_id: int = attr.ib(default=0)
+
+
+class IdleTimer:
+    """Invoke a callback after an inactivity timeout.
+
+    The IdleTimer invokes the callback after some timeout has passed. The awake() method
+    resets the internal alarm, extending the inactivity time.
+    """
+
+    def __init__(
+        self, hass: HomeAssistant, timeout: int, idle_callback: Callable[[], None]
+    ):
+        """Initialize IdleTimer."""
+        self._hass = hass
+        self._timeout = timeout
+        self._callback = idle_callback
+        self._unsub = None
+        self.idle = False
+
+    def start(self):
+        """Start the idle timer if not already started."""
+        self.idle = False
+        if self._unsub is None:
+            self._unsub = async_call_later(self._hass, self._timeout, self.fire)
+
+    def awake(self):
+        """Keep the idle time alive by resetting the timeout."""
+        self.idle = False
+        # Reset idle timeout
+        self.clear()
+        self._unsub = async_call_later(self._hass, self._timeout, self.fire)
+
+    def clear(self):
+        """Clear and disable the timer if it has not already fired."""
+        if self._unsub is not None:
+            self._unsub()
+
+    def fire(self, _now=None):
+        """Invoke the idle timeout callback, called when the alarm fires."""
+        self.idle = True
+        self._unsub = None
+        self._callback()
 
 
 class StreamOutput:
     """Represents a stream output."""
 
-    num_segments = 3
-
-    def __init__(self, stream, timeout: int = 300) -> None:
+    def __init__(
+        self, hass: HomeAssistant, idle_timer: IdleTimer, deque_maxlen: int = None
+    ) -> None:
         """Initialize a stream output."""
-        self.idle = False
-        self.timeout = timeout
-        self._stream = stream
+        self._hass = hass
+        self._idle_timer = idle_timer
         self._cursor = None
         self._event = asyncio.Event()
-        self._segments = deque(maxlen=self.num_segments)
-        self._unsub = None
+        self._segments = deque(maxlen=deque_maxlen)
 
     @property
     def name(self) -> str:
@@ -57,38 +105,27 @@ class StreamOutput:
         return None
 
     @property
-    def format(self) -> str:
-        """Return container format."""
-        return None
+    def idle(self) -> bool:
+        """Return True if the output is idle."""
+        return self._idle_timer.idle
 
     @property
-    def audio_codec(self) -> str:
-        """Return desired audio codec."""
-        return None
-
-    @property
-    def video_codec(self) -> str:
-        """Return desired video codec."""
-        return None
-
-    @property
-    def segments(self) -> List[int]:
+    def segments(self) -> list[int]:
         """Return current sequence from segments."""
         return [s.sequence for s in self._segments]
 
     @property
     def target_duration(self) -> int:
-        """Return the average duration of the segments in seconds."""
+        """Return the max duration of any given segment in seconds."""
+        segment_length = len(self._segments)
+        if not segment_length:
+            return 1
         durations = [s.duration for s in self._segments]
-        return round(sum(durations) // len(self._segments)) or 1
+        return round(max(durations)) or 1
 
     def get_segment(self, sequence: int = None) -> Any:
         """Retrieve a specific segment, or the whole list."""
-        self.idle = False
-        # Reset idle timeout
-        if self._unsub is not None:
-            self._unsub()
-        self._unsub = async_call_later(self._stream.hass, self.timeout, self._timeout)
+        self._idle_timer.awake()
 
         if not sequence:
             return self._segments
@@ -111,41 +148,24 @@ class StreamOutput:
         self._cursor = segment.sequence
         return segment
 
-    @callback
     def put(self, segment: Segment) -> None:
         """Store output."""
+        self._hass.loop.call_soon_threadsafe(self._async_put, segment)
+
+    @callback
+    def _async_put(self, segment: Segment) -> None:
+        """Store output from event loop."""
         # Start idle timeout when we start receiving data
-        if self._unsub is None:
-            self._unsub = async_call_later(
-                self._stream.hass, self.timeout, self._timeout
-            )
-
-        if segment is None:
-            self._event.set()
-            # Cleanup provider
-            if self._unsub is not None:
-                self._unsub()
-            self.cleanup()
-            return
-
+        self._idle_timer.start()
         self._segments.append(segment)
         self._event.set()
         self._event.clear()
 
-    @callback
-    def _timeout(self, _now=None):
-        """Handle stream timeout."""
-        self._unsub = None
-        if self._stream.keepalive:
-            self.idle = True
-            self._stream.check_idle()
-        else:
-            self.cleanup()
-
     def cleanup(self):
         """Handle cleanup."""
-        self._segments = deque(maxlen=self.num_segments)
-        self._stream.remove_provider(self)
+        self._event.set()
+        self._idle_timer.clear()
+        self._segments = deque(maxlen=self._segments.maxlen)
 
 
 class StreamView(HomeAssistantView):
@@ -164,11 +184,7 @@ class StreamView(HomeAssistantView):
         hass = request.app["hass"]
 
         stream = next(
-            (
-                s
-                for s in hass.data[DOMAIN][ATTR_STREAMS].values()
-                if s.access_token == token
-            ),
+            (s for s in hass.data[DOMAIN][ATTR_STREAMS] if s.access_token == token),
             None,
         )
 

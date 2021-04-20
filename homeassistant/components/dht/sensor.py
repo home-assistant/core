@@ -1,20 +1,25 @@
 """Support for Adafruit DHT temperature and humidity sensor."""
-import logging
+from contextlib import suppress
 from datetime import timedelta
+import logging
 
 import Adafruit_DHT  # pylint: disable=import-error
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import (
+    CONF_MONITORED_CONDITIONS,
+    CONF_NAME,
+    CONF_PIN,
+    PERCENTAGE,
+    TEMP_FAHRENHEIT,
+)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import TEMP_FAHRENHEIT, CONF_NAME, CONF_MONITORED_CONDITIONS
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.util.temperature import celsius_to_fahrenheit
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_PIN = "pin"
 CONF_SENSOR = "sensor"
 CONF_HUMIDITY_OFFSET = "humidity_offset"
 CONF_TEMPERATURE_OFFSET = "temperature_offset"
@@ -28,7 +33,7 @@ SENSOR_TEMPERATURE = "temperature"
 SENSOR_HUMIDITY = "humidity"
 SENSOR_TYPES = {
     SENSOR_TEMPERATURE: ["Temperature", None],
-    SENSOR_HUMIDITY: ["Humidity", "%"],
+    SENSOR_HUMIDITY: ["Humidity", PERCENTAGE],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -51,17 +56,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the DHT sensor."""
-
     SENSOR_TYPES[SENSOR_TEMPERATURE][1] = hass.config.units.temperature_unit
     available_sensors = {
         "AM2302": Adafruit_DHT.AM2302,
         "DHT11": Adafruit_DHT.DHT11,
         "DHT22": Adafruit_DHT.DHT22,
     }
-    sensor = available_sensors.get(config.get(CONF_SENSOR))
-    pin = config.get(CONF_PIN)
-    temperature_offset = config.get(CONF_TEMPERATURE_OFFSET)
-    humidity_offset = config.get(CONF_HUMIDITY_OFFSET)
+    sensor = available_sensors.get(config[CONF_SENSOR])
+    pin = config[CONF_PIN]
+    temperature_offset = config[CONF_TEMPERATURE_OFFSET]
+    humidity_offset = config[CONF_HUMIDITY_OFFSET]
 
     if not sensor:
         _LOGGER.error("DHT sensor type is not supported")
@@ -69,9 +73,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     data = DHTClient(Adafruit_DHT, sensor, pin)
     dev = []
-    name = config.get(CONF_NAME)
+    name = config[CONF_NAME]
 
-    try:
+    with suppress(KeyError):
         for variable in config[CONF_MONITORED_CONDITIONS]:
             dev.append(
                 DHTSensor(
@@ -83,13 +87,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     humidity_offset,
                 )
             )
-    except KeyError:
-        pass
 
     add_entities(dev, True)
 
 
-class DHTSensor(Entity):
+class DHTSensor(SensorEntity):
     """Implementation of the DHT sensor."""
 
     def __init__(
@@ -160,7 +162,7 @@ class DHTClient:
         self.adafruit_dht = adafruit_dht
         self.sensor = sensor
         self.pin = pin
-        self.data = dict()
+        self.data = {}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):

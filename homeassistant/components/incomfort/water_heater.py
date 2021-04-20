@@ -1,14 +1,20 @@
 """Support for an Intergas boiler via an InComfort/Intouch Lan2RF gateway."""
+from __future__ import annotations
+
 import asyncio
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from aiohttp import ClientResponseError
-from homeassistant.components.water_heater import WaterHeaterDevice
+
+from homeassistant.components.water_heater import (
+    DOMAIN as WATER_HEATER_DOMAIN,
+    WaterHeaterEntity,
+)
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from . import DOMAIN
+from . import DOMAIN, IncomfortEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,30 +27,24 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         return
 
     client = hass.data[DOMAIN]["client"]
-    heater = hass.data[DOMAIN]["heater"]
+    heaters = hass.data[DOMAIN]["heaters"]
 
-    async_add_entities([IncomfortWaterHeater(client, heater)])
+    async_add_entities([IncomfortWaterHeater(client, h) for h in heaters])
 
 
-class IncomfortWaterHeater(WaterHeaterDevice):
+class IncomfortWaterHeater(IncomfortEntity, WaterHeaterEntity):
     """Representation of an InComfort/Intouch water_heater device."""
 
     def __init__(self, client, heater) -> None:
         """Initialize the water_heater device."""
+        super().__init__()
+
         self._unique_id = f"{heater.serial_no}"
+        self.entity_id = f"{WATER_HEATER_DOMAIN}.{DOMAIN}"
+        self._name = "Boiler"
 
         self._client = client
         self._heater = heater
-
-    @property
-    def unique_id(self) -> Optional[str]:
-        """Return a unique ID."""
-        return self._unique_id
-
-    @property
-    def name(self) -> str:
-        """Return the name of the water_heater device."""
-        return "Boiler"
 
     @property
     def icon(self) -> str:
@@ -52,7 +52,7 @@ class IncomfortWaterHeater(WaterHeaterDevice):
         return "mdi:thermometer-lines"
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         return {k: v for k, v in self._heater.status.items() if k in HEATER_ATTRS}
 

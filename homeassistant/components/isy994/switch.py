@@ -1,69 +1,82 @@
 """Support for ISY994 switches."""
-import logging
 from typing import Callable
 
-from homeassistant.components.switch import DOMAIN, SwitchDevice
-from homeassistant.helpers.typing import ConfigType
+from pyisy.constants import ISY_VALUE_UNKNOWN, PROTO_GROUP
 
-from . import ISY994_NODES, ISY994_PROGRAMS, ISYDevice
+from homeassistant.components.switch import DOMAIN as SWITCH, SwitchEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.typing import HomeAssistantType
 
-_LOGGER = logging.getLogger(__name__)
+from .const import _LOGGER, DOMAIN as ISY994_DOMAIN, ISY994_NODES, ISY994_PROGRAMS
+from .entity import ISYNodeEntity, ISYProgramEntity
+from .helpers import migrate_old_unique_ids
 
 
-def setup_platform(
-    hass, config: ConfigType, add_entities: Callable[[list], None], discovery_info=None
-):
+async def async_setup_entry(
+    hass: HomeAssistantType,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[list], None],
+) -> bool:
     """Set up the ISY994 switch platform."""
+    hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
     devices = []
-    for node in hass.data[ISY994_NODES][DOMAIN]:
-        if not node.dimmable:
-            devices.append(ISYSwitchDevice(node))
+    for node in hass_isy_data[ISY994_NODES][SWITCH]:
+        devices.append(ISYSwitchEntity(node))
 
-    for name, status, actions in hass.data[ISY994_PROGRAMS][DOMAIN]:
-        devices.append(ISYSwitchProgram(name, status, actions))
+    for name, status, actions in hass_isy_data[ISY994_PROGRAMS][SWITCH]:
+        devices.append(ISYSwitchProgramEntity(name, status, actions))
 
-    add_entities(devices)
+    await migrate_old_unique_ids(hass, SWITCH, devices)
+    async_add_entities(devices)
 
 
-class ISYSwitchDevice(ISYDevice, SwitchDevice):
+class ISYSwitchEntity(ISYNodeEntity, SwitchEntity):
     """Representation of an ISY994 switch device."""
 
     @property
     def is_on(self) -> bool:
         """Get whether the ISY994 device is in the on state."""
-        return bool(self.value)
+        if self._node.status == ISY_VALUE_UNKNOWN:
+            return None
+        return bool(self._node.status)
 
     def turn_off(self, **kwargs) -> None:
-        """Send the turn on command to the ISY994 switch."""
-        if not self._node.off():
-            _LOGGER.debug("Unable to turn on switch.")
+        """Send the turn off command to the ISY994 switch."""
+        if not self._node.turn_off():
+            _LOGGER.debug("Unable to turn off switch")
 
     def turn_on(self, **kwargs) -> None:
-        """Send the turn off command to the ISY994 switch."""
-        if not self._node.on():
-            _LOGGER.debug("Unable to turn on switch.")
+        """Send the turn on command to the ISY994 switch."""
+        if not self._node.turn_on():
+            _LOGGER.debug("Unable to turn on switch")
+
+    @property
+    def icon(self) -> str:
+        """Get the icon for groups."""
+        if hasattr(self._node, "protocol") and self._node.protocol == PROTO_GROUP:
+            return "mdi:google-circles-communities"  # Matches isy scene icon
+        return super().icon
 
 
-class ISYSwitchProgram(ISYSwitchDevice):
+class ISYSwitchProgramEntity(ISYProgramEntity, SwitchEntity):
     """A representation of an ISY994 program switch."""
-
-    def __init__(self, name: str, node, actions) -> None:
-        """Initialize the ISY994 switch program."""
-        super().__init__(node)
-        self._name = name
-        self._actions = actions
 
     @property
     def is_on(self) -> bool:
         """Get whether the ISY994 switch program is on."""
-        return bool(self.value)
+        return bool(self._node.status)
 
     def turn_on(self, **kwargs) -> None:
         """Send the turn on command to the ISY994 switch program."""
-        if not self._actions.runThen():
+        if not self._actions.run_then():
             _LOGGER.error("Unable to turn on switch")
 
     def turn_off(self, **kwargs) -> None:
         """Send the turn off command to the ISY994 switch program."""
-        if not self._actions.runElse():
+        if not self._actions.run_else():
             _LOGGER.error("Unable to turn off switch")
+
+    @property
+    def icon(self) -> str:
+        """Get the icon for programs."""
+        return "mdi:script-text-outline"  # Matches isy program icon

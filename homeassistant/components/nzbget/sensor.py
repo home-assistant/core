@@ -1,111 +1,128 @@
 """Monitor the NZBGet API."""
+from __future__ import annotations
+
+from datetime import timedelta
 import logging
+from typing import Callable
 
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    CONF_NAME,
+    DATA_MEGABYTES,
+    DATA_RATE_MEGABYTES_PER_SECOND,
+    DEVICE_CLASS_TIMESTAMP,
+)
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.util.dt import utcnow
 
-from . import DATA_NZBGET, DATA_UPDATED
+from . import NZBGetEntity
+from .const import DATA_COORDINATOR, DOMAIN
+from .coordinator import NZBGetDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "NZBGet"
-
 SENSOR_TYPES = {
-    "article_cache": ["ArticleCacheMB", "Article Cache", "MB"],
-    "average_download_rate": ["AverageDownloadRate", "Average Speed", "MB/s"],
+    "article_cache": ["ArticleCacheMB", "Article Cache", DATA_MEGABYTES],
+    "average_download_rate": [
+        "AverageDownloadRate",
+        "Average Speed",
+        DATA_RATE_MEGABYTES_PER_SECOND,
+    ],
     "download_paused": ["DownloadPaused", "Download Paused", None],
-    "download_rate": ["DownloadRate", "Speed", "MB/s"],
-    "download_size": ["DownloadedSizeMB", "Size", "MB"],
-    "free_disk_space": ["FreeDiskSpaceMB", "Disk Free", "MB"],
+    "download_rate": ["DownloadRate", "Speed", DATA_RATE_MEGABYTES_PER_SECOND],
+    "download_size": ["DownloadedSizeMB", "Size", DATA_MEGABYTES],
+    "free_disk_space": ["FreeDiskSpaceMB", "Disk Free", DATA_MEGABYTES],
+    "post_job_count": ["PostJobCount", "Post Processing Jobs", "Jobs"],
     "post_paused": ["PostPaused", "Post Processing Paused", None],
-    "remaining_size": ["RemainingSizeMB", "Queue Size", "MB"],
-    "uptime": ["UpTimeSec", "Uptime", "min"],
+    "remaining_size": ["RemainingSizeMB", "Queue Size", DATA_MEGABYTES],
+    "uptime": ["UpTimeSec", "Uptime", None],
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Create NZBGet sensors."""
+async def async_setup_entry(
+    hass: HomeAssistantType,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[list[Entity], bool], None],
+) -> None:
+    """Set up NZBGet sensor based on a config entry."""
+    coordinator: NZBGetDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
+        DATA_COORDINATOR
+    ]
+    sensors = []
 
-    if discovery_info is None:
-        return
-
-    nzbget_data = hass.data[DATA_NZBGET]
-    name = discovery_info["client_name"]
-
-    devices = []
     for sensor_config in SENSOR_TYPES.values():
-        new_sensor = NZBGetSensor(
-            nzbget_data, sensor_config[0], name, sensor_config[1], sensor_config[2]
+        sensors.append(
+            NZBGetSensor(
+                coordinator,
+                entry.entry_id,
+                entry.data[CONF_NAME],
+                sensor_config[0],
+                sensor_config[1],
+                sensor_config[2],
+            )
         )
-        devices.append(new_sensor)
 
-    add_entities(devices, True)
+    async_add_entities(sensors)
 
 
-class NZBGetSensor(Entity):
+class NZBGetSensor(NZBGetEntity, SensorEntity):
     """Representation of a NZBGet sensor."""
 
     def __init__(
-        self, nzbget_data, sensor_type, client_name, sensor_name, unit_of_measurement
+        self,
+        coordinator: NZBGetDataUpdateCoordinator,
+        entry_id: str,
+        entry_name: str,
+        sensor_type: str,
+        sensor_name: str,
+        unit_of_measurement: str | None = None,
     ):
         """Initialize a new NZBGet sensor."""
-        self._name = f"{client_name} {sensor_name}"
-        self.type = sensor_type
-        self.client_name = client_name
-        self.nzbget_data = nzbget_data
-        self._state = None
+        self._sensor_type = sensor_type
+        self._unique_id = f"{entry_id}_{sensor_type}"
         self._unit_of_measurement = unit_of_measurement
 
+        super().__init__(
+            coordinator=coordinator,
+            entry_id=entry_id,
+            name=f"{entry_name} {sensor_name}",
+        )
+
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
+    def device_class(self):
+        """Return the device class."""
+        if "UpTimeSec" in self._sensor_type:
+            return DEVICE_CLASS_TIMESTAMP
+
+        return None
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique ID of the sensor."""
+        return self._unique_id
+
+    @property
+    def unit_of_measurement(self) -> str:
+        """Return the unit that the state of sensor is expressed in."""
+        return self._unit_of_measurement
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._state
+        value = self.coordinator.data["status"].get(self._sensor_type)
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
-
-    @property
-    def available(self):
-        """Return whether the sensor is available."""
-        return self.nzbget_data.available
-
-    async def async_added_to_hass(self):
-        """Handle entity which will be added."""
-        async_dispatcher_connect(
-            self.hass, DATA_UPDATED, self._schedule_immediate_update
-        )
-
-    @callback
-    def _schedule_immediate_update(self):
-        self.async_schedule_update_ha_state(True)
-
-    def update(self):
-        """Update state of sensor."""
-
-        if self.nzbget_data.status is None:
-            _LOGGER.debug(
-                "Update of %s requested, but no status is available", self._name
-            )
-            return
-
-        value = self.nzbget_data.status.get(self.type)
         if value is None:
-            _LOGGER.warning("Unable to locate value for %s", self.type)
-            return
+            _LOGGER.warning("Unable to locate value for %s", self._sensor_type)
+            return None
 
-        if "DownloadRate" in self.type and value > 0:
+        if "DownloadRate" in self._sensor_type and value > 0:
             # Convert download rate from Bytes/s to MBytes/s
-            self._state = round(value / 2 ** 20, 2)
-        elif "UpTimeSec" in self.type and value > 0:
-            # Convert uptime from seconds to minutes
-            self._state = round(value / 60, 2)
-        else:
-            self._state = value
+            return round(value / 2 ** 20, 2)
+
+        if "UpTimeSec" in self._sensor_type and value > 0:
+            uptime = utcnow() - timedelta(seconds=value)
+            return uptime.replace(microsecond=0).isoformat()
+
+        return value

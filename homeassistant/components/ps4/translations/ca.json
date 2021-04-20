@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "credential_error": "Error en l'obtenci\u00f3 de les credencials.",
+            "no_devices_found": "No s'han trobat dispositius a la xarxa",
+            "port_987_bind_error": "No s'ha pogut vincular amb el port 987. Consulta la [documentaci\u00f3](https://www.home-assistant.io/components/ps4/) per a m\u00e9s informaci\u00f3.",
+            "port_997_bind_error": "No s'ha pogut vincular amb el port 997. Consulta la [documentaci\u00f3](https://www.home-assistant.io/components/ps4/) per a m\u00e9s informaci\u00f3."
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "credential_timeout": "El servei de credencials ha expirat. Prem Envia per reiniciar-lo.",
+            "login_failed": "No s'ha pogut sincronitzar amb la PlayStation 4. Verifica que el Codi PIN sigui correcte.",
+            "no_ipaddress": "Introdueix l'Adre\u00e7a IP de la PlayStation 4 que vulguis configurar."
+        },
+        "step": {
+            "creds": {
+                "description": "Credencials necess\u00e0ries. Prem 'Envia' i, a continuaci\u00f3, a la segona pantalla de l'aplicaci\u00f3 de la PS4, actualitza els dispositius i selecciona 'Home-Assistant' per continuar.",
+                "title": "PlayStation 4"
+            },
+            "link": {
+                "data": {
+                    "code": "Codi PIN",
+                    "ip_address": "Adre\u00e7a IP",
+                    "name": "Nom",
+                    "region": "Regi\u00f3"
+                },
+                "description": "Introdueix la informaci\u00f3 de la teva PlayStation 4. Per al Codi PIN, ves a 'Configuraci\u00f3' a la consola de la PlayStation 4. Despr\u00e9s navega fins a 'Configuraci\u00f3 de la connexi\u00f3 de l'aplicaci\u00f3 m\u00f2bil' i selecciona 'Afegir dispositiu'. Introdueix el Codi PIN que es mostra. Consulta la [documentaci\u00f3](https://www.home-assistant.io/components/ps4/) per a m\u00e9s informaci\u00f3.",
+                "title": "PlayStation 4"
+            },
+            "mode": {
+                "data": {
+                    "ip_address": "Adre\u00e7a IP (deixa-ho en blanc si fas servir la detecci\u00f3 autom\u00e0tica).",
+                    "mode": "Mode de configuraci\u00f3"
+                },
+                "description": "Selecciona el mode de configuraci\u00f3. El camp de l'Adre\u00e7a IP es pot deixar en blanc si selecciones descobriment autom\u00e0tic (els dispositius es descobriran autom\u00e0ticament).",
+                "title": "PlayStation 4"
+            }
+        }
+    }
+}

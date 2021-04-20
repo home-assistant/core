@@ -1,0 +1,9 @@
+{
+  "domain": "omnilogic",
+  "name": "Hayward Omnilogic",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/omnilogic",
+  "requirements": ["omnilogic==0.4.3"],
+  "codeowners": ["@oliver84", "@djtimca", "@gentoosu"],
+  "iot_class": "cloud_polling"
+}

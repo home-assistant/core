@@ -1,30 +1,24 @@
 """Support for IKEA Tradfri covers."""
 
-from homeassistant.components.cover import (
-    CoverDevice,
-    ATTR_POSITION,
-    SUPPORT_OPEN,
-    SUPPORT_CLOSE,
-    SUPPORT_SET_POSITION,
-)
+from homeassistant.components.cover import ATTR_POSITION, CoverEntity
+
 from .base_class import TradfriBaseDevice
-from .const import KEY_GATEWAY, KEY_API, CONF_GATEWAY_ID
+from .const import ATTR_MODEL, CONF_GATEWAY_ID, DEVICES, DOMAIN, KEY_API
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Load Tradfri covers based on a config entry."""
     gateway_id = config_entry.data[CONF_GATEWAY_ID]
-    api = hass.data[KEY_API][config_entry.entry_id]
-    gateway = hass.data[KEY_GATEWAY][config_entry.entry_id]
+    tradfri_data = hass.data[DOMAIN][config_entry.entry_id]
+    api = tradfri_data[KEY_API]
+    devices = tradfri_data[DEVICES]
 
-    devices_commands = await api(gateway.get_devices())
-    devices = await api(devices_commands)
     covers = [dev for dev in devices if dev.has_blind_control]
     if covers:
         async_add_entities(TradfriCover(cover, api, gateway_id) for cover in covers)
 
 
-class TradfriCover(TradfriBaseDevice, CoverDevice):
+class TradfriCover(TradfriBaseDevice, CoverEntity):
     """The platform class required by Home Assistant."""
 
     def __init__(self, device, api, gateway_id):
@@ -35,9 +29,9 @@ class TradfriCover(TradfriBaseDevice, CoverDevice):
         self._refresh(device)
 
     @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        return {ATTR_MODEL: self._device.device_info.model_number}
 
     @property
     def current_cover_position(self):
@@ -58,6 +52,10 @@ class TradfriCover(TradfriBaseDevice, CoverDevice):
     async def async_close_cover(self, **kwargs):
         """Close cover."""
         await self._api(self._device_control.set_state(100))
+
+    async def async_stop_cover(self, **kwargs):
+        """Close cover."""
+        await self._api(self._device_control.trigger_blind())
 
     @property
     def is_closed(self):

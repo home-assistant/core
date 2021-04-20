@@ -10,11 +10,12 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
+    CONF_ATTRIBUTE,
     CONF_DEVICE_CLASS,
     CONF_ENTITY_ID,
     CONF_FRIENDLY_NAME,
@@ -25,8 +26,11 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import generate_entity_id
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.reload import setup_reload_service
 from homeassistant.util import utcnow
+
+from . import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +41,6 @@ ATTR_INVERT = "invert"
 ATTR_SAMPLE_DURATION = "sample_duration"
 ATTR_SAMPLE_COUNT = "sample_count"
 
-CONF_ATTRIBUTE = "attribute"
 CONF_INVERT = "invert"
 CONF_MAX_SAMPLES = "max_samples"
 CONF_MIN_GRADIENT = "min_gradient"
@@ -63,6 +66,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the trend sensors."""
+    setup_reload_service(hass, DOMAIN, PLATFORMS)
+
     sensors = []
 
     for device_id, device_config in config[CONF_SENSORS].items():
@@ -95,7 +100,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors)
 
 
-class SensorTrend(BinarySensorDevice):
+class SensorTrend(BinarySensorEntity):
     """Representation of a trend Sensor."""
 
     def __init__(
@@ -141,7 +146,7 @@ class SensorTrend(BinarySensorDevice):
         return self._device_class
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
             ATTR_ENTITY_ID: self._entity_id,
@@ -162,8 +167,11 @@ class SensorTrend(BinarySensorDevice):
         """Complete device setup after being added to hass."""
 
         @callback
-        def trend_sensor_state_listener(entity, old_state, new_state):
+        def trend_sensor_state_listener(event):
             """Handle state changes on the observed device."""
+            new_state = event.data.get("new_state")
+            if new_state is None:
+                return
             try:
                 if self._attribute:
                     state = new_state.attributes.get(self._attribute)
@@ -176,8 +184,10 @@ class SensorTrend(BinarySensorDevice):
             except (ValueError, TypeError) as ex:
                 _LOGGER.error(ex)
 
-        async_track_state_change(
-            self.hass, self._entity_id, trend_sensor_state_listener
+        self.async_on_remove(
+            async_track_state_change_event(
+                self.hass, [self._entity_id], trend_sensor_state_listener
+            )
         )
 
     async def async_update(self):
@@ -192,7 +202,7 @@ class SensorTrend(BinarySensorDevice):
             return
 
         # Calculate gradient of linear trend
-        await self.hass.async_add_job(self._calculate_gradient)
+        await self.hass.async_add_executor_job(self._calculate_gradient)
 
         # Update state
         self._state = (

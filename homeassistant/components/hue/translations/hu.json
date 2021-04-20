@@ -1,0 +1,46 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "M\u00e1r minden Philips Hue bridge konfigur\u00e1lt",
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "already_in_progress": "A konfigur\u00e1ci\u00f3 m\u00e1r folyamatban van.",
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "discover_timeout": "Nem tal\u00e1ltam a Hue bridget",
+            "no_bridges": "Nem tal\u00e1ltam Philips Hue bridget",
+            "not_hue_bridge": "Nem egy Hue Bridge",
+            "unknown": "Ismeretlen hiba t\u00f6rt\u00e9nt"
+        },
+        "error": {
+            "linking": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt",
+            "register_failed": "Regisztr\u00e1ci\u00f3 nem siker\u00fclt, k\u00e9rem pr\u00f3b\u00e1lja \u00fajra"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": "Hoszt"
+                },
+                "title": "V\u00e1lassz Hue bridge-t"
+            },
+            "link": {
+                "description": "Nyomja meg a gombot a bridge-en a Philips Hue Home Assistant-ben val\u00f3 regisztr\u00e1l\u00e1s\u00e1hoz.\n\n![Location of button on bridge](/static/images/config_philips_hue.jpg)",
+                "title": "Kapcsol\u00f3d\u00e1s a hubhoz"
+            },
+            "manual": {
+                "data": {
+                    "host": "Hoszt"
+                },
+                "title": "A Hue bridge manu\u00e1lis konfigur\u00e1l\u00e1sa"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "turn_off": "Kikapcsol\u00e1s",
+            "turn_on": "Bekapcsol\u00e1s"
+        },
+        "trigger_type": {
+            "remote_button_short_press": "\"{subtype}\" gomb lenyomva",
+            "remote_button_short_release": "\"{subtype}\" gomb elengedve"
+        }
+    }
+}

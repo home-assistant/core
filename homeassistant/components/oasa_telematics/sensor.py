@@ -1,14 +1,14 @@
 """Support for OASA Telematics from telematics.oasa.gr."""
-import logging
 from datetime import timedelta
+import logging
 from operator import itemgetter
 
+import oasatelematics
 import voluptuous as vol
 
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, DEVICE_CLASS_TIMESTAMP
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION, DEVICE_CLASS_TIMESTAMP
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([OASATelematicsSensor(data, stop_id, route_id, name)], True)
 
 
-class OASATelematicsSensor(Entity):
+class OASATelematicsSensor(SensorEntity):
     """Implementation of the OASA Telematics sensor."""
 
     def __init__(self, data, stop_id, route_id, name):
@@ -78,7 +78,7 @@ class OASATelematicsSensor(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         params = {}
         if self._times is not None:
@@ -128,8 +128,6 @@ class OASATelematicsData:
 
     def __init__(self, stop_id, route_id):
         """Initialize the data object."""
-        import oasatelematics
-
         self.stop_id = stop_id
         self.route_id = route_id
         self.info = self.empty_result()

@@ -1,16 +1,17 @@
 """Support for Ubiquiti mFi switches."""
 import logging
 
+from mficlient.client import FailedToLogin, MFiClient
 import requests
 import voluptuous as vol
 
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import (
     CONF_HOST,
-    CONF_PORT,
     CONF_PASSWORD,
-    CONF_USERNAME,
+    CONF_PORT,
     CONF_SSL,
+    CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
 import homeassistant.helpers.config_validation as cv
@@ -20,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_SSL = True
 DEFAULT_VERIFY_SSL = True
 
-SWITCH_MODELS = ["Outlet", "Output 5v", "Output 12v", "Output 24v"]
+SWITCH_MODELS = ["Outlet", "Output 5v", "Output 12v", "Output 24v", "Dimmer Switch"]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -39,12 +40,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     host = config.get(CONF_HOST)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
-    use_tls = config.get(CONF_SSL)
+    use_tls = config[CONF_SSL]
     verify_tls = config.get(CONF_VERIFY_SSL)
     default_port = 6443 if use_tls else 6080
     port = int(config.get(CONF_PORT, default_port))
-
-    from mficlient.client import FailedToLogin, MFiClient
 
     try:
         client = MFiClient(
@@ -62,18 +61,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class MfiSwitch(SwitchDevice):
+class MfiSwitch(SwitchEntity):
     """Representation of an mFi switch-able device."""
 
     def __init__(self, port):
         """Initialize the mFi device."""
         self._port = port
         self._target_state = None
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
 
     @property
     def unique_id(self):
@@ -113,9 +107,9 @@ class MfiSwitch(SwitchDevice):
         return int(self._port.data.get("active_pwr", 0))
 
     @property
-    def device_state_attributes(self):
-        """Return the state attributes fof the device."""
-        attr = {}
-        attr["volts"] = round(self._port.data.get("v_rms", 0), 1)
-        attr["amps"] = round(self._port.data.get("i_rms", 0), 1)
-        return attr
+    def extra_state_attributes(self):
+        """Return the state attributes for the device."""
+        return {
+            "volts": round(self._port.data.get("v_rms", 0), 1),
+            "amps": round(self._port.data.get("i_rms", 0), 1),
+        }

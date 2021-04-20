@@ -1,24 +1,26 @@
 """Code to set up a device tracker platform using a config entry."""
-from typing import Optional
+from __future__ import annotations
+
+from typing import final
 
 from homeassistant.components import zone
 from homeassistant.const import (
-    STATE_NOT_HOME,
-    STATE_HOME,
+    ATTR_BATTERY_LEVEL,
     ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
-    ATTR_BATTERY_LEVEL,
+    STATE_HOME,
+    STATE_NOT_HOME,
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 
-from .const import ATTR_SOURCE_TYPE, DOMAIN, LOGGER
+from .const import ATTR_HOST_NAME, ATTR_IP, ATTR_MAC, ATTR_SOURCE_TYPE, DOMAIN, LOGGER
 
 
 async def async_setup_entry(hass, entry):
     """Set up an entry."""
-    component: Optional[EntityComponent] = hass.data.get(DOMAIN)
+    component: EntityComponent | None = hass.data.get(DOMAIN)
 
     if component is None:
         component = hass.data[DOMAIN] = EntityComponent(LOGGER, DOMAIN, hass)
@@ -59,7 +61,17 @@ class BaseTrackerEntity(Entity):
 
 
 class TrackerEntity(BaseTrackerEntity):
-    """Represent a tracked device."""
+    """Base class for a tracked device."""
+
+    @property
+    def should_poll(self):
+        """No polling for entities that have location pushed."""
+        return False
+
+    @property
+    def force_update(self):
+        """All updates need to be written to the state machine if we're not polling."""
+        return not self.should_poll
 
     @property
     def location_accuracy(self):
@@ -104,6 +116,7 @@ class TrackerEntity(BaseTrackerEntity):
 
         return None
 
+    @final
     @property
     def state_attributes(self):
         """Return the device state attributes."""
@@ -118,7 +131,22 @@ class TrackerEntity(BaseTrackerEntity):
 
 
 class ScannerEntity(BaseTrackerEntity):
-    """Represent a tracked device that is on a scanned network."""
+    """Base class for a tracked device that is on a scanned network."""
+
+    @property
+    def ip_address(self) -> str:
+        """Return the primary ip address of the device."""
+        return None
+
+    @property
+    def mac_address(self) -> str:
+        """Return the mac address of the device."""
+        return None
+
+    @property
+    def hostname(self) -> str:
+        """Return hostname of the device."""
+        return None
 
     @property
     def state(self):
@@ -131,3 +159,18 @@ class ScannerEntity(BaseTrackerEntity):
     def is_connected(self):
         """Return true if the device is connected to the network."""
         raise NotImplementedError
+
+    @final
+    @property
+    def state_attributes(self):
+        """Return the device state attributes."""
+        attr = {}
+        attr.update(super().state_attributes)
+        if self.ip_address is not None:
+            attr[ATTR_IP] = self.ip_address
+        if self.mac_address is not None:
+            attr[ATTR_MAC] = self.mac_address
+        if self.hostname is not None:
+            attr[ATTR_HOST_NAME] = self.hostname
+
+        return attr

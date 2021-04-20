@@ -1,7 +1,6 @@
 """Support for Android IP Webcam."""
 import asyncio
 from datetime import timedelta
-import logging
 
 from pydroid_ipcam import PyDroidIPCam
 import voluptuous as vol
@@ -30,8 +29,6 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_AUD_CONNS = "Audio Connections"
 ATTR_HOST = "host"
@@ -309,7 +306,9 @@ class AndroidIPCamEntity(Entity):
                 return
             self.async_schedule_update_ha_state(True)
 
-        async_dispatcher_connect(self.hass, SIGNAL_UPDATE_DATA, async_ipcam_update)
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, SIGNAL_UPDATE_DATA, async_ipcam_update)
+        )
 
     @property
     def should_poll(self):
@@ -322,7 +321,7 @@ class AndroidIPCamEntity(Entity):
         return self._ipcam.available
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         state_attr = {ATTR_HOST: self._host}
         if self._ipcam.status_data is None:

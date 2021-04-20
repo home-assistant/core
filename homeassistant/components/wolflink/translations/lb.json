@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
+            "unknown": "Onerwaarte Feeler"
+        },
+        "step": {
+            "device": {
+                "data": {
+                    "device_name": "Apparat"
+                },
+                "title": "WOLF Apparat auswielen"
+            },
+            "user": {
+                "data": {
+                    "password": "Passwuert",
+                    "username": "Benotzernumm"
+                },
+                "title": "WOLF SmartSet Verbindung"
+            }
+        }
+    }
+}

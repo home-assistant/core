@@ -1,0 +1,18 @@
+set_time_to:
+  name: Set Time To
+  description: Control timers to turn the system on or off after a set number of minutes
+  target:
+    entity:
+      integration: advantage_air
+      domain: sensor
+  fields:
+    minutes:
+      description: Minutes until action
+      example: "60"
+set_myzone:
+  name: Set MyZone
+  description: Change which zone is set as the reference for temperature control
+  target:
+    entity:
+      integration: advantage_air
+      domain: climate

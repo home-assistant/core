@@ -5,16 +5,16 @@ import logging
 
 import aiohttp
 import async_timeout
-import voluptuous as vol
 import pysensibo
+import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
-    HVAC_MODE_HEAT_COOL,
     HVAC_MODE_COOL,
     HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY,
     HVAC_MODE_HEAT,
+    HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
     SUPPORT_FAN_MODE,
     SUPPORT_SWING_MODE,
@@ -65,7 +65,7 @@ _FETCH_FIELDS = ",".join(
         "temperatureUnit",
     ]
 )
-_INITIAL_FETCH_FIELDS = "id," + _FETCH_FIELDS
+_INITIAL_FETCH_FIELDS = f"id,{_FETCH_FIELDS}"
 
 FIELD_TO_FLAG = {
     "fanLevel": SUPPORT_FAN_MODE,
@@ -100,9 +100,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         aiohttp.client_exceptions.ClientConnectorError,
         asyncio.TimeoutError,
         pysensibo.SensiboError,
-    ):
-        _LOGGER.exception("Failed to connect to Sensibo servers.")
-        raise PlatformNotReady
+    ) as err:
+        _LOGGER.exception("Failed to connect to Sensibo servers")
+        raise PlatformNotReady from err
 
     if not devices:
         return
@@ -135,7 +135,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class SensiboClimate(ClimateDevice):
+class SensiboClimate(ClimateEntity):
     """Representation of a Sensibo device."""
 
     def __init__(self, client, data, units):
@@ -191,7 +191,7 @@ class SensiboClimate(ClimateDevice):
         return self._external_state or super().state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {"battery": self.current_battery}
 
@@ -398,5 +398,5 @@ class SensiboClimate(ClimateDevice):
                 data = await self._client.async_get_device(self._id, _FETCH_FIELDS)
                 self._do_update(data)
         except (aiohttp.client_exceptions.ClientError, pysensibo.SensiboError):
-            _LOGGER.warning("Failed to connect to Sensibo servers.")
+            _LOGGER.warning("Failed to connect to Sensibo servers")
             self._available = False

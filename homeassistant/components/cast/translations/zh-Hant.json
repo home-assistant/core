@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "\u7db2\u8def\u4e0a\u627e\u4e0d\u5230\u88dd\u7f6e",
+            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002"
+        },
+        "error": {
+            "invalid_known_hosts": "\u5df2\u77e5\u4e3b\u6a5f\u5fc5\u9808\u4ee5\u9017\u865f\u5206\u4e3b\u6a5f\u5217\u8868\u3002"
+        },
+        "step": {
+            "config": {
+                "data": {
+                    "known_hosts": "\u5047\u5982 mDNS \u63a2\u7d22\u7121\u6cd5\u4f5c\u7528\uff0c\u5247\u70ba\u5df2\u77e5\u4e3b\u6a5f\u7684\u9078\u9805\u5217\u8868\u3002"
+                },
+                "description": "\u8acb\u8f38\u5165 Google Cast \u8a2d\u5b9a\u3002",
+                "title": "Google Cast"
+            },
+            "confirm": {
+                "description": "\u662f\u5426\u8981\u958b\u59cb\u8a2d\u5b9a\uff1f"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_known_hosts": "\u5df2\u77e5\u4e3b\u6a5f\u5fc5\u9808\u4ee5\u9017\u865f\u5206\u4e3b\u6a5f\u5217\u8868\u3002"
+        },
+        "step": {
+            "options": {
+                "data": {
+                    "ignore_cec": "\u9078\u9805\u5217\u8868\u5c07\u50b3\u905e\u81f3 pychromecast.IGNORE_CEC\u3002",
+                    "known_hosts": "\u5047\u5982 mDNS \u63a2\u7d22\u7121\u6cd5\u4f5c\u7528\uff0c\u5247\u70ba\u5df2\u77e5\u4e3b\u6a5f\u7684\u9078\u9805\u5217\u8868\u3002",
+                    "uuid": "UUID \u9078\u9805\u5217\u8868\u3002\u672a\u5217\u51fa\u7684 Cast \u88dd\u7f6e\u5c07\u4e0d\u6703\u9032\u884c\u65b0\u589e\u3002"
+                },
+                "description": "\u8acb\u8f38\u5165 Google Cast \u8a2d\u5b9a\u3002"
+            }
+        }
+    }
+}

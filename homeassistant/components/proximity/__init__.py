@@ -3,13 +3,23 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_DEVICES, CONF_UNIT_OF_MEASUREMENT, CONF_ZONE
+from homeassistant.const import (
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+    CONF_DEVICES,
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_ZONE,
+    LENGTH_FEET,
+    LENGTH_KILOMETERS,
+    LENGTH_METERS,
+    LENGTH_MILES,
+    LENGTH_YARD,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_state_change
 from homeassistant.util.distance import convert
 from homeassistant.util.location import distance
-
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -29,7 +39,13 @@ DEFAULT_PROXIMITY_ZONE = "home"
 DEFAULT_TOLERANCE = 1
 DOMAIN = "proximity"
 
-UNITS = ["km", "m", "mi", "ft"]
+UNITS = [
+    LENGTH_METERS,
+    LENGTH_KILOMETERS,
+    LENGTH_FEET,
+    LENGTH_YARD,
+    LENGTH_MILES,
+]
 
 ZONE_SCHEMA = vol.Schema(
     {
@@ -57,7 +73,7 @@ def setup_proximity_component(hass, name, config):
     unit_of_measurement = config.get(
         CONF_UNIT_OF_MEASUREMENT, hass.config.units.length_unit
     )
-    zone_id = "zone.{}".format(config.get(CONF_ZONE))
+    zone_id = f"zone.{config.get(CONF_ZONE)}"
 
     proximity = Proximity(
         hass,
@@ -132,7 +148,7 @@ class Proximity(Entity):
         return self._unit_of_measurement
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_DIR_OF_TRAVEL: self.dir_of_travel, ATTR_NEAREST: self.nearest}
 
@@ -143,8 +159,8 @@ class Proximity(Entity):
         devices_in_zone = ""
 
         zone_state = self.hass.states.get(self.proximity_zone)
-        proximity_latitude = zone_state.attributes.get("latitude")
-        proximity_longitude = zone_state.attributes.get("longitude")
+        proximity_latitude = zone_state.attributes.get(ATTR_LATITUDE)
+        proximity_longitude = zone_state.attributes.get(ATTR_LONGITUDE)
 
         # Check for devices in the monitored zone.
         for device in self.proximity_devices:
@@ -161,7 +177,7 @@ class Proximity(Entity):
             if (device_state.state).lower() == (self.friendly_name).lower():
                 device_friendly = device_state.name
                 if devices_in_zone != "":
-                    devices_in_zone = devices_in_zone + ", "
+                    devices_in_zone = f"{devices_in_zone}, "
                 devices_in_zone = devices_in_zone + device_friendly
 
         # No-one to track so reset the entity.
@@ -200,13 +216,13 @@ class Proximity(Entity):
             dist_to_zone = distance(
                 proximity_latitude,
                 proximity_longitude,
-                device_state.attributes["latitude"],
-                device_state.attributes["longitude"],
+                device_state.attributes[ATTR_LATITUDE],
+                device_state.attributes[ATTR_LONGITUDE],
             )
 
             # Add the device and distance to a dictionary.
             distances_to_zone[device] = round(
-                convert(dist_to_zone, "m", self.unit_of_measurement), 1
+                convert(dist_to_zone, LENGTH_METERS, self.unit_of_measurement), 1
             )
 
         # Loop through each of the distances collected and work out the
@@ -244,14 +260,14 @@ class Proximity(Entity):
         old_distance = distance(
             proximity_latitude,
             proximity_longitude,
-            old_state.attributes["latitude"],
-            old_state.attributes["longitude"],
+            old_state.attributes[ATTR_LATITUDE],
+            old_state.attributes[ATTR_LONGITUDE],
         )
         new_distance = distance(
             proximity_latitude,
             proximity_longitude,
-            new_state.attributes["latitude"],
-            new_state.attributes["longitude"],
+            new_state.attributes[ATTR_LATITUDE],
+            new_state.attributes[ATTR_LONGITUDE],
         )
         distance_travelled = round(new_distance - old_distance, 1)
 
@@ -269,7 +285,7 @@ class Proximity(Entity):
         self.nearest = entity_name
         self.schedule_update_ha_state()
         _LOGGER.debug(
-            "proximity.%s update entity: distance=%s: direction=%s: " "device=%s",
+            "proximity.%s update entity: distance=%s: direction=%s: device=%s",
             self.friendly_name,
             round(dist_to_zone),
             direction_of_travel,

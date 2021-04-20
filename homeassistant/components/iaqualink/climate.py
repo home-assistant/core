@@ -1,6 +1,7 @@
 """Support for Aqualink Thermostats."""
+from __future__ import annotations
+
 import logging
-from typing import List, Optional
 
 from iaqualink import AqualinkHeater, AqualinkPump, AqualinkSensor, AqualinkState
 from iaqualink.const import (
@@ -10,7 +11,7 @@ from iaqualink.const import (
     AQUALINK_TEMP_FAHRENHEIT_LOW,
 )
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     DOMAIN,
     HVAC_MODE_HEAT,
@@ -22,7 +23,7 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import AqualinkEntity, refresh_system
-from .const import DOMAIN as AQUALINK_DOMAIN, CLIMATE_SUPPORTED_MODES
+from .const import CLIMATE_SUPPORTED_MODES, DOMAIN as AQUALINK_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +40,7 @@ async def async_setup_entry(
     async_add_entities(devs, True)
 
 
-class HassAqualinkThermostat(AqualinkEntity, ClimateDevice):
+class HassAqualinkThermostat(AqualinkEntity, ClimateEntity):
     """Representation of a thermostat."""
 
     @property
@@ -53,7 +54,7 @@ class HassAqualinkThermostat(AqualinkEntity, ClimateDevice):
         return SUPPORT_TARGET_TEMPERATURE
 
     @property
-    def hvac_modes(self) -> List[str]:
+    def hvac_modes(self) -> list[str]:
         """Return the list of supported HVAC modes."""
         return CLIMATE_SUPPORTED_MODES
 
@@ -119,7 +120,7 @@ class HassAqualinkThermostat(AqualinkEntity, ClimateDevice):
         return self.dev.system.devices[sensor]
 
     @property
-    def current_temperature(self) -> Optional[float]:
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.sensor.state != "":
             return float(self.sensor.state)

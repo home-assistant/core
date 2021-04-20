@@ -5,161 +5,173 @@ There are two different types of discoveries that can be fired/listened for.
  - listen_platform/discover_platform is for platforms. These are used by
    components to allow discovery of their platforms.
 """
-from homeassistant import setup, core
+from __future__ import annotations
+
+from typing import Any, Callable, TypedDict
+
+from homeassistant import core, setup
+from homeassistant.core import CALLBACK_TYPE
 from homeassistant.loader import bind_hass
-from homeassistant.const import ATTR_DISCOVERED, ATTR_SERVICE, EVENT_PLATFORM_DISCOVERED
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.loader import DEPENDENCY_BLACKLIST
-from homeassistant.util.async_ import run_callback_threadsafe
 
+from .dispatcher import async_dispatcher_connect, async_dispatcher_send
+from .typing import ConfigType, DiscoveryInfoType
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
-
+SIGNAL_PLATFORM_DISCOVERED = "discovery.platform_discovered_{}"
 EVENT_LOAD_PLATFORM = "load_platform.{}"
 ATTR_PLATFORM = "platform"
+ATTR_DISCOVERED = "discovered"
+
+# mypy: disallow-any-generics
 
 
-@bind_hass
-def listen(hass, service, callback):
-    """Set up listener for discovery of specific service.
+class DiscoveryDict(TypedDict):
+    """Discovery data."""
 
-    Service can be a string or a list/tuple.
-    """
-    run_callback_threadsafe(hass.loop, async_listen, hass, service, callback).result()
+    service: str
+    platform: str | None
+    discovered: DiscoveryInfoType | None
 
 
 @core.callback
 @bind_hass
-def async_listen(hass, service, callback):
+def async_listen(
+    hass: core.HomeAssistant,
+    service: str,
+    callback: CALLBACK_TYPE,
+) -> None:
     """Set up listener for discovery of specific service.
 
     Service can be a string or a list/tuple.
     """
-    if isinstance(service, str):
-        service = (service,)
-    else:
-        service = tuple(service)
+    job = core.HassJob(callback)
 
-    @core.callback
-    def discovery_event_listener(event):
+    async def discovery_event_listener(discovered: DiscoveryDict) -> None:
         """Listen for discovery events."""
-        if ATTR_SERVICE in event.data and event.data[ATTR_SERVICE] in service:
-            hass.async_add_job(
-                callback, event.data[ATTR_SERVICE], event.data.get(ATTR_DISCOVERED)
-            )
+        task = hass.async_run_hass_job(
+            job, discovered["service"], discovered["discovered"]
+        )
+        if task:
+            await task
 
-    hass.bus.async_listen(EVENT_PLATFORM_DISCOVERED, discovery_event_listener)
-
-
-@bind_hass
-def discover(hass, service, discovered, component, hass_config):
-    """Fire discovery event. Can ensure a component is loaded."""
-    hass.add_job(async_discover(hass, service, discovered, component, hass_config))
+    async_dispatcher_connect(
+        hass, SIGNAL_PLATFORM_DISCOVERED.format(service), discovery_event_listener
+    )
 
 
 @bind_hass
-async def async_discover(hass, service, discovered, component, hass_config):
+def discover(
+    hass: core.HomeAssistant,
+    service: str,
+    discovered: DiscoveryInfoType,
+    component: str,
+    hass_config: ConfigType,
+) -> None:
     """Fire discovery event. Can ensure a component is loaded."""
-    if component in DEPENDENCY_BLACKLIST:
-        raise HomeAssistantError("Cannot discover the {} component.".format(component))
+    hass.add_job(
+        async_discover(  # type: ignore
+            hass, service, discovered, component, hass_config
+        )
+    )
 
+
+@bind_hass
+async def async_discover(
+    hass: core.HomeAssistant,
+    service: str,
+    discovered: DiscoveryInfoType | None,
+    component: str | None,
+    hass_config: ConfigType,
+) -> None:
+    """Fire discovery event. Can ensure a component is loaded."""
     if component is not None and component not in hass.config.components:
         await setup.async_setup_component(hass, component, hass_config)
 
-    data = {ATTR_SERVICE: service}
+    data: DiscoveryDict = {
+        "service": service,
+        "platform": None,
+        "discovered": discovered,
+    }
 
-    if discovered is not None:
-        data[ATTR_DISCOVERED] = discovered
-
-    hass.bus.async_fire(EVENT_PLATFORM_DISCOVERED, data)
-
-
-@bind_hass
-def listen_platform(hass, component, callback):
-    """Register a platform loader listener."""
-    run_callback_threadsafe(
-        hass.loop, async_listen_platform, hass, component, callback
-    ).result()
+    async_dispatcher_send(hass, SIGNAL_PLATFORM_DISCOVERED.format(service), data)
 
 
 @bind_hass
-def async_listen_platform(hass, component, callback):
+def async_listen_platform(
+    hass: core.HomeAssistant,
+    component: str,
+    callback: Callable[[str, dict[str, Any] | None], Any],
+) -> None:
     """Register a platform loader listener.
 
     This method must be run in the event loop.
     """
     service = EVENT_LOAD_PLATFORM.format(component)
+    job = core.HassJob(callback)
 
-    @core.callback
-    def discovery_platform_listener(event):
+    async def discovery_platform_listener(discovered: DiscoveryDict) -> None:
         """Listen for platform discovery events."""
-        if event.data.get(ATTR_SERVICE) != service:
-            return
-
-        platform = event.data.get(ATTR_PLATFORM)
+        platform = discovered["platform"]
 
         if not platform:
             return
 
-        hass.async_run_job(callback, platform, event.data.get(ATTR_DISCOVERED))
+        task = hass.async_run_hass_job(job, platform, discovered.get("discovered"))
+        if task:
+            await task
 
-    hass.bus.async_listen(EVENT_PLATFORM_DISCOVERED, discovery_platform_listener)
-
-
-@bind_hass
-def load_platform(hass, component, platform, discovered, hass_config):
-    """Load a component and platform dynamically.
-
-    Target components will be loaded and an EVENT_PLATFORM_DISCOVERED will be
-    fired to load the platform. The event will contain:
-        { ATTR_SERVICE = EVENT_LOAD_PLATFORM + '.' + <<component>>
-          ATTR_PLATFORM = <<platform>>
-          ATTR_DISCOVERED = <<discovery info>> }
-
-    Use `listen_platform` to register a callback for these events.
-    """
-    hass.add_job(
-        async_load_platform(hass, component, platform, discovered, hass_config)
+    async_dispatcher_connect(
+        hass, SIGNAL_PLATFORM_DISCOVERED.format(service), discovery_platform_listener
     )
 
 
 @bind_hass
-async def async_load_platform(hass, component, platform, discovered, hass_config):
+def load_platform(
+    hass: core.HomeAssistant,
+    component: str,
+    platform: str,
+    discovered: DiscoveryInfoType,
+    hass_config: ConfigType,
+) -> None:
+    """Load a component and platform dynamically."""
+    hass.add_job(
+        async_load_platform(  # type: ignore
+            hass, component, platform, discovered, hass_config
+        )
+    )
+
+
+@bind_hass
+async def async_load_platform(
+    hass: core.HomeAssistant,
+    component: str,
+    platform: str,
+    discovered: DiscoveryInfoType,
+    hass_config: ConfigType,
+) -> None:
     """Load a component and platform dynamically.
 
-    Target components will be loaded and an EVENT_PLATFORM_DISCOVERED will be
-    fired to load the platform. The event will contain:
-        { ATTR_SERVICE = EVENT_LOAD_PLATFORM + '.' + <<component>>
-          ATTR_PLATFORM = <<platform>>
-          ATTR_DISCOVERED = <<discovery info>> }
-
-    Use `listen_platform` to register a callback for these events.
+    Use `async_listen_platform` to register a callback for these events.
 
     Warning: Do not await this inside a setup method to avoid a dead lock.
     Use `hass.async_create_task(async_load_platform(..))` instead.
-
-    This method is a coroutine.
     """
     assert hass_config, "You need to pass in the real hass config"
-
-    if component in DEPENDENCY_BLACKLIST:
-        raise HomeAssistantError("Cannot discover the {} component.".format(component))
 
     setup_success = True
 
     if component not in hass.config.components:
         setup_success = await setup.async_setup_component(hass, component, hass_config)
 
-    # No need to fire event if we could not set up component
+    # No need to send signal if we could not set up component
     if not setup_success:
         return
 
-    data = {
-        ATTR_SERVICE: EVENT_LOAD_PLATFORM.format(component),
-        ATTR_PLATFORM: platform,
+    service = EVENT_LOAD_PLATFORM.format(component)
+
+    data: DiscoveryDict = {
+        "service": service,
+        "platform": platform,
+        "discovered": discovered,
     }
 
-    if discovered is not None:
-        data[ATTR_DISCOVERED] = discovered
-
-    hass.bus.async_fire(EVENT_PLATFORM_DISCOVERED, data)
+    async_dispatcher_send(hass, SIGNAL_PLATFORM_DISCOVERED.format(service), data)

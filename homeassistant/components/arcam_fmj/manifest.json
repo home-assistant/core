@@ -1,13 +1,15 @@
 {
   "domain": "arcam_fmj",
-  "name": "Arcam FMJ Receiver control",
-  "config_flow": false,
+  "name": "Arcam FMJ Receivers",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/arcam_fmj",
-  "requirements": [
-    "arcam-fmj==0.4.3"
+  "requirements": ["arcam-fmj==0.5.3"],
+  "ssdp": [
+    {
+      "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+      "manufacturer": "ARCAM"
+    }
   ],
-  "dependencies": [],
-  "codeowners": [
-    "@elupus"
-  ]
+  "codeowners": ["@elupus"],
+  "iot_class": "local_polling"
 }

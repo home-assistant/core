@@ -1,20 +1,19 @@
 """Support for ADS switch platform."""
-import logging
-
 import voluptuous as vol
 
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
-from . import CONF_ADS_VAR, DATA_ADS, AdsEntity, STATE_KEY_STATE
-
-_LOGGER = logging.getLogger(__name__)
+from . import CONF_ADS_VAR, DATA_ADS, STATE_KEY_STATE, AdsEntity
 
 DEFAULT_NAME = "ADS Switch"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_ADS_VAR): cv.string, vol.Optional(CONF_NAME): cv.string}
+    {
+        vol.Required(CONF_ADS_VAR): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
 )
 
 
@@ -22,13 +21,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up switch platform for ADS."""
     ads_hub = hass.data.get(DATA_ADS)
 
-    name = config.get(CONF_NAME)
-    ads_var = config.get(CONF_ADS_VAR)
+    name = config[CONF_NAME]
+    ads_var = config[CONF_ADS_VAR]
 
     add_entities([AdsSwitch(ads_hub, name, ads_var)])
 
 
-class AdsSwitch(AdsEntity, SwitchDevice):
+class AdsSwitch(AdsEntity, SwitchEntity):
     """Representation of an ADS switch device."""
 
     async def async_added_to_hass(self):

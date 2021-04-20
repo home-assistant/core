@@ -1,13 +1,15 @@
 """Support for ThinkingCleaner switches."""
-import time
-import logging
 from datetime import timedelta
+import time
+
+from pythinkingcleaner import Discovery, ThinkingCleaner
+import voluptuous as vol
 
 from homeassistant import util
-from homeassistant.const import STATE_ON, STATE_OFF
+from homeassistant.components.switch import PLATFORM_SCHEMA
+from homeassistant.const import CONF_HOST, STATE_OFF, STATE_ON
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
@@ -21,13 +23,17 @@ SWITCH_TYPES = {
     "find": ["Find", None, None],
 }
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Optional(CONF_HOST): cv.string})
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ThinkingCleaner platform."""
-    from pythinkingcleaner import Discovery
-
-    discovery = Discovery()
-    devices = discovery.discover()
+    host = config.get(CONF_HOST)
+    if host:
+        devices = [ThinkingCleaner(host, "unknown")]
+    else:
+        discovery = Discovery()
+        devices = discovery.discover()
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update_devices():
@@ -89,7 +95,7 @@ class ThinkingCleanerSwitch(ToggleEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._tc_object.name + " " + SWITCH_TYPES[self.type][0]
+        return f"{self._tc_object.name} {SWITCH_TYPES[self.type][0]}"
 
     @property
     def is_on(self):

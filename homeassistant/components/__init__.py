@@ -11,7 +11,6 @@ import logging
 
 from homeassistant.core import split_entity_id
 
-
 # mypy: allow-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,7 +37,7 @@ def is_on(hass, entity_id=None):
             continue
 
         if not hasattr(component, "is_on"):
-            _LOGGER.warning("Integration %s has no is_on method.", domain)
+            _LOGGER.warning("Integration %s has no is_on method", domain)
             continue
 
         if component.is_on(ent_id):

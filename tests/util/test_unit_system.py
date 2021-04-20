@@ -1,20 +1,20 @@
 """Test the unit system helper."""
 import pytest
 
-from homeassistant.util.unit_system import UnitSystem, METRIC_SYSTEM, IMPERIAL_SYSTEM
 from homeassistant.const import (
-    LENGTH_METERS,
-    LENGTH_KILOMETERS,
-    MASS_GRAMS,
-    PRESSURE_PA,
-    VOLUME_LITERS,
-    TEMP_CELSIUS,
     LENGTH,
+    LENGTH_KILOMETERS,
+    LENGTH_METERS,
     MASS,
+    MASS_GRAMS,
     PRESSURE,
+    PRESSURE_PA,
+    TEMP_CELSIUS,
     TEMPERATURE,
     VOLUME,
+    VOLUME_LITERS,
 )
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
 
 SYSTEM_NAME = "TEST"
 INVALID_UNIT = "INVALID"
@@ -171,11 +171,11 @@ def test_pressure_to_imperial():
 
 def test_properties():
     """Test the unit properties are returned as expected."""
-    assert LENGTH_KILOMETERS == METRIC_SYSTEM.length_unit
-    assert TEMP_CELSIUS == METRIC_SYSTEM.temperature_unit
-    assert MASS_GRAMS == METRIC_SYSTEM.mass_unit
-    assert VOLUME_LITERS == METRIC_SYSTEM.volume_unit
-    assert PRESSURE_PA == METRIC_SYSTEM.pressure_unit
+    assert METRIC_SYSTEM.length_unit == LENGTH_KILOMETERS
+    assert METRIC_SYSTEM.temperature_unit == TEMP_CELSIUS
+    assert METRIC_SYSTEM.mass_unit == MASS_GRAMS
+    assert METRIC_SYSTEM.volume_unit == VOLUME_LITERS
+    assert METRIC_SYSTEM.pressure_unit == PRESSURE_PA
 
 
 def test_is_metric():

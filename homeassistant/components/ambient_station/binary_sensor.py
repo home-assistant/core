@@ -1,8 +1,10 @@
 """Support for Ambient Weather Station binary sensors."""
-import logging
-
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR,
+    BinarySensorEntity,
+)
 from homeassistant.const import ATTR_NAME
+from homeassistant.core import callback
 
 from . import (
     SENSOR_TYPES,
@@ -16,17 +18,13 @@ from . import (
     TYPE_BATT8,
     TYPE_BATT9,
     TYPE_BATT10,
+    TYPE_BATT_CO2,
     TYPE_BATTOUT,
+    TYPE_PM25_BATT,
+    TYPE_PM25IN_BATT,
     AmbientWeatherEntity,
 )
-from .const import ATTR_LAST_DATA, DATA_CLIENT, DOMAIN, TYPE_BINARY_SENSOR
-
-_LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up Ambient PWS binary sensors based on the old way."""
-    pass
+from .const import ATTR_LAST_DATA, ATTR_MONITORED_CONDITIONS, DATA_CLIENT, DOMAIN
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -35,9 +33,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     binary_sensor_list = []
     for mac_address, station in ambient.stations.items():
-        for condition in ambient.monitored_conditions:
+        for condition in station[ATTR_MONITORED_CONDITIONS]:
             name, _, kind, device_class = SENSOR_TYPES[condition]
-            if kind == TYPE_BINARY_SENSOR:
+            if kind == BINARY_SENSOR:
                 binary_sensor_list.append(
                     AmbientWeatherBinarySensor(
                         ambient,
@@ -52,7 +50,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(binary_sensor_list, True)
 
 
-class AmbientWeatherBinarySensor(AmbientWeatherEntity, BinarySensorDevice):
+class AmbientWeatherBinarySensor(AmbientWeatherEntity, BinarySensorEntity):
     """Define an Ambient binary sensor."""
 
     @property
@@ -69,13 +67,17 @@ class AmbientWeatherBinarySensor(AmbientWeatherEntity, BinarySensorDevice):
             TYPE_BATT7,
             TYPE_BATT8,
             TYPE_BATT9,
+            TYPE_BATT_CO2,
             TYPE_BATTOUT,
+            TYPE_PM25_BATT,
+            TYPE_PM25IN_BATT,
         ):
             return self._state == 0
 
         return self._state == 1
 
-    async def async_update(self):
+    @callback
+    def update_from_latest_data(self):
         """Fetch new state data for the entity."""
         self._state = self._ambient.stations[self._mac_address][ATTR_LAST_DATA].get(
             self._sensor_type

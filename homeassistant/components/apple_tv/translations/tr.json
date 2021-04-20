@@ -1,0 +1,56 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_device": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor",
+            "invalid_config": "Bu ayg\u0131t\u0131n yap\u0131land\u0131rmas\u0131 tamamlanmad\u0131. L\u00fctfen tekrar eklemeyi deneyin.",
+            "no_devices_found": "A\u011fda cihaz bulunamad\u0131",
+            "unknown": "Beklenmeyen hata"
+        },
+        "error": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "no_devices_found": "A\u011fda cihaz bulunamad\u0131",
+            "unknown": "Beklenmeyen hata"
+        },
+        "flow_title": "Apple TV: {name}",
+        "step": {
+            "confirm": {
+                "title": "Apple TV eklemeyi onaylay\u0131n"
+            },
+            "pair_no_pin": {
+                "title": "E\u015fle\u015ftirme"
+            },
+            "pair_with_pin": {
+                "data": {
+                    "pin": "PIN Kodu"
+                },
+                "title": "E\u015fle\u015ftirme"
+            },
+            "reconfigure": {
+                "description": "Bu Apple TV baz\u0131 ba\u011flant\u0131 sorunlar\u0131 ya\u015f\u0131yor ve yeniden yap\u0131land\u0131r\u0131lmas\u0131 gerekiyor.",
+                "title": "Cihaz\u0131n yeniden yap\u0131land\u0131r\u0131lmas\u0131"
+            },
+            "service_problem": {
+                "title": "Hizmet eklenemedi"
+            },
+            "user": {
+                "data": {
+                    "device_input": "Cihaz"
+                },
+                "title": "Yeni bir Apple TV kurun"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "start_off": "Home Assistant'\u0131 ba\u015flat\u0131rken cihaz\u0131 a\u00e7may\u0131n"
+                },
+                "description": "Genel cihaz ayarlar\u0131n\u0131 yap\u0131land\u0131r\u0131n"
+            }
+        }
+    },
+    "title": "Apple TV"
+}

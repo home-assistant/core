@@ -3,18 +3,21 @@ import logging
 import threading
 from uuid import UUID
 
+from pygatt import BLEAddressType
+from pygatt.backends import Characteristic, GATTToolBackend
+from pygatt.exceptions import BLEError, NotConnectedError, NotificationTimeout
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_MAC,
     CONF_NAME,
     EVENT_HOMEASSISTANT_STOP,
+    PERCENTAGE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +46,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Skybeacon sensor."""
     name = config.get(CONF_NAME)
     mac = config.get(CONF_MAC)
-    _LOGGER.debug("Setting up...")
+    _LOGGER.debug("Setting up")
 
     mon = Monitor(hass, mac, name)
     add_entities([SkybeaconTemp(name, mon)])
@@ -58,7 +61,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     mon.start()
 
 
-class SkybeaconHumid(Entity):
+class SkybeaconHumid(SensorEntity):
     """Representation of a Skybeacon humidity sensor."""
 
     def __init__(self, name, mon):
@@ -79,15 +82,15 @@ class SkybeaconHumid(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return "%"
+        return PERCENTAGE
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {ATTR_DEVICE: "SKYBEACON", ATTR_MODEL: 1}
 
 
-class SkybeaconTemp(Entity):
+class SkybeaconTemp(SensorEntity):
     """Representation of a Skybeacon temperature sensor."""
 
     def __init__(self, name, mon):
@@ -111,12 +114,12 @@ class SkybeaconTemp(Entity):
         return TEMP_CELSIUS
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {ATTR_DEVICE: "SKYBEACON", ATTR_MODEL: 1}
 
 
-class Monitor(threading.Thread):
+class Monitor(threading.Thread, SensorEntity):
     """Connection handling."""
 
     def __init__(self, hass, mac, name):
@@ -132,13 +135,8 @@ class Monitor(threading.Thread):
 
     def run(self):
         """Thread that keeps connection alive."""
-        # pylint: disable=import-error
-        import pygatt
-        from pygatt.backends import Characteristic
-        from pygatt.exceptions import BLEError, NotConnectedError, NotificationTimeout
-
         cached_char = Characteristic(BLE_TEMP_UUID, BLE_TEMP_HANDLE)
-        adapter = pygatt.backends.GATTToolBackend()
+        adapter = GATTToolBackend()
         while True:
             try:
                 _LOGGER.debug("Connecting to %s", self.name)
@@ -147,7 +145,7 @@ class Monitor(threading.Thread):
                 # Seems only one connection can be initiated at a time
                 with CONNECT_LOCK:
                     device = adapter.connect(
-                        self.mac, CONNECT_TIMEOUT, pygatt.BLEAddressType.random
+                        self.mac, CONNECT_TIMEOUT, BLEAddressType.random
                     )
                 if SKIP_HANDLE_LOOKUP:
                     # HACK: inject handle mapping collected offline
@@ -177,7 +175,7 @@ class Monitor(threading.Thread):
             value[2],
             value[1],
         )
-        self.data["temp"] = float(("%d.%d" % (value[0], value[2])))
+        self.data["temp"] = float("%d.%d" % (value[0], value[2]))
         self.data["humid"] = value[1]
 
     def terminate(self):

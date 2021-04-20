@@ -1,0 +1,58 @@
+# Describes the format for available Elexa Guardians services
+disable_ap:
+  description: Disable the device's onboard access point.
+  fields:
+    entity_id:
+      description: The Guardian valve controller to affect.
+      example: switch.guardian_abcde_valve
+enable_ap:
+  description: Enable the device's onboard access point.
+  fields:
+    entity_id:
+      description: The Guardian valve controller to affect.
+      example: switch.guardian_abcde_valve
+pair_sensor:
+  description: Add a new paired sensor to the valve controller.
+  fields:
+    entity_id:
+      description: The Guardian valve controller to affect.
+      example: switch.guardian_abcde_valve
+    uid:
+      description: The UID of the paired sensor
+      example: 5410EC688BCF
+reboot:
+  description: Reboot the device.
+  fields:
+    entity_id:
+      description: The Guardian valve controller to affect.
+      example: switch.guardian_abcde_valve
+reset_valve_diagnostics:
+  description: Fully (and irrecoverably) reset all valve diagnostics.
+  fields:
+    entity_id:
+      description: The Guardian valve controller to affect.
+      example: switch.guardian_abcde_valve
+unpair_sensor:
+  description: Remove a paired sensor from the valve controller.
+  fields:
+    entity_id:
+      description: The Guardian valve controller to affect.
+      example: switch.guardian_abcde_valve
+    uid:
+      description: The UID of the paired sensor
+      example: 5410EC688BCF
+upgrade_firmware:
+  description: Upgrade the device firmware.
+  fields:
+    entity_id:
+      description: The Guardian valve controller to affect.
+      example: switch.guardian_abcde_valve
+    url:
+      description: (optional) The URL of the server hosting the firmware file.
+      example: https://repo.guardiancloud.services/gvc/fw
+    port:
+      description: (optional) The port on which the firmware file is served.
+      example: 443
+    filename:
+      description: (optional) The firmware filename.
+      example: latest.bin

@@ -1,6 +1,7 @@
 """Support for Amcrest IP cameras."""
-import logging
+from contextlib import suppress
 from datetime import timedelta
+import logging
 import threading
 
 import aiohttp
@@ -11,7 +12,6 @@ from homeassistant.auth.permissions.const import POLICY_CONTROL
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
 from homeassistant.components.camera import DOMAIN as CAMERA
 from homeassistant.components.sensor import DOMAIN as SENSOR
-from homeassistant.components.switch import DOMAIN as SWITCH
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_AUTHENTICATION,
@@ -22,9 +22,9 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     CONF_SENSORS,
-    CONF_SWITCHES,
     CONF_USERNAME,
     ENTITY_MATCH_ALL,
+    ENTITY_MATCH_NONE,
     HTTP_BASIC_AUTHENTICATION,
 )
 from homeassistant.exceptions import Unauthorized, UnknownUser
@@ -34,12 +34,21 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_s
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.service import async_extract_entity_ids
 
-from .binary_sensor import BINARY_SENSOR_MOTION_DETECTED, BINARY_SENSORS
+from .binary_sensor import BINARY_POLLED_SENSORS, BINARY_SENSORS, check_binary_sensors
 from .camera import CAMERA_SERVICES, STREAM_SOURCE_LIST
-from .const import CAMERAS, DOMAIN, DATA_AMCREST, DEVICES, SERVICE_UPDATE
+from .const import (
+    CAMERAS,
+    COMM_RETRIES,
+    COMM_TIMEOUT,
+    DATA_AMCREST,
+    DEVICES,
+    DOMAIN,
+    SENSOR_EVENT_CODE,
+    SERVICE_EVENT,
+    SERVICE_UPDATE,
+)
 from .helpers import service_signal
-from .sensor import SENSOR_MOTION_DETECTOR, SENSORS
-from .switch import SWITCHES
+from .sensor import SENSORS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,68 +74,38 @@ SCAN_INTERVAL = timedelta(seconds=10)
 AUTHENTICATION_LIST = {"basic": "basic"}
 
 
-def _deprecated_sensor_values(sensors):
-    if SENSOR_MOTION_DETECTOR in sensors:
-        _LOGGER.warning(
-            "The '%s' option value '%s' is deprecated, "
-            "please remove it from your configuration and use "
-            "the '%s' option with value '%s' instead",
-            CONF_SENSORS,
-            SENSOR_MOTION_DETECTOR,
-            CONF_BINARY_SENSORS,
-            BINARY_SENSOR_MOTION_DETECTED,
-        )
-    return sensors
-
-
-def _deprecated_switches(config):
-    if CONF_SWITCHES in config:
-        _LOGGER.warning(
-            "The '%s' option (with value %s) is deprecated, "
-            "please remove it from your configuration and use "
-            "services and attributes instead",
-            CONF_SWITCHES,
-            config[CONF_SWITCHES],
-        )
-    return config
-
-
 def _has_unique_names(devices):
     names = [device[CONF_NAME] for device in devices]
     vol.Schema(vol.Unique())(names)
     return devices
 
 
-AMCREST_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Required(CONF_HOST): cv.string,
-            vol.Required(CONF_USERNAME): cv.string,
-            vol.Required(CONF_PASSWORD): cv.string,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-            vol.Optional(
-                CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION
-            ): vol.All(vol.In(AUTHENTICATION_LIST)),
-            vol.Optional(CONF_RESOLUTION, default=DEFAULT_RESOLUTION): vol.All(
-                vol.In(RESOLUTION_LIST)
-            ),
-            vol.Optional(CONF_STREAM_SOURCE, default=STREAM_SOURCE_LIST[0]): vol.All(
-                vol.In(STREAM_SOURCE_LIST)
-            ),
-            vol.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_ARGUMENTS): cv.string,
-            vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
-            vol.Optional(CONF_BINARY_SENSORS): vol.All(
-                cv.ensure_list, [vol.In(BINARY_SENSORS)]
-            ),
-            vol.Optional(CONF_SENSORS): vol.All(
-                cv.ensure_list, [vol.In(SENSORS)], _deprecated_sensor_values
-            ),
-            vol.Optional(CONF_SWITCHES): vol.All(cv.ensure_list, [vol.In(SWITCHES)]),
-            vol.Optional(CONF_CONTROL_LIGHT, default=True): cv.boolean,
-        }
-    ),
-    _deprecated_switches,
+AMCREST_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION): vol.All(
+            vol.In(AUTHENTICATION_LIST)
+        ),
+        vol.Optional(CONF_RESOLUTION, default=DEFAULT_RESOLUTION): vol.All(
+            vol.In(RESOLUTION_LIST)
+        ),
+        vol.Optional(CONF_STREAM_SOURCE, default=STREAM_SOURCE_LIST[0]): vol.All(
+            vol.In(STREAM_SOURCE_LIST)
+        ),
+        vol.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_ARGUMENTS): cv.string,
+        vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
+        vol.Optional(CONF_BINARY_SENSORS): vol.All(
+            cv.ensure_list, [vol.In(BINARY_SENSORS)], vol.Unique(), check_binary_sensors
+        ),
+        vol.Optional(CONF_SENSORS): vol.All(
+            cv.ensure_list, [vol.In(SENSORS)], vol.Unique()
+        ),
+        vol.Optional(CONF_CONTROL_LIGHT, default=True): cv.boolean,
+    }
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -135,7 +114,6 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-# pylint: disable=too-many-ancestors
 class AmcrestChecker(Http):
     """amcrest.Http wrapper for catching errors."""
 
@@ -145,53 +123,105 @@ class AmcrestChecker(Http):
         self._wrap_name = name
         self._wrap_errors = 0
         self._wrap_lock = threading.Lock()
+        self._wrap_login_err = False
+        self._wrap_event_flag = threading.Event()
+        self._wrap_event_flag.set()
         self._unsub_recheck = None
         super().__init__(
-            host, port, user, password, retries_connection=1, timeout_protocol=3.05
+            host,
+            port,
+            user,
+            password,
+            retries_connection=COMM_RETRIES,
+            timeout_protocol=COMM_TIMEOUT,
         )
 
     @property
     def available(self):
         """Return if camera's API is responding."""
-        return self._wrap_errors <= MAX_ERRORS
+        return self._wrap_errors <= MAX_ERRORS and not self._wrap_login_err
 
-    def command(self, cmd, retries=None, timeout_cmd=None, stream=False):
+    @property
+    def available_flag(self):
+        """Return threading event flag that indicates if camera's API is responding."""
+        return self._wrap_event_flag
+
+    def _start_recovery(self):
+        self._wrap_event_flag.clear()
+        dispatcher_send(self._hass, service_signal(SERVICE_UPDATE, self._wrap_name))
+        self._unsub_recheck = track_time_interval(
+            self._hass, self._wrap_test_online, RECHECK_INTERVAL
+        )
+
+    def command(self, *args, **kwargs):
         """amcrest.Http.command wrapper to catch errors."""
         try:
-            ret = super().command(cmd, retries, timeout_cmd, stream)
+            ret = super().command(*args, **kwargs)
+        except LoginError as ex:
+            with self._wrap_lock:
+                was_online = self.available
+                was_login_err = self._wrap_login_err
+                self._wrap_login_err = True
+            if not was_login_err:
+                _LOGGER.error("%s camera offline: Login error: %s", self._wrap_name, ex)
+            if was_online:
+                self._start_recovery()
+            raise
         except AmcrestError:
             with self._wrap_lock:
                 was_online = self.available
-                self._wrap_errors += 1
-                _LOGGER.debug("%s camera errs: %i", self._wrap_name, self._wrap_errors)
+                errs = self._wrap_errors = self._wrap_errors + 1
                 offline = not self.available
-            if offline and was_online:
+            _LOGGER.debug("%s camera errs: %i", self._wrap_name, errs)
+            if was_online and offline:
                 _LOGGER.error("%s camera offline: Too many errors", self._wrap_name)
-                with self._token_lock:
-                    self._token = None
-                dispatcher_send(
-                    self._hass, service_signal(SERVICE_UPDATE, self._wrap_name)
-                )
-                self._unsub_recheck = track_time_interval(
-                    self._hass, self._wrap_test_online, RECHECK_INTERVAL
-                )
+                self._start_recovery()
             raise
         with self._wrap_lock:
             was_offline = not self.available
             self._wrap_errors = 0
+            self._wrap_login_err = False
         if was_offline:
             self._unsub_recheck()
             self._unsub_recheck = None
             _LOGGER.error("%s camera back online", self._wrap_name)
+            self._wrap_event_flag.set()
             dispatcher_send(self._hass, service_signal(SERVICE_UPDATE, self._wrap_name))
         return ret
 
     def _wrap_test_online(self, now):
         """Test if camera is back online."""
+        _LOGGER.debug("Testing if %s back online", self._wrap_name)
+        with suppress(AmcrestError):
+            self.current_time  # pylint: disable=pointless-statement
+
+
+def _monitor_events(hass, name, api, event_codes):
+    event_codes = set(event_codes)
+    while True:
+        api.available_flag.wait()
         try:
-            self.current_time
-        except AmcrestError:
-            pass
+            for code, start in api.event_actions("All", retries=5):
+                event_data = {"camera": name, "event": code, "payload": start}
+                hass.bus.fire("amcrest", event_data)
+                if code in event_codes:
+                    signal = service_signal(SERVICE_EVENT, name, code)
+                    _LOGGER.debug("Sending signal: '%s': %s", signal, start)
+                    dispatcher_send(hass, signal, start)
+        except AmcrestError as error:
+            _LOGGER.warning(
+                "Error while processing events from %s camera: %r", name, error
+            )
+
+
+def _start_event_monitor(hass, name, api, event_codes):
+    thread = threading.Thread(
+        target=_monitor_events,
+        name=f"Amcrest {name}",
+        args=(hass, name, api, event_codes),
+        daemon=True,
+    )
+    thread.start()
 
 
 def setup(hass, config):
@@ -203,20 +233,14 @@ def setup(hass, config):
         username = device[CONF_USERNAME]
         password = device[CONF_PASSWORD]
 
-        try:
-            api = AmcrestChecker(
-                hass, name, device[CONF_HOST], device[CONF_PORT], username, password
-            )
-
-        except LoginError as ex:
-            _LOGGER.error("Login error for %s camera: %s", name, ex)
-            continue
+        api = AmcrestChecker(
+            hass, name, device[CONF_HOST], device[CONF_PORT], username, password
+        )
 
         ffmpeg_arguments = device[CONF_FFMPEG_ARGUMENTS]
         resolution = RESOLUTION_LIST[device[CONF_RESOLUTION]]
         binary_sensors = device.get(CONF_BINARY_SENSORS)
         sensors = device.get(CONF_SENSORS)
-        switches = device.get(CONF_SWITCHES)
         stream_source = device[CONF_STREAM_SOURCE]
         control_light = device.get(CONF_CONTROL_LIGHT)
 
@@ -238,6 +262,7 @@ def setup(hass, config):
 
         discovery.load_platform(hass, CAMERA, DOMAIN, {CONF_NAME: name}, config)
 
+        event_codes = []
         if binary_sensors:
             discovery.load_platform(
                 hass,
@@ -246,15 +271,17 @@ def setup(hass, config):
                 {CONF_NAME: name, CONF_BINARY_SENSORS: binary_sensors},
                 config,
             )
+            event_codes = [
+                BINARY_SENSORS[sensor_type][SENSOR_EVENT_CODE]
+                for sensor_type in binary_sensors
+                if sensor_type not in BINARY_POLLED_SENSORS
+            ]
+
+        _start_event_monitor(hass, name, api, event_codes)
 
         if sensors:
             discovery.load_platform(
                 hass, SENSOR, DOMAIN, {CONF_NAME: name, CONF_SENSORS: sensors}, config
-            )
-
-        if switches:
-            discovery.load_platform(
-                hass, SWITCH, DOMAIN, {CONF_NAME: name, CONF_SWITCHES: switches}, config
             )
 
     if not hass.data[DATA_AMCREST][DEVICES]:
@@ -279,6 +306,9 @@ def setup(hass, config):
                 if have_permission(user, entity_id)
             ]
 
+        if call.data.get(ATTR_ENTITY_ID) == ENTITY_MATCH_NONE:
+            return []
+
         call_ids = await async_extract_entity_ids(hass, call)
         entity_ids = []
         for entity_id in hass.data[DATA_AMCREST][CAMERAS]:
@@ -299,7 +329,7 @@ def setup(hass, config):
             async_dispatcher_send(hass, service_signal(call.service, entity_id), *args)
 
     for service, params in CAMERA_SERVICES.items():
-        hass.services.async_register(DOMAIN, service, async_service_handler, params[0])
+        hass.services.register(DOMAIN, service, async_service_handler, params[0])
 
     return True
 

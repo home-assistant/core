@@ -28,7 +28,7 @@ class AlexaDirective:
         self.payload = self._directive[API_PAYLOAD]
         self.has_endpoint = API_ENDPOINT in self._directive
 
-        self.entity = self.entity_id = self.endpoint = None
+        self.entity = self.entity_id = self.endpoint = self.instance = None
 
     def load_entity(self, hass, config):
         """Set attributes related to the entity for this request.
@@ -38,11 +38,12 @@ class AlexaDirective:
         - entity
         - entity_id
         - endpoint
+        - instance (when header includes instance property)
 
         Behavior when self.has_endpoint is False is undefined.
 
         Will raise AlexaInvalidEndpointError if the endpoint in the request is
-        malformed or nonexistant.
+        malformed or nonexistent.
         """
         _endpoint_id = self._directive[API_ENDPOINT]["endpointId"]
         self.entity_id = _endpoint_id.replace("#", ".")
@@ -52,6 +53,8 @@ class AlexaDirective:
             raise AlexaInvalidEndpointError(_endpoint_id)
 
         self.endpoint = ENTITY_ADAPTERS[self.entity.domain](hass, config, self.entity)
+        if "instance" in self._directive[API_HEADER]:
+            self.instance = self._directive[API_HEADER]["instance"]
 
     def response(self, name="Response", namespace="Alexa", payload=None):
         """Create an API formatted response.

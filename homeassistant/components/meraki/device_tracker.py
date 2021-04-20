@@ -1,19 +1,14 @@
-"""
-Support for the Meraki CMX location service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.meraki/
-
-"""
-import logging
+"""Support for the Meraki CMX location service."""
 import json
+import logging
 
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
+
+from homeassistant.components.device_tracker import PLATFORM_SCHEMA, SOURCE_TYPE_ROUTER
+from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import HTTP_BAD_REQUEST, HTTP_UNPROCESSABLE_ENTITY
 from homeassistant.core import callback
-from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.device_tracker import PLATFORM_SCHEMA, SOURCE_TYPE_ROUTER
+import homeassistant.helpers.config_validation as cv
 
 CONF_VALIDATOR = "validator"
 CONF_SECRET = "secret"
@@ -41,6 +36,7 @@ class MerakiView(HomeAssistantView):
 
     url = URL
     name = "api:meraki"
+    requires_auth = False
 
     def __init__(self, config, async_see):
         """Initialize Meraki URL endpoints."""
@@ -60,7 +56,7 @@ class MerakiView(HomeAssistantView):
             return self.json_message("Invalid JSON", HTTP_BAD_REQUEST)
         _LOGGER.debug("Meraki Data from Post: %s", json.dumps(data))
         if not data.get("secret", False):
-            _LOGGER.error("secret invalid")
+            _LOGGER.error("The secret is invalid")
             return self.json_message("No secret", HTTP_UNPROCESSABLE_ENTITY)
         if data["secret"] != self.secret:
             _LOGGER.error("Invalid Secret received from Meraki")

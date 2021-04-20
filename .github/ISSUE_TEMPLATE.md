@@ -1,47 +1,49 @@
 <!-- READ THIS FIRST:
-- If you need additional help with this template please refer to https://www.home-assistant.io/help/reporting_issues/
-- Make sure you are running the latest version of Home Assistant before reporting an issue: https://github.com/home-assistant/home-assistant/releases
-- Frontend issues should be submitted to the home-assistant-polymer repository: https://github.com/home-assistant/home-assistant-polymer/issues
-- iOS issues should be submitted to the home-assistant-iOS repository: https://github.com/home-assistant/home-assistant-iOS/issues
-- Do not report issues for integrations if you are using custom integration: files in <config-dir>/custom_components
-- This is for bugs only. Feature and enhancement requests should go in our community forum: https://community.home-assistant.io/c/feature-requests
-- Provide as many details as possible. Paste logs, configuration sample and code into the backticks. Do not delete any text from this template!
+  - If you need additional help with this template, please refer to https://www.home-assistant.io/help/reporting_issues/
+  - Make sure you are running the latest version of Home Assistant before reporting an issue: https://github.com/home-assistant/core/releases
+  - Do not report issues for integrations if you are using custom components or integrations.
+  - Provide as many details as possible. Paste logs, configuration samples and code into the backticks.
+  DO NOT DELETE ANY TEXT from this template! Otherwise, your issue may be closed without comment.
+-->
+## The problem
+<!-- 
+  Describe the issue you are experiencing here to communicate to the
+  maintainers. Tell us what you were trying to do and what happened.
 -->
 
-**Home Assistant release with the issue:**
+
+## Environment
 <!--
-- Frontend -> Developer tools -> Info
-- Or use this command: hass --version
+  Provide details about the versions you are using, which helps us to reproduce
+  and find the issue quicker. Version information is found in the
+  Home Assistant frontend: Configuration -> Info.
 -->
 
+- Home Assistant Core release with the issue: 
+- Last working Home Assistant Core release (if known): 
+- Operating environment (OS/Container/Supervised/Core): 
+- Integration causing this issue: 
+- Link to integration documentation on our website: 
 
-**Last working Home Assistant release (if known):**
-
-
-**Operating environment (Hass.io/Docker/Windows/etc.):**
+## Problem-relevant `configuration.yaml`
 <!--
-Please provide details about your environment.
+  An example configuration that caused the problem for you. Fill this out even
+  if it seems unimportant to you. Please be sure to remove personal information
+  like passwords, private URLs and other credentials.
 -->
 
-**Integration:**
-<!--
-Please add the link to the documentation at https://www.home-assistant.io/integrations/ of the integration in question.
--->
-
-
-**Description of problem:**
-
-
-
-**Problem-relevant `configuration.yaml` entries and (fill out even if it seems unimportant):**
 ```yaml
 
 ```
 
-**Traceback (if applicable):**
-```
+## Traceback/Error logs
+<!--
+  If you come across any trace or error logs, please provide them.
+-->
+
+```txt
 
 ```
 
-**Additional information:**
+## Additional information
 

@@ -1,273 +1,319 @@
 """The tests for the Rfxtrx cover platform."""
-import unittest
+from unittest.mock import call
 
-import RFXtrx as rfxtrxmod
 import pytest
 
-from homeassistant.components import rfxtrx as rfxtrx_core
-from homeassistant.setup import setup_component
+from homeassistant.components.rfxtrx import DOMAIN
+from homeassistant.core import State
 
-from tests.common import get_test_home_assistant, mock_component
+from tests.common import MockConfigEntry, mock_restore_cache
+from tests.components.rfxtrx.conftest import create_rfx_test_cfg
 
 
-@pytest.mark.skipif("os.environ.get('RFXTRX') != 'RUN'")
-class TestCoverRfxtrx(unittest.TestCase):
-    """Test the Rfxtrx cover platform."""
+async def test_one_cover(hass, rfxtrx):
+    """Test with 1 cover."""
+    entry_data = create_rfx_test_cfg(
+        devices={"0b1400cd0213c7f20d010f51": {"signal_repetitions": 1}}
+    )
+    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
 
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        mock_component("rfxtrx")
+    mock_entry.add_to_hass(hass)
 
-    def tearDown(self):
-        """Stop everything that was started."""
-        rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS = []
-        rfxtrx_core.RFX_DEVICES = {}
-        if rfxtrx_core.RFXOBJECT:
-            rfxtrx_core.RFXOBJECT.close_connection()
-        self.hass.stop()
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
 
-    def test_valid_config(self):
-        """Test configuration."""
-        assert setup_component(
-            self.hass,
-            "cover",
-            {
-                "cover": {
-                    "platform": "rfxtrx",
-                    "automatic_add": True,
-                    "devices": {
-                        "0b1100cd0213c7f210010f51": {
-                            "name": "Test",
-                            rfxtrx_core.ATTR_FIREEVENT: True,
-                        }
-                    },
-                }
+    state = hass.states.get("cover.lightwaverf_siemens_0213c7_242")
+    assert state
+
+    await hass.services.async_call(
+        "cover",
+        "open_cover",
+        {"entity_id": "cover.lightwaverf_siemens_0213c7_242"},
+        blocking=True,
+    )
+
+    await hass.services.async_call(
+        "cover",
+        "close_cover",
+        {"entity_id": "cover.lightwaverf_siemens_0213c7_242"},
+        blocking=True,
+    )
+
+    await hass.services.async_call(
+        "cover",
+        "stop_cover",
+        {"entity_id": "cover.lightwaverf_siemens_0213c7_242"},
+        blocking=True,
+    )
+
+    assert rfxtrx.transport.send.mock_calls == [
+        call(bytearray(b"\n\x14\x00\x00\x02\x13\xc7\xf2\x0f\x00\x00")),
+        call(bytearray(b"\n\x14\x00\x00\x02\x13\xc7\xf2\r\x00\x00")),
+        call(bytearray(b"\n\x14\x00\x00\x02\x13\xc7\xf2\x0e\x00\x00")),
+    ]
+
+
+@pytest.mark.parametrize("state", ["open", "closed"])
+async def test_state_restore(hass, rfxtrx, state):
+    """State restoration."""
+
+    entity_id = "cover.lightwaverf_siemens_0213c7_242"
+
+    mock_restore_cache(hass, [State(entity_id, state)])
+
+    entry_data = create_rfx_test_cfg(
+        devices={"0b1400cd0213c7f20d010f51": {"signal_repetitions": 1}}
+    )
+    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == state
+
+
+async def test_several_covers(hass, rfxtrx):
+    """Test with 3 covers."""
+    entry_data = create_rfx_test_cfg(
+        devices={
+            "0b1400cd0213c7f20d010f51": {"signal_repetitions": 1},
+            "0A1400ADF394AB010D0060": {"signal_repetitions": 1},
+            "09190000009ba8010100": {"signal_repetitions": 1},
+        }
+    )
+    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("cover.lightwaverf_siemens_0213c7_242")
+    assert state
+    assert state.state == "closed"
+    assert state.attributes.get("friendly_name") == "LightwaveRF, Siemens 0213c7:242"
+
+    state = hass.states.get("cover.lightwaverf_siemens_f394ab_1")
+    assert state
+    assert state.state == "closed"
+    assert state.attributes.get("friendly_name") == "LightwaveRF, Siemens f394ab:1"
+
+    state = hass.states.get("cover.rollertrol_009ba8_1")
+    assert state
+    assert state.state == "closed"
+    assert state.attributes.get("friendly_name") == "RollerTrol 009ba8:1"
+
+
+async def test_discover_covers(hass, rfxtrx_automatic):
+    """Test with discovery of covers."""
+    rfxtrx = rfxtrx_automatic
+
+    await rfxtrx.signal("0a140002f38cae010f0070")
+    state = hass.states.get("cover.lightwaverf_siemens_f38cae_1")
+    assert state
+    assert state.state == "open"
+
+    await rfxtrx.signal("0a1400adf394ab020e0060")
+    state = hass.states.get("cover.lightwaverf_siemens_f394ab_2")
+    assert state
+    assert state.state == "open"
+
+
+async def test_duplicate_cover(hass, rfxtrx):
+    """Test with 2 duplicate covers."""
+    entry_data = create_rfx_test_cfg(
+        devices={
+            "0b1400cd0213c7f20d010f51": {"signal_repetitions": 1},
+            "0b1400cd0213c7f20d010f50": {"signal_repetitions": 1},
+        }
+    )
+    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("cover.lightwaverf_siemens_0213c7_242")
+    assert state
+    assert state.state == "closed"
+    assert state.attributes.get("friendly_name") == "LightwaveRF, Siemens 0213c7:242"
+
+
+async def test_rfy_cover(hass, rfxtrx):
+    """Test Rfy venetian blind covers."""
+    entry_data = create_rfx_test_cfg(
+        devices={
+            "071a000001020301": {
+                "signal_repetitions": 1,
+                "venetian_blind_mode": "Unknown",
             },
-        )
+            "071a000001020302": {"signal_repetitions": 1, "venetian_blind_mode": "US"},
+            "071a000001020303": {"signal_repetitions": 1, "venetian_blind_mode": "EU"},
+        }
+    )
+    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
 
-    def test_invalid_config_capital_letters(self):
-        """Test configuration."""
-        assert not setup_component(
-            self.hass,
-            "cover",
-            {
-                "cover": {
-                    "platform": "rfxtrx",
-                    "automatic_add": True,
-                    "devices": {
-                        "2FF7f216": {
-                            "name": "Test",
-                            "packetid": "0b1100cd0213c7f210010f51",
-                            "signal_repetitions": 3,
-                        }
-                    },
-                }
-            },
-        )
+    mock_entry.add_to_hass(hass)
 
-    def test_invalid_config_extra_key(self):
-        """Test configuration."""
-        assert not setup_component(
-            self.hass,
-            "cover",
-            {
-                "cover": {
-                    "platform": "rfxtrx",
-                    "automatic_add": True,
-                    "invalid_key": "afda",
-                    "devices": {
-                        "213c7f216": {
-                            "name": "Test",
-                            "packetid": "0b1100cd0213c7f210010f51",
-                            rfxtrx_core.ATTR_FIREEVENT: True,
-                        }
-                    },
-                }
-            },
-        )
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
 
-    def test_invalid_config_capital_packetid(self):
-        """Test configuration."""
-        assert not setup_component(
-            self.hass,
-            "cover",
-            {
-                "cover": {
-                    "platform": "rfxtrx",
-                    "automatic_add": True,
-                    "devices": {
-                        "213c7f216": {
-                            "name": "Test",
-                            "packetid": "AA1100cd0213c7f210010f51",
-                            rfxtrx_core.ATTR_FIREEVENT: True,
-                        }
-                    },
-                }
-            },
-        )
+    # Test a blind with no venetian mode setting
+    state = hass.states.get("cover.rfy_010203_1")
+    assert state
 
-    def test_invalid_config_missing_packetid(self):
-        """Test configuration."""
-        assert not setup_component(
-            self.hass,
-            "cover",
-            {
-                "cover": {
-                    "platform": "rfxtrx",
-                    "automatic_add": True,
-                    "devices": {
-                        "213c7f216": {"name": "Test", rfxtrx_core.ATTR_FIREEVENT: True}
-                    },
-                }
-            },
-        )
+    await hass.services.async_call(
+        "cover",
+        "stop_cover",
+        {"entity_id": "cover.rfy_010203_1"},
+        blocking=True,
+    )
 
-    def test_default_config(self):
-        """Test with 0 cover."""
-        assert setup_component(
-            self.hass, "cover", {"cover": {"platform": "rfxtrx", "devices": {}}}
-        )
-        assert 0 == len(rfxtrx_core.RFX_DEVICES)
+    await hass.services.async_call(
+        "cover",
+        "open_cover",
+        {"entity_id": "cover.rfy_010203_1"},
+        blocking=True,
+    )
 
-    def test_one_cover(self):
-        """Test with 1 cover."""
-        assert setup_component(
-            self.hass,
-            "cover",
-            {
-                "cover": {
-                    "platform": "rfxtrx",
-                    "devices": {"0b1400cd0213c7f210010f51": {"name": "Test"}},
-                }
-            },
-        )
+    await hass.services.async_call(
+        "cover",
+        "close_cover",
+        {"entity_id": "cover.rfy_010203_1"},
+        blocking=True,
+    )
 
-        rfxtrx_core.RFXOBJECT = rfxtrxmod.Core(
-            "", transport_protocol=rfxtrxmod.DummyTransport
-        )
+    await hass.services.async_call(
+        "cover",
+        "open_cover_tilt",
+        {"entity_id": "cover.rfy_010203_1"},
+        blocking=True,
+    )
 
-        assert 1 == len(rfxtrx_core.RFX_DEVICES)
-        for id in rfxtrx_core.RFX_DEVICES:
-            entity = rfxtrx_core.RFX_DEVICES[id]
-            assert entity.signal_repetitions == 1
-            assert not entity.should_fire_event
-            assert not entity.should_poll
-            entity.open_cover()
-            entity.close_cover()
-            entity.stop_cover()
+    await hass.services.async_call(
+        "cover",
+        "close_cover_tilt",
+        {"entity_id": "cover.rfy_010203_1"},
+        blocking=True,
+    )
 
-    def test_several_covers(self):
-        """Test with 3 covers."""
-        assert setup_component(
-            self.hass,
-            "cover",
-            {
-                "cover": {
-                    "platform": "rfxtrx",
-                    "signal_repetitions": 3,
-                    "devices": {
-                        "0b1100cd0213c7f230010f71": {"name": "Test"},
-                        "0b1100100118cdea02010f70": {"name": "Bath"},
-                        "0b1100101118cdea02010f70": {"name": "Living"},
-                    },
-                }
-            },
-        )
+    assert rfxtrx.transport.send.mock_calls == [
+        call(bytearray(b"\x08\x1a\x00\x00\x01\x02\x03\x01\x00")),
+        call(bytearray(b"\x08\x1a\x00\x01\x01\x02\x03\x01\x01")),
+        call(bytearray(b"\x08\x1a\x00\x02\x01\x02\x03\x01\x03")),
+    ]
 
-        assert 3 == len(rfxtrx_core.RFX_DEVICES)
-        device_num = 0
-        for id in rfxtrx_core.RFX_DEVICES:
-            entity = rfxtrx_core.RFX_DEVICES[id]
-            assert entity.signal_repetitions == 3
-            if entity.name == "Living":
-                device_num = device_num + 1
-            elif entity.name == "Bath":
-                device_num = device_num + 1
-            elif entity.name == "Test":
-                device_num = device_num + 1
+    # Test a blind with venetian mode set to US
+    state = hass.states.get("cover.rfy_010203_2")
+    assert state
+    rfxtrx.transport.send.mock_calls = []
 
-        assert 3 == device_num
+    await hass.services.async_call(
+        "cover",
+        "stop_cover",
+        {"entity_id": "cover.rfy_010203_2"},
+        blocking=True,
+    )
 
-    def test_discover_covers(self):
-        """Test with discovery of covers."""
-        assert setup_component(
-            self.hass,
-            "cover",
-            {"cover": {"platform": "rfxtrx", "automatic_add": True, "devices": {}}},
-        )
+    await hass.services.async_call(
+        "cover",
+        "open_cover",
+        {"entity_id": "cover.rfy_010203_2"},
+        blocking=True,
+    )
 
-        event = rfxtrx_core.get_rfx_object("0a140002f38cae010f0070")
-        event.data = bytearray(
-            [0x0A, 0x14, 0x00, 0x02, 0xF3, 0x8C, 0xAE, 0x01, 0x0F, 0x00, 0x70]
-        )
+    await hass.services.async_call(
+        "cover",
+        "close_cover",
+        {"entity_id": "cover.rfy_010203_2"},
+        blocking=True,
+    )
 
-        for evt_sub in rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS:
-            evt_sub(event)
-        assert 1 == len(rfxtrx_core.RFX_DEVICES)
+    await hass.services.async_call(
+        "cover",
+        "open_cover_tilt",
+        {"entity_id": "cover.rfy_010203_2"},
+        blocking=True,
+    )
 
-        event = rfxtrx_core.get_rfx_object("0a1400adf394ab020e0060")
-        event.data = bytearray(
-            [0x0A, 0x14, 0x00, 0xAD, 0xF3, 0x94, 0xAB, 0x02, 0x0E, 0x00, 0x60]
-        )
+    await hass.services.async_call(
+        "cover",
+        "close_cover_tilt",
+        {"entity_id": "cover.rfy_010203_2"},
+        blocking=True,
+    )
 
-        for evt_sub in rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS:
-            evt_sub(event)
-        assert 2 == len(rfxtrx_core.RFX_DEVICES)
+    await hass.services.async_call(
+        "cover",
+        "stop_cover_tilt",
+        {"entity_id": "cover.rfy_010203_2"},
+        blocking=True,
+    )
 
-        # Trying to add a sensor
-        event = rfxtrx_core.get_rfx_object("0a52085e070100b31b0279")
-        event.data = bytearray(b"\nR\x08^\x07\x01\x00\xb3\x1b\x02y")
-        for evt_sub in rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS:
-            evt_sub(event)
-        assert 2 == len(rfxtrx_core.RFX_DEVICES)
+    assert rfxtrx.transport.send.mock_calls == [
+        call(bytearray(b"\x08\x1a\x00\x00\x01\x02\x03\x02\x00")),
+        call(bytearray(b"\x08\x1a\x00\x01\x01\x02\x03\x02\x0F")),
+        call(bytearray(b"\x08\x1a\x00\x02\x01\x02\x03\x02\x10")),
+        call(bytearray(b"\x08\x1a\x00\x03\x01\x02\x03\x02\x11")),
+        call(bytearray(b"\x08\x1a\x00\x04\x01\x02\x03\x02\x12")),
+        call(bytearray(b"\x08\x1a\x00\x00\x01\x02\x03\x02\x00")),
+    ]
 
-        # Trying to add a light
-        event = rfxtrx_core.get_rfx_object("0b1100100118cdea02010f70")
-        event.data = bytearray(
-            [0x0B, 0x11, 0x11, 0x10, 0x01, 0x18, 0xCD, 0xEA, 0x01, 0x02, 0x0F, 0x70]
-        )
-        for evt_sub in rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS:
-            evt_sub(event)
-        assert 2 == len(rfxtrx_core.RFX_DEVICES)
+    # Test a blind with venetian mode set to EU
+    state = hass.states.get("cover.rfy_010203_3")
+    assert state
+    rfxtrx.transport.send.mock_calls = []
 
-    def test_discover_cover_noautoadd(self):
-        """Test with discovery of cover when auto add is False."""
-        assert setup_component(
-            self.hass,
-            "cover",
-            {"cover": {"platform": "rfxtrx", "automatic_add": False, "devices": {}}},
-        )
+    await hass.services.async_call(
+        "cover",
+        "stop_cover",
+        {"entity_id": "cover.rfy_010203_3"},
+        blocking=True,
+    )
 
-        event = rfxtrx_core.get_rfx_object("0a1400adf394ab010d0060")
-        event.data = bytearray(
-            [0x0A, 0x14, 0x00, 0xAD, 0xF3, 0x94, 0xAB, 0x01, 0x0D, 0x00, 0x60]
-        )
+    await hass.services.async_call(
+        "cover",
+        "open_cover",
+        {"entity_id": "cover.rfy_010203_3"},
+        blocking=True,
+    )
 
-        for evt_sub in rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS:
-            evt_sub(event)
-        assert 0 == len(rfxtrx_core.RFX_DEVICES)
+    await hass.services.async_call(
+        "cover",
+        "close_cover",
+        {"entity_id": "cover.rfy_010203_3"},
+        blocking=True,
+    )
 
-        event = rfxtrx_core.get_rfx_object("0a1400adf394ab020e0060")
-        event.data = bytearray(
-            [0x0A, 0x14, 0x00, 0xAD, 0xF3, 0x94, 0xAB, 0x02, 0x0E, 0x00, 0x60]
-        )
-        for evt_sub in rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS:
-            evt_sub(event)
-        assert 0 == len(rfxtrx_core.RFX_DEVICES)
+    await hass.services.async_call(
+        "cover",
+        "open_cover_tilt",
+        {"entity_id": "cover.rfy_010203_3"},
+        blocking=True,
+    )
 
-        # Trying to add a sensor
-        event = rfxtrx_core.get_rfx_object("0a52085e070100b31b0279")
-        event.data = bytearray(b"\nR\x08^\x07\x01\x00\xb3\x1b\x02y")
-        for evt_sub in rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS:
-            evt_sub(event)
-        assert 0 == len(rfxtrx_core.RFX_DEVICES)
+    await hass.services.async_call(
+        "cover",
+        "close_cover_tilt",
+        {"entity_id": "cover.rfy_010203_3"},
+        blocking=True,
+    )
 
-        # Trying to add a light
-        event = rfxtrx_core.get_rfx_object("0b1100100118cdea02010f70")
-        event.data = bytearray(
-            [0x0B, 0x11, 0x11, 0x10, 0x01, 0x18, 0xCD, 0xEA, 0x01, 0x02, 0x0F, 0x70]
-        )
-        for evt_sub in rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS:
-            evt_sub(event)
-        assert 0 == len(rfxtrx_core.RFX_DEVICES)
+    await hass.services.async_call(
+        "cover",
+        "stop_cover_tilt",
+        {"entity_id": "cover.rfy_010203_3"},
+        blocking=True,
+    )
+
+    assert rfxtrx.transport.send.mock_calls == [
+        call(bytearray(b"\x08\x1a\x00\x00\x01\x02\x03\x03\x00")),
+        call(bytearray(b"\x08\x1a\x00\x01\x01\x02\x03\x03\x11")),
+        call(bytearray(b"\x08\x1a\x00\x02\x01\x02\x03\x03\x12")),
+        call(bytearray(b"\x08\x1a\x00\x03\x01\x02\x03\x03\x0F")),
+        call(bytearray(b"\x08\x1a\x00\x04\x01\x02\x03\x03\x10")),
+        call(bytearray(b"\x08\x1a\x00\x00\x01\x02\x03\x03\x00")),
+    ]

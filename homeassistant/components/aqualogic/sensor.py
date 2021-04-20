@@ -1,22 +1,24 @@
 """Support for AquaLogic sensors."""
-import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_MONITORED_CONDITIONS, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import (
+    CONF_MONITORED_CONDITIONS,
+    PERCENTAGE,
+    POWER_WATT,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN, UPDATE_TOPIC
 
-_LOGGER = logging.getLogger(__name__)
-
 TEMP_UNITS = [TEMP_CELSIUS, TEMP_FAHRENHEIT]
-PERCENT_UNITS = ["%", "%"]
+PERCENT_UNITS = [PERCENTAGE, PERCENTAGE]
 SALT_UNITS = ["g/L", "PPM"]
-WATT_UNITS = ["W", "W"]
+WATT_UNITS = [POWER_WATT, POWER_WATT]
 NO_UNITS = [None, None]
 
 # sensor_type [ description, unit, icon ]
@@ -47,13 +49,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     sensors = []
 
     processor = hass.data[DOMAIN]
-    for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
+    for sensor_type in config[CONF_MONITORED_CONDITIONS]:
         sensors.append(AquaLogicSensor(processor, sensor_type))
 
     async_add_entities(sensors)
 
 
-class AquaLogicSensor(Entity):
+class AquaLogicSensor(SensorEntity):
     """Sensor implementation for the AquaLogic component."""
 
     def __init__(self, processor, sensor_type):
@@ -70,7 +72,7 @@ class AquaLogicSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "AquaLogic {}".format(SENSOR_TYPES[self._type][0])
+        return f"AquaLogic {SENSOR_TYPES[self._type][0]}"
 
     @property
     def unit_of_measurement(self):
@@ -94,8 +96,10 @@ class AquaLogicSensor(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self.hass.helpers.dispatcher.async_dispatcher_connect(
-            UPDATE_TOPIC, self.async_update_callback
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                UPDATE_TOPIC, self.async_update_callback
+            )
         )
 
     @callback
@@ -104,4 +108,4 @@ class AquaLogicSensor(Entity):
         panel = self._processor.panel
         if panel is not None:
             self._state = getattr(panel, self._type)
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()

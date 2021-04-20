@@ -1,0 +1,85 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Po\u015brednik",
+                    "discovery": "W\u0142\u0105cz wykrywanie",
+                    "password": "Has\u0142o",
+                    "port": "Port",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "description": "Wprowad\u017a informacje o po\u0142\u0105czeniu po\u015brednika MQTT."
+            },
+            "hassio_confirm": {
+                "data": {
+                    "discovery": "W\u0142\u0105cz wykrywanie"
+                },
+                "description": "Czy chcesz skonfigurowa\u0107 Home Assistanta, aby po\u0142\u0105czy\u0142 si\u0119 z po\u015brednikiem MQTT dostarczonym przez dodatek {addon}?",
+                "title": "Po\u015brednik MQTT przez dodatek Home Assistant"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "pierwszy",
+            "button_2": "drugi",
+            "button_3": "trzeci",
+            "button_4": "czwarty",
+            "button_5": "pi\u0105ty",
+            "button_6": "sz\u00f3sty",
+            "turn_off": "wy\u0142\u0105cznik",
+            "turn_on": "w\u0142\u0105cznik"
+        },
+        "trigger_type": {
+            "button_double_press": "przycisk \"{subtype}\" zostanie podw\u00f3jnie naci\u015bni\u0119ty",
+            "button_long_press": "przycisk \"{subtype}\" zostanie naci\u015bni\u0119ty w spos\u00f3b ci\u0105g\u0142y",
+            "button_long_release": "przycisk \"{subtype}\" zostanie zwolniony po d\u0142ugim naci\u015bni\u0119ciu",
+            "button_quadruple_press": "przycisk \"{subtype}\" zostanie czterokrotnie naci\u015bni\u0119ty",
+            "button_quintuple_press": "przycisk \"{subtype}\" zostanie pi\u0119ciokrotnie naci\u015bni\u0119ty",
+            "button_short_press": "przycisk \"{subtype}\" zostanie naci\u015bni\u0119ty",
+            "button_short_release": "przycisk \"{subtype}\" zostanie zwolniony",
+            "button_triple_press": "przycisk \"{subtype}\" zostanie trzykrotnie naci\u015bni\u0119ty"
+        }
+    },
+    "options": {
+        "error": {
+            "bad_birth": "Nieprawid\u0142owy temat \"birth\"",
+            "bad_will": "Nieprawid\u0142owy temat \"will\"",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Po\u015brednik",
+                    "password": "Has\u0142o",
+                    "port": "Port",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "description": "Wprowad\u017a informacje o po\u0142\u0105czeniu po\u015brednika MQTT"
+            },
+            "options": {
+                "data": {
+                    "birth_enable": "W\u0142\u0105cz wiadomo\u015b\u0107 \"birth\"",
+                    "birth_payload": "Warto\u015b\u0107 wiadomo\u015bci \"birth\"",
+                    "birth_qos": "QoS wiadomo\u015bci \"birth\"",
+                    "birth_retain": "Flaga \"retain\" wiadomo\u015bci \"birth\"",
+                    "birth_topic": "Temat wiadomo\u015bci \"birth\"",
+                    "discovery": "W\u0142\u0105cz wykrywanie",
+                    "will_enable": "W\u0142\u0105cz wiadomo\u015b\u0107 \"will\"",
+                    "will_payload": "Warto\u015b\u0107 wiadomo\u015bci \"will\"",
+                    "will_qos": "QoS wiadomo\u015bci \"will\"",
+                    "will_retain": "Flaga \"retain\" wiadomo\u015bci \"will\"",
+                    "will_topic": "Temat wiadomo\u015bci \"will\""
+                },
+                "description": "Opcje MQTT"
+            }
+        }
+    }
+}

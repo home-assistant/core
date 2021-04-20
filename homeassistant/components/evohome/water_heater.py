@@ -1,15 +1,16 @@
 """Support for WaterHeater devices of (EMEA/EU) Honeywell TCC systems."""
+from __future__ import annotations
+
 import logging
-from typing import List
 
 from homeassistant.components.water_heater import (
     SUPPORT_AWAY_MODE,
     SUPPORT_OPERATION_MODE,
-    WaterHeaterDevice,
+    WaterHeaterEntity,
 )
 from homeassistant.const import PRECISION_TENTHS, PRECISION_WHOLE, STATE_OFF, STATE_ON
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
-from homeassistant.util.dt import parse_datetime
+import homeassistant.util.dt as dt_util
 
 from . import EvoChild
 from .const import DOMAIN, EVO_FOLLOW, EVO_PERMOVER
@@ -34,21 +35,20 @@ async def async_setup_platform(
     broker = hass.data[DOMAIN]["broker"]
 
     _LOGGER.debug(
-        "Found the DHW Controller (%s), id: %s",
+        "Adding: DhwController (%s), id=%s",
         broker.tcs.hotwater.zone_type,
         broker.tcs.hotwater.zoneId,
     )
+    new_entity = EvoDHW(broker, broker.tcs.hotwater)
 
-    evo_dhw = EvoDHW(broker, broker.tcs.hotwater)
-
-    async_add_entities([evo_dhw], update_before_add=True)
+    async_add_entities([new_entity], update_before_add=True)
 
 
-class EvoDHW(EvoChild, WaterHeaterDevice):
-    """Base for a Honeywell evohome DHW controller (aka boiler)."""
+class EvoDHW(EvoChild, WaterHeaterEntity):
+    """Base for a Honeywell TCC DHW controller (aka boiler)."""
 
     def __init__(self, evo_broker, evo_device) -> None:
-        """Initialize a evohome DHW controller."""
+        """Initialize an evohome DHW controller."""
         super().__init__(evo_broker, evo_device)
 
         self._unique_id = evo_device.dhwId
@@ -71,7 +71,7 @@ class EvoDHW(EvoChild, WaterHeaterDevice):
         return EVO_STATE_TO_HA[self._evo_device.stateStatus["state"]]
 
     @property
-    def operation_list(self) -> List[str]:
+    def operation_list(self) -> list[str]:
         """Return the list of available operations."""
         return list(HA_STATE_TO_EVO)
 
@@ -88,23 +88,28 @@ class EvoDHW(EvoChild, WaterHeaterDevice):
         Except for Auto, the mode is only until the next SetPoint.
         """
         if operation_mode == STATE_AUTO:
-            await self._call_client_api(self._evo_device.set_dhw_auto())
+            await self._evo_broker.call_client_api(self._evo_device.set_dhw_auto())
         else:
             await self._update_schedule()
-            until = parse_datetime(str(self.setpoints.get("next_sp_from")))
+            until = dt_util.parse_datetime(self.setpoints.get("next_sp_from", ""))
+            until = dt_util.as_utc(until) if until else None
 
             if operation_mode == STATE_ON:
-                await self._call_client_api(self._evo_device.set_dhw_on(until))
+                await self._evo_broker.call_client_api(
+                    self._evo_device.set_dhw_on(until=until)
+                )
             else:  # STATE_OFF
-                await self._call_client_api(self._evo_device.set_dhw_off(until))
+                await self._evo_broker.call_client_api(
+                    self._evo_device.set_dhw_off(until=until)
+                )
 
     async def async_turn_away_mode_on(self):
         """Turn away mode on."""
-        await self._call_client_api(self._evo_device.set_dhw_off())
+        await self._evo_broker.call_client_api(self._evo_device.set_dhw_off())
 
     async def async_turn_away_mode_off(self):
         """Turn away mode off."""
-        await self._call_client_api(self._evo_device.set_dhw_auto())
+        await self._evo_broker.call_client_api(self._evo_device.set_dhw_auto())
 
     async def async_update(self) -> None:
         """Get the latest state data for a DHW controller."""

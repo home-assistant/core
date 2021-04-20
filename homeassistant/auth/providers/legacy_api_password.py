@@ -3,18 +3,21 @@ Support Legacy API password auth provider.
 
 It will be removed when auth system production ready
 """
+from __future__ import annotations
+
+from collections.abc import Mapping
 import hmac
-from typing import Any, Dict, Optional, cast
+from typing import cast
 
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResultDict
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 
-from . import AuthProvider, AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, LoginFlow
-from .. import AuthManager
-from ..models import Credentials, UserMeta, User
+from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
+from ..models import Credentials, UserMeta
 
 AUTH_PROVIDER_TYPE = "legacy_api_password"
 CONF_API_PASSWORD = "api_password"
@@ -30,23 +33,6 @@ class InvalidAuthError(HomeAssistantError):
     """Raised when submitting invalid authentication."""
 
 
-async def async_validate_password(hass: HomeAssistant, password: str) -> Optional[User]:
-    """Return a user if password is valid. None if not."""
-    auth = cast(AuthManager, hass.auth)  # type: ignore
-    providers = auth.get_auth_providers(AUTH_PROVIDER_TYPE)
-    if not providers:
-        raise ValueError("Legacy API password provider not found")
-
-    try:
-        provider = cast(LegacyApiPasswordAuthProvider, providers[0])
-        provider.async_validate_login(password)
-        return await auth.async_get_or_create_user(
-            await provider.async_get_or_create_credentials({})
-        )
-    except InvalidAuthError:
-        return None
-
-
 @AUTH_PROVIDERS.register(AUTH_PROVIDER_TYPE)
 class LegacyApiPasswordAuthProvider(AuthProvider):
     """An auth provider support legacy api_password."""
@@ -58,7 +44,7 @@ class LegacyApiPasswordAuthProvider(AuthProvider):
         """Return api_password."""
         return str(self.config[CONF_API_PASSWORD])
 
-    async def async_login_flow(self, context: Optional[Dict]) -> LoginFlow:
+    async def async_login_flow(self, context: dict | None) -> LoginFlow:
         """Return a flow to login."""
         return LegacyLoginFlow(self)
 
@@ -73,7 +59,7 @@ class LegacyApiPasswordAuthProvider(AuthProvider):
             raise InvalidAuthError
 
     async def async_get_or_create_credentials(
-        self, flow_result: Dict[str, str]
+        self, flow_result: Mapping[str, str]
     ) -> Credentials:
         """Return credentials for this login."""
         credentials = await self.async_credentials()
@@ -97,8 +83,8 @@ class LegacyLoginFlow(LoginFlow):
     """Handler for the login flow."""
 
     async def async_step_init(
-        self, user_input: Optional[Dict[str, str]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, str] | None = None
+    ) -> FlowResultDict:
         """Handle the step of the form."""
         errors = {}
 

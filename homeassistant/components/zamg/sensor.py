@@ -11,23 +11,23 @@ import pytz
 import requests
 import voluptuous as vol
 
-from homeassistant.components.weather import (
-    ATTR_WEATHER_HUMIDITY,
-    ATTR_WEATHER_PRESSURE,
-    ATTR_WEATHER_WIND_SPEED,
-    ATTR_WEATHER_ATTRIBUTION,
-    ATTR_WEATHER_TEMPERATURE,
-    ATTR_WEATHER_WIND_BEARING,
-)
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
-    CONF_NAME,
+    AREA_SQUARE_METERS,
+    ATTR_ATTRIBUTION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
+    CONF_NAME,
+    DEGREE,
+    LENGTH_METERS,
+    PERCENTAGE,
+    PRESSURE_HPA,
+    SPEED_KILOMETERS_PER_HOUR,
+    TEMP_CELSIUS,
     __version__,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,21 +43,41 @@ DEFAULT_NAME = "zamg"
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 
 SENSOR_TYPES = {
-    ATTR_WEATHER_PRESSURE: ("Pressure", "hPa", "LDstat hPa", float),
-    "pressure_sealevel": ("Pressure at Sea Level", "hPa", "LDred hPa", float),
-    ATTR_WEATHER_HUMIDITY: ("Humidity", "%", "RF %", int),
-    ATTR_WEATHER_WIND_SPEED: ("Wind Speed", "km/h", "WG km/h", float),
-    ATTR_WEATHER_WIND_BEARING: ("Wind Bearing", "°", "WR °", int),
-    "wind_max_speed": ("Top Wind Speed", "km/h", "WSG km/h", float),
-    "wind_max_bearing": ("Top Wind Bearing", "°", "WSR °", int),
-    "sun_last_hour": ("Sun Last Hour", "%", "SO %", int),
-    ATTR_WEATHER_TEMPERATURE: ("Temperature", "°C", "T °C", float),
-    "precipitation": ("Precipitation", "l/m²", "N l/m²", float),
-    "dewpoint": ("Dew Point", "°C", "TP °C", float),
+    "pressure": ("Pressure", PRESSURE_HPA, "LDstat hPa", float),
+    "pressure_sealevel": ("Pressure at Sea Level", PRESSURE_HPA, "LDred hPa", float),
+    "humidity": ("Humidity", PERCENTAGE, "RF %", int),
+    "wind_speed": (
+        "Wind Speed",
+        SPEED_KILOMETERS_PER_HOUR,
+        f"WG {SPEED_KILOMETERS_PER_HOUR}",
+        float,
+    ),
+    "wind_bearing": ("Wind Bearing", DEGREE, f"WR {DEGREE}", int),
+    "wind_max_speed": (
+        "Top Wind Speed",
+        SPEED_KILOMETERS_PER_HOUR,
+        f"WSG {SPEED_KILOMETERS_PER_HOUR}",
+        float,
+    ),
+    "wind_max_bearing": ("Top Wind Bearing", DEGREE, f"WSR {DEGREE}", int),
+    "sun_last_hour": ("Sun Last Hour", PERCENTAGE, f"SO {PERCENTAGE}", int),
+    "temperature": ("Temperature", TEMP_CELSIUS, f"T {TEMP_CELSIUS}", float),
+    "precipitation": (
+        "Precipitation",
+        f"l/{AREA_SQUARE_METERS}",
+        f"N l/{AREA_SQUARE_METERS}",
+        float,
+    ),
+    "dewpoint": ("Dew Point", TEMP_CELSIUS, f"TP {TEMP_CELSIUS}", float),
     # The following probably not useful for general consumption,
     # but we need them to fill in internal attributes
     "station_name": ("Station Name", None, "Name", str),
-    "station_elevation": ("Station Elevation", "m", "Höhe m", int),
+    "station_elevation": (
+        "Station Elevation",
+        LENGTH_METERS,
+        f"Höhe {LENGTH_METERS}",
+        int,
+    ),
     "update_date": ("Update Date", None, "Datum", str),
     "update_time": ("Update Time", None, "Zeit", str),
 }
@@ -112,7 +132,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class ZamgSensor(Entity):
+class ZamgSensor(SensorEntity):
     """Implementation of a ZAMG sensor."""
 
     def __init__(self, probe, variable, name):
@@ -137,10 +157,10 @@ class ZamgSensor(Entity):
         return SENSOR_TYPES[self.variable][1]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_WEATHER_ATTRIBUTION: ATTRIBUTION,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_STATION: self.probe.get_data("station_name"),
             ATTR_UPDATED: self.probe.last_update.isoformat(),
         }
@@ -154,7 +174,7 @@ class ZamgData:
     """The class for handling the data retrieval."""
 
     API_URL = "http://www.zamg.ac.at/ogd/"
-    API_HEADERS = {USER_AGENT: "{} {}".format("home-assistant.zamg/", __version__)}
+    API_HEADERS = {USER_AGENT: f"home-assistant.zamg/ {__version__}"}
 
     def __init__(self, station_id):
         """Initialize the probe."""

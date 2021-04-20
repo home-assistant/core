@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is al geconfigureerd"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "mmi": "MMI",
+                    "radius": "Straal"
+                },
+                "title": "Vul uw filtergegevens in."
+            }
+        }
+    }
+}

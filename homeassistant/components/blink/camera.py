@@ -1,26 +1,37 @@
 """Support for Blink system camera."""
 import logging
 
-from homeassistant.components.camera import Camera
+import voluptuous as vol
 
-from . import BLINK_DATA, DEFAULT_BRAND
+from homeassistant.components.camera import Camera
+from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.helpers import entity_platform
+import homeassistant.helpers.config_validation as cv
+
+from .const import DEFAULT_BRAND, DOMAIN, SERVICE_TRIGGER
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_VIDEO_CLIP = "video"
 ATTR_IMAGE = "image"
 
+SERVICE_TRIGGER_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids})
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+
+async def async_setup_entry(hass, config, async_add_entities):
     """Set up a Blink Camera."""
-    if discovery_info is None:
-        return
-    data = hass.data[BLINK_DATA]
-    devs = []
+    data = hass.data[DOMAIN][config.entry_id]
+    entities = []
     for name, camera in data.cameras.items():
-        devs.append(BlinkCamera(data, name, camera))
+        entities.append(BlinkCamera(data, name, camera))
 
-    add_entities(devs)
+    async_add_entities(entities)
+
+    platform = entity_platform.current_platform.get()
+
+    platform.async_register_entity_service(
+        SERVICE_TRIGGER, SERVICE_TRIGGER_SCHEMA, "trigger_camera"
+    )
 
 
 class BlinkCamera(Camera):
@@ -30,7 +41,7 @@ class BlinkCamera(Camera):
         """Initialize a camera."""
         super().__init__()
         self.data = data
-        self._name = f"{BLINK_DATA} {name}"
+        self._name = f"{DOMAIN} {name}"
         self._camera = camera
         self._unique_id = f"{camera.serial}-camera"
         self.response = None
@@ -49,7 +60,7 @@ class BlinkCamera(Camera):
         return self._unique_id
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the camera attributes."""
         return self._camera.attributes
 
@@ -70,6 +81,11 @@ class BlinkCamera(Camera):
     def brand(self):
         """Return the camera brand."""
         return DEFAULT_BRAND
+
+    def trigger_camera(self):
+        """Trigger camera to take a snapshot."""
+        self._camera.snap_picture()
+        self.data.refresh()
 
     def camera_image(self):
         """Return a still image response from the camera."""

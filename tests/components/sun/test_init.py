@@ -5,13 +5,13 @@ from unittest.mock import patch
 from pytest import mark
 
 import homeassistant.components.sun as sun
-import homeassistant.core as ha
-import homeassistant.util.dt as dt_util
 from homeassistant.const import EVENT_STATE_CHANGED
+import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
+import homeassistant.util.dt as dt_util
 
 
-async def test_setting_rising(hass):
+async def test_setting_rising(hass, legacy_patchable_time):
     """Test retrieving sun setting and rising."""
     utc_now = datetime(2016, 11, 1, 8, 0, 0, tzinfo=dt_util.UTC)
     with patch("homeassistant.helpers.condition.dt_util.utcnow", return_value=utc_now):
@@ -22,18 +22,19 @@ async def test_setting_rising(hass):
     await hass.async_block_till_done()
     state = hass.states.get(sun.ENTITY_ID)
 
-    from astral import Astral
+    from astral import LocationInfo
+    import astral.sun
 
-    astral = Astral()
     utc_today = utc_now.date()
 
-    latitude = hass.config.latitude
-    longitude = hass.config.longitude
+    location = LocationInfo(
+        latitude=hass.config.latitude, longitude=hass.config.longitude
+    )
 
     mod = -1
     while True:
-        next_dawn = astral.dawn_utc(
-            utc_today + timedelta(days=mod), latitude, longitude
+        next_dawn = astral.sun.dawn(
+            location.observer, date=utc_today + timedelta(days=mod)
         )
         if next_dawn > utc_now:
             break
@@ -41,8 +42,8 @@ async def test_setting_rising(hass):
 
     mod = -1
     while True:
-        next_dusk = astral.dusk_utc(
-            utc_today + timedelta(days=mod), latitude, longitude
+        next_dusk = astral.sun.dusk(
+            location.observer, date=utc_today + timedelta(days=mod)
         )
         if next_dusk > utc_now:
             break
@@ -50,8 +51,8 @@ async def test_setting_rising(hass):
 
     mod = -1
     while True:
-        next_midnight = astral.solar_midnight_utc(
-            utc_today + timedelta(days=mod), longitude
+        next_midnight = astral.sun.midnight(
+            location.observer, date=utc_today + timedelta(days=mod)
         )
         if next_midnight > utc_now:
             break
@@ -59,15 +60,17 @@ async def test_setting_rising(hass):
 
     mod = -1
     while True:
-        next_noon = astral.solar_noon_utc(utc_today + timedelta(days=mod), longitude)
+        next_noon = astral.sun.noon(
+            location.observer, date=utc_today + timedelta(days=mod)
+        )
         if next_noon > utc_now:
             break
         mod += 1
 
     mod = -1
     while True:
-        next_rising = astral.sunrise_utc(
-            utc_today + timedelta(days=mod), latitude, longitude
+        next_rising = astral.sun.sunrise(
+            location.observer, date=utc_today + timedelta(days=mod)
         )
         if next_rising > utc_now:
             break
@@ -75,8 +78,8 @@ async def test_setting_rising(hass):
 
     mod = -1
     while True:
-        next_setting = astral.sunset_utc(
-            utc_today + timedelta(days=mod), latitude, longitude
+        next_setting = astral.sun.sunset(
+            location.observer, date=utc_today + timedelta(days=mod)
         )
         if next_setting > utc_now:
             break
@@ -102,7 +105,7 @@ async def test_setting_rising(hass):
     )
 
 
-async def test_state_change(hass):
+async def test_state_change(hass, legacy_patchable_time):
     """Test if the state changes at next setting/rising."""
     now = datetime(2016, 6, 1, 8, 0, 0, tzinfo=dt_util.UTC)
     with patch("homeassistant.helpers.condition.dt_util.utcnow", return_value=now):
@@ -119,11 +122,12 @@ async def test_state_change(hass):
 
     assert sun.STATE_BELOW_HORIZON == hass.states.get(sun.ENTITY_ID).state
 
-    hass.bus.async_fire(
-        ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: test_time + timedelta(seconds=5)}
-    )
-
-    await hass.async_block_till_done()
+    patched_time = test_time + timedelta(seconds=5)
+    with patch(
+        "homeassistant.helpers.condition.dt_util.utcnow", return_value=patched_time
+    ):
+        hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: patched_time})
+        await hass.async_block_till_done()
 
     assert sun.STATE_ABOVE_HORIZON == hass.states.get(sun.ENTITY_ID).state
 
@@ -151,10 +155,10 @@ async def test_norway_in_june(hass):
 
     assert dt_util.parse_datetime(
         state.attributes[sun.STATE_ATTR_NEXT_RISING]
-    ) == datetime(2016, 7, 25, 23, 23, 39, tzinfo=dt_util.UTC)
+    ) == datetime(2016, 7, 24, 22, 59, 45, 689645, tzinfo=dt_util.UTC)
     assert dt_util.parse_datetime(
         state.attributes[sun.STATE_ATTR_NEXT_SETTING]
-    ) == datetime(2016, 7, 26, 22, 19, 1, tzinfo=dt_util.UTC)
+    ) == datetime(2016, 7, 25, 22, 17, 13, 503932, tzinfo=dt_util.UTC)
 
     assert state.state == sun.STATE_ABOVE_HORIZON
 

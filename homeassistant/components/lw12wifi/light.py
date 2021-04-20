@@ -2,6 +2,7 @@
 
 import logging
 
+import lw12
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -9,17 +10,16 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
-    Light,
     PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
-    SUPPORT_EFFECT,
     SUPPORT_COLOR,
+    SUPPORT_EFFECT,
     SUPPORT_TRANSITION,
+    LightEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,8 +38,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up LW-12 WiFi LED Controller platform."""
-    import lw12
-
     # Assign configuration variables.
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
@@ -49,7 +47,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([LW12WiFi(name, lw12_light)])
 
 
-class LW12WiFi(Light):
+class LW12WiFi(LightEntity):
     """LW-12 WiFi LED Controller."""
 
     def __init__(self, name, lw12_light):
@@ -107,8 +105,6 @@ class LW12WiFi(Light):
 
         Use the Enum element name for display.
         """
-        import lw12
-
         return [effect.name.replace("_", " ").title() for effect in lw12.LW12_EFFECT]
 
     @property
@@ -117,14 +113,12 @@ class LW12WiFi(Light):
         return True
 
     @property
-    def shoud_poll(self) -> bool:
+    def should_poll(self) -> bool:
         """Return False to not poll the state of this entity."""
         return False
 
     def turn_on(self, **kwargs):
         """Instruct the light to turn on."""
-        import lw12
-
         self._light.light_on()
         if ATTR_HS_COLOR in kwargs:
             self._rgb_color = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])

@@ -1,20 +1,17 @@
 """Test the aiohttp client helper."""
 import asyncio
-import unittest
+from unittest.mock import Mock, patch
 
 import aiohttp
 import pytest
 
 from homeassistant.core import EVENT_HOMEASSISTANT_CLOSE
-from homeassistant.setup import async_setup_component
 import homeassistant.helpers.aiohttp_client as client
-from homeassistant.util.async_ import run_callback_threadsafe
-
-from tests.common import get_test_home_assistant
+from homeassistant.setup import async_setup_component
 
 
-@pytest.fixture
-def camera_client(hass, hass_client):
+@pytest.fixture(name="camera_client")
+def camera_client_fixture(hass, hass_client):
     """Fixture to fetch camera streams."""
     assert hass.loop.run_until_complete(
         async_setup_component(
@@ -29,134 +26,172 @@ def camera_client(hass, hass_client):
             },
         )
     )
+    hass.loop.run_until_complete(hass.async_block_till_done())
 
     yield hass.loop.run_until_complete(hass_client())
 
 
-class TestHelpersAiohttpClient(unittest.TestCase):
-    """Test homeassistant.helpers.aiohttp_client module."""
+async def test_get_clientsession_with_ssl(hass):
+    """Test init clientsession with ssl."""
+    client.async_get_clientsession(hass)
 
-    def setup_method(self, method):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-
-    def teardown_method(self, method):
-        """Stop everything that was started."""
-        self.hass.stop()
-
-    def test_get_clientsession_with_ssl(self):
-        """Test init clientsession with ssl."""
-        run_callback_threadsafe(
-            self.hass.loop, client.async_get_clientsession, self.hass
-        ).result()
-
-        assert isinstance(
-            self.hass.data[client.DATA_CLIENTSESSION], aiohttp.ClientSession
-        )
-        assert isinstance(self.hass.data[client.DATA_CONNECTOR], aiohttp.TCPConnector)
-
-    def test_get_clientsession_without_ssl(self):
-        """Test init clientsession without ssl."""
-        run_callback_threadsafe(
-            self.hass.loop, client.async_get_clientsession, self.hass, False
-        ).result()
-
-        assert isinstance(
-            self.hass.data[client.DATA_CLIENTSESSION_NOTVERIFY], aiohttp.ClientSession
-        )
-        assert isinstance(
-            self.hass.data[client.DATA_CONNECTOR_NOTVERIFY], aiohttp.TCPConnector
-        )
-
-    def test_create_clientsession_with_ssl_and_cookies(self):
-        """Test create clientsession with ssl."""
-
-        def _async_helper():
-            return client.async_create_clientsession(self.hass, cookies={"bla": True})
-
-        session = run_callback_threadsafe(self.hass.loop, _async_helper).result()
-
-        assert isinstance(session, aiohttp.ClientSession)
-        assert isinstance(self.hass.data[client.DATA_CONNECTOR], aiohttp.TCPConnector)
-
-    def test_create_clientsession_without_ssl_and_cookies(self):
-        """Test create clientsession without ssl."""
-
-        def _async_helper():
-            return client.async_create_clientsession(
-                self.hass, False, cookies={"bla": True}
-            )
-
-        session = run_callback_threadsafe(self.hass.loop, _async_helper).result()
-
-        assert isinstance(session, aiohttp.ClientSession)
-        assert isinstance(
-            self.hass.data[client.DATA_CONNECTOR_NOTVERIFY], aiohttp.TCPConnector
-        )
-
-    def test_get_clientsession_cleanup(self):
-        """Test init clientsession with ssl."""
-        run_callback_threadsafe(
-            self.hass.loop, client.async_get_clientsession, self.hass
-        ).result()
-
-        assert isinstance(
-            self.hass.data[client.DATA_CLIENTSESSION], aiohttp.ClientSession
-        )
-        assert isinstance(self.hass.data[client.DATA_CONNECTOR], aiohttp.TCPConnector)
-
-        self.hass.bus.fire(EVENT_HOMEASSISTANT_CLOSE)
-        self.hass.block_till_done()
-
-        assert self.hass.data[client.DATA_CLIENTSESSION].closed
-        assert self.hass.data[client.DATA_CONNECTOR].closed
-
-    def test_get_clientsession_cleanup_without_ssl(self):
-        """Test init clientsession with ssl."""
-        run_callback_threadsafe(
-            self.hass.loop, client.async_get_clientsession, self.hass, False
-        ).result()
-
-        assert isinstance(
-            self.hass.data[client.DATA_CLIENTSESSION_NOTVERIFY], aiohttp.ClientSession
-        )
-        assert isinstance(
-            self.hass.data[client.DATA_CONNECTOR_NOTVERIFY], aiohttp.TCPConnector
-        )
-
-        self.hass.bus.fire(EVENT_HOMEASSISTANT_CLOSE)
-        self.hass.block_till_done()
-
-        assert self.hass.data[client.DATA_CLIENTSESSION_NOTVERIFY].closed
-        assert self.hass.data[client.DATA_CONNECTOR_NOTVERIFY].closed
+    assert isinstance(hass.data[client.DATA_CLIENTSESSION], aiohttp.ClientSession)
+    assert isinstance(hass.data[client.DATA_CONNECTOR], aiohttp.TCPConnector)
 
 
-@asyncio.coroutine
-def test_async_aiohttp_proxy_stream(aioclient_mock, camera_client):
+async def test_get_clientsession_without_ssl(hass):
+    """Test init clientsession without ssl."""
+    client.async_get_clientsession(hass, verify_ssl=False)
+
+    assert isinstance(
+        hass.data[client.DATA_CLIENTSESSION_NOTVERIFY], aiohttp.ClientSession
+    )
+    assert isinstance(hass.data[client.DATA_CONNECTOR_NOTVERIFY], aiohttp.TCPConnector)
+
+
+async def test_create_clientsession_with_ssl_and_cookies(hass):
+    """Test create clientsession with ssl."""
+    session = client.async_create_clientsession(hass, cookies={"bla": True})
+    assert isinstance(session, aiohttp.ClientSession)
+    assert isinstance(hass.data[client.DATA_CONNECTOR], aiohttp.TCPConnector)
+
+
+async def test_create_clientsession_without_ssl_and_cookies(hass):
+    """Test create clientsession without ssl."""
+    session = client.async_create_clientsession(hass, False, cookies={"bla": True})
+    assert isinstance(session, aiohttp.ClientSession)
+    assert isinstance(hass.data[client.DATA_CONNECTOR_NOTVERIFY], aiohttp.TCPConnector)
+
+
+async def test_get_clientsession_cleanup(hass):
+    """Test init clientsession with ssl."""
+    client.async_get_clientsession(hass)
+
+    assert isinstance(hass.data[client.DATA_CLIENTSESSION], aiohttp.ClientSession)
+    assert isinstance(hass.data[client.DATA_CONNECTOR], aiohttp.TCPConnector)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
+    await hass.async_block_till_done()
+
+    assert hass.data[client.DATA_CLIENTSESSION].closed
+    assert hass.data[client.DATA_CONNECTOR].closed
+
+
+async def test_get_clientsession_cleanup_without_ssl(hass):
+    """Test init clientsession with ssl."""
+    client.async_get_clientsession(hass, verify_ssl=False)
+
+    assert isinstance(
+        hass.data[client.DATA_CLIENTSESSION_NOTVERIFY], aiohttp.ClientSession
+    )
+    assert isinstance(hass.data[client.DATA_CONNECTOR_NOTVERIFY], aiohttp.TCPConnector)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
+    await hass.async_block_till_done()
+
+    assert hass.data[client.DATA_CLIENTSESSION_NOTVERIFY].closed
+    assert hass.data[client.DATA_CONNECTOR_NOTVERIFY].closed
+
+
+async def test_get_clientsession_patched_close(hass):
+    """Test closing clientsession does not work."""
+    with patch("aiohttp.ClientSession.close") as mock_close:
+        session = client.async_get_clientsession(hass)
+
+        assert isinstance(hass.data[client.DATA_CLIENTSESSION], aiohttp.ClientSession)
+        assert isinstance(hass.data[client.DATA_CONNECTOR], aiohttp.TCPConnector)
+
+        with pytest.raises(RuntimeError):
+            await session.close()
+
+        assert mock_close.call_count == 0
+
+
+async def test_warning_close_session_integration(hass, caplog):
+    """Test log warning message when closing the session from integration context."""
+    with patch(
+        "homeassistant.helpers.frame.extract_stack",
+        return_value=[
+            Mock(
+                filename="/home/paulus/homeassistant/core.py",
+                lineno="23",
+                line="do_something()",
+            ),
+            Mock(
+                filename="/home/paulus/homeassistant/components/hue/light.py",
+                lineno="23",
+                line="await session.close()",
+            ),
+            Mock(
+                filename="/home/paulus/aiohue/lights.py",
+                lineno="2",
+                line="something()",
+            ),
+        ],
+    ):
+        session = client.async_get_clientsession(hass)
+        await session.close()
+    assert (
+        "Detected integration that closes the Home Assistant aiohttp session. "
+        "Please report issue for hue using this method at "
+        "homeassistant/components/hue/light.py, line 23: await session.close()"
+    ) in caplog.text
+
+
+async def test_warning_close_session_custom(hass, caplog):
+    """Test log warning message when closing the session from custom context."""
+    with patch(
+        "homeassistant.helpers.frame.extract_stack",
+        return_value=[
+            Mock(
+                filename="/home/paulus/homeassistant/core.py",
+                lineno="23",
+                line="do_something()",
+            ),
+            Mock(
+                filename="/home/paulus/config/custom_components/hue/light.py",
+                lineno="23",
+                line="await session.close()",
+            ),
+            Mock(
+                filename="/home/paulus/aiohue/lights.py",
+                lineno="2",
+                line="something()",
+            ),
+        ],
+    ):
+        session = client.async_get_clientsession(hass)
+        await session.close()
+    assert (
+        "Detected integration that closes the Home Assistant aiohttp session. "
+        "Please report issue to the custom component author for hue using this method at "
+        "custom_components/hue/light.py, line 23: await session.close()" in caplog.text
+    )
+
+
+async def test_async_aiohttp_proxy_stream(aioclient_mock, camera_client):
     """Test that it fetches the given url."""
     aioclient_mock.get("http://example.com/mjpeg_stream", content=b"Frame1Frame2Frame3")
 
-    resp = yield from camera_client.get("/api/camera_proxy_stream/camera.config_test")
+    resp = await camera_client.get("/api/camera_proxy_stream/camera.config_test")
 
     assert resp.status == 200
     assert aioclient_mock.call_count == 1
-    body = yield from resp.text()
+    body = await resp.text()
     assert body == "Frame1Frame2Frame3"
 
 
-@asyncio.coroutine
-def test_async_aiohttp_proxy_stream_timeout(aioclient_mock, camera_client):
+async def test_async_aiohttp_proxy_stream_timeout(aioclient_mock, camera_client):
     """Test that it fetches the given url."""
     aioclient_mock.get("http://example.com/mjpeg_stream", exc=asyncio.TimeoutError())
 
-    resp = yield from camera_client.get("/api/camera_proxy_stream/camera.config_test")
+    resp = await camera_client.get("/api/camera_proxy_stream/camera.config_test")
     assert resp.status == 504
 
 
-@asyncio.coroutine
-def test_async_aiohttp_proxy_stream_client_err(aioclient_mock, camera_client):
+async def test_async_aiohttp_proxy_stream_client_err(aioclient_mock, camera_client):
     """Test that it fetches the given url."""
     aioclient_mock.get("http://example.com/mjpeg_stream", exc=aiohttp.ClientError())
 
-    resp = yield from camera_client.get("/api/camera_proxy_stream/camera.config_test")
+    resp = await camera_client.get("/api/camera_proxy_stream/camera.config_test")
     assert resp.status == 502

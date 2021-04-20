@@ -1,16 +1,19 @@
 """Support for IQVIA sensors."""
-import logging
 from statistics import mean
 
 import numpy as np
 
-from homeassistant.components.iqvia import (
-    DATA_CLIENT,
+from homeassistant.const import ATTR_STATE
+from homeassistant.core import callback
+
+from . import IQVIAEntity
+from .const import (
+    DATA_COORDINATOR,
     DOMAIN,
     SENSORS,
     TYPE_ALLERGY_FORECAST,
-    TYPE_ALLERGY_OUTLOOK,
     TYPE_ALLERGY_INDEX,
+    TYPE_ALLERGY_OUTLOOK,
     TYPE_ALLERGY_TODAY,
     TYPE_ALLERGY_TOMORROW,
     TYPE_ASTHMA_FORECAST,
@@ -20,11 +23,7 @@ from homeassistant.components.iqvia import (
     TYPE_DISEASE_FORECAST,
     TYPE_DISEASE_INDEX,
     TYPE_DISEASE_TODAY,
-    IQVIAEntity,
 )
-from homeassistant.const import ATTR_STATE
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_ALLERGEN_AMOUNT = "allergen_amount"
 ATTR_ALLERGEN_GENUS = "allergen_genus"
@@ -36,6 +35,15 @@ ATTR_RATING = "rating"
 ATTR_SEASON = "season"
 ATTR_TREND = "trend"
 ATTR_ZIP_CODE = "zip_code"
+
+API_CATEGORY_MAPPING = {
+    TYPE_ALLERGY_TODAY: TYPE_ALLERGY_INDEX,
+    TYPE_ALLERGY_TOMORROW: TYPE_ALLERGY_INDEX,
+    TYPE_ALLERGY_TOMORROW: TYPE_ALLERGY_INDEX,
+    TYPE_ASTHMA_TODAY: TYPE_ASTHMA_INDEX,
+    TYPE_ASTHMA_TOMORROW: TYPE_ASTHMA_INDEX,
+    TYPE_DISEASE_TODAY: TYPE_DISEASE_INDEX,
+}
 
 RATING_MAPPING = [
     {"label": "Low", "minimum": 0.0, "maximum": 2.4},
@@ -50,15 +58,8 @@ TREND_INCREASING = "Increasing"
 TREND_SUBSIDING = "Subsiding"
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up IQVIA sensors based on the old way."""
-    pass
-
-
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up IQVIA sensors based on a config entry."""
-    iqvia = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
-
     sensor_class_mapping = {
         TYPE_ALLERGY_FORECAST: ForecastSensor,
         TYPE_ALLERGY_TODAY: IndexSensor,
@@ -71,12 +72,14 @@ async def async_setup_entry(hass, entry, async_add_entities):
     }
 
     sensors = []
-    for sensor_type in iqvia.sensor_types:
-        klass = sensor_class_mapping[sensor_type]
-        name, icon = SENSORS[sensor_type]
-        sensors.append(klass(iqvia, sensor_type, name, icon, iqvia.zip_code))
+    for sensor_type, (name, icon) in SENSORS.items():
+        api_category = API_CATEGORY_MAPPING.get(sensor_type, sensor_type)
+        coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][api_category]
+        sensor_class = sensor_class_mapping[sensor_type]
 
-    async_add_entities(sensors, True)
+        sensors.append(sensor_class(coordinator, entry, sensor_type, name, icon))
+
+    async_add_entities(sensors)
 
 
 def calculate_trend(indices):
@@ -98,12 +101,11 @@ def calculate_trend(indices):
 class ForecastSensor(IQVIAEntity):
     """Define sensor related to forecast data."""
 
-    async def async_update(self):
+    @callback
+    def update_from_latest_data(self):
         """Update the sensor."""
-        if not self._iqvia.data:
-            return
+        data = self.coordinator.data.get("Location")
 
-        data = self._iqvia.data[self._type].get("Location")
         if not data or not data.get("periods"):
             return
 
@@ -126,9 +128,11 @@ class ForecastSensor(IQVIAEntity):
         )
 
         if self._type == TYPE_ALLERGY_FORECAST:
-            outlook = self._iqvia.data[TYPE_ALLERGY_OUTLOOK]
-            self._attrs[ATTR_OUTLOOK] = outlook.get("Outlook")
-            self._attrs[ATTR_SEASON] = outlook.get("Season")
+            outlook_coordinator = self.hass.data[DOMAIN][DATA_COORDINATOR][
+                self._entry.entry_id
+            ][TYPE_ALLERGY_OUTLOOK]
+            self._attrs[ATTR_OUTLOOK] = outlook_coordinator.data.get("Outlook")
+            self._attrs[ATTR_SEASON] = outlook_coordinator.data.get("Season")
 
         self._state = average
 
@@ -136,24 +140,29 @@ class ForecastSensor(IQVIAEntity):
 class IndexSensor(IQVIAEntity):
     """Define sensor related to indices."""
 
-    async def async_update(self):
+    @callback
+    def update_from_latest_data(self):
         """Update the sensor."""
-        if not self._iqvia.data:
+        if not self.coordinator.last_update_success:
             return
 
-        data = {}
-        if self._type in (TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW):
-            data = self._iqvia.data[TYPE_ALLERGY_INDEX].get("Location")
-        elif self._type in (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW):
-            data = self._iqvia.data[TYPE_ASTHMA_INDEX].get("Location")
-        elif self._type == TYPE_DISEASE_TODAY:
-            data = self._iqvia.data[TYPE_DISEASE_INDEX].get("Location")
-
-        if not data:
+        try:
+            if self._type in (TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW):
+                data = self.coordinator.data.get("Location")
+            elif self._type in (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW):
+                data = self.coordinator.data.get("Location")
+            elif self._type == TYPE_DISEASE_TODAY:
+                data = self.coordinator.data.get("Location")
+        except KeyError:
             return
 
         key = self._type.split("_")[-1].title()
-        [period] = [p for p in data["periods"] if p["Type"] == key]
+
+        try:
+            [period] = [p for p in data["periods"] if p["Type"] == key]
+        except ValueError:
+            return
+
         [rating] = [
             i["label"]
             for i in RATING_MAPPING
@@ -190,6 +199,6 @@ class IndexSensor(IQVIAEntity):
                 )
         elif self._type == TYPE_DISEASE_TODAY:
             for attrs in period["Triggers"]:
-                self._attrs["{0}_index".format(attrs["Name"].lower())] = attrs["Index"]
+                self._attrs[f"{attrs['Name'].lower()}_index"] = attrs["Index"]
 
         self._state = period["Index"]

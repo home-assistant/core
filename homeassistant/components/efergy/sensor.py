@@ -4,18 +4,21 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_CURRENCY, POWER_WATT, ENERGY_KILO_WATT_HOUR
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import (
+    CONF_CURRENCY,
+    CONF_MONITORED_VARIABLES,
+    CONF_TYPE,
+    ENERGY_KILO_WATT_HOUR,
+    POWER_WATT,
+)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = "https://engage.efergy.com/mobile_proxy/"
 
 CONF_APPTOKEN = "app_token"
 CONF_UTC_OFFSET = "utc_offset"
-CONF_MONITORED_VARIABLES = "monitored_variables"
-CONF_SENSOR_TYPE = "type"
 
 CONF_PERIOD = "period"
 
@@ -40,7 +43,7 @@ TYPES_SCHEMA = vol.In(SENSOR_TYPES)
 
 SENSORS_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_SENSOR_TYPE): TYPES_SCHEMA,
+        vol.Required(CONF_TYPE): TYPES_SCHEMA,
         vol.Optional(CONF_CURRENCY, default=""): cv.string,
         vol.Optional(CONF_PERIOD, default=DEFAULT_PERIOD): cv.string,
     }
@@ -62,16 +65,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     dev = []
     for variable in config[CONF_MONITORED_VARIABLES]:
-        if variable[CONF_SENSOR_TYPE] == CONF_CURRENT_VALUES:
-            url_string = "{}getCurrentValuesSummary?token={}".format(
-                _RESOURCE, app_token
-            )
+        if variable[CONF_TYPE] == CONF_CURRENT_VALUES:
+            url_string = f"{_RESOURCE}getCurrentValuesSummary?token={app_token}"
             response = requests.get(url_string, timeout=10)
             for sensor in response.json():
                 sid = sensor["sid"]
                 dev.append(
                     EfergySensor(
-                        variable[CONF_SENSOR_TYPE],
+                        variable[CONF_TYPE],
                         app_token,
                         utc_offset,
                         variable[CONF_PERIOD],
@@ -81,7 +82,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 )
         dev.append(
             EfergySensor(
-                variable[CONF_SENSOR_TYPE],
+                variable[CONF_TYPE],
                 app_token,
                 utc_offset,
                 variable[CONF_PERIOD],
@@ -92,7 +93,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev, True)
 
 
-class EfergySensor(Entity):
+class EfergySensor(SensorEntity):
     """Implementation of an Efergy sensor."""
 
     def __init__(self, sensor_type, app_token, utc_offset, period, currency, sid=None):
@@ -136,9 +137,7 @@ class EfergySensor(Entity):
                 response = requests.get(url_string, timeout=10)
                 self._state = response.json()["reading"]
             elif self.type == "amount":
-                url_string = "{}getEnergy?token={}&offset={}&period={}".format(
-                    _RESOURCE, self.app_token, self.utc_offset, self.period
-                )
+                url_string = f"{_RESOURCE}getEnergy?token={self.app_token}&offset={self.utc_offset}&period={self.period}"
                 response = requests.get(url_string, timeout=10)
                 self._state = response.json()["sum"]
             elif self.type == "budget":
@@ -146,14 +145,12 @@ class EfergySensor(Entity):
                 response = requests.get(url_string, timeout=10)
                 self._state = response.json()["status"]
             elif self.type == "cost":
-                url_string = "{}getCost?token={}&offset={}&period={}".format(
-                    _RESOURCE, self.app_token, self.utc_offset, self.period
-                )
+                url_string = f"{_RESOURCE}getCost?token={self.app_token}&offset={self.utc_offset}&period={self.period}"
                 response = requests.get(url_string, timeout=10)
                 self._state = response.json()["sum"]
             elif self.type == "current_values":
-                url_string = "{}getCurrentValuesSummary?token={}".format(
-                    _RESOURCE, self.app_token
+                url_string = (
+                    f"{_RESOURCE}getCurrentValuesSummary?token={self.app_token}"
                 )
                 response = requests.get(url_string, timeout=10)
                 for sensor in response.json():

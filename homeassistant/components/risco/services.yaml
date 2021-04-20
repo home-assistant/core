@@ -1,0 +1,15 @@
+# Describes the format for available Risco services
+
+bypass_zone:
+  description: Bypass a Risco Zone
+  fields:
+    entity_id:
+      description: Entity ID of the zone to bypass
+      example: "binary_sensor.living_room_motion"
+
+unbypass_zone:
+  description: Unbypass a Risco Zone
+  fields:
+    entity_id:
+      description: Entity ID of the zone to unbypass
+      example: "binary_sensor.living_room_motion"

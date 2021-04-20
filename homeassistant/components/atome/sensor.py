@@ -1,23 +1,21 @@
 """Linky Atome."""
-import logging
 from datetime import timedelta
+import logging
 
+from pyatome.client import AtomeClient, PyAtomeError
 import voluptuous as vol
-from pyatome.client import AtomeClient
-from pyatome.client import PyAtomeError
 
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
-    CONF_NAME,
     DEVICE_CLASS_POWER,
-    POWER_WATT,
     ENERGY_KILO_WATT_HOUR,
+    POWER_WATT,
 )
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -144,7 +142,7 @@ class AtomeData:
             values = self.atome_client.get_consumption(DAILY_TYPE)
             self._day_usage = values["total"] / 1000
             self._day_price = values["price"]
-            _LOGGER.debug("Updating Atome daily data. Got: %d.", self._day_usage)
+            _LOGGER.debug("Updating Atome daily data. Got: %d", self._day_usage)
 
         except KeyError as error:
             _LOGGER.error("Missing last value in values: %s: %s", values, error)
@@ -166,7 +164,7 @@ class AtomeData:
             values = self.atome_client.get_consumption(WEEKLY_TYPE)
             self._week_usage = values["total"] / 1000
             self._week_price = values["price"]
-            _LOGGER.debug("Updating Atome weekly data. Got: %d.", self._week_usage)
+            _LOGGER.debug("Updating Atome weekly data. Got: %d", self._week_usage)
 
         except KeyError as error:
             _LOGGER.error("Missing last value in values: %s: %s", values, error)
@@ -188,7 +186,7 @@ class AtomeData:
             values = self.atome_client.get_consumption(MONTHLY_TYPE)
             self._month_usage = values["total"] / 1000
             self._month_price = values["price"]
-            _LOGGER.debug("Updating Atome monthly data. Got: %d.", self._month_usage)
+            _LOGGER.debug("Updating Atome monthly data. Got: %d", self._month_usage)
 
         except KeyError as error:
             _LOGGER.error("Missing last value in values: %s: %s", values, error)
@@ -210,13 +208,13 @@ class AtomeData:
             values = self.atome_client.get_consumption(YEARLY_TYPE)
             self._year_usage = values["total"] / 1000
             self._year_price = values["price"]
-            _LOGGER.debug("Updating Atome yearly data. Got: %d.", self._year_usage)
+            _LOGGER.debug("Updating Atome yearly data. Got: %d", self._year_usage)
 
         except KeyError as error:
             _LOGGER.error("Missing last value in values: %s: %s", values, error)
 
 
-class AtomeSensor(Entity):
+class AtomeSensor(SensorEntity):
     """Representation of a sensor entity for Atome."""
 
     def __init__(self, data, name, sensor_type):
@@ -244,7 +242,7 @@ class AtomeSensor(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._attributes
 

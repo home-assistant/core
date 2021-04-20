@@ -1,8 +1,8 @@
 {
   "domain": "opengarage",
-  "name": "Opengarage",
+  "name": "OpenGarage",
   "documentation": "https://www.home-assistant.io/integrations/opengarage",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
+  "codeowners": ["@danielhiversen"],
+  "requirements": ["open-garage==0.1.4"],
+  "iot_class": "local_polling"
 }

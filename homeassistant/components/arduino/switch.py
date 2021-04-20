@@ -1,14 +1,11 @@
 """Support for switching Arduino pins on and off."""
-import logging
-
 import voluptuous as vol
 
-from homeassistant.components import arduino
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
-_LOGGER = logging.getLogger(__name__)
+from . import DOMAIN
 
 CONF_PINS = "pins"
 CONF_TYPE = "digital"
@@ -30,39 +27,36 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Arduino platform."""
-    # Verify that Arduino board is present
-    if arduino.BOARD is None:
-        _LOGGER.error("A connection has not been made to the Arduino board")
-        return False
+    board = hass.data[DOMAIN]
 
-    pins = config.get(CONF_PINS)
+    pins = config[CONF_PINS]
 
     switches = []
     for pinnum, pin in pins.items():
-        switches.append(ArduinoSwitch(pinnum, pin))
+        switches.append(ArduinoSwitch(pinnum, pin, board))
     add_entities(switches)
 
 
-class ArduinoSwitch(SwitchDevice):
+class ArduinoSwitch(SwitchEntity):
     """Representation of an Arduino switch."""
 
-    def __init__(self, pin, options):
+    def __init__(self, pin, options, board):
         """Initialize the Pin."""
         self._pin = pin
-        self._name = options.get(CONF_NAME)
+        self._name = options[CONF_NAME]
         self.pin_type = CONF_TYPE
         self.direction = "out"
 
-        self._state = options.get(CONF_INITIAL)
+        self._state = options[CONF_INITIAL]
 
-        if options.get(CONF_NEGATE):
-            self.turn_on_handler = arduino.BOARD.set_digital_out_low
-            self.turn_off_handler = arduino.BOARD.set_digital_out_high
+        if options[CONF_NEGATE]:
+            self.turn_on_handler = board.set_digital_out_low
+            self.turn_off_handler = board.set_digital_out_high
         else:
-            self.turn_on_handler = arduino.BOARD.set_digital_out_high
-            self.turn_off_handler = arduino.BOARD.set_digital_out_low
+            self.turn_on_handler = board.set_digital_out_high
+            self.turn_off_handler = board.set_digital_out_low
 
-        arduino.BOARD.set_mode(self._pin, self.direction, self.pin_type)
+        board.set_mode(self._pin, self.direction, self.pin_type)
         (self.turn_on_handler if self._state else self.turn_off_handler)(pin)
 
     @property

@@ -1,19 +1,17 @@
 """Config flow to configure Z-Wave."""
+# pylint: disable=import-outside-toplevel
 from collections import OrderedDict
-import logging
 
 import voluptuous as vol
 
 from homeassistant import config_entries
 
 from .const import (
-    CONF_USB_STICK_PATH,
     CONF_NETWORK_KEY,
+    CONF_USB_STICK_PATH,
     DEFAULT_CONF_USB_STICK_PATH,
     DOMAIN,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -30,7 +28,7 @@ class ZwaveFlowHandler(config_entries.ConfigFlow):
     async def async_step_user(self, user_input=None):
         """Handle a flow start."""
         if self._async_current_entries():
-            return self.async_abort(reason="one_instance_only")
+            return self.async_abort(reason="single_instance_allowed")
 
         errors = {}
 
@@ -42,14 +40,13 @@ class ZwaveFlowHandler(config_entries.ConfigFlow):
 
         if user_input is not None:
             # Check if USB path is valid
-            from openzwave.option import ZWaveOption
             from openzwave.object import ZWaveException
+            from openzwave.option import ZWaveOption
 
             try:
                 from functools import partial
 
-                # pylint: disable=unused-variable
-                option = await self.hass.async_add_executor_job(  # noqa: F841
+                option = await self.hass.async_add_executor_job(  # noqa: F841 pylint: disable=unused-variable
                     partial(
                         ZWaveOption,
                         user_input[CONF_USB_STICK_PATH],
@@ -66,7 +63,7 @@ class ZwaveFlowHandler(config_entries.ConfigFlow):
                 # Generate a random key
                 from random import choice
 
-                key = str()
+                key = ""
                 for i in range(16):
                     key += "0x"
                     key += choice("1234567890ABCDEF")

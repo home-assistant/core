@@ -1,12 +1,14 @@
-"""Tests the HASS workday binary sensor."""
+"""Tests the Home Assistant workday binary sensor."""
 from datetime import date
 from unittest.mock import patch
 
-from homeassistant.components.workday.binary_sensor import day_to_string
+import pytest
+import voluptuous as vol
+
+import homeassistant.components.workday.binary_sensor as binary_sensor
 from homeassistant.setup import setup_component
 
-from tests.common import get_test_home_assistant, assert_setup_component
-
+from tests.common import assert_setup_component, get_test_home_assistant
 
 FUNCTION_PATH = "homeassistant.components.workday.binary_sensor.get_date"
 
@@ -53,6 +55,36 @@ class TestWorkdaySetup:
             }
         }
 
+        self.config_example1 = {
+            "binary_sensor": {
+                "platform": "workday",
+                "country": "US",
+                "workdays": ["mon", "tue", "wed", "thu", "fri"],
+                "excludes": ["sat", "sun"],
+            }
+        }
+
+        self.config_example2 = {
+            "binary_sensor": {
+                "platform": "workday",
+                "country": "DE",
+                "province": "BW",
+                "workdays": ["mon", "wed", "fri"],
+                "excludes": ["sat", "sun", "holiday"],
+                "add_holidays": ["2020-02-24"],
+            }
+        }
+
+        self.config_remove_holidays = {
+            "binary_sensor": {
+                "platform": "workday",
+                "country": "US",
+                "workdays": ["mon", "tue", "wed", "thu", "fri"],
+                "excludes": ["sat", "sun", "holiday"],
+                "remove_holidays": ["2020-12-25", "2020-11-26"],
+            }
+        }
+
         self.config_tomorrow = {
             "binary_sensor": {"platform": "workday", "country": "DE", "days_offset": 1}
         }
@@ -69,10 +101,25 @@ class TestWorkdaySetup:
         """Stop everything that was started."""
         self.hass.stop()
 
+    def test_valid_country(self):
+        """Test topic name/filter validation."""
+        # Invalid UTF-8, must not contain U+D800 to U+DFFF
+        with pytest.raises(vol.Invalid):
+            binary_sensor.valid_country("\ud800")
+        with pytest.raises(vol.Invalid):
+            binary_sensor.valid_country("\udfff")
+        # Country MUST NOT be empty
+        with pytest.raises(vol.Invalid):
+            binary_sensor.valid_country("")
+        # Country must be supported by holidays
+        with pytest.raises(vol.Invalid):
+            binary_sensor.valid_country("HomeAssistantLand")
+
     def test_setup_component_province(self):
         """Set up workday component."""
         with assert_setup_component(1, "binary_sensor"):
             setup_component(self.hass, "binary_sensor", self.config_province)
+            self.hass.block_till_done()
 
         entity = self.hass.states.get("binary_sensor.workday_sensor")
         assert entity is not None
@@ -83,6 +130,7 @@ class TestWorkdaySetup:
         """Test if workdays are reported correctly."""
         with assert_setup_component(1, "binary_sensor"):
             setup_component(self.hass, "binary_sensor", self.config_province)
+            self.hass.block_till_done()
 
         self.hass.start()
 
@@ -95,6 +143,7 @@ class TestWorkdaySetup:
         """Test if weekends are reported correctly."""
         with assert_setup_component(1, "binary_sensor"):
             setup_component(self.hass, "binary_sensor", self.config_province)
+            self.hass.block_till_done()
 
         self.hass.start()
 
@@ -107,6 +156,7 @@ class TestWorkdaySetup:
         """Test if public holidays are reported correctly."""
         with assert_setup_component(1, "binary_sensor"):
             setup_component(self.hass, "binary_sensor", self.config_province)
+            self.hass.block_till_done()
 
         self.hass.start()
 
@@ -117,6 +167,7 @@ class TestWorkdaySetup:
         """Set up workday component."""
         with assert_setup_component(1, "binary_sensor"):
             setup_component(self.hass, "binary_sensor", self.config_noprovince)
+            self.hass.block_till_done()
 
         entity = self.hass.states.get("binary_sensor.workday_sensor")
         assert entity is not None
@@ -127,6 +178,7 @@ class TestWorkdaySetup:
         """Test if public holidays are reported correctly."""
         with assert_setup_component(1, "binary_sensor"):
             setup_component(self.hass, "binary_sensor", self.config_noprovince)
+            self.hass.block_till_done()
 
         self.hass.start()
 
@@ -213,9 +265,58 @@ class TestWorkdaySetup:
         entity = self.hass.states.get("binary_sensor.workday_sensor")
         assert entity.state == "on"
 
+    # Freeze time to a Presidents day to test Holiday on a Work day - Jan 20th, 2020
+    #   Presidents day Feb 17th 2020 is mon.
+    @patch(FUNCTION_PATH, return_value=date(2020, 2, 17))
+    def test_config_example1_holiday(self, mock_date):
+        """Test if public holidays are reported correctly."""
+        with assert_setup_component(1, "binary_sensor"):
+            setup_component(self.hass, "binary_sensor", self.config_example1)
+
+        self.hass.start()
+
+        entity = self.hass.states.get("binary_sensor.workday_sensor")
+        assert entity.state == "on"
+
+    # Freeze time to test tue - Feb 18th, 2020
+    @patch(FUNCTION_PATH, return_value=date(2020, 2, 18))
+    def test_config_example2_tue(self, mock_date):
+        """Test if public holidays are reported correctly."""
+        with assert_setup_component(1, "binary_sensor"):
+            setup_component(self.hass, "binary_sensor", self.config_example2)
+
+        self.hass.start()
+
+        entity = self.hass.states.get("binary_sensor.workday_sensor")
+        assert entity.state == "off"
+
+    # Freeze time to test mon, but added as holiday - Feb 24th, 2020
+    @patch(FUNCTION_PATH, return_value=date(2020, 2, 24))
+    def test_config_example2_add_holiday(self, mock_date):
+        """Test if public holidays are reported correctly."""
+        with assert_setup_component(1, "binary_sensor"):
+            setup_component(self.hass, "binary_sensor", self.config_example2)
+
+        self.hass.start()
+
+        entity = self.hass.states.get("binary_sensor.workday_sensor")
+        assert entity.state == "off"
+
     def test_day_to_string(self):
         """Test if day_to_string is behaving correctly."""
-        assert day_to_string(0) == "mon"
-        assert day_to_string(1) == "tue"
-        assert day_to_string(7) == "holiday"
-        assert day_to_string(8) is None
+        assert binary_sensor.day_to_string(0) == "mon"
+        assert binary_sensor.day_to_string(1) == "tue"
+        assert binary_sensor.day_to_string(7) == "holiday"
+        assert binary_sensor.day_to_string(8) is None
+
+    # Freeze time to test Fri, but remove holiday - December 25, 2020
+    @patch(FUNCTION_PATH, return_value=date(2020, 12, 25))
+    def test_config_remove_holidays_xmas(self, mock_date):
+        """Test if removed holidays are reported correctly."""
+        with assert_setup_component(1, "binary_sensor"):
+            setup_component(self.hass, "binary_sensor", self.config_remove_holidays)
+
+        self.hass.start()
+
+        entity = self.hass.states.get("binary_sensor.workday_sensor")
+        assert entity.state == "on"

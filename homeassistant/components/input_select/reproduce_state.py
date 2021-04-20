@@ -1,19 +1,21 @@
 """Reproduce an Input select state."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Iterable
 import logging
 from types import MappingProxyType
-from typing import Iterable, Optional
+from typing import Any
 
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import Context, State
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import Context, HomeAssistant, State
 
 from . import (
+    ATTR_OPTION,
+    ATTR_OPTIONS,
     DOMAIN,
     SERVICE_SELECT_OPTION,
     SERVICE_SET_OPTIONS,
-    ATTR_OPTION,
-    ATTR_OPTIONS,
 )
 
 ATTR_GROUP = [ATTR_OPTION, ATTR_OPTIONS]
@@ -22,7 +24,11 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def _async_reproduce_state(
-    hass: HomeAssistantType, state: State, context: Optional[Context] = None
+    hass: HomeAssistant,
+    state: State,
+    *,
+    context: Context | None = None,
+    reproduce_options: dict[str, Any] | None = None,
 ) -> None:
     """Reproduce a single state."""
     cur_state = hass.states.get(state.entity_id)
@@ -64,12 +70,21 @@ async def _async_reproduce_state(
 
 
 async def async_reproduce_states(
-    hass: HomeAssistantType, states: Iterable[State], context: Optional[Context] = None
+    hass: HomeAssistant,
+    states: Iterable[State],
+    *,
+    context: Context | None = None,
+    reproduce_options: dict[str, Any] | None = None,
 ) -> None:
     """Reproduce Input select states."""
     # Reproduce states in parallel.
     await asyncio.gather(
-        *(_async_reproduce_state(hass, state, context) for state in states)
+        *(
+            _async_reproduce_state(
+                hass, state, context=context, reproduce_options=reproduce_options
+            )
+            for state in states
+        )
     )
 
 

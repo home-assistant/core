@@ -1,0 +1,42 @@
+{
+    "options": {
+        "error": {
+            "cannot_connect": "Falha na conex\u00e3o com o modem Insteon, por favor tente novamente.",
+            "input_error": "Entradas inv\u00e1lidas, por favor, verifique seus valores.",
+            "select_single": "Selecione uma op\u00e7\u00e3o."
+        },
+        "step": {
+            "add_override": {
+                "data": {
+                    "address": "Endere\u00e7o do dispositivo (ou seja, 1a2b3c)",
+                    "cat": "Subcategoria de dispositivo (ou seja, 0x0a)",
+                    "subcat": "Subcategoria de dispositivo (ou seja, 0x0a)"
+                },
+                "description": "Escolha um dispositivo para sobrescrever"
+            },
+            "add_x10": {
+                "data": {
+                    "platform": "Plataforma",
+                    "steps": "Etapas de dimmer (apenas para dispositivos de lux, padr\u00e3o 22)"
+                },
+                "description": "Altere a senha do Insteon Hub."
+            },
+            "change_hub_config": {
+                "data": {
+                    "password": "Nova Senha",
+                    "port": "Novo n\u00famero da porta",
+                    "username": "Novo usu\u00e1rio"
+                }
+            },
+            "init": {
+                "data": {
+                    "add_x10": "Adicionar um dispositivo X10"
+                }
+            },
+            "remove_x10": {
+                "description": "Remover um dispositivo X10",
+                "title": "Insteon"
+            }
+        }
+    }
+}

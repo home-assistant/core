@@ -1,16 +1,16 @@
 """Support for VELUX KLF 200 devices."""
 import logging
-import voluptuous as vol
-from pyvlx import PyVLX
-from pyvlx import PyVLXException
 
+from pyvlx import PyVLX, PyVLXException
+import voluptuous as vol
+
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 
 DOMAIN = "velux"
 DATA_VELUX = "data_velux"
-SUPPORTED_DOMAINS = ["cover", "scene"]
+PLATFORMS = ["cover", "scene"]
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
@@ -34,9 +34,9 @@ async def async_setup(hass, config):
         _LOGGER.exception("Can't connect to velux interface: %s", ex)
         return False
 
-    for component in SUPPORTED_DOMAINS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            discovery.async_load_platform(hass, component, DOMAIN, {}, config)
+            discovery.async_load_platform(hass, platform, DOMAIN, {}, config)
         )
     return True
 
@@ -58,10 +58,17 @@ class VeluxModule:
             _LOGGER.debug("Velux interface terminated")
             await self.pyvlx.disconnect()
 
+        async def async_reboot_gateway(service_call):
+            await self.pyvlx.reboot_gateway()
+
         self._hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
         host = self._domain_config.get(CONF_HOST)
         password = self._domain_config.get(CONF_PASSWORD)
         self.pyvlx = PyVLX(host=host, password=password)
+
+        self._hass.services.async_register(
+            DOMAIN, "reboot_gateway", async_reboot_gateway
+        )
 
     async def async_start(self):
         """Start velux component."""

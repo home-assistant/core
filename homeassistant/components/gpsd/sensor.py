@@ -1,18 +1,19 @@
 """Support for GPSD."""
 import logging
+import socket
 
+from gps3.agps3threaded import AGPS3mechanism
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     ATTR_MODE,
     CONF_HOST,
-    CONF_PORT,
     CONF_NAME,
+    CONF_PORT,
 )
-from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,27 +51,24 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # except GPSError:
     #     _LOGGER.warning('Not able to connect to GPSD')
     #     return False
-    import socket
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         sock.connect((host, port))
         sock.shutdown(2)
         _LOGGER.debug("Connection to GPSD possible")
-    except socket.error:
+    except OSError:
         _LOGGER.error("Not able to connect to GPSD")
         return False
 
     add_entities([GpsdSensor(hass, name, host, port)])
 
 
-class GpsdSensor(Entity):
+class GpsdSensor(SensorEntity):
     """Representation of a GPS receiver available via GPSD."""
 
     def __init__(self, hass, name, host, port):
         """Initialize the GPSD sensor."""
-        from gps3.agps3threaded import AGPS3mechanism
-
         self.hass = hass
         self._name = name
         self._host = host
@@ -95,7 +93,7 @@ class GpsdSensor(Entity):
         return None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the GPS."""
         return {
             ATTR_LATITUDE: self.agps_thread.data_stream.lat,

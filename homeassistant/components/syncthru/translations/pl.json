@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
+        },
+        "error": {
+            "invalid_url": "Nieprawid\u0142owy URL",
+            "syncthru_not_supported": "Urz\u0105dzenie nie obs\u0142uguje SyncThru",
+            "unknown_state": "Nieznany stan drukarki, sprawd\u017a adres URL i pod\u0142\u0105czenie do sieci"
+        },
+        "flow_title": "Drukarka Samsung SyncThru: {name}",
+        "step": {
+            "confirm": {
+                "data": {
+                    "name": "Nazwa",
+                    "url": "URL interfejsu internetowego"
+                }
+            },
+            "user": {
+                "data": {
+                    "name": "Nazwa",
+                    "url": "URL interfejsu internetowego"
+                }
+            }
+        }
+    }
+}

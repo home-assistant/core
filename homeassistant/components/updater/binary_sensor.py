@@ -1,26 +1,21 @@
 """Support for Home Assistant Updater binary sensors."""
 
-from homeassistant.core import callback
-from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import ATTR_NEWEST_VERSION, ATTR_RELEASE_NOTES, DISPATCHER_REMOTE_UPDATE, Updater
+from . import ATTR_NEWEST_VERSION, ATTR_RELEASE_NOTES, DOMAIN as UPDATER_DOMAIN
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the updater binary sensors."""
-    async_add_entities([UpdaterBinary()])
+    if discovery_info is None:
+        return
+
+    async_add_entities([UpdaterBinary(hass.data[UPDATER_DOMAIN])])
 
 
-class UpdaterBinary(BinarySensorDevice):
+class UpdaterBinary(CoordinatorEntity, BinarySensorEntity):
     """Representation of an updater binary sensor."""
-
-    def __init__(self):
-        """Initialize the binary sensor."""
-        self._update_available = None
-        self._release_notes = None
-        self._newest_version = None
-        self._unsub_dispatcher = None
 
     @property
     def name(self) -> str:
@@ -35,47 +30,18 @@ class UpdaterBinary(BinarySensorDevice):
     @property
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
-        return self._update_available
+        if not self.coordinator.data:
+            return None
+        return self.coordinator.data.update_available
 
     @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._update_available is not None
-
-    @property
-    def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state."""
-        return False
-
-    @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return the optional state attributes."""
-        data = super().device_state_attributes
-        if data is None:
-            data = {}
-        if self._release_notes:
-            data[ATTR_RELEASE_NOTES] = self._release_notes
-        if self._newest_version:
-            data[ATTR_NEWEST_VERSION] = self._newest_version
+        if not self.coordinator.data:
+            return None
+        data = {}
+        if self.coordinator.data.release_notes:
+            data[ATTR_RELEASE_NOTES] = self.coordinator.data.release_notes
+        if self.coordinator.data.newest_version:
+            data[ATTR_NEWEST_VERSION] = self.coordinator.data.newest_version
         return data
-
-    async def async_added_to_hass(self):
-        """Register update dispatcher."""
-
-        @callback
-        def async_state_update(updater: Updater):
-            """Update callback."""
-            self._newest_version = updater.newest_version
-            self._release_notes = updater.release_notes
-            self._update_available = updater.update_available
-            self.async_schedule_update_ha_state()
-
-        self._unsub_dispatcher = async_dispatcher_connect(
-            self.hass, DISPATCHER_REMOTE_UPDATE, async_state_update
-        )
-
-    async def async_will_remove_from_hass(self):
-        """Register update dispatcher."""
-        if self._unsub_dispatcher is not None:
-            self._unsub_dispatcher()
-            self._unsub_dispatcher = None

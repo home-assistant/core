@@ -1,448 +1,39 @@
 """The tests for the  Template switch platform."""
-from homeassistant.core import callback
+
+import pytest
+
 from homeassistant import setup
-from homeassistant.const import STATE_ON, STATE_OFF, STATE_UNAVAILABLE
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
+from homeassistant.core import CoreState, State
+from homeassistant.setup import async_setup_component
 
-from tests.common import get_test_home_assistant, assert_setup_component
-from tests.components.switch import common
+from tests.common import (
+    assert_setup_component,
+    async_mock_service,
+    mock_component,
+    mock_restore_cache,
+)
 
 
-class TestTemplateSwitch:
-    """Test the Template switch."""
+@pytest.fixture
+def calls(hass):
+    """Track calls to a mock service."""
+    return async_mock_service(hass, "test", "automation")
 
-    hass = None
-    calls = None
-    # pylint: disable=invalid-name
 
-    def setup_method(self, method):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self.calls = []
-
-        @callback
-        def record_call(service):
-            """Track function calls.."""
-            self.calls.append(service)
-
-        self.hass.services.register("test", "automation", record_call)
-
-    def teardown_method(self, method):
-        """Stop everything that was started."""
-        self.hass.stop()
-
-    def test_template_state_text(self):
-        """Test the state text of a template."""
-        with assert_setup_component(1, "switch"):
-            assert setup.setup_component(
-                self.hass,
-                "switch",
-                {
-                    "switch": {
-                        "platform": "template",
-                        "switches": {
-                            "test_template_switch": {
-                                "value_template": "{{ states.switch.test_state.state }}",
-                                "turn_on": {
-                                    "service": "switch.turn_on",
-                                    "entity_id": "switch.test_state",
-                                },
-                                "turn_off": {
-                                    "service": "switch.turn_off",
-                                    "entity_id": "switch.test_state",
-                                },
-                            }
-                        },
-                    }
-                },
-            )
-
-        self.hass.start()
-        self.hass.block_till_done()
-
-        state = self.hass.states.set("switch.test_state", STATE_ON)
-        self.hass.block_till_done()
-
-        state = self.hass.states.get("switch.test_template_switch")
-        assert state.state == STATE_ON
-
-        state = self.hass.states.set("switch.test_state", STATE_OFF)
-        self.hass.block_till_done()
-
-        state = self.hass.states.get("switch.test_template_switch")
-        assert state.state == STATE_OFF
-
-    def test_template_state_boolean_on(self):
-        """Test the setting of the state with boolean on."""
-        with assert_setup_component(1, "switch"):
-            assert setup.setup_component(
-                self.hass,
-                "switch",
-                {
-                    "switch": {
-                        "platform": "template",
-                        "switches": {
-                            "test_template_switch": {
-                                "value_template": "{{ 1 == 1 }}",
-                                "turn_on": {
-                                    "service": "switch.turn_on",
-                                    "entity_id": "switch.test_state",
-                                },
-                                "turn_off": {
-                                    "service": "switch.turn_off",
-                                    "entity_id": "switch.test_state",
-                                },
-                            }
-                        },
-                    }
-                },
-            )
-
-        self.hass.start()
-        self.hass.block_till_done()
-
-        state = self.hass.states.get("switch.test_template_switch")
-        assert state.state == STATE_ON
-
-    def test_template_state_boolean_off(self):
-        """Test the setting of the state with off."""
-        with assert_setup_component(1, "switch"):
-            assert setup.setup_component(
-                self.hass,
-                "switch",
-                {
-                    "switch": {
-                        "platform": "template",
-                        "switches": {
-                            "test_template_switch": {
-                                "value_template": "{{ 1 == 2 }}",
-                                "turn_on": {
-                                    "service": "switch.turn_on",
-                                    "entity_id": "switch.test_state",
-                                },
-                                "turn_off": {
-                                    "service": "switch.turn_off",
-                                    "entity_id": "switch.test_state",
-                                },
-                            }
-                        },
-                    }
-                },
-            )
-
-        self.hass.start()
-        self.hass.block_till_done()
-
-        state = self.hass.states.get("switch.test_template_switch")
-        assert state.state == STATE_OFF
-
-    def test_icon_template(self):
-        """Test icon template."""
-        with assert_setup_component(1, "switch"):
-            assert setup.setup_component(
-                self.hass,
-                "switch",
-                {
-                    "switch": {
-                        "platform": "template",
-                        "switches": {
-                            "test_template_switch": {
-                                "value_template": "{{ states.switch.test_state.state }}",
-                                "turn_on": {
-                                    "service": "switch.turn_on",
-                                    "entity_id": "switch.test_state",
-                                },
-                                "turn_off": {
-                                    "service": "switch.turn_off",
-                                    "entity_id": "switch.test_state",
-                                },
-                                "icon_template": "{% if states.switch.test_state.state %}"
-                                "mdi:check"
-                                "{% endif %}",
-                            }
-                        },
-                    }
-                },
-            )
-
-        self.hass.start()
-        self.hass.block_till_done()
-
-        state = self.hass.states.get("switch.test_template_switch")
-        assert state.attributes.get("icon") == ""
-
-        state = self.hass.states.set("switch.test_state", STATE_ON)
-        self.hass.block_till_done()
-
-        state = self.hass.states.get("switch.test_template_switch")
-        assert state.attributes["icon"] == "mdi:check"
-
-    def test_entity_picture_template(self):
-        """Test entity_picture template."""
-        with assert_setup_component(1, "switch"):
-            assert setup.setup_component(
-                self.hass,
-                "switch",
-                {
-                    "switch": {
-                        "platform": "template",
-                        "switches": {
-                            "test_template_switch": {
-                                "value_template": "{{ states.switch.test_state.state }}",
-                                "turn_on": {
-                                    "service": "switch.turn_on",
-                                    "entity_id": "switch.test_state",
-                                },
-                                "turn_off": {
-                                    "service": "switch.turn_off",
-                                    "entity_id": "switch.test_state",
-                                },
-                                "entity_picture_template": "{% if states.switch.test_state.state %}"
-                                "/local/switch.png"
-                                "{% endif %}",
-                            }
-                        },
-                    }
-                },
-            )
-
-        self.hass.start()
-        self.hass.block_till_done()
-
-        state = self.hass.states.get("switch.test_template_switch")
-        assert state.attributes.get("entity_picture") == ""
-
-        state = self.hass.states.set("switch.test_state", STATE_ON)
-        self.hass.block_till_done()
-
-        state = self.hass.states.get("switch.test_template_switch")
-        assert state.attributes["entity_picture"] == "/local/switch.png"
-
-    def test_template_syntax_error(self):
-        """Test templating syntax error."""
-        with assert_setup_component(0, "switch"):
-            assert setup.setup_component(
-                self.hass,
-                "switch",
-                {
-                    "switch": {
-                        "platform": "template",
-                        "switches": {
-                            "test_template_switch": {
-                                "value_template": "{% if rubbish %}",
-                                "turn_on": {
-                                    "service": "switch.turn_on",
-                                    "entity_id": "switch.test_state",
-                                },
-                                "turn_off": {
-                                    "service": "switch.turn_off",
-                                    "entity_id": "switch.test_state",
-                                },
-                            }
-                        },
-                    }
-                },
-            )
-
-        self.hass.start()
-        self.hass.block_till_done()
-
-        assert self.hass.states.all() == []
-
-    def test_invalid_name_does_not_create(self):
-        """Test invalid name."""
-        with assert_setup_component(0, "switch"):
-            assert setup.setup_component(
-                self.hass,
-                "switch",
-                {
-                    "switch": {
-                        "platform": "template",
-                        "switches": {
-                            "test INVALID switch": {
-                                "value_template": "{{ rubbish }",
-                                "turn_on": {
-                                    "service": "switch.turn_on",
-                                    "entity_id": "switch.test_state",
-                                },
-                                "turn_off": {
-                                    "service": "switch.turn_off",
-                                    "entity_id": "switch.test_state",
-                                },
-                            }
-                        },
-                    }
-                },
-            )
-
-        self.hass.start()
-        self.hass.block_till_done()
-
-        assert self.hass.states.all() == []
-
-    def test_invalid_switch_does_not_create(self):
-        """Test invalid switch."""
-        with assert_setup_component(0, "switch"):
-            assert setup.setup_component(
-                self.hass,
-                "switch",
-                {
-                    "switch": {
-                        "platform": "template",
-                        "switches": {"test_template_switch": "Invalid"},
-                    }
-                },
-            )
-
-        self.hass.start()
-        self.hass.block_till_done()
-
-        assert self.hass.states.all() == []
-
-    def test_no_switches_does_not_create(self):
-        """Test if there are no switches no creation."""
-        with assert_setup_component(0, "switch"):
-            assert setup.setup_component(
-                self.hass, "switch", {"switch": {"platform": "template"}}
-            )
-
-        self.hass.start()
-        self.hass.block_till_done()
-
-        assert self.hass.states.all() == []
-
-    def test_missing_template_does_not_create(self):
-        """Test missing template."""
-        with assert_setup_component(0, "switch"):
-            assert setup.setup_component(
-                self.hass,
-                "switch",
-                {
-                    "switch": {
-                        "platform": "template",
-                        "switches": {
-                            "test_template_switch": {
-                                "not_value_template": "{{ states.switch.test_state.state }}",
-                                "turn_on": {
-                                    "service": "switch.turn_on",
-                                    "entity_id": "switch.test_state",
-                                },
-                                "turn_off": {
-                                    "service": "switch.turn_off",
-                                    "entity_id": "switch.test_state",
-                                },
-                            }
-                        },
-                    }
-                },
-            )
-
-        self.hass.start()
-        self.hass.block_till_done()
-
-        assert self.hass.states.all() == []
-
-    def test_missing_on_does_not_create(self):
-        """Test missing on."""
-        with assert_setup_component(0, "switch"):
-            assert setup.setup_component(
-                self.hass,
-                "switch",
-                {
-                    "switch": {
-                        "platform": "template",
-                        "switches": {
-                            "test_template_switch": {
-                                "value_template": "{{ states.switch.test_state.state }}",
-                                "not_on": {
-                                    "service": "switch.turn_on",
-                                    "entity_id": "switch.test_state",
-                                },
-                                "turn_off": {
-                                    "service": "switch.turn_off",
-                                    "entity_id": "switch.test_state",
-                                },
-                            }
-                        },
-                    }
-                },
-            )
-
-        self.hass.start()
-        self.hass.block_till_done()
-
-        assert self.hass.states.all() == []
-
-    def test_missing_off_does_not_create(self):
-        """Test missing off."""
-        with assert_setup_component(0, "switch"):
-            assert setup.setup_component(
-                self.hass,
-                "switch",
-                {
-                    "switch": {
-                        "platform": "template",
-                        "switches": {
-                            "test_template_switch": {
-                                "value_template": "{{ states.switch.test_state.state }}",
-                                "turn_on": {
-                                    "service": "switch.turn_on",
-                                    "entity_id": "switch.test_state",
-                                },
-                                "not_off": {
-                                    "service": "switch.turn_off",
-                                    "entity_id": "switch.test_state",
-                                },
-                            }
-                        },
-                    }
-                },
-            )
-
-        self.hass.start()
-        self.hass.block_till_done()
-
-        assert self.hass.states.all() == []
-
-    def test_on_action(self):
-        """Test on action."""
-        assert setup.setup_component(
-            self.hass,
-            "switch",
-            {
-                "switch": {
-                    "platform": "template",
-                    "switches": {
-                        "test_template_switch": {
-                            "value_template": "{{ states.switch.test_state.state }}",
-                            "turn_on": {"service": "test.automation"},
-                            "turn_off": {
-                                "service": "switch.turn_off",
-                                "entity_id": "switch.test_state",
-                            },
-                        }
-                    },
-                }
-            },
-        )
-
-        self.hass.start()
-        self.hass.block_till_done()
-
-        self.hass.states.set("switch.test_state", STATE_OFF)
-        self.hass.block_till_done()
-
-        state = self.hass.states.get("switch.test_template_switch")
-        assert state.state == STATE_OFF
-
-        common.turn_on(self.hass, "switch.test_template_switch")
-        self.hass.block_till_done()
-
-        assert len(self.calls) == 1
-
-    def test_off_action(self):
-        """Test off action."""
-        assert setup.setup_component(
-            self.hass,
+async def test_template_state_text(hass):
+    """Test the state text of a template."""
+    with assert_setup_component(1, "switch"):
+        assert await async_setup_component(
+            hass,
             "switch",
             {
                 "switch": {
@@ -454,26 +45,563 @@ class TestTemplateSwitch:
                                 "service": "switch.turn_on",
                                 "entity_id": "switch.test_state",
                             },
-                            "turn_off": {"service": "test.automation"},
+                            "turn_off": {
+                                "service": "switch.turn_off",
+                                "entity_id": "switch.test_state",
+                            },
                         }
                     },
                 }
             },
         )
 
-        self.hass.start()
-        self.hass.block_till_done()
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
 
-        self.hass.states.set("switch.test_state", STATE_ON)
-        self.hass.block_till_done()
+    hass.states.async_set("switch.test_state", STATE_ON)
+    await hass.async_block_till_done()
 
-        state = self.hass.states.get("switch.test_template_switch")
-        assert state.state == STATE_ON
+    state = hass.states.get("switch.test_template_switch")
+    assert state.state == STATE_ON
 
-        common.turn_off(self.hass, "switch.test_template_switch")
-        self.hass.block_till_done()
+    hass.states.async_set("switch.test_state", STATE_OFF)
+    await hass.async_block_till_done()
 
-        assert len(self.calls) == 1
+    state = hass.states.get("switch.test_template_switch")
+    assert state.state == STATE_OFF
+
+
+async def test_template_state_boolean_on(hass):
+    """Test the setting of the state with boolean on."""
+    with assert_setup_component(1, "switch"):
+        assert await async_setup_component(
+            hass,
+            "switch",
+            {
+                "switch": {
+                    "platform": "template",
+                    "switches": {
+                        "test_template_switch": {
+                            "value_template": "{{ 1 == 1 }}",
+                            "turn_on": {
+                                "service": "switch.turn_on",
+                                "entity_id": "switch.test_state",
+                            },
+                            "turn_off": {
+                                "service": "switch.turn_off",
+                                "entity_id": "switch.test_state",
+                            },
+                        }
+                    },
+                }
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.test_template_switch")
+    assert state.state == STATE_ON
+
+
+async def test_template_state_boolean_off(hass):
+    """Test the setting of the state with off."""
+    with assert_setup_component(1, "switch"):
+        assert await async_setup_component(
+            hass,
+            "switch",
+            {
+                "switch": {
+                    "platform": "template",
+                    "switches": {
+                        "test_template_switch": {
+                            "value_template": "{{ 1 == 2 }}",
+                            "turn_on": {
+                                "service": "switch.turn_on",
+                                "entity_id": "switch.test_state",
+                            },
+                            "turn_off": {
+                                "service": "switch.turn_off",
+                                "entity_id": "switch.test_state",
+                            },
+                        }
+                    },
+                }
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.test_template_switch")
+    assert state.state == STATE_OFF
+
+
+async def test_icon_template(hass):
+    """Test icon template."""
+    with assert_setup_component(1, "switch"):
+        assert await async_setup_component(
+            hass,
+            "switch",
+            {
+                "switch": {
+                    "platform": "template",
+                    "switches": {
+                        "test_template_switch": {
+                            "value_template": "{{ states.switch.test_state.state }}",
+                            "turn_on": {
+                                "service": "switch.turn_on",
+                                "entity_id": "switch.test_state",
+                            },
+                            "turn_off": {
+                                "service": "switch.turn_off",
+                                "entity_id": "switch.test_state",
+                            },
+                            "icon_template": "{% if states.switch.test_state.state %}"
+                            "mdi:check"
+                            "{% endif %}",
+                        }
+                    },
+                }
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.test_template_switch")
+    assert state.attributes.get("icon") == ""
+
+    hass.states.async_set("switch.test_state", STATE_ON)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.test_template_switch")
+    assert state.attributes["icon"] == "mdi:check"
+
+
+async def test_entity_picture_template(hass):
+    """Test entity_picture template."""
+    with assert_setup_component(1, "switch"):
+        assert await async_setup_component(
+            hass,
+            "switch",
+            {
+                "switch": {
+                    "platform": "template",
+                    "switches": {
+                        "test_template_switch": {
+                            "value_template": "{{ states.switch.test_state.state }}",
+                            "turn_on": {
+                                "service": "switch.turn_on",
+                                "entity_id": "switch.test_state",
+                            },
+                            "turn_off": {
+                                "service": "switch.turn_off",
+                                "entity_id": "switch.test_state",
+                            },
+                            "entity_picture_template": "{% if states.switch.test_state.state %}"
+                            "/local/switch.png"
+                            "{% endif %}",
+                        }
+                    },
+                }
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.test_template_switch")
+    assert state.attributes.get("entity_picture") == ""
+
+    hass.states.async_set("switch.test_state", STATE_ON)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.test_template_switch")
+    assert state.attributes["entity_picture"] == "/local/switch.png"
+
+
+async def test_template_syntax_error(hass):
+    """Test templating syntax error."""
+    with assert_setup_component(0, "switch"):
+        assert await async_setup_component(
+            hass,
+            "switch",
+            {
+                "switch": {
+                    "platform": "template",
+                    "switches": {
+                        "test_template_switch": {
+                            "value_template": "{% if rubbish %}",
+                            "turn_on": {
+                                "service": "switch.turn_on",
+                                "entity_id": "switch.test_state",
+                            },
+                            "turn_off": {
+                                "service": "switch.turn_off",
+                                "entity_id": "switch.test_state",
+                            },
+                        }
+                    },
+                }
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert hass.states.async_all() == []
+
+
+async def test_invalid_name_does_not_create(hass):
+    """Test invalid name."""
+    with assert_setup_component(0, "switch"):
+        assert await async_setup_component(
+            hass,
+            "switch",
+            {
+                "switch": {
+                    "platform": "template",
+                    "switches": {
+                        "test INVALID switch": {
+                            "value_template": "{{ rubbish }",
+                            "turn_on": {
+                                "service": "switch.turn_on",
+                                "entity_id": "switch.test_state",
+                            },
+                            "turn_off": {
+                                "service": "switch.turn_off",
+                                "entity_id": "switch.test_state",
+                            },
+                        }
+                    },
+                }
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert hass.states.async_all() == []
+
+
+async def test_invalid_switch_does_not_create(hass):
+    """Test invalid switch."""
+    with assert_setup_component(0, "switch"):
+        assert await async_setup_component(
+            hass,
+            "switch",
+            {
+                "switch": {
+                    "platform": "template",
+                    "switches": {"test_template_switch": "Invalid"},
+                }
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert hass.states.async_all() == []
+
+
+async def test_no_switches_does_not_create(hass):
+    """Test if there are no switches no creation."""
+    with assert_setup_component(0, "switch"):
+        assert await async_setup_component(
+            hass, "switch", {"switch": {"platform": "template"}}
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert hass.states.async_all() == []
+
+
+async def test_missing_on_does_not_create(hass):
+    """Test missing on."""
+    with assert_setup_component(0, "switch"):
+        assert await async_setup_component(
+            hass,
+            "switch",
+            {
+                "switch": {
+                    "platform": "template",
+                    "switches": {
+                        "test_template_switch": {
+                            "value_template": "{{ states.switch.test_state.state }}",
+                            "not_on": {
+                                "service": "switch.turn_on",
+                                "entity_id": "switch.test_state",
+                            },
+                            "turn_off": {
+                                "service": "switch.turn_off",
+                                "entity_id": "switch.test_state",
+                            },
+                        }
+                    },
+                }
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert hass.states.async_all() == []
+
+
+async def test_missing_off_does_not_create(hass):
+    """Test missing off."""
+    with assert_setup_component(0, "switch"):
+        assert await async_setup_component(
+            hass,
+            "switch",
+            {
+                "switch": {
+                    "platform": "template",
+                    "switches": {
+                        "test_template_switch": {
+                            "value_template": "{{ states.switch.test_state.state }}",
+                            "turn_on": {
+                                "service": "switch.turn_on",
+                                "entity_id": "switch.test_state",
+                            },
+                            "not_off": {
+                                "service": "switch.turn_off",
+                                "entity_id": "switch.test_state",
+                            },
+                        }
+                    },
+                }
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert hass.states.async_all() == []
+
+
+async def test_on_action(hass, calls):
+    """Test on action."""
+    assert await async_setup_component(
+        hass,
+        "switch",
+        {
+            "switch": {
+                "platform": "template",
+                "switches": {
+                    "test_template_switch": {
+                        "value_template": "{{ states.switch.test_state.state }}",
+                        "turn_on": {"service": "test.automation"},
+                        "turn_off": {
+                            "service": "switch.turn_off",
+                            "entity_id": "switch.test_state",
+                        },
+                    }
+                },
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    hass.states.async_set("switch.test_state", STATE_OFF)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.test_template_switch")
+    assert state.state == STATE_OFF
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.test_template_switch"},
+        blocking=True,
+    )
+
+    assert len(calls) == 1
+
+
+async def test_on_action_optimistic(hass, calls):
+    """Test on action in optimistic mode."""
+    assert await async_setup_component(
+        hass,
+        "switch",
+        {
+            "switch": {
+                "platform": "template",
+                "switches": {
+                    "test_template_switch": {
+                        "turn_on": {"service": "test.automation"},
+                        "turn_off": {
+                            "service": "switch.turn_off",
+                            "entity_id": "switch.test_state",
+                        },
+                    }
+                },
+            }
+        },
+    )
+
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    hass.states.async_set("switch.test_template_switch", STATE_OFF)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.test_template_switch")
+    assert state.state == STATE_OFF
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.test_template_switch"},
+        blocking=True,
+    )
+
+    state = hass.states.get("switch.test_template_switch")
+    assert len(calls) == 1
+    assert state.state == STATE_ON
+
+
+async def test_off_action(hass, calls):
+    """Test off action."""
+    assert await async_setup_component(
+        hass,
+        "switch",
+        {
+            "switch": {
+                "platform": "template",
+                "switches": {
+                    "test_template_switch": {
+                        "value_template": "{{ states.switch.test_state.state }}",
+                        "turn_on": {
+                            "service": "switch.turn_on",
+                            "entity_id": "switch.test_state",
+                        },
+                        "turn_off": {"service": "test.automation"},
+                    }
+                },
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    hass.states.async_set("switch.test_state", STATE_ON)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.test_template_switch")
+    assert state.state == STATE_ON
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.test_template_switch"},
+        blocking=True,
+    )
+
+    assert len(calls) == 1
+
+
+async def test_off_action_optimistic(hass, calls):
+    """Test off action in optimistic mode."""
+    assert await async_setup_component(
+        hass,
+        "switch",
+        {
+            "switch": {
+                "platform": "template",
+                "switches": {
+                    "test_template_switch": {
+                        "turn_off": {"service": "test.automation"},
+                        "turn_on": {
+                            "service": "switch.turn_on",
+                            "entity_id": "switch.test_state",
+                        },
+                    }
+                },
+            }
+        },
+    )
+
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    hass.states.async_set("switch.test_template_switch", STATE_ON)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.test_template_switch")
+    assert state.state == STATE_ON
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.test_template_switch"},
+        blocking=True,
+    )
+
+    state = hass.states.get("switch.test_template_switch")
+    assert len(calls) == 1
+    assert state.state == STATE_OFF
+
+
+async def test_restore_state(hass):
+    """Test state restoration."""
+    mock_restore_cache(
+        hass,
+        (
+            State("switch.s1", STATE_ON),
+            State("switch.s2", STATE_OFF),
+        ),
+    )
+
+    hass.state = CoreState.starting
+    mock_component(hass, "recorder")
+
+    await async_setup_component(
+        hass,
+        "switch",
+        {
+            "switch": {
+                "platform": "template",
+                "switches": {
+                    "s1": {
+                        "turn_on": {"service": "test.automation"},
+                        "turn_off": {"service": "test.automation"},
+                    },
+                    "s2": {
+                        "turn_on": {"service": "test.automation"},
+                        "turn_off": {"service": "test.automation"},
+                    },
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.s1")
+    assert state
+    assert state.state == STATE_ON
+
+    state = hass.states.get("switch.s2")
+    assert state
+    assert state.state == STATE_OFF
 
 
 async def test_available_template_with_entities(hass):
@@ -502,6 +630,7 @@ async def test_available_template_with_entities(hass):
         },
     )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -542,8 +671,54 @@ async def test_invalid_availability_template_keeps_component_available(hass, cap
         },
     )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
     assert hass.states.get("switch.test_template_switch").state != STATE_UNAVAILABLE
     assert ("UndefinedError: 'x' is undefined") in caplog.text
+
+
+async def test_unique_id(hass):
+    """Test unique_id option only creates one switch per id."""
+    await setup.async_setup_component(
+        hass,
+        "switch",
+        {
+            "switch": {
+                "platform": "template",
+                "switches": {
+                    "test_template_switch_01": {
+                        "unique_id": "not-so-unique-anymore",
+                        "value_template": "{{ true }}",
+                        "turn_on": {
+                            "service": "switch.turn_on",
+                            "entity_id": "switch.test_state",
+                        },
+                        "turn_off": {
+                            "service": "switch.turn_off",
+                            "entity_id": "switch.test_state",
+                        },
+                    },
+                    "test_template_switch_02": {
+                        "unique_id": "not-so-unique-anymore",
+                        "value_template": "{{ false }}",
+                        "turn_on": {
+                            "service": "switch.turn_on",
+                            "entity_id": "switch.test_state",
+                        },
+                        "turn_off": {
+                            "service": "switch.turn_off",
+                            "entity_id": "switch.test_state",
+                        },
+                    },
+                },
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1

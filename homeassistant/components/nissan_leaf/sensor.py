@@ -1,7 +1,8 @@
 """Battery Charge and Range Support for the Nissan Leaf."""
 import logging
 
-from homeassistant.const import DEVICE_CLASS_BATTERY
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util.distance import LENGTH_KILOMETERS, LENGTH_MILES
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
@@ -35,13 +36,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(devices, True)
 
 
-class LeafBatterySensor(LeafEntity):
+class LeafBatterySensor(LeafEntity, SensorEntity):
     """Nissan Leaf Battery Sensor."""
 
     @property
     def name(self):
         """Sensor Name."""
-        return self.car.leaf.nickname + " Charge"
+        return f"{self.car.leaf.nickname} Charge"
 
     @property
     def device_class(self):
@@ -56,7 +57,7 @@ class LeafBatterySensor(LeafEntity):
     @property
     def unit_of_measurement(self):
         """Battery state measured in percentage."""
-        return "%"
+        return PERCENTAGE
 
     @property
     def icon(self):
@@ -65,11 +66,11 @@ class LeafBatterySensor(LeafEntity):
         return icon_for_battery_level(battery_level=self.state, charging=chargestate)
 
 
-class LeafRangeSensor(LeafEntity):
+class LeafRangeSensor(LeafEntity, SensorEntity):
     """Nissan Leaf Range Sensor."""
 
     def __init__(self, car, ac_on):
-        """Set-up range sensor. Store if AC on."""
+        """Set up range sensor. Store if AC on."""
         self._ac_on = ac_on
         super().__init__(car)
 
@@ -77,13 +78,13 @@ class LeafRangeSensor(LeafEntity):
     def name(self):
         """Update sensor name depending on AC."""
         if self._ac_on is True:
-            return self.car.leaf.nickname + " Range (AC)"
-        return self.car.leaf.nickname + " Range"
+            return f"{self.car.leaf.nickname} Range (AC)"
+        return f"{self.car.leaf.nickname} Range"
 
     def log_registration(self):
         """Log registration."""
         _LOGGER.debug(
-            "Registered LeafRangeSensor integration with HASS for VIN %s",
+            "Registered LeafRangeSensor integration with Home Assistant for VIN %s",
             self.car.leaf.vin,
         )
 

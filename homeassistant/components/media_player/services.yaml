@@ -1,324 +1,208 @@
 # Describes the format for available media player services
 
 turn_on:
+  name: Turn on
   description: Turn a media player power on.
-  fields:
-    entity_id:
-      description: Name(s) of entities to turn on.
-      example: 'media_player.living_room_chromecast'
+  target:
 
 turn_off:
+  name: Turn off
   description: Turn a media player power off.
-  fields:
-    entity_id:
-      description: Name(s) of entities to turn off.
-      example: 'media_player.living_room_chromecast'
+  target:
 
 toggle:
+  name: Toggle
   description: Toggles a media player power state.
-  fields:
-    entity_id:
-      description: Name(s) of entities to toggle.
-      example: 'media_player.living_room_chromecast'
+  target:
 
 volume_up:
+  name: Turn up volume
   description: Turn a media player volume up.
-  fields:
-    entity_id:
-      description: Name(s) of entities to turn volume up on.
-      example: 'media_player.living_room_sonos'
+  target:
 
 volume_down:
+  name: Turn down volume
   description: Turn a media player volume down.
-  fields:
-    entity_id:
-      description: Name(s) of entities to turn volume down on.
-      example: 'media_player.living_room_sonos'
+  target:
 
 volume_mute:
+  name: Mute volume
   description: Mute a media player's volume.
+  target:
   fields:
-    entity_id:
-      description: Name(s) of entities to mute.
-      example: 'media_player.living_room_sonos'
     is_volume_muted:
+      name: Muted
       description: True/false for mute/unmute.
+      required: true
       example: true
+      selector:
+        boolean:
 
 volume_set:
+  name: Set volume
   description: Set a media player's volume level.
+  target:
   fields:
-    entity_id:
-      description: Name(s) of entities to set volume level on.
-      example: 'media_player.living_room_sonos'
     volume_level:
+      name: Level
       description: Volume level to set as float.
+      required: true
       example: 0.6
+      selector:
+        number:
+          min: 0
+          max: 1
+          step: 0.01
+          mode: slider
 
 media_play_pause:
+  name: Play/Pause
   description: Toggle media player play/pause state.
-  fields:
-    entity_id:
-      description: Name(s) of entities to toggle play/pause state on.
-      example: 'media_player.living_room_sonos'
+  target:
 
 media_play:
+  name: Play
   description: Send the media player the command for play.
-  fields:
-    entity_id:
-      description: Name(s) of entities to play on.
-      example: 'media_player.living_room_sonos'
+  target:
 
 media_pause:
+  name: Pause
   description: Send the media player the command for pause.
-  fields:
-    entity_id:
-      description: Name(s) of entities to pause on.
-      example: 'media_player.living_room_sonos'
+  target:
 
 media_stop:
+  name: Stop
   description: Send the media player the stop command.
-  fields:
-    entity_id:
-      description: Name(s) of entities to stop on.
-      example: 'media_player.living_room_sonos'
+  target:
 
 media_next_track:
+  name: Next
   description: Send the media player the command for next track.
-  fields:
-    entity_id:
-      description: Name(s) of entities to send next track command to.
-      example: 'media_player.living_room_sonos'
+  target:
 
 media_previous_track:
+  name: Previous
   description: Send the media player the command for previous track.
-  fields:
-    entity_id:
-      description: Name(s) of entities to send previous track command to.
-      example: 'media_player.living_room_sonos'
+  target:
 
 media_seek:
-  description: Send the media player the command to seek in current playing media.
+  name: Seek
+  description:
+    Send the media player the command to seek in current playing media.
+  target:
   fields:
-    entity_id:
-      description: Name(s) of entities to seek media on.
-      example: 'media_player.living_room_chromecast'
     seek_position:
+      name: Position
       description: Position to seek to. The format is platform dependent.
+      required: true
       example: 100
-
-monoprice_snapshot:
-  description: Take a snapshot of the media player zone.
-  fields:
-    entity_id:
-      description: Name(s) of entities that will be snapshot. Platform dependent.
-      example: 'media_player.living_room'
-
-monoprice_restore:
-  description: Restore a snapshot of the media player zone.
-  fields:
-    entity_id:
-      description: Name(s) of entities that will be restored. Platform dependent.
-      example: 'media_player.living_room'
+      selector:
+        number:
+          min: 0
+          max: 9223372036854775807
+          step: 0.01
+          mode: box
 
 play_media:
+  name: Play media
   description: Send the media player the command for playing media.
+  target:
   fields:
-    entity_id:
-      description: Name(s) of entities to seek media on
-      example: 'media_player.living_room_chromecast'
     media_content_id:
+      name: Content ID
       description: The ID of the content to play. Platform dependent.
-      example: 'https://home-assistant.io/images/cast/splash.png'
+      required: true
+      example: "https://home-assistant.io/images/cast/splash.png"
+      selector:
+        text:
+
     media_content_type:
-      description: The type of the content to play. Must be one of image, music, tvshow, video, episode, channel or playlist
-      example: 'music'
+      name: Content type
+      description:
+        The type of the content to play. Like image, music, tvshow, video,
+        episode, channel or playlist.
+      required: true
+      example: "music"
+      selector:
+        text:
 
 select_source:
+  name: Select source
   description: Send the media player the command to change input source.
+  target:
   fields:
-    entity_id:
-      description: Name(s) of entities to change source on.
-      example: 'media_player.media_player.txnr535_0009b0d81f82'
     source:
+      name: Source
       description: Name of the source to switch to. Platform dependent.
-      example: 'video1'
+      required: true
+      example: "video1"
+      selector:
+        text:
 
 select_sound_mode:
+  name: Select sound mode
   description: Send the media player the command to change sound mode.
+  target:
   fields:
-    entity_id:
-      description: Name(s) of entities to change sound mode on.
-      example: 'media_player.marantz'
     sound_mode:
+      name: Sound mode
       description: Name of the sound mode to switch to.
-      example: 'Music'
+      example: "Music"
+      selector:
+        text:
 
 clear_playlist:
+  name: Clear playlist
   description: Send the media player the command to clear players playlist.
-  fields:
-    entity_id:
-      description: Name(s) of entities to change source on.
-      example: 'media_player.living_room_chromecast'
+  target:
 
 shuffle_set:
+  name: Shuffle
   description: Set shuffling state.
+  target:
   fields:
-    entity_id:
-      description: Name(s) of entities to set.
-      example: 'media_player.spotify'
     shuffle:
+      name: Shuffle
       description: True/false for enabling/disabling shuffle.
+      required: true
       example: true
+      selector:
+        boolean:
 
-channels_seek_forward:
-  description: Seek forward by a set number of seconds.
+repeat_set:
+  name: Repeat
+  description: Set repeat mode
+  target:
   fields:
-    entity_id:
-      description: Name of entity for the instance of Channels to seek in.
-      example: 'media_player.family_room_channels'
+    repeat:
+      name: Repeat mode
+      description: Repeat mode to set (off, all, one).
+      required: true
+      example: "off"
+      selector:
+        select:
+          options:
+            - "off"
+            - "all"
+            - "one"
 
-channels_seek_backward:
-  description: Seek backward by a set number of seconds.
+join:
+  description:
+    Group players together. Only works on platforms with support for player
+    groups.
+  name: Join
+  target:
   fields:
-    entity_id:
-      description: Name of entity for the instance of Channels to seek in.
-      example: 'media_player.family_room_channels'
+    group_members:
+      description:
+        The players which will be synced with the target player.
+      example:
+        - "media_player.multiroom_player2"
+        - "media_player.multiroom_player3"
 
-channels_seek_by:
-  description: Seek by an inputted number of seconds.
-  fields:
-    entity_id:
-      description: Name of entity for the instance of Channels to seek in.
-      example: 'media_player.family_room_channels'
-    seconds:
-      description: Number of seconds to seek by. Negative numbers seek backwards.
-      example: 120
-
-soundtouch_play_everywhere:
-  description: Play on all Bose Soundtouch devices.
-  fields:
-    master:
-      description: Name of the master entity that will coordinate the grouping. Platform dependent. It is a shortcut for creating a multi-room zone with all devices
-      example: 'media_player.soundtouch_home'
-
-soundtouch_create_zone:
-  description: Create a Sountouch multi-room zone.
-  fields:
-    master:
-      description: Name of the master entity that will coordinate the multi-room zone. Platform dependent.
-      example: 'media_player.soundtouch_home'
-    slaves:
-      description: Name of slaves entities to add to the new zone.
-      example: 'media_player.soundtouch_bedroom'
-
-soundtouch_add_zone_slave:
-  description: Add a slave to a Sountouch multi-room zone.
-  fields:
-    master:
-      description: Name of the master entity that is coordinating the multi-room zone. Platform dependent.
-      example: 'media_player.soundtouch_home'
-    slaves:
-      description: Name of slaves entities to add to the existing zone.
-      example: 'media_player.soundtouch_bedroom'
-
-soundtouch_remove_zone_slave:
-  description: Remove a slave from the Sounttouch multi-room zone.
-  fields:
-    master:
-      description: Name of the master entity that is coordinating the multi-room zone. Platform dependent.
-      example: 'media_player.soundtouch_home'
-    slaves:
-      description: Name of slaves entities to remove from the existing zone.
-      example: 'media_player.soundtouch_bedroom'
-
-squeezebox_call_method:
-  description: 'Call a Squeezebox JSON/RPC API method.'
-  fields:
-    entity_id:
-      description: Name(s) of the Squeexebox entities where to run the API method.
-      example: 'media_player.squeezebox_radio'
-    command:
-      description: Name of the Squeezebox command.
-      example: 'playlist'
-    parameters:
-      description: Optional array of parameters to be appended to the command. See 'Command Line Interface' official help page from Logitech for details.
-      example: '["loadtracks", "track.titlesearch=highway to hell"]'
-
-yamaha_enable_output:
-  description: Enable or disable an output port
-  fields:
-    entity_id:
-      description: Name(s) of entites to enable/disable port on.
-      example: 'media_player.yamaha'
-    port:
-      description: Name of port to enable/disable.
-      example: 'hdmi1'
-    enabled:
-      description: Boolean indicating if port should be enabled or not.
-      example: true
-
-bluesound_join:
-  description: Group player together.
-  fields:
-    master:
-      description: Entity ID of the player that should become the master of the group.
-      example: 'media_player.bluesound_livingroom'
-    entity_id:
-      description: Name(s) of entities that will coordinate the grouping. Platform dependent.
-      example: 'media_player.bluesound_livingroom'
-
-bluesound_unjoin:
-  description: Unjoin the player from a group.
-  fields:
-    entity_id:
-      description: Name(s) of entities that will be unjoined from their group. Platform dependent.
-      example: 'media_player.bluesound_livingroom'
-
-bluesound_set_sleep_timer:
-  description: "Set a Bluesound timer. It will increase timer in steps: 15, 30, 45, 60, 90, 0"
-  fields:
-    entity_id:
-      description: Name(s) of entities that will have a timer set.
-      example: 'media_player.bluesound_livingroom'
-
-bluesound_clear_sleep_timer:
-  description: Clear a Bluesound timer.
-  fields:
-    entity_id:
-      description: Name(s) of entities that will have the timer cleared.
-      example: 'media_player.bluesound_livingroom'
-
-songpal_set_sound_setting:
-  description: Change sound setting.
-
-  fields:
-    entity_id:
-      description: Target device.
-      example: 'media_player.my_soundbar'
-    name:
-      description: Name of the setting.
-      example: 'nightMode'
-    value:
-      description: Value to set.
-      example: 'on'
-
-blackbird_set_all_zones:
-  description: Set all Blackbird zones to a single source.
-  fields:
-    entity_id:
-      description: Name of any blackbird zone.
-      example: 'media_player.zone_1'
-    source:
-      description: Name of source to switch to.
-      example: 'Source 1'
-
-epson_select_cmode:
-  description: Select Color mode of Epson projector
-  fields:
-    entity_id:
-      description: Name of projector
-      example: 'media_player.epson_projector'
-    cmode:
-      description: Name of Cmode
-      example: 'cinema'
+unjoin:
+  description:
+    Unjoin the player from a group. Only works on platforms with support for
+    player groups.
+  name: Unjoin
+  target:

@@ -1,0 +1,59 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "already_in_progress": "\uae30\uae30 \uad6c\uc131\uc774 \uc774\ubbf8 \uc9c4\ud589 \uc911\uc785\ub2c8\ub2e4",
+            "no_h264": "\uc0ac\uc6a9 \uac00\ub2a5\ud55c H264 \uc2a4\ud2b8\ub9bc\uc774 \uc5c6\uc2b5\ub2c8\ub2e4. \uae30\uae30\uc5d0\uc11c \ud504\ub85c\ud544 \uad6c\uc131\uc744 \ud655\uc778\ud574\uc8fc\uc138\uc694.",
+            "no_mac": "ONVIF \uae30\uae30\uc758 \uace0\uc720 ID \ub97c \uad6c\uc131\ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4.",
+            "onvif_error": "ONVIF \uae30\uae30 \uc124\uc815 \uc911 \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4. \uc790\uc138\ud55c \ub0b4\uc6a9\uc740 \ub85c\uadf8\ub97c \ud655\uc778\ud574\uc8fc\uc138\uc694."
+        },
+        "error": {
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "password": "\ube44\ubc00\ubc88\ud638",
+                    "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
+                },
+                "title": "\uc778\uc99d \uad6c\uc131\ud558\uae30"
+            },
+            "configure_profile": {
+                "data": {
+                    "include": "\uce74\uba54\ub77c \uad6c\uc131\uc694\uc18c \ub9cc\ub4e4\uae30"
+                },
+                "description": "{resolution} \ud574\uc0c1\ub3c4\ub85c {profile} \uce74\uba54\ub77c \uad6c\uc131\uc694\uc18c\ub97c \ub9cc\ub4dc\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",
+                "title": "\ud504\ub85c\ud544 \uad6c\uc131\ud558\uae30"
+            },
+            "device": {
+                "data": {
+                    "host": "\ubc1c\uacac\ub41c ONVIF \uae30\uae30 \uc120\ud0dd"
+                },
+                "title": "ONVIF \uae30\uae30 \uc120\ud0dd\ud558\uae30"
+            },
+            "manual_input": {
+                "data": {
+                    "host": "\ud638\uc2a4\ud2b8",
+                    "name": "\uc774\ub984",
+                    "port": "\ud3ec\ud2b8"
+                },
+                "title": "ONVIF \uae30\uae30 \uad6c\uc131\ud558\uae30"
+            },
+            "user": {
+                "description": "\ud655\uc778\uc744 \ud074\ub9ad\ud558\uba74 \ud504\ub85c\ud544 S \ub97c \uc9c0\uc6d0\ud558\ub294 ONVIF \uae30\uae30\ub97c \ub124\ud2b8\uc6cc\ud06c\uc5d0\uc11c \uac80\uc0c9\ud569\ub2c8\ub2e4. \n\n\uc77c\ubd80 \uc81c\uc870\uc5c5\uccb4\ub294 \uae30\ubcf8\uac12\uc73c\ub85c ONVIF \ub97c \ube44\ud65c\uc131\ud654 \ud574 \ub193\uc740 \uacbd\uc6b0\uac00 \uc788\uc2b5\ub2c8\ub2e4. \uce74\uba54\ub77c \uad6c\uc131\uc5d0\uc11c ONVIF \uac00 \ud65c\uc131\ud654\ub418\uc5b4 \uc788\ub294\uc9c0 \ud655\uc778\ud574\uc8fc\uc138\uc694.",
+                "title": "ONVIF \uae30\uae30 \uc124\uc815\ud558\uae30"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "onvif_devices": {
+                "data": {
+                    "extra_arguments": "\ucd94\uac00 FFMPEG \uc778\uc218",
+                    "rtsp_transport": "RTSP \uc804\uc1a1 \uba54\ucee4\ub2c8\uc998"
+                },
+                "title": "ONVIF \uae30\uae30 \uc635\uc158"
+            }
+        }
+    }
+}

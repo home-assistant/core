@@ -2,9 +2,19 @@
   "domain": "roku",
   "name": "Roku",
   "documentation": "https://www.home-assistant.io/integrations/roku",
-  "requirements": [
-    "roku==3.1"
+  "requirements": ["rokuecp==0.8.1"],
+  "homekit": {
+    "models": ["3810X", "4660X", "7820X", "C105X", "C135X"]
+  },
+  "ssdp": [
+    {
+      "st": "roku:ecp",
+      "manufacturer": "Roku",
+      "deviceType": "urn:roku-com:device:player:1-0"
+    }
   ],
-  "dependencies": [],
-  "codeowners": []
+  "codeowners": ["@ctalkington"],
+  "quality_scale": "silver",
+  "config_flow": true,
+  "iot_class": "local_polling"
 }

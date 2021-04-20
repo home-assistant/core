@@ -1,22 +1,23 @@
 """The Netio switch component."""
-import logging
 from collections import namedtuple
 from datetime import timedelta
+import logging
 
+from pynetio import Netio
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant import util
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import (
     CONF_HOST,
+    CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
-    CONF_PASSWORD,
     EVENT_HOMEASSISTANT_STOP,
     STATE_ON,
 )
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,7 +51,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Netio platform."""
-    from pynetio import Netio
 
     host = config.get(CONF_HOST)
     username = config.get(CONF_USERNAME)
@@ -79,7 +79,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 def dispose(event):
     """Close connections to Netio Devices."""
-    for _, value in DEVICES.items():
+    for value in DEVICES.values():
         value.netio.stop()
 
 
@@ -92,7 +92,6 @@ class NetioApiView(HomeAssistantView):
     @callback
     def get(self, request, host):
         """Request handler."""
-        hass = request.app["hass"]
         data = request.query
         states, consumptions, cumulated_consumptions, start_dates = [], [], [], []
 
@@ -121,12 +120,12 @@ class NetioApiView(HomeAssistantView):
         ndev.start_dates = start_dates
 
         for dev in DEVICES[host].entities:
-            hass.async_create_task(dev.async_update_ha_state())
+            dev.async_write_ha_state()
 
         return self.json(True)
 
 
-class NetioSwitch(SwitchDevice):
+class NetioSwitch(SwitchEntity):
     """Provide a Netio linked switch."""
 
     def __init__(self, netio, outlet, name):
@@ -170,7 +169,7 @@ class NetioSwitch(SwitchDevice):
         self.netio.update()
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return optional state attributes."""
         return {
             ATTR_TOTAL_CONSUMPTION_KWH: self.cumulated_consumption_kwh,

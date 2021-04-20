@@ -1,22 +1,22 @@
 """Support for Tado Smart device trackers."""
-import logging
-from datetime import timedelta
-from collections import namedtuple
-
 import asyncio
+from collections import namedtuple
+from datetime import timedelta
+import logging
+
 import aiohttp
 import async_timeout
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
-from homeassistant.util import Throttle
 from homeassistant.components.device_tracker import (
     DOMAIN,
     PLATFORM_SCHEMA,
     DeviceScanner,
 )
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, HTTP_OK
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+import homeassistant.helpers.config_validation as cv
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,9 +60,7 @@ class TadoDeviceScanner(DeviceScanner):
         if self.home_id is None:
             self.tadoapiurl = "https://my.tado.com/api/v2/me"
         else:
-            self.tadoapiurl = (
-                "https://my.tado.com/api/v2" "/homes/{home_id}/mobileDevices"
-            )
+            self.tadoapiurl = "https://my.tado.com/api/v2/homes/{home_id}/mobileDevices"
 
         # The API URL always needs a username and password
         self.tadoapiurl += "?username={username}&password={password}"
@@ -116,8 +114,8 @@ class TadoDeviceScanner(DeviceScanner):
 
                 response = await self.websession.get(url)
 
-                if response.status != 200:
-                    _LOGGER.warning("Error %d on %s.", response.status, self.tadoapiurl)
+                if response.status != HTTP_OK:
+                    _LOGGER.warning("Error %d on %s", response.status, self.tadoapiurl)
                     return False
 
                 tado_json = await response.json()
@@ -133,11 +131,10 @@ class TadoDeviceScanner(DeviceScanner):
 
         # Find devices that have geofencing enabled, and are currently at home.
         for mobile_device in tado_json:
-            if mobile_device.get("location"):
-                if mobile_device["location"]["atHome"]:
-                    device_id = mobile_device["id"]
-                    device_name = mobile_device["name"]
-                    last_results.append(Device(device_id, device_name))
+            if mobile_device.get("location") and mobile_device["location"]["atHome"]:
+                device_id = mobile_device["id"]
+                device_name = mobile_device["name"]
+                last_results.append(Device(device_id, device_name))
 
         self.last_results = last_results
 

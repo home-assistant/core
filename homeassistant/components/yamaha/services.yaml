@@ -1,0 +1,21 @@
+enable_output:
+  description: Enable or disable an output port
+  fields:
+    entity_id:
+      description: Name(s) of entities to enable/disable port on.
+      example: "media_player.yamaha"
+    port:
+      description: Name of port to enable/disable.
+      example: "hdmi1"
+    enabled:
+      description: Boolean indicating if port should be enabled or not.
+      example: true
+select_scene:
+  description: "Select a scene on the receiver"
+  fields:
+    entity_id:
+      description: Name(s) of entities to enable/disable port on.
+      example: "media_player.yamaha"
+    scene:
+      description: Name of the scene. Standard for RX-V437 is 'BD/DVD Movie Viewing', 'TV Viewing', 'NET Audio Listening' or 'Radio Listening'
+      example: "TV Viewing"

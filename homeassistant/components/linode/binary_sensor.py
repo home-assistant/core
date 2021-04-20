@@ -3,7 +3,11 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOVING,
+    PLATFORM_SCHEMA,
+    BinarySensorEntity,
+)
 import homeassistant.helpers.config_validation as cv
 
 from . import (
@@ -22,7 +26,6 @@ from . import (
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Node"
-DEFAULT_DEVICE_CLASS = "moving"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_NODES): vol.All(cv.ensure_list, [cv.string])}
 )
@@ -44,7 +47,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev, True)
 
 
-class LinodeBinarySensor(BinarySensorDevice):
+class LinodeBinarySensor(BinarySensorEntity):
     """Representation of a Linode droplet sensor."""
 
     def __init__(self, li, node_id):
@@ -69,10 +72,10 @@ class LinodeBinarySensor(BinarySensorDevice):
     @property
     def device_class(self):
         """Return the class of this sensor."""
-        return DEFAULT_DEVICE_CLASS
+        return DEVICE_CLASS_MOVING
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the Linode Node."""
         return self._attrs
 

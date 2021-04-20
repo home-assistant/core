@@ -1,0 +1,24 @@
+{
+    "config": {
+        "error": {
+            "name_exists": "Il nome \u00e8 gi\u00e0 esistente"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Latitudine",
+                    "longitude": "Logitudine",
+                    "mode": "Modalit\u00e0",
+                    "name": "Nome"
+                },
+                "description": "Instituto Portugu\u00eas do Mar e Atmosfera",
+                "title": "Posizione"
+            }
+        }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "Endpoint API IPMA raggiungibile"
+        }
+    }
+}

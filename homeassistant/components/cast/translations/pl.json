@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Nie znaleziono urz\u0105dze\u0144 w sieci",
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
+        },
+        "error": {
+            "invalid_known_hosts": "Znane hosty musz\u0105 by\u0107 list\u0105 host\u00f3w oddzielonych przecinkami."
+        },
+        "step": {
+            "config": {
+                "data": {
+                    "known_hosts": "Opcjonalna lista znanych host\u00f3w, je\u015bli wykrywanie mDNS nie dzia\u0142a."
+                },
+                "description": "Wprowad\u017a konfiguracj\u0119 Google Cast.",
+                "title": "Google Cast"
+            },
+            "confirm": {
+                "description": "Czy chcesz rozpocz\u0105\u0107 konfiguracj\u0119?"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_known_hosts": "Znane hosty musz\u0105 by\u0107 list\u0105 host\u00f3w oddzielonych przecinkami."
+        },
+        "step": {
+            "options": {
+                "data": {
+                    "ignore_cec": "Opcjonalna lista, kt\u00f3ra zostanie przekazana do pychromecast.IGNORE_CEC.",
+                    "known_hosts": "Opcjonalna lista znanych host\u00f3w, je\u015bli wykrywanie mDNS nie dzia\u0142a.",
+                    "uuid": "Opcjonalna lista identyfikator\u00f3w UUID. Casty nie wymienione na li\u015bcie nie zostan\u0105 dodane."
+                },
+                "description": "Wprowad\u017a konfiguracj\u0119 Google Cast."
+            }
+        }
+    }
+}

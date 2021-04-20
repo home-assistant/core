@@ -1,19 +1,19 @@
 """Support for showing values from Dweet.io."""
+from datetime import timedelta
 import json
 import logging
-from datetime import timedelta
 
+import dweepy
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
-    CONF_NAME,
-    CONF_VALUE_TEMPLATE,
-    CONF_UNIT_OF_MEASUREMENT,
     CONF_DEVICE,
+    CONF_NAME,
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_VALUE_TEMPLATE,
 )
-from homeassistant.helpers.entity import Entity
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,8 +33,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Dweet sensor."""
-    import dweepy
-
     name = config.get(CONF_NAME)
     device = config.get(CONF_DEVICE)
     value_template = config.get(CONF_VALUE_TEMPLATE)
@@ -57,7 +55,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([DweetSensor(hass, dweet, name, value_template, unit)], True)
 
 
-class DweetSensor(Entity):
+class DweetSensor(SensorEntity):
     """Representation of a Dweet sensor."""
 
     def __init__(self, hass, dweet, name, value_template, unit_of_measurement):
@@ -107,8 +105,6 @@ class DweetData:
 
     def update(self):
         """Get the latest data from Dweet.io."""
-        import dweepy
-
         try:
             self.data = dweepy.get_latest_dweet_for(self._device)
         except dweepy.DweepyError:

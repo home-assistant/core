@@ -1,15 +1,11 @@
 """Switch implementation for Wireless Sensor Tags (wirelesstag.net)."""
-import logging
-
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
 
 from . import DOMAIN as WIRELESSTAG_DOMAIN, WirelessTagBaseSensor
-
-_LOGGER = logging.getLogger(__name__)
 
 ARM_TEMPERATURE = "temperature"
 ARM_HUMIDITY = "humidity"
@@ -42,14 +38,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     switches = []
     tags = platform.load_tags()
     for switch_type in config.get(CONF_MONITORED_CONDITIONS):
-        for _, tag in tags.items():
+        for tag in tags.values():
             if switch_type in tag.allowed_monitoring_types:
                 switches.append(WirelessTagSwitch(platform, tag, switch_type))
 
     add_entities(switches, True)
 
 
-class WirelessTagSwitch(WirelessTagBaseSensor, SwitchDevice):
+class WirelessTagSwitch(WirelessTagBaseSensor, SwitchEntity):
     """A switch implementation for Wireless Sensor Tags."""
 
     def __init__(self, api, tag, switch_type):
@@ -57,7 +53,7 @@ class WirelessTagSwitch(WirelessTagBaseSensor, SwitchDevice):
         super().__init__(api, tag)
         self._switch_type = switch_type
         self.sensor_type = SWITCH_TYPES[self._switch_type][1]
-        self._name = "{} {}".format(self._tag.name, SWITCH_TYPES[self._switch_type][0])
+        self._name = f"{self._tag.name} {SWITCH_TYPES[self._switch_type][0]}"
 
     def turn_on(self, **kwargs):
         """Turn on the switch."""

@@ -1,103 +1,68 @@
 """Support for KNX/IP switches."""
-import voluptuous as vol
+from __future__ import annotations
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
-from homeassistant.const import CONF_ADDRESS, CONF_NAME
-from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from collections.abc import Iterable
+from typing import Any, Callable
 
-from . import ATTR_DISCOVER_DEVICES, DATA_KNX
+from xknx import XKNX
+from xknx.devices import Switch as XknxSwitch
 
-CONF_STATE_ADDRESS = "state_address"
+from homeassistant.components.switch import SwitchEntity
+from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-DEFAULT_NAME = "KNX Switch"
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_ADDRESS): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_STATE_ADDRESS): cv.string,
-    }
-)
+from .const import DOMAIN, KNX_ADDRESS
+from .knx_entity import KnxEntity
+from .schema import SwitchSchema
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: Callable[[Iterable[Entity]], None],
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up switch(es) for KNX platform."""
-    if discovery_info is not None:
-        async_add_entities_discovery(hass, discovery_info, async_add_entities)
-    else:
-        async_add_entities_config(hass, config, async_add_entities)
+    if not discovery_info or not discovery_info["platform_config"]:
+        return
 
+    platform_config = discovery_info["platform_config"]
+    xknx: XKNX = hass.data[DOMAIN].xknx
 
-@callback
-def async_add_entities_discovery(hass, discovery_info, async_add_entities):
-    """Set up switches for KNX platform configured via xknx.yaml."""
     entities = []
-    for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
-        device = hass.data[DATA_KNX].xknx.devices[device_name]
-        entities.append(KNXSwitch(device))
+    for entity_config in platform_config:
+        entities.append(KNXSwitch(xknx, entity_config))
+
     async_add_entities(entities)
 
 
-@callback
-def async_add_entities_config(hass, config, async_add_entities):
-    """Set up switch for KNX platform configured within platform."""
-    import xknx
-
-    switch = xknx.devices.Switch(
-        hass.data[DATA_KNX].xknx,
-        name=config[CONF_NAME],
-        group_address=config[CONF_ADDRESS],
-        group_address_state=config.get(CONF_STATE_ADDRESS),
-    )
-    hass.data[DATA_KNX].xknx.devices.add(switch)
-    async_add_entities([KNXSwitch(switch)])
-
-
-class KNXSwitch(SwitchDevice):
+class KNXSwitch(KnxEntity, SwitchEntity):
     """Representation of a KNX switch."""
 
-    def __init__(self, device):
+    def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Initialize of KNX switch."""
-        self.device = device
-
-    @callback
-    def async_register_callbacks(self):
-        """Register callbacks to update hass after device was changed."""
-
-        async def after_update_callback(device):
-            """Call after device was updated."""
-            await self.async_update_ha_state()
-
-        self.device.register_device_updated_cb(after_update_callback)
-
-    async def async_added_to_hass(self):
-        """Store register state change callback."""
-        self.async_register_callbacks()
+        self._device: XknxSwitch
+        super().__init__(
+            device=XknxSwitch(
+                xknx,
+                name=config[CONF_NAME],
+                group_address=config[KNX_ADDRESS],
+                group_address_state=config.get(SwitchSchema.CONF_STATE_ADDRESS),
+                invert=config[SwitchSchema.CONF_INVERT],
+            )
+        )
 
     @property
-    def name(self):
-        """Return the name of the KNX device."""
-        return self.device.name
-
-    @property
-    def available(self):
-        """Return true if entity is available."""
-        return self.hass.data[DATA_KNX].connected
-
-    @property
-    def should_poll(self):
-        """Return the polling state. Not needed within KNX."""
-        return False
-
-    @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
-        return self.device.state
+        return bool(self._device.state)
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        await self.device.set_on()
+        await self._device.set_on()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        await self.device.set_off()
+        await self._device.set_off()

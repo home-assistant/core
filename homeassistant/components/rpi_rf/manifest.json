@@ -1,10 +1,8 @@
 {
   "domain": "rpi_rf",
-  "name": "Rpi rf",
+  "name": "Raspberry Pi RF",
   "documentation": "https://www.home-assistant.io/integrations/rpi_rf",
-  "requirements": [
-    "rpi-rf==0.9.7"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "requirements": ["rpi-rf==0.9.7"],
+  "codeowners": [],
+  "iot_class": "assumed_state"
 }

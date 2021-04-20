@@ -1,10 +1,8 @@
 {
   "domain": "github",
-  "name": "Github",
+  "name": "GitHub",
   "documentation": "https://www.home-assistant.io/integrations/github",
-  "requirements": [
-    "PyGithub==1.43.8"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "requirements": ["PyGithub==1.43.8"],
+  "codeowners": [],
+  "iot_class": "cloud_polling"
 }

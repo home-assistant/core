@@ -1,19 +1,17 @@
 """Support for OhmConnect."""
-import logging
 from datetime import timedelta
+import logging
 
+import defusedxml.ElementTree as ET
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import CONF_ID, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_ID = "id"
 
 DEFAULT_NAME = "OhmConnect Status"
 
@@ -35,7 +33,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([OhmconnectSensor(name, ohmid)], True)
 
 
-class OhmconnectSensor(Entity):
+class OhmconnectSensor(SensorEntity):
     """Representation of a OhmConnect sensor."""
 
     def __init__(self, name, ohmid):
@@ -57,19 +55,15 @@ class OhmconnectSensor(Entity):
         return "Inactive"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {"Address": self._data.get("address"), "ID": self._ohmid}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from OhmConnect."""
-        import defusedxml.ElementTree as ET
-
         try:
-            url = ("https://login.ohmconnect.com" "/verify-ohm-hour/{}").format(
-                self._ohmid
-            )
+            url = f"https://login.ohmconnect.com/verify-ohm-hour/{self._ohmid}"
             response = requests.get(url, timeout=10)
             root = ET.fromstring(response.text)
 

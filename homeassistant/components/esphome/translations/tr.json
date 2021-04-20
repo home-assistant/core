@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor"
+        },
+        "error": {
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama"
+        },
+        "step": {
+            "authenticate": {
+                "data": {
+                    "password": "Parola"
+                },
+                "description": "L\u00fctfen yap\u0131land\u0131rman\u0131zda {name} i\u00e7in belirledi\u011finiz parolay\u0131 girin."
+            },
+            "discovery_confirm": {
+                "title": "Ke\u015ffedilen ESPHome d\u00fc\u011f\u00fcm\u00fc"
+            },
+            "user": {
+                "data": {
+                    "host": "Ana Bilgisayar",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

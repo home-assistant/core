@@ -1,16 +1,16 @@
 """Support for Loop Energy sensors."""
 import logging
 
+import pyloopenergy
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
     EVENT_HOMEASSISTANT_STOP,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,8 +54,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Loop Energy sensors."""
-    import pyloopenergy
-
     elec_config = config.get(CONF_ELEC)
     gas_config = config.get(CONF_GAS, {})
 
@@ -83,7 +81,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors)
 
 
-class LoopEnergyDevice(Entity):
+class LoopEnergySensor(SensorEntity):
     """Implementation of an Loop Energy base sensor."""
 
     def __init__(self, controller):
@@ -117,29 +115,35 @@ class LoopEnergyDevice(Entity):
         self.schedule_update_ha_state(True)
 
 
-class LoopEnergyElec(LoopEnergyDevice):
+class LoopEnergyElec(LoopEnergySensor):
     """Implementation of an Loop Energy Electricity sensor."""
 
     def __init__(self, controller):
         """Initialize the sensor."""
         super().__init__(controller)
         self._name = "Power Usage"
+
+    async def async_added_to_hass(self):
+        """Subscribe to updates."""
         self._controller.subscribe_elecricity(self._callback)
 
     def update(self):
-        """Get the cached Loop energy."""
+        """Get the cached Loop energy reading."""
         self._state = round(self._controller.electricity_useage, 2)
 
 
-class LoopEnergyGas(LoopEnergyDevice):
+class LoopEnergyGas(LoopEnergySensor):
     """Implementation of an Loop Energy Gas sensor."""
 
     def __init__(self, controller):
         """Initialize the sensor."""
         super().__init__(controller)
         self._name = "Gas Usage"
+
+    async def async_added_to_hass(self):
+        """Subscribe to updates."""
         self._controller.subscribe_gas(self._callback)
 
     def update(self):
-        """Get the cached Loop energy."""
+        """Get the cached Loop gas reading."""
         self._state = round(self._controller.gas_useage, 2)

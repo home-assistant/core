@@ -5,25 +5,28 @@ import math
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.components import history
-import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
-    CONF_NAME,
     CONF_ENTITY_ID,
+    CONF_NAME,
     CONF_STATE,
     CONF_TYPE,
     EVENT_HOMEASSISTANT_START,
+    PERCENTAGE,
+    TIME_HOURS,
 )
+from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_state_change
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.reload import async_setup_reload_service
+import homeassistant.util.dt as dt_util
+
+from . import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "history_stats"
 CONF_START = "start"
 CONF_END = "end"
 CONF_DURATION = "duration"
@@ -35,7 +38,11 @@ CONF_TYPE_COUNT = "count"
 CONF_TYPE_KEYS = [CONF_TYPE_TIME, CONF_TYPE_RATIO, CONF_TYPE_COUNT]
 
 DEFAULT_NAME = "unnamed statistics"
-UNITS = {CONF_TYPE_TIME: "h", CONF_TYPE_RATIO: "%", CONF_TYPE_COUNT: ""}
+UNITS = {
+    CONF_TYPE_TIME: TIME_HOURS,
+    CONF_TYPE_RATIO: PERCENTAGE,
+    CONF_TYPE_COUNT: "",
+}
 ICON = "mdi:chart-line"
 
 ATTR_VALUE = "value"
@@ -45,7 +52,7 @@ def exactly_two_period_keys(conf):
     """Ensure exactly 2 of CONF_PERIOD_KEYS are provided."""
     if sum(param in conf for param in CONF_PERIOD_KEYS) != 2:
         raise vol.Invalid(
-            "You must provide exactly 2 of the following:" " start, end, duration"
+            "You must provide exactly 2 of the following: start, end, duration"
         )
     return conf
 
@@ -54,7 +61,7 @@ PLATFORM_SCHEMA = vol.All(
     PLATFORM_SCHEMA.extend(
         {
             vol.Required(CONF_ENTITY_ID): cv.entity_id,
-            vol.Required(CONF_STATE): cv.string,
+            vol.Required(CONF_STATE): vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(CONF_START): cv.template,
             vol.Optional(CONF_END): cv.template,
             vol.Optional(CONF_DURATION): cv.time_period,
@@ -67,10 +74,12 @@ PLATFORM_SCHEMA = vol.All(
 
 
 # noinspection PyUnusedLocal
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the History Stats sensor."""
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+
     entity_id = config.get(CONF_ENTITY_ID)
-    entity_state = config.get(CONF_STATE)
+    entity_states = config.get(CONF_STATE)
     start = config.get(CONF_START)
     end = config.get(CONF_END)
     duration = config.get(CONF_DURATION)
@@ -81,10 +90,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if template is not None:
             template.hass = hass
 
-    add_entities(
+    async_add_entities(
         [
             HistoryStatsSensor(
-                hass, entity_id, entity_state, start, end, duration, sensor_type, name
+                hass, entity_id, entity_states, start, end, duration, sensor_type, name
             )
         ]
     )
@@ -92,15 +101,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     return True
 
 
-class HistoryStatsSensor(Entity):
+class HistoryStatsSensor(SensorEntity):
     """Representation of a HistoryStats sensor."""
 
     def __init__(
-        self, hass, entity_id, entity_state, start, end, duration, sensor_type, name
+        self, hass, entity_id, entity_states, start, end, duration, sensor_type, name
     ):
         """Initialize the HistoryStats sensor."""
+        self.hass = hass
         self._entity_id = entity_id
-        self._entity_state = entity_state
+        self._entity_states = entity_states
         self._duration = duration
         self._start = start
         self._end = end
@@ -112,6 +122,9 @@ class HistoryStatsSensor(Entity):
         self.value = None
         self.count = None
 
+    async def async_added_to_hass(self):
+        """Create listeners when the entity is added."""
+
         @callback
         def start_refresh(*args):
             """Register state tracking."""
@@ -122,10 +135,18 @@ class HistoryStatsSensor(Entity):
                 self.async_schedule_update_ha_state(True)
 
             force_refresh()
-            async_track_state_change(self.hass, self._entity_id, force_refresh)
+            self.async_on_remove(
+                async_track_state_change_event(
+                    self.hass, [self._entity_id], force_refresh
+                )
+            )
+
+        if self.hass.state == CoreState.running:
+            start_refresh()
+            return
 
         # Delay first refresh to keep startup fast
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_refresh)
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_refresh)
 
     @property
     def name(self):
@@ -153,12 +174,7 @@ class HistoryStatsSensor(Entity):
         return self._unit_of_measurement
 
     @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
-
-    @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         if self.value is None:
             return {}
@@ -171,7 +187,7 @@ class HistoryStatsSensor(Entity):
         """Return the icon to use in the frontend, if any."""
         return ICON
 
-    def update(self):
+    async def async_update(self):
         """Get the latest data and updates the states."""
         # Get previous values of start and end
         p_start, p_end = self._period
@@ -203,24 +219,29 @@ class HistoryStatsSensor(Entity):
             # Don't compute anything as the value cannot have changed
             return
 
+        await self.hass.async_add_executor_job(
+            self._update, start, end, now_timestamp, start_timestamp, end_timestamp
+        )
+
+    def _update(self, start, end, now_timestamp, start_timestamp, end_timestamp):
         # Get history between start and end
         history_list = history.state_changes_during_period(
             self.hass, start, end, str(self._entity_id)
         )
 
-        if self._entity_id not in history_list.keys():
+        if self._entity_id not in history_list:
             return
 
         # Get the first state
         last_state = history.get_state(self.hass, start, self._entity_id)
-        last_state = last_state is not None and last_state == self._entity_state
+        last_state = last_state is not None and last_state in self._entity_states
         last_time = start_timestamp
         elapsed = 0
         count = 0
 
         # Make calculations
         for item in history_list.get(self._entity_id):
-            current_state = item.state == self._entity_state
+            current_state = item.state in self._entity_states
             current_time = item.last_changed.timestamp()
 
             if last_state:
@@ -250,11 +271,12 @@ class HistoryStatsSensor(Entity):
         # Parse start
         if self._start is not None:
             try:
-                start_rendered = self._start.render()
+                start_rendered = self._start.async_render()
             except (TemplateError, TypeError) as ex:
                 HistoryStatsHelper.handle_template_exception(ex, "start")
                 return
-            start = dt_util.parse_datetime(start_rendered)
+            if isinstance(start_rendered, str):
+                start = dt_util.parse_datetime(start_rendered)
             if start is None:
                 try:
                     start = dt_util.as_local(
@@ -262,18 +284,19 @@ class HistoryStatsSensor(Entity):
                     )
                 except ValueError:
                     _LOGGER.error(
-                        "Parsing error: start must be a datetime" "or a timestamp"
+                        "Parsing error: start must be a datetime or a timestamp"
                     )
                     return
 
         # Parse end
         if self._end is not None:
             try:
-                end_rendered = self._end.render()
+                end_rendered = self._end.async_render()
             except (TemplateError, TypeError) as ex:
                 HistoryStatsHelper.handle_template_exception(ex, "end")
                 return
-            end = dt_util.parse_datetime(end_rendered)
+            if isinstance(end_rendered, str):
+                end = dt_util.parse_datetime(end_rendered)
             if end is None:
                 try:
                     end = dt_util.as_local(
@@ -281,7 +304,7 @@ class HistoryStatsSensor(Entity):
                     )
                 except ValueError:
                     _LOGGER.error(
-                        "Parsing error: end must be a datetime " "or a timestamp"
+                        "Parsing error: end must be a datetime or a timestamp"
                     )
                     return
 

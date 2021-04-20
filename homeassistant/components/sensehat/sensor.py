@@ -1,14 +1,19 @@
 """Support for Sense HAT sensors."""
-import os
-import logging
 from datetime import timedelta
+import logging
+from pathlib import Path
 
+from sense_hat import SenseHat
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import TEMP_CELSIUS, CONF_DISPLAY_OPTIONS, CONF_NAME
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import (
+    CONF_DISPLAY_OPTIONS,
+    CONF_NAME,
+    PERCENTAGE,
+    TEMP_CELSIUS,
+)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -20,7 +25,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 SENSOR_TYPES = {
     "temperature": ["temperature", TEMP_CELSIUS],
-    "humidity": ["humidity", "%"],
+    "humidity": ["humidity", PERCENTAGE],
     "pressure": ["pressure", "mb"],
 }
 
@@ -37,9 +42,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def get_cpu_temp():
     """Get CPU temperature."""
-    res = os.popen("vcgencmd measure_temp").readline()
-    t_cpu = float(res.replace("temp=", "").replace("'C\n", ""))
-    return t_cpu
+    t_cpu = Path("/sys/class/thermal/thermal_zone0/temp").read_text().strip()
+    return float(t_cpu) * 0.001
 
 
 def get_average(temp_base):
@@ -63,7 +67,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev, True)
 
 
-class SenseHatSensor(Entity):
+class SenseHatSensor(SensorEntity):
     """Representation of a Sense HAT sensor."""
 
     def __init__(self, data, sensor_types):
@@ -117,7 +121,6 @@ class SenseHatData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from Sense HAT."""
-        from sense_hat import SenseHat
 
         sense = SenseHat()
         temp_from_h = sense.get_temperature_from_humidity()

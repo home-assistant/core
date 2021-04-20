@@ -1,0 +1,34 @@
+{
+    "config": {
+        "step": {
+            "bridge_mode": {
+                "data": {
+                    "include_domains": "Dom\u00e4ner att inkludera"
+                }
+            },
+            "pairing": {
+                "title": "Para HomeKit"
+            },
+            "user": {
+                "title": "Aktivera HomeKit"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "cameras": {
+                "data": {
+                    "camera_copy": "Kameror som st\u00f6der inbyggda H.264-str\u00f6mmar"
+                },
+                "description": "Kontrollera alla kameror som st\u00f6der inbyggda H.264-str\u00f6mmar. Om kameran inte skickar ut en H.264-str\u00f6m kodar systemet videon till H.264 f\u00f6r HomeKit. Transkodning kr\u00e4ver h\u00f6g prestanda och kommer troligtvis inte att fungera p\u00e5 enkortsdatorer.",
+                "title": "V\u00e4lj kamerans videoavkodare."
+            },
+            "init": {
+                "data": {
+                    "include_domains": "Dom\u00e4ner att inkludera"
+                },
+                "title": "V\u00e4lj dom\u00e4ner som ska inkluderas."
+            }
+        }
+    }
+}

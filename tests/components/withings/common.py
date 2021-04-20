@@ -1,213 +1,325 @@
 """Common data for for the withings component tests."""
-import time
+from __future__ import annotations
 
-import withings_api as withings
+from dataclasses import dataclass
+from unittest.mock import MagicMock
+from urllib.parse import urlparse
 
+from aiohttp.test_utils import TestClient
+import arrow
+import pytz
+from withings_api.common import (
+    MeasureGetMeasResponse,
+    NotifyAppli,
+    NotifyListResponse,
+    SleepGetSummaryResponse,
+    UserGetDeviceResponse,
+)
+
+from homeassistant import data_entry_flow
+import homeassistant.components.api as api
+from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
+import homeassistant.components.webhook as webhook
+from homeassistant.components.withings import async_unload_entry
+from homeassistant.components.withings.common import (
+    ConfigEntryWithingsApi,
+    DataManager,
+    get_all_data_managers,
+)
 import homeassistant.components.withings.const as const
+from homeassistant.config import async_process_ha_core_config
+from homeassistant.config_entries import SOURCE_USER, ConfigEntry
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_EXTERNAL_URL,
+    CONF_UNIT_SYSTEM,
+    CONF_UNIT_SYSTEM_METRIC,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.config_entry_oauth2_flow import AUTH_CALLBACK_PATH
+from homeassistant.setup import async_setup_component
+
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-def new_sleep_data(model, series):
-    """Create simple dict to simulate api data."""
-    return {"series": series, "model": model}
+@dataclass
+class ProfileConfig:
+    """Data representing a user profile."""
+
+    profile: str
+    user_id: int
+    api_response_user_get_device: UserGetDeviceResponse | Exception
+    api_response_measure_get_meas: MeasureGetMeasResponse | Exception
+    api_response_sleep_get_summary: SleepGetSummaryResponse | Exception
+    api_response_notify_list: NotifyListResponse | Exception
+    api_response_notify_revoke: Exception | None
 
 
-def new_sleep_data_serie(startdate, enddate, state):
-    """Create simple dict to simulate api data."""
-    return {"startdate": startdate, "enddate": enddate, "state": state}
+def new_profile_config(
+    profile: str,
+    user_id: int,
+    api_response_user_get_device: UserGetDeviceResponse | Exception | None = None,
+    api_response_measure_get_meas: MeasureGetMeasResponse | Exception | None = None,
+    api_response_sleep_get_summary: SleepGetSummaryResponse | Exception | None = None,
+    api_response_notify_list: NotifyListResponse | Exception | None = None,
+    api_response_notify_revoke: Exception | None = None,
+) -> ProfileConfig:
+    """Create a new profile config immutable object."""
+    return ProfileConfig(
+        profile=profile,
+        user_id=user_id,
+        api_response_user_get_device=api_response_user_get_device
+        or UserGetDeviceResponse(devices=[]),
+        api_response_measure_get_meas=api_response_measure_get_meas
+        or MeasureGetMeasResponse(
+            measuregrps=[],
+            more=False,
+            offset=0,
+            timezone=pytz.UTC,
+            updatetime=arrow.get(12345),
+        ),
+        api_response_sleep_get_summary=api_response_sleep_get_summary
+        or SleepGetSummaryResponse(more=False, offset=0, series=[]),
+        api_response_notify_list=api_response_notify_list
+        or NotifyListResponse(profiles=[]),
+        api_response_notify_revoke=api_response_notify_revoke,
+    )
 
 
-def new_sleep_summary(timezone, model, startdate, enddate, date, modified, data):
-    """Create simple dict to simulate api data."""
-    return {
-        "timezone": timezone,
-        "model": model,
-        "startdate": startdate,
-        "enddate": enddate,
-        "date": date,
-        "modified": modified,
-        "data": data,
-    }
+@dataclass
+class WebhookResponse:
+    """Response data from a webhook."""
+
+    message: str
+    message_code: int
 
 
-def new_sleep_summary_detail(
-    wakeupduration,
-    lightsleepduration,
-    deepsleepduration,
-    remsleepduration,
-    wakeupcount,
-    durationtosleep,
-    durationtowakeup,
-    hr_average,
-    hr_min,
-    hr_max,
-    rr_average,
-    rr_min,
-    rr_max,
-):
-    """Create simple dict to simulate api data."""
-    return {
-        "wakeupduration": wakeupduration,
-        "lightsleepduration": lightsleepduration,
-        "deepsleepduration": deepsleepduration,
-        "remsleepduration": remsleepduration,
-        "wakeupcount": wakeupcount,
-        "durationtosleep": durationtosleep,
-        "durationtowakeup": durationtowakeup,
-        "hr_average": hr_average,
-        "hr_min": hr_min,
-        "hr_max": hr_max,
-        "rr_average": rr_average,
-        "rr_min": rr_min,
-        "rr_max": rr_max,
-    }
+class ComponentFactory:
+    """Manages the setup and unloading of the withing component and profiles."""
 
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        api_class_mock: MagicMock,
+        aiohttp_client,
+        aioclient_mock: AiohttpClientMocker,
+    ) -> None:
+        """Initialize the object."""
+        self._hass = hass
+        self._api_class_mock = api_class_mock
+        self._aiohttp_client = aiohttp_client
+        self._aioclient_mock = aioclient_mock
+        self._client_id = None
+        self._client_secret = None
+        self._profile_configs: tuple[ProfileConfig, ...] = ()
 
-def new_measure_group(
-    grpid, attrib, date, created, category, deviceid, more, offset, measures
-):
-    """Create simple dict to simulate api data."""
-    return {
-        "grpid": grpid,
-        "attrib": attrib,
-        "date": date,
-        "created": created,
-        "category": category,
-        "deviceid": deviceid,
-        "measures": measures,
-        "more": more,
-        "offset": offset,
-        "comment": "blah",  # deprecated
-    }
+    async def configure_component(
+        self,
+        client_id: str = "my_client_id",
+        client_secret: str = "my_client_secret",
+        profile_configs: tuple[ProfileConfig, ...] = (),
+    ) -> None:
+        """Configure the wihings component."""
+        self._client_id = client_id
+        self._client_secret = client_secret
+        self._profile_configs = profile_configs
 
+        hass_config = {
+            "homeassistant": {
+                CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
+                CONF_EXTERNAL_URL: "http://127.0.0.1:8080/",
+            },
+            api.DOMAIN: {},
+            const.DOMAIN: {
+                CONF_CLIENT_ID: self._client_id,
+                CONF_CLIENT_SECRET: self._client_secret,
+                const.CONF_USE_WEBHOOK: True,
+            },
+        }
 
-def new_measure(type_str, value, unit):
-    """Create simple dict to simulate api data."""
-    return {
-        "value": value,
-        "type": type_str,
-        "unit": unit,
-        "algo": -1,  # deprecated
-        "fm": -1,  # deprecated
-        "fw": -1,  # deprecated
-    }
+        await async_process_ha_core_config(self._hass, hass_config.get("homeassistant"))
+        assert await async_setup_component(self._hass, HA_DOMAIN, {})
+        assert await async_setup_component(self._hass, webhook.DOMAIN, hass_config)
 
+        assert await async_setup_component(self._hass, const.DOMAIN, hass_config)
+        await self._hass.async_block_till_done()
 
-def withings_sleep_response(states):
-    """Create a sleep response based on states."""
-    data = []
-    for state in states:
-        data.append(
-            new_sleep_data_serie(
-                "2019-02-01 0{}:00:00".format(str(len(data))),
-                "2019-02-01 0{}:00:00".format(str(len(data) + 1)),
-                state,
+    @staticmethod
+    def _setup_api_method(api_method, value) -> None:
+        if isinstance(value, Exception):
+            api_method.side_effect = value
+        else:
+            api_method.return_value = value
+
+    async def setup_profile(self, user_id: int) -> ConfigEntryWithingsApi:
+        """Set up a user profile through config flows."""
+        profile_config = next(
+            iter(
+                [
+                    profile_config
+                    for profile_config in self._profile_configs
+                    if profile_config.user_id == user_id
+                ]
             )
         )
 
-    return withings.WithingsSleep(new_sleep_data("aa", data))
+        api_mock: ConfigEntryWithingsApi = MagicMock(spec=ConfigEntryWithingsApi)
+        ComponentFactory._setup_api_method(
+            api_mock.user_get_device, profile_config.api_response_user_get_device
+        )
+        ComponentFactory._setup_api_method(
+            api_mock.sleep_get_summary, profile_config.api_response_sleep_get_summary
+        )
+        ComponentFactory._setup_api_method(
+            api_mock.measure_get_meas, profile_config.api_response_measure_get_meas
+        )
+        ComponentFactory._setup_api_method(
+            api_mock.notify_list, profile_config.api_response_notify_list
+        )
+        ComponentFactory._setup_api_method(
+            api_mock.notify_revoke, profile_config.api_response_notify_revoke
+        )
+
+        self._api_class_mock.reset_mocks()
+        self._api_class_mock.return_value = api_mock
+
+        # Get the withings config flow.
+        result = await self._hass.config_entries.flow.async_init(
+            const.DOMAIN, context={"source": SOURCE_USER}
+        )
+        assert result
+        # pylint: disable=protected-access
+        state = config_entry_oauth2_flow._encode_jwt(
+            self._hass,
+            {
+                "flow_id": result["flow_id"],
+                "redirect_uri": "http://127.0.0.1:8080/auth/external/callback",
+            },
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
+        assert result["url"] == (
+            "https://account.withings.com/oauth2_user/authorize2?"
+            f"response_type=code&client_id={self._client_id}&"
+            "redirect_uri=http://127.0.0.1:8080/auth/external/callback&"
+            f"state={state}"
+            "&scope=user.info,user.metrics,user.activity,user.sleepevents"
+        )
+
+        # Simulate user being redirected from withings site.
+        client: TestClient = await self._aiohttp_client(self._hass.http.app)
+        resp = await client.get(f"{AUTH_CALLBACK_PATH}?code=abcd&state={state}")
+        assert resp.status == 200
+        assert resp.headers["content-type"] == "text/html; charset=utf-8"
+
+        self._aioclient_mock.clear_requests()
+        self._aioclient_mock.post(
+            "https://account.withings.com/oauth2/token",
+            json={
+                "refresh_token": "mock-refresh-token",
+                "access_token": "mock-access-token",
+                "type": "Bearer",
+                "expires_in": 60,
+                "userid": profile_config.user_id,
+            },
+        )
+
+        # Present user with a list of profiles to choose from.
+        result = await self._hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result.get("type") == "form"
+        assert result.get("step_id") == "profile"
+        assert "profile" in result.get("data_schema").schema
+
+        # Provide the user profile.
+        result = await self._hass.config_entries.flow.async_configure(
+            result["flow_id"], {const.PROFILE: profile_config.profile}
+        )
+
+        # Finish the config flow by calling it again.
+        assert result.get("type") == "create_entry"
+        assert result.get("result")
+        config_data = result.get("result").data
+        assert config_data.get(const.PROFILE) == profile_config.profile
+        assert config_data.get("auth_implementation") == const.DOMAIN
+        assert config_data.get("token")
+
+        # Wait for remaining tasks to complete.
+        await self._hass.async_block_till_done()
+
+        # Mock the webhook.
+        data_manager = get_data_manager_by_user_id(self._hass, user_id)
+        self._aioclient_mock.clear_requests()
+        self._aioclient_mock.request(
+            "HEAD",
+            data_manager.webhook_config.url,
+        )
+
+        return self._api_class_mock.return_value
+
+    async def call_webhook(self, user_id: int, appli: NotifyAppli) -> WebhookResponse:
+        """Call the webhook to notify of data changes."""
+        client: TestClient = await self._aiohttp_client(self._hass.http.app)
+        data_manager = get_data_manager_by_user_id(self._hass, user_id)
+
+        resp = await client.post(
+            urlparse(data_manager.webhook_config.url).path,
+            data={"userid": user_id, "appli": appli.value},
+        )
+
+        # Wait for remaining tasks to complete.
+        await self._hass.async_block_till_done()
+
+        data = await resp.json()
+        resp.close()
+
+        return WebhookResponse(message=data["message"], message_code=data["code"])
+
+    async def unload(self, profile: ProfileConfig) -> None:
+        """Unload the component for a specific user."""
+        config_entries = get_config_entries_for_user_id(self._hass, profile.user_id)
+
+        for config_entry in config_entries:
+            await async_unload_entry(self._hass, config_entry)
+
+        await self._hass.async_block_till_done()
+
+        assert not get_data_manager_by_user_id(self._hass, profile.user_id)
 
 
-WITHINGS_MEASURES_RESPONSE = withings.WithingsMeasures(
-    {
-        "updatetime": "",
-        "timezone": "",
-        "measuregrps": [
-            # Un-ambiguous groups.
-            new_measure_group(
-                1,
-                0,
-                time.time(),
-                time.time(),
-                1,
-                "DEV_ID",
-                False,
-                0,
-                [
-                    new_measure(const.MEASURE_TYPE_WEIGHT, 70, 0),
-                    new_measure(const.MEASURE_TYPE_FAT_MASS, 5, 0),
-                    new_measure(const.MEASURE_TYPE_FAT_MASS_FREE, 60, 0),
-                    new_measure(const.MEASURE_TYPE_MUSCLE_MASS, 50, 0),
-                    new_measure(const.MEASURE_TYPE_BONE_MASS, 10, 0),
-                    new_measure(const.MEASURE_TYPE_HEIGHT, 2, 0),
-                    new_measure(const.MEASURE_TYPE_TEMP, 40, 0),
-                    new_measure(const.MEASURE_TYPE_BODY_TEMP, 35, 0),
-                    new_measure(const.MEASURE_TYPE_SKIN_TEMP, 20, 0),
-                    new_measure(const.MEASURE_TYPE_FAT_RATIO, 70, -3),
-                    new_measure(const.MEASURE_TYPE_DIASTOLIC_BP, 70, 0),
-                    new_measure(const.MEASURE_TYPE_SYSTOLIC_BP, 100, 0),
-                    new_measure(const.MEASURE_TYPE_HEART_PULSE, 60, 0),
-                    new_measure(const.MEASURE_TYPE_SPO2, 95, -2),
-                    new_measure(const.MEASURE_TYPE_HYDRATION, 95, -2),
-                    new_measure(const.MEASURE_TYPE_PWV, 100, 0),
-                ],
-            ),
-            # Ambiguous groups (we ignore these)
-            new_measure_group(
-                1,
-                1,
-                time.time(),
-                time.time(),
-                1,
-                "DEV_ID",
-                False,
-                0,
-                [
-                    new_measure(const.MEASURE_TYPE_WEIGHT, 71, 0),
-                    new_measure(const.MEASURE_TYPE_FAT_MASS, 4, 0),
-                    new_measure(const.MEASURE_TYPE_MUSCLE_MASS, 51, 0),
-                    new_measure(const.MEASURE_TYPE_BONE_MASS, 11, 0),
-                    new_measure(const.MEASURE_TYPE_HEIGHT, 201, 0),
-                    new_measure(const.MEASURE_TYPE_TEMP, 41, 0),
-                    new_measure(const.MEASURE_TYPE_BODY_TEMP, 34, 0),
-                    new_measure(const.MEASURE_TYPE_SKIN_TEMP, 21, 0),
-                    new_measure(const.MEASURE_TYPE_FAT_RATIO, 71, -3),
-                    new_measure(const.MEASURE_TYPE_DIASTOLIC_BP, 71, 0),
-                    new_measure(const.MEASURE_TYPE_SYSTOLIC_BP, 101, 0),
-                    new_measure(const.MEASURE_TYPE_HEART_PULSE, 61, 0),
-                    new_measure(const.MEASURE_TYPE_SPO2, 98, -2),
-                    new_measure(const.MEASURE_TYPE_HYDRATION, 96, -2),
-                    new_measure(const.MEASURE_TYPE_PWV, 102, 0),
-                ],
-            ),
-        ],
-    }
-)
-
-
-WITHINGS_SLEEP_RESPONSE = withings_sleep_response(
-    [
-        const.MEASURE_TYPE_SLEEP_STATE_AWAKE,
-        const.MEASURE_TYPE_SLEEP_STATE_LIGHT,
-        const.MEASURE_TYPE_SLEEP_STATE_REM,
-        const.MEASURE_TYPE_SLEEP_STATE_DEEP,
-    ]
-)
-
-WITHINGS_SLEEP_SUMMARY_RESPONSE = withings.WithingsSleepSummary(
-    {
-        "series": [
-            new_sleep_summary(
-                "UTC",
-                32,
-                "2019-02-01",
-                "2019-02-02",
-                "2019-02-02",
-                "12345",
-                new_sleep_summary_detail(
-                    110, 210, 310, 410, 510, 610, 710, 810, 910, 1010, 1110, 1210, 1310
-                ),
-            ),
-            new_sleep_summary(
-                "UTC",
-                32,
-                "2019-02-01",
-                "2019-02-02",
-                "2019-02-02",
-                "12345",
-                new_sleep_summary_detail(
-                    210, 310, 410, 510, 610, 710, 810, 910, 1010, 1110, 1210, 1310, 1410
-                ),
-            ),
+def get_config_entries_for_user_id(
+    hass: HomeAssistant, user_id: int
+) -> tuple[ConfigEntry]:
+    """Get a list of config entries that apply to a specific withings user."""
+    return tuple(
+        [
+            config_entry
+            for config_entry in hass.config_entries.async_entries(const.DOMAIN)
+            if config_entry.data.get("token", {}).get("userid") == user_id
         ]
-    }
-)
+    )
+
+
+def async_get_flow_for_user_id(hass: HomeAssistant, user_id: int) -> list[dict]:
+    """Get a flow for a user id."""
+    return [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["handler"] == const.DOMAIN and flow["context"].get("userid") == user_id
+    ]
+
+
+def get_data_manager_by_user_id(
+    hass: HomeAssistant, user_id: int
+) -> DataManager | None:
+    """Get a data manager by the user id."""
+    return next(
+        iter(
+            [
+                data_manager
+                for data_manager in get_all_data_managers(hass)
+                if data_manager.user_id == user_id
+            ]
+        ),
+        None,
+    )

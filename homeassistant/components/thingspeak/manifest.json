@@ -1,10 +1,8 @@
 {
   "domain": "thingspeak",
-  "name": "Thingspeak",
+  "name": "ThingSpeak",
   "documentation": "https://www.home-assistant.io/integrations/thingspeak",
-  "requirements": [
-    "thingspeak==0.4.1"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "requirements": ["thingspeak==1.0.0"],
+  "codeowners": [],
+  "iot_class": "cloud_push"
 }

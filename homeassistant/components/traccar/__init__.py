@@ -1,20 +1,23 @@
 """Support for Traccar."""
-import logging
-
-import voluptuous as vol
 from aiohttp import web
+import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.const import HTTP_UNPROCESSABLE_ENTITY, HTTP_OK, CONF_WEBHOOK_ID
-from homeassistant.helpers import config_entry_flow
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
+from homeassistant.const import (
+    ATTR_ID,
+    CONF_WEBHOOK_ID,
+    HTTP_OK,
+    HTTP_UNPROCESSABLE_ENTITY,
+)
+from homeassistant.helpers import config_entry_flow
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+
 from .const import (
     ATTR_ACCURACY,
     ATTR_ALTITUDE,
     ATTR_BATTERY,
     ATTR_BEARING,
-    ATTR_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     ATTR_SPEED,
@@ -22,12 +25,10 @@ from .const import (
     DOMAIN,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 TRACKER_UPDATE = f"{DOMAIN}_tracker_update"
 
 
-DEFAULT_ACCURACY = 200
+DEFAULT_ACCURACY = HTTP_OK
 DEFAULT_BATTERY = -1
 
 
@@ -106,5 +107,4 @@ async def async_unload_entry(hass, entry):
     return True
 
 
-# pylint: disable=invalid-name
 async_remove_entry = config_entry_flow.webhook_async_remove_entry

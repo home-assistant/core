@@ -1,20 +1,20 @@
 """Support for Homematic lights."""
-import logging
-
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT,
-    Light,
+    SUPPORT_TRANSITION,
+    LightEntity,
 )
 
-from . import ATTR_DISCOVER_DEVICES, HMDevice
-
-_LOGGER = logging.getLogger(__name__)
+from .const import ATTR_DISCOVER_DEVICES
+from .entity import HMDevice
 
 SUPPORT_HOMEMATIC = SUPPORT_BRIGHTNESS
 
@@ -29,10 +29,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         new_device = HMLight(conf)
         devices.append(new_device)
 
-    add_entities(devices)
+    add_entities(devices, True)
 
 
-class HMLight(HMDevice, Light):
+class HMLight(HMDevice, LightEntity):
     """Representation of a Homematic light."""
 
     @property
@@ -54,17 +54,31 @@ class HMLight(HMDevice, Light):
     @property
     def supported_features(self):
         """Flag supported features."""
+        features = SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
+
         if "COLOR" in self._hmdevice.WRITENODE:
-            return SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_EFFECT
-        return SUPPORT_BRIGHTNESS
+            features |= SUPPORT_COLOR
+        if "PROGRAM" in self._hmdevice.WRITENODE:
+            features |= SUPPORT_EFFECT
+        if hasattr(self._hmdevice, "get_color_temp"):
+            features |= SUPPORT_COLOR_TEMP
+        return features
 
     @property
     def hs_color(self):
         """Return the hue and saturation color value [float, float]."""
         if not self.supported_features & SUPPORT_COLOR:
             return None
-        hue, sat = self._hmdevice.get_hs_color()
+        hue, sat = self._hmdevice.get_hs_color(self._channel)
         return hue * 360.0, sat * 100.0
+
+    @property
+    def color_temp(self):
+        """Return the color temp in mireds [int]."""
+        if not self.supported_features & SUPPORT_COLOR_TEMP:
+            return None
+        hm_color_temp = self._hmdevice.get_color_temp(self._channel)
+        return self.max_mireds - (self.max_mireds - self.min_mireds) * hm_color_temp
 
     @property
     def effect_list(self):
@@ -83,24 +97,37 @@ class HMLight(HMDevice, Light):
     def turn_on(self, **kwargs):
         """Turn the light on and/or change color or color effect settings."""
         if ATTR_TRANSITION in kwargs:
-            self._hmdevice.setValue("RAMP_TIME", kwargs[ATTR_TRANSITION])
+            self._hmdevice.setValue("RAMP_TIME", kwargs[ATTR_TRANSITION], self._channel)
 
         if ATTR_BRIGHTNESS in kwargs and self._state == "LEVEL":
             percent_bright = float(kwargs[ATTR_BRIGHTNESS]) / 255
             self._hmdevice.set_level(percent_bright, self._channel)
-        elif ATTR_HS_COLOR not in kwargs and ATTR_EFFECT not in kwargs:
+        elif (
+            ATTR_HS_COLOR not in kwargs
+            and ATTR_COLOR_TEMP not in kwargs
+            and ATTR_EFFECT not in kwargs
+        ):
             self._hmdevice.on(self._channel)
 
-        if ATTR_HS_COLOR in kwargs:
+        if ATTR_HS_COLOR in kwargs and self.supported_features & SUPPORT_COLOR:
             self._hmdevice.set_hs_color(
                 hue=kwargs[ATTR_HS_COLOR][0] / 360.0,
                 saturation=kwargs[ATTR_HS_COLOR][1] / 100.0,
+                channel=self._channel,
             )
+        if ATTR_COLOR_TEMP in kwargs:
+            hm_temp = (self.max_mireds - kwargs[ATTR_COLOR_TEMP]) / (
+                self.max_mireds - self.min_mireds
+            )
+            self._hmdevice.set_color_temp(hm_temp)
         if ATTR_EFFECT in kwargs:
             self._hmdevice.set_effect(kwargs[ATTR_EFFECT])
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
+        if ATTR_TRANSITION in kwargs:
+            self._hmdevice.setValue("RAMP_TIME", kwargs[ATTR_TRANSITION], self._channel)
+
         self._hmdevice.off(self._channel)
 
     def _init_data_struct(self):
@@ -110,4 +137,6 @@ class HMLight(HMDevice, Light):
         self._data[self._state] = None
 
         if self.supported_features & SUPPORT_COLOR:
-            self._data.update({"COLOR": None, "PROGRAM": None})
+            self._data.update({"COLOR": None})
+        if self.supported_features & SUPPORT_EFFECT:
+            self._data.update({"PROGRAM": None})

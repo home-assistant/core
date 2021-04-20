@@ -3,8 +3,9 @@ import asyncio
 from unittest.mock import patch
 
 from homeassistant import data_entry_flow
-from homeassistant.auth import models as auth_models, auth_manager_from_config
+from homeassistant.auth import auth_manager_from_config, models as auth_models
 from homeassistant.auth.mfa_modules import auth_mfa_module_from_config
+
 from tests.common import MockUser
 
 MOCK_CODE = "123456"
@@ -126,7 +127,7 @@ async def test_login_flow_validates_mfa(hass):
             result["flow_id"], {"code": MOCK_CODE}
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["data"].id == "mock-user"
+        assert result["data"].id == "mock-id"
 
 
 async def test_race_condition_in_data_loading(hass):

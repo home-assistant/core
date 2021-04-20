@@ -1,19 +1,23 @@
 """Support for displaying persistent notifications."""
+from __future__ import annotations
+
 from collections import OrderedDict
+from collections.abc import Mapping, MutableMapping
 import logging
-from typing import Any, Mapping, MutableMapping, Optional
+from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
+from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.template import Template
 from homeassistant.loader import bind_hass
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
-
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
@@ -35,8 +39,8 @@ SERVICE_MARK_READ = "mark_read"
 
 SCHEMA_SERVICE_CREATE = vol.Schema(
     {
-        vol.Required(ATTR_MESSAGE): cv.template,
-        vol.Optional(ATTR_TITLE): cv.template,
+        vol.Required(ATTR_MESSAGE): vol.Any(cv.dynamic_template, cv.string),
+        vol.Optional(ATTR_TITLE): vol.Any(cv.dynamic_template, cv.string),
         vol.Optional(ATTR_NOTIFICATION_ID): cv.string,
     }
 )
@@ -51,11 +55,6 @@ _LOGGER = logging.getLogger(__name__)
 STATE = "notifying"
 STATUS_UNREAD = "unread"
 STATUS_READ = "read"
-
-WS_TYPE_GET_NOTIFICATIONS = "persistent_notification/get"
-SCHEMA_WS_GET = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_GET_NOTIFICATIONS}
-)
 
 
 @bind_hass
@@ -75,8 +74,8 @@ def dismiss(hass, notification_id):
 def async_create(
     hass: HomeAssistant,
     message: str,
-    title: Optional[str] = None,
-    notification_id: Optional[str] = None,
+    title: str | None = None,
+    notification_id: str | None = None,
 ) -> None:
     """Generate a notification."""
     data = {
@@ -123,21 +122,24 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 
         attr = {}
         if title is not None:
-            try:
-                title.hass = hass
-                title = title.async_render()
-            except TemplateError as ex:
-                _LOGGER.error("Error rendering title %s: %s", title, ex)
-                title = title.template
+            if isinstance(title, Template):
+                try:
+                    title.hass = hass
+                    title = title.async_render(parse_result=False)
+                except TemplateError as ex:
+                    _LOGGER.error("Error rendering title %s: %s", title, ex)
+                    title = title.template
 
             attr[ATTR_TITLE] = title
+            attr[ATTR_FRIENDLY_NAME] = title
 
-        try:
-            message.hass = hass
-            message = message.async_render()
-        except TemplateError as ex:
-            _LOGGER.error("Error rendering message %s: %s", message, ex)
-            message = message.template
+        if isinstance(message, Template):
+            try:
+                message.hass = hass
+                message = message.async_render(parse_result=False)
+            except TemplateError as ex:
+                _LOGGER.error("Error rendering message %s: %s", message, ex)
+                message = message.template
 
         attr[ATTR_MESSAGE] = message
 
@@ -164,7 +166,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         if entity_id not in persistent_notifications:
             return
 
-        hass.states.async_remove(entity_id)
+        hass.states.async_remove(entity_id, call.context)
 
         del persistent_notifications[entity_id]
         hass.bus.async_fire(EVENT_PERSISTENT_NOTIFICATIONS_UPDATED)
@@ -178,7 +180,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         if entity_id not in persistent_notifications:
             _LOGGER.error(
                 "Marking persistent_notification read failed: "
-                "Notification ID %s not found.",
+                "Notification ID %s not found",
                 notification_id,
             )
             return
@@ -198,14 +200,13 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         DOMAIN, SERVICE_MARK_READ, mark_read_service, SCHEMA_SERVICE_MARK_READ
     )
 
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_GET_NOTIFICATIONS, websocket_get_notifications, SCHEMA_WS_GET
-    )
+    hass.components.websocket_api.async_register_command(websocket_get_notifications)
 
     return True
 
 
 @callback
+@websocket_api.websocket_command({vol.Required("type"): "persistent_notification/get"})
 def websocket_get_notifications(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,

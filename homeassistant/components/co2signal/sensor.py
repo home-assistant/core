@@ -4,15 +4,15 @@ import logging
 import CO2Signal
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_TOKEN,
+    ENERGY_KILO_WATT_HOUR,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 CONF_COUNTRY_CODE = "country_code"
 
@@ -25,7 +25,7 @@ MSG_LOCATION = (
     "For the coordinates, "
     "you need to use both latitude and longitude."
 )
-CO2_INTENSITY_UNIT = "CO2eq/kWh"
+CO2_INTENSITY_UNIT = f"CO2eq/{ENERGY_KILO_WATT_HOUR}"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_TOKEN): cv.string,
@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devs, True)
 
 
-class CO2Sensor(Entity):
+class CO2Sensor(SensorEntity):
     """Implementation of the CO2Signal sensor."""
 
     def __init__(self, token, country_code, lat, lon):
@@ -65,9 +65,7 @@ class CO2Sensor(Entity):
         if country_code is not None:
             device_name = country_code
         else:
-            device_name = "{lat}/{lon}".format(
-                lat=round(self._latitude, 2), lon=round(self._longitude, 2)
-            )
+            device_name = f"{round(self._latitude, 2)}/{round(self._longitude, 2)}"
 
         self._friendly_name = f"CO2 intensity - {device_name}"
 
@@ -79,7 +77,7 @@ class CO2Sensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        return "mdi:periodic-table-co2"
+        return "mdi:molecule-co2"
 
     @property
     def state(self):
@@ -92,7 +90,7 @@ class CO2Sensor(Entity):
         return CO2_INTENSITY_UNIT
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the last update."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 

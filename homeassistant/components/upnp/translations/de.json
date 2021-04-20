@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "UPnP/IGD ist bereits konfiguriert",
+            "incomplete_discovery": "Unvollst\u00e4ndige Suche",
+            "no_devices_found": "Keine UPnP/IGD-Ger\u00e4te im Netzwerk gefunden."
+        },
+        "error": {
+            "one": "Ein",
+            "other": "andere"
+        },
+        "flow_title": "UPnP/IGD: {name}",
+        "step": {
+            "ssdp_confirm": {
+                "description": "M\u00f6chten Sie dieses UPnP/IGD-Ger\u00e4t einrichten?"
+            },
+            "user": {
+                "data": {
+                    "scan_interval": "Aktualisierungsintervall (Sekunden, mindestens 30)",
+                    "usn": "Ger\u00e4t"
+                }
+            }
+        }
+    }
+}

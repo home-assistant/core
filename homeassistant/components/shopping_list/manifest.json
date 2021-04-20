@@ -1,10 +1,10 @@
 {
   "domain": "shopping_list",
-  "name": "Shopping list",
+  "name": "Shopping List",
   "documentation": "https://www.home-assistant.io/integrations/shopping_list",
-  "requirements": [],
-  "dependencies": [
-    "http"
-  ],
-  "codeowners": []
+  "dependencies": ["http"],
+  "codeowners": [],
+  "config_flow": true,
+  "quality_scale": "internal",
+  "iot_class": "local_push"
 }

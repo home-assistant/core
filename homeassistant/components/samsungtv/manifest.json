@@ -1,11 +1,14 @@
 {
   "domain": "samsungtv",
-  "name": "Samsungtv",
+  "name": "Samsung Smart TV",
   "documentation": "https://www.home-assistant.io/integrations/samsungtv",
-  "requirements": [
-    "samsungctl[websocket]==0.7.1",
-    "wakeonlan==1.1.6"
+  "requirements": ["samsungctl[websocket]==0.7.1", "samsungtvws==1.6.0"],
+  "ssdp": [
+    {
+      "st": "urn:samsung.com:device:RemoteControlReceiver:1"
+    }
   ],
-  "dependencies": [],
-  "codeowners": []
+  "codeowners": ["@escoand"],
+  "config_flow": true,
+  "iot_class": "local_polling"
 }

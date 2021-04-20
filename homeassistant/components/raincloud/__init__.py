@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+from raincloudy.core import RainCloudy
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
@@ -10,6 +11,9 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
+    PERCENTAGE,
+    TIME_DAYS,
+    TIME_MINUTES,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
@@ -55,13 +59,13 @@ ICON_MAP = {
 
 UNIT_OF_MEASUREMENT_MAP = {
     "auto_watering": "",
-    "battery": "%",
+    "battery": PERCENTAGE,
     "is_watering": "",
     "manual_watering": "",
     "next_cycle": "",
-    "rain_delay": "days",
+    "rain_delay": TIME_DAYS,
     "status": "",
-    "watering_time": "min",
+    "watering_time": TIME_MINUTES,
 }
 
 BINARY_SENSORS = ["is_watering", "status"]
@@ -96,8 +100,6 @@ def setup(hass, config):
     scan_interval = conf.get(CONF_SCAN_INTERVAL)
 
     try:
-        from raincloudy.core import RainCloudy
-
         raincloud = RainCloudy(username=username, password=password)
         if not raincloud.is_connected:
             raise HTTPError
@@ -105,9 +107,7 @@ def setup(hass, config):
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Rain Cloud service: %s", str(ex))
         hass.components.persistent_notification.create(
-            "Error: {}<br />"
-            "You will need to restart hass after fixing."
-            "".format(ex),
+            f"Error: {ex}<br />" "You will need to restart hass after fixing.",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
         )
@@ -140,7 +140,7 @@ class RainCloudEntity(Entity):
         """Initialize the RainCloud entity."""
         self.data = data
         self._sensor_type = sensor_type
-        self._name = "{0} {1}".format(self.data.name, KEY_MAP.get(self._sensor_type))
+        self._name = f"{self.data.name} {KEY_MAP.get(self._sensor_type)}"
         self._state = None
 
     @property
@@ -150,8 +150,10 @@ class RainCloudEntity(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_UPDATE_RAINCLOUD, self._update_callback
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_UPDATE_RAINCLOUD, self._update_callback
+            )
         )
 
     def _update_callback(self):
@@ -159,12 +161,7 @@ class RainCloudEntity(Entity):
         self.schedule_update_ha_state(True)
 
     @property
-    def unit_of_measurement(self):
-        """Return the units of measurement."""
-        return UNIT_OF_MEASUREMENT_MAP.get(self._sensor_type)
-
-    @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION, "identifier": self.data.serial}
 

@@ -1,20 +1,29 @@
 """Support for sensors through the SmartThings cloud API."""
+from __future__ import annotations
+
 from collections import namedtuple
-from typing import Optional, Sequence
+from collections.abc import Sequence
 
 from pysmartthings import Attribute, Capability
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
+    AREA_SQUARE_METERS,
+    CONCENTRATION_PARTS_PER_MILLION,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
     ENERGY_KILO_WATT_HOUR,
+    LIGHT_LUX,
     MASS_KILOGRAMS,
+    PERCENTAGE,
     POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    VOLT,
+    VOLUME_CUBIC_METERS,
 )
 
 from . import SmartThingsEntity
@@ -33,22 +42,39 @@ CAPABILITY_TO_SENSORS = {
         Map(Attribute.air_quality, "Air Quality", "CAQI", None)
     ],
     Capability.alarm: [Map(Attribute.alarm, "Alarm", None, None)],
-    Capability.audio_volume: [Map(Attribute.volume, "Volume", "%", None)],
-    Capability.battery: [Map(Attribute.battery, "Battery", "%", DEVICE_CLASS_BATTERY)],
+    Capability.audio_volume: [Map(Attribute.volume, "Volume", PERCENTAGE, None)],
+    Capability.battery: [
+        Map(Attribute.battery, "Battery", PERCENTAGE, DEVICE_CLASS_BATTERY)
+    ],
     Capability.body_mass_index_measurement: [
-        Map(Attribute.bmi_measurement, "Body Mass Index", "kg/m^2", None)
+        Map(
+            Attribute.bmi_measurement,
+            "Body Mass Index",
+            f"{MASS_KILOGRAMS}/{AREA_SQUARE_METERS}",
+            None,
+        )
     ],
     Capability.body_weight_measurement: [
         Map(Attribute.body_weight_measurement, "Body Weight", MASS_KILOGRAMS, None)
     ],
     Capability.carbon_dioxide_measurement: [
-        Map(Attribute.carbon_dioxide, "Carbon Dioxide Measurement", "ppm", None)
+        Map(
+            Attribute.carbon_dioxide,
+            "Carbon Dioxide Measurement",
+            CONCENTRATION_PARTS_PER_MILLION,
+            None,
+        )
     ],
     Capability.carbon_monoxide_detector: [
         Map(Attribute.carbon_monoxide, "Carbon Monoxide Detector", None, None)
     ],
     Capability.carbon_monoxide_measurement: [
-        Map(Attribute.carbon_monoxide_level, "Carbon Monoxide Measurement", "ppm", None)
+        Map(
+            Attribute.carbon_monoxide_level,
+            "Carbon Monoxide Measurement",
+            CONCENTRATION_PARTS_PER_MILLION,
+            None,
+        )
     ],
     Capability.dishwasher_operating_state: [
         Map(Attribute.machine_state, "Dishwasher Machine State", None, None),
@@ -82,18 +108,29 @@ CAPABILITY_TO_SENSORS = {
         Map(
             Attribute.equivalent_carbon_dioxide_measurement,
             "Equivalent Carbon Dioxide Measurement",
-            "ppm",
+            CONCENTRATION_PARTS_PER_MILLION,
             None,
         )
     ],
     Capability.formaldehyde_measurement: [
-        Map(Attribute.formaldehyde_level, "Formaldehyde Measurement", "ppm", None)
+        Map(
+            Attribute.formaldehyde_level,
+            "Formaldehyde Measurement",
+            CONCENTRATION_PARTS_PER_MILLION,
+            None,
+        )
+    ],
+    Capability.gas_meter: [
+        Map(Attribute.gas_meter, "Gas Meter", ENERGY_KILO_WATT_HOUR, None),
+        Map(Attribute.gas_meter_calorific, "Gas Meter Calorific", None, None),
+        Map(Attribute.gas_meter_time, "Gas Meter Time", None, DEVICE_CLASS_TIMESTAMP),
+        Map(Attribute.gas_meter_volume, "Gas Meter Volume", VOLUME_CUBIC_METERS, None),
     ],
     Capability.illuminance_measurement: [
-        Map(Attribute.illuminance, "Illuminance", "lux", DEVICE_CLASS_ILLUMINANCE)
+        Map(Attribute.illuminance, "Illuminance", LIGHT_LUX, DEVICE_CLASS_ILLUMINANCE)
     ],
     Capability.infrared_level: [
-        Map(Attribute.infrared_level, "Infrared Level", "%", None)
+        Map(Attribute.infrared_level, "Infrared Level", PERCENTAGE, None)
     ],
     Capability.media_input_source: [
         Map(Attribute.input_source, "Media Input Source", None, None)
@@ -131,7 +168,7 @@ CAPABILITY_TO_SENSORS = {
         Map(
             Attribute.humidity,
             "Relative Humidity Measurement",
-            "%",
+            PERCENTAGE,
             DEVICE_CLASS_HUMIDITY,
         )
     ],
@@ -201,15 +238,23 @@ CAPABILITY_TO_SENSORS = {
         )
     ],
     Capability.three_axis: [],
-    Capability.tv_channel: [Map(Attribute.tv_channel, "Tv Channel", None, None)],
+    Capability.tv_channel: [
+        Map(Attribute.tv_channel, "Tv Channel", None, None),
+        Map(Attribute.tv_channel_name, "Tv Channel Name", None, None),
+    ],
     Capability.tvoc_measurement: [
-        Map(Attribute.tvoc_level, "Tvoc Measurement", "ppm", None)
+        Map(
+            Attribute.tvoc_level,
+            "Tvoc Measurement",
+            CONCENTRATION_PARTS_PER_MILLION,
+            None,
+        )
     ],
     Capability.ultraviolet_index: [
         Map(Attribute.ultraviolet_index, "Ultraviolet Index", None, None)
     ],
     Capability.voltage_measurement: [
-        Map(Attribute.voltage, "Voltage Measurement", "V", None)
+        Map(Attribute.voltage, "Voltage Measurement", VOLT, None)
     ],
     Capability.washer_mode: [Map(Attribute.washer_mode, "Washer Mode", None, None)],
     Capability.washer_operating_state: [
@@ -227,11 +272,6 @@ CAPABILITY_TO_SENSORS = {
 UNITS = {"C": TEMP_CELSIUS, "F": TEMP_FAHRENHEIT}
 
 THREE_AXIS_NAMES = ["X Coordinate", "Y Coordinate", "Z Coordinate"]
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Platform uses config entry setup."""
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -260,14 +300,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(sensors)
 
 
-def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
+def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
     """Return all capabilities supported if minimum required are present."""
     return [
         capability for capability in CAPABILITY_TO_SENSORS if capability in capabilities
     ]
 
 
-class SmartThingsSensor(SmartThingsEntity):
+class SmartThingsSensor(SmartThingsEntity, SensorEntity):
     """Define a SmartThings Sensor."""
 
     def __init__(
@@ -307,7 +347,7 @@ class SmartThingsSensor(SmartThingsEntity):
         return UNITS.get(unit, unit) if unit else self._default_unit
 
 
-class SmartThingsThreeAxisSensor(SmartThingsEntity):
+class SmartThingsThreeAxisSensor(SmartThingsEntity, SensorEntity):
     """Define a SmartThings Three Axis Sensor."""
 
     def __init__(self, device, index):
@@ -318,12 +358,12 @@ class SmartThingsThreeAxisSensor(SmartThingsEntity):
     @property
     def name(self) -> str:
         """Return the name of the binary sensor."""
-        return "{} {}".format(self._device.label, THREE_AXIS_NAMES[self._index])
+        return f"{self._device.label} {THREE_AXIS_NAMES[self._index]}"
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return "{}.{}".format(self._device.device_id, THREE_AXIS_NAMES[self._index])
+        return f"{self._device.device_id}.{THREE_AXIS_NAMES[self._index]}"
 
     @property
     def state(self):

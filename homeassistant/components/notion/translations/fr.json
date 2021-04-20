@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ce nom d'utilisateur est d\u00e9j\u00e0 utilis\u00e9."
+        },
+        "error": {
+            "invalid_auth": "Authentification invalide",
+            "no_devices": "Aucun appareil trouv\u00e9 sur le compte"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur"
+                },
+                "title": "Veuillez saisir vos informations"
+            }
+        }
+    }
+}

@@ -5,7 +5,7 @@ import re
 import requests
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -61,14 +61,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([MpcHcDevice(name, url)], True)
 
 
-class MpcHcDevice(MediaPlayerDevice):
+class MpcHcDevice(MediaPlayerEntity):
     """Representation of a MPC-HC server."""
 
     def __init__(self, name, url):
         """Initialize the MPC-HC device."""
         self._name = name
         self._url = url
-        self._player_variables = dict()
+        self._player_variables = {}
+        self._available = False
 
     def update(self):
         """Get the latest details."""
@@ -79,8 +80,13 @@ class MpcHcDevice(MediaPlayerDevice):
 
             for var in mpchc_variables:
                 self._player_variables[var[0]] = var[1].lower()
+            self._available = True
         except requests.exceptions.RequestException:
-            _LOGGER.error("Could not connect to MPC-HC at: %s", self._url)
+            if self.available:
+                _LOGGER.error("Could not connect to MPC-HC at: %s", self._url)
+
+            self._player_variables = {}
+            self._available = False
 
     def _send_command(self, command_id):
         """Send a command to MPC-HC via its window message ID."""
@@ -110,6 +116,11 @@ class MpcHcDevice(MediaPlayerDevice):
             return STATE_PAUSED
 
         return STATE_IDLE
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._available
 
     @property
     def media_title(self):

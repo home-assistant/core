@@ -1,0 +1,65 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "invalid_auth": "\uc778\uc99d\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "single_instance_allowed": "\uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \ud558\ub098\uc758 \uc778\uc2a4\ud134\uc2a4\ub9cc \uad6c\uc131\ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4."
+        },
+        "error": {
+            "invalid_auth": "\uc778\uc99d\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+        },
+        "flow_title": "Tuya \uad6c\uc131\ud558\uae30",
+        "step": {
+            "user": {
+                "data": {
+                    "country_code": "\uacc4\uc815 \uad6d\uac00 \ucf54\ub4dc (\uc608 : \ubbf8\uad6d\uc758 \uacbd\uc6b0 1, \uc911\uad6d\uc758 \uacbd\uc6b0 86)",
+                    "password": "\ube44\ubc00\ubc88\ud638",
+                    "platform": "\uacc4\uc815\uc774 \ub4f1\ub85d\ub41c \uc571",
+                    "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
+                },
+                "description": "Tuya \uc790\uaca9 \uc99d\uba85\uc744 \uc785\ub825\ud574\uc8fc\uc138\uc694.",
+                "title": "Tuya"
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "error": {
+            "dev_multi_type": "\uc120\ud0dd\ud55c \uc5ec\ub7ec \uae30\uae30\ub97c \uad6c\uc131\ud558\ub824\uba74 \uc720\ud615\uc774 \ub3d9\uc77c\ud574\uc57c \ud569\ub2c8\ub2e4",
+            "dev_not_config": "\uae30\uae30 \uc720\ud615\uc744 \uad6c\uc131\ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4",
+            "dev_not_found": "\uae30\uae30\ub97c \ucc3e\uc744 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4"
+        },
+        "step": {
+            "device": {
+                "data": {
+                    "brightness_range_mode": "\uae30\uae30\uc5d0\uc11c \uc0ac\uc6a9\ud558\ub294 \ubc1d\uae30 \ubc94\uc704",
+                    "curr_temp_divider": "\ud604\uc7ac \uc628\ub3c4 \uac12 \ubd84\ud560 (0 = \uae30\ubcf8\uac12 \uc0ac\uc6a9)",
+                    "max_kelvin": "\uce98\ube48 \ub2e8\uc704\uc758 \ucd5c\ub300 \uc0c9\uc628\ub3c4",
+                    "max_temp": "\ucd5c\ub300 \ubaa9\ud45c \uc628\ub3c4 (\uae30\ubcf8\uac12\uc758 \uacbd\uc6b0 \ucd5c\uc19f\uac12 \ubc0f \ucd5c\ub313\uac12 = 0)",
+                    "min_kelvin": "\uce98\ube48 \ub2e8\uc704\uc758 \ucd5c\uc18c \uc0c9\uc628\ub3c4",
+                    "min_temp": "\ucd5c\uc18c \ubaa9\ud45c \uc628\ub3c4 (\uae30\ubcf8\uac12\uc758 \uacbd\uc6b0 \ucd5c\uc19f\uac12 \ubc0f \ucd5c\ub313\uac12 = 0)",
+                    "set_temp_divided": "\uc124\uc815 \uc628\ub3c4 \uba85\ub839\uc5d0 \ubd84\ud560\ub41c \uc628\ub3c4 \uac12 \uc0ac\uc6a9\ud558\uae30",
+                    "support_color": "\uc0c9\uc0c1 \uc9c0\uc6d0 \uac15\uc81c \uc801\uc6a9\ud558\uae30",
+                    "temp_divider": "\uc628\ub3c4 \uac12 \ubd84\ud560 (0 = \uae30\ubcf8\uac12 \uc0ac\uc6a9)",
+                    "temp_step_override": "\ud76c\ub9dd \uc628\ub3c4 \ub2e8\uacc4",
+                    "tuya_max_coltemp": "\uae30\uae30\uc5d0\uc11c \ubcf4\uace0\ud55c \ucd5c\ub300 \uc0c9\uc628\ub3c4",
+                    "unit_of_measurement": "\uae30\uae30\uc5d0\uc11c \uc0ac\uc6a9\ud558\ub294 \uc628\ub3c4 \ub2e8\uc704"
+                },
+                "description": "{device_type} `{device_name}` \uae30\uae30\uc5d0 \ub300\ud574 \ud45c\uc2dc\ub418\ub294 \uc815\ubcf4\ub97c \uc870\uc815\ud558\ub294 \uc635\uc158 \uad6c\uc131\ud558\uae30",
+                "title": "Tuya \uae30\uae30 \uad6c\uc131\ud558\uae30"
+            },
+            "init": {
+                "data": {
+                    "discovery_interval": "\uae30\uae30 \uac80\uc0c9 \ud3f4\ub9c1 \uac04\uaca9 (\ucd08)",
+                    "list_devices": "\uad6c\uc131\uc744 \uc800\uc7a5\ud558\ub824\uba74 \uad6c\uc131\ud560 \uae30\uae30\ub97c \uc120\ud0dd\ud558\uac70\ub098 \ube44\uc6cc \ub450\uc138\uc694",
+                    "query_device": "\ube60\ub978 \uc0c1\ud0dc \uc5c5\ub370\uc774\ud2b8\ub97c \uc704\ud574 \ucffc\ub9ac \ubc29\ubc95\uc744 \uc0ac\uc6a9\ud560 \uae30\uae30\ub97c \uc120\ud0dd\ud574\uc8fc\uc138\uc694",
+                    "query_interval": "\uae30\uae30 \ucffc\ub9ac \ud3f4\ub9c1 \uac04\uaca9 (\ucd08)"
+                },
+                "description": "\ud3f4\ub9c1 \uac04\uaca9 \uac12\uc744 \ub108\ubb34 \ub0ae\uac8c \uc124\uc815\ud558\uc9c0 \ub9d0\uc544 \uc8fc\uc138\uc694. \uadf8\ub807\uc9c0 \uc54a\uc73c\uba74 \ud638\ucd9c\uc5d0 \uc2e4\ud328\ud558\uace0 \ub85c\uadf8\uc5d0 \uc624\ub958 \uba54\uc2dc\uc9c0\uac00 \uc0dd\uc131\ub429\ub2c8\ub2e4.",
+                "title": "Tuya \uc635\uc158 \uad6c\uc131\ud558\uae30"
+            }
+        }
+    }
+}

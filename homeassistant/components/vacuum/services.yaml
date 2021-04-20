@@ -1,165 +1,80 @@
 # Describes the format for available vacuum services
 
 turn_on:
+  name: Turn on
   description: Start a new cleaning task.
-  fields:
-    entity_id:
-      description: Name of the vacuum entity.
-      example: 'vacuum.xiaomi_vacuum_cleaner'
+  target:
 
 turn_off:
+  name: Turn off
   description: Stop the current cleaning task and return to home.
-  fields:
-    entity_id:
-      description: Name of the vacuum entity.
-      example: 'vacuum.xiaomi_vacuum_cleaner'
+  target:
 
 stop:
+  name: Stop
   description: Stop the current cleaning task.
-  fields:
-    entity_id:
-      description: Name of the vacuum entity.
-      example: 'vacuum.xiaomi_vacuum_cleaner'
+  target:
 
 locate:
+  name: Locate
   description: Locate the vacuum cleaner robot.
-  fields:
-    entity_id:
-      description: Name of the vacuum entity.
-      example: 'vacuum.xiaomi_vacuum_cleaner'
+  target:
 
 start_pause:
+  name: Start/Pause
   description: Start, pause, or resume the cleaning task.
-  fields:
-    entity_id:
-      description: Name of the vacuum entity.
-      example: 'vacuum.xiaomi_vacuum_cleaner'
+  target:
 
 start:
+  name: Start
   description: Start or resume the cleaning task.
-  fields:
-    entity_id:
-      description: Name of the vacuum entity.
-      example: 'vacuum.xiaomi_vacuum_cleaner'
+  target:
 
 pause:
+  name: Pause
   description: Pause the cleaning task.
-  fields:
-    entity_id:
-      description: Name of the vacuum entity.
-      example: 'vacuum.xiaomi_vacuum_cleaner'
+  target:
 
 return_to_base:
+  name: Return to base
   description: Tell the vacuum cleaner to return to its dock.
-  fields:
-    entity_id:
-      description: Name of the vacuum entity.
-      example: 'vacuum.xiaomi_vacuum_cleaner'
+  target:
 
 clean_spot:
+  name: Clean spot
   description: Tell the vacuum cleaner to do a spot clean-up.
-  fields:
-    entity_id:
-      description: Name of the vacuum entity.
-      example: 'vacuum.xiaomi_vacuum_cleaner'
+  target:
 
 send_command:
+  name: Send command
   description: Send a raw command to the vacuum cleaner.
+  target:
   fields:
-    entity_id:
-      description: Name of the vacuum entity.
-      example: 'vacuum.xiaomi_vacuum_cleaner'
     command:
+      name: Command
       description: Command to execute.
-      example: 'set_dnd_timer'
+      required: true
+      example: "set_dnd_timer"
+      selector:
+        text:
     params:
+      name: Parameters
       description: Parameters for the command.
       example: '{ "key": "value" }'
+      selector:
+        object:
 
 set_fan_speed:
+  name: Set fan speed
   description: Set the fan speed of the vacuum cleaner.
+  target:
   fields:
-    entity_id:
-      description: Name of the vacuum entity.
-      example: 'vacuum.xiaomi_vacuum_cleaner'
     fan_speed:
-      description: Platform dependent vacuum cleaner fan speed, with speed steps, like 'medium' or by percentage, between 0 and 100.
-      example: 'low'
-
-xiaomi_remote_control_start:
-  description: Start remote control of the vacuum cleaner. You can then move it with `remote_control_move`, when done call `remote_control_stop`.
-  fields:
-    entity_id:
-      description: Name of the vacuum entity.
-      example: 'vacuum.xiaomi_vacuum_cleaner'
-
-xiaomi_remote_control_stop:
-  description: Stop remote control mode of the vacuum cleaner.
-  fields:
-    entity_id:
-      description: Name of the vacuum entity.
-      example: 'vacuum.xiaomi_vacuum_cleaner'
-
-xiaomi_remote_control_move:
-  description: Remote control the vacuum cleaner, make sure you first set it in remote control mode with `remote_control_start`.
-  fields:
-    entity_id:
-      description: Name of the vacuum entity.
-      example: 'vacuum.xiaomi_vacuum_cleaner'
-    velocity:
-      description: Speed, between -0.29 and 0.29.
-      example: '0.2'
-    rotation:
-      description: Rotation, between -179 degrees and 179 degrees.
-      example: '90'
-    duration:
-      description: Duration of the movement.
-      example: '1500'
-
-xiaomi_remote_control_move_step:
-  description: Remote control the vacuum cleaner, only makes one move and then stops.
-  fields:
-    entity_id:
-      description: Name of the vacuum entity.
-      example: 'vacuum.xiaomi_vacuum_cleaner'
-    velocity:
-      description: Speed, between -0.29 and 0.29.
-      example: '0.2'
-    rotation:
-      description: Rotation, between -179 degrees and 179 degrees.
-      example: '90'
-    duration:
-      description: Duration of the movement.
-      example: '1500'
-
-xiaomi_clean_zone:
-  description: Start the cleaning operation in the selected areas for the number of repeats indicated.
-  fields:
-    entity_id:
-      description: Name of the vacuum entity.
-      example: 'vacuum.xiaomi_vacuum_cleaner'
-    zone:
-      description: Array of zones. Each zone is an array of 4 integer values.
-      example: '[[23510,25311,25110,26362]]'
-    repeats:
-      description: Number of cleaning repeats for each zone between 1 and 3.
-      example: '1'
-
-neato_custom_cleaning:
-  description: Zone Cleaning service call specific to Neato Botvacs.
-  fields:
-    entity_id:
-      description: Name of the vacuum entity. [Required]
-      example: 'vacuum.neato'
-    mode:
-      description: "Set the cleaning mode: 1 for eco and 2 for turbo. Defaults to turbo if not set."
-      example: 2
-    navigation:
-      description: "Set the navigation mode: 1 for normal, 2 for extra care, 3 for deep. Defaults to normal if not set."
-      example: 1
-    category:
-      description: "Whether to use a persistent map or not for cleaning (i.e. No go lines): 2 for no map, 4 for map. Default to using map if not set (and fallback to no map if no map is found)."
-      example: 2
-    zone:
-      description: Only supported on the Botvac D7. Name of the zone to clean. Defaults to no zone i.e. complete house cleanup.
-      example: "Kitchen"
+      name: Fan speed
+      description:
+        Platform dependent vacuum cleaner fan speed, with speed steps, like
+        'medium' or by percentage, between 0 and 100.
+      required: true
+      example: "low"
+      selector:
+        text:

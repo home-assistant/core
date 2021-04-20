@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Aucun p\u00e9riph\u00e9rique AEH-W4A1 trouv\u00e9 sur le r\u00e9seau.",
+            "single_instance_allowed": "Une seule configuration de AEH-W4A1 est possible."
+        },
+        "step": {
+            "confirm": {
+                "description": "Voulez-vous configurer AEH-W4A1?"
+            }
+        }
+    }
+}

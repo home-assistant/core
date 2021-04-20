@@ -1,14 +1,16 @@
 """Support for Greenwave Reality (TCP Connected) lights."""
-import logging
 from datetime import timedelta
+import logging
+import os
 
+import greenwavereality as greenwave
 import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import CONF_HOST
 import homeassistant.helpers.config_validation as cv
@@ -29,9 +31,6 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Greenwave Reality Platform."""
-    import greenwavereality as greenwave
-    import os
-
     host = config.get(CONF_HOST)
     tokenfile = hass.config.path(".greenwave")
     if config.get(CONF_VERSION) == 3:
@@ -55,13 +54,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class GreenwaveLight(Light):
+class GreenwaveLight(LightEntity):
     """Representation of an Greenwave Reality Light."""
 
     def __init__(self, light, host, token, gatewaydata):
         """Initialize a Greenwave Reality Light."""
-        import greenwavereality as greenwave
-
         self._did = int(light["did"])
         self._name = light["name"]
         self._state = int(light["state"])
@@ -98,22 +95,16 @@ class GreenwaveLight(Light):
 
     def turn_on(self, **kwargs):
         """Instruct the light to turn on."""
-        import greenwavereality as greenwave
-
         temp_brightness = int((kwargs.get(ATTR_BRIGHTNESS, 255) / 255) * 100)
         greenwave.set_brightness(self._host, self._did, temp_brightness, self._token)
         greenwave.turn_on(self._host, self._did, self._token)
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
-        import greenwavereality as greenwave
-
         greenwave.turn_off(self._host, self._did, self._token)
 
     def update(self):
         """Fetch new state data for this light."""
-        import greenwavereality as greenwave
-
         self._gatewaydata.update()
         bulbs = self._gatewaydata.greenwave
 
@@ -128,8 +119,6 @@ class GatewayData:
 
     def __init__(self, host, token):
         """Initialize the data object."""
-        import greenwavereality as greenwave
-
         self._host = host
         self._token = token
         self._greenwave = greenwave.grab_bulbs(host, token)
@@ -142,7 +131,5 @@ class GatewayData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from the gateway."""
-        import greenwavereality as greenwave
-
         self._greenwave = greenwave.grab_bulbs(self._host, self._token)
         return self._greenwave

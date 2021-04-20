@@ -1,10 +1,15 @@
 """The Hangouts Bot."""
 import asyncio
+from contextlib import suppress
 import io
 import logging
 
 import aiohttp
+import hangups
+from hangups import ChatMessageEvent, ChatMessageSegment, Client, get_auth, hangouts_pb2
 
+from homeassistant.const import HTTP_OK
+from homeassistant.core import callback
 from homeassistant.helpers import dispatcher, intent
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -24,6 +29,7 @@ from .const import (
     EVENT_HANGOUTS_MESSAGE_RECEIVED,
     INTENT_HELP,
 )
+from .hangups_utils import HangoutsCredentials, HangoutsRefreshToken
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,6 +78,7 @@ class HangoutsBot:
                 return conv
         return None
 
+    @callback
     def async_update_conversation_commands(self):
         """Refresh the commands for every conversation."""
         self._conversation_intents = {}
@@ -83,30 +90,29 @@ class HangoutsBot:
                     conv_id = self._resolve_conversation_id(conversation)
                     if conv_id is not None:
                         conversations.append(conv_id)
-                data["_" + CONF_CONVERSATIONS] = conversations
+                data[f"_{CONF_CONVERSATIONS}"] = conversations
             elif self._default_conv_ids:
-                data["_" + CONF_CONVERSATIONS] = self._default_conv_ids
+                data[f"_{CONF_CONVERSATIONS}"] = self._default_conv_ids
             else:
-                data["_" + CONF_CONVERSATIONS] = [
+                data[f"_{CONF_CONVERSATIONS}"] = [
                     conv.id_ for conv in self._conversation_list.get_all()
                 ]
 
-            for conv_id in data["_" + CONF_CONVERSATIONS]:
+            for conv_id in data[f"_{CONF_CONVERSATIONS}"]:
                 if conv_id not in self._conversation_intents:
                     self._conversation_intents[conv_id] = {}
 
                 self._conversation_intents[conv_id][intent_type] = data
 
-        try:
+        with suppress(ValueError):
             self._conversation_list.on_event.remove_observer(
                 self._async_handle_conversation_event
             )
-        except ValueError:
-            pass
         self._conversation_list.on_event.add_observer(
             self._async_handle_conversation_event
         )
 
+    @callback
     def async_resolve_conversations(self, _):
         """Resolve the list of default and error suppressed conversations."""
         self._default_conv_ids = []
@@ -126,8 +132,6 @@ class HangoutsBot:
         )
 
     async def _async_handle_conversation_event(self, event):
-        from hangups import ChatMessageEvent
-
         if isinstance(event, ChatMessageEvent):
             dispatcher.async_dispatcher_send(
                 self.hass,
@@ -196,11 +200,6 @@ class HangoutsBot:
 
     async def async_connect(self):
         """Login to the Google Hangouts."""
-        from .hangups_utils import HangoutsRefreshToken, HangoutsCredentials
-
-        from hangups import Client
-        from hangups import get_auth
-
         session = await self.hass.async_add_executor_job(
             get_auth,
             HangoutsCredentials(None, None, None),
@@ -221,7 +220,7 @@ class HangoutsBot:
     async def _on_disconnect(self):
         """Handle disconnecting."""
         if self._connected:
-            _LOGGER.debug("Connection lost! Reconnect...")
+            _LOGGER.debug("Connection lost! Reconnect")
             await self.async_connect()
         else:
             dispatcher.async_dispatcher_send(self.hass, EVENT_HANGOUTS_DISCONNECTED)
@@ -252,8 +251,6 @@ class HangoutsBot:
         if not conversations:
             return False
 
-        from hangups import ChatMessageSegment, hangouts_pb2
-
         messages = []
         for segment in message:
             if messages:
@@ -276,7 +273,7 @@ class HangoutsBot:
                 try:
                     websession = async_get_clientsession(self.hass)
                     async with websession.get(uri, timeout=5) as response:
-                        if response.status != 200:
+                        if response.status != HTTP_OK:
                             _LOGGER.error(
                                 "Fetch image failed, %s, %s", response.status, response
                             )
@@ -306,11 +303,10 @@ class HangoutsBot:
             await conv.send_message(messages, image_file)
 
     async def _async_list_conversations(self):
-        import hangups
-
-        self._user_list, self._conversation_list = await hangups.build_user_conversation_list(
-            self._client
-        )
+        (
+            self._user_list,
+            self._conversation_list,
+        ) = await hangups.build_user_conversation_list(self._client)
         conversations = {}
         for i, conv in enumerate(self._conversation_list.get_all()):
             users_in_conversation = []

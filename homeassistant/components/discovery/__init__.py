@@ -1,23 +1,18 @@
-"""
-Starts a service to scan in intervals for new devices.
-
-Will emit EVENT_PLATFORM_DISCOVERED whenever a new service has been discovered.
-
-Knows which components handle certain types, will make sure they are
-loaded before the EVENT_PLATFORM_DISCOVERED is fired.
-"""
-import json
+"""Starts a service to scan in intervals for new devices."""
 from datetime import timedelta
+import json
 import logging
 
+from netdisco.discovery import NetworkDiscovery
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import callback
-from homeassistant.const import EVENT_HOMEASSISTANT_START
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.discovery import async_discover, async_load_platform
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.discovery import async_load_platform, async_discover
 import homeassistant.util.dt as dt_util
 
 DOMAIN = "discovery"
@@ -27,17 +22,13 @@ SERVICE_APPLE_TV = "apple_tv"
 SERVICE_DAIKIN = "daikin"
 SERVICE_DLNA_DMR = "dlna_dmr"
 SERVICE_ENIGMA2 = "enigma2"
-SERVICE_FREEBOX = "freebox"
 SERVICE_HASS_IOS_APP = "hass_ios"
 SERVICE_HASSIO = "hassio"
 SERVICE_HEOS = "heos"
-SERVICE_IGD = "igd"
 SERVICE_KONNECTED = "konnected"
 SERVICE_MOBILE_APP = "hass_mobile_app"
 SERVICE_NETGEAR = "netgear_router"
 SERVICE_OCTOPRINT = "octoprint"
-SERVICE_PLEX = "plex_mediaserver"
-SERVICE_ROKU = "roku"
 SERVICE_SABNZBD = "sabnzbd"
 SERVICE_SAMSUNG_PRINTER = "samsung_printer"
 SERVICE_TELLDUSLIVE = "tellstick"
@@ -46,43 +37,22 @@ SERVICE_WEMO = "belkin_wemo"
 SERVICE_WINK = "wink"
 SERVICE_XIAOMI_GW = "xiaomi_gw"
 
+# These have custom protocols
 CONFIG_ENTRY_HANDLERS = {
-    SERVICE_DAIKIN: "daikin",
     SERVICE_TELLDUSLIVE: "tellduslive",
-    SERVICE_IGD: "upnp",
-    SERVICE_PLEX: "plex",
+    "logitech_mediaserver": "squeezebox",
 }
 
+# These have no config flows
 SERVICE_HANDLERS = {
-    SERVICE_MOBILE_APP: ("mobile_app", None),
-    SERVICE_HASS_IOS_APP: ("ios", None),
     SERVICE_NETGEAR: ("device_tracker", None),
-    SERVICE_HASSIO: ("hassio", None),
-    SERVICE_APPLE_TV: ("apple_tv", None),
     SERVICE_ENIGMA2: ("media_player", "enigma2"),
-    SERVICE_ROKU: ("roku", None),
-    SERVICE_WINK: ("wink", None),
-    SERVICE_XIAOMI_GW: ("xiaomi_aqara", None),
     SERVICE_SABNZBD: ("sabnzbd", None),
-    SERVICE_SAMSUNG_PRINTER: ("sensor", "syncthru"),
-    SERVICE_KONNECTED: ("konnected", None),
-    SERVICE_OCTOPRINT: ("octoprint", None),
-    SERVICE_FREEBOX: ("freebox", None),
-    SERVICE_YEELIGHT: ("yeelight", None),
-    "panasonic_viera": ("media_player", "panasonic_viera"),
     "yamaha": ("media_player", "yamaha"),
-    "logitech_mediaserver": ("media_player", "squeezebox"),
-    "directv": ("media_player", "directv"),
-    "denonavr": ("media_player", "denonavr"),
-    "samsung_tv": ("media_player", "samsungtv"),
     "frontier_silicon": ("media_player", "frontier_silicon"),
     "openhome": ("media_player", "openhome"),
-    "harmony": ("remote", "harmony"),
     "bose_soundtouch": ("media_player", "soundtouch"),
     "bluesound": ("media_player", "bluesound"),
-    "songpal": ("media_player", "songpal"),
-    "kodi": ("media_player", "kodi"),
-    "volumio": ("media_player", "volumio"),
     "lg_smart_device": ("media_player", "lg_soundbar"),
     "nanoleaf_aurora": ("light", "nanoleaf"),
 }
@@ -90,16 +60,32 @@ SERVICE_HANDLERS = {
 OPTIONAL_SERVICE_HANDLERS = {SERVICE_DLNA_DMR: ("media_player", "dlna_dmr")}
 
 MIGRATED_SERVICE_HANDLERS = [
+    SERVICE_APPLE_TV,
     "axis",
     "deconz",
+    SERVICE_DAIKIN,
+    "denonavr",
     "esphome",
     "google_cast",
+    SERVICE_HASS_IOS_APP,
+    SERVICE_HASSIO,
     SERVICE_HEOS,
+    "harmony",
     "homekit",
     "ikea_tradfri",
+    "kodi",
+    SERVICE_KONNECTED,
+    SERVICE_MOBILE_APP,
+    SERVICE_OCTOPRINT,
     "philips_hue",
+    SERVICE_SAMSUNG_PRINTER,
     "sonos",
+    "songpal",
     SERVICE_WEMO,
+    SERVICE_WINK,
+    SERVICE_XIAOMI_GW,
+    "volumio",
+    SERVICE_YEELIGHT,
 ]
 
 DEFAULT_ENABLED = (
@@ -129,14 +115,10 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Start a discovery service."""
-    from netdisco.discovery import NetworkDiscovery
 
     logger = logging.getLogger(__name__)
     netdisco = NetworkDiscovery()
     already_discovered = set()
-
-    # Disable zeroconf logging, it spams
-    logging.getLogger("zeroconf").setLevel(logging.CRITICAL)
 
     if DOMAIN in config:
         # Platforms ignore by config
@@ -155,6 +137,8 @@ async def async_setup(hass, config):
                 "as it is now enabled by default",
                 platform,
             )
+
+    zeroconf_instance = await zeroconf.async_get_instance(hass)
 
     async def new_service_found(service, info):
         """Handle a new service if one is found."""
@@ -187,7 +171,7 @@ async def async_setup(hass, config):
 
         # We do not know how to handle this service.
         if not comp_plat:
-            logger.info("Unknown service discovered: %s %s", service, info)
+            logger.debug("Unknown service discovered: %s %s", service, info)
             return
 
         logger.info("Found new service: %s %s", service, info)
@@ -202,7 +186,9 @@ async def async_setup(hass, config):
     async def scan_devices(now):
         """Scan for devices."""
         try:
-            results = await hass.async_add_job(_discover, netdisco)
+            results = await hass.async_add_executor_job(
+                _discover, netdisco, zeroconf_instance
+            )
 
             for result in results:
                 hass.async_create_task(new_service_found(*result))
@@ -218,16 +204,16 @@ async def async_setup(hass, config):
         """Schedule the first discovery when Home Assistant starts up."""
         async_track_point_in_utc_time(hass, scan_devices, dt_util.utcnow())
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, schedule_first)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, schedule_first)
 
     return True
 
 
-def _discover(netdisco):
+def _discover(netdisco, zeroconf_instance):
     """Discover devices."""
     results = []
     try:
-        netdisco.scan()
+        netdisco.scan(zeroconf_instance=zeroconf_instance)
 
         for disc in netdisco.discover():
             for service in netdisco.get_info(disc):

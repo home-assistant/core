@@ -1,6 +1,8 @@
 """Bridge between emulated_roku and Home Assistant."""
 import logging
 
+from emulated_roku import EmulatedRokuCommandHandler, EmulatedRokuServer
+
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CoreState, EventOrigin
 
@@ -51,7 +53,6 @@ class EmulatedRoku:
 
     async def setup(self):
         """Start the emulated_roku server."""
-        from emulated_roku import EmulatedRokuServer, EmulatedRokuCommandHandler
 
         class EventCommandHandler(EmulatedRokuCommandHandler):
             """emulated_roku command handler to turn commands into events."""
@@ -108,7 +109,7 @@ class EmulatedRoku:
                 )
 
         LOGGER.debug(
-            "Intializing emulated_roku %s on %s:%s",
+            "Initializing emulated_roku %s on %s:%s",
             self.roku_usn,
             self.host_ip,
             self.listen_port,

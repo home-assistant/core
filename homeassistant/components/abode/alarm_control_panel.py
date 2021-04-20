@@ -1,7 +1,9 @@
 """Support for Abode Security System alarm control panels."""
-import logging
-
 import homeassistant.components.alarm_control_panel as alarm
+from homeassistant.components.alarm_control_panel.const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
+)
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     STATE_ALARM_ARMED_AWAY,
@@ -12,26 +14,18 @@ from homeassistant.const import (
 from . import AbodeDevice
 from .const import ATTRIBUTION, DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
-
 ICON = "mdi:security"
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Platform uses config entry setup."""
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up an alarm control panel for an Abode device."""
+    """Set up Abode alarm control panel device."""
     data = hass.data[DOMAIN]
-
     async_add_entities(
         [AbodeAlarm(data, await hass.async_add_executor_job(data.abode.get_alarm))]
     )
 
 
-class AbodeAlarm(AbodeDevice, alarm.AlarmControlPanel):
+class AbodeAlarm(AbodeDevice, alarm.AlarmControlPanelEntity):
     """An alarm_control_panel implementation for Abode."""
 
     @property
@@ -52,6 +46,16 @@ class AbodeAlarm(AbodeDevice, alarm.AlarmControlPanel):
             state = None
         return state
 
+    @property
+    def code_arm_required(self):
+        """Whether the code is required for arm actions."""
+        return False
+
+    @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
+
     def alarm_disarm(self, code=None):
         """Send disarm command."""
         self._device.set_standby()
@@ -65,7 +69,7 @@ class AbodeAlarm(AbodeDevice, alarm.AlarmControlPanel):
         self._device.set_away()
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,

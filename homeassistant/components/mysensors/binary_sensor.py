@@ -1,36 +1,65 @@
 """Support for MySensors binary sensors."""
+from typing import Callable
+
 from homeassistant.components import mysensors
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOISTURE,
+    DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_SAFETY,
+    DEVICE_CLASS_SOUND,
+    DEVICE_CLASS_VIBRATION,
     DEVICE_CLASSES,
     DOMAIN,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
+from homeassistant.components.mysensors import on_unload
+from homeassistant.components.mysensors.const import MYSENSORS_DISCOVERY
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.typing import HomeAssistantType
 
 SENSORS = {
     "S_DOOR": "door",
-    "S_MOTION": "motion",
+    "S_MOTION": DEVICE_CLASS_MOTION,
     "S_SMOKE": "smoke",
-    "S_SPRINKLER": "safety",
-    "S_WATER_LEAK": "safety",
-    "S_SOUND": "sound",
-    "S_VIBRATION": "vibration",
-    "S_MOISTURE": "moisture",
+    "S_SPRINKLER": DEVICE_CLASS_SAFETY,
+    "S_WATER_LEAK": DEVICE_CLASS_SAFETY,
+    "S_SOUND": DEVICE_CLASS_SOUND,
+    "S_VIBRATION": DEVICE_CLASS_VIBRATION,
+    "S_MOISTURE": DEVICE_CLASS_MOISTURE,
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the mysensors platform for binary sensors."""
-    mysensors.setup_mysensors_platform(
+async def async_setup_entry(
+    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities: Callable
+):
+    """Set up this platform for a specific ConfigEntry(==Gateway)."""
+
+    @callback
+    def async_discover(discovery_info):
+        """Discover and add a MySensors binary_sensor."""
+        mysensors.setup_mysensors_platform(
+            hass,
+            DOMAIN,
+            discovery_info,
+            MySensorsBinarySensor,
+            async_add_entities=async_add_entities,
+        )
+
+    await on_unload(
         hass,
-        DOMAIN,
-        discovery_info,
-        MySensorsBinarySensor,
-        async_add_entities=async_add_entities,
+        config_entry,
+        async_dispatcher_connect(
+            hass,
+            MYSENSORS_DISCOVERY.format(config_entry.entry_id, DOMAIN),
+            async_discover,
+        ),
     )
 
 
-class MySensorsBinarySensor(mysensors.device.MySensorsEntity, BinarySensorDevice):
+class MySensorsBinarySensor(mysensors.device.MySensorsEntity, BinarySensorEntity):
     """Representation of a MySensors Binary Sensor child node."""
 
     @property

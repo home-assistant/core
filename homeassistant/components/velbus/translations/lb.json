@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
+            "cannot_connect": "Feeler beim verbannen"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Numm fir d\u00ebs velbus Verbindung",
+                    "port": "Verbindungs zeeche-folleg"
+                },
+                "title": "D\u00e9fin\u00e9iert den Typ vun der Velbus Verbindung"
+            }
+        }
+    }
+}

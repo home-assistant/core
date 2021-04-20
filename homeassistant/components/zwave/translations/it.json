@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
+        },
+        "error": {
+            "option_error": "Convalida Z-Wave fallita. Il percorso della chiavetta USB \u00e8 corretto?"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "network_key": "Chiave di rete (lascia vuoto per generare automaticamente)",
+                    "usb_path": "Percorso del dispositivo USB"
+                },
+                "description": "Questa integrazione non viene pi\u00f9 mantenuta. Per le nuove installazioni, usa invece Z-Wave JS. \n\nVedere https://www.home-assistant.io/docs/z-wave/installation/ per informazioni sulle variabili di configurazione",
+                "title": "Configura Z-Wave"
+            }
+        }
+    },
+    "state": {
+        "_": {
+            "dead": "Disattivo",
+            "initializing": "In avvio",
+            "ready": "Pronto",
+            "sleeping": "Dormiente"
+        },
+        "query_stage": {
+            "dead": "Disattivo",
+            "initializing": "In avvio"
+        }
+    }
+}

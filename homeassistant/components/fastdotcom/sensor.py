@@ -1,17 +1,13 @@
 """Support for Fast.com internet speed testing sensor."""
-import logging
-
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import DATA_RATE_MEGABITS_PER_SECOND
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import DATA_UPDATED, DOMAIN as FASTDOTCOM_DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
-
 ICON = "mdi:speedometer"
-
-UNIT_OF_MEASUREMENT = "Mbit/s"
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -19,7 +15,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([SpeedtestSensor(hass.data[FASTDOTCOM_DOMAIN])])
 
 
-class SpeedtestSensor(RestoreEntity):
+class SpeedtestSensor(RestoreEntity, SensorEntity):
     """Implementation of a FAst.com sensor."""
 
     def __init__(self, speedtest_data):
@@ -41,7 +37,7 @@ class SpeedtestSensor(RestoreEntity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return UNIT_OF_MEASUREMENT
+        return DATA_RATE_MEGABITS_PER_SECOND
 
     @property
     def icon(self):
@@ -56,14 +52,17 @@ class SpeedtestSensor(RestoreEntity):
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, DATA_UPDATED, self._schedule_immediate_update
+            )
+        )
+
         state = await self.async_get_last_state()
         if not state:
             return
         self._state = state.state
-
-        async_dispatcher_connect(
-            self.hass, DATA_UPDATED, self._schedule_immediate_update
-        )
 
     def update(self):
         """Get the latest data and update the states."""

@@ -1,0 +1,12 @@
+{
+    "config": {
+        "abort": {
+            "install_app": "M\u1edf \u1ee9ng d\u1ee5ng di \u0111\u1ed9ng \u0111\u1ec3 thi\u1ebft l\u1eadp t\u00edch h\u1ee3p v\u1edbi Home Assistant. Xem [t\u00e0i li\u1ec7u] ({apps_url}) cho danh s\u00e1ch c\u00e1c \u1ee9ng d\u1ee5ng t\u01b0\u01a1ng th\u00edch."
+        },
+        "step": {
+            "confirm": {
+                "description": "B\u1ea1n c\u00f3 mu\u1ed1n thi\u1ebft l\u1eadp th\u00e0nh ph\u1ea7n \u1ee8ng d\u1ee5ng di \u0111\u1ed9ng kh\u00f4ng?"
+            }
+        }
+    }
+}

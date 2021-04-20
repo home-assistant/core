@@ -2,11 +2,9 @@
   "domain": "tibber",
   "name": "Tibber",
   "documentation": "https://www.home-assistant.io/integrations/tibber",
-  "requirements": [
-    "pyTibber==0.11.7"
-  ],
-  "dependencies": [],
-  "codeowners": [
-    "@danielhiversen"
-  ]
+  "requirements": ["pyTibber==0.16.2"],
+  "codeowners": ["@danielhiversen"],
+  "quality_scale": "silver",
+  "config_flow": true,
+  "iot_class": "cloud_polling"
 }

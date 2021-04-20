@@ -1,15 +1,16 @@
 """Support for Hangouts."""
 import logging
 
+from hangups.auth import GoogleAuthError
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.conversation.util import create_matcher
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers import dispatcher, intent
 import homeassistant.helpers.config_validation as cv
 
 # We need an import from .config_flow, without it .config_flow is never loaded.
-from .intents import HelpIntent
 from .config_flow import HangoutsFlowHandler  # noqa: F401
 from .const import (
     CONF_BOT,
@@ -31,6 +32,8 @@ from .const import (
     SERVICE_UPDATE,
     TARGETS_SCHEMA,
 )
+from .hangouts_bot import HangoutsBot
+from .intents import HelpIntent
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,8 +57,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the Hangouts bot component."""
-    from homeassistant.components.conversation import create_matcher
-
     config = config.get(DOMAIN)
     if config is None:
         hass.data[DOMAIN] = {
@@ -97,11 +98,7 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config):
     """Set up a config entry."""
-    from hangups.auth import GoogleAuthError
-
     try:
-        from .hangouts_bot import HangoutsBot
-
         bot = HangoutsBot(
             hass,
             config.data.get(CONF_REFRESH_TOKEN),
@@ -128,7 +125,9 @@ async def async_setup_entry(hass, config):
         bot.async_update_conversation_commands,
     )
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, bot.async_handle_hass_stop)
+    config.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, bot.async_handle_hass_stop)
+    )
 
     await bot.async_connect()
 

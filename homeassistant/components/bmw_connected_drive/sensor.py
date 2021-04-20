@@ -1,17 +1,22 @@
 """Support for reading vehicle status from BMW connected drive portal."""
 import logging
 
+from bimmer_connected.state import ChargingState
+
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     CONF_UNIT_SYSTEM_IMPERIAL,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
+    PERCENTAGE,
+    TIME_HOURS,
     VOLUME_GALLONS,
     VOLUME_LITERS,
 )
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 
-from . import DOMAIN as BMW_DOMAIN
+from . import DOMAIN as BMW_DOMAIN, BMWConnectedDriveBaseEntity
+from .const import CONF_ACCOUNT, DATA_ENTRIES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,10 +27,10 @@ ATTR_TO_HA_METRIC = {
     "remaining_range_fuel": ["mdi:map-marker-distance", LENGTH_KILOMETERS],
     "max_range_electric": ["mdi:map-marker-distance", LENGTH_KILOMETERS],
     "remaining_fuel": ["mdi:gas-station", VOLUME_LITERS],
-    "charging_time_remaining": ["mdi:update", "h"],
+    "charging_time_remaining": ["mdi:update", TIME_HOURS],
     "charging_status": ["mdi:battery-charging", None],
     # No icon as this is dealt with directly as a special case in icon()
-    "charging_level_hv": [None, "%"],
+    "charging_level_hv": [None, PERCENTAGE],
 }
 
 ATTR_TO_HA_IMPERIAL = {
@@ -35,54 +40,45 @@ ATTR_TO_HA_IMPERIAL = {
     "remaining_range_fuel": ["mdi:map-marker-distance", LENGTH_MILES],
     "max_range_electric": ["mdi:map-marker-distance", LENGTH_MILES],
     "remaining_fuel": ["mdi:gas-station", VOLUME_GALLONS],
-    "charging_time_remaining": ["mdi:update", "h"],
+    "charging_time_remaining": ["mdi:update", TIME_HOURS],
     "charging_status": ["mdi:battery-charging", None],
     # No icon as this is dealt with directly as a special case in icon()
-    "charging_level_hv": [None, "%"],
+    "charging_level_hv": [None, PERCENTAGE],
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the BMW sensors."""
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the BMW ConnectedDrive sensors from config entry."""
     if hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
         attribute_info = ATTR_TO_HA_IMPERIAL
     else:
         attribute_info = ATTR_TO_HA_METRIC
 
-    accounts = hass.data[BMW_DOMAIN]
-    _LOGGER.debug("Found BMW accounts: %s", ", ".join([a.name for a in accounts]))
-    devices = []
-    for account in accounts:
-        for vehicle in account.account.vehicles:
-            for attribute_name in vehicle.drive_train_attributes:
-                if attribute_name in vehicle.available_attributes:
-                    device = BMWConnectedDriveSensor(
-                        account, vehicle, attribute_name, attribute_info
-                    )
-                    devices.append(device)
-    add_entities(devices, True)
+    account = hass.data[BMW_DOMAIN][DATA_ENTRIES][config_entry.entry_id][CONF_ACCOUNT]
+    entities = []
+
+    for vehicle in account.account.vehicles:
+        for attribute_name in vehicle.drive_train_attributes:
+            if attribute_name in vehicle.available_attributes:
+                device = BMWConnectedDriveSensor(
+                    account, vehicle, attribute_name, attribute_info
+                )
+                entities.append(device)
+    async_add_entities(entities, True)
 
 
-class BMWConnectedDriveSensor(Entity):
+class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, SensorEntity):
     """Representation of a BMW vehicle sensor."""
 
     def __init__(self, account, vehicle, attribute: str, attribute_info):
-        """Constructor."""
-        self._vehicle = vehicle
-        self._account = account
+        """Initialize BMW vehicle sensor."""
+        super().__init__(account, vehicle)
+
         self._attribute = attribute
         self._state = None
         self._name = f"{self._vehicle.name} {self._attribute}"
         self._unique_id = f"{self._vehicle.vin}-{self._attribute}"
         self._attribute_info = attribute_info
-
-    @property
-    def should_poll(self) -> bool:
-        """Return False.
-
-        Data update is triggered from BMWConnectedDriveEntity.
-        """
-        return False
 
     @property
     def unique_id(self):
@@ -97,8 +93,6 @@ class BMWConnectedDriveSensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        from bimmer_connected.state import ChargingState
-
         vehicle_state = self._vehicle.state
         charging_state = vehicle_state.charging_status in [ChargingState.CHARGING]
 
@@ -121,13 +115,8 @@ class BMWConnectedDriveSensor(Entity):
     @property
     def unit_of_measurement(self) -> str:
         """Get the unit of measurement."""
-        _, unit = self._attribute_info.get(self._attribute, [None, None])
+        unit = self._attribute_info.get(self._attribute, [None, None])[1]
         return unit
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes of the sensor."""
-        return {"car": self._vehicle.name}
 
     def update(self) -> None:
         """Read new state data from the library."""
@@ -145,14 +134,3 @@ class BMWConnectedDriveSensor(Entity):
             self._state = round(value_converted)
         else:
             self._state = getattr(vehicle_state, self._attribute)
-
-    def update_callback(self):
-        """Schedule a state update."""
-        self.schedule_update_ha_state(True)
-
-    async def async_added_to_hass(self):
-        """Add callback after being added to hass.
-
-        Show latest data after startup.
-        """
-        self._account.add_update_listener(self.update_callback)

@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "name_exists": "Ce nom est d\u00e9j\u00e0 utilis\u00e9",
+            "wrong_location": "En Su\u00e8de uniquement"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "name": "Nom"
+                },
+                "title": "Localisation en Su\u00e8de"
+            }
+        }
+    }
+}

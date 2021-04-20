@@ -1,0 +1,18 @@
+{
+    "state": {
+        "zodiac__sign": {
+            "aquarius": "Veevalaja",
+            "aries": "J\u00e4\u00e4r",
+            "cancer": "V\u00e4hk",
+            "capricorn": "Kaljukits",
+            "gemini": "Kaksikud",
+            "leo": "L\u00f5vi",
+            "libra": "Kaalud",
+            "pisces": "Kalad",
+            "sagittarius": "Ambur",
+            "scorpio": "Skorpion",
+            "taurus": "S\u00f5nn",
+            "virgo": "Neitsi"
+        }
+    }
+}

@@ -1,6 +1,7 @@
 """Support for Xiaomi Mi WiFi Repeater 2."""
 import logging
 
+from miio import DeviceException, WifiRepeater
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
@@ -23,11 +24,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def get_scanner(hass, config):
     """Return a Xiaomi MiIO device scanner."""
-    from miio import WifiRepeater, DeviceException
-
     scanner = None
-    host = config[DOMAIN].get(CONF_HOST)
-    token = config[DOMAIN].get(CONF_TOKEN)
+    host = config[DOMAIN][CONF_HOST]
+    token = config[DOMAIN][CONF_TOKEN]
 
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
 
@@ -56,8 +55,6 @@ class XiaomiMiioDeviceScanner(DeviceScanner):
 
     async def async_scan_devices(self):
         """Scan for devices and return a list containing found device IDs."""
-        from miio import DeviceException
-
         devices = []
         try:
             station_info = await self.hass.async_add_executor_job(self.device.status)

@@ -13,7 +13,7 @@ from homeassistant.components.climate.const import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
-    ATTR_HVAC_ACTIONS,
+    ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
     ATTR_TARGET_TEMP_HIGH,
@@ -44,6 +44,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_UNKNOWN,
 )
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import setup_platform
 
@@ -198,11 +199,6 @@ def air_conditioner_fixture(device_factory):
     return device
 
 
-async def test_async_setup_platform():
-    """Test setup platform does nothing (it uses config entries)."""
-    await climate.async_setup_platform(None, None, None)
-
-
 async def test_legacy_thermostat_entity_state(hass, legacy_thermostat):
     """Tests the state attributes properly match the thermostat type."""
     await setup_platform(hass, CLIMATE_DOMAIN, devices=[legacy_thermostat])
@@ -214,7 +210,7 @@ async def test_legacy_thermostat_entity_state(hass, legacy_thermostat):
         | SUPPORT_TARGET_TEMPERATURE_RANGE
         | SUPPORT_TARGET_TEMPERATURE
     )
-    assert state.attributes[ATTR_HVAC_ACTIONS] == CURRENT_HVAC_IDLE
+    assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
     assert sorted(state.attributes[ATTR_HVAC_MODES]) == [
         HVAC_MODE_AUTO,
         HVAC_MODE_COOL,
@@ -238,7 +234,7 @@ async def test_basic_thermostat_entity_state(hass, basic_thermostat):
         state.attributes[ATTR_SUPPORTED_FEATURES]
         == SUPPORT_TARGET_TEMPERATURE_RANGE | SUPPORT_TARGET_TEMPERATURE
     )
-    assert ATTR_HVAC_ACTIONS not in state.attributes
+    assert ATTR_HVAC_ACTION not in state.attributes
     assert sorted(state.attributes[ATTR_HVAC_MODES]) == [
         HVAC_MODE_COOL,
         HVAC_MODE_HEAT,
@@ -259,7 +255,7 @@ async def test_thermostat_entity_state(hass, thermostat):
         | SUPPORT_TARGET_TEMPERATURE_RANGE
         | SUPPORT_TARGET_TEMPERATURE
     )
-    assert state.attributes[ATTR_HVAC_ACTIONS] == CURRENT_HVAC_IDLE
+    assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
     assert sorted(state.attributes[ATTR_HVAC_MODES]) == [
         HVAC_MODE_AUTO,
         HVAC_MODE_COOL,
@@ -551,7 +547,9 @@ async def test_set_turn_off(hass, air_conditioner):
     await setup_platform(hass, CLIMATE_DOMAIN, devices=[air_conditioner])
     state = hass.states.get("climate.air_conditioner")
     assert state.state == HVAC_MODE_HEAT_COOL
-    await hass.services.async_call(CLIMATE_DOMAIN, SERVICE_TURN_OFF, blocking=True)
+    await hass.services.async_call(
+        CLIMATE_DOMAIN, SERVICE_TURN_OFF, {"entity_id": "all"}, blocking=True
+    )
     state = hass.states.get("climate.air_conditioner")
     assert state.state == HVAC_MODE_OFF
 
@@ -562,7 +560,9 @@ async def test_set_turn_on(hass, air_conditioner):
     await setup_platform(hass, CLIMATE_DOMAIN, devices=[air_conditioner])
     state = hass.states.get("climate.air_conditioner")
     assert state.state == HVAC_MODE_OFF
-    await hass.services.async_call(CLIMATE_DOMAIN, SERVICE_TURN_ON, blocking=True)
+    await hass.services.async_call(
+        CLIMATE_DOMAIN, SERVICE_TURN_ON, {"entity_id": "all"}, blocking=True
+    )
     state = hass.states.get("climate.air_conditioner")
     assert state.state == HVAC_MODE_HEAT_COOL
 
@@ -570,14 +570,14 @@ async def test_set_turn_on(hass, air_conditioner):
 async def test_entity_and_device_attributes(hass, thermostat):
     """Test the attributes of the entries are correct."""
     await setup_platform(hass, CLIMATE_DOMAIN, devices=[thermostat])
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
 
     entry = entity_registry.async_get("climate.thermostat")
     assert entry
     assert entry.unique_id == thermostat.device_id
 
-    entry = device_registry.async_get_device({(DOMAIN, thermostat.device_id)}, [])
+    entry = device_registry.async_get_device({(DOMAIN, thermostat.device_id)})
     assert entry
     assert entry.name == thermostat.label
     assert entry.model == thermostat.device_type_name

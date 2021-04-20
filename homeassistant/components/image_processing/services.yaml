@@ -1,21 +1,5 @@
 # Describes the format for available image processing services
 
 scan:
-  description: Process an image immediately.
-  fields:
-    entity_id:
-      description: Name(s) of entities to scan immediately.
-      example: 'image_processing.alpr_garage'
-
-facebox_teach_face:
-  description: Teach facebox a face using a file.
-  fields:
-    entity_id:
-      description: The facebox entity to teach.
-      example: 'image_processing.facebox'
-    name:
-      description: The name of the face to teach.
-      example: 'my_name'
-    file_path:
-      description: The path to the image file.
-      example: '/images/my_image.jpg'
+  description: Process an image immediately
+  target:

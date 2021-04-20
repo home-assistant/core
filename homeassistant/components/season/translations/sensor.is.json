@@ -1,0 +1,10 @@
+{
+    "state": {
+        "season__season__": {
+            "autumn": "Haust",
+            "spring": "Vor",
+            "summer": "Sumar",
+            "winter": "Vetur"
+        }
+    }
+}

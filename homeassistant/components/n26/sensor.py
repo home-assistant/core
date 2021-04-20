@@ -1,12 +1,8 @@
 """Support for N26 bank account sensors."""
-import logging
-
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import SensorEntity
 
 from . import DEFAULT_SCAN_INTERVAL, DOMAIN, timestamp_ms_to_date
 from .const import DATA
-
-_LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = DEFAULT_SCAN_INTERVAL
 
@@ -47,7 +43,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensor_entities)
 
 
-class N26Account(Entity):
+class N26Account(SensorEntity):
     """Sensor for a N26 balance account.
 
     A balance account contains an amount of money (=balance). The amount may
@@ -71,7 +67,7 @@ class N26Account(Entity):
     @property
     def name(self) -> str:
         """Friendly name of the sensor."""
-        return "n26_{}".format(self._iban[-4:])
+        return f"n26_{self._iban[-4:]}"
 
     @property
     def state(self) -> float:
@@ -90,7 +86,7 @@ class N26Account(Entity):
         return self._data.balance.get("currency")
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Additional attributes of the sensor."""
         attributes = {
             ATTR_IBAN: self._data.balance.get("iban"),
@@ -110,7 +106,7 @@ class N26Account(Entity):
         }
 
         for limit in self._data.limits:
-            limit_attr_name = "limit_{}".format(limit["limit"].lower())
+            limit_attr_name = f"limit_{limit['limit'].lower()}"
             attributes[limit_attr_name] = limit["amount"]
 
         return attributes
@@ -121,7 +117,7 @@ class N26Account(Entity):
         return ICON_ACCOUNT
 
 
-class N26Card(Entity):
+class N26Card(SensorEntity):
     """Sensor for a N26 card."""
 
     def __init__(self, api_data, card) -> None:
@@ -143,7 +139,7 @@ class N26Card(Entity):
     @property
     def name(self) -> str:
         """Friendly name of the sensor."""
-        return "{}_card_{}".format(self._account_name.lower(), self._card["id"])
+        return f"{self._account_name.lower()}_card_{self._card['id']}"
 
     @property
     def state(self) -> float:
@@ -151,7 +147,7 @@ class N26Card(Entity):
         return self._card["status"]
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Additional attributes of the sensor."""
         attributes = {
             "apple_pay_eligible": self._card.get("applePayEligible"),
@@ -190,7 +186,7 @@ class N26Card(Entity):
         return ICON_CARD
 
 
-class N26Space(Entity):
+class N26Space(SensorEntity):
     """Sensor for a N26 space."""
 
     def __init__(self, api_data, space) -> None:
@@ -206,9 +202,7 @@ class N26Space(Entity):
     @property
     def unique_id(self):
         """Return the unique ID of the entity."""
-        return "space_{}_{}".format(
-            self._data.balance["iban"][-4:], self._space["name"].lower()
-        )
+        return f"space_{self._data.balance['iban'][-4:]}_{self._space['name'].lower()}"
 
     @property
     def name(self) -> str:
@@ -226,7 +220,7 @@ class N26Space(Entity):
         return self._space["balance"]["currency"]
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Additional attributes of the sensor."""
         goal_value = ""
         if "goal" in self._space:

@@ -1,37 +1,36 @@
 """Tests for the ness_alarm component."""
 from enum import Enum
+from unittest.mock import MagicMock, patch
 
 import pytest
-from asynctest import patch, MagicMock
 
 from homeassistant.components import alarm_control_panel
 from homeassistant.components.ness_alarm import (
-    DOMAIN,
-    CONF_DEVICE_PORT,
-    CONF_ZONE_NAME,
-    CONF_ZONES,
-    CONF_ZONE_ID,
-    SERVICE_AUX,
-    SERVICE_PANIC,
     ATTR_CODE,
     ATTR_OUTPUT_ID,
+    CONF_DEVICE_PORT,
+    CONF_ZONE_ID,
+    CONF_ZONE_NAME,
+    CONF_ZONES,
+    DOMAIN,
+    SERVICE_AUX,
+    SERVICE_PANIC,
 )
 from homeassistant.const import (
-    STATE_ALARM_ARMING,
-    SERVICE_ALARM_DISARM,
     ATTR_ENTITY_ID,
+    CONF_HOST,
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_HOME,
+    SERVICE_ALARM_DISARM,
     SERVICE_ALARM_TRIGGER,
-    STATE_ALARM_DISARMED,
     STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMING,
+    STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
     STATE_UNKNOWN,
-    CONF_HOST,
 )
 from homeassistant.setup import async_setup_component
-from tests.common import MockDependency
 
 VALID_CONFIG = {
     DOMAIN: {
@@ -261,7 +260,12 @@ def mock_nessclient():
     _mock_factory = MagicMock()
     _mock_factory.return_value = _mock_instance
 
-    with MockDependency("nessclient"), patch(
-        "nessclient.Client", new=_mock_factory, create=True
-    ), patch("nessclient.ArmingState", new=MockArmingState):
+    with patch(
+        "homeassistant.components.ness_alarm.Client", new=_mock_factory, create=True
+    ), patch(
+        "homeassistant.components.ness_alarm.ArmingState", new=MockArmingState
+    ), patch(
+        "homeassistant.components.ness_alarm.alarm_control_panel.ArmingState",
+        new=MockArmingState,
+    ):
         yield _mock_instance

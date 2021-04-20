@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_fail": "Ok\u00e4nt fel vid generering av autentisieringsadress.",
+            "authorize_url_timeout": "Timeout vid generering av en autentisieringsadress."
+        },
+        "error": {
+            "internal_error": "Internt fel vid validering av kod",
+            "timeout": "Timeout vid valididering av kod",
+            "unknown": "Ok\u00e4nt fel vid validering av kod"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "flow_impl": "Leverant\u00f6r"
+                },
+                "description": "V\u00e4lj den autentiseringsleverant\u00f6r som du vill autentisera med mot Nest.",
+                "title": "Autentiseringsleverant\u00f6r"
+            },
+            "link": {
+                "data": {
+                    "code": "Pin-kod"
+                },
+                "description": "F\u00f6r att l\u00e4nka ditt Nest-konto, [autentisiera ditt konto]({url}). \n\nEfter autentisiering, klipp och klistra in den angivna pin-koden nedan.",
+                "title": "L\u00e4nka Nest-konto"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "camera_motion": "R\u00f6relse uppt\u00e4ckt"
+        }
+    }
+}

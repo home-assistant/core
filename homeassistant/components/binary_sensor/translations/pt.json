@@ -1,0 +1,191 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_bat_low": "a bateria {entity_name} est\u00e1 baixa",
+            "is_cold": "{entity_name} est\u00e1 frio",
+            "is_connected": "{entity_name} est\u00e1 ligado",
+            "is_gas": "{entity_name} est\u00e1 a detectar g\u00e1s",
+            "is_hot": "{entity_name} est\u00e1 quente",
+            "is_light": "{entity_name} est\u00e1 a detectar luz",
+            "is_locked": "{entity_name} est\u00e1 fechado",
+            "is_moist": "{entity_name} est\u00e1 h\u00famido",
+            "is_motion": "{entity_name} est\u00e1 a detectar movimento",
+            "is_moving": "{entity_name} est\u00e1 a mexer",
+            "is_no_gas": "{entity_name} n\u00e3o est\u00e1 a detectar g\u00e1s",
+            "is_no_light": "{entity_name} n\u00e3o est\u00e1 a detectar a luz",
+            "is_no_motion": "{entity_name} n\u00e3o est\u00e1 a detectar movimento",
+            "is_no_problem": "{entity_name} n\u00e3o est\u00e1 a detectar o problema",
+            "is_no_smoke": "{entity_name} n\u00e3o est\u00e1 a detectar fumo",
+            "is_no_sound": "{entity_name} n\u00e3o est\u00e1 a detectar som",
+            "is_no_vibration": "{entity_name} n\u00e3o est\u00e1 a detectar vibra\u00e7\u00f5es",
+            "is_not_bat_low": "{entity_name} a bateria est\u00e1 normal",
+            "is_not_cold": "{entity_name} n\u00e3o est\u00e1 frio",
+            "is_not_connected": "{entity_name} est\u00e1 desligado",
+            "is_not_hot": "{entity_name} n\u00e3o est\u00e1 quente",
+            "is_not_locked": "{entity_name} est\u00e1 destrancado",
+            "is_not_moist": "{entity_name} est\u00e1 seco",
+            "is_not_moving": "{entity_name} n\u00e3o est\u00e1 a mexer",
+            "is_not_occupied": "{entity_name} n\u00e3o est\u00e1 ocupado",
+            "is_not_open": "{entity_name} est\u00e1 fechada",
+            "is_not_plugged_in": "{entity_name} est\u00e1 desconectado",
+            "is_not_powered": "{entity_name} n\u00e3o est\u00e1 alimentado",
+            "is_not_present": "{entity_name} n\u00e3o est\u00e1 presente",
+            "is_not_unsafe": "{entity_name} est\u00e1 seguro",
+            "is_occupied": "{entity_name} est\u00e1 ocupado",
+            "is_off": "{entity_name} est\u00e1 desligado",
+            "is_on": "{entity_name} est\u00e1 ligado",
+            "is_open": "{entity_name} est\u00e1 aberto",
+            "is_plugged_in": "{entity_name} est\u00e1 conectado",
+            "is_powered": "{entity_name} est\u00e1 alimentado",
+            "is_present": "{entity_name} est\u00e1 presente",
+            "is_problem": "{entity_name} est\u00e1 a detectar um problema",
+            "is_smoke": "{entity_name} est\u00e1 a detectar fumo",
+            "is_sound": "{entity_name} est\u00e1 a detectar som",
+            "is_unsafe": "{entity_name} n\u00e3o \u00e9 seguro",
+            "is_vibration": "{entity_name} est\u00e1 a detectar vibra\u00e7\u00f5es"
+        },
+        "trigger_type": {
+            "bat_low": "{entity_name} com bateria fraca",
+            "cold": "{entity_name} ficou frio",
+            "connected": "{entity_name} est\u00e1 ligado",
+            "gas": "{entity_name} detectou g\u00e1s",
+            "hot": "{entity_name} ficou quente",
+            "light": "{entity_name} detectou luz",
+            "locked": "{entity_name} fechou",
+            "moist": "ficou h\u00famido {entity_name}",
+            "motion": "{entity_name} detectou movimento",
+            "moving": "{entity_name} come\u00e7ou a mover-se",
+            "no_gas": "{entity_name} deixou de detectar g\u00e1s",
+            "no_light": "{entity_name} deixou de detectar luz",
+            "no_motion": "{entity_name} deixou de detectar movimento",
+            "no_problem": "{entity_name} deixou de detectar problemas",
+            "no_smoke": "{entity_name} deixou de detectar fumo",
+            "no_sound": "{entity_name} deixou de detectar som",
+            "no_vibration": "{entity_name} deixou de detectar vibra\u00e7\u00e3o",
+            "not_bat_low": "{entity_name} bateria normal",
+            "not_cold": "{entity_name} deixou de estar frio",
+            "not_connected": "{entity_name} est\u00e1 desligado",
+            "not_hot": "{entity_name} deixou de estar quente",
+            "not_locked": "{entity_name} destrancado",
+            "not_moist": "{entity_name} ficou seco",
+            "not_moving": "{entity_name} deixou de se mover",
+            "not_occupied": "{entity_name} deixou de estar ocupado",
+            "not_opened": "fechado {entity_name}",
+            "not_plugged_in": "{entity_name} desligado",
+            "not_powered": "{entity_name} n\u00e3o alimentado",
+            "not_present": "ausente {entity_name}",
+            "not_unsafe": "ficou seguro {entity_name}",
+            "occupied": "ficou ocupado {entity_name}",
+            "opened": "{entity_name} aberto",
+            "plugged_in": "{entity_name} ligado",
+            "powered": "{entity_name} alimentado",
+            "present": "{entity_name} presente",
+            "problem": "foi detectado problema em {entity_name}",
+            "smoke": "foi detectado fumo em {entity_name}",
+            "sound": "foram detectadas sons em {entity_name}",
+            "turned_off": "foi desligado {entity_name}",
+            "turned_on": "foi ligado {entity_name}",
+            "unsafe": "ficou inseguro {entity_name}",
+            "vibration": "foram detectadas vibra\u00e7\u00f5es em {entity_name}"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "Desligado",
+            "on": "Ligado"
+        },
+        "battery": {
+            "off": "Normal",
+            "on": "Baixo"
+        },
+        "battery_charging": {
+            "off": "Sem carregar",
+            "on": "A carregar"
+        },
+        "cold": {
+            "off": "Normal",
+            "on": "Frio"
+        },
+        "connectivity": {
+            "off": "Desligado",
+            "on": "Ligado"
+        },
+        "door": {
+            "off": "Fechada",
+            "on": "Aberta"
+        },
+        "garage_door": {
+            "off": "Fechada",
+            "on": "Aberta"
+        },
+        "gas": {
+            "off": "Limpo",
+            "on": "Detectado"
+        },
+        "heat": {
+            "off": "Normal",
+            "on": "Quente"
+        },
+        "light": {
+            "off": "Sem luz",
+            "on": "Com luz"
+        },
+        "lock": {
+            "off": "Trancada",
+            "on": "Destrancada"
+        },
+        "moisture": {
+            "off": "Seco",
+            "on": "H\u00famido"
+        },
+        "motion": {
+            "off": "Limpo",
+            "on": "Detectado"
+        },
+        "moving": {
+            "off": "Parado",
+            "on": "Em movimento"
+        },
+        "occupancy": {
+            "off": "Limpo",
+            "on": "Detectado"
+        },
+        "opening": {
+            "off": "Fechado",
+            "on": "Aberto"
+        },
+        "plug": {
+            "off": "Desligado",
+            "on": "Ligado"
+        },
+        "presence": {
+            "off": "Fora",
+            "on": "Casa"
+        },
+        "problem": {
+            "off": "OK",
+            "on": "Problema"
+        },
+        "safety": {
+            "off": "Seguro",
+            "on": "Inseguro"
+        },
+        "smoke": {
+            "off": "Limpo",
+            "on": "Detectado"
+        },
+        "sound": {
+            "off": "Limpo",
+            "on": "Detectado"
+        },
+        "vibration": {
+            "off": "Limpo",
+            "on": "Detetado"
+        },
+        "window": {
+            "off": "Fechada",
+            "on": "Aberta"
+        }
+    },
+    "title": "Sensor bin\u00e1rio"
+}

@@ -3,12 +3,14 @@
 from collections import namedtuple
 from datetime import timedelta
 import logging
+
+from fints.client import FinTS3PinTanClient
+from fints.dialog import FinTSDialogError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_USERNAME, CONF_PIN, CONF_URL, CONF_NAME
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import CONF_NAME, CONF_PIN, CONF_URL, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,7 +74,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     for account in balance_accounts:
         if config[CONF_ACCOUNTS] and account.iban not in account_config:
-            _LOGGER.info("skipping account %s for bank %s", account.iban, fints_name)
+            _LOGGER.info("Skipping account %s for bank %s", account.iban, fints_name)
             continue
 
         account_name = account_config.get(account.iban)
@@ -84,7 +86,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for account in holdings_accounts:
         if config[CONF_HOLDINGS] and account.accountnumber not in holdings_config:
             _LOGGER.info(
-                "skipping holdings %s for bank %s", account.accountnumber, fints_name
+                "Skipping holdings %s for bank %s", account.accountnumber, fints_name
             )
             continue
 
@@ -118,7 +120,6 @@ class FinTsClient:
         the client objects. If that ever changes, consider caching the client
         object and also think about potential concurrency problems.
         """
-        from fints.client import FinTS3PinTanClient
 
         return FinTS3PinTanClient(
             self._credentials.blz,
@@ -129,7 +130,6 @@ class FinTsClient:
 
     def detect_accounts(self):
         """Identify the accounts of the bank."""
-        from fints.dialog import FinTSDialogError
 
         balance_accounts = []
         holdings_accounts = []
@@ -153,7 +153,7 @@ class FinTsClient:
         return balance_accounts, holdings_accounts
 
 
-class FinTsAccount(Entity):
+class FinTsAccount(SensorEntity):
     """Sensor for a FinTS balance account.
 
     A balance account contains an amount of money (=balance). The amount may
@@ -167,14 +167,6 @@ class FinTsAccount(Entity):
         self._name = name
         self._balance: float = None
         self._currency: str = None
-
-    @property
-    def should_poll(self) -> bool:
-        """Return True.
-
-        Data needs to be polled from the bank servers.
-        """
-        return True
 
     def update(self) -> None:
         """Get the current balance and currency for the account."""
@@ -200,7 +192,7 @@ class FinTsAccount(Entity):
         return self._currency
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Additional attributes of the sensor."""
         attributes = {ATTR_ACCOUNT: self._account.iban, ATTR_ACCOUNT_TYPE: "balance"}
         if self._client.name:
@@ -213,7 +205,7 @@ class FinTsAccount(Entity):
         return ICON
 
 
-class FinTsHoldingsAccount(Entity):
+class FinTsHoldingsAccount(SensorEntity):
     """Sensor for a FinTS holdings account.
 
     A holdings account does not contain money but rather some financial
@@ -227,14 +219,6 @@ class FinTsHoldingsAccount(Entity):
         self._account = account
         self._holdings = []
         self._total: float = None
-
-    @property
-    def should_poll(self) -> bool:
-        """Return True.
-
-        Data needs to be polled from the bank servers.
-        """
-        return True
 
     def update(self) -> None:
         """Get the current holdings for the account."""
@@ -253,7 +237,7 @@ class FinTsHoldingsAccount(Entity):
         return ICON
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Additional attributes of the sensor.
 
         Lists each holding of the account with the current value.

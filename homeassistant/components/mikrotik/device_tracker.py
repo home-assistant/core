@@ -1,190 +1,161 @@
 """Support for Mikrotik routers as device tracker."""
 import logging
 
-from homeassistant.components.device_tracker import (
+from homeassistant.components.device_tracker.config_entry import ScannerEntity
+from homeassistant.components.device_tracker.const import (
     DOMAIN as DEVICE_TRACKER,
-    DeviceScanner,
+    SOURCE_TYPE_ROUTER,
 )
-from homeassistant.util import slugify
-from homeassistant.const import CONF_METHOD
-from .const import (
-    HOSTS,
-    MIKROTIK,
-    CONF_ARP_PING,
-    MIKROTIK_SERVICES,
-    CAPSMAN,
-    WIRELESS,
-    DHCP,
-    ARP,
-    ATTR_DEVICE_TRACKER,
-)
+from homeassistant.core import callback
+from homeassistant.helpers import entity_registry
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+import homeassistant.util.dt as dt_util
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-
-def get_scanner(hass, config):
-    """Validate the configuration and return MikrotikScanner."""
-    for host in hass.data[MIKROTIK][HOSTS]:
-        if DEVICE_TRACKER not in hass.data[MIKROTIK][HOSTS][host]:
-            continue
-        hass.data[MIKROTIK][HOSTS][host].pop(DEVICE_TRACKER, None)
-        api = hass.data[MIKROTIK][HOSTS][host]["api"]
-        config = hass.data[MIKROTIK][HOSTS][host]["config"]
-        hostname = api.get_hostname()
-        scanner = MikrotikScanner(api, host, hostname, config)
-    return scanner if scanner.success_init else None
+# These are normalized to ATTR_IP and ATTR_MAC to conform
+# to device_tracker
+FILTER_ATTRS = ("ip_address", "mac_address")
 
 
-class MikrotikScanner(DeviceScanner):
-    """This class queries a Mikrotik device."""
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up device tracker for Mikrotik component."""
+    hub = hass.data[DOMAIN][config_entry.entry_id]
 
-    def __init__(self, api, host, hostname, config):
-        """Initialize the scanner."""
-        self.api = api
-        self.config = config
-        self.host = host
-        self.hostname = hostname
-        self.method = config.get(CONF_METHOD)
-        self.arp_ping = config.get(CONF_ARP_PING)
-        self.dhcp = None
-        self.devices_arp = {}
-        self.devices_dhcp = {}
-        self.device_tracker = None
-        self.success_init = self.api.connected()
+    tracked = {}
 
-    def get_extra_attributes(self, device):
-        """
-        Get extra attributes of a device.
+    registry = await entity_registry.async_get_registry(hass)
 
-        Some known extra attributes that may be returned in the device tuple
-        include MAC address (mac), network device (dev), IP address
-        (ip), reachable status (reachable), associated router
-        (host), hostname if known (hostname) among others.
-        """
-        return self.device_tracker.get(device) or {}
+    # Restore clients that is not a part of active clients list.
+    for entity in registry.entities.values():
 
-    def get_device_name(self, device):
-        """Get name for a device."""
-        host = self.device_tracker.get(device, {})
-        return host.get("host_name")
+        if (
+            entity.config_entry_id == config_entry.entry_id
+            and entity.domain == DEVICE_TRACKER
+        ):
 
-    def scan_devices(self):
-        """Scan for new devices and return a list with found device MACs."""
-        self.update_device_tracker()
-        return list(self.device_tracker)
+            if (
+                entity.unique_id in hub.api.devices
+                or entity.unique_id not in hub.api.all_devices
+            ):
+                continue
+            hub.api.restore_device(entity.unique_id)
 
-    def get_method(self):
-        """Determine the device tracker polling method."""
-        if self.method:
-            _LOGGER.debug(
-                "Mikrotik %s: Manually selected polling method %s",
-                self.host,
-                self.method,
-            )
-            return self.method
+    @callback
+    def update_hub():
+        """Update the status of the device."""
+        update_items(hub, async_add_entities, tracked)
 
-        capsman = self.api.command(MIKROTIK_SERVICES[CAPSMAN])
-        if not capsman:
-            _LOGGER.debug(
-                "Mikrotik %s: Not a CAPsMAN controller. "
-                "Trying local wireless interfaces",
-                (self.host),
-            )
-        else:
-            return CAPSMAN
+    async_dispatcher_connect(hass, hub.signal_update, update_hub)
 
-        wireless = self.api.command(MIKROTIK_SERVICES[WIRELESS])
-        if not wireless:
-            _LOGGER.info(
-                "Mikrotik %s: Wireless adapters not found. Try to "
-                "use DHCP lease table as presence tracker source. "
-                "Please decrease lease time as much as possible",
-                self.host,
-            )
-            return DHCP
-
-        return WIRELESS
-
-    def update_device_tracker(self):
-        """Update device_tracker from Mikrotik API."""
-        self.device_tracker = {}
-        if not self.method:
-            self.method = self.get_method()
-
-        data = self.api.command(MIKROTIK_SERVICES[self.method])
-        if data is None:
-            return
-
-        if self.method != DHCP:
-            dhcp = self.api.command(MIKROTIK_SERVICES[DHCP])
-            if dhcp is not None:
-                self.devices_dhcp = load_mac(dhcp)
-
-        arp = self.api.command(MIKROTIK_SERVICES[ARP])
-        self.devices_arp = load_mac(arp)
-
-        for device in data:
-            mac = device.get("mac-address")
-            if self.method == DHCP:
-                if "active-address" not in device:
-                    continue
-
-                if self.arp_ping and self.devices_arp:
-                    if mac not in self.devices_arp:
-                        continue
-                    ip_address = self.devices_arp[mac]["address"]
-                    interface = self.devices_arp[mac]["interface"]
-                    if not self.do_arp_ping(ip_address, interface):
-                        continue
-
-            attrs = {}
-            if mac in self.devices_dhcp and "host-name" in self.devices_dhcp[mac]:
-                hostname = self.devices_dhcp[mac].get("host-name")
-                if hostname:
-                    attrs["host_name"] = hostname
-
-            if self.devices_arp and mac in self.devices_arp:
-                attrs["ip_address"] = self.devices_arp[mac].get("address")
-
-            for attr in ATTR_DEVICE_TRACKER:
-                if attr in device and device[attr] is not None:
-                    attrs[slugify(attr)] = device[attr]
-            attrs["scanner_type"] = self.method
-            attrs["scanner_host"] = self.host
-            attrs["scanner_hostname"] = self.hostname
-            self.device_tracker[mac] = attrs
-
-    def do_arp_ping(self, ip_address, interface):
-        """Attempt to arp ping MAC address via interface."""
-        params = {
-            "arp-ping": "yes",
-            "interval": "100ms",
-            "count": 3,
-            "interface": interface,
-            "address": ip_address,
-        }
-        cmd = "/ping"
-        data = self.api.command(cmd, params)
-        if data is not None:
-            status = 0
-            for result in data:
-                if "status" in result:
-                    _LOGGER.debug(
-                        "Mikrotik %s arp_ping error: %s", self.host, result["status"]
-                    )
-                    status += 1
-            if status == len(data):
-                return None
-        return data
+    update_hub()
 
 
-def load_mac(devices=None):
-    """Load dictionary using MAC address as key."""
-    if not devices:
+@callback
+def update_items(hub, async_add_entities, tracked):
+    """Update tracked device state from the hub."""
+    new_tracked = []
+    for mac, device in hub.api.devices.items():
+        if mac not in tracked:
+            tracked[mac] = MikrotikHubTracker(device, hub)
+            new_tracked.append(tracked[mac])
+
+    if new_tracked:
+        async_add_entities(new_tracked)
+
+
+class MikrotikHubTracker(ScannerEntity):
+    """Representation of network device."""
+
+    def __init__(self, device, hub):
+        """Initialize the tracked device."""
+        self.device = device
+        self.hub = hub
+        self.unsub_dispatcher = None
+
+    @property
+    def is_connected(self):
+        """Return true if the client is connected to the network."""
+        if (
+            self.device.last_seen
+            and (dt_util.utcnow() - self.device.last_seen)
+            < self.hub.option_detection_time
+        ):
+            return True
+        return False
+
+    @property
+    def source_type(self):
+        """Return the source type of the client."""
+        return SOURCE_TYPE_ROUTER
+
+    @property
+    def name(self) -> str:
+        """Return the name of the client."""
+        return self.device.name
+
+    @property
+    def hostname(self) -> str:
+        """Return the hostname of the client."""
+        return self.device.name
+
+    @property
+    def mac_address(self) -> str:
+        """Return the mac address of the client."""
+        return self.device.mac
+
+    @property
+    def ip_address(self) -> str:
+        """Return the mac address of the client."""
+        return self.device.ip_address
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique identifier for this device."""
+        return self.device.mac
+
+    @property
+    def available(self) -> bool:
+        """Return if controller is available."""
+        return self.hub.available
+
+    @property
+    def extra_state_attributes(self):
+        """Return the device state attributes."""
+        if self.is_connected:
+            return {k: v for k, v in self.device.attrs.items() if k not in FILTER_ATTRS}
         return None
-    mac_devices = {}
-    for device in devices:
-        if "mac-address" in device:
-            mac = device.pop("mac-address")
-            mac_devices[mac] = device
-    return mac_devices
+
+    @property
+    def device_info(self):
+        """Return a client description for device registry."""
+        info = {
+            "connections": {(CONNECTION_NETWORK_MAC, self.device.mac)},
+            "identifiers": {(DOMAIN, self.device.mac)},
+            # We only get generic info from device discovery and so don't want
+            # to override API specific info that integrations can provide
+            "default_name": self.name,
+        }
+        return info
+
+    async def async_added_to_hass(self):
+        """Client entity created."""
+        _LOGGER.debug("New network device tracker %s (%s)", self.name, self.unique_id)
+        self.unsub_dispatcher = async_dispatcher_connect(
+            self.hass, self.hub.signal_update, self.async_write_ha_state
+        )
+
+    async def async_update(self):
+        """Synchronize state with hub."""
+        _LOGGER.debug(
+            "Updating Mikrotik tracked client %s (%s)", self.entity_id, self.unique_id
+        )
+        await self.hub.request_update()
+
+    async def will_remove_from_hass(self):
+        """Disconnect from dispatcher."""
+        if self.unsub_dispatcher:
+            self.unsub_dispatcher()

@@ -1,14 +1,8 @@
 """Component for the Portuguese weather service - IPMA."""
-from homeassistant.core import Config, HomeAssistant
-from .config_flow import IpmaFlowHandler  # noqa
-from .const import DOMAIN  # noqa
+from .config_flow import IpmaFlowHandler  # noqa: F401
+from .const import DOMAIN  # noqa: F401
 
 DEFAULT_NAME = "ipma"
-
-
-async def async_setup(hass: HomeAssistant, config: Config) -> bool:
-    """Set up configured IPMA."""
-    return True
 
 
 async def async_setup_entry(hass, config_entry):

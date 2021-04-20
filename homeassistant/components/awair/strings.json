@@ -1,0 +1,29 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "You must register for an Awair developer access token at: https://developer.getawair.com/onboard/login",
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]",
+          "email": "[%key:common::config_flow::data::email%]"
+        }
+      },
+      "reauth": {
+        "description": "Please re-enter your Awair developer access token.",
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]",
+          "email": "[%key:common::config_flow::data::email%]"
+        }
+      }
+    },
+    "error": {
+      "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  }
+}

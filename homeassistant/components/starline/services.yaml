@@ -1,0 +1,17 @@
+update_state:
+  description: >
+    Fetch the last state of the devices from the StarLine server.
+set_scan_interval:
+  description: >
+    Set update frequency.
+  fields:
+    scan_interval:
+      description: Update frequency (in seconds).
+      example: 180
+set_scan_obd_interval:
+  description: >
+    Set OBD info update frequency.
+  fields:
+    scan_interval:
+      description: Update frequency (in seconds).
+      example: 10800

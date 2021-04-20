@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "unknown": "Uventet feil"
+        },
+        "flow_title": "",
+        "step": {
+            "link": {
+                "description": "Vil du konfigurere {name} ({host})?",
+                "title": "Sett opp Logitech Harmony Hub"
+            },
+            "user": {
+                "data": {
+                    "host": "Vert",
+                    "name": "Navn p\u00e5 hub"
+                },
+                "title": "Sett opp Logitech Harmony Hub"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "activity": "Standardaktiviteten som skal utf\u00f8res n\u00e5r ingen er angitt.",
+                    "delay_secs": "Forsinkelsen mellom sending av kommandoer."
+                },
+                "description": "Juster alternativene for harmonihub"
+            }
+        }
+    }
+}

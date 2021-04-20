@@ -1,11 +1,16 @@
 """The tests for the MQTT cover platform."""
-import json
-from unittest.mock import ANY
+from unittest.mock import patch
 
-from homeassistant.components import cover, mqtt
-from homeassistant.components.cover import ATTR_POSITION, ATTR_TILT_POSITION
+import pytest
+
+from homeassistant.components import cover
+from homeassistant.components.cover import (
+    ATTR_CURRENT_POSITION,
+    ATTR_CURRENT_TILT_POSITION,
+    ATTR_POSITION,
+    ATTR_TILT_POSITION,
+)
 from homeassistant.components.mqtt.cover import MqttCover
-from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
@@ -16,21 +21,45 @@ from homeassistant.const import (
     SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
-    STATE_CLOSED,
-    STATE_OPEN,
-    STATE_UNAVAILABLE,
     SERVICE_TOGGLE,
     SERVICE_TOGGLE_COVER_TILT,
+    STATE_CLOSED,
+    STATE_CLOSING,
+    STATE_OPEN,
+    STATE_OPENING,
     STATE_UNKNOWN,
 )
 from homeassistant.setup import async_setup_component
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_mqtt_message,
-    async_mock_mqtt_component,
-    mock_registry,
+from .test_common import (
+    help_test_availability_when_connection_lost,
+    help_test_availability_without_topic,
+    help_test_custom_availability_payload,
+    help_test_default_availability_payload,
+    help_test_discovery_broken,
+    help_test_discovery_removal,
+    help_test_discovery_update,
+    help_test_discovery_update_attr,
+    help_test_discovery_update_unchanged,
+    help_test_entity_debug_info_message,
+    help_test_entity_device_info_remove,
+    help_test_entity_device_info_update,
+    help_test_entity_device_info_with_connection,
+    help_test_entity_device_info_with_identifier,
+    help_test_entity_id_update_discovery_update,
+    help_test_entity_id_update_subscriptions,
+    help_test_setting_attribute_via_mqtt_json_message,
+    help_test_setting_attribute_with_template,
+    help_test_unique_id,
+    help_test_update_with_json_attrs_bad_JSON,
+    help_test_update_with_json_attrs_not_dict,
 )
+
+from tests.common import async_fire_mqtt_message
+
+DEFAULT_CONFIG = {
+    cover.DOMAIN: {"platform": "mqtt", "name": "test", "state_topic": "test-topic"}
+}
 
 
 async def test_state_via_state_topic(hass, mqtt_mock):
@@ -51,6 +80,7 @@ async def test_state_via_state_topic(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("cover.test")
     assert state.state == STATE_UNKNOWN
@@ -65,6 +95,95 @@ async def test_state_via_state_topic(hass, mqtt_mock):
 
     state = hass.states.get("cover.test")
     assert state.state == STATE_OPEN
+
+
+async def test_opening_and_closing_state_via_custom_state_payload(hass, mqtt_mock):
+    """Test the controlling opening and closing state via a custom payload."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "state-topic",
+                "command_topic": "command-topic",
+                "qos": 0,
+                "payload_open": "OPEN",
+                "payload_close": "CLOSE",
+                "payload_stop": "STOP",
+                "state_opening": "34",
+                "state_closing": "--43",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_UNKNOWN
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+    async_fire_mqtt_message(hass, "state-topic", "34")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_OPENING
+
+    async_fire_mqtt_message(hass, "state-topic", "--43")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_CLOSING
+
+    async_fire_mqtt_message(hass, "state-topic", STATE_CLOSED)
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_CLOSED
+
+
+async def test_open_closed_state_from_position_optimistic(hass, mqtt_mock):
+    """Test the state after setting the position using optimistic mode."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "position_topic": "position-topic",
+                "set_position_topic": "set-position-topic",
+                "qos": 0,
+                "payload_open": "OPEN",
+                "payload_close": "CLOSE",
+                "payload_stop": "STOP",
+                "optimistic": True,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_UNKNOWN
+
+    await hass.services.async_call(
+        cover.DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {ATTR_ENTITY_ID: "cover.test", ATTR_POSITION: 0},
+        blocking=True,
+    )
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_CLOSED
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await hass.services.async_call(
+        cover.DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {ATTR_ENTITY_ID: "cover.test", ATTR_POSITION: 100},
+        blocking=True,
+    )
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_OPEN
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
 
 
 async def test_position_via_position_topic(hass, mqtt_mock):
@@ -87,6 +206,7 @@ async def test_position_via_position_topic(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("cover.test")
     assert state.state == STATE_UNKNOWN
@@ -124,6 +244,7 @@ async def test_state_via_template(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("cover.test")
     assert state.state == STATE_UNKNOWN
@@ -137,6 +258,45 @@ async def test_state_via_template(hass, mqtt_mock):
 
     state = hass.states.get("cover.test")
     assert state.state == STATE_CLOSED
+
+
+async def test_state_via_template_with_json_value(hass, mqtt_mock, caplog):
+    """Test the controlling state via topic with JSON value."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "state-topic",
+                "command_topic": "command-topic",
+                "qos": 0,
+                "value_template": "{{ value_json.Var1 }}",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_UNKNOWN
+
+    async_fire_mqtt_message(hass, "state-topic", '{ "Var1": "open", "Var2": "other" }')
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_OPEN
+
+    async_fire_mqtt_message(
+        hass, "state-topic", '{ "Var1": "closed", "Var2": "other" }'
+    )
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_CLOSED
+
+    async_fire_mqtt_message(hass, "state-topic", '{ "Var2": "other" }')
+    assert (
+        "Template variable warning: 'dict object' has no attribute 'Var1' when rendering"
+    ) in caplog.text
 
 
 async def test_position_via_template(hass, mqtt_mock):
@@ -155,6 +315,7 @@ async def test_position_via_template(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("cover.test")
     assert state.state == STATE_UNKNOWN
@@ -189,6 +350,7 @@ async def test_optimistic_state_change(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("cover.test")
     assert state.state == STATE_UNKNOWN
@@ -210,7 +372,7 @@ async def test_optimistic_state_change(hass, mqtt_mock):
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "CLOSE", 0, False)
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("cover.test")
-    assert STATE_CLOSED == state.state
+    assert state.state == STATE_CLOSED
 
     await hass.services.async_call(
         cover.DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: "cover.test"}, blocking=True
@@ -219,7 +381,7 @@ async def test_optimistic_state_change(hass, mqtt_mock):
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "OPEN", 0, False)
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("cover.test")
-    assert STATE_OPEN == state.state
+    assert state.state == STATE_OPEN
 
     await hass.services.async_call(
         cover.DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: "cover.test"}, blocking=True
@@ -228,6 +390,69 @@ async def test_optimistic_state_change(hass, mqtt_mock):
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "CLOSE", 0, False)
     state = hass.states.get("cover.test")
     assert state.state == STATE_CLOSED
+
+
+async def test_optimistic_state_change_with_position(hass, mqtt_mock):
+    """Test changing state optimistically."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "optimistic": True,
+                "command_topic": "command-topic",
+                "position_topic": "position-topic",
+                "qos": 0,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+    assert state.attributes.get(ATTR_CURRENT_POSITION) is None
+
+    await hass.services.async_call(
+        cover.DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: "cover.test"}, blocking=True
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with("command-topic", "OPEN", 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_OPEN
+    assert state.attributes.get(ATTR_CURRENT_POSITION) == 100
+
+    await hass.services.async_call(
+        cover.DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: "cover.test"}, blocking=True
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with("command-topic", "CLOSE", 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_CLOSED
+    assert state.attributes.get(ATTR_CURRENT_POSITION) == 0
+
+    await hass.services.async_call(
+        cover.DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: "cover.test"}, blocking=True
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with("command-topic", "OPEN", 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_OPEN
+    assert state.attributes.get(ATTR_CURRENT_POSITION) == 100
+
+    await hass.services.async_call(
+        cover.DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: "cover.test"}, blocking=True
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with("command-topic", "CLOSE", 0, False)
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_CLOSED
+    assert state.attributes.get(ATTR_CURRENT_POSITION) == 0
 
 
 async def test_send_open_cover_command(hass, mqtt_mock):
@@ -245,6 +470,7 @@ async def test_send_open_cover_command(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("cover.test")
     assert state.state == STATE_UNKNOWN
@@ -273,6 +499,7 @@ async def test_send_close_cover_command(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("cover.test")
     assert state.state == STATE_UNKNOWN
@@ -301,6 +528,7 @@ async def test_send_stop__cover_command(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("cover.test")
     assert state.state == STATE_UNKNOWN
@@ -333,33 +561,34 @@ async def test_current_cover_position(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state_attributes_dict = hass.states.get("cover.test").attributes
-    assert not ("current_position" in state_attributes_dict)
-    assert not ("current_tilt_position" in state_attributes_dict)
-    assert not (4 & hass.states.get("cover.test").attributes["supported_features"] == 4)
+    assert ATTR_CURRENT_POSITION not in state_attributes_dict
+    assert ATTR_CURRENT_TILT_POSITION not in state_attributes_dict
+    assert 4 & hass.states.get("cover.test").attributes["supported_features"] != 4
 
     async_fire_mqtt_message(hass, "get-position-topic", "0")
     current_cover_position = hass.states.get("cover.test").attributes[
-        "current_position"
+        ATTR_CURRENT_POSITION
     ]
     assert current_cover_position == 0
 
     async_fire_mqtt_message(hass, "get-position-topic", "50")
     current_cover_position = hass.states.get("cover.test").attributes[
-        "current_position"
+        ATTR_CURRENT_POSITION
     ]
     assert current_cover_position == 50
 
     async_fire_mqtt_message(hass, "get-position-topic", "non-numeric")
     current_cover_position = hass.states.get("cover.test").attributes[
-        "current_position"
+        ATTR_CURRENT_POSITION
     ]
     assert current_cover_position == 50
 
     async_fire_mqtt_message(hass, "get-position-topic", "101")
     current_cover_position = hass.states.get("cover.test").attributes[
-        "current_position"
+        ATTR_CURRENT_POSITION
     ]
     assert current_cover_position == 100
 
@@ -383,50 +612,71 @@ async def test_current_cover_position_inverted(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state_attributes_dict = hass.states.get("cover.test").attributes
-    assert not ("current_position" in state_attributes_dict)
-    assert not ("current_tilt_position" in state_attributes_dict)
-    assert not (4 & hass.states.get("cover.test").attributes["supported_features"] == 4)
+    assert ATTR_CURRENT_POSITION not in state_attributes_dict
+    assert ATTR_CURRENT_TILT_POSITION not in state_attributes_dict
+    assert 4 & hass.states.get("cover.test").attributes["supported_features"] != 4
 
     async_fire_mqtt_message(hass, "get-position-topic", "100")
     current_percentage_cover_position = hass.states.get("cover.test").attributes[
-        "current_position"
+        ATTR_CURRENT_POSITION
     ]
     assert current_percentage_cover_position == 0
     assert hass.states.get("cover.test").state == STATE_CLOSED
 
     async_fire_mqtt_message(hass, "get-position-topic", "0")
     current_percentage_cover_position = hass.states.get("cover.test").attributes[
-        "current_position"
+        ATTR_CURRENT_POSITION
     ]
     assert current_percentage_cover_position == 100
     assert hass.states.get("cover.test").state == STATE_OPEN
 
     async_fire_mqtt_message(hass, "get-position-topic", "50")
     current_percentage_cover_position = hass.states.get("cover.test").attributes[
-        "current_position"
+        ATTR_CURRENT_POSITION
     ]
     assert current_percentage_cover_position == 50
     assert hass.states.get("cover.test").state == STATE_OPEN
 
     async_fire_mqtt_message(hass, "get-position-topic", "non-numeric")
     current_percentage_cover_position = hass.states.get("cover.test").attributes[
-        "current_position"
+        ATTR_CURRENT_POSITION
     ]
     assert current_percentage_cover_position == 50
     assert hass.states.get("cover.test").state == STATE_OPEN
 
     async_fire_mqtt_message(hass, "get-position-topic", "101")
     current_percentage_cover_position = hass.states.get("cover.test").attributes[
-        "current_position"
+        ATTR_CURRENT_POSITION
     ]
     assert current_percentage_cover_position == 0
     assert hass.states.get("cover.test").state == STATE_CLOSED
 
 
-async def test_set_cover_position(hass, mqtt_mock):
-    """Test setting cover position."""
+async def test_optimistic_position(hass, mqtt_mock):
+    """Test optimistic position is not supported."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "command_topic": "command-topic",
+                "set_position_topic": "set-position-topic",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("cover.test")
+    assert state is None
+
+
+async def test_position_update(hass, mqtt_mock):
+    """Test cover position update from received MQTT message."""
     assert await async_setup_component(
         hass,
         cover.DOMAIN,
@@ -445,18 +695,19 @@ async def test_set_cover_position(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state_attributes_dict = hass.states.get("cover.test").attributes
-    assert not ("current_position" in state_attributes_dict)
-    assert not ("current_tilt_position" in state_attributes_dict)
+    assert ATTR_CURRENT_POSITION not in state_attributes_dict
+    assert ATTR_CURRENT_TILT_POSITION not in state_attributes_dict
     assert 4 & hass.states.get("cover.test").attributes["supported_features"] == 4
 
     async_fire_mqtt_message(hass, "get-position-topic", "22")
     state_attributes_dict = hass.states.get("cover.test").attributes
-    assert "current_position" in state_attributes_dict
-    assert not ("current_tilt_position" in state_attributes_dict)
+    assert ATTR_CURRENT_POSITION in state_attributes_dict
+    assert ATTR_CURRENT_TILT_POSITION not in state_attributes_dict
     current_cover_position = hass.states.get("cover.test").attributes[
-        "current_position"
+        ATTR_CURRENT_POSITION
     ]
     assert current_cover_position == 22
 
@@ -482,6 +733,7 @@ async def test_set_position_templated(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         cover.DOMAIN,
@@ -513,6 +765,7 @@ async def test_set_position_untemplated(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         cover.DOMAIN,
@@ -521,7 +774,39 @@ async def test_set_position_untemplated(hass, mqtt_mock):
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("position-topic", 62, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with("position-topic", "62", 0, False)
+
+
+async def test_set_position_untemplated_custom_percentage_range(hass, mqtt_mock):
+    """Test setting cover position via template."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "position_topic": "state-topic",
+                "command_topic": "command-topic",
+                "set_position_topic": "position-topic",
+                "position_open": 0,
+                "position_closed": 100,
+                "payload_open": "OPEN",
+                "payload_close": "CLOSE",
+                "payload_stop": "STOP",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        cover.DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {ATTR_ENTITY_ID: "cover.test", ATTR_POSITION: 38},
+        blocking=True,
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with("position-topic", "62", 0, False)
 
 
 async def test_no_command_topic(hass, mqtt_mock):
@@ -542,8 +827,31 @@ async def test_no_command_topic(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     assert hass.states.get("cover.test").attributes["supported_features"] == 240
+
+
+async def test_no_payload_stop(hass, mqtt_mock):
+    """Test with no stop payload."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "command_topic": "command-topic",
+                "qos": 0,
+                "payload_open": "OPEN",
+                "payload_close": "CLOSE",
+                "payload_stop": None,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("cover.test").attributes["supported_features"] == 3
 
 
 async def test_with_command_topic_and_tilt(hass, mqtt_mock):
@@ -565,6 +873,7 @@ async def test_with_command_topic_and_tilt(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     assert hass.states.get("cover.test").attributes["supported_features"] == 251
 
@@ -589,12 +898,13 @@ async def test_tilt_defaults(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state_attributes_dict = hass.states.get("cover.test").attributes
-    assert "current_tilt_position" in state_attributes_dict
+    assert ATTR_CURRENT_TILT_POSITION in state_attributes_dict
 
     current_cover_position = hass.states.get("cover.test").attributes[
-        "current_tilt_position"
+        ATTR_CURRENT_TILT_POSITION
     ]
     assert current_cover_position == STATE_UNKNOWN
 
@@ -619,6 +929,7 @@ async def test_tilt_via_invocation_defaults(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         cover.DOMAIN,
@@ -627,7 +938,9 @@ async def test_tilt_via_invocation_defaults(hass, mqtt_mock):
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 100, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "100", 0, False
+    )
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
@@ -637,14 +950,14 @@ async def test_tilt_via_invocation_defaults(hass, mqtt_mock):
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 0, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", "0", 0, False)
     mqtt_mock.async_publish.reset_mock()
 
     # Close tilt status would be received from device when non-optimistic
     async_fire_mqtt_message(hass, "tilt-status-topic", "0")
 
     current_cover_tilt_position = hass.states.get("cover.test").attributes[
-        "current_tilt_position"
+        ATTR_CURRENT_TILT_POSITION
     ]
     assert current_cover_tilt_position == 0
 
@@ -655,14 +968,16 @@ async def test_tilt_via_invocation_defaults(hass, mqtt_mock):
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 100, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "100", 0, False
+    )
     mqtt_mock.async_publish.reset_mock()
 
     # Open tilt status would be received from device when non-optimistic
     async_fire_mqtt_message(hass, "tilt-status-topic", "100")
 
     current_cover_tilt_position = hass.states.get("cover.test").attributes[
-        "current_tilt_position"
+        ATTR_CURRENT_TILT_POSITION
     ]
     assert current_cover_tilt_position == 100
 
@@ -673,7 +988,7 @@ async def test_tilt_via_invocation_defaults(hass, mqtt_mock):
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 0, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", "0", 0, False)
 
 
 async def test_tilt_given_value(hass, mqtt_mock):
@@ -698,6 +1013,7 @@ async def test_tilt_given_value(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         cover.DOMAIN,
@@ -706,7 +1022,9 @@ async def test_tilt_given_value(hass, mqtt_mock):
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 80, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "80", 0, False
+    )
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
@@ -716,14 +1034,16 @@ async def test_tilt_given_value(hass, mqtt_mock):
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 25, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "25", 0, False
+    )
     mqtt_mock.async_publish.reset_mock()
 
     # Close tilt status would be received from device when non-optimistic
     async_fire_mqtt_message(hass, "tilt-status-topic", "25")
 
     current_cover_tilt_position = hass.states.get("cover.test").attributes[
-        "current_tilt_position"
+        ATTR_CURRENT_TILT_POSITION
     ]
     assert current_cover_tilt_position == 25
 
@@ -734,14 +1054,16 @@ async def test_tilt_given_value(hass, mqtt_mock):
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 80, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "80", 0, False
+    )
     mqtt_mock.async_publish.reset_mock()
 
     # Open tilt status would be received from device when non-optimistic
     async_fire_mqtt_message(hass, "tilt-status-topic", "80")
 
     current_cover_tilt_position = hass.states.get("cover.test").attributes[
-        "current_tilt_position"
+        ATTR_CURRENT_TILT_POSITION
     ]
     assert current_cover_tilt_position == 80
 
@@ -752,7 +1074,9 @@ async def test_tilt_given_value(hass, mqtt_mock):
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 25, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "25", 0, False
+    )
 
 
 async def test_tilt_given_value_optimistic(hass, mqtt_mock):
@@ -778,6 +1102,7 @@ async def test_tilt_given_value_optimistic(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         cover.DOMAIN,
@@ -787,11 +1112,30 @@ async def test_tilt_given_value_optimistic(hass, mqtt_mock):
     )
 
     current_cover_tilt_position = hass.states.get("cover.test").attributes[
-        "current_tilt_position"
+        ATTR_CURRENT_TILT_POSITION
     ]
     assert current_cover_tilt_position == 80
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 80, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "80", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+
+    await hass.services.async_call(
+        cover.DOMAIN,
+        SERVICE_SET_COVER_TILT_POSITION,
+        {ATTR_ENTITY_ID: "cover.test", ATTR_TILT_POSITION: 50},
+        blocking=True,
+    )
+
+    current_cover_tilt_position = hass.states.get("cover.test").attributes[
+        ATTR_CURRENT_TILT_POSITION
+    ]
+    assert current_cover_tilt_position == 50
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "50", 0, False
+    )
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
@@ -802,11 +1146,13 @@ async def test_tilt_given_value_optimistic(hass, mqtt_mock):
     )
 
     current_cover_tilt_position = hass.states.get("cover.test").attributes[
-        "current_tilt_position"
+        ATTR_CURRENT_TILT_POSITION
     ]
     assert current_cover_tilt_position == 25
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 25, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "25", 0, False
+    )
 
 
 async def test_tilt_given_value_altered_range(hass, mqtt_mock):
@@ -834,6 +1180,7 @@ async def test_tilt_given_value_altered_range(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         cover.DOMAIN,
@@ -843,11 +1190,13 @@ async def test_tilt_given_value_altered_range(hass, mqtt_mock):
     )
 
     current_cover_tilt_position = hass.states.get("cover.test").attributes[
-        "current_tilt_position"
+        ATTR_CURRENT_TILT_POSITION
     ]
     assert current_cover_tilt_position == 50
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 25, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "25", 0, False
+    )
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
@@ -858,11 +1207,11 @@ async def test_tilt_given_value_altered_range(hass, mqtt_mock):
     )
 
     current_cover_tilt_position = hass.states.get("cover.test").attributes[
-        "current_tilt_position"
+        ATTR_CURRENT_TILT_POSITION
     ]
     assert current_cover_tilt_position == 0
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 0, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", "0", 0, False)
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
@@ -873,11 +1222,13 @@ async def test_tilt_given_value_altered_range(hass, mqtt_mock):
     )
 
     current_cover_tilt_position = hass.states.get("cover.test").attributes[
-        "current_tilt_position"
+        ATTR_CURRENT_TILT_POSITION
     ]
     assert current_cover_tilt_position == 50
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 25, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "25", 0, False
+    )
 
 
 async def test_tilt_via_topic(hass, mqtt_mock):
@@ -900,18 +1251,19 @@ async def test_tilt_via_topic(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "tilt-status-topic", "0")
 
     current_cover_tilt_position = hass.states.get("cover.test").attributes[
-        "current_tilt_position"
+        ATTR_CURRENT_TILT_POSITION
     ]
     assert current_cover_tilt_position == 0
 
     async_fire_mqtt_message(hass, "tilt-status-topic", "50")
 
     current_cover_tilt_position = hass.states.get("cover.test").attributes[
-        "current_tilt_position"
+        ATTR_CURRENT_TILT_POSITION
     ]
     assert current_cover_tilt_position == 50
 
@@ -939,20 +1291,67 @@ async def test_tilt_via_topic_template(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "tilt-status-topic", "99")
 
     current_cover_tilt_position = hass.states.get("cover.test").attributes[
-        "current_tilt_position"
+        ATTR_CURRENT_TILT_POSITION
     ]
     assert current_cover_tilt_position == 0
 
     async_fire_mqtt_message(hass, "tilt-status-topic", "5000")
 
     current_cover_tilt_position = hass.states.get("cover.test").attributes[
-        "current_tilt_position"
+        ATTR_CURRENT_TILT_POSITION
     ]
     assert current_cover_tilt_position == 50
+
+
+async def test_tilt_via_topic_template_json_value(hass, mqtt_mock, caplog):
+    """Test tilt by updating status via MQTT and template with JSON value."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "state-topic",
+                "command_topic": "command-topic",
+                "qos": 0,
+                "payload_open": "OPEN",
+                "payload_close": "CLOSE",
+                "payload_stop": "STOP",
+                "tilt_command_topic": "tilt-command-topic",
+                "tilt_status_topic": "tilt-status-topic",
+                "tilt_status_template": "{{ value_json.Var1 }}",
+                "tilt_opened_value": 400,
+                "tilt_closed_value": 125,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "tilt-status-topic", '{"Var1": 9, "Var2": 30}')
+
+    current_cover_tilt_position = hass.states.get("cover.test").attributes[
+        ATTR_CURRENT_TILT_POSITION
+    ]
+    assert current_cover_tilt_position == 9
+
+    async_fire_mqtt_message(hass, "tilt-status-topic", '{"Var1": 50, "Var2": 10}')
+
+    current_cover_tilt_position = hass.states.get("cover.test").attributes[
+        ATTR_CURRENT_TILT_POSITION
+    ]
+    assert current_cover_tilt_position == 50
+
+    async_fire_mqtt_message(hass, "tilt-status-topic", '{"Var2": 10}')
+
+    assert (
+        "Template variable warning: 'dict object' has no attribute 'Var1' when rendering"
+    ) in caplog.text
 
 
 async def test_tilt_via_topic_altered_range(hass, mqtt_mock):
@@ -977,25 +1376,132 @@ async def test_tilt_via_topic_altered_range(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "tilt-status-topic", "0")
 
     current_cover_tilt_position = hass.states.get("cover.test").attributes[
-        "current_tilt_position"
+        ATTR_CURRENT_TILT_POSITION
     ]
     assert current_cover_tilt_position == 0
 
     async_fire_mqtt_message(hass, "tilt-status-topic", "50")
 
     current_cover_tilt_position = hass.states.get("cover.test").attributes[
-        "current_tilt_position"
+        ATTR_CURRENT_TILT_POSITION
     ]
     assert current_cover_tilt_position == 100
 
     async_fire_mqtt_message(hass, "tilt-status-topic", "25")
 
     current_cover_tilt_position = hass.states.get("cover.test").attributes[
-        "current_tilt_position"
+        ATTR_CURRENT_TILT_POSITION
+    ]
+    assert current_cover_tilt_position == 50
+
+
+async def test_tilt_status_out_of_range_warning(hass, caplog, mqtt_mock):
+    """Test tilt status via MQTT tilt out of range warning message."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "state-topic",
+                "command_topic": "command-topic",
+                "qos": 0,
+                "payload_open": "OPEN",
+                "payload_close": "CLOSE",
+                "payload_stop": "STOP",
+                "tilt_command_topic": "tilt-command-topic",
+                "tilt_status_topic": "tilt-status-topic",
+                "tilt_min": 0,
+                "tilt_max": 50,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "tilt-status-topic", "60")
+
+    assert (
+        "Payload '60' is out of range, must be between '0' and '50' inclusive"
+    ) in caplog.text
+
+
+async def test_tilt_status_not_numeric_warning(hass, caplog, mqtt_mock):
+    """Test tilt status via MQTT tilt not numeric warning message."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "state-topic",
+                "command_topic": "command-topic",
+                "qos": 0,
+                "payload_open": "OPEN",
+                "payload_close": "CLOSE",
+                "payload_stop": "STOP",
+                "tilt_command_topic": "tilt-command-topic",
+                "tilt_status_topic": "tilt-status-topic",
+                "tilt_min": 0,
+                "tilt_max": 50,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "tilt-status-topic", "abc")
+
+    assert ("Payload 'abc' is not numeric") in caplog.text
+
+
+async def test_tilt_via_topic_altered_range_inverted(hass, mqtt_mock):
+    """Test tilt status via MQTT with altered tilt range and inverted tilt position."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "state-topic",
+                "command_topic": "command-topic",
+                "qos": 0,
+                "payload_open": "OPEN",
+                "payload_close": "CLOSE",
+                "payload_stop": "STOP",
+                "tilt_command_topic": "tilt-command-topic",
+                "tilt_status_topic": "tilt-status-topic",
+                "tilt_min": 50,
+                "tilt_max": 0,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "tilt-status-topic", "0")
+
+    current_cover_tilt_position = hass.states.get("cover.test").attributes[
+        ATTR_CURRENT_TILT_POSITION
+    ]
+    assert current_cover_tilt_position == 100
+
+    async_fire_mqtt_message(hass, "tilt-status-topic", "50")
+
+    current_cover_tilt_position = hass.states.get("cover.test").attributes[
+        ATTR_CURRENT_TILT_POSITION
+    ]
+    assert current_cover_tilt_position == 0
+
+    async_fire_mqtt_message(hass, "tilt-status-topic", "25")
+
+    current_cover_tilt_position = hass.states.get("cover.test").attributes[
+        ATTR_CURRENT_TILT_POSITION
     ]
     assert current_cover_tilt_position == 50
 
@@ -1025,25 +1531,26 @@ async def test_tilt_via_topic_template_altered_range(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "tilt-status-topic", "99")
 
     current_cover_tilt_position = hass.states.get("cover.test").attributes[
-        "current_tilt_position"
+        ATTR_CURRENT_TILT_POSITION
     ]
     assert current_cover_tilt_position == 0
 
     async_fire_mqtt_message(hass, "tilt-status-topic", "5000")
 
     current_cover_tilt_position = hass.states.get("cover.test").attributes[
-        "current_tilt_position"
+        ATTR_CURRENT_TILT_POSITION
     ]
     assert current_cover_tilt_position == 100
 
     async_fire_mqtt_message(hass, "tilt-status-topic", "2500")
 
     current_cover_tilt_position = hass.states.get("cover.test").attributes[
-        "current_tilt_position"
+        ATTR_CURRENT_TILT_POSITION
     ]
     assert current_cover_tilt_position == 50
 
@@ -1068,6 +1575,7 @@ async def test_tilt_position(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         cover.DOMAIN,
@@ -1076,7 +1584,44 @@ async def test_tilt_position(hass, mqtt_mock):
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 50, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "50", 0, False
+    )
+
+
+async def test_tilt_position_templated(hass, mqtt_mock):
+    """Test tilt position via template."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "state-topic",
+                "command_topic": "command-topic",
+                "qos": 0,
+                "payload_open": "OPEN",
+                "payload_close": "CLOSE",
+                "payload_stop": "STOP",
+                "tilt_command_topic": "tilt-command-topic",
+                "tilt_status_topic": "tilt-status-topic",
+                "tilt_command_template": "{{100-32}}",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        cover.DOMAIN,
+        SERVICE_SET_COVER_TILT_POSITION,
+        {ATTR_ENTITY_ID: "cover.test", ATTR_TILT_POSITION: 100},
+        blocking=True,
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "68", 0, False
+    )
 
 
 async def test_tilt_position_altered_range(hass, mqtt_mock):
@@ -1103,6 +1648,7 @@ async def test_tilt_position_altered_range(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         cover.DOMAIN,
@@ -1111,12 +1657,15 @@ async def test_tilt_position_altered_range(hass, mqtt_mock):
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 25, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "25", 0, False
+    )
 
 
 async def test_find_percentage_in_range_defaults(hass, mqtt_mock):
     """Test find percentage in range with default range."""
     mqtt_cover = MqttCover(
+        hass,
         {
             "name": "cover.test",
             "state_topic": "state-topic",
@@ -1160,6 +1709,7 @@ async def test_find_percentage_in_range_defaults(hass, mqtt_mock):
 async def test_find_percentage_in_range_altered(hass, mqtt_mock):
     """Test find percentage in range with altered range."""
     mqtt_cover = MqttCover(
+        hass,
         {
             "name": "cover.test",
             "state_topic": "state-topic",
@@ -1203,6 +1753,7 @@ async def test_find_percentage_in_range_altered(hass, mqtt_mock):
 async def test_find_percentage_in_range_defaults_inverted(hass, mqtt_mock):
     """Test find percentage in range with default range but inverted."""
     mqtt_cover = MqttCover(
+        hass,
         {
             "name": "cover.test",
             "state_topic": "state-topic",
@@ -1246,6 +1797,7 @@ async def test_find_percentage_in_range_defaults_inverted(hass, mqtt_mock):
 async def test_find_percentage_in_range_altered_inverted(hass, mqtt_mock):
     """Test find percentage in range with altered range and inverted."""
     mqtt_cover = MqttCover(
+        hass,
         {
             "name": "cover.test",
             "state_topic": "state-topic",
@@ -1289,6 +1841,7 @@ async def test_find_percentage_in_range_altered_inverted(hass, mqtt_mock):
 async def test_find_in_range_defaults(hass, mqtt_mock):
     """Test find in range with default range."""
     mqtt_cover = MqttCover(
+        hass,
         {
             "name": "cover.test",
             "state_topic": "state-topic",
@@ -1332,6 +1885,7 @@ async def test_find_in_range_defaults(hass, mqtt_mock):
 async def test_find_in_range_altered(hass, mqtt_mock):
     """Test find in range with altered range."""
     mqtt_cover = MqttCover(
+        hass,
         {
             "name": "cover.test",
             "state_topic": "state-topic",
@@ -1375,6 +1929,7 @@ async def test_find_in_range_altered(hass, mqtt_mock):
 async def test_find_in_range_defaults_inverted(hass, mqtt_mock):
     """Test find in range with default range but inverted."""
     mqtt_cover = MqttCover(
+        hass,
         {
             "name": "cover.test",
             "state_topic": "state-topic",
@@ -1418,6 +1973,7 @@ async def test_find_in_range_defaults_inverted(hass, mqtt_mock):
 async def test_find_in_range_altered_inverted(hass, mqtt_mock):
     """Test find in range with altered range and inverted."""
     mqtt_cover = MqttCover(
+        hass,
         {
             "name": "cover.test",
             "state_topic": "state-topic",
@@ -1458,89 +2014,32 @@ async def test_find_in_range_altered_inverted(hass, mqtt_mock):
     assert mqtt_cover.find_in_range_from_percent(60, "cover") == 120
 
 
+async def test_availability_when_connection_lost(hass, mqtt_mock):
+    """Test availability after MQTT disconnection."""
+    await help_test_availability_when_connection_lost(
+        hass, mqtt_mock, cover.DOMAIN, DEFAULT_CONFIG
+    )
+
+
 async def test_availability_without_topic(hass, mqtt_mock):
     """Test availability without defined availability topic."""
-    assert await async_setup_component(
-        hass,
-        cover.DOMAIN,
-        {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-            }
-        },
+    await help_test_availability_without_topic(
+        hass, mqtt_mock, cover.DOMAIN, DEFAULT_CONFIG
     )
 
-    state = hass.states.get("cover.test")
-    assert state.state != STATE_UNAVAILABLE
 
-
-async def test_availability_by_defaults(hass, mqtt_mock):
-    """Test availability by defaults with defined topic."""
-    assert await async_setup_component(
-        hass,
-        cover.DOMAIN,
-        {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "availability_topic": "availability-topic",
-            }
-        },
+async def test_default_availability_payload(hass, mqtt_mock):
+    """Test availability by default payload with defined topic."""
+    await help_test_default_availability_payload(
+        hass, mqtt_mock, cover.DOMAIN, DEFAULT_CONFIG
     )
 
-    state = hass.states.get("cover.test")
-    assert state.state == STATE_UNAVAILABLE
 
-    async_fire_mqtt_message(hass, "availability-topic", "online")
-    await hass.async_block_till_done()
-
-    state = hass.states.get("cover.test")
-    assert state.state != STATE_UNAVAILABLE
-
-    async_fire_mqtt_message(hass, "availability-topic", "offline")
-    await hass.async_block_till_done()
-
-    state = hass.states.get("cover.test")
-    assert state.state == STATE_UNAVAILABLE
-
-
-async def test_availability_by_custom_payload(hass, mqtt_mock):
+async def test_custom_availability_payload(hass, mqtt_mock):
     """Test availability by custom payload with defined topic."""
-    assert await async_setup_component(
-        hass,
-        cover.DOMAIN,
-        {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "availability_topic": "availability-topic",
-                "payload_available": "good",
-                "payload_not_available": "nogood",
-            }
-        },
+    await help_test_custom_availability_payload(
+        hass, mqtt_mock, cover.DOMAIN, DEFAULT_CONFIG
     )
-
-    state = hass.states.get("cover.test")
-    assert state.state == STATE_UNAVAILABLE
-
-    async_fire_mqtt_message(hass, "availability-topic", "good")
-    await hass.async_block_till_done()
-
-    state = hass.states.get("cover.test")
-    assert state.state != STATE_UNAVAILABLE
-
-    async_fire_mqtt_message(hass, "availability-topic", "nogood")
-    await hass.async_block_till_done()
-
-    state = hass.states.get("cover.test")
-    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_valid_device_class(hass, mqtt_mock):
@@ -1557,6 +2056,7 @@ async def test_valid_device_class(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("cover.test")
     assert state.attributes.get("device_class") == "garage"
@@ -1576,6 +2076,7 @@ async def test_invalid_device_class(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("cover.test")
     assert state is None
@@ -1583,309 +2084,474 @@ async def test_invalid_device_class(hass, mqtt_mock):
 
 async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
     """Test the setting of attribute via MQTT with JSON payload."""
-    assert await async_setup_component(
-        hass,
-        cover.DOMAIN,
-        {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "test-topic",
-                "json_attributes_topic": "attr-topic",
-            }
-        },
+    await help_test_setting_attribute_via_mqtt_json_message(
+        hass, mqtt_mock, cover.DOMAIN, DEFAULT_CONFIG
     )
 
-    async_fire_mqtt_message(hass, "attr-topic", '{ "val": "100" }')
-    state = hass.states.get("cover.test")
 
-    assert state.attributes.get("val") == "100"
+async def test_setting_attribute_with_template(hass, mqtt_mock):
+    """Test the setting of attribute via MQTT with JSON payload."""
+    await help_test_setting_attribute_with_template(
+        hass, mqtt_mock, cover.DOMAIN, DEFAULT_CONFIG
+    )
 
 
 async def test_update_with_json_attrs_not_dict(hass, mqtt_mock, caplog):
     """Test attributes get extracted from a JSON result."""
-    assert await async_setup_component(
-        hass,
-        cover.DOMAIN,
-        {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "test-topic",
-                "json_attributes_topic": "attr-topic",
-            }
-        },
+    await help_test_update_with_json_attrs_not_dict(
+        hass, mqtt_mock, caplog, cover.DOMAIN, DEFAULT_CONFIG
     )
 
-    async_fire_mqtt_message(hass, "attr-topic", '[ "list", "of", "things"]')
-    state = hass.states.get("cover.test")
 
-    assert state.attributes.get("val") is None
-    assert "JSON result was not a dictionary" in caplog.text
-
-
-async def test_update_with_json_attrs_bad_JSON(hass, mqtt_mock, caplog):
+async def test_update_with_json_attrs_bad_json(hass, mqtt_mock, caplog):
     """Test attributes get extracted from a JSON result."""
-    assert await async_setup_component(
-        hass,
-        cover.DOMAIN,
-        {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "test-topic",
-                "json_attributes_topic": "attr-topic",
-            }
-        },
+    await help_test_update_with_json_attrs_bad_JSON(
+        hass, mqtt_mock, caplog, cover.DOMAIN, DEFAULT_CONFIG
     )
-
-    async_fire_mqtt_message(hass, "attr-topic", "This is not JSON")
-
-    state = hass.states.get("cover.test")
-    assert state.attributes.get("val") is None
-    assert "Erroneous JSON: This is not JSON" in caplog.text
 
 
 async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     """Test update of discovered MQTTAttributes."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    await async_start(hass, "homeassistant", {}, entry)
-    data1 = (
-        '{ "name": "Beer",'
-        '  "command_topic": "test_topic",'
-        '  "json_attributes_topic": "attr-topic1" }'
+    await help_test_discovery_update_attr(
+        hass, mqtt_mock, caplog, cover.DOMAIN, DEFAULT_CONFIG
     )
-    data2 = (
-        '{ "name": "Beer",'
-        '  "command_topic": "test_topic",'
-        '  "json_attributes_topic": "attr-topic2" }'
-    )
-    async_fire_mqtt_message(hass, "homeassistant/cover/bla/config", data1)
-    await hass.async_block_till_done()
-    async_fire_mqtt_message(hass, "attr-topic1", '{ "val": "100" }')
-    state = hass.states.get("cover.beer")
-    assert state.attributes.get("val") == "100"
 
-    # Change json_attributes_topic
-    async_fire_mqtt_message(hass, "homeassistant/cover/bla/config", data2)
-    await hass.async_block_till_done()
 
-    # Verify we are no longer subscribing to the old topic
-    async_fire_mqtt_message(hass, "attr-topic1", '{ "val": "50" }')
-    state = hass.states.get("cover.beer")
-    assert state.attributes.get("val") == "100"
-
-    # Verify we are subscribing to the new topic
-    async_fire_mqtt_message(hass, "attr-topic2", '{ "val": "75" }')
-    state = hass.states.get("cover.beer")
-    assert state.attributes.get("val") == "75"
+async def test_unique_id(hass, mqtt_mock):
+    """Test unique_id option only creates one cover per id."""
+    config = {
+        cover.DOMAIN: [
+            {
+                "platform": "mqtt",
+                "name": "Test 1",
+                "state_topic": "test-topic",
+                "unique_id": "TOTALLY_UNIQUE",
+            },
+            {
+                "platform": "mqtt",
+                "name": "Test 2",
+                "state_topic": "test-topic",
+                "unique_id": "TOTALLY_UNIQUE",
+            },
+        ]
+    }
+    await help_test_unique_id(hass, mqtt_mock, cover.DOMAIN, config)
 
 
 async def test_discovery_removal_cover(hass, mqtt_mock, caplog):
     """Test removal of discovered cover."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    await async_start(hass, "homeassistant", {}, entry)
-    data = '{ "name": "Beer",' '  "command_topic": "test_topic" }'
-    async_fire_mqtt_message(hass, "homeassistant/cover/bla/config", data)
-    await hass.async_block_till_done()
-    state = hass.states.get("cover.beer")
-    assert state is not None
-    assert state.name == "Beer"
-    async_fire_mqtt_message(hass, "homeassistant/cover/bla/config", "")
-    await hass.async_block_till_done()
-    state = hass.states.get("cover.beer")
-    assert state is None
+    data = '{ "name": "test", "command_topic": "test_topic" }'
+    await help_test_discovery_removal(hass, mqtt_mock, caplog, cover.DOMAIN, data)
 
 
 async def test_discovery_update_cover(hass, mqtt_mock, caplog):
     """Test update of discovered cover."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    await async_start(hass, "homeassistant", {}, entry)
-    data1 = '{ "name": "Beer",' '  "command_topic": "test_topic" }'
-    data2 = '{ "name": "Milk",' '  "command_topic": "test_topic" }'
-    async_fire_mqtt_message(hass, "homeassistant/cover/bla/config", data1)
-    await hass.async_block_till_done()
-    state = hass.states.get("cover.beer")
-    assert state is not None
-    assert state.name == "Beer"
-
-    async_fire_mqtt_message(hass, "homeassistant/cover/bla/config", data2)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("cover.beer")
-    assert state is not None
-    assert state.name == "Milk"
-
-    state = hass.states.get("cover.milk")
-    assert state is None
-
-
-async def test_discovery_broken(hass, mqtt_mock, caplog):
-    """Test handling of bad discovery message."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    await async_start(hass, "homeassistant", {}, entry)
-
-    data1 = '{ "name": "Beer",' '  "command_topic": "test_topic#" }'
-    data2 = '{ "name": "Milk",' '  "command_topic": "test_topic" }'
-
-    async_fire_mqtt_message(hass, "homeassistant/cover/bla/config", data1)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("cover.beer")
-    assert state is None
-
-    async_fire_mqtt_message(hass, "homeassistant/cover/bla/config", data2)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("cover.milk")
-    assert state is not None
-    assert state.name == "Milk"
-    state = hass.states.get("cover.beer")
-    assert state is None
-
-
-async def test_unique_id(hass):
-    """Test unique_id option only creates one cover per id."""
-    await async_mock_mqtt_component(hass)
-    assert await async_setup_component(
-        hass,
-        cover.DOMAIN,
-        {
-            cover.DOMAIN: [
-                {
-                    "platform": "mqtt",
-                    "name": "Test 1",
-                    "state_topic": "test-topic",
-                    "unique_id": "TOTALLY_UNIQUE",
-                },
-                {
-                    "platform": "mqtt",
-                    "name": "Test 2",
-                    "state_topic": "test-topic",
-                    "unique_id": "TOTALLY_UNIQUE",
-                },
-            ]
-        },
+    data1 = '{ "name": "Beer", "command_topic": "test_topic" }'
+    data2 = '{ "name": "Milk", "command_topic": "test_topic" }'
+    await help_test_discovery_update(
+        hass, mqtt_mock, caplog, cover.DOMAIN, data1, data2
     )
 
-    async_fire_mqtt_message(hass, "test-topic", "payload")
 
-    assert len(hass.states.async_entity_ids(cover.DOMAIN)) == 1
+async def test_discovery_update_unchanged_cover(hass, mqtt_mock, caplog):
+    """Test update of discovered cover."""
+    data1 = '{ "name": "Beer", "command_topic": "test_topic" }'
+    with patch(
+        "homeassistant.components.mqtt.cover.MqttCover.discovery_update"
+    ) as discovery_update:
+        await help_test_discovery_update_unchanged(
+            hass, mqtt_mock, caplog, cover.DOMAIN, data1, discovery_update
+        )
+
+
+@pytest.mark.no_fail_on_log_exception
+async def test_discovery_broken(hass, mqtt_mock, caplog):
+    """Test handling of bad discovery message."""
+    data1 = '{ "name": "Beer", "command_topic": "test_topic#" }'
+    data2 = '{ "name": "Milk", "command_topic": "test_topic" }'
+    await help_test_discovery_broken(
+        hass, mqtt_mock, caplog, cover.DOMAIN, data1, data2
+    )
+
+
+async def test_entity_device_info_with_connection(hass, mqtt_mock):
+    """Test MQTT cover device registry integration."""
+    await help_test_entity_device_info_with_connection(
+        hass, mqtt_mock, cover.DOMAIN, DEFAULT_CONFIG
+    )
 
 
 async def test_entity_device_info_with_identifier(hass, mqtt_mock):
     """Test MQTT cover device registry integration."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    entry.add_to_hass(hass)
-    await async_start(hass, "homeassistant", {}, entry)
-    registry = await hass.helpers.device_registry.async_get_registry()
-
-    data = json.dumps(
-        {
-            "platform": "mqtt",
-            "name": "Test 1",
-            "state_topic": "test-topic",
-            "command_topic": "test-command-topic",
-            "device": {
-                "identifiers": ["helloworld"],
-                "connections": [["mac", "02:5b:26:a8:dc:12"]],
-                "manufacturer": "Whatever",
-                "name": "Beer",
-                "model": "Glass",
-                "sw_version": "0.1-beta",
-            },
-            "unique_id": "veryunique",
-        }
+    await help_test_entity_device_info_with_identifier(
+        hass, mqtt_mock, cover.DOMAIN, DEFAULT_CONFIG
     )
-    async_fire_mqtt_message(hass, "homeassistant/cover/bla/config", data)
-    await hass.async_block_till_done()
-
-    device = registry.async_get_device({("mqtt", "helloworld")}, set())
-    assert device is not None
-    assert device.identifiers == {("mqtt", "helloworld")}
-    assert device.connections == {("mac", "02:5b:26:a8:dc:12")}
-    assert device.manufacturer == "Whatever"
-    assert device.name == "Beer"
-    assert device.model == "Glass"
-    assert device.sw_version == "0.1-beta"
 
 
 async def test_entity_device_info_update(hass, mqtt_mock):
     """Test device registry update."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    entry.add_to_hass(hass)
-    await async_start(hass, "homeassistant", {}, entry)
-    registry = await hass.helpers.device_registry.async_get_registry()
-
-    config = {
-        "platform": "mqtt",
-        "name": "Test 1",
-        "state_topic": "test-topic",
-        "command_topic": "test-command-topic",
-        "device": {
-            "identifiers": ["helloworld"],
-            "connections": [["mac", "02:5b:26:a8:dc:12"]],
-            "manufacturer": "Whatever",
-            "name": "Beer",
-            "model": "Glass",
-            "sw_version": "0.1-beta",
-        },
-        "unique_id": "veryunique",
-    }
-
-    data = json.dumps(config)
-    async_fire_mqtt_message(hass, "homeassistant/cover/bla/config", data)
-    await hass.async_block_till_done()
-
-    device = registry.async_get_device({("mqtt", "helloworld")}, set())
-    assert device is not None
-    assert device.name == "Beer"
-
-    config["device"]["name"] = "Milk"
-    data = json.dumps(config)
-    async_fire_mqtt_message(hass, "homeassistant/cover/bla/config", data)
-    await hass.async_block_till_done()
-
-    device = registry.async_get_device({("mqtt", "helloworld")}, set())
-    assert device is not None
-    assert device.name == "Milk"
+    await help_test_entity_device_info_update(
+        hass, mqtt_mock, cover.DOMAIN, DEFAULT_CONFIG
+    )
 
 
-async def test_entity_id_update(hass, mqtt_mock):
+async def test_entity_device_info_remove(hass, mqtt_mock):
+    """Test device registry remove."""
+    await help_test_entity_device_info_remove(
+        hass, mqtt_mock, cover.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_entity_id_update_subscriptions(hass, mqtt_mock):
     """Test MQTT subscriptions are managed when entity_id is updated."""
-    registry = mock_registry(hass, {})
-    mock_mqtt = await async_mock_mqtt_component(hass)
+    await help_test_entity_id_update_subscriptions(
+        hass, mqtt_mock, cover.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_entity_id_update_discovery_update(hass, mqtt_mock):
+    """Test MQTT discovery update when entity_id is updated."""
+    await help_test_entity_id_update_discovery_update(
+        hass, mqtt_mock, cover.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_entity_debug_info_message(hass, mqtt_mock):
+    """Test MQTT debug info."""
+    await help_test_entity_debug_info_message(
+        hass, mqtt_mock, cover.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_deprecated_value_template_for_position_topic_warning(
+    hass, caplog, mqtt_mock
+):
+    """Test warning when value_template is used for position_topic."""
     assert await async_setup_component(
         hass,
         cover.DOMAIN,
         {
-            cover.DOMAIN: [
-                {
-                    "platform": "mqtt",
-                    "name": "beer",
-                    "state_topic": "test-topic",
-                    "availability_topic": "avty-topic",
-                    "unique_id": "TOTALLY_UNIQUE",
-                }
-            ]
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "command_topic": "command-topic",
+                "set_position_topic": "set-position-topic",
+                "position_topic": "position-topic",
+                "value_template": "{{100-62}}",
+            }
         },
     )
-
-    state = hass.states.get("cover.beer")
-    assert state is not None
-    assert mock_mqtt.async_subscribe.call_count == 2
-    mock_mqtt.async_subscribe.assert_any_call("test-topic", ANY, 0, "utf-8")
-    mock_mqtt.async_subscribe.assert_any_call("avty-topic", ANY, 0, "utf-8")
-    mock_mqtt.async_subscribe.reset_mock()
-
-    registry.async_update_entity("cover.beer", new_entity_id="cover.milk")
     await hass.async_block_till_done()
 
-    state = hass.states.get("cover.beer")
-    assert state is None
+    assert (
+        "Using 'value_template' for 'position_topic' is deprecated "
+        "and will be removed from Home Assistant in version 2021.6, "
+        "please replace it with 'position_template'"
+    ) in caplog.text
 
-    state = hass.states.get("cover.milk")
-    assert state is not None
-    assert mock_mqtt.async_subscribe.call_count == 2
-    mock_mqtt.async_subscribe.assert_any_call("test-topic", ANY, 0, "utf-8")
-    mock_mqtt.async_subscribe.assert_any_call("avty-topic", ANY, 0, "utf-8")
+
+async def test_deprecated_tilt_invert_state_warning(hass, caplog, mqtt_mock):
+    """Test warning when tilt_invert_state is used."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "command_topic": "command-topic",
+                "tilt_invert_state": True,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert (
+        "'tilt_invert_state' is deprecated "
+        "and will be removed from Home Assistant in version 2021.6, "
+        "please invert tilt using 'tilt_min' & 'tilt_max'"
+    ) in caplog.text
+
+
+async def test_no_deprecated_tilt_invert_state_warning(hass, caplog, mqtt_mock):
+    """Test warning when tilt_invert_state is used."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "command_topic": "command-topic",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert (
+        "'tilt_invert_state' is deprecated "
+        "and will be removed from Home Assistant in version 2021.6, "
+        "please invert tilt using 'tilt_min' & 'tilt_max'"
+    ) not in caplog.text
+
+
+async def test_no_deprecated_warning_for_position_topic_using_position_template(
+    hass, caplog, mqtt_mock
+):
+    """Test no warning when position_template is used for position_topic."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "command_topic": "command-topic",
+                "set_position_topic": "set-position-topic",
+                "position_topic": "position-topic",
+                "position_template": "{{100-62}}",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert (
+        "using 'value_template' for 'position_topic' is deprecated "
+        "and will be removed from Home Assistant in version 2021.6, "
+        "please replace it with 'position_template'"
+    ) not in caplog.text
+
+
+async def test_state_and_position_topics_state_not_set_via_position_topic(
+    hass, mqtt_mock
+):
+    """Test state is not set via position topic when both state and position topics are set."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "state-topic",
+                "position_topic": "get-position-topic",
+                "position_open": 100,
+                "position_closed": 0,
+                "state_open": "OPEN",
+                "state_closed": "CLOSE",
+                "command_topic": "command-topic",
+                "qos": 0,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_UNKNOWN
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+    async_fire_mqtt_message(hass, "state-topic", "OPEN")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_OPEN
+
+    async_fire_mqtt_message(hass, "get-position-topic", "0")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_OPEN
+
+    async_fire_mqtt_message(hass, "get-position-topic", "100")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_OPEN
+
+    async_fire_mqtt_message(hass, "state-topic", "CLOSE")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_CLOSED
+
+    async_fire_mqtt_message(hass, "get-position-topic", "0")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_CLOSED
+
+    async_fire_mqtt_message(hass, "get-position-topic", "100")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_CLOSED
+
+
+async def test_set_state_via_position_using_stopped_state(hass, mqtt_mock):
+    """Test the controlling state via position topic using stopped state."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "state-topic",
+                "position_topic": "get-position-topic",
+                "position_open": 100,
+                "position_closed": 0,
+                "state_open": "OPEN",
+                "state_closed": "CLOSE",
+                "state_stopped": "STOPPED",
+                "command_topic": "command-topic",
+                "qos": 0,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_UNKNOWN
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+    async_fire_mqtt_message(hass, "state-topic", "OPEN")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_OPEN
+
+    async_fire_mqtt_message(hass, "get-position-topic", "0")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_OPEN
+
+    async_fire_mqtt_message(hass, "state-topic", "STOPPED")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_CLOSED
+
+    async_fire_mqtt_message(hass, "get-position-topic", "100")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_CLOSED
+
+    async_fire_mqtt_message(hass, "state-topic", "STOPPED")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_OPEN
+
+
+async def test_position_via_position_topic_template(hass, mqtt_mock):
+    """Test position by updating status via position template."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "state-topic",
+                "command_topic": "command-topic",
+                "set_position_topic": "set-position-topic",
+                "position_topic": "get-position-topic",
+                "position_template": "{{ (value | multiply(0.01)) | int }}",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "get-position-topic", "99")
+
+    current_cover_position_position = hass.states.get("cover.test").attributes[
+        ATTR_CURRENT_POSITION
+    ]
+    assert current_cover_position_position == 0
+
+    async_fire_mqtt_message(hass, "get-position-topic", "5000")
+
+    current_cover_position_position = hass.states.get("cover.test").attributes[
+        ATTR_CURRENT_POSITION
+    ]
+    assert current_cover_position_position == 50
+
+
+async def test_position_via_position_topic_template_json_value(hass, mqtt_mock, caplog):
+    """Test position by updating status via position template with a JSON value."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "state-topic",
+                "command_topic": "command-topic",
+                "set_position_topic": "set-position-topic",
+                "position_topic": "get-position-topic",
+                "position_template": "{{ value_json.Var1 }}",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "get-position-topic", '{"Var1": 9, "Var2": 60}')
+
+    current_cover_position_position = hass.states.get("cover.test").attributes[
+        ATTR_CURRENT_POSITION
+    ]
+    assert current_cover_position_position == 9
+
+    async_fire_mqtt_message(hass, "get-position-topic", '{"Var1": 50, "Var2": 10}')
+
+    current_cover_position_position = hass.states.get("cover.test").attributes[
+        ATTR_CURRENT_POSITION
+    ]
+    assert current_cover_position_position == 50
+
+    async_fire_mqtt_message(hass, "get-position-topic", '{"Var2": 60}')
+
+    assert (
+        "Template variable warning: 'dict object' has no attribute 'Var1' when rendering"
+    ) in caplog.text
+
+
+async def test_set_state_via_stopped_state_no_position_topic(hass, mqtt_mock):
+    """Test the controlling state via stopped state when no position topic."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "state-topic",
+                "state_open": "OPEN",
+                "state_closed": "CLOSE",
+                "state_stopped": "STOPPED",
+                "state_opening": "OPENING",
+                "state_closing": "CLOSING",
+                "command_topic": "command-topic",
+                "qos": 0,
+                "optimistic": False,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "state-topic", "OPEN")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_OPEN
+
+    async_fire_mqtt_message(hass, "state-topic", "OPENING")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_OPENING
+
+    async_fire_mqtt_message(hass, "state-topic", "STOPPED")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_OPEN
+
+    async_fire_mqtt_message(hass, "state-topic", "CLOSING")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_CLOSING
+
+    async_fire_mqtt_message(hass, "state-topic", "STOPPED")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_CLOSED

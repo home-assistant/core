@@ -1,21 +1,20 @@
 """Demo platform that offers a fake water heater device."""
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
-
 from homeassistant.components.water_heater import (
     SUPPORT_AWAY_MODE,
     SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_TEMPERATURE,
-    WaterHeaterDevice,
+    WaterHeaterEntity,
 )
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 
 SUPPORT_FLAGS_HEATER = (
     SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE | SUPPORT_AWAY_MODE
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Demo water_heater devices."""
-    add_entities(
+    async_add_entities(
         [
             DemoWaterHeater("Demo Water Heater", 119, TEMP_FAHRENHEIT, False, "eco"),
             DemoWaterHeater("Demo Water Heater Celsius", 45, TEMP_CELSIUS, True, "eco"),
@@ -23,7 +22,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class DemoWaterHeater(WaterHeaterDevice):
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Demo config entry."""
+    await async_setup_platform(hass, {}, async_add_entities)
+
+
+class DemoWaterHeater(WaterHeaterEntity):
     """Representation of a demo water_heater device."""
 
     def __init__(

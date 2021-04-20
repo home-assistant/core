@@ -1,10 +1,9 @@
 {
   "domain": "alarmdecoder",
-  "name": "Alarmdecoder",
+  "name": "AlarmDecoder",
   "documentation": "https://www.home-assistant.io/integrations/alarmdecoder",
-  "requirements": [
-    "alarmdecoder==1.13.2"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "requirements": ["adext==0.4.1"],
+  "codeowners": ["@ajschmidt8"],
+  "config_flow": true,
+  "iot_class": "local_push"
 }

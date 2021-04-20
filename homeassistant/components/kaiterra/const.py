@@ -2,6 +2,14 @@
 
 from datetime import timedelta
 
+from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_BILLION,
+    CONCENTRATION_PARTS_PER_MILLION,
+    PERCENTAGE,
+)
+
 DOMAIN = "kaiterra"
 
 DISPATCHER_KAITERRA = "kaiterra_update"
@@ -44,7 +52,16 @@ ATTR_AQI_LEVEL = "air_quality_index_level"
 ATTR_AQI_POLLUTANT = "air_quality_index_pollutant"
 
 AVAILABLE_AQI_STANDARDS = ["us", "cn", "in"]
-AVAILABLE_UNITS = ["x", "%", "C", "F", "mg/m³", "µg/m³", "ppm", "ppb"]
+AVAILABLE_UNITS = [
+    "x",
+    PERCENTAGE,
+    "C",
+    "F",
+    CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_MILLION,
+    CONCENTRATION_PARTS_PER_BILLION,
+]
 AVAILABLE_DEVICE_TYPES = ["laseregg", "sensedge"]
 
 CONF_AQI_STANDARD = "aqi_standard"
@@ -54,4 +71,4 @@ DEFAULT_AQI_STANDARD = "us"
 DEFAULT_PREFERRED_UNIT = []
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 
-KAITERRA_COMPONENTS = ["sensor", "air_quality"]
+PLATFORMS = ["sensor", "air_quality"]

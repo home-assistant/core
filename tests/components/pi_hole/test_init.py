@@ -1,39 +1,49 @@
 """Test pi_hole component."""
+import logging
+from unittest.mock import AsyncMock
 
-from asynctest import CoroutineMock
-from hole import Hole
+from hole.exceptions import HoleError
 
-from homeassistant.components import pi_hole
-from tests.common import async_setup_component
-from unittest.mock import patch
+from homeassistant.components import pi_hole, switch
+from homeassistant.components.pi_hole.const import (
+    CONF_LOCATION,
+    CONF_STATISTICS_ONLY,
+    DEFAULT_LOCATION,
+    DEFAULT_NAME,
+    DEFAULT_SSL,
+    DEFAULT_VERIFY_SSL,
+    SERVICE_DISABLE,
+    SERVICE_DISABLE_ATTR_DURATION,
+)
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_API_KEY,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_SSL,
+    CONF_VERIFY_SSL,
+)
+from homeassistant.setup import async_setup_component
+
+from . import (
+    CONF_CONFIG_ENTRY,
+    CONF_DATA,
+    SWITCH_ENTITY_ID,
+    _create_mocked_hole,
+    _patch_config_flow_hole,
+    _patch_init_hole,
+)
+
+from tests.common import MockConfigEntry
 
 
-def mock_pihole_data_call(Hole):
-    """Need to override so as to allow mocked data."""
-    Hole.__init__ = (
-        lambda self, host, loop, session, location, tls, verify_tls=True, api_token=None: None
-    )
-    Hole.data = {
-        "ads_blocked_today": 0,
-        "ads_percentage_today": 0,
-        "clients_ever_seen": 0,
-        "dns_queries_today": 0,
-        "domains_being_blocked": 0,
-        "queries_cached": 0,
-        "queries_forwarded": 0,
-        "status": 0,
-        "unique_clients": 0,
-        "unique_domains": 0,
-    }
-    pass
-
-
-async def test_setup_no_config(hass):
-    """Tests component setup with no config."""
-    with patch.object(
-        Hole, "get_data", new=CoroutineMock(side_effect=mock_pihole_data_call(Hole))
-    ):
-        assert await async_setup_component(hass, pi_hole.DOMAIN, {pi_hole.DOMAIN: {}})
+async def test_setup_minimal_config(hass):
+    """Tests component setup with minimal config."""
+    mocked_hole = _create_mocked_hole()
+    with _patch_config_flow_hole(mocked_hole), _patch_init_hole(mocked_hole):
+        assert await async_setup_component(
+            hass, pi_hole.DOMAIN, {pi_hole.DOMAIN: [{"host": "pi.hole"}]}
+        )
 
     await hass.async_block_till_done()
 
@@ -81,14 +91,18 @@ async def test_setup_no_config(hass):
     assert hass.states.get("sensor.pi_hole_domains_blocked").state == "0"
     assert hass.states.get("sensor.pi_hole_seen_clients").state == "0"
 
+    assert hass.states.get("binary_sensor.pi_hole").name == "Pi-Hole"
+    assert hass.states.get("binary_sensor.pi_hole").state == "off"
 
-async def test_setup_custom_config(hass):
-    """Tests component setup with custom config."""
-    with patch.object(
-        Hole, "get_data", new=CoroutineMock(side_effect=mock_pihole_data_call(Hole))
-    ):
+
+async def test_setup_name_config(hass):
+    """Tests component setup with a custom name."""
+    mocked_hole = _create_mocked_hole()
+    with _patch_config_flow_hole(mocked_hole), _patch_init_hole(mocked_hole):
         assert await async_setup_component(
-            hass, pi_hole.DOMAIN, {pi_hole.DOMAIN: {"name": "Custom"}}
+            hass,
+            pi_hole.DOMAIN,
+            {pi_hole.DOMAIN: [{"host": "pi.hole", "name": "Custom"}]},
         )
 
     await hass.async_block_till_done()
@@ -97,3 +111,136 @@ async def test_setup_custom_config(hass):
         hass.states.get("sensor.custom_ads_blocked_today").name
         == "Custom Ads Blocked Today"
     )
+
+
+async def test_switch(hass, caplog):
+    """Test Pi-hole switch."""
+    mocked_hole = _create_mocked_hole()
+    with _patch_config_flow_hole(mocked_hole), _patch_init_hole(mocked_hole):
+        assert await async_setup_component(
+            hass,
+            pi_hole.DOMAIN,
+            {pi_hole.DOMAIN: [{"host": "pi.hole1", "api_key": "1"}]},
+        )
+
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            switch.DOMAIN,
+            switch.SERVICE_TURN_ON,
+            {"entity_id": SWITCH_ENTITY_ID},
+            blocking=True,
+        )
+        mocked_hole.enable.assert_called_once()
+
+        await hass.services.async_call(
+            switch.DOMAIN,
+            switch.SERVICE_TURN_OFF,
+            {"entity_id": SWITCH_ENTITY_ID},
+            blocking=True,
+        )
+        mocked_hole.disable.assert_called_once_with(True)
+
+        # Failed calls
+        type(mocked_hole).enable = AsyncMock(side_effect=HoleError("Error1"))
+        await hass.services.async_call(
+            switch.DOMAIN,
+            switch.SERVICE_TURN_ON,
+            {"entity_id": SWITCH_ENTITY_ID},
+            blocking=True,
+        )
+        type(mocked_hole).disable = AsyncMock(side_effect=HoleError("Error2"))
+        await hass.services.async_call(
+            switch.DOMAIN,
+            switch.SERVICE_TURN_OFF,
+            {"entity_id": SWITCH_ENTITY_ID},
+            blocking=True,
+        )
+        errors = [x for x in caplog.records if x.levelno == logging.ERROR]
+        assert errors[-2].message == "Unable to enable Pi-hole: Error1"
+        assert errors[-1].message == "Unable to disable Pi-hole: Error2"
+
+
+async def test_disable_service_call(hass):
+    """Test disable service call with no Pi-hole named."""
+    mocked_hole = _create_mocked_hole()
+    with _patch_config_flow_hole(mocked_hole), _patch_init_hole(mocked_hole):
+        assert await async_setup_component(
+            hass,
+            pi_hole.DOMAIN,
+            {
+                pi_hole.DOMAIN: [
+                    {"host": "pi.hole1", "api_key": "1"},
+                    {"host": "pi.hole2", "name": "Custom"},
+                ]
+            },
+        )
+
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            pi_hole.DOMAIN,
+            SERVICE_DISABLE,
+            {ATTR_ENTITY_ID: "all", SERVICE_DISABLE_ATTR_DURATION: "00:00:01"},
+            blocking=True,
+        )
+
+        await hass.async_block_till_done()
+
+        mocked_hole.disable.assert_called_once_with(1)
+
+
+async def test_unload(hass):
+    """Test unload entities."""
+    entry = MockConfigEntry(
+        domain=pi_hole.DOMAIN,
+        data={
+            CONF_NAME: DEFAULT_NAME,
+            CONF_HOST: "pi.hole",
+            CONF_LOCATION: DEFAULT_LOCATION,
+            CONF_SSL: DEFAULT_SSL,
+            CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
+            CONF_STATISTICS_ONLY: True,
+        },
+    )
+    entry.add_to_hass(hass)
+    mocked_hole = _create_mocked_hole()
+    with _patch_config_flow_hole(mocked_hole), _patch_init_hole(mocked_hole):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+    assert entry.entry_id in hass.data[pi_hole.DOMAIN]
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.entry_id not in hass.data[pi_hole.DOMAIN]
+
+
+async def test_migrate(hass):
+    """Test migrate from old config entry."""
+    entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=CONF_DATA)
+    entry.add_to_hass(hass)
+
+    mocked_hole = _create_mocked_hole()
+    with _patch_config_flow_hole(mocked_hole), _patch_init_hole(mocked_hole):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.data == CONF_CONFIG_ENTRY
+
+
+async def test_migrate_statistics_only(hass):
+    """Test migrate from old config entry with statistics only."""
+    conf_data = {**CONF_DATA}
+    conf_data[CONF_API_KEY] = ""
+    entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=conf_data)
+    entry.add_to_hass(hass)
+
+    mocked_hole = _create_mocked_hole()
+    with _patch_config_flow_hole(mocked_hole), _patch_init_hole(mocked_hole):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    config_entry_data = {**CONF_CONFIG_ENTRY}
+    config_entry_data[CONF_STATISTICS_ONLY] = True
+    config_entry_data[CONF_API_KEY] = ""
+    assert entry.data == config_entry_data

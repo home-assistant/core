@@ -1,5 +1,5 @@
 """The tests the for GPSLogger device tracker platform."""
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -7,12 +7,14 @@ from homeassistant import data_entry_flow
 from homeassistant.components import gpslogger, zone
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.gpslogger import DOMAIN, TRACKER_UPDATE
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     HTTP_OK,
     HTTP_UNPROCESSABLE_ENTITY,
     STATE_HOME,
     STATE_NOT_HOME,
 )
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 from homeassistant.setup import async_setup_component
 
@@ -62,7 +64,10 @@ async def setup_zones(loop, hass):
 @pytest.fixture
 async def webhook_id(hass, gpslogger_client):
     """Initialize the GPSLogger component and get the webhook_id."""
-    hass.config.api = Mock(base_url="http://example.com")
+    await async_process_ha_core_config(
+        hass,
+        {"internal_url": "http://example.local:8123"},
+    )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
     )
@@ -77,7 +82,7 @@ async def webhook_id(hass, gpslogger_client):
 
 async def test_missing_data(hass, gpslogger_client, webhook_id):
     """Test missing data."""
-    url = "/api/webhook/{}".format(webhook_id)
+    url = f"/api/webhook/{webhook_id}"
 
     data = {"latitude": 1.0, "longitude": 1.1, "device": "123"}
 
@@ -103,7 +108,7 @@ async def test_missing_data(hass, gpslogger_client, webhook_id):
 
 async def test_enter_and_exit(hass, gpslogger_client, webhook_id):
     """Test when there is a known zone."""
-    url = "/api/webhook/{}".format(webhook_id)
+    url = f"/api/webhook/{webhook_id}"
 
     data = {"latitude": HOME_LATITUDE, "longitude": HOME_LONGITUDE, "device": "123"}
 
@@ -111,19 +116,15 @@ async def test_enter_and_exit(hass, gpslogger_client, webhook_id):
     req = await gpslogger_client.post(url, data=data)
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
-    state_name = hass.states.get(
-        "{}.{}".format(DEVICE_TRACKER_DOMAIN, data["device"])
-    ).state
-    assert STATE_HOME == state_name
+    state_name = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['device']}").state
+    assert state_name == STATE_HOME
 
     # Enter Home again
     req = await gpslogger_client.post(url, data=data)
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
-    state_name = hass.states.get(
-        "{}.{}".format(DEVICE_TRACKER_DOMAIN, data["device"])
-    ).state
-    assert STATE_HOME == state_name
+    state_name = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['device']}").state
+    assert state_name == STATE_HOME
 
     data["longitude"] = 0
     data["latitude"] = 0
@@ -132,21 +133,19 @@ async def test_enter_and_exit(hass, gpslogger_client, webhook_id):
     req = await gpslogger_client.post(url, data=data)
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
-    state_name = hass.states.get(
-        "{}.{}".format(DEVICE_TRACKER_DOMAIN, data["device"])
-    ).state
-    assert STATE_NOT_HOME == state_name
+    state_name = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['device']}").state
+    assert state_name == STATE_NOT_HOME
 
-    dev_reg = await hass.helpers.device_registry.async_get_registry()
+    dev_reg = dr.async_get(hass)
     assert len(dev_reg.devices) == 1
 
-    ent_reg = await hass.helpers.entity_registry.async_get_registry()
+    ent_reg = er.async_get(hass)
     assert len(ent_reg.entities) == 1
 
 
 async def test_enter_with_attrs(hass, gpslogger_client, webhook_id):
     """Test when additional attributes are present."""
-    url = "/api/webhook/{}".format(webhook_id)
+    url = f"/api/webhook/{webhook_id}"
 
     data = {
         "latitude": 1.0,
@@ -164,7 +163,7 @@ async def test_enter_with_attrs(hass, gpslogger_client, webhook_id):
     req = await gpslogger_client.post(url, data=data)
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
-    state = hass.states.get("{}.{}".format(DEVICE_TRACKER_DOMAIN, data["device"]))
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['device']}")
     assert state.state == STATE_NOT_HOME
     assert state.attributes["gps_accuracy"] == 10.5
     assert state.attributes["battery_level"] == 10.0
@@ -190,7 +189,7 @@ async def test_enter_with_attrs(hass, gpslogger_client, webhook_id):
     req = await gpslogger_client.post(url, data=data)
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
-    state = hass.states.get("{}.{}".format(DEVICE_TRACKER_DOMAIN, data["device"]))
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['device']}")
     assert state.state == STATE_HOME
     assert state.attributes["gps_accuracy"] == 123
     assert state.attributes["battery_level"] == 23
@@ -206,17 +205,15 @@ async def test_enter_with_attrs(hass, gpslogger_client, webhook_id):
 )
 async def test_load_unload_entry(hass, gpslogger_client, webhook_id):
     """Test that the appropriate dispatch signals are added and removed."""
-    url = "/api/webhook/{}".format(webhook_id)
+    url = f"/api/webhook/{webhook_id}"
     data = {"latitude": HOME_LATITUDE, "longitude": HOME_LONGITUDE, "device": "123"}
 
     # Enter the Home
     req = await gpslogger_client.post(url, data=data)
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
-    state_name = hass.states.get(
-        "{}.{}".format(DEVICE_TRACKER_DOMAIN, data["device"])
-    ).state
-    assert STATE_HOME == state_name
+    state_name = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['device']}").state
+    assert state_name == STATE_HOME
     assert len(hass.data[DATA_DISPATCHER][TRACKER_UPDATE]) == 1
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]

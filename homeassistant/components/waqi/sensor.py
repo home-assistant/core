@@ -1,23 +1,23 @@
 """Support for the World Air Quality Index service."""
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 
 import aiohttp
 import voluptuous as vol
 from waqiasync import WaqiClient
 
-from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
-    ATTR_TIME,
     ATTR_TEMPERATURE,
+    ATTR_TIME,
     CONF_TOKEN,
 )
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,19 +74,26 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             _LOGGER.debug("The following stations were returned: %s", stations)
             for station in stations:
                 waqi_sensor = WaqiSensor(client, station)
-                if not station_filter or {
-                    waqi_sensor.uid,
-                    waqi_sensor.url,
-                    waqi_sensor.station_name,
-                } & set(station_filter):
+                if (
+                    not station_filter
+                    or {
+                        waqi_sensor.uid,
+                        waqi_sensor.url,
+                        waqi_sensor.station_name,
+                    }
+                    & set(station_filter)
+                ):
                     dev.append(waqi_sensor)
-    except (aiohttp.client_exceptions.ClientConnectorError, asyncio.TimeoutError):
-        _LOGGER.exception("Failed to connect to WAQI servers.")
-        raise PlatformNotReady
+    except (
+        aiohttp.client_exceptions.ClientConnectorError,
+        asyncio.TimeoutError,
+    ) as err:
+        _LOGGER.exception("Failed to connect to WAQI servers")
+        raise PlatformNotReady from err
     async_add_entities(dev, True)
 
 
-class WaqiSensor(Entity):
+class WaqiSensor(SensorEntity):
     """Implementation of a WAQI sensor."""
 
     def __init__(self, client, station):
@@ -114,7 +121,7 @@ class WaqiSensor(Entity):
         """Return the name of the sensor."""
         if self.station_name:
             return f"WAQI {self.station_name}"
-        return "WAQI {}".format(self.url if self.url else self.uid)
+        return f"WAQI {self.url if self.url else self.uid}"
 
     @property
     def icon(self):
@@ -144,7 +151,7 @@ class WaqiSensor(Entity):
         return "AQI"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the last update."""
         attrs = {}
 

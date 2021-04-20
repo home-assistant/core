@@ -2,13 +2,8 @@
   "domain": "automation",
   "name": "Automation",
   "documentation": "https://www.home-assistant.io/integrations/automation",
-  "requirements": [],
-  "dependencies": [
-    "device_automation",
-    "group",
-    "webhook"
-  ],
-  "codeowners": [
-    "@home-assistant/core"
-  ]
+  "dependencies": ["blueprint", "trace"],
+  "after_dependencies": ["device_automation", "webhook"],
+  "codeowners": ["@home-assistant/core"],
+  "quality_scale": "internal"
 }

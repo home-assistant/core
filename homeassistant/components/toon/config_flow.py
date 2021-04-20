@@ -1,169 +1,101 @@
 """Config flow to configure the Toon component."""
-from collections import OrderedDict
-import logging
-from functools import partial
+from __future__ import annotations
 
+import logging
+from typing import Any
+
+from toonapi import Agreement, Toon, ToonError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import callback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
-from .const import (
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    CONF_DISPLAY,
-    CONF_TENANT,
-    DATA_TOON_CONFIG,
-    DOMAIN,
-)
-
-_LOGGER = logging.getLogger(__name__)
+from .const import CONF_AGREEMENT, CONF_AGREEMENT_ID, CONF_MIGRATE, DOMAIN
 
 
-@callback
-def configured_displays(hass):
-    """Return a set of configured Toon displays."""
-    return set(
-        entry.data[CONF_DISPLAY] for entry in hass.config_entries.async_entries(DOMAIN)
-    )
-
-
-@config_entries.HANDLERS.register(DOMAIN)
-class ToonFlowHandler(config_entries.ConfigFlow):
+class ToonFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     """Handle a Toon config flow."""
 
-    VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
+    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
+    DOMAIN = DOMAIN
+    VERSION = 2
 
-    def __init__(self):
-        """Initialize the Toon flow."""
-        self.displays = None
-        self.username = None
-        self.password = None
-        self.tenant = None
+    agreements: list[Agreement] | None = None
+    data: dict[str, Any] | None = None
 
-    async def async_step_user(self, user_input=None):
-        """Handle a flow initiated by the user."""
-        app = self.hass.data.get(DATA_TOON_CONFIG, {})
+    @property
+    def logger(self) -> logging.Logger:
+        """Return logger."""
+        return logging.getLogger(__name__)
 
-        if not app:
-            return self.async_abort(reason="no_app")
+    async def async_oauth_create_entry(self, data: dict[str, Any]) -> dict[str, Any]:
+        """Test connection and load up agreements."""
+        self.data = data
 
-        return await self.async_step_authenticate(user_input)
-
-    async def _show_authenticaticate_form(self, errors=None):
-        """Show the authentication form to the user."""
-        fields = OrderedDict()
-        fields[vol.Required(CONF_USERNAME)] = str
-        fields[vol.Required(CONF_PASSWORD)] = str
-        fields[vol.Optional(CONF_TENANT)] = vol.In(["eneco", "electrabel", "viesgo"])
-
-        return self.async_show_form(
-            step_id="authenticate",
-            data_schema=vol.Schema(fields),
-            errors=errors if errors else {},
+        toon = Toon(
+            token=self.data["token"]["access_token"],
+            session=async_get_clientsession(self.hass),
         )
-
-    async def async_step_authenticate(self, user_input=None):
-        """Attempt to authenticate with the Toon account."""
-        from toonapilib import Toon
-        from toonapilib.toonapilibexceptions import (
-            InvalidConsumerSecret,
-            InvalidConsumerKey,
-            InvalidCredentials,
-            AgreementsRetrievalError,
-        )
-
-        if user_input is None:
-            return await self._show_authenticaticate_form()
-
-        app = self.hass.data.get(DATA_TOON_CONFIG, {})
         try:
-            toon = await self.hass.async_add_executor_job(
-                partial(
-                    Toon,
-                    user_input[CONF_USERNAME],
-                    user_input[CONF_PASSWORD],
-                    app[CONF_CLIENT_ID],
-                    app[CONF_CLIENT_SECRET],
-                    tenant_id=user_input[CONF_TENANT],
-                )
-            )
+            self.agreements = await toon.agreements()
+        except ToonError:
+            return self.async_abort(reason="connection_error")
 
-            displays = toon.display_names
-
-        except InvalidConsumerKey:
-            return self.async_abort(reason="client_id")
-
-        except InvalidConsumerSecret:
-            return self.async_abort(reason="client_secret")
-
-        except InvalidCredentials:
-            return await self._show_authenticaticate_form({"base": "credentials"})
-
-        except AgreementsRetrievalError:
+        if not self.agreements:
             return self.async_abort(reason="no_agreements")
 
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected error while authenticating")
-            return self.async_abort(reason="unknown_auth_fail")
+        return await self.async_step_agreement()
 
-        self.displays = displays
-        self.username = user_input[CONF_USERNAME]
-        self.password = user_input[CONF_PASSWORD]
-        self.tenant = user_input[CONF_TENANT]
+    async def async_step_import(
+        self, config: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        """Start a configuration flow based on imported data.
 
-        return await self.async_step_display()
+        This step is merely here to trigger "discovery" when the `toon`
+        integration is listed in the user configuration, or when migrating from
+        the version 1 schema.
+        """
 
-    async def _show_display_form(self, errors=None):
-        """Show the select display form to the user."""
-        fields = OrderedDict()
-        fields[vol.Required(CONF_DISPLAY)] = vol.In(self.displays)
+        if config is not None and CONF_MIGRATE in config:
+            self.context.update({CONF_MIGRATE: config[CONF_MIGRATE]})
+        else:
+            await self._async_handle_discovery_without_unique_id()
 
-        return self.async_show_form(
-            step_id="display",
-            data_schema=vol.Schema(fields),
-            errors=errors if errors else {},
-        )
+        return await self.async_step_user()
 
-    async def async_step_display(self, user_input=None):
-        """Select Toon display to add."""
-        from toonapilib import Toon
+    async def async_step_agreement(
+        self, user_input: dict[str, Any] = None
+    ) -> dict[str, Any]:
+        """Select Toon agreement to add."""
+        if len(self.agreements) == 1:
+            return await self._create_entry(self.agreements[0])
 
-        if not self.displays:
-            return self.async_abort(reason="no_displays")
+        agreements_list = [
+            f"{agreement.street} {agreement.house_number}, {agreement.city}"
+            for agreement in self.agreements
+        ]
 
         if user_input is None:
-            return await self._show_display_form()
-
-        if user_input[CONF_DISPLAY] in configured_displays(self.hass):
-            return await self._show_display_form({"base": "display_exists"})
-
-        app = self.hass.data.get(DATA_TOON_CONFIG, {})
-        try:
-            await self.hass.async_add_executor_job(
-                partial(
-                    Toon,
-                    self.username,
-                    self.password,
-                    app[CONF_CLIENT_ID],
-                    app[CONF_CLIENT_SECRET],
-                    tenant_id=self.tenant,
-                    display_common_name=user_input[CONF_DISPLAY],
-                )
+            return self.async_show_form(
+                step_id="agreement",
+                data_schema=vol.Schema(
+                    {vol.Required(CONF_AGREEMENT): vol.In(agreements_list)}
+                ),
             )
 
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected error while authenticating")
-            return self.async_abort(reason="unknown_auth_fail")
+        agreement_index = agreements_list.index(user_input[CONF_AGREEMENT])
+        return await self._create_entry(self.agreements[agreement_index])
 
+    async def _create_entry(self, agreement: Agreement) -> dict[str, Any]:
+        if CONF_MIGRATE in self.context:
+            await self.hass.config_entries.async_remove(self.context[CONF_MIGRATE])
+
+        await self.async_set_unique_id(agreement.agreement_id)
+        self._abort_if_unique_id_configured()
+
+        self.data[CONF_AGREEMENT_ID] = agreement.agreement_id
         return self.async_create_entry(
-            title=user_input[CONF_DISPLAY],
-            data={
-                CONF_USERNAME: self.username,
-                CONF_PASSWORD: self.password,
-                CONF_TENANT: self.tenant,
-                CONF_DISPLAY: user_input[CONF_DISPLAY],
-            },
+            title=f"{agreement.street} {agreement.house_number}, {agreement.city}",
+            data=self.data,
         )

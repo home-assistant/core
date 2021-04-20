@@ -2,15 +2,14 @@
 import asyncio
 import logging
 import os
-import sys
 from subprocess import PIPE
+import sys
 from unittest.mock import MagicMock, call, patch
 
 import pkg_resources
 import pytest
 
 import homeassistant.util.package as package
-
 
 RESOURCE_DIR = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..", "resources")
@@ -71,13 +70,11 @@ def mock_venv():
         yield mock
 
 
-@asyncio.coroutine
 def mock_async_subprocess():
     """Return an async Popen mock."""
     async_popen = MagicMock()
 
-    @asyncio.coroutine
-    def communicate(input=None):
+    async def communicate(input=None):
         """Communicate mock."""
         stdout = bytes("/deps_dir/lib_dir", "utf-8")
         return (stdout, None)
@@ -218,8 +215,7 @@ def test_install_find_links(mock_sys, mock_popen, mock_env_copy, mock_venv):
     assert mock_popen.return_value.communicate.call_count == 1
 
 
-@asyncio.coroutine
-def test_async_get_user_site(mock_env_copy):
+async def test_async_get_user_site(mock_env_copy):
     """Test async get user site directory."""
     deps_dir = "/deps_dir"
     env = mock_env_copy()
@@ -229,7 +225,7 @@ def test_async_get_user_site(mock_env_copy):
         "homeassistant.util.package.asyncio.create_subprocess_exec",
         return_value=mock_async_subprocess(),
     ) as popen_mock:
-        ret = yield from package.async_get_user_site(deps_dir)
+        ret = await package.async_get_user_site(deps_dir)
     assert popen_mock.call_count == 1
     assert popen_mock.call_args == call(
         *args,
@@ -243,10 +239,55 @@ def test_async_get_user_site(mock_env_copy):
 
 def test_check_package_global():
     """Test for an installed package."""
-    installed_package = list(pkg_resources.working_set)[0].project_name
+    first_package = list(pkg_resources.working_set)[0]
+    installed_package = first_package.project_name
+    installed_version = first_package.version
+
     assert package.is_installed(installed_package)
+    assert package.is_installed(f"{installed_package}=={installed_version}")
+    assert package.is_installed(f"{installed_package}>={installed_version}")
+    assert package.is_installed(f"{installed_package}<={installed_version}")
+    assert not package.is_installed(f"{installed_package}<{installed_version}")
+
+
+def test_check_package_version_does_not_match():
+    """Test for version mismatch."""
+    installed_package = list(pkg_resources.working_set)[0].project_name
+    assert not package.is_installed(f"{installed_package}==999.999.999")
+    assert not package.is_installed(f"{installed_package}>=999.999.999")
 
 
 def test_check_package_zip():
     """Test for an installed zip package."""
     assert not package.is_installed(TEST_ZIP_REQ)
+
+
+def test_get_distribution_falls_back_to_version():
+    """Test for get_distribution failing and fallback to version."""
+    first_package = list(pkg_resources.working_set)[0]
+    installed_package = first_package.project_name
+    installed_version = first_package.version
+
+    with patch(
+        "homeassistant.util.package.pkg_resources.get_distribution",
+        side_effect=pkg_resources.ExtractionError,
+    ):
+        assert package.is_installed(installed_package)
+        assert package.is_installed(f"{installed_package}=={installed_version}")
+        assert package.is_installed(f"{installed_package}>={installed_version}")
+        assert package.is_installed(f"{installed_package}<={installed_version}")
+        assert not package.is_installed(f"{installed_package}<{installed_version}")
+
+
+def test_check_package_previous_failed_install():
+    """Test for when a previously install package failed and left cruft behind."""
+    first_package = list(pkg_resources.working_set)[0]
+    installed_package = first_package.project_name
+    installed_version = first_package.version
+
+    with patch(
+        "homeassistant.util.package.pkg_resources.get_distribution",
+        side_effect=pkg_resources.ExtractionError,
+    ), patch("homeassistant.util.package.version", return_value=None):
+        assert not package.is_installed(installed_package)
+        assert not package.is_installed(f"{installed_package}=={installed_version}")

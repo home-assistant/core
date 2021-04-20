@@ -1,10 +1,8 @@
 {
   "domain": "free_mobile",
-  "name": "Free mobile",
+  "name": "Free Mobile",
   "documentation": "https://www.home-assistant.io/integrations/free_mobile",
-  "requirements": [
-    "freesms==0.1.2"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "requirements": ["freesms==0.1.2"],
+  "codeowners": [],
+  "iot_class": "cloud_push"
 }

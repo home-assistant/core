@@ -1,0 +1,14 @@
+{
+    "state": {
+        "_": {
+            "dead": "\u039d\u03b5\u03ba\u03c1\u03cc",
+            "initializing": "\u0391\u03c1\u03c7\u03b9\u03ba\u03bf\u03c0\u03bf\u03af\u03b7\u03c3\u03b7",
+            "ready": "\u0388\u03c4\u03bf\u03b9\u03bc\u03bf",
+            "sleeping": "\u039a\u03bf\u03b9\u03bc\u03ac\u03c4\u03b1\u03b9"
+        },
+        "query_stage": {
+            "dead": "\u039d\u03b5\u03ba\u03c1\u03cc ( {query_stage} )",
+            "initializing": "\u0391\u03c1\u03c7\u03b9\u03ba\u03bf\u03c0\u03bf\u03af\u03b7\u03c3\u03b7 ( {query_stage} )"
+        }
+    }
+}

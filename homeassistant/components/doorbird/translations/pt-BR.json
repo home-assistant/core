@@ -1,0 +1,9 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Este DoorBird j\u00e1 est\u00e1 configurado",
+            "link_local_address": "Link de endere\u00e7os locais n\u00e3o s\u00e3o suportados",
+            "not_doorbird_device": "Este dispositivo n\u00e3o \u00e9 um DoorBird"
+        }
+    }
+}

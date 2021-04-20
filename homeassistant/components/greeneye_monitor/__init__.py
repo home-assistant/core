@@ -1,13 +1,19 @@
 """Support for monitoring a GreenEye Monitor energy monitor."""
 import logging
 
+from greeneye import Monitors
 import voluptuous as vol
 
 from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
+    CONF_SENSOR_TYPE,
+    CONF_SENSORS,
     CONF_TEMPERATURE_UNIT,
     EVENT_HOMEASSISTANT_STOP,
+    TIME_HOURS,
+    TIME_MINUTES,
+    TIME_SECONDS,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
@@ -23,10 +29,9 @@ CONF_NET_METERING = "net_metering"
 CONF_NUMBER = "number"
 CONF_PULSE_COUNTERS = "pulse_counters"
 CONF_SERIAL_NUMBER = "serial_number"
-CONF_SENSORS = "sensors"
-CONF_SENSOR_TYPE = "sensor_type"
 CONF_TEMPERATURE_SENSORS = "temperature_sensors"
 CONF_TIME_UNIT = "time_unit"
+CONF_VOLTAGE_SENSORS = "voltage"
 
 DATA_GREENEYE_MONITOR = "greeneye_monitor"
 DOMAIN = "greeneye_monitor"
@@ -34,12 +39,9 @@ DOMAIN = "greeneye_monitor"
 SENSOR_TYPE_CURRENT = "current_sensor"
 SENSOR_TYPE_PULSE_COUNTER = "pulse_counter"
 SENSOR_TYPE_TEMPERATURE = "temperature_sensor"
+SENSOR_TYPE_VOLTAGE = "voltage_sensor"
 
 TEMPERATURE_UNIT_CELSIUS = "C"
-
-TIME_UNIT_SECOND = "s"
-TIME_UNIT_MINUTE = "min"
-TIME_UNIT_HOUR = "h"
 
 TEMPERATURE_SENSOR_SCHEMA = vol.Schema(
     {vol.Required(CONF_NUMBER): vol.Range(1, 8), vol.Required(CONF_NAME): cv.string}
@@ -54,14 +56,20 @@ TEMPERATURE_SENSORS_SCHEMA = vol.Schema(
     }
 )
 
+VOLTAGE_SENSOR_SCHEMA = vol.Schema(
+    {vol.Required(CONF_NUMBER): vol.Range(1, 48), vol.Required(CONF_NAME): cv.string}
+)
+
+VOLTAGE_SENSORS_SCHEMA = vol.All(cv.ensure_list, [VOLTAGE_SENSOR_SCHEMA])
+
 PULSE_COUNTER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NUMBER): vol.Range(1, 4),
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_COUNTED_QUANTITY): cv.string,
         vol.Optional(CONF_COUNTED_QUANTITY_PER_PULSE, default=1.0): vol.Coerce(float),
-        vol.Optional(CONF_TIME_UNIT, default=TIME_UNIT_SECOND): vol.Any(
-            TIME_UNIT_SECOND, TIME_UNIT_MINUTE, TIME_UNIT_HOUR
+        vol.Optional(CONF_TIME_UNIT, default=TIME_SECONDS): vol.Any(
+            TIME_SECONDS, TIME_MINUTES, TIME_HOURS
         ),
     }
 )
@@ -96,6 +104,7 @@ MONITOR_SCHEMA = vol.Schema(
             default={CONF_TEMPERATURE_UNIT: TEMPERATURE_UNIT_CELSIUS, CONF_SENSORS: []},
         ): TEMPERATURE_SENSORS_SCHEMA,
         vol.Optional(CONF_PULSE_COUNTERS, default=[]): PULSE_COUNTERS_SCHEMA,
+        vol.Optional(CONF_VOLTAGE_SENSORS, default=[]): VOLTAGE_SENSORS_SCHEMA,
     }
 )
 
@@ -110,8 +119,6 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: COMPONENT_SCHEMA}, extra=vol.ALLOW_EXTRA)
 
 async def async_setup(hass, config):
     """Set up the GreenEye Monitor component."""
-    from greeneye import Monitors
-
     monitors = Monitors()
     hass.data[DATA_GREENEYE_MONITOR] = monitors
 
@@ -137,6 +144,16 @@ async def async_setup(hass, config):
                     CONF_SENSOR_TYPE: SENSOR_TYPE_CURRENT,
                     **monitor_serial_number,
                     **channel_config,
+                }
+            )
+
+        voltage_configs = monitor_config[CONF_VOLTAGE_SENSORS]
+        for voltage_config in voltage_configs:
+            all_sensors.append(
+                {
+                    CONF_SENSOR_TYPE: SENSOR_TYPE_VOLTAGE,
+                    **monitor_serial_number,
+                    **voltage_config,
                 }
             )
 
@@ -168,7 +185,7 @@ async def async_setup(hass, config):
     if not all_sensors:
         _LOGGER.error(
             "Configuration must specify at least one "
-            "channel, pulse counter or temperature sensor"
+            "channel, voltage, pulse counter or temperature sensor"
         )
         return False
 

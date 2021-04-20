@@ -1,10 +1,8 @@
 {
   "domain": "iota",
-  "name": "Iota",
+  "name": "IOTA",
   "documentation": "https://www.home-assistant.io/integrations/iota",
-  "requirements": [
-    "pyota==2.0.5"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "requirements": ["pyota==2.0.5"],
+  "codeowners": [],
+  "iot_class": "cloud_polling"
 }

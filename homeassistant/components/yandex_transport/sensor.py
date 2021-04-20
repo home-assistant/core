@@ -1,16 +1,16 @@
 """Service for obtaining information about closer bus from Transport Yandex Service."""
 
-import logging
 from datetime import timedelta
+import logging
 
+from aioymaps import YandexMapsRequester
 import voluptuous as vol
-from ya_ma import YandexMapsRequester
 
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, DEVICE_CLASS_TIMESTAMP
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION, DEVICE_CLASS_TIMESTAMP
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,20 +35,21 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Yandex transport sensor."""
     stop_id = config[CONF_STOP_ID]
     name = config[CONF_NAME]
     routes = config[CONF_ROUTE]
 
-    data = YandexMapsRequester(user_agent=USER_AGENT)
-    add_entities([DiscoverMoscowYandexTransport(data, stop_id, routes, name)], True)
+    client_session = async_create_clientsession(hass, requote_redirect_url=False)
+    data = YandexMapsRequester(user_agent=USER_AGENT, client_session=client_session)
+    async_add_entities([DiscoverYandexTransport(data, stop_id, routes, name)], True)
 
 
-class DiscoverMoscowYandexTransport(Entity):
+class DiscoverYandexTransport(SensorEntity):
     """Implementation of yandex_transport sensor."""
 
-    def __init__(self, requester, stop_id, routes, name):
+    def __init__(self, requester: YandexMapsRequester, stop_id, routes, name):
         """Initialize sensor."""
         self.requester = requester
         self._stop_id = stop_id
@@ -58,25 +59,27 @@ class DiscoverMoscowYandexTransport(Entity):
         self._name = name
         self._attrs = None
 
-    def update(self):
+    async def async_update(self, *, tries=0):
         """Get the latest data from maps.yandex.ru and update the states."""
         attrs = {}
         closer_time = None
+        yandex_reply = await self.requester.get_stop_info(self._stop_id)
         try:
-            yandex_reply = self.requester.get_stop_info(self._stop_id)
             data = yandex_reply["data"]
-            stop_metadata = data["properties"]["StopMetaData"]
         except KeyError as key_error:
             _LOGGER.warning(
                 "Exception KeyError was captured, missing key is %s. Yandex returned: %s",
                 key_error,
                 yandex_reply,
             )
-            self.requester.set_new_session()
-            data = self.requester.get_stop_info(self._stop_id)["data"]
-            stop_metadata = data["properties"]["StopMetaData"]
-        stop_name = data["properties"]["name"]
-        transport_list = stop_metadata["Transport"]
+            if tries > 0:
+                return
+            await self.requester.set_new_session()
+            await self.async_update(tries=tries + 1)
+            return
+
+        stop_name = data["name"]
+        transport_list = data["transports"]
         for transport in transport_list:
             route = transport["name"]
             for thread in transport["threads"]:
@@ -120,7 +123,7 @@ class DiscoverMoscowYandexTransport(Entity):
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._attrs
 

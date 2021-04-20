@@ -1,0 +1,48 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "already_in_progress": "Seadistamine on juba k\u00e4imas",
+            "cannot_connect": "\u00dchenduse loomine nurjus. Vooluv\u00f5rgust ja LAN v\u00f5rgust eemaldamine ja taas\u00fchendamine v\u00f5ib aidata",
+            "not_denonavr_manufacturer": "Pole Denoni AVR Network Receiver, avastatud tootja pole \u00f5ige",
+            "not_denonavr_missing": "Pole Denoni AVR Network Receiver, avastamisteave pole t\u00e4ielik"
+        },
+        "error": {
+            "discovery_error": "Denon AVR Network Receiver'i avastamine nurjus"
+        },
+        "flow_title": "Denon AVR v\u00f5rguvastuv\u00f5tja: {name}",
+        "step": {
+            "confirm": {
+                "description": "Palun kinnita vastuv\u00f5tja lisamine",
+                "title": ""
+            },
+            "select": {
+                "data": {
+                    "select_host": "Ressiiveri IP aadress"
+                },
+                "description": "Kui soovid t\u00e4iendavaid vastuv\u00f5tjaid \u00fchendada, k\u00e4ivitad seadistamine uuesti",
+                "title": "Valivastuv\u00f5tja, millega soovid \u00fchenduda"
+            },
+            "user": {
+                "data": {
+                    "host": "IP aadress"
+                },
+                "description": "Kui IP-aadressi pole m\u00e4\u00e4ratud, kasutatakse automaatset avastamist",
+                "title": ""
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_all_sources": "Kuva k\u00f5ik sisendid",
+                    "zone2": "Seadista tsoon 2",
+                    "zone3": "Seadista tsoon 3"
+                },
+                "description": "Valikuliste s\u00e4tete m\u00e4\u00e4ramine",
+                "title": ""
+            }
+        }
+    }
+}

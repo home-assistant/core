@@ -12,7 +12,8 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.components.smartthings import binary_sensor
 from homeassistant.components.smartthings.const import DOMAIN, SIGNAL_SMARTTHINGS_UPDATE
-from homeassistant.const import ATTR_FRIENDLY_NAME
+from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .conftest import setup_platform
@@ -32,11 +33,6 @@ async def test_mapping_integrity():
         assert device_class in DEVICE_CLASSES, device_class
 
 
-async def test_async_setup_platform():
-    """Test setup platform does nothing (it uses config entries)."""
-    await binary_sensor.async_setup_platform(None, None, None)
-
-
 async def test_entity_state(hass, device_factory):
     """Tests the state attributes properly match the light types."""
     device = device_factory(
@@ -45,7 +41,7 @@ async def test_entity_state(hass, device_factory):
     await setup_platform(hass, BINARY_SENSOR_DOMAIN, devices=[device])
     state = hass.states.get("binary_sensor.motion_sensor_1_motion")
     assert state.state == "off"
-    assert state.attributes[ATTR_FRIENDLY_NAME] == device.label + " " + Attribute.motion
+    assert state.attributes[ATTR_FRIENDLY_NAME] == f"{device.label} {Attribute.motion}"
 
 
 async def test_entity_and_device_attributes(hass, device_factory):
@@ -54,15 +50,15 @@ async def test_entity_and_device_attributes(hass, device_factory):
     device = device_factory(
         "Motion Sensor 1", [Capability.motion_sensor], {Attribute.motion: "inactive"}
     )
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
     # Act
     await setup_platform(hass, BINARY_SENSOR_DOMAIN, devices=[device])
     # Assert
     entry = entity_registry.async_get("binary_sensor.motion_sensor_1_motion")
     assert entry
-    assert entry.unique_id == device.device_id + "." + Attribute.motion
-    entry = device_registry.async_get_device({(DOMAIN, device.device_id)}, [])
+    assert entry.unique_id == f"{device.device_id}.{Attribute.motion}"
+    entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
     assert entry
     assert entry.name == device.label
     assert entry.model == device.device_type_name
@@ -98,4 +94,7 @@ async def test_unload_config_entry(hass, device_factory):
     # Act
     await hass.config_entries.async_forward_entry_unload(config_entry, "binary_sensor")
     # Assert
-    assert not hass.states.get("binary_sensor.motion_sensor_1_motion")
+    assert (
+        hass.states.get("binary_sensor.motion_sensor_1_motion").state
+        == STATE_UNAVAILABLE
+    )

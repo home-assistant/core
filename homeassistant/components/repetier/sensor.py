@@ -3,10 +3,10 @@ from datetime import datetime
 import logging
 import time
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import DEVICE_CLASS_TIMESTAMP
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 
 from . import REPETIER_API, SENSOR_TYPES, UPDATE_SIGNAL
 
@@ -35,11 +35,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         printer_id = info["printer_id"]
         sensor_type = info["sensor_type"]
         temp_id = info["temp_id"]
-        name = info["name"]
+        name = f"{info['name']}{SENSOR_TYPES[sensor_type][3]}"
         if temp_id is not None:
-            name = "{}{}{}".format(name, SENSOR_TYPES[sensor_type][3], temp_id)
-        else:
-            name = "{}{}".format(name, SENSOR_TYPES[sensor_type][3])
+            _LOGGER.debug("%s Temp_id: %s", sensor_type, temp_id)
+            name = f"{name}{temp_id}"
         sensor_class = sensor_map[sensor_type]
         entity = sensor_class(api, temp_id, name, printer_id, sensor_type)
         entities.append(entity)
@@ -47,7 +46,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(entities, True)
 
 
-class RepetierSensor(Entity):
+class RepetierSensor(SensorEntity):
     """Class to create and populate a Repetier Sensor."""
 
     def __init__(self, api, temp_id, name, printer_id, sensor_type):
@@ -67,7 +66,7 @@ class RepetierSensor(Entity):
         return self._available
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return sensor attributes."""
         return self._attributes
 
@@ -103,7 +102,9 @@ class RepetierSensor(Entity):
 
     async def async_added_to_hass(self):
         """Connect update callbacks."""
-        async_dispatcher_connect(self.hass, UPDATE_SIGNAL, self.update_callback)
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, UPDATE_SIGNAL, self.update_callback)
+        )
 
     def _get_data(self):
         """Return new data from the api cache."""

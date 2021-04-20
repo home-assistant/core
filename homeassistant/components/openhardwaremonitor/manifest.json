@@ -1,8 +1,7 @@
 {
   "domain": "openhardwaremonitor",
-  "name": "Openhardwaremonitor",
+  "name": "Open Hardware Monitor",
   "documentation": "https://www.home-assistant.io/integrations/openhardwaremonitor",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

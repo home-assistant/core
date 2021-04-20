@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Bitte gib den Hostnamen oder die IP-Adresse eines Heos-Ger\u00e4ts ein (vorzugsweise eines, das per Kabel mit dem Netzwerk verbunden ist).",
+                "title": "Mit Heos verbinden"
+            }
+        }
+    }
+}

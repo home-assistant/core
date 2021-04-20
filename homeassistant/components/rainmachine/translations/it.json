@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "invalid_auth": "Autenticazione non valida"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Nome dell'host o indirizzo IP",
+                    "password": "Password",
+                    "port": "Porta"
+                },
+                "title": "Inserisci i tuoi dati"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "zone_run_time": "Tempo di esecuzione della zona di default (in secondi)"
+                },
+                "title": "Configura RainMachine"
+            }
+        }
+    }
+}

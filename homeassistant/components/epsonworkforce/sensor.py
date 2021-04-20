@@ -1,23 +1,21 @@
 """Support for Epson Workforce Printer."""
 from datetime import timedelta
-import logging
 
+from epsonprinter_pkg.epsonprinterapi import EpsonPrinterAPI
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_HOST, CONF_MONITORED_CONDITIONS
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import CONF_HOST, CONF_MONITORED_CONDITIONS, PERCENTAGE
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
-_LOGGER = logging.getLogger(__name__)
 MONITORED_CONDITIONS = {
-    "black": ["Ink level Black", "%", "mdi:water"],
-    "photoblack": ["Ink level Photoblack", "%", "mdi:water"],
-    "magenta": ["Ink level Magenta", "%", "mdi:water"],
-    "cyan": ["Ink level Cyan", "%", "mdi:water"],
-    "yellow": ["Ink level Yellow", "%", "mdi:water"],
-    "clean": ["Cleaning level", "%", "mdi:water"],
+    "black": ["Ink level Black", PERCENTAGE, "mdi:water"],
+    "photoblack": ["Ink level Photoblack", PERCENTAGE, "mdi:water"],
+    "magenta": ["Ink level Magenta", PERCENTAGE, "mdi:water"],
+    "cyan": ["Ink level Cyan", PERCENTAGE, "mdi:water"],
+    "yellow": ["Ink level Yellow", PERCENTAGE, "mdi:water"],
+    "clean": ["Cleaning level", PERCENTAGE, "mdi:water"],
 }
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -34,8 +32,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the cartridge sensor."""
     host = config.get(CONF_HOST)
 
-    from epsonprinter_pkg.epsonprinterapi import EpsonPrinterAPI
-
     api = EpsonPrinterAPI(host)
     if not api.available:
         raise PlatformNotReady()
@@ -48,7 +44,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(sensors, True)
 
 
-class EpsonPrinterCartridge(Entity):
+class EpsonPrinterCartridge(SensorEntity):
     """Representation of a cartridge sensor."""
 
     def __init__(self, api, cartridgeidx):

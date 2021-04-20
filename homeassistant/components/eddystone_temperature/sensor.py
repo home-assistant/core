@@ -3,15 +3,14 @@ Read temperature information from Eddystone beacons.
 
 Your beacons must be configured to transmit UID (for identification) and TLM
 (for temperature) frames.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.eddystone_temperature/
 """
 import logging
 
+# pylint: disable=import-error
+from beacontools import BeaconScanner, EddystoneFilter, EddystoneTLMFrame
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_NAME,
     EVENT_HOMEASSISTANT_START,
@@ -20,7 +19,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,7 +87,7 @@ def get_from_conf(config, config_key, length):
     string = config.get(config_key)
     if len(string) != length:
         _LOGGER.error(
-            "Error in config parameter %s: Must be exactly %d "
+            "Error in configuration parameter %s: Must be exactly %d "
             "bytes. Device will not be added",
             config_key,
             length / 2,
@@ -98,7 +96,7 @@ def get_from_conf(config, config_key, length):
     return string
 
 
-class EddystoneTemp(Entity):
+class EddystoneTemp(SensorEntity):
     """Representation of a temperature sensor."""
 
     def __init__(self, name, namespace, instance):
@@ -150,12 +148,6 @@ class Monitor:
                 packet.temperature,
             )
 
-        from beacontools import (  # pylint: disable=import-error
-            BeaconScanner,
-            EddystoneFilter,
-            EddystoneTLMFrame,
-        )
-
         device_filters = [EddystoneFilter(d.namespace, d.instance) for d in devices]
 
         self.scanner = BeaconScanner(
@@ -178,15 +170,18 @@ class Monitor:
         )
 
         for dev in self.devices:
-            if dev.namespace == namespace and dev.instance == instance:
-                if dev.temperature != temperature:
-                    dev.temperature = temperature
-                    dev.schedule_update_ha_state()
+            if (
+                dev.namespace == namespace
+                and dev.instance == instance
+                and dev.temperature != temperature
+            ):
+                dev.temperature = temperature
+                dev.schedule_update_ha_state()
 
     def stop(self):
         """Signal runner to stop and join thread."""
         if self.scanning:
-            _LOGGER.debug("Stopping...")
+            _LOGGER.debug("Stopping")
             self.scanner.stop()
             _LOGGER.debug("Stopped")
             self.scanning = False

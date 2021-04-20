@@ -1,0 +1,15 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_home": "{entity_name} er hjemme",
+            "is_not_home": "{entity_name} er ikke hjemme"
+        }
+    },
+    "state": {
+        "_": {
+            "home": "Hjemme",
+            "not_home": "Ude"
+        }
+    },
+    "title": "Enhedssporing"
+}

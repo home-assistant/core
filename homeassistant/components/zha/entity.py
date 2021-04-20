@@ -1,69 +1,61 @@
 """Entity for Zigbee Home Automation."""
+from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable
+import functools
 import logging
-import time
+from typing import Any
 
-from homeassistant.core import callback
+from homeassistant.const import ATTR_NAME
+from homeassistant.core import CALLBACK_TYPE, Event, callback
 from homeassistant.helpers import entity
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.util import slugify
 
 from .core.const import (
     ATTR_MANUFACTURER,
     ATTR_MODEL,
-    ATTR_NAME,
     DATA_ZHA,
     DATA_ZHA_BRIDGE_ID,
     DOMAIN,
+    SIGNAL_GROUP_ENTITY_REMOVED,
+    SIGNAL_GROUP_MEMBERSHIP_CHANGE,
     SIGNAL_REMOVE,
 )
 from .core.helpers import LogMixin
+from .core.typing import CALLABLE_T, ChannelType, ZhaDeviceType
 
 _LOGGER = logging.getLogger(__name__)
 
 ENTITY_SUFFIX = "entity_suffix"
-RESTART_GRACE_PERIOD = 7200  # 2 hours
+UPDATE_GROUP_FROM_CHILD_DELAY = 0.2
 
 
-class ZhaEntity(RestoreEntity, LogMixin, entity.Entity):
+class BaseZhaEntity(LogMixin, entity.Entity):
     """A base class for ZHA entities."""
 
-    _domain = None  # Must be overridden by subclasses
-
-    def __init__(self, unique_id, zha_device, channels, skip_entity_id=False, **kwargs):
+    def __init__(self, unique_id: str, zha_device: ZhaDeviceType, **kwargs):
         """Init ZHA entity."""
-        self._force_update = False
-        self._should_poll = False
-        self._unique_id = unique_id
-        if not skip_entity_id:
-            ieee = zha_device.ieee
-            ieeetail = "".join(["%02x" % (o,) for o in ieee[-4:]])
-            self.entity_id = "{}.{}_{}_{}_{}{}".format(
-                self._domain,
-                slugify(zha_device.manufacturer),
-                slugify(zha_device.model),
-                ieeetail,
-                channels[0].cluster.endpoint.endpoint_id,
-                kwargs.get(ENTITY_SUFFIX, ""),
-            )
-        self._state = None
-        self._device_state_attributes = {}
-        self._zha_device = zha_device
-        self.cluster_channels = {}
-        self._available = False
-        self._component = kwargs["component"]
-        self._unsubs = []
-        self.remove_future = None
-        for channel in channels:
-            self.cluster_channels[channel.name] = channel
+        self._name: str = ""
+        self._force_update: bool = False
+        self._should_poll: bool = False
+        self._unique_id: str = unique_id
+        self._state: Any = None
+        self._extra_state_attributes: dict[str, Any] = {}
+        self._zha_device: ZhaDeviceType = zha_device
+        self._unsubs: list[CALLABLE_T] = []
+        self.remove_future: Awaitable[None] = None
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return Entity's default name."""
-        return self.zha_device.name
+        return self._name
 
     @property
     def unique_id(self) -> str:
@@ -71,14 +63,14 @@ class ZhaEntity(RestoreEntity, LogMixin, entity.Entity):
         return self._unique_id
 
     @property
-    def zha_device(self):
+    def zha_device(self) -> ZhaDeviceType:
         """Return the zha device this entity is attached to."""
         return self._zha_device
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
-        return self._device_state_attributes
+        return self._extra_state_attributes
 
     @property
     def force_update(self) -> bool:
@@ -91,7 +83,7 @@ class ZhaEntity(RestoreEntity, LogMixin, entity.Entity):
         return self._should_poll
 
     @property
-    def device_info(self):
+    def device_info(self) -> dict[str, Any]:
         """Return a device description for device registry."""
         zha_device_info = self._zha_device.device_info
         ieee = zha_device_info["ieee"]
@@ -104,40 +96,93 @@ class ZhaEntity(RestoreEntity, LogMixin, entity.Entity):
             "via_device": (DOMAIN, self.hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID]),
         }
 
-    @property
-    def available(self):
-        """Return entity availability."""
-        return self._available
+    @callback
+    def async_state_changed(self) -> None:
+        """Entity state changed."""
+        self.async_write_ha_state()
 
-    def async_set_available(self, available):
-        """Set entity availability."""
-        self._available = available
-        self.async_schedule_update_ha_state()
-
-    def async_update_state_attribute(self, key, value):
+    @callback
+    def async_update_state_attribute(self, key: str, value: Any) -> None:
         """Update a single device state attribute."""
-        self._device_state_attributes.update({key: value})
-        self.async_schedule_update_ha_state()
+        self._extra_state_attributes.update({key: value})
+        self.async_write_ha_state()
 
-    def async_set_state(self, state):
+    @callback
+    def async_set_state(self, attr_id: int, attr_name: str, value: Any) -> None:
         """Set the entity state."""
-        pass
 
-    async def async_added_to_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect entity object when removed."""
+        for unsub in self._unsubs[:]:
+            unsub()
+            self._unsubs.remove(unsub)
+
+    @callback
+    def async_accept_signal(
+        self, channel: ChannelType, signal: str, func: CALLABLE_T, signal_override=False
+    ):
+        """Accept a signal from a channel."""
+        unsub = None
+        if signal_override:
+            unsub = async_dispatcher_connect(self.hass, signal, func)
+        else:
+            unsub = async_dispatcher_connect(
+                self.hass, f"{channel.unique_id}_{signal}", func
+            )
+        self._unsubs.append(unsub)
+
+    def log(self, level: int, msg: str, *args):
+        """Log a message."""
+        msg = f"%s: {msg}"
+        args = (self.entity_id,) + args
+        _LOGGER.log(level, msg, *args)
+
+
+class ZhaEntity(BaseZhaEntity, RestoreEntity):
+    """A base class for non group ZHA entities."""
+
+    def __init__(
+        self,
+        unique_id: str,
+        zha_device: ZhaDeviceType,
+        channels: list[ChannelType],
+        **kwargs,
+    ):
+        """Init ZHA entity."""
+        super().__init__(unique_id, zha_device, **kwargs)
+        ieeetail = "".join([f"{o:02x}" for o in zha_device.ieee[:4]])
+        ch_names = [ch.cluster.ep_attribute for ch in channels]
+        ch_names = ", ".join(sorted(ch_names))
+        self._name: str = f"{zha_device.name} {ieeetail} {ch_names}"
+        self.cluster_channels: dict[str, ChannelType] = {}
+        for channel in channels:
+            self.cluster_channels[channel.name] = channel
+
+    @property
+    def available(self) -> bool:
+        """Return entity availability."""
+        return self._zha_device.available
+
+    async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
-        await super().async_added_to_hass()
         self.remove_future = asyncio.Future()
-        await self.async_check_recently_seen()
-        await self.async_accept_signal(
+        self.async_accept_signal(
             None,
-            "{}_{}".format(self.zha_device.available_signal, "entity"),
-            self.async_set_available,
+            f"{SIGNAL_REMOVE}_{self.zha_device.ieee}",
+            functools.partial(self.async_remove, force_remove=True),
             signal_override=True,
         )
-        await self.async_accept_signal(
+
+        if not self.zha_device.is_mains_powered:
+            # mains powered devices will get real time state
+            last_state = await self.async_get_last_state()
+            if last_state:
+                self.async_restore_last_state(last_state)
+
+        self.async_accept_signal(
             None,
-            "{}_{}".format(SIGNAL_REMOVE, str(self.zha_device.ieee)),
-            self.async_remove,
+            f"{self.zha_device.available_signal}_entity",
+            self.async_state_changed,
             signal_override=True,
         )
         self._zha_device.gateway.register_entity_reference(
@@ -149,52 +194,94 @@ class ZhaEntity(RestoreEntity, LogMixin, entity.Entity):
             self.remove_future,
         )
 
-    async def async_check_recently_seen(self):
-        """Check if the device was seen within the last 2 hours."""
-        last_state = await self.async_get_last_state()
-        if (
-            last_state
-            and self._zha_device.last_seen
-            and (time.time() - self._zha_device.last_seen < RESTART_GRACE_PERIOD)
-        ):
-            self.async_set_available(True)
-            if not self.zha_device.is_mains_powered:
-                # mains powered devices will get real time state
-                self.async_restore_last_state(last_state)
-            self._zha_device.set_available(True)
-
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect entity object when removed."""
-        for unsub in self._unsubs[:]:
-            unsub()
-            self._unsubs.remove(unsub)
+        await super().async_will_remove_from_hass()
         self.zha_device.gateway.remove_entity_reference(self)
         self.remove_future.set_result(True)
 
     @callback
-    def async_restore_last_state(self, last_state):
+    def async_restore_last_state(self, last_state) -> None:
         """Restore previous state."""
-        pass
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Retrieve latest state."""
-        for channel in self.cluster_channels.values():
-            if hasattr(channel, "async_update"):
-                await channel.async_update()
+        tasks = [
+            channel.async_update()
+            for channel in self.cluster_channels.values()
+            if hasattr(channel, "async_update")
+        ]
+        if tasks:
+            await asyncio.gather(*tasks)
 
-    async def async_accept_signal(self, channel, signal, func, signal_override=False):
-        """Accept a signal from a channel."""
-        unsub = None
-        if signal_override:
-            unsub = async_dispatcher_connect(self.hass, signal, func)
-        else:
-            unsub = async_dispatcher_connect(
-                self.hass, f"{channel.unique_id}_{signal}", func
+
+class ZhaGroupEntity(BaseZhaEntity):
+    """A base class for ZHA group entities."""
+
+    def __init__(
+        self, entity_ids: list[str], unique_id: str, group_id: int, zha_device, **kwargs
+    ) -> None:
+        """Initialize a light group."""
+        super().__init__(unique_id, zha_device, **kwargs)
+        self._available = False
+        self._group = zha_device.gateway.groups.get(group_id)
+        self._name = f"{self._group.name}_zha_group_0x{group_id:04x}"
+        self._group_id: int = group_id
+        self._entity_ids: list[str] = entity_ids
+        self._async_unsub_state_changed: CALLBACK_TYPE | None = None
+        self._handled_group_membership = False
+
+    @property
+    def available(self) -> bool:
+        """Return entity availability."""
+        return self._available
+
+    async def _handle_group_membership_changed(self):
+        """Handle group membership changed."""
+        # Make sure we don't call remove twice as members are removed
+        if self._handled_group_membership:
+            return
+
+        self._handled_group_membership = True
+        await self.async_remove(force_remove=True)
+
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+        await super().async_added_to_hass()
+
+        self.async_accept_signal(
+            None,
+            f"{SIGNAL_GROUP_MEMBERSHIP_CHANGE}_0x{self._group_id:04x}",
+            self._handle_group_membership_changed,
+            signal_override=True,
+        )
+
+        self._async_unsub_state_changed = async_track_state_change_event(
+            self.hass, self._entity_ids, self.async_state_changed_listener
+        )
+
+        def send_removed_signal():
+            async_dispatcher_send(
+                self.hass, SIGNAL_GROUP_ENTITY_REMOVED, self._group_id
             )
-        self._unsubs.append(unsub)
 
-    def log(self, level, msg, *args):
-        """Log a message."""
-        msg = "%s: " + msg
-        args = (self.entity_id,) + args
-        _LOGGER.log(level, msg, *args)
+        self.async_on_remove(send_removed_signal)
+
+    @callback
+    def async_state_changed_listener(self, event: Event):
+        """Handle child updates."""
+        # Delay to ensure that we get updates from all members before updating the group
+        self.hass.loop.call_later(
+            UPDATE_GROUP_FROM_CHILD_DELAY,
+            lambda: self.async_schedule_update_ha_state(True),
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Handle removal from Home Assistant."""
+        await super().async_will_remove_from_hass()
+        if self._async_unsub_state_changed is not None:
+            self._async_unsub_state_changed()
+            self._async_unsub_state_changed = None
+
+    async def async_update(self) -> None:
+        """Update the state of the group entity."""

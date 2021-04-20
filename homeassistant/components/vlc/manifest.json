@@ -1,10 +1,8 @@
 {
   "domain": "vlc",
-  "name": "Vlc",
+  "name": "VLC media player",
   "documentation": "https://www.home-assistant.io/integrations/vlc",
-  "requirements": [
-    "python-vlc==1.1.2"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "requirements": ["python-vlc==1.1.2"],
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

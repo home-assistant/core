@@ -1,6 +1,4 @@
 """Life360 integration."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -37,8 +35,6 @@ from .const import (
 )
 from .helpers import get_api
 
-_LOGGER = logging.getLogger(__name__)
-
 DEFAULT_PREFIX = DOMAIN
 
 CONF_ACCOUNTS = "accounts"
@@ -57,7 +53,7 @@ def _prefix(value):
     if not value:
         return ""
     if not value.endswith("_"):
-        return value + "_"
+        return f"{value}_"
     return value
 
 
@@ -67,9 +63,7 @@ def _thresholds(config):
     if error_threshold and warning_threshold:
         if error_threshold <= warning_threshold:
             raise vol.Invalid(
-                "{} must be larger than {}".format(
-                    CONF_ERROR_THRESHOLD, CONF_WARNING_THRESHOLD
-                )
+                f"{CONF_ERROR_THRESHOLD} must be larger than {CONF_WARNING_THRESHOLD}"
             )
     elif not error_threshold and warning_threshold:
         config[CONF_ERROR_THRESHOLD] = warning_threshold + 1

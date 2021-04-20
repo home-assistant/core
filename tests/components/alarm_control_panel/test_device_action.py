@@ -2,6 +2,7 @@
 import pytest
 
 from homeassistant.components.alarm_control_panel import DOMAIN
+import homeassistant.components.automation as automation
 from homeassistant.const import (
     CONF_PLATFORM,
     STATE_ALARM_ARMED_AWAY,
@@ -11,18 +12,18 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
     STATE_UNKNOWN,
 )
-from homeassistant.setup import async_setup_component
-import homeassistant.components.automation as automation
 from homeassistant.helpers import device_registry
+from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
     assert_lists_same,
+    async_get_device_automation_capabilities,
+    async_get_device_automations,
     mock_device_registry,
     mock_registry,
-    async_get_device_automations,
-    async_get_device_automation_capabilities,
 )
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
 @pytest.fixture
@@ -46,6 +47,9 @@ async def test_get_actions(hass, device_reg, entity_reg):
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
+    hass.states.async_set(
+        "alarm_control_panel.test_5678", "attributes", {"supported_features": 15}
+    )
     expected_actions = [
         {
             "domain": DOMAIN,
@@ -82,6 +86,36 @@ async def test_get_actions(hass, device_reg, entity_reg):
     assert_lists_same(actions, expected_actions)
 
 
+async def test_get_actions_arm_night_only(hass, device_reg, entity_reg):
+    """Test we get the expected actions from a alarm_control_panel."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
+    hass.states.async_set(
+        "alarm_control_panel.test_5678", "attributes", {"supported_features": 4}
+    )
+    expected_actions = [
+        {
+            "domain": DOMAIN,
+            "type": "arm_night",
+            "device_id": device_entry.id,
+            "entity_id": "alarm_control_panel.test_5678",
+        },
+        {
+            "domain": DOMAIN,
+            "type": "disarm",
+            "device_id": device_entry.id,
+            "entity_id": "alarm_control_panel.test_5678",
+        },
+    ]
+    actions = await async_get_device_automations(hass, "action", device_entry.id)
+    assert_lists_same(actions, expected_actions)
+
+
 async def test_get_action_capabilities(hass, device_reg, entity_reg):
     """Test we get the expected capabilities from a sensor trigger."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
@@ -100,6 +134,7 @@ async def test_get_action_capabilities(hass, device_reg, entity_reg):
         device_id=device_entry.id,
     )
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     expected_capabilities = {
         "arm_away": {"extra_fields": []},
@@ -137,6 +172,7 @@ async def test_get_action_capabilities_arm_code(hass, device_reg, entity_reg):
         device_id=device_entry.id,
     )
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     expected_capabilities = {
         "arm_away": {
@@ -234,6 +270,8 @@ async def test_action(hass):
         },
     )
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
     assert (
         hass.states.get("alarm_control_panel.alarm_no_arm_code").state == STATE_UNKNOWN
     )

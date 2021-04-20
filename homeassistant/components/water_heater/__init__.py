@@ -1,32 +1,32 @@
 """Support for water heater devices."""
 from datetime import timedelta
-import logging
 import functools as ft
+import logging
+from typing import final
 
 import voluptuous as vol
 
-from homeassistant.helpers.temperature import display_temp as show_temp
-from homeassistant.util.temperature import convert as convert_temperature
-from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.config_validation import (  # noqa
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
-    SERVICE_TURN_ON,
-    SERVICE_TURN_OFF,
-    STATE_ON,
-    STATE_OFF,
-    TEMP_CELSIUS,
-    PRECISION_WHOLE,
     PRECISION_TENTHS,
+    PRECISION_WHOLE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+    TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import (  # noqa: F401
+    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA_BASE,
+)
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.temperature import display_temp as show_temp
+from homeassistant.util.temperature import convert as convert_temperature
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -129,8 +129,8 @@ async def async_unload_entry(hass, entry):
     return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
-class WaterHeaterDevice(Entity):
-    """Representation of a water_heater device."""
+class WaterHeaterEntity(Entity):
+    """Base class for water heater entities."""
 
     @property
     def state(self):
@@ -145,6 +145,26 @@ class WaterHeaterDevice(Entity):
         return PRECISION_WHOLE
 
     @property
+    def capability_attributes(self):
+        """Return capability attributes."""
+        supported_features = self.supported_features or 0
+
+        data = {
+            ATTR_MIN_TEMP: show_temp(
+                self.hass, self.min_temp, self.temperature_unit, self.precision
+            ),
+            ATTR_MAX_TEMP: show_temp(
+                self.hass, self.max_temp, self.temperature_unit, self.precision
+            ),
+        }
+
+        if supported_features & SUPPORT_OPERATION_MODE:
+            data[ATTR_OPERATION_LIST] = self.operation_list
+
+        return data
+
+    @final
+    @property
     def state_attributes(self):
         """Return the optional state attributes."""
         data = {
@@ -153,12 +173,6 @@ class WaterHeaterDevice(Entity):
                 self.current_temperature,
                 self.temperature_unit,
                 self.precision,
-            ),
-            ATTR_MIN_TEMP: show_temp(
-                self.hass, self.min_temp, self.temperature_unit, self.precision
-            ),
-            ATTR_MAX_TEMP: show_temp(
-                self.hass, self.max_temp, self.temperature_unit, self.precision
             ),
             ATTR_TEMPERATURE: show_temp(
                 self.hass,
@@ -184,8 +198,6 @@ class WaterHeaterDevice(Entity):
 
         if supported_features & SUPPORT_OPERATION_MODE:
             data[ATTR_OPERATION_MODE] = self.current_operation
-            if self.operation_list:
-                data[ATTR_OPERATION_LIST] = self.operation_list
 
         if supported_features & SUPPORT_AWAY_MODE:
             is_away = self.is_away_mode_on
@@ -309,3 +321,15 @@ async def async_service_temperature_set(entity, service):
             kwargs[value] = temp
 
     await entity.async_set_temperature(**kwargs)
+
+
+class WaterHeaterDevice(WaterHeaterEntity):
+    """Representation of a water heater (for backwards compatibility)."""
+
+    def __init_subclass__(cls, **kwargs):
+        """Print deprecation warning."""
+        super().__init_subclass__(**kwargs)
+        _LOGGER.warning(
+            "WaterHeaterDevice is deprecated, modify %s to extend WaterHeaterEntity",
+            cls.__name__,
+        )

@@ -1,29 +1,110 @@
 repos:
--   repo: https://github.com/psf/black
-    rev: 19.3b0
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v2.12.0
     hooks:
-    -   id: black
+      - id: pyupgrade
+        args: [--py38-plus]
+  - repo: https://github.com/psf/black
+    rev: 20.8b1
+    hooks:
+      - id: black
         args:
           - --safe
           - --quiet
--   repo: https://gitlab.com/pycqa/flake8
-    rev: 3.7.8
+        files: ^((homeassistant|script|tests)/.+)?[^/]+\.py$
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.0.0
     hooks:
-    -   id: flake8
+      - id: codespell
+        args:
+          - --ignore-words-list=hass,alot,datas,dof,dur,ether,farenheit,hist,iff,ines,ist,lightsensor,mut,nd,pres,referer,ser,serie,te,technik,ue,uint,visability,wan,wanna,withing,iam,incomfort
+          - --skip="./.*,*.csv,*.json"
+          - --quiet-level=2
+        exclude_types: [csv, json]
+        exclude: ^tests/fixtures/
+  - repo: https://gitlab.com/pycqa/flake8
+    rev: 3.9.1
+    hooks:
+      - id: flake8
         additional_dependencies:
-          - flake8-docstrings==1.3.1
-          - pydocstyle==4.0.0
-# Using a local "system" mypy instead of the mypy hook, because its
-# results depend on what is installed. And the mypy hook runs in a
-# virtualenv of its own, meaning we'd need to install and maintain
-# another set of our dependencies there... no. Use the "system" one
-# and reuse the environment that is set up anyway already instead.
--   repo: local
+          - pycodestyle==2.7.0
+          - pyflakes==2.3.1
+          - flake8-docstrings==1.6.0
+          - pydocstyle==6.0.0
+          - flake8-comprehensions==3.4.0
+          - flake8-noqa==1.1.0
+        files: ^(homeassistant|script|tests)/.+\.py$
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.0
     hooks:
-    -   id: mypy
+      - id: bandit
+        args:
+          - --quiet
+          - --format=custom
+          - --configfile=tests/bandit.yaml
+        files: ^(homeassistant|script|tests)/.+\.py$
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.7.0
+    hooks:
+      - id: isort
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.2.0
+    hooks:
+      - id: check-executables-have-shebangs
+        stages: [manual]
+      - id: check-json
+        exclude: (.vscode|.devcontainer)
+      - id: no-commit-to-branch
+        args:
+          - --branch=dev
+          - --branch=master
+          - --branch=rc
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.24.2
+    hooks:
+      - id: yamllint
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v2.2.1
+    hooks:
+      - id: prettier
+        stages: [manual]
+  - repo: https://github.com/cdce8p/python-typing-update
+    rev: v0.3.3
+    hooks:
+      # Run `python-typing-update` hook manually from time to time
+      # to update python typing syntax.
+      # Will require manual work, before submitting changes!
+      - id: python-typing-update
+        stages: [manual]
+        args:
+          - --py38-plus
+          - --force
+          - --keep-updates
+        files: ^(homeassistant|tests|script)/.+\.py$
+  - repo: local
+    hooks:
+      # Run mypy through our wrapper script in order to get the possible
+      # pyenv and/or virtualenv activated; it may not have been e.g. if
+      # committing from a GUI tool that was not launched from an activated
+      # shell.
+      - id: mypy
         name: mypy
-        entry: mypy
-        language: system
+        entry: script/run-in-env.sh mypy
+        language: script
         types: [python]
         require_serial: true
-        exclude: ^script/scaffold/templates/
+        files: ^homeassistant/.+\.py$
+      - id: gen_requirements_all
+        name: gen_requirements_all
+        entry: script/run-in-env.sh python3 -m script.gen_requirements_all
+        pass_filenames: false
+        language: script
+        types: [text]
+        files: ^(homeassistant/.+/manifest\.json|\.pre-commit-config\.yaml)$
+      - id: hassfest
+        name: hassfest
+        entry: script/run-in-env.sh python3 -m script.hassfest
+        pass_filenames: false
+        language: script
+        types: [text]
+        files: ^(homeassistant/.+/(manifest|strings)\.json|\.coveragerc|homeassistant/.+/services\.yaml)$

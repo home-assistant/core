@@ -3,11 +3,15 @@
   "name": "Toon",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/toon",
-  "requirements": [
-    "toonapilib==3.2.4"
+  "requirements": ["toonapi==0.2.0"],
+  "dependencies": ["http"],
+  "after_dependencies": ["cloud"],
+  "codeowners": ["@frenck"],
+  "dhcp": [
+    {
+      "hostname": "eneco-*",
+      "macaddress": "74C63B*"
+    }
   ],
-  "dependencies": [],
-  "codeowners": [
-    "@frenck"
-  ]
+  "iot_class": "cloud_push"
 }

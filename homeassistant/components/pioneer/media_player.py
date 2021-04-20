@@ -4,7 +4,7 @@ import telnetlib
 
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -13,6 +13,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -36,6 +37,7 @@ DEFAULT_SOURCES = {}
 SUPPORT_PIONEER = (
     SUPPORT_PAUSE
     | SUPPORT_VOLUME_SET
+    | SUPPORT_VOLUME_STEP
     | SUPPORT_VOLUME_MUTE
     | SUPPORT_TURN_ON
     | SUPPORT_TURN_OFF
@@ -71,7 +73,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         add_entities([pioneer])
 
 
-class PioneerDevice(MediaPlayerDevice):
+class PioneerDevice(MediaPlayerEntity):
     """Representation of a Pioneer device."""
 
     def __init__(self, name, host, port, timeout, sources):
@@ -85,7 +87,7 @@ class PioneerDevice(MediaPlayerDevice):
         self._muted = False
         self._selected_source = ""
         self._source_name_to_number = sources
-        self._source_number_to_name = dict((v, k) for k, v in sources.items())
+        self._source_number_to_name = {v: k for k, v in sources.items()}
 
     @classmethod
     def telnet_request(cls, telnet, command, expected_prefix):
@@ -140,7 +142,7 @@ class PioneerDevice(MediaPlayerDevice):
         # Build the source name dictionaries if necessary
         if not self._source_name_to_number:
             for i in range(MAX_SOURCE_NUMBERS):
-                result = self.telnet_request(telnet, "?RGB" + str(i).zfill(2), "RGB")
+                result = self.telnet_request(telnet, f"?RGB{str(i).zfill(2)}", "RGB")
 
                 if not result:
                     continue
@@ -169,6 +171,8 @@ class PioneerDevice(MediaPlayerDevice):
     @property
     def state(self):
         """Return the state of the device."""
+        if self._pwstate == "PWR2":
+            return STATE_OFF
         if self._pwstate == "PWR1":
             return STATE_OFF
         if self._pwstate == "PWR0":
@@ -199,7 +203,7 @@ class PioneerDevice(MediaPlayerDevice):
     @property
     def source_list(self):
         """List of available input sources."""
-        return list(self._source_name_to_number.keys())
+        return list(self._source_name_to_number)
 
     @property
     def media_title(self):
@@ -221,7 +225,7 @@ class PioneerDevice(MediaPlayerDevice):
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         # 60dB max
-        self.telnet_command(str(round(volume * MAX_VOLUME)).zfill(3) + "VL")
+        self.telnet_command(f"{round(volume * MAX_VOLUME):03}VL")
 
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
@@ -233,4 +237,4 @@ class PioneerDevice(MediaPlayerDevice):
 
     def select_source(self, source):
         """Select input source."""
-        self.telnet_command(self._source_name_to_number.get(source) + "FN")
+        self.telnet_command(f"{self._source_name_to_number.get(source)}FN")

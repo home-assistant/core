@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Este c\u00f3digo postal ya ha sido configurado."
+        },
+        "error": {
+            "invalid_zip_code": "El c\u00f3digo postal no es v\u00e1lido"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "zip_code": "C\u00f3digo postal"
+                },
+                "description": "Indica tu c\u00f3digo postal de Estados Unidos o Canad\u00e1.",
+                "title": "IQVIA"
+            }
+        }
+    }
+}

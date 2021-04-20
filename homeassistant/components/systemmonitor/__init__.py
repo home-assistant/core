@@ -1,1 +1,1 @@
-"""The systemmonitor component."""
+"""The systemmonitor integration."""

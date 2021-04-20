@@ -2,6 +2,8 @@
 from unittest.mock import MagicMock, patch
 
 from pyps4_2ndscreen.credential import get_ddp_message
+from pyps4_2ndscreen.ddp import DEFAULT_UDP_PORT
+from pyps4_2ndscreen.media_art import TYPE_APP as PS_TYPE_APP
 
 from homeassistant.components import ps4
 from homeassistant.components.media_player.const import (
@@ -10,6 +12,7 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_TITLE,
+    MEDIA_TYPE_APP,
     MEDIA_TYPE_GAME,
 )
 from homeassistant.components.ps4.const import (
@@ -29,13 +32,13 @@ from homeassistant.const import (
     CONF_REGION,
     CONF_TOKEN,
     STATE_IDLE,
-    STATE_OFF,
     STATE_PLAYING,
+    STATE_STANDBY,
     STATE_UNKNOWN,
 )
 from homeassistant.setup import async_setup_component
-from tests.common import MockConfigEntry, mock_device_registry, mock_registry, mock_coro
 
+from tests.common import MockConfigEntry, mock_device_registry, mock_registry
 
 MOCK_CREDS = "123412341234abcd12341234abcd12341234abcd12341234abcd12341234abcd"
 MOCK_NAME = "ha_ps4_name"
@@ -46,7 +49,7 @@ MOCK_HOST_NAME = "Fake PS4"
 MOCK_HOST_ID = "A0000A0AA000"
 MOCK_HOST_VERSION = "09879011"
 MOCK_HOST_TYPE = "PS4"
-MOCK_STATUS_STANDBY = "Server Standby"
+MOCK_STATUS_REST = "Server Standby"
 MOCK_STATUS_ON = "Ok"
 MOCK_STANDBY_CODE = 620
 MOCK_ON_CODE = 200
@@ -100,13 +103,13 @@ MOCK_STATUS_IDLE = {
     "system-version": MOCK_HOST_VERSION,
 }
 
-MOCK_STATUS_OFF = {
+MOCK_STATUS_STANDBY = {
     "host-type": MOCK_HOST_TYPE,
     "host-ip": MOCK_HOST,
     "host-request-port": MOCK_TCP_PORT,
     "host-id": MOCK_HOST_ID,
     "host-name": MOCK_HOST_NAME,
-    "status": MOCK_STATUS_STANDBY,
+    "status": MOCK_STATUS_REST,
     "status_code": MOCK_STANDBY_CODE,
     "device-discovery-protocol-version": MOCK_DDP_VERSION,
     "system-version": MOCK_HOST_VERSION,
@@ -123,7 +126,6 @@ MOCK_DATA = {CONF_TOKEN: MOCK_CREDS, "devices": [MOCK_DEVICE]}
 MOCK_CONFIG = MockConfigEntry(domain=DOMAIN, data=MOCK_DATA, entry_id=MOCK_ENTRY_ID)
 
 MOCK_LOAD = "homeassistant.components.ps4.media_player.load_games"
-MOCK_SAVE = "homeassistant.components.ps4.save_json"
 
 
 async def setup_mock_component(hass, entry=None):
@@ -137,9 +139,7 @@ async def setup_mock_component(hass, entry=None):
 
     mock_entry.add_to_hass(hass)
 
-    # Don't use an actual file.
-    with patch(MOCK_LOAD, return_value={}), patch(MOCK_SAVE, side_effect=MagicMock()):
-        await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
     await hass.async_block_till_done()
 
@@ -150,28 +150,17 @@ async def setup_mock_component(hass, entry=None):
     return mock_entity_id
 
 
-async def mock_ddp_response(hass, mock_status_data, games=None):
+async def mock_ddp_response(hass, mock_status_data):
     """Mock raw UDP response from device."""
     mock_protocol = hass.data[PS4_DATA].protocol
-
+    assert mock_protocol.local_port == DEFAULT_UDP_PORT
     mock_code = mock_status_data.get("status_code")
     mock_status = mock_status_data.get("status")
-    mock_status_header = "{} {}".format(mock_code, mock_status)
+    mock_status_header = f"{mock_code} {mock_status}"
     mock_response = get_ddp_message(mock_status_header, mock_status_data).encode()
 
-    if games is None:
-        games = {}
-
-    with patch(MOCK_LOAD, return_value=games), patch(
-        MOCK_SAVE, side_effect=MagicMock()
-    ):
-        mock_protocol.datagram_received(mock_response, (MOCK_HOST, MOCK_RANDOM_PORT))
-        await hass.async_block_till_done()
-
-
-async def test_async_setup_platform_does_nothing():
-    """Test setup platform does nothing (Uses config entries only)."""
-    await ps4.media_player.async_setup_platform(None, None, None)
+    mock_protocol.datagram_received(mock_response, (MOCK_HOST, MOCK_RANDOM_PORT))
+    await hass.async_block_till_done()
 
 
 async def test_media_player_is_setup_correctly_with_entry(hass):
@@ -184,18 +173,17 @@ async def test_media_player_is_setup_correctly_with_entry(hass):
 
     # Test that entity is added to hass.
     assert hass.data[PS4_DATA].protocol is not None
-    assert mock_entity_id == "media_player.{}".format(MOCK_NAME)
+    assert mock_entity_id == f"media_player.{MOCK_NAME}"
     assert mock_state == STATE_UNKNOWN
 
 
-async def test_state_off_is_set(hass):
-    """Test that state is set to off."""
+async def test_state_standby_is_set(hass):
+    """Test that state is set to standby."""
     mock_entity_id = await setup_mock_component(hass)
 
-    with patch(MOCK_SAVE, side_effect=MagicMock()):
-        await mock_ddp_response(hass, MOCK_STATUS_OFF)
+    await mock_ddp_response(hass, MOCK_STATUS_STANDBY)
 
-    assert hass.states.get(mock_entity_id).state == STATE_OFF
+    assert hass.states.get(mock_entity_id).state == STATE_STANDBY
 
 
 async def test_state_playing_is_set(hass):
@@ -206,9 +194,7 @@ async def test_state_playing_is_set(hass):
         "pyps4.Ps4Async.async_get_ps_store_data",
     )
 
-    with patch(mock_func, return_value=mock_coro(None)), patch(
-        MOCK_SAVE, side_effect=MagicMock()
-    ):
+    with patch(mock_func, return_value=None):
         await mock_ddp_response(hass, MOCK_STATUS_PLAYING)
 
     assert hass.states.get(mock_entity_id).state == STATE_PLAYING
@@ -218,8 +204,7 @@ async def test_state_idle_is_set(hass):
     """Test that state is set to idle."""
     mock_entity_id = await setup_mock_component(hass)
 
-    with patch(MOCK_SAVE, side_effect=MagicMock()):
-        await mock_ddp_response(hass, MOCK_STATUS_IDLE)
+    await mock_ddp_response(hass, MOCK_STATUS_IDLE)
 
     assert hass.states.get(mock_entity_id).state == STATE_IDLE
 
@@ -243,11 +228,9 @@ async def test_media_attributes_are_fetched(hass):
     mock_result = MagicMock()
     mock_result.name = MOCK_TITLE_NAME
     mock_result.cover_art = MOCK_TITLE_ART_URL
-    mock_result.game_type = "game"
+    mock_result.game_type = "not_an_app"
 
-    with patch(mock_func, return_value=mock_coro(mock_result)) as mock_fetch, patch(
-        MOCK_SAVE, side_effect=MagicMock()
-    ):
+    with patch(mock_func, return_value=mock_result) as mock_fetch:
         await mock_ddp_response(hass, MOCK_STATUS_PLAYING)
 
     mock_state = hass.states.get(mock_entity_id)
@@ -262,20 +245,33 @@ async def test_media_attributes_are_fetched(hass):
     assert mock_attrs.get(ATTR_MEDIA_TITLE) == MOCK_TITLE_NAME
     assert mock_attrs.get(ATTR_MEDIA_CONTENT_TYPE) == MOCK_TITLE_TYPE
 
+    # Change state so that the next fetch is called.
+    await mock_ddp_response(hass, MOCK_STATUS_STANDBY)
 
-async def test_media_attributes_are_loaded(hass):
+    # Test that content type of app is set.
+    mock_result.game_type = PS_TYPE_APP
+
+    with patch(mock_func, return_value=mock_result) as mock_fetch_app:
+        await mock_ddp_response(hass, MOCK_STATUS_PLAYING)
+
+    mock_state = hass.states.get(mock_entity_id)
+    mock_attrs = dict(mock_state.attributes)
+
+    assert len(mock_fetch_app.mock_calls) == 1
+    assert mock_attrs.get(ATTR_MEDIA_CONTENT_TYPE) == MEDIA_TYPE_APP
+
+
+async def test_media_attributes_are_loaded(hass, patch_load_json):
     """Test that media attributes are loaded."""
     mock_entity_id = await setup_mock_component(hass)
-    mock_data = {MOCK_TITLE_ID: MOCK_GAMES_DATA_LOCKED}
-    mock_func = "{}{}".format(
-        "homeassistant.components.ps4.media_player.",
-        "pyps4.Ps4Async.async_get_ps_store_data",
-    )
+    patch_load_json.return_value = {MOCK_TITLE_ID: MOCK_GAMES_DATA_LOCKED}
 
-    with patch(mock_func, return_value=mock_coro(None)) as mock_fetch, patch(
-        MOCK_SAVE, side_effect=MagicMock()
-    ):
-        await mock_ddp_response(hass, MOCK_STATUS_PLAYING, mock_data)
+    with patch(
+        "homeassistant.components.ps4.media_player."
+        "pyps4.Ps4Async.async_get_ps_store_data",
+        return_value=None,
+    ) as mock_fetch:
+        await mock_ddp_response(hass, MOCK_STATUS_PLAYING)
 
     mock_state = hass.states.get(mock_entity_id)
     mock_attrs = dict(mock_state.attributes)
@@ -292,26 +288,24 @@ async def test_media_attributes_are_loaded(hass):
     assert mock_attrs.get(ATTR_MEDIA_CONTENT_TYPE) == MOCK_TITLE_TYPE
 
 
-async def test_device_info_is_set_from_status_correctly(hass):
+async def test_device_info_is_set_from_status_correctly(hass, patch_get_status):
     """Test that device info is set correctly from status update."""
     mock_d_registry = mock_device_registry(hass)
-    with patch("pyps4_2ndscreen.ps4.get_status", return_value=MOCK_STATUS_OFF):
-        mock_entity_id = await setup_mock_component(hass)
+    patch_get_status.return_value = MOCK_STATUS_STANDBY
+    mock_entity_id = await setup_mock_component(hass)
 
     await hass.async_block_till_done()
 
     # Reformat mock status-sw_version for assertion.
-    mock_version = MOCK_STATUS_OFF["system-version"]
+    mock_version = MOCK_STATUS_STANDBY["system-version"]
     mock_version = mock_version[1:4]
-    mock_version = "{}.{}".format(mock_version[0], mock_version[1:])
+    mock_version = f"{mock_version[0]}.{mock_version[1:]}"
 
     mock_state = hass.states.get(mock_entity_id).state
 
     mock_d_entries = mock_d_registry.devices
-    mock_entry = mock_d_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_HOST_ID)}, connections={()}
-    )
-    assert mock_state == STATE_OFF
+    mock_entry = mock_d_registry.async_get_device(identifiers={(DOMAIN, MOCK_HOST_ID)})
+    assert mock_state == STATE_STANDBY
 
     assert len(mock_d_entries) == 1
     assert mock_entry.name == MOCK_HOST_NAME
@@ -377,9 +371,7 @@ async def test_turn_on(hass):
         "homeassistant.components.ps4.media_player.", "pyps4.Ps4Async.wakeup"
     )
 
-    with patch(mock_func, return_value=MagicMock()) as mock_call, patch(
-        MOCK_SAVE, side_effect=MagicMock()
-    ):
+    with patch(mock_func) as mock_call:
         await hass.services.async_call(
             "media_player", "turn_on", {ATTR_ENTITY_ID: mock_entity_id}
         )
@@ -395,11 +387,25 @@ async def test_turn_off(hass):
         "homeassistant.components.ps4.media_player.", "pyps4.Ps4Async.standby"
     )
 
-    with patch(mock_func, return_value=MagicMock()) as mock_call, patch(
-        MOCK_SAVE, side_effect=MagicMock()
-    ):
+    with patch(mock_func) as mock_call:
         await hass.services.async_call(
             "media_player", "turn_off", {ATTR_ENTITY_ID: mock_entity_id}
+        )
+        await hass.async_block_till_done()
+
+    assert len(mock_call.mock_calls) == 1
+
+
+async def test_toggle(hass):
+    """Test that toggle service calls function."""
+    mock_entity_id = await setup_mock_component(hass)
+    mock_func = "{}{}".format(
+        "homeassistant.components.ps4.media_player.", "pyps4.Ps4Async.toggle"
+    )
+
+    with patch(mock_func) as mock_call:
+        await hass.services.async_call(
+            "media_player", "toggle", {ATTR_ENTITY_ID: mock_entity_id}
         )
         await hass.async_block_till_done()
 
@@ -413,9 +419,7 @@ async def test_media_pause(hass):
         "homeassistant.components.ps4.media_player.", "pyps4.Ps4Async.remote_control"
     )
 
-    with patch(mock_func, return_value=MagicMock()) as mock_call, patch(
-        MOCK_SAVE, side_effect=MagicMock()
-    ):
+    with patch(mock_func) as mock_call:
         await hass.services.async_call(
             "media_player", "media_pause", {ATTR_ENTITY_ID: mock_entity_id}
         )
@@ -431,9 +435,7 @@ async def test_media_stop(hass):
         "homeassistant.components.ps4.media_player.", "pyps4.Ps4Async.remote_control"
     )
 
-    with patch(mock_func, return_value=MagicMock()) as mock_call, patch(
-        MOCK_SAVE, side_effect=MagicMock()
-    ):
+    with patch(mock_func) as mock_call:
         await hass.services.async_call(
             "media_player", "media_stop", {ATTR_ENTITY_ID: mock_entity_id}
         )
@@ -442,46 +444,34 @@ async def test_media_stop(hass):
     assert len(mock_call.mock_calls) == 1
 
 
-async def test_select_source(hass):
+async def test_select_source(hass, patch_load_json):
     """Test that select source service calls function with title."""
-    mock_data = {MOCK_TITLE_ID: MOCK_GAMES_DATA}
-    with patch("pyps4_2ndscreen.ps4.get_status", return_value=MOCK_STATUS_IDLE), patch(
-        MOCK_LOAD, return_value=mock_data
-    ):
+    patch_load_json.return_value = {MOCK_TITLE_ID: MOCK_GAMES_DATA}
+    with patch("pyps4_2ndscreen.ps4.get_status", return_value=MOCK_STATUS_IDLE):
         mock_entity_id = await setup_mock_component(hass)
 
-    mock_func = "{}{}".format(
-        "homeassistant.components.ps4.media_player.", "pyps4.Ps4Async.start_title"
-    )
-
-    with patch(mock_func, return_value=MagicMock()) as mock_call, patch(
-        MOCK_SAVE, side_effect=MagicMock()
+    with patch("pyps4_2ndscreen.ps4.Ps4Async.start_title") as mock_call, patch(
+        "homeassistant.components.ps4.media_player.PS4Device.async_update"
     ):
         # Test with title name.
         await hass.services.async_call(
             "media_player",
             "select_source",
             {ATTR_ENTITY_ID: mock_entity_id, ATTR_INPUT_SOURCE: MOCK_TITLE_NAME},
+            blocking=True,
         )
-        await hass.async_block_till_done()
 
     assert len(mock_call.mock_calls) == 1
 
 
-async def test_select_source_caps(hass):
+async def test_select_source_caps(hass, patch_load_json):
     """Test that select source service calls function with upper case title."""
-    mock_data = {MOCK_TITLE_ID: MOCK_GAMES_DATA}
-    with patch("pyps4_2ndscreen.ps4.get_status", return_value=MOCK_STATUS_IDLE), patch(
-        MOCK_LOAD, return_value=mock_data
-    ):
+    patch_load_json.return_value = {MOCK_TITLE_ID: MOCK_GAMES_DATA}
+    with patch("pyps4_2ndscreen.ps4.get_status", return_value=MOCK_STATUS_IDLE):
         mock_entity_id = await setup_mock_component(hass)
 
-    mock_func = "{}{}".format(
-        "homeassistant.components.ps4.media_player.", "pyps4.Ps4Async.start_title"
-    )
-
-    with patch(mock_func, return_value=MagicMock()) as mock_call, patch(
-        MOCK_SAVE, side_effect=MagicMock()
+    with patch("pyps4_2ndscreen.ps4.Ps4Async.start_title") as mock_call, patch(
+        "homeassistant.components.ps4.media_player.PS4Device.async_update"
     ):
         # Test with title name in caps.
         await hass.services.async_call(
@@ -491,34 +481,28 @@ async def test_select_source_caps(hass):
                 ATTR_ENTITY_ID: mock_entity_id,
                 ATTR_INPUT_SOURCE: MOCK_TITLE_NAME.upper(),
             },
+            blocking=True,
         )
-        await hass.async_block_till_done()
 
     assert len(mock_call.mock_calls) == 1
 
 
-async def test_select_source_id(hass):
+async def test_select_source_id(hass, patch_load_json):
     """Test that select source service calls function with Title ID."""
-    mock_data = {MOCK_TITLE_ID: MOCK_GAMES_DATA}
-    with patch("pyps4_2ndscreen.ps4.get_status", return_value=MOCK_STATUS_IDLE), patch(
-        MOCK_LOAD, return_value=mock_data
-    ):
+    patch_load_json.return_value = {MOCK_TITLE_ID: MOCK_GAMES_DATA}
+    with patch("pyps4_2ndscreen.ps4.get_status", return_value=MOCK_STATUS_IDLE):
         mock_entity_id = await setup_mock_component(hass)
 
-    mock_func = "{}{}".format(
-        "homeassistant.components.ps4.media_player.", "pyps4.Ps4Async.start_title"
-    )
-
-    with patch(mock_func, return_value=MagicMock()) as mock_call, patch(
-        MOCK_SAVE, side_effect=MagicMock()
+    with patch("pyps4_2ndscreen.ps4.Ps4Async.start_title") as mock_call, patch(
+        "homeassistant.components.ps4.media_player.PS4Device.async_update"
     ):
         # Test with title ID.
         await hass.services.async_call(
             "media_player",
             "select_source",
             {ATTR_ENTITY_ID: mock_entity_id, ATTR_INPUT_SOURCE: MOCK_TITLE_ID},
+            blocking=True,
         )
-        await hass.async_block_till_done()
 
     assert len(mock_call.mock_calls) == 1
 
@@ -526,17 +510,14 @@ async def test_select_source_id(hass):
 async def test_ps4_send_command(hass):
     """Test that ps4 send command service calls function."""
     mock_entity_id = await setup_mock_component(hass)
-    mock_func = "{}{}".format(
-        "homeassistant.components.ps4.media_player.", "pyps4.Ps4Async.remote_control"
-    )
 
-    with patch(mock_func, return_value=MagicMock()) as mock_call, patch(
-        MOCK_SAVE, side_effect=MagicMock()
-    ):
+    with patch("pyps4_2ndscreen.ps4.Ps4Async.remote_control") as mock_call:
         await hass.services.async_call(
-            DOMAIN, "send_command", {ATTR_ENTITY_ID: mock_entity_id, ATTR_COMMAND: "ps"}
+            DOMAIN,
+            "send_command",
+            {ATTR_ENTITY_ID: mock_entity_id, ATTR_COMMAND: "ps"},
+            blocking=True,
         )
-        await hass.async_block_till_done()
 
     assert len(mock_call.mock_calls) == 1
 

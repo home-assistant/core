@@ -28,10 +28,7 @@ class TestKiraSensor(unittest.TestCase):
         mock_kira = MagicMock()
         self.hass.data[kira.DOMAIN] = {kira.CONF_SENSOR: {}}
         self.hass.data[kira.DOMAIN][kira.CONF_SENSOR]["kira"] = mock_kira
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     # pylint: disable=protected-access
     def test_kira_sensor_callback(self):
@@ -50,4 +47,4 @@ class TestKiraSensor(unittest.TestCase):
         sensor._update_callback(codeTuple)
 
         assert sensor.state == codeName
-        assert sensor.device_state_attributes == {kira.CONF_DEVICE: deviceName}
+        assert sensor.extra_state_attributes == {kira.CONF_DEVICE: deviceName}

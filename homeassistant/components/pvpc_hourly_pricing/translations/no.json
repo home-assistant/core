@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Tjenesten er allerede konfigurert"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Sensornavn",
+                    "tariff": "Avtaletariff (1, 2 eller 3 perioder)"
+                },
+                "description": "Denne sensoren bruker offisiell API for \u00e5 f\u00e5 [timeprising av elektrisitet (PVPC)](https://www.esios.ree.es/es/pvpc) i Spania.\nFor mer presis forklaring, bes\u00f8k [integrasjonsdokumenter](https://www.home-assistant.io/integrations/pvpc_hourly_pricing/).\n\nVelg den avtalte satsen basert p\u00e5 antall faktureringsperioder per dag:\n- 1 periode: normal\n- 2 perioder: diskriminering (nattlig rate)\n- 3 perioder: elbil (per natt rate p\u00e5 3 perioder)",
+                "title": "Tariffvalg"
+            }
+        }
+    }
+}

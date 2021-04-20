@@ -1,23 +1,24 @@
 """Component to create an interface to a Pilight daemon."""
-import logging
+from datetime import timedelta
 import functools
+import logging
 import socket
 import threading
-from datetime import timedelta
 
+from pilight import pilight
 import voluptuous as vol
 
-from homeassistant.helpers.event import track_point_in_utc_time
-from homeassistant.util import dt as dt_util
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP,
     CONF_HOST,
     CONF_PORT,
-    CONF_WHITELIST,
     CONF_PROTOCOL,
+    CONF_WHITELIST,
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP,
 )
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import track_point_in_utc_time
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,7 +60,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the Pilight component."""
-    from pilight import pilight
 
     host = config[DOMAIN][CONF_HOST]
     port = config[DOMAIN][CONF_PORT]
@@ -67,7 +67,7 @@ def setup(hass, config):
 
     try:
         pilight_client = pilight.Client(host=host, port=port)
-    except (socket.error, socket.timeout) as err:
+    except (OSError, socket.timeout) as err:
         _LOGGER.error("Unable to connect to %s on port %s: %s", host, port, err)
         return False
 

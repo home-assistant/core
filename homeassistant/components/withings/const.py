@@ -1,103 +1,64 @@
 """Constants used by the Withings component."""
+from enum import Enum
+
 import homeassistant.const as const
+
+CONF_PROFILES = "profiles"
+CONF_USE_WEBHOOK = "use_webhook"
 
 DATA_MANAGER = "data_manager"
 
-BASE_URL = "base_url"
-CLIENT_ID = "client_id"
-CLIENT_SECRET = "client_secret"
-CODE = "code"
 CONFIG = "config"
-CREDENTIALS = "credentials"
 DOMAIN = "withings"
 LOG_NAMESPACE = "homeassistant.components.withings"
-MEASURES = "measures"
 PROFILE = "profile"
-PROFILES = "profiles"
+PUSH_HANDLER = "push_handler"
+CONF_WEBHOOK_URL = "webhook_url"
 
-AUTH_CALLBACK_PATH = "/api/withings/authorize"
-AUTH_CALLBACK_NAME = "withings:authorize"
 
-THROTTLE_INTERVAL = 60
+class Measurement(Enum):
+    """Measurement supported by the withings integration."""
 
-STATE_UNKNOWN = const.STATE_UNKNOWN
-STATE_AWAKE = "awake"
-STATE_DEEP = "deep"
-STATE_LIGHT = "light"
-STATE_REM = "rem"
+    BODY_TEMP_C = "body_temperature_c"
+    BONE_MASS_KG = "bone_mass_kg"
+    DIASTOLIC_MMHG = "diastolic_blood_pressure_mmhg"
+    FAT_FREE_MASS_KG = "fat_free_mass_kg"
+    FAT_MASS_KG = "fat_mass_kg"
+    FAT_RATIO_PCT = "fat_ratio_pct"
+    HEART_PULSE_BPM = "heart_pulse_bpm"
+    HEIGHT_M = "height_m"
+    HYDRATION = "hydration"
+    IN_BED = "in_bed"
+    MUSCLE_MASS_KG = "muscle_mass_kg"
+    PWV = "pulse_wave_velocity"
+    SKIN_TEMP_C = "skin_temperature_c"
+    SLEEP_BREATHING_DISTURBANCES_INTENSITY = "sleep_breathing_disturbances_intensity"
+    SLEEP_DEEP_DURATION_SECONDS = "sleep_deep_duration_seconds"
+    SLEEP_HEART_RATE_AVERAGE = "sleep_heart_rate_average_bpm"
+    SLEEP_HEART_RATE_MAX = "sleep_heart_rate_max_bpm"
+    SLEEP_HEART_RATE_MIN = "sleep_heart_rate_min_bpm"
+    SLEEP_LIGHT_DURATION_SECONDS = "sleep_light_duration_seconds"
+    SLEEP_REM_DURATION_SECONDS = "sleep_rem_duration_seconds"
+    SLEEP_RESPIRATORY_RATE_AVERAGE = "sleep_respiratory_average_bpm"
+    SLEEP_RESPIRATORY_RATE_MAX = "sleep_respiratory_max_bpm"
+    SLEEP_RESPIRATORY_RATE_MIN = "sleep_respiratory_min_bpm"
+    SLEEP_SCORE = "sleep_score"
+    SLEEP_SNORING = "sleep_snoring"
+    SLEEP_SNORING_EPISODE_COUNT = "sleep_snoring_eposode_count"
+    SLEEP_TOSLEEP_DURATION_SECONDS = "sleep_tosleep_duration_seconds"
+    SLEEP_TOWAKEUP_DURATION_SECONDS = "sleep_towakeup_duration_seconds"
+    SLEEP_WAKEUP_COUNT = "sleep_wakeup_count"
+    SLEEP_WAKEUP_DURATION_SECONDS = "sleep_wakeup_duration_seconds"
+    SPO2_PCT = "spo2_pct"
+    SYSTOLIC_MMGH = "systolic_blood_pressure_mmhg"
+    TEMP_C = "temperature_c"
+    WEIGHT_KG = "weight_kg"
 
-MEASURE_TYPE_BODY_TEMP = 71
-MEASURE_TYPE_BONE_MASS = 88
-MEASURE_TYPE_DIASTOLIC_BP = 9
-MEASURE_TYPE_FAT_MASS = 8
-MEASURE_TYPE_FAT_MASS_FREE = 5
-MEASURE_TYPE_FAT_RATIO = 6
-MEASURE_TYPE_HEART_PULSE = 11
-MEASURE_TYPE_HEIGHT = 4
-MEASURE_TYPE_HYDRATION = 77
-MEASURE_TYPE_MUSCLE_MASS = 76
-MEASURE_TYPE_PWV = 91
-MEASURE_TYPE_SKIN_TEMP = 73
-MEASURE_TYPE_SLEEP_DEEP_DURATION = "deepsleepduration"
-MEASURE_TYPE_SLEEP_HEART_RATE_AVERAGE = "hr_average"
-MEASURE_TYPE_SLEEP_HEART_RATE_MAX = "hr_max"
-MEASURE_TYPE_SLEEP_HEART_RATE_MIN = "hr_min"
-MEASURE_TYPE_SLEEP_LIGHT_DURATION = "lightsleepduration"
-MEASURE_TYPE_SLEEP_REM_DURATION = "remsleepduration"
-MEASURE_TYPE_SLEEP_RESPIRATORY_RATE_AVERAGE = "rr_average"
-MEASURE_TYPE_SLEEP_RESPIRATORY_RATE_MAX = "rr_max"
-MEASURE_TYPE_SLEEP_RESPIRATORY_RATE_MIN = "rr_min"
-MEASURE_TYPE_SLEEP_STATE_AWAKE = 0
-MEASURE_TYPE_SLEEP_STATE_DEEP = 2
-MEASURE_TYPE_SLEEP_STATE_LIGHT = 1
-MEASURE_TYPE_SLEEP_STATE_REM = 3
-MEASURE_TYPE_SLEEP_TOSLEEP_DURATION = "durationtosleep"
-MEASURE_TYPE_SLEEP_TOWAKEUP_DURATION = "durationtowakeup"
-MEASURE_TYPE_SLEEP_WAKEUP_DURATION = "wakeupduration"
-MEASURE_TYPE_SLEEP_WAKUP_COUNT = "wakeupcount"
-MEASURE_TYPE_SPO2 = 54
-MEASURE_TYPE_SYSTOLIC_BP = 10
-MEASURE_TYPE_TEMP = 12
-MEASURE_TYPE_WEIGHT = 1
 
-MEAS_BODY_TEMP_C = "body_temperature_c"
-MEAS_BONE_MASS_KG = "bone_mass_kg"
-MEAS_DIASTOLIC_MMHG = "diastolic_blood_pressure_mmhg"
-MEAS_FAT_FREE_MASS_KG = "fat_free_mass_kg"
-MEAS_FAT_MASS_KG = "fat_mass_kg"
-MEAS_FAT_RATIO_PCT = "fat_ratio_pct"
-MEAS_HEART_PULSE_BPM = "heart_pulse_bpm"
-MEAS_HEIGHT_M = "height_m"
-MEAS_HYDRATION = "hydration"
-MEAS_MUSCLE_MASS_KG = "muscle_mass_kg"
-MEAS_PWV = "pulse_wave_velocity"
-MEAS_SKIN_TEMP_C = "skin_temperature_c"
-MEAS_SLEEP_DEEP_DURATION_SECONDS = "sleep_deep_duration_seconds"
-MEAS_SLEEP_HEART_RATE_AVERAGE = "sleep_heart_rate_average_bpm"
-MEAS_SLEEP_HEART_RATE_MAX = "sleep_heart_rate_max_bpm"
-MEAS_SLEEP_HEART_RATE_MIN = "sleep_heart_rate_min_bpm"
-MEAS_SLEEP_LIGHT_DURATION_SECONDS = "sleep_light_duration_seconds"
-MEAS_SLEEP_REM_DURATION_SECONDS = "sleep_rem_duration_seconds"
-MEAS_SLEEP_RESPIRATORY_RATE_AVERAGE = "sleep_respiratory_average_bpm"
-MEAS_SLEEP_RESPIRATORY_RATE_MAX = "sleep_respiratory_max_bpm"
-MEAS_SLEEP_RESPIRATORY_RATE_MIN = "sleep_respiratory_min_bpm"
-MEAS_SLEEP_STATE = "sleep_state"
-MEAS_SLEEP_TOSLEEP_DURATION_SECONDS = "sleep_tosleep_duration_seconds"
-MEAS_SLEEP_TOWAKEUP_DURATION_SECONDS = "sleep_towakeup_duration_seconds"
-MEAS_SLEEP_WAKEUP_COUNT = "sleep_wakeup_count"
-MEAS_SLEEP_WAKEUP_DURATION_SECONDS = "sleep_wakeup_duration_seconds"
-MEAS_SPO2_PCT = "spo2_pct"
-MEAS_SYSTOLIC_MMGH = "systolic_blood_pressure_mmhg"
-MEAS_TEMP_C = "temperature_c"
-MEAS_WEIGHT_KG = "weight_kg"
-
+SCORE_POINTS = "points"
 UOM_BEATS_PER_MINUTE = "bpm"
-UOM_BREATHS_PER_MINUTE = "br/m"
+UOM_BREATHS_PER_MINUTE = f"br/{const.TIME_MINUTES}"
 UOM_FREQUENCY = "times"
-UOM_METERS_PER_SECOND = "m/s"
 UOM_MMHG = "mmhg"
-UOM_PERCENT = "%"
 UOM_LENGTH_M = const.LENGTH_METERS
-UOM_MASS_KG = const.MASS_KILOGRAMS
-UOM_SECONDS = "seconds"
 UOM_TEMP_C = const.TEMP_CELSIUS

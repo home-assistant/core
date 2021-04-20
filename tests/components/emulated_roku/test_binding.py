@@ -1,20 +1,18 @@
 """Tests for emulated_roku library bindings."""
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from homeassistant.components.emulated_roku.binding import (
-    EmulatedRoku,
-    EVENT_ROKU_COMMAND,
-    ATTR_SOURCE_NAME,
+    ATTR_APP_ID,
     ATTR_COMMAND_TYPE,
     ATTR_KEY,
-    ATTR_APP_ID,
-    ROKU_COMMAND_KEYPRESS,
+    ATTR_SOURCE_NAME,
+    EVENT_ROKU_COMMAND,
     ROKU_COMMAND_KEYDOWN,
+    ROKU_COMMAND_KEYPRESS,
     ROKU_COMMAND_KEYUP,
     ROKU_COMMAND_LAUNCH,
+    EmulatedRoku,
 )
-
-from tests.common import mock_coro_func
 
 
 async def test_events_fired_properly(hass):
@@ -39,12 +37,14 @@ async def test_events_fired_properly(hass):
         nonlocal roku_event_handler
         roku_event_handler = handler
 
-        return Mock(start=mock_coro_func(), close=mock_coro_func())
+        return Mock(start=AsyncMock(), close=AsyncMock())
 
     def listener(event):
         events.append(event)
 
-    with patch("emulated_roku.EmulatedRokuServer", instantiate):
+    with patch(
+        "homeassistant.components.emulated_roku.binding.EmulatedRokuServer", instantiate
+    ):
         hass.bus.async_listen(EVENT_ROKU_COMMAND, listener)
 
         assert await binding.setup() is True

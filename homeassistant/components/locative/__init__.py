@@ -1,22 +1,23 @@
 """Support for Locative."""
+from __future__ import annotations
+
 import logging
-from typing import Dict
 
-import voluptuous as vol
 from aiohttp import web
+import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 from homeassistant.const import (
-    HTTP_UNPROCESSABLE_ENTITY,
+    ATTR_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
-    STATE_NOT_HOME,
     CONF_WEBHOOK_ID,
-    ATTR_ID,
     HTTP_OK,
+    HTTP_UNPROCESSABLE_ENTITY,
+    STATE_NOT_HOME,
 )
 from homeassistant.helpers import config_entry_flow
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,7 +35,7 @@ def _id(value: str) -> str:
     return value.replace("-", "")
 
 
-def _validate_test_mode(obj: Dict) -> Dict:
+def _validate_test_mode(obj: dict) -> dict:
     """Validate that id is provided outside of test mode."""
     if ATTR_ID not in obj and obj[ATTR_TRIGGER] != "test":
         raise vol.Invalid("Location id not specified")
@@ -93,9 +94,7 @@ async def handle_webhook(hass, webhook_id, request):
         # before the previous zone was exited. The enter message will
         # be sent first, then the exit message will be sent second.
         return web.Response(
-            text="Ignoring exit from {} (already in {})".format(
-                location_name, current_state
-            ),
+            text=f"Ignoring exit from {location_name} (already in {current_state})",
             status=HTTP_OK,
         )
 
@@ -127,9 +126,7 @@ async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
     hass.data[DOMAIN]["unsub_device_tracker"].pop(entry.entry_id)()
-    await hass.config_entries.async_forward_entry_unload(entry, DEVICE_TRACKER)
-    return True
+    return await hass.config_entries.async_forward_entry_unload(entry, DEVICE_TRACKER)
 
 
-# pylint: disable=invalid-name
 async_remove_entry = config_entry_flow.webhook_async_remove_entry

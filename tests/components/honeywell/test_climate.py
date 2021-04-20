@@ -2,25 +2,23 @@
 import unittest
 from unittest import mock
 
-import voluptuous as vol
+import pytest
 import requests.exceptions
 import somecomfort
-import pytest
+import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_USERNAME,
-    CONF_PASSWORD,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-)
 from homeassistant.components.climate.const import (
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
     ATTR_HVAC_MODES,
 )
-
 import homeassistant.components.honeywell.climate as honeywell
-
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
 
 pytestmark = pytest.mark.skip("Need to be fixed!")
 
@@ -29,7 +27,7 @@ class TestHoneywell(unittest.TestCase):
     """A test class for Honeywell themostats."""
 
     @mock.patch("somecomfort.SomeComfort")
-    @mock.patch("homeassistant.components.honeywell." "climate.HoneywellUSThermostat")
+    @mock.patch("homeassistant.components.honeywell.climate.HoneywellUSThermostat")
     def test_setup_us(self, mock_ht, mock_sc):
         """Test for the US setup."""
         config = {
@@ -100,7 +98,7 @@ class TestHoneywell(unittest.TestCase):
         assert not add_entities.called
 
     @mock.patch("somecomfort.SomeComfort")
-    @mock.patch("homeassistant.components.honeywell." "climate.HoneywellUSThermostat")
+    @mock.patch("homeassistant.components.honeywell.climate.HoneywellUSThermostat")
     def _test_us_filtered_devices(self, mock_ht, mock_sc, loc=None, dev=None):
         """Test for US filtered thermostats."""
         config = {
@@ -159,7 +157,7 @@ class TestHoneywell(unittest.TestCase):
         assert [mock.sentinel.loc2dev1] == devices
 
     @mock.patch("evohomeclient.EvohomeClient")
-    @mock.patch("homeassistant.components.honeywell.climate." "HoneywellUSThermostat")
+    @mock.patch("homeassistant.components.honeywell.climate.HoneywellUSThermostat")
     def test_eu_setup_full_config(self, mock_round, mock_evo):
         """Test the EU setup with complete configuration."""
         config = {
@@ -183,10 +181,10 @@ class TestHoneywell(unittest.TestCase):
                 mock.call(mock_evo.return_value, "bar", False, 20.0),
             ]
         )
-        assert 2 == add_entities.call_count
+        assert add_entities.call_count == 2
 
     @mock.patch("evohomeclient.EvohomeClient")
-    @mock.patch("homeassistant.components.honeywell.climate." "HoneywellUSThermostat")
+    @mock.patch("homeassistant.components.honeywell.climate.HoneywellUSThermostat")
     def test_eu_setup_partial_config(self, mock_round, mock_evo):
         """Test the EU setup with partial configuration."""
         config = {
@@ -208,7 +206,7 @@ class TestHoneywell(unittest.TestCase):
         )
 
     @mock.patch("evohomeclient.EvohomeClient")
-    @mock.patch("homeassistant.components.honeywell.climate." "HoneywellUSThermostat")
+    @mock.patch("homeassistant.components.honeywell.climate.HoneywellUSThermostat")
     def test_eu_setup_bad_temp(self, mock_round, mock_evo):
         """Test the EU setup with invalid temperature."""
         config = {
@@ -221,7 +219,7 @@ class TestHoneywell(unittest.TestCase):
             honeywell.PLATFORM_SCHEMA(config)
 
     @mock.patch("evohomeclient.EvohomeClient")
-    @mock.patch("homeassistant.components.honeywell.climate." "HoneywellUSThermostat")
+    @mock.patch("homeassistant.components.honeywell.climate.HoneywellUSThermostat")
     def test_eu_setup_error(self, mock_round, mock_evo):
         """Test the EU setup with errors."""
         config = {
@@ -271,15 +269,15 @@ class TestHoneywellRound(unittest.TestCase):
 
     def test_attributes(self):
         """Test the attributes."""
-        assert "House" == self.round1.name
-        assert TEMP_CELSIUS == self.round1.temperature_unit
-        assert 20 == self.round1.current_temperature
-        assert 21 == self.round1.target_temperature
+        assert self.round1.name == "House"
+        assert self.round1.temperature_unit == TEMP_CELSIUS
+        assert self.round1.current_temperature == 20
+        assert self.round1.target_temperature == 21
         assert not self.round1.is_away_mode_on
 
-        assert "Hot Water" == self.round2.name
-        assert TEMP_CELSIUS == self.round2.temperature_unit
-        assert 21 == self.round2.current_temperature
+        assert self.round2.name == "Hot Water"
+        assert self.round2.temperature_unit == TEMP_CELSIUS
+        assert self.round2.current_temperature == 21
         assert self.round2.target_temperature is None
         assert not self.round2.is_away_mode_on
 
@@ -306,12 +304,12 @@ class TestHoneywellRound(unittest.TestCase):
     def test_set_hvac_mode(self) -> None:
         """Test setting the system operation."""
         self.round1.set_hvac_mode("cool")
-        assert "cool" == self.round1.current_operation
-        assert "cool" == self.device.system_mode
+        assert self.round1.current_operation == "cool"
+        assert self.device.system_mode == "cool"
 
         self.round1.set_hvac_mode("heat")
-        assert "heat" == self.round1.current_operation
-        assert "heat" == self.device.system_mode
+        assert self.round1.current_operation == "heat"
+        assert self.device.system_mode == "heat"
 
 
 class TestHoneywellUS(unittest.TestCase):
@@ -344,40 +342,40 @@ class TestHoneywellUS(unittest.TestCase):
     def test_properties(self):
         """Test the properties."""
         assert self.honeywell.is_fan_on
-        assert "test" == self.honeywell.name
-        assert 72 == self.honeywell.current_temperature
+        assert self.honeywell.name == "test"
+        assert self.honeywell.current_temperature == 72
 
     def test_unit_of_measurement(self):
         """Test the unit of measurement."""
-        assert TEMP_FAHRENHEIT == self.honeywell.temperature_unit
+        assert self.honeywell.temperature_unit == TEMP_FAHRENHEIT
         self.device.temperature_unit = "C"
-        assert TEMP_CELSIUS == self.honeywell.temperature_unit
+        assert self.honeywell.temperature_unit == TEMP_CELSIUS
 
     def test_target_temp(self):
         """Test the target temperature."""
-        assert 65 == self.honeywell.target_temperature
+        assert self.honeywell.target_temperature == 65
         self.device.system_mode = "cool"
-        assert 78 == self.honeywell.target_temperature
+        assert self.honeywell.target_temperature == 78
 
     def test_set_temp(self):
         """Test setting the temperature."""
         self.honeywell.set_temperature(temperature=70)
-        assert 70 == self.device.setpoint_heat
-        assert 70 == self.honeywell.target_temperature
+        assert self.device.setpoint_heat == 70
+        assert self.honeywell.target_temperature == 70
 
         self.device.system_mode = "cool"
-        assert 78 == self.honeywell.target_temperature
+        assert self.honeywell.target_temperature == 78
         self.honeywell.set_temperature(temperature=74)
-        assert 74 == self.device.setpoint_cool
-        assert 74 == self.honeywell.target_temperature
+        assert self.device.setpoint_cool == 74
+        assert self.honeywell.target_temperature == 74
 
     def test_set_hvac_mode(self) -> None:
         """Test setting the operation mode."""
         self.honeywell.set_hvac_mode("cool")
-        assert "cool" == self.device.system_mode
+        assert self.device.system_mode == "cool"
 
         self.honeywell.set_hvac_mode("heat")
-        assert "heat" == self.device.system_mode
+        assert self.device.system_mode == "heat"
 
     def test_set_temp_fail(self):
         """Test if setting the temperature fails."""
@@ -394,10 +392,10 @@ class TestHoneywellUS(unittest.TestCase):
             ATTR_FAN_MODES: somecomfort.FAN_MODES,
             ATTR_HVAC_MODES: somecomfort.SYSTEM_MODES,
         }
-        assert expected == self.honeywell.device_state_attributes
+        assert expected == self.honeywell.extra_state_attributes
         expected["fan"] = "idle"
         self.device.fan_running = False
-        assert expected == self.honeywell.device_state_attributes
+        assert self.honeywell.extra_state_attributes == expected
 
     def test_with_no_fan(self):
         """Test if there is on fan."""
@@ -409,7 +407,7 @@ class TestHoneywellUS(unittest.TestCase):
             ATTR_FAN_MODES: somecomfort.FAN_MODES,
             ATTR_HVAC_MODES: somecomfort.SYSTEM_MODES,
         }
-        assert expected == self.honeywell.device_state_attributes
+        assert self.honeywell.extra_state_attributes == expected
 
     def test_heat_away_mode(self):
         """Test setting the heat away mode."""

@@ -1,16 +1,17 @@
 """Support for Telldus Live."""
 import asyncio
-import logging
 from functools import partial
+import logging
 
+from tellduslive import DIM, TURNON, UP, Session
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant import config_entries
 from homeassistant.const import CONF_SCAN_INTERVAL
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
-from . import config_flow  # noqa  pylint_disable=unused-import
+
 from .const import (
     CONF_HOST,
     DOMAIN,
@@ -51,7 +52,6 @@ INTERVAL_TRACKER = f"{DOMAIN}_INTERVAL"
 
 async def async_setup_entry(hass, entry):
     """Create a tellduslive session."""
-    from tellduslive import Session
 
     conf = entry.data[KEY_SESSION]
 
@@ -80,7 +80,7 @@ async def async_setup_entry(hass, entry):
 async def async_new_client(hass, session, entry):
     """Add the hubs associated with the current client to device_registry."""
     interval = entry.data[KEY_SCAN_INTERVAL]
-    _LOGGER.debug("Update interval %s seconds.", interval)
+    _LOGGER.debug("Update interval %s seconds", interval)
     client = TelldusLiveClient(hass, entry, session, interval)
     hass.data[DOMAIN] = client
     dev_reg = await hass.helpers.device_registry.async_get_registry()
@@ -123,8 +123,8 @@ async def async_unload_entry(hass, config_entry):
     interval_tracker()
     await asyncio.wait(
         [
-            hass.config_entries.async_forward_entry_unload(config_entry, component)
-            for component in hass.data.pop(CONFIG_ENTRY_IS_SETUP)
+            hass.config_entries.async_forward_entry_unload(config_entry, platform)
+            for platform in hass.data.pop(CONFIG_ENTRY_IS_SETUP)
         ]
     )
     del hass.data[DOMAIN]
@@ -159,7 +159,6 @@ class TelldusLiveClient:
         """Find out what type of HA component to create."""
         if device.is_sensor:
             return "sensor"
-        from tellduslive import DIM, UP, TURNON
 
         if device.methods & DIM:
             return "light"

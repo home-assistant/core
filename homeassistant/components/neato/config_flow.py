@@ -1,112 +1,61 @@
-"""Config flow to configure Neato integration."""
+"""Config flow for Neato Botvac."""
+from __future__ import annotations
 
 import logging
 
-from pybotvac import Account, Neato, Vorwerk
-from pybotvac.exceptions import NeatoLoginException, NeatoRobotException
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_TOKEN
+from homeassistant.helpers import config_entry_oauth2_flow
 
-# pylint: disable=unused-import
-from .const import CONF_VENDOR, NEATO_DOMAIN, VALID_VENDORS
-
-DOCS_URL = "https://www.home-assistant.io/components/neato"
-DEFAULT_VENDOR = "neato"
-
-_LOGGER = logging.getLogger(__name__)
+from .const import NEATO_DOMAIN
 
 
-class NeatoConfigFlow(config_entries.ConfigFlow, domain=NEATO_DOMAIN):
-    """Neato integration config flow."""
+class OAuth2FlowHandler(
+    config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=NEATO_DOMAIN
+):
+    """Config flow to handle Neato Botvac OAuth2 authentication."""
 
-    VERSION = 1
+    DOMAIN = NEATO_DOMAIN
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
-    def __init__(self):
-        """Initialize flow."""
-        self._username = vol.UNDEFINED
-        self._password = vol.UNDEFINED
-        self._vendor = vol.UNDEFINED
+    @property
+    def logger(self) -> logging.Logger:
+        """Return logger."""
+        return logging.getLogger(__name__)
 
-    async def async_step_user(self, user_input=None):
-        """Handle a flow initialized by the user."""
-        errors = {}
-
-        if self._async_current_entries():
+    async def async_step_user(self, user_input: dict | None = None) -> dict:
+        """Create an entry for the flow."""
+        current_entries = self._async_current_entries()
+        if current_entries and CONF_TOKEN in current_entries[0].data:
+            # Already configured
             return self.async_abort(reason="already_configured")
 
-        if user_input is not None:
-            self._username = user_input["username"]
-            self._password = user_input["password"]
-            self._vendor = user_input["vendor"]
+        return await super().async_step_user(user_input=user_input)
 
-            error = await self.hass.async_add_executor_job(
-                self.try_login, self._username, self._password, self._vendor
+    async def async_step_reauth(self, data) -> dict:
+        """Perform reauth upon migration of old entries."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(self, user_input: dict | None = None) -> dict:
+        """Confirm reauth upon migration of old entries."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reauth_confirm", data_schema=vol.Schema({})
             )
-            if error:
-                errors["base"] = error
-            else:
-                return self.async_create_entry(
-                    title=user_input[CONF_USERNAME],
-                    data=user_input,
-                    description_placeholders={"docs_url": DOCS_URL},
-                )
+        return await self.async_step_user()
 
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_PASSWORD): str,
-                    vol.Optional(CONF_VENDOR, default="neato"): vol.In(VALID_VENDORS),
-                }
-            ),
-            description_placeholders={"docs_url": DOCS_URL},
-            errors=errors,
-        )
-
-    async def async_step_import(self, user_input):
-        """Import a config flow from configuration."""
-
-        if self._async_current_entries():
-            return self.async_abort(reason="already_configured")
-
-        username = user_input[CONF_USERNAME]
-        password = user_input[CONF_PASSWORD]
-        vendor = user_input[CONF_VENDOR]
-
-        error = await self.hass.async_add_executor_job(
-            self.try_login, username, password, vendor
-        )
-        if error is not None:
-            _LOGGER.error(error)
-            return self.async_abort(reason=error)
-
-        return self.async_create_entry(
-            title=f"{username} (from configuration)",
-            data={
-                CONF_USERNAME: username,
-                CONF_PASSWORD: password,
-                CONF_VENDOR: vendor,
-            },
-        )
-
-    @staticmethod
-    def try_login(username, password, vendor):
-        """Try logging in to device and return any errors."""
-        this_vendor = None
-        if vendor == "vorwerk":
-            this_vendor = Vorwerk()
-        else:  # Neato
-            this_vendor = Neato()
-
-        try:
-            Account(username, password, this_vendor)
-        except NeatoLoginException:
-            return "invalid_credentials"
-        except NeatoRobotException:
-            return "unexpected_error"
-
-        return None
+    async def async_oauth_create_entry(self, data: dict) -> dict:
+        """Create an entry for the flow. Update an entry if one already exist."""
+        current_entries = self._async_current_entries()
+        if current_entries and CONF_TOKEN not in current_entries[0].data:
+            # Update entry
+            self.hass.config_entries.async_update_entry(
+                current_entries[0], title=self.flow_impl.name, data=data
+            )
+            self.hass.async_create_task(
+                self.hass.config_entries.async_reload(current_entries[0].entry_id)
+            )
+            return self.async_abort(reason="reauth_successful")
+        return self.async_create_entry(title=self.flow_impl.name, data=data)

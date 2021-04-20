@@ -4,9 +4,8 @@ import xmlrpc.client
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_URL
-from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,7 +35,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class SupervisorProcessSensor(Entity):
+class SupervisorProcessSensor(SensorEntity):
     """Representation of a supervisor-monitored process."""
 
     def __init__(self, info, server):
@@ -61,7 +60,7 @@ class SupervisorProcessSensor(Entity):
         return self._available
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             ATTR_DESCRIPTION: self._info.get("description"),
@@ -71,7 +70,9 @@ class SupervisorProcessSensor(Entity):
     def update(self):
         """Update device state."""
         try:
-            self._info = self._server.supervisor.getProcessInfo(self._info.get("name"))
+            self._info = self._server.supervisor.getProcessInfo(
+                self._info.get("group") + ":" + self._info.get("name")
+            )
             self._available = True
         except ConnectionRefusedError:
             _LOGGER.warning("Supervisord not available")

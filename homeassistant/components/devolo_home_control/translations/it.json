@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'account \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "invalid_auth": "Autenticazione non valida"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "home_control_url": "URL di Home Control",
+                    "mydevolo_url": "URL di mydevolo",
+                    "password": "Password",
+                    "username": "E-mail / devolo ID"
+                }
+            }
+        }
+    }
+}

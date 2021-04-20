@@ -1,12 +1,13 @@
 """Support for displaying details about a Gitter.im chat room."""
 import logging
 
+from gitterpy.client import GitterClient
+from gitterpy.errors import GitterRoomError, GitterTokenError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_ROOM
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,7 +18,7 @@ ATTR_USERNAME = "username"
 DEFAULT_NAME = "Gitter messages"
 DEFAULT_ROOM = "home-assistant/home-assistant"
 
-ICON = "mdi:message-settings-variant"
+ICON = "mdi:message-cog"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -30,8 +31,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Gitter sensor."""
-    from gitterpy.client import GitterClient
-    from gitterpy.errors import GitterTokenError
 
     name = config.get(CONF_NAME)
     api_key = config.get(CONF_API_KEY)
@@ -47,7 +46,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([GitterSensor(gitter, room, name, username)], True)
 
 
-class GitterSensor(Entity):
+class GitterSensor(SensorEntity):
     """Representation of a Gitter sensor."""
 
     def __init__(self, data, room, name, username):
@@ -76,7 +75,7 @@ class GitterSensor(Entity):
         return self._unit_of_measurement
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             ATTR_USERNAME: self._username,
@@ -91,7 +90,6 @@ class GitterSensor(Entity):
 
     def update(self):
         """Get the latest data and updates the state."""
-        from gitterpy.errors import GitterRoomError
 
         try:
             data = self._data.user.unread_items(self._room)
@@ -99,7 +97,7 @@ class GitterSensor(Entity):
             _LOGGER.error(error)
             return
 
-        if "error" not in data.keys():
+        if "error" not in data:
             self._mention = len(data["mention"])
             self._state = len(data["chat"])
         else:

@@ -1,34 +1,39 @@
 """The tests for NEW_NAME device actions."""
 import pytest
 
+from homeassistant.components import automation
 from homeassistant.components.NEW_DOMAIN import DOMAIN
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.setup import async_setup_component
-import homeassistant.components.automation as automation
-from homeassistant.helpers import device_registry
 
 from tests.common import (
     MockConfigEntry,
     assert_lists_same,
+    async_get_device_automations,
     async_mock_service,
     mock_device_registry,
     mock_registry,
-    async_get_device_automations,
 )
 
 
 @pytest.fixture
-def device_reg(hass):
+def device_reg(hass: HomeAssistant) -> device_registry.DeviceRegistry:
     """Return an empty, loaded, registry."""
     return mock_device_registry(hass)
 
 
 @pytest.fixture
-def entity_reg(hass):
+def entity_reg(hass: HomeAssistant) -> entity_registry.EntityRegistry:
     """Return an empty, loaded, registry."""
     return mock_registry(hass)
 
 
-async def test_get_actions(hass, device_reg, entity_reg):
+async def test_get_actions(
+    hass: HomeAssistant,
+    device_reg: device_registry.DeviceRegistry,
+    entity_reg: entity_registry.EntityRegistry,
+) -> None:
     """Test we get the expected actions from a NEW_DOMAIN."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -55,7 +60,7 @@ async def test_get_actions(hass, device_reg, entity_reg):
     assert_lists_same(actions, expected_actions)
 
 
-async def test_action(hass):
+async def test_action(hass: HomeAssistant) -> None:
     """Test for turn_on and turn_off actions."""
     assert await async_setup_component(
         hass,

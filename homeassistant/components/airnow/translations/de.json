@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "invalid_location": "F\u00fcr diesen Standort wurden keine Ergebnisse gefunden",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-Schl\u00fcssel",
+                    "latitude": "Breitengrad",
+                    "longitude": "L\u00e4ngengrad"
+                },
+                "description": "Richten Sie die AirNow-Luftqualit\u00e4tsintegration ein. Um den API-Schl\u00fcssel zu generieren, besuchen Sie https://docs.airnowapi.org/account/request/.",
+                "title": "AirNow"
+            }
+        }
+    },
+    "title": "AirNow"
+}

@@ -1,0 +1,30 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "id_exists": "Az \u00e1tj\u00e1r\u00f3 azonos\u00edt\u00f3ja m\u00e1r l\u00e9tezik"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "device": "El\u00e9r\u00e9si \u00fat vagy URL",
+                    "id": "ID",
+                    "name": "N\u00e9v"
+                },
+                "title": "OpenTherm \u00e1tj\u00e1r\u00f3"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "floor_temperature": "Padl\u00f3 h\u0151m\u00e9rs\u00e9klete",
+                    "precision": "Pontoss\u00e1g",
+                    "temporary_override_mode": "Ideiglenes be\u00e1ll\u00edt\u00e1s fel\u00fclb\u00edr\u00e1l\u00e1si m\u00f3dja"
+                }
+            }
+        }
+    }
+}

@@ -1,10 +1,8 @@
 {
   "domain": "system_log",
-  "name": "System log",
+  "name": "System Log",
   "documentation": "https://www.home-assistant.io/integrations/system_log",
-  "requirements": [],
-  "dependencies": [
-    "http"
-  ],
-  "codeowners": []
+  "dependencies": ["http"],
+  "codeowners": [],
+  "quality_scale": "internal"
 }

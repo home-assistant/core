@@ -1,0 +1,59 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ONVIF ya est\u00e1 configurado.",
+            "already_in_progress": "El flujo de configuraci\u00f3n para el dispositivo ONVIF ya est\u00e1 en marcha.",
+            "no_h264": "No hab\u00eda transmisiones H264 disponibles. Verifique la configuraci\u00f3n del perfil en su dispositivo.",
+            "no_mac": "No se pudo configurar una identificaci\u00f3n \u00fanica para el dispositivo ONVIF.",
+            "onvif_error": "Error de configuraci\u00f3n del dispositivo ONVIF.  Revise los registros para m\u00e1s informaci\u00f3n."
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar"
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "password": "Contrase\u00f1a",
+                    "username": "Usuario"
+                },
+                "title": "Configurar la autenticaci\u00f3n"
+            },
+            "configure_profile": {
+                "data": {
+                    "include": "Crear la entidad de la c\u00e1mara"
+                },
+                "description": "\u00bfCrear la entidad de c\u00e1mara para {profile} a {resolution} de resoluci\u00f3n?",
+                "title": "Configurar los perfiles"
+            },
+            "device": {
+                "data": {
+                    "host": "Seleccione el dispositivo ONVIF descubierto"
+                },
+                "title": "Seleccione el dispositivo ONVIF"
+            },
+            "manual_input": {
+                "data": {
+                    "host": "Host",
+                    "name": "Nombre",
+                    "port": "Puerto"
+                },
+                "title": "Configurar el dispositivo ONVIF"
+            },
+            "user": {
+                "description": "Al hacer clic en Enviar, buscaremos en su red dispositivos ONVIF compatibles con el perfil S.\n\nAlgunos fabricantes han comenzado a desactivar ONVIF de forma predeterminada. Aseg\u00farese de que ONVIF est\u00e9 activado en la configuraci\u00f3n de la c\u00e1mara.",
+                "title": "Configuraci\u00f3n del dispositivo ONVIF"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "onvif_devices": {
+                "data": {
+                    "extra_arguments": "Argumentos extra de FFMPEG",
+                    "rtsp_transport": "Mecanismo de transporte RTSP"
+                },
+                "title": "Opciones del dispositivo ONVIF"
+            }
+        }
+    }
+}

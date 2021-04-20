@@ -1,20 +1,21 @@
 """Support for CO2 sensor connected to a serial port."""
-import logging
 from datetime import timedelta
+import logging
 
+from pmsensor import co2sensor
 import voluptuous as vol
 
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_TEMPERATURE,
-    CONF_NAME,
+    CONCENTRATION_PARTS_PER_MILLION,
     CONF_MONITORED_CONDITIONS,
+    CONF_NAME,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.util.temperature import celsius_to_fahrenheit
 from homeassistant.util import Throttle
+from homeassistant.util.temperature import celsius_to_fahrenheit
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +28,10 @@ ATTR_CO2_CONCENTRATION = "co2_concentration"
 
 SENSOR_TEMPERATURE = "temperature"
 SENSOR_CO2 = "co2"
-SENSOR_TYPES = {SENSOR_TEMPERATURE: ["Temperature", None], SENSOR_CO2: ["CO2", "ppm"]}
+SENSOR_TYPES = {
+    SENSOR_TEMPERATURE: ["Temperature", None],
+    SENSOR_CO2: ["CO2", CONCENTRATION_PARTS_PER_MILLION],
+}
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -41,7 +45,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available CO2 sensors."""
-    from pmsensor import co2sensor
 
     try:
         co2sensor.read_mh_z19(config.get(CONF_SERIAL_DEVICE))
@@ -65,7 +68,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     return True
 
 
-class MHZ19Sensor(Entity):
+class MHZ19Sensor(SensorEntity):
     """Representation of an CO2 sensor."""
 
     def __init__(self, mhz_client, sensor_type, temp_unit, name):
@@ -81,7 +84,7 @@ class MHZ19Sensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{}: {}".format(self._name, SENSOR_TYPES[self._sensor_type][0])
+        return f"{self._name}: {SENSOR_TYPES[self._sensor_type][0]}"
 
     @property
     def state(self):
@@ -103,7 +106,7 @@ class MHZ19Sensor(Entity):
         self._ppm = data.get(SENSOR_CO2)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         result = {}
         if self._sensor_type == SENSOR_TEMPERATURE and self._ppm is not None:
@@ -116,11 +119,11 @@ class MHZ19Sensor(Entity):
 class MHZClient:
     """Get the latest data from the MH-Z sensor."""
 
-    def __init__(self, co2sensor, serial):
+    def __init__(self, co2sens, serial):
         """Initialize the sensor."""
-        self.co2sensor = co2sensor
+        self.co2sensor = co2sens
         self._serial = serial
-        self.data = dict()
+        self.data = {}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):

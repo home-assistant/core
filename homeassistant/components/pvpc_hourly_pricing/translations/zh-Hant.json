@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u670d\u52d9\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "\u50b3\u611f\u5668\u540d\u7a31",
+                    "tariff": "\u5408\u7d04\u8cbb\u7387\uff081\u30012 \u6216 3 \u9031\u671f\uff09"
+                },
+                "description": "\u6b64\u50b3\u611f\u5668\u4f7f\u7528\u4e86\u975e\u5b98\u65b9 API \u4ee5\u53d6\u5f97\u897f\u73ed\u7259 [\u8a08\u6642\u96fb\u50f9\uff08PVPC\uff09](https://www.esios.ree.es/es/pvpc)\u3002\n\u95dc\u65bc\u66f4\u8a73\u7d30\u7684\u8aaa\u660e\uff0c\u8acb\u53c3\u95b1 [\u6574\u5408\u6587\u4ef6](https://www.home-assistant.io/integrations/pvpc_hourly_pricing/)\u3002\n\n\u57fa\u65bc\u6bcf\u5929\u7684\u5e33\u55ae\u9031\u671f\u9078\u64c7\u5408\u7d04\u8cbb\u7387\uff1a\n- 1 \u9031\u671f\uff1a\u4e00\u822c\n- 2 \u9031\u671f\uff1a\u5dee\u5225\u8cbb\u7387\uff08\u591c\u9593\u8cbb\u7387\uff09\n- 3 \u9031\u671f\uff1a\u96fb\u52d5\u8eca\uff08\u591c\u9593\u8cbb\u7387 3 \u9031\u671f\uff09",
+                "title": "\u8cbb\u7387\u9078\u64c7"
+            }
+        }
+    }
+}

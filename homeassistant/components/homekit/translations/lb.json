@@ -1,0 +1,60 @@
+{
+    "config": {
+        "abort": {
+            "port_name_in_use": "Een Accessoire oder eng Bridge mat d\u00ebsem Numm oder Port ass sch konfigur\u00e9iert."
+        },
+        "step": {
+            "pairing": {
+                "description": "Soubaal {name} bridge prett ass, ass Kopplung disponibel an den 'Notifikatioune' als \"HomeKit Bridge Setup\".",
+                "title": "Pair Homekit"
+            },
+            "user": {
+                "data": {
+                    "auto_start": "Autostart (d\u00e9aktiv\u00e9ier falls Z-Wave oder een aanere verz\u00f6gerte Start System benotzt g\u00ebtt)",
+                    "include_domains": "Domaine d\u00e9i solle abegraff ginn."
+                },
+                "description": "HomeKit Integratioun erlaabt et Home Assistant Entit\u00e9iten am HomeKit z'acc\u00e9d\u00e9ieren. HomeKit Bridges sinn op 150 Accessoire limit\u00e9iert, mat der Bridge selwer. Falls d'Bridge m\u00e9i w\u00e9i d\u00e9i max. Unzuel vun Accessoire soll \u00ebnnerst\u00ebtzen ass et recommand\u00e9iert verschidden HomeKit Bridges fir verschidden Domaine anzesetzen. Eng detaill\u00e9iert Konfiguratioun ass n\u00ebmme via YAML fir d\u00e9i prim\u00e4r Bridge verf\u00fcgbar.",
+                "title": "HomeKit aktiv\u00e9ieren"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "advanced": {
+                "data": {
+                    "auto_start": "Autostart (d\u00e9aktiv\u00e9ier falls Z-Wave oder een aanere verz\u00f6gerte Start System benotzt g\u00ebtt)",
+                    "safe_mode": "Safe Mode (n\u00ebmmen aktiv\u00e9ieren wann Kopplung net geht)"
+                },
+                "description": "D\u00ebs Astellungen brauche n\u00ebmmen ajust\u00e9iert ze ginn falls HomeKit net funktion\u00e9iert.",
+                "title": "Erweidert Konfiguratioun"
+            },
+            "cameras": {
+                "data": {
+                    "camera_copy": "Kamera mat nativer H.264 Stream \u00cbnnerst\u00ebtzung"
+                },
+                "description": "Iwwerpr\u00e9if all Kamera op nativ H.264 \u00cbnnerst\u00ebtzung. Falls d'Kamera keng H.264 Stream Ausgab huet, transkod\u00e9iert de System de Video op H.264 fir Homekit. Transkod\u00e9iere ben\u00e9idegt eng performant CPU an w\u00e4ert net anst\u00e4nneg op Single Board Computer funktion\u00e9ieren.",
+                "title": "Kamera Video Codec auswielen."
+            },
+            "include_exclude": {
+                "data": {
+                    "entities": "Entit\u00e9iten",
+                    "mode": "Modus"
+                },
+                "description": "Entit\u00e9iten auswielen d\u00e9i expos\u00e9iert solle ginn. Am Acessoire Modus g\u00ebtt n\u00ebmmen eng eenzeg Entit\u00e9it expos\u00e9iert. Am Bridge include Modus, ginn all Entit\u00e9iten vum Domaine expos\u00e9iert ausser spezifesch ausgewielten Entit\u00e9iten. Am Bride Exclude Modus, ginn all Entit\u00e9ite vum Domaine expos\u00e9iert ausser d\u00e9i ausgeschlossen Entit\u00e9iten.",
+                "title": "Entit\u00e9iten auswielen d\u00e9i expos\u00e9iert solle ginn"
+            },
+            "init": {
+                "data": {
+                    "include_domains": "Domaine d\u00e9i solle ageschloss ginn",
+                    "mode": "Modus"
+                },
+                "description": "HomeKit kann entweder als Bridge oder Single Accessoire konfigur\u00e9iert ginn. Am Acessoire Modus ka n\u00ebmmen eng eenzeg Entit\u00e9it benotzt ginn. D\u00ebse Modus ass n\u00e9ideg fir de korretke Betrib vu Medie Spiller vun der TV Klasse. Entit\u00e9ite an der \"Domaine fir z'expos\u00e9ieren\" ginn mat HomeKit expos\u00e9iert. Du kanns am n\u00e4chste Schr\u00ebtt auswielen w\u00e9ieng Entit\u00e9ite aus oder ageschloss solle ginn.",
+                "title": "Domaine auswielen fir z'expos\u00e9ieren"
+            },
+            "yaml": {
+                "description": "D\u00ebs Entr\u00e9e ass via YAML kontroll\u00e9iert",
+                "title": "HomeKit Optioune ajust\u00e9ieren"
+            }
+        }
+    }
+}

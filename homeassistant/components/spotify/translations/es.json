@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Tiempo de espera agotado generando la url de autorizaci\u00f3n.",
+            "missing_configuration": "La integraci\u00f3n de Spotify no est\u00e1 configurada. Por favor, siga la documentaci\u00f3n.",
+            "no_url_available": "No hay URL disponible. Para obtener informaci\u00f3n sobre este error, [consulta la secci\u00f3n de ayuda]({docs_url})",
+            "reauth_account_mismatch": "La cuenta de Spotify con la que est\u00e1s autenticado, no coincide con la cuenta necesaria para re-autenticaci\u00f3n."
+        },
+        "create_entry": {
+            "default": "Autentificado con \u00e9xito con Spotify."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Selecciona el m\u00e9todo de autenticaci\u00f3n"
+            },
+            "reauth_confirm": {
+                "description": "La integraci\u00f3n de Spotify necesita volver a autenticarse con Spotify para la cuenta: {account}",
+                "title": "Volver a autenticar con Spotify"
+            }
+        }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "Se puede acceder al punto de conexi\u00f3n de la API de Spotify"
+        }
+    }
+}

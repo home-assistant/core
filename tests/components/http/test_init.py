@@ -1,12 +1,39 @@
 """The tests for the Home Assistant HTTP component."""
+from ipaddress import ip_network
 import logging
-import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
-from homeassistant.setup import async_setup_component
+import pytest
 
 import homeassistant.components.http as http
-from homeassistant.util.ssl import server_context_modern, server_context_intermediate
+from homeassistant.setup import async_setup_component
+from homeassistant.util.ssl import server_context_intermediate, server_context_modern
+
+
+@pytest.fixture
+def mock_stack():
+    """Mock extract stack."""
+    with patch(
+        "homeassistant.components.http.extract_stack",
+        return_value=[
+            Mock(
+                filename="/home/paulus/core/homeassistant/core.py",
+                lineno="23",
+                line="do_something()",
+            ),
+            Mock(
+                filename="/home/paulus/core/homeassistant/components/hue/light.py",
+                lineno="23",
+                line="self.light.is_on",
+            ),
+            Mock(
+                filename="/home/paulus/core/homeassistant/components/http/__init__.py",
+                lineno="157",
+                line="base_url",
+            ),
+        ],
+    ):
+        yield
 
 
 class TestView(http.HomeAssistantView):
@@ -31,98 +58,6 @@ async def test_registering_view_while_running(
     await hass.async_start()
     # This raises a RuntimeError if app is frozen
     hass.http.register_view(TestView)
-
-
-class TestApiConfig(unittest.TestCase):
-    """Test API configuration methods."""
-
-    def test_api_base_url_with_domain(hass):
-        """Test setting API URL with domain."""
-        api_config = http.ApiConfig("example.com")
-        assert api_config.base_url == "http://example.com:8123"
-
-    def test_api_base_url_with_ip(hass):
-        """Test setting API URL with IP."""
-        api_config = http.ApiConfig("1.1.1.1")
-        assert api_config.base_url == "http://1.1.1.1:8123"
-
-    def test_api_base_url_with_ip_and_port(hass):
-        """Test setting API URL with IP and port."""
-        api_config = http.ApiConfig("1.1.1.1", 8124)
-        assert api_config.base_url == "http://1.1.1.1:8124"
-
-    def test_api_base_url_with_protocol(hass):
-        """Test setting API URL with protocol."""
-        api_config = http.ApiConfig("https://example.com")
-        assert api_config.base_url == "https://example.com:8123"
-
-    def test_api_base_url_with_protocol_and_port(hass):
-        """Test setting API URL with protocol and port."""
-        api_config = http.ApiConfig("https://example.com", 433)
-        assert api_config.base_url == "https://example.com:433"
-
-    def test_api_base_url_with_ssl_enable(hass):
-        """Test setting API URL with use_ssl enabled."""
-        api_config = http.ApiConfig("example.com", use_ssl=True)
-        assert api_config.base_url == "https://example.com:8123"
-
-    def test_api_base_url_with_ssl_enable_and_port(hass):
-        """Test setting API URL with use_ssl enabled and port."""
-        api_config = http.ApiConfig("1.1.1.1", use_ssl=True, port=8888)
-        assert api_config.base_url == "https://1.1.1.1:8888"
-
-    def test_api_base_url_with_protocol_and_ssl_enable(hass):
-        """Test setting API URL with specific protocol and use_ssl enabled."""
-        api_config = http.ApiConfig("http://example.com", use_ssl=True)
-        assert api_config.base_url == "http://example.com:8123"
-
-    def test_api_base_url_removes_trailing_slash(hass):
-        """Test a trialing slash is removed when setting the API URL."""
-        api_config = http.ApiConfig("http://example.com/")
-        assert api_config.base_url == "http://example.com:8123"
-
-
-async def test_api_base_url_with_domain(hass):
-    """Test setting API URL."""
-    result = await async_setup_component(
-        hass, "http", {"http": {"base_url": "example.com"}}
-    )
-    assert result
-    assert hass.config.api.base_url == "http://example.com"
-
-
-async def test_api_base_url_with_ip(hass):
-    """Test setting api url."""
-    result = await async_setup_component(
-        hass, "http", {"http": {"server_host": "1.1.1.1"}}
-    )
-    assert result
-    assert hass.config.api.base_url == "http://1.1.1.1:8123"
-
-
-async def test_api_base_url_with_ip_port(hass):
-    """Test setting api url."""
-    result = await async_setup_component(
-        hass, "http", {"http": {"base_url": "1.1.1.1:8124"}}
-    )
-    assert result
-    assert hass.config.api.base_url == "http://1.1.1.1:8124"
-
-
-async def test_api_no_base_url(hass):
-    """Test setting api url."""
-    result = await async_setup_component(hass, "http", {"http": {}})
-    assert result
-    assert hass.config.api.base_url == "http://127.0.0.1:8123"
-
-
-async def test_api_base_url_removes_trailing_slash(hass):
-    """Test setting api url."""
-    result = await async_setup_component(
-        hass, "http", {"http": {"base_url": "https://example.com/"}}
-    )
-    assert result
-    assert hass.config.api.base_url == "https://example.com"
 
 
 async def test_not_log_password(hass, aiohttp_client, caplog, legacy_auth):
@@ -241,3 +176,20 @@ async def test_cors_defaults(hass):
 
     assert len(mock_setup.mock_calls) == 1
     assert mock_setup.mock_calls[0][1][1] == ["https://cast.home-assistant.io"]
+
+
+async def test_storing_config(hass, aiohttp_client, aiohttp_unused_port):
+    """Test that we store last working config."""
+    config = {
+        http.CONF_SERVER_PORT: aiohttp_unused_port(),
+        "use_x_forwarded_for": True,
+        "trusted_proxies": ["192.168.1.100"],
+    }
+
+    assert await async_setup_component(hass, http.DOMAIN, {http.DOMAIN: config})
+
+    await hass.async_start()
+    restored = await hass.components.http.async_get_last_config()
+    restored["trusted_proxies"][0] = ip_network(restored["trusted_proxies"][0])
+
+    assert restored == http.HTTP_SCHEMA(config)

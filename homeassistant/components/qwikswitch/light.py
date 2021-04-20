@@ -1,5 +1,5 @@
 """Support for Qwikswitch Relays and Dimmers."""
-from homeassistant.components.light import SUPPORT_BRIGHTNESS, Light
+from homeassistant.components.light import SUPPORT_BRIGHTNESS, LightEntity
 
 from . import DOMAIN as QWIKSWITCH, QSToggleEntity
 
@@ -14,7 +14,7 @@ async def async_setup_platform(hass, _, add_entities, discovery_info=None):
     add_entities(devs)
 
 
-class QSLight(QSToggleEntity, Light):
+class QSLight(QSToggleEntity, LightEntity):
     """Light based on a Qwikswitch relay/dimmer module."""
 
     @property

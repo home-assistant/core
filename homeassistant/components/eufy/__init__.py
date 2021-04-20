@@ -1,7 +1,5 @@
 """Support for Eufy devices."""
-import logging
 import lakeside
-
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -15,8 +13,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "eufy"
 

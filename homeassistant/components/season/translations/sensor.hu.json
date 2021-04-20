@@ -1,0 +1,16 @@
+{
+    "state": {
+        "season__season": {
+            "autumn": "\u0150sz",
+            "spring": "Tavasz",
+            "summer": "Ny\u00e1r",
+            "winter": "T\u00e9l"
+        },
+        "season__season__": {
+            "autumn": "\u0150sz",
+            "spring": "Tavasz",
+            "summer": "Ny\u00e1r",
+            "winter": "T\u00e9l"
+        }
+    }
+}

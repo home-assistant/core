@@ -1,0 +1,11 @@
+{
+  "domain": "elgato",
+  "name": "Elgato Key Light",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/elgato",
+  "requirements": ["elgato==2.0.1"],
+  "zeroconf": ["_elg._tcp.local."],
+  "codeowners": ["@frenck"],
+  "quality_scale": "platinum",
+  "iot_class": "local_polling"
+}

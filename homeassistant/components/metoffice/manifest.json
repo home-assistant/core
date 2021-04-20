@@ -1,10 +1,9 @@
 {
   "domain": "metoffice",
-  "name": "Metoffice",
+  "name": "Met Office",
   "documentation": "https://www.home-assistant.io/integrations/metoffice",
-  "requirements": [
-    "datapoint==0.4.3"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "requirements": ["datapoint==0.9.5"],
+  "codeowners": ["@MrHarcombe"],
+  "config_flow": true,
+  "iot_class": "cloud_polling"
 }

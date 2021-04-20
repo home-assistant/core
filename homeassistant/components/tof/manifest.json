@@ -1,12 +1,9 @@
 {
   "domain": "tof",
-  "name": "Tof",
+  "name": "Time of Flight",
   "documentation": "https://www.home-assistant.io/integrations/tof",
-  "requirements": [
-    "VL53L1X2==0.1.5"
-  ],
-  "dependencies": [
-    "rpi_gpio"
-  ],
-  "codeowners": []
+  "requirements": ["VL53L1X2==0.1.5"],
+  "dependencies": ["rpi_gpio"],
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

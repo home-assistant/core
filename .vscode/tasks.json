@@ -33,7 +33,7 @@
     {
       "label": "Flake8",
       "type": "shell",
-      "command": "flake8 homeassistant tests",
+      "command": "pre-commit run flake8 --all-files",
       "group": {
         "kind": "test",
         "isDefault": true
@@ -76,7 +76,7 @@
     {
       "label": "Install all Requirements",
       "type": "shell",
-      "command": "pip3 install -r requirements_all.txt -c homeassistant/package_constraints.txt",
+      "command": "pip3 install -r requirements_all.txt",
       "group": {
         "kind": "build",
         "isDefault": true
@@ -90,7 +90,7 @@
     {
       "label": "Install all Test Requirements",
       "type": "shell",
-      "command": "pip3 install -r requirements_test_all.txt -c homeassistant/package_constraints.txt",
+      "command": "pip3 install -r requirements_test_all.txt",
       "group": {
         "kind": "build",
         "isDefault": true

@@ -1,15 +1,14 @@
 """Tests for the sigfox sensor."""
 import re
+
 import requests_mock
-import unittest
 
 from homeassistant.components.sigfox.sensor import (
     API_URL,
     CONF_API_LOGIN,
     CONF_API_PASSWORD,
 )
-from homeassistant.setup import setup_component
-from tests.common import get_test_home_assistant
+from homeassistant.setup import async_setup_component
 
 TEST_API_LOGIN = "foo"
 TEST_API_PASSWORD = "ebcd1234"
@@ -31,40 +30,32 @@ VALID_MESSAGE = """
 """
 
 
-class TestSigfoxSensor(unittest.TestCase):
-    """Test the sigfox platform."""
+async def test_invalid_credentials(hass):
+    """Test for invalid credentials."""
+    with requests_mock.Mocker() as mock_req:
+        url = re.compile(API_URL + "devicetypes")
+        mock_req.get(url, text="{}", status_code=401)
+        assert await async_setup_component(hass, "sensor", VALID_CONFIG)
+        await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids()) == 0
 
-    def setUp(self):
-        """Initialize values for this testcase class."""
-        self.hass = get_test_home_assistant()
 
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+async def test_valid_credentials(hass):
+    """Test for valid credentials."""
+    with requests_mock.Mocker() as mock_req:
+        url1 = re.compile(API_URL + "devicetypes")
+        mock_req.get(url1, text='{"data":[{"id":"fake_type"}]}', status_code=200)
 
-    def test_invalid_credentials(self):
-        """Test for invalid credentials."""
-        with requests_mock.Mocker() as mock_req:
-            url = re.compile(API_URL + "devicetypes")
-            mock_req.get(url, text="{}", status_code=401)
-            assert setup_component(self.hass, "sensor", VALID_CONFIG)
-        assert len(self.hass.states.entity_ids()) == 0
+        url2 = re.compile(API_URL + "devicetypes/fake_type/devices")
+        mock_req.get(url2, text='{"data":[{"id":"fake_id"}]}')
 
-    def test_valid_credentials(self):
-        """Test for valid credentials."""
-        with requests_mock.Mocker() as mock_req:
-            url1 = re.compile(API_URL + "devicetypes")
-            mock_req.get(url1, text='{"data":[{"id":"fake_type"}]}', status_code=200)
+        url3 = re.compile(API_URL + "devices/fake_id/messages*")
+        mock_req.get(url3, text=VALID_MESSAGE)
 
-            url2 = re.compile(API_URL + "devicetypes/fake_type/devices")
-            mock_req.get(url2, text='{"data":[{"id":"fake_id"}]}')
+        assert await async_setup_component(hass, "sensor", VALID_CONFIG)
+        await hass.async_block_till_done()
 
-            url3 = re.compile(API_URL + "devices/fake_id/messages*")
-            mock_req.get(url3, text=VALID_MESSAGE)
-
-            assert setup_component(self.hass, "sensor", VALID_CONFIG)
-
-            assert len(self.hass.states.entity_ids()) == 1
-            state = self.hass.states.get("sensor.sigfox_fake_id")
-            assert state.state == "payload"
-            assert state.attributes.get("snr") == "50.0"
+        assert len(hass.states.async_entity_ids()) == 1
+        state = hass.states.get("sensor.sigfox_fake_id")
+        assert state.state == "payload"
+        assert state.attributes.get("snr") == "50.0"

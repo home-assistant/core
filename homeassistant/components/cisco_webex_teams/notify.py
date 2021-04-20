@@ -2,11 +2,12 @@
 import logging
 
 import voluptuous as vol
+from webexteamssdk import ApiError, WebexTeamsAPI, exceptions
 
 from homeassistant.components.notify import (
+    ATTR_TITLE,
     PLATFORM_SCHEMA,
     BaseNotificationService,
-    ATTR_TITLE,
 )
 from homeassistant.const import CONF_TOKEN
 import homeassistant.helpers.config_validation as cv
@@ -22,7 +23,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def get_service(hass, config, discovery_info=None):
     """Get the CiscoWebexTeams notification service."""
-    from webexteamssdk import WebexTeamsAPI, exceptions
 
     client = WebexTeamsAPI(access_token=config[CONF_TOKEN])
     try:
@@ -45,15 +45,14 @@ class CiscoWebexTeamsNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
-        from webexteamssdk import ApiError
 
         title = ""
         if kwargs.get(ATTR_TITLE) is not None:
-            title = "{}{}".format(kwargs.get(ATTR_TITLE), "<br>")
+            title = f"{kwargs.get(ATTR_TITLE)}<br>"
 
         try:
             self.client.messages.create(roomId=self.room, html=f"{title}{message}")
         except ApiError as api_error:
             _LOGGER.error(
-                "Could not send CiscoWebexTeams notification. " "Error: %s", api_error
+                "Could not send CiscoWebexTeams notification. Error: %s", api_error
             )

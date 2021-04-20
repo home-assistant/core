@@ -1,14 +1,14 @@
 """Support for departure information for public transport in Munich."""
-import logging
-from datetime import timedelta
-
 from copy import deepcopy
+from datetime import timedelta
+import logging
+
+import MVGLive
 import voluptuous as vol
 
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, TIME_MINUTES
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,7 +77,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class MVGLiveSensor(Entity):
+class MVGLiveSensor(SensorEntity):
     """Implementation of an MVG Live sensor."""
 
     def __init__(
@@ -113,7 +113,7 @@ class MVGLiveSensor(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         dep = self.data.departures
         if not dep:
@@ -130,7 +130,7 @@ class MVGLiveSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return "min"
+        return TIME_MINUTES
 
     def update(self):
         """Get the latest data and update the state."""
@@ -150,8 +150,6 @@ class MVGLiveData:
         self, station, destinations, directions, lines, products, timeoffset, number
     ):
         """Initialize the sensor."""
-        import MVGLive
-
         self._station = station
         self._destinations = destinations
         self._directions = directions

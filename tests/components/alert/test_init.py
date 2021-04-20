@@ -1,27 +1,26 @@
 """The tests for the Alert component."""
-import unittest
-
 # pylint: disable=protected-access
 from copy import deepcopy
 
+import pytest
+
 import homeassistant.components.alert as alert
-import homeassistant.components.notify as notify
 from homeassistant.components.alert import DOMAIN
+import homeassistant.components.notify as notify
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ENTITY_ID,
-    STATE_IDLE,
     CONF_NAME,
     CONF_STATE,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_ON,
+    STATE_IDLE,
     STATE_OFF,
+    STATE_ON,
 )
 from homeassistant.core import callback
-from homeassistant.setup import setup_component
-from tests.common import get_test_home_assistant
+from homeassistant.setup import async_setup_component
 
 NAME = "alert_test"
 DONE_MESSAGE = "alert_gone"
@@ -60,15 +59,7 @@ TEST_NOACK = [
     None,
     None,
 ]
-ENTITY_ID = alert.ENTITY_ID_FORMAT.format(NAME)
-
-
-def turn_on(hass, entity_id):
-    """Reset the alert.
-
-    This is a legacy helper method. Do not use it for new tests.
-    """
-    hass.add_job(async_turn_on, hass, entity_id)
+ENTITY_ID = f"{alert.DOMAIN}.{NAME}"
 
 
 @callback
@@ -81,14 +72,6 @@ def async_turn_on(hass, entity_id):
     hass.async_create_task(hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data))
 
 
-def turn_off(hass, entity_id):
-    """Acknowledge alert.
-
-    This is a legacy helper method. Do not use it for new tests.
-    """
-    hass.add_job(async_turn_off, hass, entity_id)
-
-
 @callback
 def async_turn_off(hass, entity_id):
     """Async acknowledge the alert.
@@ -97,14 +80,6 @@ def async_turn_off(hass, entity_id):
     """
     data = {ATTR_ENTITY_ID: entity_id}
     hass.async_create_task(hass.services.async_call(DOMAIN, SERVICE_TURN_OFF, data))
-
-
-def toggle(hass, entity_id):
-    """Toggle acknowledgment of alert.
-
-    This is a legacy helper method. Do not use it for new tests.
-    """
-    hass.add_job(async_toggle, hass, entity_id)
 
 
 @callback
@@ -117,259 +92,237 @@ def async_toggle(hass, entity_id):
     hass.async_create_task(hass.services.async_call(DOMAIN, SERVICE_TOGGLE, data))
 
 
-# pylint: disable=invalid-name
-class TestAlert(unittest.TestCase):
-    """Test the alert module."""
+@pytest.fixture
+def mock_notifier(hass):
+    """Mock for notifier."""
+    events = []
 
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self._setup_notify()
+    @callback
+    def record_event(event):
+        """Add recorded event to set."""
+        events.append(event)
 
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+    hass.services.async_register(notify.DOMAIN, NOTIFIER, record_event)
 
-    def _setup_notify(self):
-        events = []
+    return events
 
-        @callback
-        def record_event(event):
-            """Add recorded event to set."""
-            events.append(event)
 
-        self.hass.services.register(notify.DOMAIN, NOTIFIER, record_event)
+async def test_is_on(hass):
+    """Test is_on method."""
+    hass.states.async_set(ENTITY_ID, STATE_ON)
+    await hass.async_block_till_done()
+    assert alert.is_on(hass, ENTITY_ID)
+    hass.states.async_set(ENTITY_ID, STATE_OFF)
+    await hass.async_block_till_done()
+    assert not alert.is_on(hass, ENTITY_ID)
 
-        return events
 
-    def test_is_on(self):
-        """Test is_on method."""
-        self.hass.states.set(ENTITY_ID, STATE_ON)
-        self.hass.block_till_done()
-        assert alert.is_on(self.hass, ENTITY_ID)
-        self.hass.states.set(ENTITY_ID, STATE_OFF)
-        self.hass.block_till_done()
-        assert not alert.is_on(self.hass, ENTITY_ID)
+async def test_setup(hass):
+    """Test setup method."""
+    assert await async_setup_component(hass, alert.DOMAIN, TEST_CONFIG)
+    assert hass.states.get(ENTITY_ID).state == STATE_IDLE
 
-    def test_setup(self):
-        """Test setup method."""
-        assert setup_component(self.hass, alert.DOMAIN, TEST_CONFIG)
-        assert STATE_IDLE == self.hass.states.get(ENTITY_ID).state
 
-    def test_fire(self):
-        """Test the alert firing."""
-        assert setup_component(self.hass, alert.DOMAIN, TEST_CONFIG)
-        self.hass.states.set("sensor.test", STATE_ON)
-        self.hass.block_till_done()
-        assert STATE_ON == self.hass.states.get(ENTITY_ID).state
+async def test_fire(hass, mock_notifier):
+    """Test the alert firing."""
+    assert await async_setup_component(hass, alert.DOMAIN, TEST_CONFIG)
+    hass.states.async_set("sensor.test", STATE_ON)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
 
-    def test_silence(self):
-        """Test silencing the alert."""
-        assert setup_component(self.hass, alert.DOMAIN, TEST_CONFIG)
-        self.hass.states.set("sensor.test", STATE_ON)
-        self.hass.block_till_done()
-        turn_off(self.hass, ENTITY_ID)
-        self.hass.block_till_done()
-        assert STATE_OFF == self.hass.states.get(ENTITY_ID).state
 
-        # alert should not be silenced on next fire
-        self.hass.states.set("sensor.test", STATE_OFF)
-        self.hass.block_till_done()
-        assert STATE_IDLE == self.hass.states.get(ENTITY_ID).state
-        self.hass.states.set("sensor.test", STATE_ON)
-        self.hass.block_till_done()
-        assert STATE_ON == self.hass.states.get(ENTITY_ID).state
+async def test_silence(hass, mock_notifier):
+    """Test silencing the alert."""
+    assert await async_setup_component(hass, alert.DOMAIN, TEST_CONFIG)
+    hass.states.async_set("sensor.test", STATE_ON)
+    await hass.async_block_till_done()
+    async_turn_off(hass, ENTITY_ID)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
-    def test_reset(self):
-        """Test resetting the alert."""
-        assert setup_component(self.hass, alert.DOMAIN, TEST_CONFIG)
-        self.hass.states.set("sensor.test", STATE_ON)
-        self.hass.block_till_done()
-        turn_off(self.hass, ENTITY_ID)
-        self.hass.block_till_done()
-        assert STATE_OFF == self.hass.states.get(ENTITY_ID).state
-        turn_on(self.hass, ENTITY_ID)
-        self.hass.block_till_done()
-        assert STATE_ON == self.hass.states.get(ENTITY_ID).state
+    # alert should not be silenced on next fire
+    hass.states.async_set("sensor.test", STATE_OFF)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == STATE_IDLE
+    hass.states.async_set("sensor.test", STATE_ON)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
 
-    def test_toggle(self):
-        """Test toggling alert."""
-        assert setup_component(self.hass, alert.DOMAIN, TEST_CONFIG)
-        self.hass.states.set("sensor.test", STATE_ON)
-        self.hass.block_till_done()
-        assert STATE_ON == self.hass.states.get(ENTITY_ID).state
-        toggle(self.hass, ENTITY_ID)
-        self.hass.block_till_done()
-        assert STATE_OFF == self.hass.states.get(ENTITY_ID).state
-        toggle(self.hass, ENTITY_ID)
-        self.hass.block_till_done()
-        assert STATE_ON == self.hass.states.get(ENTITY_ID).state
 
-    def test_hidden(self):
-        """Test entity hiding."""
-        assert setup_component(self.hass, alert.DOMAIN, TEST_CONFIG)
-        hidden = self.hass.states.get(ENTITY_ID).attributes.get("hidden")
-        assert hidden
+async def test_reset(hass, mock_notifier):
+    """Test resetting the alert."""
+    assert await async_setup_component(hass, alert.DOMAIN, TEST_CONFIG)
+    hass.states.async_set("sensor.test", STATE_ON)
+    await hass.async_block_till_done()
+    async_turn_off(hass, ENTITY_ID)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+    async_turn_on(hass, ENTITY_ID)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
 
-        self.hass.states.set("sensor.test", STATE_ON)
-        self.hass.block_till_done()
-        hidden = self.hass.states.get(ENTITY_ID).attributes.get("hidden")
-        assert not hidden
 
-        turn_off(self.hass, ENTITY_ID)
-        hidden = self.hass.states.get(ENTITY_ID).attributes.get("hidden")
-        assert not hidden
+async def test_toggle(hass, mock_notifier):
+    """Test toggling alert."""
+    assert await async_setup_component(hass, alert.DOMAIN, TEST_CONFIG)
+    hass.states.async_set("sensor.test", STATE_ON)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+    async_toggle(hass, ENTITY_ID)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+    async_toggle(hass, ENTITY_ID)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
 
-    def test_notification_no_done_message(self):
-        """Test notifications."""
-        events = []
-        config = deepcopy(TEST_CONFIG)
-        del config[alert.DOMAIN][NAME][alert.CONF_DONE_MESSAGE]
 
-        @callback
-        def record_event(event):
-            """Add recorded event to set."""
-            events.append(event)
+async def test_notification_no_done_message(hass):
+    """Test notifications."""
+    events = []
+    config = deepcopy(TEST_CONFIG)
+    del config[alert.DOMAIN][NAME][alert.CONF_DONE_MESSAGE]
 
-        self.hass.services.register(notify.DOMAIN, NOTIFIER, record_event)
+    @callback
+    def record_event(event):
+        """Add recorded event to set."""
+        events.append(event)
 
-        assert setup_component(self.hass, alert.DOMAIN, config)
-        assert 0 == len(events)
+    hass.services.async_register(notify.DOMAIN, NOTIFIER, record_event)
 
-        self.hass.states.set("sensor.test", STATE_ON)
-        self.hass.block_till_done()
-        assert 1 == len(events)
+    assert await async_setup_component(hass, alert.DOMAIN, config)
+    assert len(events) == 0
 
-        self.hass.states.set("sensor.test", STATE_OFF)
-        self.hass.block_till_done()
-        assert 1 == len(events)
+    hass.states.async_set("sensor.test", STATE_ON)
+    await hass.async_block_till_done()
+    assert len(events) == 1
 
-    def test_notification(self):
-        """Test notifications."""
-        events = []
+    hass.states.async_set("sensor.test", STATE_OFF)
+    await hass.async_block_till_done()
+    assert len(events) == 1
 
-        @callback
-        def record_event(event):
-            """Add recorded event to set."""
-            events.append(event)
 
-        self.hass.services.register(notify.DOMAIN, NOTIFIER, record_event)
+async def test_notification(hass):
+    """Test notifications."""
+    events = []
 
-        assert setup_component(self.hass, alert.DOMAIN, TEST_CONFIG)
-        assert 0 == len(events)
+    @callback
+    def record_event(event):
+        """Add recorded event to set."""
+        events.append(event)
 
-        self.hass.states.set("sensor.test", STATE_ON)
-        self.hass.block_till_done()
-        assert 1 == len(events)
+    hass.services.async_register(notify.DOMAIN, NOTIFIER, record_event)
 
-        self.hass.states.set("sensor.test", STATE_OFF)
-        self.hass.block_till_done()
-        assert 2 == len(events)
+    assert await async_setup_component(hass, alert.DOMAIN, TEST_CONFIG)
+    assert len(events) == 0
 
-    def test_sending_non_templated_notification(self):
-        """Test notifications."""
-        events = self._setup_notify()
+    hass.states.async_set("sensor.test", STATE_ON)
+    await hass.async_block_till_done()
+    assert len(events) == 1
 
-        assert setup_component(self.hass, alert.DOMAIN, TEST_CONFIG)
+    hass.states.async_set("sensor.test", STATE_OFF)
+    await hass.async_block_till_done()
+    assert len(events) == 2
 
-        self.hass.states.set(TEST_ENTITY, STATE_ON)
-        self.hass.block_till_done()
-        self.assertEqual(1, len(events))
-        last_event = events[-1]
-        self.assertEqual(last_event.data[notify.ATTR_MESSAGE], NAME)
 
-    def test_sending_templated_notification(self):
-        """Test templated notification."""
-        events = self._setup_notify()
+async def test_sending_non_templated_notification(hass, mock_notifier):
+    """Test notifications."""
+    assert await async_setup_component(hass, alert.DOMAIN, TEST_CONFIG)
 
-        config = deepcopy(TEST_CONFIG)
-        config[alert.DOMAIN][NAME][alert.CONF_ALERT_MESSAGE] = TEMPLATE
-        assert setup_component(self.hass, alert.DOMAIN, config)
+    hass.states.async_set(TEST_ENTITY, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(mock_notifier) == 1
+    last_event = mock_notifier[-1]
+    assert last_event.data[notify.ATTR_MESSAGE] == NAME
 
-        self.hass.states.set(TEST_ENTITY, STATE_ON)
-        self.hass.block_till_done()
-        self.assertEqual(1, len(events))
-        last_event = events[-1]
-        self.assertEqual(last_event.data[notify.ATTR_MESSAGE], TEST_ENTITY)
 
-    def test_sending_templated_done_notification(self):
-        """Test templated notification."""
-        events = self._setup_notify()
+async def test_sending_templated_notification(hass, mock_notifier):
+    """Test templated notification."""
+    config = deepcopy(TEST_CONFIG)
+    config[alert.DOMAIN][NAME][alert.CONF_ALERT_MESSAGE] = TEMPLATE
+    assert await async_setup_component(hass, alert.DOMAIN, config)
 
-        config = deepcopy(TEST_CONFIG)
-        config[alert.DOMAIN][NAME][alert.CONF_DONE_MESSAGE] = TEMPLATE
-        assert setup_component(self.hass, alert.DOMAIN, config)
+    hass.states.async_set(TEST_ENTITY, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(mock_notifier) == 1
+    last_event = mock_notifier[-1]
+    assert last_event.data[notify.ATTR_MESSAGE] == TEST_ENTITY
 
-        self.hass.states.set(TEST_ENTITY, STATE_ON)
-        self.hass.block_till_done()
-        self.hass.states.set(TEST_ENTITY, STATE_OFF)
-        self.hass.block_till_done()
-        self.assertEqual(2, len(events))
-        last_event = events[-1]
-        self.assertEqual(last_event.data[notify.ATTR_MESSAGE], TEST_ENTITY)
 
-    def test_sending_titled_notification(self):
-        """Test notifications."""
-        events = self._setup_notify()
+async def test_sending_templated_done_notification(hass, mock_notifier):
+    """Test templated notification."""
+    config = deepcopy(TEST_CONFIG)
+    config[alert.DOMAIN][NAME][alert.CONF_DONE_MESSAGE] = TEMPLATE
+    assert await async_setup_component(hass, alert.DOMAIN, config)
 
-        config = deepcopy(TEST_CONFIG)
-        config[alert.DOMAIN][NAME][alert.CONF_TITLE] = TITLE
-        assert setup_component(self.hass, alert.DOMAIN, config)
+    hass.states.async_set(TEST_ENTITY, STATE_ON)
+    await hass.async_block_till_done()
+    hass.states.async_set(TEST_ENTITY, STATE_OFF)
+    await hass.async_block_till_done()
+    assert len(mock_notifier) == 2
+    last_event = mock_notifier[-1]
+    assert last_event.data[notify.ATTR_MESSAGE] == TEST_ENTITY
 
-        self.hass.states.set(TEST_ENTITY, STATE_ON)
-        self.hass.block_till_done()
-        self.assertEqual(1, len(events))
-        last_event = events[-1]
-        self.assertEqual(last_event.data[notify.ATTR_TITLE], TEST_TITLE)
 
-    def test_sending_data_notification(self):
-        """Test notifications."""
-        events = self._setup_notify()
+async def test_sending_titled_notification(hass, mock_notifier):
+    """Test notifications."""
+    config = deepcopy(TEST_CONFIG)
+    config[alert.DOMAIN][NAME][alert.CONF_TITLE] = TITLE
+    assert await async_setup_component(hass, alert.DOMAIN, config)
 
-        config = deepcopy(TEST_CONFIG)
-        config[alert.DOMAIN][NAME][alert.CONF_DATA] = TEST_DATA
-        assert setup_component(self.hass, alert.DOMAIN, config)
+    hass.states.async_set(TEST_ENTITY, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(mock_notifier) == 1
+    last_event = mock_notifier[-1]
+    assert last_event.data[notify.ATTR_TITLE] == TEST_TITLE
 
-        self.hass.states.set(TEST_ENTITY, STATE_ON)
-        self.hass.block_till_done()
-        self.assertEqual(1, len(events))
-        last_event = events[-1]
-        self.assertEqual(last_event.data[notify.ATTR_DATA], TEST_DATA)
 
-    def test_skipfirst(self):
-        """Test skipping first notification."""
-        config = deepcopy(TEST_CONFIG)
-        config[alert.DOMAIN][NAME][alert.CONF_SKIP_FIRST] = True
-        events = []
+async def test_sending_data_notification(hass, mock_notifier):
+    """Test notifications."""
+    config = deepcopy(TEST_CONFIG)
+    config[alert.DOMAIN][NAME][alert.CONF_DATA] = TEST_DATA
+    assert await async_setup_component(hass, alert.DOMAIN, config)
 
-        @callback
-        def record_event(event):
-            """Add recorded event to set."""
-            events.append(event)
+    hass.states.async_set(TEST_ENTITY, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(mock_notifier) == 1
+    last_event = mock_notifier[-1]
+    assert last_event.data[notify.ATTR_DATA] == TEST_DATA
 
-        self.hass.services.register(notify.DOMAIN, NOTIFIER, record_event)
 
-        assert setup_component(self.hass, alert.DOMAIN, config)
-        assert 0 == len(events)
+async def test_skipfirst(hass):
+    """Test skipping first notification."""
+    config = deepcopy(TEST_CONFIG)
+    config[alert.DOMAIN][NAME][alert.CONF_SKIP_FIRST] = True
+    events = []
 
-        self.hass.states.set("sensor.test", STATE_ON)
-        self.hass.block_till_done()
-        assert 0 == len(events)
+    @callback
+    def record_event(event):
+        """Add recorded event to set."""
+        events.append(event)
 
-    def test_noack(self):
-        """Test no ack feature."""
-        entity = alert.Alert(self.hass, *TEST_NOACK)
-        self.hass.add_job(entity.begin_alerting)
-        self.hass.block_till_done()
+    hass.services.async_register(notify.DOMAIN, NOTIFIER, record_event)
 
-        assert entity.hidden is True
+    assert await async_setup_component(hass, alert.DOMAIN, config)
+    assert len(events) == 0
 
-    def test_done_message_state_tracker_reset_on_cancel(self):
-        """Test that the done message is reset when canceled."""
-        entity = alert.Alert(self.hass, *TEST_NOACK)
-        entity._cancel = lambda *args: None
-        assert entity._send_done_message is False
-        entity._send_done_message = True
-        self.hass.add_job(entity.end_alerting)
-        self.hass.block_till_done()
-        assert entity._send_done_message is False
+    hass.states.async_set("sensor.test", STATE_ON)
+    await hass.async_block_till_done()
+    assert len(events) == 0
+
+
+async def test_noack(hass):
+    """Test no ack feature."""
+    entity = alert.Alert(hass, *TEST_NOACK)
+    hass.async_add_job(entity.begin_alerting)
+    await hass.async_block_till_done()
+
+
+async def test_done_message_state_tracker_reset_on_cancel(hass):
+    """Test that the done message is reset when canceled."""
+    entity = alert.Alert(hass, *TEST_NOACK)
+    entity._cancel = lambda *args: None
+    assert entity._send_done_message is False
+    entity._send_done_message = True
+    hass.async_add_job(entity.end_alerting)
+    await hass.async_block_till_done()
+    assert entity._send_done_message is False

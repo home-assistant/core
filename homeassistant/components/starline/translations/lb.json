@@ -1,0 +1,41 @@
+{
+    "config": {
+        "error": {
+            "error_auth_app": "Ong\u00ebltege Applikatioun's ID oder Schl\u00ebssel",
+            "error_auth_mfa": "Ong\u00ebltegte Code",
+            "error_auth_user": "Ong\u00ebltege Benotzernumm oder Passwuert"
+        },
+        "step": {
+            "auth_app": {
+                "data": {
+                    "app_id": "App ID",
+                    "app_secret": "Schl\u00ebssel"
+                },
+                "description": "Applikatioun's ID an Schl\u00ebssel vum [StarLine Developpeur's Kont](https://my.starline.ru/developer)",
+                "title": "Login Informatioune vun der Applikatioun"
+            },
+            "auth_captcha": {
+                "data": {
+                    "captcha_code": "Cod vum Bild"
+                },
+                "description": "{captcha_img}",
+                "title": "Captcha"
+            },
+            "auth_mfa": {
+                "data": {
+                    "mfa_code": "SMS Code"
+                },
+                "description": "Gitt de Code an deen un d'Telefondnummer {phone_number} gesch\u00e9ckt gouf",
+                "title": "2-Faktor-Authentifikatioun"
+            },
+            "auth_user": {
+                "data": {
+                    "password": "Passwuert",
+                    "username": "Benotzernumm"
+                },
+                "description": "StarLine Konto Email a Passwuert",
+                "title": "Login Informatiounen"
+            }
+        }
+    }
+}

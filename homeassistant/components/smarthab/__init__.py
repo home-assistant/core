@@ -1,19 +1,19 @@
-"""
-Support for SmartHab device integration.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/integrations/smarthab/
-"""
+"""Support for SmartHab device integration."""
+import asyncio
 import logging
 
+import pysmarthab
 import voluptuous as vol
 
-from homeassistant.helpers.discovery import load_platform
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import HomeAssistantType
 
 DOMAIN = "smarthab"
 DATA_HUB = "hub"
+PLATFORMS = ["light", "cover"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,35 +30,66 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config) -> bool:
+async def async_setup(hass, config) -> bool:
     """Set up the SmartHab platform."""
-    import pysmarthab
 
-    sh_conf = config.get(DOMAIN)
+    hass.data.setdefault(DOMAIN, {})
+
+    if DOMAIN not in config:
+        return True
+
+    if not hass.config_entries.async_entries(DOMAIN):
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=config[DOMAIN],
+            )
+        )
+
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
+    """Set up config entry for SmartHab integration."""
 
     # Assign configuration variables
-    username = sh_conf[CONF_EMAIL]
-    password = sh_conf[CONF_PASSWORD]
+    username = entry.data[CONF_EMAIL]
+    password = entry.data[CONF_PASSWORD]
 
     # Setup connection with SmartHab API
     hub = pysmarthab.SmartHab()
 
     try:
-        hub.login(username, password)
-    except pysmarthab.RequestFailedException as ex:
-        _LOGGER.error("Error while trying to reach SmartHab API.")
-        _LOGGER.debug(ex, exc_info=True)
-        return False
-
-    # Verify that passed in configuration works
-    if not hub.is_logged_in():
-        _LOGGER.error("Could not authenticate with SmartHab API")
-        return False
+        await hub.async_login(username, password)
+    except pysmarthab.RequestFailedException as err:
+        _LOGGER.exception("Error while trying to reach SmartHab API")
+        raise ConfigEntryNotReady from err
 
     # Pass hub object to child platforms
-    hass.data[DOMAIN] = {DATA_HUB: hub}
+    hass.data[DOMAIN][entry.entry_id] = {DATA_HUB: hub}
 
-    load_platform(hass, "light", DOMAIN, None, config)
-    load_platform(hass, "cover", DOMAIN, None, config)
+    for platform in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, platform)
+        )
 
     return True
+
+
+async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
+    """Unload config entry from SmartHab integration."""
+
+    result = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
+            ]
+        )
+    )
+
+    if result:
+        hass.data[DOMAIN].pop(entry.entry_id)
+
+    return result

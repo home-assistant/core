@@ -1,31 +1,32 @@
 """Test for the smhi weather entity."""
 import asyncio
-import logging
 from datetime import datetime
-from unittest.mock import Mock, patch
+import logging
+from unittest.mock import AsyncMock, Mock, patch
 
+from smhi.smhi_lib import APIURL_TEMPLATE, SmhiForecastException
+
+from homeassistant.components.smhi import weather as weather_smhi
+from homeassistant.components.smhi.const import ATTR_SMHI_CLOUDINESS
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_PRECIPITATION,
     ATTR_FORECAST_TEMP,
+    ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
-    ATTR_WEATHER_TEMPERATURE,
+    ATTR_WEATHER_ATTRIBUTION,
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_PRESSURE,
-    ATTR_FORECAST_TEMP_LOW,
+    ATTR_WEATHER_TEMPERATURE,
     ATTR_WEATHER_VISIBILITY,
-    ATTR_WEATHER_ATTRIBUTION,
     ATTR_WEATHER_WIND_BEARING,
     ATTR_WEATHER_WIND_SPEED,
-    ATTR_FORECAST_PRECIPITATION,
     DOMAIN as WEATHER_DOMAIN,
 )
-from homeassistant.components.smhi import weather as weather_smhi
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 
-from tests.common import load_fixture, MockConfigEntry
-
-from homeassistant.components.smhi.const import ATTR_SMHI_CLOUDINESS
+from tests.common import MockConfigEntry, load_fixture
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,8 +41,6 @@ async def test_setup_hass(hass: HomeAssistant, aioclient_mock) -> None:
     "async_forward_entry_setup". The actual result are tested
     with the entity state rather than "per function" unity tests
     """
-    from smhi.smhi_lib import APIURL_TEMPLATE
-
     uri = APIURL_TEMPLATE.format(TEST_CONFIG["longitude"], TEST_CONFIG["latitude"])
     api_response = load_fixture("smhi.json")
     aioclient_mock.get(uri, text=api_response)
@@ -49,6 +48,7 @@ async def test_setup_hass(hass: HomeAssistant, aioclient_mock) -> None:
     entry = MockConfigEntry(domain="smhi", data=TEST_CONFIG)
 
     await hass.config_entries.async_forward_entry_setup(entry, WEATHER_DOMAIN)
+    await hass.async_block_till_done()
     assert aioclient_mock.call_count == 1
 
     #  Testing the actual entity state for
@@ -75,11 +75,6 @@ async def test_setup_hass(hass: HomeAssistant, aioclient_mock) -> None:
     assert forecast[ATTR_FORECAST_CONDITION] == "partlycloudy"
 
 
-async def test_setup_plattform(hass):
-    """Test that setup plattform does nothing."""
-    assert await weather_smhi.async_setup_platform(hass, None, None) is None
-
-
 def test_properties_no_data(hass: HomeAssistant) -> None:
     """Test properties when no API data available."""
     weather = weather_smhi.SmhiWeather("name", "10", "10")
@@ -99,7 +94,7 @@ def test_properties_no_data(hass: HomeAssistant) -> None:
     assert weather.temperature_unit == TEMP_CELSIUS
 
 
-# pylint: disable=W0212
+# pylint: disable=protected-access
 def test_properties_unknown_symbol() -> None:
     """Test behaviour when unknown symbol from API."""
     hass = Mock()
@@ -152,10 +147,9 @@ def test_properties_unknown_symbol() -> None:
     assert forecast[ATTR_FORECAST_CONDITION] is None
 
 
-# pylint: disable=W0212
+# pylint: disable=protected-access
 async def test_refresh_weather_forecast_exceeds_retries(hass) -> None:
     """Test the refresh weather forecast function."""
-    from smhi.smhi_lib import SmhiForecastException
 
     with patch.object(
         hass.helpers.event, "async_call_later"
@@ -197,7 +191,6 @@ async def test_refresh_weather_forecast_timeout(hass) -> None:
 
 async def test_refresh_weather_forecast_exception() -> None:
     """Test any exception."""
-    from smhi.smhi_lib import SmhiForecastException
 
     hass = Mock()
     weather = weather_smhi.SmhiWeather("name", "17.0022", "62.0022")
@@ -205,17 +198,11 @@ async def test_refresh_weather_forecast_exception() -> None:
 
     with patch.object(
         hass.helpers.event, "async_call_later"
-    ) as call_later, patch.object(weather_smhi, "async_timeout"), patch.object(
-        weather_smhi.SmhiWeather, "retry_update"
-    ), patch.object(
-        weather_smhi.SmhiWeather,
+    ) as call_later, patch.object(
+        weather,
         "get_weather_forecast",
         side_effect=SmhiForecastException(),
     ):
-
-        hass.async_add_job = Mock()
-        call_later = hass.helpers.event.async_call_later
-
         await weather.async_update()
         assert len(call_later.mock_calls) == 1
         # Assert we are going to wait RETRY_TIMEOUT seconds
@@ -228,8 +215,8 @@ async def test_retry_update():
     weather = weather_smhi.SmhiWeather("name", "17.0022", "62.0022")
     weather.hass = hass
 
-    with patch.object(weather_smhi.SmhiWeather, "async_update") as update:
-        await weather.retry_update()
+    with patch.object(weather, "async_update", AsyncMock()) as update:
+        await weather.retry_update(None)
         assert len(update.mock_calls) == 1
 
 

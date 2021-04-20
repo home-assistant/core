@@ -3,6 +3,8 @@ import logging
 import os
 
 import voluptuous as vol
+from watchdog.events import PatternMatchingEventHandler
+from watchdog.observers import Observer
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
@@ -41,7 +43,7 @@ def setup(hass, config):
         path = watcher[CONF_FOLDER]
         patterns = watcher[CONF_PATTERNS]
         if not hass.config.is_allowed_path(path):
-            _LOGGER.error("folder %s is not valid or allowed", path)
+            _LOGGER.error("Folder %s is not valid or allowed", path)
             return False
         Watcher(path, patterns, hass)
 
@@ -50,7 +52,6 @@ def setup(hass, config):
 
 def create_event_handler(patterns, hass):
     """Return the Watchdog EventHandler object."""
-    from watchdog.events import PatternMatchingEventHandler
 
     class EventHandler(PatternMatchingEventHandler):
         """Class for handling Watcher events."""
@@ -91,6 +92,10 @@ def create_event_handler(patterns, hass):
             """File deleted."""
             self.process(event)
 
+        def on_closed(self, event):
+            """File closed."""
+            self.process(event)
+
     return EventHandler(patterns, hass)
 
 
@@ -99,8 +104,6 @@ class Watcher:
 
     def __init__(self, path, patterns, hass):
         """Initialise the watchdog observer."""
-        from watchdog.observers import Observer
-
         self._observer = Observer()
         self._observer.schedule(
             create_event_handler(patterns, hass), path, recursive=True

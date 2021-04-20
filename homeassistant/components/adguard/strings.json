@@ -1,30 +1,28 @@
 {
-    "config": {
-        "title": "AdGuard Home",
-        "step": {
-            "user": {
-                "title": "Link your AdGuard Home.",
-                "description": "Set up your AdGuard Home instance to allow monitoring and control.",
-                "data": {
-                    "host": "Host",
-                    "password": "Password",
-                    "port": "Port",
-                    "username": "Username",
-                    "ssl": "AdGuard Home uses a SSL certificate",
-                    "verify_ssl": "AdGuard Home uses a proper certificate"
-                }
-            },
-            "hassio_confirm": {
-                "title": "AdGuard Home via Hass.io add-on",
-                "description": "Do you want to configure Home Assistant to connect to the AdGuard Home provided by the Hass.io add-on: {addon}?"
-            }
-        },
-        "error": {
-            "connection_error": "Failed to connect."
-        },
-        "abort": {
-            "single_instance_allowed": "Only a single configuration of AdGuard Home is allowed.",
-            "existing_instance_updated": "Updated existing configuration."
+  "config": {
+    "step": {
+      "user": {
+        "description": "Set up your AdGuard Home instance to allow monitoring and control.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         }
+      },
+      "hassio_confirm": {
+        "title": "AdGuard Home via Home Assistant add-on",
+        "description": "Do you want to configure Home Assistant to connect to the AdGuard Home provided by the add-on: {addon}?"
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "existing_instance_updated": "Updated existing configuration.",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
+  }
 }

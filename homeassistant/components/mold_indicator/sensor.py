@@ -5,20 +5,19 @@ import math
 import voluptuous as vol
 
 from homeassistant import util
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.core import callback
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    CONF_NAME,
     EVENT_HOMEASSISTANT_START,
+    PERCENTAGE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    CONF_NAME,
 )
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_state_change
-
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import async_track_state_change_event
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,7 +68,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class MoldIndicator(Entity):
+class MoldIndicator(SensorEntity):
     """Represents a MoldIndication sensor."""
 
     def __init__(
@@ -90,13 +89,11 @@ class MoldIndicator(Entity):
         self._calib_factor = calib_factor
         self._is_metric = is_metric
         self._available = False
-        self._entities = set(
-            [
-                self._indoor_temp_sensor,
-                self._indoor_humidity_sensor,
-                self._outdoor_temp_sensor,
-            ]
-        )
+        self._entities = {
+            self._indoor_temp_sensor,
+            self._indoor_humidity_sensor,
+            self._outdoor_temp_sensor,
+        }
 
         self._dewpoint = None
         self._indoor_temp = None
@@ -108,10 +105,13 @@ class MoldIndicator(Entity):
         """Register callbacks."""
 
         @callback
-        def mold_indicator_sensors_state_listener(entity, old_state, new_state):
+        def mold_indicator_sensors_state_listener(event):
             """Handle for state changes for dependent sensors."""
+            new_state = event.data.get("new_state")
+            old_state = event.data.get("old_state")
+            entity = event.data.get("entity_id")
             _LOGGER.debug(
-                "Sensor state change for %s that had old state %s " "and new state %s",
+                "Sensor state change for %s that had old state %s and new state %s",
                 entity,
                 old_state,
                 new_state,
@@ -125,8 +125,8 @@ class MoldIndicator(Entity):
             """Add listeners and get 1st state."""
             _LOGGER.debug("Startup for %s", self.entity_id)
 
-            async_track_state_change(
-                self.hass, self._entities, mold_indicator_sensors_state_listener
+            async_track_state_change_event(
+                self.hass, list(self._entities), mold_indicator_sensors_state_listener
             )
 
             # Read initial state
@@ -189,7 +189,7 @@ class MoldIndicator(Entity):
         # Return an error if the sensor change its state to Unknown.
         if state.state == STATE_UNKNOWN:
             _LOGGER.error(
-                "Unable to parse temperature sensor %s with state:" " %s",
+                "Unable to parse temperature sensor %s with state: %s",
                 state.entity_id,
                 state.state,
             )
@@ -200,7 +200,7 @@ class MoldIndicator(Entity):
 
         if temp is None:
             _LOGGER.error(
-                "Unable to parse temperature sensor %s with state:" " %s",
+                "Unable to parse temperature sensor %s with state: %s",
                 state.entity_id,
                 state.state,
             )
@@ -212,7 +212,7 @@ class MoldIndicator(Entity):
         if unit == TEMP_CELSIUS:
             return temp
         _LOGGER.error(
-            "Temp sensor %s has unsupported unit: %s (allowed: %s, " "%s)",
+            "Temp sensor %s has unsupported unit: %s (allowed: %s, %s)",
             state.entity_id,
             unit,
             TEMP_CELSIUS,
@@ -246,7 +246,7 @@ class MoldIndicator(Entity):
             )
             return None
 
-        if unit != "%":
+        if unit != PERCENTAGE:
             _LOGGER.error(
                 "Humidity sensor %s has unsupported unit: %s %s",
                 state.entity_id,
@@ -307,7 +307,7 @@ class MoldIndicator(Entity):
         if None in (self._dewpoint, self._calib_factor) or self._calib_factor == 0:
 
             _LOGGER.debug(
-                "Invalid inputs - dewpoint: %s," " calibration-factor: %s",
+                "Invalid inputs - dewpoint: %s, calibration-factor: %s",
                 self._dewpoint,
                 self._calib_factor,
             )
@@ -344,7 +344,7 @@ class MoldIndicator(Entity):
         elif crit_humidity < 0:
             self._state = "0"
         else:
-            self._state = "{0:d}".format(int(crit_humidity))
+            self._state = f"{int(crit_humidity):d}"
 
         _LOGGER.debug("Mold indicator humidity: %s", self._state)
 
@@ -361,7 +361,7 @@ class MoldIndicator(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return "%"
+        return PERCENTAGE
 
     @property
     def state(self):
@@ -374,10 +374,13 @@ class MoldIndicator(Entity):
         return self._available
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self._is_metric:
-            return {ATTR_DEWPOINT: self._dewpoint, ATTR_CRITICAL_TEMP: self._crit_temp}
+            return {
+                ATTR_DEWPOINT: round(self._dewpoint, 2),
+                ATTR_CRITICAL_TEMP: round(self._crit_temp, 2),
+            }
 
         dewpoint = (
             util.temperature.celsius_to_fahrenheit(self._dewpoint)
@@ -391,4 +394,7 @@ class MoldIndicator(Entity):
             else None
         )
 
-        return {ATTR_DEWPOINT: dewpoint, ATTR_CRITICAL_TEMP: crit_temp}
+        return {
+            ATTR_DEWPOINT: round(dewpoint, 2),
+            ATTR_CRITICAL_TEMP: round(crit_temp, 2),
+        }

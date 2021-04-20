@@ -1,0 +1,69 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Za\u0159\u00edzen\u00ed je ji\u017e nastaveno"
+        },
+        "create_entry": {
+            "default": "\u00dasp\u011b\u0161n\u011b p\u0159ipojen k AlarmDecoder."
+        },
+        "error": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
+        },
+        "step": {
+            "protocol": {
+                "data": {
+                    "device_path": "Cesta k za\u0159\u00edzen\u00ed",
+                    "host": "Hostitel",
+                    "port": "Port"
+                },
+                "title": "Nastavte spojen\u00ed"
+            },
+            "user": {
+                "data": {
+                    "protocol": "Protokol"
+                },
+                "title": "Vyberte protokol AlarmDecoder"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "int": "Pole n\u00ed\u017ee mus\u00ed b\u00fdt cel\u00e9 \u010d\u00edslo."
+        },
+        "step": {
+            "arm_settings": {
+                "data": {
+                    "alt_night_mode": "Alternativn\u00ed no\u010dn\u00ed re\u017eim",
+                    "code_arm_required": "K\u00f3d vy\u017eadovan\u00fd pro zabezpe\u010den\u00ed"
+                },
+                "title": "Konfigurovat AlarmDecoder"
+            },
+            "init": {
+                "data": {
+                    "edit_select": "Upravit"
+                },
+                "description": "Co chcete upravit?",
+                "title": "Konfigurovat AlarmDecoder"
+            },
+            "zone_details": {
+                "data": {
+                    "zone_loop": "RF Loop",
+                    "zone_name": "N\u00e1zev z\u00f3ny",
+                    "zone_relayaddr": "Relay adresa",
+                    "zone_relaychan": "Relay kan\u00e1l",
+                    "zone_rfid": "RF Serial",
+                    "zone_type": "Typ z\u00f3ny"
+                },
+                "description": "Zadejte podrobnosti pro z\u00f3nu {zone_number}. Chcete-li odstranit z\u00f3nu {zone_number}, ponechejte n\u00e1zev z\u00f3ny pr\u00e1zdn\u00fd.",
+                "title": "Konfigurovat AlarmDecoder"
+            },
+            "zone_select": {
+                "data": {
+                    "zone_number": "\u010c\u00edslo z\u00f3ny"
+                },
+                "description": "Zadejte \u010d\u00edslo z\u00f3ny, kterou chcete p\u0159idat, upravit nebo odstranit.",
+                "title": "Konfigurovat AlarmDecoder"
+            }
+        }
+    }
+}

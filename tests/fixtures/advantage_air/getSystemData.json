@@ -1,0 +1,155 @@
+{
+    "aircons": {
+        "ac1": {
+            "info": {
+                "climateControlModeIsRunning": false,
+                "countDownToOff": 10,
+                "countDownToOn": 0,
+                "fan": "high",
+                "filterCleanStatus": 0,
+                "freshAirStatus": "off",
+                "mode": "vent",
+                "myZone": 1,
+                "name": "AC One",
+                "setTemp": 24,
+                "state": "on"
+            },
+            "zones": {
+                "z01": {
+                    "error": 0,
+                    "maxDamper": 100,
+                    "measuredTemp": 25,
+                    "minDamper": 0,
+                    "motion": 1,
+                    "motionConfig": 2,
+                    "name": "Zone open with Sensor",
+                    "number": 1,
+                    "rssi": 40,
+                    "setTemp": 24,
+                    "state": "open",
+                    "type": 1,
+                    "value": 100
+                },
+                "z02": {
+                    "error": 0,
+                    "maxDamper": 100,
+                    "measuredTemp": 25,
+                    "minDamper": 0,
+                    "motion": 0,
+                    "motionConfig": 2,
+                    "name": "Zone closed with Sensor",
+                    "number": 2,
+                    "rssi": 10,
+                    "setTemp": 24,
+                    "state": "close",
+                    "type": 1,
+                    "value": 0
+                },
+                "z03": {
+                    "error": 0,
+                    "maxDamper": 100,
+                    "measuredTemp": 25,
+                    "minDamper": 0,
+                    "motion": 1,
+                    "motionConfig": 1,
+                    "name": "Zone 3",
+                    "number": 3,
+                    "rssi": 25,
+                    "setTemp": 24,
+                    "state": "close",
+                    "type": 1,
+                    "value": 0
+                },
+                "z04": {
+                    "error": 0,
+                    "maxDamper": 100,
+                    "measuredTemp": 25,
+                    "minDamper": 0,
+                    "motion": 1,
+                    "motionConfig": 1,
+                    "name": "Zone 4",
+                    "number": 4,
+                    "rssi": 75,
+                    "setTemp": 24,
+                    "state": "close",
+                    "type": 1,
+                    "value": 0
+                },
+                "z05": {
+                    "error": 0,
+                    "maxDamper": 100,
+                    "measuredTemp": 25,
+                    "minDamper": 0,
+                    "motion": 5,
+                    "motionConfig": 1,
+                    "name": "Zone 5",
+                    "number": 1,
+                    "rssi": 100,
+                    "setTemp": 24,
+                    "state": "close",
+                    "type": 1,
+                    "value": 0
+                }
+            }
+        },
+        "ac2": {
+            "info": {
+                "climateControlModeIsRunning": false,
+                "countDownToOff": 0,
+                "countDownToOn": 20,
+                "fan": "low",
+                "filterCleanStatus": 1,
+                "freshAirStatus": "none",
+                "mode": "cool",
+                "myZone": 1,
+                "name": "AC Two",
+                "setTemp": 24,
+                "state": "off"
+            },
+            "zones": {
+                "z01": {
+                    "error": 0,
+                    "maxDamper": 100,
+                    "measuredTemp": 0,
+                    "minDamper": 0,
+                    "motion": 0,
+                    "motionConfig": 0,
+                    "name": "Zone open without sensor",
+                    "number": 1,
+                    "rssi": 0,
+                    "setTemp": 24,
+                    "state": "open",
+                    "type": 0,
+                    "value": 100
+                },
+                "z02": {
+                    "error": 0,
+                    "maxDamper": 100,
+                    "measuredTemp": 0,
+                    "minDamper": 0,
+                    "motion": 0,
+                    "motionConfig": 0,
+                    "name": "Zone closed without sensor",
+                    "number": 2,
+                    "rssi": 0,
+                    "setTemp": 24,
+                    "state": "close",
+                    "type": 0,
+                    "value": 0
+                }
+            }
+        }
+    },
+    "system": {
+        "hasAircons": true,
+        "hasLights": false,
+        "hasSensors": false,
+        "hasThings": false,
+        "hasThingsBOG": false,
+        "hasThingsLight": false,
+        "name": "testname",
+        "rid": "uniqueid",
+        "sysType": "e-zone",
+        "myAppRev": "testversion"
+    }
+}

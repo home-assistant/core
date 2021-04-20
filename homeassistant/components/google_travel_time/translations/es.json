@@ -1,0 +1,22 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "destination": "Destino",
+                    "origin": "Origen"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "language": "Idioma",
+                    "units": "Unidades"
+                }
+            }
+        }
+    }
+}

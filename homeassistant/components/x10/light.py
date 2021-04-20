@@ -1,16 +1,16 @@
 """Support for X10 lights."""
 import logging
-from subprocess import check_output, CalledProcessError, STDOUT
+from subprocess import STDOUT, CalledProcessError, check_output
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_NAME, CONF_ID, CONF_DEVICES
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    SUPPORT_BRIGHTNESS,
-    Light,
     PLATFORM_SCHEMA,
+    SUPPORT_BRIGHTNESS,
+    LightEntity,
 )
+from homeassistant.const import CONF_DEVICES, CONF_ID, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ def x10_command(command):
 
 def get_unit_status(code):
     """Get on/off status for given unit."""
-    output = check_output("heyu onstate " + code, shell=True)
+    output = check_output(["heyu", "onstate", code])
     return int(output.decode("utf-8")[0])
 
 
@@ -50,7 +50,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(X10Light(light, is_cm11a) for light in config[CONF_DEVICES])
 
 
-class X10Light(Light):
+class X10Light(LightEntity):
     """Representation of an X10 Light."""
 
     def __init__(self, light, is_cm11a):
@@ -84,18 +84,18 @@ class X10Light(Light):
     def turn_on(self, **kwargs):
         """Instruct the light to turn on."""
         if self._is_cm11a:
-            x10_command("on " + self._id)
+            x10_command(f"on {self._id}")
         else:
-            x10_command("fon " + self._id)
+            x10_command(f"fon {self._id}")
         self._brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
         self._state = True
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
         if self._is_cm11a:
-            x10_command("off " + self._id)
+            x10_command(f"off {self._id}")
         else:
-            x10_command("foff " + self._id)
+            x10_command(f"foff {self._id}")
         self._state = False
 
     def update(self):

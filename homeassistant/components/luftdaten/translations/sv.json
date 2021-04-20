@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "invalid_sensor": "Sensor saknas eller \u00e4r ogiltig"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "show_on_map": "Visa p\u00e5 karta",
+                    "station_id": "Luftdaten Sensor-ID"
+                },
+                "title": "Definiera Luftdaten"
+            }
+        }
+    }
+}

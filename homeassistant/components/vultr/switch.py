@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
@@ -50,7 +50,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([VultrSwitch(vultr, subscription, name)], True)
 
 
-class VultrSwitch(SwitchDevice):
+class VultrSwitch(SwitchEntity):
     """Representation of a Vultr subscription switch."""
 
     def __init__(self, vultr, subscription, name):
@@ -80,7 +80,7 @@ class VultrSwitch(SwitchDevice):
         return "mdi:server" if self.is_on else "mdi:server-off"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the Vultr subscription."""
         return {
             ATTR_ALLOWED_BANDWIDTH: self.data.get("allowed_bandwidth_gb"),

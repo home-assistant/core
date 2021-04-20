@@ -2,8 +2,18 @@ alarm_keypress:
   description: Send custom keypresses to the alarm.
   fields:
     entity_id:
-      description: Name of the alarm control panel to trigger.
-      example: 'alarm_control_panel.downstairs'
+      description: Name of alarm control panel to deliver keypress.
+      example: "alarm_control_panel.main"
     keypress:
-      description: 'String to send to the alarm panel.'
-      example: '*71'
+      description: "String to send to the alarm panel."
+      example: "*71"
+
+alarm_toggle_chime:
+  description: Send the alarm the toggle chime command.
+  fields:
+    entity_id:
+      description: Name of alarm control panel to toggle chime.
+      example: "alarm_control_panel.main"
+    code:
+      description: A required code to toggle the alarm control panel chime with.
+      example: 1234

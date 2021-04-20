@@ -1,277 +1,183 @@
 """Test the Dyson sensor(s) component."""
-import unittest
-from unittest import mock
+from __future__ import annotations
 
-import asynctest
+from unittest.mock import patch
+
 from libpurecool.dyson_pure_cool import DysonPureCool
 from libpurecool.dyson_pure_cool_link import DysonPureCoolLink
+import pytest
 
-from homeassistant.components import dyson as dyson_parent
-from homeassistant.components.dyson import sensor as dyson
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, STATE_OFF
-from homeassistant.helpers import discovery
-from homeassistant.setup import async_setup_component
-from tests.common import get_test_home_assistant
-
-
-def _get_dyson_purecool_device():
-    """Return a valid device provide by Dyson web services."""
-    device = mock.Mock(spec=DysonPureCool)
-    device.serial = "XX-XXXXX-XX"
-    device.name = "Living room"
-    device.connect = mock.Mock(return_value=True)
-    device.auto_connect = mock.Mock(return_value=True)
-    device.environmental_state.humidity = 42
-    device.environmental_state.temperature = 280
-    device.state.hepa_filter_state = 90
-    device.state.carbon_filter_state = 80
-    return device
-
-
-def _get_config():
-    """Return a config dictionary."""
-    return {
-        dyson_parent.DOMAIN: {
-            dyson_parent.CONF_USERNAME: "email",
-            dyson_parent.CONF_PASSWORD: "password",
-            dyson_parent.CONF_LANGUAGE: "GB",
-            dyson_parent.CONF_DEVICES: [
-                {"device_id": "XX-XXXXX-XX", "device_ip": "192.168.0.1"}
-            ],
-        }
-    }
-
-
-def _get_device_without_state():
-    """Return a valid device provide by Dyson web services."""
-    device = mock.Mock(spec=DysonPureCoolLink)
-    device.name = "Device_name"
-    device.state = None
-    device.environmental_state = None
-    return device
-
-
-def _get_with_state():
-    """Return a valid device with state values."""
-    device = mock.Mock()
-    device.name = "Device_name"
-    device.state = mock.Mock()
-    device.state.filter_life = 100
-    device.environmental_state = mock.Mock()
-    device.environmental_state.dust = 5
-    device.environmental_state.humidity = 45
-    device.environmental_state.temperature = 295
-    device.environmental_state.volatil_organic_compounds = 2
-
-    return device
-
-
-def _get_with_standby_monitoring():
-    """Return a valid device with state but with standby monitoring disable."""
-    device = mock.Mock()
-    device.name = "Device_name"
-    device.state = mock.Mock()
-    device.state.filter_life = 100
-    device.environmental_state = mock.Mock()
-    device.environmental_state.dust = 5
-    device.environmental_state.humidity = 0
-    device.environmental_state.temperature = 0
-    device.environmental_state.volatil_organic_compounds = 2
-
-    return device
-
-
-class DysonTest(unittest.TestCase):
-    """Dyson Sensor component test class."""
-
-    def setUp(self):  # pylint: disable=invalid-name
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-
-    def tearDown(self):  # pylint: disable=invalid-name
-        """Stop everything that was started."""
-        self.hass.stop()
-
-    def test_setup_component_with_no_devices(self):
-        """Test setup component with no devices."""
-        self.hass.data[dyson.DYSON_DEVICES] = []
-        add_entities = mock.MagicMock()
-        dyson.setup_platform(self.hass, None, add_entities)
-        add_entities.assert_not_called()
-
-    def test_setup_component(self):
-        """Test setup component with devices."""
-
-        def _add_device(devices):
-            assert len(devices) == 5
-            assert devices[0].name == "Device_name Filter Life"
-            assert devices[1].name == "Device_name Dust"
-            assert devices[2].name == "Device_name Humidity"
-            assert devices[3].name == "Device_name Temperature"
-            assert devices[4].name == "Device_name AQI"
-
-        device_fan = _get_device_without_state()
-        device_non_fan = _get_with_state()
-        self.hass.data[dyson.DYSON_DEVICES] = [device_fan, device_non_fan]
-        dyson.setup_platform(self.hass, None, _add_device, mock.MagicMock())
-
-    def test_dyson_filter_life_sensor(self):
-        """Test filter life sensor with no value."""
-        sensor = dyson.DysonFilterLifeSensor(_get_device_without_state())
-        sensor.hass = self.hass
-        sensor.entity_id = "sensor.dyson_1"
-        assert not sensor.should_poll
-        assert sensor.state is None
-        assert sensor.unit_of_measurement == "hours"
-        assert sensor.name == "Device_name Filter Life"
-        assert sensor.entity_id == "sensor.dyson_1"
-        sensor.on_message("message")
-
-    def test_dyson_filter_life_sensor_with_values(self):
-        """Test filter sensor with values."""
-        sensor = dyson.DysonFilterLifeSensor(_get_with_state())
-        sensor.hass = self.hass
-        sensor.entity_id = "sensor.dyson_1"
-        assert not sensor.should_poll
-        assert sensor.state == 100
-        assert sensor.unit_of_measurement == "hours"
-        assert sensor.name == "Device_name Filter Life"
-        assert sensor.entity_id == "sensor.dyson_1"
-        sensor.on_message("message")
-
-    def test_dyson_dust_sensor(self):
-        """Test dust sensor with no value."""
-        sensor = dyson.DysonDustSensor(_get_device_without_state())
-        sensor.hass = self.hass
-        sensor.entity_id = "sensor.dyson_1"
-        assert not sensor.should_poll
-        assert sensor.state is None
-        assert sensor.unit_of_measurement is None
-        assert sensor.name == "Device_name Dust"
-        assert sensor.entity_id == "sensor.dyson_1"
-
-    def test_dyson_dust_sensor_with_values(self):
-        """Test dust sensor with values."""
-        sensor = dyson.DysonDustSensor(_get_with_state())
-        sensor.hass = self.hass
-        sensor.entity_id = "sensor.dyson_1"
-        assert not sensor.should_poll
-        assert sensor.state == 5
-        assert sensor.unit_of_measurement is None
-        assert sensor.name == "Device_name Dust"
-        assert sensor.entity_id == "sensor.dyson_1"
-
-    def test_dyson_humidity_sensor(self):
-        """Test humidity sensor with no value."""
-        sensor = dyson.DysonHumiditySensor(_get_device_without_state())
-        sensor.hass = self.hass
-        sensor.entity_id = "sensor.dyson_1"
-        assert not sensor.should_poll
-        assert sensor.state is None
-        assert sensor.unit_of_measurement == "%"
-        assert sensor.name == "Device_name Humidity"
-        assert sensor.entity_id == "sensor.dyson_1"
-
-    def test_dyson_humidity_sensor_with_values(self):
-        """Test humidity sensor with values."""
-        sensor = dyson.DysonHumiditySensor(_get_with_state())
-        sensor.hass = self.hass
-        sensor.entity_id = "sensor.dyson_1"
-        assert not sensor.should_poll
-        assert sensor.state == 45
-        assert sensor.unit_of_measurement == "%"
-        assert sensor.name == "Device_name Humidity"
-        assert sensor.entity_id == "sensor.dyson_1"
-
-    def test_dyson_humidity_standby_monitoring(self):
-        """Test humidity sensor while device is in standby monitoring."""
-        sensor = dyson.DysonHumiditySensor(_get_with_standby_monitoring())
-        sensor.hass = self.hass
-        sensor.entity_id = "sensor.dyson_1"
-        assert not sensor.should_poll
-        assert sensor.state == STATE_OFF
-        assert sensor.unit_of_measurement == "%"
-        assert sensor.name == "Device_name Humidity"
-        assert sensor.entity_id == "sensor.dyson_1"
-
-    def test_dyson_temperature_sensor(self):
-        """Test temperature sensor with no value."""
-        sensor = dyson.DysonTemperatureSensor(_get_device_without_state(), TEMP_CELSIUS)
-        sensor.hass = self.hass
-        sensor.entity_id = "sensor.dyson_1"
-        assert not sensor.should_poll
-        assert sensor.state is None
-        assert sensor.unit_of_measurement == "°C"
-        assert sensor.name == "Device_name Temperature"
-        assert sensor.entity_id == "sensor.dyson_1"
-
-    def test_dyson_temperature_sensor_with_values(self):
-        """Test temperature sensor with values."""
-        sensor = dyson.DysonTemperatureSensor(_get_with_state(), TEMP_CELSIUS)
-        sensor.hass = self.hass
-        sensor.entity_id = "sensor.dyson_1"
-        assert not sensor.should_poll
-        assert sensor.state == 21.9
-        assert sensor.unit_of_measurement == "°C"
-        assert sensor.name == "Device_name Temperature"
-        assert sensor.entity_id == "sensor.dyson_1"
-
-        sensor = dyson.DysonTemperatureSensor(_get_with_state(), TEMP_FAHRENHEIT)
-        sensor.hass = self.hass
-        sensor.entity_id = "sensor.dyson_1"
-        assert not sensor.should_poll
-        assert sensor.state == 71.3
-        assert sensor.unit_of_measurement == "°F"
-        assert sensor.name == "Device_name Temperature"
-        assert sensor.entity_id == "sensor.dyson_1"
-
-    def test_dyson_temperature_standby_monitoring(self):
-        """Test temperature sensor while device is in standby monitoring."""
-        sensor = dyson.DysonTemperatureSensor(
-            _get_with_standby_monitoring(), TEMP_CELSIUS
-        )
-        sensor.hass = self.hass
-        sensor.entity_id = "sensor.dyson_1"
-        assert not sensor.should_poll
-        assert sensor.state == STATE_OFF
-        assert sensor.unit_of_measurement == "°C"
-        assert sensor.name == "Device_name Temperature"
-        assert sensor.entity_id == "sensor.dyson_1"
-
-    def test_dyson_air_quality_sensor(self):
-        """Test air quality sensor with no value."""
-        sensor = dyson.DysonAirQualitySensor(_get_device_without_state())
-        sensor.hass = self.hass
-        sensor.entity_id = "sensor.dyson_1"
-        assert not sensor.should_poll
-        assert sensor.state is None
-        assert sensor.unit_of_measurement is None
-        assert sensor.name == "Device_name AQI"
-        assert sensor.entity_id == "sensor.dyson_1"
-
-    def test_dyson_air_quality_sensor_with_values(self):
-        """Test air quality sensor with values."""
-        sensor = dyson.DysonAirQualitySensor(_get_with_state())
-        sensor.hass = self.hass
-        sensor.entity_id = "sensor.dyson_1"
-        assert not sensor.should_poll
-        assert sensor.state == 2
-        assert sensor.unit_of_measurement is None
-        assert sensor.name == "Device_name AQI"
-        assert sensor.entity_id == "sensor.dyson_1"
-
-
-@asynctest.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
-@asynctest.patch(
-    "libpurecool.dyson.DysonAccount.devices",
-    return_value=[_get_dyson_purecool_device()],
+from homeassistant.components.dyson import DOMAIN
+from homeassistant.components.dyson.sensor import SENSOR_ATTRIBUTES, SENSOR_NAMES
+from homeassistant.components.sensor import DOMAIN as PLATFORM_DOMAIN
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    STATE_OFF,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
 )
-async def test_purecool_component_setup_only_once(devices, login, hass):
-    """Test if entities are created only once."""
-    config = _get_config()
-    await async_setup_component(hass, dyson_parent.DOMAIN, config)
-    await hass.async_block_till_done()
-    discovery.load_platform(hass, "sensor", dyson_parent.DOMAIN, {}, config)
-    await hass.async_block_till_done()
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
 
-    assert len(hass.data[dyson.DYSON_SENSOR_DEVICES]) == 2
+from .common import (
+    BASE_PATH,
+    CONFIG,
+    ENTITY_NAME,
+    NAME,
+    SERIAL,
+    async_get_basic_device,
+    async_update_device,
+)
+
+from tests.common import async_setup_component
+
+ENTITY_ID_PREFIX = f"{PLATFORM_DOMAIN}.{ENTITY_NAME}"
+
+MOCKED_VALUES = {
+    "filter_life": 100,
+    "dust": 5,
+    "humidity": 45,
+    "temperature_kelvin": 295,
+    "temperature": 21.9,
+    "air_quality": 5,
+    "hepa_filter_state": 50,
+    "combi_filter_state": 50,
+    "carbon_filter_state": 10,
+}
+
+MOCKED_UPDATED_VALUES = {
+    "filter_life": 30,
+    "dust": 2,
+    "humidity": 80,
+    "temperature_kelvin": 240,
+    "temperature": -33.1,
+    "air_quality": 3,
+    "hepa_filter_state": 30,
+    "combi_filter_state": 30,
+    "carbon_filter_state": 20,
+}
+
+
+@callback
+def _async_assign_values(
+    device: DysonPureCoolLink, values=MOCKED_VALUES, combi=False
+) -> None:
+    """Assign mocked values to the device."""
+    if isinstance(device, DysonPureCool):
+        device.state.hepa_filter_state = values["hepa_filter_state"]
+        device.state.carbon_filter_state = (
+            "INV" if combi else values["carbon_filter_state"]
+        )
+        device.environmental_state.humidity = values["humidity"]
+        device.environmental_state.temperature = values["temperature_kelvin"]
+    else:  # DysonPureCoolLink
+        device.state.filter_life = values["filter_life"]
+        device.environmental_state.dust = values["dust"]
+        device.environmental_state.humidity = values["humidity"]
+        device.environmental_state.temperature = values["temperature_kelvin"]
+        device.environmental_state.volatil_organic_compounds = values["air_quality"]
+
+
+@callback
+def async_get_device(spec: type[DysonPureCoolLink], combi=False) -> DysonPureCoolLink:
+    """Return a device of the given type."""
+    device = async_get_basic_device(spec)
+    _async_assign_values(device, combi=combi)
+    return device
+
+
+@callback
+def _async_get_entity_id(sensor_type: str) -> str:
+    """Get the expected entity id from the type of the sensor."""
+    sensor_name = SENSOR_NAMES[sensor_type]
+    entity_id_suffix = sensor_name.lower().replace(" ", "_")
+    return f"{ENTITY_ID_PREFIX}_{entity_id_suffix}"
+
+
+@pytest.mark.parametrize(
+    "device,sensors",
+    [
+        (
+            DysonPureCoolLink,
+            ["filter_life", "dust", "humidity", "temperature", "air_quality"],
+        ),
+        (
+            DysonPureCool,
+            ["hepa_filter_state", "carbon_filter_state", "humidity", "temperature"],
+        ),
+        (
+            [DysonPureCool, True],
+            ["combi_filter_state", "humidity", "temperature"],
+        ),
+    ],
+    indirect=["device"],
+)
+async def test_sensors(
+    hass: HomeAssistant, device: DysonPureCoolLink, sensors: list[str]
+) -> None:
+    """Test the sensors."""
+    # Temperature is given by the device in kelvin
+    # Make sure no other sensors are set up
+    assert len(hass.states.async_all()) == len(sensors)
+
+    entity_registry = er.async_get(hass)
+    for sensor in sensors:
+        entity_id = _async_get_entity_id(sensor)
+
+        # Test unique id
+        assert entity_registry.async_get(entity_id).unique_id == f"{SERIAL}-{sensor}"
+
+        # Test state
+        state = hass.states.get(entity_id)
+        assert state.state == str(MOCKED_VALUES[sensor])
+        assert state.name == f"{NAME} {SENSOR_NAMES[sensor]}"
+
+        # Test attributes
+        attributes = state.attributes
+        for attr, value in SENSOR_ATTRIBUTES[sensor].items():
+            assert attributes[attr] == value
+
+    # Test data update
+    _async_assign_values(device, MOCKED_UPDATED_VALUES)
+    await async_update_device(hass, device)
+    for sensor in sensors:
+        state = hass.states.get(_async_get_entity_id(sensor))
+        assert state.state == str(MOCKED_UPDATED_VALUES[sensor])
+
+
+@pytest.mark.parametrize("device", [DysonPureCoolLink], indirect=True)
+async def test_sensors_off(hass: HomeAssistant, device: DysonPureCoolLink) -> None:
+    """Test the case where temperature and humidity are not available."""
+    device.environmental_state.temperature = 0
+    device.environmental_state.humidity = 0
+    await async_update_device(hass, device)
+    assert hass.states.get(f"{ENTITY_ID_PREFIX}_temperature").state == STATE_OFF
+    assert hass.states.get(f"{ENTITY_ID_PREFIX}_humidity").state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    "unit_system,temp_unit,temperature",
+    [(METRIC_SYSTEM, TEMP_CELSIUS, 21.9), (IMPERIAL_SYSTEM, TEMP_FAHRENHEIT, 71.3)],
+)
+async def test_temperature(
+    hass: HomeAssistant, unit_system: UnitSystem, temp_unit: str, temperature: float
+) -> None:
+    """Test the temperature sensor in different units."""
+    hass.config.units = unit_system
+
+    device = async_get_device(DysonPureCoolLink)
+    with patch(f"{BASE_PATH}.DysonAccount.login", return_value=True), patch(
+        f"{BASE_PATH}.DysonAccount.devices", return_value=[device]
+    ), patch(f"{BASE_PATH}.PLATFORMS", [PLATFORM_DOMAIN]):
+        # PLATFORMS is patched so that only the platform being tested is set up
+        await async_setup_component(
+            hass,
+            DOMAIN,
+            CONFIG,
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get(f"{ENTITY_ID_PREFIX}_temperature")
+    assert state.state == str(temperature)
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == temp_unit

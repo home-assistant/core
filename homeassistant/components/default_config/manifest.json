@@ -1,24 +1,37 @@
 {
   "domain": "default_config",
-  "name": "Default config",
+  "name": "Default Config",
   "documentation": "https://www.home-assistant.io/integrations/default_config",
-  "requirements": [],
   "dependencies": [
     "automation",
     "cloud",
-    "config",
+    "counter",
+    "dhcp",
     "frontend",
     "history",
+    "input_boolean",
+    "input_datetime",
+    "input_number",
+    "input_select",
+    "input_text",
     "logbook",
     "map",
+    "media_source",
     "mobile_app",
+    "my",
     "person",
+    "scene",
     "script",
     "ssdp",
     "sun",
     "system_health",
+    "tag",
+    "timer",
     "updater",
-    "zeroconf"
+    "webhook",
+    "zeroconf",
+    "zone"
   ],
-  "codeowners": []
+  "codeowners": [],
+  "quality_scale": "internal"
 }

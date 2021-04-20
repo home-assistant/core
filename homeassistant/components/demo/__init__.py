@@ -1,33 +1,39 @@
 """Set up the demo environment that mimics interaction with devices."""
 import asyncio
-import logging
-import time
 
-from homeassistant import bootstrap
-import homeassistant.core as ha
+from homeassistant import bootstrap, config_entries
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START
+import homeassistant.core as ha
 
 DOMAIN = "demo"
-_LOGGER = logging.getLogger(__name__)
-COMPONENTS_WITH_DEMO_PLATFORM = [
+
+COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     "air_quality",
     "alarm_control_panel",
     "binary_sensor",
-    "calendar",
     "camera",
     "climate",
     "cover",
-    "device_tracker",
     "fan",
-    "image_processing",
+    "humidifier",
     "light",
     "lock",
     "media_player",
-    "notify",
+    "number",
     "sensor",
     "switch",
+    "vacuum",
+    "water_heater",
+]
+
+COMPONENTS_WITH_DEMO_PLATFORM = [
     "tts",
+    "stt",
     "mailbox",
+    "notify",
+    "image_processing",
+    "calendar",
+    "device_tracker",
 ]
 
 
@@ -36,14 +42,21 @@ async def async_setup(hass, config):
     if DOMAIN not in config:
         return True
 
-    config.setdefault(ha.DOMAIN, {})
-    config.setdefault(DOMAIN, {})
+    if not hass.config_entries.async_entries(DOMAIN):
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data={}
+            )
+        )
 
     # Set up demo platforms
-    for component in COMPONENTS_WITH_DEMO_PLATFORM:
+    for platform in COMPONENTS_WITH_DEMO_PLATFORM:
         hass.async_create_task(
-            hass.helpers.discovery.async_load_platform(component, DOMAIN, {}, config)
+            hass.helpers.discovery.async_load_platform(platform, DOMAIN, {}, config)
         )
+
+    config.setdefault(ha.DOMAIN, {})
+    config.setdefault(DOMAIN, {})
 
     # Set up sun
     if not hass.config.latitude:
@@ -92,7 +105,7 @@ async def async_setup(hass, config):
         )
     )
 
-    # Set up input boolean
+    # Set up input number
     tasks.append(
         bootstrap.async_setup_component(
             hass,
@@ -111,19 +124,6 @@ async def async_setup(hass, config):
         )
     )
 
-    # Set up weblink
-    tasks.append(
-        bootstrap.async_setup_component(
-            hass,
-            "weblink",
-            {
-                "weblink": {
-                    "entities": [{"name": "Router", "url": "http://192.168.1.1"}]
-                }
-            },
-        )
-    )
-
     results = await asyncio.gather(*tasks)
 
     if any(not result for result in results):
@@ -134,43 +134,22 @@ async def async_setup(hass, config):
         "This is an example of a persistent notification.", title="Example Notification"
     )
 
-    # Set up configurator
-    configurator_ids = []
-    configurator = hass.components.configurator
-
-    def hue_configuration_callback(data):
-        """Fake callback, mark config as done."""
-        time.sleep(2)
-
-        # First time it is called, pretend it failed.
-        if len(configurator_ids) == 1:
-            configurator.notify_errors(
-                configurator_ids[0], "Failed to register, please try again."
-            )
-
-            configurator_ids.append(0)
-        else:
-            configurator.request_done(configurator_ids[0])
-
-    request_id = configurator.async_request_config(
-        "Philips Hue",
-        hue_configuration_callback,
-        description=(
-            "Press the button on the bridge to register Philips "
-            "Hue with Home Assistant."
-        ),
-        description_image="/static/images/config_philips_hue.jpg",
-        fields=[{"id": "username", "name": "Username"}],
-        submit_caption="I have pressed the button",
-    )
-    configurator_ids.append(request_id)
-
     async def demo_start_listener(_event):
         """Finish set up."""
         await finish_setup(hass, config)
 
     hass.bus.async_listen(EVENT_HOMEASSISTANT_START, demo_start_listener)
 
+    return True
+
+
+async def async_setup_entry(hass, config_entry):
+    """Set the config entry up."""
+    # Set up demo platforms with config entry
+    for platform in COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(config_entry, platform)
+        )
     return True
 
 
@@ -186,22 +165,6 @@ async def finish_setup(hass, config):
         switches = sorted(hass.states.async_entity_ids("switch"))
         lights = sorted(hass.states.async_entity_ids("light"))
 
-    # Set up history graph
-    await bootstrap.async_setup_component(
-        hass,
-        "history_graph",
-        {
-            "history_graph": {
-                "switches": {
-                    "name": "Recent Switches",
-                    "entities": switches,
-                    "hours_to_show": 1,
-                    "refresh": 60,
-                }
-            }
-        },
-    )
-
     # Set up scripts
     await bootstrap.async_setup_component(
         hass,
@@ -209,7 +172,7 @@ async def finish_setup(hass, config):
         {
             "script": {
                 "demo": {
-                    "alias": "Toggle {}".format(lights[0].split(".")[1]),
+                    "alias": f"Toggle {lights[0].split('.')[1]}",
                     "sequence": [
                         {
                             "service": "light.turn_off",

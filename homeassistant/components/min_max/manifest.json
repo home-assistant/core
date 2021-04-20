@@ -1,10 +1,8 @@
 {
   "domain": "min_max",
-  "name": "Min max",
+  "name": "Min/Max",
   "documentation": "https://www.home-assistant.io/integrations/min_max",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": [
-    "@fabaff"
-  ]
+  "codeowners": ["@fabaff"],
+  "quality_scale": "internal",
+  "iot_class": "local_polling"
 }

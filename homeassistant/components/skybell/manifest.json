@@ -1,10 +1,8 @@
 {
   "domain": "skybell",
-  "name": "Skybell",
+  "name": "SkyBell",
   "documentation": "https://www.home-assistant.io/integrations/skybell",
-  "requirements": [
-    "skybellpy==0.4.0"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "requirements": ["skybellpy==0.6.3"],
+  "codeowners": [],
+  "iot_class": "cloud_polling"
 }

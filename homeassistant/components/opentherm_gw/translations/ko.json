@@ -1,0 +1,33 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "id_exists": "OpenTherm Gateway id \uac00 \uc774\ubbf8 \uc874\uc7ac\ud569\ub2c8\ub2e4"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "device": "\uacbd\ub85c \ub610\ub294 URL",
+                    "id": "ID",
+                    "name": "\uc774\ub984"
+                },
+                "title": "OpenTherm Gateway"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "floor_temperature": "\uc628\ub3c4 \uc18c\uc218\uc810 \ubc84\ub9bc",
+                    "precision": "\uc815\ubc00\ub3c4",
+                    "read_precision": "\uc77d\uae30 \uc815\ubc00\ub3c4",
+                    "set_precision": "\uc815\ubc00\ub3c4 \uc124\uc815\ud558\uae30",
+                    "temporary_override_mode": "\uc784\uc2dc \uc124\uc815\uac12 \uc7ac\uc815\uc758 \ubaa8\ub4dc"
+                },
+                "description": "OpenTherm Gateway \uc635\uc158"
+            }
+        }
+    }
+}

@@ -1,0 +1,50 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "resources": {
+                "data": {
+                    "resources": "Bronnen"
+                },
+                "title": "Kies de te controleren bronnen"
+            },
+            "ups": {
+                "data": {
+                    "alias": "Alias",
+                    "resources": "Bronnen"
+                },
+                "title": "Kies een UPS om uit te lezen"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Wachtwoord",
+                    "port": "Poort",
+                    "username": "Gebruikersnaam"
+                },
+                "title": "Verbind met NUT-server"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "Verbinden mislukt",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "resources": "Bronnen",
+                    "scan_interval": "Scaninterval (seconden)"
+                },
+                "description": "Kies Sensorbronnen."
+            }
+        }
+    }
+}

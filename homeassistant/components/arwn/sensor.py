@@ -3,9 +3,9 @@ import json
 import logging
 
 from homeassistant.components import mqtt
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import DEGREE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import callback
-from homeassistant.const import TEMP_FAHRENHEIT, TEMP_CELSIUS
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,27 +30,35 @@ def discover_sensors(topic, payload):
             unit = TEMP_FAHRENHEIT
         else:
             unit = TEMP_CELSIUS
-        return ArwnSensor(name, "temp", unit)
+        return ArwnSensor(topic, name, "temp", unit)
     if domain == "moisture":
-        name = parts[2] + " Moisture"
-        return ArwnSensor(name, "moisture", unit, "mdi:water-percent")
+        name = f"{parts[2]} Moisture"
+        return ArwnSensor(topic, name, "moisture", unit, "mdi:water-percent")
     if domain == "rain":
         if len(parts) >= 3 and parts[2] == "today":
             return ArwnSensor(
-                "Rain Since Midnight", "since_midnight", "in", "mdi:water"
+                topic, "Rain Since Midnight", "since_midnight", "in", "mdi:water"
             )
+        return (
+            ArwnSensor(topic + "/total", "Total Rainfall", "total", unit, "mdi:water"),
+            ArwnSensor(topic + "/rate", "Rainfall Rate", "rate", unit, "mdi:water"),
+        )
     if domain == "barometer":
-        return ArwnSensor("Barometer", "pressure", unit, "mdi:thermometer-lines")
+        return ArwnSensor(topic, "Barometer", "pressure", unit, "mdi:thermometer-lines")
     if domain == "wind":
         return (
-            ArwnSensor("Wind Speed", "speed", unit, "mdi:speedometer"),
-            ArwnSensor("Wind Gust", "gust", unit, "mdi:speedometer"),
-            ArwnSensor("Wind Direction", "direction", "°", "mdi:compass"),
+            ArwnSensor(
+                topic + "/speed", "Wind Speed", "speed", unit, "mdi:speedometer"
+            ),
+            ArwnSensor(topic + "/gust", "Wind Gust", "gust", unit, "mdi:speedometer"),
+            ArwnSensor(
+                topic + "/dir", "Wind Direction", "direction", DEGREE, "mdi:compass"
+            ),
         )
 
 
 def _slug(name):
-    return "sensor.arwn_{}".format(slugify(name))
+    return f"sensor.arwn_{slugify(name)}"
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -91,25 +99,31 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 sensor.set_event(event)
                 store[sensor.name] = sensor
                 _LOGGER.debug(
-                    "Registering new sensor %(name)s => %(event)s",
-                    dict(name=sensor.name, event=event),
+                    "Registering sensor %(name)s => %(event)s",
+                    {"name": sensor.name, "event": event},
                 )
                 async_add_entities((sensor,), True)
             else:
+                _LOGGER.debug(
+                    "Recording sensor %(name)s => %(event)s",
+                    {"name": sensor.name, "event": event},
+                )
                 store[sensor.name].set_event(event)
 
     await mqtt.async_subscribe(hass, TOPIC, async_sensor_event_received, 0)
     return True
 
 
-class ArwnSensor(Entity):
+class ArwnSensor(SensorEntity):
     """Representation of an ARWN sensor."""
 
-    def __init__(self, name, state_key, units, icon=None):
+    def __init__(self, topic, name, state_key, units, icon=None):
         """Initialize the sensor."""
         self.hass = None
         self.entity_id = _slug(name)
         self._name = name
+        # This mqtt topic for the sensor which is its uid
+        self._uid = topic
         self._state_key = state_key
         self.event = {}
         self._unit_of_measurement = units
@@ -119,7 +133,7 @@ class ArwnSensor(Entity):
         """Update the sensor with the most recent event."""
         self.event = {}
         self.event.update(event)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def state(self):
@@ -132,7 +146,15 @@ class ArwnSensor(Entity):
         return self._name
 
     @property
-    def state_attributes(self):
+    def unique_id(self):
+        """Return a unique ID.
+
+        This is based on the topic that comes from mqtt
+        """
+        return self._uid
+
+    @property
+    def extra_state_attributes(self):
         """Return all the state attributes."""
         return self.event
 

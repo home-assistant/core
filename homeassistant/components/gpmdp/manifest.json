@@ -1,10 +1,9 @@
 {
   "domain": "gpmdp",
-  "name": "Gpmdp",
+  "name": "Google Play Music Desktop Player (GPMDP)",
   "documentation": "https://www.home-assistant.io/integrations/gpmdp",
-  "requirements": [
-    "websocket-client==0.54.0"
-  ],
+  "requirements": ["websocket-client==0.54.0"],
   "dependencies": ["configurator"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

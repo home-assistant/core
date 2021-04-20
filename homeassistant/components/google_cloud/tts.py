@@ -1,11 +1,11 @@
 """Support for the Google Cloud TTS service."""
+import asyncio
 import logging
 import os
 
-import asyncio
 import async_timeout
-import voluptuous as vol
 from google.cloud import texttospeech
+import voluptuous as vol
 
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
 import homeassistant.helpers.config_validation as cv
@@ -20,8 +20,16 @@ CONF_SPEED = "speed"
 CONF_PITCH = "pitch"
 CONF_GAIN = "gain"
 CONF_PROFILES = "profiles"
+CONF_TEXT_TYPE = "text_type"
 
 SUPPORTED_LANGUAGES = [
+    "af-ZA",
+    "ar-XA",
+    "bg-BG",
+    "bn-IN",
+    "ca-ES",
+    "cmn-CN",
+    "cmn-TW",
     "cs-CZ",
     "da-DK",
     "de-DE",
@@ -31,27 +39,39 @@ SUPPORTED_LANGUAGES = [
     "en-IN",
     "en-US",
     "es-ES",
+    "es-US",
     "fi-FI",
     "fil-PH",
     "fr-CA",
     "fr-FR",
+    "gu-IN",
     "hi-IN",
     "hu-HU",
     "id-ID",
+    "is-IS",
     "it-IT",
     "ja-JP",
+    "kn-IN",
     "ko-KR",
+    "lv-LV",
+    "ml-IN",
     "nb-NO",
     "nl-NL",
     "pl-PL",
     "pt-BR",
     "pt-PT",
+    "ro-RO",
     "ru-RU",
     "sk-SK",
+    "sr-RS",
     "sv-SE",
+    "ta-IN",
+    "te-IN",
+    "th-TH",
     "tr-TR",
     "uk-UA",
     "vi-VN",
+    "yue-HK",
 ]
 DEFAULT_LANG = "en-US"
 
@@ -74,6 +94,9 @@ MIN_GAIN = -96.0
 MAX_GAIN = 16.0
 DEFAULT_GAIN = 0
 
+SUPPORTED_TEXT_TYPES = ["text", "ssml"]
+DEFAULT_TEXT_TYPE = "text"
+
 SUPPORTED_PROFILES = [
     "wearable-class-device",
     "handset-class-device",
@@ -93,6 +116,7 @@ SUPPORTED_OPTIONS = [
     CONF_PITCH,
     CONF_GAIN,
     CONF_PROFILES,
+    CONF_TEXT_TYPE,
 ]
 
 GENDER_SCHEMA = vol.All(
@@ -106,6 +130,7 @@ SPEED_SCHEMA = vol.All(vol.Coerce(float), vol.Clamp(min=MIN_SPEED, max=MAX_SPEED
 PITCH_SCHEMA = vol.All(vol.Coerce(float), vol.Clamp(min=MIN_PITCH, max=MAX_PITCH))
 GAIN_SCHEMA = vol.All(vol.Coerce(float), vol.Clamp(min=MIN_GAIN, max=MAX_GAIN))
 PROFILES_SCHEMA = vol.All(cv.ensure_list, [vol.In(SUPPORTED_PROFILES)])
+TEXT_TYPE_SCHEMA = vol.All(vol.Lower, vol.In(SUPPORTED_TEXT_TYPES))
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -118,11 +143,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PITCH, default=DEFAULT_PITCH): PITCH_SCHEMA,
         vol.Optional(CONF_GAIN, default=DEFAULT_GAIN): GAIN_SCHEMA,
         vol.Optional(CONF_PROFILES, default=[]): PROFILES_SCHEMA,
+        vol.Optional(CONF_TEXT_TYPE, default=DEFAULT_TEXT_TYPE): TEXT_TYPE_SCHEMA,
     }
 )
 
 
-async def async_get_engine(hass, config):
+async def async_get_engine(hass, config, discovery_info=None):
     """Set up Google Cloud TTS component."""
     key_file = config.get(CONF_KEY_FILE)
     if key_file:
@@ -134,14 +160,15 @@ async def async_get_engine(hass, config):
     return GoogleCloudTTSProvider(
         hass,
         key_file,
-        config.get(CONF_LANG),
-        config.get(CONF_GENDER),
-        config.get(CONF_VOICE),
-        config.get(CONF_ENCODING),
-        config.get(CONF_SPEED),
-        config.get(CONF_PITCH),
-        config.get(CONF_GAIN),
-        config.get(CONF_PROFILES),
+        config[CONF_LANG],
+        config[CONF_GENDER],
+        config[CONF_VOICE],
+        config[CONF_ENCODING],
+        config[CONF_SPEED],
+        config[CONF_PITCH],
+        config[CONF_GAIN],
+        config[CONF_PROFILES],
+        config[CONF_TEXT_TYPE],
     )
 
 
@@ -160,6 +187,7 @@ class GoogleCloudTTSProvider(Provider):
         pitch=0,
         gain=0,
         profiles=None,
+        text_type=DEFAULT_TEXT_TYPE,
     ):
         """Init Google Cloud TTS service."""
         self.hass = hass
@@ -172,6 +200,7 @@ class GoogleCloudTTSProvider(Provider):
         self._pitch = pitch
         self._gain = gain
         self._profiles = profiles
+        self._text_type = text_type
 
         if key_file:
             self._client = texttospeech.TextToSpeechClient.from_service_account_json(
@@ -206,6 +235,7 @@ class GoogleCloudTTSProvider(Provider):
             CONF_PITCH: self._pitch,
             CONF_GAIN: self._gain,
             CONF_PROFILES: self._profiles,
+            CONF_TEXT_TYPE: self._text_type,
         }
 
     async def async_get_tts_audio(self, message, language, options=None):
@@ -214,11 +244,12 @@ class GoogleCloudTTSProvider(Provider):
             {
                 vol.Optional(CONF_GENDER, default=self._gender): GENDER_SCHEMA,
                 vol.Optional(CONF_VOICE, default=self._voice): VOICE_SCHEMA,
-                vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): SCHEMA_ENCODING,
+                vol.Optional(CONF_ENCODING, default=self._encoding): SCHEMA_ENCODING,
                 vol.Optional(CONF_SPEED, default=self._speed): SPEED_SCHEMA,
-                vol.Optional(CONF_PITCH, default=self._speed): SPEED_SCHEMA,
-                vol.Optional(CONF_GAIN, default=DEFAULT_GAIN): GAIN_SCHEMA,
-                vol.Optional(CONF_PROFILES, default=[]): PROFILES_SCHEMA,
+                vol.Optional(CONF_PITCH, default=self._pitch): PITCH_SCHEMA,
+                vol.Optional(CONF_GAIN, default=self._gain): GAIN_SCHEMA,
+                vol.Optional(CONF_PROFILES, default=self._profiles): PROFILES_SCHEMA,
+                vol.Optional(CONF_TEXT_TYPE, default=self._text_type): TEXT_TYPE_SCHEMA,
             }
         )
         options = options_schema(options)
@@ -229,8 +260,9 @@ class GoogleCloudTTSProvider(Provider):
             language = _voice[:5]
 
         try:
+            params = {options[CONF_TEXT_TYPE]: message}
             # pylint: disable=no-member
-            synthesis_input = texttospeech.types.SynthesisInput(text=message)
+            synthesis_input = texttospeech.types.SynthesisInput(**params)
 
             voice = texttospeech.types.VoiceSelectionParams(
                 language_code=language,
@@ -240,10 +272,10 @@ class GoogleCloudTTSProvider(Provider):
 
             audio_config = texttospeech.types.AudioConfig(
                 audio_encoding=texttospeech.enums.AudioEncoding[_encoding],
-                speaking_rate=options.get(CONF_SPEED),
-                pitch=options.get(CONF_PITCH),
-                volume_gain_db=options.get(CONF_GAIN),
-                effects_profile_id=options.get(CONF_PROFILES),
+                speaking_rate=options[CONF_SPEED],
+                pitch=options[CONF_PITCH],
+                volume_gain_db=options[CONF_GAIN],
+                effects_profile_id=options[CONF_PROFILES],
             )
             # pylint: enable=no-member
 

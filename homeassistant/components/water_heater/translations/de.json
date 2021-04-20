@@ -1,0 +1,19 @@
+{
+    "device_automation": {
+        "action_type": {
+            "turn_off": "{entity_name} ausschalten",
+            "turn_on": "{entity_name} einschalten"
+        }
+    },
+    "state": {
+        "_": {
+            "eco": "Sparmodus",
+            "electric": "Elektrisch",
+            "gas": "Gas",
+            "heat_pump": "W\u00e4rmepumpe",
+            "high_demand": "Hoher Bedarf",
+            "off": "Aus",
+            "performance": "Leistung"
+        }
+    }
+}

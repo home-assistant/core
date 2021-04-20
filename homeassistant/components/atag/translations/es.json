@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Este dispositivo ya ha sido a\u00f1adido a HomeAssistant"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar",
+            "unauthorized": "Emparejamiento denegado, comprobar el dispositivo para la solicitud de autorizaci\u00f3n"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "Correo electr\u00f3nico (Opcional)",
+                    "host": "Host",
+                    "port": "Puerto"
+                },
+                "title": "Conectarse al dispositivo"
+            }
+        }
+    }
+}

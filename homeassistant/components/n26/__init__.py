@@ -2,9 +2,9 @@
 from datetime import datetime, timedelta, timezone
 import logging
 
-import voluptuous as vol
-
 from n26 import api as n26_api, config as n26_config
+from requests import HTTPError
+import voluptuous as vol
 
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
@@ -36,7 +36,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-N26_COMPONENTS = ["sensor", "switch"]
+PLATFORMS = ["sensor", "switch"]
 
 
 def setup(hass, config):
@@ -50,8 +50,6 @@ def setup(hass, config):
         password = acc[CONF_PASSWORD]
 
         api = n26_api.Api(n26_config.Config(user, password))
-
-        from requests import HTTPError
 
         try:
             api.get_token()
@@ -67,9 +65,9 @@ def setup(hass, config):
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][DATA] = api_data_list
 
-    # Load components for supported devices
-    for component in N26_COMPONENTS:
-        load_platform(hass, component, DOMAIN, {}, config)
+    # Load platforms for supported devices
+    for platform in PLATFORMS:
+        load_platform(hass, platform, DOMAIN, {}, config)
 
     return True
 

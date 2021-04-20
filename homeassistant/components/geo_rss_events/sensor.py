@@ -4,28 +4,25 @@ Generic GeoRSS events service.
 Retrieves current events (typically incidents or alerts) in GeoRSS format, and
 shows information on events filtered by distance to the HA instance's location
 and grouped by category.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.geo_rss_events/
 """
-import logging
 from datetime import timedelta
+import logging
 
-import voluptuous as vol
 from georss_client import UPDATE_OK, UPDATE_OK_NO_DATA
-from georss_client.generic_feed import GenericFeed
+from georss_generic_client import GenericFeed
+import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
-    CONF_UNIT_OF_MEASUREMENT,
-    CONF_NAME,
     CONF_LATITUDE,
     CONF_LONGITUDE,
+    CONF_NAME,
     CONF_RADIUS,
+    CONF_UNIT_OF_MEASUREMENT,
     CONF_URL,
+    LENGTH_KILOMETERS,
 )
-from homeassistant.helpers.entity import Entity
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,7 +95,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class GeoRssServiceSensor(Entity):
+class GeoRssServiceSensor(SensorEntity):
     """Representation of a Sensor."""
 
     def __init__(
@@ -121,9 +118,7 @@ class GeoRssServiceSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(
-            self._service_name, "Any" if self._category is None else self._category
-        )
+        return f"{self._service_name} {'Any' if self._category is None else self._category}"
 
     @property
     def state(self):
@@ -141,7 +136,7 @@ class GeoRssServiceSensor(Entity):
         return DEFAULT_ICON
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._state_attributes
 
@@ -157,7 +152,7 @@ class GeoRssServiceSensor(Entity):
             # And now compute the attributes from the filtered events.
             matrix = {}
             for entry in feed_entries:
-                matrix[entry.title] = f"{entry.distance_to_home:.0f}km"
+                matrix[entry.title] = f"{entry.distance_to_home:.0f}{LENGTH_KILOMETERS}"
             self._state_attributes = matrix
         elif status == UPDATE_OK_NO_DATA:
             _LOGGER.debug("Update successful, but no data received from %s", self._feed)

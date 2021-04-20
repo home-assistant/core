@@ -1,10 +1,9 @@
 {
   "domain": "recollect_waste",
-  "name": "Recollect waste",
+  "name": "ReCollect Waste",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/recollect_waste",
-  "requirements": [
-    "recollect-waste==1.0.1"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "requirements": ["aiorecollect==1.0.4"],
+  "codeowners": ["@bachya"],
+  "iot_class": "cloud_polling"
 }

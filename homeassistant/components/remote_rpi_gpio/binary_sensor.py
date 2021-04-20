@@ -1,26 +1,20 @@
 """Support for binary sensor using RPi GPIO."""
-import logging
-
+import requests
 import voluptuous as vol
 
-import requests
-
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import CONF_HOST
-from homeassistant.components.binary_sensor import BinarySensorDevice, PLATFORM_SCHEMA
-
 import homeassistant.helpers.config_validation as cv
 
 from . import (
     CONF_BOUNCETIME,
-    CONF_PULL_MODE,
     CONF_INVERT_LOGIC,
+    CONF_PULL_MODE,
     DEFAULT_BOUNCETIME,
     DEFAULT_INVERT_LOGIC,
     DEFAULT_PULL_MODE,
 )
 from .. import remote_rpi_gpio
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_PORTS = "ports"
 
@@ -59,7 +53,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class RemoteRPiGPIOBinarySensor(BinarySensorDevice):
+class RemoteRPiGPIOBinarySensor(BinarySensorEntity):
     """Represent a binary sensor that uses a Remote Raspberry Pi GPIO."""
 
     def __init__(self, name, button, invert_logic):

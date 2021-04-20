@@ -1,9 +1,11 @@
 """Modesl used by multiple MQTT modules."""
-from typing import Union, Callable
+from __future__ import annotations
+
+import datetime as dt
+from typing import Callable, Union
 
 import attr
 
-# pylint: disable=invalid-name
 PublishPayloadType = Union[str, bytes, int, float, None]
 
 
@@ -11,10 +13,12 @@ PublishPayloadType = Union[str, bytes, int, float, None]
 class Message:
     """MQTT Message."""
 
-    topic = attr.ib(type=str)
-    payload = attr.ib(type=PublishPayloadType)
-    qos = attr.ib(type=int)
-    retain = attr.ib(type=bool)
+    topic: str = attr.ib()
+    payload: PublishPayloadType = attr.ib()
+    qos: int = attr.ib()
+    retain: bool = attr.ib()
+    subscribed_topic: str | None = attr.ib(default=None)
+    timestamp: dt.datetime | None = attr.ib(default=None)
 
 
 MessageCallbackType = Callable[[Message], None]

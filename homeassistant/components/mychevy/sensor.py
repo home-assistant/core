@@ -1,9 +1,9 @@
 """Support for MyChevy sensors."""
 import logging
 
-from homeassistant.components.sensor import ENTITY_ID_FORMAT
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorEntity
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util import slugify
 
@@ -25,7 +25,9 @@ SENSORS = [
     EVSensorConfig("Electric Range", "electricRange", "miles", "mdi:speedometer"),
     EVSensorConfig("Charged By", "estimatedFullChargeBy"),
     EVSensorConfig("Charge Mode", "chargeMode"),
-    EVSensorConfig("Battery Level", BATTERY_SENSOR, "%", "mdi:battery", ["charging"]),
+    EVSensorConfig(
+        "Battery Level", BATTERY_SENSOR, PERCENTAGE, "mdi:battery", ["charging"]
+    ),
 ]
 
 
@@ -43,7 +45,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors)
 
 
-class MyChevyStatus(Entity):
+class MyChevyStatus(SensorEntity):
     """A string representing the charge mode."""
 
     _name = "MyChevy Status"
@@ -55,11 +57,17 @@ class MyChevyStatus(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self.hass.helpers.dispatcher.async_dispatcher_connect(
-            UPDATE_TOPIC, self.success
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                UPDATE_TOPIC, self.success
+            )
         )
 
-        self.hass.helpers.dispatcher.async_dispatcher_connect(ERROR_TOPIC, self.error)
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                ERROR_TOPIC, self.error
+            )
+        )
 
     @callback
     def success(self):
@@ -67,7 +75,7 @@ class MyChevyStatus(Entity):
         if self._state != MYCHEVY_SUCCESS:
             _LOGGER.debug("Successfully connected to mychevy website")
             self._state = MYCHEVY_SUCCESS
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @callback
     def error(self):
@@ -77,7 +85,7 @@ class MyChevyStatus(Entity):
             "This probably means the mychevy to OnStar link is down"
         )
         self._state = MYCHEVY_ERROR
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def icon(self):
@@ -100,7 +108,7 @@ class MyChevyStatus(Entity):
         return False
 
 
-class EVSensor(Entity):
+class EVSensor(SensorEntity):
     """Base EVSensor class.
 
     The only real difference between sensors is which units and what
@@ -120,11 +128,7 @@ class EVSensor(Entity):
         self._state_attributes = {}
         self._car_vid = car_vid
 
-        self.entity_id = ENTITY_ID_FORMAT.format(
-            "{}_{}_{}".format(
-                MYCHEVY_DOMAIN, slugify(self._car.name), slugify(self._name)
-            )
-        )
+        self.entity_id = f"{SENSOR_DOMAIN}.{MYCHEVY_DOMAIN}_{slugify(self._car.name)}_{slugify(self._name)}"
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -155,9 +159,11 @@ class EVSensor(Entity):
         """Update state."""
         if self._car is not None:
             self._state = getattr(self._car, self._attr, None)
+            if self._unit_of_measurement == "miles":
+                self._state = round(self._state)
             for attr in self._extra_attrs:
                 self._state_attributes[attr] = getattr(self._car, attr)
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     @property
     def state(self):
@@ -165,7 +171,7 @@ class EVSensor(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return all the state attributes."""
         return self._state_attributes
 

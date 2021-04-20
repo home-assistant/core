@@ -1,0 +1,63 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "not_irobot_device": "El dispositiu descobert no \u00e9s un dispositiu iRobot",
+            "short_blid": "El BLID s'ha truncat"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
+        "flow_title": "iRobot {name} ({host})",
+        "step": {
+            "init": {
+                "data": {
+                    "host": "Amfitri\u00f3"
+                },
+                "description": "Selecciona un/a Roomba o Braava.",
+                "title": "Connexi\u00f3 autom\u00e0tica amb el dispositiu"
+            },
+            "link": {
+                "description": "Mant\u00e9 premut el bot\u00f3 d'inici a {name} fins que el dispositiu emeti un so (aproximadament dos segons) despr\u00e9s, envia en els seg\u00fcents 30 segons.",
+                "title": "Recupera la contrasenya"
+            },
+            "link_manual": {
+                "data": {
+                    "password": "Contrasenya"
+                },
+                "description": "No s'ha pogut obtenir la contrasenya del dispositiu autom\u00e0ticament. Segueix els passos de la seg\u00fcent documentaci\u00f3: {auth_help_url}",
+                "title": "Introdueix contrasenya"
+            },
+            "manual": {
+                "data": {
+                    "blid": "BLID",
+                    "host": "Amfitri\u00f3"
+                },
+                "description": "No s'ha descobert cap Roomba ni cap Braava a la teva xarxa. El BLID \u00e9s la part del nom d'amfitri\u00f3 del dispositiu despr\u00e9s de `iRobot-` o `Roomba-`. Segueix els passos de la documentaci\u00f3 seg\u00fcent: {auth_help_url}",
+                "title": "Connecta't al dispositiu manualment"
+            },
+            "user": {
+                "data": {
+                    "blid": "BLID",
+                    "continuous": "Cont\u00ednua",
+                    "delay": "Retard",
+                    "host": "Amfitri\u00f3",
+                    "password": "Contrasenya"
+                },
+                "description": "Actualment la recuperaci\u00f3 de BLID i la contrasenya \u00e9s un proc\u00e9s manual. Segueix els passos de la documentaci\u00f3 a: https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials",
+                "title": "Connexi\u00f3 amb el dispositiu"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "continuous": "Cont\u00ednua",
+                    "delay": "Retard"
+                }
+            }
+        }
+    }
+}

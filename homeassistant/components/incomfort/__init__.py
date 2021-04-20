@@ -1,14 +1,19 @@
 """Support for an Intergas boiler via an InComfort/Intouch Lan2RF gateway."""
+from __future__ import annotations
+
 import logging
 
 from aiohttp import ClientResponseError
-import voluptuous as vol
 from incomfortclient import Gateway as InComfortGateway
+import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,12 +45,13 @@ async def async_setup(hass, hass_config):
     )
 
     try:
-        heater = incomfort_data["heater"] = list(await client.heaters)[0]
+        heaters = incomfort_data["heaters"] = list(await client.heaters)
     except ClientResponseError as err:
         _LOGGER.warning("Setup failed, check your configuration, message is: %s", err)
         return False
 
-    await heater.update()
+    for heater in heaters:
+        await heater.update()
 
     for platform in ["water_heater", "binary_sensor", "sensor", "climate"]:
         hass.async_create_task(
@@ -53,3 +59,38 @@ async def async_setup(hass, hass_config):
         )
 
     return True
+
+
+class IncomfortEntity(Entity):
+    """Base class for all InComfort entities."""
+
+    def __init__(self) -> None:
+        """Initialize the class."""
+        self._unique_id = self._name = None
+
+    @property
+    def unique_id(self) -> str | None:
+        """Return a unique ID."""
+        return self._unique_id
+
+    @property
+    def name(self) -> str | None:
+        """Return the name of the sensor."""
+        return self._name
+
+
+class IncomfortChild(IncomfortEntity):
+    """Base class for all InComfort entities (excluding the boiler)."""
+
+    async def async_added_to_hass(self) -> None:
+        """Set up a listener when this entity is added to HA."""
+        self.async_on_remove(async_dispatcher_connect(self.hass, DOMAIN, self._refresh))
+
+    @callback
+    def _refresh(self) -> None:
+        self.async_schedule_update_ha_state(force_refresh=True)
+
+    @property
+    def should_poll(self) -> bool:
+        """Return False as this device should never be polled."""
+        return False

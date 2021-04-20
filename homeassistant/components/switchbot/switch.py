@@ -1,15 +1,16 @@
 """Support for Switchbot."""
-import logging
-from typing import Any, Dict
+from __future__ import annotations
 
+from typing import Any
+
+# pylint: disable=import-error
+import switchbot
 import voluptuous as vol
 
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, CONF_MAC
 from homeassistant.helpers.restore_state import RestoreEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Switchbot"
 
@@ -17,6 +18,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_MAC): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PASSWORD): cv.string,
     }
 )
 
@@ -25,22 +27,21 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Perform the setup for Switchbot devices."""
     name = config.get(CONF_NAME)
     mac_addr = config[CONF_MAC]
-    add_entities([SwitchBot(mac_addr, name)])
+    password = config.get(CONF_PASSWORD)
+    add_entities([SwitchBot(mac_addr, name, password)])
 
 
-class SwitchBot(SwitchDevice, RestoreEntity):
+class SwitchBot(SwitchEntity, RestoreEntity):
     """Representation of a Switchbot."""
 
-    def __init__(self, mac, name) -> None:
+    def __init__(self, mac, name, password) -> None:
         """Initialize the Switchbot."""
-        # pylint: disable=import-error, no-member
-        import switchbot
 
         self._state = None
         self._last_run_success = None
         self._name = name
         self._mac = mac
-        self._device = switchbot.Switchbot(mac=mac)
+        self._device = switchbot.Switchbot(mac=mac, password=password)
 
     async def async_added_to_hass(self):
         """Run when entity about to be added."""
@@ -78,7 +79,7 @@ class SwitchBot(SwitchDevice, RestoreEntity):
 
     @property
     def unique_id(self) -> str:
-        """Return a unique, HASS-friendly identifier for this entity."""
+        """Return a unique, Home Assistant friendly identifier for this entity."""
         return self._mac.replace(":", "")
 
     @property
@@ -87,6 +88,6 @@ class SwitchBot(SwitchDevice, RestoreEntity):
         return self._name
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {"last_run_success": self._last_run_success}

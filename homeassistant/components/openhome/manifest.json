@@ -1,10 +1,8 @@
 {
   "domain": "openhome",
-  "name": "Openhome",
+  "name": "Linn / OpenHome",
   "documentation": "https://www.home-assistant.io/integrations/openhome",
-  "requirements": [
-    "openhomedevice==0.4.2"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "requirements": ["openhomedevice==0.7.2"],
+  "codeowners": ["@bazwilliams"],
+  "iot_class": "local_polling"
 }

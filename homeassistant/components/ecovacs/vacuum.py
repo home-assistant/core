@@ -1,6 +1,8 @@
 """Support for Ecovacs Ecovacs Vaccums."""
 import logging
 
+import sucks
+
 from homeassistant.components.vacuum import (
     SUPPORT_BATTERY,
     SUPPORT_CLEAN_SPOT,
@@ -12,7 +14,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_STOP,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
-    VacuumDevice,
+    VacuumEntity,
 )
 from homeassistant.helpers.icon import icon_for_battery_level
 
@@ -42,22 +44,22 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     vacuums = []
     for device in hass.data[ECOVACS_DEVICES]:
         vacuums.append(EcovacsVacuum(device))
-    _LOGGER.debug("Adding Ecovacs Vacuums to Hass: %s", vacuums)
+    _LOGGER.debug("Adding Ecovacs Vacuums to Home Assistant: %s", vacuums)
     add_entities(vacuums, True)
 
 
-class EcovacsVacuum(VacuumDevice):
+class EcovacsVacuum(VacuumEntity):
     """Ecovacs Vacuums such as Deebot."""
 
     def __init__(self, device):
         """Initialize the Ecovacs Vacuum."""
         self.device = device
         self.device.connect_and_wait_until_ready()
-        if self.device.vacuum.get("nick", None) is not None:
-            self._name = "{}".format(self.device.vacuum["nick"])
+        if self.device.vacuum.get("nick") is not None:
+            self._name = str(self.device.vacuum["nick"])
         else:
             # In case there is no nickname defined, use the device id
-            self._name = "{}".format(self.device.vacuum["did"])
+            self._name = str(format(self.device.vacuum["did"]))
 
         self._fan_speed = None
         self._error = None
@@ -94,7 +96,7 @@ class EcovacsVacuum(VacuumDevice):
     @property
     def unique_id(self) -> str:
         """Return an unique ID."""
-        return self.device.vacuum.get("did", None)
+        return self.device.vacuum.get("did")
 
     @property
     def is_on(self):
@@ -123,9 +125,8 @@ class EcovacsVacuum(VacuumDevice):
 
     def return_to_base(self, **kwargs):
         """Set the vacuum cleaner to return to the dock."""
-        from sucks import Charge
 
-        self.device.run(Charge())
+        self.device.run(sucks.Charge())
 
     @property
     def battery_icon(self):
@@ -150,15 +151,13 @@ class EcovacsVacuum(VacuumDevice):
     @property
     def fan_speed_list(self):
         """Get the list of available fan speed steps of the vacuum cleaner."""
-        from sucks import FAN_SPEED_NORMAL, FAN_SPEED_HIGH
 
-        return [FAN_SPEED_NORMAL, FAN_SPEED_HIGH]
+        return [sucks.FAN_SPEED_NORMAL, sucks.FAN_SPEED_HIGH]
 
     def turn_on(self, **kwargs):
         """Turn the vacuum on and start cleaning."""
-        from sucks import Clean
 
-        self.device.run(Clean())
+        self.device.run(sucks.Clean())
 
     def turn_off(self, **kwargs):
         """Turn the vacuum off stopping the cleaning and returning home."""
@@ -166,37 +165,31 @@ class EcovacsVacuum(VacuumDevice):
 
     def stop(self, **kwargs):
         """Stop the vacuum cleaner."""
-        from sucks import Stop
 
-        self.device.run(Stop())
+        self.device.run(sucks.Stop())
 
     def clean_spot(self, **kwargs):
         """Perform a spot clean-up."""
-        from sucks import Spot
 
-        self.device.run(Spot())
+        self.device.run(sucks.Spot())
 
     def locate(self, **kwargs):
         """Locate the vacuum cleaner."""
-        from sucks import PlaySound
 
-        self.device.run(PlaySound())
+        self.device.run(sucks.PlaySound())
 
     def set_fan_speed(self, fan_speed, **kwargs):
         """Set fan speed."""
         if self.is_on:
-            from sucks import Clean
 
-            self.device.run(Clean(mode=self.device.clean_status, speed=fan_speed))
+            self.device.run(sucks.Clean(mode=self.device.clean_status, speed=fan_speed))
 
     def send_command(self, command, params=None, **kwargs):
         """Send a command to a vacuum cleaner."""
-        from sucks import VacBotCommand
-
-        self.device.run(VacBotCommand(command, params))
+        self.device.run(sucks.VacBotCommand(command, params))
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device-specific state attributes of this vacuum."""
         data = {}
         data[ATTR_ERROR] = self._error

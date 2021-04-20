@@ -3,9 +3,9 @@ Provide a mock binary sensor platform.
 
 Call init before using it in your tests to ensure clean test data.
 """
-from homeassistant.components.binary_sensor import BinarySensorDevice, DEVICE_CLASSES
-from tests.common import MockEntity
+from homeassistant.components.binary_sensor import DEVICE_CLASSES, BinarySensorEntity
 
+from tests.common import MockEntity
 
 ENTITIES = {}
 
@@ -36,7 +36,7 @@ async def async_setup_platform(
     async_add_entities_callback(list(ENTITIES.values()))
 
 
-class MockBinarySensor(MockEntity, BinarySensorDevice):
+class MockBinarySensor(MockEntity, BinarySensorEntity):
     """Mock Binary Sensor class."""
 
     @property

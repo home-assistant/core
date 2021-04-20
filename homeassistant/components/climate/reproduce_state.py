@@ -1,32 +1,38 @@
 """Module that groups code required to handle state restore for component."""
+from __future__ import annotations
+
 import asyncio
-from typing import Iterable, Optional
+from collections.abc import Iterable
+from typing import Any
 
 from homeassistant.const import ATTR_TEMPERATURE
-from homeassistant.core import Context, State
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import Context, HomeAssistant, State
 
 from .const import (
     ATTR_AUX_HEAT,
+    ATTR_HUMIDITY,
+    ATTR_HVAC_MODE,
+    ATTR_PRESET_MODE,
+    ATTR_SWING_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    ATTR_PRESET_MODE,
-    ATTR_HVAC_MODE,
-    ATTR_SWING_MODE,
-    ATTR_HUMIDITY,
+    DOMAIN,
     HVAC_MODES,
     SERVICE_SET_AUX_HEAT,
-    SERVICE_SET_TEMPERATURE,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_SWING_MODE,
     SERVICE_SET_HUMIDITY,
-    DOMAIN,
+    SERVICE_SET_HVAC_MODE,
+    SERVICE_SET_PRESET_MODE,
+    SERVICE_SET_SWING_MODE,
+    SERVICE_SET_TEMPERATURE,
 )
 
 
 async def _async_reproduce_states(
-    hass: HomeAssistantType, state: State, context: Optional[Context] = None
+    hass: HomeAssistant,
+    state: State,
+    *,
+    context: Context | None = None,
+    reproduce_options: dict[str, Any] | None = None,
 ) -> None:
     """Reproduce component states."""
 
@@ -69,9 +75,18 @@ async def _async_reproduce_states(
 
 
 async def async_reproduce_states(
-    hass: HomeAssistantType, states: Iterable[State], context: Optional[Context] = None
+    hass: HomeAssistant,
+    states: Iterable[State],
+    *,
+    context: Context | None = None,
+    reproduce_options: dict[str, Any] | None = None,
 ) -> None:
     """Reproduce component states."""
     await asyncio.gather(
-        *(_async_reproduce_states(hass, state, context) for state in states)
+        *(
+            _async_reproduce_states(
+                hass, state, context=context, reproduce_options=reproduce_options
+            )
+            for state in states
+        )
     )

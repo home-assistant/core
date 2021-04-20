@@ -1,9 +1,28 @@
 """Support for HDMI CEC."""
 from collections import defaultdict
-from functools import reduce
+from functools import partial, reduce
 import logging
 import multiprocessing
 
+from pycec.cec import CecAdapter
+from pycec.commands import CecCommand, KeyPressCommand, KeyReleaseCommand
+from pycec.const import (
+    ADDR_AUDIOSYSTEM,
+    ADDR_BROADCAST,
+    ADDR_UNREGISTERED,
+    KEY_MUTE_OFF,
+    KEY_MUTE_ON,
+    KEY_MUTE_TOGGLE,
+    KEY_VOLUME_DOWN,
+    KEY_VOLUME_UP,
+    POWER_OFF,
+    POWER_ON,
+    STATUS_PLAY,
+    STATUS_STILL,
+    STATUS_STOP,
+)
+from pycec.network import HDMINetwork, PhysicalAddress
+from pycec.tcp import TcpAdapter
 import voluptuous as vol
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER
@@ -19,9 +38,10 @@ from homeassistant.const import (
     STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import discovery
+from homeassistant.helpers import discovery, event
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -143,6 +163,9 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+WATCHDOG_INTERVAL = 120
+EVENT_HDMI_CEC_UNAVAILABLE = "hdmi_cec_unavailable"
+
 
 def pad_physical_address(addr):
     """Right-pad a physical address."""
@@ -155,8 +178,6 @@ def parse_mapping(mapping, parents=None):
         parents = []
     for addr, val in mapping.items():
         if isinstance(addr, (str,)) and isinstance(val, (str,)):
-            from pycec.network import PhysicalAddress
-
             yield (addr, PhysicalAddress(val))
         else:
             cur = parents + [addr]
@@ -168,20 +189,6 @@ def parse_mapping(mapping, parents=None):
 
 def setup(hass: HomeAssistant, base_config):
     """Set up the CEC capability."""
-    from pycec.network import HDMINetwork
-    from pycec.commands import CecCommand, KeyReleaseCommand, KeyPressCommand
-    from pycec.const import (
-        KEY_VOLUME_UP,
-        KEY_VOLUME_DOWN,
-        KEY_MUTE_ON,
-        KEY_MUTE_OFF,
-        KEY_MUTE_TOGGLE,
-        ADDR_AUDIOSYSTEM,
-        ADDR_BROADCAST,
-        ADDR_UNREGISTERED,
-    )
-    from pycec.cec import CecAdapter
-    from pycec.tcp import TcpAdapter
 
     # Parse configuration into a dict of device name to physical address
     # represented as a list of four elements.
@@ -199,13 +206,25 @@ def setup(hass: HomeAssistant, base_config):
         if multiprocessing.cpu_count() < 2
         else None
     )
-    host = base_config[DOMAIN].get(CONF_HOST, None)
+    host = base_config[DOMAIN].get(CONF_HOST)
     display_name = base_config[DOMAIN].get(CONF_DISPLAY_NAME, DEFAULT_DISPLAY_NAME)
     if host:
         adapter = TcpAdapter(host, name=display_name, activate_source=False)
     else:
         adapter = CecAdapter(name=display_name[:12], activate_source=False)
     hdmi_network = HDMINetwork(adapter, loop=loop)
+
+    def _adapter_watchdog(now=None):
+        _LOGGER.debug("Reached _adapter_watchdog")
+        event.async_call_later(hass, WATCHDOG_INTERVAL, _adapter_watchdog)
+        if not adapter.initialized:
+            _LOGGER.info("Adapter not initialized; Trying to restart")
+            hass.bus.fire(EVENT_HDMI_CEC_UNAVAILABLE)
+            adapter.init()
+
+    hdmi_network.set_initialized_callback(
+        partial(event.async_call_later, hass, WATCHDOG_INTERVAL, _adapter_watchdog)
+    )
 
     def _volume(call):
         """Increase/decrease volume and mute/unmute system."""
@@ -278,8 +297,6 @@ def setup(hass: HomeAssistant, base_config):
 
     def _select_device(call):
         """Select the active device."""
-        from pycec.network import PhysicalAddress
-
         addr = call.data[ATTR_DEVICE]
         if not addr:
             _LOGGER.error("Device not found: %s", call.data[ATTR_DEVICE])
@@ -326,7 +343,7 @@ def setup(hass: HomeAssistant, base_config):
     def _shutdown(call):
         hdmi_network.stop()
 
-    def _start_cec(event):
+    def _start_cec(callback_event):
         """Register services and start HDMI network to watch for devices."""
         hass.services.register(
             DOMAIN, SERVICE_SEND_COMMAND, _tx, SERVICE_SEND_COMMAND_SCHEMA
@@ -352,7 +369,7 @@ def setup(hass: HomeAssistant, base_config):
     return True
 
 
-class CecDevice(Entity):
+class CecEntity(Entity):
     """Representation of a HDMI CEC device entity."""
 
     def __init__(self, device, logical) -> None:
@@ -363,17 +380,15 @@ class CecDevice(Entity):
         self._logical_address = logical
         self.entity_id = "%s.%d" % (DOMAIN, self._logical_address)
 
+    def _hdmi_cec_unavailable(self, callback_event):
+        # Change state to unavailable. Without this, entity would remain in
+        # its last state, since the state changes are pushed.
+        self._state = STATE_UNAVAILABLE
+        self.schedule_update_ha_state(False)
+
     def update(self):
         """Update device status."""
         device = self._device
-        from pycec.const import (
-            STATUS_PLAY,
-            STATUS_STOP,
-            STATUS_STILL,
-            POWER_OFF,
-            POWER_ON,
-        )
-
         if device.power_status in [POWER_OFF, 3]:
             self._state = STATE_OFF
         elif device.status == STATUS_PLAY:
@@ -390,10 +405,22 @@ class CecDevice(Entity):
     async def async_added_to_hass(self):
         """Register HDMI callbacks after initialization."""
         self._device.set_update_callback(self._update)
+        self.hass.bus.async_listen(
+            EVENT_HDMI_CEC_UNAVAILABLE, self._hdmi_cec_unavailable
+        )
 
     def _update(self, device=None):
         """Device status changed, schedule an update."""
         self.schedule_update_ha_state(True)
+
+    @property
+    def should_poll(self):
+        """
+        Return false.
+
+        CecEntity.update() is called by the HDMI network when there is new data.
+        """
+        return False
 
     @property
     def name(self):
@@ -448,7 +475,7 @@ class CecDevice(Entity):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         state_attr = {}
         if self.vendor_id is not None:

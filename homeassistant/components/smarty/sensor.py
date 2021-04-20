@@ -3,15 +3,16 @@
 import datetime as dt
 import logging
 
-from homeassistant.core import callback
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
-    TEMP_CELSIUS,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
+    TEMP_CELSIUS,
 )
-import homeassistant.util.dt as dt_util
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+import homeassistant.util.dt as dt_util
+
 from . import DOMAIN, SIGNAL_UPDATE_SMARTY
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,7 +35,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(sensors, True)
 
 
-class SmartySensor(Entity):
+class SmartySensor(SensorEntity):
     """Representation of a Smarty Sensor."""
 
     def __init__(

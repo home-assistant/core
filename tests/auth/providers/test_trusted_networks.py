@@ -1,5 +1,6 @@
 """Test the Trusted Networks auth provider."""
 from ipaddress import ip_address, ip_network
+from unittest.mock import Mock, patch
 
 import pytest
 import voluptuous as vol
@@ -142,6 +143,16 @@ async def test_validate_access(provider):
         provider.async_validate_access(ip_address("2001:db8::ff00:42:8329"))
 
 
+async def test_validate_refresh_token(provider):
+    """Verify re-validation of refresh token."""
+    with patch.object(provider, "async_validate_access") as mock:
+        with pytest.raises(tn_auth.InvalidAuthError):
+            provider.async_validate_refresh_token(Mock(), None)
+
+        provider.async_validate_refresh_token(Mock(), "127.0.0.1")
+        mock.assert_called_once_with(ip_address("127.0.0.1"))
+
+
 async def test_login_flow(manager, provider):
     """Test login flow."""
     owner = await manager.async_create_user("test-owner")
@@ -151,7 +162,7 @@ async def test_login_flow(manager, provider):
     flow = await provider.async_login_flow({"ip_address": ip_address("127.0.0.1")})
     step = await flow.async_step_init()
     assert step["type"] == "abort"
-    assert step["reason"] == "not_whitelisted"
+    assert step["reason"] == "not_allowed"
 
     # from trusted network, list users
     flow = await provider.async_login_flow({"ip_address": ip_address("192.168.0.1")})
@@ -190,7 +201,7 @@ async def test_trusted_users_login(manager_with_user, provider_with_user):
     )
     step = await flow.async_step_init()
     assert step["type"] == "abort"
-    assert step["reason"] == "not_whitelisted"
+    assert step["reason"] == "not_allowed"
 
     # from trusted network, list users intersect trusted_users
     flow = await provider_with_user.async_login_flow(
@@ -274,7 +285,7 @@ async def test_trusted_group_login(manager_with_user, provider_with_user):
     )
     step = await flow.async_step_init()
     assert step["type"] == "abort"
-    assert step["reason"] == "not_whitelisted"
+    assert step["reason"] == "not_allowed"
 
     # from trusted network, list users intersect trusted_users
     flow = await provider_with_user.async_login_flow(
@@ -313,7 +324,7 @@ async def test_bypass_login_flow(manager_bypass_login, provider_bypass_login):
     )
     step = await flow.async_step_init()
     assert step["type"] == "abort"
-    assert step["reason"] == "not_whitelisted"
+    assert step["reason"] == "not_allowed"
 
     # from trusted network, only one available user, bypass the login flow
     flow = await provider_bypass_login.async_login_flow(

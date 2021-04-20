@@ -1,18 +1,25 @@
-"""
-Platform for retrieving meteorological data from Environment Canada.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/weather.environmentcanada/
-"""
+"""Platform for retrieving meteorological data from Environment Canada."""
 import datetime
-import logging
 import re
 
 from env_canada import ECData
 import voluptuous as vol
 
 from homeassistant.components.weather import (
+    ATTR_CONDITION_CLEAR_NIGHT,
+    ATTR_CONDITION_CLOUDY,
+    ATTR_CONDITION_FOG,
+    ATTR_CONDITION_HAIL,
+    ATTR_CONDITION_LIGHTNING_RAINY,
+    ATTR_CONDITION_PARTLYCLOUDY,
+    ATTR_CONDITION_POURING,
+    ATTR_CONDITION_RAINY,
+    ATTR_CONDITION_SNOWY,
+    ATTR_CONDITION_SNOWY_RAINY,
+    ATTR_CONDITION_SUNNY,
+    ATTR_CONDITION_WINDY,
     ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
@@ -20,10 +27,8 @@ from homeassistant.components.weather import (
     WeatherEntity,
 )
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS
-import homeassistant.util.dt as dt
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
+import homeassistant.util.dt as dt
 
 CONF_FORECAST = "forecast"
 CONF_ATTRIBUTION = "Data provided by Environment Canada"
@@ -52,18 +57,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 # Icon codes from http://dd.weatheroffice.ec.gc.ca/citypage_weather/
 # docs/current_conditions_icon_code_descriptions_e.csv
 ICON_CONDITION_MAP = {
-    "sunny": [0, 1],
-    "clear-night": [30, 31],
-    "partlycloudy": [2, 3, 4, 5, 22, 32, 33, 34, 35],
-    "cloudy": [10],
-    "rainy": [6, 9, 11, 12, 28, 36],
-    "lightning-rainy": [19, 39, 46, 47],
-    "pouring": [13],
-    "snowy-rainy": [7, 14, 15, 27, 37],
-    "snowy": [8, 16, 17, 18, 25, 26, 38, 40],
-    "windy": [43],
-    "fog": [20, 21, 23, 24, 44],
-    "hail": [26, 27],
+    ATTR_CONDITION_SUNNY: [0, 1],
+    ATTR_CONDITION_CLEAR_NIGHT: [30, 31],
+    ATTR_CONDITION_PARTLYCLOUDY: [2, 3, 4, 5, 22, 32, 33, 34, 35],
+    ATTR_CONDITION_CLOUDY: [10],
+    ATTR_CONDITION_RAINY: [6, 9, 11, 12, 28, 36],
+    ATTR_CONDITION_LIGHTNING_RAINY: [19, 39, 46, 47],
+    ATTR_CONDITION_POURING: [13],
+    ATTR_CONDITION_SNOWY_RAINY: [7, 14, 15, 27, 37],
+    ATTR_CONDITION_SNOWY: [8, 16, 17, 18, 25, 26, 38, 40],
+    ATTR_CONDITION_WINDY: [43],
+    ATTR_CONDITION_FOG: [20, 21, 23, 24, 44],
+    ATTR_CONDITION_HAIL: [26, 27],
 }
 
 
@@ -103,7 +108,7 @@ class ECWeather(WeatherEntity):
     @property
     def temperature(self):
         """Return the temperature."""
-        if self.ec_data.conditions.get("temperature").get("value"):
+        if self.ec_data.conditions.get("temperature", {}).get("value"):
             return float(self.ec_data.conditions["temperature"]["value"])
         if self.ec_data.hourly_forecasts[0].get("temperature"):
             return float(self.ec_data.hourly_forecasts[0]["temperature"])
@@ -117,35 +122,35 @@ class ECWeather(WeatherEntity):
     @property
     def humidity(self):
         """Return the humidity."""
-        if self.ec_data.conditions.get("humidity").get("value"):
+        if self.ec_data.conditions.get("humidity", {}).get("value"):
             return float(self.ec_data.conditions["humidity"]["value"])
         return None
 
     @property
     def wind_speed(self):
         """Return the wind speed."""
-        if self.ec_data.conditions.get("wind_speed").get("value"):
+        if self.ec_data.conditions.get("wind_speed", {}).get("value"):
             return float(self.ec_data.conditions["wind_speed"]["value"])
         return None
 
     @property
     def wind_bearing(self):
         """Return the wind bearing."""
-        if self.ec_data.conditions.get("wind_bearing").get("value"):
+        if self.ec_data.conditions.get("wind_bearing", {}).get("value"):
             return float(self.ec_data.conditions["wind_bearing"]["value"])
         return None
 
     @property
     def pressure(self):
         """Return the pressure."""
-        if self.ec_data.conditions.get("pressure").get("value"):
+        if self.ec_data.conditions.get("pressure", {}).get("value"):
             return 10 * float(self.ec_data.conditions["pressure"]["value"])
         return None
 
     @property
     def visibility(self):
         """Return the visibility."""
-        if self.ec_data.conditions.get("visibility").get("value"):
+        if self.ec_data.conditions.get("visibility", {}).get("value"):
             return float(self.ec_data.conditions["visibility"]["value"])
         return None
 
@@ -154,7 +159,7 @@ class ECWeather(WeatherEntity):
         """Return the weather condition."""
         icon_code = None
 
-        if self.ec_data.conditions.get("icon_code").get("value"):
+        if self.ec_data.conditions.get("icon_code", {}).get("value"):
             icon_code = self.ec_data.conditions["icon_code"]["value"]
         elif self.ec_data.hourly_forecasts[0].get("icon_code"):
             icon_code = self.ec_data.hourly_forecasts[0]["icon_code"]
@@ -179,20 +184,34 @@ def get_forecast(ec_data, forecast_type):
 
     if forecast_type == "daily":
         half_days = ec_data.daily_forecasts
+
+        today = {
+            ATTR_FORECAST_TIME: dt.now().isoformat(),
+            ATTR_FORECAST_CONDITION: icon_code_to_condition(
+                int(half_days[0]["icon_code"])
+            ),
+            ATTR_FORECAST_PRECIPITATION_PROBABILITY: int(
+                half_days[0]["precip_probability"]
+            ),
+        }
+
         if half_days[0]["temperature_class"] == "high":
-            forecast_array.append(
+            today.update(
                 {
-                    ATTR_FORECAST_TIME: dt.now().isoformat(),
                     ATTR_FORECAST_TEMP: int(half_days[0]["temperature"]),
                     ATTR_FORECAST_TEMP_LOW: int(half_days[1]["temperature"]),
-                    ATTR_FORECAST_CONDITION: icon_code_to_condition(
-                        int(half_days[0]["icon_code"])
-                    ),
                 }
             )
-            half_days = half_days[2:]
         else:
-            half_days = half_days[1:]
+            today.update(
+                {
+                    ATTR_FORECAST_TEMP_LOW: int(half_days[0]["temperature"]),
+                    ATTR_FORECAST_TEMP: int(half_days[1]["temperature"]),
+                }
+            )
+
+        forecast_array.append(today)
+        half_days = half_days[2:]
 
         for day, high, low in zip(range(1, 6), range(0, 9, 2), range(1, 10, 2)):
             forecast_array.append(
@@ -204,6 +223,9 @@ def get_forecast(ec_data, forecast_type):
                     ATTR_FORECAST_TEMP_LOW: int(half_days[low]["temperature"]),
                     ATTR_FORECAST_CONDITION: icon_code_to_condition(
                         int(half_days[high]["icon_code"])
+                    ),
+                    ATTR_FORECAST_PRECIPITATION_PROBABILITY: int(
+                        half_days[high]["precip_probability"]
                     ),
                 }
             )
@@ -219,6 +241,9 @@ def get_forecast(ec_data, forecast_type):
                     ATTR_FORECAST_TEMP: int(hours[hour]["temperature"]),
                     ATTR_FORECAST_CONDITION: icon_code_to_condition(
                         int(hours[hour]["icon_code"])
+                    ),
+                    ATTR_FORECAST_PRECIPITATION_PROBABILITY: int(
+                        hours[hour]["precip_probability"]
                     ),
                 }
             )

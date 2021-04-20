@@ -4,15 +4,15 @@ All containing methods are legacy helpers that should not be used by new
 components. Instead call the service directly.
 """
 from homeassistant.components.device_tracker import (
-    DOMAIN,
     ATTR_ATTRIBUTES,
     ATTR_BATTERY,
+    ATTR_DEV_ID,
     ATTR_GPS,
     ATTR_GPS_ACCURACY,
+    ATTR_HOST_NAME,
     ATTR_LOCATION_NAME,
     ATTR_MAC,
-    ATTR_DEV_ID,
-    ATTR_HOST_NAME,
+    DOMAIN,
     SERVICE_SEE,
 )
 from homeassistant.core import callback

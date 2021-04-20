@@ -1,27 +1,31 @@
 """Platform for the opengarage.io cover component."""
 import logging
 
-import requests
+import opengarage
 import voluptuous as vol
 
 from homeassistant.components.cover import (
-    CoverDevice,
     DEVICE_CLASS_GARAGE,
     PLATFORM_SCHEMA,
-    SUPPORT_OPEN,
     SUPPORT_CLOSE,
+    SUPPORT_OPEN,
+    CoverEntity,
 )
 from homeassistant.const import (
-    CONF_NAME,
-    STATE_CLOSED,
-    STATE_OPEN,
     CONF_COVERS,
     CONF_HOST,
+    CONF_NAME,
     CONF_PORT,
+    CONF_SSL,
+    CONF_VERIFY_SSL,
+    STATE_CLOSED,
     STATE_CLOSING,
+    STATE_OPEN,
     STATE_OPENING,
 )
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import format_mac
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,6 +46,8 @@ COVER_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_SSL, default=False): cv.boolean,
+        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
     }
 )
 
@@ -50,36 +56,45 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the OpenGarage covers."""
     covers = []
     devices = config.get(CONF_COVERS)
 
     for device_config in devices.values():
-        args = {
-            CONF_NAME: device_config.get(CONF_NAME),
-            CONF_HOST: device_config.get(CONF_HOST),
-            CONF_PORT: device_config.get(CONF_PORT),
-            CONF_DEVICE_KEY: device_config.get(CONF_DEVICE_KEY),
-        }
+        opengarage_url = (
+            f"{'https' if device_config[CONF_SSL] else 'http'}://"
+            f"{device_config.get(CONF_HOST)}:{device_config.get(CONF_PORT)}"
+        )
 
-        covers.append(OpenGarageCover(args))
+        open_garage = opengarage.OpenGarage(
+            opengarage_url,
+            device_config[CONF_DEVICE_KEY],
+            device_config[CONF_VERIFY_SSL],
+            async_get_clientsession(hass),
+        )
+        status = await open_garage.update_state()
+        covers.append(
+            OpenGarageCover(
+                device_config.get(CONF_NAME), open_garage, format_mac(status["mac"])
+            )
+        )
 
-    add_entities(covers, True)
+    async_add_entities(covers, True)
 
 
-class OpenGarageCover(CoverDevice):
+class OpenGarageCover(CoverEntity):
     """Representation of a OpenGarage cover."""
 
-    def __init__(self, args):
+    def __init__(self, name, open_garage, device_id):
         """Initialize the cover."""
-        self.opengarage_url = "http://{}:{}".format(args[CONF_HOST], args[CONF_PORT])
-        self._name = args[CONF_NAME]
-        self._device_key = args[CONF_DEVICE_KEY]
+        self._name = name
+        self._open_garage = open_garage
         self._state = None
         self._state_before_move = None
-        self._device_state_attributes = {}
+        self._extra_state_attributes = {}
         self._available = True
+        self._device_id = device_id
 
     @property
     def name(self):
@@ -92,9 +107,9 @@ class OpenGarageCover(CoverDevice):
         return self._available
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
-        return self._device_state_attributes
+        return self._extra_state_attributes
 
     @property
     def is_closed(self):
@@ -103,30 +118,27 @@ class OpenGarageCover(CoverDevice):
             return None
         return self._state in [STATE_CLOSED, STATE_OPENING]
 
-    def close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs):
         """Close the cover."""
         if self._state in [STATE_CLOSED, STATE_CLOSING]:
             return
         self._state_before_move = self._state
         self._state = STATE_CLOSING
-        self._push_button()
+        await self._push_button()
 
-    def open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs):
         """Open the cover."""
         if self._state in [STATE_OPEN, STATE_OPENING]:
             return
         self._state_before_move = self._state
         self._state = STATE_OPENING
-        self._push_button()
+        await self._push_button()
 
-    def update(self):
+    async def async_update(self):
         """Get updated status from API."""
-        try:
-            status = requests.get(f"{self.opengarage_url}/jc", timeout=10).json()
-        except requests.exceptions.RequestException as ex:
-            _LOGGER.error(
-                "Unable to connect to OpenGarage device: %(reason)s", dict(reason=ex)
-            )
+        status = await self._open_garage.update_state()
+        if status is None:
+            _LOGGER.error("Unable to connect to OpenGarage device")
             self._available = False
             return
 
@@ -142,25 +154,19 @@ class OpenGarageCover(CoverDevice):
 
         _LOGGER.debug("%s status: %s", self._name, self._state)
         if status.get("rssi") is not None:
-            self._device_state_attributes[ATTR_SIGNAL_STRENGTH] = status.get("rssi")
+            self._extra_state_attributes[ATTR_SIGNAL_STRENGTH] = status.get("rssi")
         if status.get("dist") is not None:
-            self._device_state_attributes[ATTR_DISTANCE_SENSOR] = status.get("dist")
+            self._extra_state_attributes[ATTR_DISTANCE_SENSOR] = status.get("dist")
         if self._state is not None:
-            self._device_state_attributes[ATTR_DOOR_STATE] = self._state
+            self._extra_state_attributes[ATTR_DOOR_STATE] = self._state
 
         self._available = True
 
-    def _push_button(self):
+    async def _push_button(self):
         """Send commands to API."""
-        result = -1
-        try:
-            result = requests.get(
-                f"{self.opengarage_url}/cc?dkey={self._device_key}&click=1", timeout=10
-            ).json()["result"]
-        except requests.exceptions.RequestException as ex:
-            _LOGGER.error(
-                "Unable to connect to OpenGarage device: %(reason)s", dict(reason=ex)
-            )
+        result = await self._open_garage.push_button()
+        if result is None:
+            _LOGGER.error("Unable to connect to OpenGarage device")
         if result == 1:
             return
 
@@ -181,3 +187,8 @@ class OpenGarageCover(CoverDevice):
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_OPEN | SUPPORT_CLOSE
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._device_id

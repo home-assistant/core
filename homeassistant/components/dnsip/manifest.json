@@ -1,10 +1,8 @@
 {
   "domain": "dnsip",
-  "name": "Dnsip",
+  "name": "DNS IP",
   "documentation": "https://www.home-assistant.io/integrations/dnsip",
-  "requirements": [
-    "aiodns==2.0.0"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "requirements": ["aiodns==2.0.0"],
+  "codeowners": [],
+  "iot_class": "cloud_polling"
 }

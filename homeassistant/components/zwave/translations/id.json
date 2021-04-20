@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
+        },
+        "error": {
+            "option_error": "Validasi Z-Wave gagal. Apakah jalur ke stik USB sudah benar?"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "network_key": "Kunci Jaringan (biarkan kosong untuk dibuat secara otomatis)",
+                    "usb_path": "Jalur Perangkat USB"
+                },
+                "description": "Integrasi ini tidak lagi dipertahankan. Untuk instalasi baru, gunakan Z-Wave JS sebagai gantinya.\n\nBaca https://www.home-assistant.io/docs/z-wave/installation/ untuk informasi tentang variabel konfigurasi",
+                "title": "Siapkan Z-Wave"
+            }
+        }
+    },
+    "state": {
+        "_": {
+            "dead": "Mati",
+            "initializing": "Inisialisasi",
+            "ready": "Siap",
+            "sleeping": "Tidur"
+        },
+        "query_stage": {
+            "dead": "Mati",
+            "initializing": "Inisialisasi"
+        }
+    }
+}

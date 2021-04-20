@@ -4,12 +4,12 @@ Lazy 'tox' to quickly check if branch is up to PR standards.
 
 This is NOT a tox replacement, only a quick check during development.
 """
-import os
 import asyncio
-import sys
+from collections import namedtuple
+import os
 import re
 import shlex
-from collections import namedtuple
+import sys
 
 try:
     from colorlog.escape_codes import escape_codes
@@ -32,13 +32,14 @@ def printc(the_color, *args):
         return
     try:
         print(escape_codes[the_color] + msg + escape_codes["reset"])
-    except KeyError:
+    except KeyError as err:
         print(msg)
-        raise ValueError(f"Invalid color {the_color}")
+        raise ValueError(f"Invalid color {the_color}") from err
 
 
 def validate_requirements_ok():
     """Validate requirements, returns True of ok."""
+    # pylint: disable=import-error,import-outside-toplevel
     from gen_requirements_all import main as req_main
 
     return req_main(True) == 0
@@ -61,13 +62,12 @@ async def async_exec(*args, display=False):
     argsp = []
     for arg in args:
         if os.path.isfile(arg):
-            argsp.append("\\\n  {}".format(shlex.quote(arg)))
+            argsp.append(f"\\\n  {shlex.quote(arg)}")
         else:
             argsp.append(shlex.quote(arg))
     printc("cyan", *argsp)
     try:
         kwargs = {
-            "loop": LOOP,
             "stdout": asyncio.subprocess.PIPE,
             "stderr": asyncio.subprocess.STDOUT,
         }
@@ -75,10 +75,7 @@ async def async_exec(*args, display=False):
             kwargs["stderr"] = asyncio.subprocess.PIPE
         proc = await asyncio.create_subprocess_exec(*args, **kwargs)
     except FileNotFoundError as err:
-        printc(
-            FAIL,
-            "Could not execute {}. Did you install test requirements?".format(args[0]),
-        )
+        printc(FAIL, f"Could not execute {args[0]}. Did you install test requirements?")
         raise err
 
     if not display:
@@ -120,7 +117,7 @@ async def pylint(files):
 
 async def flake8(files):
     """Exec flake8."""
-    _, log = await async_exec("flake8", "--doctests", *files)
+    _, log = await async_exec("pre-commit", "run", "flake8", "--files", *files)
     res = []
     for line in log.splitlines():
         line = line.split(":")
@@ -202,7 +199,7 @@ async def main():
             elif parts[-1] == "__main__.py":
                 parts[-1] = "test_main.py"
             else:
-                parts[-1] = "test_" + parts[-1]
+                parts[-1] = f"test_{parts[-1]}"
             fname = "/".join(parts)
             if os.path.isfile(fname):
                 test_files.add(fname)
@@ -235,15 +232,7 @@ async def main():
 
 
 if __name__ == "__main__":
-    LOOP = (
-        asyncio.ProactorEventLoop()
-        if sys.platform == "win32"
-        else asyncio.get_event_loop()
-    )
-
     try:
-        LOOP.run_until_complete(main())
+        asyncio.run(main())
     except (FileNotFoundError, KeyboardInterrupt):
         pass
-    finally:
-        LOOP.close()

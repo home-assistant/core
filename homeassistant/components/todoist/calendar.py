@@ -2,98 +2,53 @@
 from datetime import datetime, timedelta
 import logging
 
+from todoist.api import TodoistAPI
 import voluptuous as vol
 
-from homeassistant.components.calendar import (
-    DOMAIN,
-    PLATFORM_SCHEMA,
-    CalendarEventDevice,
-)
+from homeassistant.components.calendar import PLATFORM_SCHEMA, CalendarEventDevice
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TOKEN
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.template import DATE_STR_FORMAT
-from homeassistant.util import Throttle, dt
+from homeassistant.util import dt
+
+from .const import (
+    ALL_DAY,
+    ALL_TASKS,
+    CHECKED,
+    COMPLETED,
+    CONF_EXTRA_PROJECTS,
+    CONF_PROJECT_DUE_DATE,
+    CONF_PROJECT_LABEL_WHITELIST,
+    CONF_PROJECT_WHITELIST,
+    CONTENT,
+    DATETIME,
+    DESCRIPTION,
+    DOMAIN,
+    DUE,
+    DUE_DATE,
+    DUE_DATE_LANG,
+    DUE_DATE_STRING,
+    DUE_DATE_VALID_LANGS,
+    DUE_TODAY,
+    END,
+    ID,
+    LABELS,
+    NAME,
+    OVERDUE,
+    PRIORITY,
+    PROJECT_ID,
+    PROJECT_NAME,
+    PROJECTS,
+    REMINDER_DATE,
+    REMINDER_DATE_LANG,
+    REMINDER_DATE_STRING,
+    SERVICE_NEW_TASK,
+    START,
+    SUMMARY,
+    TASKS,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_EXTRA_PROJECTS = "custom_projects"
-CONF_PROJECT_DUE_DATE = "due_date_days"
-CONF_PROJECT_LABEL_WHITELIST = "labels"
-CONF_PROJECT_WHITELIST = "include_projects"
-
-# Calendar Platform: Does this calendar event last all day?
-ALL_DAY = "all_day"
-# Attribute: All tasks in this project
-ALL_TASKS = "all_tasks"
-# Todoist API: "Completed" flag -- 1 if complete, else 0
-CHECKED = "checked"
-# Attribute: Is this task complete?
-COMPLETED = "completed"
-# Todoist API: What is this task about?
-# Service Call: What is this task about?
-CONTENT = "content"
-# Calendar Platform: Get a calendar event's description
-DESCRIPTION = "description"
-# Calendar Platform: Used in the '_get_date()' method
-DATETIME = "dateTime"
-DUE = "due"
-# Service Call: When is this task due (in natural language)?
-DUE_DATE_STRING = "due_date_string"
-# Service Call: The language of DUE_DATE_STRING
-DUE_DATE_LANG = "due_date_lang"
-# Service Call: The available options of DUE_DATE_LANG
-DUE_DATE_VALID_LANGS = [
-    "en",
-    "da",
-    "pl",
-    "zh",
-    "ko",
-    "de",
-    "pt",
-    "ja",
-    "it",
-    "fr",
-    "sv",
-    "ru",
-    "es",
-    "nl",
-]
-# Attribute: When is this task due?
-# Service Call: When is this task due?
-DUE_DATE = "due_date"
-# Todoist API: Look up a task's due date
-DUE_DATE_UTC = "due_date_utc"
-# Attribute: Is this task due today?
-DUE_TODAY = "due_today"
-# Calendar Platform: When a calendar event ends
-END = "end"
-# Todoist API: Look up a Project/Label/Task ID
-ID = "id"
-# Todoist API: Fetch all labels
-# Service Call: What are the labels attached to this task?
-LABELS = "labels"
-# Todoist API: "Name" value
-NAME = "name"
-# Attribute: Is this task overdue?
-OVERDUE = "overdue"
-# Attribute: What is this task's priority?
-# Todoist API: Get a task's priority
-# Service Call: What is this task's priority?
-PRIORITY = "priority"
-# Todoist API: Look up the Project ID a Task belongs to
-PROJECT_ID = "project_id"
-# Service Call: What Project do you want a Task added to?
-PROJECT_NAME = "project"
-# Todoist API: Fetch all Projects
-PROJECTS = "projects"
-# Calendar Platform: When does a calendar event start?
-START = "start"
-# Calendar Platform: What is the next calendar event about?
-SUMMARY = "summary"
-# Todoist API: Fetch all Tasks
-TASKS = "items"
-
-SERVICE_NEW_TASK = "todoist_new_task"
 
 NEW_TASK_SERVICE_SCHEMA = vol.Schema(
     {
@@ -104,6 +59,11 @@ NEW_TASK_SERVICE_SCHEMA = vol.Schema(
         vol.Exclusive(DUE_DATE_STRING, "due_date"): cv.string,
         vol.Optional(DUE_DATE_LANG): vol.All(cv.string, vol.In(DUE_DATE_VALID_LANGS)),
         vol.Exclusive(DUE_DATE, "due_date"): cv.string,
+        vol.Exclusive(REMINDER_DATE_STRING, "reminder_date"): cv.string,
+        vol.Optional(REMINDER_DATE_LANG): vol.All(
+            cv.string, vol.In(DUE_DATE_VALID_LANGS)
+        ),
+        vol.Exclusive(REMINDER_DATE, "reminder_date"): cv.string,
     }
 )
 
@@ -132,7 +92,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
+SCAN_INTERVAL = timedelta(minutes=15)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -142,8 +102,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # Look up IDs based on (lowercase) names.
     project_id_lookup = {}
     label_id_lookup = {}
-
-    from todoist.api import TodoistAPI
 
     api = TodoistAPI(token)
     api.sync()
@@ -202,7 +160,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(project_devices)
 
     def handle_new_task(call):
-        """Call when a user creates a new Todoist Task from HASS."""
+        """Call when a user creates a new Todoist Task from Home Assistant."""
         project_name = call.data[PROJECT_NAME]
         project_id = project_id_lookup[project_name]
 
@@ -231,12 +189,33 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 due_date = datetime(due.year, due.month, due.day)
             # Format it in the manner Todoist expects
             due_date = dt.as_utc(due_date)
-            date_format = "%Y-%m-%dT%H:%M"
+            date_format = "%Y-%m-%dT%H:%M%S"
             due_date = datetime.strftime(due_date, date_format)
             _due["date"] = due_date
 
         if _due:
             item.update(due=_due)
+
+        _reminder_due: dict = {}
+        if REMINDER_DATE_STRING in call.data:
+            _reminder_due["string"] = call.data[REMINDER_DATE_STRING]
+
+        if REMINDER_DATE_LANG in call.data:
+            _reminder_due["lang"] = call.data[REMINDER_DATE_LANG]
+
+        if REMINDER_DATE in call.data:
+            due_date = dt.parse_datetime(call.data[REMINDER_DATE])
+            if due_date is None:
+                due = dt.parse_date(call.data[REMINDER_DATE])
+                due_date = datetime(due.year, due.month, due.day)
+            # Format it in the manner Todoist expects
+            due_date = dt.as_utc(due_date)
+            date_format = "%Y-%m-%dT%H:%M:%S"
+            due_date = datetime.strftime(due_date, date_format)
+            _reminder_due["date"] = due_date
+
+        if _reminder_due:
+            api.reminders.add(item["id"], due=_reminder_due)
 
         # Commit changes
         api.commit()
@@ -247,15 +226,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-def _parse_due_date(data: dict) -> datetime:
+def _parse_due_date(data: dict, gmt_string) -> datetime:
     """Parse the due date dict into a datetime object."""
     # Add time information to date only strings.
     if len(data["date"]) == 10:
         data["date"] += "T00:00:00"
-    # If there is no timezone provided, use UTC.
-    if data["timezone"] is None:
-        data["date"] += "Z"
-    return dt.parse_datetime(data["date"])
+    if dt.parse_datetime(data["date"]).tzinfo is None:
+        data["date"] += gmt_string
+    return dt.as_utc(dt.parse_datetime(data["date"]))
 
 
 class TodoistProjectDevice(CalendarEventDevice):
@@ -267,7 +245,7 @@ class TodoistProjectDevice(CalendarEventDevice):
         data,
         labels,
         token,
-        latest_task_due_date=None,
+        due_date_days=None,
         whitelisted_labels=None,
         whitelisted_projects=None,
     ):
@@ -276,7 +254,7 @@ class TodoistProjectDevice(CalendarEventDevice):
             data,
             labels,
             token,
-            latest_task_due_date,
+            due_date_days,
             whitelisted_labels,
             whitelisted_projects,
         )
@@ -306,20 +284,19 @@ class TodoistProjectDevice(CalendarEventDevice):
         return await self.data.async_get_events(hass, start_date, end_date)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         if self.data.event is None:
             # No tasks, we don't REALLY need to show anything.
             return None
 
-        attributes = {}
-        attributes[DUE_TODAY] = self.data.event[DUE_TODAY]
-        attributes[OVERDUE] = self.data.event[OVERDUE]
-        attributes[ALL_TASKS] = self._cal_data[ALL_TASKS]
-        attributes[PRIORITY] = self.data.event[PRIORITY]
-        attributes[LABELS] = self.data.event[LABELS]
-
-        return attributes
+        return {
+            DUE_TODAY: self.data.event[DUE_TODAY],
+            OVERDUE: self.data.event[OVERDUE],
+            ALL_TASKS: self._cal_data[ALL_TASKS],
+            PRIORITY: self.data.event[PRIORITY],
+            LABELS: self.data.event[LABELS],
+        }
 
 
 class TodoistProjectData:
@@ -352,8 +329,7 @@ class TodoistProjectData:
     platform itself, but are not used by this component at all.
 
     The 'update' method polls the Todoist API for new projects/tasks, as well
-    as any updates to current projects/tasks. This is throttled to every
-    MIN_TIME_BETWEEN_UPDATES minutes.
+    as any updates to current projects/tasks. This occurs every SCAN_INTERVAL minutes.
     """
 
     def __init__(
@@ -361,7 +337,7 @@ class TodoistProjectData:
         project_data,
         labels,
         api,
-        latest_task_due_date=None,
+        due_date_days=None,
         whitelisted_labels=None,
         whitelisted_projects=None,
     ):
@@ -379,12 +355,12 @@ class TodoistProjectData:
 
         self.all_project_tasks = []
 
-        # The latest date a task can be due (for making lists of everything
+        # The days a task can be due (for making lists of everything
         # due today, or everything due in the next week, for example).
-        if latest_task_due_date is not None:
-            self._latest_due_date = dt.utcnow() + timedelta(days=latest_task_due_date)
+        if due_date_days is not None:
+            self._due_date_days = timedelta(days=due_date_days)
         else:
-            self._latest_due_date = None
+            self._due_date_days = None
 
         # Only tasks with one of these labels will be included.
         if whitelisted_labels is not None:
@@ -409,7 +385,7 @@ class TodoistProjectData:
         task[SUMMARY] = data[CONTENT]
         task[COMPLETED] = data[CHECKED] == 1
         task[PRIORITY] = data[PRIORITY]
-        task[DESCRIPTION] = "https://todoist.com/showTask?id={}".format(data[ID])
+        task[DESCRIPTION] = f"https://todoist.com/showTask?id={data[ID]}"
 
         # All task Labels (optional parameter).
         task[LABELS] = [
@@ -430,10 +406,12 @@ class TodoistProjectData:
         # Generally speaking, that means right now.
         task[START] = dt.utcnow()
         if data[DUE] is not None:
-            task[END] = _parse_due_date(data[DUE])
+            task[END] = _parse_due_date(
+                data[DUE], self._api.state["user"]["tz_info"]["gmt_string"]
+            )
 
-            if self._latest_due_date is not None and (
-                task[END] > self._latest_due_date
+            if self._due_date_days is not None and (
+                task[END] > dt.utcnow() + self._due_date_days
             ):
                 # This task is out of range of our due date;
                 # it shouldn't be counted.
@@ -453,7 +431,7 @@ class TodoistProjectData:
         else:
             # If we ask for everything due before a certain date, don't count
             # things which have no due dates.
-            if self._latest_due_date is not None:
+            if self._due_date_days is not None:
                 return None
 
             # Define values for tasks without due dates
@@ -550,19 +528,37 @@ class TodoistProjectData:
 
         events = []
         for task in project_task_data:
-            due_date = _parse_due_date(task["due"])
+            if task["due"] is None:
+                continue
+            due_date = _parse_due_date(
+                task["due"], self._api.state["user"]["tz_info"]["gmt_string"]
+            )
+            midnight = dt.as_utc(
+                dt.parse_datetime(
+                    due_date.strftime("%Y-%m-%d")
+                    + "T00:00:00"
+                    + self._api.state["user"]["tz_info"]["gmt_string"]
+                )
+            )
+
             if start_date < due_date < end_date:
+                if due_date == midnight:
+                    # If the due date has no time data, return just the date so that it
+                    # will render correctly as an all day event on a calendar.
+                    due_date_value = due_date.strftime("%Y-%m-%d")
+                else:
+                    due_date_value = due_date.isoformat()
                 event = {
                     "uid": task["id"],
                     "title": task["content"],
-                    "start": due_date.isoformat(),
-                    "end": due_date.isoformat(),
+                    "start": due_date_value,
+                    "end": due_date_value,
                     "allDay": True,
+                    "summary": task["content"],
                 }
                 events.append(event)
         return events
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data."""
         if self._id is None:
@@ -621,7 +617,7 @@ class TodoistProjectData:
             if self.event[END] is not None:
                 self.event[END] = {DATETIME: self.event[END].strftime(DATE_STR_FORMAT)}
             else:
-                # HASS gets cranky if a calendar event never ends
+                # Home Assistant gets cranky if a calendar event never ends
                 # Let's set our "due date" to tomorrow
                 self.event[END] = {
                     DATETIME: (datetime.utcnow() + timedelta(days=1)).strftime(

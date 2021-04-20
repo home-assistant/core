@@ -1,22 +1,28 @@
 """Support for the Hive switches."""
-from homeassistant.components.switch import SwitchDevice
+from datetime import timedelta
 
-from . import DOMAIN, DATA_HIVE, HiveEntity, refresh_system
+from homeassistant.components.switch import SwitchEntity
 
+from . import HiveEntity, refresh_system
+from .const import ATTR_MODE, DOMAIN
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up Hive switches."""
-    if discovery_info is None:
-        return
-
-    session = hass.data.get(DATA_HIVE)
-    devs = []
-    for dev in discovery_info:
-        devs.append(HiveDevicePlug(session, dev))
-    add_entities(devs)
+PARALLEL_UPDATES = 0
+SCAN_INTERVAL = timedelta(seconds=15)
 
 
-class HiveDevicePlug(HiveEntity, SwitchDevice):
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up Hive thermostat based on a config entry."""
+
+    hive = hass.data[DOMAIN][entry.entry_id]
+    devices = hive.session.deviceList.get("switch")
+    entities = []
+    if devices:
+        for dev in devices:
+            entities.append(HiveDevicePlug(hive, dev))
+    async_add_entities(entities, True)
+
+
+class HiveDevicePlug(HiveEntity, SwitchEntity):
     """Hive Active Plug."""
 
     @property
@@ -27,39 +33,54 @@ class HiveDevicePlug(HiveEntity, SwitchDevice):
     @property
     def device_info(self):
         """Return device information."""
-        return {"identifiers": {(DOMAIN, self.unique_id)}, "name": self.name}
+        if self.device["hiveType"] == "activeplug":
+            return {
+                "identifiers": {(DOMAIN, self.device["device_id"])},
+                "name": self.device["device_name"],
+                "model": self.device["deviceData"]["model"],
+                "manufacturer": self.device["deviceData"]["manufacturer"],
+                "sw_version": self.device["deviceData"]["version"],
+                "via_device": (DOMAIN, self.device["parentDevice"]),
+            }
 
     @property
     def name(self):
         """Return the name of this Switch device if any."""
-        return self.node_name
+        return self.device["haName"]
 
     @property
-    def device_state_attributes(self):
+    def available(self):
+        """Return if the device is available."""
+        return self.device["deviceData"].get("online")
+
+    @property
+    def extra_state_attributes(self):
         """Show Device Attributes."""
-        return self.attributes
+        return {
+            ATTR_MODE: self.attributes.get(ATTR_MODE),
+        }
 
     @property
     def current_power_w(self):
         """Return the current power usage in W."""
-        return self.session.switch.get_power_usage(self.node_id)
+        return self.device["status"].get("power_usage")
 
     @property
     def is_on(self):
         """Return true if switch is on."""
-        return self.session.switch.get_state(self.node_id)
+        return self.device["status"]["state"]
 
     @refresh_system
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
-        self.session.switch.turn_on(self.node_id)
+        await self.hive.switch.turnOn(self.device)
 
     @refresh_system
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        self.session.switch.turn_off(self.node_id)
+        await self.hive.switch.turnOff(self.device)
 
-    def update(self):
+    async def async_update(self):
         """Update all Node data from Hive."""
-        self.session.core.update_data(self.node_id)
-        self.attributes = self.session.attributes.state_attributes(self.node_id)
+        await self.hive.session.updateData(self.device)
+        self.device = await self.hive.switch.getSwitch(self.device)

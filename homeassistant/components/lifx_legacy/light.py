@@ -3,12 +3,10 @@ Support for the LIFX platform that implements lights.
 
 This is a legacy platform, included because the current lifx platform does
 not yet support Windows.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.lifx/
 """
 import logging
 
+import liffylights
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -16,19 +14,19 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR_TEMP,
-    SUPPORT_COLOR,
-    SUPPORT_TRANSITION,
-    Light,
     PLATFORM_SCHEMA,
-)
-from homeassistant.helpers.event import track_time_change
-from homeassistant.util.color import (
-    color_temperature_mired_to_kelvin,
-    color_temperature_kelvin_to_mired,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP,
+    SUPPORT_TRANSITION,
+    LightEntity,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import track_time_change
+from homeassistant.util.color import (
+    color_temperature_kelvin_to_mired,
+    color_temperature_mired_to_kelvin,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,13 +46,22 @@ SUPPORT_LIFX = (
     SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_COLOR | SUPPORT_TRANSITION
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_SERVER): cv.string, vol.Optional(CONF_BROADCAST): cv.string}
+PLATFORM_SCHEMA = vol.All(
+    cv.deprecated(CONF_SERVER),
+    cv.deprecated(CONF_BROADCAST),
+    PLATFORM_SCHEMA.extend(
+        {vol.Optional(CONF_SERVER): cv.string, vol.Optional(CONF_BROADCAST): cv.string}
+    ),
 )
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the LIFX platform."""
+    _LOGGER.warning(
+        "The LIFX Legacy platform is deprecated and will be removed in "
+        "Home Assistant Core 2021.6.0; Use the LIFX integration instead"
+    )
+
     server_addr = config.get(CONF_SERVER)
     broadcast_addr = config.get(CONF_BROADCAST)
 
@@ -71,8 +78,6 @@ class LIFX:
 
     def __init__(self, add_entities_callback, server_addr=None, broadcast_addr=None):
         """Initialize the light."""
-        import liffylights
-
         self._devices = []
 
         self._add_entities_callback = add_entities_callback
@@ -141,7 +146,7 @@ class LIFX:
         self._liffylights.probe(address)
 
 
-class LIFXLight(Light):
+class LIFXLight(LightEntity):
     """Representation of a LIFX light."""
 
     def __init__(self, liffy, ipaddr, name, power, hue, saturation, brightness, kelvin):

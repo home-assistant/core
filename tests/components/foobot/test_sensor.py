@@ -1,16 +1,25 @@
 """The tests for the Foobot sensor platform."""
 
-import re
 import asyncio
+import re
 from unittest.mock import MagicMock
+
 import pytest
 
-
-import homeassistant.components.sensor as sensor
 from homeassistant.components.foobot import sensor as foobot
-from homeassistant.const import TEMP_CELSIUS
+import homeassistant.components.sensor as sensor
+from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_BILLION,
+    CONCENTRATION_PARTS_PER_MILLION,
+    HTTP_FORBIDDEN,
+    HTTP_INTERNAL_SERVER_ERROR,
+    PERCENTAGE,
+    TEMP_CELSIUS,
+)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.setup import async_setup_component
+
 from tests.common import load_fixture
 
 VALID_CONFIG = {
@@ -30,14 +39,15 @@ async def test_default_setup(hass, aioclient_mock):
         re.compile("api.foobot.io/v2/device/.*"), text=load_fixture("foobot_data.json")
     )
     assert await async_setup_component(hass, sensor.DOMAIN, {"sensor": VALID_CONFIG})
+    await hass.async_block_till_done()
 
     metrics = {
-        "co2": ["1232.0", "ppm"],
+        "co2": ["1232.0", CONCENTRATION_PARTS_PER_MILLION],
         "temperature": ["21.1", TEMP_CELSIUS],
-        "humidity": ["49.5", "%"],
-        "pm2_5": ["144.8", "µg/m3"],
-        "voc": ["340.7", "ppb"],
-        "index": ["138.9", "%"],
+        "humidity": ["49.5", PERCENTAGE],
+        "pm2_5": ["144.8", CONCENTRATION_MICROGRAMS_PER_CUBIC_METER],
+        "voc": ["340.7", CONCENTRATION_PARTS_PER_BILLION],
+        "index": ["138.9", PERCENTAGE],
     }
 
     for name, value in metrics.items():
@@ -63,7 +73,7 @@ async def test_setup_permanent_error(hass, aioclient_mock):
     """Expected failures caused by permanent errors in API response."""
     fake_async_add_entities = MagicMock()
 
-    errors = [400, 401, 403]
+    errors = [400, 401, HTTP_FORBIDDEN]
     for error in errors:
         aioclient_mock.get(re.compile("api.foobot.io/v2/owner/.*"), status=error)
         result = await foobot.async_setup_platform(
@@ -76,7 +86,7 @@ async def test_setup_temporary_error(hass, aioclient_mock):
     """Expected failures caused by temporary errors in API response."""
     fake_async_add_entities = MagicMock()
 
-    errors = [429, 500]
+    errors = [429, HTTP_INTERNAL_SERVER_ERROR]
     for error in errors:
         aioclient_mock.get(re.compile("api.foobot.io/v2/owner/.*"), status=error)
         with pytest.raises(PlatformNotReady):

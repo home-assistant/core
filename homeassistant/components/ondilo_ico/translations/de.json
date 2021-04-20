@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL.",
+            "missing_configuration": "Die Komponente ist nicht konfiguriert. Bitte der Dokumentation folgen."
+        },
+        "create_entry": {
+            "default": "Erfolgreich authentifiziert"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "W\u00e4hle die Authentifizierungsmethode"
+            }
+        }
+    },
+    "title": "Ondilo ICO"
+}

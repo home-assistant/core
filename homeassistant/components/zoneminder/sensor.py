@@ -2,11 +2,11 @@
 import logging
 
 import voluptuous as vol
+from zoneminder.monitor import TimePeriod
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN as ZONEMINDER_DOMAIN
 
@@ -56,7 +56,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors)
 
 
-class ZMSensorMonitors(Entity):
+class ZMSensorMonitors(SensorEntity):
     """Get the status of each ZoneMinder monitor."""
 
     def __init__(self, monitor):
@@ -90,12 +90,11 @@ class ZMSensorMonitors(Entity):
         self._is_available = self._monitor.is_available
 
 
-class ZMSensorEvents(Entity):
+class ZMSensorEvents(SensorEntity):
     """Get the number of events for each monitor."""
 
     def __init__(self, monitor, include_archived, sensor_type):
         """Initialize event sensor."""
-        from zoneminder.monitor import TimePeriod
 
         self._monitor = monitor
         self._include_archived = include_archived
@@ -122,7 +121,7 @@ class ZMSensorEvents(Entity):
         self._state = self._monitor.get_events(self.time_period, self._include_archived)
 
 
-class ZMSensorRunState(Entity):
+class ZMSensorRunState(SensorEntity):
     """Get the ZoneMinder run state."""
 
     def __init__(self, client):

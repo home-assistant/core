@@ -7,20 +7,19 @@ from unittest import mock
 from urllib.parse import parse_qs
 
 from aiohttp import ClientSession
+from aiohttp.client_exceptions import ClientError, ClientResponseError
 from aiohttp.streams import StreamReader
 from yarl import URL
 
-from aiohttp.client_exceptions import ClientResponseError
-
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 
-retype = type(re.compile(""))
+RETYPE = type(re.compile(""))
 
 
 def mock_stream(data):
     """Mock a stream with data."""
     protocol = mock.Mock(_reading_paused=False)
-    stream = StreamReader(protocol)
+    stream = StreamReader(protocol, limit=2 ** 16)
     stream.feed_data(data)
     stream.feed_eof()
     return stream
@@ -50,23 +49,26 @@ class AiohttpClientMocker:
         headers={},
         exc=None,
         cookies=None,
+        side_effect=None,
     ):
         """Mock a request."""
-        if json is not None:
-            text = _json.dumps(json)
-        if text is not None:
-            content = text.encode("utf-8")
-        if content is None:
-            content = b""
-
-        if not isinstance(url, retype):
+        if not isinstance(url, RETYPE):
             url = URL(url)
         if params:
             url = url.with_query(params)
 
         self._mocks.append(
             AiohttpClientMockResponse(
-                method, url, status, content, cookies, exc, headers
+                method=method,
+                url=url,
+                status=status,
+                response=content,
+                json=json,
+                text=text,
+                cookies=cookies,
+                exc=exc,
+                headers=headers,
+                side_effect=side_effect,
             )
         )
 
@@ -136,7 +138,8 @@ class AiohttpClientMocker:
         for response in self._mocks:
             if response.match_request(method, url, params):
                 self.mock_calls.append((method, url, data, headers))
-
+                if response.side_effect:
+                    response = await response.side_effect(method, url, data)
                 if response.exc:
                     raise response.exc
                 return response
@@ -150,15 +153,32 @@ class AiohttpClientMockResponse:
     """Mock Aiohttp client response."""
 
     def __init__(
-        self, method, url, status, response, cookies=None, exc=None, headers=None
+        self,
+        method,
+        url,
+        status=200,
+        response=None,
+        json=None,
+        text=None,
+        cookies=None,
+        exc=None,
+        headers=None,
+        side_effect=None,
     ):
         """Initialize a fake response."""
+        if json is not None:
+            text = _json.dumps(json)
+        if text is not None:
+            response = text.encode("utf-8")
+        if response is None:
+            response = b""
+
         self.method = method
         self._url = url
         self.status = status
         self.response = response
         self.exc = exc
-
+        self.side_effect = side_effect
         self._headers = headers or {}
         self._cookies = {}
 
@@ -174,7 +194,7 @@ class AiohttpClientMockResponse:
             return False
 
         # regular expression matching
-        if isinstance(self._url, retype):
+        if isinstance(self._url, RETYPE):
             return self._url.search(str(url)) is not None
 
         if (
@@ -221,25 +241,20 @@ class AiohttpClientMockResponse:
         """Return content."""
         return mock_stream(self.response)
 
-    @asyncio.coroutine
-    def read(self):
+    async def read(self):
         """Return mock response."""
         return self.response
 
-    @asyncio.coroutine
-    def text(self, encoding="utf-8"):
+    async def text(self, encoding="utf-8", errors="strict"):
         """Return mock response as a string."""
-        return self.response.decode(encoding)
+        return self.response.decode(encoding, errors=errors)
 
-    @asyncio.coroutine
-    def json(self, encoding="utf-8"):
+    async def json(self, encoding="utf-8", content_type=None):
         """Return mock response as a json."""
         return _json.loads(self.response.decode(encoding))
 
-    @asyncio.coroutine
     def release(self):
         """Mock release."""
-        pass
 
     def raise_for_status(self):
         """Raise error if status is 400 or higher."""
@@ -254,7 +269,6 @@ class AiohttpClientMockResponse:
 
     def close(self):
         """Mock close."""
-        pass
 
 
 @contextmanager
@@ -262,7 +276,7 @@ def mock_aiohttp_client():
     """Context manager to mock aiohttp client."""
     mocker = AiohttpClientMocker()
 
-    def create_session(hass, *args):
+    def create_session(hass, *args, **kwargs):
         session = mocker.create_session(hass.loop)
 
         async def close_session(event):
@@ -274,7 +288,43 @@ def mock_aiohttp_client():
         return session
 
     with mock.patch(
-        "homeassistant.helpers.aiohttp_client.async_create_clientsession",
+        "homeassistant.helpers.aiohttp_client._async_create_clientsession",
         side_effect=create_session,
     ):
         yield mocker
+
+
+class MockLongPollSideEffect:
+    """Imitate a long_poll request.
+
+    It should be created and used as a side effect for a GET/PUT/etc. request.
+    Once created, actual responses are queued with queue_response
+    If queue is empty, will await until done.
+    """
+
+    def __init__(self):
+        """Initialize the queue."""
+        self.semaphore = asyncio.Semaphore(0)
+        self.response_list = []
+        self.stopping = False
+
+    async def __call__(self, method, url, data):
+        """Fetch the next response from the queue or wait until the queue has items."""
+        if self.stopping:
+            raise ClientError()
+        await self.semaphore.acquire()
+        kwargs = self.response_list.pop(0)
+        return AiohttpClientMockResponse(method=method, url=url, **kwargs)
+
+    def queue_response(self, **kwargs):
+        """Add a response to the long_poll queue."""
+        self.response_list.append(kwargs)
+        self.semaphore.release()
+
+    def stop(self):
+        """Stop the current request and future ones.
+
+        This avoids an exception if there is someone waiting when exiting test.
+        """
+        self.stopping = True
+        self.queue_response(exc=ClientError())

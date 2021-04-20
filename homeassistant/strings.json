@@ -1,0 +1,79 @@
+{
+  "common": {
+    "state": {
+      "off": "Off",
+      "on": "On",
+      "open": "Open",
+      "closed": "Closed",
+      "connected": "Connected",
+      "disconnected": "Disconnected",
+      "locked": "Locked",
+      "unlocked": "Unlocked",
+      "active": "Active",
+      "idle": "Idle",
+      "standby": "Standby",
+      "paused": "Paused",
+      "home": "Home",
+      "not_home": "Away"
+    },
+    "config_flow": {
+      "title": {
+        "oauth2_pick_implementation": "Pick Authentication Method",
+        "reauth": "Reauthenticate Integration",
+        "via_hassio_addon": "{name} via Home Assistant add-on"
+      },
+      "description": {
+        "confirm_setup": "Do you want to start set up?"
+      },
+      "data": {
+        "name": "Name",
+        "email": "Email",
+        "username": "Username",
+        "password": "Password",
+        "host": "Host",
+        "ip": "IP Address",
+        "port": "Port",
+        "url": "URL",
+        "usb_path": "USB Device Path",
+        "access_token": "Access Token",
+        "api_key": "API Key",
+        "api_token": "API Token",
+        "ssl": "Uses an SSL certificate",
+        "verify_ssl": "Verify SSL certificate",
+        "elevation": "Elevation",
+        "longitude": "Longitude",
+        "latitude": "Latitude",
+        "location": "Location",
+        "pin": "PIN Code",
+        "mode": "Mode"
+      },
+      "create_entry": {
+        "authenticated": "Successfully authenticated"
+      },
+      "error": {
+        "cannot_connect": "Failed to connect",
+        "invalid_access_token": "Invalid access token",
+        "invalid_api_key": "Invalid API key",
+        "invalid_auth": "Invalid authentication",
+        "invalid_host": "Invalid hostname or IP address",
+        "unknown": "Unexpected error"
+      },
+      "abort": {
+        "single_instance_allowed": "Already configured. Only a single configuration possible.",
+        "already_configured_account": "Account is already configured",
+        "already_configured_device": "Device is already configured",
+        "already_configured_location": "Location is already configured",
+        "already_configured_service": "Service is already configured",
+        "already_in_progress": "Configuration flow is already in progress",
+        "no_devices_found": "No devices found on the network",
+        "webhook_not_internet_accessible": "Your Home Assistant instance needs to be accessible from the internet to receive webhook messages.",
+        "oauth2_error": "Received invalid token data.",
+        "oauth2_missing_configuration": "The component is not configured. Please follow the documentation.",
+        "oauth2_authorize_url_timeout": "Timeout generating authorize URL.",
+        "oauth2_no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
+        "reauth_successful": "Re-authentication was successful",
+        "unknown_authorize_url_generation": "Unknown error generating an authorize URL."
+      }
+    }
+  }
+}

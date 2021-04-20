@@ -12,6 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORTED_LANGUAGES = ["zh"]
 DEFAULT_LANG = "zh"
+SUPPORTED_PERSON = [0, 1, 3, 4, 5, 103, 106, 110, 111, 5003, 5118]
 
 CONF_APP_ID = "app_id"
 CONF_SECRET_KEY = "secret_key"
@@ -35,9 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_VOLUME, default=5): vol.All(
             vol.Coerce(int), vol.Range(min=0, max=15)
         ),
-        vol.Optional(CONF_PERSON, default=0): vol.All(
-            vol.Coerce(int), vol.Range(min=0, max=4)
-        ),
+        vol.Optional(CONF_PERSON, default=0): vol.In(SUPPORTED_PERSON),
     }
 )
 
@@ -52,7 +51,7 @@ _OPTIONS = {
 SUPPORTED_OPTIONS = [CONF_PERSON, CONF_PITCH, CONF_SPEED, CONF_VOLUME]
 
 
-def get_engine(hass, config):
+def get_engine(hass, config, discovery_info=None):
     """Set up Baidu TTS component."""
     return BaiduTTSProvider(hass, config)
 
@@ -63,21 +62,21 @@ class BaiduTTSProvider(Provider):
     def __init__(self, hass, conf):
         """Init Baidu TTS service."""
         self.hass = hass
-        self._lang = conf.get(CONF_LANG)
+        self._lang = conf[CONF_LANG]
         self._codec = "mp3"
         self.name = "BaiduTTS"
 
         self._app_data = {
-            "appid": conf.get(CONF_APP_ID),
-            "apikey": conf.get(CONF_API_KEY),
-            "secretkey": conf.get(CONF_SECRET_KEY),
+            "appid": conf[CONF_APP_ID],
+            "apikey": conf[CONF_API_KEY],
+            "secretkey": conf[CONF_SECRET_KEY],
         }
 
         self._speech_conf_data = {
-            _OPTIONS[CONF_PERSON]: conf.get(CONF_PERSON),
-            _OPTIONS[CONF_PITCH]: conf.get(CONF_PITCH),
-            _OPTIONS[CONF_SPEED]: conf.get(CONF_SPEED),
-            _OPTIONS[CONF_VOLUME]: conf.get(CONF_VOLUME),
+            _OPTIONS[CONF_PERSON]: conf[CONF_PERSON],
+            _OPTIONS[CONF_PITCH]: conf[CONF_PITCH],
+            _OPTIONS[CONF_SPEED]: conf[CONF_SPEED],
+            _OPTIONS[CONF_VOLUME]: conf[CONF_VOLUME],
         }
 
     @property

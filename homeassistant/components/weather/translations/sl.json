@@ -1,0 +1,21 @@
+{
+    "state": {
+        "_": {
+            "clear-night": "Jasno, no\u010d",
+            "cloudy": "Obla\u010dno",
+            "exceptional": "Izjemno",
+            "fog": "Megla",
+            "hail": "To\u010da",
+            "lightning": "Strele",
+            "lightning-rainy": "Grmenje, de\u017eevno",
+            "partlycloudy": "Delno obla\u010dno",
+            "pouring": "Lije",
+            "rainy": "De\u017eevno",
+            "snowy": "Sne\u017eeno",
+            "snowy-rainy": "Sne\u017eeno, de\u017eevno",
+            "sunny": "Son\u010dno",
+            "windy": "Vetrovno",
+            "windy-variant": "Vetrovno"
+        }
+    }
+}

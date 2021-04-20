@@ -6,7 +6,7 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -17,7 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,11 +71,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 hass, entity_id, name, lower, upper, hysteresis, device_class
             )
         ],
-        True,
     )
 
 
-class ThresholdSensor(BinarySensorDevice):
+class ThresholdSensor(BinarySensorEntity):
     """Representation of a Threshold sensor."""
 
     def __init__(self, hass, entity_id, name, lower, upper, hysteresis, device_class):
@@ -88,13 +87,17 @@ class ThresholdSensor(BinarySensorDevice):
         self._hysteresis = hysteresis
         self._device_class = device_class
 
-        self._state_position = None
-        self._state = False
+        self._state_position = POSITION_UNKNOWN
+        self._state = None
         self.sensor_value = None
 
         @callback
-        def async_threshold_sensor_state_listener(entity, old_state, new_state):
+        def async_threshold_sensor_state_listener(event):
             """Handle sensor state changes."""
+            new_state = event.data.get("new_state")
+            if new_state is None:
+                return
+
             try:
                 self.sensor_value = (
                     None if new_state.state == STATE_UNKNOWN else float(new_state.state)
@@ -103,9 +106,12 @@ class ThresholdSensor(BinarySensorDevice):
                 self.sensor_value = None
                 _LOGGER.warning("State is not numerical")
 
-            hass.async_add_job(self.async_update_ha_state, True)
+            self._update_state()
+            self.async_write_ha_state()
 
-        async_track_state_change(hass, entity_id, async_threshold_sensor_state_listener)
+        async_track_state_change_event(
+            hass, [entity_id], async_threshold_sensor_state_listener
+        )
 
     @property
     def name(self):
@@ -138,7 +144,7 @@ class ThresholdSensor(BinarySensorDevice):
             return TYPE_UPPER
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
             ATTR_ENTITY_ID: self._entity_id,
@@ -150,8 +156,9 @@ class ThresholdSensor(BinarySensorDevice):
             ATTR_UPPER: self._threshold_upper,
         }
 
-    async def async_update(self):
-        """Get the latest data and updates the states."""
+    @callback
+    def _update_state(self):
+        """Update the state."""
 
         def below(threshold):
             """Determine if the sensor value is below a threshold."""

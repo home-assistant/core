@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Este pa\u00eds ya est\u00e1 configurado."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "country": "Pa\u00eds"
+                },
+                "title": "Seleccione un pa\u00eds para monitorear"
+            }
+        }
+    }
+}

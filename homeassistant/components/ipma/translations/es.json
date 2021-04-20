@@ -1,0 +1,24 @@
+{
+    "config": {
+        "error": {
+            "name_exists": "El nombre ya existe"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Latitud",
+                    "longitude": "Longitud",
+                    "mode": "Modo",
+                    "name": "Nombre"
+                },
+                "description": "Instituto Portugu\u00eas do Mar e Atmosfera",
+                "title": "Ubicaci\u00f3n"
+            }
+        }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "Se puede acceder al punto de conexi\u00f3n de la API IPMA"
+        }
+    }
+}

@@ -1,5 +1,5 @@
 """The tests the for Locative device tracker platform."""
-from unittest.mock import patch, Mock
+from unittest.mock import patch
 
 import pytest
 
@@ -7,6 +7,7 @@ from homeassistant import data_entry_flow
 from homeassistant.components import locative
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.locative import DOMAIN, TRACKER_UPDATE
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import HTTP_OK, HTTP_UNPROCESSABLE_ENTITY
 from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 from homeassistant.setup import async_setup_component
@@ -33,7 +34,10 @@ async def locative_client(loop, hass, hass_client):
 @pytest.fixture
 async def webhook_id(hass, locative_client):
     """Initialize the Geofency component and get the webhook_id."""
-    hass.config.api = Mock(base_url="http://example.com")
+    await async_process_ha_core_config(
+        hass,
+        {"internal_url": "http://example.local:8123"},
+    )
     result = await hass.config_entries.flow.async_init(
         "locative", context={"source": "user"}
     )
@@ -48,7 +52,7 @@ async def webhook_id(hass, locative_client):
 
 async def test_missing_data(locative_client, webhook_id):
     """Test missing data."""
-    url = "/api/webhook/{}".format(webhook_id)
+    url = f"/api/webhook/{webhook_id}"
 
     data = {
         "latitude": 1.0,
@@ -108,7 +112,7 @@ async def test_missing_data(locative_client, webhook_id):
 
 async def test_enter_and_exit(hass, locative_client, webhook_id):
     """Test when there is a known zone."""
-    url = "/api/webhook/{}".format(webhook_id)
+    url = f"/api/webhook/{webhook_id}"
 
     data = {
         "latitude": 40.7855,
@@ -177,7 +181,7 @@ async def test_enter_and_exit(hass, locative_client, webhook_id):
 
 async def test_exit_after_enter(hass, locative_client, webhook_id):
     """Test when an exit message comes after an enter message."""
-    url = "/api/webhook/{}".format(webhook_id)
+    url = f"/api/webhook/{webhook_id}"
 
     data = {
         "latitude": 40.7855,
@@ -219,7 +223,7 @@ async def test_exit_after_enter(hass, locative_client, webhook_id):
 
 async def test_exit_first(hass, locative_client, webhook_id):
     """Test when an exit message is sent first on a new device."""
-    url = "/api/webhook/{}".format(webhook_id)
+    url = f"/api/webhook/{webhook_id}"
 
     data = {
         "latitude": 40.7855,
@@ -240,7 +244,7 @@ async def test_exit_first(hass, locative_client, webhook_id):
 
 async def test_two_devices(hass, locative_client, webhook_id):
     """Test updating two different devices."""
-    url = "/api/webhook/{}".format(webhook_id)
+    url = f"/api/webhook/{webhook_id}"
 
     data_device_1 = {
         "latitude": 40.7855,
@@ -283,7 +287,7 @@ async def test_two_devices(hass, locative_client, webhook_id):
 )
 async def test_load_unload_entry(hass, locative_client, webhook_id):
     """Test that the appropriate dispatch signals are added and removed."""
-    url = "/api/webhook/{}".format(webhook_id)
+    url = f"/api/webhook/{webhook_id}"
 
     data = {
         "latitude": 40.7855,

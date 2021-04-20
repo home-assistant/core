@@ -1,201 +1,108 @@
 """Support for Toon sensors."""
-import logging
+from __future__ import annotations
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT
+from homeassistant.core import HomeAssistant
 
-from . import (
-    ToonData,
-    ToonEntity,
+from .const import (
+    ATTR_DEFAULT_ENABLED,
+    ATTR_DEVICE_CLASS,
+    ATTR_ICON,
+    ATTR_MEASUREMENT,
+    ATTR_NAME,
+    ATTR_SECTION,
+    ATTR_UNIT_OF_MEASUREMENT,
+    DOMAIN,
+    SENSOR_ENTITIES,
+)
+from .coordinator import ToonDataUpdateCoordinator
+from .models import (
+    ToonBoilerDeviceEntity,
+    ToonDisplayDeviceEntity,
     ToonElectricityMeterDeviceEntity,
+    ToonEntity,
     ToonGasMeterDeviceEntity,
     ToonSolarDeviceEntity,
-    ToonBoilerDeviceEntity,
+    ToonWaterMeterDeviceEntity,
 )
-from .const import CURRENCY_EUR, DATA_TOON, DOMAIN, VOLUME_CM3, VOLUME_M3, RATIO_PERCENT
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up Toon sensors based on a config entry."""
-    toon = hass.data[DATA_TOON][entry.entry_id]
+    coordinator = hass.data[DOMAIN][entry.entry_id]
 
     sensors = [
-        ToonElectricityMeterDeviceSensor(
-            toon, "power", "value", "Current Power Usage", "mdi:power-plug", POWER_WATT
-        ),
-        ToonElectricityMeterDeviceSensor(
-            toon,
-            "power",
-            "average",
-            "Average Power Usage",
-            "mdi:power-plug",
-            POWER_WATT,
-        ),
-        ToonElectricityMeterDeviceSensor(
-            toon,
-            "power",
-            "daily_value",
-            "Power Usage Today",
-            "mdi:power-plug",
-            ENERGY_KILO_WATT_HOUR,
-        ),
-        ToonElectricityMeterDeviceSensor(
-            toon,
-            "power",
-            "daily_cost",
-            "Power Cost Today",
-            "mdi:power-plug",
-            CURRENCY_EUR,
-        ),
-        ToonElectricityMeterDeviceSensor(
-            toon,
-            "power",
-            "average_daily",
-            "Average Daily Power Usage",
-            "mdi:power-plug",
-            ENERGY_KILO_WATT_HOUR,
-        ),
-        ToonElectricityMeterDeviceSensor(
-            toon,
-            "power",
-            "meter_reading",
-            "Power Meter Feed IN Tariff 1",
-            "mdi:power-plug",
-            ENERGY_KILO_WATT_HOUR,
-        ),
-        ToonElectricityMeterDeviceSensor(
-            toon,
-            "power",
-            "meter_reading_low",
-            "Power Meter Feed IN Tariff 2",
-            "mdi:power-plug",
-            ENERGY_KILO_WATT_HOUR,
-        ),
+        ToonElectricityMeterDeviceSensor(coordinator, key=key)
+        for key in (
+            "power_average_daily",
+            "power_average",
+            "power_daily_cost",
+            "power_daily_value",
+            "power_meter_reading_low",
+            "power_meter_reading",
+            "power_value",
+            "solar_meter_reading_low_produced",
+            "solar_meter_reading_produced",
+        )
     ]
 
-    if toon.gas:
+    sensors.extend(
+        [ToonDisplayDeviceSensor(coordinator, key="current_display_temperature")]
+    )
+
+    sensors.extend(
+        [
+            ToonGasMeterDeviceSensor(coordinator, key=key)
+            for key in (
+                "gas_average_daily",
+                "gas_average",
+                "gas_daily_cost",
+                "gas_daily_usage",
+                "gas_meter_reading",
+                "gas_value",
+            )
+        ]
+    )
+
+    sensors.extend(
+        [
+            ToonWaterMeterDeviceSensor(coordinator, key=key)
+            for key in (
+                "water_average_daily",
+                "water_average",
+                "water_daily_cost",
+                "water_daily_usage",
+                "water_meter_reading",
+                "water_value",
+            )
+        ]
+    )
+
+    if coordinator.data.agreement.is_toon_solar:
         sensors.extend(
             [
-                ToonGasMeterDeviceSensor(
-                    toon,
-                    "gas",
-                    "value",
-                    "Current Gas Usage",
-                    "mdi:gas-cylinder",
-                    VOLUME_CM3,
-                ),
-                ToonGasMeterDeviceSensor(
-                    toon,
-                    "gas",
-                    "average",
-                    "Average Gas Usage",
-                    "mdi:gas-cylinder",
-                    VOLUME_CM3,
-                ),
-                ToonGasMeterDeviceSensor(
-                    toon,
-                    "gas",
-                    "daily_usage",
-                    "Gas Usage Today",
-                    "mdi:gas-cylinder",
-                    VOLUME_M3,
-                ),
-                ToonGasMeterDeviceSensor(
-                    toon,
-                    "gas",
-                    "average_daily",
-                    "Average Daily Gas Usage",
-                    "mdi:gas-cylinder",
-                    VOLUME_M3,
-                ),
-                ToonGasMeterDeviceSensor(
-                    toon,
-                    "gas",
-                    "meter_reading",
-                    "Gas Meter",
-                    "mdi:gas-cylinder",
-                    VOLUME_M3,
-                ),
-                ToonGasMeterDeviceSensor(
-                    toon,
-                    "gas",
-                    "daily_cost",
-                    "Gas Cost Today",
-                    "mdi:gas-cylinder",
-                    CURRENCY_EUR,
-                ),
+                ToonSolarDeviceSensor(coordinator, key=key)
+                for key in [
+                    "solar_value",
+                    "solar_maximum",
+                    "solar_produced",
+                    "solar_average_produced",
+                    "power_usage_day_produced_solar",
+                    "power_usage_day_from_grid_usage",
+                    "power_usage_day_to_grid_usage",
+                    "power_usage_current_covered_by_solar",
+                ]
             ]
         )
 
-    if toon.solar:
-        sensors.extend(
-            [
-                ToonSolarDeviceSensor(
-                    toon,
-                    "solar",
-                    "value",
-                    "Current Solar Production",
-                    "mdi:solar-power",
-                    POWER_WATT,
-                ),
-                ToonSolarDeviceSensor(
-                    toon,
-                    "solar",
-                    "maximum",
-                    "Max Solar Production",
-                    "mdi:solar-power",
-                    POWER_WATT,
-                ),
-                ToonSolarDeviceSensor(
-                    toon,
-                    "solar",
-                    "produced",
-                    "Solar Production to Grid",
-                    "mdi:solar-power",
-                    POWER_WATT,
-                ),
-                ToonSolarDeviceSensor(
-                    toon,
-                    "solar",
-                    "average_produced",
-                    "Average Solar Production to Grid",
-                    "mdi:solar-power",
-                    POWER_WATT,
-                ),
-                ToonElectricityMeterDeviceSensor(
-                    toon,
-                    "solar",
-                    "meter_reading_produced",
-                    "Power Meter Feed OUT Tariff 1",
-                    "mdi:solar-power",
-                    ENERGY_KILO_WATT_HOUR,
-                ),
-                ToonElectricityMeterDeviceSensor(
-                    toon,
-                    "solar",
-                    "meter_reading_low_produced",
-                    "Power Meter Feed OUT Tariff 2",
-                    "mdi:solar-power",
-                    ENERGY_KILO_WATT_HOUR,
-                ),
-            ]
-        )
-
-    if toon.thermostat_info.have_ot_boiler:
+    if coordinator.data.thermostat.have_opentherm_boiler:
         sensors.extend(
             [
                 ToonBoilerDeviceSensor(
-                    toon,
-                    "thermostat_info",
-                    "current_modulation_level",
-                    "Boiler Modulation Level",
-                    "mdi:percent",
-                    RATIO_PERCENT,
+                    coordinator, key="thermostat_info_current_modulation_level"
                 )
             ]
         )
@@ -203,102 +110,66 @@ async def async_setup_entry(
     async_add_entities(sensors, True)
 
 
-class ToonSensor(ToonEntity):
+class ToonSensor(ToonEntity, SensorEntity):
     """Defines a Toon sensor."""
 
-    def __init__(
-        self,
-        toon: ToonData,
-        section: str,
-        measurement: str,
-        name: str,
-        icon: str,
-        unit_of_measurement: str,
-    ) -> None:
+    def __init__(self, coordinator: ToonDataUpdateCoordinator, *, key: str) -> None:
         """Initialize the Toon sensor."""
-        self._state = None
-        self._unit_of_measurement = unit_of_measurement
-        self.section = section
-        self.measurement = measurement
+        self.key = key
 
-        super().__init__(toon, name, icon)
+        super().__init__(
+            coordinator,
+            enabled_default=SENSOR_ENTITIES[key][ATTR_DEFAULT_ENABLED],
+            icon=SENSOR_ENTITIES[key][ATTR_ICON],
+            name=SENSOR_ENTITIES[key][ATTR_NAME],
+        )
 
     @property
     def unique_id(self) -> str:
         """Return the unique ID for this sensor."""
-        return "_".join(
-            [DOMAIN, self.toon.agreement.id, "sensor", self.section, self.measurement]
-        )
+        agreement_id = self.coordinator.data.agreement.agreement_id
+        # This unique ID is a bit ugly and contains unneeded information.
+        # It is here for legacy / backward compatible reasons.
+        return f"{DOMAIN}_{agreement_id}_sensor_{self.key}"
 
     @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the state of the sensor."""
-        return self._state
+        section = getattr(
+            self.coordinator.data, SENSOR_ENTITIES[self.key][ATTR_SECTION]
+        )
+        return getattr(section, SENSOR_ENTITIES[self.key][ATTR_MEASUREMENT])
 
     @property
-    def unit_of_measurement(self) -> str:
+    def unit_of_measurement(self) -> str | None:
         """Return the unit this state is expressed in."""
-        return self._unit_of_measurement
+        return SENSOR_ENTITIES[self.key][ATTR_UNIT_OF_MEASUREMENT]
 
-    def update(self) -> None:
-        """Get the latest data from the sensor."""
-        section = getattr(self.toon, self.section)
-        value = None
-
-        if not section:
-            return
-
-        if self.section == "power" and self.measurement == "daily_value":
-            value = round(
-                (float(section.daily_usage) + float(section.daily_usage_low)) / 1000.0,
-                2,
-            )
-
-        if value is None:
-            value = getattr(section, self.measurement)
-
-        if self.section == "power" and self.measurement in [
-            "meter_reading",
-            "meter_reading_low",
-            "average_daily",
-        ]:
-            value = round(float(value) / 1000.0, 2)
-
-        if self.section == "solar" and self.measurement in [
-            "meter_reading_produced",
-            "meter_reading_low_produced",
-        ]:
-            value = float(value) / 1000.0
-
-        if self.section == "gas" and self.measurement in [
-            "average_daily",
-            "daily_usage",
-            "meter_reading",
-        ]:
-            value = round(float(value) / 1000.0, 2)
-
-        self._state = max(0, value)
+    @property
+    def device_class(self) -> str | None:
+        """Return the device class."""
+        return SENSOR_ENTITIES[self.key][ATTR_DEVICE_CLASS]
 
 
 class ToonElectricityMeterDeviceSensor(ToonSensor, ToonElectricityMeterDeviceEntity):
     """Defines a Electricity Meter sensor."""
 
-    pass
-
 
 class ToonGasMeterDeviceSensor(ToonSensor, ToonGasMeterDeviceEntity):
     """Defines a Gas Meter sensor."""
 
-    pass
+
+class ToonWaterMeterDeviceSensor(ToonSensor, ToonWaterMeterDeviceEntity):
+    """Defines a Water Meter sensor."""
 
 
 class ToonSolarDeviceSensor(ToonSensor, ToonSolarDeviceEntity):
     """Defines a Solar sensor."""
 
-    pass
-
 
 class ToonBoilerDeviceSensor(ToonSensor, ToonBoilerDeviceEntity):
     """Defines a Boiler sensor."""
 
-    pass
+
+class ToonDisplayDeviceSensor(ToonSensor, ToonDisplayDeviceEntity):
+    """Defines a Display sensor."""

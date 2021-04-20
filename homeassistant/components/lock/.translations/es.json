@@ -1,8 +1,0 @@
-{
-    "device_automation": {
-        "condition_type": {
-            "is_locked": "{entity_name} est\u00e1 bloqueado",
-            "is_unlocked": "{entity_name} est\u00e1 desbloqueado"
-        }
-    }
-}

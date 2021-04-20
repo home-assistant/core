@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "cannot_connect": "Impossible de se connecter, veuillez r\u00e9essayer",
+            "invalid_auth": "Authentification non valide",
+            "no_results": "Aucun r\u00e9sultat. Essayez avec une autre station / adresse"
+        },
+        "step": {
+            "station": {
+                "data": {
+                    "station": "Station / Adresse"
+                },
+                "title": "Entrez la station / l'adresse"
+            },
+            "station_select": {
+                "data": {
+                    "station": "Station / Adresse"
+                },
+                "title": "S\u00e9lectionner la station/l\u2019adresse"
+            },
+            "user": {
+                "data": {
+                    "host": "H\u00f4te",
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur"
+                },
+                "title": "Connectez-vous \u00e0 l'API HVV"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "filter": "S\u00e9lectionnez des lignes",
+                    "offset": "D\u00e9calage (minutes)",
+                    "real_time": "Utiliser des donn\u00e9es en temps r\u00e9el"
+                },
+                "description": "Modifier les options de ce capteur de d\u00e9part",
+                "title": "Options"
+            }
+        }
+    }
+}

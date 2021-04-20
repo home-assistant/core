@@ -1,20 +1,21 @@
 """The tests for Lock device actions."""
 import pytest
 
+import homeassistant.components.automation as automation
 from homeassistant.components.lock import DOMAIN
 from homeassistant.const import CONF_PLATFORM
-from homeassistant.setup import async_setup_component
-import homeassistant.components.automation as automation
 from homeassistant.helpers import device_registry
+from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
     assert_lists_same,
+    async_get_device_automations,
     async_mock_service,
     mock_device_registry,
     mock_registry,
-    async_get_device_automations,
 )
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
 @pytest.fixture
@@ -34,6 +35,7 @@ async def test_get_actions_support_open(hass, device_reg, entity_reg):
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -77,6 +79,7 @@ async def test_get_actions_not_support_open(hass, device_reg, entity_reg):
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -146,6 +149,7 @@ async def test_action(hass):
             ]
         },
     )
+    await hass.async_block_till_done()
 
     lock_calls = async_mock_service(hass, "lock", "lock")
     unlock_calls = async_mock_service(hass, "lock", "unlock")

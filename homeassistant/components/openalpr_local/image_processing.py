@@ -1,27 +1,24 @@
 """Component that will help set the OpenALPR local for ALPR processing."""
 import asyncio
 import io
-import logging
 import re
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.core import split_entity_id, callback
-from homeassistant.const import CONF_REGION
 from homeassistant.components.image_processing import (
-    PLATFORM_SCHEMA,
-    ImageProcessingEntity,
+    ATTR_CONFIDENCE,
+    ATTR_ENTITY_ID,
     CONF_CONFIDENCE,
-    CONF_SOURCE,
     CONF_ENTITY_ID,
     CONF_NAME,
-    ATTR_ENTITY_ID,
-    ATTR_CONFIDENCE,
+    CONF_SOURCE,
+    PLATFORM_SCHEMA,
+    ImageProcessingEntity,
 )
+from homeassistant.const import CONF_REGION
+from homeassistant.core import callback, split_entity_id
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util.async_ import run_callback_threadsafe
-
-_LOGGER = logging.getLogger(__name__)
 
 RE_ALPR_PLATE = re.compile(r"^plate\d*:")
 RE_ALPR_RESULT = re.compile(r"- (\w*)\s*confidence: (\d*.\d*)")
@@ -47,7 +44,7 @@ OPENALPR_REGIONS = [
     "vn2",
 ]
 
-CONF_ALPR_BIN = "alp_bin"
+CONF_ALPR_BIN = "alpr_bin"
 
 DEFAULT_BINARY = "alpr"
 
@@ -102,11 +99,9 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
         return "alpr"
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
-        attr = {ATTR_PLATES: self.plates, ATTR_VEHICLES: self.vehicles}
-
-        return attr
+        return {ATTR_PLATES: self.plates, ATTR_VEHICLES: self.vehicles}
 
     def process_plates(self, plates, vehicles):
         """Send event with new plates and store data."""
@@ -161,7 +156,7 @@ class OpenAlprLocalEntity(ImageProcessingAlprEntity):
         if name:
             self._name = name
         else:
-            self._name = "OpenAlpr {0}".format(split_entity_id(camera_entity)[1])
+            self._name = f"OpenAlpr {split_entity_id(camera_entity)[1]}"
 
     @property
     def confidence(self):

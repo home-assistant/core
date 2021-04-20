@@ -2,9 +2,7 @@
   "domain": "nanoleaf",
   "name": "Nanoleaf",
   "documentation": "https://www.home-assistant.io/integrations/nanoleaf",
-  "requirements": [
-    "pynanoleaf==0.0.5"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "requirements": ["pynanoleaf==0.1.0"],
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

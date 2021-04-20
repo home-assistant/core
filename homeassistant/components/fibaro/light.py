@@ -1,24 +1,21 @@
 """Support for Fibaro lights."""
 import asyncio
 from functools import partial
-import logging
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
     ATTR_WHITE_VALUE,
-    ENTITY_ID_FORMAT,
+    DOMAIN,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_WHITE_VALUE,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import CONF_WHITE_VALUE
 import homeassistant.util.color as color_util
 
 from . import CONF_COLOR, CONF_DIMMING, CONF_RESET_COLOR, FIBARO_DEVICES, FibaroDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def scaleto255(value):
@@ -48,7 +45,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class FibaroLight(FibaroDevice, Light):
+class FibaroLight(FibaroDevice, LightEntity):
     """Representation of a Fibaro Light, including dimmable."""
 
     def __init__(self, fibaro_device):
@@ -68,7 +65,7 @@ class FibaroLight(FibaroDevice, Light):
         supports_dimming = "levelChange" in fibaro_device.interfaces
         supports_white_v = "setW" in fibaro_device.actions
 
-        # Configuration can overrride default capability detection
+        # Configuration can override default capability detection
         if devconf.get(CONF_DIMMING, supports_dimming):
             self._supported_flags |= SUPPORT_BRIGHTNESS
         if devconf.get(CONF_COLOR, supports_color):
@@ -77,7 +74,7 @@ class FibaroLight(FibaroDevice, Light):
             self._supported_flags |= SUPPORT_WHITE_VALUE
 
         super().__init__(fibaro_device)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
+        self.entity_id = f"{DOMAIN}.{self.ha_id}"
 
     @property
     def brightness(self):
@@ -121,13 +118,11 @@ class FibaroLight(FibaroDevice, Light):
                 # We set it to the target brightness and turn it on
                 self._brightness = scaleto100(target_brightness)
 
-        if self._supported_flags & SUPPORT_COLOR:
-            if (
-                self._reset_color
-                and kwargs.get(ATTR_WHITE_VALUE) is None
-                and kwargs.get(ATTR_HS_COLOR) is None
-                and kwargs.get(ATTR_BRIGHTNESS) is None
-            ):
+        if self._supported_flags & SUPPORT_COLOR and (
+            kwargs.get(ATTR_WHITE_VALUE) is not None
+            or kwargs.get(ATTR_HS_COLOR) is not None
+        ):
+            if self._reset_color:
                 self._color = (100, 0)
 
             # Update based on parameters
@@ -135,14 +130,14 @@ class FibaroLight(FibaroDevice, Light):
             self._color = kwargs.get(ATTR_HS_COLOR, self._color)
             rgb = color_util.color_hs_to_RGB(*self._color)
             self.call_set_color(
-                round(rgb[0] * self._brightness / 100.0),
-                round(rgb[1] * self._brightness / 100.0),
-                round(rgb[2] * self._brightness / 100.0),
-                round(self._white * self._brightness / 100.0),
+                round(rgb[0]),
+                round(rgb[1]),
+                round(rgb[2]),
+                round(self._white),
             )
 
             if self.state == "off":
-                self.set_level(int(self._brightness))
+                self.set_level(min(int(self._brightness), 99))
             return
 
         if self._reset_color:
@@ -150,7 +145,7 @@ class FibaroLight(FibaroDevice, Light):
             self.call_set_color(bri255, bri255, bri255, bri255)
 
         if self._supported_flags & SUPPORT_BRIGHTNESS:
-            self.set_level(int(self._brightness))
+            self.set_level(min(int(self._brightness), 99))
             return
 
         # The simplest case is left for last. No dimming, just switch on
@@ -206,4 +201,4 @@ class FibaroLight(FibaroDevice, Light):
             if rgbw_list[0] or rgbw_list[1] or rgbw_list[2]:
                 self._color = color_util.color_RGB_to_hs(*rgbw_list[:3])
             if (self._supported_flags & SUPPORT_WHITE_VALUE) and self.brightness != 0:
-                self._white = min(255, max(0, rgbw_list[3] * 100.0 / self._brightness))
+                self._white = min(255, max(0, rgbw_list[3]))

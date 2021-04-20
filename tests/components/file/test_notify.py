@@ -1,89 +1,78 @@
 """The tests for the notify file platform."""
 import os
-import unittest
 from unittest.mock import call, mock_open, patch
 
-from homeassistant.setup import setup_component
+import pytest
+
 import homeassistant.components.notify as notify
 from homeassistant.components.notify import ATTR_TITLE_DEFAULT
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import assert_setup_component, get_test_home_assistant
+from tests.common import assert_setup_component
 
 
-class TestNotifyFile(unittest.TestCase):
-    """Test the file notify."""
+async def test_bad_config(hass):
+    """Test set up the platform with bad/missing config."""
+    config = {notify.DOMAIN: {"name": "test", "platform": "file"}}
+    with assert_setup_component(0) as handle_config:
+        assert await async_setup_component(hass, notify.DOMAIN, config)
+    assert not handle_config[notify.DOMAIN]
 
-    def setUp(self):  # pylint: disable=invalid-name
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
 
-    def tearDown(self):  # pylint: disable=invalid-name
-        """Stop down everything that was started."""
-        self.hass.stop()
+@pytest.mark.parametrize(
+    "timestamp",
+    [
+        False,
+        True,
+    ],
+)
+async def test_notify_file(hass, timestamp):
+    """Test the notify file output."""
+    filename = "mock_file"
+    message = "one, two, testing, testing"
+    with assert_setup_component(1) as handle_config:
+        assert await async_setup_component(
+            hass,
+            notify.DOMAIN,
+            {
+                "notify": {
+                    "name": "test",
+                    "platform": "file",
+                    "filename": filename,
+                    "timestamp": timestamp,
+                }
+            },
+        )
+    assert handle_config[notify.DOMAIN]
 
-    def test_bad_config(self):
-        """Test set up the platform with bad/missing config."""
-        config = {notify.DOMAIN: {"name": "test", "platform": "file"}}
-        with assert_setup_component(0) as handle_config:
-            assert setup_component(self.hass, notify.DOMAIN, config)
-        assert not handle_config[notify.DOMAIN]
+    m_open = mock_open()
+    with patch("homeassistant.components.file.notify.open", m_open, create=True), patch(
+        "homeassistant.components.file.notify.os.stat"
+    ) as mock_st, patch("homeassistant.util.dt.utcnow", return_value=dt_util.utcnow()):
 
-    def _test_notify_file(self, timestamp):
-        """Test the notify file output."""
-        filename = "mock_file"
-        message = "one, two, testing, testing"
-        with assert_setup_component(1) as handle_config:
-            assert setup_component(
-                self.hass,
-                notify.DOMAIN,
-                {
-                    "notify": {
-                        "name": "test",
-                        "platform": "file",
-                        "filename": filename,
-                        "timestamp": timestamp,
-                    }
-                },
-            )
-        assert handle_config[notify.DOMAIN]
+        mock_st.return_value.st_size = 0
+        title = (
+            f"{ATTR_TITLE_DEFAULT} notifications "
+            f"(Log started: {dt_util.utcnow().isoformat()})\n{'-' * 80}\n"
+        )
 
-        m_open = mock_open()
-        with patch(
-            "homeassistant.components.file.notify.open", m_open, create=True
-        ), patch("homeassistant.components.file.notify.os.stat") as mock_st, patch(
-            "homeassistant.util.dt.utcnow", return_value=dt_util.utcnow()
-        ):
+        await hass.services.async_call(
+            "notify", "test", {"message": message}, blocking=True
+        )
 
-            mock_st.return_value.st_size = 0
-            title = "{} notifications (Log started: {})\n{}\n".format(
-                ATTR_TITLE_DEFAULT, dt_util.utcnow().isoformat(), "-" * 80
-            )
+        full_filename = os.path.join(hass.config.path(), filename)
+        assert m_open.call_count == 1
+        assert m_open.call_args == call(full_filename, "a")
 
-            self.hass.services.call(
-                "notify", "test", {"message": message}, blocking=True
-            )
-
-            full_filename = os.path.join(self.hass.config.path(), filename)
-            assert m_open.call_count == 1
-            assert m_open.call_args == call(full_filename, "a")
-
-            assert m_open.return_value.write.call_count == 2
-            if not timestamp:
-                assert m_open.return_value.write.call_args_list == [
-                    call(title),
-                    call("{}\n".format(message)),
-                ]
-            else:
-                assert m_open.return_value.write.call_args_list == [
-                    call(title),
-                    call("{} {}\n".format(dt_util.utcnow().isoformat(), message)),
-                ]
-
-    def test_notify_file(self):
-        """Test the notify file output without timestamp."""
-        self._test_notify_file(False)
-
-    def test_notify_file_timestamp(self):
-        """Test the notify file output with timestamp."""
-        self._test_notify_file(True)
+        assert m_open.return_value.write.call_count == 2
+        if not timestamp:
+            assert m_open.return_value.write.call_args_list == [
+                call(title),
+                call(f"{message}\n"),
+            ]
+        else:
+            assert m_open.return_value.write.call_args_list == [
+                call(title),
+                call(f"{dt_util.utcnow().isoformat()} {message}\n"),
+            ]

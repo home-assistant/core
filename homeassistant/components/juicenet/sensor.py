@@ -1,56 +1,61 @@
 """Support for monitoring juicenet/juicepoint/juicebox based EVSE sensors."""
-import logging
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import (
+    ELECTRICAL_CURRENT_AMPERE,
+    ENERGY_WATT_HOUR,
+    POWER_WATT,
+    TEMP_CELSIUS,
+    TIME_SECONDS,
+    VOLT,
+)
 
-from homeassistant.const import ENERGY_WATT_HOUR, POWER_WATT, TEMP_CELSIUS
-from homeassistant.helpers.entity import Entity
-
-from . import DOMAIN, JuicenetDevice
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN, JUICENET_API, JUICENET_COORDINATOR
+from .entity import JuiceNetDevice
 
 SENSOR_TYPES = {
     "status": ["Charging Status", None],
     "temperature": ["Temperature", TEMP_CELSIUS],
-    "voltage": ["Voltage", "V"],
-    "amps": ["Amps", "A"],
+    "voltage": ["Voltage", VOLT],
+    "amps": ["Amps", ELECTRICAL_CURRENT_AMPERE],
     "watts": ["Watts", POWER_WATT],
-    "charge_time": ["Charge time", "s"],
+    "charge_time": ["Charge time", TIME_SECONDS],
     "energy_added": ["Energy added", ENERGY_WATT_HOUR],
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Juicenet sensor."""
-    api = hass.data[DOMAIN]["api"]
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the JuiceNet Sensors."""
+    entities = []
+    juicenet_data = hass.data[DOMAIN][config_entry.entry_id]
+    api = juicenet_data[JUICENET_API]
+    coordinator = juicenet_data[JUICENET_COORDINATOR]
 
-    dev = []
-    for device in api.get_devices():
-        for variable in SENSOR_TYPES:
-            dev.append(JuicenetSensorDevice(device, variable, hass))
-
-    add_entities(dev)
+    for device in api.devices:
+        for sensor in SENSOR_TYPES:
+            entities.append(JuiceNetSensorDevice(device, sensor, coordinator))
+    async_add_entities(entities)
 
 
-class JuicenetSensorDevice(JuicenetDevice, Entity):
-    """Implementation of a Juicenet sensor."""
+class JuiceNetSensorDevice(JuiceNetDevice, SensorEntity):
+    """Implementation of a JuiceNet sensor."""
 
-    def __init__(self, device, sensor_type, hass):
+    def __init__(self, device, sensor_type, coordinator):
         """Initialise the sensor."""
-        super().__init__(device, sensor_type, hass)
+        super().__init__(device, sensor_type, coordinator)
         self._name = SENSOR_TYPES[sensor_type][0]
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
 
     @property
     def name(self):
         """Return the name of the device."""
-        return "{} {}".format(self.device.name(), self._name)
+        return f"{self.device.name} {self._name}"
 
     @property
     def icon(self):
         """Return the icon of the sensor."""
         icon = None
         if self.type == "status":
-            status = self.device.getStatus()
+            status = self.device.status
             if status == "standby":
                 icon = "mdi:power-plug-off"
             elif status == "plugged":
@@ -66,7 +71,7 @@ class JuicenetSensorDevice(JuicenetDevice, Entity):
         elif self.type == "watts":
             icon = "mdi:flash"
         elif self.type == "charge_time":
-            icon = "mdi:timer"
+            icon = "mdi:timer-outline"
         elif self.type == "energy_added":
             icon = "mdi:flash"
         return icon
@@ -81,29 +86,19 @@ class JuicenetSensorDevice(JuicenetDevice, Entity):
         """Return the state."""
         state = None
         if self.type == "status":
-            state = self.device.getStatus()
+            state = self.device.status
         elif self.type == "temperature":
-            state = self.device.getTemperature()
+            state = self.device.temperature
         elif self.type == "voltage":
-            state = self.device.getVoltage()
+            state = self.device.voltage
         elif self.type == "amps":
-            state = self.device.getAmps()
+            state = self.device.amps
         elif self.type == "watts":
-            state = self.device.getWatts()
+            state = self.device.watts
         elif self.type == "charge_time":
-            state = self.device.getChargeTime()
+            state = self.device.charge_time
         elif self.type == "energy_added":
-            state = self.device.getEnergyAdded()
+            state = self.device.energy_added
         else:
             state = "Unknown"
         return state
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        attributes = {}
-        if self.type == "status":
-            man_dev_id = self.device.id()
-            if man_dev_id:
-                attributes["manufacturer_device_id"] = man_dev_id
-        return attributes

@@ -1,5 +1,5 @@
 """The tests the for Traccar device tracker platform."""
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -7,12 +7,14 @@ from homeassistant import data_entry_flow
 from homeassistant.components import traccar, zone
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.traccar import DOMAIN, TRACKER_UPDATE
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     HTTP_OK,
     HTTP_UNPROCESSABLE_ENTITY,
     STATE_HOME,
     STATE_NOT_HOME,
 )
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 from homeassistant.setup import async_setup_component
 
@@ -23,7 +25,6 @@ HOME_LONGITUDE = -115.815811
 @pytest.fixture(autouse=True)
 def mock_dev_track(mock_device_tracker_conf):
     """Mock device tracker config loading."""
-    pass
 
 
 @pytest.fixture(name="client")
@@ -60,7 +61,10 @@ async def setup_zones(loop, hass):
 @pytest.fixture(name="webhook_id")
 async def webhook_id_fixture(hass, client):
     """Initialize the Traccar component and get the webhook_id."""
-    hass.config.api = Mock(base_url="http://example.com")
+    await async_process_ha_core_config(
+        hass,
+        {"external_url": "http://example.com"},
+    )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
     )
@@ -75,7 +79,7 @@ async def webhook_id_fixture(hass, client):
 
 async def test_missing_data(hass, client, webhook_id):
     """Test missing data."""
-    url = "/api/webhook/{}".format(webhook_id)
+    url = f"/api/webhook/{webhook_id}"
     data = {"lat": "1.0", "lon": "1.1", "id": "123"}
 
     # No data
@@ -100,7 +104,7 @@ async def test_missing_data(hass, client, webhook_id):
 
 async def test_enter_and_exit(hass, client, webhook_id):
     """Test when there is a known zone."""
-    url = "/api/webhook/{}".format(webhook_id)
+    url = f"/api/webhook/{webhook_id}"
     data = {"lat": str(HOME_LATITUDE), "lon": str(HOME_LONGITUDE), "id": "123"}
 
     # Enter the Home
@@ -110,7 +114,7 @@ async def test_enter_and_exit(hass, client, webhook_id):
     state_name = hass.states.get(
         "{}.{}".format(DEVICE_TRACKER_DOMAIN, data["id"])
     ).state
-    assert STATE_HOME == state_name
+    assert state_name == STATE_HOME
 
     # Enter Home again
     req = await client.post(url, params=data)
@@ -119,7 +123,7 @@ async def test_enter_and_exit(hass, client, webhook_id):
     state_name = hass.states.get(
         "{}.{}".format(DEVICE_TRACKER_DOMAIN, data["id"])
     ).state
-    assert STATE_HOME == state_name
+    assert state_name == STATE_HOME
 
     data["lon"] = 0
     data["lat"] = 0
@@ -131,18 +135,18 @@ async def test_enter_and_exit(hass, client, webhook_id):
     state_name = hass.states.get(
         "{}.{}".format(DEVICE_TRACKER_DOMAIN, data["id"])
     ).state
-    assert STATE_NOT_HOME == state_name
+    assert state_name == STATE_NOT_HOME
 
-    dev_reg = await hass.helpers.device_registry.async_get_registry()
+    dev_reg = dr.async_get(hass)
     assert len(dev_reg.devices) == 1
 
-    ent_reg = await hass.helpers.entity_registry.async_get_registry()
+    ent_reg = er.async_get(hass)
     assert len(ent_reg.entities) == 1
 
 
 async def test_enter_with_attrs(hass, client, webhook_id):
     """Test when additional attributes are present."""
-    url = "/api/webhook/{}".format(webhook_id)
+    url = f"/api/webhook/{webhook_id}"
     data = {
         "timestamp": 123456789,
         "lat": "1.0",
@@ -191,7 +195,7 @@ async def test_enter_with_attrs(hass, client, webhook_id):
 
 async def test_two_devices(hass, client, webhook_id):
     """Test updating two different devices."""
-    url = "/api/webhook/{}".format(webhook_id)
+    url = f"/api/webhook/{webhook_id}"
 
     data_device_1 = {"lat": "1.0", "lon": "1.1", "id": "device_1"}
 
@@ -223,7 +227,7 @@ async def test_two_devices(hass, client, webhook_id):
 )
 async def test_load_unload_entry(hass, client, webhook_id):
     """Test that the appropriate dispatch signals are added and removed."""
-    url = "/api/webhook/{}".format(webhook_id)
+    url = f"/api/webhook/{webhook_id}"
     data = {"lat": str(HOME_LATITUDE), "lon": str(HOME_LONGITUDE), "id": "123"}
 
     # Enter the Home
@@ -233,7 +237,7 @@ async def test_load_unload_entry(hass, client, webhook_id):
     state_name = hass.states.get(
         "{}.{}".format(DEVICE_TRACKER_DOMAIN, data["id"])
     ).state
-    assert STATE_HOME == state_name
+    assert state_name == STATE_HOME
     assert len(hass.data[DATA_DISPATCHER][TRACKER_UPDATE]) == 1
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]

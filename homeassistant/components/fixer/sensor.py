@@ -2,20 +2,19 @@
 from datetime import timedelta
 import logging
 
+from fixerio import Fixerio
+from fixerio.exceptions import FixerioException
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME, CONF_TARGET
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_EXCHANGE_RATE = "Exchange rate"
 ATTR_TARGET = "Target currency"
 ATTRIBUTION = "Data provided by the European Central Bank (ECB)"
-
-CONF_TARGET = "target"
 
 DEFAULT_BASE = "USD"
 DEFAULT_NAME = "Exchange rate"
@@ -35,15 +34,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Fixer.io sensor."""
-    from fixerio import Fixerio, exceptions
-
     api_key = config.get(CONF_API_KEY)
     name = config.get(CONF_NAME)
     target = config.get(CONF_TARGET)
 
     try:
         Fixerio(symbols=[target], access_key=api_key).latest()
-    except exceptions.FixerioException:
+    except FixerioException:
         _LOGGER.error("One of the given currencies is not supported")
         return
 
@@ -51,7 +48,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([ExchangeRateSensor(data, name, target)], True)
 
 
-class ExchangeRateSensor(Entity):
+class ExchangeRateSensor(SensorEntity):
     """Representation of a Exchange sensor."""
 
     def __init__(self, data, name, target):
@@ -77,7 +74,7 @@ class ExchangeRateSensor(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self.data.rate is not None:
             return {
@@ -102,8 +99,6 @@ class ExchangeData:
 
     def __init__(self, target_currency, api_key):
         """Initialize the data object."""
-        from fixerio import Fixerio
-
         self.api_key = api_key
         self.rate = None
         self.target_currency = target_currency

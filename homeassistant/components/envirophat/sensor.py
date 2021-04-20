@@ -1,14 +1,19 @@
 """Support for Enviro pHAT sensors."""
+from datetime import timedelta
 import importlib
 import logging
-from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import TEMP_CELSIUS, CONF_DISPLAY_OPTIONS, CONF_NAME
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import (
+    CONF_DISPLAY_OPTIONS,
+    CONF_NAME,
+    PRESSURE_HPA,
+    TEMP_CELSIUS,
+    VOLT,
+)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,11 +35,11 @@ SENSOR_TYPES = {
     "magnetometer_y": ["magnetometer_y", " ", "mdi:magnet"],
     "magnetometer_z": ["magnetometer_z", " ", "mdi:magnet"],
     "temperature": ["temperature", TEMP_CELSIUS, "mdi:thermometer"],
-    "pressure": ["pressure", "hPa", "mdi:gauge"],
-    "voltage_0": ["voltage_0", "V", "mdi:flash"],
-    "voltage_1": ["voltage_1", "V", "mdi:flash"],
-    "voltage_2": ["voltage_2", "V", "mdi:flash"],
-    "voltage_3": ["voltage_3", "V", "mdi:flash"],
+    "pressure": ["pressure", PRESSURE_HPA, "mdi:gauge"],
+    "voltage_0": ["voltage_0", VOLT, "mdi:flash"],
+    "voltage_1": ["voltage_1", VOLT, "mdi:flash"],
+    "voltage_2": ["voltage_2", VOLT, "mdi:flash"],
+    "voltage_3": ["voltage_3", VOLT, "mdi:flash"],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -53,7 +58,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     try:
         envirophat = importlib.import_module("envirophat")
     except OSError:
-        _LOGGER.error("No Enviro pHAT was found.")
+        _LOGGER.error("No Enviro pHAT was found")
         return False
 
     data = EnvirophatData(envirophat, config.get(CONF_USE_LEDS))
@@ -65,7 +70,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev, True)
 
 
-class EnvirophatSensor(Entity):
+class EnvirophatSensor(SensorEntity):
     """Representation of an Enviro pHAT sensor."""
 
     def __init__(self, data, sensor_types):
@@ -172,14 +177,18 @@ class EnvirophatData:
             self.envirophat.leds.off()
 
         # accelerometer readings in G
-        self.accelerometer_x, self.accelerometer_y, self.accelerometer_z = (
-            self.envirophat.motion.accelerometer()
-        )
+        (
+            self.accelerometer_x,
+            self.accelerometer_y,
+            self.accelerometer_z,
+        ) = self.envirophat.motion.accelerometer()
 
         # raw magnetometer reading
-        self.magnetometer_x, self.magnetometer_y, self.magnetometer_z = (
-            self.envirophat.motion.magnetometer()
-        )
+        (
+            self.magnetometer_x,
+            self.magnetometer_y,
+            self.magnetometer_z,
+        ) = self.envirophat.motion.magnetometer()
 
         # temperature resolution of BMP280 sensor: 0.01°C
         self.temperature = round(self.envirophat.weather.temperature(), 2)
@@ -189,6 +198,9 @@ class EnvirophatData:
         self.pressure = round(self.envirophat.weather.pressure() / 100.0, 3)
 
         # Voltage sensor, reading between 0-3.3V
-        self.voltage_0, self.voltage_1, self.voltage_2, self.voltage_3 = (
-            self.envirophat.analog.read_all()
-        )
+        (
+            self.voltage_0,
+            self.voltage_1,
+            self.voltage_2,
+            self.voltage_3,
+        ) = self.envirophat.analog.read_all()

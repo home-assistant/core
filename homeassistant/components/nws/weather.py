@@ -1,140 +1,52 @@
 """Support for NWS weather service."""
-from collections import OrderedDict
-from datetime import timedelta
-from json import JSONDecodeError
-import logging
-
-import aiohttp
-from pynws import SimpleNWS
-import voluptuous as vol
-
 from homeassistant.components.weather import (
-    WeatherEntity,
-    PLATFORM_SCHEMA,
+    ATTR_CONDITION_CLEAR_NIGHT,
+    ATTR_CONDITION_SUNNY,
     ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TIME,
-    ATTR_FORECAST_WIND_SPEED,
     ATTR_FORECAST_WIND_BEARING,
+    ATTR_FORECAST_WIND_SPEED,
+    WeatherEntity,
 )
 from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_NAME,
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    CONF_MODE,
     LENGTH_KILOMETERS,
     LENGTH_METERS,
     LENGTH_MILES,
     PRESSURE_HPA,
-    PRESSURE_PA,
     PRESSURE_INHG,
+    PRESSURE_PA,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers import config_validation as cv
-from homeassistant.util import Throttle
+from homeassistant.core import callback
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util.distance import convert as convert_distance
+from homeassistant.util.dt import utcnow
 from homeassistant.util.pressure import convert as convert_pressure
 from homeassistant.util.temperature import convert as convert_temperature
 
-_LOGGER = logging.getLogger(__name__)
-
-ATTRIBUTION = "Data from National Weather Service/NOAA"
-
-SCAN_INTERVAL = timedelta(minutes=15)
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
-
-CONF_STATION = "station"
-
-ATTR_FORECAST_DETAIL_DESCRIPTION = "detailed_description"
-ATTR_FORECAST_PRECIP_PROB = "precipitation_probability"
-ATTR_FORECAST_DAYTIME = "daytime"
-
-# Ordered so that a single condition can be chosen from multiple weather codes.
-# Catalog of NWS icon weather codes listed at:
-# https://api.weather.gov/icons
-CONDITION_CLASSES = OrderedDict(
-    [
-        (
-            "exceptional",
-            [
-                "Tornado",
-                "Hurricane conditions",
-                "Tropical storm conditions",
-                "Dust",
-                "Smoke",
-                "Haze",
-                "Hot",
-                "Cold",
-            ],
-        ),
-        ("snowy", ["Snow", "Sleet", "Blizzard"]),
-        (
-            "snowy-rainy",
-            [
-                "Rain/snow",
-                "Rain/sleet",
-                "Freezing rain/snow",
-                "Freezing rain",
-                "Rain/freezing rain",
-            ],
-        ),
-        ("hail", []),
-        (
-            "lightning-rainy",
-            [
-                "Thunderstorm (high cloud cover)",
-                "Thunderstorm (medium cloud cover)",
-                "Thunderstorm (low cloud cover)",
-            ],
-        ),
-        ("lightning", []),
-        ("pouring", []),
-        (
-            "rainy",
-            [
-                "Rain",
-                "Rain showers (high cloud cover)",
-                "Rain showers (low cloud cover)",
-            ],
-        ),
-        ("windy-variant", ["Mostly cloudy and windy", "Overcast and windy"]),
-        (
-            "windy",
-            [
-                "Fair/clear and windy",
-                "A few clouds and windy",
-                "Partly cloudy and windy",
-            ],
-        ),
-        ("fog", ["Fog/mist"]),
-        ("clear", ["Fair/clear"]),  # sunny and clear-night
-        ("cloudy", ["Mostly cloudy", "Overcast"]),
-        ("partlycloudy", ["A few clouds", "Partly cloudy"]),
-    ]
+from . import base_unique_id
+from .const import (
+    ATTR_FORECAST_DAYTIME,
+    ATTR_FORECAST_DETAILED_DESCRIPTION,
+    ATTRIBUTION,
+    CONDITION_CLASSES,
+    COORDINATOR_FORECAST,
+    COORDINATOR_FORECAST_HOURLY,
+    COORDINATOR_OBSERVATION,
+    DAYNIGHT,
+    DOMAIN,
+    FORECAST_VALID_TIME,
+    HOURLY,
+    NWS_DATA,
+    OBSERVATION_VALID_TIME,
 )
 
-ERRORS = (aiohttp.ClientError, JSONDecodeError)
-
-FORECAST_MODE = ["daynight", "hourly"]
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Inclusive(
-            CONF_LATITUDE, "coordinates", "Latitude and longitude must exist together"
-        ): cv.latitude,
-        vol.Inclusive(
-            CONF_LONGITUDE, "coordinates", "Latitude and longitude must exist together"
-        ): cv.longitude,
-        vol.Optional(CONF_MODE, default="daynight"): vol.In(FORECAST_MODE),
-        vol.Optional(CONF_STATION): cv.string,
-        vol.Required(CONF_API_KEY): cv.string,
-    }
-)
+PARALLEL_UPDATES = 0
 
 
 def convert_condition(time, weather):
@@ -159,82 +71,73 @@ def convert_condition(time, weather):
 
     if cond == "clear":
         if time == "day":
-            return "sunny", max(prec_probs)
+            return ATTR_CONDITION_SUNNY, max(prec_probs)
         if time == "night":
-            return "clear-night", max(prec_probs)
+            return ATTR_CONDITION_CLEAR_NIGHT, max(prec_probs)
     return cond, max(prec_probs)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistantType, entry: ConfigType, async_add_entities
+) -> None:
     """Set up the NWS weather platform."""
+    hass_data = hass.data[DOMAIN][entry.entry_id]
 
-    latitude = config.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-    station = config.get(CONF_STATION)
-    api_key = config[CONF_API_KEY]
-    mode = config[CONF_MODE]
-
-    websession = async_get_clientsession(hass)
-    # ID request as being from HA, pynws prepends the api_key in addition
-    api_key_ha = f"{api_key} homeassistant"
-    nws = SimpleNWS(latitude, longitude, api_key_ha, mode, websession)
-
-    _LOGGER.debug("Setting up station: %s", station)
-    try:
-        await nws.set_station(station)
-    except ERRORS as status:
-        _LOGGER.error(
-            "Error getting station list for %s: %s", (latitude, longitude), status
-        )
-        raise PlatformNotReady
-
-    _LOGGER.debug("Station list: %s", nws.stations)
-    _LOGGER.debug(
-        "Initialized for coordinates %s, %s -> station %s",
-        latitude,
-        longitude,
-        nws.station,
+    async_add_entities(
+        [
+            NWSWeather(entry.data, hass_data, DAYNIGHT, hass.config.units),
+            NWSWeather(entry.data, hass_data, HOURLY, hass.config.units),
+        ],
+        False,
     )
-
-    async_add_entities([NWSWeather(nws, mode, hass.config.units, config)], True)
 
 
 class NWSWeather(WeatherEntity):
     """Representation of a weather condition."""
 
-    def __init__(self, nws, mode, units, config):
+    def __init__(self, entry_data, hass_data, mode, units):
         """Initialise the platform with a data instance and station name."""
-        self.nws = nws
-        self.station_name = config.get(CONF_NAME, self.nws.station)
+        self.nws = hass_data[NWS_DATA]
+        self.latitude = entry_data[CONF_LATITUDE]
+        self.longitude = entry_data[CONF_LONGITUDE]
+        self.coordinator_observation = hass_data[COORDINATOR_OBSERVATION]
+        if mode == DAYNIGHT:
+            self.coordinator_forecast = hass_data[COORDINATOR_FORECAST]
+        else:
+            self.coordinator_forecast = hass_data[COORDINATOR_FORECAST_HOURLY]
+        self.station = self.nws.station
+
         self.is_metric = units.is_metric
         self.mode = mode
 
         self.observation = None
         self._forecast = None
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def async_update(self):
-        """Update Condition."""
-        _LOGGER.debug("Updating station observations %s", self.nws.station)
-        try:
-            await self.nws.update_observation()
-        except ERRORS as status:
-            _LOGGER.error(
-                "Error updating observation from station %s: %s",
-                self.nws.station,
-                status,
-            )
+    async def async_added_to_hass(self) -> None:
+        """Set up a listener and load data."""
+        self.async_on_remove(
+            self.coordinator_observation.async_add_listener(self._update_callback)
+        )
+        self.async_on_remove(
+            self.coordinator_forecast.async_add_listener(self._update_callback)
+        )
+        self._update_callback()
+
+    @callback
+    def _update_callback(self) -> None:
+        """Load data from integration."""
+        self.observation = self.nws.observation
+        if self.mode == DAYNIGHT:
+            self._forecast = self.nws.forecast
         else:
-            self.observation = self.nws.observation
-        _LOGGER.debug("Updating forecast")
-        try:
-            await self.nws.update_forecast()
-        except ERRORS as status:
-            _LOGGER.error(
-                "Error updating forecast from station %s: %s", self.nws.station, status
-            )
-            return
-        self._forecast = self.nws.forecast
+            self._forecast = self.nws.forecast_hourly
+
+        self.async_write_ha_state()
+
+    @property
+    def should_poll(self) -> bool:
+        """Entities do not individually poll."""
+        return False
 
     @property
     def attribution(self):
@@ -244,7 +147,7 @@ class NWSWeather(WeatherEntity):
     @property
     def name(self):
         """Return the name of the station."""
-        return self.station_name
+        return f"{self.station} {self.mode.title()}"
 
     @property
     def temperature(self):
@@ -252,7 +155,7 @@ class NWSWeather(WeatherEntity):
         temp_c = None
         if self.observation:
             temp_c = self.observation.get("temperature")
-        if temp_c:
+        if temp_c is not None:
             return convert_temperature(temp_c, TEMP_CELSIUS, TEMP_FAHRENHEIT)
         return None
 
@@ -283,17 +186,16 @@ class NWSWeather(WeatherEntity):
     @property
     def wind_speed(self):
         """Return the current windspeed."""
-        wind_m_s = None
+        wind_km_hr = None
         if self.observation:
-            wind_m_s = self.observation.get("windSpeed")
-        if wind_m_s is None:
+            wind_km_hr = self.observation.get("windSpeed")
+        if wind_km_hr is None:
             return None
-        wind_m_hr = wind_m_s * 3600
 
         if self.is_metric:
-            wind = convert_distance(wind_m_hr, LENGTH_METERS, LENGTH_KILOMETERS)
+            wind = wind_km_hr
         else:
-            wind = convert_distance(wind_m_hr, LENGTH_METERS, LENGTH_MILES)
+            wind = convert_distance(wind_km_hr, LENGTH_KILOMETERS, LENGTH_MILES)
         return round(wind)
 
     @property
@@ -345,14 +247,14 @@ class NWSWeather(WeatherEntity):
         forecast = []
         for forecast_entry in self._forecast:
             data = {
-                ATTR_FORECAST_DETAIL_DESCRIPTION: forecast_entry.get(
+                ATTR_FORECAST_DETAILED_DESCRIPTION: forecast_entry.get(
                     "detailedForecast"
                 ),
                 ATTR_FORECAST_TEMP: forecast_entry.get("temperature"),
                 ATTR_FORECAST_TIME: forecast_entry.get("startTime"),
             }
 
-            if self.mode == "daynight":
+            if self.mode == DAYNIGHT:
                 data[ATTR_FORECAST_DAYTIME] = forecast_entry.get("isDaytime")
             time = forecast_entry.get("iconTime")
             weather = forecast_entry.get("iconWeather")
@@ -361,11 +263,11 @@ class NWSWeather(WeatherEntity):
             else:
                 cond, precip = None, None
             data[ATTR_FORECAST_CONDITION] = cond
-            data[ATTR_FORECAST_PRECIP_PROB] = precip
+            data[ATTR_FORECAST_PRECIPITATION_PROBABILITY] = precip
 
             data[ATTR_FORECAST_WIND_BEARING] = forecast_entry.get("windBearing")
             wind_speed = forecast_entry.get("windSpeedAvg")
-            if wind_speed:
+            if wind_speed is not None:
                 if self.is_metric:
                     data[ATTR_FORECAST_WIND_SPEED] = round(
                         convert_distance(wind_speed, LENGTH_MILES, LENGTH_KILOMETERS)
@@ -376,3 +278,42 @@ class NWSWeather(WeatherEntity):
                 data[ATTR_FORECAST_WIND_SPEED] = None
             forecast.append(data)
         return forecast
+
+    @property
+    def unique_id(self):
+        """Return a unique_id for this entity."""
+        return f"{base_unique_id(self.latitude, self.longitude)}_{self.mode}"
+
+    @property
+    def available(self):
+        """Return if state is available."""
+        last_success = (
+            self.coordinator_observation.last_update_success
+            and self.coordinator_forecast.last_update_success
+        )
+        if (
+            self.coordinator_observation.last_update_success_time
+            and self.coordinator_forecast.last_update_success_time
+        ):
+            last_success_time = (
+                utcnow() - self.coordinator_observation.last_update_success_time
+                < OBSERVATION_VALID_TIME
+                and utcnow() - self.coordinator_forecast.last_update_success_time
+                < FORECAST_VALID_TIME
+            )
+        else:
+            last_success_time = False
+        return last_success or last_success_time
+
+    async def async_update(self):
+        """Update the entity.
+
+        Only used by the generic entity update service.
+        """
+        await self.coordinator_observation.async_request_refresh()
+        await self.coordinator_forecast.async_request_refresh()
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return self.mode == DAYNIGHT

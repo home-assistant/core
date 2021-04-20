@@ -1,6 +1,6 @@
 """Support for Coinbase sensors."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION
-from homeassistant.helpers.entity import Entity
 
 ATTR_NATIVE_BALANCE = "Balance in native currency"
 
@@ -12,7 +12,7 @@ CURRENCY_ICONS = {
     "USD": "mdi:currency-usd",
 }
 
-DEFAULT_COIN_ICON = "mdi:coin"
+DEFAULT_COIN_ICON = "mdi:currency-usd-circle"
 
 ATTRIBUTION = "Data provided by coinbase.com"
 
@@ -38,7 +38,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([sensor], True)
 
 
-class AccountSensor(Entity):
+class AccountSensor(SensorEntity):
     """Representation of a Coinbase.com sensor."""
 
     def __init__(self, coinbase_data, name, currency):
@@ -71,26 +71,24 @@ class AccountSensor(Entity):
         return CURRENCY_ICONS.get(self._unit_of_measurement, DEFAULT_COIN_ICON)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_NATIVE_BALANCE: "{} {}".format(
-                self._native_balance, self._native_currency
-            ),
+            ATTR_NATIVE_BALANCE: f"{self._native_balance} {self._native_currency}",
         }
 
     def update(self):
         """Get the latest state of the sensor."""
         self._coinbase_data.update()
         for account in self._coinbase_data.accounts["data"]:
-            if self._name == "Coinbase {}".format(account["name"]):
+            if self._name == f"Coinbase {account['name']}":
                 self._state = account["balance"]["amount"]
                 self._native_balance = account["native_balance"]["amount"]
                 self._native_currency = account["native_balance"]["currency"]
 
 
-class ExchangeRateSensor(Entity):
+class ExchangeRateSensor(SensorEntity):
     """Representation of a Coinbase.com sensor."""
 
     def __init__(self, coinbase_data, exchange_currency, native_currency):
@@ -122,7 +120,7 @@ class ExchangeRateSensor(Entity):
         return CURRENCY_ICONS.get(self.currency, DEFAULT_COIN_ICON)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 

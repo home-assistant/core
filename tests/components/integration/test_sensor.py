@@ -2,6 +2,7 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT, TIME_SECONDS
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -13,7 +14,7 @@ async def test_state(hass):
             "platform": "integration",
             "name": "integration",
             "source": "sensor.power",
-            "unit": "kWh",
+            "unit": ENERGY_KILO_WATT_HOUR,
             "round": 2,
         }
     }
@@ -35,7 +36,7 @@ async def test_state(hass):
     # Testing a power sensor at 1 KiloWatts for 1hour = 1kWh
     assert round(float(state.state), config["sensor"]["round"]) == 1.0
 
-    assert state.attributes.get("unit_of_measurement") == "kWh"
+    assert state.attributes.get("unit_of_measurement") == ENERGY_KILO_WATT_HOUR
 
 
 async def test_trapezoidal(hass):
@@ -45,7 +46,7 @@ async def test_trapezoidal(hass):
             "platform": "integration",
             "name": "integration",
             "source": "sensor.power",
-            "unit": "kWh",
+            "unit": ENERGY_KILO_WATT_HOUR,
             "round": 2,
         }
     }
@@ -68,7 +69,7 @@ async def test_trapezoidal(hass):
 
     assert round(float(state.state), config["sensor"]["round"]) == 8.33
 
-    assert state.attributes.get("unit_of_measurement") == "kWh"
+    assert state.attributes.get("unit_of_measurement") == ENERGY_KILO_WATT_HOUR
 
 
 async def test_left(hass):
@@ -79,7 +80,7 @@ async def test_left(hass):
             "name": "integration",
             "method": "left",
             "source": "sensor.power",
-            "unit": "kWh",
+            "unit": ENERGY_KILO_WATT_HOUR,
             "round": 2,
         }
     }
@@ -102,7 +103,7 @@ async def test_left(hass):
 
     assert round(float(state.state), config["sensor"]["round"]) == 7.5
 
-    assert state.attributes.get("unit_of_measurement") == "kWh"
+    assert state.attributes.get("unit_of_measurement") == ENERGY_KILO_WATT_HOUR
 
 
 async def test_right(hass):
@@ -113,7 +114,7 @@ async def test_right(hass):
             "name": "integration",
             "method": "right",
             "source": "sensor.power",
-            "unit": "kWh",
+            "unit": ENERGY_KILO_WATT_HOUR,
             "round": 2,
         }
     }
@@ -136,7 +137,7 @@ async def test_right(hass):
 
     assert round(float(state.state), config["sensor"]["round"]) == 9.17
 
-    assert state.attributes.get("unit_of_measurement") == "kWh"
+    assert state.attributes.get("unit_of_measurement") == ENERGY_KILO_WATT_HOUR
 
 
 async def test_prefix(hass):
@@ -154,13 +155,13 @@ async def test_prefix(hass):
     assert await async_setup_component(hass, "sensor", config)
 
     entity_id = config["sensor"]["source"]
-    hass.states.async_set(entity_id, 1000, {"unit_of_measurement": "W"})
+    hass.states.async_set(entity_id, 1000, {"unit_of_measurement": POWER_WATT})
     await hass.async_block_till_done()
 
     now = dt_util.utcnow() + timedelta(seconds=3600)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.states.async_set(
-            entity_id, 1000, {"unit_of_measurement": "W"}, force_update=True
+            entity_id, 1000, {"unit_of_measurement": POWER_WATT}, force_update=True
         )
         await hass.async_block_till_done()
 
@@ -169,7 +170,7 @@ async def test_prefix(hass):
 
     # Testing a power sensor at 1000 Watts for 1hour = 1kWh
     assert round(float(state.state), config["sensor"]["round"]) == 1.0
-    assert state.attributes.get("unit_of_measurement") == "kWh"
+    assert state.attributes.get("unit_of_measurement") == ENERGY_KILO_WATT_HOUR
 
 
 async def test_suffix(hass):
@@ -181,7 +182,7 @@ async def test_suffix(hass):
             "source": "sensor.bytes_per_second",
             "round": 2,
             "unit_prefix": "k",
-            "unit_time": "s",
+            "unit_time": TIME_SECONDS,
         }
     }
 
@@ -200,4 +201,4 @@ async def test_suffix(hass):
     assert state is not None
 
     # Testing a network speed sensor at 1000 bytes/s over 10s  = 10kbytes
-    assert round(float(state.state), config["sensor"]["round"]) == 10.0
+    assert round(float(state.state)) == 10

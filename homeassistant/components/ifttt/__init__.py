@@ -6,9 +6,10 @@ import pyfttt
 import requests
 import voluptuous as vol
 
-from homeassistant.const import CONF_WEBHOOK_ID
+from homeassistant.const import CONF_WEBHOOK_ID, HTTP_OK
 from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
+
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,6 +24,7 @@ ATTR_VALUE3 = "value3"
 
 CONF_KEY = "key"
 
+SERVICE_PUSH_ALARM_STATE = "push_alarm_state"
 SERVICE_TRIGGER = "trigger"
 
 SERVICE_TRIGGER_SCHEMA = vol.Schema(
@@ -62,7 +64,7 @@ async def async_setup(hass, config):
         value2 = call.data.get(ATTR_VALUE2)
         value3 = call.data.get(ATTR_VALUE3)
 
-        target_keys = dict()
+        target_keys = {}
         for target in targets:
             if target not in api_keys:
                 _LOGGER.error("No IFTTT api key for %s", target)
@@ -73,8 +75,8 @@ async def async_setup(hass, config):
 
             for target, key in target_keys.items():
                 res = pyfttt.send_event(key, event, value1, value2, value3)
-                if res.status_code != 200:
-                    _LOGGER.error("IFTTT reported error sending event to %s.", target)
+                if res.status_code != HTTP_OK:
+                    _LOGGER.error("IFTTT reported error sending event to %s", target)
         except requests.exceptions.RequestException:
             _LOGGER.exception("Error communicating with IFTTT")
 
@@ -91,10 +93,19 @@ async def handle_webhook(hass, webhook_id, request):
     try:
         data = json.loads(body) if body else {}
     except ValueError:
-        return None
+        _LOGGER.error(
+            "Received invalid data from IFTTT. Data needs to be formatted as JSON: %s",
+            body,
+        )
+        return
 
-    if isinstance(data, dict):
-        data["webhook_id"] = webhook_id
+    if not isinstance(data, dict):
+        _LOGGER.error(
+            "Received invalid data from IFTTT. Data needs to be a dictionary: %s", data
+        )
+        return
+
+    data["webhook_id"] = webhook_id
     hass.bus.async_fire(EVENT_RECEIVED, data)
 
 
@@ -112,5 +123,4 @@ async def async_unload_entry(hass, entry):
     return True
 
 
-# pylint: disable=invalid-name
 async_remove_entry = config_entry_flow.webhook_async_remove_entry

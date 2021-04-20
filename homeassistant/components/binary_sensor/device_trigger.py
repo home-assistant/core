@@ -1,19 +1,19 @@
 """Provides device triggers for binary sensors."""
 import voluptuous as vol
 
-from homeassistant.components.automation import state as state_automation
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.const import (
     CONF_TURNED_OFF,
     CONF_TURNED_ON,
 )
+from homeassistant.components.homeassistant.triggers import state as state_trigger
 from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID, CONF_FOR, CONF_TYPE
-from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_registry import async_entries_for_device
 
 from . import (
-    DOMAIN,
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_BATTERY_CHARGING,
     DEVICE_CLASS_COLD,
     DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_DOOR,
@@ -36,8 +36,8 @@ from . import (
     DEVICE_CLASS_SOUND,
     DEVICE_CLASS_VIBRATION,
     DEVICE_CLASS_WINDOW,
+    DOMAIN,
 )
-
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -45,6 +45,8 @@ DEVICE_CLASS_NONE = "none"
 
 CONF_BAT_LOW = "bat_low"
 CONF_NOT_BAT_LOW = "not_bat_low"
+CONF_CHARGING = "charging"
+CONF_NOT_CHARGING = "not_charging"
 CONF_COLD = "cold"
 CONF_NOT_COLD = "not_cold"
 CONF_CONNECTED = "connected"
@@ -92,7 +94,7 @@ TURNED_ON = [
     CONF_GAS,
     CONF_HOT,
     CONF_LIGHT,
-    CONF_LOCKED,
+    CONF_NOT_LOCKED,
     CONF_MOIST,
     CONF_MOTION,
     CONF_MOVING,
@@ -114,7 +116,7 @@ TURNED_OFF = [
     CONF_NOT_COLD,
     CONF_NOT_CONNECTED,
     CONF_NOT_HOT,
-    CONF_NOT_LOCKED,
+    CONF_LOCKED,
     CONF_NOT_MOIST,
     CONF_NOT_MOVING,
     CONF_NOT_OCCUPIED,
@@ -136,6 +138,10 @@ TURNED_OFF = [
 
 ENTITY_TRIGGERS = {
     DEVICE_CLASS_BATTERY: [{CONF_TYPE: CONF_BAT_LOW}, {CONF_TYPE: CONF_NOT_BAT_LOW}],
+    DEVICE_CLASS_BATTERY_CHARGING: [
+        {CONF_TYPE: CONF_CHARGING},
+        {CONF_TYPE: CONF_NOT_CHARGING},
+    ],
     DEVICE_CLASS_COLD: [{CONF_TYPE: CONF_COLD}, {CONF_TYPE: CONF_NOT_COLD}],
     DEVICE_CLASS_CONNECTIVITY: [
         {CONF_TYPE: CONF_CONNECTED},
@@ -184,23 +190,20 @@ async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
     trigger_type = config[CONF_TYPE]
     if trigger_type in TURNED_ON:
-        from_state = "off"
         to_state = "on"
     else:
-        from_state = "on"
         to_state = "off"
 
     state_config = {
-        state_automation.CONF_PLATFORM: "state",
-        state_automation.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-        state_automation.CONF_FROM: from_state,
-        state_automation.CONF_TO: to_state,
+        state_trigger.CONF_PLATFORM: "state",
+        state_trigger.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
+        state_trigger.CONF_TO: to_state,
     }
     if CONF_FOR in config:
         state_config[CONF_FOR] = config[CONF_FOR]
 
-    state_config = state_automation.TRIGGER_SCHEMA(state_config)
-    return await state_automation.async_attach_trigger(
+    state_config = state_trigger.TRIGGER_SCHEMA(state_config)
+    return await state_trigger.async_attach_trigger(
         hass, state_config, action, automation_info, platform_type="device"
     )
 
@@ -227,16 +230,14 @@ async def async_get_triggers(hass, device_id):
         )
 
         triggers.extend(
-            (
-                {
-                    **automation,
-                    "platform": "device",
-                    "device_id": device_id,
-                    "entity_id": entry.entity_id,
-                    "domain": DOMAIN,
-                }
-                for automation in templates
-            )
+            {
+                **automation,
+                "platform": "device",
+                "device_id": device_id,
+                "entity_id": entry.entity_id,
+                "domain": DOMAIN,
+            }
+            for automation in templates
         )
 
     return triggers

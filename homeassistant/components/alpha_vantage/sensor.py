@@ -2,14 +2,13 @@
 from datetime import timedelta
 import logging
 
-import voluptuous as vol
-from alpha_vantage.timeseries import TimeSeries
 from alpha_vantage.foreignexchange import ForeignExchange
+from alpha_vantage.timeseries import TimeSeries
+import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_CURRENCY, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,7 +63,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Alpha Vantage sensor."""
-    api_key = config.get(CONF_API_KEY)
+    api_key = config[CONF_API_KEY]
     symbols = config.get(CONF_SYMBOLS, [])
     conversions = config.get(CONF_FOREIGN_EXCHANGE, [])
 
@@ -105,7 +104,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     _LOGGER.debug("Setup completed")
 
 
-class AlphaVantageSensor(Entity):
+class AlphaVantageSensor(SensorEntity):
     """Representation of a Alpha Vantage sensor."""
 
     def __init__(self, timeseries, symbol):
@@ -133,7 +132,7 @@ class AlphaVantageSensor(Entity):
         return self.values["1. open"]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self.values is not None:
             return {
@@ -156,14 +155,14 @@ class AlphaVantageSensor(Entity):
         _LOGGER.debug("Received new values for symbol %s", self._symbol)
 
 
-class AlphaVantageForeignExchange(Entity):
+class AlphaVantageForeignExchange(SensorEntity):
     """Sensor for foreign exchange rates."""
 
     def __init__(self, foreign_exchange, config):
         """Initialize the sensor."""
         self._foreign_exchange = foreign_exchange
-        self._from_currency = config.get(CONF_FROM)
-        self._to_currency = config.get(CONF_TO)
+        self._from_currency = config[CONF_FROM]
+        self._to_currency = config[CONF_TO]
         if CONF_NAME in config:
             self._name = config.get(CONF_NAME)
         else:
@@ -193,7 +192,7 @@ class AlphaVantageForeignExchange(Entity):
         return self._icon
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self.values is not None:
             return {

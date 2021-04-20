@@ -1,13 +1,15 @@
 """Validate dependencies."""
-import pathlib
-from typing import Dict
+from __future__ import annotations
 
+import pathlib
 import re
+
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
+from homeassistant.const import CONF_SELECTOR
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.util.yaml import load_yaml
 
 from .model import Integration
@@ -23,16 +25,23 @@ def exists(value):
 FIELD_SCHEMA = vol.Schema(
     {
         vol.Required("description"): str,
+        vol.Optional("name"): str,
         vol.Optional("example"): exists,
         vol.Optional("default"): exists,
         vol.Optional("values"): exists,
         vol.Optional("required"): bool,
+        vol.Optional("advanced"): bool,
+        vol.Optional(CONF_SELECTOR): selector.validate_selector,
     }
 )
 
 SERVICE_SCHEMA = vol.Schema(
     {
         vol.Required("description"): str,
+        vol.Optional("name"): str,
+        vol.Optional("target"): vol.Any(
+            selector.TargetSelector.CONFIG_SCHEMA, None  # pylint: disable=no-member
+        ),
         vol.Optional("fields"): vol.Schema({str: FIELD_SCHEMA}),
     }
 )
@@ -58,7 +67,9 @@ def validate_services(integration: Integration):
     """Validate services."""
     # Find if integration uses services
     has_services = grep_dir(
-        integration.path, "**/*.py", r"hass\.services\.(register|async_register)"
+        integration.path,
+        "**/*.py",
+        r"(hass\.services\.(register|async_register))|async_register_entity_service",
     )
 
     if not has_services:
@@ -79,11 +90,11 @@ def validate_services(integration: Integration):
         SERVICES_SCHEMA(data)
     except vol.Invalid as err:
         integration.add_error(
-            "services", "Invalid services.yaml: {}".format(humanize_error(data, err))
+            "services", f"Invalid services.yaml: {humanize_error(data, err)}"
         )
 
 
-def validate(integrations: Dict[str, Integration], config):
+def validate(integrations: dict[str, Integration], config):
     """Handle dependencies for integrations."""
     # check services.yaml is cool
     for integration in integrations.values():

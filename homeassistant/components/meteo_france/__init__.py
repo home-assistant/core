@@ -1,137 +1,215 @@
 """Support for Meteo-France weather data."""
-import datetime
+import asyncio
+from datetime import timedelta
 import logging
 
+from meteofrance_api.client import MeteoFranceClient
+from meteofrance_api.helpers import is_valid_warning_department
 import voluptuous as vol
 
-from homeassistant.const import CONF_MONITORED_CONDITIONS
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.discovery import load_platform
-from homeassistant.util import Throttle
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, CONF_CITY, SENSOR_TYPES, DATA_METEO_FRANCE
+from .const import (
+    CONF_CITY,
+    COORDINATOR_ALERT,
+    COORDINATOR_FORECAST,
+    COORDINATOR_RAIN,
+    DOMAIN,
+    PLATFORMS,
+    UNDO_UPDATE_LISTENER,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = datetime.timedelta(minutes=5)
+SCAN_INTERVAL_RAIN = timedelta(minutes=5)
+SCAN_INTERVAL = timedelta(minutes=15)
 
 
-def has_all_unique_cities(value):
-    """Validate that all cities are unique."""
-    cities = [location[CONF_CITY] for location in value]
-    vol.Schema(vol.Unique())(cities)
-    return value
-
+CITY_SCHEMA = vol.Schema({vol.Required(CONF_CITY): cv.string})
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.All(
-            cv.ensure_list,
-            [
-                vol.Schema(
-                    {
-                        vol.Required(CONF_CITY): cv.string,
-                        vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(
-                            cv.ensure_list, [vol.In(SENSOR_TYPES)]
-                        ),
-                    }
-                )
-            ],
-            has_all_unique_cities,
-        )
-    },
+    {DOMAIN: vol.Schema(vol.All(cv.ensure_list, [CITY_SCHEMA]))},
     extra=vol.ALLOW_EXTRA,
 )
 
 
-def setup(hass, config):
-    """Set up the Meteo-France component."""
-    hass.data[DATA_METEO_FRANCE] = {}
+async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+    """Set up Meteo-France from legacy config file."""
+    conf = config.get(DOMAIN)
+    if not conf:
+        return True
 
-    # Check if at least weather alert have to be monitored for one location.
-    need_weather_alert_watcher = False
-    for location in config[DOMAIN]:
-        if (
-            CONF_MONITORED_CONDITIONS in location
-            and "weather_alert" in location[CONF_MONITORED_CONDITIONS]
-        ):
-            need_weather_alert_watcher = True
-
-    # If weather alert monitoring is expected initiate a client to be used by
-    # all weather_alert entities.
-    if need_weather_alert_watcher:
-        _LOGGER.debug("Weather Alert monitoring expected. Loading vigilancemeteo")
-        from vigilancemeteo import VigilanceMeteoFranceProxy, VigilanceMeteoError
-
-        weather_alert_client = VigilanceMeteoFranceProxy()
-        try:
-            weather_alert_client.update_data()
-        except VigilanceMeteoError as exp:
-            _LOGGER.error(
-                "Unexpected error when creating the vigilance_meteoFrance proxy: %s ",
-                exp,
+    for city_conf in conf:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=city_conf
             )
-    else:
-        weather_alert_client = None
-    hass.data[DATA_METEO_FRANCE]["weather_alert_client"] = weather_alert_client
-
-    for location in config[DOMAIN]:
-
-        city = location[CONF_CITY]
-
-        from meteofrance.client import meteofranceClient, meteofranceError
-
-        try:
-            client = meteofranceClient(city)
-        except meteofranceError as exp:
-            _LOGGER.error(
-                "Unexpected error when creating the meteofrance proxy: %s", exp
-            )
-            return
-
-        client.need_rain_forecast = bool(
-            CONF_MONITORED_CONDITIONS in location
-            and "next_rain" in location[CONF_MONITORED_CONDITIONS]
         )
-
-        hass.data[DATA_METEO_FRANCE][city] = MeteoFranceUpdater(client)
-        hass.data[DATA_METEO_FRANCE][city].update()
-
-        if CONF_MONITORED_CONDITIONS in location:
-            monitored_conditions = location[CONF_MONITORED_CONDITIONS]
-            _LOGGER.debug("meteo_france sensor platform loaded for %s", city)
-            load_platform(
-                hass,
-                "sensor",
-                DOMAIN,
-                {CONF_CITY: city, CONF_MONITORED_CONDITIONS: monitored_conditions},
-                config,
-            )
-
-        load_platform(hass, "weather", DOMAIN, {CONF_CITY: city}, config)
 
     return True
 
 
-class MeteoFranceUpdater:
-    """Update data from Meteo-France."""
+async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+    """Set up an Meteo-France account from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
 
-    def __init__(self, client):
-        """Initialize the data object."""
-        self._client = client
+    latitude = entry.data.get(CONF_LATITUDE)
 
-    def get_data(self):
-        """Get the latest data from Meteo-France."""
-        return self._client.get_data()
+    client = MeteoFranceClient()
+    # Migrate from previous config
+    if not latitude:
+        places = await hass.async_add_executor_job(
+            client.search_places, entry.data[CONF_CITY]
+        )
+        hass.config_entries.async_update_entry(
+            entry,
+            title=f"{places[0]}",
+            data={
+                CONF_LATITUDE: places[0].latitude,
+                CONF_LONGITUDE: places[0].longitude,
+            },
+        )
 
-    @Throttle(SCAN_INTERVAL)
-    def update(self):
-        """Get the latest data from Meteo-France."""
-        from meteofrance.client import meteofranceError
+    latitude = entry.data[CONF_LATITUDE]
+    longitude = entry.data[CONF_LONGITUDE]
 
-        try:
-            self._client.update()
-        except meteofranceError as exp:
-            _LOGGER.error(
-                "Unexpected error when updating the meteofrance proxy: %s", exp
+    async def _async_update_data_forecast_forecast():
+        """Fetch data from API endpoint."""
+        return await hass.async_add_executor_job(
+            client.get_forecast, latitude, longitude
+        )
+
+    async def _async_update_data_rain():
+        """Fetch data from API endpoint."""
+        return await hass.async_add_executor_job(client.get_rain, latitude, longitude)
+
+    async def _async_update_data_alert():
+        """Fetch data from API endpoint."""
+        return await hass.async_add_executor_job(
+            client.get_warning_current_phenomenoms, department, 0, True
+        )
+
+    coordinator_forecast = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=f"Météo-France forecast for city {entry.title}",
+        update_method=_async_update_data_forecast_forecast,
+        update_interval=SCAN_INTERVAL,
+    )
+    coordinator_rain = None
+    coordinator_alert = None
+
+    # Fetch initial data so we have data when entities subscribe
+    await coordinator_forecast.async_refresh()
+
+    if not coordinator_forecast.last_update_success:
+        raise ConfigEntryNotReady
+
+    # Check if rain forecast is available.
+    if coordinator_forecast.data.position.get("rain_product_available") == 1:
+        coordinator_rain = DataUpdateCoordinator(
+            hass,
+            _LOGGER,
+            name=f"Météo-France rain for city {entry.title}",
+            update_method=_async_update_data_rain,
+            update_interval=SCAN_INTERVAL_RAIN,
+        )
+        await coordinator_rain.async_refresh()
+
+        if not coordinator_rain.last_update_success:
+            raise ConfigEntryNotReady
+    else:
+        _LOGGER.warning(
+            "1 hour rain forecast not available. %s is not in covered zone",
+            entry.title,
+        )
+
+    department = coordinator_forecast.data.position.get("dept")
+    _LOGGER.debug(
+        "Department corresponding to %s is %s",
+        entry.title,
+        department,
+    )
+    if is_valid_warning_department(department):
+        if not hass.data[DOMAIN].get(department):
+            coordinator_alert = DataUpdateCoordinator(
+                hass,
+                _LOGGER,
+                name=f"Météo-France alert for department {department}",
+                update_method=_async_update_data_alert,
+                update_interval=SCAN_INTERVAL,
             )
+
+            await coordinator_alert.async_refresh()
+
+            if not coordinator_alert.last_update_success:
+                raise ConfigEntryNotReady
+
+            hass.data[DOMAIN][department] = True
+        else:
+            _LOGGER.warning(
+                "Weather alert for department %s won't be added with city %s, as it has already been added within another city",
+                department,
+                entry.title,
+            )
+    else:
+        _LOGGER.warning(
+            "Weather alert not available: The city %s is not in metropolitan France or Andorre",
+            entry.title,
+        )
+
+    undo_listener = entry.add_update_listener(_async_update_listener)
+
+    hass.data[DOMAIN][entry.entry_id] = {
+        COORDINATOR_FORECAST: coordinator_forecast,
+        COORDINATOR_RAIN: coordinator_rain,
+        COORDINATOR_ALERT: coordinator_alert,
+        UNDO_UPDATE_LISTENER: undo_listener,
+    }
+
+    for platform in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, platform)
+        )
+
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
+    """Unload a config entry."""
+    if hass.data[DOMAIN][entry.entry_id][COORDINATOR_ALERT]:
+
+        department = hass.data[DOMAIN][entry.entry_id][
+            COORDINATOR_FORECAST
+        ].data.position.get("dept")
+        hass.data[DOMAIN][department] = False
+        _LOGGER.debug(
+            "Weather alert for depatment %s unloaded and released. It can be added now by another city",
+            department,
+        )
+
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
+            ]
+        )
+    )
+    if unload_ok:
+        hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
+        hass.data[DOMAIN].pop(entry.entry_id)
+        if not hass.data[DOMAIN]:
+            hass.data.pop(DOMAIN)
+
+    return unload_ok
+
+
+async def _async_update_listener(hass: HomeAssistantType, entry: ConfigEntry):
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)

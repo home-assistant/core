@@ -1,16 +1,13 @@
 """Support for IBM Watson TTS integration."""
-import logging
-
+from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
+from ibm_watson import TextToSpeechV1
 import voluptuous as vol
 
 from homeassistant.components.tts import PLATFORM_SCHEMA, Provider
 import homeassistant.helpers.config_validation as cv
 
-_LOGGER = logging.getLogger(__name__)
-
 CONF_URL = "watson_url"
 CONF_APIKEY = "watson_apikey"
-ATTR_CREDENTIALS = "credentials"
 
 DEFAULT_URL = "https://stream.watsonplatform.net/text-to-speech/api"
 
@@ -20,39 +17,49 @@ CONF_TEXT_TYPE = "text"
 
 # List from https://tinyurl.com/watson-tts-docs
 SUPPORTED_VOICES = [
-    "de-DE_BirgitVoice",
-    "de-DE_BirgitV2Voice",
+    "ar-AR_OmarVoice",
     "de-DE_BirgitV3Voice",
-    "de-DE_DieterVoice",
-    "de-DE_DieterV2Voice",
+    "de-DE_BirgitVoice",
     "de-DE_DieterV3Voice",
-    "en-GB_KateVoice",
+    "de-DE_DieterVoice",
+    "de-DE_ErikaV3Voice",
     "en-GB_KateV3Voice",
-    "en-US_AllisonVoice",
-    "en-US_AllisonV2Voice",
+    "en-GB_KateVoice",
+    "en-GB_CharlotteV3Voice",
+    "en-GB_JamesV3Voice",
     "en-US_AllisonV3Voice",
-    "en-US_LisaVoice",
-    "en-US_LisaV2Voice",
+    "en-US_AllisonVoice",
+    "en-US_EmilyV3Voice",
+    "en-US_HenryV3Voice",
+    "en-US_KevinV3Voice",
     "en-US_LisaV3Voice",
-    "en-US_MichaelVoice",
-    "en-US_MichaelV2Voice",
+    "en-US_LisaVoice",
     "en-US_MichaelV3Voice",
-    "es-ES_EnriqueVoice",
+    "en-US_MichaelVoice",
+    "en-US_OliviaV3Voice",
     "es-ES_EnriqueV3Voice",
-    "es-ES_LauraVoice",
+    "es-ES_EnriqueVoice",
     "es-ES_LauraV3Voice",
-    "es-LA_SofiaVoice",
+    "es-ES_LauraVoice",
     "es-LA_SofiaV3Voice",
-    "es-US_SofiaVoice",
+    "es-LA_SofiaVoice",
     "es-US_SofiaV3Voice",
-    "fr-FR_ReneeVoice",
+    "es-US_SofiaVoice",
     "fr-FR_ReneeV3Voice",
-    "it-IT_FrancescaVoice",
-    "it-IT_FrancescaV2Voice",
+    "fr-FR_ReneeVoice",
     "it-IT_FrancescaV3Voice",
+    "it-IT_FrancescaVoice",
+    "ja-JP_EmiV3Voice",
     "ja-JP_EmiVoice",
-    "pt-BR_IsabelaVoice",
+    "ko-KR_YoungmiVoice",
+    "ko-KR_YunaVoice",
+    "nl-NL_EmmaVoice",
+    "nl-NL_LiamVoice",
     "pt-BR_IsabelaV3Voice",
+    "pt-BR_IsabelaVoice",
+    "zh-CN_LiNaVoice",
+    "zh-CN_WangWeiVoice",
+    "zh-CN_ZhangJingVoice",
 ]
 
 SUPPORTED_OUTPUT_FORMATS = [
@@ -90,11 +97,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_engine(hass, config):
+def get_engine(hass, config, discovery_info=None):
     """Set up IBM Watson TTS component."""
-    from ibm_watson import TextToSpeechV1
 
-    service = TextToSpeechV1(url=config[CONF_URL], iam_apikey=config[CONF_APIKEY])
+    authenticator = IAMAuthenticator(config[CONF_APIKEY])
+    service = TextToSpeechV1(authenticator)
+    service.set_service_url(config[CONF_URL])
 
     supported_languages = list({s[:5] for s in SUPPORTED_VOICES})
     default_voice = config[CONF_VOICE]

@@ -1,7 +1,7 @@
 """Support for IP Cameras."""
 import asyncio
-import logging
 from contextlib import closing
+import logging
 
 import aiohttp
 import async_timeout
@@ -9,21 +9,21 @@ import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
 
+from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 from homeassistant.const import (
-    CONF_NAME,
-    CONF_USERNAME,
-    CONF_PASSWORD,
     CONF_AUTHENTICATION,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
-    CONF_VERIFY_SSL,
-)
-from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
-from homeassistant.helpers.aiohttp_client import (
-    async_get_clientsession,
-    async_aiohttp_proxy_web,
 )
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import (
+    async_aiohttp_proxy_web,
+    async_get_clientsession,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,9 +98,12 @@ class MjpegCamera(Camera):
         self._still_image_url = device_info.get(CONF_STILL_IMAGE_URL)
 
         self._auth = None
-        if self._username and self._password:
-            if self._authentication == HTTP_BASIC_AUTHENTICATION:
-                self._auth = aiohttp.BasicAuth(self._username, password=self._password)
+        if (
+            self._username
+            and self._password
+            and self._authentication == HTTP_BASIC_AUTHENTICATION
+        ):
+            self._auth = aiohttp.BasicAuth(self._username, password=self._password)
         self._verify_ssl = device_info.get(CONF_VERIFY_SSL)
 
     async def async_camera_image(self):
@@ -110,7 +113,7 @@ class MjpegCamera(Camera):
             self._authentication == HTTP_DIGEST_AUTHENTICATION
             or self._still_image_url is None
         ):
-            image = await self.hass.async_add_job(self.camera_image)
+            image = await self.hass.async_add_executor_job(self.camera_image)
             return image
 
         websession = async_get_clientsession(self.hass, verify_ssl=self._verify_ssl)
@@ -122,10 +125,10 @@ class MjpegCamera(Camera):
                 return image
 
         except asyncio.TimeoutError:
-            _LOGGER.error("Timeout getting camera image")
+            _LOGGER.error("Timeout getting camera image from %s", self._name)
 
         except aiohttp.ClientError as err:
-            _LOGGER.error("Error getting new camera image: %s", err)
+            _LOGGER.error("Error getting new camera image from %s: %s", self._name, err)
 
     def camera_image(self):
         """Return a still image response from the camera."""
@@ -144,8 +147,6 @@ class MjpegCamera(Camera):
         else:
             req = requests.get(self._mjpeg_url, stream=True, timeout=10)
 
-        # https://github.com/PyCQA/pylint/issues/1437
-        # pylint: disable=no-member
         with closing(req) as response:
             return extract_image_from_mjpeg(response.iter_content(102400))
 

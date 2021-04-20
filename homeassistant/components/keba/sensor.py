@@ -1,13 +1,12 @@
 """Support for KEBA charging station sensors."""
-import logging
-
-from homeassistant.const import ENERGY_KILO_WATT_HOUR
-from homeassistant.helpers.entity import Entity
-from homeassistant.const import DEVICE_CLASS_POWER
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import (
+    DEVICE_CLASS_POWER,
+    ELECTRICAL_CURRENT_AMPERE,
+    ENERGY_KILO_WATT_HOUR,
+)
 
 from . import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -18,30 +17,64 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     keba = hass.data[DOMAIN]
 
     sensors = [
-        KebaSensor(keba, "Curr user", "Max current", "mdi:flash", "A"),
         KebaSensor(
-            keba, "Setenergy", "Energy target", "mdi:gauge", ENERGY_KILO_WATT_HOUR
+            keba,
+            "Curr user",
+            "Max Current",
+            "max_current",
+            "mdi:flash",
+            ELECTRICAL_CURRENT_AMPERE,
         ),
-        KebaSensor(keba, "P", "Charging power", "mdi:flash", "kW", DEVICE_CLASS_POWER),
         KebaSensor(
-            keba, "E pres", "Session energy", "mdi:gauge", ENERGY_KILO_WATT_HOUR
+            keba,
+            "Setenergy",
+            "Energy Target",
+            "energy_target",
+            "mdi:gauge",
+            ENERGY_KILO_WATT_HOUR,
         ),
-        KebaSensor(keba, "E total", "Total Energy", "mdi:gauge", ENERGY_KILO_WATT_HOUR),
+        KebaSensor(
+            keba,
+            "P",
+            "Charging Power",
+            "charging_power",
+            "mdi:flash",
+            "kW",
+            DEVICE_CLASS_POWER,
+        ),
+        KebaSensor(
+            keba,
+            "E pres",
+            "Session Energy",
+            "session_energy",
+            "mdi:gauge",
+            ENERGY_KILO_WATT_HOUR,
+        ),
+        KebaSensor(
+            keba,
+            "E total",
+            "Total Energy",
+            "total_energy",
+            "mdi:gauge",
+            ENERGY_KILO_WATT_HOUR,
+        ),
     ]
     async_add_entities(sensors)
 
 
-class KebaSensor(Entity):
+class KebaSensor(SensorEntity):
     """The entity class for KEBA charging stations sensors."""
 
-    def __init__(self, keba, key, name, icon, unit, device_class=None):
+    def __init__(self, keba, key, name, entity_type, icon, unit, device_class=None):
         """Initialize the KEBA Sensor."""
-        self._key = key
         self._keba = keba
+        self._key = key
         self._name = name
-        self._device_class = device_class
+        self._entity_type = entity_type
         self._icon = icon
         self._unit = unit
+        self._device_class = device_class
+
         self._state = None
         self._attributes = {}
 
@@ -53,12 +86,12 @@ class KebaSensor(Entity):
     @property
     def unique_id(self):
         """Return the unique ID of the binary sensor."""
-        return f"{self._keba.device_name}_{self._name}"
+        return f"{self._keba.device_id}_{self._entity_type}"
 
     @property
     def name(self):
         """Return the name of the device."""
-        return self._name
+        return f"{self._keba.device_name} {self._name}"
 
     @property
     def device_class(self):
@@ -81,7 +114,7 @@ class KebaSensor(Entity):
         return self._unit
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the binary sensor."""
         return self._attributes
 

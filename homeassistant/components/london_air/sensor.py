@@ -5,9 +5,9 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import HTTP_OK
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -83,13 +83,13 @@ class APIData:
     def update(self):
         """Get the latest data from TFL."""
         response = requests.get(URL, timeout=10)
-        if response.status_code != 200:
+        if response.status_code != HTTP_OK:
             _LOGGER.warning("Invalid response from API")
         else:
             self.data = parse_api_response(response.json())
 
 
-class AirSensor(Entity):
+class AirSensor(SensorEntity):
     """Single authority air sensor."""
 
     ICON = "mdi:cloud-outline"
@@ -123,23 +123,25 @@ class AirSensor(Entity):
         return self.ICON
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return other details about the sensor state."""
         attrs = {}
         attrs["updated"] = self._updated
-        attrs["sites"] = len(self._site_data)
+        attrs["sites"] = len(self._site_data) if self._site_data is not None else 0
         attrs["data"] = self._site_data
         return attrs
 
     def update(self):
         """Update the sensor."""
-        self._api_data.update()
-        self._site_data = self._api_data.data[self._name]
-        self._updated = self._site_data[0]["updated"]
         sites_status = []
-        for site in self._site_data:
-            if site["pollutants_status"] != "no_species_data":
-                sites_status.append(site["pollutants_status"])
+        self._api_data.update()
+        if self._api_data.data:
+            self._site_data = self._api_data.data[self._name]
+            self._updated = self._site_data[0]["updated"]
+            for site in self._site_data:
+                if site["pollutants_status"] != "no_species_data":
+                    sites_status.append(site["pollutants_status"])
+
         if sites_status:
             self._state = max(set(sites_status), key=sites_status.count)
         else:
@@ -157,9 +159,9 @@ def parse_species(species_data):
             species_dict["code"] = species["@SpeciesCode"]
             species_dict["quality"] = species["@AirQualityBand"]
             species_dict["index"] = species["@AirQualityIndex"]
-            species_dict["summary"] = (
-                species_dict["code"] + " is " + species_dict["quality"]
-            )
+            species_dict[
+                "summary"
+            ] = f"{species_dict['code']} is {species_dict['quality']}"
             parsed_species_data.append(species_dict)
             quality_list.append(species_dict["quality"])
     return parsed_species_data, quality_list

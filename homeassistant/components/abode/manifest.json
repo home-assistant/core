@@ -3,11 +3,10 @@
   "name": "Abode",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/abode",
-  "requirements": [
-    "abodepy==0.16.5"
-  ],
-  "dependencies": [],
-  "codeowners": [
-    "@shred86"
-  ]
+  "requirements": ["abodepy==1.2.0"],
+  "codeowners": ["@shred86"],
+  "homekit": {
+    "models": ["Abode", "Iota"]
+  },
+  "iot_class": "cloud_push"
 }

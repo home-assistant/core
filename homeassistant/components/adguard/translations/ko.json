@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "existing_instance_updated": "\uae30\uc874 \uad6c\uc131\uc744 \uc5c5\ub370\uc774\ud2b8\ud588\uc2b5\ub2c8\ub2e4.",
+            "single_instance_allowed": "\uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \ud558\ub098\uc758 \uc778\uc2a4\ud134\uc2a4\ub9cc \uad6c\uc131\ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4."
+        },
+        "error": {
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "{addon} \uc560\ub4dc\uc628\uc5d0\uc11c \uc81c\uacf5\ud558\ub294 AdGuard Home\uc5d0 \uc5f0\uacb0\ud558\ub3c4\ub85d Home Assistant\ub97c \uad6c\uc131\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",
+                "title": "Home Assistant \uc560\ub4dc\uc628\uc758 AdGuard Home"
+            },
+            "user": {
+                "data": {
+                    "host": "\ud638\uc2a4\ud2b8",
+                    "password": "\ube44\ubc00\ubc88\ud638",
+                    "port": "\ud3ec\ud2b8",
+                    "ssl": "SSL \uc778\uc99d\uc11c \uc0ac\uc6a9",
+                    "username": "\uc0ac\uc6a9\uc790 \uc774\ub984",
+                    "verify_ssl": "SSL \uc778\uc99d\uc11c \ud655\uc778"
+                },
+                "description": "\ubaa8\ub2c8\ud130\ub9c1 \ubc0f \uc81c\uc5b4\uac00 \uac00\ub2a5\ud558\ub3c4\ub85d AdGuard Home \uc778\uc2a4\ud134\uc2a4\ub97c \uc124\uc815\ud574\uc8fc\uc138\uc694."
+            }
+        }
+    }
+}

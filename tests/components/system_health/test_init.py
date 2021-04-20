@@ -1,38 +1,67 @@
 """Tests for the system health component init."""
 import asyncio
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, Mock, patch
 
-import pytest
+from aiohttp.client_exceptions import ClientError
 
+from homeassistant.components import system_health
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_coro
+from tests.common import get_system_health_info, mock_platform
 
 
-@pytest.fixture
-def mock_system_info(hass):
-    """Mock system info."""
-    hass.helpers.system_info.async_get_system_info = Mock(
-        return_value=mock_coro({"hello": True})
-    )
-
-
-async def test_info_endpoint_return_info(hass, hass_ws_client, mock_system_info):
-    """Test that the info endpoint works."""
-    assert await async_setup_component(hass, "system_health", {})
+async def gather_system_health_info(hass, hass_ws_client):
+    """Gather all info."""
     client = await hass_ws_client(hass)
 
     resp = await client.send_json({"id": 6, "type": "system_health/info"})
+
+    # Confirm subscription
     resp = await client.receive_json()
     assert resp["success"]
-    data = resp["result"]
+
+    data = {}
+
+    # Get initial data
+    resp = await client.receive_json()
+    assert resp["event"]["type"] == "initial"
+    data = resp["event"]["data"]
+
+    while True:
+        resp = await client.receive_json()
+        event = resp["event"]
+
+        if event["type"] == "finish":
+            break
+
+        assert event["type"] == "update"
+
+        if event["success"]:
+            data[event["domain"]]["info"][event["key"]] = event["data"]
+        else:
+            data[event["domain"]]["info"][event["key"]] = event["error"]
+
+    return data
+
+
+async def test_info_endpoint_return_info(hass, hass_ws_client):
+    """Test that the info endpoint works."""
+    assert await async_setup_component(hass, "homeassistant", {})
+
+    with patch(
+        "homeassistant.components.homeassistant.system_health.system_health_info",
+        return_value={"hello": True},
+    ):
+        assert await async_setup_component(hass, "system_health", {})
+
+    data = await gather_system_health_info(hass, hass_ws_client)
 
     assert len(data) == 1
     data = data["homeassistant"]
-    assert data == {"hello": True}
+    assert data == {"info": {"hello": True}}
 
 
-async def test_info_endpoint_register_callback(hass, hass_ws_client, mock_system_info):
+async def test_info_endpoint_register_callback(hass, hass_ws_client):
     """Test that the info endpoint allows registering callbacks."""
 
     async def mock_info(hass):
@@ -40,21 +69,17 @@ async def test_info_endpoint_register_callback(hass, hass_ws_client, mock_system
 
     hass.components.system_health.async_register_info("lovelace", mock_info)
     assert await async_setup_component(hass, "system_health", {})
-    client = await hass_ws_client(hass)
+    data = await gather_system_health_info(hass, hass_ws_client)
 
-    resp = await client.send_json({"id": 6, "type": "system_health/info"})
-    resp = await client.receive_json()
-    assert resp["success"]
-    data = resp["result"]
-
-    assert len(data) == 2
+    assert len(data) == 1
     data = data["lovelace"]
-    assert data == {"storage": "YAML"}
+    assert data == {"info": {"storage": "YAML"}}
+
+    # Test our test helper works
+    assert await get_system_health_info(hass, "lovelace") == {"storage": "YAML"}
 
 
-async def test_info_endpoint_register_callback_timeout(
-    hass, hass_ws_client, mock_system_info
-):
+async def test_info_endpoint_register_callback_timeout(hass, hass_ws_client):
     """Test that the info endpoint timing out."""
 
     async def mock_info(hass):
@@ -62,21 +87,14 @@ async def test_info_endpoint_register_callback_timeout(
 
     hass.components.system_health.async_register_info("lovelace", mock_info)
     assert await async_setup_component(hass, "system_health", {})
-    client = await hass_ws_client(hass)
+    data = await gather_system_health_info(hass, hass_ws_client)
 
-    resp = await client.send_json({"id": 6, "type": "system_health/info"})
-    resp = await client.receive_json()
-    assert resp["success"]
-    data = resp["result"]
-
-    assert len(data) == 2
+    assert len(data) == 1
     data = data["lovelace"]
-    assert data == {"error": "Fetching info timed out"}
+    assert data == {"info": {"error": {"type": "failed", "error": "timeout"}}}
 
 
-async def test_info_endpoint_register_callback_exc(
-    hass, hass_ws_client, mock_system_info
-):
+async def test_info_endpoint_register_callback_exc(hass, hass_ws_client):
     """Test that the info endpoint requires auth."""
 
     async def mock_info(hass):
@@ -84,13 +102,58 @@ async def test_info_endpoint_register_callback_exc(
 
     hass.components.system_health.async_register_info("lovelace", mock_info)
     assert await async_setup_component(hass, "system_health", {})
-    client = await hass_ws_client(hass)
+    data = await gather_system_health_info(hass, hass_ws_client)
 
-    resp = await client.send_json({"id": 6, "type": "system_health/info"})
-    resp = await client.receive_json()
-    assert resp["success"]
-    data = resp["result"]
-
-    assert len(data) == 2
+    assert len(data) == 1
     data = data["lovelace"]
-    assert data == {"error": "TEST ERROR"}
+    assert data == {"info": {"error": {"type": "failed", "error": "unknown"}}}
+
+
+async def test_platform_loading(hass, hass_ws_client, aioclient_mock):
+    """Test registering via platform."""
+    aioclient_mock.get("http://example.com/status", text="")
+    aioclient_mock.get("http://example.com/status_fail", exc=ClientError)
+    hass.config.components.add("fake_integration")
+    mock_platform(
+        hass,
+        "fake_integration.system_health",
+        Mock(
+            async_register=lambda hass, register: register.async_register_info(
+                AsyncMock(
+                    return_value={
+                        "hello": "info",
+                        "server_reachable": system_health.async_check_can_reach_url(
+                            hass, "http://example.com/status"
+                        ),
+                        "server_fail_reachable": system_health.async_check_can_reach_url(
+                            hass,
+                            "http://example.com/status_fail",
+                            more_info="http://more-info-url.com",
+                        ),
+                        "async_crash": AsyncMock(side_effect=ValueError)(),
+                    }
+                ),
+                "/config/fake_integration",
+            )
+        ),
+    )
+
+    assert await async_setup_component(hass, "system_health", {})
+    data = await gather_system_health_info(hass, hass_ws_client)
+
+    assert data["fake_integration"] == {
+        "info": {
+            "hello": "info",
+            "server_reachable": "ok",
+            "server_fail_reachable": {
+                "type": "failed",
+                "error": "unreachable",
+                "more_info": "http://more-info-url.com",
+            },
+            "async_crash": {
+                "type": "failed",
+                "error": "unknown",
+            },
+        },
+        "manage_url": "/config/fake_integration",
+    }

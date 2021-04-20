@@ -5,14 +5,13 @@ from urllib.parse import urlencode
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST, CONF_PORT
-import homeassistant.helpers.config_validation as cv
-
 from homeassistant.components.notify import (
     ATTR_DATA,
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.const import CONF_HOST, CONF_PORT
+import homeassistant.helpers.config_validation as cv
 
 ATTR_METHOD = "method"
 ATTR_METHOD_DEFAULT = "speak"
@@ -70,7 +69,7 @@ class LannouncerNotificationService(BaseNotificationService):
             # Send message
             _LOGGER.debug("Sending message: %s", cmd)
             sock.sendall(cmd.encode())
-            sock.sendall("&@DONE@\n".encode())
+            sock.sendall(b"&@DONE@\n")
 
             # Check response
             buffer = sock.recv(1024)
@@ -81,5 +80,5 @@ class LannouncerNotificationService(BaseNotificationService):
             sock.close()
         except socket.gaierror:
             _LOGGER.error("Unable to connect to host %s", self._host)
-        except socket.error:
+        except OSError:
             _LOGGER.exception("Failed to send data to Lannnouncer")

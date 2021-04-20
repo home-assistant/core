@@ -1,13 +1,12 @@
 """The tests for the SleepIQ component."""
-import unittest
 from unittest.mock import MagicMock, patch
-
-import requests_mock
 
 from homeassistant import setup
 import homeassistant.components.sleepiq as sleepiq
 
-from tests.common import load_fixture, get_test_home_assistant
+from tests.common import load_fixture
+
+CONFIG = {"sleepiq": {"username": "foo", "password": "bar"}}
 
 
 def mock_responses(mock, single=False):
@@ -18,64 +17,48 @@ def mock_responses(mock, single=False):
     else:
         suffix = ""
     mock.put(base_url + "login", text=load_fixture("sleepiq-login.json"))
-    mock.get(
-        base_url + "bed?_k=0987", text=load_fixture("sleepiq-bed{}.json".format(suffix))
-    )
+    mock.get(base_url + "bed?_k=0987", text=load_fixture(f"sleepiq-bed{suffix}.json"))
     mock.get(base_url + "sleeper?_k=0987", text=load_fixture("sleepiq-sleeper.json"))
     mock.get(
         base_url + "bed/familyStatus?_k=0987",
-        text=load_fixture("sleepiq-familystatus{}.json".format(suffix)),
+        text=load_fixture(f"sleepiq-familystatus{suffix}.json"),
     )
 
 
-class TestSleepIQ(unittest.TestCase):
-    """Tests the SleepIQ component."""
+async def test_setup(hass, requests_mock):
+    """Test the setup."""
+    mock_responses(requests_mock)
 
-    def setUp(self):
-        """Initialize values for this test case class."""
-        self.hass = get_test_home_assistant()
-        self.username = "foo"
-        self.password = "bar"
-        self.config = {
-            "sleepiq": {"username": self.username, "password": self.password}
-        }
+    # We're mocking the load_platform discoveries or else the platforms
+    # will be setup during tear down when blocking till done, but the mocks
+    # are no longer active.
+    with patch("homeassistant.helpers.discovery.load_platform", MagicMock()):
+        assert sleepiq.setup(hass, CONFIG)
 
-    def tearDown(self):  # pylint: disable=invalid-name
-        """Stop everything that was started."""
-        self.hass.stop()
 
-    @requests_mock.Mocker()
-    def test_setup(self, mock):
-        """Test the setup."""
-        mock_responses(mock)
+async def test_setup_login_failed(hass, requests_mock):
+    """Test the setup if a bad username or password is given."""
+    mock_responses(requests_mock)
+    requests_mock.put(
+        "https://prod-api.sleepiq.sleepnumber.com/rest/login",
+        status_code=401,
+        json=load_fixture("sleepiq-login-failed.json"),
+    )
 
-        # We're mocking the load_platform discoveries or else the platforms
-        # will be setup during tear down when blocking till done, but the mocks
-        # are no longer active.
-        with patch("homeassistant.helpers.discovery.load_platform", MagicMock()):
-            assert sleepiq.setup(self.hass, self.config)
+    response = sleepiq.setup(hass, CONFIG)
+    assert not response
 
-    @requests_mock.Mocker()
-    def test_setup_login_failed(self, mock):
-        """Test the setup if a bad username or password is given."""
-        mock.put(
-            "https://prod-api.sleepiq.sleepnumber.com/rest/login",
-            status_code=401,
-            json=load_fixture("sleepiq-login-failed.json"),
-        )
 
-        response = sleepiq.setup(self.hass, self.config)
-        assert not response
+async def test_setup_component_no_login(hass):
+    """Test the setup when no login is configured."""
+    conf = CONFIG.copy()
+    del conf["sleepiq"]["username"]
+    assert not await setup.async_setup_component(hass, sleepiq.DOMAIN, conf)
 
-    def test_setup_component_no_login(self):
-        """Test the setup when no login is configured."""
-        conf = self.config.copy()
-        del conf["sleepiq"]["username"]
-        assert not setup.setup_component(self.hass, sleepiq.DOMAIN, conf)
 
-    def test_setup_component_no_password(self):
-        """Test the setup when no password is configured."""
-        conf = self.config.copy()
-        del conf["sleepiq"]["password"]
+async def test_setup_component_no_password(hass):
+    """Test the setup when no password is configured."""
+    conf = CONFIG.copy()
+    del conf["sleepiq"]["password"]
 
-        assert not setup.setup_component(self.hass, sleepiq.DOMAIN, conf)
+    assert not await setup.async_setup_component(hass, sleepiq.DOMAIN, conf)

@@ -2,70 +2,141 @@
 import logging
 
 import RFXtrx as rfxtrxmod
-import voluptuous as vol
 
-from homeassistant.components import rfxtrx
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
-from homeassistant.const import CONF_NAME
-from homeassistant.helpers import config_validation as cv
+from homeassistant.components.switch import SwitchEntity
+from homeassistant.const import CONF_DEVICES, STATE_ON
+from homeassistant.core import callback
 
 from . import (
-    CONF_AUTOMATIC_ADD,
-    CONF_DEVICES,
-    CONF_FIRE_EVENT,
+    CONF_DATA_BITS,
     CONF_SIGNAL_REPETITIONS,
     DEFAULT_SIGNAL_REPETITIONS,
+    DOMAIN,
+    RfxtrxCommandEntity,
+    connect_auto_add,
+    get_device_id,
+    get_rfx_object,
 )
+from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST
+
+DATA_SWITCH = f"{DOMAIN}_switch"
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_DEVICES, default={}): {
-            cv.string: vol.Schema(
-                {
-                    vol.Required(CONF_NAME): cv.string,
-                    vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
-                }
-            )
-        },
-        vol.Optional(CONF_AUTOMATIC_ADD, default=False): cv.boolean,
-        vol.Optional(
-            CONF_SIGNAL_REPETITIONS, default=DEFAULT_SIGNAL_REPETITIONS
-        ): vol.Coerce(int),
-    }
-)
+
+def supported(event):
+    """Return whether an event supports switch."""
+    return (
+        isinstance(event.device, rfxtrxmod.LightingDevice)
+        and not event.device.known_to_be_dimmable
+        and not event.device.known_to_be_rollershutter
+        or isinstance(event.device, rfxtrxmod.RfyDevice)
+    )
 
 
-def setup_platform(hass, config, add_entities_callback, discovery_info=None):
-    """Set up the RFXtrx platform."""
+async def async_setup_entry(
+    hass,
+    config_entry,
+    async_add_entities,
+):
+    """Set up config entry."""
+    discovery_info = config_entry.data
+    device_ids = set()
+
     # Add switch from config file
-    switches = rfxtrx.get_devices_from_config(config, RfxtrxSwitch)
-    add_entities_callback(switches)
+    entities = []
+    for packet_id, entity_info in discovery_info[CONF_DEVICES].items():
+        event = get_rfx_object(packet_id)
+        if event is None:
+            _LOGGER.error("Invalid device: %s", packet_id)
+            continue
+        if not supported(event):
+            continue
 
-    def switch_update(event):
+        device_id = get_device_id(
+            event.device, data_bits=entity_info.get(CONF_DATA_BITS)
+        )
+        if device_id in device_ids:
+            continue
+        device_ids.add(device_id)
+
+        entity = RfxtrxSwitch(
+            event.device, device_id, entity_info[CONF_SIGNAL_REPETITIONS]
+        )
+        entities.append(entity)
+
+    async_add_entities(entities)
+
+    @callback
+    def switch_update(event, device_id):
         """Handle sensor updates from the RFXtrx gateway."""
-        if (
-            not isinstance(event.device, rfxtrxmod.LightingDevice)
-            or event.device.known_to_be_dimmable
-            or event.device.known_to_be_rollershutter
-        ):
+        if not supported(event):
             return
 
-        new_device = rfxtrx.get_new_device(event, config, RfxtrxSwitch)
-        if new_device:
-            add_entities_callback([new_device])
+        if device_id in device_ids:
+            return
+        device_ids.add(device_id)
 
-        rfxtrx.apply_received_command(event)
+        _LOGGER.info(
+            "Added switch (Device ID: %s Class: %s Sub: %s, Event: %s)",
+            event.device.id_string.lower(),
+            event.device.__class__.__name__,
+            event.device.subtype,
+            "".join(f"{x:02x}" for x in event.data),
+        )
+
+        entity = RfxtrxSwitch(
+            event.device, device_id, DEFAULT_SIGNAL_REPETITIONS, event=event
+        )
+        async_add_entities([entity])
 
     # Subscribe to main RFXtrx events
-    if switch_update not in rfxtrx.RECEIVED_EVT_SUBSCRIBERS:
-        rfxtrx.RECEIVED_EVT_SUBSCRIBERS.append(switch_update)
+    connect_auto_add(hass, discovery_info, switch_update)
 
 
-class RfxtrxSwitch(rfxtrx.RfxtrxDevice, SwitchDevice):
+class RfxtrxSwitch(RfxtrxCommandEntity, SwitchEntity):
     """Representation of a RFXtrx switch."""
 
-    def turn_on(self, **kwargs):
+    async def async_added_to_hass(self):
+        """Restore device state."""
+        await super().async_added_to_hass()
+
+        if self._event is None:
+            old_state = await self.async_get_last_state()
+            if old_state is not None:
+                self._state = old_state.state == STATE_ON
+
+    def _apply_event(self, event):
+        """Apply command from rfxtrx."""
+        super()._apply_event(event)
+        if event.values["Command"] in COMMAND_ON_LIST:
+            self._state = True
+        elif event.values["Command"] in COMMAND_OFF_LIST:
+            self._state = False
+
+    @callback
+    def _handle_event(self, event, device_id):
+        """Check if event applies to me and update."""
+        if device_id != self._device_id:
+            return
+
+        self._apply_event(event)
+
+        self.async_write_ha_state()
+
+    @property
+    def is_on(self):
+        """Return true if device is on."""
+        return self._state
+
+    async def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        self._send_command("turn_on")
+        await self._async_send(self._device.send_on)
+        self._state = True
+        self.async_write_ha_state()
+
+    async def async_turn_off(self, **kwargs):
+        """Turn the device off."""
+        await self._async_send(self._device.send_off)
+        self._state = False
+        self.async_write_ha_state()

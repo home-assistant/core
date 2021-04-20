@@ -1,13 +1,8 @@
 {
   "domain": "plant",
-  "name": "Plant",
+  "name": "Plant Monitor",
   "documentation": "https://www.home-assistant.io/integrations/plant",
-  "requirements": [],
-  "dependencies": [
-    "group",
-    "zone"
-  ],
-  "codeowners": [
-    "@ChristianKuehnel"
-  ]
+  "after_dependencies": ["recorder"],
+  "codeowners": [],
+  "quality_scale": "internal"
 }

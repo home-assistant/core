@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto wurde bereits konfiguriert"
+        },
+        "error": {
+            "invalid_auth": "Ung\u00fcltige Authentifizierung"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "home_control_url": "Home Control URL",
+                    "mydevolo_url": "mydevolo URL",
+                    "password": "Passwort",
+                    "username": "E-Mail / devolo ID"
+                }
+            }
+        }
+    }
+}

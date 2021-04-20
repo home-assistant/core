@@ -1,65 +1,112 @@
 """Support for Meteo-France weather service."""
-from datetime import timedelta
 import logging
+import time
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_PRECIPITATION,
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
+    ATTR_FORECAST_WIND_BEARING,
+    ATTR_FORECAST_WIND_SPEED,
     WeatherEntity,
 )
-import homeassistant.util.dt as dt_util
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_MODE, TEMP_CELSIUS
+from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
+from homeassistant.util import dt as dt_util
 
-from .const import ATTRIBUTION, CONDITION_CLASSES, CONF_CITY, DATA_METEO_FRANCE
+from .const import (
+    ATTRIBUTION,
+    CONDITION_CLASSES,
+    COORDINATOR_FORECAST,
+    DOMAIN,
+    FORECAST_MODE_DAILY,
+    FORECAST_MODE_HOURLY,
+    MANUFACTURER,
+    MODEL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def format_condition(condition: str):
+    """Return condition from dict CONDITION_CLASSES."""
+    for key, value in CONDITION_CLASSES.items():
+        if condition in value:
+            return key
+    return condition
+
+
+async def async_setup_entry(
+    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+) -> None:
     """Set up the Meteo-France weather platform."""
-    if discovery_info is None:
-        return
+    coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR_FORECAST]
 
-    city = discovery_info[CONF_CITY]
-    client = hass.data[DATA_METEO_FRANCE][city]
+    async_add_entities(
+        [
+            MeteoFranceWeather(
+                coordinator,
+                entry.options.get(CONF_MODE, FORECAST_MODE_DAILY),
+            )
+        ],
+        True,
+    )
+    _LOGGER.debug(
+        "Weather entity (%s) added for %s",
+        entry.options.get(CONF_MODE, FORECAST_MODE_DAILY),
+        coordinator.data.position["name"],
+    )
 
-    add_entities([MeteoFranceWeather(client)], True)
 
-
-class MeteoFranceWeather(WeatherEntity):
+class MeteoFranceWeather(CoordinatorEntity, WeatherEntity):
     """Representation of a weather condition."""
 
-    def __init__(self, client):
+    def __init__(self, coordinator: DataUpdateCoordinator, mode: str):
         """Initialise the platform with a data instance and station name."""
-        self._client = client
-        self._data = {}
+        super().__init__(coordinator)
+        self._city_name = self.coordinator.data.position["name"]
+        self._mode = mode
+        self._unique_id = f"{self.coordinator.data.position['lat']},{self.coordinator.data.position['lon']}"
 
-    def update(self):
-        """Update current conditions."""
-        self._client.update()
-        self._data = self._client.get_data()
+    @property
+    def unique_id(self):
+        """Return the unique id of the sensor."""
+        return self._unique_id
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._data["name"]
+        return self._city_name
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "identifiers": {(DOMAIN, self.platform.config_entry.unique_id)},
+            "name": self.coordinator.name,
+            "manufacturer": MANUFACTURER,
+            "model": MODEL,
+            "entry_type": "service",
+        }
 
     @property
     def condition(self):
         """Return the current condition."""
-        return self.format_condition(self._data["weather"])
+        return format_condition(
+            self.coordinator.data.current_forecast["weather"]["desc"]
+        )
 
     @property
     def temperature(self):
         """Return the temperature."""
-        return self._data["temperature"]
-
-    @property
-    def humidity(self):
-        """Return the humidity."""
-        return None
+        return self.coordinator.data.current_forecast["T"]["value"]
 
     @property
     def temperature_unit(self):
@@ -67,51 +114,76 @@ class MeteoFranceWeather(WeatherEntity):
         return TEMP_CELSIUS
 
     @property
+    def pressure(self):
+        """Return the pressure."""
+        return self.coordinator.data.current_forecast["sea_level"]
+
+    @property
+    def humidity(self):
+        """Return the humidity."""
+        return self.coordinator.data.current_forecast["humidity"]
+
+    @property
     def wind_speed(self):
         """Return the wind speed."""
-        return self._data["wind_speed"]
+        # convert from API m/s to km/h
+        return round(self.coordinator.data.current_forecast["wind"]["speed"] * 3.6)
 
     @property
     def wind_bearing(self):
         """Return the wind bearing."""
-        return self._data["wind_bearing"]
+        wind_bearing = self.coordinator.data.current_forecast["wind"]["direction"]
+        if wind_bearing != -1:
+            return wind_bearing
+
+    @property
+    def forecast(self):
+        """Return the forecast."""
+        forecast_data = []
+
+        if self._mode == FORECAST_MODE_HOURLY:
+            today = time.time()
+            for forecast in self.coordinator.data.forecast:
+                # Can have data in the past
+                if forecast["dt"] < today:
+                    continue
+                forecast_data.append(
+                    {
+                        ATTR_FORECAST_TIME: dt_util.utc_from_timestamp(
+                            forecast["dt"]
+                        ).isoformat(),
+                        ATTR_FORECAST_CONDITION: format_condition(
+                            forecast["weather"]["desc"]
+                        ),
+                        ATTR_FORECAST_TEMP: forecast["T"]["value"],
+                        ATTR_FORECAST_PRECIPITATION: forecast["rain"].get("1h"),
+                        ATTR_FORECAST_WIND_SPEED: forecast["wind"]["speed"],
+                        ATTR_FORECAST_WIND_BEARING: forecast["wind"]["direction"]
+                        if forecast["wind"]["direction"] != -1
+                        else None,
+                    }
+                )
+        else:
+            for forecast in self.coordinator.data.daily_forecast:
+                # stop when we don't have a weather condition (can happen around last days of forcast, max 14)
+                if not forecast.get("weather12H"):
+                    break
+                forecast_data.append(
+                    {
+                        ATTR_FORECAST_TIME: self.coordinator.data.timestamp_to_locale_time(
+                            forecast["dt"]
+                        ),
+                        ATTR_FORECAST_CONDITION: format_condition(
+                            forecast["weather12H"]["desc"]
+                        ),
+                        ATTR_FORECAST_TEMP: forecast["T"]["max"],
+                        ATTR_FORECAST_TEMP_LOW: forecast["T"]["min"],
+                        ATTR_FORECAST_PRECIPITATION: forecast["precipitation"]["24h"],
+                    }
+                )
+        return forecast_data
 
     @property
     def attribution(self):
         """Return the attribution."""
         return ATTRIBUTION
-
-    @property
-    def forecast(self):
-        """Return the forecast."""
-        reftime = dt_util.utcnow().replace(hour=12, minute=0, second=0, microsecond=0)
-        reftime += timedelta(hours=24)
-        _LOGGER.debug("reftime used for %s forecast: %s", self._data["name"], reftime)
-        forecast_data = []
-        for key in self._data["forecast"]:
-            value = self._data["forecast"][key]
-            data_dict = {
-                ATTR_FORECAST_TIME: reftime.isoformat(),
-                ATTR_FORECAST_TEMP: int(value["max_temp"]),
-                ATTR_FORECAST_TEMP_LOW: int(value["min_temp"]),
-                ATTR_FORECAST_CONDITION: self.format_condition(value["weather"]),
-            }
-            reftime = reftime + timedelta(hours=24)
-            forecast_data.append(data_dict)
-        return forecast_data
-
-    @staticmethod
-    def format_condition(condition):
-        """Return condition from dict CONDITION_CLASSES."""
-        for key, value in CONDITION_CLASSES.items():
-            if condition in value:
-                return key
-        return condition
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        data = dict()
-        if self._data and "next_rain" in self._data:
-            data["next_rain"] = self._data["next_rain"]
-        return data

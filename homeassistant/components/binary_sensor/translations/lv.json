@@ -1,0 +1,91 @@
+{
+    "device_automation": {
+        "trigger_type": {
+            "turned_off": "{entity_name} tika izsl\u0113gta",
+            "turned_on": "{entity_name} tika iesl\u0113gta"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "Izsl\u0113gts",
+            "on": "Iesl\u0113gts"
+        },
+        "battery": {
+            "off": "Norm\u0101ls",
+            "on": "Zems"
+        },
+        "cold": {
+            "off": "Norm\u0101ls",
+            "on": "Auksts"
+        },
+        "connectivity": {
+            "off": "Atvienots",
+            "on": "Piesl\u0113dzies"
+        },
+        "door": {
+            "off": "Aizv\u0113rtas",
+            "on": "Atv\u0113rtas"
+        },
+        "garage_door": {
+            "off": "Aizv\u0113rtas",
+            "on": "Atv\u0113rtas"
+        },
+        "gas": {
+            "off": "Br\u012bvs",
+            "on": "Sajusta"
+        },
+        "heat": {
+            "off": "Norm\u0101ls",
+            "on": "Karsts"
+        },
+        "lock": {
+            "off": "Sl\u0113gts",
+            "on": "Atsl\u0113gts"
+        },
+        "moisture": {
+            "off": "Sauss",
+            "on": "Slapj\u0161"
+        },
+        "motion": {
+            "off": "Br\u012bvs",
+            "on": "Sajusta"
+        },
+        "occupancy": {
+            "off": "Br\u012bvs",
+            "on": "Aiz\u0146emts"
+        },
+        "opening": {
+            "off": "Aizv\u0113rts",
+            "on": "Atv\u0113rts"
+        },
+        "presence": {
+            "off": "Promb\u016btne",
+            "on": "M\u0101j\u0101s"
+        },
+        "problem": {
+            "off": "OK",
+            "on": "Probl\u0113ma"
+        },
+        "safety": {
+            "off": "Dro\u0161i",
+            "on": "Nedro\u0161i"
+        },
+        "smoke": {
+            "off": "Br\u012bvs",
+            "on": "Sajusta"
+        },
+        "sound": {
+            "off": "Br\u012bvs",
+            "on": "Sajusts"
+        },
+        "vibration": {
+            "off": "Br\u012bvs",
+            "on": "Sajusts"
+        },
+        "window": {
+            "off": "Aizv\u0113rts",
+            "on": "Atv\u0113rts"
+        }
+    },
+    "title": "Bin\u0101rais sensors"
+}

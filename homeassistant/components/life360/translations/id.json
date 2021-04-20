@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "invalid_auth": "Autentikasi tidak valid",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "create_entry": {
+            "default": "Untuk mengatur opsi tingkat lanjut, baca [dokumentasi Life360]({docs_url})."
+        },
+        "error": {
+            "already_configured": "Akun sudah dikonfigurasi",
+            "invalid_auth": "Autentikasi tidak valid",
+            "invalid_username": "Nama pengguna tidak valid",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna"
+                },
+                "description": "Untuk mengatur opsi tingkat lanjut, baca [dokumentasi Life360]({docs_url}).\nAnda mungkin ingin melakukannya sebelum menambahkan akun.",
+                "title": "Info Akun Life360"
+            }
+        }
+    }
+}

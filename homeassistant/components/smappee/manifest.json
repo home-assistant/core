@@ -1,10 +1,20 @@
 {
   "domain": "smappee",
   "name": "Smappee",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/smappee",
-  "requirements": [
-    "smappy==0.2.16"
+  "dependencies": ["http"],
+  "requirements": ["pysmappee==0.2.17"],
+  "codeowners": ["@bsmappee"],
+  "zeroconf": [
+    {
+      "type": "_ssh._tcp.local.",
+      "name": "smappee1*"
+    },
+    {
+      "type": "_ssh._tcp.local.",
+      "name": "smappee2*"
+    }
   ],
-  "dependencies": [],
-  "codeowners": []
+  "iot_class": "cloud_polling"
 }

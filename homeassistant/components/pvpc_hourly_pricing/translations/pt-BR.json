@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "A integra\u00e7\u00e3o j\u00e1 est\u00e1 configurada com um sensor existente com essa tarifa"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Nome do sensor",
+                    "tariff": "Tarifa contratada (1, 2 ou 3 per\u00edodos)"
+                },
+                "description": "Esse sensor usa a API oficial para obter [pre\u00e7os por hora de eletricidade (PVPC)]](https://www.esios.ree.es/es/pvpc) na Espanha. \nPara uma explica\u00e7\u00e3o mais precisa, visite os [documentos de integra\u00e7\u00e3o](https://www.home-assistant.io/integrations/pvpc_hourly_pricing/). \n\nSelecione a taxa contratada com base no n\u00famero de per\u00edodos de cobran\u00e7a por dia: \n- 1 per\u00edodo: normal \n- 2 per\u00edodos: discrimina\u00e7\u00e3o (taxa noturna) \n- 3 per\u00edodos: carro el\u00e9trico (taxa noturna de 3 per\u00edodos)",
+                "title": "Sele\u00e7\u00e3o de tarifas"
+            }
+        }
+    }
+}

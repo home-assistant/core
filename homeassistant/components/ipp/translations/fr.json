@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "cannot_connect": "\u00c9chec de connexion",
+            "connection_upgrade": "Impossible de se connecter \u00e0 l'imprimante parce qu'une mise \u00e0 niveau de la connexion est n\u00e9cessaire.",
+            "ipp_error": "Erreur IPP rencontr\u00e9e.",
+            "ipp_version_error": "Version d'IPP non prise en charge par l'imprimante.",
+            "parse_error": "Impossible d'analyser la r\u00e9ponse de l'imprimante.",
+            "unique_id_required": "Dispositif ne portant pas l'identification unique requise pour la d\u00e9couverte."
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "connection_upgrade": "Impossible de se connecter \u00e0 l'imprimante. Veuillez r\u00e9essayer avec l'option SSL / TLS coch\u00e9e."
+        },
+        "flow_title": "Imprimante: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "base_path": "Chemin d'acc\u00e8s relatif \u00e0 l'imprimante",
+                    "host": "Nom d'h\u00f4te ou adresse IP",
+                    "port": "Port",
+                    "ssl": "L'imprimante prend en charge la communication via SSL/TLS",
+                    "verify_ssl": "L'imprimante utilise un certificat SSL appropri\u00e9"
+                },
+                "description": "Configurez votre imprimante via IPP (Internet Printing Protocol) pour l'int\u00e9grer \u00e0 Home Assistant",
+                "title": "Reliez votre imprimante"
+            },
+            "zeroconf_confirm": {
+                "description": "Voulez-vous ajouter l'imprimante `{name}` \u00e0 Home Assistant ?",
+                "title": "Imprimante trouv\u00e9e"
+            }
+        }
+    }
+}

@@ -1,6 +1,6 @@
 """Tests for Logi Circle config flow."""
 import asyncio
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -8,15 +8,12 @@ from homeassistant import data_entry_flow
 from homeassistant.components.logi_circle import config_flow
 from homeassistant.components.logi_circle.config_flow import (
     DOMAIN,
+    AuthorizationFailed,
     LogiCircleAuthCallbackView,
 )
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockDependency, mock_coro
-
-
-class AuthorizationFailed(Exception):
-    """Dummy Exception."""
+from tests.common import mock_coro
 
 
 class MockRequest:
@@ -40,7 +37,7 @@ def init_config_flow(hass):
         sensors=None,
     )
     flow = config_flow.LogiCircleFlowHandler()
-    flow._get_authorization_url = Mock(  # pylint: disable=W0212
+    flow._get_authorization_url = Mock(  # pylint: disable=protected-access
         return_value="http://example.com"
     )
     flow.hass = hass
@@ -50,22 +47,20 @@ def init_config_flow(hass):
 @pytest.fixture
 def mock_logi_circle():
     """Mock logi_circle."""
-    with MockDependency("logi_circle", "exception") as mock_logi_circle_:
-        mock_logi_circle_.exception.AuthorizationFailed = AuthorizationFailed
-        mock_logi_circle_.LogiCircle().authorize = Mock(
-            return_value=mock_coro(return_value=True)
-        )
-        mock_logi_circle_.LogiCircle().close = Mock(
-            return_value=mock_coro(return_value=True)
-        )
-        mock_logi_circle_.LogiCircle().account = mock_coro(
-            return_value={"accountId": "testId"}
-        )
-        mock_logi_circle_.LogiCircle().authorize_url = "http://authorize.url"
-        yield mock_logi_circle_
+    with patch(
+        "homeassistant.components.logi_circle.config_flow.LogiCircle"
+    ) as logi_circle:
+        LogiCircle = logi_circle()
+        LogiCircle.authorize = AsyncMock(return_value=True)
+        LogiCircle.close = AsyncMock(return_value=True)
+        LogiCircle.account = mock_coro(return_value={"accountId": "testId"})
+        LogiCircle.authorize_url = "http://authorize.url"
+        yield LogiCircle
 
 
-async def test_step_import(hass, mock_logi_circle):  # pylint: disable=W0621
+async def test_step_import(
+    hass, mock_logi_circle  # pylint: disable=redefined-outer-name
+):
     """Test that we trigger import when configuring with client."""
     flow = init_config_flow(hass)
 
@@ -75,8 +70,8 @@ async def test_step_import(hass, mock_logi_circle):  # pylint: disable=W0621
 
 
 async def test_full_flow_implementation(
-    hass, mock_logi_circle
-):  # noqa pylint: disable=W0621
+    hass, mock_logi_circle  # pylint: disable=redefined-outer-name
+):
     """Test registering an implementation and finishing flow works."""
     config_flow.register_flow_implementation(
         hass,
@@ -120,7 +115,7 @@ async def test_abort_if_no_implementation_registered(hass):
 
     result = await flow.async_step_user()
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "no_flows"
+    assert result["reason"] == "missing_configuration"
 
 
 async def test_abort_if_already_setup(hass):
@@ -130,17 +125,17 @@ async def test_abort_if_already_setup(hass):
     with patch.object(hass.config_entries, "async_entries", return_value=[{}]):
         result = await flow.async_step_user()
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_setup"
+    assert result["reason"] == "already_configured"
 
     with patch.object(hass.config_entries, "async_entries", return_value=[{}]):
         result = await flow.async_step_import()
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_setup"
+    assert result["reason"] == "already_configured"
 
     with patch.object(hass.config_entries, "async_entries", return_value=[{}]):
         result = await flow.async_step_code()
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_setup"
+    assert result["reason"] == "already_configured"
 
     with patch.object(hass.config_entries, "async_entries", return_value=[{}]):
         result = await flow.async_step_auth()
@@ -150,14 +145,17 @@ async def test_abort_if_already_setup(hass):
 
 @pytest.mark.parametrize(
     "side_effect,error",
-    [(asyncio.TimeoutError, "auth_timeout"), (AuthorizationFailed, "auth_error")],
+    [
+        (asyncio.TimeoutError, "authorize_url_timeout"),
+        (AuthorizationFailed, "invalid_auth"),
+    ],
 )
 async def test_abort_if_authorize_fails(
     hass, mock_logi_circle, side_effect, error
-):  # noqa pylint: disable=W0621
+):  # pylint: disable=redefined-outer-name
     """Test we abort if authorizing fails."""
     flow = init_config_flow(hass)
-    mock_logi_circle.LogiCircle().authorize.side_effect = side_effect
+    mock_logi_circle.authorize.side_effect = side_effect
 
     result = await flow.async_step_code("123ABC")
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -176,7 +174,9 @@ async def test_not_pick_implementation_if_only_one(hass):
     assert result["step_id"] == "auth"
 
 
-async def test_gen_auth_url(hass, mock_logi_circle):  # pylint: disable=W0621
+async def test_gen_auth_url(
+    hass, mock_logi_circle
+):  # pylint: disable=redefined-outer-name
     """Test generating authorize URL from Logi Circle API."""
     config_flow.register_flow_implementation(
         hass,
@@ -192,7 +192,7 @@ async def test_gen_auth_url(hass, mock_logi_circle):  # pylint: disable=W0621
     flow.flow_impl = "test-auth-url"
     await async_setup_component(hass, "http", {})
 
-    result = flow._get_authorization_url()  # pylint: disable=W0212
+    result = flow._get_authorization_url()  # pylint: disable=protected-access
     assert result == "http://authorize.url"
 
 
@@ -206,7 +206,7 @@ async def test_callback_view_rejects_missing_code(hass):
 
 async def test_callback_view_accepts_code(
     hass, mock_logi_circle
-):  # noqa pylint: disable=W0621
+):  # pylint: disable=redefined-outer-name
     """Test the auth callback view handles requests with auth code."""
     init_config_flow(hass)
     view = LogiCircleAuthCallbackView()
@@ -215,4 +215,4 @@ async def test_callback_view_accepts_code(
     assert resp.status == 200
 
     await hass.async_block_till_done()
-    mock_logi_circle.LogiCircle.return_value.authorize.assert_called_with("456")
+    mock_logi_circle.authorize.assert_called_with("456")

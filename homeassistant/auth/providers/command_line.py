@@ -1,21 +1,22 @@
 """Auth provider that validates credentials via an external command."""
-
-from typing import Any, Dict, Optional, cast
+from __future__ import annotations
 
 import asyncio.subprocess
 import collections
+from collections.abc import Mapping
 import logging
 import os
+from typing import Any, cast
 
 import voluptuous as vol
 
+from homeassistant.const import CONF_COMMAND
+from homeassistant.data_entry_flow import FlowResultDict
 from homeassistant.exceptions import HomeAssistantError
 
-from . import AuthProvider, AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, LoginFlow
+from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from ..models import Credentials, UserMeta
 
-
-CONF_COMMAND = "command"
 CONF_ARGS = "args"
 CONF_META = "meta"
 
@@ -53,9 +54,9 @@ class CommandLineAuthProvider(AuthProvider):
         attributes provided by external programs.
         """
         super().__init__(*args, **kwargs)
-        self._user_meta: Dict[str, Dict[str, Any]] = {}
+        self._user_meta: dict[str, dict[str, Any]] = {}
 
-    async def async_login_flow(self, context: Optional[dict]) -> LoginFlow:
+    async def async_login_flow(self, context: dict | None) -> LoginFlow:
         """Return a flow to login."""
         return CommandLineLoginFlow(self)
 
@@ -63,8 +64,7 @@ class CommandLineAuthProvider(AuthProvider):
         """Validate a username and password."""
         env = {"username": username, "password": password}
         try:
-            # pylint: disable=no-member
-            process = await asyncio.subprocess.create_subprocess_exec(
+            process = await asyncio.subprocess.create_subprocess_exec(  # pylint: disable=no-member
                 self.config[CONF_COMMAND],
                 *self.config[CONF_ARGS],
                 env=env,
@@ -74,18 +74,18 @@ class CommandLineAuthProvider(AuthProvider):
         except OSError as err:
             # happens when command doesn't exist or permission is denied
             _LOGGER.error("Error while authenticating %r: %s", username, err)
-            raise InvalidAuthError
+            raise InvalidAuthError from err
 
         if process.returncode != 0:
             _LOGGER.error(
-                "User %r failed to authenticate, command exited " "with code %d.",
+                "User %r failed to authenticate, command exited with code %d",
                 username,
                 process.returncode,
             )
             raise InvalidAuthError
 
         if self.config[CONF_META]:
-            meta: Dict[str, str] = {}
+            meta: dict[str, str] = {}
             for _line in stdout.splitlines():
                 try:
                     line = _line.decode().lstrip()
@@ -102,7 +102,7 @@ class CommandLineAuthProvider(AuthProvider):
             self._user_meta[username] = meta
 
     async def async_get_or_create_credentials(
-        self, flow_result: Dict[str, str]
+        self, flow_result: Mapping[str, str]
     ) -> Credentials:
         """Get credentials based on the flow result."""
         username = flow_result["username"]
@@ -128,8 +128,8 @@ class CommandLineLoginFlow(LoginFlow):
     """Handler for the login flow."""
 
     async def async_step_init(
-        self, user_input: Optional[Dict[str, str]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, str] | None = None
+    ) -> FlowResultDict:
         """Handle the step of the form."""
         errors = {}
 
@@ -146,7 +146,7 @@ class CommandLineLoginFlow(LoginFlow):
                 user_input.pop("password")
                 return await self.async_finish(user_input)
 
-        schema: Dict[str, type] = collections.OrderedDict()
+        schema: dict[str, type] = collections.OrderedDict()
         schema["username"] = str
         schema["password"] = str
 

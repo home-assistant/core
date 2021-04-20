@@ -1,19 +1,19 @@
 """Support for HUAWEI routers."""
 import base64
+from collections import namedtuple
 import logging
 import re
-from collections import namedtuple
 
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN,
     PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ class HuaweiDeviceScanner(DeviceScanner):
         '"(?P<IPv4Enabled>.*?)","(?P<IPv6Enabled>.*?)",'
         '"(?P<DeviceType>.*?)"'
     )
-    LOGIN_COOKIE = dict(Cookie="body:Language:portuguese:id=-1")
+    LOGIN_COOKIE = {"Cookie": "body:Language:portuguese:id=-1"}
 
     def __init__(self, config):
         """Initialize the scanner."""
@@ -88,7 +88,7 @@ class HuaweiDeviceScanner(DeviceScanner):
 
         _LOGGER.debug(
             "Active clients: %s",
-            "\n".join((client.mac + " " + client.name) for client in active_clients),
+            "\n".join(f"{client.mac} {client.name}" for client in active_clients),
         )
         return True
 

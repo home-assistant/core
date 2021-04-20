@@ -4,19 +4,19 @@ import logging
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.cover import CoverDevice, PLATFORM_SCHEMA
-from homeassistant.helpers.event import track_utc_time_change
+from homeassistant.components.cover import PLATFORM_SCHEMA, CoverEntity
 from homeassistant.const import (
-    CONF_DEVICE,
-    CONF_USERNAME,
-    CONF_PASSWORD,
     CONF_ACCESS_TOKEN,
+    CONF_COVERS,
+    CONF_DEVICE,
     CONF_NAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
     STATE_CLOSED,
     STATE_OPEN,
-    CONF_COVERS,
 )
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import track_utc_time_change
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,7 +74,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(covers)
 
 
-class GaradgetCover(CoverDevice):
+class GaradgetCover(CoverEntity):
     """Representation of a Garadget cover."""
 
     def __init__(self, hass, args):
@@ -105,14 +105,14 @@ class GaradgetCover(CoverDevice):
                     self._name = doorconfig["nme"]
             self.update()
         except requests.exceptions.ConnectionError as ex:
-            _LOGGER.error("Unable to connect to server: %(reason)s", dict(reason=ex))
+            _LOGGER.error("Unable to connect to server: %(reason)s", {"reason": ex})
             self._state = STATE_OFFLINE
             self._available = False
             self._name = DEFAULT_NAME
         except KeyError:
             _LOGGER.warning(
                 "Garadget device %(device)s seems to be offline",
-                dict(device=self.device_id),
+                {"device": self.device_id},
             )
             self._name = DEFAULT_NAME
             self._state = STATE_OFFLINE
@@ -120,9 +120,8 @@ class GaradgetCover(CoverDevice):
 
     def __del__(self):
         """Try to remove token."""
-        if self._obtained_token is True:
-            if self.access_token is not None:
-                self.remove_token()
+        if self._obtained_token is True and self.access_token is not None:
+            self.remove_token()
 
     @property
     def name(self):
@@ -130,17 +129,12 @@ class GaradgetCover(CoverDevice):
         return self._name
 
     @property
-    def should_poll(self):
-        """No polling needed for a demo cover."""
-        return True
-
-    @property
     def available(self):
         """Return True if entity is available."""
         return self._available
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         data = {}
 
@@ -229,31 +223,31 @@ class GaradgetCover(CoverDevice):
         try:
             status = self._get_variable("doorStatus")
             _LOGGER.debug("Current Status: %s", status["status"])
-            self._state = STATES_MAP.get(status["status"], None)
+            self._state = STATES_MAP.get(status["status"])
             self.time_in_state = status["time"]
             self.signal = status["signal"]
             self.sensor = status["sensor"]
             self._available = True
         except requests.exceptions.ConnectionError as ex:
-            _LOGGER.error("Unable to connect to server: %(reason)s", dict(reason=ex))
+            _LOGGER.error("Unable to connect to server: %(reason)s", {"reason": ex})
             self._state = STATE_OFFLINE
         except KeyError:
             _LOGGER.warning(
                 "Garadget device %(device)s seems to be offline",
-                dict(device=self.device_id),
+                {"device": self.device_id},
             )
             self._state = STATE_OFFLINE
 
-        if self._state not in [STATE_CLOSING, STATE_OPENING]:
-            if self._unsub_listener_cover is not None:
-                self._unsub_listener_cover()
-                self._unsub_listener_cover = None
+        if (
+            self._state not in [STATE_CLOSING, STATE_OPENING]
+            and self._unsub_listener_cover is not None
+        ):
+            self._unsub_listener_cover()
+            self._unsub_listener_cover = None
 
     def _get_variable(self, var):
         """Get latest status."""
-        url = "{}/v1/devices/{}/{}?access_token={}".format(
-            self.particle_url, self.device_id, var, self.access_token
-        )
+        url = f"{self.particle_url}/v1/devices/{self.device_id}/{var}?access_token={self.access_token}"
         ret = requests.get(url, timeout=10)
         result = {}
         for pairs in ret.json()["result"].split("|"):

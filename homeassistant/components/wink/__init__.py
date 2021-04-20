@@ -6,14 +6,16 @@ import os
 import time
 
 from aiohttp.web import Response
-import pywink
 from pubnubsubhandler import PubNubSubscriptionHandler
+import pywink
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_NAME,
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
     CONF_EMAIL,
     CONF_PASSWORD,
     EVENT_HOMEASSISTANT_START,
@@ -25,10 +27,11 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
+from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import track_time_interval
+from homeassistant.helpers.network import get_url
 from homeassistant.util.json import load_json, save_json
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,8 +40,6 @@ DOMAIN = "wink"
 
 SUBSCRIPTION_HANDLER = None
 
-CONF_CLIENT_ID = "client_id"
-CONF_CLIENT_SECRET = "client_secret"
 CONF_USER_AGENT = "user_agent"
 CONF_OAUTH = "oauth"
 CONF_LOCAL_CONTROL = "local_control"
@@ -46,8 +47,6 @@ CONF_MISSING_OAUTH_MSG = "Missing oauth2 credentials."
 
 ATTR_ACCESS_TOKEN = "access_token"
 ATTR_REFRESH_TOKEN = "refresh_token"
-ATTR_CLIENT_ID = "client_id"
-ATTR_CLIENT_SECRET = "client_secret"
 ATTR_PAIRING_MODE = "pairing_mode"
 ATTR_KIDDE_RADIO_CODE = "kidde_radio_code"
 ATTR_HUB_NAME = "hub_name"
@@ -57,7 +56,10 @@ WINK_AUTH_START = "/auth/wink"
 WINK_CONFIG_FILE = ".wink.conf"
 USER_AGENT = f"Manufacturer/Home-Assistant{__version__} python/3 Wink/3"
 
-DEFAULT_CONFIG = {"client_id": "CLIENT_ID_HERE", "client_secret": "CLIENT_SECRET_HERE"}
+DEFAULT_CONFIG = {
+    CONF_CLIENT_ID: "CLIENT_ID_HERE",
+    CONF_CLIENT_SECRET: "CLIENT_SECRET_HERE",
+}
 
 SERVICE_ADD_NEW_DEVICES = "pull_newly_added_devices_from_wink"
 SERVICE_REFRESH_STATES = "refresh_state_from_wink"
@@ -131,11 +133,11 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-RENAME_DEVICE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+RENAME_DEVICE_SCHEMA = make_entity_service_schema(
     {vol.Required(ATTR_NAME): cv.string}, extra=vol.ALLOW_EXTRA
 )
 
-DELETE_DEVICE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
+DELETE_DEVICE_SCHEMA = make_entity_service_schema({}, extra=vol.ALLOW_EXTRA)
 
 SET_PAIRING_MODE_SCHEMA = vol.Schema(
     {
@@ -146,31 +148,31 @@ SET_PAIRING_MODE_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SET_VOLUME_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+SET_VOLUME_SCHEMA = make_entity_service_schema(
     {vol.Required(ATTR_VOLUME): vol.In(VOLUMES)}
 )
 
-SET_SIREN_TONE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+SET_SIREN_TONE_SCHEMA = make_entity_service_schema(
     {vol.Required(ATTR_TONE): vol.In(TONES)}
 )
 
-SET_CHIME_MODE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+SET_CHIME_MODE_SCHEMA = make_entity_service_schema(
     {vol.Required(ATTR_TONE): vol.In(CHIME_TONES)}
 )
 
-SET_AUTO_SHUTOFF_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+SET_AUTO_SHUTOFF_SCHEMA = make_entity_service_schema(
     {vol.Required(ATTR_AUTO_SHUTOFF): vol.In(AUTO_SHUTOFF_TIMES)}
 )
 
-SET_STROBE_ENABLED_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+SET_STROBE_ENABLED_SCHEMA = make_entity_service_schema(
     {vol.Required(ATTR_ENABLED): cv.boolean}
 )
 
-ENABLED_SIREN_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+ENABLED_SIREN_SCHEMA = make_entity_service_schema(
     {vol.Required(ATTR_ENABLED): cv.boolean}
 )
 
-DIAL_CONFIG_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+DIAL_CONFIG_SCHEMA = make_entity_service_schema(
     {
         vol.Optional(ATTR_MIN_VALUE): vol.Coerce(int),
         vol.Optional(ATTR_MAX_VALUE): vol.Coerce(int),
@@ -182,7 +184,7 @@ DIAL_CONFIG_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
     }
 )
 
-DIAL_STATE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+DIAL_STATE_SCHEMA = make_entity_service_schema(
     {
         vol.Required(ATTR_VALUE): vol.Coerce(int),
         vol.Optional(ATTR_LABELS): cv.ensure_list(cv.string),
@@ -218,12 +220,12 @@ def _request_app_setup(hass, config):
             setup(hass, config)
             return
 
-        client_id = callback_data.get("client_id").strip()
-        client_secret = callback_data.get("client_secret").strip()
+        client_id = callback_data.get(CONF_CLIENT_ID).strip()
+        client_secret = callback_data.get(CONF_CLIENT_SECRET).strip()
         if None not in (client_id, client_secret):
             save_json(
                 _config_path,
-                {ATTR_CLIENT_ID: client_id, ATTR_CLIENT_SECRET: client_secret},
+                {CONF_CLIENT_ID: client_id, CONF_CLIENT_SECRET: client_secret},
             )
             setup(hass, config)
             return
@@ -231,17 +233,15 @@ def _request_app_setup(hass, config):
         _configurator = hass.data[DOMAIN]["configuring"][DOMAIN]
         configurator.notify_errors(_configurator, error_msg)
 
-    start_url = f"{hass.config.api.base_url}{WINK_AUTH_CALLBACK_PATH}"
+    start_url = f"{get_url(hass)}{WINK_AUTH_CALLBACK_PATH}"
 
-    description = """Please create a Wink developer app at
+    description = f"""Please create a Wink developer app at
                      https://developer.wink.com.
-                     Add a Redirect URI of {}.
+                     Add a Redirect URI of {start_url}.
                      They will provide you a Client ID and secret
                      after reviewing your request.
                      (This can take several days).
-                     """.format(
-        start_url
-    )
+                     """
 
     hass.data[DOMAIN]["configuring"][DOMAIN] = configurator.request_config(
         DOMAIN,
@@ -250,8 +250,8 @@ def _request_app_setup(hass, config):
         submit_caption="submit",
         description_image="/static/images/config_wink.png",
         fields=[
-            {"id": "client_id", "name": "Client ID", "type": "string"},
-            {"id": "client_secret", "name": "Client secret", "type": "string"},
+            {"id": CONF_CLIENT_ID, "name": "Client ID", "type": "string"},
+            {"id": CONF_CLIENT_SECRET, "name": "Client secret", "type": "string"},
         ],
     )
 
@@ -271,7 +271,7 @@ def _request_oauth_completion(hass, config):
         """Call setup again."""
         setup(hass, config)
 
-    start_url = f"{hass.config.api.base_url}{WINK_AUTH_START}"
+    start_url = f"{get_url(hass)}{WINK_AUTH_START}"
 
     description = f"Please authorize Wink by visiting {start_url}"
 
@@ -294,8 +294,8 @@ def setup(hass, config):
         }
 
     if config.get(DOMAIN) is not None:
-        client_id = config[DOMAIN].get(ATTR_CLIENT_ID)
-        client_secret = config[DOMAIN].get(ATTR_CLIENT_SECRET)
+        client_id = config[DOMAIN].get(CONF_CLIENT_ID)
+        client_secret = config[DOMAIN].get(CONF_CLIENT_SECRET)
         email = config[DOMAIN].get(CONF_EMAIL)
         password = config[DOMAIN].get(CONF_PASSWORD)
         local_control = config[DOMAIN].get(CONF_LOCAL_CONTROL)
@@ -310,8 +310,8 @@ def setup(hass, config):
         _LOGGER.info("Using legacy OAuth authentication")
         if not local_control:
             pywink.disable_local_control()
-        hass.data[DOMAIN]["oauth"]["client_id"] = client_id
-        hass.data[DOMAIN]["oauth"]["client_secret"] = client_secret
+        hass.data[DOMAIN]["oauth"][CONF_CLIENT_ID] = client_id
+        hass.data[DOMAIN]["oauth"][CONF_CLIENT_SECRET] = client_secret
         hass.data[DOMAIN]["oauth"]["email"] = email
         hass.data[DOMAIN]["oauth"]["password"] = password
         pywink.legacy_set_wink_credentials(email, password, client_id, client_secret)
@@ -342,8 +342,8 @@ def setup(hass, config):
         # This will be called after authorizing Home-Assistant
         if None not in (access_token, refresh_token):
             pywink.set_wink_credentials(
-                config_file.get(ATTR_CLIENT_ID),
-                config_file.get(ATTR_CLIENT_SECRET),
+                config_file.get(CONF_CLIENT_ID),
+                config_file.get(CONF_CLIENT_SECRET),
                 access_token=access_token,
                 refresh_token=refresh_token,
             )
@@ -351,12 +351,10 @@ def setup(hass, config):
         # Home .
         else:
 
-            redirect_uri = "{}{}".format(
-                hass.config.api.base_url, WINK_AUTH_CALLBACK_PATH
-            )
+            redirect_uri = f"{get_url(hass)}{WINK_AUTH_CALLBACK_PATH}"
 
             wink_auth_start_url = pywink.get_authorization_url(
-                config_file.get(ATTR_CLIENT_ID), redirect_uri
+                config_file.get(CONF_CLIENT_ID), redirect_uri
             )
             hass.http.register_redirect(WINK_AUTH_START, wink_auth_start_url)
             hass.http.register_view(
@@ -695,20 +693,20 @@ class WinkAuthCallbackView(HomeAssistantView):
 
         response_message = """Wink has been successfully authorized!
          You can close this window now! For the best results you should reboot
-         HomeAssistant"""
+         Home Assistant"""
         html_response = """<html><head><title>Wink Auth</title></head>
                 <body><h1>{}</h1></body></html>"""
 
         if data.get("code") is not None:
             response = self.request_token(
-                data.get("code"), self.config_file["client_secret"]
+                data.get("code"), self.config_file[CONF_CLIENT_SECRET]
             )
 
             config_contents = {
                 ATTR_ACCESS_TOKEN: response["access_token"],
                 ATTR_REFRESH_TOKEN: response["refresh_token"],
-                ATTR_CLIENT_ID: self.config_file["client_id"],
-                ATTR_CLIENT_SECRET: self.config_file["client_secret"],
+                CONF_CLIENT_ID: self.config_file[CONF_CLIENT_ID],
+                CONF_CLIENT_SECRET: self.config_file[CONF_CLIENT_SECRET],
             }
             save_json(hass.config.path(WINK_CONFIG_FILE), config_contents)
 
@@ -740,7 +738,7 @@ class WinkDevice(Entity):
         try:
             if message is None:
                 _LOGGER.error(
-                    "Error on pubnub update for %s " "polling API for current state",
+                    "Error on pubnub update for %s polling API for current state",
                     self.name,
                 )
                 self.schedule_update_ha_state(True)
@@ -749,8 +747,7 @@ class WinkDevice(Entity):
                 self.schedule_update_ha_state()
         except (ValueError, KeyError, AttributeError):
             _LOGGER.error(
-                "Error in pubnub JSON for %s " "polling API for current state",
-                self.name,
+                "Error in pubnub JSON for %s polling API for current state", self.name
             )
             self.schedule_update_ha_state(True)
 
@@ -763,7 +760,7 @@ class WinkDevice(Entity):
     def unique_id(self):
         """Return the unique id of the Wink device."""
         if hasattr(self.wink, "capability") and self.wink.capability() is not None:
-            return "{}_{}".format(self.wink.object_id(), self.wink.capability())
+            return f"{self.wink.object_id()}_{self.wink.capability()}"
         return self.wink.object_id()
 
     @property
@@ -781,7 +778,7 @@ class WinkDevice(Entity):
         return self.wink.pubnub_channel is None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attributes = {}
         battery = self._battery_level
@@ -858,9 +855,9 @@ class WinkSirenDevice(WinkDevice):
         return "mdi:bell-ring"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
-        attributes = super().device_state_attributes
+        attributes = super().extra_state_attributes
 
         auto_shutoff = self.wink.auto_shutoff()
         if auto_shutoff is not None:
@@ -913,12 +910,12 @@ class WinkNimbusDialDevice(WinkDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        return self.parent.name() + " dial " + str(self.wink.index() + 1)
+        return f"{self.parent.name()} dial {self.wink.index() + 1}"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
-        attributes = super().device_state_attributes
+        attributes = super().extra_state_attributes
         dial_attributes = self.dial_attributes()
 
         return {**attributes, **dial_attributes}

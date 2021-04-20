@@ -1,6 +1,4 @@
 """Support for HomematicIP Cloud weather devices."""
-import logging
-
 from homematicip.aio.device import (
     AsyncWeatherSensor,
     AsyncWeatherSensorPlus,
@@ -8,60 +6,65 @@ from homematicip.aio.device import (
 )
 from homematicip.base.enums import WeatherCondition
 
-from homeassistant.components.weather import WeatherEntity
+from homeassistant.components.weather import (
+    ATTR_CONDITION_CLOUDY,
+    ATTR_CONDITION_FOG,
+    ATTR_CONDITION_LIGHTNING,
+    ATTR_CONDITION_LIGHTNING_RAINY,
+    ATTR_CONDITION_PARTLYCLOUDY,
+    ATTR_CONDITION_RAINY,
+    ATTR_CONDITION_SNOWY,
+    ATTR_CONDITION_SNOWY_RAINY,
+    ATTR_CONDITION_SUNNY,
+    ATTR_CONDITION_WINDY,
+    WeatherEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS
-from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import HomeAssistantType
 
-from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
+from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
 from .hap import HomematicipHAP
 
-_LOGGER = logging.getLogger(__name__)
-
 HOME_WEATHER_CONDITION = {
-    WeatherCondition.CLEAR: "sunny",
-    WeatherCondition.LIGHT_CLOUDY: "partlycloudy",
-    WeatherCondition.CLOUDY: "cloudy",
-    WeatherCondition.CLOUDY_WITH_RAIN: "rainy",
-    WeatherCondition.CLOUDY_WITH_SNOW_RAIN: "snowy-rainy",
-    WeatherCondition.HEAVILY_CLOUDY: "cloudy",
-    WeatherCondition.HEAVILY_CLOUDY_WITH_RAIN: "rainy",
-    WeatherCondition.HEAVILY_CLOUDY_WITH_STRONG_RAIN: "snowy-rainy",
-    WeatherCondition.HEAVILY_CLOUDY_WITH_SNOW: "snowy",
-    WeatherCondition.HEAVILY_CLOUDY_WITH_SNOW_RAIN: "snowy-rainy",
-    WeatherCondition.HEAVILY_CLOUDY_WITH_THUNDER: "lightning",
-    WeatherCondition.HEAVILY_CLOUDY_WITH_RAIN_AND_THUNDER: "lightning-rainy",
-    WeatherCondition.FOGGY: "fog",
-    WeatherCondition.STRONG_WIND: "windy",
+    WeatherCondition.CLEAR: ATTR_CONDITION_SUNNY,
+    WeatherCondition.LIGHT_CLOUDY: ATTR_CONDITION_PARTLYCLOUDY,
+    WeatherCondition.CLOUDY: ATTR_CONDITION_CLOUDY,
+    WeatherCondition.CLOUDY_WITH_RAIN: ATTR_CONDITION_RAINY,
+    WeatherCondition.CLOUDY_WITH_SNOW_RAIN: ATTR_CONDITION_SNOWY_RAINY,
+    WeatherCondition.HEAVILY_CLOUDY: ATTR_CONDITION_CLOUDY,
+    WeatherCondition.HEAVILY_CLOUDY_WITH_RAIN: ATTR_CONDITION_RAINY,
+    WeatherCondition.HEAVILY_CLOUDY_WITH_STRONG_RAIN: ATTR_CONDITION_SNOWY_RAINY,
+    WeatherCondition.HEAVILY_CLOUDY_WITH_SNOW: ATTR_CONDITION_SNOWY,
+    WeatherCondition.HEAVILY_CLOUDY_WITH_SNOW_RAIN: ATTR_CONDITION_SNOWY_RAINY,
+    WeatherCondition.HEAVILY_CLOUDY_WITH_THUNDER: ATTR_CONDITION_LIGHTNING,
+    WeatherCondition.HEAVILY_CLOUDY_WITH_RAIN_AND_THUNDER: ATTR_CONDITION_LIGHTNING_RAINY,
+    WeatherCondition.FOGGY: ATTR_CONDITION_FOG,
+    WeatherCondition.STRONG_WIND: ATTR_CONDITION_WINDY,
     WeatherCondition.UNKNOWN: "",
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the HomematicIP Cloud weather sensor."""
-    pass
-
-
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the HomematicIP weather sensor from a config entry."""
-    hap = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]]
-    devices = []
+    hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
+    entities = []
     for device in hap.home.devices:
         if isinstance(device, AsyncWeatherSensorPro):
-            devices.append(HomematicipWeatherSensorPro(hap, device))
+            entities.append(HomematicipWeatherSensorPro(hap, device))
         elif isinstance(device, (AsyncWeatherSensor, AsyncWeatherSensorPlus)):
-            devices.append(HomematicipWeatherSensor(hap, device))
+            entities.append(HomematicipWeatherSensor(hap, device))
 
-    devices.append(HomematicipHomeWeather(hap))
+    entities.append(HomematicipHomeWeather(hap))
 
-    if devices:
-        async_add_entities(devices)
+    if entities:
+        async_add_entities(entities)
 
 
-class HomematicipWeatherSensor(HomematicipGenericDevice, WeatherEntity):
-    """representation of a HomematicIP Cloud weather sensor plus & basic."""
+class HomematicipWeatherSensor(HomematicipGenericEntity, WeatherEntity):
+    """Representation of the HomematicIP weather sensor plus & basic."""
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the weather sensor."""
@@ -101,16 +104,16 @@ class HomematicipWeatherSensor(HomematicipGenericDevice, WeatherEntity):
     def condition(self) -> str:
         """Return the current condition."""
         if getattr(self._device, "raining", None):
-            return "rainy"
+            return ATTR_CONDITION_RAINY
         if self._device.storm:
-            return "windy"
+            return ATTR_CONDITION_WINDY
         if self._device.sunshine:
-            return "sunny"
+            return ATTR_CONDITION_SUNNY
         return ""
 
 
 class HomematicipWeatherSensorPro(HomematicipWeatherSensor):
-    """representation of a HomematicIP weather sensor pro."""
+    """Representation of the HomematicIP weather sensor pro."""
 
     @property
     def wind_bearing(self) -> float:
@@ -118,8 +121,8 @@ class HomematicipWeatherSensorPro(HomematicipWeatherSensor):
         return self._device.windDirection
 
 
-class HomematicipHomeWeather(HomematicipGenericDevice, WeatherEntity):
-    """representation of a HomematicIP Cloud home weather."""
+class HomematicipHomeWeather(HomematicipGenericEntity, WeatherEntity):
+    """Representation of the HomematicIP home weather."""
 
     def __init__(self, hap: HomematicipHAP) -> None:
         """Initialize the home weather."""
@@ -128,7 +131,7 @@ class HomematicipHomeWeather(HomematicipGenericDevice, WeatherEntity):
 
     @property
     def available(self) -> bool:
-        """Device available."""
+        """Return if weather entity is available."""
         return self._home.connected
 
     @property
@@ -138,7 +141,7 @@ class HomematicipHomeWeather(HomematicipGenericDevice, WeatherEntity):
 
     @property
     def temperature(self) -> float:
-        """Return the platform temperature."""
+        """Return the temperature."""
         return self._device.weather.temperature
 
     @property

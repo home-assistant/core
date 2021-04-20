@@ -1,8 +1,8 @@
 {
   "domain": "ubus",
-  "name": "Ubus",
+  "name": "OpenWrt (ubus)",
   "documentation": "https://www.home-assistant.io/integrations/ubus",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
+  "requirements": ["openwrt-ubus-rpc==0.0.2"],
+  "codeowners": ["@noltari"],
+  "iot_class": "local_polling"
 }

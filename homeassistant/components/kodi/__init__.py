@@ -1,91 +1,93 @@
 """The kodi component."""
 
 import asyncio
-import voluptuous as vol
+import logging
 
-from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM
-from homeassistant.helpers import config_validation as cv
-from homeassistant.components.kodi.const import DOMAIN
-from homeassistant.components.media_player.const import DOMAIN as MP_DOMAIN
+from pykodi import CannotConnectError, InvalidAuthError, Kodi, get_kodi_connection
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
+from .const import (
+    CONF_WS_PORT,
+    DATA_CONNECTION,
+    DATA_KODI,
+    DATA_REMOVE_LISTENER,
+    DOMAIN,
+)
+
+_LOGGER = logging.getLogger(__name__)
+PLATFORMS = ["media_player"]
 
 
-SERVICE_ADD_MEDIA = "add_to_playlist"
-SERVICE_CALL_METHOD = "call_method"
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Set up Kodi from a config entry."""
+    conn = get_kodi_connection(
+        entry.data[CONF_HOST],
+        entry.data[CONF_PORT],
+        entry.data[CONF_WS_PORT],
+        entry.data[CONF_USERNAME],
+        entry.data[CONF_PASSWORD],
+        entry.data[CONF_SSL],
+        session=async_get_clientsession(hass),
+    )
 
-ATTR_MEDIA_TYPE = "media_type"
-ATTR_MEDIA_NAME = "media_name"
-ATTR_MEDIA_ARTIST_NAME = "artist_name"
-ATTR_MEDIA_ID = "media_id"
-ATTR_METHOD = "method"
+    kodi = Kodi(conn)
 
-MEDIA_PLAYER_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.comp_entity_ids})
+    try:
+        await conn.connect()
+    except CannotConnectError:
+        pass
+    except InvalidAuthError as error:
+        _LOGGER.error(
+            "Login to %s failed: [%s]",
+            entry.data[CONF_HOST],
+            error,
+        )
+        return False
 
-KODI_ADD_MEDIA_SCHEMA = MEDIA_PLAYER_SCHEMA.extend(
-    {
-        vol.Required(ATTR_MEDIA_TYPE): cv.string,
-        vol.Optional(ATTR_MEDIA_ID): cv.string,
-        vol.Optional(ATTR_MEDIA_NAME): cv.string,
-        vol.Optional(ATTR_MEDIA_ARTIST_NAME): cv.string,
+    async def _close(event):
+        await conn.close()
+
+    remove_stop_listener = hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close)
+
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {
+        DATA_CONNECTION: conn,
+        DATA_KODI: kodi,
+        DATA_REMOVE_LISTENER: remove_stop_listener,
     }
-)
-KODI_CALL_METHOD_SCHEMA = MEDIA_PLAYER_SCHEMA.extend(
-    {vol.Required(ATTR_METHOD): cv.string}, extra=vol.ALLOW_EXTRA
-)
 
-SERVICE_TO_METHOD = {
-    SERVICE_ADD_MEDIA: {
-        "method": "async_add_media_to_playlist",
-        "schema": KODI_ADD_MEDIA_SCHEMA,
-    },
-    SERVICE_CALL_METHOD: {
-        "method": "async_call_method",
-        "schema": KODI_CALL_METHOD_SCHEMA,
-    },
-}
+    for platform in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, platform)
+        )
 
-
-async def async_setup(hass, config):
-    """Set up the Kodi integration."""
-    if any(
-        ((CONF_PLATFORM, DOMAIN) in cfg.items() for cfg in config.get(MP_DOMAIN, []))
-    ):
-        # Register the Kodi media_player services
-        async def async_service_handler(service):
-            """Map services to methods on MediaPlayerDevice."""
-            method = SERVICE_TO_METHOD.get(service.service)
-            if not method:
-                return
-
-            params = {
-                key: value for key, value in service.data.items() if key != "entity_id"
-            }
-            entity_ids = service.data.get("entity_id")
-            if entity_ids:
-                target_players = [
-                    player
-                    for player in hass.data[DOMAIN].values()
-                    if player.entity_id in entity_ids
-                ]
-            else:
-                target_players = hass.data[DOMAIN].values()
-
-            update_tasks = []
-            for player in target_players:
-                await getattr(player, method["method"])(**params)
-
-            for player in target_players:
-                if player.should_poll:
-                    update_coro = player.async_update_ha_state(True)
-                    update_tasks.append(update_coro)
-
-            if update_tasks:
-                await asyncio.wait(update_tasks)
-
-        for service in SERVICE_TO_METHOD:
-            schema = SERVICE_TO_METHOD[service]["schema"]
-            hass.services.async_register(
-                DOMAIN, service, async_service_handler, schema=schema
-            )
-
-    # Return boolean to indicate that initialization was successful.
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Unload a config entry."""
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
+            ]
+        )
+    )
+    if unload_ok:
+        data = hass.data[DOMAIN].pop(entry.entry_id)
+        await data[DATA_CONNECTION].close()
+        data[DATA_REMOVE_LISTENER]()
+
+    return unload_ok

@@ -1,10 +1,11 @@
 """Helpers to deal with Cast devices."""
-from typing import Optional, Tuple
+from __future__ import annotations
+
+from typing import Optional
 
 import attr
 from pychromecast import dial
-
-from .const import DEFAULT_PORT
+from pychromecast.const import CAST_MANUFACTURERS
 
 
 @attr.s(slots=True, frozen=True)
@@ -14,21 +15,15 @@ class ChromecastInfo:
     This also has the same attributes as the mDNS fields by zeroconf.
     """
 
-    host = attr.ib(type=str)
-    port = attr.ib(type=int)
-    service = attr.ib(type=Optional[str], default=None)
-    uuid = attr.ib(
-        type=Optional[str], converter=attr.converters.optional(str), default=None
+    services: set | None = attr.ib()
+    uuid: str | None = attr.ib(
+        converter=attr.converters.optional(str), default=None
     )  # always convert UUID to string if not None
-    manufacturer = attr.ib(type=str, default="")
-    model_name = attr.ib(type=str, default="")
-    friendly_name = attr.ib(type=Optional[str], default=None)
+    _manufacturer = attr.ib(type=Optional[str], default=None)
+    model_name: str = attr.ib(default="")
+    friendly_name: str | None = attr.ib(default=None)
+    is_audio_group = attr.ib(type=Optional[bool], default=False)
     is_dynamic_group = attr.ib(type=Optional[bool], default=None)
-
-    @property
-    def is_audio_group(self) -> bool:
-        """Return if this is an audio group."""
-        return self.port != DEFAULT_PORT
 
     @property
     def is_information_complete(self) -> bool:
@@ -48,71 +43,62 @@ class ChromecastInfo:
         )
 
     @property
-    def host_port(self) -> Tuple[str, int]:
-        """Return the host+port tuple."""
-        return self.host, self.port
+    def manufacturer(self) -> str:
+        """Return the manufacturer."""
+        if self._manufacturer:
+            return self._manufacturer
+        if not self.model_name:
+            return None
+        return CAST_MANUFACTURERS.get(self.model_name.lower(), "Google Inc.")
 
-    def fill_out_missing_chromecast_info(self) -> "ChromecastInfo":
+    def fill_out_missing_chromecast_info(self) -> ChromecastInfo:
         """Return a new ChromecastInfo object with missing attributes filled in.
 
-        Uses blocking HTTP.
+        Uses blocking HTTP / HTTPS.
         """
         if self.is_information_complete:
-            # We have all information, no need to check HTTP API. Or this is an
-            # audio group, so checking via HTTP won't give us any new information.
+            # We have all information, no need to check HTTP API.
             return self
 
-        # Fill out missing information via HTTP dial.
+        # Fill out missing group information via HTTP API.
         if self.is_audio_group:
             is_dynamic_group = False
             http_group_status = None
-            dynamic_groups = []
             if self.uuid:
                 http_group_status = dial.get_multizone_status(
-                    self.host,
-                    services=[self.service],
+                    None,
+                    services=self.services,
                     zconf=ChromeCastZeroconf.get_zeroconf(),
                 )
                 if http_group_status is not None:
-                    dynamic_groups = [
-                        str(g.uuid) for g in http_group_status.dynamic_groups
-                    ]
-                    is_dynamic_group = self.uuid in dynamic_groups
+                    is_dynamic_group = any(
+                        str(g.uuid) == self.uuid
+                        for g in http_group_status.dynamic_groups
+                    )
 
             return ChromecastInfo(
-                service=self.service,
-                host=self.host,
-                port=self.port,
+                services=self.services,
                 uuid=self.uuid,
                 friendly_name=self.friendly_name,
-                manufacturer=self.manufacturer,
                 model_name=self.model_name,
+                is_audio_group=True,
                 is_dynamic_group=is_dynamic_group,
             )
 
+        # Fill out some missing information (friendly_name, uuid) via HTTP dial.
         http_device_status = dial.get_device_status(
-            self.host, services=[self.service], zconf=ChromeCastZeroconf.get_zeroconf()
+            None, services=self.services, zconf=ChromeCastZeroconf.get_zeroconf()
         )
         if http_device_status is None:
             # HTTP dial didn't give us any new information.
             return self
 
         return ChromecastInfo(
-            service=self.service,
-            host=self.host,
-            port=self.port,
+            services=self.services,
             uuid=(self.uuid or http_device_status.uuid),
             friendly_name=(self.friendly_name or http_device_status.friendly_name),
             manufacturer=(self.manufacturer or http_device_status.manufacturer),
             model_name=(self.model_name or http_device_status.model_name),
-        )
-
-    def same_dynamic_group(self, other: "ChromecastInfo") -> bool:
-        """Test chromecast info is same dynamic group."""
-        return (
-            self.is_audio_group
-            and other.is_dynamic_group
-            and self.friendly_name == other.friendly_name
         )
 
 
@@ -140,20 +126,22 @@ class CastStatusListener:
     potentially arrive. This class allows invalidating past chromecast objects.
     """
 
-    def __init__(self, cast_device, chromecast, mz_mgr):
+    def __init__(self, cast_device, chromecast, mz_mgr, mz_only=False):
         """Initialize the status listener."""
         self._cast_device = cast_device
         self._uuid = chromecast.uuid
         self._valid = True
         self._mz_mgr = mz_mgr
 
+        if cast_device._cast_info.is_audio_group:
+            self._mz_mgr.add_multizone(chromecast)
+        if mz_only:
+            return
+
         chromecast.register_status_listener(self)
         chromecast.socket_client.media_controller.register_status_listener(self)
         chromecast.register_connection_listener(self)
-        # pylint: disable=protected-access
-        if cast_device._cast_info.is_audio_group:
-            self._mz_mgr.add_multizone(chromecast)
-        else:
+        if not cast_device._cast_info.is_audio_group:
             self._mz_mgr.register_listener(chromecast.uuid, self)
 
     def new_cast_status(self, cast_status):
@@ -174,7 +162,6 @@ class CastStatusListener:
     @staticmethod
     def added_to_multizone(group_uuid):
         """Handle the cast added to a group."""
-        pass
 
     def removed_from_multizone(self, group_uuid):
         """Handle the cast removed from a group."""
@@ -183,7 +170,6 @@ class CastStatusListener:
 
     def multizone_new_cast_status(self, group_uuid, cast_status):
         """Handle reception of a new CastStatus for a group."""
-        pass
 
     def multizone_new_media_status(self, group_uuid, media_status):
         """Handle reception of a new MediaStatus for a group."""
@@ -200,47 +186,4 @@ class CastStatusListener:
             self._mz_mgr.remove_multizone(self._uuid)
         else:
             self._mz_mgr.deregister_listener(self._uuid, self)
-        self._valid = False
-
-
-class DynamicGroupCastStatusListener:
-    """Helper class to handle pychromecast status callbacks.
-
-    Necessary because a CastDevice entity can create a new socket client
-    and therefore callbacks from multiple chromecast connections can
-    potentially arrive. This class allows invalidating past chromecast objects.
-    """
-
-    def __init__(self, cast_device, chromecast, mz_mgr):
-        """Initialize the status listener."""
-        self._cast_device = cast_device
-        self._uuid = chromecast.uuid
-        self._valid = True
-        self._mz_mgr = mz_mgr
-
-        chromecast.register_status_listener(self)
-        chromecast.socket_client.media_controller.register_status_listener(self)
-        chromecast.register_connection_listener(self)
-        self._mz_mgr.add_multizone(chromecast)
-
-    def new_cast_status(self, cast_status):
-        """Handle reception of a new CastStatus."""
-        pass
-
-    def new_media_status(self, media_status):
-        """Handle reception of a new MediaStatus."""
-        if self._valid:
-            self._cast_device.new_dynamic_group_media_status(media_status)
-
-    def new_connection_status(self, connection_status):
-        """Handle reception of a new ConnectionStatus."""
-        if self._valid:
-            self._cast_device.new_dynamic_group_connection_status(connection_status)
-
-    def invalidate(self):
-        """Invalidate this status listener.
-
-        All following callbacks won't be forwarded.
-        """
-        self._mz_mgr.remove_multizone(self._uuid)
         self._valid = False

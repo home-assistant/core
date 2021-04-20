@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto jest ju\u017c skonfigurowane"
+        },
+        "error": {
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "no_devices": "Nie znaleziono urz\u0105dze\u0144 na koncie"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "title": "Wprowad\u017a dane"
+            }
+        }
+    }
+}

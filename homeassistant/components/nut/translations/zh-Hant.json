@@ -1,0 +1,50 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "step": {
+            "resources": {
+                "data": {
+                    "resources": "\u8cc7\u6e90"
+                },
+                "title": "\u9078\u64c7\u6240\u8981\u76e3\u8996\u7684\u8cc7\u6e90"
+            },
+            "ups": {
+                "data": {
+                    "alias": "\u5225\u540d",
+                    "resources": "\u8cc7\u6e90"
+                },
+                "title": "\u9078\u64c7\u6240\u8981\u76e3\u8996\u7684 UPS"
+            },
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef",
+                    "password": "\u5bc6\u78bc",
+                    "port": "\u901a\u8a0a\u57e0",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                },
+                "title": "\u9023\u7dda\u81f3 NUT \u4f3a\u670d\u5668"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "resources": "\u8cc7\u6e90",
+                    "scan_interval": "\u6383\u63cf\u9593\u8ddd\uff08\u79d2\uff09"
+                },
+                "description": "\u9078\u64c7\u50b3\u611f\u5668\u8cc7\u6e90\u3002"
+            }
+        }
+    }
+}

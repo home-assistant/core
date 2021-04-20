@@ -1,0 +1,9 @@
+{
+  "state": {
+    "_": {
+      "active": "[%key:common::state::active%]",
+      "idle": "[%key:common::state::idle%]",
+      "paused": "[%key:common::state::paused%]"
+    }
+  }
+}

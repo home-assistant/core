@@ -1,6 +1,7 @@
 """Support for Nanoleaf Lights."""
 import logging
 
+from pynanoleaf import Nanoleaf, Unavailable
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -15,7 +16,7 @@ from homeassistant.components.light import (
     SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT,
     SUPPORT_TRANSITION,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
 import homeassistant.helpers.config_validation as cv
@@ -54,22 +55,25 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Nanoleaf light."""
-    from pynanoleaf import Nanoleaf, Unavailable
 
     if DATA_NANOLEAF not in hass.data:
-        hass.data[DATA_NANOLEAF] = dict()
+        hass.data[DATA_NANOLEAF] = {}
 
     token = ""
     if discovery_info is not None:
         host = discovery_info["host"]
-        name = discovery_info["hostname"]
+        name = None
+        device_id = discovery_info["properties"]["id"]
+
         # if device already exists via config, skip discovery setup
         if host in hass.data[DATA_NANOLEAF]:
             return
         _LOGGER.info("Discovered a new Nanoleaf: %s", discovery_info)
         conf = load_json(hass.config.path(CONFIG_FILE))
-        if conf.get(host, {}).get("token"):
-            token = conf[host]["token"]
+        if host in conf and device_id not in conf:
+            conf[device_id] = conf.pop(host)
+            save_json(hass.config.path(CONFIG_FILE), conf)
+        token = conf.get(device_id, {}).get("token", "")
     else:
         host = config[CONF_HOST]
         name = config[CONF_NAME]
@@ -94,20 +98,24 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     nanoleaf_light.token = token
 
     try:
-        nanoleaf_light.available
+        info = nanoleaf_light.info
     except Unavailable:
         _LOGGER.error("Could not connect to Nanoleaf Light: %s on %s", name, host)
         return
+
+    if name is None:
+        name = info.name
 
     hass.data[DATA_NANOLEAF][host] = nanoleaf_light
     add_entities([NanoleafLight(nanoleaf_light, name)], True)
 
 
-class NanoleafLight(Light):
+class NanoleafLight(LightEntity):
     """Representation of a Nanoleaf Light."""
 
     def __init__(self, light, name):
         """Initialize an Nanoleaf light."""
+        self._unique_id = light.serialNo
         self._available = True
         self._brightness = None
         self._color_temp = None
@@ -156,6 +164,11 @@ class NanoleafLight(Light):
     def max_mireds(self):
         """Return the warmest color_temp that this light supports."""
         return 833
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._unique_id
 
     @property
     def name(self):
@@ -210,6 +223,10 @@ class NanoleafLight(Light):
                 self._light.brightness = int(brightness / 2.55)
 
         if effect:
+            if effect not in self._effects_list:
+                raise ValueError(
+                    f"Attempting to apply effect not in the effect list: '{effect}'"
+                )
             self._light.effect = effect
 
     def turn_off(self, **kwargs):
@@ -222,15 +239,23 @@ class NanoleafLight(Light):
 
     def update(self):
         """Fetch new state data for this light."""
-        from pynanoleaf import Unavailable
 
         try:
             self._available = self._light.available
             self._brightness = self._light.brightness
-            self._color_temp = self._light.color_temperature
-            self._effect = self._light.effect
             self._effects_list = self._light.effects
-            self._hs_color = self._light.hue, self._light.saturation
+            # Nanoleaf api returns non-existent effect named "*Solid*" when light set to solid color.
+            # This causes various issues with scening (see https://github.com/home-assistant/core/issues/36359).
+            # Until fixed at the library level, we should ensure the effect exists before saving to light properties
+            self._effect = (
+                self._light.effect if self._light.effect in self._effects_list else None
+            )
+            if self._effect is None:
+                self._color_temp = self._light.color_temperature
+                self._hs_color = self._light.hue, self._light.saturation
+            else:
+                self._color_temp = None
+                self._hs_color = None
             self._state = self._light.on
         except Unavailable as err:
             _LOGGER.error("Could not update status for %s (%s)", self.name, err)

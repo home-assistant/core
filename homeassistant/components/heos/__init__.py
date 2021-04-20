@@ -1,8 +1,9 @@
 """Denon HEOS Media Player."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Dict
 
 from pyheos import Heos, HeosError, const as heos_const
 import voluptuous as vol
@@ -52,15 +53,19 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
         # Check if host needs to be updated
         entry = entries[0]
         if entry.data[CONF_HOST] != host:
-            entry.data[CONF_HOST] = host
-            entry.title = format_title(host)
-            hass.config_entries.async_update_entry(entry)
+            hass.config_entries.async_update_entry(
+                entry, title=format_title(host), data={**entry.data, CONF_HOST: host}
+            )
 
     return True
 
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Initialize config entry which represents the HEOS controller."""
+    # For backwards compat
+    if entry.unique_id is None:
+        hass.config_entries.async_update_entry(entry, unique_id=DOMAIN)
+
     host = entry.data[CONF_HOST]
     # Setting all_progress_events=False ensures that we only receive a
     # media position update upon start of playback or when media changes
@@ -71,13 +76,15 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     except HeosError as error:
         await controller.disconnect()
         _LOGGER.debug("Unable to connect to controller %s: %s", host, error)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from error
 
     # Disconnect when shutting down
     async def disconnect_controller(event):
         await controller.disconnect()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, disconnect_controller)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, disconnect_controller)
+    )
 
     # Get players and sources
     try:
@@ -95,7 +102,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     except HeosError as error:
         await controller.disconnect()
         _LOGGER.debug("Unable to retrieve players and sources: %s", error)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from error
 
     controller_manager = ControllerManager(hass, controller)
     await controller_manager.connect_listeners()
@@ -187,12 +194,12 @@ class ControllerManager:
         # Update players
         self._hass.helpers.dispatcher.async_dispatcher_send(SIGNAL_HEOS_UPDATED)
 
-    def update_ids(self, mapped_ids: Dict[int, int]):
+    def update_ids(self, mapped_ids: dict[int, int]):
         """Update the IDs in the device and entity registry."""
         # mapped_ids contains the mapped IDs (new:old)
         for new_id, old_id in mapped_ids.items():
             # update device registry
-            entry = self._device_registry.async_get_device({(DOMAIN, old_id)}, set())
+            entry = self._device_registry.async_get_device({(DOMAIN, old_id)})
             new_identifiers = {(DOMAIN, new_id)}
             if entry:
                 self._device_registry.async_update_device(

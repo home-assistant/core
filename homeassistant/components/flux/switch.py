@@ -2,18 +2,13 @@
 Flux for Home-Assistant.
 
 The idea was taken from https://github.com/KpaBap/hue-flux/
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/switch.flux/
 """
 import datetime
 import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.light import (
-    is_on,
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_RGB_COLOR,
@@ -22,29 +17,31 @@ from homeassistant.components.light import (
     ATTR_XY_COLOR,
     DOMAIN as LIGHT_DOMAIN,
     VALID_TRANSITION,
+    is_on,
 )
-from homeassistant.components.switch import DOMAIN, SwitchDevice
+from homeassistant.components.switch import DOMAIN, SwitchEntity
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    CONF_NAME,
-    CONF_PLATFORM,
+    CONF_BRIGHTNESS,
     CONF_LIGHTS,
     CONF_MODE,
+    CONF_NAME,
+    CONF_PLATFORM,
     SERVICE_TURN_ON,
     STATE_ON,
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
 )
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers import config_validation as cv, event
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.sun import get_astral_event_date
 from homeassistant.util import slugify
 from homeassistant.util.color import (
-    color_temperature_to_rgb,
     color_RGB_to_xy_brightness,
     color_temperature_kelvin_to_mired,
+    color_temperature_to_rgb,
 )
-from homeassistant.util.dt import utcnow as dt_utcnow, as_local
+from homeassistant.util.dt import as_local, utcnow as dt_utcnow
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +50,6 @@ CONF_STOP_TIME = "stop_time"
 CONF_START_CT = "start_colortemp"
 CONF_SUNSET_CT = "sunset_colortemp"
 CONF_STOP_CT = "stop_colortemp"
-CONF_BRIGHTNESS = "brightness"
 CONF_DISABLE_BRIGHTNESS_ADJUST = "disable_brightness_adjust"
 CONF_INTERVAL = "interval"
 
@@ -167,11 +163,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         """Update lights."""
         await flux.async_flux_update()
 
-    service_name = slugify("{} {}".format(name, "update"))
+    service_name = slugify(f"{name} update")
     hass.services.async_register(DOMAIN, service_name, async_update)
 
 
-class FluxSwitch(SwitchDevice, RestoreEntity):
+class FluxSwitch(SwitchEntity, RestoreEntity):
     """Representation of a Flux switch."""
 
     def __init__(
@@ -227,7 +223,7 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
         if self.is_on:
             return
 
-        self.unsub_tracker = async_track_time_interval(
+        self.unsub_tracker = event.async_track_time_interval(
             self.hass,
             self.async_flux_update,
             datetime.timedelta(seconds=self._interval),
@@ -236,7 +232,7 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
         # Make initial update
         await self.async_flux_update()
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn off flux."""
@@ -244,7 +240,7 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
             self.unsub_tracker()
             self.unsub_tracker = None
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_flux_update(self, utcnow=None):
         """Update all the lights using flux."""
@@ -310,7 +306,7 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
             await async_set_lights_xy(
                 self.hass, self._lights, x_val, y_val, brightness, self._transition
             )
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Lights updated to x:%s y:%s brightness:%s, %s%% "
                 "of %s cycle complete at %s",
                 x_val,
@@ -322,8 +318,8 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
             )
         elif self._mode == MODE_RGB:
             await async_set_lights_rgb(self.hass, self._lights, rgb, self._transition)
-            _LOGGER.info(
-                "Lights updated to rgb:%s, %s%% " "of %s cycle complete at %s",
+            _LOGGER.debug(
+                "Lights updated to rgb:%s, %s%% of %s cycle complete at %s",
                 rgb,
                 round(percentage_complete * 100),
                 time_state,
@@ -335,7 +331,7 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
             await async_set_lights_temp(
                 self.hass, self._lights, mired, brightness, self._transition
             )
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Lights updated to mired:%s brightness:%s, %s%% "
                 "of %s cycle complete at %s",
                 mired,

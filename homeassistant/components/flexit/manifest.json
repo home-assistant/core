@@ -2,11 +2,8 @@
   "domain": "flexit",
   "name": "Flexit",
   "documentation": "https://www.home-assistant.io/integrations/flexit",
-  "requirements": [
-    "pyflexit==0.3"
-  ],
-  "dependencies": [
-    "modbus"
-  ],
-  "codeowners": []
+  "requirements": ["pyflexit==0.3"],
+  "dependencies": ["modbus"],
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

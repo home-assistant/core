@@ -2,16 +2,21 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Tuple
+from typing import final
 
-from PIL import ImageDraw
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME, CONF_ENTITY_ID, CONF_NAME
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_NAME,
+    CONF_ENTITY_ID,
+    CONF_NAME,
+    CONF_SOURCE,
+)
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
+from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -41,7 +46,6 @@ ATTR_GLASSES = "glasses"
 ATTR_MOTION = "motion"
 ATTR_TOTAL_FACES = "total_faces"
 
-CONF_SOURCE = "source"
 CONF_CONFIDENCE = "confidence"
 
 DEFAULT_TIMEOUT = 10
@@ -65,43 +69,6 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE.extend(PLATFORM_SCHEMA.schema)
 
 
-def draw_box(
-    draw: ImageDraw,
-    box: Tuple[float, float, float, float],
-    img_width: int,
-    img_height: int,
-    text: str = "",
-    color: Tuple[int, int, int] = (255, 255, 0),
-) -> None:
-    """
-    Draw a bounding box on and image.
-
-    The bounding box is defined by the tuple (y_min, x_min, y_max, x_max)
-    where the coordinates are floats in the range [0.0, 1.0] and
-    relative to the width and height of the image.
-
-    For example, if an image is 100 x 200 pixels (height x width) and the bounding
-    box is `(0.1, 0.2, 0.5, 0.9)`, the upper-left and bottom-right coordinates of
-    the bounding box will be `(40, 10)` to `(180, 50)` (in (x,y) coordinates).
-    """
-
-    line_width = 5
-    y_min, x_min, y_max, x_max = box
-    (left, right, top, bottom) = (
-        x_min * img_width,
-        x_max * img_width,
-        y_min * img_height,
-        y_max * img_height,
-    )
-    draw.line(
-        [(left, top), (left, bottom), (right, bottom), (right, top), (left, top)],
-        width=line_width,
-        fill=color,
-    )
-    if text:
-        draw.text((left + line_width, abs(top - line_width)), text, fill=color)
-
-
 async def async_setup(hass, config):
     """Set up the image processing."""
     component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
@@ -115,13 +82,13 @@ async def async_setup(hass, config):
         update_tasks = []
         for entity in image_entities:
             entity.async_set_context(service.context)
-            update_tasks.append(entity.async_update_ha_state(True))
+            update_tasks.append(asyncio.create_task(entity.async_update_ha_state(True)))
 
         if update_tasks:
             await asyncio.wait(update_tasks)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SCAN, async_scan_service, schema=ENTITY_SERVICE_SCHEMA
+        DOMAIN, SERVICE_SCAN, async_scan_service, schema=make_entity_service_schema({})
     )
 
     return True
@@ -146,12 +113,9 @@ class ImageProcessingEntity(Entity):
         """Process image."""
         raise NotImplementedError()
 
-    def async_process_image(self, image):
-        """Process image.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.process_image, image)
+    async def async_process_image(self, image):
+        """Process image."""
+        return await self.hass.async_add_executor_job(self.process_image, image)
 
     async def async_update(self):
         """Update image and process it.
@@ -212,12 +176,11 @@ class ImageProcessingFaceEntity(ImageProcessingEntity):
         """Return the class of this device, from component DEVICE_CLASSES."""
         return "face"
 
+    @final
     @property
     def state_attributes(self):
         """Return device specific state attributes."""
-        attr = {ATTR_FACES: self.faces, ATTR_TOTAL_FACES: self.total_faces}
-
-        return attr
+        return {ATTR_FACES: self.faces, ATTR_TOTAL_FACES: self.total_faces}
 
     def process_faces(self, faces, total):
         """Send event with detected faces and store data."""
@@ -245,9 +208,12 @@ class ImageProcessingFaceEntity(ImageProcessingEntity):
         """
         # Send events
         for face in faces:
-            if ATTR_CONFIDENCE in face and self.confidence:
-                if face[ATTR_CONFIDENCE] < self.confidence:
-                    continue
+            if (
+                ATTR_CONFIDENCE in face
+                and self.confidence
+                and face[ATTR_CONFIDENCE] < self.confidence
+            ):
+                continue
 
             face.update({ATTR_ENTITY_ID: self.entity_id})
             self.hass.async_add_job(self.hass.bus.async_fire, EVENT_DETECT_FACE, face)

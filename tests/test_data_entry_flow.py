@@ -1,4 +1,7 @@
 """Test the flow classes."""
+import asyncio
+from unittest.mock import patch
+
 import pytest
 import voluptuous as vol
 
@@ -14,27 +17,31 @@ def manager():
     handlers = Registry()
     entries = []
 
-    async def async_create_flow(handler_name, *, context, data):
-        handler = handlers.get(handler_name)
+    class FlowManager(data_entry_flow.FlowManager):
+        """Test flow manager."""
 
-        if handler is None:
-            raise data_entry_flow.UnknownHandler
+        async def async_create_flow(self, handler_key, *, context, data):
+            """Test create flow."""
+            handler = handlers.get(handler_key)
 
-        flow = handler()
-        flow.init_step = context.get("init_step", "init")
-        flow.source = context.get("source")
-        return flow
+            if handler is None:
+                raise data_entry_flow.UnknownHandler
 
-    async def async_add_entry(flow, result):
-        if result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
-            result["source"] = flow.context.get("source")
-            entries.append(result)
-        return result
+            flow = handler()
+            flow.init_step = context.get("init_step", "init")
+            return flow
 
-    manager = data_entry_flow.FlowManager(None, async_create_flow, async_add_entry)
-    manager.mock_created_entries = entries
-    manager.mock_reg_handler = handlers.register
-    return manager
+        async def async_finish_flow(self, flow, result):
+            """Test finish flow."""
+            if result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+                result["source"] = flow.context.get("source")
+                entries.append(result)
+            return result
+
+    mgr = FlowManager(None)
+    mgr.mock_created_entries = entries
+    mgr.mock_reg_handler = handlers.register
+    return mgr
 
 
 async def test_configure_reuses_handler_instance(manager):
@@ -54,7 +61,14 @@ async def test_configure_reuses_handler_instance(manager):
     assert form["errors"]["base"] == "1"
     form = await manager.async_configure(form["flow_id"])
     assert form["errors"]["base"] == "2"
-    assert len(manager.async_progress()) == 1
+    assert manager.async_progress() == [
+        {
+            "flow_id": form["flow_id"],
+            "handler": "test",
+            "step_id": "init",
+            "context": {},
+        }
+    ]
     assert len(manager.mock_created_entries) == 0
 
 
@@ -94,7 +108,7 @@ async def test_configure_two_steps(manager):
 
 
 async def test_show_form(manager):
-    """Test that abort removes the flow from progress."""
+    """Test that we can show a form."""
     schema = vol.Schema({vol.Required("username"): str, vol.Required("password"): str})
 
     @manager.mock_reg_handler("test")
@@ -194,22 +208,23 @@ async def test_finish_callback_change_result_type(hass):
                 step_id="init", data_schema=vol.Schema({"count": int})
             )
 
-    async def async_create_flow(handler_name, *, context, data):
-        """Create a test flow."""
-        return TestFlow()
+    class FlowManager(data_entry_flow.FlowManager):
+        async def async_create_flow(self, handler_name, *, context, data):
+            """Create a test flow."""
+            return TestFlow()
 
-    async def async_finish_flow(flow, result):
-        """Redirect to init form if count <= 1."""
-        if result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
-            if result["data"] is None or result["data"].get("count", 0) <= 1:
-                return flow.async_show_form(
-                    step_id="init", data_schema=vol.Schema({"count": int})
-                )
-            else:
-                result["result"] = result["data"]["count"]
-        return result
+        async def async_finish_flow(self, flow, result):
+            """Redirect to init form if count <= 1."""
+            if result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+                if result["data"] is None or result["data"].get("count", 0) <= 1:
+                    return flow.async_show_form(
+                        step_id="init", data_schema=vol.Schema({"count": int})
+                    )
+                else:
+                    result["result"] = result["data"]["count"]
+            return result
 
-    manager = data_entry_flow.FlowManager(hass, async_create_flow, async_finish_flow)
+    manager = FlowManager(hass)
 
     result = await manager.async_init("test")
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -271,3 +286,112 @@ async def test_external_step(hass, manager):
     result = await manager.async_configure(result["flow_id"])
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "Hello"
+
+
+async def test_show_progress(hass, manager):
+    """Test show progress logic."""
+    manager.hass = hass
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        VERSION = 5
+        data = None
+        task_one_done = False
+
+        async def async_step_init(self, user_input=None):
+            if not user_input:
+                if not self.task_one_done:
+                    self.task_one_done = True
+                    progress_action = "task_one"
+                else:
+                    progress_action = "task_two"
+                return self.async_show_progress(
+                    step_id="init",
+                    progress_action=progress_action,
+                )
+
+            self.data = user_input
+            return self.async_show_progress_done(next_step_id="finish")
+
+        async def async_step_finish(self, user_input=None):
+            return self.async_create_entry(title=self.data["title"], data=self.data)
+
+    events = async_capture_events(
+        hass, data_entry_flow.EVENT_DATA_ENTRY_FLOW_PROGRESSED
+    )
+
+    result = await manager.async_init("test")
+    assert result["type"] == data_entry_flow.RESULT_TYPE_SHOW_PROGRESS
+    assert result["progress_action"] == "task_one"
+    assert len(manager.async_progress()) == 1
+
+    # Mimic task one done and moving to task two
+    # Called by integrations: `hass.config_entries.flow.async_configure(…)`
+    result = await manager.async_configure(result["flow_id"])
+    assert result["type"] == data_entry_flow.RESULT_TYPE_SHOW_PROGRESS
+    assert result["progress_action"] == "task_two"
+
+    await hass.async_block_till_done()
+    assert len(events) == 1
+    assert events[0].data == {
+        "handler": "test",
+        "flow_id": result["flow_id"],
+        "refresh": True,
+    }
+
+    # Mimic task two done and continuing step
+    # Called by integrations: `hass.config_entries.flow.async_configure(…)`
+    result = await manager.async_configure(result["flow_id"], {"title": "Hello"})
+    assert result["type"] == data_entry_flow.RESULT_TYPE_SHOW_PROGRESS_DONE
+
+    await hass.async_block_till_done()
+    assert len(events) == 2
+    assert events[1].data == {
+        "handler": "test",
+        "flow_id": result["flow_id"],
+        "refresh": True,
+    }
+
+    # Frontend refreshes the flow
+    result = await manager.async_configure(result["flow_id"])
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "Hello"
+
+
+async def test_abort_flow_exception(manager):
+    """Test that the AbortFlow exception works."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            raise data_entry_flow.AbortFlow("mock-reason", {"placeholder": "yo"})
+
+    form = await manager.async_init("test")
+    assert form["type"] == "abort"
+    assert form["reason"] == "mock-reason"
+    assert form["description_placeholders"] == {"placeholder": "yo"}
+
+
+async def test_initializing_flows_canceled_on_shutdown(hass, manager):
+    """Test that initializing flows are canceled on shutdown."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            await asyncio.sleep(1)
+
+    task = asyncio.create_task(manager.async_init("test"))
+    await hass.async_block_till_done()
+    await manager.async_shutdown()
+
+    with pytest.raises(asyncio.exceptions.CancelledError):
+        await task
+
+
+async def test_init_unknown_flow(manager):
+    """Test that UnknownFlow is raised when async_create_flow returns None."""
+
+    with pytest.raises(data_entry_flow.UnknownFlow), patch.object(
+        manager, "async_create_flow", return_value=None
+    ):
+        await manager.async_init("test")

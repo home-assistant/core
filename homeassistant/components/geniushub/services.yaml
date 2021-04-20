@@ -1,0 +1,40 @@
+# Support for a Genius Hub system
+# Describes the format for available services
+
+set_zone_mode:
+  description: >-
+    Set the zone to an operating mode.
+  fields:
+    entity_id:
+      description: The zone's entity_id.
+      example: climate.kitchen
+    mode:
+      description: "One of: off, timer or footprint."
+      example: timer
+
+set_zone_override:
+  description: >-
+    Override the zone's setpoint for a given duration.
+  fields:
+    entity_id:
+      description: The zone's entity_id.
+      example: climate.bathroom
+    temperature:
+      description: The target temperature, to 0.1 C.
+      example: 19.2
+    duration:
+      description: >-
+        The duration of the override. Optional, default 1 hour, maximum 24 hours.
+      example: '{"minutes": 135}'
+
+set_switch_override:
+  description: >-
+    Override switch for a given duration.
+  fields:
+    entity_id:
+      description: The zone's entity_id.
+      example: switch.study
+    duration:
+      description: >-
+        The duration of the override. Optional, default 1 hour, maximum 24 hours.
+      example: '{"minutes": 135}'

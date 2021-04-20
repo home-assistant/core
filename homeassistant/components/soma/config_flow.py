@@ -1,12 +1,13 @@
 """Config flow for Soma."""
 import logging
 
-import voluptuous as vol
 from api.soma_api import SomaApi
 from requests import RequestException
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
+
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,14 +40,22 @@ class SomaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Finish config flow."""
         api = SomaApi(user_input["host"], user_input["port"])
         try:
-            await self.hass.async_add_executor_job(api.list_devices)
+            result = await self.hass.async_add_executor_job(api.list_devices)
             _LOGGER.info("Successfully set up Soma Connect")
-            return self.async_create_entry(
-                title="Soma Connect",
-                data={"host": user_input["host"], "port": user_input["port"]},
+            if result["result"] == "success":
+                return self.async_create_entry(
+                    title="Soma Connect",
+                    data={"host": user_input["host"], "port": user_input["port"]},
+                )
+            _LOGGER.error(
+                "Connection to SOMA Connect failed (result:%s)", result["result"]
             )
+            return self.async_abort(reason="result_error")
         except RequestException:
-            _LOGGER.error("Connection to SOMA Connect failed")
+            _LOGGER.error("Connection to SOMA Connect failed with RequestException")
+            return self.async_abort(reason="connection_error")
+        except KeyError:
+            _LOGGER.error("Connection to SOMA Connect failed with KeyError")
             return self.async_abort(reason="connection_error")
 
     async def async_step_import(self, user_input=None):

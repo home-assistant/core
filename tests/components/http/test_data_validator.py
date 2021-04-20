@@ -11,7 +11,7 @@ from homeassistant.components.http.data_validator import RequestDataValidator
 async def get_client(aiohttp_client, validator):
     """Generate a client that hits a view decorated with validator."""
     app = web.Application()
-    app["hass"] = Mock(is_running=True)
+    app["hass"] = Mock(is_stopping=False)
 
     class TestView(HomeAssistantView):
         url = "/"

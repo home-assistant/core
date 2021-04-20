@@ -1,14 +1,15 @@
 {
   "domain": "konnected",
-  "name": "Konnected",
+  "name": "Konnected.io",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/konnected",
-  "requirements": [
-    "konnected==0.1.5"
+  "requirements": ["konnected==1.2.0"],
+  "ssdp": [
+    {
+      "manufacturer": "konnected.io"
+    }
   ],
-  "dependencies": [
-    "http"
-  ],
-  "codeowners": [
-    "@heythisisnate"
-  ]
+  "dependencies": ["http"],
+  "codeowners": ["@heythisisnate", "@kit-klein"],
+  "iot_class": "local_polling"
 }

@@ -1,18 +1,21 @@
 """ruamel.yaml utility functions."""
+from __future__ import annotations
+
+from collections import OrderedDict
+from contextlib import suppress
 import logging
 import os
 from os import O_CREAT, O_TRUNC, O_WRONLY, stat_result
-from collections import OrderedDict
-from typing import Union, List, Dict, Optional
+from typing import Dict, List, Union
 
 import ruamel.yaml
-from ruamel.yaml import YAML
+from ruamel.yaml import YAML  # type: ignore
+from ruamel.yaml.compat import StringIO
 from ruamel.yaml.constructor import SafeConstructor
 from ruamel.yaml.error import YAMLError
-from ruamel.yaml.compat import StringIO
 
-from homeassistant.util.yaml import secret_yaml
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util.yaml import secret_yaml
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,7 +25,7 @@ JSON_TYPE = Union[List, Dict, str]  # pylint: disable=invalid-name
 class ExtSafeConstructor(SafeConstructor):
     """Extended SafeConstructor."""
 
-    name: Optional[str] = None
+    name: str | None = None
 
 
 class UnsupportedYamlError(HomeAssistantError):
@@ -54,9 +57,8 @@ def _yaml_unsupported(
     constructor: ExtSafeConstructor, node: ruamel.yaml.nodes.Node
 ) -> None:
     raise UnsupportedYamlError(
-        "Unsupported YAML, you can not use {} in {}".format(
-            node.tag, os.path.basename(constructor.name or "(None)")
-        )
+        f"Unsupported YAML, you can not use {node.tag} in "
+        f"{os.path.basename(constructor.name or '(None)')}"
     )
 
 
@@ -71,26 +73,25 @@ def object_to_yaml(data: JSON_TYPE) -> str:
         return result
     except YAMLError as exc:
         _LOGGER.error("YAML error: %s", exc)
-        raise HomeAssistantError(exc)
+        raise HomeAssistantError(exc) from exc
 
 
 def yaml_to_object(data: str) -> JSON_TYPE:
     """Create object from yaml string."""
     yaml = YAML(typ="rt")
     try:
-        result: Union[List, Dict, str] = yaml.load(data)
+        result: list | dict | str = yaml.load(data)
         return result
     except YAMLError as exc:
         _LOGGER.error("YAML error: %s", exc)
-        raise HomeAssistantError(exc)
+        raise HomeAssistantError(exc) from exc
 
 
 def load_yaml(fname: str, round_trip: bool = False) -> JSON_TYPE:
     """Load a YAML file."""
     if round_trip:
         yaml = YAML(typ="rt")
-        # type ignore: https://bitbucket.org/ruamel/yaml/pull-requests/42
-        yaml.preserve_quotes = True  # type: ignore
+        yaml.preserve_quotes = True
     else:
         if ExtSafeConstructor.name is None:
             ExtSafeConstructor.name = fname
@@ -104,17 +105,17 @@ def load_yaml(fname: str, round_trip: bool = False) -> JSON_TYPE:
             return yaml.load(conf_file) or OrderedDict()
     except YAMLError as exc:
         _LOGGER.error("YAML error in %s: %s", fname, exc)
-        raise HomeAssistantError(exc)
+        raise HomeAssistantError(exc) from exc
     except UnicodeDecodeError as exc:
         _LOGGER.error("Unable to read file %s: %s", fname, exc)
-        raise HomeAssistantError(exc)
+        raise HomeAssistantError(exc) from exc
 
 
 def save_yaml(fname: str, data: JSON_TYPE) -> None:
     """Save a YAML file."""
     yaml = YAML(typ="rt")
     yaml.indent(sequence=4, offset=2)
-    tmp_fname = fname + "__TEMP__"
+    tmp_fname = f"{fname}__TEMP__"
     try:
         try:
             file_stat = os.stat(fname)
@@ -128,16 +129,14 @@ def save_yaml(fname: str, data: JSON_TYPE) -> None:
             yaml.dump(data, temp_file)
         os.replace(tmp_fname, fname)
         if hasattr(os, "chown") and file_stat.st_ctime > -1:
-            try:
+            with suppress(OSError):
                 os.chown(fname, file_stat.st_uid, file_stat.st_gid)
-            except OSError:
-                pass
     except YAMLError as exc:
         _LOGGER.error(str(exc))
-        raise HomeAssistantError(exc)
+        raise HomeAssistantError(exc) from exc
     except OSError as exc:
         _LOGGER.exception("Saving YAML file %s failed: %s", fname, exc)
-        raise WriteError(exc)
+        raise WriteError(exc) from exc
     finally:
         if os.path.exists(tmp_fname):
             try:

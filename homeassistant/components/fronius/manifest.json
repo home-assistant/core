@@ -3,6 +3,6 @@
   "name": "Fronius",
   "documentation": "https://www.home-assistant.io/integrations/fronius",
   "requirements": ["pyfronius==0.4.6"],
-  "dependencies": [],
-  "codeowners": ["@nielstron"]
+  "codeowners": ["@nielstron"],
+  "iot_class": "local_polling"
 }

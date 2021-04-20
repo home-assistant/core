@@ -1,29 +1,22 @@
-"""
-Manufacturer specific channels module for Zigbee Home Automation.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/integrations/zha/
-"""
-import logging
-
+"""Manufacturer specific channels module for Zigbee Home Automation."""
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from . import AttributeListeningChannel, ZigbeeChannel
 from .. import registries
 from ..const import (
+    ATTR_ATTRIBUTE_ID,
+    ATTR_ATTRIBUTE_NAME,
+    ATTR_VALUE,
     REPORT_CONFIG_ASAP,
     REPORT_CONFIG_MAX_INT,
     REPORT_CONFIG_MIN_INT,
     SIGNAL_ATTR_UPDATED,
+    UNKNOWN,
 )
-
-
-_LOGGER = logging.getLogger(__name__)
+from .base import ZigbeeChannel
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(registries.SMARTTHINGS_HUMIDITY_CLUSTER)
-class SmartThingsHumidity(AttributeListeningChannel):
+class SmartThingsHumidity(ZigbeeChannel):
     """Smart Things Humidity channel."""
 
     REPORT_CONFIG = [
@@ -42,10 +35,26 @@ class OsramButton(ZigbeeChannel):
     REPORT_CONFIG = []
 
 
+@registries.CHANNEL_ONLY_CLUSTERS.register(registries.PHILLIPS_REMOTE_CLUSTER)
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(registries.PHILLIPS_REMOTE_CLUSTER)
+class PhillipsRemote(ZigbeeChannel):
+    """Phillips remote channel."""
+
+    REPORT_CONFIG = []
+
+
+@registries.CHANNEL_ONLY_CLUSTERS.register(0xFCC0)
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(0xFCC0)
+class OppleRemote(ZigbeeChannel):
+    """Opple button channel."""
+
+    REPORT_CONFIG = []
+
+
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(
     registries.SMARTTHINGS_ACCELERATION_CLUSTER
 )
-class SmartThingsAcceleration(AttributeListeningChannel):
+class SmartThingsAcceleration(ZigbeeChannel):
     """Smart Things Acceleration channel."""
 
     REPORT_CONFIG = [
@@ -59,18 +68,19 @@ class SmartThingsAcceleration(AttributeListeningChannel):
     def attribute_updated(self, attrid, value):
         """Handle attribute updates on this cluster."""
         if attrid == self.value_attribute:
-            async_dispatcher_send(
-                self._zha_device.hass, f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", value
+            self.async_send_signal(
+                f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
+                attrid,
+                self._cluster.attributes.get(attrid, [UNKNOWN])[0],
+                value,
             )
-        else:
-            self.zha_send_event(
-                self._cluster,
-                SIGNAL_ATTR_UPDATED,
-                {
-                    "attribute_id": attrid,
-                    "attribute_name": self._cluster.attributes.get(attrid, ["Unknown"])[
-                        0
-                    ],
-                    "value": value,
-                },
-            )
+            return
+
+        self.zha_send_event(
+            SIGNAL_ATTR_UPDATED,
+            {
+                ATTR_ATTRIBUTE_ID: attrid,
+                ATTR_ATTRIBUTE_NAME: self._cluster.attributes.get(attrid, [UNKNOWN])[0],
+                ATTR_VALUE: value,
+            },
+        )

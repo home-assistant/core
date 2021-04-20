@@ -7,9 +7,6 @@ import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
 
-from homeassistant.const import CONF_TIMEOUT, CONF_HOST
-import homeassistant.helpers.config_validation as cv
-
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TITLE,
@@ -17,6 +14,8 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.const import CONF_HOST, CONF_TIMEOUT, HTTP_OK, PERCENTAGE
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,7 +66,14 @@ POSITIONS = {
     "center": 4,
 }
 
-TRANSPARENCIES = {"default": 0, "0%": 1, "25%": 2, "50%": 3, "75%": 4, "100%": 5}
+TRANSPARENCIES = {
+    "default": 0,
+    f"0{PERCENTAGE}": 1,
+    f"25{PERCENTAGE}": 2,
+    f"50{PERCENTAGE}": 3,
+    f"75{PERCENTAGE}": 4,
+    f"100{PERCENTAGE}": 5,
+}
 
 COLORS = {
     "grey": "#607d8b",
@@ -152,26 +158,26 @@ class NFAndroidTVNotificationService(BaseNotificationService):
         """Send a message to a Android TV device."""
         _LOGGER.debug("Sending notification to: %s", self._target)
 
-        payload = dict(
-            filename=(
+        payload = {
+            "filename": (
                 "icon.png",
                 self._icon_file,
                 "application/octet-stream",
                 {"Expires": "0"},
             ),
-            type="0",
-            title=kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT),
-            msg=message,
-            duration="%i" % self._default_duration,
-            fontsize="%i" % FONTSIZES.get(self._default_fontsize),
-            position="%i" % POSITIONS.get(self._default_position),
-            bkgcolor="%s" % COLORS.get(self._default_color),
-            transparency="%i" % TRANSPARENCIES.get(self._default_transparency),
-            offset="0",
-            app=ATTR_TITLE_DEFAULT,
-            force="true",
-            interrupt="%i" % self._default_interrupt,
-        )
+            "type": "0",
+            "title": kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT),
+            "msg": message,
+            "duration": "%i" % self._default_duration,
+            "fontsize": "%i" % FONTSIZES.get(self._default_fontsize),
+            "position": "%i" % POSITIONS.get(self._default_position),
+            "bkgcolor": "%s" % COLORS.get(self._default_color),
+            "transparency": "%i" % TRANSPARENCIES.get(self._default_transparency),
+            "offset": "0",
+            "app": ATTR_TITLE_DEFAULT,
+            "force": "true",
+            "interrupt": "%i" % self._default_interrupt,
+        }
 
         data = kwargs.get(ATTR_DATA)
         if data:
@@ -232,7 +238,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
         try:
             _LOGGER.debug("Payload: %s", str(payload))
             response = requests.post(self._target, files=payload, timeout=self._timeout)
-            if response.status_code != 200:
+            if response.status_code != HTTP_OK:
                 _LOGGER.error("Error sending message: %s", str(response))
         except requests.exceptions.ConnectionError as err:
             _LOGGER.error("Error communicating with %s: %s", self._target, str(err))

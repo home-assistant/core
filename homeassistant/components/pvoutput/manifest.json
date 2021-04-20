@@ -1,10 +1,8 @@
 {
   "domain": "pvoutput",
-  "name": "Pvoutput",
+  "name": "PVOutput",
   "documentation": "https://www.home-assistant.io/integrations/pvoutput",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": [
-    "@fabaff"
-  ]
+  "after_dependencies": ["rest"],
+  "codeowners": ["@fabaff"],
+  "iot_class": "cloud_polling"
 }

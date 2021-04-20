@@ -1,14 +1,20 @@
 """Support for Logi Circle devices."""
 import asyncio
-import logging
 
+from aiohttp.client_exceptions import ClientResponseError
 import async_timeout
+from logi_circle import LogiCircle
+from logi_circle.exception import AuthorizationFailed
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.camera import ATTR_FILENAME, CAMERA_SERVICE_SCHEMA
+from homeassistant.components.camera import ATTR_FILENAME
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     ATTR_MODE,
+    CONF_API_KEY,
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
     CONF_MONITORED_CONDITIONS,
     CONF_SENSORS,
     EVENT_HOMEASSISTANT_STOP,
@@ -18,9 +24,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import config_flow
 from .const import (
-    CONF_API_KEY,
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
     CONF_REDIRECT_URI,
     DATA_LOGI,
     DEFAULT_CACHEDB,
@@ -36,7 +39,6 @@ from .const import (
 NOTIFICATION_ID = "logi_circle_notification"
 NOTIFICATION_TITLE = "Logi Circle Setup"
 
-_LOGGER = logging.getLogger(__name__)
 _TIMEOUT = 15  # seconds
 
 SERVICE_SET_CONFIG = "set_config"
@@ -45,6 +47,8 @@ SERVICE_LIVESTREAM_RECORD = "livestream_record"
 
 ATTR_VALUE = "value"
 ATTR_DURATION = "duration"
+
+PLATFORMS = ["camera", "sensor"]
 
 SENSOR_SCHEMA = vol.Schema(
     {
@@ -69,19 +73,24 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-LOGI_CIRCLE_SERVICE_SET_CONFIG = CAMERA_SERVICE_SCHEMA.extend(
+LOGI_CIRCLE_SERVICE_SET_CONFIG = vol.Schema(
     {
+        vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
         vol.Required(ATTR_MODE): vol.In([LED_MODE_KEY, RECORDING_MODE_KEY]),
         vol.Required(ATTR_VALUE): cv.boolean,
     }
 )
 
-LOGI_CIRCLE_SERVICE_SNAPSHOT = CAMERA_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_FILENAME): cv.template}
+LOGI_CIRCLE_SERVICE_SNAPSHOT = vol.Schema(
+    {
+        vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
+        vol.Required(ATTR_FILENAME): cv.template,
+    }
 )
 
-LOGI_CIRCLE_SERVICE_RECORD = CAMERA_SERVICE_SCHEMA.extend(
+LOGI_CIRCLE_SERVICE_RECORD = vol.Schema(
     {
+        vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
         vol.Required(ATTR_FILENAME): cv.template,
         vol.Required(ATTR_DURATION): cv.positive_int,
     }
@@ -116,10 +125,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up Logi Circle from a config entry."""
-    from logi_circle import LogiCircle
-    from logi_circle.exception import AuthorizationFailed
-    from aiohttp.client_exceptions import ClientResponseError
-
     logi_circle = LogiCircle(
         client_id=entry.data[CONF_CLIENT_ID],
         client_secret=entry.data[CONF_CLIENT_SECRET],
@@ -130,9 +135,10 @@ async def async_setup_entry(hass, entry):
 
     if not logi_circle.authorized:
         hass.components.persistent_notification.create(
-            "Error: The cached access tokens are missing from {}.<br />"
-            "Please unload then re-add the Logi Circle integration to resolve."
-            "".format(DEFAULT_CACHEDB),
+            (
+                f"Error: The cached access tokens are missing from {DEFAULT_CACHEDB}.<br />"
+                f"Please unload then re-add the Logi Circle integration to resolve."
+            ),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
         )
@@ -158,18 +164,14 @@ async def async_setup_entry(hass, entry):
         # string, so we'll handle it separately.
         err = f"{_TIMEOUT}s timeout exceeded when connecting to Logi Circle API"
         hass.components.persistent_notification.create(
-            "Error: {}<br />"
-            "You will need to restart hass after fixing."
-            "".format(err),
+            f"Error: {err}<br />You will need to restart hass after fixing.",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
         )
         return False
     except ClientResponseError as ex:
         hass.components.persistent_notification.create(
-            "Error: {}<br />"
-            "You will need to restart hass after fixing."
-            "".format(ex),
+            f"Error: {ex}<br />You will need to restart hass after fixing.",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
         )
@@ -177,9 +179,9 @@ async def async_setup_entry(hass, entry):
 
     hass.data[DATA_LOGI] = logi_circle
 
-    for component in "camera", "sensor":
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     async def service_handler(service):
@@ -218,15 +220,17 @@ async def async_setup_entry(hass, entry):
         """Close Logi Circle aiohttp session."""
         await logi_circle.auth_provider.close()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shut_down)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shut_down)
+    )
 
     return True
 
 
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
-    for component in "camera", "sensor":
-        await hass.config_entries.async_forward_entry_unload(entry, component)
+    for platform in PLATFORMS:
+        await hass.config_entries.async_forward_entry_unload(entry, platform)
 
     logi_circle = hass.data.pop(DATA_LOGI)
 

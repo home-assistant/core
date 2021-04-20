@@ -18,12 +18,7 @@ from homeassistant.components.microsoft_face import (
 from homeassistant.const import ATTR_NAME
 from homeassistant.setup import setup_component
 
-from tests.common import (
-    get_test_home_assistant,
-    assert_setup_component,
-    mock_coro,
-    load_fixture,
-)
+from tests.common import assert_setup_component, get_test_home_assistant, load_fixture
 
 
 def create_group(hass, name):
@@ -89,15 +84,15 @@ class TestMicrosoftFaceSetup:
 
         self.config = {mf.DOMAIN: {"api_key": "12345678abcdef"}}
 
-        self.endpoint_url = "https://westus.{0}".format(mf.FACE_API_URL)
+        self.endpoint_url = f"https://westus.{mf.FACE_API_URL}"
 
     def teardown_method(self):
         """Stop everything that was started."""
         self.hass.stop()
 
     @patch(
-        "homeassistant.components.microsoft_face." "MicrosoftFace.update_store",
-        return_value=mock_coro(),
+        "homeassistant.components.microsoft_face.MicrosoftFace.update_store",
+        return_value=None,
     )
     def test_setup_component(self, mock_update):
         """Set up component."""
@@ -105,8 +100,8 @@ class TestMicrosoftFaceSetup:
             setup_component(self.hass, mf.DOMAIN, self.config)
 
     @patch(
-        "homeassistant.components.microsoft_face." "MicrosoftFace.update_store",
-        return_value=mock_coro(),
+        "homeassistant.components.microsoft_face.MicrosoftFace.update_store",
+        return_value=None,
     )
     def test_setup_component_wrong_api_key(self, mock_update):
         """Set up component without api key."""
@@ -114,8 +109,8 @@ class TestMicrosoftFaceSetup:
             setup_component(self.hass, mf.DOMAIN, {mf.DOMAIN: {}})
 
     @patch(
-        "homeassistant.components.microsoft_face." "MicrosoftFace.update_store",
-        return_value=mock_coro(),
+        "homeassistant.components.microsoft_face.MicrosoftFace.update_store",
+        return_value=None,
     )
     def test_setup_component_test_service(self, mock_update):
         """Set up component."""
@@ -170,8 +165,8 @@ class TestMicrosoftFaceSetup:
         )
 
     @patch(
-        "homeassistant.components.microsoft_face." "MicrosoftFace.update_store",
-        return_value=mock_coro(),
+        "homeassistant.components.microsoft_face.MicrosoftFace.update_store",
+        return_value=None,
     )
     def test_service_groups(self, mock_update, aioclient_mock):
         """Set up component, test groups services."""
@@ -257,8 +252,8 @@ class TestMicrosoftFaceSetup:
         assert "Hans" not in entity_group1.attributes
 
     @patch(
-        "homeassistant.components.microsoft_face." "MicrosoftFace.update_store",
-        return_value=mock_coro(),
+        "homeassistant.components.microsoft_face.MicrosoftFace.update_store",
+        return_value=None,
     )
     def test_service_train(self, mock_update, aioclient_mock):
         """Set up component, test train groups services."""
@@ -278,7 +273,7 @@ class TestMicrosoftFaceSetup:
 
     @patch(
         "homeassistant.components.camera.async_get_image",
-        return_value=mock_coro(camera.Image("image/jpeg", b"Test")),
+        return_value=camera.Image("image/jpeg", b"Test"),
     )
     def test_service_face(self, camera_mock, aioclient_mock):
         """Set up component, test person face services."""
@@ -317,8 +312,8 @@ class TestMicrosoftFaceSetup:
         assert aioclient_mock.mock_calls[3][2] == b"Test"
 
     @patch(
-        "homeassistant.components.microsoft_face." "MicrosoftFace.update_store",
-        return_value=mock_coro(),
+        "homeassistant.components.microsoft_face.MicrosoftFace.update_store",
+        return_value=None,
     )
     def test_service_status_400(self, mock_update, aioclient_mock):
         """Set up component, test groups services with error."""
@@ -339,8 +334,8 @@ class TestMicrosoftFaceSetup:
         assert len(aioclient_mock.mock_calls) == 1
 
     @patch(
-        "homeassistant.components.microsoft_face." "MicrosoftFace.update_store",
-        return_value=mock_coro(),
+        "homeassistant.components.microsoft_face.MicrosoftFace.update_store",
+        return_value=None,
     )
     def test_service_status_timeout(self, mock_update, aioclient_mock):
         """Set up component, test groups services with timeout."""

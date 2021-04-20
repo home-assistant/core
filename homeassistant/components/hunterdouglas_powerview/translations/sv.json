@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad"
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta, f\u00f6rs\u00f6k igen",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "step": {
+            "link": {
+                "description": "Do vill du konfigurera {name} ({host})?",
+                "title": "Anslut till PowerView Hub"
+            },
+            "user": {
+                "data": {
+                    "host": "IP-adress"
+                },
+                "title": "Anslut till PowerView Hub"
+            }
+        }
+    }
+}

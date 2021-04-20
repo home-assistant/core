@@ -1,14 +1,16 @@
 """Connection session."""
+from __future__ import annotations
+
 import asyncio
-from typing import Any, Callable, Dict, Hashable
+from collections.abc import Hashable
+from typing import Any, Callable
 
 import voluptuous as vol
 
-from homeassistant.core import callback, Context
-from homeassistant.exceptions import Unauthorized
+from homeassistant.core import Context, callback
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 
 from . import const, messages
-
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
@@ -27,7 +29,7 @@ class ActiveConnection:
         else:
             self.refresh_token_id = None
 
-        self.subscriptions: Dict[Hashable, Callable[[], Any]] = {}
+        self.subscriptions: dict[Hashable, Callable[[], Any]] = {}
         self.last_id = 0
 
     def context(self, msg):
@@ -38,7 +40,7 @@ class ActiveConnection:
         return Context(user_id=user.id)
 
     @callback
-    def send_result(self, msg_id, result=None):
+    def send_result(self, msg_id: int, result: Any | None = None) -> None:
         """Send a result message."""
         self.send_message(messages.result_message(msg_id, result))
 
@@ -50,7 +52,7 @@ class ActiveConnection:
         self.send_message(content)
 
     @callback
-    def send_error(self, msg_id, code, message):
+    def send_error(self, msg_id: int, code: str, message: str) -> None:
         """Send a error message."""
         self.send_message(messages.error_message(msg_id, code, message))
 
@@ -108,6 +110,8 @@ class ActiveConnection:
     @callback
     def async_handle_exception(self, msg, err):
         """Handle an exception while processing a handler."""
+        log_handler = self.logger.error
+
         if isinstance(err, Unauthorized):
             code = const.ERR_UNAUTHORIZED
             err_message = "Unauthorized"
@@ -117,9 +121,14 @@ class ActiveConnection:
         elif isinstance(err, asyncio.TimeoutError):
             code = const.ERR_TIMEOUT
             err_message = "Timeout"
+        elif isinstance(err, HomeAssistantError):
+            code = const.ERR_UNKNOWN_ERROR
+            err_message = str(err)
         else:
             code = const.ERR_UNKNOWN_ERROR
             err_message = "Unknown error"
+            log_handler = self.logger.exception
 
-        self.logger.exception("Error handling message: %s", err_message)
+        log_handler("Error handling message: %s", err_message)
+
         self.send_message(messages.error_message(msg["id"], code, err_message))

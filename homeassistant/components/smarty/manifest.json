@@ -1,13 +1,8 @@
 {
   "domain": "smarty",
-  "name": "smarty",
+  "name": "Salda Smarty",
   "documentation": "https://www.home-assistant.io/integrations/smarty",
-  "requirements": [
-    "pysmarty==0.8"
-  ],
-  "dependencies": [],
-  "codeowners": [
-    "@z0mbieprocess"
-  ]
+  "requirements": ["pysmarty==0.8"],
+  "codeowners": ["@z0mbieprocess"],
+  "iot_class": "local_polling"
 }
-

@@ -1,16 +1,12 @@
 """Support for Fibaro cover - curtains, rollershutters etc."""
-import logging
-
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    ENTITY_ID_FORMAT,
-    CoverDevice,
+    DOMAIN,
+    CoverEntity,
 )
 
 from . import FIBARO_DEVICES, FibaroDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -23,13 +19,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class FibaroCover(FibaroDevice, CoverDevice):
+class FibaroCover(FibaroDevice, CoverEntity):
     """Representation a Fibaro Cover."""
 
     def __init__(self, fibaro_device):
         """Initialize the Vera device."""
         super().__init__(fibaro_device)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
+        self.entity_id = f"{DOMAIN}.{self.ha_id}"
 
     @staticmethod
     def bound(position):

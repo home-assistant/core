@@ -1,0 +1,8 @@
+{
+  "domain": "intent",
+  "name": "Intent",
+  "config_flow": false,
+  "documentation": "https://www.home-assistant.io/integrations/intent",
+  "dependencies": ["http"],
+  "codeowners": ["@home-assistant/core"]
+}

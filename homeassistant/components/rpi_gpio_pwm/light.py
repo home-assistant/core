@@ -1,22 +1,28 @@
 """Support for LED lights that can be controlled using PWM."""
 import logging
 
+from pwmled import Color
+from pwmled.driver.gpio import GpioDriver
+from pwmled.driver.pca9685 import Pca9685Driver
+from pwmled.led import SimpleLed
+from pwmled.led.rgb import RgbLed
+from pwmled.led.rgbw import RgbwLed
 import voluptuous as vol
 
-from homeassistant.const import CONF_NAME, CONF_TYPE, STATE_ON, CONF_ADDRESS
 from homeassistant.components.light import (
-    Light,
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
+    PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_TRANSITION,
-    PLATFORM_SCHEMA,
+    LightEntity,
 )
+from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_NAME, CONF_TYPE, STATE_ON
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util.color as color_util
 from homeassistant.helpers.restore_state import RestoreEntity
+import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,6 +58,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                     vol.Required(CONF_TYPE): vol.In(CONF_LED_TYPES),
                     vol.Optional(CONF_FREQUENCY): cv.positive_int,
                     vol.Optional(CONF_ADDRESS): cv.byte,
+                    vol.Optional(CONF_HOST): cv.string,
                 }
             ],
         )
@@ -61,11 +68,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the PWM LED lights."""
-    from pwmled.led import SimpleLed
-    from pwmled.led.rgb import RgbLed
-    from pwmled.led.rgbw import RgbwLed
-    from pwmled.driver.gpio import GpioDriver
-    from pwmled.driver.pca9685 import Pca9685Driver
 
     leds = []
     for led_conf in config[CONF_LEDS]:
@@ -75,6 +77,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if CONF_FREQUENCY in led_conf:
             opt_args["freq"] = led_conf[CONF_FREQUENCY]
         if driver_type == CONF_DRIVER_GPIO:
+            if CONF_HOST in led_conf:
+                opt_args["host"] = led_conf[CONF_HOST]
             driver = GpioDriver(pins, **opt_args)
         elif driver_type == CONF_DRIVER_PCA9685:
             if CONF_ADDRESS in led_conf:
@@ -100,7 +104,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(leds)
 
 
-class PwmSimpleLed(Light, RestoreEntity):
+class PwmSimpleLed(LightEntity, RestoreEntity):
     """Representation of a simple one-color PWM LED."""
 
     def __init__(self, led, name):
@@ -118,9 +122,6 @@ class PwmSimpleLed(Light, RestoreEntity):
             self._is_on = last_state.state == STATE_ON
             self._brightness = last_state.attributes.get(
                 "brightness", DEFAULT_BRIGHTNESS
-            )
-            self._led.set(
-                is_on=self._is_on, brightness=_from_hass_brightness(self._brightness)
             )
 
     @property
@@ -195,7 +196,6 @@ class PwmRgbLed(PwmSimpleLed):
         last_state = await self.async_get_last_state()
         if last_state:
             self._color = last_state.attributes.get("hs_color", DEFAULT_COLOR)
-            self._led.set(color=_from_hass_color(self._color))
 
     @property
     def hs_color(self):
@@ -240,7 +240,6 @@ def _from_hass_brightness(brightness):
 
 def _from_hass_color(color):
     """Convert Home Assistant RGB list to Color tuple."""
-    from pwmled import Color
 
     rgb = color_util.color_hs_to_RGB(*color)
     return Color(*tuple(rgb))

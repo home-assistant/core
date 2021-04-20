@@ -1,0 +1,29 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_idle": "{entity_name} er inaktiv",
+            "is_off": "{entity_name} er sl\u00e5tt av",
+            "is_on": "{entity_name} er sl\u00e5tt p\u00e5",
+            "is_paused": "{entity_name} er satt p\u00e5 pause",
+            "is_playing": "{entity_name} spiller n\u00e5"
+        },
+        "trigger_type": {
+            "idle": "{entity_name} blir inaktiv",
+            "paused": "{entity_name} er satt p\u00e5 pause",
+            "playing": "{entity_name} begynner \u00e5 spille",
+            "turned_off": "{entity_name} sl\u00e5tt av",
+            "turned_on": "{entity_name} sl\u00e5tt p\u00e5"
+        }
+    },
+    "state": {
+        "_": {
+            "idle": "Inaktiv",
+            "off": "Av",
+            "on": "P\u00e5",
+            "paused": "Pauset",
+            "playing": "Spiller",
+            "standby": "Avventer"
+        }
+    },
+    "title": "Mediaspiller"
+}

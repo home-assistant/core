@@ -1,162 +1,106 @@
-"""Tests for the Withings config flow."""
-from aiohttp.web_request import BaseRequest
-from asynctest import CoroutineMock, MagicMock
-import pytest
+"""Tests for config flow."""
+from aiohttp.test_utils import TestClient
 
-from homeassistant import data_entry_flow
 from homeassistant.components.withings import const
-from homeassistant.components.withings.config_flow import (
-    register_flow_implementation,
-    WithingsFlowHandler,
-    WithingsAuthCallbackView,
+from homeassistant.config import async_process_ha_core_config
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_EXTERNAL_URL,
+    CONF_UNIT_SYSTEM,
+    CONF_UNIT_SYSTEM_METRIC,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant
+from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.config_entry_oauth2_flow import AUTH_CALLBACK_PATH
+from homeassistant.setup import async_setup_component
+
+from tests.common import MockConfigEntry
 
 
-@pytest.fixture(name="flow_handler")
-def flow_handler_fixture(hass: HomeAssistantType):
-    """Provide flow handler."""
-    flow_handler = WithingsFlowHandler()
-    flow_handler.hass = hass
-    return flow_handler
-
-
-def test_flow_handler_init(flow_handler: WithingsFlowHandler):
-    """Test the init of the flow handler."""
-    assert not flow_handler.flow_profile
-
-
-def test_flow_handler_async_profile_config_entry(
-    hass: HomeAssistantType, flow_handler: WithingsFlowHandler
-):
-    """Test profile config entry."""
-    config_entries = [
-        ConfigEntry(
-            version=1,
-            domain=const.DOMAIN,
-            title="AAA",
-            data={},
-            source="source",
-            connection_class="connection_class",
-            system_options={},
-        ),
-        ConfigEntry(
-            version=1,
-            domain=const.DOMAIN,
-            title="Person 1",
-            data={const.PROFILE: "Person 1"},
-            source="source",
-            connection_class="connection_class",
-            system_options={},
-        ),
-        ConfigEntry(
-            version=1,
-            domain=const.DOMAIN,
-            title="BBB",
-            data={},
-            source="source",
-            connection_class="connection_class",
-            system_options={},
-        ),
-    ]
-
-    hass.config_entries.async_entries = MagicMock(return_value=config_entries)
-
-    config_entry = flow_handler.async_profile_config_entry
-
-    assert not config_entry("GGGG")
-    hass.config_entries.async_entries.assert_called_with(const.DOMAIN)
-
-    assert not config_entry("CCC")
-    hass.config_entries.async_entries.assert_called_with(const.DOMAIN)
-
-    assert config_entry("Person 1") == config_entries[1]
-    hass.config_entries.async_entries.assert_called_with(const.DOMAIN)
-
-
-def test_flow_handler_get_auth_client(
-    hass: HomeAssistantType, flow_handler: WithingsFlowHandler
-):
-    """Test creation of an auth client."""
-    register_flow_implementation(
-        hass, "my_client_id", "my_client_secret", "http://localhost/", ["Person 1"]
+async def test_config_non_unique_profile(hass: HomeAssistant) -> None:
+    """Test setup a non-unique profile."""
+    config_entry = MockConfigEntry(
+        domain=const.DOMAIN, data={const.PROFILE: "person0"}, unique_id="0"
     )
+    config_entry.add_to_hass(hass)
 
-    client = flow_handler.get_auth_client("Person 1")
-    assert client.client_id == "my_client_id"
-    assert client.consumer_secret == "my_client_secret"
-    assert client.callback_uri.startswith(
-        "http://localhost/api/withings/authorize?flow_id="
-    )
-    assert client.callback_uri.endswith("&profile=Person 1")
-    assert client.scope == "user.info,user.metrics,user.activity"
-
-
-async def test_auth_callback_view_get(hass: HomeAssistantType):
-    """Test get api path."""
-    view = WithingsAuthCallbackView()
-    hass.config_entries.flow.async_configure = CoroutineMock(return_value="AAAA")
-
-    request = MagicMock(spec=BaseRequest)
-    request.app = {"hass": hass}
-
-    # No args
-    request.query = {}
-    response = await view.get(request)
-    assert response.status == 400
-    hass.config_entries.flow.async_configure.assert_not_called()
-    hass.config_entries.flow.async_configure.reset_mock()
-
-    # Checking flow_id
-    request.query = {"flow_id": "my_flow_id"}
-    response = await view.get(request)
-    assert response.status == 400
-    hass.config_entries.flow.async_configure.assert_not_called()
-    hass.config_entries.flow.async_configure.reset_mock()
-
-    # Checking flow_id and profile
-    request.query = {"flow_id": "my_flow_id", "profile": "my_profile"}
-    response = await view.get(request)
-    assert response.status == 400
-    hass.config_entries.flow.async_configure.assert_not_called()
-    hass.config_entries.flow.async_configure.reset_mock()
-
-    # Checking flow_id, profile, code
-    request.query = {
-        "flow_id": "my_flow_id",
-        "profile": "my_profile",
-        "code": "my_code",
-    }
-    response = await view.get(request)
-    assert response.status == 200
-    hass.config_entries.flow.async_configure.assert_called_with(
-        "my_flow_id", {const.PROFILE: "my_profile", const.CODE: "my_code"}
-    )
-    hass.config_entries.flow.async_configure.reset_mock()
-
-    # Exception thrown
-    hass.config_entries.flow.async_configure = CoroutineMock(
-        side_effect=data_entry_flow.UnknownFlow()
-    )
-    request.query = {
-        "flow_id": "my_flow_id",
-        "profile": "my_profile",
-        "code": "my_code",
-    }
-    response = await view.get(request)
-    assert response.status == 400
-    hass.config_entries.flow.async_configure.assert_called_with(
-        "my_flow_id", {const.PROFILE: "my_profile", const.CODE: "my_code"}
-    )
-    hass.config_entries.flow.async_configure.reset_mock()
-
-
-async def test_init_without_config(hass):
-    """Try initializin a configg flow without it being configured."""
     result = await hass.config_entries.flow.async_init(
-        "withings", context={"source": "user"}
+        const.DOMAIN, context={"source": "profile"}, data={const.PROFILE: "person0"}
     )
 
+    assert result
+    assert result["errors"]["base"] == "already_configured"
+
+
+async def test_config_reauth_profile(
+    hass: HomeAssistant, aiohttp_client, aioclient_mock, current_request_with_host
+) -> None:
+    """Test reauth an existing profile re-creates the config entry."""
+    hass_config = {
+        HA_DOMAIN: {
+            CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
+            CONF_EXTERNAL_URL: "http://127.0.0.1:8080/",
+        },
+        const.DOMAIN: {
+            CONF_CLIENT_ID: "my_client_id",
+            CONF_CLIENT_SECRET: "my_client_secret",
+            const.CONF_USE_WEBHOOK: False,
+        },
+    }
+    await async_process_ha_core_config(hass, hass_config.get(HA_DOMAIN))
+    assert await async_setup_component(hass, const.DOMAIN, hass_config)
+    await hass.async_block_till_done()
+
+    config_entry = MockConfigEntry(
+        domain=const.DOMAIN, data={const.PROFILE: "person0"}, unique_id="0"
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN, context={"source": "reauth", "profile": "person0"}
+    )
+    assert result
+    assert result["type"] == "form"
+    assert result["step_id"] == "reauth"
+    assert result["description_placeholders"] == {const.PROFILE: "person0"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+
+    # pylint: disable=protected-access
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    client: TestClient = await aiohttp_client(hass.http.app)
+    resp = await client.get(f"{AUTH_CALLBACK_PATH}?code=abcd&state={state}")
+    assert resp.status == 200
+    assert resp.headers["content-type"] == "text/html; charset=utf-8"
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.post(
+        "https://account.withings.com/oauth2/token",
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": "mock-access-token",
+            "type": "Bearer",
+            "expires_in": 60,
+            "userid": "0",
+        },
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result
     assert result["type"] == "abort"
-    assert result["reason"] == "no_flows"
+    assert result["reason"] == "already_configured"
+
+    entries = hass.config_entries.async_entries(const.DOMAIN)
+    assert entries
+    assert entries[0].data["token"]["refresh_token"] == "mock-refresh-token"

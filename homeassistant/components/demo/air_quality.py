@@ -2,11 +2,16 @@
 from homeassistant.components.air_quality import AirQualityEntity
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Air Quality."""
-    add_entities(
+    async_add_entities(
         [DemoAirQuality("Home", 14, 23, 100), DemoAirQuality("Office", 4, 16, None)]
     )
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Demo config entry."""
+    await async_setup_platform(hass, {}, async_add_entities)
 
 
 class DemoAirQuality(AirQualityEntity):
@@ -22,7 +27,7 @@ class DemoAirQuality(AirQualityEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format("Demo Air Quality", self._name)
+        return f"Demo Air Quality {self._name}"
 
     @property
     def should_poll(self):

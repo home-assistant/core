@@ -1,4 +1,5 @@
 """Support for Swisscom routers (Internet-Box)."""
+from contextlib import suppress
 import logging
 
 from aiohttp.hdrs import CONTENT_TYPE
@@ -80,17 +81,28 @@ class SwisscomDeviceScanner(DeviceScanner):
         {"service":"Devices", "method":"get",
         "parameters":{"expression":"lan and not self"}}"""
 
-        request = requests.post(url, headers=headers, data=data, timeout=10)
-
         devices = {}
+
+        try:
+            request = requests.post(url, headers=headers, data=data, timeout=10)
+        except (
+            requests.exceptions.ConnectionError,
+            requests.exceptions.Timeout,
+            requests.exceptions.ConnectTimeout,
+        ):
+            _LOGGER.info("No response from Swisscom Internet Box")
+            return devices
+
+        if "status" not in request.json():
+            _LOGGER.info("No status in response from Swisscom Internet Box")
+            return devices
+
         for device in request.json()["status"]:
-            try:
+            with suppress(KeyError, requests.exceptions.RequestException):
                 devices[device["Key"]] = {
                     "ip": device["IPAddress"],
                     "mac": device["PhysAddress"],
                     "host": device["Name"],
                     "status": device["Active"],
                 }
-            except (KeyError, requests.exceptions.RequestException):
-                pass
         return devices

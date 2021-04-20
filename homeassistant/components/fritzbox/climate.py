@@ -1,36 +1,35 @@
 """Support for AVM Fritz!Box smarthome thermostate devices."""
-import logging
-
 import requests
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     HVAC_MODE_HEAT,
-    PRESET_ECO,
-    PRESET_COMFORT,
-    SUPPORT_TARGET_TEMPERATURE,
     HVAC_MODE_OFF,
+    PRESET_COMFORT,
+    PRESET_ECO,
     SUPPORT_PRESET_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_TEMPERATURE,
+    CONF_DEVICES,
     PRECISION_HALVES,
     TEMP_CELSIUS,
 )
 
-from . import (
+from .const import (
     ATTR_STATE_BATTERY_LOW,
     ATTR_STATE_DEVICE_LOCKED,
     ATTR_STATE_HOLIDAY_MODE,
     ATTR_STATE_LOCKED,
     ATTR_STATE_SUMMER_MODE,
     ATTR_STATE_WINDOW_OPEN,
+    CONF_CONNECTIONS,
     DOMAIN as FRITZBOX_DOMAIN,
+    LOGGER,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
@@ -48,21 +47,21 @@ ON_REPORT_SET_TEMPERATURE = 30.0
 OFF_REPORT_SET_TEMPERATURE = 0.0
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Fritzbox smarthome thermostat platform."""
-    devices = []
-    fritz_list = hass.data[FRITZBOX_DOMAIN]
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Fritzbox smarthome thermostat from config_entry."""
+    entities = []
+    devices = hass.data[FRITZBOX_DOMAIN][CONF_DEVICES]
+    fritz = hass.data[FRITZBOX_DOMAIN][CONF_CONNECTIONS][config_entry.entry_id]
 
-    for fritz in fritz_list:
-        device_list = fritz.get_devices()
-        for device in device_list:
-            if device.has_thermostat:
-                devices.append(FritzboxThermostat(device, fritz))
+    for device in await hass.async_add_executor_job(fritz.get_devices):
+        if device.has_thermostat and device.ain not in devices:
+            entities.append(FritzboxThermostat(device, fritz))
+            devices.add(device.ain)
 
-    add_entities(devices)
+    async_add_entities(entities)
 
 
-class FritzboxThermostat(ClimateDevice):
+class FritzboxThermostat(ClimateEntity):
     """The thermostat class for Fritzbox smarthome thermostates."""
 
     def __init__(self, device, fritz):
@@ -73,6 +72,22 @@ class FritzboxThermostat(ClimateDevice):
         self._target_temperature = self._device.target_temperature
         self._comfort_temperature = self._device.comfort_temperature
         self._eco_temperature = self._device.eco_temperature
+
+    @property
+    def device_info(self):
+        """Return device specific attributes."""
+        return {
+            "name": self.name,
+            "identifiers": {(FRITZBOX_DOMAIN, self._device.ain)},
+            "manufacturer": self._device.manufacturer,
+            "model": self._device.productname,
+            "sw_version": self._device.fw_version,
+        }
+
+    @property
+    def unique_id(self):
+        """Return the unique ID of the device."""
+        return self._device.ain
 
     @property
     def supported_features(self):
@@ -176,7 +191,7 @@ class FritzboxThermostat(ClimateDevice):
         return MAX_TEMPERATURE
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
         attrs = {
             ATTR_STATE_BATTERY_LOW: self._device.battery_low,
@@ -205,5 +220,5 @@ class FritzboxThermostat(ClimateDevice):
             self._comfort_temperature = self._device.comfort_temperature
             self._eco_temperature = self._device.eco_temperature
         except requests.exceptions.HTTPError as ex:
-            _LOGGER.warning("Fritzbox connection error: %s", ex)
+            LOGGER.warning("Fritzbox connection error: %s", ex)
             self._fritz.login()

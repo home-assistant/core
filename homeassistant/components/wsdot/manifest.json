@@ -1,8 +1,7 @@
 {
   "domain": "wsdot",
-  "name": "Wsdot",
+  "name": "Washington State Department of Transportation (WSDOT)",
   "documentation": "https://www.home-assistant.io/integrations/wsdot",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "cloud_polling"
 }

@@ -1,0 +1,109 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Bridge is al geconfigureerd",
+            "already_in_progress": "De configuratiestroom is al aan de gang",
+            "no_bridges": "Geen deCONZ apparaten ontdekt",
+            "no_hardware_available": "Geen radiohardware aangesloten op deCONZ",
+            "not_deconz_bridge": "Dit is geen deCONZ bridge",
+            "updated_instance": "DeCONZ-instantie bijgewerkt met nieuw host-adres"
+        },
+        "error": {
+            "no_key": "Kon geen API-sleutel ophalen"
+        },
+        "flow_title": "deCONZ Zigbee gateway ( {host} )",
+        "step": {
+            "hassio_confirm": {
+                "description": "Wilt u Home Assistant configureren om verbinding te maken met de deCONZ gateway van de Home Assistant add-on {addon}?",
+                "title": "deCONZ Zigbee Gateway via Home Assistant add-on"
+            },
+            "link": {
+                "description": "Ontgrendel je deCONZ gateway om te registreren met Home Assistant.\n\n1. Ga naar deCONZ systeeminstellingen (Instellingen -> Gateway -> Geavanceerd)\n2. Druk op de knop \"Gateway ontgrendelen\"",
+                "title": "Koppel met deCONZ"
+            },
+            "manual_input": {
+                "data": {
+                    "host": "Host",
+                    "port": "Poort"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Selecteer gevonden deCONZ gateway"
+                }
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "both_buttons": "Beide knoppen",
+            "bottom_buttons": "Onderste knoppen",
+            "button_1": "Eerste knop",
+            "button_2": "Tweede knop",
+            "button_3": "Derde knop",
+            "button_4": "Vierde knop",
+            "button_5": "Vijfde knop",
+            "button_6": "Zesde knop",
+            "button_7": "Zevende knop",
+            "button_8": "Achtste knop",
+            "close": "Sluiten",
+            "dim_down": "Dim omlaag",
+            "dim_up": "Dim omhoog",
+            "left": "Links",
+            "open": "Open",
+            "right": "Rechts",
+            "side_1": "Zijde 1",
+            "side_2": "Zijde 2",
+            "side_3": "Zijde 3",
+            "side_4": "Zijde 4",
+            "side_5": "Zijde 5",
+            "side_6": "Zijde 6",
+            "top_buttons": "Bovenste knoppen",
+            "turn_off": "Uitschakelen",
+            "turn_on": "Inschakelen"
+        },
+        "trigger_type": {
+            "remote_awakened": "Apparaat is gewekt",
+            "remote_button_double_press": "\"{subtype}\" knop dubbel geklikt",
+            "remote_button_long_press": "\" {subtype} \" knop continu ingedrukt",
+            "remote_button_long_release": "\"{subtype}\" knop losgelaten na lang indrukken van de knop",
+            "remote_button_quadruple_press": "\" {subtype} \" knop viervoudig aangeklikt",
+            "remote_button_quintuple_press": "\" {subtype} \" knop vijf keer aangeklikt",
+            "remote_button_rotated": "Knop gedraaid \" {subtype} \"",
+            "remote_button_rotated_fast": "Knop is snel gedraaid \" {subtype} \"",
+            "remote_button_rotation_stopped": "Knoprotatie \" {subtype} \" gestopt",
+            "remote_button_short_press": "\"{subtype}\" knop ingedrukt",
+            "remote_button_short_release": "\"{subtype}\" knop losgelaten",
+            "remote_button_triple_press": "\" {subtype} \" knop driemaal geklikt",
+            "remote_double_tap": "Apparaat \"{subtype}\" dubbel getikt",
+            "remote_double_tap_any_side": "Apparaat dubbel getikt aan elke kant",
+            "remote_falling": "Apparaat in vrije val",
+            "remote_flip_180_degrees": "Apparaat 180 graden omgedraaid",
+            "remote_flip_90_degrees": "Apparaat 90 graden omgedraaid",
+            "remote_gyro_activated": "Apparaat geschud",
+            "remote_moved": "Apparaat verplaatst met \"{subtype}\" omhoog",
+            "remote_moved_any_side": "Apparaat gedraaid met elke kant naar boven",
+            "remote_rotate_from_side_1": "Apparaat gedraaid van \"zijde 1\" naar \"{subtype}\"\".",
+            "remote_rotate_from_side_2": "Apparaat gedraaid van \"zijde 2\" naar \"{subtype}\"\".",
+            "remote_rotate_from_side_3": "Apparaat gedraaid van \"zijde 3\" naar \" {subtype} \"",
+            "remote_rotate_from_side_4": "Apparaat gedraaid van \"zijde 4\" naar \" {subtype} \"",
+            "remote_rotate_from_side_5": "Apparaat gedraaid van \"zijde 5\" naar \" {subtype} \"",
+            "remote_rotate_from_side_6": "Apparaat gedraaid van \"zijde 6\" naar \" {subtype} \"",
+            "remote_turned_clockwise": "Apparaat met de klok mee gedraaid",
+            "remote_turned_counter_clockwise": "Apparaat tegen de klok in gedraaid"
+        }
+    },
+    "options": {
+        "step": {
+            "deconz_devices": {
+                "data": {
+                    "allow_clip_sensor": "DeCONZ CLIP sensoren toestaan",
+                    "allow_deconz_groups": "Sta deCONZ-lichtgroepen toe",
+                    "allow_new_devices": "Sta automatische toevoeging van nieuwe apparaten toe"
+                },
+                "description": "Configureer de zichtbaarheid van deCONZ-apparaattypen",
+                "title": "deCONZ opties"
+            }
+        }
+    }
+}

@@ -3,12 +3,11 @@ import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 from homeassistant.auth.models import RefreshToken, User
-from homeassistant.components.http.ban import process_wrong_login, process_success_login
+from homeassistant.components.http.ban import process_success_login, process_wrong_login
 from homeassistant.const import __version__
 
 from .connection import ActiveConnection
 from .error import Disconnect
-
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
@@ -58,12 +57,12 @@ class AuthPhase:
         try:
             msg = AUTH_MESSAGE_SCHEMA(msg)
         except vol.Invalid as err:
-            error_msg = "Auth message incorrectly formatted: {}".format(
-                humanize_error(msg, err)
+            error_msg = (
+                f"Auth message incorrectly formatted: {humanize_error(msg, err)}"
             )
             self._logger.warning(error_msg)
             self._send_message(auth_invalid_message(error_msg))
-            raise Disconnect
+            raise Disconnect from err
 
         if "access_token" in msg:
             self._logger.debug("Received access_token")

@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "password": "L\u00f6senord",
+                    "username": "E-postadress"
+                },
+                "title": "Ange anv\u00e4ndarnamn och l\u00f6senord"
+            }
+        }
+    }
+}

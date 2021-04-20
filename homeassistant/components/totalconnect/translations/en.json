@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication",
+            "usercode": "Usercode not valid for this user at this location"
+        },
+        "step": {
+            "locations": {
+                "data": {
+                    "location": "Location"
+                },
+                "description": "Enter the usercode for this user at this location",
+                "title": "Location Usercodes"
+            },
+            "reauth_confirm": {
+                "description": "Total Connect needs to re-authenticate your account",
+                "title": "Reauthenticate Integration"
+            },
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "title": "Total Connect"
+            }
+        }
+    }
+}

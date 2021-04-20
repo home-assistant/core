@@ -2,161 +2,131 @@
 import asyncio
 import base64
 import io
-from unittest.mock import patch, mock_open, PropertyMock
+from unittest.mock import Mock, PropertyMock, mock_open, patch
 
 import pytest
 
-from homeassistant.setup import setup_component, async_setup_component
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_ENTITY_PICTURE,
-    EVENT_HOMEASSISTANT_START,
-)
-from homeassistant.components import camera, http
+from homeassistant.components import camera
 from homeassistant.components.camera.const import DOMAIN, PREF_PRELOAD_STREAM
 from homeassistant.components.camera.prefs import CameraEntityPreferences
 from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.config import async_process_ha_core_config
+from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.setup import async_setup_component
 
-from tests.common import (
-    get_test_home_assistant,
-    get_test_instance_port,
-    assert_setup_component,
-    mock_coro,
-)
 from tests.components.camera import common
 
 
-@pytest.fixture
-def mock_camera(hass):
+@pytest.fixture(name="mock_camera")
+async def mock_camera_fixture(hass):
     """Initialize a demo camera platform."""
-    assert hass.loop.run_until_complete(
-        async_setup_component(hass, "camera", {camera.DOMAIN: {"platform": "demo"}})
+    assert await async_setup_component(
+        hass, "camera", {camera.DOMAIN: {"platform": "demo"}}
     )
+    await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.demo.camera.DemoCamera.camera_image",
+        "homeassistant.components.demo.camera.Path.read_bytes",
         return_value=b"Test",
     ):
         yield
 
 
-@pytest.fixture
-def mock_stream(hass):
+@pytest.fixture(name="mock_stream")
+def mock_stream_fixture(hass):
     """Initialize a demo camera platform with streaming."""
     assert hass.loop.run_until_complete(
         async_setup_component(hass, "stream", {"stream": {}})
     )
 
 
-@pytest.fixture
-def setup_camera_prefs(hass):
+@pytest.fixture(name="setup_camera_prefs")
+def setup_camera_prefs_fixture(hass):
     """Initialize HTTP API."""
     return common.mock_camera_prefs(hass, "camera.demo_camera")
 
 
-class TestSetupCamera:
-    """Test class for setup camera."""
-
-    def setup_method(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-
-    def teardown_method(self):
-        """Stop everything that was started."""
-        self.hass.stop()
-
-    def test_setup_component(self):
-        """Set up demo platform on camera component."""
-        config = {camera.DOMAIN: {"platform": "demo"}}
-
-        with assert_setup_component(1, camera.DOMAIN):
-            setup_component(self.hass, camera.DOMAIN, config)
+@pytest.fixture(name="image_mock_url")
+async def image_mock_url_fixture(hass):
+    """Fixture for get_image tests."""
+    await async_setup_component(
+        hass, camera.DOMAIN, {camera.DOMAIN: {"platform": "demo"}}
+    )
+    await hass.async_block_till_done()
 
 
-class TestGetImage:
-    """Test class for camera."""
+async def test_get_image_from_camera(hass, image_mock_url):
+    """Grab an image from camera entity."""
 
-    def setup_method(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-
-        setup_component(
-            self.hass,
-            http.DOMAIN,
-            {http.DOMAIN: {http.CONF_SERVER_PORT: get_test_instance_port()}},
-        )
-
-        config = {camera.DOMAIN: {"platform": "demo"}}
-
-        setup_component(self.hass, camera.DOMAIN, config)
-
-        state = self.hass.states.get("camera.demo_camera")
-        self.url = "{0}{1}".format(
-            self.hass.config.api.base_url, state.attributes.get(ATTR_ENTITY_PICTURE)
-        )
-
-    def teardown_method(self):
-        """Stop everything that was started."""
-        self.hass.stop()
-
-    @patch(
-        "homeassistant.components.demo.camera.DemoCamera.camera_image",
+    with patch(
+        "homeassistant.components.demo.camera.Path.read_bytes",
         autospec=True,
         return_value=b"Test",
-    )
-    def test_get_image_from_camera(self, mock_camera):
-        """Grab an image from camera entity."""
-        self.hass.start()
+    ) as mock_camera:
+        image = await camera.async_get_image(hass, "camera.demo_camera")
 
-        image = asyncio.run_coroutine_threadsafe(
-            camera.async_get_image(self.hass, "camera.demo_camera"), self.hass.loop
-        ).result()
-
-        assert mock_camera.called
-        assert image.content == b"Test"
-
-    def test_get_image_without_exists_camera(self):
-        """Try to get image without exists camera."""
-        with patch(
-            "homeassistant.helpers.entity_component.EntityComponent." "get_entity",
-            return_value=None,
-        ), pytest.raises(HomeAssistantError):
-            asyncio.run_coroutine_threadsafe(
-                camera.async_get_image(self.hass, "camera.demo_camera"), self.hass.loop
-            ).result()
-
-    def test_get_image_with_timeout(self):
-        """Try to get image with timeout."""
-        with patch(
-            "homeassistant.components.camera.Camera.async_camera_image",
-            side_effect=asyncio.TimeoutError,
-        ), pytest.raises(HomeAssistantError):
-            asyncio.run_coroutine_threadsafe(
-                camera.async_get_image(self.hass, "camera.demo_camera"), self.hass.loop
-            ).result()
-
-    def test_get_image_fails(self):
-        """Try to get image with timeout."""
-        with patch(
-            "homeassistant.components.camera.Camera.async_camera_image",
-            return_value=mock_coro(None),
-        ), pytest.raises(HomeAssistantError):
-            asyncio.run_coroutine_threadsafe(
-                camera.async_get_image(self.hass, "camera.demo_camera"), self.hass.loop
-            ).result()
+    assert mock_camera.called
+    assert image.content == b"Test"
 
 
-@asyncio.coroutine
-def test_snapshot_service(hass, mock_camera):
+async def test_get_stream_source_from_camera(hass, mock_camera):
+    """Fetch stream source from camera entity."""
+
+    with patch(
+        "homeassistant.components.camera.Camera.stream_source",
+        return_value="rtsp://127.0.0.1/stream",
+    ) as mock_camera_stream_source:
+        stream_source = await camera.async_get_stream_source(hass, "camera.demo_camera")
+
+    assert mock_camera_stream_source.called
+    assert stream_source == "rtsp://127.0.0.1/stream"
+
+
+async def test_get_image_without_exists_camera(hass, image_mock_url):
+    """Try to get image without exists camera."""
+    with patch(
+        "homeassistant.helpers.entity_component.EntityComponent.get_entity",
+        return_value=None,
+    ), pytest.raises(HomeAssistantError):
+        await camera.async_get_image(hass, "camera.demo_camera")
+
+
+async def test_get_image_with_timeout(hass, image_mock_url):
+    """Try to get image with timeout."""
+    with patch(
+        "homeassistant.components.demo.camera.DemoCamera.async_camera_image",
+        side_effect=asyncio.TimeoutError,
+    ), pytest.raises(HomeAssistantError):
+        await camera.async_get_image(hass, "camera.demo_camera")
+
+
+async def test_get_image_fails(hass, image_mock_url):
+    """Try to get image with timeout."""
+    with patch(
+        "homeassistant.components.demo.camera.DemoCamera.async_camera_image",
+        return_value=None,
+    ), pytest.raises(HomeAssistantError):
+        await camera.async_get_image(hass, "camera.demo_camera")
+
+
+async def test_snapshot_service(hass, mock_camera):
     """Test snapshot service."""
     mopen = mock_open()
 
-    with patch(
-        "homeassistant.components.camera.open", mopen, create=True
+    with patch("homeassistant.components.camera.open", mopen, create=True), patch(
+        "homeassistant.components.camera.os.path.exists",
+        Mock(spec="os.path.exists", return_value=True),
     ), patch.object(hass.config, "is_allowed_path", return_value=True):
-        common.async_snapshot(hass, "/tmp/bla")
-        yield from hass.async_block_till_done()
+        await hass.services.async_call(
+            camera.DOMAIN,
+            camera.SERVICE_SNAPSHOT,
+            {
+                ATTR_ENTITY_ID: "camera.demo_camera",
+                camera.ATTR_FILENAME: "/test/snapshot.jpg",
+            },
+            blocking=True,
+        )
 
         mock_write = mopen().write
 
@@ -185,25 +155,20 @@ async def test_websocket_camera_thumbnail(hass, hass_ws_client, mock_camera):
 async def test_websocket_stream_no_source(
     hass, hass_ws_client, mock_camera, mock_stream
 ):
-    """Test camera/stream websocket command."""
+    """Test camera/stream websocket command with camera with no source."""
     await async_setup_component(hass, "camera", {})
 
-    with patch(
-        "homeassistant.components.camera.request_stream",
-        return_value="http://home.assistant/playlist.m3u8",
-    ) as mock_request_stream:
-        # Request playlist through WebSocket
-        client = await hass_ws_client(hass)
-        await client.send_json(
-            {"id": 6, "type": "camera/stream", "entity_id": "camera.demo_camera"}
-        )
-        msg = await client.receive_json()
+    # Request playlist through WebSocket
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {"id": 6, "type": "camera/stream", "entity_id": "camera.demo_camera"}
+    )
+    msg = await client.receive_json()
 
-        # Assert WebSocket response
-        assert not mock_request_stream.called
-        assert msg["id"] == 6
-        assert msg["type"] == TYPE_RESULT
-        assert not msg["success"]
+    # Assert WebSocket response
+    assert msg["id"] == 6
+    assert msg["type"] == TYPE_RESULT
+    assert not msg["success"]
 
 
 async def test_websocket_camera_stream(hass, hass_ws_client, mock_camera, mock_stream):
@@ -211,11 +176,11 @@ async def test_websocket_camera_stream(hass, hass_ws_client, mock_camera, mock_s
     await async_setup_component(hass, "camera", {})
 
     with patch(
-        "homeassistant.components.camera.request_stream",
+        "homeassistant.components.camera.Stream.endpoint_url",
         return_value="http://home.assistant/playlist.m3u8",
-    ) as mock_request_stream, patch(
+    ) as mock_stream_view_url, patch(
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
-        return_value=mock_coro("http://example.com"),
+        return_value="http://example.com",
     ):
         # Request playlist through WebSocket
         client = await hass_ws_client(hass)
@@ -225,7 +190,7 @@ async def test_websocket_camera_stream(hass, hass_ws_client, mock_camera, mock_s
         msg = await client.receive_json()
 
         # Assert WebSocket response
-        assert mock_request_stream.called
+        assert mock_stream_view_url.called
         assert msg["id"] == 6
         assert msg["type"] == TYPE_RESULT
         assert msg["success"]
@@ -278,9 +243,7 @@ async def test_play_stream_service_no_source(hass, mock_camera, mock_stream):
         ATTR_ENTITY_ID: "camera.demo_camera",
         camera.ATTR_MEDIA_PLAYER: "media_player.test",
     }
-    with patch("homeassistant.components.camera.request_stream"), pytest.raises(
-        HomeAssistantError
-    ):
+    with pytest.raises(HomeAssistantError):
         # Call service
         await hass.services.async_call(
             camera.DOMAIN, camera.SERVICE_PLAY_STREAM, data, blocking=True
@@ -289,20 +252,26 @@ async def test_play_stream_service_no_source(hass, mock_camera, mock_stream):
 
 async def test_handle_play_stream_service(hass, mock_camera, mock_stream):
     """Test camera play_stream service."""
+    await async_process_ha_core_config(
+        hass,
+        {"external_url": "https://example.com"},
+    )
     await async_setup_component(hass, "media_player", {})
-    data = {
-        ATTR_ENTITY_ID: "camera.demo_camera",
-        camera.ATTR_MEDIA_PLAYER: "media_player.test",
-    }
     with patch(
-        "homeassistant.components.camera.request_stream"
+        "homeassistant.components.camera.Stream.endpoint_url",
     ) as mock_request_stream, patch(
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
-        return_value=mock_coro("http://example.com"),
+        return_value="http://example.com",
     ):
         # Call service
         await hass.services.async_call(
-            camera.DOMAIN, camera.SERVICE_PLAY_STREAM, data, blocking=True
+            camera.DOMAIN,
+            camera.SERVICE_PLAY_STREAM,
+            {
+                ATTR_ENTITY_ID: "camera.demo_camera",
+                camera.ATTR_MEDIA_PLAYER: "media_player.test",
+            },
+            blocking=True,
         )
         # So long as we request the stream, the rest should be covered
         # by the play_media service tests.
@@ -313,7 +282,7 @@ async def test_no_preload_stream(hass, mock_stream):
     """Test camera preload preference."""
     demo_prefs = CameraEntityPreferences({PREF_PRELOAD_STREAM: False})
     with patch(
-        "homeassistant.components.camera.request_stream"
+        "homeassistant.components.camera.Stream.endpoint_url",
     ) as mock_request_stream, patch(
         "homeassistant.components.camera.prefs.CameraPreferences.get",
         return_value=demo_prefs,
@@ -332,52 +301,56 @@ async def test_preload_stream(hass, mock_stream):
     """Test camera preload preference."""
     demo_prefs = CameraEntityPreferences({PREF_PRELOAD_STREAM: True})
     with patch(
-        "homeassistant.components.camera.request_stream"
-    ) as mock_request_stream, patch(
+        "homeassistant.components.camera.create_stream"
+    ) as mock_create_stream, patch(
         "homeassistant.components.camera.prefs.CameraPreferences.get",
         return_value=demo_prefs,
     ), patch(
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
-        return_value=mock_coro("http://example.com"),
+        return_value="http://example.com",
     ):
-        await async_setup_component(hass, "camera", {DOMAIN: {"platform": "demo"}})
+        assert await async_setup_component(
+            hass, "camera", {DOMAIN: {"platform": "demo"}}
+        )
+        await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
-        assert mock_request_stream.called
+        assert mock_create_stream.called
 
 
 async def test_record_service_invalid_path(hass, mock_camera):
     """Test record service with invalid path."""
-    data = {
-        ATTR_ENTITY_ID: "camera.demo_camera",
-        camera.CONF_FILENAME: "/my/invalid/path",
-    }
     with patch.object(
         hass.config, "is_allowed_path", return_value=False
     ), pytest.raises(HomeAssistantError):
         # Call service
         await hass.services.async_call(
-            camera.DOMAIN, camera.SERVICE_RECORD, data, blocking=True
+            camera.DOMAIN,
+            camera.SERVICE_RECORD,
+            {
+                ATTR_ENTITY_ID: "camera.demo_camera",
+                camera.CONF_FILENAME: "/my/invalid/path",
+            },
+            blocking=True,
         )
 
 
 async def test_record_service(hass, mock_camera, mock_stream):
     """Test record service."""
-    data = {ATTR_ENTITY_ID: "camera.demo_camera", camera.CONF_FILENAME: "/my/path"}
-
     with patch(
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
-        return_value=mock_coro("http://example.com"),
+        return_value="http://example.com",
     ), patch(
-        "homeassistant.components.stream.async_handle_record_service",
-        return_value=mock_coro(),
-    ) as mock_record_service, patch.object(
-        hass.config, "is_allowed_path", return_value=True
-    ):
+        "homeassistant.components.stream.Stream.async_record",
+        autospec=True,
+    ) as mock_record:
         # Call service
         await hass.services.async_call(
-            camera.DOMAIN, camera.SERVICE_RECORD, data, blocking=True
+            camera.DOMAIN,
+            camera.SERVICE_RECORD,
+            {ATTR_ENTITY_ID: "camera.demo_camera", camera.CONF_FILENAME: "/my/path"},
+            blocking=True,
         )
         # So long as we call stream.record, the rest should be covered
         # by those tests.
-        assert mock_record_service.called
+        assert mock_record.called

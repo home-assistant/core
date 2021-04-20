@@ -1,11 +1,13 @@
 """Support for Alexa skill auth."""
 import asyncio
+from datetime import timedelta
 import json
 import logging
-from datetime import timedelta
+
 import aiohttp
 import async_timeout
 
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, HTTP_OK
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.util import dt
@@ -46,11 +48,11 @@ class Auth:
         lwa_params = {
             "grant_type": "authorization_code",
             "code": accept_grant_code,
-            "client_id": self.client_id,
-            "client_secret": self.client_secret,
+            CONF_CLIENT_ID: self.client_id,
+            CONF_CLIENT_SECRET: self.client_secret,
         }
         _LOGGER.debug(
-            "Calling LWA to get the access token (first time), " "with: %s",
+            "Calling LWA to get the access token (first time), with: %s",
             json.dumps(lwa_params),
         )
 
@@ -68,21 +70,21 @@ class Auth:
                 await self.async_load_preferences()
 
             if self.is_token_valid():
-                _LOGGER.debug("Token still valid, using it.")
+                _LOGGER.debug("Token still valid, using it")
                 return self._prefs[STORAGE_ACCESS_TOKEN]
 
             if self._prefs[STORAGE_REFRESH_TOKEN] is None:
-                _LOGGER.debug("Token invalid and no refresh token available.")
+                _LOGGER.debug("Token invalid and no refresh token available")
                 return None
 
             lwa_params = {
                 "grant_type": "refresh_token",
                 "refresh_token": self._prefs[STORAGE_REFRESH_TOKEN],
-                "client_id": self.client_id,
-                "client_secret": self.client_secret,
+                CONF_CLIENT_ID: self.client_id,
+                CONF_CLIENT_SECRET: self.client_secret,
             }
 
-            _LOGGER.debug("Calling LWA to refresh the access token.")
+            _LOGGER.debug("Calling LWA to refresh the access token")
             return await self._async_request_new_token(lwa_params)
 
     @callback
@@ -111,14 +113,14 @@ class Auth:
                 )
 
         except (asyncio.TimeoutError, aiohttp.ClientError):
-            _LOGGER.error("Timeout calling LWA to get auth token.")
+            _LOGGER.error("Timeout calling LWA to get auth token")
             return None
 
         _LOGGER.debug("LWA response header: %s", response.headers)
         _LOGGER.debug("LWA response status: %s", response.status)
 
-        if response.status != 200:
-            _LOGGER.error("Error calling LWA to get auth token.")
+        if response.status != HTTP_OK:
+            _LOGGER.error("Error calling LWA to get auth token")
             return None
 
         response_json = await response.json()

@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto jest ju\u017c skonfigurowane",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
+        },
+        "error": {
+            "already_configured": "Konto jest ju\u017c skonfigurowane",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_auth": "Niepoprawne uwierzytelnienie"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Has\u0142o",
+                    "username": "Adres e-mail"
+                },
+                "description": "Wprowad\u017a dane",
+                "title": "Tesla \u2014 konfiguracja"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "enable_wake_on_start": "Wymu\u015b wybudzenie samochod\u00f3w podczas uruchamiania",
+                    "scan_interval": "Cz\u0119stotliwo\u015b\u0107 aktualizacji"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,21 @@
+{
+    "state": {
+        "_": {
+            "clear-night": "Skaidrs, nakts",
+            "cloudy": "M\u0101ko\u0146ains",
+            "exceptional": "Iz\u0146\u0113muma k\u0101rt\u0101",
+            "fog": "Migla",
+            "hail": "Krusa",
+            "lightning": "Zibens",
+            "lightning-rainy": "Zibens, lietus",
+            "partlycloudy": "Da\u013c\u0113ji apm\u0101cies",
+            "pouring": "Lietusg\u0101ze",
+            "rainy": "Lietains",
+            "snowy": "Sniegs",
+            "snowy-rainy": "Sniegs, lietus",
+            "sunny": "Saulains",
+            "windy": "V\u0113jains",
+            "windy-variant": "V\u0113jains"
+        }
+    }
+}

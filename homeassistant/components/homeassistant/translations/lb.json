@@ -1,0 +1,21 @@
+{
+    "system_health": {
+        "info": {
+            "arch": "CPU Architektur",
+            "chassis": "Chassis",
+            "dev": "Entw\u00e9cklung",
+            "docker": "Docker",
+            "docker_version": "Docker",
+            "hassio": "Supervisor API",
+            "host_os": "Home Assistant OS",
+            "installation_type": "Typ vun Installatioun",
+            "os_name": "Betribssystem Famille",
+            "os_version": "Betribssystem Versioun",
+            "python_version": "Python Versioun",
+            "supervisor": "Supervisor",
+            "timezone": "Z\u00e4itzon",
+            "version": "Versioun",
+            "virtualenv": "Virtuellen Environnement"
+        }
+    }
+}

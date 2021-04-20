@@ -1,22 +1,19 @@
 """Support for Blinkt! lights on Raspberry Pi."""
 import importlib
-import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    SUPPORT_BRIGHTNESS,
     ATTR_HS_COLOR,
-    SUPPORT_COLOR,
-    Light,
     PLATFORM_SCHEMA,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    LightEntity,
 )
 from homeassistant.const import CONF_NAME
+import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
-
-_LOGGER = logging.getLogger(__name__)
 
 SUPPORT_BLINKT = SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 
@@ -29,20 +26,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Blinkt Light platform."""
-    # pylint: disable=no-member
     blinkt = importlib.import_module("blinkt")
 
     # ensure that the lights are off when exiting
     blinkt.set_clear_on_exit()
 
-    name = config.get(CONF_NAME)
+    name = config[CONF_NAME]
 
     add_entities(
         [BlinktLight(blinkt, name, index) for index in range(blinkt.NUM_PIXELS)]
     )
 
 
-class BlinktLight(Light):
+class BlinktLight(LightEntity):
     """Representation of a Blinkt! Light."""
 
     def __init__(self, blinkt, name, index):

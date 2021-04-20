@@ -1,11 +1,9 @@
 """Provide CORS support for the HTTP component."""
-import aiohttp_cors
+from aiohttp.hdrs import ACCEPT, AUTHORIZATION, CONTENT_TYPE, ORIGIN
 from aiohttp.web_urldispatcher import Resource, ResourceRoute, StaticResource
-from aiohttp.hdrs import ACCEPT, CONTENT_TYPE, ORIGIN, AUTHORIZATION
 
 from homeassistant.const import HTTP_HEADER_X_REQUESTED_WITH
 from homeassistant.core import callback
-
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -22,6 +20,11 @@ VALID_CORS_TYPES = (Resource, ResourceRoute, StaticResource)
 @callback
 def setup_cors(app, origins):
     """Set up CORS."""
+    # This import should remain here. That way the HTTP integration can always
+    # be imported by other integrations without it's requirements being installed.
+    # pylint: disable=import-outside-toplevel
+    import aiohttp_cors
+
     cors = aiohttp_cors.setup(
         app,
         defaults={

@@ -1,8 +1,7 @@
 {
   "domain": "water_heater",
-  "name": "Water heater",
+  "name": "Water Heater",
   "documentation": "https://www.home-assistant.io/integrations/water_heater",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
+  "codeowners": [],
+  "quality_scale": "internal"
 }

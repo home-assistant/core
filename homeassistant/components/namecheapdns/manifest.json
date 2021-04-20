@@ -1,10 +1,8 @@
 {
   "domain": "namecheapdns",
-  "name": "Namecheapdns",
+  "name": "Namecheap FreeDNS",
   "documentation": "https://www.home-assistant.io/integrations/namecheapdns",
-  "requirements": [
-    "defusedxml==0.6.0"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "requirements": ["defusedxml==0.6.0"],
+  "codeowners": [],
+  "iot_class": "cloud_push"
 }

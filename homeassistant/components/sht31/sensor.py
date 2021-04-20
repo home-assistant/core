@@ -4,16 +4,20 @@ from datetime import timedelta
 import logging
 import math
 
+from Adafruit_SHT31 import SHT31
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import TEMP_CELSIUS, CONF_NAME, CONF_MONITORED_CONDITIONS
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import (
+    CONF_MONITORED_CONDITIONS,
+    CONF_NAME,
+    PERCENTAGE,
+    PRECISION_TENTHS,
+    TEMP_CELSIUS,
+)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.temperature import display_temp
-from homeassistant.const import PRECISION_TENTHS
 from homeassistant.util import Throttle
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +47,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the sensor platform."""
-    from Adafruit_SHT31 import SHT31
 
     i2c_address = config.get(CONF_I2C_ADDRESS)
     sensor = SHT31(address=i2c_address)
@@ -63,7 +66,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     devs = []
     for sensor_type, sensor_class in sensor_classes.items():
-        name = "{} {}".format(config.get(CONF_NAME), sensor_type.capitalize())
+        name = f"{config.get(CONF_NAME)} {sensor_type.capitalize()}"
         devs.append(sensor_class(sensor_client, name))
 
     add_entities(devs)
@@ -89,7 +92,7 @@ class SHTClient:
         self.humidity = humidity
 
 
-class SHTSensor(Entity):
+class SHTSensor(SensorEntity):
     """An abstract SHTSensor, can be either temperature or humidity."""
 
     def __init__(self, sensor, name):
@@ -137,7 +140,7 @@ class SHTSensorHumidity(SHTSensor):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return "%"
+        return PERCENTAGE
 
     def update(self):
         """Fetch humidity from the sensor."""

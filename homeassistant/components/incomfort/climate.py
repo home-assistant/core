@@ -1,16 +1,16 @@
 """Support for an Intergas boiler via an InComfort/InTouch Lan2RF gateway."""
-from typing import Any, Dict, List, Optional
+from __future__ import annotations
 
-from homeassistant.components.climate import ClimateDevice
+from typing import Any
+
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN, ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import DOMAIN
+from . import DOMAIN, IncomfortChild
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -19,47 +19,29 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         return
 
     client = hass.data[DOMAIN]["client"]
-    heater = hass.data[DOMAIN]["heater"]
+    heaters = hass.data[DOMAIN]["heaters"]
 
-    async_add_entities([InComfortClimate(client, heater, r) for r in heater.rooms])
+    async_add_entities(
+        [InComfortClimate(client, h, r) for h in heaters for r in h.rooms]
+    )
 
 
-class InComfortClimate(ClimateDevice):
+class InComfortClimate(IncomfortChild, ClimateEntity):
     """Representation of an InComfort/InTouch climate device."""
 
     def __init__(self, client, heater, room) -> None:
         """Initialize the climate device."""
+        super().__init__()
+
         self._unique_id = f"{heater.serial_no}_{room.room_no}"
+        self.entity_id = f"{CLIMATE_DOMAIN}.{DOMAIN}_{room.room_no}"
+        self._name = f"Thermostat {room.room_no}"
 
         self._client = client
         self._room = room
-        self._name = f"Room {room.room_no}"
-
-    async def async_added_to_hass(self) -> None:
-        """Set up a listener when this entity is added to HA."""
-        async_dispatcher_connect(self.hass, DOMAIN, self._refresh)
-
-    @callback
-    def _refresh(self) -> None:
-        self.async_schedule_update_ha_state(force_refresh=True)
 
     @property
-    def should_poll(self) -> bool:
-        """Return False as this device should never be polled."""
-        return False
-
-    @property
-    def unique_id(self) -> Optional[str]:
-        """Return a unique ID."""
-        return self._unique_id
-
-    @property
-    def name(self) -> str:
-        """Return the name of the climate device."""
-        return self._name
-
-    @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         return {"status": self._room.status}
 
@@ -74,17 +56,17 @@ class InComfortClimate(ClimateDevice):
         return HVAC_MODE_HEAT
 
     @property
-    def hvac_modes(self) -> List[str]:
+    def hvac_modes(self) -> list[str]:
         """Return the list of available hvac operation modes."""
         return [HVAC_MODE_HEAT]
 
     @property
-    def current_temperature(self) -> Optional[float]:
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._room.room_temp
 
     @property
-    def target_temperature(self) -> Optional[float]:
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._room.setpoint
 
@@ -110,4 +92,3 @@ class InComfortClimate(ClimateDevice):
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
-        pass

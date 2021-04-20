@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Slu\u017eba je ji\u017e nastavena"
+        },
+        "error": {
+            "invalid_key": "Neplatn\u00fd kl\u00ed\u010d API",
+            "no_devices": "V \u00fa\u010dtu nebyla nalezena \u017e\u00e1dn\u00e1 za\u0159\u00edzen\u00ed"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Kl\u00ed\u010d API",
+                    "app_key": "Kl\u00ed\u010d aplikace"
+                },
+                "title": "Vypl\u0148te sv\u00e9 \u00fadaje"
+            }
+        }
+    }
+}

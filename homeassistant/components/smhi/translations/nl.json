@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "name_exists": "Naam bestaat al",
+            "wrong_location": "Locatie alleen Zweden"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Breedtegraad",
+                    "longitude": "Lengtegraad",
+                    "name": "Naam"
+                },
+                "title": "Locatie in Zweden"
+            }
+        }
+    }
+}

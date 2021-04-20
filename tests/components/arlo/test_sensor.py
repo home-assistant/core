@@ -1,14 +1,16 @@
 """The tests for the Netgear Arlo sensors."""
 from collections import namedtuple
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
+
 import pytest
+
+from homeassistant.components.arlo import DATA_ARLO, sensor as arlo
 from homeassistant.const import (
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_HUMIDITY,
     ATTR_ATTRIBUTION,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
 )
-from homeassistant.components.arlo import sensor as arlo
-from homeassistant.components.arlo import DATA_ARLO
 
 
 def _get_named_tuple(input_dict):
@@ -92,7 +94,7 @@ def sensor_with_hass_data(default_sensor, hass):
 def mock_dispatch():
     """Mock the dispatcher connect method."""
     target = "homeassistant.components.arlo.sensor.async_dispatcher_connect"
-    with patch(target, MagicMock()) as _mock:
+    with patch(target) as _mock:
         yield _mock
 
 
@@ -167,7 +169,7 @@ def test_sensor_icon(temperature_sensor):
 def test_unit_of_measure(default_sensor, battery_sensor):
     """Test the unit_of_measurement property."""
     assert default_sensor.unit_of_measurement is None
-    assert battery_sensor.unit_of_measurement == "%"
+    assert battery_sensor.unit_of_measurement == PERCENTAGE
 
 
 def test_device_class(default_sensor, temperature_sensor, humidity_sensor):
@@ -192,7 +194,7 @@ def test_update_captured_today(captured_sensor):
 def _test_attributes(sensor_type):
     data = _get_named_tuple({"model_id": "TEST123"})
     sensor = _get_sensor("test", sensor_type, data)
-    attrs = sensor.device_state_attributes
+    attrs = sensor.extra_state_attributes
     assert attrs.get(ATTR_ATTRIBUTION) == "Data provided by arlo.netgear.com"
     assert attrs.get("brand") == "Netgear Arlo"
     assert attrs.get("model") == "TEST123"
@@ -209,7 +211,7 @@ def test_state_attributes():
 
 def test_attributes_total_cameras(cameras_sensor):
     """Test attributes for total cameras sensor type."""
-    attrs = cameras_sensor.device_state_attributes
+    attrs = cameras_sensor.extra_state_attributes
     assert attrs.get(ATTR_ATTRIBUTION) == "Data provided by arlo.netgear.com"
     assert attrs.get("brand") == "Netgear Arlo"
     assert attrs.get("model") is None

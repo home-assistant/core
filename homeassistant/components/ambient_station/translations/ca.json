@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El servei ja est\u00e0 configurat"
+        },
+        "error": {
+            "invalid_key": "Clau API inv\u00e0lida",
+            "no_devices": "No s'ha trobat cap dispositiu al compte"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Clau API",
+                    "app_key": "Clau d'aplicaci\u00f3"
+                },
+                "title": "Introdueix la teva informaci\u00f3"
+            }
+        }
+    }
+}

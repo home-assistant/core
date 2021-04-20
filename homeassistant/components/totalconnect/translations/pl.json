@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto jest ju\u017c skonfigurowane",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
+        },
+        "error": {
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "usercode": "Nieprawid\u0142owy kod u\u017cytkownika dla u\u017cytkownika w tej lokalizacji"
+        },
+        "step": {
+            "locations": {
+                "data": {
+                    "location": "Lokalizacja"
+                },
+                "description": "Wprowad\u017a kod u\u017cytkownika dla u\u017cytkownika w tej lokalizacji",
+                "title": "Kody lokalizacji u\u017cytkownika"
+            },
+            "reauth_confirm": {
+                "description": "Integracja Total Connect wymaga ponownego uwierzytelnienia Twojego konta",
+                "title": "Ponownie uwierzytelnij integracj\u0119"
+            },
+            "user": {
+                "data": {
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "title": "Total Connect"
+            }
+        }
+    }
+}

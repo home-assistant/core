@@ -1,0 +1,53 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_device": "Ger\u00e4t ist bereits konfiguriert",
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "updated_entry": "Dieser Eintrag wurde bereits eingerichtet, aber der Name, die Apps und / oder die in der Konfiguration definierten Optionen stimmen nicht mit der zuvor importierten Konfiguration \u00fcberein, sodass der Konfigurationseintrag entsprechend aktualisiert wurde."
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "complete_pairing_failed": "Das Pairing konnte nicht abgeschlossen werden. Vergewissere dich, dass der eingegebene PIN korrekt ist und dass der Fernseher noch mit Strom versorgt wird und mit dem Netzwerk verbunden ist, bevor du es erneut versuchst."
+        },
+        "step": {
+            "pair_tv": {
+                "data": {
+                    "pin": "PIN-Code"
+                },
+                "description": "Ihr Fernseher sollte einen Code anzeigen. Geben Sie diesen Code in das Formular ein und fahren Sie mit dem n\u00e4chsten Schritt fort, um die Kopplung abzuschlie\u00dfen.",
+                "title": "Schlie\u00dfen Sie den Pairing-Prozess ab"
+            },
+            "pairing_complete": {
+                "description": "Dein Richten Sie das VIZIO SmartCast-Ger\u00e4t ein ist jetzt mit Home Assistant verbunden.",
+                "title": "Kopplung abgeschlossen"
+            },
+            "pairing_complete_import": {
+                "description": "Dein Richten Sie das VIZIO SmartCast-Ger\u00e4t ein ist jetzt mit Home Assistant verbunden.\n\nDein Zugangstoken ist '**{access_token}**'.",
+                "title": "Kopplung abgeschlossen"
+            },
+            "user": {
+                "data": {
+                    "access_token": "Zugangstoken",
+                    "device_class": "Ger\u00e4tetyp",
+                    "host": "Host",
+                    "name": "Name"
+                },
+                "description": "Ein Zugangstoken wird nur f\u00fcr Fernsehger\u00e4te ben\u00f6tigt. Wenn du ein Fernsehger\u00e4t konfigurierst und noch kein Zugangstoken hast, lass es leer, um einen Pairing-Vorgang durchzuf\u00fchren.",
+                "title": "Richten Sie das VIZIO SmartCast-Ger\u00e4t ein"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "apps_to_include_or_exclude": "Apps zum Einschlie\u00dfen oder Ausschlie\u00dfen",
+                    "include_or_exclude": "Apps einschlie\u00dfen oder ausschlie\u00dfen?",
+                    "volume_step": "Lautst\u00e4rken-Schrittgr\u00f6\u00dfe"
+                },
+                "description": "Wenn Sie \u00fcber ein Smart-TV-Ger\u00e4t verf\u00fcgen, k\u00f6nnen Sie Ihre Quellliste optional filtern, indem Sie ausw\u00e4hlen, welche Apps in Ihre Quellliste aufgenommen oder ausgeschlossen werden sollen.",
+                "title": "Aktualisiere die Richten Sie das VIZIO SmartCast-Ger\u00e4t ein-Optionen"
+            }
+        }
+    }
+}

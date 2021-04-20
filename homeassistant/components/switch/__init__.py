@@ -1,32 +1,28 @@
 """Component to interface with switches that can be controlled remotely."""
 from datetime import timedelta
 import logging
+from typing import final
 
 import voluptuous as vol
 
-from homeassistant.loader import bind_hass
-from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.helpers.config_validation import (  # noqa
+from homeassistant.const import (
+    SERVICE_TOGGLE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_ON,
+)
+from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-from homeassistant.const import (
-    STATE_ON,
-    SERVICE_TURN_ON,
-    SERVICE_TURN_OFF,
-    SERVICE_TOGGLE,
-)
-from homeassistant.components import group
-
+from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.loader import bind_hass
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
 DOMAIN = "switch"
 SCAN_INTERVAL = timedelta(seconds=30)
-
-GROUP_NAME_ALL_SWITCHES = "all switches"
-ENTITY_ID_ALL_SWITCHES = group.ENTITY_ID_FORMAT.format("all_switches")
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
@@ -51,19 +47,18 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @bind_hass
-def is_on(hass, entity_id=None):
+def is_on(hass, entity_id):
     """Return if the switch is on based on the statemachine.
 
     Async friendly.
     """
-    entity_id = entity_id or ENTITY_ID_ALL_SWITCHES
     return hass.states.is_state(entity_id, STATE_ON)
 
 
 async def async_setup(hass, config):
     """Track states and offer events for switches."""
     component = hass.data[DOMAIN] = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_SWITCHES
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
 
@@ -84,8 +79,8 @@ async def async_unload_entry(hass, entry):
     return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
-class SwitchDevice(ToggleEntity):
-    """Representation of a switch."""
+class SwitchEntity(ToggleEntity):
+    """Base class for switch entities."""
 
     @property
     def current_power_w(self):
@@ -102,6 +97,7 @@ class SwitchDevice(ToggleEntity):
         """Return true if device is in standby."""
         return None
 
+    @final
     @property
     def state_attributes(self):
         """Return the optional state attributes."""
@@ -109,7 +105,7 @@ class SwitchDevice(ToggleEntity):
 
         for prop, attr in PROP_TO_ATTR.items():
             value = getattr(self, prop)
-            if value:
+            if value is not None:
                 data[attr] = value
 
         return data
@@ -118,3 +114,15 @@ class SwitchDevice(ToggleEntity):
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
         return None
+
+
+class SwitchDevice(SwitchEntity):
+    """Representation of a switch (for backwards compatibility)."""
+
+    def __init_subclass__(cls, **kwargs):
+        """Print deprecation warning."""
+        super().__init_subclass__(**kwargs)
+        _LOGGER.warning(
+            "SwitchDevice is deprecated, modify %s to extend SwitchEntity",
+            cls.__name__,
+        )

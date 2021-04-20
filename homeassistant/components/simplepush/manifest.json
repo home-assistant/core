@@ -2,9 +2,7 @@
   "domain": "simplepush",
   "name": "Simplepush",
   "documentation": "https://www.home-assistant.io/integrations/simplepush",
-  "requirements": [
-    "simplepush==1.1.4"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "requirements": ["simplepush==1.1.4"],
+  "codeowners": [],
+  "iot_class": "cloud_polling"
 }

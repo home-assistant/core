@@ -1,21 +1,20 @@
 """Support for retrieving status info from Google Wifi/OnHub routers."""
-import logging
 from datetime import timedelta
+import logging
 
-import voluptuous as vol
 import requests
+import voluptuous as vol
 
-from homeassistant.util import dt
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
-    CONF_NAME,
     CONF_HOST,
     CONF_MONITORED_CONDITIONS,
+    CONF_NAME,
     STATE_UNKNOWN,
+    TIME_DAYS,
 )
-from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
+import homeassistant.helpers.config_validation as cv
+from homeassistant.util import Throttle, dt
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +39,7 @@ MONITORED_CONDITIONS = {
         "mdi:checkbox-marked-circle-outline",
     ],
     ATTR_NEW_VERSION: [["software", "updateNewVersion"], None, "mdi:update"],
-    ATTR_UPTIME: [["system", "uptime"], "days", "mdi:timelapse"],
+    ATTR_UPTIME: [["system", "uptime"], TIME_DAYS, "mdi:timelapse"],
     ATTR_LAST_RESTART: [["system", "uptime"], None, "mdi:restart"],
     ATTR_LOCAL_IP: [["wan", "localIpAddress"], None, "mdi:access-point-network"],
     ATTR_STATUS: [["wan", "online"], None, "mdi:google"],
@@ -71,7 +70,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev, True)
 
 
-class GoogleWifiSensor(Entity):
+class GoogleWifiSensor(SensorEntity):
     """Representation of a Google Wifi sensor."""
 
     def __init__(self, api, name, variable):
@@ -176,9 +175,10 @@ class GoogleWifiAPI:
                             sensor_value = "Online"
                         else:
                             sensor_value = "Offline"
-                    elif attr_key == ATTR_LOCAL_IP:
-                        if not self.raw_data["wan"]["online"]:
-                            sensor_value = STATE_UNKNOWN
+                    elif (
+                        attr_key == ATTR_LOCAL_IP and not self.raw_data["wan"]["online"]
+                    ):
+                        sensor_value = STATE_UNKNOWN
 
                     self.data[attr_key] = sensor_value
             except KeyError:

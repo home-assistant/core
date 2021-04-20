@@ -1,0 +1,19 @@
+{
+    "system_health": {
+        "info": {
+            "board": "\u041f\u043b\u0430\u0442\u0430",
+            "disk_total": "\u041f\u0430\u043c\u044f\u0442\u0438 \u0434\u043e\u0441\u0442\u0443\u043f\u043d\u043e",
+            "disk_used": "\u041f\u0430\u043c\u044f\u0442\u0438 \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u043d\u043e",
+            "docker_version": "\u0412\u0435\u0440\u0441\u0438\u044f Docker",
+            "healthy": "\u0418\u0441\u043f\u0440\u0430\u0432\u043d\u043e",
+            "host_os": "\u041e\u043f\u0435\u0440\u0430\u0446\u0438\u043e\u043d\u043d\u0430\u044f \u0441\u0438\u0441\u0442\u0435\u043c\u0430 \u0445\u043e\u0441\u0442\u0430",
+            "installed_addons": "\u0423\u0441\u0442\u0430\u043d\u043e\u0432\u043b\u0435\u043d\u043d\u044b\u0435 \u0434\u043e\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u044f",
+            "supervisor_api": "Supervisor API",
+            "supervisor_version": "\u0412\u0435\u0440\u0441\u0438\u044f Supervisor",
+            "supported": "\u041f\u043e\u0434\u0434\u0435\u0440\u0436\u043a\u0430",
+            "update_channel": "\u041a\u0430\u043d\u0430\u043b \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u0439",
+            "version_api": "\u0412\u0435\u0440\u0441\u0438\u044f API"
+        }
+    },
+    "title": "Home Assistant Supervisor"
+}

@@ -1,12 +1,9 @@
 {
   "domain": "coolmaster",
-  "name": "Coolmaster",
+  "name": "CoolMasterNet",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/coolmaster",
-  "requirements": [
-    "pycoolmasternet==0.0.4"
-  ],
-  "dependencies": [],
-  "codeowners": [
-    "@OnFreund"
-  ]
+  "requirements": ["pycoolmasternet-async==0.1.2"],
+  "codeowners": ["@OnFreund"],
+  "iot_class": "local_polling"
 }

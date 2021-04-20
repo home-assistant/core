@@ -1,0 +1,18 @@
+{
+    "system_health": {
+        "info": {
+            "disk_total": "\u00d6sszes hely",
+            "disk_used": "Felhaszn\u00e1lt hely",
+            "docker_version": "Docker verzi\u00f3",
+            "healthy": "Eg\u00e9szs\u00e9ges",
+            "host_os": "Gazdag\u00e9p oper\u00e1ci\u00f3s rendszer",
+            "installed_addons": "Telep\u00edtett kieg\u00e9sz\u00edt\u0151k",
+            "supervisor_api": "Supervisor API",
+            "supervisor_version": "Supervisor verzi\u00f3",
+            "supported": "T\u00e1mogatott",
+            "update_channel": "Friss\u00edt\u00e9si csatorna",
+            "version_api": "API verzi\u00f3"
+        }
+    },
+    "title": "Home Assistant Supervisor"
+}

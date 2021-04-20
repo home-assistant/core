@@ -1,10 +1,7 @@
 {
   "domain": "no_ip",
-  "name": "No ip",
+  "name": "No-IP.com",
   "documentation": "https://www.home-assistant.io/integrations/no_ip",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": [
-    "@fabaff"
-  ]
+  "codeowners": ["@fabaff"],
+  "iot_class": "cloud_polling"
 }

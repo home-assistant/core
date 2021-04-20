@@ -1,0 +1,92 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
+        "flow_title": "ZHA: {name}",
+        "step": {
+            "pick_radio": {
+                "data": {
+                    "radio_type": "Tipus de r\u00e0dio"
+                },
+                "description": "Tria el teu tipus de r\u00e0dio Zigbee",
+                "title": "Tipus de r\u00e0dio"
+            },
+            "port_config": {
+                "data": {
+                    "baudrate": "velocitat del port",
+                    "flow_control": "control de flux de dades",
+                    "path": "Ruta del port s\u00e8rie al dispositiu"
+                },
+                "description": "Introdueix la configuraci\u00f3 espec\u00edfica de port",
+                "title": "Configuraci\u00f3"
+            },
+            "user": {
+                "data": {
+                    "path": "Ruta del port s\u00e8rie al dispositiu"
+                },
+                "description": "Selecciona el port s\u00e8rie per a la r\u00e0dio Zigbee",
+                "title": "ZHA"
+            }
+        }
+    },
+    "device_automation": {
+        "action_type": {
+            "squawk": "Squawk",
+            "warn": "Av\u00eds"
+        },
+        "trigger_subtype": {
+            "both_buttons": "Ambd\u00f3s botons",
+            "button_1": "Primer bot\u00f3",
+            "button_2": "Segon bot\u00f3",
+            "button_3": "Tercer bot\u00f3",
+            "button_4": "Quart bot\u00f3",
+            "button_5": "Cinqu\u00e8 bot\u00f3",
+            "button_6": "Sis\u00e8 bot\u00f3",
+            "close": "Tanca",
+            "dim_down": "Atenua la brillantor",
+            "dim_up": "Augmenta la brillantor",
+            "face_1": "amb la cara 1 activada",
+            "face_2": "amb la cara 2 activada",
+            "face_3": "amb la cara 3 activada",
+            "face_4": "amb la cara 4 activada",
+            "face_5": "amb la cara 5 activada",
+            "face_6": "amb la cara 6 activada",
+            "face_any": "Amb qualsevol o alguna de les cares especificades activades.",
+            "left": "Esquerra",
+            "open": "Obert",
+            "right": "Dreta",
+            "turn_off": "Desactiva",
+            "turn_on": "Activa"
+        },
+        "trigger_type": {
+            "device_dropped": "Dispositiu caigut",
+            "device_flipped": "Dispositiu voltejat a \"{subtype}\"",
+            "device_knocked": "Dispositiu colpejat a \"{subtype}\"",
+            "device_offline": "Dispositiu desconnectat",
+            "device_rotated": "Dispositiu rotat a \"{subtype}\"",
+            "device_shaken": "Dispositiu sacsejat",
+            "device_slid": "Dispositiu lliscat a \"{subtype}\"",
+            "device_tilted": "Dispositiu inclinat",
+            "remote_button_alt_double_press": "Bot\u00f3 \"{subtype}\" clicat dues vegades (mode alternatiu)",
+            "remote_button_alt_long_press": "Bot\u00f3 \"{subtype}\" premut cont\u00ednuament (mode alternatiu)",
+            "remote_button_alt_long_release": "Bot\u00f3 \"{subtype}\" alliberat despr\u00e9s d'una estona premut (mode alternatiu",
+            "remote_button_alt_quadruple_press": "Bot\u00f3 \"{subtype}\" clicat quatre vegades (mode alternatiu)",
+            "remote_button_alt_quintuple_press": "Bot\u00f3 \"{subtype}\" clicat cinc vegades (mode alternatiu)",
+            "remote_button_alt_short_press": "Bot\u00f3 \"{subtype}\" premut (mode alternatiu)",
+            "remote_button_alt_short_release": "Bot\u00f3 \"{subtype}\" alliberat (mode alternatiu)",
+            "remote_button_alt_triple_press": "Bot\u00f3 \"{subtype}\" clicat tres vegades (mode alternatiu)",
+            "remote_button_double_press": "Bot\u00f3 \"{subtype}\" clicat dues vegades",
+            "remote_button_long_press": "Bot\u00f3 \"{subtype}\" premut cont\u00ednuament",
+            "remote_button_long_release": "Bot\u00f3 \"{subtype}\" alliberat despr\u00e9s d'una estona premut",
+            "remote_button_quadruple_press": "Bot\u00f3 \"{subtype}\" clicat quatre vegades",
+            "remote_button_quintuple_press": "Bot\u00f3 \"{subtype}\" clicat cinc vegades",
+            "remote_button_short_press": "Bot\u00f3 \"{subtype}\" premut",
+            "remote_button_short_release": "Bot\u00f3 \"{subtype}\" alliberat",
+            "remote_button_triple_press": "Bot\u00f3 \"{subtype}\" clicat tres vegades"
+        }
+    }
+}

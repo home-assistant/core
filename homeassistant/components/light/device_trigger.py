@@ -1,14 +1,15 @@
 """Provides device trigger for lights."""
-from typing import List
+from __future__ import annotations
+
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, CALLBACK_TYPE
 from homeassistant.components.automation import AutomationActionType
 from homeassistant.components.device_automation import toggle_entity
 from homeassistant.const import CONF_DOMAIN
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.typing import ConfigType
-from . import DOMAIN
 
+from . import DOMAIN
 
 TRIGGER_SCHEMA = toggle_entity.TRIGGER_SCHEMA.extend(
     {vol.Required(CONF_DOMAIN): DOMAIN}
@@ -27,7 +28,7 @@ async def async_attach_trigger(
     )
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device triggers."""
     return await toggle_entity.async_get_triggers(hass, device_id, DOMAIN)
 

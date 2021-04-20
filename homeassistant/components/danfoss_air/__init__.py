@@ -2,6 +2,8 @@
 from datetime import timedelta
 import logging
 
+from pydanfossair.commands import ReadCommand
+from pydanfossair.danfossclient import DanfossClient
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST
@@ -11,7 +13,7 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-DANFOSS_AIR_PLATFORMS = ["sensor", "binary_sensor", "switch"]
+PLATFORMS = ["sensor", "binary_sensor", "switch"]
 DOMAIN = "danfoss_air"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
@@ -27,7 +29,7 @@ def setup(hass, config):
 
     hass.data[DOMAIN] = DanfossAir(conf[CONF_HOST])
 
-    for platform in DANFOSS_AIR_PLATFORMS:
+    for platform in PLATFORMS:
         discovery.load_platform(hass, platform, DOMAIN, {}, config)
 
     return True
@@ -39,8 +41,6 @@ class DanfossAir:
     def __init__(self, host):
         """Initialize the Danfoss Air CCM connection."""
         self._data = {}
-
-        from pydanfossair.danfossclient import DanfossClient
 
         self._client = DanfossClient(host)
 
@@ -56,7 +56,6 @@ class DanfossAir:
     def update(self):
         """Use the data from Danfoss Air API."""
         _LOGGER.debug("Fetching data from Danfoss Air CCM module")
-        from pydanfossair.commands import ReadCommand
 
         self._data[ReadCommand.exhaustTemperature] = self._client.command(
             ReadCommand.exhaustTemperature

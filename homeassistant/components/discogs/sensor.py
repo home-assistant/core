@@ -6,7 +6,7 @@ import random
 import discogs_client
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_MONITORED_CONDITIONS,
@@ -15,7 +15,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,7 +65,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Discogs sensor."""
-
     token = config[CONF_TOKEN]
     name = config[CONF_NAME]
 
@@ -84,13 +82,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     sensors = []
-    for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
+    for sensor_type in config[CONF_MONITORED_CONDITIONS]:
         sensors.append(DiscogsSensor(discogs_data, name, sensor_type))
 
     add_entities(sensors, True)
 
 
-class DiscogsSensor(Entity):
+class DiscogsSensor(SensorEntity):
     """Create a new Discogs sensor for a specific type."""
 
     def __init__(self, discogs_data, name, sensor_type):
@@ -104,7 +102,7 @@ class DiscogsSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self._name, SENSORS[self._type]["name"])
+        return f"{self._name} {SENSORS[self._type]['name']}"
 
     @property
     def state(self):
@@ -122,26 +120,23 @@ class DiscogsSensor(Entity):
         return SENSORS[self._type]["unit_of_measurement"]
 
     @property
-    def device_state_attributes(self):
-        """Return the state attributes of the sensor."""
+    def extra_state_attributes(self):
+        """Return the device state attributes of the sensor."""
         if self._state is None or self._attrs is None:
             return None
 
-        if self._type != SENSOR_RANDOM_RECORD_TYPE:
+        if self._type == SENSOR_RANDOM_RECORD_TYPE and self._state is not None:
             return {
+                "cat_no": self._attrs["labels"][0]["catno"],
+                "cover_image": self._attrs["cover_image"],
+                "format": f"{self._attrs['formats'][0]['name']} ({self._attrs['formats'][0]['descriptions'][0]})",
+                "label": self._attrs["labels"][0]["name"],
+                "released": self._attrs["year"],
                 ATTR_ATTRIBUTION: ATTRIBUTION,
                 ATTR_IDENTITY: self._discogs_data["user"],
             }
 
         return {
-            "cat_no": self._attrs["labels"][0]["catno"],
-            "cover_image": self._attrs["cover_image"],
-            "format": "{} ({})".format(
-                self._attrs["formats"][0]["name"],
-                self._attrs["formats"][0]["descriptions"][0],
-            ),
-            "label": self._attrs["labels"][0]["name"],
-            "released": self._attrs["year"],
             ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_IDENTITY: self._discogs_data["user"],
         }
@@ -150,13 +145,14 @@ class DiscogsSensor(Entity):
         """Get a random record suggestion from the user's collection."""
         # Index 0 in the folders is the 'All' folder
         collection = self._discogs_data["folders"][0]
-        random_index = random.randrange(collection.count)
-        random_record = collection.releases[random_index].release
+        if collection.count > 0:
+            random_index = random.randrange(collection.count)
+            random_record = collection.releases[random_index].release
 
-        self._attrs = random_record.data
-        return "{} - {}".format(
-            random_record.data["artists"][0]["name"], random_record.data["title"]
-        )
+            self._attrs = random_record.data
+            return f"{random_record.data['artists'][0]['name']} - {random_record.data['title']}"
+
+        return None
 
     def update(self):
         """Set state to the amount of records in user's collection."""

@@ -6,10 +6,9 @@ import aiohttp
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import ATTR_ATTRIBUTION, HTTP_OK, TIME_MINUTES
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,7 +71,7 @@ async def async_http_request(hass, uri):
         session = hass.helpers.aiohttp_client.async_get_clientsession(hass)
         with async_timeout.timeout(REQUEST_TIMEOUT):
             req = await session.get(uri)
-        if req.status != 200:
+        if req.status != HTTP_OK:
             return {"error": req.status}
         json_response = await req.json()
         return json_response
@@ -82,7 +81,7 @@ async def async_http_request(hass, uri):
         _LOGGER.error("Received non-JSON data from ViaggiaTreno API endpoint")
 
 
-class ViaggiaTrenoSensor(Entity):
+class ViaggiaTrenoSensor(SensorEntity):
     """Implementation of a ViaggiaTreno sensor."""
 
     def __init__(self, train_id, station_id, name):
@@ -119,7 +118,7 @@ class ViaggiaTrenoSensor(Entity):
         return self._unit
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return extra attributes."""
         self._attributes[ATTR_ATTRIBUTION] = ATTRIBUTION
         return self._attributes
@@ -177,5 +176,5 @@ class ViaggiaTrenoSensor(Entity):
                 self._unit = ""
             else:
                 self._state = res.get("ritardo")
-                self._unit = "min"
+                self._unit = TIME_MINUTES
                 self._icon = ICON

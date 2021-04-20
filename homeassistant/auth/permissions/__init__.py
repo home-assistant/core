@@ -1,28 +1,17 @@
 """Permissions for Home Assistant."""
+from __future__ import annotations
+
 import logging
-from typing import (  # noqa: F401
-    cast,
-    Any,
-    Callable,
-    Dict,
-    List,
-    Mapping,
-    Optional,
-    Set,
-    Tuple,
-    Union,
-    TYPE_CHECKING,
-)
+from typing import Any, Callable
 
 import voluptuous as vol
 
 from .const import CAT_ENTITIES
+from .entities import ENTITY_POLICY_SCHEMA, compile_entities
+from .merge import merge_policies  # noqa: F401
 from .models import PermissionLookup
 from .types import PolicyType
-from .entities import ENTITY_POLICY_SCHEMA, compile_entities
-from .merge import merge_policies  # noqa
 from .util import test_all
-
 
 POLICY_SCHEMA = vol.Schema({vol.Optional(CAT_ENTITIES): ENTITY_POLICY_SCHEMA})
 
@@ -32,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 class AbstractPermissions:
     """Default permissions class."""
 
-    _cached_entity_func: Optional[Callable[[str, str], bool]] = None
+    _cached_entity_func: Callable[[str, str], bool] | None = None
 
     def _entity_func(self) -> Callable[[str, str], bool]:
         """Return a function that can test entity access."""
@@ -70,14 +59,11 @@ class PolicyPermissions(AbstractPermissions):
 
     def __eq__(self, other: Any) -> bool:
         """Equals check."""
-        # pylint: disable=protected-access
         return isinstance(other, PolicyPermissions) and other._policy == self._policy
 
 
 class _OwnerPermissions(AbstractPermissions):
     """Owner permissions."""
-
-    # pylint: disable=no-self-use
 
     def access_all_entities(self, key: str) -> bool:
         """Check if we have a certain access to all entities."""
@@ -88,4 +74,4 @@ class _OwnerPermissions(AbstractPermissions):
         return lambda entity_id, key: True
 
 
-OwnerPermissions = _OwnerPermissions()  # pylint: disable=invalid-name
+OwnerPermissions = _OwnerPermissions()

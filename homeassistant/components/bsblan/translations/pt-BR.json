@@ -1,0 +1,10 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Configure o seu dispositivo BSB-Lan para integrar com o Home Assistant.",
+                "title": "Conecte-se ao dispositivo BSB-Lan"
+            }
+        }
+    }
+}

@@ -1,26 +1,26 @@
 """Component that will help set the OpenALPR cloud for ALPR processing."""
 import asyncio
-import logging
 from base64 import b64encode
+import logging
 
 import aiohttp
 import async_timeout
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.core import split_entity_id
-from homeassistant.const import CONF_API_KEY
 from homeassistant.components.image_processing import (
-    PLATFORM_SCHEMA,
     CONF_CONFIDENCE,
-    CONF_SOURCE,
     CONF_ENTITY_ID,
     CONF_NAME,
+    CONF_SOURCE,
+    PLATFORM_SCHEMA,
 )
 from homeassistant.components.openalpr_local.image_processing import (
     ImageProcessingAlprEntity,
 )
+from homeassistant.const import CONF_API_KEY, HTTP_OK
+from homeassistant.core import split_entity_id
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,7 +86,7 @@ class OpenAlprCloudEntity(ImageProcessingAlprEntity):
         if name:
             self._name = name
         else:
-            self._name = "OpenAlpr {0}".format(split_entity_id(camera_entity)[1])
+            self._name = f"OpenAlpr {split_entity_id(camera_entity)[1]}"
 
     @property
     def confidence(self):
@@ -121,8 +121,8 @@ class OpenAlprCloudEntity(ImageProcessingAlprEntity):
 
                 data = await request.json()
 
-                if request.status != 200:
-                    _LOGGER.error("Error %d -> %s.", request.status, data.get("error"))
+                if request.status != HTTP_OK:
+                    _LOGGER.error("Error %d -> %s", request.status, data.get("error"))
                     return
 
         except (asyncio.TimeoutError, aiohttp.ClientError):

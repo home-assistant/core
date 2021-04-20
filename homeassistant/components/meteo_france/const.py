@@ -1,112 +1,221 @@
 """Meteo-France component constants."""
 
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.components.weather import (
+    ATTR_CONDITION_CLEAR_NIGHT,
+    ATTR_CONDITION_CLOUDY,
+    ATTR_CONDITION_EXCEPTIONAL,
+    ATTR_CONDITION_FOG,
+    ATTR_CONDITION_HAIL,
+    ATTR_CONDITION_LIGHTNING,
+    ATTR_CONDITION_LIGHTNING_RAINY,
+    ATTR_CONDITION_PARTLYCLOUDY,
+    ATTR_CONDITION_POURING,
+    ATTR_CONDITION_RAINY,
+    ATTR_CONDITION_SNOWY,
+    ATTR_CONDITION_SNOWY_RAINY,
+    ATTR_CONDITION_SUNNY,
+    ATTR_CONDITION_WINDY,
+    ATTR_CONDITION_WINDY_VARIANT,
+)
+from homeassistant.const import (
+    DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_TIMESTAMP,
+    LENGTH_MILLIMETERS,
+    PERCENTAGE,
+    PRESSURE_HPA,
+    SPEED_KILOMETERS_PER_HOUR,
+    TEMP_CELSIUS,
+    UV_INDEX,
+)
 
 DOMAIN = "meteo_france"
-DATA_METEO_FRANCE = "data_meteo_france"
+PLATFORMS = ["sensor", "weather"]
+COORDINATOR_FORECAST = "coordinator_forecast"
+COORDINATOR_RAIN = "coordinator_rain"
+COORDINATOR_ALERT = "coordinator_alert"
+UNDO_UPDATE_LISTENER = "undo_update_listener"
 ATTRIBUTION = "Data provided by Météo-France"
+MODEL = "Météo-France mobile API"
+MANUFACTURER = "Météo-France"
 
 CONF_CITY = "city"
+FORECAST_MODE_HOURLY = "hourly"
+FORECAST_MODE_DAILY = "daily"
+FORECAST_MODE = [FORECAST_MODE_HOURLY, FORECAST_MODE_DAILY]
 
-DEFAULT_WEATHER_CARD = True
+ATTR_NEXT_RAIN_1_HOUR_FORECAST = "1_hour_forecast"
+ATTR_NEXT_RAIN_DT_REF = "forecast_time_ref"
 
-SENSOR_TYPE_NAME = "name"
-SENSOR_TYPE_UNIT = "unit"
-SENSOR_TYPE_ICON = "icon"
-SENSOR_TYPE_CLASS = "device_class"
+ENTITY_NAME = "name"
+ENTITY_UNIT = "unit"
+ENTITY_ICON = "icon"
+ENTITY_DEVICE_CLASS = "device_class"
+ENTITY_ENABLE = "enable"
+ENTITY_API_DATA_PATH = "data_path"
+
 SENSOR_TYPES = {
+    "pressure": {
+        ENTITY_NAME: "Pressure",
+        ENTITY_UNIT: PRESSURE_HPA,
+        ENTITY_ICON: None,
+        ENTITY_DEVICE_CLASS: DEVICE_CLASS_PRESSURE,
+        ENTITY_ENABLE: False,
+        ENTITY_API_DATA_PATH: "current_forecast:sea_level",
+    },
     "rain_chance": {
-        SENSOR_TYPE_NAME: "Rain chance",
-        SENSOR_TYPE_UNIT: "%",
-        SENSOR_TYPE_ICON: "mdi:weather-rainy",
-        SENSOR_TYPE_CLASS: None,
-    },
-    "freeze_chance": {
-        SENSOR_TYPE_NAME: "Freeze chance",
-        SENSOR_TYPE_UNIT: "%",
-        SENSOR_TYPE_ICON: "mdi:snowflake",
-        SENSOR_TYPE_CLASS: None,
-    },
-    "thunder_chance": {
-        SENSOR_TYPE_NAME: "Thunder chance",
-        SENSOR_TYPE_UNIT: "%",
-        SENSOR_TYPE_ICON: "mdi:weather-lightning",
-        SENSOR_TYPE_CLASS: None,
+        ENTITY_NAME: "Rain chance",
+        ENTITY_UNIT: PERCENTAGE,
+        ENTITY_ICON: "mdi:weather-rainy",
+        ENTITY_DEVICE_CLASS: None,
+        ENTITY_ENABLE: True,
+        ENTITY_API_DATA_PATH: "probability_forecast:rain:3h",
     },
     "snow_chance": {
-        SENSOR_TYPE_NAME: "Snow chance",
-        SENSOR_TYPE_UNIT: "%",
-        SENSOR_TYPE_ICON: "mdi:weather-snowy",
-        SENSOR_TYPE_CLASS: None,
+        ENTITY_NAME: "Snow chance",
+        ENTITY_UNIT: PERCENTAGE,
+        ENTITY_ICON: "mdi:weather-snowy",
+        ENTITY_DEVICE_CLASS: None,
+        ENTITY_ENABLE: True,
+        ENTITY_API_DATA_PATH: "probability_forecast:snow:3h",
     },
-    "weather": {
-        SENSOR_TYPE_NAME: "Weather",
-        SENSOR_TYPE_UNIT: None,
-        SENSOR_TYPE_ICON: "mdi:weather-partly-cloudy",
-        SENSOR_TYPE_CLASS: None,
+    "freeze_chance": {
+        ENTITY_NAME: "Freeze chance",
+        ENTITY_UNIT: PERCENTAGE,
+        ENTITY_ICON: "mdi:snowflake",
+        ENTITY_DEVICE_CLASS: None,
+        ENTITY_ENABLE: True,
+        ENTITY_API_DATA_PATH: "probability_forecast:freezing",
+    },
+    "wind_gust": {
+        ENTITY_NAME: "Wind gust",
+        ENTITY_UNIT: SPEED_KILOMETERS_PER_HOUR,
+        ENTITY_ICON: "mdi:weather-windy-variant",
+        ENTITY_DEVICE_CLASS: None,
+        ENTITY_ENABLE: False,
+        ENTITY_API_DATA_PATH: "current_forecast:wind:gust",
     },
     "wind_speed": {
-        SENSOR_TYPE_NAME: "Wind Speed",
-        SENSOR_TYPE_UNIT: "km/h",
-        SENSOR_TYPE_ICON: "mdi:weather-windy",
-        SENSOR_TYPE_CLASS: None,
+        ENTITY_NAME: "Wind speed",
+        ENTITY_UNIT: SPEED_KILOMETERS_PER_HOUR,
+        ENTITY_ICON: "mdi:weather-windy",
+        ENTITY_DEVICE_CLASS: None,
+        ENTITY_ENABLE: False,
+        ENTITY_API_DATA_PATH: "current_forecast:wind:speed",
     },
     "next_rain": {
-        SENSOR_TYPE_NAME: "Next rain",
-        SENSOR_TYPE_UNIT: "min",
-        SENSOR_TYPE_ICON: "mdi:weather-rainy",
-        SENSOR_TYPE_CLASS: None,
+        ENTITY_NAME: "Next rain",
+        ENTITY_UNIT: None,
+        ENTITY_ICON: None,
+        ENTITY_DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP,
+        ENTITY_ENABLE: True,
+        ENTITY_API_DATA_PATH: None,
     },
     "temperature": {
-        SENSOR_TYPE_NAME: "Temperature",
-        SENSOR_TYPE_UNIT: TEMP_CELSIUS,
-        SENSOR_TYPE_ICON: "mdi:thermometer",
-        SENSOR_TYPE_CLASS: "temperature",
+        ENTITY_NAME: "Temperature",
+        ENTITY_UNIT: TEMP_CELSIUS,
+        ENTITY_ICON: None,
+        ENTITY_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+        ENTITY_ENABLE: False,
+        ENTITY_API_DATA_PATH: "current_forecast:T:value",
     },
     "uv": {
-        SENSOR_TYPE_NAME: "UV",
-        SENSOR_TYPE_UNIT: None,
-        SENSOR_TYPE_ICON: "mdi:sunglasses",
-        SENSOR_TYPE_CLASS: None,
+        ENTITY_NAME: "UV",
+        ENTITY_UNIT: UV_INDEX,
+        ENTITY_ICON: "mdi:sunglasses",
+        ENTITY_DEVICE_CLASS: None,
+        ENTITY_ENABLE: True,
+        ENTITY_API_DATA_PATH: "today_forecast:uv",
     },
     "weather_alert": {
-        SENSOR_TYPE_NAME: "Weather Alert",
-        SENSOR_TYPE_UNIT: None,
-        SENSOR_TYPE_ICON: "mdi:weather-cloudy-alert",
-        SENSOR_TYPE_CLASS: None,
+        ENTITY_NAME: "Weather alert",
+        ENTITY_UNIT: None,
+        ENTITY_ICON: "mdi:weather-cloudy-alert",
+        ENTITY_DEVICE_CLASS: None,
+        ENTITY_ENABLE: True,
+        ENTITY_API_DATA_PATH: None,
+    },
+    "precipitation": {
+        ENTITY_NAME: "Daily precipitation",
+        ENTITY_UNIT: LENGTH_MILLIMETERS,
+        ENTITY_ICON: "mdi:cup-water",
+        ENTITY_DEVICE_CLASS: None,
+        ENTITY_ENABLE: True,
+        ENTITY_API_DATA_PATH: "today_forecast:precipitation:24h",
+    },
+    "cloud": {
+        ENTITY_NAME: "Cloud cover",
+        ENTITY_UNIT: PERCENTAGE,
+        ENTITY_ICON: "mdi:weather-partly-cloudy",
+        ENTITY_DEVICE_CLASS: None,
+        ENTITY_ENABLE: True,
+        ENTITY_API_DATA_PATH: "current_forecast:clouds",
+    },
+    "original_condition": {
+        ENTITY_NAME: "Original condition",
+        ENTITY_UNIT: None,
+        ENTITY_ICON: None,
+        ENTITY_DEVICE_CLASS: None,
+        ENTITY_ENABLE: False,
+        ENTITY_API_DATA_PATH: "current_forecast:weather:desc",
+    },
+    "daily_original_condition": {
+        ENTITY_NAME: "Daily original condition",
+        ENTITY_UNIT: None,
+        ENTITY_ICON: None,
+        ENTITY_DEVICE_CLASS: None,
+        ENTITY_ENABLE: False,
+        ENTITY_API_DATA_PATH: "today_forecast:weather12H:desc",
     },
 }
 
 CONDITION_CLASSES = {
-    "clear-night": ["Nuit Claire"],
-    "cloudy": ["Très nuageux"],
-    "fog": ["Brume ou bancs de brouillard", "Brouillard", "Brouillard givrant"],
-    "hail": ["Risque de grêle"],
-    "lightning": ["Risque d'orages", "Orages"],
-    "lightning-rainy": ["Pluie orageuses", "Pluies orageuses", "Averses orageuses"],
-    "partlycloudy": ["Ciel voilé", "Ciel voilé nuit", "Éclaircies"],
-    "pouring": ["Pluie forte"],
-    "rainy": [
+    ATTR_CONDITION_CLEAR_NIGHT: ["Nuit Claire", "Nuit claire"],
+    ATTR_CONDITION_CLOUDY: ["Très nuageux", "Couvert"],
+    ATTR_CONDITION_FOG: [
+        "Brume ou bancs de brouillard",
+        "Brume",
+        "Brouillard",
+        "Brouillard givrant",
+        "Bancs de Brouillard",
+    ],
+    ATTR_CONDITION_HAIL: ["Risque de grêle", "Risque de grèle"],
+    ATTR_CONDITION_LIGHTNING: ["Risque d'orages", "Orages"],
+    ATTR_CONDITION_LIGHTNING_RAINY: [
+        "Pluie orageuses",
+        "Pluies orageuses",
+        "Averses orageuses",
+    ],
+    ATTR_CONDITION_PARTLYCLOUDY: [
+        "Ciel voilé",
+        "Ciel voilé nuit",
+        "Éclaircies",
+        "Eclaircies",
+        "Peu nuageux",
+    ],
+    ATTR_CONDITION_POURING: ["Pluie forte"],
+    ATTR_CONDITION_RAINY: [
         "Bruine / Pluie faible",
         "Bruine",
         "Pluie faible",
         "Pluies éparses / Rares averses",
         "Pluies éparses",
         "Rares averses",
+        "Pluie modérée",
         "Pluie / Averses",
         "Averses",
         "Pluie",
     ],
-    "snowy": [
+    ATTR_CONDITION_SNOWY: [
         "Neige / Averses de neige",
         "Neige",
         "Averses de neige",
         "Neige forte",
         "Quelques flocons",
     ],
-    "snowy-rainy": ["Pluie et neige", "Pluie verglaçante"],
-    "sunny": ["Ensoleillé"],
-    "windy": [],
-    "windy-variant": [],
-    "exceptional": [],
+    ATTR_CONDITION_SNOWY_RAINY: ["Pluie et neige", "Pluie verglaçante"],
+    ATTR_CONDITION_SUNNY: ["Ensoleillé"],
+    ATTR_CONDITION_WINDY: [],
+    ATTR_CONDITION_WINDY_VARIANT: [],
+    ATTR_CONDITION_EXCEPTIONAL: [],
 }

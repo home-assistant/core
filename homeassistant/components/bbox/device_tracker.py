@@ -1,11 +1,11 @@
 """Support for French FAI Bouygues Bbox routers."""
+from __future__ import annotations
+
 from collections import namedtuple
 from datetime import timedelta
 import logging
-from typing import List
 
 import pybbox
-
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
@@ -48,7 +48,7 @@ class BboxDeviceScanner(DeviceScanner):
         self.host = config[CONF_HOST]
 
         """Initialize the scanner."""
-        self.last_results: List[Device] = []
+        self.last_results: list[Device] = []
 
         self.success_init = self._update_info()
         _LOGGER.info("Scanner initialized")
@@ -75,7 +75,7 @@ class BboxDeviceScanner(DeviceScanner):
 
         Returns boolean if scanning successful.
         """
-        _LOGGER.info("Scanning...")
+        _LOGGER.info("Scanning")
 
         box = pybbox.Bbox(ip=self.host)
         result = box.get_all_connected_devices()

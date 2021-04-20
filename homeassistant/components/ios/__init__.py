@@ -1,6 +1,5 @@
 """Native Home Assistant iOS app component."""
 import datetime
-import logging
 
 import voluptuous as vol
 
@@ -10,11 +9,21 @@ from homeassistant.const import HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util.json import load_json, save_json
 
-_LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "ios"
+from .const import (
+    CONF_ACTION_BACKGROUND_COLOR,
+    CONF_ACTION_ICON,
+    CONF_ACTION_ICON_COLOR,
+    CONF_ACTION_ICON_ICON,
+    CONF_ACTION_LABEL,
+    CONF_ACTION_LABEL_COLOR,
+    CONF_ACTION_LABEL_TEXT,
+    CONF_ACTION_NAME,
+    CONF_ACTIONS,
+    DOMAIN,
+)
 
 CONF_PUSH = "push"
 CONF_PUSH_CATEGORIES = "categories"
@@ -31,6 +40,8 @@ CONF_PUSH_ACTIONS_BEHAVIOR = "behavior"
 CONF_PUSH_ACTIONS_CONTEXT = "context"
 CONF_PUSH_ACTIONS_TEXT_INPUT_BUTTON_TITLE = "textInputButtonTitle"
 CONF_PUSH_ACTIONS_TEXT_INPUT_PLACEHOLDER = "textInputPlaceholder"
+
+CONF_USER = "user"
 
 ATTR_FOREGROUND = "foreground"
 ATTR_BACKGROUND = "background"
@@ -87,7 +98,7 @@ BATTERY_STATES = [
 
 ATTR_DEVICES = "devices"
 
-ACTION_SCHEMA = vol.Schema(
+PUSH_ACTION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PUSH_ACTIONS_IDENTIFIER): vol.Upper,
         vol.Required(CONF_PUSH_ACTIONS_TITLE): cv.string,
@@ -107,25 +118,40 @@ ACTION_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-ACTION_SCHEMA_LIST = vol.All(cv.ensure_list, [ACTION_SCHEMA])
+PUSH_ACTION_LIST_SCHEMA = vol.All(cv.ensure_list, [PUSH_ACTION_SCHEMA])
+
+PUSH_CATEGORY_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PUSH_CATEGORIES_NAME): cv.string,
+        vol.Required(CONF_PUSH_CATEGORIES_IDENTIFIER): vol.Lower,
+        vol.Required(CONF_PUSH_CATEGORIES_ACTIONS): PUSH_ACTION_LIST_SCHEMA,
+    }
+)
+
+PUSH_CATEGORY_LIST_SCHEMA = vol.All(cv.ensure_list, [PUSH_CATEGORY_SCHEMA])
+
+ACTION_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ACTION_NAME): cv.string,
+        vol.Optional(CONF_ACTION_BACKGROUND_COLOR): cv.string,
+        vol.Optional(CONF_ACTION_LABEL): {
+            vol.Optional(CONF_ACTION_LABEL_TEXT): cv.string,
+            vol.Optional(CONF_ACTION_LABEL_COLOR): cv.string,
+        },
+        vol.Optional(CONF_ACTION_ICON): {
+            vol.Optional(CONF_ACTION_ICON_ICON): cv.string,
+            vol.Optional(CONF_ACTION_ICON_COLOR): cv.string,
+        },
+    },
+)
+
+ACTION_LIST_SCHEMA = vol.All(cv.ensure_list, [ACTION_SCHEMA])
 
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: {
-            CONF_PUSH: {
-                CONF_PUSH_CATEGORIES: vol.All(
-                    cv.ensure_list,
-                    [
-                        {
-                            vol.Required(CONF_PUSH_CATEGORIES_NAME): cv.string,
-                            vol.Required(CONF_PUSH_CATEGORIES_IDENTIFIER): vol.Lower,
-                            vol.Required(
-                                CONF_PUSH_CATEGORIES_ACTIONS
-                            ): ACTION_SCHEMA_LIST,
-                        }
-                    ],
-                )
-            }
+            CONF_PUSH: {CONF_PUSH_CATEGORIES: PUSH_CATEGORY_LIST_SCHEMA},
+            CONF_ACTIONS: ACTION_LIST_SCHEMA,
         }
     },
     extra=vol.ALLOW_EXTRA,
@@ -195,7 +221,7 @@ def devices_with_push(hass):
 
 def enabled_push_ids(hass):
     """Return a list of push enabled target push IDs."""
-    push_ids = list()
+    push_ids = []
     for device in hass.data[DOMAIN][ATTR_DEVICES].values():
         if device.get(ATTR_PUSH_ID) is not None:
             push_ids.append(device.get(ATTR_PUSH_ID))
@@ -226,7 +252,10 @@ async def async_setup(hass, config):
     if ios_config == {}:
         ios_config[ATTR_DEVICES] = {}
 
-    ios_config[CONF_PUSH] = (conf or {}).get(CONF_PUSH, {})
+    ios_config[CONF_USER] = conf or {}
+
+    if CONF_PUSH not in ios_config[CONF_USER]:
+        ios_config[CONF_USER][CONF_PUSH] = {}
 
     hass.data[DOMAIN] = ios_config
 
@@ -250,7 +279,8 @@ async def async_setup_entry(hass, entry):
     )
 
     hass.http.register_view(iOSIdentifyDeviceView(hass.config.path(CONFIGURATION_FILE)))
-    hass.http.register_view(iOSPushConfigView(hass.data[DOMAIN][CONF_PUSH]))
+    hass.http.register_view(iOSPushConfigView(hass.data[DOMAIN][CONF_USER][CONF_PUSH]))
+    hass.http.register_view(iOSConfigView(hass.data[DOMAIN][CONF_USER]))
 
     return True
 
@@ -272,6 +302,22 @@ class iOSPushConfigView(HomeAssistantView):
         return self.json(self.push_config)
 
 
+class iOSConfigView(HomeAssistantView):
+    """A view that provides the whole user-defined configuration."""
+
+    url = "/api/ios/config"
+    name = "api:ios:config"
+
+    def __init__(self, config):
+        """Init the view."""
+        self.config = config
+
+    @callback
+    def get(self, request):
+        """Handle the GET request for the user-defined configuration."""
+        return self.json(self.config)
+
+
 class iOSIdentifyDeviceView(HomeAssistantView):
     """A view that accepts device identification requests."""
 
@@ -279,7 +325,7 @@ class iOSIdentifyDeviceView(HomeAssistantView):
     name = "api:ios:identify"
 
     def __init__(self, config_path):
-        """Initiliaze the view."""
+        """Initialize the view."""
         self._config_path = config_path
 
     async def post(self, request):
@@ -301,9 +347,11 @@ class iOSIdentifyDeviceView(HomeAssistantView):
 
         data[ATTR_LAST_SEEN_AT] = datetime.datetime.now().isoformat()
 
-        name = data.get(ATTR_DEVICE_ID)
+        device_id = data[ATTR_DEVICE_ID]
 
-        hass.data[DOMAIN][ATTR_DEVICES][name] = data
+        hass.data[DOMAIN][ATTR_DEVICES][device_id] = data
+
+        async_dispatcher_send(hass, f"{DOMAIN}.{device_id}", data)
 
         try:
             save_json(self._config_path, hass.data[DOMAIN])

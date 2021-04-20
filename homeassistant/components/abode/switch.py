@@ -1,40 +1,34 @@
 """Support for Abode Security System switches."""
-import logging
-
 import abodepy.helpers.constants as CONST
-import abodepy.helpers.timeline as TIMELINE
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import AbodeAutomation, AbodeDevice
 from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
+DEVICE_TYPES = [CONST.TYPE_SWITCH, CONST.TYPE_VALVE]
 
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Platform uses config entry setup."""
-    pass
+ICON = "mdi:robot"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Abode switch devices."""
     data = hass.data[DOMAIN]
 
-    devices = []
+    entities = []
 
-    for device in data.abode.get_devices(generic_type=CONST.TYPE_SWITCH):
-        devices.append(AbodeSwitch(data, device))
+    for device_type in DEVICE_TYPES:
+        for device in data.abode.get_devices(generic_type=device_type):
+            entities.append(AbodeSwitch(data, device))
 
-    for automation in data.abode.get_automations(generic_type=CONST.TYPE_AUTOMATION):
-        devices.append(
-            AbodeAutomationSwitch(data, automation, TIMELINE.AUTOMATION_EDIT_GROUP)
-        )
+    for automation in data.abode.get_automations():
+        entities.append(AbodeAutomationSwitch(data, automation))
 
-    async_add_entities(devices)
+    async_add_entities(entities)
 
 
-class AbodeSwitch(AbodeDevice, SwitchDevice):
+class AbodeSwitch(AbodeDevice, SwitchEntity):
     """Representation of an Abode switch."""
 
     def turn_on(self, **kwargs):
@@ -51,18 +45,36 @@ class AbodeSwitch(AbodeDevice, SwitchDevice):
         return self._device.is_on
 
 
-class AbodeAutomationSwitch(AbodeAutomation, SwitchDevice):
+class AbodeAutomationSwitch(AbodeAutomation, SwitchEntity):
     """A switch implementation for Abode automations."""
 
+    async def async_added_to_hass(self):
+        """Set up trigger automation service."""
+        await super().async_added_to_hass()
+
+        signal = f"abode_trigger_automation_{self.entity_id}"
+        self.async_on_remove(async_dispatcher_connect(self.hass, signal, self.trigger))
+
     def turn_on(self, **kwargs):
-        """Turn on the device."""
-        self._automation.set_active(True)
+        """Enable the automation."""
+        if self._automation.enable(True):
+            self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
-        """Turn off the device."""
-        self._automation.set_active(False)
+        """Disable the automation."""
+        if self._automation.enable(False):
+            self.schedule_update_ha_state()
+
+    def trigger(self):
+        """Trigger the automation."""
+        self._automation.trigger()
 
     @property
     def is_on(self):
-        """Return True if the binary sensor is on."""
-        return self._automation.is_active
+        """Return True if the automation is enabled."""
+        return self._automation.is_enabled
+
+    @property
+    def icon(self):
+        """Return the robot icon to match Home Assistant automations."""
+        return ICON

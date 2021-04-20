@@ -4,8 +4,8 @@ import logging
 
 from pybotvac.exceptions import NeatoRobotException
 
-from homeassistant.components.sensor import DEVICE_CLASS_BATTERY
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import DEVICE_CLASS_BATTERY, SensorEntity
+from homeassistant.const import PERCENTAGE
 
 from .const import NEATO_DOMAIN, NEATO_LOGIN, NEATO_ROBOTS, SCAN_INTERVAL_MINUTES
 
@@ -14,11 +14,6 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(minutes=SCAN_INTERVAL_MINUTES)
 
 BATTERY = "Battery"
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Neato sensor."""
-    pass
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -35,32 +30,26 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(dev, True)
 
 
-class NeatoSensor(Entity):
+class NeatoSensor(SensorEntity):
     """Neato sensor."""
 
     def __init__(self, neato, robot):
         """Initialize Neato sensor."""
         self.robot = robot
-        self.neato = neato
-        self._available = self.neato.logged_in if self.neato is not None else False
+        self._available = False
         self._robot_name = f"{self.robot.name} {BATTERY}"
         self._robot_serial = self.robot.serial
         self._state = None
 
     def update(self):
         """Update Neato Sensor."""
-        if self.neato is None:
-            _LOGGER.error("Error while updating sensor")
-            self._state = None
-            self._available = False
-            return
-
         try:
-            self.neato.update_robots()
             self._state = self.robot.state
         except NeatoRobotException as ex:
             if self._available:
-                _LOGGER.error("Neato sensor connection error: %s", ex)
+                _LOGGER.error(
+                    "Neato sensor connection error for '%s': %s", self.entity_id, ex
+                )
             self._state = None
             self._available = False
             return
@@ -96,7 +85,7 @@ class NeatoSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return unit of measurement."""
-        return "%"
+        return PERCENTAGE
 
     @property
     def device_info(self):

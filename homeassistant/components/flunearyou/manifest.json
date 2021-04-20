@@ -1,12 +1,9 @@
 {
   "domain": "flunearyou",
-  "name": "Flunearyou",
+  "name": "Flu Near You",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/flunearyou",
-  "requirements": [
-    "pyflunearyou==1.0.3"
-  ],
-  "dependencies": [],
-  "codeowners": [
-    "@bachya"
-  ]
+  "requirements": ["pyflunearyou==1.0.7"],
+  "codeowners": ["@bachya"],
+  "iot_class": "cloud_polling"
 }

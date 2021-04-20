@@ -1,7 +1,6 @@
 """Generate an integration."""
 from pathlib import Path
 
-from .error import ExitApp
 from .model import Info
 
 TEMPLATE_DIR = Path(__file__).parent / "templates"
@@ -11,21 +10,12 @@ TEMPLATE_TESTS = TEMPLATE_DIR / "tests"
 
 def generate(template: str, info: Info) -> None:
     """Generate a template."""
-    _validate(template, info)
-
     print(f"Scaffolding {template} for the {info.domain} integration...")
     _ensure_tests_dir_exists(info)
     _generate(TEMPLATE_DIR / template / "integration", info.integration_dir, info)
     _generate(TEMPLATE_DIR / template / "tests", info.tests_dir, info)
     _custom_tasks(template, info)
     print()
-
-
-def _validate(template, info):
-    """Validate we can run this task."""
-    if template == "config_flow":
-        if (info.integration_dir / "config_flow.py").exists():
-            raise ExitApp(f"Integration {info.domain} already has a config flow.")
 
 
 def _generate(src_dir, target_dir, info: Info) -> None:
@@ -42,6 +32,20 @@ def _generate(src_dir, target_dir, info: Info) -> None:
             content = content.replace(to_search, to_replace)
 
         target_file = target_dir / source_file.relative_to(src_dir)
+
+        # If the target file exists, create our template as EXAMPLE_<filename>.
+        # Exception: If we are creating a new integration, we can end up running integration base
+        # and a config flows on top of one another. In that case, we want to override the files.
+        if not info.is_new and target_file.exists():
+            new_name = f"EXAMPLE_{target_file.name}"
+            print(f"File {target_file} already exists, creating {new_name} instead.")
+            target_file = target_file.parent / new_name
+            info.examples_added.add(target_file)
+        elif src_dir.name == "integration":
+            info.files_added.add(target_file)
+        else:
+            info.tests_added.add(target_file)
+
         print(f"Writing {target_file}")
         target_file.write_text(content)
 
@@ -58,6 +62,11 @@ def _ensure_tests_dir_exists(info: Info) -> None:
     )
 
 
+def _append(path: Path, text):
+    """Append some text to a path."""
+    path.write_text(path.read_text() + text)
+
+
 def _custom_tasks(template, info) -> None:
     """Handle custom tasks for templates."""
     if template == "integration":
@@ -68,7 +77,7 @@ def _custom_tasks(template, info) -> None:
 
         info.update_manifest(**changes)
 
-    if template == "device_trigger":
+    elif template == "device_trigger":
         info.update_strings(
             device_automation={
                 **info.strings().get("device_automation", {}),
@@ -79,18 +88,18 @@ def _custom_tasks(template, info) -> None:
             }
         )
 
-    if template == "device_condition":
+    elif template == "device_condition":
         info.update_strings(
             device_automation={
                 **info.strings().get("device_automation", {}),
-                "condtion_type": {
+                "condition_type": {
                     "is_on": "{entity_name} is on",
                     "is_off": "{entity_name} is off",
                 },
             }
         )
 
-    if template == "device_action":
+    elif template == "device_action":
         info.update_strings(
             device_automation={
                 **info.strings().get("device_automation", {}),
@@ -101,54 +110,68 @@ def _custom_tasks(template, info) -> None:
             }
         )
 
-    if template == "config_flow":
+    elif template == "config_flow":
         info.update_manifest(config_flow=True)
         info.update_strings(
+            title=info.name,
             config={
-                "title": info.name,
                 "step": {
-                    "user": {"title": "Connect to the device", "data": {"host": "Host"}}
+                    "user": {
+                        "data": {
+                            "host": "[%key:common::config_flow::data::host%]",
+                            "username": "[%key:common::config_flow::data::username%]",
+                            "password": "[%key:common::config_flow::data::password%]",
+                        },
+                    }
                 },
                 "error": {
-                    "cannot_connect": "Failed to connect, please try again",
-                    "invalid_auth": "Invalid authentication",
-                    "unknown": "Unexpected error",
+                    "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+                    "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+                    "unknown": "[%key:common::config_flow::error::unknown%]",
                 },
-                "abort": {"already_configured": "Device is already configured"},
-            }
+                "abort": {
+                    "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+                },
+            },
         )
 
-    if template == "config_flow_discovery":
+    elif template == "config_flow_discovery":
         info.update_manifest(config_flow=True)
         info.update_strings(
+            title=info.name,
             config={
-                "title": info.name,
                 "step": {
                     "confirm": {
-                        "title": info.name,
-                        "description": f"Do you want to set up {info.name}?",
+                        "description": "[%key:common::config_flow::description::confirm_setup%]",
                     }
                 },
                 "abort": {
-                    "single_instance_allowed": f"Only a single configuration of {info.name} is possible.",
-                    "no_devices_found": f"No {info.name} devices found on the network.",
+                    "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+                    "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
                 },
-            }
+            },
         )
 
-    if template in ("config_flow", "config_flow_discovery"):
-        init_file = info.integration_dir / "__init__.py"
-        init_file.write_text(
-            init_file.read_text()
-            + """
-
-async def async_setup_entry(hass, entry):
-    \"\"\"Set up a config entry for NEW_NAME.\"\"\"
-    # TODO forward the entry for each platform that you want to set up.
-    # hass.async_create_task(
-    #     hass.config_entries.async_forward_entry_setup(entry, "media_player")
-    # )
-
-    return True
-"""
+    elif template == "config_flow_oauth2":
+        info.update_manifest(config_flow=True, dependencies=["http"])
+        info.update_strings(
+            title=info.name,
+            config={
+                "step": {
+                    "pick_implementation": {
+                        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+                    }
+                },
+                "abort": {
+                    "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+                    "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+                    "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+                    "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+                    "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+                    "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+                },
+                "create_entry": {
+                    "default": "[%key:common::config_flow::create_entry::authenticated%]"
+                },
+            },
         )

@@ -1,14 +1,16 @@
 """A sensor for incoming calls using a USB modem that supports caller ID."""
 import logging
+
+from basicmodem.basicmodem import BasicModem as bm
 import voluptuous as vol
+
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
-    STATE_IDLE,
-    EVENT_HOMEASSISTANT_STOP,
-    CONF_NAME,
     CONF_DEVICE,
+    CONF_NAME,
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_IDLE,
 )
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,20 +31,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up modem caller ID sensor platform."""
-    from basicmodem.basicmodem import BasicModem as bm
 
     name = config.get(CONF_NAME)
     port = config.get(CONF_DEVICE)
 
     modem = bm(port)
     if modem.state == modem.STATE_FAILED:
-        _LOGGER.error("Unable to initialize modem.")
+        _LOGGER.error("Unable to initialize modem")
         return
 
     add_entities([ModemCalleridSensor(hass, name, port, modem)])
 
 
-class ModemCalleridSensor(Entity):
+class ModemCalleridSensor(SensorEntity):
     """Implementation of USB modem caller ID sensor."""
 
     def __init__(self, hass, name, port, modem):
@@ -84,7 +85,7 @@ class ModemCalleridSensor(Entity):
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._attributes
 

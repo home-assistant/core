@@ -1,364 +1,345 @@
 """Support for August devices."""
-from datetime import timedelta
+import asyncio
+from itertools import chain
 import logging
 
-from august.api import Api
-from august.authenticator import AuthenticationState, Authenticator, ValidationResult
-from requests import RequestException, Session
-import voluptuous as vol
+from aiohttp import ClientError, ClientResponseError
+from yalexs.exceptions import AugustApiAIOHTTPError
+from yalexs.pubnub_activity import activities_from_pubnub_message
+from yalexs.pubnub_async import AugustPubNub, async_create_pubnub
 
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_TIMEOUT,
-    CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP,
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PASSWORD
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
 )
-from homeassistant.helpers import discovery
-import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
+
+from .activity import ActivityStream
+from .const import DATA_AUGUST, DOMAIN, MIN_TIME_BETWEEN_DETAIL_UPDATES, PLATFORMS
+from .exceptions import CannotConnect, InvalidAuth, RequireValidation
+from .gateway import AugustGateway
+from .subscriber import AugustSubscriberMixin
 
 _LOGGER = logging.getLogger(__name__)
 
-_CONFIGURING = {}
-
-DEFAULT_TIMEOUT = 10
-ACTIVITY_FETCH_LIMIT = 10
-ACTIVITY_INITIAL_FETCH_LIMIT = 20
-
-CONF_LOGIN_METHOD = "login_method"
-CONF_INSTALL_ID = "install_id"
-
-NOTIFICATION_ID = "august_notification"
-NOTIFICATION_TITLE = "August Setup"
-
-AUGUST_CONFIG_FILE = ".august.conf"
-
-DATA_AUGUST = "august"
-DOMAIN = "august"
-DEFAULT_ENTITY_NAMESPACE = "august"
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=5)
-LOGIN_METHODS = ["phone", "email"]
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_LOGIN_METHOD): vol.In(LOGIN_METHODS),
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_INSTALL_ID): cv.string,
-                vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
+API_CACHED_ATTRS = (
+    "door_state",
+    "door_state_datetime",
+    "lock_status",
+    "lock_status_datetime",
 )
 
-AUGUST_COMPONENTS = ["camera", "binary_sensor", "lock"]
+
+async def async_setup(hass: HomeAssistant, config: dict):
+    """Set up the August component from YAML."""
+    hass.data.setdefault(DOMAIN, {})
+    return True
 
 
-def request_configuration(hass, config, api, authenticator):
-    """Request configuration steps from the user."""
-    configurator = hass.components.configurator
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Set up August from a config entry."""
 
-    def august_configuration_callback(data):
-        """Run when the configuration callback is called."""
+    august_gateway = AugustGateway(hass)
 
-        result = authenticator.validate_verification_code(data.get("verification_code"))
+    try:
+        await august_gateway.async_setup(entry.data)
+        return await async_setup_august(hass, entry, august_gateway)
+    except (RequireValidation, InvalidAuth) as err:
+        raise ConfigEntryAuthFailed from err
+    except (ClientResponseError, CannotConnect, asyncio.TimeoutError) as err:
+        raise ConfigEntryNotReady from err
 
-        if result == ValidationResult.INVALID_VERIFICATION_CODE:
-            configurator.notify_errors(
-                _CONFIGURING[DOMAIN], "Invalid verification code"
-            )
-        elif result == ValidationResult.VALIDATED:
-            setup_august(hass, config, api, authenticator)
 
-    if DOMAIN not in _CONFIGURING:
-        authenticator.send_verification_code()
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Unload a config entry."""
 
-    conf = config[DOMAIN]
-    username = conf.get(CONF_USERNAME)
-    login_method = conf.get(CONF_LOGIN_METHOD)
+    hass.data[DOMAIN][entry.entry_id][DATA_AUGUST].async_stop()
 
-    _CONFIGURING[DOMAIN] = configurator.request_config(
-        NOTIFICATION_TITLE,
-        august_configuration_callback,
-        description="Please check your {} ({}) and enter the verification "
-        "code below".format(login_method, username),
-        submit_caption="Verify",
-        fields=[
-            {"id": "verification_code", "name": "Verification code", "type": "string"}
-        ],
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
+            ]
+        )
     )
 
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
 
-def setup_august(hass, config, api, authenticator):
+    return unload_ok
+
+
+async def async_setup_august(hass, config_entry, august_gateway):
     """Set up the August component."""
 
-    authentication = None
-    try:
-        authentication = authenticator.authenticate()
-    except RequestException as ex:
-        _LOGGER.error("Unable to connect to August service: %s", str(ex))
+    if CONF_PASSWORD in config_entry.data:
+        # We no longer need to store passwords since we do not
+        # support YAML anymore
+        config_data = config_entry.data.copy()
+        del config_data[CONF_PASSWORD]
+        hass.config_entries.async_update_entry(config_entry, data=config_data)
 
-        hass.components.persistent_notification.create(
-            "Error: {}<br />"
-            "You will need to restart hass after fixing."
-            "".format(ex),
-            title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID,
+    await august_gateway.async_authenticate()
+
+    data = hass.data[DOMAIN][config_entry.entry_id] = {
+        DATA_AUGUST: AugustData(hass, august_gateway)
+    }
+    await data[DATA_AUGUST].async_setup()
+
+    for platform in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(config_entry, platform)
         )
 
-    state = authentication.state
-
-    if state == AuthenticationState.AUTHENTICATED:
-        if DOMAIN in _CONFIGURING:
-            hass.components.configurator.request_done(_CONFIGURING.pop(DOMAIN))
-
-        hass.data[DATA_AUGUST] = AugustData(hass, api, authentication.access_token)
-
-        for component in AUGUST_COMPONENTS:
-            discovery.load_platform(hass, component, DOMAIN, {}, config)
-
-        return True
-    if state == AuthenticationState.BAD_PASSWORD:
-        _LOGGER.error("Invalid password provided")
-        return False
-    if state == AuthenticationState.REQUIRES_VALIDATION:
-        request_configuration(hass, config, api, authenticator)
-        return True
-
-    return False
+    return True
 
 
-def setup(hass, config):
-    """Set up the August component."""
-
-    conf = config[DOMAIN]
-    api_http_session = None
-    try:
-        api_http_session = Session()
-    except RequestException as ex:
-        _LOGGER.warning("Creating HTTP session failed with: %s", str(ex))
-
-    api = Api(timeout=conf.get(CONF_TIMEOUT), http_session=api_http_session)
-
-    authenticator = Authenticator(
-        api,
-        conf.get(CONF_LOGIN_METHOD),
-        conf.get(CONF_USERNAME),
-        conf.get(CONF_PASSWORD),
-        install_id=conf.get(CONF_INSTALL_ID),
-        access_token_cache_file=hass.config.path(AUGUST_CONFIG_FILE),
-    )
-
-    def close_http_session(event):
-        """Close API sessions used to connect to August."""
-        _LOGGER.debug("Closing August HTTP sessions")
-        if api_http_session:
-            try:
-                api_http_session.close()
-            except RequestException:
-                pass
-
-        _LOGGER.debug("August HTTP session closed.")
-
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, close_http_session)
-    _LOGGER.debug("Registered for HASS stop event")
-
-    return setup_august(hass, config, api, authenticator)
-
-
-class AugustData:
+class AugustData(AugustSubscriberMixin):
     """August data object."""
 
-    def __init__(self, hass, api, access_token):
+    def __init__(self, hass, august_gateway):
         """Init August data object."""
+        super().__init__(hass, MIN_TIME_BETWEEN_DETAIL_UPDATES)
         self._hass = hass
-        self._api = api
-        self._access_token = access_token
-        self._doorbells = self._api.get_doorbells(self._access_token) or []
-        self._locks = self._api.get_operable_locks(self._access_token) or []
-        self._house_ids = [d.house_id for d in self._doorbells + self._locks]
+        self._august_gateway = august_gateway
+        self.activity_stream = None
+        self._api = august_gateway.api
+        self._device_detail_by_id = {}
+        self._doorbells_by_id = {}
+        self._locks_by_id = {}
+        self._house_ids = set()
+        self._pubnub_unsub = None
 
-        self._doorbell_detail_by_id = {}
-        self._lock_status_by_id = {}
-        self._lock_detail_by_id = {}
-        self._door_state_by_id = {}
-        self._activities_by_id = {}
+    async def async_setup(self):
+        """Async setup of august device data and activities."""
+        token = self._august_gateway.access_token
+        user_data, locks, doorbells = await asyncio.gather(
+            self._api.async_get_user(token),
+            self._api.async_get_operable_locks(token),
+            self._api.async_get_doorbells(token),
+        )
+        if not doorbells:
+            doorbells = []
+        if not locks:
+            locks = []
 
-    @property
-    def house_ids(self):
-        """Return a list of house_ids."""
-        return self._house_ids
+        self._doorbells_by_id = {device.device_id: device for device in doorbells}
+        self._locks_by_id = {device.device_id: device for device in locks}
+        self._house_ids = {device.house_id for device in chain(locks, doorbells)}
+
+        await self._async_refresh_device_detail_by_ids(
+            [device.device_id for device in chain(locks, doorbells)]
+        )
+
+        # We remove all devices that we are missing
+        # detail as we cannot determine if they are usable.
+        # This also allows us to avoid checking for
+        # detail being None all over the place
+        self._remove_inoperative_locks()
+        self._remove_inoperative_doorbells()
+
+        pubnub = AugustPubNub()
+        for device in self._device_detail_by_id.values():
+            pubnub.register_device(device)
+
+        self.activity_stream = ActivityStream(
+            self._hass, self._api, self._august_gateway, self._house_ids, pubnub
+        )
+        await self.activity_stream.async_setup()
+        pubnub.subscribe(self.async_pubnub_message)
+        self._pubnub_unsub = async_create_pubnub(user_data["UserID"], pubnub)
+
+    @callback
+    def async_pubnub_message(self, device_id, date_time, message):
+        """Process a pubnub message."""
+        device = self.get_device_detail(device_id)
+        activities = activities_from_pubnub_message(device, date_time, message)
+        if activities:
+            self.activity_stream.async_process_newer_device_activities(activities)
+            self.async_signal_device_id_update(device.device_id)
+        self.activity_stream.async_schedule_house_id_refresh(device.house_id)
+
+    @callback
+    def async_stop(self):
+        """Stop the subscriptions."""
+        self._pubnub_unsub()
+        self.activity_stream.async_stop()
 
     @property
     def doorbells(self):
-        """Return a list of doorbells."""
-        return self._doorbells
+        """Return a list of py-august Doorbell objects."""
+        return self._doorbells_by_id.values()
 
     @property
     def locks(self):
-        """Return a list of locks."""
-        return self._locks
+        """Return a list of py-august Lock objects."""
+        return self._locks_by_id.values()
 
-    def get_device_activities(self, device_id, *activity_types):
-        """Return a list of activities."""
-        _LOGGER.debug("Getting device activities")
-        self._update_device_activities()
+    def get_device_detail(self, device_id):
+        """Return the py-august LockDetail or DoorbellDetail object for a device."""
+        return self._device_detail_by_id[device_id]
 
-        activities = self._activities_by_id.get(device_id, [])
-        if activity_types:
-            return [a for a in activities if a.activity_type in activity_types]
-        return activities
+    async def _async_refresh(self, time):
+        await self._async_refresh_device_detail_by_ids(self._subscriptions.keys())
 
-    def get_latest_device_activity(self, device_id, *activity_types):
-        """Return latest activity."""
-        activities = self.get_device_activities(device_id, *activity_types)
-        return next(iter(activities or []), None)
+    async def _async_refresh_device_detail_by_ids(self, device_ids_list):
+        await asyncio.gather(
+            *[
+                self._async_refresh_device_detail_by_id(device_id)
+                for device_id in device_ids_list
+            ]
+        )
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def _update_device_activities(self, limit=ACTIVITY_FETCH_LIMIT):
-        """Update data object with latest from August API."""
-        _LOGGER.debug("Start retrieving device activities")
-        for house_id in self.house_ids:
-            _LOGGER.debug("Updating device activity for house id %s", house_id)
-
-            activities = self._api.get_house_activities(
-                self._access_token, house_id, limit=limit
+    async def _async_refresh_device_detail_by_id(self, device_id):
+        if device_id in self._locks_by_id:
+            if self.activity_stream and self.activity_stream.pubnub.connected:
+                saved_attrs = _save_live_attrs(self._device_detail_by_id[device_id])
+            await self._async_update_device_detail(
+                self._locks_by_id[device_id], self._api.async_get_lock_detail
             )
+            if self.activity_stream and self.activity_stream.pubnub.connected:
+                _restore_live_attrs(self._device_detail_by_id[device_id], saved_attrs)
+            # keypads are always attached to locks
+            if (
+                device_id in self._device_detail_by_id
+                and self._device_detail_by_id[device_id].keypad is not None
+            ):
+                keypad = self._device_detail_by_id[device_id].keypad
+                self._device_detail_by_id[keypad.device_id] = keypad
+        elif device_id in self._doorbells_by_id:
+            await self._async_update_device_detail(
+                self._doorbells_by_id[device_id],
+                self._api.async_get_doorbell_detail,
+            )
+        _LOGGER.debug(
+            "async_signal_device_id_update (from detail updates): %s", device_id
+        )
+        self.async_signal_device_id_update(device_id)
 
-            device_ids = {a.device_id for a in activities}
-            for device_id in device_ids:
-                self._activities_by_id[device_id] = [
-                    a for a in activities if a.device_id == device_id
-                ]
-        _LOGGER.debug("Completed retrieving device activities")
+    async def _async_update_device_detail(self, device, api_call):
+        _LOGGER.debug(
+            "Started retrieving detail for %s (%s)",
+            device.device_name,
+            device.device_id,
+        )
 
-    def get_doorbell_detail(self, doorbell_id):
-        """Return doorbell detail."""
-        self._update_doorbells()
-        return self._doorbell_detail_by_id.get(doorbell_id)
+        try:
+            self._device_detail_by_id[device.device_id] = await api_call(
+                self._august_gateway.access_token, device.device_id
+            )
+        except ClientError as ex:
+            _LOGGER.error(
+                "Request error trying to retrieve %s details for %s. %s",
+                device.device_id,
+                device.device_name,
+                ex,
+            )
+        _LOGGER.debug(
+            "Completed retrieving detail for %s (%s)",
+            device.device_name,
+            device.device_id,
+        )
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def _update_doorbells(self):
-        detail_by_id = {}
+    def _get_device_name(self, device_id):
+        """Return doorbell or lock name as August has it stored."""
+        if device_id in self._locks_by_id:
+            return self._locks_by_id[device_id].device_name
+        if device_id in self._doorbells_by_id:
+            return self._doorbells_by_id[device_id].device_name
 
-        _LOGGER.debug("Start retrieving doorbell details")
-        for doorbell in self._doorbells:
-            _LOGGER.debug("Updating doorbell status for %s", doorbell.device_name)
-            try:
-                detail_by_id[doorbell.device_id] = self._api.get_doorbell_detail(
-                    self._access_token, doorbell.device_id
-                )
-            except RequestException as ex:
-                _LOGGER.error(
-                    "Request error trying to retrieve doorbell" " status for %s. %s",
-                    doorbell.device_name,
-                    ex,
-                )
-                detail_by_id[doorbell.device_id] = None
-            except Exception:
-                detail_by_id[doorbell.device_id] = None
-                raise
-
-        _LOGGER.debug("Completed retrieving doorbell details")
-        self._doorbell_detail_by_id = detail_by_id
-
-    def get_lock_status(self, lock_id):
-        """Return status if the door is locked or unlocked.
-
-        This is status for the lock itself.
-        """
-        self._update_locks()
-        return self._lock_status_by_id.get(lock_id)
-
-    def get_lock_detail(self, lock_id):
-        """Return lock detail."""
-        self._update_locks()
-        return self._lock_detail_by_id.get(lock_id)
-
-    def get_door_state(self, lock_id):
-        """Return status if the door is open or closed.
-
-        This is the status from the door sensor.
-        """
-        self._update_doors()
-        return self._door_state_by_id.get(lock_id)
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def _update_doors(self):
-        state_by_id = {}
-
-        _LOGGER.debug("Start retrieving door status")
-        for lock in self._locks:
-            _LOGGER.debug("Updating door status for %s", lock.device_name)
-
-            try:
-                state_by_id[lock.device_id] = self._api.get_lock_door_status(
-                    self._access_token, lock.device_id
-                )
-            except RequestException as ex:
-                _LOGGER.error(
-                    "Request error trying to retrieve door" " status for %s. %s",
-                    lock.device_name,
-                    ex,
-                )
-                state_by_id[lock.device_id] = None
-            except Exception:
-                state_by_id[lock.device_id] = None
-                raise
-
-        _LOGGER.debug("Completed retrieving door status")
-        self._door_state_by_id = state_by_id
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def _update_locks(self):
-        status_by_id = {}
-        detail_by_id = {}
-
-        _LOGGER.debug("Start retrieving locks status")
-        for lock in self._locks:
-            _LOGGER.debug("Updating lock status for %s", lock.device_name)
-            try:
-                status_by_id[lock.device_id] = self._api.get_lock_status(
-                    self._access_token, lock.device_id
-                )
-            except RequestException as ex:
-                _LOGGER.error(
-                    "Request error trying to retrieve door" " status for %s. %s",
-                    lock.device_name,
-                    ex,
-                )
-                status_by_id[lock.device_id] = None
-            except Exception:
-                status_by_id[lock.device_id] = None
-                raise
-
-            try:
-                detail_by_id[lock.device_id] = self._api.get_lock_detail(
-                    self._access_token, lock.device_id
-                )
-            except RequestException as ex:
-                _LOGGER.error(
-                    "Request error trying to retrieve door" " details for %s. %s",
-                    lock.device_name,
-                    ex,
-                )
-                detail_by_id[lock.device_id] = None
-            except Exception:
-                detail_by_id[lock.device_id] = None
-                raise
-
-        _LOGGER.debug("Completed retrieving locks status")
-        self._lock_status_by_id = status_by_id
-        self._lock_detail_by_id = detail_by_id
-
-    def lock(self, device_id):
+    async def async_lock(self, device_id):
         """Lock the device."""
-        return self._api.lock(self._access_token, device_id)
+        return await self._async_call_api_op_requires_bridge(
+            device_id,
+            self._api.async_lock_return_activities,
+            self._august_gateway.access_token,
+            device_id,
+        )
 
-    def unlock(self, device_id):
+    async def async_unlock(self, device_id):
         """Unlock the device."""
-        return self._api.unlock(self._access_token, device_id)
+        return await self._async_call_api_op_requires_bridge(
+            device_id,
+            self._api.async_unlock_return_activities,
+            self._august_gateway.access_token,
+            device_id,
+        )
+
+    async def _async_call_api_op_requires_bridge(
+        self, device_id, func, *args, **kwargs
+    ):
+        """Call an API that requires the bridge to be online and will change the device state."""
+        ret = None
+        try:
+            ret = await func(*args, **kwargs)
+        except AugustApiAIOHTTPError as err:
+            device_name = self._get_device_name(device_id)
+            if device_name is None:
+                device_name = f"DeviceID: {device_id}"
+            raise HomeAssistantError(f"{device_name}: {err}") from err
+
+        return ret
+
+    def _remove_inoperative_doorbells(self):
+        for doorbell in list(self.doorbells):
+            device_id = doorbell.device_id
+            doorbell_is_operative = False
+            doorbell_detail = self._device_detail_by_id.get(device_id)
+            if doorbell_detail is None:
+                _LOGGER.info(
+                    "The doorbell %s could not be setup because the system could not fetch details about the doorbell",
+                    doorbell.device_name,
+                )
+            else:
+                doorbell_is_operative = True
+
+            if not doorbell_is_operative:
+                del self._doorbells_by_id[device_id]
+                del self._device_detail_by_id[device_id]
+
+    def _remove_inoperative_locks(self):
+        # Remove non-operative locks as there must
+        # be a bridge (August Connect) for them to
+        # be usable
+        for lock in list(self.locks):
+            device_id = lock.device_id
+            lock_is_operative = False
+            lock_detail = self._device_detail_by_id.get(device_id)
+            if lock_detail is None:
+                _LOGGER.info(
+                    "The lock %s could not be setup because the system could not fetch details about the lock",
+                    lock.device_name,
+                )
+            elif lock_detail.bridge is None:
+                _LOGGER.info(
+                    "The lock %s could not be setup because it does not have a bridge (Connect)",
+                    lock.device_name,
+                )
+            # Bridge may come back online later so we still add the device since we will
+            # have a pubnub subscription to tell use when it recovers
+            else:
+                lock_is_operative = True
+
+            if not lock_is_operative:
+                del self._locks_by_id[device_id]
+                del self._device_detail_by_id[device_id]
+
+
+def _save_live_attrs(lock_detail):
+    """Store the attributes that the lock detail api may have an invalid cache for.
+
+    Since we are connected to pubnub we may have more current data
+    then the api so we want to restore the most current data after
+    updating battery state etc.
+    """
+    return {attr: getattr(lock_detail, attr) for attr in API_CACHED_ATTRS}
+
+
+def _restore_live_attrs(lock_detail, attrs):
+    """Restore the non-cache attributes after a cached update."""
+    for attr, value in attrs.items():
+        setattr(lock_detail, attr, value)

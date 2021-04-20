@@ -1,8 +1,9 @@
 {
   "domain": "nzbget",
-  "name": "Nzbget",
+  "name": "NZBGet",
   "documentation": "https://www.home-assistant.io/integrations/nzbget",
   "requirements": ["pynzbgetapi==0.2.0"],
-  "dependencies": [],
-  "codeowners": ["@chriscla"]
+  "codeowners": ["@chriscla"],
+  "config_flow": true,
+  "iot_class": "local_polling"
 }

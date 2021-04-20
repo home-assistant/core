@@ -1,26 +1,27 @@
 """Support for Flux lights."""
 import logging
-import socket
 import random
 
 from flux_led import BulbScanner, WifiLedBulb
 import voluptuous as vol
 
-from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_PROTOCOL, ATTR_MODE
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_HS_COLOR,
+    ATTR_COLOR_TEMP,
     ATTR_EFFECT,
+    ATTR_HS_COLOR,
     ATTR_WHITE_VALUE,
     EFFECT_COLORLOOP,
     EFFECT_RANDOM,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_EFFECT,
-    SUPPORT_COLOR,
-    SUPPORT_WHITE_VALUE,
-    Light,
     PLATFORM_SCHEMA,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP,
+    SUPPORT_EFFECT,
+    SUPPORT_WHITE_VALUE,
+    LightEntity,
 )
+from homeassistant.const import ATTR_MODE, CONF_DEVICES, CONF_NAME, CONF_PROTOCOL
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
@@ -42,6 +43,10 @@ MODE_RGBW = "rgbw"
 # This mode enables white value to be controlled by brightness.
 # RGB value is ignored when this mode is specified.
 MODE_WHITE = "w"
+
+# Constant color temp values for 2 flux_led special modes
+# Warm-white and Cool-white modes
+COLOR_TEMP_WARM_VS_COLD_WHITE_CUT_OFF = 285
 
 # List of supported effects which aren't already declared in LIGHT
 EFFECT_RED_FADE = "red_fade"
@@ -93,7 +98,7 @@ TRANSITION_GRADUAL = "gradual"
 TRANSITION_JUMP = "jump"
 TRANSITION_STROBE = "strobe"
 
-FLUX_EFFECT_LIST = sorted(list(EFFECT_MAP)) + [EFFECT_RANDOM]
+FLUX_EFFECT_LIST = sorted(EFFECT_MAP) + [EFFECT_RANDOM]
 
 CUSTOM_EFFECT_SCHEMA = vol.Schema(
     {
@@ -161,7 +166,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         ipaddr = device["ipaddr"]
         if ipaddr in light_ips:
             continue
-        device["name"] = "{} {}".format(device["id"], ipaddr)
+        device["name"] = f"{device['id']} {ipaddr}"
         device[ATTR_MODE] = None
         device[CONF_PROTOCOL] = None
         device[CONF_CUSTOM_EFFECT] = None
@@ -171,7 +176,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(lights, True)
 
 
-class FluxLight(Light):
+class FluxLight(LightEntity):
     """Representation of a Flux light."""
 
     def __init__(self, device):
@@ -235,7 +240,7 @@ class FluxLight(Light):
     def supported_features(self):
         """Flag supported features."""
         if self._mode == MODE_RGBW:
-            return SUPPORT_FLUX_LED | SUPPORT_WHITE_VALUE
+            return SUPPORT_FLUX_LED | SUPPORT_WHITE_VALUE | SUPPORT_COLOR_TEMP
 
         if self._mode == MODE_WHITE:
             return SUPPORT_BRIGHTNESS
@@ -284,6 +289,17 @@ class FluxLight(Light):
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         effect = kwargs.get(ATTR_EFFECT)
         white = kwargs.get(ATTR_WHITE_VALUE)
+        color_temp = kwargs.get(ATTR_COLOR_TEMP)
+
+        # handle special modes
+        if color_temp is not None:
+            if brightness is None:
+                brightness = self.brightness
+            if color_temp > COLOR_TEMP_WARM_VS_COLD_WHITE_CUT_OFF:
+                self._bulb.setRgbw(w=brightness)
+            else:
+                self._bulb.setRgbw(w2=brightness)
+            return
 
         # Show warning if effect set with rgb, brightness, or white level
         if effect and (brightness or white or rgb):
@@ -346,7 +362,7 @@ class FluxLight(Light):
             try:
                 self._connect()
                 self._error_reported = False
-            except socket.error:
+            except OSError:
                 self._disconnect()
                 if not self._error_reported:
                     _LOGGER.warning(

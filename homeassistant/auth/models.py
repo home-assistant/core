@@ -1,15 +1,18 @@
 """Auth models."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
-from typing import Dict, List, NamedTuple, Optional
+import secrets
+from typing import NamedTuple
 import uuid
 
 import attr
 
+from homeassistant.const import __version__
 from homeassistant.util import dt as dt_util
 
 from . import permissions as perm_mdl
 from .const import GROUP_ID_ADMIN
-from .util import generate_secret
 
 TOKEN_TYPE_NORMAL = "normal"
 TOKEN_TYPE_SYSTEM = "system"
@@ -20,33 +23,38 @@ TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN = "long_lived_access_token"
 class Group:
     """A group."""
 
-    name = attr.ib(type=Optional[str])
-    policy = attr.ib(type=perm_mdl.PolicyType)
-    id = attr.ib(type=str, factory=lambda: uuid.uuid4().hex)
-    system_generated = attr.ib(type=bool, default=False)
+    name: str | None = attr.ib()
+    policy: perm_mdl.PolicyType = attr.ib()
+    id: str = attr.ib(factory=lambda: uuid.uuid4().hex)
+    system_generated: bool = attr.ib(default=False)
 
 
 @attr.s(slots=True)
 class User:
     """A user."""
 
-    name = attr.ib(type=Optional[str])
-    perm_lookup = attr.ib(type=perm_mdl.PermissionLookup, cmp=False)
-    id = attr.ib(type=str, factory=lambda: uuid.uuid4().hex)
-    is_owner = attr.ib(type=bool, default=False)
-    is_active = attr.ib(type=bool, default=False)
-    system_generated = attr.ib(type=bool, default=False)
+    name: str | None = attr.ib()
+    perm_lookup: perm_mdl.PermissionLookup = attr.ib(eq=False, order=False)
+    id: str = attr.ib(factory=lambda: uuid.uuid4().hex)
+    is_owner: bool = attr.ib(default=False)
+    is_active: bool = attr.ib(default=False)
+    system_generated: bool = attr.ib(default=False)
 
-    groups = attr.ib(type=List[Group], factory=list, cmp=False)
+    groups: list[Group] = attr.ib(factory=list, eq=False, order=False)
 
     # List of credentials of a user.
-    credentials = attr.ib(type=List["Credentials"], factory=list, cmp=False)
+    credentials: list[Credentials] = attr.ib(factory=list, eq=False, order=False)
 
     # Tokens associated with a user.
-    refresh_tokens = attr.ib(type=Dict[str, "RefreshToken"], factory=dict, cmp=False)
+    refresh_tokens: dict[str, RefreshToken] = attr.ib(
+        factory=dict, eq=False, order=False
+    )
 
-    _permissions = attr.ib(
-        type=Optional[perm_mdl.PolicyPermissions], init=False, cmp=False, default=None
+    _permissions: perm_mdl.PolicyPermissions | None = attr.ib(
+        init=False,
+        eq=False,
+        order=False,
+        default=None,
     )
 
     @property
@@ -82,39 +90,46 @@ class User:
 class RefreshToken:
     """RefreshToken for a user to grant new access tokens."""
 
-    user = attr.ib(type=User)
-    client_id = attr.ib(type=Optional[str])
-    access_token_expiration = attr.ib(type=timedelta)
-    client_name = attr.ib(type=Optional[str], default=None)
-    client_icon = attr.ib(type=Optional[str], default=None)
-    token_type = attr.ib(
-        type=str,
+    user: User = attr.ib()
+    client_id: str | None = attr.ib()
+    access_token_expiration: timedelta = attr.ib()
+    client_name: str | None = attr.ib(default=None)
+    client_icon: str | None = attr.ib(default=None)
+    token_type: str = attr.ib(
         default=TOKEN_TYPE_NORMAL,
         validator=attr.validators.in_(
             (TOKEN_TYPE_NORMAL, TOKEN_TYPE_SYSTEM, TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN)
         ),
     )
-    id = attr.ib(type=str, factory=lambda: uuid.uuid4().hex)
-    created_at = attr.ib(type=datetime, factory=dt_util.utcnow)
-    token = attr.ib(type=str, factory=lambda: generate_secret(64))
-    jwt_key = attr.ib(type=str, factory=lambda: generate_secret(64))
+    id: str = attr.ib(factory=lambda: uuid.uuid4().hex)
+    created_at: datetime = attr.ib(factory=dt_util.utcnow)
+    token: str = attr.ib(factory=lambda: secrets.token_hex(64))
+    jwt_key: str = attr.ib(factory=lambda: secrets.token_hex(64))
 
-    last_used_at = attr.ib(type=Optional[datetime], default=None)
-    last_used_ip = attr.ib(type=Optional[str], default=None)
+    last_used_at: datetime | None = attr.ib(default=None)
+    last_used_ip: str | None = attr.ib(default=None)
+
+    credential: Credentials | None = attr.ib(default=None)
+
+    version: str | None = attr.ib(default=__version__)
 
 
 @attr.s(slots=True)
 class Credentials:
     """Credentials for a user on an auth provider."""
 
-    auth_provider_type = attr.ib(type=str)
-    auth_provider_id = attr.ib(type=Optional[str])
+    auth_provider_type: str = attr.ib()
+    auth_provider_id: str | None = attr.ib()
 
     # Allow the auth provider to store data to represent their auth.
-    data = attr.ib(type=dict)
+    data: dict = attr.ib()
 
-    id = attr.ib(type=str, factory=lambda: uuid.uuid4().hex)
-    is_new = attr.ib(type=bool, default=True)
+    id: str = attr.ib(factory=lambda: uuid.uuid4().hex)
+    is_new: bool = attr.ib(default=True)
 
 
-UserMeta = NamedTuple("UserMeta", [("name", Optional[str]), ("is_active", bool)])
+class UserMeta(NamedTuple):
+    """User metadata."""
+
+    name: str | None
+    is_active: bool

@@ -1,8 +1,7 @@
 {
   "domain": "nfandroidtv",
-  "name": "Nfandroidtv",
+  "name": "Notifications for Android TV / FireTV",
   "documentation": "https://www.home-assistant.io/integrations/nfandroidtv",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "local_push"
 }

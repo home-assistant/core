@@ -1,18 +1,14 @@
 """Light/LED support for the Skybell HD Doorbell."""
-import logging
-
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
-    Light,
+    LightEntity,
 )
 import homeassistant.util.color as color_util
 
 from . import DOMAIN as SKYBELL_DOMAIN, SkybellDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -27,16 +23,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 def _to_skybell_level(level):
-    """Convert the given HASS light level (0-255) to Skybell (0-100)."""
+    """Convert the given Home Assistant light level (0-255) to Skybell (0-100)."""
     return int((level * 100) / 255)
 
 
 def _to_hass_level(level):
-    """Convert the given Skybell (0-100) light level to HASS (0-255)."""
+    """Convert the given Skybell (0-100) light level to Home Assistant (0-255)."""
     return int((level * 255) / 100)
 
 
-class SkybellLight(SkybellDevice, Light):
+class SkybellLight(SkybellDevice, LightEntity):
     """A binary sensor implementation for Skybell devices."""
 
     def __init__(self, device):

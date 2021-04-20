@@ -1,29 +1,49 @@
 """The tests for Monoprice Media player platform."""
-import unittest
-from unittest import mock
-import voluptuous as vol
-
 from collections import defaultdict
+from unittest.mock import patch
+
+from serial import SerialException
+
 from homeassistant.components.media_player.const import (
-    DOMAIN,
-    SUPPORT_TURN_ON,
+    ATTR_INPUT_SOURCE,
+    ATTR_INPUT_SOURCE_LIST,
+    ATTR_MEDIA_VOLUME_LEVEL,
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
+    SERVICE_SELECT_SOURCE,
+    SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
-    SUPPORT_SELECT_SOURCE,
 )
-from homeassistant.const import STATE_ON, STATE_OFF
-
-import tests.common
-from homeassistant.components.monoprice.media_player import (
-    DATA_MONOPRICE,
-    PLATFORM_SCHEMA,
-    SERVICE_SNAPSHOT,
+from homeassistant.components.monoprice.const import (
+    CONF_NOT_FIRST_RUN,
+    CONF_SOURCES,
+    DOMAIN,
     SERVICE_RESTORE,
-    setup_platform,
+    SERVICE_SNAPSHOT,
 )
-import pytest
+from homeassistant.const import (
+    CONF_PORT,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    SERVICE_VOLUME_DOWN,
+    SERVICE_VOLUME_MUTE,
+    SERVICE_VOLUME_SET,
+    SERVICE_VOLUME_UP,
+)
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_component import async_update_entity
+
+from tests.common import MockConfigEntry
+
+MOCK_CONFIG = {CONF_PORT: "fake port", CONF_SOURCES: {"1": "one", "3": "three"}}
+MOCK_OPTIONS = {CONF_SOURCES: {"2": "two", "4": "four"}}
+
+ZONE_1_ID = "media_player.zone_11"
+ZONE_2_ID = "media_player.zone_12"
+ZONE_7_ID = "media_player.zone_21"
 
 
 class AttrDict(dict):
@@ -74,423 +94,444 @@ class MockMonoprice:
         self.zones[zone.zone] = AttrDict(zone)
 
 
-class TestMonopriceSchema(unittest.TestCase):
-    """Test Monoprice schema."""
+async def test_cannot_connect(hass):
+    """Test connection error."""
 
-    def test_valid_schema(self):
-        """Test valid schema."""
-        valid_schema = {
-            "platform": "monoprice",
-            "port": "/dev/ttyUSB0",
-            "zones": {
-                11: {"name": "a"},
-                12: {"name": "a"},
-                13: {"name": "a"},
-                14: {"name": "a"},
-                15: {"name": "a"},
-                16: {"name": "a"},
-                21: {"name": "a"},
-                22: {"name": "a"},
-                23: {"name": "a"},
-                24: {"name": "a"},
-                25: {"name": "a"},
-                26: {"name": "a"},
-                31: {"name": "a"},
-                32: {"name": "a"},
-                33: {"name": "a"},
-                34: {"name": "a"},
-                35: {"name": "a"},
-                36: {"name": "a"},
-            },
-            "sources": {
-                1: {"name": "a"},
-                2: {"name": "a"},
-                3: {"name": "a"},
-                4: {"name": "a"},
-                5: {"name": "a"},
-                6: {"name": "a"},
-            },
-        }
-        PLATFORM_SCHEMA(valid_schema)
+    with patch(
+        "homeassistant.components.monoprice.get_monoprice",
+        side_effect=SerialException,
+    ):
+        config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+        config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert hass.states.get(ZONE_1_ID) is None
 
-    def test_invalid_schemas(self):
-        """Test invalid schemas."""
-        schemas = (
-            {},  # Empty
-            None,  # None
-            # Missing port
-            {
-                "platform": "monoprice",
-                "name": "Name",
-                "zones": {11: {"name": "a"}},
-                "sources": {1: {"name": "b"}},
-            },
-            # Invalid zone number
-            {
-                "platform": "monoprice",
-                "port": "aaa",
-                "name": "Name",
-                "zones": {10: {"name": "a"}},
-                "sources": {1: {"name": "b"}},
-            },
-            # Invalid source number
-            {
-                "platform": "monoprice",
-                "port": "aaa",
-                "name": "Name",
-                "zones": {11: {"name": "a"}},
-                "sources": {0: {"name": "b"}},
-            },
-            # Zone missing name
-            {
-                "platform": "monoprice",
-                "port": "aaa",
-                "name": "Name",
-                "zones": {11: {}},
-                "sources": {1: {"name": "b"}},
-            },
-            # Source missing name
-            {
-                "platform": "monoprice",
-                "port": "aaa",
-                "name": "Name",
-                "zones": {11: {"name": "a"}},
-                "sources": {1: {}},
-            },
+
+async def _setup_monoprice(hass, monoprice):
+    with patch(
+        "homeassistant.components.monoprice.get_monoprice",
+        new=lambda *a: monoprice,
+    ):
+        config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+        config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+
+async def _setup_monoprice_with_options(hass, monoprice):
+    with patch(
+        "homeassistant.components.monoprice.get_monoprice",
+        new=lambda *a: monoprice,
+    ):
+        config_entry = MockConfigEntry(
+            domain=DOMAIN, data=MOCK_CONFIG, options=MOCK_OPTIONS
         )
-        for value in schemas:
-            with pytest.raises(vol.MultipleInvalid):
-                PLATFORM_SCHEMA(value)
+        config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
 
-class TestMonopriceMediaPlayer(unittest.TestCase):
-    """Test the media_player module."""
+async def _setup_monoprice_not_first_run(hass, monoprice):
+    with patch(
+        "homeassistant.components.monoprice.get_monoprice",
+        new=lambda *a: monoprice,
+    ):
+        data = {**MOCK_CONFIG, CONF_NOT_FIRST_RUN: True}
+        config_entry = MockConfigEntry(domain=DOMAIN, data=data)
+        config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    def setUp(self):
-        """Set up the test case."""
-        self.monoprice = MockMonoprice()
-        self.hass = tests.common.get_test_home_assistant()
-        self.hass.start()
-        # Note, source dictionary is unsorted!
-        with mock.patch("pymonoprice.get_monoprice", new=lambda *a: self.monoprice):
-            setup_platform(
-                self.hass,
-                {
-                    "platform": "monoprice",
-                    "port": "/dev/ttyS0",
-                    "name": "Name",
-                    "zones": {12: {"name": "Zone name"}},
-                    "sources": {
-                        1: {"name": "one"},
-                        3: {"name": "three"},
-                        2: {"name": "two"},
-                    },
-                },
-                lambda *args, **kwargs: None,
-                {},
-            )
-            self.hass.block_till_done()
-        self.media_player = self.hass.data[DATA_MONOPRICE][0]
-        self.media_player.hass = self.hass
-        self.media_player.entity_id = "media_player.zone_1"
 
-    def tearDown(self):
-        """Tear down the test case."""
-        self.hass.stop()
+async def _call_media_player_service(hass, name, data):
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN, name, service_data=data, blocking=True
+    )
 
-    def test_setup_platform(self, *args):
-        """Test setting up platform."""
-        # Two services must be registered
-        assert self.hass.services.has_service(DOMAIN, SERVICE_RESTORE)
-        assert self.hass.services.has_service(DOMAIN, SERVICE_SNAPSHOT)
-        assert len(self.hass.data[DATA_MONOPRICE]) == 1
-        assert self.hass.data[DATA_MONOPRICE][0].name == "Zone name"
 
-    def test_service_calls_with_entity_id(self):
-        """Test snapshot save/restore service calls."""
-        self.media_player.update()
-        assert "Zone name" == self.media_player.name
-        assert STATE_ON == self.media_player.state
-        assert 0.0 == self.media_player.volume_level, 0.0001
-        assert self.media_player.is_volume_muted
-        assert "one" == self.media_player.source
+async def _call_homeassistant_service(hass, name, data):
+    await hass.services.async_call(
+        "homeassistant", name, service_data=data, blocking=True
+    )
 
-        # Saving default values
-        self.hass.services.call(
-            DOMAIN,
-            SERVICE_SNAPSHOT,
-            {"entity_id": "media_player.zone_1"},
-            blocking=True,
-        )
-        # self.hass.block_till_done()
 
-        # Changing media player to new state
-        self.media_player.set_volume_level(1)
-        self.media_player.select_source("two")
-        self.media_player.mute_volume(False)
-        self.media_player.turn_off()
+async def _call_monoprice_service(hass, name, data):
+    await hass.services.async_call(DOMAIN, name, service_data=data, blocking=True)
 
-        # Checking that values were indeed changed
-        self.media_player.update()
-        assert "Zone name" == self.media_player.name
-        assert STATE_OFF == self.media_player.state
-        assert 1.0 == self.media_player.volume_level, 0.0001
-        assert not self.media_player.is_volume_muted
-        assert "two" == self.media_player.source
 
-        # Restoring wrong media player to its previous state
-        # Nothing should be done
-        self.hass.services.call(
-            DOMAIN, SERVICE_RESTORE, {"entity_id": "media.not_existing"}, blocking=True
-        )
-        # self.hass.block_till_done()
+async def test_service_calls_with_entity_id(hass):
+    """Test snapshot save/restore service calls."""
+    await _setup_monoprice(hass, MockMonoprice())
 
-        # Checking that values were not (!) restored
-        self.media_player.update()
-        assert "Zone name" == self.media_player.name
-        assert STATE_OFF == self.media_player.state
-        assert 1.0 == self.media_player.volume_level, 0.0001
-        assert not self.media_player.is_volume_muted
-        assert "two" == self.media_player.source
+    # Changing media player to new state
+    await _call_media_player_service(
+        hass, SERVICE_VOLUME_SET, {"entity_id": ZONE_1_ID, "volume_level": 0.0}
+    )
+    await _call_media_player_service(
+        hass, SERVICE_SELECT_SOURCE, {"entity_id": ZONE_1_ID, "source": "one"}
+    )
 
-        # Restoring media player to its previous state
-        self.hass.services.call(
-            DOMAIN, SERVICE_RESTORE, {"entity_id": "media_player.zone_1"}, blocking=True
-        )
-        self.hass.block_till_done()
+    # Saving existing values
+    await _call_monoprice_service(hass, SERVICE_SNAPSHOT, {"entity_id": ZONE_1_ID})
 
-        # Checking that values were restored
-        assert "Zone name" == self.media_player.name
-        assert STATE_ON == self.media_player.state
-        assert 0.0 == self.media_player.volume_level, 0.0001
-        assert self.media_player.is_volume_muted
-        assert "one" == self.media_player.source
+    # Changing media player to new state
+    await _call_media_player_service(
+        hass, SERVICE_VOLUME_SET, {"entity_id": ZONE_1_ID, "volume_level": 1.0}
+    )
+    await _call_media_player_service(
+        hass, SERVICE_SELECT_SOURCE, {"entity_id": ZONE_1_ID, "source": "three"}
+    )
 
-    def test_service_calls_without_entity_id(self):
-        """Test snapshot save/restore service calls."""
-        self.media_player.update()
-        assert "Zone name" == self.media_player.name
-        assert STATE_ON == self.media_player.state
-        assert 0.0 == self.media_player.volume_level, 0.0001
-        assert self.media_player.is_volume_muted
-        assert "one" == self.media_player.source
+    # Restoring other media player to its previous state
+    # The zone should not be restored
+    await _call_monoprice_service(hass, SERVICE_RESTORE, {"entity_id": ZONE_2_ID})
+    await hass.async_block_till_done()
 
-        # Restoring media player
-        # since there is no snapshot, nothing should be done
-        self.hass.services.call(DOMAIN, SERVICE_RESTORE, blocking=True)
-        self.hass.block_till_done()
-        self.media_player.update()
-        assert "Zone name" == self.media_player.name
-        assert STATE_ON == self.media_player.state
-        assert 0.0 == self.media_player.volume_level, 0.0001
-        assert self.media_player.is_volume_muted
-        assert "one" == self.media_player.source
+    # Checking that values were not (!) restored
+    state = hass.states.get(ZONE_1_ID)
 
-        # Saving default values
-        self.hass.services.call(DOMAIN, SERVICE_SNAPSHOT, blocking=True)
-        self.hass.block_till_done()
+    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 1.0
+    assert state.attributes[ATTR_INPUT_SOURCE] == "three"
 
-        # Changing media player to new state
-        self.media_player.set_volume_level(1)
-        self.media_player.select_source("two")
-        self.media_player.mute_volume(False)
-        self.media_player.turn_off()
+    # Restoring media player to its previous state
+    await _call_monoprice_service(hass, SERVICE_RESTORE, {"entity_id": ZONE_1_ID})
+    await hass.async_block_till_done()
 
-        # Checking that values were indeed changed
-        self.media_player.update()
-        assert "Zone name" == self.media_player.name
-        assert STATE_OFF == self.media_player.state
-        assert 1.0 == self.media_player.volume_level, 0.0001
-        assert not self.media_player.is_volume_muted
-        assert "two" == self.media_player.source
+    state = hass.states.get(ZONE_1_ID)
 
-        # Restoring media player to its previous state
-        self.hass.services.call(DOMAIN, SERVICE_RESTORE, blocking=True)
-        self.hass.block_till_done()
+    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.0
+    assert state.attributes[ATTR_INPUT_SOURCE] == "one"
 
-        # Checking that values were restored
-        assert "Zone name" == self.media_player.name
-        assert STATE_ON == self.media_player.state
-        assert 0.0 == self.media_player.volume_level, 0.0001
-        assert self.media_player.is_volume_muted
-        assert "one" == self.media_player.source
 
-    def test_update(self):
-        """Test updating values from monoprice."""
-        assert self.media_player.state is None
-        assert self.media_player.volume_level is None
-        assert self.media_player.is_volume_muted is None
-        assert self.media_player.source is None
+async def test_service_calls_with_all_entities(hass):
+    """Test snapshot save/restore service calls."""
+    await _setup_monoprice(hass, MockMonoprice())
 
-        self.media_player.update()
+    # Changing media player to new state
+    await _call_media_player_service(
+        hass, SERVICE_VOLUME_SET, {"entity_id": ZONE_1_ID, "volume_level": 0.0}
+    )
+    await _call_media_player_service(
+        hass, SERVICE_SELECT_SOURCE, {"entity_id": ZONE_1_ID, "source": "one"}
+    )
 
-        assert STATE_ON == self.media_player.state
-        assert 0.0 == self.media_player.volume_level, 0.0001
-        assert self.media_player.is_volume_muted
-        assert "one" == self.media_player.source
+    # Saving existing values
+    await _call_monoprice_service(hass, SERVICE_SNAPSHOT, {"entity_id": "all"})
 
-    def test_name(self):
-        """Test name property."""
-        assert "Zone name" == self.media_player.name
+    # Changing media player to new state
+    await _call_media_player_service(
+        hass, SERVICE_VOLUME_SET, {"entity_id": ZONE_1_ID, "volume_level": 1.0}
+    )
+    await _call_media_player_service(
+        hass, SERVICE_SELECT_SOURCE, {"entity_id": ZONE_1_ID, "source": "three"}
+    )
 
-    def test_state(self):
-        """Test state property."""
-        assert self.media_player.state is None
+    # Restoring media player to its previous state
+    await _call_monoprice_service(hass, SERVICE_RESTORE, {"entity_id": "all"})
+    await hass.async_block_till_done()
 
-        self.media_player.update()
-        assert STATE_ON == self.media_player.state
+    state = hass.states.get(ZONE_1_ID)
 
-        self.monoprice.zones[12].power = False
-        self.media_player.update()
-        assert STATE_OFF == self.media_player.state
+    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.0
+    assert state.attributes[ATTR_INPUT_SOURCE] == "one"
 
-    def test_volume_level(self):
-        """Test volume level property."""
-        assert self.media_player.volume_level is None
-        self.media_player.update()
-        assert 0.0 == self.media_player.volume_level, 0.0001
 
-        self.monoprice.zones[12].volume = 38
-        self.media_player.update()
-        assert 1.0 == self.media_player.volume_level, 0.0001
+async def test_service_calls_without_relevant_entities(hass):
+    """Test snapshot save/restore service calls."""
+    await _setup_monoprice(hass, MockMonoprice())
 
-        self.monoprice.zones[12].volume = 19
-        self.media_player.update()
-        assert 0.5 == self.media_player.volume_level, 0.0001
+    # Changing media player to new state
+    await _call_media_player_service(
+        hass, SERVICE_VOLUME_SET, {"entity_id": ZONE_1_ID, "volume_level": 0.0}
+    )
+    await _call_media_player_service(
+        hass, SERVICE_SELECT_SOURCE, {"entity_id": ZONE_1_ID, "source": "one"}
+    )
 
-    def test_is_volume_muted(self):
-        """Test volume muted property."""
-        assert self.media_player.is_volume_muted is None
+    # Saving existing values
+    await _call_monoprice_service(hass, SERVICE_SNAPSHOT, {"entity_id": "all"})
 
-        self.media_player.update()
-        assert self.media_player.is_volume_muted
+    # Changing media player to new state
+    await _call_media_player_service(
+        hass, SERVICE_VOLUME_SET, {"entity_id": ZONE_1_ID, "volume_level": 1.0}
+    )
+    await _call_media_player_service(
+        hass, SERVICE_SELECT_SOURCE, {"entity_id": ZONE_1_ID, "source": "three"}
+    )
 
-        self.monoprice.zones[12].mute = False
-        self.media_player.update()
-        assert not self.media_player.is_volume_muted
+    # Restoring media player to its previous state
+    await _call_monoprice_service(hass, SERVICE_RESTORE, {"entity_id": "light.demo"})
+    await hass.async_block_till_done()
 
-    def test_supported_features(self):
-        """Test supported features property."""
-        assert (
-            SUPPORT_VOLUME_MUTE
-            | SUPPORT_VOLUME_SET
-            | SUPPORT_VOLUME_STEP
-            | SUPPORT_TURN_ON
-            | SUPPORT_TURN_OFF
-            | SUPPORT_SELECT_SOURCE
-            == self.media_player.supported_features
-        )
+    state = hass.states.get(ZONE_1_ID)
 
-    def test_source(self):
-        """Test source property."""
-        assert self.media_player.source is None
-        self.media_player.update()
-        assert "one" == self.media_player.source
+    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 1.0
+    assert state.attributes[ATTR_INPUT_SOURCE] == "three"
 
-    def test_media_title(self):
-        """Test media title property."""
-        assert self.media_player.media_title is None
-        self.media_player.update()
-        assert "one" == self.media_player.media_title
 
-    def test_source_list(self):
-        """Test source list property."""
-        # Note, the list is sorted!
-        assert ["one", "two", "three"] == self.media_player.source_list
+async def test_restore_without_snapshort(hass):
+    """Test restore when snapshot wasn't called."""
+    await _setup_monoprice(hass, MockMonoprice())
 
-    def test_select_source(self):
-        """Test source selection methods."""
-        self.media_player.update()
+    with patch.object(MockMonoprice, "restore_zone") as method_call:
+        await _call_monoprice_service(hass, SERVICE_RESTORE, {"entity_id": ZONE_1_ID})
+        await hass.async_block_till_done()
 
-        assert "one" == self.media_player.source
+        assert not method_call.called
 
-        self.media_player.select_source("two")
-        assert 2 == self.monoprice.zones[12].source
-        self.media_player.update()
-        assert "two" == self.media_player.source
 
-        # Trying to set unknown source
-        self.media_player.select_source("no name")
-        assert 2 == self.monoprice.zones[12].source
-        self.media_player.update()
-        assert "two" == self.media_player.source
+async def test_update(hass):
+    """Test updating values from monoprice."""
+    monoprice = MockMonoprice()
+    await _setup_monoprice(hass, monoprice)
 
-    def test_turn_on(self):
-        """Test turning on the zone."""
-        self.monoprice.zones[12].power = False
-        self.media_player.update()
-        assert STATE_OFF == self.media_player.state
+    # Changing media player to new state
+    await _call_media_player_service(
+        hass, SERVICE_VOLUME_SET, {"entity_id": ZONE_1_ID, "volume_level": 0.0}
+    )
+    await _call_media_player_service(
+        hass, SERVICE_SELECT_SOURCE, {"entity_id": ZONE_1_ID, "source": "one"}
+    )
 
-        self.media_player.turn_on()
-        assert self.monoprice.zones[12].power
-        self.media_player.update()
-        assert STATE_ON == self.media_player.state
+    monoprice.set_source(11, 3)
+    monoprice.set_volume(11, 38)
 
-    def test_turn_off(self):
-        """Test turning off the zone."""
-        self.monoprice.zones[12].power = True
-        self.media_player.update()
-        assert STATE_ON == self.media_player.state
+    await async_update_entity(hass, ZONE_1_ID)
+    await hass.async_block_till_done()
 
-        self.media_player.turn_off()
-        assert not self.monoprice.zones[12].power
-        self.media_player.update()
-        assert STATE_OFF == self.media_player.state
+    state = hass.states.get(ZONE_1_ID)
 
-    def test_mute_volume(self):
-        """Test mute functionality."""
-        self.monoprice.zones[12].mute = True
-        self.media_player.update()
-        assert self.media_player.is_volume_muted
+    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 1.0
+    assert state.attributes[ATTR_INPUT_SOURCE] == "three"
 
-        self.media_player.mute_volume(False)
-        assert not self.monoprice.zones[12].mute
-        self.media_player.update()
-        assert not self.media_player.is_volume_muted
 
-        self.media_player.mute_volume(True)
-        assert self.monoprice.zones[12].mute
-        self.media_player.update()
-        assert self.media_player.is_volume_muted
+async def test_failed_update(hass):
+    """Test updating failure from monoprice."""
+    monoprice = MockMonoprice()
+    await _setup_monoprice(hass, monoprice)
 
-    def test_set_volume_level(self):
-        """Test set volume level."""
-        self.media_player.set_volume_level(1.0)
-        assert 38 == self.monoprice.zones[12].volume
-        assert isinstance(self.monoprice.zones[12].volume, int)
+    # Changing media player to new state
+    await _call_media_player_service(
+        hass, SERVICE_VOLUME_SET, {"entity_id": ZONE_1_ID, "volume_level": 0.0}
+    )
+    await _call_media_player_service(
+        hass, SERVICE_SELECT_SOURCE, {"entity_id": ZONE_1_ID, "source": "one"}
+    )
 
-        self.media_player.set_volume_level(0.0)
-        assert 0 == self.monoprice.zones[12].volume
-        assert isinstance(self.monoprice.zones[12].volume, int)
+    monoprice.set_source(11, 3)
+    monoprice.set_volume(11, 38)
 
-        self.media_player.set_volume_level(0.5)
-        assert 19 == self.monoprice.zones[12].volume
-        assert isinstance(self.monoprice.zones[12].volume, int)
+    with patch.object(MockMonoprice, "zone_status", side_effect=SerialException):
+        await async_update_entity(hass, ZONE_1_ID)
+        await hass.async_block_till_done()
 
-    def test_volume_up(self):
-        """Test increasing volume by one."""
-        self.monoprice.zones[12].volume = 37
-        self.media_player.update()
-        self.media_player.volume_up()
-        assert 38 == self.monoprice.zones[12].volume
-        assert isinstance(self.monoprice.zones[12].volume, int)
+    state = hass.states.get(ZONE_1_ID)
 
-        # Try to raise value beyond max
-        self.media_player.update()
-        self.media_player.volume_up()
-        assert 38 == self.monoprice.zones[12].volume
-        assert isinstance(self.monoprice.zones[12].volume, int)
+    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.0
+    assert state.attributes[ATTR_INPUT_SOURCE] == "one"
 
-    def test_volume_down(self):
-        """Test decreasing volume by one."""
-        self.monoprice.zones[12].volume = 1
-        self.media_player.update()
-        self.media_player.volume_down()
-        assert 0 == self.monoprice.zones[12].volume
-        assert isinstance(self.monoprice.zones[12].volume, int)
 
-        # Try to lower value beyond minimum
-        self.media_player.update()
-        self.media_player.volume_down()
-        assert 0 == self.monoprice.zones[12].volume
-        assert isinstance(self.monoprice.zones[12].volume, int)
+async def test_empty_update(hass):
+    """Test updating with no state from monoprice."""
+    monoprice = MockMonoprice()
+    await _setup_monoprice(hass, monoprice)
+
+    # Changing media player to new state
+    await _call_media_player_service(
+        hass, SERVICE_VOLUME_SET, {"entity_id": ZONE_1_ID, "volume_level": 0.0}
+    )
+    await _call_media_player_service(
+        hass, SERVICE_SELECT_SOURCE, {"entity_id": ZONE_1_ID, "source": "one"}
+    )
+
+    monoprice.set_source(11, 3)
+    monoprice.set_volume(11, 38)
+
+    with patch.object(MockMonoprice, "zone_status", return_value=None):
+        await async_update_entity(hass, ZONE_1_ID)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(ZONE_1_ID)
+
+    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.0
+    assert state.attributes[ATTR_INPUT_SOURCE] == "one"
+
+
+async def test_supported_features(hass):
+    """Test supported features property."""
+    await _setup_monoprice(hass, MockMonoprice())
+
+    state = hass.states.get(ZONE_1_ID)
+    assert (
+        SUPPORT_VOLUME_MUTE
+        | SUPPORT_VOLUME_SET
+        | SUPPORT_VOLUME_STEP
+        | SUPPORT_TURN_ON
+        | SUPPORT_TURN_OFF
+        | SUPPORT_SELECT_SOURCE
+        == state.attributes["supported_features"]
+    )
+
+
+async def test_source_list(hass):
+    """Test source list property."""
+    await _setup_monoprice(hass, MockMonoprice())
+
+    state = hass.states.get(ZONE_1_ID)
+    # Note, the list is sorted!
+    assert state.attributes[ATTR_INPUT_SOURCE_LIST] == ["one", "three"]
+
+
+async def test_source_list_with_options(hass):
+    """Test source list property."""
+    await _setup_monoprice_with_options(hass, MockMonoprice())
+
+    state = hass.states.get(ZONE_1_ID)
+    # Note, the list is sorted!
+    assert state.attributes[ATTR_INPUT_SOURCE_LIST] == ["two", "four"]
+
+
+async def test_select_source(hass):
+    """Test source selection methods."""
+    monoprice = MockMonoprice()
+    await _setup_monoprice(hass, monoprice)
+
+    await _call_media_player_service(
+        hass,
+        SERVICE_SELECT_SOURCE,
+        {"entity_id": ZONE_1_ID, ATTR_INPUT_SOURCE: "three"},
+    )
+    assert monoprice.zones[11].source == 3
+
+    # Trying to set unknown source
+    await _call_media_player_service(
+        hass,
+        SERVICE_SELECT_SOURCE,
+        {"entity_id": ZONE_1_ID, ATTR_INPUT_SOURCE: "no name"},
+    )
+    assert monoprice.zones[11].source == 3
+
+
+async def test_unknown_source(hass):
+    """Test behavior when device has unknown source."""
+    monoprice = MockMonoprice()
+    await _setup_monoprice(hass, monoprice)
+
+    monoprice.set_source(11, 5)
+
+    await async_update_entity(hass, ZONE_1_ID)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ZONE_1_ID)
+
+    assert state.attributes.get(ATTR_INPUT_SOURCE) is None
+
+
+async def test_turn_on_off(hass):
+    """Test turning on the zone."""
+    monoprice = MockMonoprice()
+    await _setup_monoprice(hass, monoprice)
+
+    await _call_media_player_service(hass, SERVICE_TURN_OFF, {"entity_id": ZONE_1_ID})
+    assert not monoprice.zones[11].power
+
+    await _call_media_player_service(hass, SERVICE_TURN_ON, {"entity_id": ZONE_1_ID})
+    assert monoprice.zones[11].power
+
+
+async def test_mute_volume(hass):
+    """Test mute functionality."""
+    monoprice = MockMonoprice()
+    await _setup_monoprice(hass, monoprice)
+
+    await _call_media_player_service(
+        hass, SERVICE_VOLUME_SET, {"entity_id": ZONE_1_ID, "volume_level": 0.5}
+    )
+    await _call_media_player_service(
+        hass, SERVICE_VOLUME_MUTE, {"entity_id": ZONE_1_ID, "is_volume_muted": False}
+    )
+    assert not monoprice.zones[11].mute
+
+    await _call_media_player_service(
+        hass, SERVICE_VOLUME_MUTE, {"entity_id": ZONE_1_ID, "is_volume_muted": True}
+    )
+    assert monoprice.zones[11].mute
+
+
+async def test_volume_up_down(hass):
+    """Test increasing volume by one."""
+    monoprice = MockMonoprice()
+    await _setup_monoprice(hass, monoprice)
+
+    await _call_media_player_service(
+        hass, SERVICE_VOLUME_SET, {"entity_id": ZONE_1_ID, "volume_level": 0.0}
+    )
+    assert monoprice.zones[11].volume == 0
+
+    await _call_media_player_service(
+        hass, SERVICE_VOLUME_DOWN, {"entity_id": ZONE_1_ID}
+    )
+    # should not go below zero
+    assert monoprice.zones[11].volume == 0
+
+    await _call_media_player_service(hass, SERVICE_VOLUME_UP, {"entity_id": ZONE_1_ID})
+    assert monoprice.zones[11].volume == 1
+
+    await _call_media_player_service(
+        hass, SERVICE_VOLUME_SET, {"entity_id": ZONE_1_ID, "volume_level": 1.0}
+    )
+    assert monoprice.zones[11].volume == 38
+
+    await _call_media_player_service(hass, SERVICE_VOLUME_UP, {"entity_id": ZONE_1_ID})
+    # should not go above 38
+    assert monoprice.zones[11].volume == 38
+
+    await _call_media_player_service(
+        hass, SERVICE_VOLUME_DOWN, {"entity_id": ZONE_1_ID}
+    )
+    assert monoprice.zones[11].volume == 37
+
+
+async def test_first_run_with_available_zones(hass):
+    """Test first run with all zones available."""
+    monoprice = MockMonoprice()
+    await _setup_monoprice(hass, monoprice)
+
+    registry = er.async_get(hass)
+
+    entry = registry.async_get(ZONE_7_ID)
+    assert not entry.disabled
+
+
+async def test_first_run_with_failing_zones(hass):
+    """Test first run with failed zones."""
+    monoprice = MockMonoprice()
+
+    with patch.object(MockMonoprice, "zone_status", side_effect=SerialException):
+        await _setup_monoprice(hass, monoprice)
+
+    registry = er.async_get(hass)
+
+    entry = registry.async_get(ZONE_1_ID)
+    assert not entry.disabled
+
+    entry = registry.async_get(ZONE_7_ID)
+    assert entry.disabled
+    assert entry.disabled_by == "integration"
+
+
+async def test_not_first_run_with_failing_zone(hass):
+    """Test first run with failed zones."""
+    monoprice = MockMonoprice()
+
+    with patch.object(MockMonoprice, "zone_status", side_effect=SerialException):
+        await _setup_monoprice_not_first_run(hass, monoprice)
+
+    registry = er.async_get(hass)
+
+    entry = registry.async_get(ZONE_1_ID)
+    assert not entry.disabled
+
+    entry = registry.async_get(ZONE_7_ID)
+    assert not entry.disabled

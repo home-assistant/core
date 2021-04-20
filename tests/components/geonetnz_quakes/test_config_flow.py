@@ -1,66 +1,39 @@
 """Define tests for the GeoNet NZ Quakes config flow."""
 from datetime import timedelta
-
-import pytest
-from asynctest import patch, CoroutineMock
+from unittest.mock import patch
 
 from homeassistant import data_entry_flow
 from homeassistant.components.geonetnz_quakes import (
-    async_setup_entry,
-    config_flow,
-    CONF_MMI,
     CONF_MINIMUM_MAGNITUDE,
+    CONF_MMI,
     DOMAIN,
-    async_unload_entry,
-    FEED,
 )
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_RADIUS,
-    CONF_UNIT_SYSTEM,
     CONF_SCAN_INTERVAL,
+    CONF_UNIT_SYSTEM,
 )
-from tests.common import MockConfigEntry
-
-
-@pytest.fixture
-def config_entry():
-    """Create a mock GeoNet NZ Quakes config entry."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_LATITUDE: -41.2,
-            CONF_LONGITUDE: 174.7,
-            CONF_RADIUS: 25,
-            CONF_UNIT_SYSTEM: "metric",
-            CONF_SCAN_INTERVAL: 300.0,
-            CONF_MMI: 4,
-            CONF_MINIMUM_MAGNITUDE: 0.0,
-        },
-        title="-41.2, 174.7",
-    )
 
 
 async def test_duplicate_error(hass, config_entry):
     """Test that errors are shown when duplicates are added."""
     conf = {CONF_LATITUDE: -41.2, CONF_LONGITUDE: 174.7, CONF_RADIUS: 25}
-
     config_entry.add_to_hass(hass)
-    flow = config_flow.GeonetnzQuakesFlowHandler()
-    flow.hass = hass
 
-    result = await flow.async_step_user(user_input=conf)
-    assert result["errors"] == {"base": "identifier_exists"}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}, data=conf
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_show_form(hass):
     """Test that the form is served with no input."""
-    flow = config_flow.GeonetnzQuakesFlowHandler()
-    flow.hass = hass
-
-    result = await flow.async_step_user(user_input=None)
-
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
@@ -77,10 +50,12 @@ async def test_step_import(hass):
         CONF_MINIMUM_MAGNITUDE: 2.5,
     }
 
-    flow = config_flow.GeonetnzQuakesFlowHandler()
-    flow.hass = hass
-
-    result = await flow.async_step_import(import_config=conf)
+    with patch(
+        "homeassistant.components.geonetnz_quakes.async_setup_entry", return_value=True
+    ), patch("homeassistant.components.geonetnz_quakes.async_setup", return_value=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "import"}, data=conf
+        )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "-41.2, 174.7"
     assert result["data"] == {
@@ -100,10 +75,12 @@ async def test_step_user(hass):
     hass.config.longitude = 174.7
     conf = {CONF_RADIUS: 25, CONF_MMI: 4}
 
-    flow = config_flow.GeonetnzQuakesFlowHandler()
-    flow.hass = hass
-
-    result = await flow.async_step_user(user_input=conf)
+    with patch(
+        "homeassistant.components.geonetnz_quakes.async_setup_entry", return_value=True
+    ), patch("homeassistant.components.geonetnz_quakes.async_setup", return_value=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}, data=conf
+        )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "-41.2, 174.7"
     assert result["data"] == {
@@ -111,25 +88,6 @@ async def test_step_user(hass):
         CONF_LONGITUDE: 174.7,
         CONF_RADIUS: 25,
         CONF_MMI: 4,
-        CONF_UNIT_SYSTEM: "metric",
         CONF_SCAN_INTERVAL: 300.0,
         CONF_MINIMUM_MAGNITUDE: 0.0,
     }
-
-
-async def test_component_unload_config_entry(hass, config_entry):
-    """Test that loading and unloading of a config entry works."""
-    config_entry.add_to_hass(hass)
-    with patch(
-        "aio_geojson_geonetnz_quakes.GeonetnzQuakesFeedManager.update",
-        new_callable=CoroutineMock,
-    ) as mock_feed_manager_update:
-        # Load config entry.
-        assert await async_setup_entry(hass, config_entry)
-        await hass.async_block_till_done()
-        assert mock_feed_manager_update.call_count == 1
-        assert hass.data[DOMAIN][FEED][config_entry.entry_id] is not None
-        # Unload config entry.
-        assert await async_unload_entry(hass, config_entry)
-        await hass.async_block_till_done()
-        assert hass.data[DOMAIN][FEED].get(config_entry.entry_id) is None

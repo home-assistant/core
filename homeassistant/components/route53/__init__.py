@@ -1,11 +1,14 @@
 """Update the IP addresses of your Route53 DNS records."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import List
 
+import boto3
+import requests
 import voluptuous as vol
 
-from homeassistant.const import CONF_DOMAIN, CONF_TTL, CONF_ZONE
+from homeassistant.const import CONF_DOMAIN, CONF_TTL, CONF_ZONE, HTTP_OK
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_time_interval
 
@@ -64,18 +67,20 @@ def setup(hass, config):
     return True
 
 
+def _get_fqdn(record, domain):
+    if record == ".":
+        return domain
+    return f"{record}.{domain}"
+
+
 def _update_route53(
     aws_access_key_id: str,
     aws_secret_access_key: str,
     zone: str,
     domain: str,
-    records: List[str],
+    records: list[str],
     ttl: int,
 ):
-    import boto3
-    from ipify import get_ip
-    from ipify import exceptions
-
     _LOGGER.debug("Starting update for zone %s", zone)
 
     client = boto3.client(
@@ -86,14 +91,10 @@ def _update_route53(
 
     # Get the IP Address and build an array of changes
     try:
-        ipaddress = get_ip()
+        ipaddress = requests.get("https://api.ipify.org/", timeout=5).text
 
-    except exceptions.ConnectionError:
+    except requests.RequestException:
         _LOGGER.warning("Unable to reach the ipify service")
-        return
-
-    except exceptions.ServiceError:
-        _LOGGER.warning("Unable to complete the ipfy request")
         return
 
     changes = []
@@ -104,7 +105,7 @@ def _update_route53(
             {
                 "Action": "UPSERT",
                 "ResourceRecordSet": {
-                    "Name": f"{record}.{domain}",
+                    "Name": _get_fqdn(record, domain),
                     "Type": "A",
                     "TTL": ttl,
                     "ResourceRecords": [{"Value": ipaddress}],
@@ -120,5 +121,5 @@ def _update_route53(
     )
     _LOGGER.debug("Response is %s", response)
 
-    if response["ResponseMetadata"]["HTTPStatusCode"] != 200:
+    if response["ResponseMetadata"]["HTTPStatusCode"] != HTTP_OK:
         _LOGGER.warning(response)

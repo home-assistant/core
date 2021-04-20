@@ -3,13 +3,12 @@ from datetime import timedelta
 import logging
 
 import requests
-import xmltodict
 import voluptuous as vol
+import xmltodict
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_API_KEY, CONF_NAME, ATTR_ATTRIBUTION
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = "http://www.zillow.com/webservice/GetZestimate.htm"
@@ -56,7 +55,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class ZestimateDataSensor(Entity):
+class ZestimateDataSensor(SensorEntity):
     """Implementation of a Zestimate sensor."""
 
     def __init__(self, name, params):
@@ -86,7 +85,7 @@ class ZestimateDataSensor(Entity):
             return None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attributes = {}
         if self.data is not None:

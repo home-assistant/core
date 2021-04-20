@@ -1,9 +1,12 @@
 """Helpers for data entry flows for config entries."""
-from typing import Callable, Awaitable, Union
-from homeassistant import config_entries
-from .typing import HomeAssistantType
+from __future__ import annotations
 
-# mypy: allow-untyped-defs
+from typing import Any, Awaitable, Callable, Union
+
+from homeassistant import config_entries
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultDict
+from homeassistant.helpers.typing import DiscoveryInfoType
 
 DiscoveryFunctionType = Callable[[], Union[Awaitable[bool], bool]]
 
@@ -24,30 +27,34 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
         self._domain = domain
         self._title = title
         self._discovery_function = discovery_function
-        self.CONNECTION_CLASS = connection_class  # pylint: disable=C0103
+        self.CONNECTION_CLASS = connection_class  # pylint: disable=invalid-name
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResultDict:
         """Handle a flow initialized by the user."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
+        await self.async_set_unique_id(self._domain, raise_on_progress=False)
+
         return await self.async_step_confirm()
 
-    async def async_step_confirm(self, user_input=None):
+    async def async_step_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResultDict:
         """Confirm setup."""
         if user_input is None:
+            self._set_confirm_only()
             return self.async_show_form(step_id="confirm")
 
-        if (  # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-            self.context
-            and self.context.get("source") != config_entries.SOURCE_DISCOVERY
-        ):
+        if self.source == config_entries.SOURCE_USER:
             # Get current discovered entries.
             in_progress = self._async_in_progress()
 
             has_devices = in_progress
             if not has_devices:
-                has_devices = await self.hass.async_add_job(
+                has_devices = await self.hass.async_add_job(  # type: ignore
                     self._discovery_function, self.hass
                 )
 
@@ -58,23 +65,37 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
             for flow in in_progress:
                 self.hass.config_entries.flow.async_abort(flow["flow_id"])
 
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+
         return self.async_create_entry(title=self._title, data={})
 
-    async def async_step_discovery(self, discovery_info):
+    async def async_step_discovery(
+        self, discovery_info: DiscoveryInfoType
+    ) -> FlowResultDict:
         """Handle a flow initialized by discovery."""
         if self._async_in_progress() or self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
+
+        await self.async_set_unique_id(self._domain)
 
         return await self.async_step_confirm()
 
     async_step_zeroconf = async_step_discovery
     async_step_ssdp = async_step_discovery
+    async_step_mqtt = async_step_discovery
     async_step_homekit = async_step_discovery
+    async_step_dhcp = async_step_discovery
 
-    async def async_step_import(self, _):
+    async def async_step_import(self, _: dict[str, Any] | None) -> FlowResultDict:
         """Handle a flow initialized by import."""
-        if self._async_in_progress() or self._async_current_entries():
+        if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
+
+        # Cancel other flows.
+        in_progress = self._async_in_progress()
+        for flow in in_progress:
+            self.hass.config_entries.flow.async_abort(flow["flow_id"])
 
         return self.async_create_entry(title=self._title, data={})
 
@@ -114,17 +135,22 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
         self._description_placeholder = description_placeholder
         self._allow_multiple = allow_multiple
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResultDict:
         """Handle a user initiated set up flow to create a webhook."""
         if not self._allow_multiple and self._async_current_entries():
-            return self.async_abort(reason="one_instance_allowed")
+            return self.async_abort(reason="single_instance_allowed")
 
         if user_input is None:
             return self.async_show_form(step_id="user")
 
         webhook_id = self.hass.components.webhook.async_generate_id()
 
-        if self.hass.components.cloud.async_active_subscription():
+        if (
+            "cloud" in self.hass.config.components
+            and self.hass.components.cloud.async_active_subscription()
+        ):
             webhook_url = await self.hass.components.cloud.async_create_cloudhook(
                 webhook_id
             )
@@ -157,7 +183,7 @@ def register_webhook_flow(
 
 
 async def webhook_async_remove_entry(
-    hass: HomeAssistantType, entry: config_entries.ConfigEntry
+    hass: HomeAssistant, entry: config_entries.ConfigEntry
 ) -> None:
     """Remove a webhook config entry."""
     if not entry.data.get("cloudhook") or "cloud" not in hass.config.components:

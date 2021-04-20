@@ -1,8 +1,14 @@
 """Test Home Assistant logging util methods."""
 import asyncio
+from functools import partial
 import logging
-import threading
+import queue
+from unittest.mock import patch
 
+import pytest
+
+from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
+from homeassistant.core import callback, is_callback
 import homeassistant.util.logging as logging_util
 
 
@@ -19,54 +25,61 @@ def test_sensitive_data_filter():
     assert sensitive_record.msg == "******* log"
 
 
-@asyncio.coroutine
-def test_async_handler_loop_log(loop):
-    """Test logging data inside from inside the event loop."""
-    loop._thread_ident = threading.get_ident()
+async def test_logging_with_queue_handler():
+    """Test logging with HomeAssistantQueueHandler."""
 
-    queue = asyncio.Queue(loop=loop)
-    base_handler = logging.handlers.QueueHandler(queue)
-    handler = logging_util.AsyncHandler(loop, base_handler)
-
-    # Test passthrough props and noop functions
-    assert handler.createLock() is None
-    assert handler.acquire() is None
-    assert handler.release() is None
-    assert handler.formatter is base_handler.formatter
-    assert handler.name is base_handler.get_name()
-    handler.name = "mock_name"
-    assert base_handler.get_name() == "mock_name"
+    simple_queue = queue.SimpleQueue()  # type: ignore
+    handler = logging_util.HomeAssistantQueueHandler(simple_queue)
 
     log_record = logging.makeLogRecord({"msg": "Test Log Record"})
+
     handler.emit(log_record)
-    yield from handler.async_close(True)
-    assert queue.get_nowait().msg == "Test Log Record"
-    assert queue.empty()
 
-
-@asyncio.coroutine
-def test_async_handler_thread_log(loop):
-    """Test logging data from a thread."""
-    loop._thread_ident = threading.get_ident()
-
-    queue = asyncio.Queue(loop=loop)
-    base_handler = logging.handlers.QueueHandler(queue)
-    handler = logging_util.AsyncHandler(loop, base_handler)
-
-    log_record = logging.makeLogRecord({"msg": "Test Log Record"})
-
-    def add_log():
-        """Emit a mock log."""
+    with pytest.raises(asyncio.CancelledError), patch.object(
+        handler, "enqueue", side_effect=asyncio.CancelledError
+    ):
         handler.emit(log_record)
-        handler.close()
 
-    yield from loop.run_in_executor(None, add_log)
-    yield from handler.async_close(True)
+    with patch.object(handler, "emit") as emit_mock:
+        handler.handle(log_record)
+        emit_mock.assert_called_once()
 
-    assert queue.get_nowait().msg == "Test Log Record"
-    assert queue.empty()
+    with patch.object(handler, "filter") as filter_mock, patch.object(
+        handler, "emit"
+    ) as emit_mock:
+        filter_mock.return_value = False
+        handler.handle(log_record)
+        emit_mock.assert_not_called()
+
+    with patch.object(handler, "enqueue", side_effect=OSError), patch.object(
+        handler, "handleError"
+    ) as mock_handle_error:
+        handler.emit(log_record)
+        mock_handle_error.assert_called_once()
+
+    handler.close()
+
+    assert simple_queue.get_nowait().msg == "Test Log Record"
+    assert simple_queue.empty()
 
 
+async def test_migrate_log_handler(hass):
+    """Test migrating log handlers."""
+
+    original_handlers = logging.root.handlers
+
+    logging_util.async_activate_log_queue_handler(hass)
+
+    assert len(logging.root.handlers) == 1
+    assert isinstance(logging.root.handlers[0], logging_util.HomeAssistantQueueHandler)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
+    await hass.async_block_till_done()
+
+    assert logging.root.handlers == original_handlers
+
+
+@pytest.mark.no_fail_on_log_exception
 async def test_async_create_catching_coro(hass, caplog):
     """Test exception logging of wrapped coroutine."""
 
@@ -77,3 +90,30 @@ async def test_async_create_catching_coro(hass, caplog):
     await hass.async_block_till_done()
     assert "This is a bad coroutine" in caplog.text
     assert "in test_async_create_catching_coro" in caplog.text
+
+
+def test_catch_log_exception():
+    """Test it is still a callback after wrapping including partial."""
+
+    async def async_meth():
+        pass
+
+    assert asyncio.iscoroutinefunction(
+        logging_util.catch_log_exception(partial(async_meth), lambda: None)
+    )
+
+    @callback
+    def callback_meth():
+        pass
+
+    assert is_callback(
+        logging_util.catch_log_exception(partial(callback_meth), lambda: None)
+    )
+
+    def sync_meth():
+        pass
+
+    wrapped = logging_util.catch_log_exception(partial(sync_meth), lambda: None)
+
+    assert not is_callback(wrapped)
+    assert not asyncio.iscoroutinefunction(wrapped)

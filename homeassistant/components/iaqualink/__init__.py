@@ -1,11 +1,12 @@
 """Component to embed Aqualink devices."""
+from __future__ import annotations
+
 import asyncio
 from functools import wraps
 import logging
+from typing import Any
 
-from aiohttp import ClientTimeout
-import voluptuous as vol
-
+import aiohttp.client_exceptions
 from iaqualink import (
     AqualinkBinarySensor,
     AqualinkClient,
@@ -16,6 +17,7 @@ from iaqualink import (
     AqualinkThermostat,
     AqualinkToggle,
 )
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -25,19 +27,18 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import callback
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .const import DOMAIN, UPDATE_INTERVAL
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,13 +86,19 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> None
     sensors = hass.data[DOMAIN][SENSOR_DOMAIN] = []
     switches = hass.data[DOMAIN][SWITCH_DOMAIN] = []
 
-    session = async_create_clientsession(hass, timeout=ClientTimeout(total=5))
+    session = async_get_clientsession(hass)
     aqualink = AqualinkClient(username, password, session)
     try:
         await aqualink.login()
     except AqualinkLoginException as login_exception:
-        _LOGGER.error("Exception raised while attempting to login: %s", login_exception)
+        _LOGGER.error("Failed to login: %s", login_exception)
         return False
+    except (
+        asyncio.TimeoutError,
+        aiohttp.client_exceptions.ClientConnectorError,
+    ) as aio_exception:
+        _LOGGER.warning("Exception raised while attempting to login: %s", aio_exception)
+        raise ConfigEntryNotReady from aio_exception
 
     systems = await aqualink.get_systems()
     systems = list(systems.values())
@@ -133,7 +140,16 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> None
 
     async def _async_systems_update(now):
         """Refresh internal state for all systems."""
+        prev = systems[0].last_run_success
+
         await systems[0].update()
+        success = systems[0].last_run_success
+
+        if not success and prev:
+            _LOGGER.warning("Failed to refresh iAqualink state")
+        elif success and not prev:
+            _LOGGER.warning("Reconnected to iAqualink")
+
         async_dispatcher_send(hass, DOMAIN)
 
     async_track_time_interval(hass, _async_systems_update, UPDATE_INTERVAL)
@@ -191,11 +207,9 @@ class AqualinkEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Set up a listener when this entity is added to HA."""
-        async_dispatcher_connect(self.hass, DOMAIN, self._update_callback)
-
-    @callback
-    def _update_callback(self) -> None:
-        self.async_schedule_update_ha_state()
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, DOMAIN, self.async_write_ha_state)
+        )
 
     @property
     def should_poll(self) -> bool:
@@ -210,3 +224,24 @@ class AqualinkEntity(Entity):
     def unique_id(self) -> str:
         """Return a unique identifier for this entity."""
         return f"{self.dev.system.serial}_{self.dev.name}"
+
+    @property
+    def assumed_state(self) -> bool:
+        """Return whether the state is based on actual reading from the device."""
+        return not self.dev.system.last_run_success
+
+    @property
+    def available(self) -> bool:
+        """Return whether the device is available or not."""
+        return self.dev.system.online
+
+    @property
+    def device_info(self) -> dict[str, Any]:
+        """Return the device info."""
+        return {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self.name,
+            "model": self.dev.__class__.__name__.replace("Aqualink", ""),
+            "manufacturer": "Jandy",
+            "via_device": (DOMAIN, self.dev.system.serial),
+        }

@@ -7,7 +7,6 @@ import voluptuous as vol
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.const import ATTR_BATTERY_LEVEL
-from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -69,25 +68,27 @@ class ArloCam(Camera):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(self.hass, SIGNAL_UPDATE_ARLO, self._update_callback)
-
-    @callback
-    def _update_callback(self):
-        """Call update method."""
-        self.async_schedule_update_ha_state()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_UPDATE_ARLO, self.async_write_ha_state
+            )
+        )
 
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
+        video = await self.hass.async_add_executor_job(
+            getattr, self._camera, "last_video"
+        )
 
-        video = self._camera.last_video
         if not video:
-            error_msg = "Video not found for {0}. Is it older than {1} days?".format(
-                self.name, self._camera.min_days_vdo_cache
+            error_msg = (
+                f"Video not found for {self.name}. "
+                f"Is it older than {self._camera.min_days_vdo_cache} days?"
             )
             _LOGGER.error(error_msg)
             return
 
-        stream = CameraMjpeg(self._ffmpeg.binary, loop=self.hass.loop)
+        stream = CameraMjpeg(self._ffmpeg.binary)
         await stream.open_camera(video.video_url, extra_cmd=self._ffmpeg_arguments)
 
         try:
@@ -107,7 +108,7 @@ class ArloCam(Camera):
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             name: value

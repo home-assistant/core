@@ -1,172 +1,155 @@
-"""Support for bandwidth sensors with UniFi clients."""
-import logging
+"""Sensor platform for UniFi integration.
 
-from homeassistant.components.unifi.config_flow import get_controller_from_config_entry
+Support for bandwidth sensors of network clients.
+Support for uptime sensors of network clients.
+"""
+
+from datetime import datetime, timedelta
+
+from homeassistant.components.sensor import DEVICE_CLASS_TIMESTAMP, DOMAIN, SensorEntity
+from homeassistant.const import DATA_MEGABYTES
 from homeassistant.core import callback
-from homeassistant.helpers import entity_registry
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_registry import DISABLED_CONFIG_ENTRY
+import homeassistant.util.dt as dt_util
 
-LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN as UNIFI_DOMAIN
+from .unifi_client import UniFiClient
 
-ATTR_RECEIVING = "receiving"
-ATTR_TRANSMITTING = "transmitting"
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Sensor platform doesn't support configuration through configuration.yaml."""
+RX_SENSOR = "rx"
+TX_SENSOR = "tx"
+UPTIME_SENSOR = "uptime"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up sensors for UniFi integration."""
-    controller = get_controller_from_config_entry(hass, config_entry)
-    sensors = {}
-
-    registry = await entity_registry.async_get_registry(hass)
-
-    @callback
-    def update_controller():
-        """Update the values of the controller."""
-        update_items(controller, async_add_entities, sensors)
-
-    controller.listeners.append(
-        async_dispatcher_connect(hass, controller.signal_update, update_controller)
-    )
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    controller.entities[DOMAIN] = {
+        RX_SENSOR: set(),
+        TX_SENSOR: set(),
+        UPTIME_SENSOR: set(),
+    }
 
     @callback
-    def update_disable_on_entities():
+    def items_added(
+        clients: set = controller.api.clients, devices: set = controller.api.devices
+    ) -> None:
         """Update the values of the controller."""
-        for entity in sensors.values():
+        if controller.option_allow_bandwidth_sensors:
+            add_bandwith_entities(controller, async_add_entities, clients)
 
-            disabled_by = None
-            if not entity.entity_registry_enabled_default and entity.enabled:
-                disabled_by = DISABLED_CONFIG_ENTRY
+        if controller.option_allow_uptime_sensors:
+            add_uptime_entities(controller, async_add_entities, clients)
 
-            registry.async_update_entity(
-                entity.registry_entry.entity_id, disabled_by=disabled_by
-            )
+    for signal in (controller.signal_update, controller.signal_options_update):
+        controller.listeners.append(async_dispatcher_connect(hass, signal, items_added))
 
-    controller.listeners.append(
-        async_dispatcher_connect(
-            hass, controller.signal_options_update, update_disable_on_entities
-        )
-    )
-
-    update_controller()
+    items_added()
 
 
 @callback
-def update_items(controller, async_add_entities, sensors):
-    """Update sensors from the controller."""
-    new_sensors = []
+def add_bandwith_entities(controller, async_add_entities, clients):
+    """Add new sensor entities from the controller."""
+    sensors = []
 
-    for client_id in controller.api.clients:
-        for direction, sensor_class in (
-            ("rx", UniFiRxBandwidthSensor),
-            ("tx", UniFiTxBandwidthSensor),
-        ):
-            item_id = f"{direction}-{client_id}"
-
-            if item_id in sensors:
-                sensor = sensors[item_id]
-                if sensor.enabled:
-                    sensor.async_schedule_update_ha_state()
+    for mac in clients:
+        for sensor_class in (UniFiRxBandwidthSensor, UniFiTxBandwidthSensor):
+            if mac in controller.entities[DOMAIN][sensor_class.TYPE]:
                 continue
 
-            sensors[item_id] = sensor_class(
-                controller.api.clients[client_id], controller
-            )
-            new_sensors.append(sensors[item_id])
+            client = controller.api.clients[mac]
+            sensors.append(sensor_class(client, controller))
 
-    if new_sensors:
-        async_add_entities(new_sensors)
+    if sensors:
+        async_add_entities(sensors)
 
 
-class UniFiBandwidthSensor(Entity):
-    """UniFi Bandwidth sensor base class."""
+@callback
+def add_uptime_entities(controller, async_add_entities, clients):
+    """Add new sensor entities from the controller."""
+    sensors = []
 
-    def __init__(self, client, controller):
-        """Set up client."""
-        self.client = client
-        self.controller = controller
-        self.is_wired = self.client.mac not in controller.wireless_clients
+    for mac in clients:
+        if mac in controller.entities[DOMAIN][UniFiUpTimeSensor.TYPE]:
+            continue
 
-    @property
-    def entity_registry_enabled_default(self):
-        """Return if the entity should be enabled when first added to the entity registry."""
-        if self.controller.option_allow_bandwidth_sensors:
-            return True
-        return False
+        client = controller.api.clients[mac]
+        sensors.append(UniFiUpTimeSensor(client, controller))
 
-    async def async_added_to_hass(self):
-        """Client entity created."""
-        LOGGER.debug("New UniFi bandwidth sensor %s (%s)", self.name, self.client.mac)
+    if sensors:
+        async_add_entities(sensors)
 
-    async def async_update(self):
-        """Synchronize state with controller.
 
-        Make sure to update self.is_wired if client is wireless, there is an issue when clients go offline that they get marked as wired.
-        """
-        LOGGER.debug(
-            "Updating UniFi bandwidth sensor %s (%s)", self.entity_id, self.client.mac
-        )
-        await self.controller.request_update()
+class UniFiBandwidthSensor(UniFiClient, SensorEntity):
+    """UniFi bandwidth sensor base class."""
 
-        if self.is_wired and self.client.mac in self.controller.wireless_clients:
-            self.is_wired = False
+    DOMAIN = DOMAIN
 
     @property
-    def available(self) -> bool:
-        """Return if controller is available."""
-        return self.controller.available
+    def name(self) -> str:
+        """Return the name of the client."""
+        return f"{super().name} {self.TYPE.upper()}"
 
     @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        return {"connections": {(CONNECTION_NETWORK_MAC, self.client.mac)}}
+    def unit_of_measurement(self) -> str:
+        """Return the unit of measurement of this entity."""
+        return DATA_MEGABYTES
+
+    async def options_updated(self) -> None:
+        """Config entry options are updated, remove entity if option is disabled."""
+        if not self.controller.option_allow_bandwidth_sensors:
+            await self.remove_item({self.client.mac})
 
 
 class UniFiRxBandwidthSensor(UniFiBandwidthSensor):
     """Receiving bandwidth sensor."""
 
+    TYPE = RX_SENSOR
+
     @property
-    def state(self):
+    def state(self) -> int:
         """Return the state of the sensor."""
-        if self.is_wired:
+        if self._is_wired:
             return self.client.wired_rx_bytes / 1000000
-        return self.client.raw.get("rx_bytes", 0) / 1000000
-
-    @property
-    def name(self):
-        """Return the name of the client."""
-        name = self.client.name or self.client.hostname
-        return f"{name} RX"
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this bandwidth sensor."""
-        return f"rx-{self.client.mac}"
+        return self.client.rx_bytes / 1000000
 
 
 class UniFiTxBandwidthSensor(UniFiBandwidthSensor):
     """Transmitting bandwidth sensor."""
 
+    TYPE = TX_SENSOR
+
     @property
-    def state(self):
+    def state(self) -> int:
         """Return the state of the sensor."""
-        if self.is_wired:
+        if self._is_wired:
             return self.client.wired_tx_bytes / 1000000
-        return self.client.raw.get("tx_bytes", 0) / 1000000
+        return self.client.tx_bytes / 1000000
+
+
+class UniFiUpTimeSensor(UniFiClient, SensorEntity):
+    """UniFi uptime sensor."""
+
+    DOMAIN = DOMAIN
+    TYPE = UPTIME_SENSOR
 
     @property
-    def name(self):
+    def device_class(self) -> str:
+        """Return device class."""
+        return DEVICE_CLASS_TIMESTAMP
+
+    @property
+    def name(self) -> str:
         """Return the name of the client."""
-        name = self.client.name or self.client.hostname
-        return f"{name} TX"
+        return f"{super().name} {self.TYPE.capitalize()}"
 
     @property
-    def unique_id(self):
-        """Return a unique identifier for this bandwidth sensor."""
-        return f"tx-{self.client.mac}"
+    def state(self) -> datetime:
+        """Return the uptime of the client."""
+        if self.client.uptime < 1000000000:
+            return (dt_util.now() - timedelta(seconds=self.client.uptime)).isoformat()
+        return dt_util.utc_from_timestamp(float(self.client.uptime)).isoformat()
+
+    async def options_updated(self) -> None:
+        """Config entry options are updated, remove entity if option is disabled."""
+        if not self.controller.option_allow_uptime_sensors:
+            await self.remove_item({self.client.mac})

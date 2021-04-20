@@ -1,12 +1,12 @@
 """Support for particulate matter sensors connected to a serial port."""
 import logging
 
+from pmsensor import serial_pm as pm
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,8 +24,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available PM sensors."""
-    from pmsensor import serial_pm as pm
-
     try:
         coll = pm.PMDataCollector(
             config.get(CONF_SERIAL_DEVICE), pm.SUPPORTED_SENSORS[config.get(CONF_BRAND)]
@@ -49,7 +47,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     for pmname in coll.supported_values():
         if config.get(CONF_NAME) is not None:
-            name = "{} PM{}".format(config.get(CONF_NAME), pmname)
+            name = f"{config.get(CONF_NAME)} PM{pmname}"
         else:
             name = f"PM{pmname}"
         dev.append(ParticulateMatterSensor(coll, name, pmname))
@@ -57,7 +55,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev)
 
 
-class ParticulateMatterSensor(Entity):
+class ParticulateMatterSensor(SensorEntity):
     """Representation of an Particulate matter sensor."""
 
     def __init__(self, pmDataCollector, name, pmname):
@@ -80,7 +78,7 @@ class ParticulateMatterSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return "µg/m³"
+        return CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
 
     def update(self):
         """Read from sensor and update the state."""

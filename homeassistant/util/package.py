@@ -1,22 +1,22 @@
 """Helpers to install PyPi packages."""
+from __future__ import annotations
+
 import asyncio
+from importlib.metadata import PackageNotFoundError, version
 import logging
 import os
+from pathlib import Path
 from subprocess import PIPE, Popen
 import sys
-from typing import Optional
 from urllib.parse import urlparse
-from pathlib import Path
 
 import pkg_resources
-from importlib_metadata import version, PackageNotFoundError
-
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def is_virtual_env() -> bool:
-    """Return if we run in a virtual environtment."""
+    """Return if we run in a virtual environment."""
     # Check supports venv && virtualenv
     return getattr(sys, "base_prefix", sys.prefix) != sys.prefix or hasattr(
         sys, "real_prefix"
@@ -35,6 +35,9 @@ def is_installed(package: str) -> bool:
     Returns False when the package is not installed or doesn't meet req.
     """
     try:
+        pkg_resources.get_distribution(package)
+        return True
+    except (pkg_resources.ResolutionError, pkg_resources.ExtractionError):
         req = pkg_resources.Requirement.parse(package)
     except ValueError:
         # This is a zip file. We no longer use this in Home Assistant,
@@ -42,7 +45,14 @@ def is_installed(package: str) -> bool:
         req = pkg_resources.Requirement.parse(urlparse(package).fragment)
 
     try:
-        return version(req.project_name) in req
+        installed_version = version(req.project_name)
+        # This will happen when an install failed or
+        # was aborted while in progress see
+        # https://github.com/home-assistant/core/issues/47699
+        if installed_version is None:
+            _LOGGER.error("Installed version for %s resolved to None", req.project_name)  # type: ignore
+            return False
+        return installed_version in req
     except PackageNotFoundError:
         return False
 
@@ -50,10 +60,10 @@ def is_installed(package: str) -> bool:
 def install_package(
     package: str,
     upgrade: bool = True,
-    target: Optional[str] = None,
-    constraints: Optional[str] = None,
-    find_links: Optional[str] = None,
-    no_cache_dir: Optional[bool] = False,
+    target: str | None = None,
+    constraints: str | None = None,
+    find_links: str | None = None,
+    no_cache_dir: bool | None = False,
 ) -> bool:
     """Install a package on PyPi. Accepts pip compatible package strings.
 

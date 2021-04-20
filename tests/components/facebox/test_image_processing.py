@@ -5,23 +5,23 @@ import pytest
 import requests
 import requests_mock
 
-from homeassistant.core import callback
+import homeassistant.components.facebox.image_processing as fb
+import homeassistant.components.image_processing as ip
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
     CONF_FRIENDLY_NAME,
-    CONF_PASSWORD,
-    CONF_USERNAME,
     CONF_IP_ADDRESS,
+    CONF_PASSWORD,
     CONF_PORT,
+    CONF_USERNAME,
     HTTP_BAD_REQUEST,
     HTTP_OK,
     HTTP_UNAUTHORIZED,
     STATE_UNKNOWN,
 )
+from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
-import homeassistant.components.image_processing as ip
-import homeassistant.components.facebox.image_processing as fb
 
 MOCK_IP = "192.168.0.1"
 MOCK_PORT = "8080"
@@ -81,7 +81,7 @@ VALID_CONFIG = {
 def mock_healthybox():
     """Mock fb.check_box_health."""
     check_box_health = (
-        "homeassistant.components.facebox.image_processing." "check_box_health"
+        "homeassistant.components.facebox.image_processing.check_box_health"
     )
     with patch(check_box_health, return_value=MOCK_BOX_ID) as _mock_healthybox:
         yield _mock_healthybox
@@ -119,7 +119,7 @@ def mock_open_file():
 def test_check_box_health(caplog):
     """Test check box health."""
     with requests_mock.Mocker() as mock_req:
-        url = "http://{}:{}/healthz".format(MOCK_IP, MOCK_PORT)
+        url = f"http://{MOCK_IP}:{MOCK_PORT}/healthz"
         mock_req.get(url, status_code=HTTP_OK, json=MOCK_HEALTH)
         assert fb.check_box_health(url, "user", "pass") == MOCK_BOX_ID
 
@@ -156,6 +156,7 @@ def test_valid_file_path():
 async def test_setup_platform(hass, mock_healthybox):
     """Set up platform with one entity."""
     await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
+    await hass.async_block_till_done()
     assert hass.states.get(VALID_ENTITY_ID)
 
 
@@ -166,12 +167,14 @@ async def test_setup_platform_with_auth(hass, mock_healthybox):
     valid_config_auth[ip.DOMAIN][CONF_PASSWORD] = MOCK_PASSWORD
 
     await async_setup_component(hass, ip.DOMAIN, valid_config_auth)
+    await hass.async_block_till_done()
     assert hass.states.get(VALID_ENTITY_ID)
 
 
 async def test_process_image(hass, mock_healthybox, mock_image):
     """Test successful processing of an image."""
     await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
+    await hass.async_block_till_done()
     assert hass.states.get(VALID_ENTITY_ID)
 
     face_events = []
@@ -184,7 +187,7 @@ async def test_process_image(hass, mock_healthybox, mock_image):
     hass.bus.async_listen("image_processing.detect_face", mock_face_event)
 
     with requests_mock.Mocker() as mock_req:
-        url = "http://{}:{}/facebox/check".format(MOCK_IP, MOCK_PORT)
+        url = f"http://{MOCK_IP}:{MOCK_PORT}/facebox/check"
         mock_req.post(url, json=MOCK_JSON)
         data = {ATTR_ENTITY_ID: VALID_ENTITY_ID}
         await hass.services.async_call(ip.DOMAIN, ip.SERVICE_SCAN, service_data=data)
@@ -215,11 +218,12 @@ async def test_process_image(hass, mock_healthybox, mock_image):
 async def test_process_image_errors(hass, mock_healthybox, mock_image, caplog):
     """Test process_image errors."""
     await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
+    await hass.async_block_till_done()
     assert hass.states.get(VALID_ENTITY_ID)
 
     # Test connection error.
     with requests_mock.Mocker() as mock_req:
-        url = "http://{}:{}/facebox/check".format(MOCK_IP, MOCK_PORT)
+        url = f"http://{MOCK_IP}:{MOCK_PORT}/facebox/check"
         mock_req.register_uri("POST", url, exc=requests.exceptions.ConnectTimeout)
         data = {ATTR_ENTITY_ID: VALID_ENTITY_ID}
         await hass.services.async_call(ip.DOMAIN, ip.SERVICE_SCAN, service_data=data)
@@ -233,7 +237,7 @@ async def test_process_image_errors(hass, mock_healthybox, mock_image, caplog):
 
     # Now test with bad auth.
     with requests_mock.Mocker() as mock_req:
-        url = "http://{}:{}/facebox/check".format(MOCK_IP, MOCK_PORT)
+        url = f"http://{MOCK_IP}:{MOCK_PORT}/facebox/check"
         mock_req.register_uri("POST", url, status_code=HTTP_UNAUTHORIZED)
         data = {ATTR_ENTITY_ID: VALID_ENTITY_ID}
         await hass.services.async_call(ip.DOMAIN, ip.SERVICE_SCAN, service_data=data)
@@ -246,6 +250,7 @@ async def test_teach_service(
 ):
     """Test teaching of facebox."""
     await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
+    await hass.async_block_till_done()
     assert hass.states.get(VALID_ENTITY_ID)
 
     # Patch out 'is_allowed_path' as the mock files aren't allowed
@@ -253,7 +258,7 @@ async def test_teach_service(
 
     # Test successful teach.
     with requests_mock.Mocker() as mock_req:
-        url = "http://{}:{}/facebox/teach".format(MOCK_IP, MOCK_PORT)
+        url = f"http://{MOCK_IP}:{MOCK_PORT}/facebox/teach"
         mock_req.post(url, status_code=HTTP_OK)
         data = {
             ATTR_ENTITY_ID: VALID_ENTITY_ID,
@@ -261,13 +266,13 @@ async def test_teach_service(
             fb.FILE_PATH: MOCK_FILE_PATH,
         }
         await hass.services.async_call(
-            ip.DOMAIN, fb.SERVICE_TEACH_FACE, service_data=data
+            fb.DOMAIN, fb.SERVICE_TEACH_FACE, service_data=data
         )
         await hass.async_block_till_done()
 
     # Now test with bad auth.
     with requests_mock.Mocker() as mock_req:
-        url = "http://{}:{}/facebox/teach".format(MOCK_IP, MOCK_PORT)
+        url = f"http://{MOCK_IP}:{MOCK_PORT}/facebox/teach"
         mock_req.post(url, status_code=HTTP_UNAUTHORIZED)
         data = {
             ATTR_ENTITY_ID: VALID_ENTITY_ID,
@@ -275,14 +280,14 @@ async def test_teach_service(
             fb.FILE_PATH: MOCK_FILE_PATH,
         }
         await hass.services.async_call(
-            ip.DOMAIN, fb.SERVICE_TEACH_FACE, service_data=data
+            fb.DOMAIN, fb.SERVICE_TEACH_FACE, service_data=data
         )
         await hass.async_block_till_done()
         assert "AuthenticationError on facebox" in caplog.text
 
     # Now test the failed teaching.
     with requests_mock.Mocker() as mock_req:
-        url = "http://{}:{}/facebox/teach".format(MOCK_IP, MOCK_PORT)
+        url = f"http://{MOCK_IP}:{MOCK_PORT}/facebox/teach"
         mock_req.post(url, status_code=HTTP_BAD_REQUEST, text=MOCK_ERROR_NO_FACE)
         data = {
             ATTR_ENTITY_ID: VALID_ENTITY_ID,
@@ -290,14 +295,14 @@ async def test_teach_service(
             fb.FILE_PATH: MOCK_FILE_PATH,
         }
         await hass.services.async_call(
-            ip.DOMAIN, fb.SERVICE_TEACH_FACE, service_data=data
+            fb.DOMAIN, fb.SERVICE_TEACH_FACE, service_data=data
         )
         await hass.async_block_till_done()
         assert MOCK_ERROR_NO_FACE in caplog.text
 
     # Now test connection error.
     with requests_mock.Mocker() as mock_req:
-        url = "http://{}:{}/facebox/teach".format(MOCK_IP, MOCK_PORT)
+        url = f"http://{MOCK_IP}:{MOCK_PORT}/facebox/teach"
         mock_req.post(url, exc=requests.exceptions.ConnectTimeout)
         data = {
             ATTR_ENTITY_ID: VALID_ENTITY_ID,
@@ -305,7 +310,7 @@ async def test_teach_service(
             fb.FILE_PATH: MOCK_FILE_PATH,
         }
         await hass.services.async_call(
-            ip.DOMAIN, fb.SERVICE_TEACH_FACE, service_data=data
+            fb.DOMAIN, fb.SERVICE_TEACH_FACE, service_data=data
         )
         await hass.async_block_till_done()
         assert "ConnectionError: Is facebox running?" in caplog.text
@@ -313,12 +318,13 @@ async def test_teach_service(
 
 async def test_setup_platform_with_name(hass, mock_healthybox):
     """Set up platform with one entity and a name."""
-    named_entity_id = "image_processing.{}".format(MOCK_NAME)
+    named_entity_id = f"image_processing.{MOCK_NAME}"
 
     valid_config_named = VALID_CONFIG.copy()
     valid_config_named[ip.DOMAIN][ip.CONF_SOURCE][ip.CONF_NAME] = MOCK_NAME
 
     await async_setup_component(hass, ip.DOMAIN, valid_config_named)
+    await hass.async_block_till_done()
     assert hass.states.get(named_entity_id)
     state = hass.states.get(named_entity_id)
     assert state.attributes.get(CONF_FRIENDLY_NAME) == MOCK_NAME

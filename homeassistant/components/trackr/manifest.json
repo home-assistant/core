@@ -1,10 +1,8 @@
 {
   "domain": "trackr",
-  "name": "Trackr",
+  "name": "TrackR",
   "documentation": "https://www.home-assistant.io/integrations/trackr",
-  "requirements": [
-    "pytrackr==0.0.5"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "requirements": ["pytrackr==0.0.5"],
+  "codeowners": [],
+  "iot_class": "cloud_polling"
 }

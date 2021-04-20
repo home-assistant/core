@@ -1,12 +1,8 @@
 {
   "domain": "quantum_gateway",
-  "name": "Quantum gateway",
+  "name": "Quantum Gateway",
   "documentation": "https://www.home-assistant.io/integrations/quantum_gateway",
-  "requirements": [
-    "quantum-gateway==0.0.5"
-  ],
-  "dependencies": [],
-  "codeowners": [
-    "@cisasteelersfan"
-  ]
+  "requirements": ["quantum-gateway==0.0.5"],
+  "codeowners": ["@cisasteelersfan"],
+  "iot_class": "local_polling"
 }

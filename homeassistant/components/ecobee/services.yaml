@@ -55,7 +55,7 @@ resume_program:
   fields:
     entity_id:
       description: Name(s) of entities to change.
-      example: 'climate.kitchen'
+      example: "climate.kitchen"
     resume_all:
       description: Resume all events and return to the scheduled program. This default to false which removes only the top event.
       example: true
@@ -65,7 +65,40 @@ set_fan_min_on_time:
   fields:
     entity_id:
       description: Name(s) of entities to change.
-      example: 'climate.kitchen'
+      example: "climate.kitchen"
     fan_min_on_time:
       description: New value of fan min on time.
       example: 5
+
+set_dst_mode:
+  description: Enable/disable automatic daylight savings time.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: "climate.kitchen"
+    dst_enabled:
+      description: Enable automatic daylight savings time.
+      example: "true"
+
+set_mic_mode:
+  description: Enable/disable Alexa mic (only for Ecobee 4).
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: "climate.kitchen"
+    mic_enabled:
+      description: Enable Alexa mic.
+      example: "true"
+
+set_occupancy_modes:
+  description: Enable/disable Smart Home/Away and Follow Me modes.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: "climate.kitchen"
+    auto_away:
+      description: Enable Smart Home/Away mode.
+      example: "true"
+    follow_me:
+      description: Enable Follow Me mode.
+      example: "true"

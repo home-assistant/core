@@ -1,16 +1,20 @@
 """Support for monitoring plants."""
 from collections import deque
+from contextlib import suppress
 from datetime import datetime, timedelta
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components import group
+from homeassistant.components.recorder.models import States
 from homeassistant.components.recorder.util import execute, session_scope
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
+    CONDUCTIVITY,
     CONF_SENSORS,
+    LIGHT_LUX,
+    PERCENTAGE,
     STATE_OK,
     STATE_PROBLEM,
     STATE_UNAVAILABLE,
@@ -22,7 +26,7 @@ from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,15 +47,15 @@ ATTR_MAX_BRIGHTNESS_HISTORY = "max_brightness"
 # to have a separate literal for it to avoid confusion.
 ATTR_DICT_OF_UNITS_OF_MEASUREMENT = "unit_of_measurement_dict"
 
-CONF_MIN_BATTERY_LEVEL = "min_" + READING_BATTERY
-CONF_MIN_TEMPERATURE = "min_" + READING_TEMPERATURE
-CONF_MAX_TEMPERATURE = "max_" + READING_TEMPERATURE
-CONF_MIN_MOISTURE = "min_" + READING_MOISTURE
-CONF_MAX_MOISTURE = "max_" + READING_MOISTURE
-CONF_MIN_CONDUCTIVITY = "min_" + READING_CONDUCTIVITY
-CONF_MAX_CONDUCTIVITY = "max_" + READING_CONDUCTIVITY
-CONF_MIN_BRIGHTNESS = "min_" + READING_BRIGHTNESS
-CONF_MAX_BRIGHTNESS = "max_" + READING_BRIGHTNESS
+CONF_MIN_BATTERY_LEVEL = f"min_{READING_BATTERY}"
+CONF_MIN_TEMPERATURE = f"min_{READING_TEMPERATURE}"
+CONF_MAX_TEMPERATURE = f"max_{READING_TEMPERATURE}"
+CONF_MIN_MOISTURE = f"min_{READING_MOISTURE}"
+CONF_MAX_MOISTURE = f"max_{READING_MOISTURE}"
+CONF_MIN_CONDUCTIVITY = f"min_{READING_CONDUCTIVITY}"
+CONF_MAX_CONDUCTIVITY = f"max_{READING_CONDUCTIVITY}"
+CONF_MIN_BRIGHTNESS = f"min_{READING_BRIGHTNESS}"
+CONF_MAX_BRIGHTNESS = f"max_{READING_BRIGHTNESS}"
 CONF_CHECK_DAYS = "check_days"
 
 CONF_SENSOR_BATTERY_LEVEL = READING_BATTERY
@@ -100,8 +104,6 @@ PLANT_SCHEMA = vol.Schema(
 )
 
 DOMAIN = "plant"
-GROUP_NAME_ALL_PLANTS = "all plants"
-ENTITY_ID_ALL_PLANTS = group.ENTITY_ID_FORMAT.format("all_plants")
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: {cv.string: PLANT_SCHEMA}}, extra=vol.ALLOW_EXTRA)
 
@@ -113,7 +115,7 @@ ENABLE_LOAD_HISTORY = False
 
 async def async_setup(hass, config):
     """Set up the Plant component."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass, group_name=GROUP_NAME_ALL_PLANTS)
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     entities = []
     for plant_name, plant_config in config[DOMAIN].items():
@@ -133,24 +135,27 @@ class Plant(Entity):
     """
 
     READINGS = {
-        READING_BATTERY: {ATTR_UNIT_OF_MEASUREMENT: "%", "min": CONF_MIN_BATTERY_LEVEL},
+        READING_BATTERY: {
+            ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
+            "min": CONF_MIN_BATTERY_LEVEL,
+        },
         READING_TEMPERATURE: {
             ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
             "min": CONF_MIN_TEMPERATURE,
             "max": CONF_MAX_TEMPERATURE,
         },
         READING_MOISTURE: {
-            ATTR_UNIT_OF_MEASUREMENT: "%",
+            ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
             "min": CONF_MIN_MOISTURE,
             "max": CONF_MAX_MOISTURE,
         },
         READING_CONDUCTIVITY: {
-            ATTR_UNIT_OF_MEASUREMENT: "µS/cm",
+            ATTR_UNIT_OF_MEASUREMENT: CONDUCTIVITY,
             "min": CONF_MIN_CONDUCTIVITY,
             "max": CONF_MAX_CONDUCTIVITY,
         },
         READING_BRIGHTNESS: {
-            ATTR_UNIT_OF_MEASUREMENT: "lux",
+            ATTR_UNIT_OF_MEASUREMENT: LIGHT_LUX,
             "min": CONF_MIN_BRIGHTNESS,
             "max": CONF_MAX_BRIGHTNESS,
         },
@@ -159,9 +164,9 @@ class Plant(Entity):
     def __init__(self, name, config):
         """Initialize the Plant component."""
         self._config = config
-        self._sensormap = dict()
-        self._readingmap = dict()
-        self._unit_of_measurement = dict()
+        self._sensormap = {}
+        self._readingmap = {}
+        self._unit_of_measurement = {}
         for reading, entity_id in config["sensors"].items():
             self._sensormap[entity_id] = reading
             self._readingmap[reading] = entity_id
@@ -180,11 +185,15 @@ class Plant(Entity):
         self._brightness_history = DailyHistory(self._conf_check_days)
 
     @callback
-    def state_changed(self, entity_id, _, new_state):
-        """Update the sensor status.
+    def _state_changed_event(self, event):
+        """Sensor state change event."""
+        self.state_changed(event.data.get("entity_id"), event.data.get("new_state"))
 
-        This callback is triggered, when the sensor state changes.
-        """
+    @callback
+    def state_changed(self, entity_id, new_state):
+        """Update the sensor status."""
+        if new_state is None:
+            return
         value = new_state.state
         _LOGGER.debug("Received callback from %s with value %s", entity_id, value)
         if value == STATE_UNKNOWN:
@@ -253,7 +262,7 @@ class Plant(Entity):
             self._state = STATE_OK
             self._problems = PROBLEM_NONE
         _LOGGER.debug("New data processed")
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     def _check_min(self, sensor_name, value, params):
         """If configured, check the value against the defined minimum value."""
@@ -274,21 +283,23 @@ class Plant(Entity):
         """After being added to hass, load from history."""
         if ENABLE_LOAD_HISTORY and "recorder" in self.hass.config.components:
             # only use the database if it's configured
-            self.hass.async_add_job(self._load_history_from_db)
+            await self.hass.async_add_executor_job(self._load_history_from_db)
+            self.async_write_ha_state()
 
-        async_track_state_change(self.hass, list(self._sensormap), self.state_changed)
+        async_track_state_change_event(
+            self.hass, list(self._sensormap), self._state_changed_event
+        )
 
         for entity_id in self._sensormap:
             state = self.hass.states.get(entity_id)
             if state is not None:
-                self.state_changed(entity_id, None, state)
+                self.state_changed(entity_id, state)
 
-    async def _load_history_from_db(self):
+    def _load_history_from_db(self):
         """Load the history of the brightness values from the database.
 
         This only needs to be done once during startup.
         """
-        from homeassistant.components.recorder.models import States
 
         start_date = datetime.now() - timedelta(days=self._conf_check_days)
         entity_id = self._readingmap.get(READING_BRIGHTNESS)
@@ -309,19 +320,16 @@ class Plant(Entity):
                 )
                 .order_by(States.last_updated.asc())
             )
-            states = execute(query)
+            states = execute(query, to_native=True, validate_entity_ids=False)
 
             for state in states:
                 # filter out all None, NaN and "unknown" states
                 # only keep real values
-                try:
+                with suppress(ValueError):
                     self._brightness_history.add_measurement(
                         int(state.state), state.last_updated
                     )
-                except ValueError:
-                    pass
         _LOGGER.debug("Initializing from database completed")
-        self.async_schedule_update_ha_state()
 
     @property
     def should_poll(self):
@@ -339,7 +347,7 @@ class Plant(Entity):
         return self._state
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the attributes of the entity.
 
         Provide the individual measurements from the
@@ -370,7 +378,7 @@ class DailyHistory:
         """Create new DailyHistory with a maximum length of the history."""
         self.max_length = max_length
         self._days = None
-        self._max_dict = dict()
+        self._max_dict = {}
         self.max = None
 
     def add_measurement(self, value, timestamp=None):

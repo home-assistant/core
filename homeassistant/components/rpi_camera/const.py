@@ -1,0 +1,22 @@
+"""Consts used by rpi_camera."""
+
+DOMAIN = "rpi_camera"
+
+CONF_HORIZONTAL_FLIP = "horizontal_flip"
+CONF_IMAGE_HEIGHT = "image_height"
+CONF_IMAGE_QUALITY = "image_quality"
+CONF_IMAGE_ROTATION = "image_rotation"
+CONF_IMAGE_WIDTH = "image_width"
+CONF_OVERLAY_METADATA = "overlay_metadata"
+CONF_OVERLAY_TIMESTAMP = "overlay_timestamp"
+CONF_TIMELAPSE = "timelapse"
+CONF_VERTICAL_FLIP = "vertical_flip"
+
+DEFAULT_HORIZONTAL_FLIP = 0
+DEFAULT_IMAGE_HEIGHT = 480
+DEFAULT_IMAGE_QUALITY = 7
+DEFAULT_IMAGE_ROTATION = 0
+DEFAULT_IMAGE_WIDTH = 640
+DEFAULT_NAME = "Raspberry Pi Camera"
+DEFAULT_TIMELAPSE = 1000
+DEFAULT_VERTICAL_FLIP = 0

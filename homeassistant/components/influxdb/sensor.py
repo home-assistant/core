@@ -1,101 +1,181 @@
 """InfluxDB component which allows you to get data from an Influx database."""
-from datetime import timedelta
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
-    CONF_HOST,
+    CONF_API_VERSION,
     CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_SSL,
     CONF_UNIT_OF_MEASUREMENT,
-    CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
-    CONF_VERIFY_SSL,
+    EVENT_HOMEASSISTANT_STOP,
     STATE_UNKNOWN,
 )
-from homeassistant.exceptions import TemplateError
+from homeassistant.exceptions import PlatformNotReady, TemplateError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-from . import CONF_DB_NAME
+from . import create_influx_url, get_influx_connection, validate_version_specific_config
+from .const import (
+    API_VERSION_2,
+    COMPONENT_CONFIG_SCHEMA_CONNECTION,
+    CONF_BUCKET,
+    CONF_DB_NAME,
+    CONF_FIELD,
+    CONF_GROUP_FUNCTION,
+    CONF_IMPORTS,
+    CONF_LANGUAGE,
+    CONF_MEASUREMENT_NAME,
+    CONF_QUERIES,
+    CONF_QUERIES_FLUX,
+    CONF_QUERY,
+    CONF_RANGE_START,
+    CONF_RANGE_STOP,
+    CONF_WHERE,
+    DEFAULT_API_VERSION,
+    DEFAULT_FIELD,
+    DEFAULT_FUNCTION_FLUX,
+    DEFAULT_GROUP_FUNCTION,
+    DEFAULT_RANGE_START,
+    DEFAULT_RANGE_STOP,
+    INFLUX_CONF_VALUE,
+    INFLUX_CONF_VALUE_V2,
+    LANGUAGE_FLUX,
+    LANGUAGE_INFLUXQL,
+    MIN_TIME_BETWEEN_UPDATES,
+    NO_BUCKET_ERROR,
+    NO_DATABASE_ERROR,
+    QUERY_MULTIPLE_RESULTS_MESSAGE,
+    QUERY_NO_RESULTS_MESSAGE,
+    RENDERING_QUERY_ERROR_MESSAGE,
+    RENDERING_QUERY_MESSAGE,
+    RENDERING_WHERE_ERROR_MESSAGE,
+    RENDERING_WHERE_MESSAGE,
+    RUNNING_QUERY_MESSAGE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_HOST = "localhost"
-DEFAULT_PORT = 8086
-DEFAULT_DATABASE = "home_assistant"
-DEFAULT_SSL = False
-DEFAULT_VERIFY_SSL = False
-DEFAULT_GROUP_FUNCTION = "mean"
-DEFAULT_FIELD = "value"
 
-CONF_QUERIES = "queries"
-CONF_GROUP_FUNCTION = "group_function"
-CONF_FIELD = "field"
-CONF_MEASUREMENT_NAME = "measurement"
-CONF_WHERE = "where"
+def _merge_connection_config_into_query(conf, query):
+    """Merge connection details into each configured query."""
+    for key in conf:
+        if key not in query and key not in [CONF_QUERIES, CONF_QUERIES_FLUX]:
+            query[key] = conf[key]
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
-_QUERY_SCHEME = vol.Schema(
+def validate_query_format_for_version(conf: dict) -> dict:
+    """Ensure queries are provided in correct format based on API version."""
+    if conf[CONF_API_VERSION] == API_VERSION_2:
+        if CONF_QUERIES_FLUX not in conf:
+            raise vol.Invalid(
+                f"{CONF_QUERIES_FLUX} is required when {CONF_API_VERSION} is {API_VERSION_2}"
+            )
+
+        for query in conf[CONF_QUERIES_FLUX]:
+            _merge_connection_config_into_query(conf, query)
+            query[CONF_LANGUAGE] = LANGUAGE_FLUX
+
+        del conf[CONF_BUCKET]
+
+    else:
+        if CONF_QUERIES not in conf:
+            raise vol.Invalid(
+                f"{CONF_QUERIES} is required when {CONF_API_VERSION} is {DEFAULT_API_VERSION}"
+            )
+
+        for query in conf[CONF_QUERIES]:
+            _merge_connection_config_into_query(conf, query)
+            query[CONF_LANGUAGE] = LANGUAGE_INFLUXQL
+
+        del conf[CONF_DB_NAME]
+
+    return conf
+
+
+_QUERY_SENSOR_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_MEASUREMENT_NAME): cv.string,
-        vol.Required(CONF_WHERE): cv.template,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_DB_NAME, default=DEFAULT_DATABASE): cv.string,
-        vol.Optional(CONF_GROUP_FUNCTION, default=DEFAULT_GROUP_FUNCTION): cv.string,
-        vol.Optional(CONF_FIELD, default=DEFAULT_FIELD): cv.string,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_QUERIES): [_QUERY_SCHEME],
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Inclusive(CONF_USERNAME, "authentication"): cv.string,
-        vol.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
-        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-    }
+_QUERY_SCHEMA = {
+    LANGUAGE_INFLUXQL: _QUERY_SENSOR_SCHEMA.extend(
+        {
+            vol.Optional(CONF_DB_NAME): cv.string,
+            vol.Required(CONF_MEASUREMENT_NAME): cv.string,
+            vol.Optional(
+                CONF_GROUP_FUNCTION, default=DEFAULT_GROUP_FUNCTION
+            ): cv.string,
+            vol.Optional(CONF_FIELD, default=DEFAULT_FIELD): cv.string,
+            vol.Required(CONF_WHERE): cv.template,
+        }
+    ),
+    LANGUAGE_FLUX: _QUERY_SENSOR_SCHEMA.extend(
+        {
+            vol.Optional(CONF_BUCKET): cv.string,
+            vol.Optional(CONF_RANGE_START, default=DEFAULT_RANGE_START): cv.string,
+            vol.Optional(CONF_RANGE_STOP, default=DEFAULT_RANGE_STOP): cv.string,
+            vol.Required(CONF_QUERY): cv.template,
+            vol.Optional(CONF_IMPORTS): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(CONF_GROUP_FUNCTION): cv.string,
+        }
+    ),
+}
+
+PLATFORM_SCHEMA = vol.All(
+    SENSOR_PLATFORM_SCHEMA.extend(COMPONENT_CONFIG_SCHEMA_CONNECTION).extend(
+        {
+            vol.Exclusive(CONF_QUERIES, "queries"): [_QUERY_SCHEMA[LANGUAGE_INFLUXQL]],
+            vol.Exclusive(CONF_QUERIES_FLUX, "queries"): [_QUERY_SCHEMA[LANGUAGE_FLUX]],
+        }
+    ),
+    validate_version_specific_config,
+    validate_query_format_for_version,
+    create_influx_url,
 )
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the InfluxDB component."""
-    influx_conf = {
-        "host": config[CONF_HOST],
-        "password": config.get(CONF_PASSWORD),
-        "port": config.get(CONF_PORT),
-        "ssl": config.get(CONF_SSL),
-        "username": config.get(CONF_USERNAME),
-        "verify_ssl": config.get(CONF_VERIFY_SSL),
-    }
+    try:
+        influx = get_influx_connection(config, test_read=True)
+    except ConnectionError as exc:
+        _LOGGER.error(exc)
+        raise PlatformNotReady() from exc
 
-    dev = []
+    entities = []
+    if CONF_QUERIES_FLUX in config:
+        for query in config[CONF_QUERIES_FLUX]:
+            if query[CONF_BUCKET] in influx.data_repositories:
+                entities.append(InfluxSensor(hass, influx, query))
+            else:
+                _LOGGER.error(NO_BUCKET_ERROR, query[CONF_BUCKET])
+    else:
+        for query in config[CONF_QUERIES]:
+            if query[CONF_DB_NAME] in influx.data_repositories:
+                entities.append(InfluxSensor(hass, influx, query))
+            else:
+                _LOGGER.error(NO_DATABASE_ERROR, query[CONF_DB_NAME])
 
-    for query in config.get(CONF_QUERIES):
-        sensor = InfluxSensor(hass, influx_conf, query)
-        if sensor.connected:
-            dev.append(sensor)
+    add_entities(entities, update_before_add=True)
 
-    add_entities(dev, True)
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, lambda _: influx.close())
 
 
-class InfluxSensor(Entity):
+class InfluxSensor(SensorEntity):
     """Implementation of a Influxdb sensor."""
 
-    def __init__(self, hass, influx_conf, query):
+    def __init__(self, hass, influx, query):
         """Initialize the sensor."""
-        from influxdb import InfluxDBClient, exceptions
-
         self._name = query.get(CONF_NAME)
         self._unit_of_measurement = query.get(CONF_UNIT_OF_MEASUREMENT)
         value_template = query.get(CONF_VALUE_TEMPLATE)
@@ -104,40 +184,33 @@ class InfluxSensor(Entity):
             self._value_template.hass = hass
         else:
             self._value_template = None
-        database = query.get(CONF_DB_NAME)
         self._state = None
         self._hass = hass
 
-        where_clause = query.get(CONF_WHERE)
-        where_clause.hass = hass
-
-        influx = InfluxDBClient(
-            host=influx_conf["host"],
-            port=influx_conf["port"],
-            username=influx_conf["username"],
-            password=influx_conf["password"],
-            database=database,
-            ssl=influx_conf["ssl"],
-            verify_ssl=influx_conf["verify_ssl"],
-        )
-        try:
-            influx.query("SHOW SERIES LIMIT 1;")
-            self.connected = True
-            self.data = InfluxSensorData(
+        if query[CONF_LANGUAGE] == LANGUAGE_FLUX:
+            query_clause = query.get(CONF_QUERY)
+            query_clause.hass = hass
+            self.data = InfluxFluxSensorData(
                 influx,
+                query.get(CONF_BUCKET),
+                query.get(CONF_RANGE_START),
+                query.get(CONF_RANGE_STOP),
+                query_clause,
+                query.get(CONF_IMPORTS),
+                query.get(CONF_GROUP_FUNCTION),
+            )
+
+        else:
+            where_clause = query.get(CONF_WHERE)
+            where_clause.hass = hass
+            self.data = InfluxQLSensorData(
+                influx,
+                query.get(CONF_DB_NAME),
                 query.get(CONF_GROUP_FUNCTION),
                 query.get(CONF_FIELD),
                 query.get(CONF_MEASUREMENT_NAME),
                 where_clause,
             )
-        except exceptions.InfluxDBClientError as exc:
-            _LOGGER.error(
-                "Database host is not accessible due to '%s', please"
-                " check your entries in the configuration file and"
-                " that the database exists and is READ/WRITE",
-                exc,
-            )
-            self.connected = False
 
     @property
     def name(self):
@@ -154,11 +227,6 @@ class InfluxSensor(Entity):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
-
     def update(self):
         """Get the latest data from Influxdb and updates the states."""
         self.data.update()
@@ -173,12 +241,68 @@ class InfluxSensor(Entity):
         self._state = value
 
 
-class InfluxSensorData:
-    """Class for handling the data retrieval."""
+class InfluxFluxSensorData:
+    """Class for handling the data retrieval from Influx with Flux query."""
 
-    def __init__(self, influx, group, field, measurement, where):
+    def __init__(self, influx, bucket, range_start, range_stop, query, imports, group):
         """Initialize the data object."""
         self.influx = influx
+        self.bucket = bucket
+        self.range_start = range_start
+        self.range_stop = range_stop
+        self.query = query
+        self.imports = imports
+        self.group = group
+        self.value = None
+        self.full_query = None
+
+        self.query_prefix = f'from(bucket:"{bucket}") |> range(start: {range_start}, stop: {range_stop}) |>'
+        if imports is not None:
+            for i in imports:
+                self.query_prefix = f'import "{i}" {self.query_prefix}'
+
+        if group is None:
+            self.query_postfix = DEFAULT_FUNCTION_FLUX
+        else:
+            self.query_postfix = f'|> {group}(column: "{INFLUX_CONF_VALUE_V2}")'
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update(self):
+        """Get the latest data by querying influx."""
+        _LOGGER.debug(RENDERING_QUERY_MESSAGE, self.query)
+        try:
+            rendered_query = self.query.render(parse_result=False)
+        except TemplateError as ex:
+            _LOGGER.error(RENDERING_QUERY_ERROR_MESSAGE, ex)
+            return
+
+        self.full_query = f"{self.query_prefix} {rendered_query} {self.query_postfix}"
+
+        _LOGGER.debug(RUNNING_QUERY_MESSAGE, self.full_query)
+
+        try:
+            tables = self.influx.query(self.full_query)
+        except (ConnectionError, ValueError) as exc:
+            _LOGGER.error(exc)
+            self.value = None
+            return
+
+        if not tables:
+            _LOGGER.warning(QUERY_NO_RESULTS_MESSAGE, self.full_query)
+            self.value = None
+        else:
+            if len(tables) > 1 or len(tables[0].records) > 1:
+                _LOGGER.warning(QUERY_MULTIPLE_RESULTS_MESSAGE, self.full_query)
+            self.value = tables[0].records[0].values[INFLUX_CONF_VALUE_V2]
+
+
+class InfluxQLSensorData:
+    """Class for handling the data retrieval with v1 API."""
+
+    def __init__(self, influx, db_name, group, field, measurement, where):
+        """Initialize the data object."""
+        self.influx = influx
+        self.db_name = db_name
         self.group = group
         self.field = field
         self.measurement = measurement
@@ -189,30 +313,28 @@ class InfluxSensorData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data with a shell command."""
-        _LOGGER.info("Rendering where: %s", self.where)
+        _LOGGER.debug(RENDERING_WHERE_MESSAGE, self.where)
         try:
-            where_clause = self.where.render()
+            where_clause = self.where.render(parse_result=False)
         except TemplateError as ex:
-            _LOGGER.error("Could not render where clause template: %s", ex)
+            _LOGGER.error(RENDERING_WHERE_ERROR_MESSAGE, ex)
             return
 
-        self.query = "select {}({}) as value from {} where {}".format(
-            self.group, self.field, self.measurement, where_clause
-        )
+        self.query = f"select {self.group}({self.field}) as {INFLUX_CONF_VALUE} from {self.measurement} where {where_clause}"
 
-        _LOGGER.info("Running query: %s", self.query)
+        _LOGGER.debug(RUNNING_QUERY_MESSAGE, self.query)
 
-        points = list(self.influx.query(self.query).get_points())
+        try:
+            points = self.influx.query(self.query, self.db_name)
+        except (ConnectionError, ValueError) as exc:
+            _LOGGER.error(exc)
+            self.value = None
+            return
+
         if not points:
-            _LOGGER.warning(
-                "Query returned no points, sensor state set " "to UNKNOWN: %s",
-                self.query,
-            )
+            _LOGGER.warning(QUERY_NO_RESULTS_MESSAGE, self.query)
             self.value = None
         else:
             if len(points) > 1:
-                _LOGGER.warning(
-                    "Query returned multiple points, only first " "one shown: %s",
-                    self.query,
-                )
-            self.value = points[0].get("value")
+                _LOGGER.warning(QUERY_MULTIPLE_RESULTS_MESSAGE, self.query)
+            self.value = points[0].get(INFLUX_CONF_VALUE)

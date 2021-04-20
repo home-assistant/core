@@ -1,22 +1,22 @@
 """Support for an exposed aREST RESTful API of a device."""
-import logging
 from datetime import timedelta
+import logging
 
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
-    CONF_UNIT_OF_MEASUREMENT,
-    CONF_VALUE_TEMPLATE,
-    CONF_RESOURCE,
     CONF_MONITORED_VARIABLES,
     CONF_NAME,
+    CONF_RESOURCE,
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_VALUE_TEMPLATE,
+    HTTP_OK,
 )
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,15 +51,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the aREST sensor."""
-    resource = config.get(CONF_RESOURCE)
-    var_conf = config.get(CONF_MONITORED_VARIABLES)
-    pins = config.get(CONF_PINS)
+    resource = config[CONF_RESOURCE]
+    var_conf = config[CONF_MONITORED_VARIABLES]
+    pins = config[CONF_PINS]
 
     try:
         response = requests.get(resource, timeout=10).json()
     except requests.exceptions.MissingSchema:
         _LOGGER.error(
-            "Missing resource or schema in configuration. " "Add http:// to your URL"
+            "Missing resource or schema in configuration. Add http:// to your URL"
         )
         return False
     except requests.exceptions.ConnectionError:
@@ -77,7 +77,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         def _render(value):
             try:
-                return value_template.async_render({"value": value})
+                return value_template.async_render({"value": value}, parse_result=False)
             except TemplateError:
                 _LOGGER.exception("Error parsing value")
                 return value
@@ -123,7 +123,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev, True)
 
 
-class ArestSensor(Entity):
+class ArestSensor(SensorEntity):
     """Implementation of an aREST sensor for exposed variables."""
 
     def __init__(
@@ -140,7 +140,7 @@ class ArestSensor(Entity):
         """Initialize the sensor."""
         self.arest = arest
         self._resource = resource
-        self._name = "{} {}".format(location.title(), name.title())
+        self._name = f"{location.title()} {name.title()}"
         self._variable = variable
         self._pin = pin
         self._state = None
@@ -149,7 +149,7 @@ class ArestSensor(Entity):
 
         if self._pin is not None:
             request = requests.get(f"{self._resource}/mode/{self._pin}/i", timeout=10)
-            if request.status_code != 200:
+            if request.status_code != HTTP_OK:
                 _LOGGER.error("Can't set mode of %s", self._resource)
 
     @property
@@ -204,8 +204,7 @@ class ArestData:
                 try:
                     if str(self._pin[0]) == "A":
                         response = requests.get(
-                            "{}/analog/{}".format(self._resource, self._pin[1:]),
-                            timeout=10,
+                            f"{self._resource}/analog/{self._pin[1:]}", timeout=10
                         )
                         self.data = {"value": response.json()["return_value"]}
                 except TypeError:

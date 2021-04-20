@@ -17,10 +17,28 @@ PREF_DISABLE_2FA = "disable_2fa"
 PREF_ALIASES = "aliases"
 PREF_SHOULD_EXPOSE = "should_expose"
 PREF_GOOGLE_LOCAL_WEBHOOK_ID = "google_local_webhook_id"
-DEFAULT_SHOULD_EXPOSE = True
+PREF_USERNAME = "username"
+PREF_ALEXA_DEFAULT_EXPOSE = "alexa_default_expose"
+PREF_GOOGLE_DEFAULT_EXPOSE = "google_default_expose"
+PREF_TTS_DEFAULT_VOICE = "tts_default_voice"
+DEFAULT_TTS_DEFAULT_VOICE = ("en-US", "female")
 DEFAULT_DISABLE_2FA = False
 DEFAULT_ALEXA_REPORT_STATE = False
 DEFAULT_GOOGLE_REPORT_STATE = False
+DEFAULT_EXPOSED_DOMAINS = [
+    "climate",
+    "cover",
+    "fan",
+    "humidifier",
+    "light",
+    "lock",
+    "scene",
+    "script",
+    "sensor",
+    "switch",
+    "vacuum",
+    "water_heater",
+]
 
 CONF_ALEXA = "alexa"
 CONF_ALIASES = "aliases"
@@ -30,13 +48,14 @@ CONF_FILTER = "filter"
 CONF_GOOGLE_ACTIONS = "google_actions"
 CONF_RELAYER = "relayer"
 CONF_USER_POOL_ID = "user_pool_id"
-CONF_GOOGLE_ACTIONS_SYNC_URL = "google_actions_sync_url"
 CONF_SUBSCRIPTION_INFO_URL = "subscription_info_url"
 CONF_CLOUDHOOK_CREATE_URL = "cloudhook_create_url"
 CONF_REMOTE_API_URL = "remote_api_url"
 CONF_ACME_DIRECTORY_SERVER = "acme_directory_server"
 CONF_ALEXA_ACCESS_TOKEN_URL = "alexa_access_token_url"
 CONF_GOOGLE_ACTIONS_REPORT_STATE_URL = "google_actions_report_state_url"
+CONF_ACCOUNT_LINK_URL = "account_link_url"
+CONF_VOICE_API_URL = "voice_api_url"
 
 MODE_DEV = "development"
 MODE_PROD = "production"

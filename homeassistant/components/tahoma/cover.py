@@ -10,7 +10,7 @@ from homeassistant.components.cover import (
     DEVICE_CLASS_GARAGE,
     DEVICE_CLASS_SHUTTER,
     DEVICE_CLASS_WINDOW,
-    CoverDevice,
+    CoverEntity,
 )
 from homeassistant.util.dt import utcnow
 
@@ -28,15 +28,19 @@ ATTR_LOCK_ORIG = "lock_originator"
 HORIZONTAL_AWNING = "io:HorizontalAwningIOComponent"
 
 TAHOMA_DEVICE_CLASSES = {
-    "io:ExteriorVenetianBlindIOComponent": DEVICE_CLASS_BLIND,
     HORIZONTAL_AWNING: DEVICE_CLASS_AWNING,
+    "io:AwningValanceIOComponent": DEVICE_CLASS_AWNING,
+    "io:DiscreteGarageOpenerWithPartialPositionIOComponent": DEVICE_CLASS_GARAGE,
+    "io:DiscreteGarageOpenerIOComponent": DEVICE_CLASS_GARAGE,
+    "io:ExteriorVenetianBlindIOComponent": DEVICE_CLASS_BLIND,
+    "io:GarageOpenerIOComponent": DEVICE_CLASS_GARAGE,
     "io:RollerShutterGenericIOComponent": DEVICE_CLASS_SHUTTER,
     "io:RollerShutterUnoIOComponent": DEVICE_CLASS_SHUTTER,
     "io:RollerShutterVeluxIOComponent": DEVICE_CLASS_SHUTTER,
     "io:RollerShutterWithLowSpeedManagementIOComponent": DEVICE_CLASS_SHUTTER,
     "io:VerticalExteriorAwningIOComponent": DEVICE_CLASS_AWNING,
+    "io:VerticalInteriorBlindVeluxIOComponent": DEVICE_CLASS_BLIND,
     "io:WindowOpenerVeluxIOComponent": DEVICE_CLASS_WINDOW,
-    "io:GarageOpenerIOComponent": DEVICE_CLASS_GARAGE,
     "rts:BlindRTSComponent": DEVICE_CLASS_BLIND,
     "rts:CurtainRTSComponent": DEVICE_CLASS_CURTAIN,
     "rts:DualCurtainRTSComponent": DEVICE_CLASS_CURTAIN,
@@ -48,6 +52,8 @@ TAHOMA_DEVICE_CLASSES = {
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tahoma covers."""
+    if discovery_info is None:
+        return
     controller = hass.data[TAHOMA_DOMAIN]["controller"]
     devices = []
     for device in hass.data[TAHOMA_DOMAIN]["devices"]["cover"]:
@@ -55,7 +61,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class TahomaCover(TahomaDevice, CoverDevice):
+class TahomaCover(TahomaDevice, CoverEntity):
     """Representation a Tahoma Cover."""
 
     def __init__(self, tahoma_device, controller):
@@ -150,6 +156,11 @@ class TahomaCover(TahomaDevice, CoverDevice):
                 self._closed = (
                     self.tahoma_device.active_states["core:OpenClosedState"] == "closed"
                 )
+            if "core:OpenClosedPartialState" in self.tahoma_device.active_states:
+                self._closed = (
+                    self.tahoma_device.active_states["core:OpenClosedPartialState"]
+                    == "closed"
+                )
             else:
                 self._closed = False
 
@@ -162,10 +173,15 @@ class TahomaCover(TahomaDevice, CoverDevice):
 
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        if self.tahoma_device.type == HORIZONTAL_AWNING:
-            self.apply_action("setPosition", kwargs.get(ATTR_POSITION, 0))
+        if self.tahoma_device.type == "io:WindowOpenerVeluxIOComponent":
+            command = "setClosure"
         else:
-            self.apply_action("setPosition", 100 - kwargs.get(ATTR_POSITION, 0))
+            command = "setPosition"
+
+        if self.tahoma_device.type == HORIZONTAL_AWNING:
+            self.apply_action(command, kwargs.get(ATTR_POSITION, 0))
+        else:
+            self.apply_action(command, 100 - kwargs.get(ATTR_POSITION, 0))
 
     @property
     def is_closed(self):
@@ -178,10 +194,10 @@ class TahomaCover(TahomaDevice, CoverDevice):
         return TAHOMA_DEVICE_CLASSES.get(self.tahoma_device.type)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         attr = {}
-        super_attr = super().device_state_attributes
+        super_attr = super().extra_state_attributes
         if super_attr is not None:
             attr.update(super_attr)
 
@@ -221,20 +237,22 @@ class TahomaCover(TahomaDevice, CoverDevice):
             == "io:RollerShutterWithLowSpeedManagementIOComponent"
         ):
             self.apply_action("setPosition", "secured")
-        elif self.tahoma_device.type in (
-            "rts:BlindRTSComponent",
+        elif self.tahoma_device.type in {
             "io:ExteriorVenetianBlindIOComponent",
-            "rts:VenetianBlindRTSComponent",
+            "rts:BlindRTSComponent",
             "rts:DualCurtainRTSComponent",
             "rts:ExteriorVenetianBlindRTSComponent",
-            "rts:BlindRTSComponent",
-        ):
+            "rts:VenetianBlindRTSComponent",
+        }:
             self.apply_action("my")
-        elif self.tahoma_device.type in (
+        elif self.tahoma_device.type in {
             HORIZONTAL_AWNING,
+            "io:AwningValanceIOComponent",
             "io:RollerShutterGenericIOComponent",
             "io:VerticalExteriorAwningIOComponent",
-        ):
+            "io:VerticalInteriorBlindVeluxIOComponent",
+            "io:WindowOpenerVeluxIOComponent",
+        }:
             self.apply_action("stop")
         else:
             self.apply_action("stopIdentify")

@@ -1,12 +1,8 @@
 {
-    "domain": "here_travel_time",
-    "name": "HERE travel time",
-    "documentation": "https://www.home-assistant.io/integrations/here_travel_time",
-    "requirements": [
-      "herepy==0.6.3.1"
-    ],
-    "dependencies": [],
-    "codeowners": [
-      "@eifinger"
-    ]
-  }
+  "domain": "here_travel_time",
+  "name": "HERE Travel Time",
+  "documentation": "https://www.home-assistant.io/integrations/here_travel_time",
+  "requirements": ["herepy==2.0.0"],
+  "codeowners": ["@eifinger"],
+  "iot_class": "cloud_polling"
+}

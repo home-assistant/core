@@ -1,12 +1,8 @@
 {
   "domain": "ohmconnect",
-  "name": "Ohmconnect",
+  "name": "OhmConnect",
   "documentation": "https://www.home-assistant.io/integrations/ohmconnect",
-  "requirements": [
-    "defusedxml==0.6.0"
-  ],
-  "dependencies": [],
-  "codeowners": [
-    "@robbiet480"
-  ]
+  "requirements": ["defusedxml==0.6.0"],
+  "codeowners": ["@robbiet480"],
+  "iot_class": "cloud_polling"
 }

@@ -1,14 +1,12 @@
 """Support for IOTA wallets."""
-import logging
 from datetime import timedelta
 
+from iota import Iota
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.entity import Entity
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_IRI = "iri"
 CONF_TESTNET = "testnet"
@@ -69,14 +67,12 @@ class IotaDevice(Entity):
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
-        attr = {CONF_WALLET_NAME: self._name}
-        return attr
+        return {CONF_WALLET_NAME: self._name}
 
     @property
     def api(self):
         """Construct API object for interaction with the IRI node."""
-        from iota import Iota
 
         return Iota(adapter=self.iri, seed=self._seed)

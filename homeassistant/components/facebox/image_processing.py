@@ -5,40 +5,41 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME
-from homeassistant.core import split_entity_id
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.image_processing import (
-    PLATFORM_SCHEMA,
-    ImageProcessingFaceEntity,
     ATTR_CONFIDENCE,
-    CONF_SOURCE,
     CONF_ENTITY_ID,
     CONF_NAME,
-    DOMAIN,
+    CONF_SOURCE,
+    PLATFORM_SCHEMA,
+    ImageProcessingFaceEntity,
 )
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_ID,
+    ATTR_NAME,
     CONF_IP_ADDRESS,
-    CONF_PORT,
     CONF_PASSWORD,
+    CONF_PORT,
     CONF_USERNAME,
     HTTP_BAD_REQUEST,
     HTTP_OK,
     HTTP_UNAUTHORIZED,
 )
+from homeassistant.core import split_entity_id
+import homeassistant.helpers.config_validation as cv
+
+from .const import DOMAIN, SERVICE_TEACH_FACE
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_BOUNDING_BOX = "bounding_box"
 ATTR_CLASSIFIER = "classifier"
 ATTR_IMAGE_ID = "image_id"
-ATTR_ID = "id"
 ATTR_MATCHED = "matched"
 FACEBOX_NAME = "name"
 CLASSIFIER = "facebox"
 DATA_FACEBOX = "facebox_classifiers"
 FILE_PATH = "file_path"
-SERVICE_TEACH_FACE = "facebox_teach_face"
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -262,7 +263,7 @@ class FaceClassifyEntity(ImageProcessingFaceEntity):
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the classifier attributes."""
         return {
             "matched_faces": self._matched,

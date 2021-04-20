@@ -1,7 +1,8 @@
 """Support for Repetier-Server sensors."""
-import logging
 from datetime import timedelta
+import logging
 
+import pyrepetier
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -11,6 +12,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     CONF_SENSORS,
+    PERCENTAGE,
     TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
@@ -107,7 +109,7 @@ def has_all_unique_names(value):
 
 
 SENSOR_TYPES = {
-    # Type, Unit, Icon
+    # Type, Unit, Icon, post
     "bed_temperature": ["temperature", TEMP_CELSIUS, "mdi:thermometer", "_bed_"],
     "extruder_temperature": [
         "temperature",
@@ -122,7 +124,7 @@ SENSOR_TYPES = {
         "_chamber_",
     ],
     "current_state": ["state", None, "mdi:printer-3d", ""],
-    "current_job": ["progress", "%", "mdi:file-percent", "_current_job"],
+    "current_job": ["progress", PERCENTAGE, "mdi:file-percent", "_current_job"],
     "job_end": ["progress", None, "mdi:clock-end", "_job_end"],
     "job_start": ["progress", None, "mdi:clock-start", "_job_start"],
 }
@@ -160,14 +162,12 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the Repetier Server component."""
-    import pyrepetier
-
     hass.data[REPETIER_API] = {}
 
     for repetier in config[DOMAIN]:
         _LOGGER.debug("Repetier server config %s", repetier[CONF_HOST])
 
-        url = "http://{}".format(repetier[CONF_HOST])
+        url = f"http://{repetier[CONF_HOST]}"
         port = repetier[CONF_PORT]
         api_key = repetier[CONF_API_KEY]
 
@@ -249,12 +249,12 @@ class PrinterAPI:
                     if prop_data is None:
                         continue
                     for idx, _ in enumerate(prop_data):
-                        info["temp_id"] = idx
-                        sensor_info.append(info)
+                        prop_info = info.copy()
+                        prop_info["temp_id"] = idx
+                        sensor_info.append(prop_info)
                 else:
                     info["temp_id"] = None
                     sensor_info.append(info)
-
                 self._known_entities.add(known)
 
         if not sensor_info:

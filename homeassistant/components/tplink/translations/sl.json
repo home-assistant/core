@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "TP-Link naprav ni mogo\u010de najti v omre\u017eju.",
+            "single_instance_allowed": "Potrebna je samo ena konfiguracija."
+        },
+        "step": {
+            "confirm": {
+                "description": "\u017delite namestiti pametne naprave TP-Link?"
+            }
+        }
+    }
+}

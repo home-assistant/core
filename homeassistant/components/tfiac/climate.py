@@ -6,7 +6,7 @@ import logging
 from pytfiac import Tfiac
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     FAN_AUTO,
     FAN_HIGH,
@@ -73,7 +73,7 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
     async_add_devices([TfiacClimate(hass, tfiac_client)])
 
 
-class TfiacClimate(ClimateDevice):
+class TfiacClimate(ClimateEntity):
     """TFIAC class."""
 
     def __init__(self, hass, client):
@@ -189,3 +189,11 @@ class TfiacClimate(ClimateDevice):
     async def async_set_swing_mode(self, swing_mode):
         """Set new swing mode."""
         await self._client.set_swing(swing_mode.capitalize())
+
+    async def async_turn_on(self):
+        """Turn device on."""
+        await self._client.set_state(OPERATION_MODE)
+
+    async def async_turn_off(self):
+        """Turn device off."""
+        await self._client.set_state(ON_MODE, "off")

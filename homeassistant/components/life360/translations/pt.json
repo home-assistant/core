@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
+            "unknown": "Erro inesperado"
+        },
+        "error": {
+            "already_configured": "Conta j\u00e1 configurada",
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
+            "invalid_username": "Nome de utilizador incorreto",
+            "unknown": "Erro inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Palavra-passe",
+                    "username": "Nome de Utilizador"
+                }
+            }
+        }
+    }
+}

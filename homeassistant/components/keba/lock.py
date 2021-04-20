@@ -1,11 +1,7 @@
 """Support for KEBA charging station switch."""
-import logging
-
-from homeassistant.components.lock import LockDevice
+from homeassistant.components.lock import LockEntity
 
 from . import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -15,17 +11,18 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     keba = hass.data[DOMAIN]
 
-    sensors = [KebaLock(keba, "Authentication")]
+    sensors = [KebaLock(keba, "Authentication", "authentication")]
     async_add_entities(sensors)
 
 
-class KebaLock(LockDevice):
+class KebaLock(LockEntity):
     """The entity class for KEBA charging stations switch."""
 
-    def __init__(self, keba, name):
+    def __init__(self, keba, name, entity_type):
         """Initialize the KEBA switch."""
         self._keba = keba
         self._name = name
+        self._entity_type = entity_type
         self._state = True
 
     @property
@@ -35,13 +32,13 @@ class KebaLock(LockDevice):
 
     @property
     def unique_id(self):
-        """Return the unique ID of the binary sensor."""
-        return f"{self._keba.device_name}_{self._name}"
+        """Return the unique ID of the lock."""
+        return f"{self._keba.device_id}_{self._entity_type}"
 
     @property
     def name(self):
         """Return the name of the device."""
-        return self._name
+        return f"{self._keba.device_name} {self._name}"
 
     @property
     def is_locked(self):

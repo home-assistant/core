@@ -1,7 +1,8 @@
 """Test configuration and mocks for the SmartThings component."""
+import secrets
+from unittest.mock import Mock, patch
 from uuid import uuid4
 
-from asynctest import Mock, patch
 from pysmartthings import (
     CLASSIFICATION_AUTOMATION,
     AppEntity,
@@ -28,8 +29,6 @@ from homeassistant.components.smartthings.const import (
     CONF_INSTALLED_APP_ID,
     CONF_INSTANCE_ID,
     CONF_LOCATION_ID,
-    CONF_OAUTH_CLIENT_ID,
-    CONF_OAUTH_CLIENT_SECRET,
     CONF_REFRESH_TOKEN,
     DATA_BROKERS,
     DOMAIN,
@@ -37,11 +36,18 @@ from homeassistant.components.smartthings.const import (
     STORAGE_KEY,
     STORAGE_VERSION,
 )
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import CONN_CLASS_CLOUD_PUSH, SOURCE_USER, ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_WEBHOOK_ID
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_WEBHOOK_ID,
+)
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 COMPONENT_PREFIX = "homeassistant.components.smartthings."
 
@@ -72,8 +78,11 @@ async def setup_platform(hass, platform: str, *, devices=None, scenes=None):
 async def setup_component(hass, config_file, hass_storage):
     """Load the SmartThing component."""
     hass_storage[STORAGE_KEY] = {"data": config_file, "version": STORAGE_VERSION}
+    await async_process_ha_core_config(
+        hass,
+        {"external_url": "https://test.local"},
+    )
     await async_setup_component(hass, "smartthings", {})
-    hass.config.api.base_url = "https://test.local"
 
 
 def _create_location():
@@ -96,7 +105,7 @@ def locations_fixture(location):
 
 
 @pytest.fixture(name="app")
-def app_fixture(hass, config_file):
+async def app_fixture(hass, config_file):
     """Fixture for a single app."""
     app = Mock(AppEntity)
     app.app_name = APP_NAME_PREFIX + str(uuid4())
@@ -104,7 +113,7 @@ def app_fixture(hass, config_file):
     app.app_type = "WEBHOOK_SMART_APP"
     app.classifications = [CLASSIFICATION_AUTOMATION]
     app.display_name = "Home Assistant"
-    app.description = hass.config.location_name + " at " + hass.config.api.base_url
+    app.description = f"{hass.config.location_name} at https://test.local"
     app.single_instance = True
     app.webhook_target_url = webhook.async_generate_url(
         hass, hass.data[DOMAIN][CONF_WEBHOOK_ID]
@@ -160,7 +169,7 @@ def installed_apps_fixture(installed_app, locations, app):
 @pytest.fixture(name="config_file")
 def config_file_fixture():
     """Fixture representing the local config file contents."""
-    return {CONF_INSTANCE_ID: str(uuid4()), CONF_WEBHOOK_ID: webhook.generate_secret()}
+    return {CONF_INSTANCE_ID: str(uuid4()), CONF_WEBHOOK_ID: secrets.token_hex()}
 
 
 @pytest.fixture(name="smartthings_mock")
@@ -213,8 +222,8 @@ def config_entry_fixture(hass, installed_app, location):
         CONF_APP_ID: installed_app.app_id,
         CONF_LOCATION_ID: location.location_id,
         CONF_REFRESH_TOKEN: str(uuid4()),
-        CONF_OAUTH_CLIENT_ID: str(uuid4()),
-        CONF_OAUTH_CLIENT_SECRET: str(uuid4()),
+        CONF_CLIENT_ID: str(uuid4()),
+        CONF_CLIENT_SECRET: str(uuid4()),
     }
     return MockConfigEntry(
         domain=DOMAIN,
@@ -242,7 +251,7 @@ def subscription_factory_fixture():
 def device_factory_fixture():
     """Fixture for creating mock devices."""
     api = Mock(Api)
-    api.post_device_command.return_value = {}
+    api.post_device_command.return_value = {"results": [{"status": "ACCEPTED"}]}
 
     def _factory(label, capabilities, status: dict = None):
         device_data = {

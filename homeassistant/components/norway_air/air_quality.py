@@ -1,14 +1,14 @@
 """Sensor for checking the air quality forecast around Norway."""
+from datetime import timedelta
 import logging
 
-from datetime import timedelta
+import metno
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.air_quality import PLATFORM_SCHEMA, AirQualityEntity
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,12 +67,10 @@ def round_state(func):
 
 
 class AirSensor(AirQualityEntity):
-    """Representation of an Yr.no sensor."""
+    """Representation of an air quality sensor."""
 
     def __init__(self, name, coordinates, forecast, session):
         """Initialize the sensor."""
-        import metno
-
         self._name = name
         self._api = metno.AirQualityData(coordinates, forecast, session)
 
@@ -82,7 +80,7 @@ class AirSensor(AirQualityEntity):
         return ATTRIBUTION
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return other details about the sensor state."""
         return {
             "level": self._api.data.get("level"),

@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Naprava je \u017ee konfigurirana",
+            "link_local_address": "Lokalni naslovi povezave niso podprti",
+            "not_axis_device": "Odkrita naprava ni naprava Axis"
+        },
+        "error": {
+            "already_configured": "Naprava je \u017ee konfigurirana",
+            "already_in_progress": "Konfiguracijski tok za to napravo je \u017ee v teku."
+        },
+        "flow_title": "OS naprava: {Name} ({Host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Gostitelj",
+                    "password": "Geslo",
+                    "port": "Vrata",
+                    "username": "Uporabni\u0161ko ime"
+                },
+                "title": "Nastavite plo\u0161\u010dek"
+            }
+        }
+    }
+}

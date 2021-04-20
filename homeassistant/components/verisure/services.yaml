@@ -1,5 +1,23 @@
 capture_smartcam:
-  description: Capture a new image from a smartcam.
-  fields:
-    device_serial: {description: The serial number of the smartcam you want to capture
-        an image from., example: 2DEU AT5Z}
+  name: Capture SmartCam image
+  description: Capture a new image from a Verisure SmartCam
+  target:
+    entity:
+      integration: verisure
+      domain: camera
+
+enable_autolock:
+  name: Enable autolock
+  description: Enable autolock of a Verisure Lockguard Smartlock
+  target:
+    entity:
+      integration: verisure
+      domain: lock
+
+disable_autolock:
+  name: Disable autolock
+  description: Disable autolock of a Verisure Lockguard Smartlock
+  target:
+    entity:
+      integration: verisure
+      domain: lock

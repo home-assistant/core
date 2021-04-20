@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
+            "already_in_progress": "Konfiguratioun's Oflaf ass schonn am gaangen.",
+            "cannot_connect": "Feeler beim verbannen"
+        },
+        "flow_title": "Arcam FMJ um {host}",
+        "step": {
+            "confirm": {
+                "description": "Soll den Arcam FMJ um `{host}` am Home Assistant dob\u00e4i gesaat ginn?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "description": "G\u00ebff den Numm oder IP-Adress vum Apparat un."
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_on": "{entity_name} soll ugeschalt ginn"
+        }
+    }
+}

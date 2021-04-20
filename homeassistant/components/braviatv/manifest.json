@@ -1,15 +1,9 @@
 {
   "domain": "braviatv",
-  "name": "Braviatv",
+  "name": "Sony Bravia TV",
   "documentation": "https://www.home-assistant.io/integrations/braviatv",
-  "requirements": [
-    "braviarc-homeassistant==0.3.7.dev0",
-    "getmac==0.8.1"
-  ],
-  "dependencies": [
-    "configurator"
-  ],
-  "codeowners": [
-    "@robbiet480"
-  ]
+  "requirements": ["bravia-tv==1.0.8"],
+  "codeowners": ["@bieniu"],
+  "config_flow": true,
+  "iot_class": "local_polling"
 }

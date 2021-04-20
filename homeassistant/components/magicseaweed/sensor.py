@@ -1,19 +1,20 @@
 """Support for magicseaweed data from magicseaweed.com."""
 from datetime import timedelta
 import logging
+
+import magicseaweed
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_NAME,
-    CONF_MONITORED_CONDITIONS,
     ATTR_ATTRIBUTION,
+    CONF_API_KEY,
+    CONF_MONITORED_CONDITIONS,
+    CONF_NAME,
 )
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,7 +89,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class MagicSeaweedSensor(Entity):
+class MagicSeaweedSensor(SensorEntity):
     """Implementation of a MagicSeaweed sensor."""
 
     def __init__(self, forecast_data, sensor_type, name, unit_system, hour=None):
@@ -134,7 +135,7 @@ class MagicSeaweedSensor(Entity):
         return ICON
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._attrs
 
@@ -152,18 +153,12 @@ class MagicSeaweedSensor(Entity):
         elif self.type == "max_breaking_swell":
             self._state = forecast.swell_maxBreakingHeight
         elif self.type == "swell_forecast":
-            summary = "{} - {}".format(
-                forecast.swell_minBreakingHeight, forecast.swell_maxBreakingHeight
-            )
+            summary = f"{forecast.swell_minBreakingHeight} - {forecast.swell_maxBreakingHeight}"
             self._state = summary
             if self.hour is None:
                 for hour, data in self.data.hourly.items():
                     occurs = hour
-                    hr_summary = "{} - {} {}".format(
-                        data.swell_minBreakingHeight,
-                        data.swell_maxBreakingHeight,
-                        data.swell_unit,
-                    )
+                    hr_summary = f"{data.swell_minBreakingHeight} - {data.swell_maxBreakingHeight} {data.swell_unit}"
                     self._attrs[occurs] = hr_summary
 
         if self.type != "swell_forecast":
@@ -175,8 +170,6 @@ class MagicSeaweedData:
 
     def __init__(self, api_key, spot_id, units):
         """Initialize the data object."""
-        import magicseaweed
-
         self._msw = magicseaweed.MSW_Forecast(api_key, spot_id, None, units)
         self.currently = None
         self.hourly = {}

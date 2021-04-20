@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "De geselecteerde overeenkomst is al geconfigureerd.",
+            "authorize_url_fail": "Onbekende fout bij het genereren van een autorisatie-URL.",
+            "authorize_url_timeout": "Time-out tijdens genereren autorisatie url.",
+            "missing_configuration": "De Netatmo-component is niet geconfigureerd. Gelieve de documentatie volgen.",
+            "no_agreements": "Dit account heeft geen Toon schermen.",
+            "no_url_available": "Geen URL beschikbaar. Voor informatie over deze fout [check the help section] ( {docs_url} )",
+            "unknown_authorize_url_generation": "Onbekende fout bij het genereren van een autorisatie-URL."
+        },
+        "step": {
+            "agreement": {
+                "data": {
+                    "agreement": "Overeenkomst"
+                },
+                "description": "Selecteer het overeenkomstadres dat u wilt toevoegen.",
+                "title": "Kies uw overeenkomst"
+            },
+            "pick_implementation": {
+                "title": "Kies uw leverancier om mee te authenticeren"
+            }
+        }
+    }
+}

@@ -1,27 +1,31 @@
 """Device tracker platform that adds support for OwnTracks over MQTT."""
-import logging
-
-from homeassistant.core import callback
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_BATTERY_LEVEL
-from homeassistant.components.device_tracker.const import SOURCE_TYPE_GPS
+from homeassistant.components.device_tracker import (
+    ATTR_BATTERY,
+    ATTR_GPS,
+    ATTR_GPS_ACCURACY,
+    ATTR_LOCATION_NAME,
+)
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from homeassistant.components.device_tracker.const import SOURCE_TYPE_GPS
+from homeassistant.const import (
+    ATTR_BATTERY_LEVEL,
+    ATTR_DEVICE_ID,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+)
+from homeassistant.core import callback
 from homeassistant.helpers.restore_state import RestoreEntity
+
 from .const import (
     ATTR_ALTITUDE,
-    ATTR_BATTERY,
     ATTR_COURSE,
-    ATTR_DEVICE_ID,
     ATTR_DEVICE_NAME,
-    ATTR_GPS_ACCURACY,
-    ATTR_GPS,
-    ATTR_LOCATION_NAME,
     ATTR_SPEED,
     ATTR_VERTICAL_ACCURACY,
     SIGNAL_LOCATION_UPDATE,
 )
 from .helpers import device_info
 
-_LOGGER = logging.getLogger(__name__)
 ATTR_KEYS = (ATTR_ALTITUDE, ATTR_COURSE, ATTR_SPEED, ATTR_VERTICAL_ACCURACY)
 
 
@@ -52,7 +56,7 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
         return self._data.get(ATTR_BATTERY)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific attributes."""
         attrs = {}
         for key in ATTR_KEYS:
@@ -96,11 +100,6 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
     def name(self):
         """Return the name of the device."""
         return self._entry.data[ATTR_DEVICE_NAME]
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def source_type(self):

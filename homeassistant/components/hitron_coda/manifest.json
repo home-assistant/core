@@ -1,8 +1,7 @@
 {
   "domain": "hitron_coda",
-  "name": "Hitron coda",
+  "name": "Rogers Hitron CODA",
   "documentation": "https://www.home-assistant.io/integrations/hitron_coda",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

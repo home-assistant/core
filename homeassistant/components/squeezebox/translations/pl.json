@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "no_server_found": "Nie znaleziono serwera LMS"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "no_server_found": "Nie uda\u0142o si\u0119 automatycznie wykry\u0107 serwera",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "flow_title": "Logitech Squeezebox: {host}",
+        "step": {
+            "edit": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "password": "Has\u0142o",
+                    "port": "Port",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "title": "Edycja informacji o po\u0142\u0105czeniu"
+            },
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP"
+                }
+            }
+        }
+    }
+}

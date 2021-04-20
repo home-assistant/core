@@ -2,34 +2,31 @@
 Support for EBox.
 
 Get data from 'My Usage Page' page: https://client.ebox.ca/myusage
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.ebox/
 """
-import logging
 from datetime import timedelta
+import logging
 
+from pyebox import EboxClient
+from pyebox.client import PyEboxError
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
-    CONF_USERNAME,
-    CONF_PASSWORD,
-    CONF_NAME,
     CONF_MONITORED_VARIABLES,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    DATA_GIGABITS,
+    PERCENTAGE,
+    TIME_DAYS,
 )
-from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 from homeassistant.exceptions import PlatformNotReady
-
+import homeassistant.helpers.config_validation as cv
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-GIGABITS = "Gb"
 PRICE = "CAD"
-DAYS = "days"
-PERCENT = "%"
 
 DEFAULT_NAME = "EBox"
 
@@ -38,19 +35,23 @@ SCAN_INTERVAL = timedelta(minutes=15)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 SENSOR_TYPES = {
-    "usage": ["Usage", PERCENT, "mdi:percent"],
-    "balance": ["Balance", PRICE, "mdi:square-inc-cash"],
-    "limit": ["Data limit", GIGABITS, "mdi:download"],
-    "days_left": ["Days left", DAYS, "mdi:calendar-today"],
-    "before_offpeak_download": ["Download before offpeak", GIGABITS, "mdi:download"],
-    "before_offpeak_upload": ["Upload before offpeak", GIGABITS, "mdi:upload"],
-    "before_offpeak_total": ["Total before offpeak", GIGABITS, "mdi:download"],
-    "offpeak_download": ["Offpeak download", GIGABITS, "mdi:download"],
-    "offpeak_upload": ["Offpeak Upload", GIGABITS, "mdi:upload"],
-    "offpeak_total": ["Offpeak Total", GIGABITS, "mdi:download"],
-    "download": ["Download", GIGABITS, "mdi:download"],
-    "upload": ["Upload", GIGABITS, "mdi:upload"],
-    "total": ["Total", GIGABITS, "mdi:download"],
+    "usage": ["Usage", PERCENTAGE, "mdi:percent"],
+    "balance": ["Balance", PRICE, "mdi:cash-usd"],
+    "limit": ["Data limit", DATA_GIGABITS, "mdi:download"],
+    "days_left": ["Days left", TIME_DAYS, "mdi:calendar-today"],
+    "before_offpeak_download": [
+        "Download before offpeak",
+        DATA_GIGABITS,
+        "mdi:download",
+    ],
+    "before_offpeak_upload": ["Upload before offpeak", DATA_GIGABITS, "mdi:upload"],
+    "before_offpeak_total": ["Total before offpeak", DATA_GIGABITS, "mdi:download"],
+    "offpeak_download": ["Offpeak download", DATA_GIGABITS, "mdi:download"],
+    "offpeak_upload": ["Offpeak Upload", DATA_GIGABITS, "mdi:upload"],
+    "offpeak_total": ["Offpeak Total", DATA_GIGABITS, "mdi:download"],
+    "download": ["Download", DATA_GIGABITS, "mdi:download"],
+    "upload": ["Upload", DATA_GIGABITS, "mdi:upload"],
+    "total": ["Total", DATA_GIGABITS, "mdi:download"],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -75,13 +76,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     name = config.get(CONF_NAME)
 
-    from pyebox.client import PyEboxError
-
     try:
         await ebox_data.async_update()
     except PyEboxError as exp:
         _LOGGER.error("Failed login: %s", exp)
-        raise PlatformNotReady
+        raise PlatformNotReady from exp
 
     sensors = []
     for variable in config[CONF_MONITORED_VARIABLES]:
@@ -90,7 +89,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(sensors, True)
 
 
-class EBoxSensor(Entity):
+class EBoxSensor(SensorEntity):
     """Implementation of a EBox sensor."""
 
     def __init__(self, ebox_data, sensor_type, name):
@@ -135,16 +134,12 @@ class EBoxData:
 
     def __init__(self, username, password, httpsession):
         """Initialize the data object."""
-        from pyebox import EboxClient
-
         self.client = EboxClient(username, password, REQUESTS_TIMEOUT, httpsession)
         self.data = {}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Get the latest data from Ebox."""
-        from pyebox.client import PyEboxError
-
         try:
             await self.client.fetch_data()
         except PyEboxError as exp:

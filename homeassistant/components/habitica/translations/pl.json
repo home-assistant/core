@@ -1,0 +1,20 @@
+{
+    "config": {
+        "error": {
+            "invalid_credentials": "Niepoprawne uwierzytelnienie",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Klucz API",
+                    "api_user": "Identyfikator API u\u017cytkownika Habitica",
+                    "name": "Nadpisanie nazwy u\u017cytkownika Habitica. B\u0119dzie u\u017cywany do wywo\u0142a\u0144 serwisowych.",
+                    "url": "URL"
+                },
+                "description": "Po\u0142\u0105cz sw\u00f3j profil Habitica, aby umo\u017cliwi\u0107 monitorowanie profilu i zada\u0144 u\u017cytkownika. Pami\u0119taj, \u017ce api_id i api_key musz\u0105 zosta\u0107 pobrane z https://habitica.com/user/settings/api"
+            }
+        }
+    },
+    "title": "Habitica"
+}

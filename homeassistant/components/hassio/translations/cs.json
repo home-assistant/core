@@ -1,0 +1,19 @@
+{
+    "system_health": {
+        "info": {
+            "board": "Deska",
+            "disk_total": "Kapacita disku",
+            "disk_used": "Obsazeno na disku",
+            "docker_version": "Verze Dockeru",
+            "healthy": "V po\u0159\u00e1dku",
+            "host_os": "Hostitelsk\u00fd opera\u010dn\u00ed syst\u00e9m",
+            "installed_addons": "Nainstalovan\u00e9 dopl\u0148ky",
+            "supervisor_api": "API Supervisora",
+            "supervisor_version": "Verze Supervizora",
+            "supported": "Podporov\u00e1no",
+            "update_channel": "Kan\u00e1l aktualizac\u00ed",
+            "version_api": "Verze API"
+        }
+    },
+    "title": "Home Assistant Supervisor"
+}

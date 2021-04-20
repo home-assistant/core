@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+        },
+        "error": {
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "flow_title": "Logitech Harmony Hub: {name}",
+        "step": {
+            "link": {
+                "description": "{name} ({host})\uc744(\ub97c) \uc124\uc815\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",
+                "title": "Logitech Harmony Hub \uc124\uc815\ud558\uae30"
+            },
+            "user": {
+                "data": {
+                    "host": "\ud638\uc2a4\ud2b8",
+                    "name": "Hub \uc774\ub984"
+                },
+                "title": "Logitech Harmony Hub \uc124\uc815\ud558\uae30"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "activity": "\uc9c0\uc815\ub418\uc9c0 \uc54a\uc740 \uacbd\uc6b0 \uc2e4\ud589\ud560 \uae30\ubcf8 \uc561\uc158.",
+                    "delay_secs": "\uba85\ub839 \uc804\uc1a1 \uc0ac\uc774\uc758 \uc9c0\uc5f0 \uc2dc\uac04."
+                },
+                "description": "Harmony Hub \uc635\uc158 \uc870\uc815"
+            }
+        }
+    }
+}

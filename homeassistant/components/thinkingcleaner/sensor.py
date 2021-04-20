@@ -1,17 +1,19 @@
 """Support for ThinkingCleaner sensors."""
-import logging
 from datetime import timedelta
 
-from homeassistant import util
-from homeassistant.helpers.entity import Entity
+from pythinkingcleaner import Discovery, ThinkingCleaner
+import voluptuous as vol
 
-_LOGGER = logging.getLogger(__name__)
+from homeassistant import util
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import CONF_HOST, PERCENTAGE
+import homeassistant.helpers.config_validation as cv
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 
 SENSOR_TYPES = {
-    "battery": ["Battery", "%", "mdi:battery"],
+    "battery": ["Battery", PERCENTAGE, "mdi:battery"],
     "state": ["State", None, None],
     "capacity": ["Capacity", None, None],
 }
@@ -43,13 +45,18 @@ STATES = {
     "st_unknown": "Unknown state",
 }
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Optional(CONF_HOST): cv.string})
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ThinkingCleaner platform."""
-    from pythinkingcleaner import Discovery
 
-    discovery = Discovery()
-    devices = discovery.discover()
+    host = config.get(CONF_HOST)
+    if host:
+        devices = [ThinkingCleaner(host, "unknown")]
+    else:
+        discovery = Discovery()
+        devices = discovery.discover()
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update_devices():
@@ -65,7 +72,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev)
 
 
-class ThinkingCleanerSensor(Entity):
+class ThinkingCleanerSensor(SensorEntity):
     """Representation of a ThinkingCleaner Sensor."""
 
     def __init__(self, tc_object, sensor_type, update_devices):
@@ -80,7 +87,7 @@ class ThinkingCleanerSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self._tc_object.name, SENSOR_TYPES[self.type][0])
+        return f"{self._tc_object.name} {SENSOR_TYPES[self.type][0]}"
 
     @property
     def icon(self):

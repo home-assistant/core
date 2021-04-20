@@ -2,12 +2,8 @@
 import asyncio
 from collections.abc import Mapping
 from copy import deepcopy
-import logging
 
 import voluptuous as vol
-
-from homeassistant.const import ATTR_SERVICE
-import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -16,11 +12,10 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.const import ATTR_SERVICE
+import homeassistant.helpers.config_validation as cv
 
-
-# mypy: allow-untyped-calls, allow-untyped-defs
-
-_LOGGER = logging.getLogger(__name__)
+# mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
 CONF_SERVICES = "services"
 

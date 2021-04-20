@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is al geconfigureerd",
+            "cannot_connect": "Kan geen verbinding maken"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "country": "Land"
+                },
+                "title": "Kies een land om te monitoren"
+            }
+        }
+    }
+}

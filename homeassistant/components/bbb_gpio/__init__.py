@@ -1,25 +1,20 @@
 """Support for controlling GPIO pins of a Beaglebone Black."""
-import logging
-
 from Adafruit_BBIO import GPIO  # pylint: disable=import-error
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
-
-_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "bbb_gpio"
 
 
 def setup(hass, config):
     """Set up the BeagleBone Black GPIO component."""
-    # pylint: disable=import-error
 
     def cleanup_gpio(event):
         """Stuff to do before stopping."""
         GPIO.cleanup()
 
     def prepare_gpio(event):
-        """Stuff to do when home assistant starts."""
+        """Stuff to do when Home Assistant starts."""
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, cleanup_gpio)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, prepare_gpio)

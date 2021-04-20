@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "site_exists": "Dette site_id er allerede konfigureret"
+        },
+        "error": {
+            "site_exists": "Dette site_id er allerede konfigureret"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-n\u00f8glen til dette websted",
+                    "name": "Navnet p\u00e5 denne installation",
+                    "site_id": "SolarEdge site-id"
+                },
+                "title": "Definer API-parametre til denne installation"
+            }
+        }
+    }
+}

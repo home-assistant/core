@@ -1,0 +1,16 @@
+{
+    "state": {
+        "season__season": {
+            "autumn": "Outono",
+            "spring": "Primavera",
+            "summer": "Ver\u00e3o",
+            "winter": "Inverno"
+        },
+        "season__season__": {
+            "autumn": "Outono",
+            "spring": "Primavera",
+            "summer": "Ver\u00e3o",
+            "winter": "Inverno"
+        }
+    }
+}

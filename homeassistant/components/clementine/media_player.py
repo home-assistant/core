@@ -1,11 +1,11 @@
 """Support for Clementine Music Player as media player."""
 from datetime import timedelta
-import logging
 import time
 
+from clementineremote import ClementineRemote
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     SUPPORT_NEXT_TRACK,
@@ -26,8 +26,6 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Clementine Remote"
 DEFAULT_PORT = 5500
@@ -56,10 +54,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Clementine platform."""
-    from clementineremote import ClementineRemote
 
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
+    host = config[CONF_HOST]
+    port = config[CONF_PORT]
     token = config.get(CONF_ACCESS_TOKEN)
 
     client = ClementineRemote(host, port, token, reconnect=True)
@@ -67,7 +64,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([ClementineDevice(client, config[CONF_NAME])])
 
 
-class ClementineDevice(MediaPlayerDevice):
+class ClementineDevice(MediaPlayerEntity):
     """Representation of Clementine Player."""
 
     def __init__(self, client, name):

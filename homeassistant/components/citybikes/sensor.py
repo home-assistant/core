@@ -7,7 +7,11 @@ import aiohttp
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.components.sensor import ENTITY_ID_FORMAT, PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    ENTITY_ID_FORMAT,
+    PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_ID,
@@ -25,7 +29,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity, async_generate_entity_id
+from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import distance, location
 
@@ -57,7 +61,7 @@ SCAN_INTERVAL = timedelta(minutes=5)  # Timely, and doesn't suffocate the API
 STATIONS_URI = "v2/networks/{uid}?fields=network.stations"
 
 CITYBIKES_ATTRIBUTION = (
-    "Information provided by the CityBikes Project " "(https://citybik.es/#about)"
+    "Information provided by the CityBikes Project (https://citybik.es/#about)"
 )
 
 CITYBIKES_NETWORKS = "citybikes_networks"
@@ -125,8 +129,6 @@ STATIONS_RESPONSE_SCHEMA = vol.Schema(
 class CityBikesRequestError(Exception):
     """Error to indicate a CityBikes API request has failed."""
 
-    pass
-
 
 async def async_citybikes_request(hass, uri, schema):
     """Perform a request to CityBikes API endpoint, and parse the response."""
@@ -143,9 +145,7 @@ async def async_citybikes_request(hass, uri, schema):
     except ValueError:
         _LOGGER.error("Received non-JSON data from CityBikes API endpoint")
     except vol.Invalid as err:
-        _LOGGER.error(
-            "Received unexpected JSON from CityBikes" " API endpoint: %s", err
-        )
+        _LOGGER.error("Received unexpected JSON from CityBikes API endpoint: %s", err)
     raise CityBikesRequestError
 
 
@@ -229,8 +229,8 @@ class CityBikesNetworks:
                     result = network[ATTR_ID]
 
             return result
-        except CityBikesRequestError:
-            raise PlatformNotReady
+        except CityBikesRequestError as err:
+            raise PlatformNotReady from err
         finally:
             self.networks_loading.release()
 
@@ -255,14 +255,14 @@ class CityBikesNetwork:
             )
             self.stations = network[ATTR_NETWORK][ATTR_STATIONS_LIST]
             self.ready.set()
-        except CityBikesRequestError:
+        except CityBikesRequestError as err:
             if now is not None:
                 self.ready.clear()
             else:
-                raise PlatformNotReady
+                raise PlatformNotReady from err
 
 
-class CityBikesStation(Entity):
+class CityBikesStation(SensorEntity):
     """CityBikes API Sensor."""
 
     def __init__(self, network, station_id, entity_id):
@@ -290,7 +290,7 @@ class CityBikesStation(Entity):
                 break
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self._station_data:
             return {

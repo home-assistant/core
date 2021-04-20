@@ -9,23 +9,13 @@ import string
 import requests
 import slixmpp
 from slixmpp.exceptions import IqError, IqTimeout, XMPPError
-from slixmpp.xmlstream.xmlstream import NotConnectedError
 from slixmpp.plugins.xep_0363.http_upload import (
     FileTooBig,
     FileUploadError,
     UploadServiceNotFound,
 )
+from slixmpp.xmlstream.xmlstream import NotConnectedError
 import voluptuous as vol
-
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_RECIPIENT,
-    CONF_RESOURCE,
-    CONF_ROOM,
-    CONF_SENDER,
-)
-import homeassistant.helpers.config_validation as cv
-import homeassistant.helpers.template as template_helper
 
 from homeassistant.components.notify import (
     ATTR_TITLE,
@@ -33,6 +23,16 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_RECIPIENT,
+    CONF_RESOURCE,
+    CONF_ROOM,
+    CONF_SENDER,
+    HTTP_BAD_REQUEST,
+)
+import homeassistant.helpers.config_validation as cv
+import homeassistant.helpers.template as template_helper
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,7 +55,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_SENDER): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_RECIPIENT): cv.string,
+        vol.Required(CONF_RECIPIENT): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_RESOURCE, default=DEFAULT_RESOURCE): cv.string,
         vol.Optional(CONF_ROOM, default=""): cv.string,
         vol.Optional(CONF_TLS, default=True): cv.boolean,
@@ -87,7 +87,7 @@ class XmppNotificationService(BaseNotificationService):
         self._sender = sender
         self._resource = resource
         self._password = password
-        self._recipient = recipient
+        self._recipients = recipient
         self._tls = tls
         self._verify = verify
         self._room = room
@@ -102,7 +102,7 @@ class XmppNotificationService(BaseNotificationService):
         await async_send_message(
             f"{self._sender}/{self._resource}",
             self._password,
-            self._recipient,
+            self._recipients,
             self._tls,
             self._verify,
             self._room,
@@ -116,7 +116,7 @@ class XmppNotificationService(BaseNotificationService):
 async def async_send_message(
     sender,
     password,
-    recipient,
+    recipients,
     use_tls,
     verify_certificate,
     room,
@@ -165,7 +165,7 @@ async def async_send_message(
             if message:
                 self.send_text_message()
 
-            self.disconnect(wait=True)
+            self.disconnect()
 
         async def send_file(self, timeout=None):
             """Send file via XMPP.
@@ -174,7 +174,7 @@ async def async_send_message(
             HTTP Upload (XEP_0363)
             """
             if room:
-                self.plugin["xep_0045"].join_muc(room, sender, wait=True)
+                self.plugin["xep_0045"].join_muc(room, sender)
 
             try:
                 # Uploading with XEP_0363
@@ -182,20 +182,21 @@ async def async_send_message(
                 url = await self.upload_file(timeout=timeout)
 
                 _LOGGER.info("Upload success")
-                if room:
-                    _LOGGER.info("Sending file to %s", room)
-                    message = self.Message(sto=room, stype="groupchat")
-                else:
-                    _LOGGER.info("Sending file to %s", recipient)
-                    message = self.Message(sto=recipient, stype="chat")
-
-                message["body"] = url
-                # pylint: disable=invalid-sequence-index
-                message["oob"]["url"] = url
-                try:
-                    message.send()
-                except (IqError, IqTimeout, XMPPError) as ex:
-                    _LOGGER.error("Could not send image message %s", ex)
+                for recipient in recipients:
+                    if room:
+                        _LOGGER.info("Sending file to %s", room)
+                        message = self.Message(sto=room, stype="groupchat")
+                    else:
+                        _LOGGER.info("Sending file to %s", recipient)
+                        message = self.Message(sto=recipient, stype="chat")
+                    message["body"] = url
+                    message["oob"]["url"] = url
+                    try:
+                        message.send()
+                    except (IqError, IqTimeout, XMPPError) as ex:
+                        _LOGGER.error("Could not send image message %s", ex)
+                    if room:
+                        break
             except (IqError, IqTimeout, XMPPError) as ex:
                 _LOGGER.error("Upload error, could not send message %s", ex)
             except NotConnectedError as ex:
@@ -203,7 +204,7 @@ async def async_send_message(
             except FileTooBig as ex:
                 _LOGGER.error("File too big for server, could not upload file %s", ex)
             except UploadServiceNotFound as ex:
-                _LOGGER.error("UploadServiceNotFound: " " could not upload file %s", ex)
+                _LOGGER.error("UploadServiceNotFound, could not upload file %s", ex)
             except FileUploadError as ex:
                 _LOGGER.error("FileUploadError, could not upload file %s", ex)
             except requests.exceptions.SSLError as ex:
@@ -264,7 +265,7 @@ async def async_send_message(
 
             result = await hass.async_add_executor_job(get_url, url)
 
-            if result.status_code >= 400:
+            if result.status_code >= HTTP_BAD_REQUEST:
                 _LOGGER.error("Could not load file from %s", url)
                 return None
 
@@ -299,10 +300,10 @@ async def async_send_message(
 
         async def upload_file_from_path(self, path, timeout=None):
             """Upload a file from a local file path via XEP_0363."""
-            _LOGGER.info("Uploading file from path, %s ...", path)
+            _LOGGER.info("Uploading file from path, %s", path)
 
             if not hass.config.is_allowed_path(path):
-                raise PermissionError("Could not access file. Not in whitelist.")
+                raise PermissionError("Could not access file. Path not allowed")
 
             with open(path, "rb") as upfile:
                 _LOGGER.debug("Reading file %s", path)
@@ -334,11 +335,12 @@ async def async_send_message(
             try:
                 if room:
                     _LOGGER.debug("Joining room %s", room)
-                    self.plugin["xep_0045"].join_muc(room, sender, wait=True)
+                    self.plugin["xep_0045"].join_muc(room, sender)
                     self.send_message(mto=room, mbody=message, mtype="groupchat")
                 else:
-                    _LOGGER.debug("Sending message to %s", recipient)
-                    self.send_message(mto=recipient, mbody=message, mtype="chat")
+                    for recipient in recipients:
+                        _LOGGER.debug("Sending message to %s", recipient)
+                        self.send_message(mto=recipient, mbody=message, mtype="chat")
             except (IqError, IqTimeout, XMPPError) as ex:
                 _LOGGER.error("Could not send text message %s", ex)
             except NotConnectedError as ex:

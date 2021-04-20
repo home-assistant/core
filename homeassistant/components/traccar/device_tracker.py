@@ -2,29 +2,31 @@
 from datetime import datetime, timedelta
 import logging
 
+from pytraccar.api import API
+from stringcase import camelcase
 import voluptuous as vol
 
-from homeassistant.core import callback
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_VERIFY_SSL,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    CONF_SCAN_INTERVAL,
-    CONF_MONITORED_CONDITIONS,
-    CONF_EVENT,
-)
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA, SOURCE_TYPE_GPS
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from homeassistant.const import (
+    CONF_EVENT,
+    CONF_HOST,
+    CONF_MONITORED_CONDITIONS,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SCAN_INTERVAL,
+    CONF_SSL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
+from homeassistant.core import callback
 from homeassistant.helpers import device_registry
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import HomeAssistantType
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import slugify
 
 from . import DOMAIN, TRACKER_UPDATE
@@ -41,29 +43,28 @@ from .const import (
     ATTR_MOTION,
     ATTR_SPEED,
     ATTR_STATUS,
-    ATTR_TRACKER,
     ATTR_TRACCAR_ID,
-    EVENT_DEVICE_MOVING,
-    EVENT_COMMAND_RESULT,
-    EVENT_DEVICE_FUEL_DROP,
-    EVENT_GEOFENCE_ENTER,
-    EVENT_DEVICE_OFFLINE,
-    EVENT_DRIVER_CHANGED,
-    EVENT_GEOFENCE_EXIT,
-    EVENT_DEVICE_OVERSPEED,
-    EVENT_DEVICE_ONLINE,
-    EVENT_DEVICE_STOPPED,
-    EVENT_MAINTENANCE,
-    EVENT_ALARM,
-    EVENT_TEXT_MESSAGE,
-    EVENT_DEVICE_UNKNOWN,
-    EVENT_IGNITION_OFF,
-    EVENT_IGNITION_ON,
-    EVENT_ALL_EVENTS,
+    ATTR_TRACKER,
     CONF_MAX_ACCURACY,
     CONF_SKIP_ACCURACY_ON,
+    EVENT_ALARM,
+    EVENT_ALL_EVENTS,
+    EVENT_COMMAND_RESULT,
+    EVENT_DEVICE_FUEL_DROP,
+    EVENT_DEVICE_MOVING,
+    EVENT_DEVICE_OFFLINE,
+    EVENT_DEVICE_ONLINE,
+    EVENT_DEVICE_OVERSPEED,
+    EVENT_DEVICE_STOPPED,
+    EVENT_DEVICE_UNKNOWN,
+    EVENT_DRIVER_CHANGED,
+    EVENT_GEOFENCE_ENTER,
+    EVENT_GEOFENCE_EXIT,
+    EVENT_IGNITION_OFF,
+    EVENT_IGNITION_ON,
+    EVENT_MAINTENANCE,
+    EVENT_TEXT_MESSAGE,
 )
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,9 +79,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PORT, default=8082): cv.port,
         vol.Optional(CONF_SSL, default=False): cv.boolean,
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-        vol.Required(CONF_MAX_ACCURACY, default=0): vol.All(
-            vol.Coerce(int), vol.Range(min=0)
-        ),
+        vol.Required(CONF_MAX_ACCURACY, default=0): cv.positive_int,
         vol.Optional(CONF_SKIP_ACCURACY_ON, default=[]): vol.All(
             cv.ensure_list, [cv.string]
         ),
@@ -156,7 +155,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry, async_add_entities):
 
 async def async_setup_scanner(hass, config, async_see, discovery_info=None):
     """Validate the configuration and return a Traccar scanner."""
-    from pytraccar.api import API
 
     session = async_get_clientsession(hass, config[CONF_VERIFY_SSL])
 
@@ -199,7 +197,6 @@ class TraccarScanner:
         event_types,
     ):
         """Initialize."""
-        from stringcase import camelcase
 
         self._event_types = {camelcase(evt): evt for evt in event_types}
         self._custom_attributes = custom_attributes
@@ -317,7 +314,7 @@ class TraccarScanner:
                     None,
                 )
                 self._hass.bus.async_fire(
-                    "traccar_" + self._event_types.get(event["type"]),
+                    f"traccar_{self._event_types.get(event['type'])}",
                     {
                         "device_traccar_id": event["deviceId"],
                         "device_name": device_name,
@@ -348,7 +345,7 @@ class TraccarEntity(TrackerEntity, RestoreEntity):
         return self._battery
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific attributes."""
         return self._attributes
 
@@ -371,11 +368,6 @@ class TraccarEntity(TrackerEntity, RestoreEntity):
     def name(self):
         """Return the name of the device."""
         return self._name
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def unique_id(self):

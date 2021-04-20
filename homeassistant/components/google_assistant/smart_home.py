@@ -3,28 +3,29 @@ import asyncio
 from itertools import product
 import logging
 
+from homeassistant.const import ATTR_ENTITY_ID, __version__
 from homeassistant.util.decorator import Registry
 
-from homeassistant.const import ATTR_ENTITY_ID, __version__
-
 from .const import (
-    ERR_PROTOCOL_ERROR,
     ERR_DEVICE_OFFLINE,
+    ERR_PROTOCOL_ERROR,
     ERR_UNKNOWN_ERROR,
     EVENT_COMMAND_RECEIVED,
-    EVENT_SYNC_RECEIVED,
     EVENT_QUERY_RECEIVED,
+    EVENT_SYNC_RECEIVED,
 )
-from .helpers import RequestData, GoogleEntity, async_get_entities
 from .error import SmartHomeError
+from .helpers import GoogleEntity, RequestData, async_get_entities
 
 HANDLERS = Registry()
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_handle_message(hass, config, user_id, message):
+async def async_handle_message(hass, config, user_id, message, source):
     """Handle incoming API messages."""
-    data = RequestData(config, user_id, message["requestId"], message.get("devices"))
+    data = RequestData(
+        config, user_id, source, message["requestId"], message.get("devices")
+    )
 
     response = await _process(hass, data, message)
 
@@ -76,21 +77,35 @@ async def async_devices_sync(hass, data, payload):
     https://developers.google.com/assistant/smarthome/develop/process-intents#SYNC
     """
     hass.bus.async_fire(
-        EVENT_SYNC_RECEIVED, {"request_id": data.request_id}, context=data.context
+        EVENT_SYNC_RECEIVED,
+        {"request_id": data.request_id, "source": data.source},
+        context=data.context,
     )
 
-    devices = await asyncio.gather(
+    agent_user_id = data.config.get_agent_user_id(data.context)
+    entities = async_get_entities(hass, data.config)
+    results = await asyncio.gather(
         *(
-            entity.sync_serialize()
-            for entity in async_get_entities(hass, data.config)
+            entity.sync_serialize(agent_user_id)
+            for entity in entities
             if entity.should_expose()
-        )
+        ),
+        return_exceptions=True,
     )
 
-    response = {
-        "agentUserId": data.config.agent_user_id or data.context.user_id,
-        "devices": devices,
-    }
+    devices = []
+
+    for entity, result in zip(entities, results):
+        if isinstance(result, Exception):
+            _LOGGER.error("Error serializing %s", entity.entity_id, exc_info=result)
+        else:
+            devices.append(result)
+
+    response = {"agentUserId": agent_user_id, "devices": devices}
+
+    await data.config.async_connect_agent_user(agent_user_id)
+
+    _LOGGER.debug("Syncing entities response: %s", response)
 
     return response
 
@@ -101,16 +116,22 @@ async def async_devices_query(hass, data, payload):
 
     https://developers.google.com/assistant/smarthome/develop/process-intents#QUERY
     """
+    payload_devices = payload.get("devices", [])
+
+    hass.bus.async_fire(
+        EVENT_QUERY_RECEIVED,
+        {
+            "request_id": data.request_id,
+            ATTR_ENTITY_ID: [device["id"] for device in payload_devices],
+            "source": data.source,
+        },
+        context=data.context,
+    )
+
     devices = {}
-    for device in payload.get("devices", []):
+    for device in payload_devices:
         devid = device["id"]
         state = hass.states.get(devid)
-
-        hass.bus.async_fire(
-            EVENT_QUERY_RECEIVED,
-            {"request_id": data.request_id, ATTR_ENTITY_ID: devid},
-            context=data.context,
-        )
 
         if not state:
             # If we can't find a state, the device is offline
@@ -118,9 +139,31 @@ async def async_devices_query(hass, data, payload):
             continue
 
         entity = GoogleEntity(hass, data.config, state)
-        devices[devid] = entity.query_serialize()
+        try:
+            devices[devid] = entity.query_serialize()
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected error serializing query for %s", state)
+            devices[devid] = {"online": False}
 
     return {"devices": devices}
+
+
+async def _entity_execute(entity, data, executions):
+    """Execute all commands for an entity.
+
+    Returns a dict if a special result needs to be set.
+    """
+    for execution in executions:
+        try:
+            await entity.execute(data, execution)
+        except SmartHomeError as err:
+            return {
+                "ids": [entity.entity_id],
+                "status": "ERROR",
+                **err.to_response(),
+            }
+
+    return None
 
 
 @HANDLERS.register("action.devices.EXECUTE")
@@ -130,47 +173,55 @@ async def handle_devices_execute(hass, data, payload):
     https://developers.google.com/assistant/smarthome/develop/process-intents#EXECUTE
     """
     entities = {}
+    executions = {}
     results = {}
 
     for command in payload["commands"]:
+        hass.bus.async_fire(
+            EVENT_COMMAND_RECEIVED,
+            {
+                "request_id": data.request_id,
+                ATTR_ENTITY_ID: [device["id"] for device in command["devices"]],
+                "execution": command["execution"],
+                "source": data.source,
+            },
+            context=data.context,
+        )
+
         for device, execution in product(command["devices"], command["execution"]):
             entity_id = device["id"]
-
-            hass.bus.async_fire(
-                EVENT_COMMAND_RECEIVED,
-                {
-                    "request_id": data.request_id,
-                    ATTR_ENTITY_ID: entity_id,
-                    "execution": execution,
-                },
-                context=data.context,
-            )
 
             # Happens if error occurred. Skip entity for further processing
             if entity_id in results:
                 continue
 
-            if entity_id not in entities:
-                state = hass.states.get(entity_id)
+            if entity_id in entities:
+                executions[entity_id].append(execution)
+                continue
 
-                if state is None:
-                    results[entity_id] = {
-                        "ids": [entity_id],
-                        "status": "ERROR",
-                        "errorCode": ERR_DEVICE_OFFLINE,
-                    }
-                    continue
+            state = hass.states.get(entity_id)
 
-                entities[entity_id] = GoogleEntity(hass, data.config, state)
-
-            try:
-                await entities[entity_id].execute(data, execution)
-            except SmartHomeError as err:
+            if state is None:
                 results[entity_id] = {
                     "ids": [entity_id],
                     "status": "ERROR",
-                    **err.to_response(),
+                    "errorCode": ERR_DEVICE_OFFLINE,
                 }
+                continue
+
+            entities[entity_id] = GoogleEntity(hass, data.config, state)
+            executions[entity_id] = [execution]
+
+    execute_results = await asyncio.gather(
+        *[
+            _entity_execute(entities[entity_id], data, executions[entity_id])
+            for entity_id in executions
+        ]
+    )
+
+    for entity_id, result in zip(executions, execute_results):
+        if result is not None:
+            results[entity_id] = result
 
     final_results = list(results.values())
 
@@ -197,7 +248,7 @@ async def async_devices_disconnect(hass, data: RequestData, payload):
 
     https://developers.google.com/assistant/smarthome/develop/process-intents#DISCONNECT
     """
-    await data.config.async_deactivate_report_state()
+    await data.config.async_disconnect_agent_user(data.context.user_id)
     return None
 
 
@@ -209,7 +260,7 @@ async def async_devices_identify(hass, data: RequestData, payload):
     """
     return {
         "device": {
-            "id": data.config.agent_user_id,
+            "id": data.config.get_agent_user_id(data.context),
             "isLocalOnly": True,
             "isProxy": True,
             "deviceInfo": {
@@ -228,13 +279,13 @@ async def async_devices_reachable(hass, data: RequestData, payload):
 
     https://developers.google.com/actions/smarthome/create#actiondevicesdisconnect
     """
-    google_ids = set(dev["id"] for dev in (data.devices or []))
+    google_ids = {dev["id"] for dev in (data.devices or [])}
 
     return {
         "devices": [
             entity.reachable_device_serialize()
             for entity in async_get_entities(hass, data.config)
-            if entity.entity_id in google_ids and entity.should_expose()
+            if entity.entity_id in google_ids and entity.should_expose_local()
         ]
     }
 

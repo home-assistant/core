@@ -1,12 +1,11 @@
 """The test for light device automation."""
 import pytest
 
-from homeassistant.setup import async_setup_component
 import homeassistant.components.automation as automation
 from homeassistant.components.websocket_api.const import TYPE_RESULT
-from homeassistant.const import STATE_ON, STATE_OFF, CONF_PLATFORM
+from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
 from homeassistant.helpers import device_registry
-
+from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
@@ -14,6 +13,7 @@ from tests.common import (
     mock_device_registry,
     mock_registry,
 )
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
 @pytest.fixture
@@ -183,6 +183,9 @@ async def test_websocket_get_action_capabilities(
     )
     entity_reg.async_get_or_create(
         "alarm_control_panel", "test", "5678", device_id=device_entry.id
+    )
+    hass.states.async_set(
+        "alarm_control_panel.test_5678", "attributes", {"supported_features": 15}
     )
     expected_capabilities = {
         "arm_away": {"extra_fields": []},
@@ -608,7 +611,7 @@ async def test_automation_with_bad_condition(hass, caplog):
 
 @pytest.fixture
 def calls(hass):
-    """Track calls to a mock serivce."""
+    """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
@@ -619,7 +622,7 @@ async def test_automation_with_sub_condition(hass, calls):
 
     platform.init()
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
-
+    await hass.async_block_till_done()
     ent1, ent2, ent3 = platform.ENTITIES
 
     assert await async_setup_component(
@@ -759,3 +762,17 @@ async def test_automation_with_bad_trigger(hass, caplog):
     )
 
     assert "required key not provided" in caplog.text
+
+
+async def test_websocket_device_not_found(hass, hass_ws_client):
+    """Test calling command with unknown device."""
+    await async_setup_component(hass, "device_automation", {})
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {"id": 1, "type": "device_automation/action/list", "device_id": "non-existing"}
+    )
+    msg = await client.receive_json()
+
+    assert msg["id"] == 1
+    assert not msg["success"]
+    assert msg["error"] == {"code": "not_found", "message": "Device not found"}

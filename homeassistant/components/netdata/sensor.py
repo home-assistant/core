@@ -2,20 +2,22 @@
 from datetime import timedelta
 import logging
 
+from netdata import Netdata
+from netdata.exceptions import NetdataError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_HOST,
     CONF_ICON,
     CONF_NAME,
     CONF_PORT,
     CONF_RESOURCES,
+    PERCENTAGE,
 )
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,7 +55,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Netdata sensor."""
-    from netdata import Netdata
 
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
@@ -77,7 +78,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         try:
             resource_data = netdata.api.metrics[sensor]
             unit = (
-                "%"
+                PERCENTAGE
                 if resource_data["units"] == "percentage"
                 else resource_data["units"]
             )
@@ -91,10 +92,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             )
         )
 
+    dev.append(NetdataAlarms(netdata, name, host, port))
     async_add_entities(dev, True)
 
 
-class NetdataSensor(Entity):
+class NetdataSensor(SensorEntity):
     """Implementation of a Netdata sensor."""
 
     def __init__(self, netdata, name, sensor, sensor_name, element, icon, unit, invert):
@@ -143,6 +145,68 @@ class NetdataSensor(Entity):
         )
 
 
+class NetdataAlarms(SensorEntity):
+    """Implementation of a Netdata alarm sensor."""
+
+    def __init__(self, netdata, name, host, port):
+        """Initialize the Netdata alarm sensor."""
+        self.netdata = netdata
+        self._state = None
+        self._name = name
+        self._host = host
+        self._port = port
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return f"{self._name} Alarms"
+
+    @property
+    def state(self):
+        """Return the state of the resources."""
+        return self._state
+
+    @property
+    def icon(self):
+        """Status symbol if type is symbol."""
+        if self._state == "ok":
+            return "mdi:check"
+        if self._state == "warning":
+            return "mdi:alert-outline"
+        if self._state == "critical":
+            return "mdi:alert"
+        return "mdi:crosshairs-question"
+
+    @property
+    def available(self):
+        """Could the resource be accessed during the last update call."""
+        return self.netdata.available
+
+    async def async_update(self):
+        """Get the latest alarms from Netdata REST API."""
+        await self.netdata.async_update()
+        alarms = self.netdata.api.alarms["alarms"]
+        self._state = None
+        number_of_alarms = len(alarms)
+        number_of_relevant_alarms = number_of_alarms
+
+        _LOGGER.debug("Host %s has %s alarms", self.name, number_of_alarms)
+
+        for alarm in alarms:
+            if alarms[alarm]["recipient"] == "silent":
+                number_of_relevant_alarms = number_of_relevant_alarms - 1
+            elif alarms[alarm]["status"] == "CLEAR":
+                number_of_relevant_alarms = number_of_relevant_alarms - 1
+            elif alarms[alarm]["status"] == "UNDEFINED":
+                number_of_relevant_alarms = number_of_relevant_alarms - 1
+            elif alarms[alarm]["status"] == "UNINITIALIZED":
+                number_of_relevant_alarms = number_of_relevant_alarms - 1
+            elif alarms[alarm]["status"] == "CRITICAL":
+                self._state = "critical"
+                return
+        self._state = "ok" if number_of_relevant_alarms == 0 else "warning"
+
+
 class NetdataData:
     """The class for handling the data retrieval."""
 
@@ -154,10 +218,10 @@ class NetdataData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Get the latest data from the Netdata REST API."""
-        from netdata.exceptions import NetdataError
 
         try:
             await self.api.get_allmetrics()
+            await self.api.get_alarms()
             self.available = True
         except NetdataError:
             _LOGGER.error("Unable to retrieve data from Netdata")

@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana",
+            "import_failed": "Import z konfiguracji nie powi\u00f3d\u0142 si\u0119"
+        },
+        "error": {
+            "connection_refused": "Po\u0142\u0105czenie odrzucone podczas \u0142\u0105czenia z hostem",
+            "connection_timeout": "Przekroczono limit czasu po\u0142\u0105czenia z hostem",
+            "resolve_failed": "Tego hosta nie mo\u017cna rozwi\u0105za\u0107"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "name": "Nazwa certyfikatu",
+                    "port": "Port"
+                },
+                "title": "Zdefiniuj certyfikat do sprawdzenia"
+            }
+        }
+    },
+    "title": "Wa\u017cno\u015b\u0107 certyfikatu"
+}

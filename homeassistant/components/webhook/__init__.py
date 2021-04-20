@@ -1,14 +1,17 @@
 """Webhooks for Home Assistant."""
 import logging
+import secrets
 
-from aiohttp.web import Response, Request
+from aiohttp.web import Request, Response
 import voluptuous as vol
 
-from homeassistant.core import callback
-from homeassistant.loader import bind_hass
-from homeassistant.auth.util import generate_secret
 from homeassistant.components import websocket_api
 from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.const import HTTP_OK
+from homeassistant.core import callback
+from homeassistant.helpers.network import get_url
+from homeassistant.loader import bind_hass
+from homeassistant.util.aiohttp import MockRequest
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,14 +49,17 @@ def async_unregister(hass, webhook_id):
 @callback
 def async_generate_id():
     """Generate a webhook_id."""
-    return generate_secret(entropy=32)
+    return secrets.token_hex(32)
 
 
 @callback
 @bind_hass
 def async_generate_url(hass, webhook_id):
     """Generate the full URL for a webhook_id."""
-    return "{}{}".format(hass.config.api.base_url, async_generate_path(webhook_id))
+    return "{}{}".format(
+        get_url(hass, prefer_external=True, allow_cloud=False),
+        async_generate_path(webhook_id),
+    )
 
 
 @callback
@@ -70,17 +76,30 @@ async def async_handle_webhook(hass, webhook_id, request):
 
     # Always respond successfully to not give away if a hook exists or not.
     if webhook is None:
-        _LOGGER.warning("Received message for unregistered webhook %s", webhook_id)
-        return Response(status=200)
+        if isinstance(request, MockRequest):
+            received_from = request.mock_source
+        else:
+            received_from = request.remote
+
+        _LOGGER.warning(
+            "Received message for unregistered webhook %s from %s",
+            webhook_id,
+            received_from,
+        )
+        # Look at content to provide some context for received webhook
+        # Limit to 64 chars to avoid flooding the log
+        content = await request.content.read(64)
+        _LOGGER.debug("%s", content)
+        return Response(status=HTTP_OK)
 
     try:
         response = await webhook["handler"](hass, webhook_id, request)
         if response is None:
-            response = Response(status=200)
+            response = Response(status=HTTP_OK)
         return response
     except Exception:  # pylint: disable=broad-except
         _LOGGER.exception("Error processing webhook %s", webhook_id)
-        return Response(status=200)
+        return Response(status=HTTP_OK)
 
 
 async def async_setup(hass, config):

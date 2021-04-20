@@ -2,9 +2,7 @@
   "domain": "zabbix",
   "name": "Zabbix",
   "documentation": "https://www.home-assistant.io/integrations/zabbix",
-  "requirements": [
-    "pyzabbix==0.7.4"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "requirements": ["py-zabbix==1.1.7"],
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

@@ -1,134 +1,64 @@
 """Interfaces with iAlarm control panels."""
 import logging
-import re
 
-import voluptuous as vol
-
-import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_CODE,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED,
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
+from homeassistant.components.alarm_control_panel.const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import DATA_COORDINATOR, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "iAlarm"
+
+async def async_setup_entry(hass, entry, async_add_entities) -> None:
+    """Set up a iAlarm alarm control panel based on a config entry."""
+    coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
+    async_add_entities([IAlarmPanel(coordinator)], False)
 
 
-def no_application_protocol(value):
-    """Validate that value is without the application protocol."""
-    protocol_separator = "://"
-    if not value or protocol_separator in value:
-        raise vol.Invalid(f"Invalid host, {protocol_separator} is not allowed")
+class IAlarmPanel(CoordinatorEntity, AlarmControlPanelEntity):
+    """Representation of an iAlarm device."""
 
-    return value
+    @property
+    def device_info(self):
+        """Return device info for this device."""
+        return {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self.name,
+            "manufacturer": "Antifurto365 - Meian",
+        }
 
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): vol.All(cv.string, no_application_protocol),
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_CODE): cv.positive_int,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
-
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up an iAlarm control panel."""
-    name = config.get(CONF_NAME)
-    code = config.get(CONF_CODE)
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    host = config.get(CONF_HOST)
-
-    url = f"http://{host}"
-    ialarm = IAlarmPanel(name, code, username, password, url)
-    add_entities([ialarm], True)
-
-
-class IAlarmPanel(alarm.AlarmControlPanel):
-    """Representation of an iAlarm status."""
-
-    def __init__(self, name, code, username, password, url):
-        """Initialize the iAlarm status."""
-        from pyialarm import IAlarm
-
-        self._name = name
-        self._code = str(code) if code else None
-        self._username = username
-        self._password = password
-        self._url = url
-        self._state = None
-        self._client = IAlarm(username, password, url)
+    @property
+    def unique_id(self):
+        """Return a unique id."""
+        return self.coordinator.mac
 
     @property
     def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def code_format(self):
-        """Return one or more digits/characters."""
-        if self._code is None:
-            return None
-        if isinstance(self._code, str) and re.search("^\\d+$", self._code):
-            return alarm.FORMAT_NUMBER
-        return alarm.FORMAT_TEXT
+        """Return the name."""
+        return "iAlarm"
 
     @property
     def state(self):
         """Return the state of the device."""
-        return self._state
+        return self.coordinator.state
 
-    def update(self):
-        """Return the state of the device."""
-        status = self._client.get_status()
-        _LOGGER.debug("iAlarm status: %s", status)
-        if status:
-            status = int(status)
-
-        if status == self._client.DISARMED:
-            state = STATE_ALARM_DISARMED
-        elif status == self._client.ARMED_AWAY:
-            state = STATE_ALARM_ARMED_AWAY
-        elif status == self._client.ARMED_STAY:
-            state = STATE_ALARM_ARMED_HOME
-        elif status == self._client.TRIGGERED:
-            state = STATE_ALARM_TRIGGERED
-        else:
-            state = None
-
-        self._state = state
+    @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
-        if self._validate_code(code):
-            self._client.disarm()
-
-    def alarm_arm_away(self, code=None):
-        """Send arm away command."""
-        if self._validate_code(code):
-            self._client.arm_away()
+        self.coordinator.ialarm.disarm()
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
-        if self._validate_code(code):
-            self._client.arm_stay()
+        self.coordinator.ialarm.arm_stay()
 
-    def _validate_code(self, code):
-        """Validate given code."""
-        check = self._code is None or code == self._code
-        if not check:
-            _LOGGER.warning("Wrong code entered")
-        return check
+    def alarm_arm_away(self, code=None):
+        """Send arm away command."""
+        self.coordinator.ialarm.arm_away()

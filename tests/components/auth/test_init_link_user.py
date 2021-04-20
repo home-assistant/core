@@ -42,7 +42,7 @@ async def async_get_code(hass, aiohttp_client):
     step = await resp.json()
 
     resp = await client.post(
-        "/auth/login_flow/{}".format(step["flow_id"]),
+        f"/auth/login_flow/{step['flow_id']}",
         json={"client_id": CLIENT_ID, "username": "2nd-user", "password": "2nd-pass"},
     )
 
@@ -67,7 +67,7 @@ async def test_link_user(hass, aiohttp_client):
     resp = await client.post(
         "/auth/link_user",
         json={"client_id": CLIENT_ID, "code": code},
-        headers={"authorization": "Bearer {}".format(info["access_token"])},
+        headers={"authorization": f"Bearer {info['access_token']}"},
     )
 
     assert resp.status == 200
@@ -84,7 +84,7 @@ async def test_link_user_invalid_client_id(hass, aiohttp_client):
     resp = await client.post(
         "/auth/link_user",
         json={"client_id": "invalid", "code": code},
-        headers={"authorization": "Bearer {}".format(info["access_token"])},
+        headers={"authorization": f"Bearer {info['access_token']}"},
     )
 
     assert resp.status == 400
@@ -100,7 +100,7 @@ async def test_link_user_invalid_code(hass, aiohttp_client):
     resp = await client.post(
         "/auth/link_user",
         json={"client_id": CLIENT_ID, "code": "invalid"},
-        headers={"authorization": "Bearer {}".format(info["access_token"])},
+        headers={"authorization": f"Bearer {info['access_token']}"},
     )
 
     assert resp.status == 400

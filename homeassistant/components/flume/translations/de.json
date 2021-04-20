@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto wurde bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "client_id": "Client-ID",
+                    "client_secret": "Client Secret",
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "description": "Um auf die Flume Personal API zugreifen zu k\u00f6nnen, m\u00fcssen Sie unter https://portal.flumetech.com/settings#token eine 'Client ID' und 'Client Secret' anfordern",
+                "title": "Stellen Sie eine Verbindung zu Ihrem Flume-Konto her"
+            }
+        }
+    }
+}

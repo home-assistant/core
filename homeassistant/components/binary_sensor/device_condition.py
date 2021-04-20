@@ -1,10 +1,11 @@
-"""Implemenet device conditions for binary sensor."""
-from typing import Dict, List
+"""Implement device conditions for binary sensor."""
+from __future__ import annotations
+
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant
 from homeassistant.components.device_automation.const import CONF_IS_OFF, CONF_IS_ON
 from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID, CONF_FOR, CONF_TYPE
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.entity_registry import (
     async_entries_for_device,
@@ -13,8 +14,8 @@ from homeassistant.helpers.entity_registry import (
 from homeassistant.helpers.typing import ConfigType
 
 from . import (
-    DOMAIN,
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_BATTERY_CHARGING,
     DEVICE_CLASS_COLD,
     DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_DOOR,
@@ -37,12 +38,15 @@ from . import (
     DEVICE_CLASS_SOUND,
     DEVICE_CLASS_VIBRATION,
     DEVICE_CLASS_WINDOW,
+    DOMAIN,
 )
 
 DEVICE_CLASS_NONE = "none"
 
 CONF_IS_BAT_LOW = "is_bat_low"
 CONF_IS_NOT_BAT_LOW = "is_not_bat_low"
+CONF_IS_CHARGING = "is_charging"
+CONF_IS_NOT_CHARGING = "is_not_charging"
 CONF_IS_COLD = "is_cold"
 CONF_IS_NOT_COLD = "is_not_cold"
 CONF_IS_CONNECTED = "is_connected"
@@ -84,12 +88,13 @@ CONF_IS_NOT_OPEN = "is_not_open"
 
 IS_ON = [
     CONF_IS_BAT_LOW,
+    CONF_IS_CHARGING,
     CONF_IS_COLD,
     CONF_IS_CONNECTED,
     CONF_IS_GAS,
     CONF_IS_HOT,
     CONF_IS_LIGHT,
-    CONF_IS_LOCKED,
+    CONF_IS_NOT_LOCKED,
     CONF_IS_MOIST,
     CONF_IS_MOTION,
     CONF_IS_MOVING,
@@ -108,10 +113,11 @@ IS_ON = [
 
 IS_OFF = [
     CONF_IS_NOT_BAT_LOW,
+    CONF_IS_NOT_CHARGING,
     CONF_IS_NOT_COLD,
     CONF_IS_NOT_CONNECTED,
     CONF_IS_NOT_HOT,
-    CONF_IS_NOT_LOCKED,
+    CONF_IS_LOCKED,
     CONF_IS_NOT_MOIST,
     CONF_IS_NOT_MOVING,
     CONF_IS_NOT_OCCUPIED,
@@ -134,6 +140,10 @@ ENTITY_CONDITIONS = {
     DEVICE_CLASS_BATTERY: [
         {CONF_TYPE: CONF_IS_BAT_LOW},
         {CONF_TYPE: CONF_IS_NOT_BAT_LOW},
+    ],
+    DEVICE_CLASS_BATTERY_CHARGING: [
+        {CONF_TYPE: CONF_IS_CHARGING},
+        {CONF_TYPE: CONF_IS_NOT_CHARGING},
     ],
     DEVICE_CLASS_COLD: [{CONF_TYPE: CONF_IS_COLD}, {CONF_TYPE: CONF_IS_NOT_COLD}],
     DEVICE_CLASS_CONNECTIVITY: [
@@ -195,9 +205,9 @@ CONDITION_SCHEMA = cv.DEVICE_CONDITION_BASE_SCHEMA.extend(
 
 async def async_get_conditions(
     hass: HomeAssistant, device_id: str
-) -> List[Dict[str, str]]:
+) -> list[dict[str, str]]:
     """List device conditions."""
-    conditions: List[Dict[str, str]] = []
+    conditions: list[dict[str, str]] = []
     entity_registry = await async_get_registry(hass)
     entries = [
         entry
@@ -216,21 +226,20 @@ async def async_get_conditions(
         )
 
         conditions.extend(
-            (
-                {
-                    **template,
-                    "condition": "device",
-                    "device_id": device_id,
-                    "entity_id": entry.entity_id,
-                    "domain": DOMAIN,
-                }
-                for template in templates
-            )
+            {
+                **template,
+                "condition": "device",
+                "device_id": device_id,
+                "entity_id": entry.entity_id,
+                "domain": DOMAIN,
+            }
+            for template in templates
         )
 
     return conditions
 
 
+@callback
 def async_condition_from_config(
     config: ConfigType, config_validation: bool
 ) -> condition.ConditionCheckerType:

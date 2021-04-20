@@ -97,6 +97,7 @@ async def test_restoring_location(hass, create_registrations, webhook_client):
     # mobile app doesn't support unloading, so we just reload device tracker
     await hass.config_entries.async_forward_entry_unload(config_entry, "device_tracker")
     await hass.config_entries.async_forward_entry_setup(config_entry, "device_tracker")
+    await hass.async_block_till_done()
 
     state_2 = hass.states.get("device_tracker.test_1_2")
     assert state_2 is not None

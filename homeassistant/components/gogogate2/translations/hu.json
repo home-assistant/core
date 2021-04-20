@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP c\u00edm",
+                    "password": "Jelsz\u00f3",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                },
+                "title": "A GogoGate2 vagy az iSmartGate be\u00e1ll\u00edt\u00e1sa"
+            }
+        }
+    }
+}

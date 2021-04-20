@@ -1,15 +1,15 @@
 """Monitors home energy use for the ELIQ Online service."""
+import asyncio
 from datetime import timedelta
 import logging
-import asyncio
 
+import eliqonline
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, POWER_WATT
-from homeassistant.helpers.entity import Entity
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,8 +34,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the ELIQ Online sensor."""
-    import eliqonline
-
     access_token = config.get(CONF_ACCESS_TOKEN)
     name = config.get(CONF_NAME, DEFAULT_NAME)
     channel_id = config.get(CONF_CHANNEL_ID)
@@ -53,7 +51,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([EliqSensor(api, channel_id, name)], True)
 
 
-class EliqSensor(Entity):
+class EliqSensor(SensorEntity):
     """Implementation of an ELIQ Online sensor."""
 
     def __init__(self, api, channel_id, name):

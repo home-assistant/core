@@ -1,10 +1,15 @@
 """Support for Tesla HVAC system."""
+from __future__ import annotations
+
 import logging
 
-from homeassistant.components.climate import ClimateDevice
+from teslajsonpy.exceptions import UnknownPresetMode
+
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
-    HVAC_MODE_HEAT,
+    HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
+    SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
@@ -13,31 +18,32 @@ from . import DOMAIN as TESLA_DOMAIN, TeslaDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_HVAC = [HVAC_MODE_HEAT, HVAC_MODE_OFF]
+SUPPORT_HVAC = [HVAC_MODE_HEAT_COOL, HVAC_MODE_OFF]
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Tesla climate platform."""
-    devices = [
-        TeslaThermostat(device, hass.data[TESLA_DOMAIN]["controller"])
-        for device in hass.data[TESLA_DOMAIN]["devices"]["climate"]
-    ]
-    add_entities(devices, True)
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Tesla binary_sensors by config_entry."""
+    async_add_entities(
+        [
+            TeslaThermostat(
+                device,
+                hass.data[TESLA_DOMAIN][config_entry.entry_id]["coordinator"],
+            )
+            for device in hass.data[TESLA_DOMAIN][config_entry.entry_id]["devices"][
+                "climate"
+            ]
+        ],
+        True,
+    )
 
 
-class TeslaThermostat(TeslaDevice, ClimateDevice):
+class TeslaThermostat(TeslaDevice, ClimateEntity):
     """Representation of a Tesla climate."""
-
-    def __init__(self, tesla_device, controller):
-        """Initialize the Tesla device."""
-        super().__init__(tesla_device, controller)
-        self._target_temperature = None
-        self._temperature = None
 
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE
+        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
     @property
     def hvac_mode(self):
@@ -46,7 +52,7 @@ class TeslaThermostat(TeslaDevice, ClimateDevice):
         Need to be one of HVAC_MODE_*.
         """
         if self.tesla_device.is_hvac_enabled():
-            return HVAC_MODE_HEAT
+            return HVAC_MODE_HEAT_COOL
         return HVAC_MODE_OFF
 
     @property
@@ -57,43 +63,58 @@ class TeslaThermostat(TeslaDevice, ClimateDevice):
         """
         return SUPPORT_HVAC
 
-    def update(self):
-        """Call by the Tesla device callback to update state."""
-        _LOGGER.debug("Updating: %s", self._name)
-        self.tesla_device.update()
-        self._target_temperature = self.tesla_device.get_goal_temp()
-        self._temperature = self.tesla_device.get_current_temp()
-
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        tesla_temp_units = self.tesla_device.measurement
-
-        if tesla_temp_units == "F":
+        if self.tesla_device.measurement == "F":
             return TEMP_FAHRENHEIT
         return TEMP_CELSIUS
 
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        return self._temperature
+        return self.tesla_device.get_current_temp()
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        return self._target_temperature
+        return self.tesla_device.get_goal_temp()
 
-    def set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs):
         """Set new target temperatures."""
-        _LOGGER.debug("Setting temperature for: %s", self._name)
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature:
-            self.tesla_device.set_temperature(temperature)
+            _LOGGER.debug("%s: Setting temperature to %s", self.name, temperature)
+            await self.tesla_device.set_temperature(temperature)
 
-    def set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
-        _LOGGER.debug("Setting mode for: %s", self._name)
+        _LOGGER.debug("%s: Setting hvac mode to %s", self.name, hvac_mode)
         if hvac_mode == HVAC_MODE_OFF:
-            self.tesla_device.set_status(False)
-        elif hvac_mode == HVAC_MODE_HEAT:
-            self.tesla_device.set_status(True)
+            await self.tesla_device.set_status(False)
+        elif hvac_mode == HVAC_MODE_HEAT_COOL:
+            await self.tesla_device.set_status(True)
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set new preset mode."""
+        _LOGGER.debug("%s: Setting preset_mode to: %s", self.name, preset_mode)
+        try:
+            await self.tesla_device.set_preset_mode(preset_mode)
+        except UnknownPresetMode as ex:
+            _LOGGER.error("%s", ex.message)
+
+    @property
+    def preset_mode(self) -> str | None:
+        """Return the current preset mode, e.g., home, away, temp.
+
+        Requires SUPPORT_PRESET_MODE.
+        """
+        return self.tesla_device.preset_mode
+
+    @property
+    def preset_modes(self) -> list[str] | None:
+        """Return a list of available preset modes.
+
+        Requires SUPPORT_PRESET_MODE.
+        """
+        return self.tesla_device.preset_modes

@@ -1,13 +1,10 @@
 """The tests for the Ring component."""
-from copy import deepcopy
-import os
-import unittest
-import requests_mock
 from datetime import timedelta
-from homeassistant import setup
-import homeassistant.components.ring as ring
 
-from tests.common import get_test_config_dir, get_test_home_assistant, load_fixture
+import homeassistant.components.ring as ring
+from homeassistant.setup import async_setup_component
+
+from tests.common import load_fixture
 
 ATTRIBUTION = "Data provided by Ring.com"
 
@@ -16,68 +13,28 @@ VALID_CONFIG = {
 }
 
 
-class TestRing(unittest.TestCase):
-    """Tests the Ring component."""
+async def test_setup(hass, requests_mock):
+    """Test the setup."""
+    await async_setup_component(hass, ring.DOMAIN, {})
 
-    def cleanup(self):
-        """Cleanup any data created from the tests."""
-        if os.path.isfile(self.cache):
-            os.remove(self.cache)
+    requests_mock.post(
+        "https://oauth.ring.com/oauth/token", text=load_fixture("ring_oauth.json")
+    )
+    requests_mock.post(
+        "https://api.ring.com/clients_api/session",
+        text=load_fixture("ring_session.json"),
+    )
+    requests_mock.get(
+        "https://api.ring.com/clients_api/ring_devices",
+        text=load_fixture("ring_devices.json"),
+    )
+    requests_mock.get(
+        "https://api.ring.com/clients_api/chimes/999999/health",
+        text=load_fixture("ring_chime_health_attrs.json"),
+    )
+    requests_mock.get(
+        "https://api.ring.com/clients_api/doorbots/987652/health",
+        text=load_fixture("ring_doorboot_health_attrs.json"),
+    )
 
-    def setUp(self):
-        """Initialize values for this test case class."""
-        self.hass = get_test_home_assistant()
-        self.cache = get_test_config_dir(ring.DEFAULT_CACHEDB)
-        self.config = VALID_CONFIG
-
-    def tearDown(self):  # pylint: disable=invalid-name
-        """Stop everything that was started."""
-        self.hass.stop()
-        self.cleanup()
-
-    @requests_mock.Mocker()
-    def test_setup(self, mock):
-        """Test the setup."""
-        mock.post(
-            "https://oauth.ring.com/oauth/token", text=load_fixture("ring_oauth.json")
-        )
-        mock.post(
-            "https://api.ring.com/clients_api/session",
-            text=load_fixture("ring_session.json"),
-        )
-        mock.get(
-            "https://api.ring.com/clients_api/ring_devices",
-            text=load_fixture("ring_devices.json"),
-        )
-        mock.get(
-            "https://api.ring.com/clients_api/chimes/999999/health",
-            text=load_fixture("ring_chime_health_attrs.json"),
-        )
-        mock.get(
-            "https://api.ring.com/clients_api/doorbots/987652/health",
-            text=load_fixture("ring_doorboot_health_attrs.json"),
-        )
-        response = ring.setup(self.hass, self.config)
-        assert response
-
-    @requests_mock.Mocker()
-    def test_setup_component_no_login(self, mock):
-        """Test the setup when no login is configured."""
-        mock.post(
-            "https://api.ring.com/clients_api/session",
-            text=load_fixture("ring_session.json"),
-        )
-        conf = deepcopy(VALID_CONFIG)
-        del conf["ring"]["username"]
-        assert not setup.setup_component(self.hass, ring.DOMAIN, conf)
-
-    @requests_mock.Mocker()
-    def test_setup_component_no_pwd(self, mock):
-        """Test the setup when no password is configured."""
-        mock.post(
-            "https://api.ring.com/clients_api/session",
-            text=load_fixture("ring_session.json"),
-        )
-        conf = deepcopy(VALID_CONFIG)
-        del conf["ring"]["password"]
-        assert not setup.setup_component(self.hass, ring.DOMAIN, conf)
+    assert await ring.async_setup(hass, VALID_CONFIG)

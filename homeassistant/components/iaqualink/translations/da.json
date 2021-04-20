@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Adgangskode",
+                    "username": "Brugernavn / e-mail-adresse"
+                },
+                "description": "Indtast brugernavn og adgangskode til din iAqualink-konto.",
+                "title": "Opret forbindelse til iAqualink"
+            }
+        }
+    }
+}

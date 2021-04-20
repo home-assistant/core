@@ -2,9 +2,7 @@
   "domain": "whois",
   "name": "Whois",
   "documentation": "https://www.home-assistant.io/integrations/whois",
-  "requirements": [
-    "python-whois==0.7.2"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "requirements": ["python-whois==0.7.3"],
+  "codeowners": [],
+  "iot_class": "cloud_polling"
 }

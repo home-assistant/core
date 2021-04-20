@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Service ass scho konfigur\u00e9iert",
+            "cannot_connect": "Feeler beim verbannen",
+            "invalid_sensor": "Sensor net disponibel oder ong\u00eblteg"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "show_on_map": "Op der Kaart uweisen",
+                    "station_id": "Luftdaten Sensor ID"
+                },
+                "title": "Luftdaten d\u00e9fin\u00e9ieren"
+            }
+        }
+    }
+}

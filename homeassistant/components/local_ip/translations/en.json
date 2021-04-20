@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Sensor Name"
+                },
+                "description": "Do you want to start set up?",
+                "title": "Local IP Address"
+            }
+        }
+    },
+    "title": "Local IP Address"
+}

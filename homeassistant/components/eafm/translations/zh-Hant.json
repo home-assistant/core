@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "no_stations": "\u627e\u4e0d\u5230\u7b26\u5408\u7684\u76e3\u63a7\u7ad9\u3002"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "station": "\u76e3\u63a7\u7ad9"
+                },
+                "description": "\u9078\u64c7\u6240\u8981\u76e3\u63a7\u7684\u7ad9\u9ede",
+                "title": "\u8ffd\u8e64\u6d2a\u6c34\u76e3\u63a7\u7ad9"
+            }
+        }
+    }
+}

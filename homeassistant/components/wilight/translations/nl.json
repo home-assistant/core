@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "not_supported_device": "Deze WiLight wordt momenteel niet ondersteund",
+            "not_wilight_device": "Dit apparaat is geen WiLight"
+        },
+        "flow_title": "WiLight: {name}",
+        "step": {
+            "confirm": {
+                "description": "Wil je WiLight {name} ? \n\n Het ondersteunt: {components}",
+                "title": "WiLight"
+            }
+        }
+    }
+}

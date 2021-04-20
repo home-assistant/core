@@ -1,8 +1,8 @@
 {
   "domain": "upc_connect",
-  "name": "Upc connect",
+  "name": "UPC Connect Box",
   "documentation": "https://www.home-assistant.io/integrations/upc_connect",
-  "requirements": ["connect-box==0.2.5"],
-  "dependencies": [],
-  "codeowners": ["@pvizeli"]
+  "requirements": ["connect-box==0.2.8"],
+  "codeowners": ["@pvizeli", "@fabaff"],
+  "iot_class": "local_polling"
 }

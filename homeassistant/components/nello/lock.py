@@ -2,11 +2,12 @@
 from itertools import filterfalse
 import logging
 
+from pynello.private import Nello
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.lock import LockDevice, PLATFORM_SCHEMA
+from homeassistant.components.lock import PLATFORM_SCHEMA, SUPPORT_OPEN, LockEntity
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,13 +22,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Nello lock platform."""
-    from pynello.private import Nello
 
     nello = Nello(config.get(CONF_USERNAME), config.get(CONF_PASSWORD))
     add_entities([NelloLock(lock) for lock in nello.locations], True)
 
 
-class NelloLock(LockDevice):
+class NelloLock(LockEntity):
     """Representation of a Nello lock."""
 
     def __init__(self, nello_lock):
@@ -48,7 +48,7 @@ class NelloLock(LockDevice):
         return True
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
         return self._device_attrs
 
@@ -85,3 +85,13 @@ class NelloLock(LockDevice):
         """Unlock the device."""
         if not self._nello_lock.open_door():
             _LOGGER.error("Failed to unlock")
+
+    def open(self, **kwargs):
+        """Unlock the device."""
+        if not self._nello_lock.open_door():
+            _LOGGER.error("Failed to open")
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_OPEN

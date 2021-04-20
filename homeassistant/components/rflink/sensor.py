@@ -1,13 +1,13 @@
 """Support for Rflink sensors."""
-import logging
-
 from rflink.parser import PACKET_FIELDS, UNITS
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    CONF_DEVICES,
     CONF_NAME,
+    CONF_SENSOR_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
 )
 import homeassistant.helpers.config_validation as cv
@@ -15,9 +15,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import (
     CONF_ALIASES,
-    CONF_ALIASSES,
     CONF_AUTOMATIC_ADD,
-    CONF_DEVICES,
     DATA_DEVICE_REGISTER,
     DATA_ENTITY_LOOKUP,
     EVENT_KEY_ID,
@@ -27,18 +25,13 @@ from . import (
     SIGNAL_HANDLE_EVENT,
     TMP_ENTITY,
     RflinkDevice,
-    remove_deprecated,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 SENSOR_ICONS = {
     "humidity": "mdi:water-percent",
     "battery": "mdi:battery",
     "temperature": "mdi:thermometer",
 }
-
-CONF_SENSOR_TYPE = "sensor_type"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -52,8 +45,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                     vol.Optional(CONF_ALIASES, default=[]): vol.All(
                         cv.ensure_list, [cv.string]
                     ),
-                    # deprecated config options
-                    vol.Optional(CONF_ALIASSES): vol.All(cv.ensure_list, [cv.string]),
                 }
             )
         },
@@ -80,7 +71,6 @@ def devices_from_config(domain_config):
             config[ATTR_UNIT_OF_MEASUREMENT] = lookup_unit_for_sensor_type(
                 config[CONF_SENSOR_TYPE]
             )
-        remove_deprecated(config)
         device = RflinkSensor(device_id, **config)
         devices.append(device)
 
@@ -108,7 +98,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_SENSOR] = add_new_device
 
 
-class RflinkSensor(RflinkDevice):
+class RflinkSensor(RflinkDevice, SensorEntity):
     """Representation of a Rflink sensor."""
 
     def __init__(
@@ -144,13 +134,17 @@ class RflinkSensor(RflinkDevice):
                 self.hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_SENSOR][_id].append(
                     self.entity_id
                 )
-        async_dispatcher_connect(
-            self.hass, SIGNAL_AVAILABILITY, self._availability_callback
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_AVAILABILITY, self._availability_callback
+            )
         )
-        async_dispatcher_connect(
-            self.hass,
-            SIGNAL_HANDLE_EVENT.format(self.entity_id),
-            self.handle_event_callback,
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_HANDLE_EVENT.format(self.entity_id),
+                self.handle_event_callback,
+            )
         )
 
         # Process the initial event now that the entity is created

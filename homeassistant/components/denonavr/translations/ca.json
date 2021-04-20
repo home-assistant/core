@@ -1,0 +1,48 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
+            "cannot_connect": "No s'ha pogut connectar, torna-ho a provar. Pot ser \u00fatil desconnectar i tornar a connectar els cables d'Ethernet i d'alimentaci\u00f3",
+            "not_denonavr_manufacturer": "No \u00e9s un receptor de xarxa Denon AVR, no coincideix el fabricant descobert",
+            "not_denonavr_missing": "No \u00e9s un receptor de xarxa Denon AVR, informaci\u00f3 de descobriment no completa"
+        },
+        "error": {
+            "discovery_error": "No s'ha pogut descobrir un receptor de xarxa AVR de Denon"
+        },
+        "flow_title": "Receptor de xarxa AVR de Denon: {name}",
+        "step": {
+            "confirm": {
+                "description": "Confirma l'addici\u00f3 del receptor",
+                "title": "Receptors de xarxa AVR de Denon"
+            },
+            "select": {
+                "data": {
+                    "select_host": "Adre\u00e7a IP del receptor"
+                },
+                "description": "Torna a executar la configuraci\u00f3 si vols connectar receptors addicionals",
+                "title": "Selecciona el receptor al qual connectar-te"
+            },
+            "user": {
+                "data": {
+                    "host": "Adre\u00e7a IP"
+                },
+                "description": "Connecta el teu receptor, si no es configura l'adre\u00e7a IP, s'utilitza el descobriment autom\u00e0tic",
+                "title": "Receptors de xarxa AVR de Denon"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_all_sources": "Mostra totes les fonts",
+                    "zone2": "Configura la Zona 2",
+                    "zone3": "Configura la Zona 3"
+                },
+                "description": "Especifica par\u00e0metres opcionals",
+                "title": "Receptors de xarxa AVR de Denon"
+            }
+        }
+    }
+}

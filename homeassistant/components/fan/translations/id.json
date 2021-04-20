@@ -1,0 +1,23 @@
+{
+    "device_automation": {
+        "action_type": {
+            "turn_off": "Matikan {entity_name}",
+            "turn_on": "Nyalakan {entity_name}"
+        },
+        "condition_type": {
+            "is_off": "{entity_name} mati",
+            "is_on": "{entity_name} nyala"
+        },
+        "trigger_type": {
+            "turned_off": "{entity_name} dimatikan",
+            "turned_on": "{entity_name} dinyalakan"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "Mati",
+            "on": "Nyala"
+        }
+    },
+    "title": "Kipas Angin"
+}

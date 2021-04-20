@@ -1,18 +1,20 @@
 """This component provides HA sensor support for Travis CI framework."""
-import logging
 from datetime import timedelta
+import logging
 
+from travispy import TravisPy
+from travispy.errors import TravisError
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_API_KEY,
-    CONF_SCAN_INTERVAL,
     CONF_MONITORED_CONDITIONS,
+    CONF_SCAN_INTERVAL,
+    TIME_SECONDS,
 )
-from homeassistant.helpers.entity import Entity
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,12 +29,12 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 # sensor_type [ description, unit, icon ]
 SENSOR_TYPES = {
-    "last_build_id": ["Last Build ID", "", "mdi:account-card-details"],
-    "last_build_duration": ["Last Build Duration", "sec", "mdi:timelapse"],
+    "last_build_id": ["Last Build ID", "", "mdi:card-account-details"],
+    "last_build_duration": ["Last Build Duration", TIME_SECONDS, "mdi:timelapse"],
     "last_build_finished_at": ["Last Build Finished At", "", "mdi:timetable"],
     "last_build_started_at": ["Last Build Started At", "", "mdi:timetable"],
-    "last_build_state": ["Last Build State", "", "mdi:github-circle"],
-    "state": ["State", "", "mdi:github-circle"],
+    "last_build_state": ["Last Build State", "", "mdi:github"],
+    "state": ["State", "", "mdi:github"],
 }
 
 NOTIFICATION_ID = "travisci"
@@ -53,8 +55,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Travis CI sensor."""
-    from travispy import TravisPy
-    from travispy.errors import TravisError
 
     token = config.get(CONF_API_KEY)
     repositories = config.get(CONF_REPOSITORY)
@@ -93,7 +93,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     return True
 
 
-class TravisCISensor(Entity):
+class TravisCISensor(SensorEntity):
     """Representation of a Travis CI sensor."""
 
     def __init__(self, data, repo_name, user, branch, sensor_type):
@@ -105,9 +105,7 @@ class TravisCISensor(Entity):
         self._user = user
         self._branch = branch
         self._state = None
-        self._name = "{0} {1}".format(
-            self._repo_name, SENSOR_TYPES[self._sensor_type][0]
-        )
+        self._name = f"{self._repo_name} {SENSOR_TYPES[self._sensor_type][0]}"
 
     @property
     def name(self):
@@ -125,7 +123,7 @@ class TravisCISensor(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {}
         attrs[ATTR_ATTRIBUTION] = ATTRIBUTION

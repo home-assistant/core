@@ -3,7 +3,16 @@ import logging
 
 import pywink
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOISTURE,
+    DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_OCCUPANCY,
+    DEVICE_CLASS_OPENING,
+    DEVICE_CLASS_SMOKE,
+    DEVICE_CLASS_SOUND,
+    DEVICE_CLASS_VIBRATION,
+    BinarySensorEntity,
+)
 
 from . import DOMAIN, WinkDevice
 
@@ -12,17 +21,17 @@ _LOGGER = logging.getLogger(__name__)
 # These are the available sensors mapped to binary_sensor class
 SENSOR_TYPES = {
     "brightness": "light",
-    "capturing_audio": "sound",
+    "capturing_audio": DEVICE_CLASS_SOUND,
     "capturing_video": None,
     "co_detected": "gas",
-    "liquid_detected": "moisture",
-    "loudness": "sound",
-    "motion": "motion",
-    "noise": "sound",
-    "opened": "opening",
-    "presence": "occupancy",
-    "smoke_detected": "smoke",
-    "vibration": "vibration",
+    "liquid_detected": DEVICE_CLASS_MOISTURE,
+    "loudness": DEVICE_CLASS_SOUND,
+    "motion": DEVICE_CLASS_MOTION,
+    "noise": DEVICE_CLASS_SOUND,
+    "opened": DEVICE_CLASS_OPENING,
+    "presence": DEVICE_CLASS_OCCUPANCY,
+    "smoke_detected": DEVICE_CLASS_SMOKE,
+    "vibration": DEVICE_CLASS_VIBRATION,
 }
 
 
@@ -31,14 +40,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     for sensor in pywink.get_sensors():
         _id = sensor.object_id() + sensor.name()
-        if _id not in hass.data[DOMAIN]["unique_ids"]:
-            if sensor.capability() in SENSOR_TYPES:
-                add_entities([WinkBinarySensorDevice(sensor, hass)])
+        if (
+            _id not in hass.data[DOMAIN]["unique_ids"]
+            and sensor.capability() in SENSOR_TYPES
+        ):
+            add_entities([WinkBinarySensorEntity(sensor, hass)])
 
     for key in pywink.get_keys():
         _id = key.object_id() + key.name()
         if _id not in hass.data[DOMAIN]["unique_ids"]:
-            add_entities([WinkBinarySensorDevice(key, hass)])
+            add_entities([WinkBinarySensorEntity(key, hass)])
 
     for sensor in pywink.get_smoke_and_co_detectors():
         _id = sensor.object_id() + sensor.name()
@@ -68,19 +79,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for door_bell_sensor in pywink.get_door_bells():
         _id = door_bell_sensor.object_id() + door_bell_sensor.name()
         if _id not in hass.data[DOMAIN]["unique_ids"]:
-            add_entities([WinkBinarySensorDevice(door_bell_sensor, hass)])
+            add_entities([WinkBinarySensorEntity(door_bell_sensor, hass)])
 
     for camera_sensor in pywink.get_cameras():
         _id = camera_sensor.object_id() + camera_sensor.name()
         if _id not in hass.data[DOMAIN]["unique_ids"]:
             try:
                 if camera_sensor.capability() in SENSOR_TYPES:
-                    add_entities([WinkBinarySensorDevice(camera_sensor, hass)])
+                    add_entities([WinkBinarySensorEntity(camera_sensor, hass)])
             except AttributeError:
                 _LOGGER.info("Device isn't a sensor, skipping")
 
 
-class WinkBinarySensorDevice(WinkDevice, BinarySensorDevice):
+class WinkBinarySensorEntity(WinkDevice, BinarySensorEntity):
     """Representation of a Wink binary sensor."""
 
     def __init__(self, wink, hass):
@@ -110,29 +121,29 @@ class WinkBinarySensorDevice(WinkDevice, BinarySensorDevice):
         return SENSOR_TYPES.get(self.capability)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
-        return super().device_state_attributes
+        return super().extra_state_attributes
 
 
-class WinkSmokeDetector(WinkBinarySensorDevice):
+class WinkSmokeDetector(WinkBinarySensorEntity):
     """Representation of a Wink Smoke detector."""
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
-        _attributes = super().device_state_attributes
+        _attributes = super().extra_state_attributes
         _attributes["test_activated"] = self.wink.test_activated()
         return _attributes
 
 
-class WinkHub(WinkBinarySensorDevice):
+class WinkHub(WinkBinarySensorEntity):
     """Representation of a Wink Hub."""
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
-        _attributes = super().device_state_attributes
+        _attributes = super().extra_state_attributes
         _attributes["update_needed"] = self.wink.update_needed()
         _attributes["firmware_version"] = self.wink.firmware_version()
         _attributes["pairing_mode"] = self.wink.pairing_mode()
@@ -146,13 +157,13 @@ class WinkHub(WinkBinarySensorDevice):
         return _attributes
 
 
-class WinkRemote(WinkBinarySensorDevice):
+class WinkRemote(WinkBinarySensorEntity):
     """Representation of a Wink Lutron Connected bulb remote."""
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
-        _attributes = super().device_state_attributes
+        _attributes = super().extra_state_attributes
         _attributes["button_on_pressed"] = self.wink.button_on_pressed()
         _attributes["button_off_pressed"] = self.wink.button_off_pressed()
         _attributes["button_up_pressed"] = self.wink.button_up_pressed()
@@ -165,19 +176,19 @@ class WinkRemote(WinkBinarySensorDevice):
         return None
 
 
-class WinkButton(WinkBinarySensorDevice):
+class WinkButton(WinkBinarySensorEntity):
     """Representation of a Wink Relay button."""
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
-        _attributes = super().device_state_attributes
+        _attributes = super().extra_state_attributes
         _attributes["pressed"] = self.wink.pressed()
         _attributes["long_pressed"] = self.wink.long_pressed()
         return _attributes
 
 
-class WinkGang(WinkBinarySensorDevice):
+class WinkGang(WinkBinarySensorEntity):
     """Representation of a Wink Relay gang."""
 
     @property

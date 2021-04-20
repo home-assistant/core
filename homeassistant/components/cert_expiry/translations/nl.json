@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is al geconfigureerd",
+            "import_failed": "Importeren vanuit configuratie is mislukt"
+        },
+        "error": {
+            "connection_refused": "Verbinding geweigerd bij verbinding met host",
+            "connection_timeout": "Time-out bij verbinding maken met deze host",
+            "resolve_failed": "Deze host kon niet gevonden worden"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "De naam van het certificaat",
+                    "port": "Poort"
+                },
+                "title": "Het certificaat defini\u00ebren dat moet worden getest"
+            }
+        }
+    },
+    "title": "Vervaldatum certificaat"
+}

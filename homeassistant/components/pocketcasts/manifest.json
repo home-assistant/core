@@ -1,10 +1,8 @@
 {
   "domain": "pocketcasts",
-  "name": "Pocketcasts",
+  "name": "Pocket Casts",
   "documentation": "https://www.home-assistant.io/integrations/pocketcasts",
-  "requirements": [
-    "pocketcasts==0.1"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "requirements": ["pycketcasts==1.0.0"],
+  "codeowners": [],
+  "iot_class": "cloud_polling"
 }

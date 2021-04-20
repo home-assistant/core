@@ -2,10 +2,12 @@
 from datetime import timedelta
 import logging
 
+from horimote import Client, keys
+from horimote.exceptions import AuthenticationError
 import voluptuous as vol
 
 from homeassistant import util
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     SUPPORT_NEXT_TRACK,
@@ -56,8 +58,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Horizon platform."""
-    from horimote import Client, keys
-    from horimote.exceptions import AuthenticationError
 
     host = config[CONF_HOST]
     name = config[CONF_NAME]
@@ -71,22 +71,22 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     except OSError as msg:
         # occurs if horizon box is offline
         _LOGGER.error("Connection to %s at %s failed: %s", name, host, msg)
-        raise PlatformNotReady
+        raise PlatformNotReady from msg
 
     _LOGGER.info("Connection to %s at %s established", name, host)
 
     add_entities([HorizonDevice(client, name, keys)], True)
 
 
-class HorizonDevice(MediaPlayerDevice):
+class HorizonDevice(MediaPlayerEntity):
     """Representation of a Horizon HD Recorder."""
 
-    def __init__(self, client, name, keys):
+    def __init__(self, client, name, remote_keys):
         """Initialize the remote."""
         self._client = client
         self._name = name
         self._state = None
-        self._keys = keys
+        self._keys = remote_keys
 
     @property
     def name(self):
@@ -116,12 +116,12 @@ class HorizonDevice(MediaPlayerDevice):
 
     def turn_on(self):
         """Turn the device on."""
-        if self._state is STATE_OFF:
+        if self._state == STATE_OFF:
             self._send_key(self._keys.POWER)
 
     def turn_off(self):
         """Turn the device off."""
-        if self._state is not STATE_OFF:
+        if self._state != STATE_OFF:
             self._send_key(self._keys.POWER)
 
     def media_previous_track(self):
@@ -177,7 +177,6 @@ class HorizonDevice(MediaPlayerDevice):
 
     def _send(self, key=None, channel=None):
         """Send a key to the Horizon device."""
-        from horimote.exceptions import AuthenticationError
 
         try:
             if key:
@@ -185,9 +184,7 @@ class HorizonDevice(MediaPlayerDevice):
             elif channel:
                 self._client.select_channel(channel)
         except OSError as msg:
-            _LOGGER.error(
-                "%s disconnected: %s. Trying to reconnect...", self._name, msg
-            )
+            _LOGGER.error("%s disconnected: %s. Trying to reconnect", self._name, msg)
 
             # for reconnect, first gracefully disconnect
             self._client.disconnect()

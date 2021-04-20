@@ -4,9 +4,10 @@ import asyncio
 import aiohttp
 
 import homeassistant.components.rest_command as rc
+from homeassistant.const import CONTENT_TYPE_JSON, CONTENT_TYPE_TEXT_PLAIN
 from homeassistant.setup import setup_component
 
-from tests.common import get_test_home_assistant, assert_setup_component
+from tests.common import assert_setup_component, get_test_home_assistant
 
 
 class TestRestCommandSetup:
@@ -51,6 +52,7 @@ class TestRestCommandComponent:
         self.config = {
             rc.DOMAIN: {
                 "get_test": {"url": self.url, "method": "get"},
+                "patch_test": {"url": self.url, "method": "patch"},
                 "post_test": {"url": self.url, "method": "post"},
                 "put_test": {"url": self.url, "method": "put"},
                 "delete_test": {"url": self.url, "method": "delete"},
@@ -65,7 +67,7 @@ class TestRestCommandComponent:
 
     def test_setup_tests(self):
         """Set up test config and test it."""
-        with assert_setup_component(4):
+        with assert_setup_component(5):
             setup_component(self.hass, rc.DOMAIN, self.config)
 
         assert self.hass.services.has_service(rc.DOMAIN, "get_test")
@@ -75,7 +77,7 @@ class TestRestCommandComponent:
 
     def test_rest_command_timeout(self, aioclient_mock):
         """Call a rest command with timeout."""
-        with assert_setup_component(4):
+        with assert_setup_component(5):
             setup_component(self.hass, rc.DOMAIN, self.config)
 
         aioclient_mock.get(self.url, exc=asyncio.TimeoutError())
@@ -87,7 +89,7 @@ class TestRestCommandComponent:
 
     def test_rest_command_aiohttp_error(self, aioclient_mock):
         """Call a rest command with aiohttp exception."""
-        with assert_setup_component(4):
+        with assert_setup_component(5):
             setup_component(self.hass, rc.DOMAIN, self.config)
 
         aioclient_mock.get(self.url, exc=aiohttp.ClientError())
@@ -99,7 +101,7 @@ class TestRestCommandComponent:
 
     def test_rest_command_http_error(self, aioclient_mock):
         """Call a rest command with status code 400."""
-        with assert_setup_component(4):
+        with assert_setup_component(5):
             setup_component(self.hass, rc.DOMAIN, self.config)
 
         aioclient_mock.get(self.url, status=400)
@@ -114,7 +116,7 @@ class TestRestCommandComponent:
         data = {"username": "test", "password": "123456"}
         self.config[rc.DOMAIN]["get_test"].update(data)
 
-        with assert_setup_component(4):
+        with assert_setup_component(5):
             setup_component(self.hass, rc.DOMAIN, self.config)
 
         aioclient_mock.get(self.url, content=b"success")
@@ -129,7 +131,7 @@ class TestRestCommandComponent:
         data = {"payload": "test"}
         self.config[rc.DOMAIN]["post_test"].update(data)
 
-        with assert_setup_component(4):
+        with assert_setup_component(5):
             setup_component(self.hass, rc.DOMAIN, self.config)
 
         aioclient_mock.post(self.url, content=b"success")
@@ -142,7 +144,7 @@ class TestRestCommandComponent:
 
     def test_rest_command_get(self, aioclient_mock):
         """Call a rest command with get."""
-        with assert_setup_component(4):
+        with assert_setup_component(5):
             setup_component(self.hass, rc.DOMAIN, self.config)
 
         aioclient_mock.get(self.url, content=b"success")
@@ -154,7 +156,7 @@ class TestRestCommandComponent:
 
     def test_rest_command_delete(self, aioclient_mock):
         """Call a rest command with delete."""
-        with assert_setup_component(4):
+        with assert_setup_component(5):
             setup_component(self.hass, rc.DOMAIN, self.config)
 
         aioclient_mock.delete(self.url, content=b"success")
@@ -164,12 +166,28 @@ class TestRestCommandComponent:
 
         assert len(aioclient_mock.mock_calls) == 1
 
+    def test_rest_command_patch(self, aioclient_mock):
+        """Call a rest command with patch."""
+        data = {"payload": "data"}
+        self.config[rc.DOMAIN]["patch_test"].update(data)
+
+        with assert_setup_component(5):
+            setup_component(self.hass, rc.DOMAIN, self.config)
+
+        aioclient_mock.patch(self.url, content=b"success")
+
+        self.hass.services.call(rc.DOMAIN, "patch_test", {})
+        self.hass.block_till_done()
+
+        assert len(aioclient_mock.mock_calls) == 1
+        assert aioclient_mock.mock_calls[0][2] == b"data"
+
     def test_rest_command_post(self, aioclient_mock):
         """Call a rest command with post."""
         data = {"payload": "data"}
         self.config[rc.DOMAIN]["post_test"].update(data)
 
-        with assert_setup_component(4):
+        with assert_setup_component(5):
             setup_component(self.hass, rc.DOMAIN, self.config)
 
         aioclient_mock.post(self.url, content=b"success")
@@ -185,7 +203,7 @@ class TestRestCommandComponent:
         data = {"payload": "data"}
         self.config[rc.DOMAIN]["put_test"].update(data)
 
-        with assert_setup_component(4):
+        with assert_setup_component(5):
             setup_component(self.hass, rc.DOMAIN, self.config)
 
         aioclient_mock.put(self.url, content=b"success")
@@ -201,23 +219,36 @@ class TestRestCommandComponent:
         header_config_variations = {
             rc.DOMAIN: {
                 "no_headers_test": {},
-                "content_type_test": {"content_type": "text/plain"},
+                "content_type_test": {"content_type": CONTENT_TYPE_TEXT_PLAIN},
                 "headers_test": {
                     "headers": {
-                        "Accept": "application/json",
+                        "Accept": CONTENT_TYPE_JSON,
                         "User-Agent": "Mozilla/5.0",
                     }
                 },
                 "headers_and_content_type_test": {
-                    "headers": {"Accept": "application/json"},
-                    "content_type": "text/plain",
+                    "headers": {"Accept": CONTENT_TYPE_JSON},
+                    "content_type": CONTENT_TYPE_TEXT_PLAIN,
                 },
                 "headers_and_content_type_override_test": {
                     "headers": {
-                        "Accept": "application/json",
+                        "Accept": CONTENT_TYPE_JSON,
                         aiohttp.hdrs.CONTENT_TYPE: "application/pdf",
                     },
-                    "content_type": "text/plain",
+                    "content_type": CONTENT_TYPE_TEXT_PLAIN,
+                },
+                "headers_template_test": {
+                    "headers": {
+                        "Accept": CONTENT_TYPE_JSON,
+                        "User-Agent": "Mozilla/{{ 3 + 2 }}.0",
+                    }
+                },
+                "headers_and_content_type_override_template_test": {
+                    "headers": {
+                        "Accept": "application/{{ 1 + 1 }}json",
+                        aiohttp.hdrs.CONTENT_TYPE: "application/pdf",
+                    },
+                    "content_type": "text/json",
                 },
             }
         }
@@ -228,7 +259,7 @@ class TestRestCommandComponent:
                 {"url": self.url, "method": "post", "payload": "test data"}
             )
 
-        with assert_setup_component(5):
+        with assert_setup_component(7):
             setup_component(self.hass, rc.DOMAIN, header_config_variations)
 
         # provide post request data
@@ -240,11 +271,13 @@ class TestRestCommandComponent:
             "headers_test",
             "headers_and_content_type_test",
             "headers_and_content_type_override_test",
+            "headers_template_test",
+            "headers_and_content_type_override_template_test",
         ]:
             self.hass.services.call(rc.DOMAIN, test_service, {})
 
         self.hass.block_till_done()
-        assert len(aioclient_mock.mock_calls) == 5
+        assert len(aioclient_mock.mock_calls) == 7
 
         # no_headers_test
         assert aioclient_mock.mock_calls[0][3] is None
@@ -253,26 +286,39 @@ class TestRestCommandComponent:
         assert len(aioclient_mock.mock_calls[1][3]) == 1
         assert (
             aioclient_mock.mock_calls[1][3].get(aiohttp.hdrs.CONTENT_TYPE)
-            == "text/plain"
+            == CONTENT_TYPE_TEXT_PLAIN
         )
 
         # headers_test
         assert len(aioclient_mock.mock_calls[2][3]) == 2
-        assert aioclient_mock.mock_calls[2][3].get("Accept") == "application/json"
+        assert aioclient_mock.mock_calls[2][3].get("Accept") == CONTENT_TYPE_JSON
         assert aioclient_mock.mock_calls[2][3].get("User-Agent") == "Mozilla/5.0"
 
         # headers_and_content_type_test
         assert len(aioclient_mock.mock_calls[3][3]) == 2
         assert (
             aioclient_mock.mock_calls[3][3].get(aiohttp.hdrs.CONTENT_TYPE)
-            == "text/plain"
+            == CONTENT_TYPE_TEXT_PLAIN
         )
-        assert aioclient_mock.mock_calls[3][3].get("Accept") == "application/json"
+        assert aioclient_mock.mock_calls[3][3].get("Accept") == CONTENT_TYPE_JSON
 
         # headers_and_content_type_override_test
         assert len(aioclient_mock.mock_calls[4][3]) == 2
         assert (
             aioclient_mock.mock_calls[4][3].get(aiohttp.hdrs.CONTENT_TYPE)
-            == "text/plain"
+            == CONTENT_TYPE_TEXT_PLAIN
         )
-        assert aioclient_mock.mock_calls[4][3].get("Accept") == "application/json"
+        assert aioclient_mock.mock_calls[4][3].get("Accept") == CONTENT_TYPE_JSON
+
+        # headers_template_test
+        assert len(aioclient_mock.mock_calls[5][3]) == 2
+        assert aioclient_mock.mock_calls[5][3].get("Accept") == CONTENT_TYPE_JSON
+        assert aioclient_mock.mock_calls[5][3].get("User-Agent") == "Mozilla/5.0"
+
+        # headers_and_content_type_override_template_test
+        assert len(aioclient_mock.mock_calls[6][3]) == 2
+        assert (
+            aioclient_mock.mock_calls[6][3].get(aiohttp.hdrs.CONTENT_TYPE)
+            == "text/json"
+        )
+        assert aioclient_mock.mock_calls[6][3].get("Accept") == "application/2json"

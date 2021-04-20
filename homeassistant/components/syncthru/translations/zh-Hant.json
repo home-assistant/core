@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "invalid_url": "\u7db2\u5740\u7121\u6548",
+            "syncthru_not_supported": "\u88dd\u7f6e\u4e0d\u652f\u63f4 SyncThru",
+            "unknown_state": "\u5370\u8868\u6a5f\u72c0\u614b\u672a\u77e5\uff0c\u8acb\u78ba\u8a8d URL \u8207\u7db2\u8def\u9023\u7dda"
+        },
+        "flow_title": "Samsung SyncThru \u5370\u8868\u6a5f\uff1a{name}",
+        "step": {
+            "confirm": {
+                "data": {
+                    "name": "\u540d\u7a31",
+                    "url": "Web \u4ecb\u9762 URL"
+                }
+            },
+            "user": {
+                "data": {
+                    "name": "\u540d\u7a31",
+                    "url": "Web \u4ecb\u9762 URL"
+                }
+            }
+        }
+    }
+}

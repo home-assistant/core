@@ -1,9 +1,14 @@
 """A platform that to monitor Uptime Robot monitors."""
 import logging
 
+from pyuptimerobot import UptimeRobot
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_CONNECTIVITY,
+    PLATFORM_SCHEMA,
+    BinarySensorEntity,
+)
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 
@@ -18,7 +23,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_API_KEY): cv.string}
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Uptime Robot binary_sensors."""
-    from pyuptimerobot import UptimeRobot
 
     up_robot = UptimeRobot()
     api_key = config.get(CONF_API_KEY)
@@ -43,7 +47,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class UptimeRobotBinarySensor(BinarySensorDevice):
+class UptimeRobotBinarySensor(BinarySensorEntity):
     """Representation of a Uptime Robot binary sensor."""
 
     def __init__(self, api_key, up_robot, monitor_id, name, target):
@@ -68,10 +72,10 @@ class UptimeRobotBinarySensor(BinarySensorDevice):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return "connectivity"
+        return DEVICE_CLASS_CONNECTIVITY
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the binary sensor."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION, ATTR_TARGET: self._target}
 

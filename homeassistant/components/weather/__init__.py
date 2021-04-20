@@ -1,9 +1,10 @@
 """Weather component that handles meteorological data for your location."""
 from datetime import timedelta
 import logging
+from typing import final
 
 from homeassistant.const import PRECISION_TENTHS, PRECISION_WHOLE, TEMP_CELSIUS
-from homeassistant.helpers.config_validation import (  # noqa
+from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
@@ -11,15 +12,31 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
 
-
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CONDITION_CLASS = "condition_class"
+ATTR_CONDITION_CLEAR_NIGHT = "clear-night"
+ATTR_CONDITION_CLOUDY = "cloudy"
+ATTR_CONDITION_EXCEPTIONAL = "exceptional"
+ATTR_CONDITION_FOG = "fog"
+ATTR_CONDITION_HAIL = "hail"
+ATTR_CONDITION_LIGHTNING = "lightning"
+ATTR_CONDITION_LIGHTNING_RAINY = "lightning-rainy"
+ATTR_CONDITION_PARTLYCLOUDY = "partlycloudy"
+ATTR_CONDITION_POURING = "pouring"
+ATTR_CONDITION_RAINY = "rainy"
+ATTR_CONDITION_SNOWY = "snowy"
+ATTR_CONDITION_SNOWY_RAINY = "snowy-rainy"
+ATTR_CONDITION_SUNNY = "sunny"
+ATTR_CONDITION_WINDY = "windy"
+ATTR_CONDITION_WINDY_VARIANT = "windy-variant"
 ATTR_FORECAST = "forecast"
 ATTR_FORECAST_CONDITION = "condition"
 ATTR_FORECAST_PRECIPITATION = "precipitation"
+ATTR_FORECAST_PRECIPITATION_PROBABILITY = "precipitation_probability"
+ATTR_FORECAST_PRESSURE = "pressure"
 ATTR_FORECAST_TEMP = "temperature"
 ATTR_FORECAST_TEMP_LOW = "templow"
 ATTR_FORECAST_TIME = "datetime"
@@ -115,13 +132,14 @@ class WeatherEntity(Entity):
 
     @property
     def precision(self):
-        """Return the forecast."""
+        """Return the precision of the temperature value."""
         return (
             PRECISION_TENTHS
             if self.temperature_unit == TEMP_CELSIUS
             else PRECISION_WHOLE
         )
 
+    @final
     @property
     def state_attributes(self):
         """Return the state attributes."""

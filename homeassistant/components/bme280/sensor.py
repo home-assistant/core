@@ -1,17 +1,21 @@
 """Support for BME280 temperature, humidity and pressure sensor."""
+from contextlib import suppress
 from datetime import timedelta
 from functools import partial
 import logging
 
-import smbus  # pylint: disable=import-error
 from i2csense.bme280 import BME280  # pylint: disable=import-error
-
+import smbus
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import (
+    CONF_MONITORED_CONDITIONS,
+    CONF_NAME,
+    PERCENTAGE,
+    TEMP_FAHRENHEIT,
+)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import TEMP_FAHRENHEIT, CONF_NAME, CONF_MONITORED_CONDITIONS
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.util.temperature import celsius_to_fahrenheit
 
@@ -45,7 +49,7 @@ SENSOR_HUMID = "humidity"
 SENSOR_PRESS = "pressure"
 SENSOR_TYPES = {
     SENSOR_TEMP: ["Temperature", None],
-    SENSOR_HUMID: ["Humidity", "%"],
+    SENSOR_HUMID: ["Humidity", PERCENTAGE],
     SENSOR_PRESS: ["Pressure", "mb"],
 }
 DEFAULT_MONITORED = [SENSOR_TEMP, SENSOR_HUMID, SENSOR_PRESS]
@@ -81,22 +85,22 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the BME280 sensor."""
 
     SENSOR_TYPES[SENSOR_TEMP][1] = hass.config.units.temperature_unit
-    name = config.get(CONF_NAME)
-    i2c_address = config.get(CONF_I2C_ADDRESS)
+    name = config[CONF_NAME]
+    i2c_address = config[CONF_I2C_ADDRESS]
 
-    bus = smbus.SMBus(config.get(CONF_I2C_BUS))
-    sensor = await hass.async_add_job(
+    bus = smbus.SMBus(config[CONF_I2C_BUS])
+    sensor = await hass.async_add_executor_job(
         partial(
             BME280,
             bus,
             i2c_address,
-            osrs_t=config.get(CONF_OVERSAMPLING_TEMP),
-            osrs_p=config.get(CONF_OVERSAMPLING_PRES),
-            osrs_h=config.get(CONF_OVERSAMPLING_HUM),
-            mode=config.get(CONF_OPERATION_MODE),
-            t_sb=config.get(CONF_T_STANDBY),
-            filter_mode=config.get(CONF_FILTER_MODE),
-            delta_temp=config.get(CONF_DELTA_TEMP),
+            osrs_t=config[CONF_OVERSAMPLING_TEMP],
+            osrs_p=config[CONF_OVERSAMPLING_PRES],
+            osrs_h=config[CONF_OVERSAMPLING_HUM],
+            mode=config[CONF_OPERATION_MODE],
+            t_sb=config[CONF_T_STANDBY],
+            filter_mode=config[CONF_FILTER_MODE],
+            delta_temp=config[CONF_DELTA_TEMP],
             logger=_LOGGER,
         )
     )
@@ -104,16 +108,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         _LOGGER.error("BME280 sensor not detected at %s", i2c_address)
         return False
 
-    sensor_handler = await hass.async_add_job(BME280Handler, sensor)
+    sensor_handler = await hass.async_add_executor_job(BME280Handler, sensor)
 
     dev = []
-    try:
+    with suppress(KeyError):
         for variable in config[CONF_MONITORED_CONDITIONS]:
             dev.append(
                 BME280Sensor(sensor_handler, variable, SENSOR_TYPES[variable][1], name)
             )
-    except KeyError:
-        pass
 
     async_add_entities(dev, True)
 
@@ -132,7 +134,7 @@ class BME280Handler:
         self.sensor.update(first_reading)
 
 
-class BME280Sensor(Entity):
+class BME280Sensor(SensorEntity):
     """Implementation of the BME280 sensor."""
 
     def __init__(self, bme280_client, sensor_type, temp_unit, name):
@@ -162,12 +164,12 @@ class BME280Sensor(Entity):
 
     async def async_update(self):
         """Get the latest data from the BME280 and update the states."""
-        await self.hass.async_add_job(self.bme280_client.update)
+        await self.hass.async_add_executor_job(self.bme280_client.update)
         if self.bme280_client.sensor.sample_ok:
             if self.type == SENSOR_TEMP:
-                temperature = round(self.bme280_client.sensor.temperature, 1)
+                temperature = round(self.bme280_client.sensor.temperature, 2)
                 if self.temp_unit == TEMP_FAHRENHEIT:
-                    temperature = round(celsius_to_fahrenheit(temperature), 1)
+                    temperature = round(celsius_to_fahrenheit(temperature), 2)
                 self._state = temperature
             elif self.type == SENSOR_HUMID:
                 self._state = round(self.bme280_client.sensor.humidity, 1)

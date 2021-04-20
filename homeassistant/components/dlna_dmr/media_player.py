@@ -1,23 +1,19 @@
 """Support for DLNA DMR (Device Media Renderer)."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import functools
 import logging
-from typing import Optional
 
 import aiohttp
+from async_upnp_client import UpnpFactory
+from async_upnp_client.aiohttp import AiohttpNotifyServer, AiohttpSessionRequester
+from async_upnp_client.profiles.dlna import DeviceState, DmrDevice
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_CHANNEL,
-    MEDIA_TYPE_EPISODE,
-    MEDIA_TYPE_IMAGE,
-    MEDIA_TYPE_MOVIE,
-    MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_PLAYLIST,
-    MEDIA_TYPE_TVSHOW,
-    MEDIA_TYPE_VIDEO,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -38,12 +34,12 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
 from homeassistant.util import get_local_ip
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,28 +62,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-HOME_ASSISTANT_UPNP_CLASS_MAPPING = {
-    MEDIA_TYPE_MUSIC: "object.item.audioItem",
-    MEDIA_TYPE_TVSHOW: "object.item.videoItem",
-    MEDIA_TYPE_MOVIE: "object.item.videoItem",
-    MEDIA_TYPE_VIDEO: "object.item.videoItem",
-    MEDIA_TYPE_EPISODE: "object.item.videoItem",
-    MEDIA_TYPE_CHANNEL: "object.item.videoItem",
-    MEDIA_TYPE_IMAGE: "object.item.imageItem",
-    MEDIA_TYPE_PLAYLIST: "object.item.playlist",
-}
-UPNP_CLASS_DEFAULT = "object.item"
-HOME_ASSISTANT_UPNP_MIME_TYPE_MAPPING = {
-    MEDIA_TYPE_MUSIC: "audio/*",
-    MEDIA_TYPE_TVSHOW: "video/*",
-    MEDIA_TYPE_MOVIE: "video/*",
-    MEDIA_TYPE_VIDEO: "video/*",
-    MEDIA_TYPE_EPISODE: "video/*",
-    MEDIA_TYPE_CHANNEL: "video/*",
-    MEDIA_TYPE_IMAGE: "image/*",
-    MEDIA_TYPE_PLAYLIST: "playlist/*",
-}
-
 
 def catch_request_errors():
     """Catch asyncio.TimeoutError, aiohttp.ClientError errors."""
@@ -96,10 +70,10 @@ def catch_request_errors():
         """Call wrapper for decorator."""
 
         @functools.wraps(func)
-        def wrapper(self, *args, **kwargs):
+        async def wrapper(self, *args, **kwargs):
             """Catch asyncio.TimeoutError, aiohttp.ClientError errors."""
             try:
-                return func(self, *args, **kwargs)
+                return await func(self, *args, **kwargs)
             except (asyncio.TimeoutError, aiohttp.ClientError):
                 _LOGGER.error("Error during call %s", func.__name__)
 
@@ -109,11 +83,11 @@ def catch_request_errors():
 
 
 async def async_start_event_handler(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     server_host: str,
     server_port: int,
     requester,
-    callback_url_override: Optional[str] = None,
+    callback_url_override: str | None = None,
 ):
     """Register notify view."""
     hass_data = hass.data[DLNA_DMR_DATA]
@@ -121,8 +95,6 @@ async def async_start_event_handler(
         return hass_data["event_handler"]
 
     # start event handler
-    from async_upnp_client.aiohttp import AiohttpNotifyServer
-
     server = AiohttpNotifyServer(
         requester,
         listen_port=server_port,
@@ -146,7 +118,7 @@ async def async_start_event_handler(
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType, config, async_add_entities, discovery_info=None
+    hass: HomeAssistant, config, async_add_entities, discovery_info=None
 ):
     """Set up DLNA DMR platform."""
     if config.get(CONF_URL) is not None:
@@ -163,13 +135,11 @@ async def async_setup_platform(
         hass.data[DLNA_DMR_DATA]["lock"] = asyncio.Lock()
 
     # build upnp/aiohttp requester
-    from async_upnp_client.aiohttp import AiohttpSessionRequester
-
     session = async_get_clientsession(hass)
     requester = AiohttpSessionRequester(session, True)
 
     # ensure event handler has been started
-    with await hass.data[DLNA_DMR_DATA]["lock"]:
+    async with hass.data[DLNA_DMR_DATA]["lock"]:
         server_host = config.get(CONF_LISTEN_IP)
         if server_host is None:
             server_host = get_local_ip()
@@ -180,17 +150,13 @@ async def async_setup_platform(
         )
 
     # create upnp device
-    from async_upnp_client import UpnpFactory
-
     factory = UpnpFactory(requester, disable_state_variable_validation=True)
     try:
         upnp_device = await factory.async_create_device(url)
-    except (asyncio.TimeoutError, aiohttp.ClientError):
-        raise PlatformNotReady()
+    except (asyncio.TimeoutError, aiohttp.ClientError) as err:
+        raise PlatformNotReady() from err
 
     # wrap with DmrDevice
-    from async_upnp_client.profiles.dlna import DmrDevice
-
     dlna_device = DmrDevice(upnp_device, event_handler)
 
     # create our own device
@@ -199,11 +165,11 @@ async def async_setup_platform(
     async_add_entities([device], True)
 
 
-class DlnaDmrDevice(MediaPlayerDevice):
+class DlnaDmrDevice(MediaPlayerEntity):
     """Representation of a DLNA DMR device."""
 
     def __init__(self, dmr_device, name=None):
-        """Initializer."""
+        """Initialize DLNA DMR device."""
         self._device = dmr_device
         self._name = name
 
@@ -224,8 +190,8 @@ class DlnaDmrDevice(MediaPlayerDevice):
         return self._available
 
     async def _async_on_hass_stop(self, event):
-        """Event handler on HASS stop."""
-        with await self.hass.data[DLNA_DMR_DATA]["lock"]:
+        """Event handler on Home Assistant stop."""
+        async with self.hass.data[DLNA_DMR_DATA]["lock"]:
             await self._device.async_unsubscribe_services()
 
     async def async_update(self):
@@ -286,7 +252,9 @@ class DlnaDmrDevice(MediaPlayerDevice):
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
-        return self._device.volume_level
+        if self._device.has_volume_level:
+            return self._device.volume_level
+        return 0
 
     @catch_request_errors()
     async def async_set_volume_level(self, volume):
@@ -344,25 +312,18 @@ class DlnaDmrDevice(MediaPlayerDevice):
     @catch_request_errors()
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
+        _LOGGER.debug("Playing media: %s, %s, %s", media_type, media_id, kwargs)
         title = "Home Assistant"
-        mime_type = HOME_ASSISTANT_UPNP_MIME_TYPE_MAPPING.get(media_type, media_type)
-        upnp_class = HOME_ASSISTANT_UPNP_CLASS_MAPPING.get(
-            media_type, UPNP_CLASS_DEFAULT
-        )
 
         # Stop current playing media
         if self._device.can_stop:
             await self.async_media_stop()
 
         # Queue media
-        await self._device.async_set_transport_uri(
-            media_id, title, mime_type, upnp_class
-        )
+        await self._device.async_set_transport_uri(media_id, title)
         await self._device.async_wait_for_can_play()
 
         # If already playing, no need to call Play
-        from async_upnp_client.profiles.dlna import DeviceState
-
         if self._device.state == DeviceState.PLAYING:
             return
 
@@ -402,8 +363,6 @@ class DlnaDmrDevice(MediaPlayerDevice):
         """State of the player."""
         if not self._available:
             return STATE_OFF
-
-        from async_upnp_client.profiles.dlna import DeviceState
 
         if self._device.state is None:
             return STATE_ON

@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "host": "V\u00e4rd",
+                    "port": "Port (10000)"
+                },
+                "title": "Anslut till enheten"
+            }
+        }
+    }
+}

@@ -1,37 +1,33 @@
 """Config flow to configure the Ambient PWS component."""
+from aioambient import Client
+from aioambient.errors import AmbientError
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY
-from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
 from .const import CONF_APP_KEY, DOMAIN
 
 
-@callback
-def configured_instances(hass):
-    """Return a set of configured Ambient PWS instances."""
-    return set(
-        entry.data[CONF_APP_KEY] for entry in hass.config_entries.async_entries(DOMAIN)
-    )
-
-
-@config_entries.HANDLERS.register(DOMAIN)
-class AmbientStationFlowHandler(config_entries.ConfigFlow):
+class AmbientStationFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle an Ambient PWS config flow."""
 
     VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
-    async def _show_form(self, errors=None):
-        """Show the form to the user."""
-        data_schema = vol.Schema(
+    def __init__(self):
+        """Initialize the config flow."""
+        self.data_schema = vol.Schema(
             {vol.Required(CONF_API_KEY): str, vol.Required(CONF_APP_KEY): str}
         )
 
+    async def _show_form(self, errors=None):
+        """Show the form to the user."""
         return self.async_show_form(
-            step_id="user", data_schema=data_schema, errors=errors if errors else {}
+            step_id="user",
+            data_schema=self.data_schema,
+            errors=errors if errors else {},
         )
 
     async def async_step_import(self, import_config):
@@ -40,17 +36,16 @@ class AmbientStationFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""
-        from aioambient import Client
-        from aioambient.errors import AmbientError
-
         if not user_input:
             return await self._show_form()
 
-        if user_input[CONF_APP_KEY] in configured_instances(self.hass):
-            return await self._show_form({CONF_APP_KEY: "identifier_exists"})
+        await self.async_set_unique_id(user_input[CONF_APP_KEY])
+        self._abort_if_unique_id_configured()
 
         session = aiohttp_client.async_get_clientsession(self.hass)
-        client = Client(user_input[CONF_API_KEY], user_input[CONF_APP_KEY], session)
+        client = Client(
+            user_input[CONF_API_KEY], user_input[CONF_APP_KEY], session=session
+        )
 
         try:
             devices = await client.api.get_devices()

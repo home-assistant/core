@@ -1,38 +1,51 @@
 """Test component/platform setup."""
 # pylint: disable=protected-access
 import asyncio
+import datetime
 import os
-from unittest import mock
 import threading
-import logging
+from unittest.mock import AsyncMock, Mock, patch
 
+import pytest
 import voluptuous as vol
 
-from homeassistant.core import callback
-from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_COMPONENT_LOADED
+from homeassistant import config_entries, setup
 import homeassistant.config as config_util
-from homeassistant import setup
-import homeassistant.util.dt as dt_util
+from homeassistant.const import EVENT_COMPONENT_LOADED, EVENT_HOMEASSISTANT_START
+from homeassistant.core import callback
+from homeassistant.helpers import discovery
 from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-from homeassistant.helpers import discovery
+import homeassistant.util.dt as dt_util
 
 from tests.common import (
-    get_test_home_assistant,
+    MockConfigEntry,
     MockModule,
     MockPlatform,
     assert_setup_component,
     get_test_config_dir,
-    mock_integration,
+    get_test_home_assistant,
     mock_entity_platform,
+    mock_integration,
 )
 
 ORIG_TIMEZONE = dt_util.DEFAULT_TIME_ZONE
 VERSION_PATH = os.path.join(get_test_config_dir(), config_util.VERSION_FILE)
 
-_LOGGER = logging.getLogger(__name__)
+
+@pytest.fixture(autouse=True)
+def mock_handlers():
+    """Mock config flows."""
+
+    class MockFlowHandler(config_entries.ConfigFlow):
+        """Define a mock flow handler."""
+
+        VERSION = 1
+
+    with patch.dict(config_entries.HANDLERS, {"comp": MockFlowHandler}):
+        yield
 
 
 class TestSetup:
@@ -240,7 +253,7 @@ class TestSetup:
 
     def test_component_not_double_initialized(self):
         """Test we do not set up a component twice."""
-        mock_setup = mock.MagicMock(return_value=True)
+        mock_setup = Mock(return_value=True)
 
         mock_integration(self.hass, MockModule("comp", setup=mock_setup))
 
@@ -252,7 +265,7 @@ class TestSetup:
         assert setup.setup_component(self.hass, "comp", {})
         assert not mock_setup.called
 
-    @mock.patch("homeassistant.util.package.install_package", return_value=False)
+    @patch("homeassistant.util.package.install_package", return_value=False)
     def test_component_not_installed_if_requirement_fails(self, mock_install):
         """Component setup should fail if requirement can't install."""
         self.hass.config.skip_pip = False
@@ -265,8 +278,7 @@ class TestSetup:
         """Test component setup while waiting for lock is not set up twice."""
         result = []
 
-        @asyncio.coroutine
-        def async_setup(hass, config):
+        async def async_setup(hass, config):
             """Tracking Setup."""
             result.append(1)
 
@@ -327,7 +339,7 @@ class TestSetup:
             """Test that config is passed in."""
             if config.get("comp_a", {}).get("valid", False):
                 return True
-            raise Exception("Config not passed in: {}".format(config))
+            raise Exception(f"Config not passed in: {config}")
 
         platform = MockPlatform()
 
@@ -344,6 +356,7 @@ class TestSetup:
             "switch",
             {"comp_a": {"valid": True}, "switch": {"platform": "platform_a"}},
         )
+        self.hass.block_till_done()
         assert "comp_a" in self.hass.config.components
 
     def test_platform_specific_config_validation(self):
@@ -352,7 +365,7 @@ class TestSetup:
             {"valid": True}, extra=vol.PREVENT_EXTRA
         )
 
-        mock_setup = mock.MagicMock(spec_set=True)
+        mock_setup = Mock(spec_set=True)
 
         mock_entity_platform(
             self.hass,
@@ -366,6 +379,7 @@ class TestSetup:
                 "switch",
                 {"switch": {"platform": "platform_a", "invalid": True}},
             )
+            self.hass.block_till_done()
             assert mock_setup.call_count == 0
 
         self.hass.data.pop(setup.DATA_SETUP)
@@ -383,6 +397,7 @@ class TestSetup:
                     }
                 },
             )
+            self.hass.block_till_done()
             assert mock_setup.call_count == 0
 
         self.hass.data.pop(setup.DATA_SETUP)
@@ -394,6 +409,7 @@ class TestSetup:
                 "switch",
                 {"switch": {"platform": "platform_a", "valid": True}},
             )
+            self.hass.block_till_done()
             assert mock_setup.call_count == 1
 
     def test_disable_component_if_invalid_return(self):
@@ -426,10 +442,14 @@ class TestSetup:
         """Test all init work done till start."""
         call_order = []
 
-        def component1_setup(hass, config):
+        async def component1_setup(hass, config):
             """Set up mock component."""
-            discovery.discover(hass, "test_component2", {}, "test_component2", {})
-            discovery.discover(hass, "test_component3", {}, "test_component3", {})
+            await discovery.async_discover(
+                hass, "test_component2", {}, "test_component2", {}
+            )
+            await discovery.async_discover(
+                hass, "test_component3", {}, "test_component3", {}
+            )
             return True
 
         def component_track_setup(hass, config):
@@ -438,7 +458,7 @@ class TestSetup:
             return True
 
         mock_integration(
-            self.hass, MockModule("test_component1", setup=component1_setup)
+            self.hass, MockModule("test_component1", async_setup=component1_setup)
         )
 
         mock_integration(
@@ -462,25 +482,15 @@ class TestSetup:
         assert call_order == [1, 1, 2]
 
 
-@asyncio.coroutine
-def test_component_cannot_depend_config(hass):
-    """Test config is not allowed to be a dependency."""
-    result = yield from setup._async_process_dependencies(
-        hass, None, "test", ["config"]
-    )
-    assert not result
-
-
-@asyncio.coroutine
-def test_component_warn_slow_setup(hass):
+async def test_component_warn_slow_setup(hass):
     """Warn we log when a component setup takes a long time."""
     mock_integration(hass, MockModule("test_component1"))
-    with mock.patch.object(hass.loop, "call_later", mock.MagicMock()) as mock_call:
-        result = yield from setup.async_setup_component(hass, "test_component1", {})
+    with patch.object(hass.loop, "call_later") as mock_call:
+        result = await setup.async_setup_component(hass, "test_component1", {})
         assert result
         assert mock_call.called
-        assert len(mock_call.mock_calls) == 3
 
+        assert len(mock_call.mock_calls) == 3
         timeout, logger_method = mock_call.mock_calls[0][1][:2]
 
         assert timeout == setup.SLOW_SETUP_WARNING
@@ -489,16 +499,33 @@ def test_component_warn_slow_setup(hass):
         assert mock_call().cancel.called
 
 
-@asyncio.coroutine
-def test_platform_no_warn_slow(hass):
+async def test_platform_no_warn_slow(hass):
     """Do not warn for long entity setup time."""
     mock_integration(
         hass, MockModule("test_component1", platform_schema=PLATFORM_SCHEMA)
     )
-    with mock.patch.object(hass.loop, "call_later", mock.MagicMock()) as mock_call:
-        result = yield from setup.async_setup_component(hass, "test_component1", {})
+    with patch.object(hass.loop, "call_later") as mock_call:
+        result = await setup.async_setup_component(hass, "test_component1", {})
         assert result
-        assert not mock_call.called
+        assert len(mock_call.mock_calls) == 0
+
+
+async def test_platform_error_slow_setup(hass, caplog):
+    """Don't block startup more than SLOW_SETUP_MAX_WAIT."""
+
+    with patch.object(setup, "SLOW_SETUP_MAX_WAIT", 1):
+        called = []
+
+        async def async_setup(*args):
+            """Tracking Setup."""
+            called.append(1)
+            await asyncio.sleep(2)
+
+        mock_integration(hass, MockModule("test_component1", async_setup=async_setup))
+        result = await setup.async_setup_component(hass, "test_component1", {})
+        assert len(called) == 1
+        assert not result
+        assert "test_component1 is taking longer than 1 seconds" in caplog.text
 
 
 async def test_when_setup_already_loaded(hass):
@@ -527,3 +554,157 @@ async def test_when_setup_already_loaded(hass):
     setup.async_when_setup(hass, "test", mock_callback)
     await hass.async_block_till_done()
     assert calls == ["test", "test"]
+
+
+async def test_async_when_setup_or_start_already_loaded(hass):
+    """Test when setup or start."""
+    calls = []
+
+    async def mock_callback(hass, component):
+        """Mock callback."""
+        calls.append(component)
+
+    setup.async_when_setup_or_start(hass, "test", mock_callback)
+    await hass.async_block_till_done()
+    assert calls == []
+
+    hass.config.components.add("test")
+    hass.bus.async_fire(EVENT_COMPONENT_LOADED, {"component": "test"})
+    await hass.async_block_till_done()
+    assert calls == ["test"]
+
+    # Event listener should be gone
+    hass.bus.async_fire(EVENT_COMPONENT_LOADED, {"component": "test"})
+    await hass.async_block_till_done()
+    assert calls == ["test"]
+
+    # Should be called right away
+    setup.async_when_setup_or_start(hass, "test", mock_callback)
+    await hass.async_block_till_done()
+    assert calls == ["test", "test"]
+
+    setup.async_when_setup_or_start(hass, "not_loaded", mock_callback)
+    await hass.async_block_till_done()
+    assert calls == ["test", "test"]
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+    assert calls == ["test", "test", "not_loaded"]
+
+
+async def test_setup_import_blows_up(hass):
+    """Test that we handle it correctly when importing integration blows up."""
+    with patch(
+        "homeassistant.loader.Integration.get_component", side_effect=ValueError
+    ):
+        assert not await setup.async_setup_component(hass, "sun", {})
+
+
+async def test_parallel_entry_setup(hass):
+    """Test config entries are set up in parallel."""
+    MockConfigEntry(domain="comp", data={"value": 1}).add_to_hass(hass)
+    MockConfigEntry(domain="comp", data={"value": 2}).add_to_hass(hass)
+
+    calls = []
+
+    async def mock_async_setup_entry(hass, entry):
+        """Mock setting up an entry."""
+        calls.append(entry.data["value"])
+        await asyncio.sleep(0)
+        calls.append(entry.data["value"])
+        return True
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup_entry=mock_async_setup_entry,
+        ),
+    )
+    mock_entity_platform(hass, "config_flow.comp", None)
+    await setup.async_setup_component(hass, "comp", {})
+
+    assert calls == [1, 2, 1, 2]
+
+
+async def test_integration_disabled(hass, caplog):
+    """Test we can disable an integration."""
+    disabled_reason = "Dependency contains code that breaks Home Assistant"
+    mock_integration(
+        hass,
+        MockModule("test_component1", partial_manifest={"disabled": disabled_reason}),
+    )
+    result = await setup.async_setup_component(hass, "test_component1", {})
+    assert not result
+    assert disabled_reason in caplog.text
+
+
+async def test_async_get_loaded_integrations(hass):
+    """Test we can enumerate loaded integations."""
+    hass.config.components.add("notbase")
+    hass.config.components.add("switch")
+    hass.config.components.add("notbase.switch")
+    hass.config.components.add("myintegration")
+    hass.config.components.add("device_tracker")
+    hass.config.components.add("device_tracker.other")
+    hass.config.components.add("myintegration.light")
+    assert setup.async_get_loaded_integrations(hass) == {
+        "other",
+        "switch",
+        "notbase",
+        "myintegration",
+        "device_tracker",
+    }
+
+
+async def test_integration_no_setup(hass, caplog):
+    """Test we fail integration setup without setup functions."""
+    mock_integration(
+        hass,
+        MockModule("test_integration_without_setup", setup=False),
+    )
+    result = await setup.async_setup_component(
+        hass, "test_integration_without_setup", {}
+    )
+    assert not result
+    assert "No setup or config entry setup function defined" in caplog.text
+
+
+async def test_integration_only_setup_entry(hass):
+    """Test we have an integration with only a setup entry method."""
+    mock_integration(
+        hass,
+        MockModule(
+            "test_integration_only_entry",
+            setup=False,
+            async_setup_entry=AsyncMock(return_value=True),
+        ),
+    )
+    assert await setup.async_setup_component(hass, "test_integration_only_entry", {})
+
+
+async def test_async_start_setup(hass):
+    """Test setup started context manager keeps track of setup times."""
+    with setup.async_start_setup(hass, ["august"]):
+        assert isinstance(
+            hass.data[setup.DATA_SETUP_STARTED]["august"], datetime.datetime
+        )
+        with setup.async_start_setup(hass, ["august"]):
+            assert isinstance(
+                hass.data[setup.DATA_SETUP_STARTED]["august_2"], datetime.datetime
+            )
+
+    assert "august" not in hass.data[setup.DATA_SETUP_STARTED]
+    assert isinstance(hass.data[setup.DATA_SETUP_TIME]["august"], datetime.timedelta)
+    assert "august_2" not in hass.data[setup.DATA_SETUP_TIME]
+
+
+async def test_async_start_setup_platforms(hass):
+    """Test setup started context manager keeps track of setup times for platforms."""
+    with setup.async_start_setup(hass, ["sensor.august"]):
+        assert isinstance(
+            hass.data[setup.DATA_SETUP_STARTED]["sensor.august"], datetime.datetime
+        )
+
+    assert "august" not in hass.data[setup.DATA_SETUP_STARTED]
+    assert isinstance(hass.data[setup.DATA_SETUP_TIME]["august"], datetime.timedelta)
+    assert "sensor" not in hass.data[setup.DATA_SETUP_TIME]

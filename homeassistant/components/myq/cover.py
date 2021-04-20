@@ -1,82 +1,72 @@
 """Support for MyQ-Enabled Garage Doors."""
 import logging
-import voluptuous as vol
+
+from pymyq.const import (
+    DEVICE_STATE as MYQ_DEVICE_STATE,
+    DEVICE_STATE_ONLINE as MYQ_DEVICE_STATE_ONLINE,
+    DEVICE_TYPE_GATE as MYQ_DEVICE_TYPE_GATE,
+    KNOWN_MODELS,
+    MANUFACTURER,
+)
+from pymyq.errors import MyQError
 
 from homeassistant.components.cover import (
-    CoverDevice,
-    PLATFORM_SCHEMA,
+    DEVICE_CLASS_GARAGE,
+    DEVICE_CLASS_GATE,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
+    CoverEntity,
 )
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_TYPE,
-    CONF_USERNAME,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
-)
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import DOMAIN, MYQ_COORDINATOR, MYQ_GATEWAY, MYQ_TO_HASS
 
 _LOGGER = logging.getLogger(__name__)
 
-MYQ_TO_HASS = {
-    "closed": STATE_CLOSED,
-    "closing": STATE_CLOSING,
-    "open": STATE_OPEN,
-    "opening": STATE_OPENING,
-}
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_TYPE): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-    }
-)
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up mysq covers."""
+    data = hass.data[DOMAIN][config_entry.entry_id]
+    myq = data[MYQ_GATEWAY]
+    coordinator = data[MYQ_COORDINATOR]
+
+    async_add_entities(
+        [MyQDevice(coordinator, device) for device in myq.covers.values()], True
+    )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the platform."""
-    from pymyq import login
-    from pymyq.errors import MyQError, UnsupportedBrandError
-
-    websession = aiohttp_client.async_get_clientsession(hass)
-
-    username = config[CONF_USERNAME]
-    password = config[CONF_PASSWORD]
-    brand = config[CONF_TYPE]
-
-    try:
-        myq = await login(username, password, brand, websession)
-    except UnsupportedBrandError:
-        _LOGGER.error("Unsupported brand: %s", brand)
-        return
-    except MyQError as err:
-        _LOGGER.error("There was an error while logging in: %s", err)
-        return
-
-    devices = await myq.get_devices()
-    async_add_entities([MyQDevice(device) for device in devices], True)
-
-
-class MyQDevice(CoverDevice):
+class MyQDevice(CoordinatorEntity, CoverEntity):
     """Representation of a MyQ cover."""
 
-    def __init__(self, device):
+    def __init__(self, coordinator, device):
         """Initialize with API object, device id."""
+        super().__init__(coordinator)
         self._device = device
 
     @property
     def device_class(self):
         """Define this cover as a garage door."""
-        return "garage"
+        device_type = self._device.device_type
+        if device_type is not None and device_type == MYQ_DEVICE_TYPE_GATE:
+            return DEVICE_CLASS_GATE
+        return DEVICE_CLASS_GARAGE
 
     @property
     def name(self):
         """Return the name of the garage door if any."""
         return self._device.name
+
+    @property
+    def available(self):
+        """Return if the device is online."""
+        if not self.coordinator.last_update_success:
+            return False
+
+        # Not all devices report online so assume True if its missing
+        return self._device.device_json[MYQ_DEVICE_STATE].get(
+            MYQ_DEVICE_STATE_ONLINE, True
+        )
 
     @property
     def is_closed(self):
@@ -87,6 +77,11 @@ class MyQDevice(CoverDevice):
     def is_closing(self):
         """Return if the cover is closing or not."""
         return MYQ_TO_HASS.get(self._device.state) == STATE_CLOSING
+
+    @property
+    def is_open(self):
+        """Return if the cover is opening or not."""
+        return MYQ_TO_HASS.get(self._device.state) == STATE_OPEN
 
     @property
     def is_opening(self):
@@ -100,17 +95,72 @@ class MyQDevice(CoverDevice):
 
     @property
     def unique_id(self):
-        """Return a unique, HASS-friendly identifier for this entity."""
+        """Return a unique, Home Assistant friendly identifier for this entity."""
         return self._device.device_id
 
     async def async_close_cover(self, **kwargs):
         """Issue close command to cover."""
-        await self._device.close()
+        if self.is_closing or self.is_closed:
+            return
+
+        try:
+            wait_task = await self._device.close(wait_for_state=False)
+        except MyQError as err:
+            _LOGGER.error(
+                "Closing of cover %s failed with error: %s", self._device.name, str(err)
+            )
+
+            return
+
+        # Write closing state to HASS
+        self.async_write_ha_state()
+
+        if not await wait_task:
+            _LOGGER.error("Closing of cover %s failed", self._device.name)
+
+        # Write final state to HASS
+        self.async_write_ha_state()
 
     async def async_open_cover(self, **kwargs):
         """Issue open command to cover."""
-        await self._device.open()
+        if self.is_opening or self.is_open:
+            return
 
-    async def async_update(self):
-        """Update status of cover."""
-        await self._device.update()
+        try:
+            wait_task = await self._device.open(wait_for_state=False)
+        except MyQError as err:
+            _LOGGER.error(
+                "Opening of cover %s failed with error: %s", self._device.name, str(err)
+            )
+            return
+
+        # Write opening state to HASS
+        self.async_write_ha_state()
+
+        if not await wait_task:
+            _LOGGER.error("Opening of cover %s failed", self._device.name)
+
+        # Write final state to HASS
+        self.async_write_ha_state()
+
+    @property
+    def device_info(self):
+        """Return the device_info of the device."""
+        device_info = {
+            "identifiers": {(DOMAIN, self._device.device_id)},
+            "name": self._device.name,
+            "manufacturer": MANUFACTURER,
+            "sw_version": self._device.firmware_version,
+        }
+        model = KNOWN_MODELS.get(self._device.device_id[2:4])
+        if model:
+            device_info["model"] = model
+        if self._device.parent_device_id:
+            device_info["via_device"] = (DOMAIN, self._device.parent_device_id)
+        return device_info
+
+    async def async_added_to_hass(self):
+        """Subscribe to updates."""
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self.async_write_ha_state)
+        )

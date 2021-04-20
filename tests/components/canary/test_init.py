@@ -1,71 +1,82 @@
 """The tests for the Canary component."""
-import unittest
-from unittest.mock import patch, MagicMock, PropertyMock
+from unittest.mock import patch
 
-import homeassistant.components.canary as canary
-from homeassistant import setup
-from tests.common import get_test_home_assistant
+from requests import ConnectTimeout
 
+from homeassistant.components.camera.const import DOMAIN as CAMERA_DOMAIN
+from homeassistant.components.canary.const import CONF_FFMPEG_ARGUMENTS, DOMAIN
+from homeassistant.config_entries import (
+    ENTRY_STATE_LOADED,
+    ENTRY_STATE_NOT_LOADED,
+    ENTRY_STATE_SETUP_RETRY,
+)
+from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
+from homeassistant.setup import async_setup_component
 
-def mock_device(device_id, name, is_online=True, device_type_name=None):
-    """Mock Canary Device class."""
-    device = MagicMock()
-    type(device).device_id = PropertyMock(return_value=device_id)
-    type(device).name = PropertyMock(return_value=name)
-    type(device).is_online = PropertyMock(return_value=is_online)
-    type(device).device_type = PropertyMock(
-        return_value={"id": 1, "name": device_type_name}
-    )
-    return device
+from . import YAML_CONFIG, init_integration
 
 
-def mock_location(name, is_celsius=True, devices=None):
-    """Mock Canary Location class."""
-    location = MagicMock()
-    type(location).name = PropertyMock(return_value=name)
-    type(location).is_celsius = PropertyMock(return_value=is_celsius)
-    type(location).devices = PropertyMock(return_value=devices or [])
-    return location
+async def test_import_from_yaml(hass, canary) -> None:
+    """Test import from YAML."""
+    with patch(
+        "homeassistant.components.canary.async_setup_entry",
+        return_value=True,
+    ):
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: YAML_CONFIG})
+        await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+
+    assert entries[0].data[CONF_USERNAME] == "test-username"
+    assert entries[0].data[CONF_PASSWORD] == "test-password"
+    assert entries[0].data[CONF_TIMEOUT] == 5
 
 
-def mock_reading(sensor_type, sensor_value):
-    """Mock Canary Reading class."""
-    reading = MagicMock()
-    type(reading).sensor_type = PropertyMock(return_value=sensor_type)
-    type(reading).value = PropertyMock(return_value=sensor_value)
-    return reading
+async def test_import_from_yaml_ffmpeg(hass, canary) -> None:
+    """Test import from YAML with ffmpeg arguments."""
+    with patch(
+        "homeassistant.components.canary.async_setup_entry",
+        return_value=True,
+    ):
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                DOMAIN: YAML_CONFIG,
+                CAMERA_DOMAIN: [{"platform": DOMAIN, CONF_FFMPEG_ARGUMENTS: "-v"}],
+            },
+        )
+        await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+
+    assert entries[0].data[CONF_USERNAME] == "test-username"
+    assert entries[0].data[CONF_PASSWORD] == "test-password"
+    assert entries[0].data[CONF_TIMEOUT] == 5
+    assert entries[0].data.get(CONF_FFMPEG_ARGUMENTS) == "-v"
 
 
-class TestCanary(unittest.TestCase):
-    """Tests the Canary component."""
+async def test_unload_entry(hass, canary):
+    """Test successful unload of entry."""
+    entry = await init_integration(hass)
 
-    def setUp(self):
-        """Initialize values for this test case class."""
-        self.hass = get_test_home_assistant()
+    assert entry
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert entry.state == ENTRY_STATE_LOADED
 
-    def tearDown(self):  # pylint: disable=invalid-name
-        """Stop everything that was started."""
-        self.hass.stop()
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
 
-    @patch("homeassistant.components.canary.CanaryData.update")
-    @patch("canary.api.Api.login")
-    def test_setup_with_valid_config(self, mock_login, mock_update):
-        """Test setup component."""
-        config = {"canary": {"username": "foo@bar.org", "password": "bar"}}
+    assert entry.state == ENTRY_STATE_NOT_LOADED
+    assert not hass.data.get(DOMAIN)
 
-        assert setup.setup_component(self.hass, canary.DOMAIN, config)
 
-        mock_update.assert_called_once_with()
-        mock_login.assert_called_once_with()
+async def test_async_setup_raises_entry_not_ready(hass, canary):
+    """Test that it throws ConfigEntryNotReady when exception occurs during setup."""
+    canary.side_effect = ConnectTimeout()
 
-    def test_setup_with_missing_password(self):
-        """Test setup component."""
-        config = {"canary": {"username": "foo@bar.org"}}
-
-        assert not setup.setup_component(self.hass, canary.DOMAIN, config)
-
-    def test_setup_with_missing_username(self):
-        """Test setup component."""
-        config = {"canary": {"password": "bar"}}
-
-        assert not setup.setup_component(self.hass, canary.DOMAIN, config)
+    entry = await init_integration(hass)
+    assert entry
+    assert entry.state == ENTRY_STATE_SETUP_RETRY

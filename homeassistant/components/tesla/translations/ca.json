@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El compte ja ha estat configurat",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
+        },
+        "error": {
+            "already_configured": "El compte ja ha estat configurat",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrasenya",
+                    "username": "Correu electr\u00f2nic"
+                },
+                "description": "Introdueix la teva informaci\u00f3.",
+                "title": "Configuraci\u00f3 de Tesla"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "enable_wake_on_start": "For\u00e7a el despertar del cotxe en la posada en marxa",
+                    "scan_interval": "Segons entre escanejos"
+                }
+            }
+        }
+    }
+}

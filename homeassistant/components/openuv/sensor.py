@@ -1,16 +1,14 @@
 """Support for OpenUV sensors."""
-import logging
-
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import TIME_MINUTES, UV_INDEX
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.dt import as_local, parse_datetime
 
-from . import (
-    DATA_OPENUV_CLIENT,
+from . import OpenUvEntity
+from .const import (
+    DATA_CLIENT,
     DATA_UV,
     DOMAIN,
-    SENSORS,
-    TOPIC_UPDATE,
     TYPE_CURRENT_OZONE_LEVEL,
     TYPE_CURRENT_UV_INDEX,
     TYPE_CURRENT_UV_LEVEL,
@@ -21,10 +19,7 @@ from . import (
     TYPE_SAFE_EXPOSURE_TIME_4,
     TYPE_SAFE_EXPOSURE_TIME_5,
     TYPE_SAFE_EXPOSURE_TIME_6,
-    OpenUvEntity,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_MAX_UV_TIME = "time"
 
@@ -43,27 +38,57 @@ UV_LEVEL_HIGH = "High"
 UV_LEVEL_MODERATE = "Moderate"
 UV_LEVEL_LOW = "Low"
 
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up an OpenUV sensor based on existing config."""
-    pass
+SENSORS = {
+    TYPE_CURRENT_OZONE_LEVEL: ("Current Ozone Level", "mdi:vector-triangle", "du"),
+    TYPE_CURRENT_UV_INDEX: ("Current UV Index", "mdi:weather-sunny", UV_INDEX),
+    TYPE_CURRENT_UV_LEVEL: ("Current UV Level", "mdi:weather-sunny", None),
+    TYPE_MAX_UV_INDEX: ("Max UV Index", "mdi:weather-sunny", UV_INDEX),
+    TYPE_SAFE_EXPOSURE_TIME_1: (
+        "Skin Type 1 Safe Exposure Time",
+        "mdi:timer-outline",
+        TIME_MINUTES,
+    ),
+    TYPE_SAFE_EXPOSURE_TIME_2: (
+        "Skin Type 2 Safe Exposure Time",
+        "mdi:timer-outline",
+        TIME_MINUTES,
+    ),
+    TYPE_SAFE_EXPOSURE_TIME_3: (
+        "Skin Type 3 Safe Exposure Time",
+        "mdi:timer-outline",
+        TIME_MINUTES,
+    ),
+    TYPE_SAFE_EXPOSURE_TIME_4: (
+        "Skin Type 4 Safe Exposure Time",
+        "mdi:timer-outline",
+        TIME_MINUTES,
+    ),
+    TYPE_SAFE_EXPOSURE_TIME_5: (
+        "Skin Type 5 Safe Exposure Time",
+        "mdi:timer-outline",
+        TIME_MINUTES,
+    ),
+    TYPE_SAFE_EXPOSURE_TIME_6: (
+        "Skin Type 6 Safe Exposure Time",
+        "mdi:timer-outline",
+        TIME_MINUTES,
+    ),
+}
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up a Nest sensor based on a config entry."""
-    openuv = hass.data[DOMAIN][DATA_OPENUV_CLIENT][entry.entry_id]
+    """Set up a OpenUV sensor based on a config entry."""
+    openuv = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
 
     sensors = []
-    for sensor_type in openuv.sensor_conditions:
-        name, icon, unit = SENSORS[sensor_type]
-        sensors.append(
-            OpenUvSensor(openuv, sensor_type, name, icon, unit, entry.entry_id)
-        )
+    for kind, attrs in SENSORS.items():
+        name, icon, unit = attrs
+        sensors.append(OpenUvSensor(openuv, kind, name, icon, unit, entry.entry_id))
 
     async_add_entities(sensors, True)
 
 
-class OpenUvSensor(OpenUvEntity):
+class OpenUvSensor(OpenUvEntity, SensorEntity):
     """Define a binary sensor for OpenUV."""
 
     def __init__(self, openuv, sensor_type, name, icon, unit, entry_id):
@@ -97,7 +122,7 @@ class OpenUvSensor(OpenUvEntity):
 
     @property
     def unique_id(self) -> str:
-        """Return a unique, HASS-friendly identifier for this entity."""
+        """Return a unique, Home Assistant friendly identifier for this entity."""
         return f"{self._latitude}_{self._longitude}_{self._sensor_type}"
 
     @property
@@ -105,26 +130,17 @@ class OpenUvSensor(OpenUvEntity):
         """Return the unit the value is expressed in."""
         return self._unit
 
-    async def async_added_to_hass(self):
-        """Register callbacks."""
-
-        @callback
-        def update():
-            """Update the state."""
-            self.async_schedule_update_ha_state(True)
-
-        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
-            self.hass, TOPIC_UPDATE, update
-        )
-
-    async def async_will_remove_from_hass(self):
-        """Disconnect dispatcher listener when removed."""
-        if self._async_unsub_dispatcher_connect:
-            self._async_unsub_dispatcher_connect()
-
-    async def async_update(self):
+    @callback
+    def update_from_latest_data(self):
         """Update the state."""
-        data = self.openuv.data[DATA_UV]["result"]
+        data = self.openuv.data[DATA_UV].get("result")
+
+        if not data:
+            self._available = False
+            return
+
+        self._available = True
+
         if self._sensor_type == TYPE_CURRENT_OZONE_LEVEL:
             self._state = data["ozone"]
         elif self._sensor_type == TYPE_CURRENT_UV_INDEX:

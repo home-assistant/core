@@ -1,0 +1,21 @@
+{
+    "options": {
+        "step": {
+            "options_1": {
+                "data": {
+                    "bool": "Boolean opsional",
+                    "constant": "Konstanta",
+                    "int": "Input numerik"
+                }
+            },
+            "options_2": {
+                "data": {
+                    "multi": "Pilihan ganda",
+                    "select": "Pilih salah satu opsi",
+                    "string": "Nilai string"
+                }
+            }
+        }
+    },
+    "title": "Demo"
+}

@@ -1,0 +1,39 @@
+{
+  "config": {
+    "step": {
+      "on_supervisor": {
+        "title": "Select connection method",
+        "description": "Do you want to use the OpenZWave Supervisor add-on?",
+        "data": { "use_addon": "Use the OpenZWave Supervisor add-on" }
+      },
+      "install_addon": {
+        "title": "The OpenZWave add-on installation has started"
+      },
+      "start_addon": {
+        "title": "Enter the OpenZWave add-on configuration",
+        "data": {
+          "usb_path": "[%key:common::config_flow::data::usb_path%]",
+          "network_key": "Network Key"
+        }
+      },
+      "hassio_confirm": {
+        "title": "Set up OpenZWave integration with the OpenZWave add-on"
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "addon_info_failed": "Failed to get OpenZWave add-on info.",
+      "addon_install_failed": "Failed to install the OpenZWave add-on.",
+      "addon_set_config_failed": "Failed to set OpenZWave configuration.",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "mqtt_required": "The MQTT integration is not set up"
+    },
+    "error": {
+      "addon_start_failed": "Failed to start the OpenZWave add-on. Check the configuration."
+    },
+    "progress": {
+      "install_addon": "Please wait while the OpenZWave add-on installation finishes. This can take several minutes."
+    }
+  }
+}

@@ -1,9 +1,8 @@
 """The tests for the rss_feed_api component."""
-import asyncio
-from xml.etree import ElementTree
-
+from defusedxml import ElementTree
 import pytest
 
+from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.setup import async_setup_component
 
 
@@ -28,24 +27,22 @@ def mock_http_client(loop, hass, hass_client):
     return loop.run_until_complete(hass_client())
 
 
-@asyncio.coroutine
-def test_get_nonexistant_feed(mock_http_client):
+async def test_get_nonexistant_feed(mock_http_client):
     """Test if we can retrieve the correct rss feed."""
-    resp = yield from mock_http_client.get("/api/rss_template/otherfeed")
-    assert resp.status == 404
+    resp = await mock_http_client.get("/api/rss_template/otherfeed")
+    assert resp.status == HTTP_NOT_FOUND
 
 
-@asyncio.coroutine
-def test_get_rss_feed(mock_http_client, hass):
+async def test_get_rss_feed(mock_http_client, hass):
     """Test if we can retrieve the correct rss feed."""
     hass.states.async_set("test.test1", "a_state_1")
     hass.states.async_set("test.test2", "a_state_2")
     hass.states.async_set("test.test3", "a_state_3")
 
-    resp = yield from mock_http_client.get("/api/rss_template/testfeed")
+    resp = await mock_http_client.get("/api/rss_template/testfeed")
     assert resp.status == 200
 
-    text = yield from resp.text()
+    text = await resp.text()
 
     xml = ElementTree.fromstring(text)
     assert xml[0].text == "feed title is a_state_1"

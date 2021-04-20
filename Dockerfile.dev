@@ -1,7 +1,11 @@
-FROM python:3.7
+FROM mcr.microsoft.com/vscode/devcontainers/python:0-3.8
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+RUN \
+    curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
+    && apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         libudev-dev \
         libavformat-dev \
         libavcodec-dev \
@@ -10,6 +14,7 @@ RUN apt-get update \
         libswscale-dev \
         libswresample-dev \
         libavfilter-dev \
+        libpcap-dev \
         git \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -18,15 +23,16 @@ WORKDIR /usr/src
 
 # Setup hass-release
 RUN git clone --depth 1 https://github.com/home-assistant/hass-release \
-    && cd hass-release \
-    && pip3 install -e .
+    && pip3 install -e hass-release/
 
 WORKDIR /workspaces
 
 # Install Python dependencies from requirements
-COPY requirements_test.txt homeassistant/package_constraints.txt ./
-RUN pip3 install -r requirements_test.txt -c package_constraints.txt \
-    && rm -f requirements_test.txt package_constraints.txt
+COPY requirements.txt requirements_test.txt requirements_test_pre_commit.txt ./
+COPY homeassistant/package_constraints.txt homeassistant/package_constraints.txt
+RUN pip3 install -r requirements.txt \
+   && pip3 install -r requirements_test.txt \
+   && rm -rf requirements.txt requirements_test.txt requirements_test_pre_commit.txt homeassistant/
 
 # Set the default shell to bash instead of sh
 ENV SHELL /bin/bash

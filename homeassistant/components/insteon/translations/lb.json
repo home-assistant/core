@@ -1,0 +1,109 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Feeler beim verbannen",
+            "single_instance_allowed": "Scho konfigur\u00e9iert. N\u00ebmmen eng eenzeg Konfiguratioun m\u00e9iglech."
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen mam",
+            "select_single": "Eng Optioun auswielen."
+        },
+        "step": {
+            "hubv1": {
+                "data": {
+                    "host": "IP Adresse",
+                    "port": "Port"
+                },
+                "description": "Insteon Hub Versioun 1 (pre-2014) konfigur\u00e9ieren.",
+                "title": "Insteon Hub Versioun 1"
+            },
+            "hubv2": {
+                "data": {
+                    "host": "IP Adresse",
+                    "password": "Passwuert",
+                    "port": "Port",
+                    "username": "Benotzernumm"
+                },
+                "description": "Insteon Hub Versioun 2 konfigur\u00e9ieren.",
+                "title": "Insteon Hub Versioun 2"
+            },
+            "plm": {
+                "data": {
+                    "device": "Pad vum USB Apparat"
+                },
+                "description": "Insteon PowerLink Modem (PLM) konfigur\u00e9ieren.",
+                "title": "Insteon PLM"
+            },
+            "user": {
+                "data": {
+                    "modem_type": "Typ vu Modem."
+                },
+                "description": "Insteon Modem Typ auswielen.",
+                "title": "Insteon"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "Feeler beim verbannen",
+            "input_error": "Ong\u00eblteg Entr\u00e9e\u00ebn, iwwerpr\u00e9if deng W\u00e4erter.",
+            "select_single": "Eng Optioun auswielen."
+        },
+        "step": {
+            "add_override": {
+                "data": {
+                    "address": "Apparat Adress (Beispill 1a2b3c)",
+                    "cat": "Apparat Kategorie (Beispill 0x10)",
+                    "subcat": "Apparat \u00cbnnerkategorie (Beispill 0x0a)"
+                },
+                "description": "Apparat iwwerschr\u00e9iwen dob\u00e4isetzen",
+                "title": "Insteon"
+            },
+            "add_x10": {
+                "data": {
+                    "housecode": "Hauscode (a-p)",
+                    "platform": "Plattform",
+                    "steps": "Dimmer Schr\u00ebtt (n\u00ebmme fir Luuchten, standard 22)",
+                    "unitcode": "Unitcode (1-16)"
+                },
+                "description": "Insteon Hub passwuert \u00e4nneren",
+                "title": "Insteon"
+            },
+            "change_hub_config": {
+                "data": {
+                    "host": "IP Adresse",
+                    "password": "Passwuert",
+                    "port": "Port",
+                    "username": "Benotzernumm"
+                },
+                "description": "Insteon Hub Verbindungs Informatiounen \u00e4nneren. Du muss Home Assistant no der \u00c4nnerung fr\u00ebsch starten. D\u00ebst \u00e4nnert net d'Konfiguratioun vum Hub selwer. Fir d'Konfiguratioun vum Hub ze \u00e4nnere benotz d'Hub App.",
+                "title": "Insteon"
+            },
+            "init": {
+                "data": {
+                    "add_override": "Apparat iwwerschr\u00e9iwen dob\u00e4isetzen",
+                    "add_x10": "Een X10 Apparat dob\u00e4isetzen.",
+                    "change_hub_config": "Hub Konfiguratioun \u00e4nneren.",
+                    "remove_override": "Apparat iwwerschr\u00e9iwen l\u00e4schen",
+                    "remove_x10": "Een X10 Apparat l\u00e4schen."
+                },
+                "description": "Eng Optioun auswielen fir ze konfigur\u00e9ieren",
+                "title": "Insteon"
+            },
+            "remove_override": {
+                "data": {
+                    "address": "Eng Apparat Adress auswielen fir ze l\u00e4schen"
+                },
+                "description": "Apparat iwwerschr\u00e9iwen l\u00e4schen",
+                "title": "Insteon"
+            },
+            "remove_x10": {
+                "data": {
+                    "address": "Wiel eng Adress vun egem Apparat aus fir ze l\u00e4schen"
+                },
+                "description": "Een X10 Apparat l\u00e4schen",
+                "title": "Insteon"
+            }
+        }
+    }
+}

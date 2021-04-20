@@ -1,73 +1,82 @@
 """Print links to relevant docs."""
 from .model import Info
 
+DATA = {
+    "config_flow": {
+        "title": "Config Flow",
+        "docs": "https://developers.home-assistant.io/docs/en/config_entries_config_flow_handler.html",
+    },
+    "config_flow_discovery": {
+        "title": "Discoverable Config Flow",
+        "docs": "https://developers.home-assistant.io/docs/en/config_entries_config_flow_handler.html#discoverable-integrations-that-require-no-authentication",
+    },
+    "config_flow_oauth2": {
+        "title": "OAuth2 Config Flow",
+        "docs": "https://developers.home-assistant.io/docs/en/next/config_entries_config_flow_handler.html#configuration-via-oauth2",
+    },
+    "device_action": {
+        "title": "Device Action",
+        "docs": "https://developers.home-assistant.io/docs/en/device_automation_action.html",
+    },
+    "device_condition": {
+        "title": "Device Condition",
+        "docs": "https://developers.home-assistant.io/docs/en/device_automation_condition.html",
+    },
+    "device_trigger": {
+        "title": "Device Trigger",
+        "docs": "https://developers.home-assistant.io/docs/en/device_automation_trigger.html",
+    },
+    "integration": {
+        "title": "Integration",
+        "docs": "https://developers.home-assistant.io/docs/en/creating_integration_file_structure.html",
+    },
+    "reproduce_state": {
+        "title": "Reproduce State",
+        "docs": "https://developers.home-assistant.io/docs/en/reproduce_state_index.html",
+        "extra": "You will now need to update the code to make sure that every attribute that can occur in the state will cause the right service to be called.",
+    },
+    "significant_change": {
+        "title": "Significant Change",
+        "docs": "https://developers.home-assistant.io/docs/en/significant_change_index.html",
+        "extra": "You will now need to update the code to make sure that entities with different device classes are correctly considered.",
+    },
+}
+
 
 def print_relevant_docs(template: str, info: Info) -> None:
     """Print relevant docs."""
-    if template == "integration":
+    data = DATA[template]
+
+    print()
+    print("**************************")
+    print()
+    print()
+    print(f"{data['title']} code has been generated")
+    print()
+    if info.files_added:
+        print("Added the following files:")
+        for file in info.files_added:
+            print(f"- {file}")
+        print()
+
+    if info.tests_added:
+        print("Added the following tests:")
+        for file in info.tests_added:
+            print(f"- {file}")
+        print()
+
+    if info.examples_added:
         print(
-            f"""
-Your integration has been created at {info.integration_dir} . Next step is to fill in the blanks for the code marked with TODO.
-
-For a breakdown of each file, check the developer documentation at:
-https://developers.home-assistant.io/docs/en/creating_integration_file_structure.html
-"""
+            "Because some files already existed, we added the following example files. Please copy the relevant code to the existing files."
         )
+        for file in info.examples_added:
+            print(f"- {file}")
+        print()
 
-    elif template == "config_flow":
-        print(
-            f"""
-The config flow has been added to the {info.domain} integration. Next step is to fill in the blanks for the code marked with TODO.
-"""
-        )
+    print(
+        "The next step is to look at the files and deal with all areas marked as TODO."
+    )
 
-    elif template == "reproduce_state":
-        print(
-            f"""
-Reproduce state code has been added to the {info.domain} integration:
- - {info.integration_dir / "reproduce_state.py"}
- - {info.tests_dir / "test_reproduce_state.py"}
-
-You will now need to update the code to make sure that every attribute
-that can occur in the state will cause the right service to be called.
-"""
-        )
-
-    elif template == "device_trigger":
-        print(
-            f"""
-Device trigger base has been added to the {info.domain} integration:
- - {info.integration_dir / "device_trigger.py"}
- - {info.integration_dir / "strings.json"} (translations)
- - {info.tests_dir / "test_device_trigger.py"}
-
-You will now need to update the code to make sure that relevant triggers
-are exposed.
-"""
-        )
-
-    elif template == "device_condition":
-        print(
-            f"""
-Device condition base has been added to the {info.domain} integration:
- - {info.integration_dir / "device_condition.py"}
- - {info.integration_dir / "strings.json"} (translations)
- - {info.tests_dir / "test_device_condition.py"}
-
-You will now need to update the code to make sure that relevant condtions
-are exposed.
-"""
-        )
-
-    elif template == "device_action":
-        print(
-            f"""
-Device action base has been added to the {info.domain} integration:
- - {info.integration_dir / "device_action.py"}
- - {info.integration_dir / "strings.json"} (translations)
- - {info.tests_dir / "test_device_action.py"}
-
-You will now need to update the code to make sure that relevant services
-are exposed as actions.
-"""
-        )
+    if "extra" in data:
+        print()
+        print(data["extra"])

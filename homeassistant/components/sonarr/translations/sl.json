@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "ssl": "Uporablja SSL certifikat",
+                    "verify_ssl": "Preverite SSL certifikat"
+                }
+            }
+        }
+    }
+}

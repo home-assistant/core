@@ -7,7 +7,7 @@ trigger:
     - dev
 pr: none
 schedules:
-  - cron: "30 0 * * *"
+  - cron: "0 0 * * *"
     displayName: "translation update"
     branches:
       include:
@@ -30,14 +30,14 @@ jobs:
     vmImage: 'ubuntu-latest'
   steps:
   - task: UsePythonVersion@0
-    displayName: 'Use Python 3.7'
+    displayName: 'Use Python 3.8'
     inputs:
-      versionSpec: '3.7'
+      versionSpec: '3.8'
   - script: |
       export LOKALISE_TOKEN="$(lokaliseToken)"
       export AZURE_BRANCH="$(Build.SourceBranchName)"
 
-      ./script/translations_upload
+      python3 -m script.translations upload
     displayName: 'Upload Translation'
 
 - job: 'Download'
@@ -54,9 +54,8 @@ jobs:
   - template: templates/azp-step-git-init.yaml@azure
   - script: |
       export LOKALISE_TOKEN="$(lokaliseToken)"
-      export AZURE_BRANCH="$(Build.SourceBranchName)"
 
-      ./script/translations_download
+      python3 -m script.translations download
     displayName: 'Download Translation'
   - script: |
       git checkout dev

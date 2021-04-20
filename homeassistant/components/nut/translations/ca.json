@@ -1,0 +1,50 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "resources": {
+                "data": {
+                    "resources": "Recursos"
+                },
+                "title": "Selecciona els recursos a monitoritzar"
+            },
+            "ups": {
+                "data": {
+                    "alias": "\u00c0lies",
+                    "resources": "Recursos"
+                },
+                "title": "Selecciona el SAI (UPS) a monitoritzar"
+            },
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "password": "Contrasenya",
+                    "port": "Port",
+                    "username": "Nom d'usuari"
+                },
+                "title": "No s'ha pogut connectar amb el servidor NUT"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "resources": "Recursos",
+                    "scan_interval": "Interval d'escaneig (segons)"
+                },
+                "description": "Selecciona els recursos del sensor."
+            }
+        }
+    }
+}

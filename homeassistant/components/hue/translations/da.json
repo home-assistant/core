@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "Alle Philips Hue-broer er allerede konfigureret",
+            "already_configured": "Bridgen er allerede konfigureret",
+            "already_in_progress": "Bro-konfiguration er allerede i gang.",
+            "cannot_connect": "Kunne ikke oprette forbindelse til bridgen",
+            "discover_timeout": "Ingen Philips Hue-bro fundet",
+            "no_bridges": "Ingen Philips Hue-broer fundet",
+            "not_hue_bridge": "Ikke en Hue-bro",
+            "unknown": "Ukendt fejl opstod"
+        },
+        "error": {
+            "linking": "Der opstod en ukendt linkfejl.",
+            "register_failed": "Det lykkedes ikke at registrere, pr\u00f8v igen"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": "V\u00e6rt"
+                },
+                "title": "V\u00e6lg Hue bridge"
+            },
+            "link": {
+                "description": "Tryk p\u00e5 knappen p\u00e5 broen for at registrere Philips Hue med Home Assistant. \n\n ![Placering af knap p\u00e5 bro](/static/images/config_philips_hue.jpg)",
+                "title": "Forbind Hub"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "F\u00f8rste knap",
+            "button_2": "Anden knap",
+            "button_3": "Tredje knap",
+            "button_4": "Fjerde knap",
+            "dim_down": "D\u00e6mp ned",
+            "dim_up": "D\u00e6mp op",
+            "turn_off": "Sluk",
+            "turn_on": "T\u00e6nd"
+        },
+        "trigger_type": {
+            "remote_button_long_release": "\"{subtype}\"-knappen frigivet efter langt tryk",
+            "remote_button_short_press": "\"{subtype}\"-knappen trykket p\u00e5",
+            "remote_button_short_release": "\"{subtype}\"-knappen frigivet"
+        }
+    }
+}

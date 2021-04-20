@@ -1,16 +1,17 @@
 """Minio component."""
+from __future__ import annotations
+
 import logging
 import os
-import threading
 from queue import Queue
-from typing import List
+import threading
 
 import voluptuous as vol
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
 
-from .minio_helper import create_minio_client, MinioEventThread
+from .minio_helper import MinioEventThread, create_minio_client
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -124,7 +125,7 @@ def setup(hass, config):
     def _render_service_value(service, key):
         value = service.data[key]
         value.hass = hass
-        return value.async_render()
+        return value.async_render(parse_result=False)
 
     def put_file(service):
         """Upload file service."""
@@ -170,7 +171,7 @@ def get_minio_endpoint(host: str, port: int) -> str:
 
 
 class QueueListener(threading.Thread):
-    """Forward events from queue into HASS event bus."""
+    """Forward events from queue into Home Assistant event bus."""
 
     def __init__(self, hass):
         """Create queue."""
@@ -179,7 +180,7 @@ class QueueListener(threading.Thread):
         self._queue = Queue()
 
     def run(self):
-        """Listen to queue events, and forward them to HASS event bus."""
+        """Listen to queue events, and forward them to Home Assistant event bus."""
         _LOGGER.info("Running QueueListener")
         while True:
             event = self._queue.get()
@@ -230,7 +231,7 @@ class MinioListener:
         bucket_name: str,
         prefix: str,
         suffix: str,
-        events: List[str],
+        events: list[str],
     ):
         """Create Listener."""
         self._queue = queue

@@ -1,18 +1,19 @@
 """Get ride details and liveboard details for NMBS (Belgian railway)."""
 import logging
 
+from pyrail import iRail
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     CONF_NAME,
     CONF_SHOW_ON_MAP,
+    TIME_MINUTES,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,12 +46,12 @@ def get_time_until(departure_time=None):
         return 0
 
     delta = dt_util.utc_from_timestamp(int(departure_time)) - dt_util.now()
-    return round((delta.total_seconds() / 60))
+    return round(delta.total_seconds() / 60)
 
 
 def get_delay_in_minutes(delay=0):
     """Get the delay in minutes from a delay in seconds."""
-    return round((int(delay) / 60))
+    return round(int(delay) / 60)
 
 
 def get_ride_duration(departure_time, arrival_time, delay=0):
@@ -58,13 +59,12 @@ def get_ride_duration(departure_time, arrival_time, delay=0):
     duration = dt_util.utc_from_timestamp(
         int(arrival_time)
     ) - dt_util.utc_from_timestamp(int(departure_time))
-    duration_time = int(round((duration.total_seconds() / 60)))
+    duration_time = int(round(duration.total_seconds() / 60))
     return duration_time + get_delay_in_minutes(delay)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the NMBS sensor with iRail API."""
-    from pyrail import iRail
 
     api_client = iRail()
 
@@ -80,26 +80,36 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     ]
 
     if station_live is not None:
-        sensors.append(NMBSLiveBoard(api_client, station_live))
+        sensors.append(
+            NMBSLiveBoard(api_client, station_live, station_from, station_to)
+        )
 
     add_entities(sensors, True)
 
 
-class NMBSLiveBoard(Entity):
+class NMBSLiveBoard(SensorEntity):
     """Get the next train from a station's liveboard."""
 
-    def __init__(self, api_client, live_station):
+    def __init__(self, api_client, live_station, station_from, station_to):
         """Initialize the sensor for getting liveboard data."""
         self._station = live_station
         self._api_client = api_client
-
+        self._station_from = station_from
+        self._station_to = station_to
         self._attrs = {}
         self._state = None
 
     @property
     def name(self):
         """Return the sensor default name."""
-        return "NMBS Live"
+        return f"NMBS Live ({self._station})"
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        unique_id = f"{self._station}_{self._station_from}_{self._station_to}"
+
+        return f"nmbs_live_{unique_id}"
 
     @property
     def icon(self):
@@ -115,7 +125,7 @@ class NMBSLiveBoard(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the sensor attributes if data is available."""
         if self._state is None or not self._attrs:
             return None
@@ -125,6 +135,7 @@ class NMBSLiveBoard(Entity):
 
         attrs = {
             "departure": f"In {departure} minutes",
+            "departure_minutes": departure,
             "extra_train": int(self._attrs["isExtra"]) > 0,
             "vehicle_id": self._attrs["vehicle"],
             "monitored_station": self._station,
@@ -133,21 +144,26 @@ class NMBSLiveBoard(Entity):
 
         if delay > 0:
             attrs["delay"] = f"{delay} minutes"
+            attrs["delay_minutes"] = delay
 
         return attrs
 
     def update(self):
         """Set the state equal to the next departure."""
         liveboard = self._api_client.get_liveboard(self._station)
+
+        if liveboard is None or not liveboard["departures"]:
+            return
+
         next_departure = liveboard["departures"]["departure"][0]
 
         self._attrs = next_departure
-        self._state = "Track {} - {}".format(
-            next_departure["platform"], next_departure["station"]
+        self._state = (
+            f"Track {next_departure['platform']} - {next_departure['station']}"
         )
 
 
-class NMBSSensor(Entity):
+class NMBSSensor(SensorEntity):
     """Get the the total travel time for a given connection."""
 
     def __init__(
@@ -172,7 +188,7 @@ class NMBSSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return "min"
+        return TIME_MINUTES
 
     @property
     def icon(self):
@@ -185,7 +201,7 @@ class NMBSSensor(Entity):
         return "mdi:train"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return sensor attributes if data is available."""
         if self._state is None or not self._attrs:
             return None
@@ -195,6 +211,7 @@ class NMBSSensor(Entity):
 
         attrs = {
             "departure": f"In {departure} minutes",
+            "departure_minutes": departure,
             "destination": self._station_to,
             "direction": self._attrs["departure"]["direction"]["name"],
             "platform_arriving": self._attrs["arrival"]["platform"],
@@ -219,6 +236,7 @@ class NMBSSensor(Entity):
 
         if delay > 0:
             attrs["delay"] = f"{delay} minutes"
+            attrs["delay_minutes"] = delay
 
         return attrs
 
@@ -250,6 +268,9 @@ class NMBSSensor(Entity):
         connections = self._api_client.get_connections(
             self._station_from, self._station_to
         )
+
+        if connections is None or not connections["connection"]:
+            return
 
         if int(connections["connection"][0]["departure"]["left"]) > 0:
             next_connection = connections["connection"][1]

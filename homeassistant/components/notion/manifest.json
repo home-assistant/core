@@ -3,11 +3,7 @@
   "name": "Notion",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/notion",
-  "requirements": [
-    "aionotion==1.1.0"
-  ],
-  "dependencies": [],
-  "codeowners": [
-    "@bachya"
-  ]
+  "requirements": ["aionotion==1.1.0"],
+  "codeowners": ["@bachya"],
+  "iot_class": "cloud_polling"
 }

@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado",
+            "already_in_progress": "O processo de configura\u00e7\u00e3o j\u00e1 est\u00e1 a decorrer",
+            "cannot_connect": "Falha na liga\u00e7\u00e3o"
+        },
+        "error": {
+            "one": "uma",
+            "other": "mais"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Servidor",
+                    "port": "Porto"
+                },
+                "description": "Por favor, introduza o nome ou o endere\u00e7o IP do dispositivo."
+            }
+        }
+    }
+}

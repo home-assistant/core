@@ -1,21 +1,25 @@
 """Numeric integration of data coming from a source sensor over time."""
+from decimal import Decimal, DecimalException
 import logging
 
-from decimal import Decimal, DecimalException
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
-    CONF_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
-    STATE_UNKNOWN,
+    CONF_METHOD,
+    CONF_NAME,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    TIME_DAYS,
+    TIME_HOURS,
+    TIME_MINUTES,
+    TIME_SECONDS,
 )
 from homeassistant.core import callback
-from homeassistant.helpers.event import async_track_state_change
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.restore_state import RestoreEntity
-
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -28,7 +32,6 @@ CONF_ROUND_DIGITS = "round"
 CONF_UNIT_PREFIX = "unit_prefix"
 CONF_UNIT_TIME = "unit_time"
 CONF_UNIT_OF_MEASUREMENT = "unit"
-CONF_METHOD = "method"
 
 TRAPEZOIDAL_METHOD = "trapezoidal"
 LEFT_METHOD = "left"
@@ -36,10 +39,15 @@ RIGHT_METHOD = "right"
 INTEGRATION_METHOD = [TRAPEZOIDAL_METHOD, LEFT_METHOD, RIGHT_METHOD]
 
 # SI Metric prefixes
-UNIT_PREFIXES = {None: 1, "k": 10 ** 3, "G": 10 ** 6, "T": 10 ** 9}
+UNIT_PREFIXES = {None: 1, "k": 10 ** 3, "M": 10 ** 6, "G": 10 ** 9, "T": 10 ** 12}
 
 # SI Time prefixes
-UNIT_TIME = {"s": 1, "min": 60, "h": 60 * 60, "d": 24 * 60 * 60}
+UNIT_TIME = {
+    TIME_SECONDS: 1,
+    TIME_MINUTES: 60,
+    TIME_HOURS: 60 * 60,
+    TIME_DAYS: 24 * 60 * 60,
+}
 
 ICON = "mdi:chart-histogram"
 
@@ -51,7 +59,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_SOURCE_SENSOR): cv.entity_id,
         vol.Optional(CONF_ROUND_DIGITS, default=DEFAULT_ROUND): vol.Coerce(int),
         vol.Optional(CONF_UNIT_PREFIX, default=None): vol.In(UNIT_PREFIXES),
-        vol.Optional(CONF_UNIT_TIME, default="h"): vol.In(UNIT_TIME),
+        vol.Optional(CONF_UNIT_TIME, default=TIME_HOURS): vol.In(UNIT_TIME),
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
         vol.Optional(CONF_METHOD, default=TRAPEZOIDAL_METHOD): vol.In(
             INTEGRATION_METHOD
@@ -75,7 +83,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([integral])
 
 
-class IntegrationSensor(RestoreEntity):
+class IntegrationSensor(RestoreEntity, SensorEntity):
     """Representation of an integration sensor."""
 
     def __init__(
@@ -97,8 +105,8 @@ class IntegrationSensor(RestoreEntity):
         self._name = name if name is not None else f"{source_entity} integral"
 
         if unit_of_measurement is None:
-            self._unit_template = "{}{}{}".format(
-                "" if unit_prefix is None else unit_prefix, "{}", unit_time
+            self._unit_template = (
+                f"{'' if unit_prefix is None else unit_prefix}{{}}{unit_time}"
             )
             # we postpone the definition of unit_of_measurement to later
             self._unit_of_measurement = None
@@ -119,8 +127,10 @@ class IntegrationSensor(RestoreEntity):
                 _LOGGER.warning("Could not restore last state: %s", err)
 
         @callback
-        def calc_integration(entity, old_state, new_state):
+        def calc_integration(event):
             """Handle the sensor state changes."""
+            old_state = event.data.get("old_state")
+            new_state = event.data.get("new_state")
             if (
                 old_state is None
                 or old_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]
@@ -164,9 +174,11 @@ class IntegrationSensor(RestoreEntity):
                 _LOGGER.error("Could not calculate integral: %s", err)
             else:
                 self._state += integral
-                self.async_schedule_update_ha_state()
+                self.async_write_ha_state()
 
-        async_track_state_change(self.hass, self._sensor_source_id, calc_integration)
+        async_track_state_change_event(
+            self.hass, [self._sensor_source_id], calc_integration
+        )
 
     @property
     def name(self):
@@ -189,10 +201,9 @@ class IntegrationSensor(RestoreEntity):
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
-        state_attr = {ATTR_SOURCE_ID: self._sensor_source_id}
-        return state_attr
+        return {ATTR_SOURCE_ID: self._sensor_source_id}
 
     @property
     def icon(self):

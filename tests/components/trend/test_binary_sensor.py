@@ -1,11 +1,14 @@
 """The test for the Trend sensor platform."""
 from datetime import timedelta
+from os import path
 from unittest.mock import patch
 
-from homeassistant import setup
+from homeassistant import config as hass_config, setup
+from homeassistant.components.trend import DOMAIN
+from homeassistant.const import SERVICE_RELOAD
 import homeassistant.util.dt as dt_util
 
-from tests.common import get_test_home_assistant, assert_setup_component
+from tests.common import assert_setup_component, get_test_home_assistant
 
 
 class TestTrendBinarySensor:
@@ -35,6 +38,7 @@ class TestTrendBinarySensor:
                 }
             },
         )
+        self.hass.block_till_done()
 
         self.hass.states.set("sensor.test_state", "1")
         self.hass.block_till_done()
@@ -62,6 +66,7 @@ class TestTrendBinarySensor:
                 }
             },
         )
+        self.hass.block_till_done()
 
         now = dt_util.utcnow()
         for val in [10, 0, 20, 30]:
@@ -103,6 +108,7 @@ class TestTrendBinarySensor:
                 }
             },
         )
+        self.hass.block_till_done()
 
         now = dt_util.utcnow()
         for val in [30, 20, 30, 10]:
@@ -137,6 +143,7 @@ class TestTrendBinarySensor:
                 }
             },
         )
+        self.hass.block_till_done()
 
         self.hass.states.set("sensor.test_state", "2")
         self.hass.block_till_done()
@@ -162,6 +169,7 @@ class TestTrendBinarySensor:
                 }
             },
         )
+        self.hass.block_till_done()
 
         self.hass.states.set("sensor.test_state", "1")
         self.hass.block_till_done()
@@ -187,6 +195,7 @@ class TestTrendBinarySensor:
                 }
             },
         )
+        self.hass.block_till_done()
 
         self.hass.states.set("sensor.test_state", "2")
         self.hass.block_till_done()
@@ -212,6 +221,7 @@ class TestTrendBinarySensor:
                 }
             },
         )
+        self.hass.block_till_done()
         self.hass.states.set("sensor.test_state", "State", {"attr": "1"})
         self.hass.block_till_done()
         self.hass.states.set("sensor.test_state", "State", {"attr": "2"})
@@ -236,6 +246,7 @@ class TestTrendBinarySensor:
                 }
             },
         )
+        self.hass.block_till_done()
 
         self.hass.states.set("sensor.test_state", "State", {"attr": "2"})
         self.hass.block_till_done()
@@ -262,6 +273,7 @@ class TestTrendBinarySensor:
                 }
             },
         )
+        self.hass.block_till_done()
 
         for val in [0, 1, 2, 3, 2, 1]:
             self.hass.states.set("sensor.test_state", val)
@@ -285,6 +297,7 @@ class TestTrendBinarySensor:
                 }
             },
         )
+        self.hass.block_till_done()
 
         self.hass.states.set("sensor.test_state", "Non")
         self.hass.block_till_done()
@@ -310,6 +323,7 @@ class TestTrendBinarySensor:
                 }
             },
         )
+        self.hass.block_till_done()
 
         self.hass.states.set("sensor.test_state", "State", {"attr": "2"})
         self.hass.block_till_done()
@@ -359,3 +373,47 @@ class TestTrendBinarySensor:
                 self.hass, "binary_sensor", {"binary_sensor": {"platform": "trend"}}
             )
         assert self.hass.states.all() == []
+
+
+async def test_reload(hass):
+    """Verify we can reload trend sensors."""
+    hass.states.async_set("sensor.test_state", 1234)
+
+    await setup.async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "trend",
+                "sensors": {"test_trend_sensor": {"entity_id": "sensor.test_state"}},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 2
+
+    assert hass.states.get("binary_sensor.test_trend_sensor")
+
+    yaml_path = path.join(
+        _get_fixtures_base_path(),
+        "fixtures",
+        "trend/configuration.yaml",
+    )
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 2
+
+    assert hass.states.get("binary_sensor.test_trend_sensor") is None
+    assert hass.states.get("binary_sensor.second_test_trend_sensor")
+
+
+def _get_fixtures_base_path():
+    return path.dirname(path.dirname(path.dirname(__file__)))

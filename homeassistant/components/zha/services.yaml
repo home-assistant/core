@@ -1,7 +1,7 @@
 # Describes the format for available zha services
 
 permit:
-  description: Allow nodes to join the ZigBee network.
+  description: Allow nodes to join the Zigbee network.
   fields:
     duration:
       description: Time to permit joins, in seconds
@@ -9,9 +9,18 @@ permit:
     ieee_address:
       description: IEEE address of the node permitting new joins
       example: "00:0d:6f:00:05:7d:2d:34"
+    source_ieee:
+      description: IEEE address of the joining device (must be used with install code)
+      example: "00:0a:bf:00:01:10:23:35"
+    install_code:
+      description: Install code of the joining device (must be used with source_ieee)
+      example: "1234-5678-1234-5678-AABB-CCDD-AABB-CCDD-EEFF"
+    qr_code:
+      description: value of the QR install code (different between vendors)
+      example: "Z:000D6FFFFED4163B$I:52797BF4A5084DAA8E1712B61741CA024051"
 
 remove:
-  description: Remove a node from the ZigBee network.
+  description: Remove a node from the Zigbee network.
   fields:
     ieee_address:
       description: IEEE address of the node to remove
@@ -78,7 +87,27 @@ issue_zigbee_cluster_command:
       example: "server"
     args:
       description: args to pass to the command
-      example: {}
+      example: "[arg1, arg2, argN]"
+    manufacturer:
+      description: manufacturer code
+      example: 0x00FC
+
+issue_zigbee_group_command:
+  description: >-
+    Issue command on the specified cluster on the specified group.
+  fields:
+    group:
+      description: Hexadecimal address of the group
+      example: 0x0222
+    cluster_id:
+      description: ZCL cluster to send command to
+      example: 6
+    command:
+      description: id of the command to execute
+      example: 0
+    args:
+      description: args to pass to the command
+      example: "[arg1, arg2, argN]"
     manufacturer:
       description: manufacturer code
       example: 0x00FC
@@ -112,11 +141,11 @@ warning_device_warn:
       example: "00:0d:6f:00:05:7d:2d:34"
     mode:
       description: >-
-        The Warning Mode field is used as an 4-bit enumeration, can have one of the values defined below in table 8-20 of the ZCL spec. The exact behavior of the WD device in each mode is according to the relevant security standards.
+        The Warning Mode field is used as an 4-bit enumeration, can have one of the values 0-6 defined below in table 8-20 of the ZCL spec. The exact behavior of the WD device in each mode is according to the relevant security standards.
       example: 1
     strobe:
       description: >-
-        The Strobe field is used as a 2-bit enumeration, and determines if the visual indication is required in addition to the audible siren, as indicated in Table 8-21 of the ZCL spec. If the strobe field is “1” and the Warning Mode is “0” (“Stop”) then only the strobe is activated.
+        The Strobe field is used as a 2-bit enumeration, and determines if the visual indication is required in addition to the audible siren, as indicated in Table 8-21 of the ZCL spec. "0" means no strobe, "1" means strobe. If the strobe field is “1” and the Warning Mode is “0” (“Stop”) then only the strobe is activated.
       example: 1
     level:
       description: >-
@@ -124,13 +153,84 @@ warning_device_warn:
       example: 2
     duration:
       description: >-
-        Requested duration of warning, in seconds. If both Strobe and Warning Mode are "0" this field SHALL be ignored.
+        Requested duration of warning, in seconds (16 bit). If both Strobe and Warning Mode are "0" this field SHALL be ignored.
       example: 2
     duty_cycle:
       description: >-
         Indicates the length of the flash cycle. This provides a means of varying the flash duration for different alarm types (e.g., fire, police, burglar). Valid range is 0-100 in increments of 10. All other values SHALL be rounded to the nearest valid value. Strobe SHALL calculate duty cycle over a duration of one second. The ON state SHALL precede the OFF state. For example, if Strobe Duty Cycle Field specifies “40,” then the strobe SHALL flash ON for 4/10ths of a second and then turn OFF for 6/10ths of a second.
-      example: 2
+      example: 50
     intensity:
       description: >-
         Indicates the intensity of the strobe as shown in Table 8-23 of the ZCL spec. This attribute is designed to vary the output of the strobe (i.e., brightness) and not its frequency, which is detailed in section 8.4.2.3.1.6 of the ZCL spec.
       example: 2
+
+clear_lock_user_code:
+  name: Clear lock user
+  description: Clear a user code from a lock
+  target:
+    entity:
+      domain: lock
+      integration: zha
+  fields:
+    code_slot:
+      name: Code slot
+      description: Code slot to clear code from
+      required: true
+      example: 1
+      selector:
+        text:
+
+enable_lock_user_code:
+  name: Enable lock user
+  description: Enable a user code on a lock
+  target:
+    entity:
+      domain: lock
+      integration: zha
+  fields:
+    code_slot:
+      name: Code slot
+      description: Code slot to enable
+      required: true
+      example: 1
+      selector:
+        text:
+
+disable_lock_user_code:
+  name: Disable lock user
+  description: Disable a user code on a lock
+  target:
+    entity:
+      domain: lock
+      integration: zha
+  fields:
+    code_slot:
+      name: Code slot
+      description: Code slot to disable
+      required: true
+      example: 1
+      selector:
+        text:
+
+set_lock_user_code:
+  name: Set lock user code
+  description: Set a user code on a lock
+  target:
+    entity:
+      domain: lock
+      integration: zha
+  fields:
+    code_slot:
+      name: Code slot
+      description: Code slot to set the code in
+      required: true
+      example: 1
+      selector:
+        text:
+    user_code:
+      name: Code
+      description: Code to set
+      required: true
+      example: 1234
+      selector:
+        text:

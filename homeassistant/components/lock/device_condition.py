@@ -1,21 +1,23 @@
 """Provides device automations for Lock."""
-from typing import List
+from __future__ import annotations
+
 import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_CONDITION,
-    CONF_DOMAIN,
-    CONF_TYPE,
     CONF_DEVICE_ID,
+    CONF_DOMAIN,
     CONF_ENTITY_ID,
+    CONF_TYPE,
     STATE_LOCKED,
     STATE_UNLOCKED,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import condition, config_validation as cv, entity_registry
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType
+
 from . import DOMAIN
 
 CONDITION_TYPES = {"is_locked", "is_unlocked"}
@@ -28,7 +30,7 @@ CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
 )
 
 
-async def async_get_conditions(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_conditions(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device conditions for Lock devices."""
     registry = await entity_registry.async_get_registry(hass)
     conditions = []
@@ -61,6 +63,7 @@ async def async_get_conditions(hass: HomeAssistant, device_id: str) -> List[dict
     return conditions
 
 
+@callback
 def async_condition_from_config(
     config: ConfigType, config_validation: bool
 ) -> condition.ConditionCheckerType:

@@ -1,15 +1,16 @@
 """HTTP views to interact with the entity registry."""
 import voluptuous as vol
 
-from homeassistant.core import callback
-from homeassistant.helpers.entity_registry import async_get_registry
+from homeassistant import config_entries
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
 from homeassistant.components.websocket_api.decorators import (
     async_response,
     require_admin,
 )
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_registry import async_get_registry
 
 
 async def async_setup(hass):
@@ -57,7 +58,9 @@ async def websocket_get_entity(hass, connection, msg):
         )
         return
 
-    connection.send_message(websocket_api.result_message(msg["id"], _entry_dict(entry)))
+    connection.send_message(
+        websocket_api.result_message(msg["id"], _entry_ext_dict(entry))
+    )
 
 
 @require_admin
@@ -68,6 +71,8 @@ async def websocket_get_entity(hass, connection, msg):
         vol.Required("entity_id"): cv.entity_id,
         # If passed in, we update value. Passing None will remove old value.
         vol.Optional("name"): vol.Any(str, None),
+        vol.Optional("icon"): vol.Any(str, None),
+        vol.Optional("area_id"): vol.Any(str, None),
         vol.Optional("new_entity_id"): str,
         # We only allow setting disabled_by user via API.
         vol.Optional("disabled_by"): vol.Any("user", None),
@@ -88,21 +93,34 @@ async def websocket_update_entity(hass, connection, msg):
 
     changes = {}
 
-    if "name" in msg:
-        changes["name"] = msg["name"]
-
-    if "disabled_by" in msg:
-        changes["disabled_by"] = msg["disabled_by"]
+    for key in ("name", "icon", "area_id", "disabled_by"):
+        if key in msg:
+            changes[key] = msg[key]
 
     if "new_entity_id" in msg and msg["new_entity_id"] != msg["entity_id"]:
         changes["new_entity_id"] = msg["new_entity_id"]
         if hass.states.get(msg["new_entity_id"]) is not None:
             connection.send_message(
                 websocket_api.error_message(
-                    msg["id"], "invalid_info", "Entity is already registered"
+                    msg["id"],
+                    "invalid_info",
+                    "Entity with this ID is already registered",
                 )
             )
             return
+
+    if "disabled_by" in msg and msg["disabled_by"] is None:
+        entity = registry.entities[msg["entity_id"]]
+        if entity.device_id:
+            device_registry = await hass.helpers.device_registry.async_get_registry()
+            device = device_registry.async_get(entity.device_id)
+            if device.disabled:
+                connection.send_message(
+                    websocket_api.error_message(
+                        msg["id"], "invalid_info", "Device is disabled"
+                    )
+                )
+                return
 
     try:
         if changes:
@@ -111,10 +129,15 @@ async def websocket_update_entity(hass, connection, msg):
         connection.send_message(
             websocket_api.error_message(msg["id"], "invalid_info", str(err))
         )
-    else:
-        connection.send_message(
-            websocket_api.result_message(msg["id"], _entry_dict(entry))
-        )
+        return
+    result = {"entity_entry": _entry_ext_dict(entry)}
+    if "disabled_by" in changes and changes["disabled_by"] is None:
+        config_entry = hass.config_entries.async_get_entry(entry.config_entry_id)
+        if config_entry and not config_entry.supports_unload:
+            result["require_restart"] = True
+        else:
+            result["reload_delay"] = config_entries.RELOAD_AFTER_UPDATE_DELAY
+    connection.send_result(msg["id"], result)
 
 
 @require_admin
@@ -148,8 +171,21 @@ def _entry_dict(entry):
     return {
         "config_entry_id": entry.config_entry_id,
         "device_id": entry.device_id,
+        "area_id": entry.area_id,
         "disabled_by": entry.disabled_by,
         "entity_id": entry.entity_id,
         "name": entry.name,
+        "icon": entry.icon,
         "platform": entry.platform,
     }
+
+
+@callback
+def _entry_ext_dict(entry):
+    """Convert entry to API format."""
+    data = _entry_dict(entry)
+    data["original_name"] = entry.original_name
+    data["original_icon"] = entry.original_icon
+    data["unique_id"] = entry.unique_id
+    data["capabilities"] = entry.capabilities
+    return data

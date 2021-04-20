@@ -4,6 +4,7 @@ from unittest.mock import patch
 import pytest
 
 import homeassistant.components.google as google
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.setup import async_setup_component
 
 
@@ -24,7 +25,7 @@ def mock_google_setup(hass):
 
 async def test_setup_component(hass, google_setup):
     """Test setup component."""
-    config = {"google": {"client_id": "id", "client_secret": "secret"}}
+    config = {"google": {CONF_CLIENT_ID: "id", CONF_CLIENT_SECRET: "secret"}}
 
     assert await async_setup_component(hass, "google", config)
 
@@ -51,8 +52,8 @@ async def test_found_calendar(hass, google_setup, mock_next_event, test_calendar
     """Test when a calendar is found."""
     config = {
         "google": {
-            "client_id": "id",
-            "client_secret": "secret",
+            CONF_CLIENT_ID: "id",
+            CONF_CLIENT_SECRET: "secret",
             "track_new_calendar": True,
         }
     }

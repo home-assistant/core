@@ -1,70 +1,99 @@
 """Support for August lock."""
-from datetime import timedelta
 import logging
 
-from august.activity import ActivityType
-from august.lock import LockStatus
+from yalexs.activity import ActivityType
+from yalexs.lock import LockStatus
+from yalexs.util import update_lock_detail_from_activity
 
-from homeassistant.components.lock import LockDevice
+from homeassistant.components.lock import ATTR_CHANGED_BY, LockEntity
 from homeassistant.const import ATTR_BATTERY_LEVEL
+from homeassistant.core import callback
+from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import DATA_AUGUST
+from .const import DATA_AUGUST, DOMAIN
+from .entity import AugustEntityMixin
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=5)
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up August locks."""
-    data = hass.data[DATA_AUGUST]
+    data = hass.data[DOMAIN][config_entry.entry_id][DATA_AUGUST]
     devices = []
 
     for lock in data.locks:
         _LOGGER.debug("Adding lock for %s", lock.device_name)
         devices.append(AugustLock(data, lock))
 
-    add_entities(devices, True)
+    async_add_entities(devices, True)
 
 
-class AugustLock(LockDevice):
+class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
     """Representation of an August lock."""
 
-    def __init__(self, data, lock):
+    def __init__(self, data, device):
         """Initialize the lock."""
+        super().__init__(data, device)
         self._data = data
-        self._lock = lock
+        self._device = device
         self._lock_status = None
-        self._lock_detail = None
         self._changed_by = None
         self._available = False
+        self._update_from_data()
 
-    def lock(self, **kwargs):
+    async def async_lock(self, **kwargs):
         """Lock the device."""
-        self._data.lock(self._lock.device_id)
+        await self._call_lock_operation(self._data.async_lock)
 
-    def unlock(self, **kwargs):
+    async def async_unlock(self, **kwargs):
         """Unlock the device."""
-        self._data.unlock(self._lock.device_id)
+        await self._call_lock_operation(self._data.async_unlock)
 
-    def update(self):
-        """Get the latest state of the sensor."""
-        self._lock_status = self._data.get_lock_status(self._lock.device_id)
-        self._available = self._lock_status is not None
+    async def _call_lock_operation(self, lock_operation):
+        activities = await lock_operation(self._device_id)
+        for lock_activity in activities:
+            update_lock_detail_from_activity(self._detail, lock_activity)
 
-        self._lock_detail = self._data.get_lock_detail(self._lock.device_id)
+        if self._update_lock_status_from_detail():
+            _LOGGER.debug(
+                "async_signal_device_id_update (from lock operation): %s",
+                self._device_id,
+            )
+            self._data.async_signal_device_id_update(self._device_id)
 
-        activity = self._data.get_latest_device_activity(
-            self._lock.device_id, ActivityType.LOCK_OPERATION
+    def _update_lock_status_from_detail(self):
+        self._available = self._detail.bridge_is_online
+
+        if self._lock_status != self._detail.lock_status:
+            self._lock_status = self._detail.lock_status
+            return True
+        return False
+
+    @callback
+    def _update_from_data(self):
+        """Get the latest state of the sensor and update activity."""
+        lock_activity = self._data.activity_stream.get_latest_device_activity(
+            self._device_id,
+            {ActivityType.LOCK_OPERATION, ActivityType.LOCK_OPERATION_WITHOUT_OPERATOR},
         )
 
-        if activity is not None:
-            self._changed_by = activity.operated_by
+        if lock_activity is not None:
+            self._changed_by = lock_activity.operated_by
+            update_lock_detail_from_activity(self._detail, lock_activity)
+
+        bridge_activity = self._data.activity_stream.get_latest_device_activity(
+            self._device_id, {ActivityType.BRIDGE_OPERATION}
+        )
+
+        if bridge_activity is not None:
+            update_lock_detail_from_activity(self._detail, bridge_activity)
+
+        self._update_lock_status_from_detail()
 
     @property
     def name(self):
         """Return the name of this device."""
-        return self._lock.device_name
+        return self._device.device_name
 
     @property
     def available(self):
@@ -74,7 +103,8 @@ class AugustLock(LockDevice):
     @property
     def is_locked(self):
         """Return true if device is on."""
-
+        if self._lock_status is None or self._lock_status is LockStatus.UNKNOWN:
+            return None
         return self._lock_status is LockStatus.LOCKED
 
     @property
@@ -83,14 +113,27 @@ class AugustLock(LockDevice):
         return self._changed_by
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
-        if self._lock_detail is None:
-            return None
+        attributes = {ATTR_BATTERY_LEVEL: self._detail.battery_level}
 
-        return {ATTR_BATTERY_LEVEL: self._lock_detail.battery_level}
+        if self._detail.keypad is not None:
+            attributes["keypad_battery_level"] = self._detail.keypad.battery_level
+
+        return attributes
+
+    async def async_added_to_hass(self):
+        """Restore ATTR_CHANGED_BY on startup since it is likely no longer in the activity log."""
+        await super().async_added_to_hass()
+
+        last_state = await self.async_get_last_state()
+        if not last_state:
+            return
+
+        if ATTR_CHANGED_BY in last_state.attributes:
+            self._changed_by = last_state.attributes[ATTR_CHANGED_BY]
 
     @property
     def unique_id(self) -> str:
         """Get the unique id of the lock."""
-        return f"{self._lock.device_id:s}_lock"
+        return f"{self._device_id:s}_lock"

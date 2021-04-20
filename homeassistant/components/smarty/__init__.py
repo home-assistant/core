@@ -1,12 +1,13 @@
 """Support to control a Salda Smarty XP/XV ventilation unit."""
 
 from datetime import timedelta
-
 import ipaddress
 import logging
+
+from pysmarty import Smarty
 import voluptuous as vol
 
-from homeassistant.const import CONF_NAME, CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -36,7 +37,6 @@ SIGNAL_UPDATE_SMARTY = "smarty_update"
 
 def setup(hass, config):
     """Set up the smarty environment."""
-    from pysmarty import Smarty
 
     conf = config[DOMAIN]
 
@@ -59,12 +59,12 @@ def setup(hass, config):
 
     def poll_device_update(event_time):
         """Update Smarty device."""
-        _LOGGER.debug("Updating Smarty device...")
+        _LOGGER.debug("Updating Smarty device")
         if smarty.update():
-            _LOGGER.debug("Update success...")
+            _LOGGER.debug("Update success")
             dispatcher_send(hass, SIGNAL_UPDATE_SMARTY)
         else:
-            _LOGGER.debug("Update failed...")
+            _LOGGER.debug("Update failed")
 
     track_time_interval(hass, poll_device_update, timedelta(seconds=30))
 

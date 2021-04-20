@@ -1,11 +1,38 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # Setups the repository.
 
 # Stop on errors
 set -e
 
 cd "$(dirname "$0")/.."
+
+# Add default vscode settings if not existing
+SETTINGS_FILE=./.vscode/settings.json
+SETTINGS_TEMPLATE_FILE=./.vscode/settings.default.json
+if [ ! -f "$SETTINGS_FILE" ]; then
+    echo "Copy $SETTINGS_TEMPLATE_FILE to $SETTINGS_FILE."
+    cp "$SETTINGS_TEMPLATE_FILE" "$SETTINGS_FILE"
+fi
+
+mkdir -p config
+
+if [ ! -n "$DEVCONTAINER" ];then
+  python3 -m venv venv
+  source venv/bin/activate
+fi
+
 script/bootstrap
 
 pre-commit install
-pip3 install -e .
+python3 -m pip install -e . --constraint homeassistant/package_constraints.txt
+
+hass --script ensure_config -c config
+
+if ! grep -R "logger" config/configuration.yaml >> /dev/null;then
+echo "
+logger:
+  default: info
+  logs:
+    homeassistant.components.cloud: debug
+" >> config/configuration.yaml
+fi

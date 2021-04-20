@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "unknown": "Tapahtui tuntematon virhe. Lis\u00e4tietoja on lokeissa."
+        },
+        "error": {
+            "invalid_pin_code": "Antamasi PIN-koodi ei kelpaa"
+        },
+        "step": {
+            "pairing": {
+                "data": {
+                    "pin": "PIN"
+                },
+                "description": "Kirjoita televisiossa n\u00e4kyv\u00e4 PIN-koodi",
+                "title": "Paritus"
+            },
+            "user": {
+                "data": {
+                    "host": "IP-osoite",
+                    "name": "Nimi"
+                },
+                "description": "Anna Panasonic Viera TV:n IP-osoite",
+                "title": "Television m\u00e4\u00e4ritt\u00e4minen"
+            }
+        }
+    }
+}

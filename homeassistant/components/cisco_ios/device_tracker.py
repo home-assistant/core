@@ -42,12 +42,12 @@ class CiscoDeviceScanner(DeviceScanner):
         self.host = config[CONF_HOST]
         self.username = config[CONF_USERNAME]
         self.port = config.get(CONF_PORT)
-        self.password = config.get(CONF_PASSWORD)
+        self.password = config[CONF_PASSWORD]
 
         self.last_results = {}
 
         self.success_init = self._update_info()
-        _LOGGER.info("cisco_ios scanner initialized")
+        _LOGGER.info("Initialized cisco_ios scanner")
 
     def get_device_name(self, device):
         """Get the firmware doesn't save the name of the wireless device."""
@@ -131,8 +131,7 @@ class CiscoDeviceScanner(DeviceScanner):
 
             return devices_result.decode("utf-8")
         except pxssh.ExceptionPxssh as px_e:
-            _LOGGER.error("pxssh failed on login")
-            _LOGGER.error(px_e)
+            _LOGGER.error("Failed to login via pxssh: %s", px_e)
 
         return None
 

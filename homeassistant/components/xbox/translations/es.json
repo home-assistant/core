@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Tiempo de espera agotado generando la url de autorizaci\u00f3n.",
+            "missing_configuration": "El componente no est\u00e1 configurado. Consulta la documentaci\u00f3n.",
+            "single_instance_allowed": "Ya est\u00e1 configurado. Solo es posible una \u00fanica configuraci\u00f3n."
+        },
+        "create_entry": {
+            "default": "Autenticado correctamente"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Selecciona el m\u00e9todo de autenticaci\u00f3n"
+            }
+        }
+    }
+}

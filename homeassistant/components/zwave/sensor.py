@@ -1,17 +1,10 @@
 """Support for Z-Wave sensors."""
-import logging
-from homeassistant.core import callback
-from homeassistant.components.sensor import DOMAIN, DEVICE_CLASS_BATTERY
+from homeassistant.components.sensor import DEVICE_CLASS_BATTERY, DOMAIN, SensorEntity
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from . import const, ZWaveDeviceEntity
 
-_LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old method of setting up Z-Wave sensors."""
-    pass
+from . import ZWaveDeviceEntity, const
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -44,7 +37,7 @@ def get_device(node, values, **kwargs):
     return None
 
 
-class ZWaveSensor(ZWaveDeviceEntity):
+class ZWaveSensor(ZWaveDeviceEntity, SensorEntity):
     """Representation of a Z-Wave sensor."""
 
     def __init__(self, values):
@@ -107,8 +100,6 @@ class ZWaveAlarmSensor(ZWaveSensor):
 
     COMMAND_CLASS_ALARM is what we get here.
     """
-
-    pass
 
 
 class ZWaveBatterySensor(ZWaveSensor):

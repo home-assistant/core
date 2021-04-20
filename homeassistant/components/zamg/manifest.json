@@ -1,8 +1,7 @@
 {
   "domain": "zamg",
-  "name": "Zamg",
+  "name": "Zentralanstalt f\u00fcr Meteorologie und Geodynamik (ZAMG)",
   "documentation": "https://www.home-assistant.io/integrations/zamg",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "cloud_polling"
 }

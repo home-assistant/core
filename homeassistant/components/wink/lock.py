@@ -1,10 +1,8 @@
 """Support for Wink locks."""
-import logging
-
 import pywink
 import voluptuous as vol
 
-from homeassistant.components.lock import LockDevice
+from homeassistant.components.lock import LockEntity
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
@@ -16,14 +14,12 @@ import homeassistant.helpers.config_validation as cv
 
 from . import DOMAIN, WinkDevice
 
-_LOGGER = logging.getLogger(__name__)
-
-SERVICE_SET_VACATION_MODE = "wink_set_lock_vacation_mode"
-SERVICE_SET_ALARM_MODE = "wink_set_lock_alarm_mode"
-SERVICE_SET_ALARM_SENSITIVITY = "wink_set_lock_alarm_sensitivity"
-SERVICE_SET_ALARM_STATE = "wink_set_lock_alarm_state"
-SERVICE_SET_BEEPER_STATE = "wink_set_lock_beeper_state"
-SERVICE_ADD_KEY = "wink_add_new_lock_key_code"
+SERVICE_SET_VACATION_MODE = "set_lock_vacation_mode"
+SERVICE_SET_ALARM_MODE = "set_lock_alarm_mode"
+SERVICE_SET_ALARM_SENSITIVITY = "set_lock_alarm_sensitivity"
+SERVICE_SET_ALARM_STATE = "set_lock_alarm_state"
+SERVICE_SET_BEEPER_STATE = "set_lock_beeper_state"
+SERVICE_ADD_KEY = "add_new_lock_key_code"
 
 ATTR_ENABLED = "enabled"
 ATTR_SENSITIVITY = "sensitivity"
@@ -133,7 +129,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class WinkLockDevice(WinkDevice, LockDevice):
+class WinkLockDevice(WinkDevice, LockEntity):
     """Representation of a Wink lock."""
 
     async def async_added_to_hass(self):
@@ -191,9 +187,9 @@ class WinkLockDevice(WinkDevice, LockDevice):
         self.wink.set_alarm_mode(mode)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
-        super_attrs = super().device_state_attributes
+        super_attrs = super().extra_state_attributes
         sensitivity = dict_value_to_key(
             ALARM_SENSITIVITY_MAP, self.wink.alarm_sensitivity()
         )

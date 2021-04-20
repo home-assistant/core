@@ -2,7 +2,6 @@
   "domain": "garadget",
   "name": "Garadget",
   "documentation": "https://www.home-assistant.io/integrations/garadget",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "cloud_polling"
 }

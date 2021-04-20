@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 import homeassistant.helpers.config_validation as cv
 
 from . import (
@@ -44,7 +44,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev, True)
 
 
-class LinodeSwitch(SwitchDevice):
+class LinodeSwitch(SwitchEntity):
     """Representation of a Linode Node switch."""
 
     def __init__(self, li, node_id):
@@ -67,7 +67,7 @@ class LinodeSwitch(SwitchDevice):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the Linode Node."""
         return self._attrs
 

@@ -1,0 +1,29 @@
+{
+    "device_automation": {
+        "action_type": {
+            "clean": "{entity_name}\uc744(\ub97c) \uccad\uc18c\uc2dc\ud0a4\uae30",
+            "dock": "{entity_name}\uc744(\ub97c) \ucda9\uc804\uc2a4\ud14c\uc774\uc158\uc73c\ub85c \ubcf5\uadc0\uc2dc\ud0a4\uae30"
+        },
+        "condition_type": {
+            "is_cleaning": "{entity_name}\uc774(\uac00) \uccad\uc18c \uc911\uc774\uba74",
+            "is_docked": "{entity_name}\uc774(\uac00) \ucda9\uc804 \uc2a4\ud14c\uc774\uc158\uc5d0 \uc788\uc73c\uba74"
+        },
+        "trigger_type": {
+            "cleaning": "{entity_name}\uc774(\uac00) \uccad\uc18c\ud558\uae30 \uc2dc\uc791\ud588\uc744 \ub54c",
+            "docked": "{entity_name}\uc774(\uac00) \ucda9\uc804 \uc2a4\ud14c\uc774\uc158\uc5d0 \ubcf5\uadc0\ud588\uc744 \ub54c"
+        }
+    },
+    "state": {
+        "_": {
+            "cleaning": "\uccad\uc18c\uc911",
+            "docked": "\ucda9\uc804\uc911",
+            "error": "\uc791\ub3d9 \uc624\ub958",
+            "idle": "\ub300\uae30\uc911",
+            "off": "\uaebc\uc9d0",
+            "on": "\ucf1c\uc9d0",
+            "paused": "\uc77c\uc2dc\uc911\uc9c0",
+            "returning": "\ucda9\uc804 \ubcf5\uadc0 \uc911"
+        }
+    },
+    "title": "\uccad\uc18c\uae30"
+}

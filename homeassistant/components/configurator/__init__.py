@@ -6,20 +6,19 @@ This will return a request id that has to be used for future calls.
 A callback has to be provided to `request_config` which will be called when
 the user has submitted configuration information.
 """
+from contextlib import suppress
 import functools as ft
-import logging
 
-from homeassistant.core import callback as async_callback
 from homeassistant.const import (
-    EVENT_TIME_CHANGED,
-    ATTR_FRIENDLY_NAME,
     ATTR_ENTITY_PICTURE,
+    ATTR_FRIENDLY_NAME,
+    EVENT_TIME_CHANGED,
 )
-from homeassistant.loader import bind_hass
+from homeassistant.core import Event, callback as async_callback
 from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import run_callback_threadsafe
 
-_LOGGER = logging.getLogger(__name__)
 _KEY_INSTANCE = "configurator"
 
 DATA_REQUESTS = "configurator_requests"
@@ -98,11 +97,8 @@ def request_config(hass, *args, **kwargs):
 @async_callback
 def async_notify_errors(hass, request_id, error):
     """Add errors to a config request."""
-    try:
+    with suppress(KeyError):  # If request_id does not exist
         hass.data[DATA_REQUESTS][request_id].async_notify_errors(request_id, error)
-    except KeyError:
-        # If request_id does not exist
-        pass
 
 
 @bind_hass
@@ -117,11 +113,8 @@ def notify_errors(hass, request_id, error):
 @async_callback
 def async_request_done(hass, request_id):
     """Mark a configuration request as done."""
-    try:
+    with suppress(KeyError):  # If request_id does not exist
         hass.data[DATA_REQUESTS].pop(request_id).async_request_done(request_id)
-    except KeyError:
-        # If request_id does not exist
-        pass
 
 
 @bind_hass
@@ -209,14 +202,14 @@ class Configurator:
         entity_id = self._requests.pop(request_id)[0]
 
         # If we remove the state right away, it will not be included with
-        # the result fo the service call (current design limitation).
+        # the result of the service call (current design limitation).
         # Instead, we will set it to configured to give as feedback but delete
         # it shortly after so that it is deleted when the client updates.
         self.hass.states.async_set(entity_id, STATE_CONFIGURED)
 
-        def deferred_remove(event):
+        def deferred_remove(event: Event):
             """Remove the request state."""
-            self.hass.states.async_remove(entity_id)
+            self.hass.states.async_remove(entity_id, context=event.context)
 
         self.hass.bus.async_listen_once(EVENT_TIME_CHANGED, deferred_remove)
 
@@ -237,7 +230,7 @@ class Configurator:
     def _generate_unique_id(self):
         """Generate a unique configurator ID."""
         self._cur_id += 1
-        return "{}-{}".format(id(self), self._cur_id)
+        return f"{id(self)}-{self._cur_id}"
 
     def _validate_request_id(self, request_id):
         """Validate that the request belongs to this instance."""

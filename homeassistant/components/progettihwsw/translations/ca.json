@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "relay_modes": {
+                "data": {
+                    "relay_1": "Rel\u00e9 1",
+                    "relay_10": "Rel\u00e9 10",
+                    "relay_11": "Rel\u00e9 11",
+                    "relay_12": "Rel\u00e9 12",
+                    "relay_13": "Relleu 13",
+                    "relay_14": "Rel\u00e9 14",
+                    "relay_15": "Rel\u00e9 15",
+                    "relay_16": "Rel\u00e9 16",
+                    "relay_2": "Rel\u00e9 2",
+                    "relay_3": "Rel\u00e9 3",
+                    "relay_4": "Rel\u00e9 4",
+                    "relay_5": "Rel\u00e9 5",
+                    "relay_6": "Rel\u00e9 6",
+                    "relay_7": "Rel\u00e9 7",
+                    "relay_8": "Rel\u00e9 8",
+                    "relay_9": "Rel\u00e9 9"
+                },
+                "title": "Configuraci\u00f3 de rel\u00e9s"
+            },
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "port": "Port"
+                },
+                "title": "Configuraci\u00f3 del tauler"
+            }
+        }
+    }
+}

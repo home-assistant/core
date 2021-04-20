@@ -2,9 +2,7 @@
   "domain": "datadog",
   "name": "Datadog",
   "documentation": "https://www.home-assistant.io/integrations/datadog",
-  "requirements": [
-    "datadog==0.15.0"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "requirements": ["datadog==0.15.0"],
+  "codeowners": [],
+  "iot_class": "local_push"
 }

@@ -1,35 +1,33 @@
 {
-    "config": {
-        "abort": {
-            "already_configured": "ESP is already configured"
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
+    },
+    "error": {
+      "resolve_error": "Can't resolve address of the ESP. If this error persists, please set a static IP address: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips",
+      "connection_error": "Can't connect to ESP. Please make sure your YAML file contains an 'api:' line.",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
         },
-        "error": {
-            "resolve_error": "Can't resolve address of the ESP. If this error persists, please set a static IP address: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips",
-            "connection_error": "Can't connect to ESP. Please make sure your YAML file contains an 'api:' line.",
-            "invalid_password": "Invalid password!"
+        "description": "Please enter connection settings of your [ESPHome](https://esphomelib.com/) node."
+      },
+      "authenticate": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
         },
-        "step": {
-            "user": {
-                "data": {
-                    "host": "Host",
-                    "port": "Port"
-                },
-                "description": "Please enter connection settings of your [ESPHome](https://esphomelib.com/) node.",
-                "title": "ESPHome"
-            },
-            "authenticate": {
-                "data": {
-                    "password": "Password"
-                },
-                "description": "Please enter the password you set in your configuration for {name}.",
-                "title": "Enter Password"
-            },
-            "discovery_confirm": {
-                "description": "Do you want to add the ESPHome node `{name}` to Home Assistant?",
-                "title": "Discovered ESPHome node"
-            }
-        },
-        "title": "ESPHome",
-        "flow_title": "ESPHome: {name}"
-    }
+        "description": "Please enter the password you set in your configuration for {name}."
+      },
+      "discovery_confirm": {
+        "description": "Do you want to add the ESPHome node `{name}` to Home Assistant?",
+        "title": "Discovered ESPHome node"
+      }
+    },
+    "flow_title": "ESPHome: {name}"
+  }
 }

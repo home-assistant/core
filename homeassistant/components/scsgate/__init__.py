@@ -2,6 +2,10 @@
 import logging
 from threading import Lock
 
+from scsgate.connection import Connection
+from scsgate.messages import ScenarioTriggeredMessage, StateMessage
+from scsgate.reactor import Reactor
+from scsgate.tasks import GetStatusTask
 import voluptuous as vol
 
 from homeassistant.const import CONF_DEVICE, CONF_NAME
@@ -10,13 +14,9 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_STATE = "state"
-
 CONF_SCS_ID = "scs_id"
 
 DOMAIN = "scsgate"
-
-SCSGATE = None
 
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema({vol.Required(CONF_DEVICE): cv.string})}, extra=vol.ALLOW_EXTRA
@@ -30,11 +30,11 @@ SCSGATE_SCHEMA = vol.Schema(
 def setup(hass, config):
     """Set up the SCSGate component."""
     device = config[DOMAIN][CONF_DEVICE]
-    global SCSGATE
+    scsgate = None
 
     try:
-        SCSGATE = SCSGate(device=device, logger=_LOGGER)
-        SCSGATE.start()
+        scsgate = SCSGate(device=device, logger=_LOGGER)
+        scsgate.start()
     except Exception as exception:  # pylint: disable=broad-except
         _LOGGER.error("Cannot setup SCSGate component: %s", exception)
         return False
@@ -42,9 +42,10 @@ def setup(hass, config):
     def stop_monitor(event):
         """Stop the SCSGate."""
         _LOGGER.info("Stopping SCSGate monitor thread")
-        SCSGATE.stop()
+        scsgate.stop()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_monitor)
+    hass.data[DOMAIN] = scsgate
 
     return True
 
@@ -61,11 +62,7 @@ class SCSGate:
         self._device_being_registered = None
         self._device_being_registered_lock = Lock()
 
-        from scsgate.connection import Connection
-
         connection = Connection(device=device, logger=self._logger)
-
-        from scsgate.reactor import Reactor
 
         self._reactor = Reactor(
             connection=connection,
@@ -75,7 +72,6 @@ class SCSGate:
 
     def handle_message(self, message):
         """Handle a messages seen on the bus."""
-        from scsgate.messages import StateMessage, ScenarioTriggeredMessage
 
         self._logger.debug(f"Received message {message}")
         if not isinstance(message, StateMessage) and not isinstance(
@@ -132,11 +128,10 @@ class SCSGate:
 
     def _activate_next_device(self):
         """Start the activation of the first device."""
-        from scsgate.tasks import GetStatusTask
 
         with self._devices_to_register_lock:
             while self._devices_to_register:
-                _, device = self._devices_to_register.popitem()
+                device = self._devices_to_register.popitem()[1]
                 self._devices[device.scs_id] = device
                 self._device_being_registered = device.scs_id
                 self._reactor.append_task(GetStatusTask(target=device.scs_id))
@@ -144,7 +139,7 @@ class SCSGate:
     def is_device_registered(self, device_id):
         """Check whether a device is already registered or not."""
         with self._devices_to_register_lock:
-            if device_id in self._devices_to_register.keys():
+            if device_id in self._devices_to_register:
                 return False
 
         with self._device_being_registered_lock:

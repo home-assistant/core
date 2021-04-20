@@ -1,16 +1,19 @@
 """Support the sensor of a BloomSky weather station."""
-import logging
-
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import TEMP_FAHRENHEIT, TEMP_CELSIUS, CONF_MONITORED_CONDITIONS
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import (
+    AREA_SQUARE_METERS,
+    CONF_MONITORED_CONDITIONS,
+    PERCENTAGE,
+    PRESSURE_INHG,
+    PRESSURE_MBAR,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
 import homeassistant.helpers.config_validation as cv
 
-from . import BLOOMSKY
-
-LOGGER = logging.getLogger(__name__)
+from . import DOMAIN
 
 # These are the available sensors
 SENSOR_TYPES = [
@@ -25,18 +28,18 @@ SENSOR_TYPES = [
 # Sensor units - these do not currently align with the API documentation
 SENSOR_UNITS_IMPERIAL = {
     "Temperature": TEMP_FAHRENHEIT,
-    "Humidity": "%",
-    "Pressure": "inHg",
-    "Luminance": "cd/m²",
+    "Humidity": PERCENTAGE,
+    "Pressure": PRESSURE_INHG,
+    "Luminance": f"cd/{AREA_SQUARE_METERS}",
     "Voltage": "mV",
 }
 
 # Metric units
 SENSOR_UNITS_METRIC = {
     "Temperature": TEMP_CELSIUS,
-    "Humidity": "%",
-    "Pressure": "mbar",
-    "Luminance": "cd/m²",
+    "Humidity": PERCENTAGE,
+    "Pressure": PRESSURE_MBAR,
+    "Luminance": f"cd/{AREA_SQUARE_METERS}",
     "Voltage": "mV",
 }
 
@@ -55,14 +58,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available BloomSky weather sensors."""
     # Default needed in case of discovery
-    sensors = config.get(CONF_MONITORED_CONDITIONS, SENSOR_TYPES)
+    if discovery_info is not None:
+        return
 
-    for device in BLOOMSKY.devices.values():
+    sensors = config[CONF_MONITORED_CONDITIONS]
+    bloomsky = hass.data[DOMAIN]
+
+    for device in bloomsky.devices.values():
         for variable in sensors:
-            add_entities([BloomSkySensor(BLOOMSKY, device, variable)], True)
+            add_entities([BloomSkySensor(bloomsky, device, variable)], True)
 
 
-class BloomSkySensor(Entity):
+class BloomSkySensor(SensorEntity):
     """Representation of a single sensor in a BloomSky device."""
 
     def __init__(self, bs, device, sensor_name):
@@ -70,7 +77,7 @@ class BloomSkySensor(Entity):
         self._bloomsky = bs
         self._device_id = device["DeviceID"]
         self._sensor_name = sensor_name
-        self._name = "{} {}".format(device["DeviceName"], sensor_name)
+        self._name = f"{device['DeviceName']} {sensor_name}"
         self._state = None
         self._unique_id = f"{self._device_id}-{self._sensor_name}"
 

@@ -1,5 +1,5 @@
 """The test for the Melissa Climate component."""
-from tests.common import MockDependency, mock_coro_func
+from unittest.mock import AsyncMock, patch
 
 from homeassistant.components import melissa
 
@@ -8,15 +8,16 @@ VALID_CONFIG = {"melissa": {"username": "********", "password": "********"}}
 
 async def test_setup(hass):
     """Test setting up the Melissa component."""
-    with MockDependency("melissa") as mocked_melissa:
-        mocked_melissa.AsyncMelissa().async_connect = mock_coro_func()
+    with patch("melissa.AsyncMelissa") as mocked_melissa, patch.object(
+        melissa, "async_load_platform"
+    ):
+        mocked_melissa.return_value.async_connect = AsyncMock()
         await melissa.async_setup(hass, VALID_CONFIG)
 
-        mocked_melissa.AsyncMelissa.assert_called_with(
-            username="********", password="********"
-        )
+        mocked_melissa.assert_called_with(username="********", password="********")
 
         assert melissa.DATA_MELISSA in hass.data
         assert isinstance(
-            hass.data[melissa.DATA_MELISSA], type(mocked_melissa.AsyncMelissa())
+            hass.data[melissa.DATA_MELISSA],
+            type(mocked_melissa.return_value),
         )

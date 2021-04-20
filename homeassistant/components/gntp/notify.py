@@ -2,10 +2,9 @@
 import logging
 import os
 
+import gntp.errors
+import gntp.notifier
 import voluptuous as vol
-
-from homeassistant.const import CONF_PASSWORD, CONF_PORT
-import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.notify import (
     ATTR_TITLE,
@@ -13,12 +12,10 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.const import CONF_PASSWORD, CONF_PORT
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
-
-_GNTP_LOGGER = logging.getLogger("gntp")
-_GNTP_LOGGER.setLevel(logging.ERROR)
-
 
 CONF_APP_NAME = "app_name"
 CONF_APP_ICON = "app_icon"
@@ -41,6 +38,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def get_service(hass, config, discovery_info=None):
     """Get the GNTP notification service."""
+    _LOGGER.warning(
+        "The GNTP (Growl) integration has been deprecated and is going to be "
+        "removed in Home Assistant Core 2021.6. The Growl project has retired"
+    )
+
+    logging.getLogger("gntp").setLevel(logging.ERROR)
+
     if config.get(CONF_APP_ICON) is None:
         icon_file = os.path.join(
             os.path.dirname(__file__),
@@ -69,9 +73,6 @@ class GNTPNotificationService(BaseNotificationService):
 
     def __init__(self, app_name, app_icon, hostname, password, port):
         """Initialize the service."""
-        import gntp.notifier
-        import gntp.errors
-
         self.gntp = gntp.notifier.GrowlNotifier(
             applicationName=app_name,
             notifications=["Notification"],

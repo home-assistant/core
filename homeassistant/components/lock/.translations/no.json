@@ -1,8 +1,0 @@
-{
-    "device_automation": {
-        "condition_type": {
-            "is_locked": "{entity_name} er l\u00e5st",
-            "is_unlocked": "{entity_name} er l\u00e5st opp"
-        }
-    }
-}

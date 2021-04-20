@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "already_in_progress": "Konfiguracja jest ju\u017c w toku",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Adres IP",
+                    "port": "Port"
+                },
+                "description": "Skonfiguruj lokalne urz\u0105dzenie Elexa Guardian."
+            },
+            "zeroconf_confirm": {
+                "description": "Czy chcesz skonfigurowa\u0107 to urz\u0105dzenie Guardian?"
+            }
+        }
+    }
+}

@@ -1,34 +1,36 @@
 """Script to check the configuration file."""
+from __future__ import annotations
 
 import argparse
+import asyncio
+from collections import OrderedDict
+from collections.abc import Mapping, Sequence
+from glob import glob
 import logging
 import os
-from collections import OrderedDict
-from glob import glob
-from typing import Dict, List, Sequence, Any, Tuple, Callable
+from typing import Any, Callable
 from unittest.mock import patch
 
-from homeassistant import bootstrap, core
+from homeassistant import core
 from homeassistant.config import get_default_config_dir
-from homeassistant.helpers.check_config import async_check_ha_config_file
-import homeassistant.util.yaml.loader as yaml_loader
 from homeassistant.exceptions import HomeAssistantError
-
+from homeassistant.helpers.check_config import async_check_ha_config_file
+from homeassistant.util.yaml import Secrets
+import homeassistant.util.yaml.loader as yaml_loader
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
-REQUIREMENTS = ("colorlog==4.0.2",)
+REQUIREMENTS = ("colorlog==5.0.1",)
 
 _LOGGER = logging.getLogger(__name__)
 # pylint: disable=protected-access
-MOCKS: Dict[str, Tuple[str, Callable]] = {
+MOCKS: dict[str, tuple[str, Callable]] = {
     "load": ("homeassistant.util.yaml.loader.load_yaml", yaml_loader.load_yaml),
     "load*": ("homeassistant.config.load_yaml", yaml_loader.load_yaml),
     "secrets": ("homeassistant.util.yaml.loader.secret_yaml", yaml_loader.secret_yaml),
 }
-SILENCE = ("homeassistant.scripts.check_config.yaml_loader.clear_secret_cache",)
 
-PATCHES: Dict[str, Any] = {}
+PATCHES: dict[str, Any] = {}
 
 C_HEAD = "bold"
 ERROR_STR = "General Errors"
@@ -36,6 +38,7 @@ ERROR_STR = "General Errors"
 
 def color(the_color, *args, reset=None):
     """Color helper."""
+    # pylint: disable=import-outside-toplevel
     from colorlog.escape_codes import escape_codes, parse_colors
 
     try:
@@ -44,10 +47,10 @@ def color(the_color, *args, reset=None):
             return parse_colors(the_color)
         return parse_colors(the_color) + " ".join(args) + escape_codes[reset or "reset"]
     except KeyError as k:
-        raise ValueError("Invalid color {} in {}".format(str(k), the_color))
+        raise ValueError(f"Invalid color {k!s} in {the_color}") from k
 
 
-def run(script_args: List) -> int:
+def run(script_args: list) -> int:
     """Handle check config commandline script."""
     parser = argparse.ArgumentParser(description="Check Home Assistant configuration.")
     parser.add_argument("--script", choices=["check_config"])
@@ -82,7 +85,7 @@ def run(script_args: List) -> int:
 
     res = check(config_dir, args.secrets)
 
-    domain_info: List[str] = []
+    domain_info: list[str] = []
     if args.info:
         domain_info = args.info.split(",")
 
@@ -119,10 +122,10 @@ def run(script_args: List) -> int:
                 if domain == ERROR_STR:
                     continue
                 print(" ", color(C_HEAD, domain + ":"))
-                dump_dict(res["components"].get(domain, None))
+                dump_dict(res["components"].get(domain))
 
     if args.secrets:
-        flatsecret: Dict[str, str] = {}
+        flatsecret: dict[str, str] = {}
 
         for sfn, sdict in res["secret_cache"].items():
             sss = []
@@ -140,12 +143,7 @@ def run(script_args: List) -> int:
             if sval is None:
                 print(" -", skey + ":", color("red", "not found"))
                 continue
-            print(
-                " -",
-                skey + ":",
-                sval,
-                color("cyan", "[from:", flatsecret.get(skey, "keyring") + "]"),
-            )
+            print(" -", skey + ":", sval)
 
     return len(res["except"])
 
@@ -153,19 +151,19 @@ def run(script_args: List) -> int:
 def check(config_dir, secrets=False):
     """Perform a check by mocking hass load functions."""
     logging.getLogger("homeassistant.loader").setLevel(logging.CRITICAL)
-    res: Dict[str, Any] = {
+    res: dict[str, Any] = {
         "yaml_files": OrderedDict(),  # yaml_files loaded
         "secrets": OrderedDict(),  # secret cache and secrets loaded
         "except": OrderedDict(),  # exceptions raised (with config)
         #'components' is a HomeAssistantConfig  # noqa: E265
-        "secret_cache": None,
+        "secret_cache": {},
     }
 
     # pylint: disable=possibly-unused-variable
-    def mock_load(filename):
+    def mock_load(filename, secrets=None):
         """Mock hass.util.load_yaml to save config file names."""
         res["yaml_files"][filename] = True
-        return MOCKS["load"][1](filename)
+        return MOCKS["load"][1](filename, secrets)
 
     # pylint: disable=possibly-unused-variable
     def mock_secrets(ldr, node):
@@ -177,17 +175,13 @@ def check(config_dir, secrets=False):
         res["secrets"][node.value] = val
         return val
 
-    # Patches to skip functions
-    for sil in SILENCE:
-        PATCHES[sil] = patch(sil)
-
     # Patches with local mock functions
     for key, val in MOCKS.items():
         if not secrets and key == "secrets":
             continue
         # The * in the key is removed to find the mock_function (side_effect)
         # This allows us to use one side_effect to patch multiple locations
-        mock_function = locals()["mock_" + key.replace("*", "")]
+        mock_function = locals()[f"mock_{key.replace('*', '')}"]
         PATCHES[key] = patch(val[0], side_effect=mock_function)
 
     # Start all patches
@@ -196,16 +190,19 @@ def check(config_dir, secrets=False):
 
     if secrets:
         # Ensure !secrets point to the patched function
-        yaml_loader.yaml.SafeLoader.add_constructor("!secret", yaml_loader.secret_yaml)
+        yaml_loader.SafeLineLoader.add_constructor("!secret", yaml_loader.secret_yaml)
+
+    def secrets_proxy(*args):
+        secrets = Secrets(*args)
+        res["secret_cache"] = secrets._cache
+        return secrets
 
     try:
-        hass = core.HomeAssistant()
-        hass.config.config_dir = config_dir
-
-        res["components"] = hass.loop.run_until_complete(
-            async_check_ha_config_file(hass)
-        )
-        res["secret_cache"] = OrderedDict(yaml_loader.__SECRET_CACHE)
+        with patch.object(yaml_loader, "Secrets", secrets_proxy):
+            res["components"] = asyncio.run(async_check_config(config_dir))
+        res["secret_cache"] = {
+            str(key): val for key, val in res["secret_cache"].items()
+        }
         for err in res["components"].errors:
             domain = err.domain or ERROR_STR
             res["except"].setdefault(domain, []).append(err.message)
@@ -213,7 +210,6 @@ def check(config_dir, secrets=False):
                 res["except"].setdefault(domain, []).append(err.config)
 
     except Exception as err:  # pylint: disable=broad-except
-        _LOGGER.exception("BURB")
         print(color("red", "Fatal error while loading config:"), str(err))
         res["except"].setdefault(ERROR_STR, []).append(str(err))
     finally:
@@ -222,21 +218,27 @@ def check(config_dir, secrets=False):
             pat.stop()
         if secrets:
             # Ensure !secrets point to the original function
-            yaml_loader.yaml.SafeLoader.add_constructor(
+            yaml_loader.SafeLineLoader.add_constructor(
                 "!secret", yaml_loader.secret_yaml
             )
-        bootstrap.clear_secret_cache()
 
     return res
+
+
+async def async_check_config(config_dir):
+    """Check the HA config."""
+    hass = core.HomeAssistant()
+    hass.config.config_dir = config_dir
+    components = await async_check_ha_config_file(hass)
+    await hass.async_stop(force=True)
+    return components
 
 
 def line_info(obj, **kwargs):
     """Display line config source."""
     if hasattr(obj, "__config_file__"):
         return color(
-            "cyan",
-            "[source {}:{}]".format(obj.__config_file__, obj.__line__ or "?"),
-            **kwargs,
+            "cyan", f"[source {obj.__config_file__}:{obj.__line__ or '?'}]", **kwargs
         )
     return "?"
 
@@ -255,7 +257,7 @@ def dump_dict(layer, indent_count=3, listi=False, **kwargs):
     indent_str = indent_count * " "
     if listi or isinstance(layer, list):
         indent_str = indent_str[:-1] + "-"
-    if isinstance(layer, Dict):
+    if isinstance(layer, Mapping):
         for key, value in sorted(layer.items(), key=sort_dict_key):
             if isinstance(value, (dict, list)):
                 print(indent_str, str(key) + ":", line_info(value, **kwargs))

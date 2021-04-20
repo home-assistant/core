@@ -1,13 +1,29 @@
 """Base class for IKEA TRADFRI."""
+from functools import wraps
 import logging
 
 from pytradfri.error import PytradfriError
 
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
+
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def handle_error(func):
+    """Handle tradfri api call error."""
+
+    @wraps(func)
+    async def wrapper(command):
+        """Decorate api call."""
+        try:
+            await func(command)
+        except PytradfriError as err:
+            _LOGGER.error("Unable to execute command %s: %s", command, err)
+
+    return wrapper
 
 
 class TradfriBaseClass(Entity):
@@ -18,8 +34,7 @@ class TradfriBaseClass(Entity):
 
     def __init__(self, device, api, gateway_id):
         """Initialize a device."""
-        self._available = True
-        self._api = api
+        self._api = handle_error(api)
         self._device = None
         self._device_control = None
         self._device_data = None
@@ -33,8 +48,7 @@ class TradfriBaseClass(Entity):
     def _async_start_observe(self, exc=None):
         """Start observation of device."""
         if exc:
-            self._available = False
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
             _LOGGER.warning("Observation failed for %s", self._name, exc_info=exc)
 
         try:
@@ -51,11 +65,6 @@ class TradfriBaseClass(Entity):
     async def async_added_to_hass(self):
         """Start thread when added to hass."""
         self._async_start_observe()
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._available
 
     @property
     def name(self):
@@ -76,13 +85,12 @@ class TradfriBaseClass(Entity):
     def _observe_update(self, device):
         """Receive new state data for this device."""
         self._refresh(device)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     def _refresh(self, device):
         """Refresh the device data."""
         self._device = device
         self._name = device.name
-        self._available = device.reachable
 
 
 class TradfriBaseDevice(TradfriBaseClass):
@@ -90,6 +98,16 @@ class TradfriBaseDevice(TradfriBaseClass):
 
     All devices should inherit from this class.
     """
+
+    def __init__(self, device, api, gateway_id):
+        """Initialize a device."""
+        super().__init__(device, api, gateway_id)
+        self._available = True
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._available
 
     @property
     def device_info(self):
@@ -104,3 +122,8 @@ class TradfriBaseDevice(TradfriBaseClass):
             "sw_version": info.firmware_version,
             "via_device": (DOMAIN, self._gateway_id),
         }
+
+    def _refresh(self, device):
+        """Refresh the device data."""
+        super()._refresh(device)
+        self._available = device.reachable

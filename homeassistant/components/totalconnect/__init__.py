@@ -1,59 +1,82 @@
 """The totalconnect component."""
+import asyncio
 import logging
 
-import voluptuous as vol
 from total_connect_client import TotalConnectClient
+import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers import discovery
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
+import homeassistant.helpers.config_validation as cv
 
+from .const import CONF_USERCODES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "totalconnect"
+PLATFORMS = ["alarm_control_panel", "binary_sensor"]
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-            }
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_USERNAME): cv.string,
+                    vol.Required(CONF_PASSWORD): cv.string,
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
-TOTALCONNECT_PLATFORMS = ["alarm_control_panel"]
 
-
-def setup(hass, config):
-    """Set up TotalConnect component."""
-    conf = config[DOMAIN]
-
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Set up upon config entry in user interface."""
+    conf = entry.data
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
 
-    client = TotalConnectClient.TotalConnectClient(username, password)
+    if CONF_USERCODES not in conf:
+        # should only happen for those who used UI before we added usercodes
+        raise ConfigEntryAuthFailed("No usercodes in TotalConnect configuration")
 
-    if client.token is False:
-        _LOGGER.error("TotalConnect authentication failed")
-        return False
+    temp_codes = conf[CONF_USERCODES]
+    usercodes = {}
+    for code in temp_codes:
+        usercodes[int(code)] = temp_codes[code]
 
-    hass.data[DOMAIN] = TotalConnectSystem(username, password, client)
+    client = await hass.async_add_executor_job(
+        TotalConnectClient.TotalConnectClient, username, password, usercodes
+    )
 
-    for platform in TOTALCONNECT_PLATFORMS:
-        discovery.load_platform(hass, platform, DOMAIN, {}, config)
+    if not client.is_valid_credentials():
+        raise ConfigEntryAuthFailed("TotalConnect authentication failed")
+
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = client
+
+    for platform in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, platform)
+        )
 
     return True
 
 
-class TotalConnectSystem:
-    """TotalConnect System class."""
+async def async_unload_entry(hass, entry: ConfigEntry):
+    """Unload a config entry."""
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
+            ]
+        )
+    )
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
 
-    def __init__(self, username, password, client):
-        """Initialize the TotalConnect system."""
-        self._username = username
-        self._password = password
-        self.client = client
+    return unload_ok

@@ -1,28 +1,38 @@
 """Device tracker platform that adds support for OwnTracks over MQTT."""
-import logging
-
-from homeassistant.core import callback
+from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from homeassistant.components.device_tracker.const import (
+    ATTR_SOURCE_TYPE,
+    DOMAIN,
+    SOURCE_TYPE_GPS,
+)
 from homeassistant.const import (
+    ATTR_BATTERY_LEVEL,
     ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
-    ATTR_BATTERY_LEVEL,
 )
-from homeassistant.components.device_tracker.const import (
-    ENTITY_ID_FORMAT,
-    ATTR_SOURCE_TYPE,
-    SOURCE_TYPE_GPS,
-)
-from homeassistant.components.device_tracker.config_entry import TrackerEntity
-from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.core import callback
 from homeassistant.helpers import device_registry
-from . import DOMAIN as OT_DOMAIN
+from homeassistant.helpers.restore_state import RestoreEntity
 
-_LOGGER = logging.getLogger(__name__)
+from . import DOMAIN as OT_DOMAIN
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up OwnTracks based off an entry."""
+    # Restore previously loaded devices
+    dev_reg = await device_registry.async_get_registry(hass)
+    dev_ids = {
+        identifier[1]
+        for device in dev_reg.devices.values()
+        for identifier in device.identifiers
+        if identifier[0] == OT_DOMAIN
+    }
+
+    entities = []
+    for dev_id in dev_ids:
+        entity = hass.data[OT_DOMAIN]["devices"][dev_id] = OwnTracksEntity(dev_id)
+        entities.append(entity)
 
     @callback
     def _receive_data(dev_id, **data):
@@ -38,24 +48,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     hass.data[OT_DOMAIN]["context"].set_async_see(_receive_data)
 
-    # Restore previously loaded devices
-    dev_reg = await device_registry.async_get_registry(hass)
-    dev_ids = {
-        identifier[1]
-        for device in dev_reg.devices.values()
-        for identifier in device.identifiers
-        if identifier[0] == OT_DOMAIN
-    }
-
-    if not dev_ids:
-        return True
-
-    entities = []
-    for dev_id in dev_ids:
-        entity = hass.data[OT_DOMAIN]["devices"][dev_id] = OwnTracksEntity(dev_id)
-        entities.append(entity)
-
-    async_add_entities(entities)
+    if entities:
+        async_add_entities(entities)
 
     return True
 
@@ -67,7 +61,7 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
         """Set up OwnTracks entity."""
         self._dev_id = dev_id
         self._data = data or {}
-        self.entity_id = ENTITY_ID_FORMAT.format(dev_id)
+        self.entity_id = f"{DOMAIN}.{dev_id}"
 
     @property
     def unique_id(self):
@@ -80,7 +74,7 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
         return self._data.get("battery")
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific attributes."""
         return self._data.get("attributes")
 
@@ -118,11 +112,6 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
         return self._data.get("host_name")
 
     @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
     def source_type(self):
         """Return the source type, eg gps or router, of the device."""
         return self._data.get("source_type", SOURCE_TYPE_GPS)
@@ -158,4 +147,5 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
     def update_data(self, data):
         """Mark the device as seen."""
         self._data = data
-        self.async_write_ha_state()
+        if self.hass:
+            self.async_write_ha_state()

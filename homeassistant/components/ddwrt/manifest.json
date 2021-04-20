@@ -1,8 +1,7 @@
 {
   "domain": "ddwrt",
-  "name": "Ddwrt",
+  "name": "DD-WRT",
   "documentation": "https://www.home-assistant.io/integrations/ddwrt",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

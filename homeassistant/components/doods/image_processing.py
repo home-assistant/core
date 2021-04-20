@@ -1,13 +1,13 @@
 """Support for the DOODS service."""
 import io
 import logging
+import os
 import time
 
-import voluptuous as vol
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, UnidentifiedImageError
 from pydoods import PyDOODS
+import voluptuous as vol
 
-from homeassistant.const import CONF_TIMEOUT
 from homeassistant.components.image_processing import (
     CONF_CONFIDENCE,
     CONF_ENTITY_ID,
@@ -15,24 +15,24 @@ from homeassistant.components.image_processing import (
     CONF_SOURCE,
     PLATFORM_SCHEMA,
     ImageProcessingEntity,
-    draw_box,
 )
+from homeassistant.const import CONF_COVERS, CONF_TIMEOUT, CONF_URL
 from homeassistant.core import split_entity_id
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.pil import draw_box
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_MATCHES = "matches"
 ATTR_SUMMARY = "summary"
 ATTR_TOTAL_MATCHES = "total_matches"
+ATTR_PROCESS_TIME = "process_time"
 
-CONF_URL = "url"
 CONF_AUTH_KEY = "auth_key"
 CONF_DETECTOR = "detector"
 CONF_LABELS = "labels"
 CONF_AREA = "area"
-CONF_COVERS = "covers"
 CONF_TOP = "top"
 CONF_BOTTOM = "bottom"
 CONF_RIGHT = "right"
@@ -177,6 +177,7 @@ class Doods(ImageProcessingEntity):
                     _LOGGER.warning("Detector does not support label %s", label)
                     continue
                 self._label_areas[label] = [0, 0, 1, 1]
+                self._label_covers[label] = True
                 if label not in dconfig or dconfig[label] > confidence:
                     dconfig[label] = confidence
 
@@ -202,6 +203,7 @@ class Doods(ImageProcessingEntity):
         self._matches = {}
         self._total_matches = 0
         self._last_image = None
+        self._process_time = 0
 
     @property
     def camera_entity(self):
@@ -219,7 +221,7 @@ class Doods(ImageProcessingEntity):
         return self._total_matches
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         return {
             ATTR_MATCHES: self._matches,
@@ -227,6 +229,7 @@ class Doods(ImageProcessingEntity):
                 label: len(values) for label, values in self._matches.items()
             },
             ATTR_TOTAL_MATCHES: self._total_matches,
+            ATTR_PROCESS_TIME: self._process_time,
         }
 
     def _save_image(self, image, matches, paths):
@@ -269,11 +272,17 @@ class Doods(ImageProcessingEntity):
 
         for path in paths:
             _LOGGER.info("Saving results image to %s", path)
+            if not os.path.exists(os.path.dirname(path)):
+                os.makedirs(os.path.dirname(path), exist_ok=True)
             img.save(path)
 
     def process_image(self, image):
         """Process the image."""
-        img = Image.open(io.BytesIO(bytearray(image)))
+        try:
+            img = Image.open(io.BytesIO(bytearray(image))).convert("RGB")
+        except UnidentifiedImageError:
+            _LOGGER.warning("Unable to process image, bad data")
+            return
         img_width, img_height = img.size
 
         if self._aspect and abs((img_width / img_height) - self._aspect) > 0.1:
@@ -284,7 +293,7 @@ class Doods(ImageProcessingEntity):
             )
 
         # Run detection
-        start = time.time()
+        start = time.monotonic()
         response = self._doods.detect(
             image, dconfig=self._dconfig, detector_name=self._detector_name
         )
@@ -292,7 +301,7 @@ class Doods(ImageProcessingEntity):
             "doods detect: %s response: %s duration: %s",
             self._dconfig,
             response,
-            time.time() - start,
+            time.monotonic() - start,
         )
 
         matches = {}
@@ -303,6 +312,7 @@ class Doods(ImageProcessingEntity):
                 _LOGGER.error(response["error"])
             self._matches = matches
             self._total_matches = total_matches
+            self._process_time = time.monotonic() - start
             return
 
         for detection in response["detections"]:
@@ -375,3 +385,4 @@ class Doods(ImageProcessingEntity):
 
         self._matches = matches
         self._total_matches = total_matches
+        self._process_time = time.monotonic() - start

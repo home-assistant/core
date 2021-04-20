@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "\u5b58\u53d6\u6b0a\u6756",
+                    "host": "\u4e3b\u6a5f\u7aef"
+                },
+                "description": "\u8a2d\u5b9a Vilfo \u8def\u7531\u5668\u6574\u5408\u3002\u9700\u8981\u8f38\u5165 Vilfo \u8def\u7531\u5668\u4e3b\u6a5f\u540d\u7a31/IP \u4f4d\u5740\u3001API \u5b58\u53d6\u6b0a\u6756\u3002\u5176\u4ed6\u6574\u5408\u76f8\u95dc\u8cc7\u8a0a\uff0c\u8acb\u53c3\u8003\uff1ahttps://www.home-assistant.io/integrations/vilfo",
+                "title": "\u9023\u7dda\u81f3 Vilfo \u8def\u7531\u5668"
+            }
+        }
+    }
+}

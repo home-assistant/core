@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
+        },
+        "error": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "name": "Prefix utilitzat pels sensors de Solar-Log"
+                },
+                "title": "Configuraci\u00f3 de la connexi\u00f3 amb Solar-Log"
+            }
+        }
+    }
+}

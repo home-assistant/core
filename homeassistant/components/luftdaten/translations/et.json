@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Teenus on juba seadistatud",
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_sensor": "Andur pole saadaval v\u00f5i vigane"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "show_on_map": "Kuva kaardil",
+                    "station_id": ""
+                },
+                "title": "M\u00e4\u00e4ratle Luftdaten"
+            }
+        }
+    }
+}

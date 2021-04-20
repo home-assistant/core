@@ -1,9 +1,10 @@
 """Support to interface with the Emby API."""
 import logging
 
+from pyemby import EmbyServer
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_MOVIE,
@@ -35,8 +36,6 @@ import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_AUTO_HIDE = "auto_hide"
-
 MEDIA_TYPE_TRAILER = "trailer"
 MEDIA_TYPE_GENERIC_VIDEO = "video"
 
@@ -44,9 +43,6 @@ DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 8096
 DEFAULT_SSL_PORT = 8920
 DEFAULT_SSL = False
-DEFAULT_AUTO_HIDE = False
-
-_LOGGER = logging.getLogger(__name__)
 
 SUPPORT_EMBY = (
     SUPPORT_PAUSE
@@ -60,7 +56,6 @@ SUPPORT_EMBY = (
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_AUTO_HIDE, default=DEFAULT_AUTO_HIDE): cv.boolean,
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_PORT): cv.port,
         vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
@@ -70,13 +65,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Emby platform."""
-    from pyemby import EmbyServer
 
     host = config.get(CONF_HOST)
     key = config.get(CONF_API_KEY)
     port = config.get(CONF_PORT)
-    ssl = config.get(CONF_SSL)
-    auto_hide = config.get(CONF_AUTO_HIDE)
+    ssl = config[CONF_SSL]
 
     if port is None:
         port = DEFAULT_SSL_PORT if ssl else DEFAULT_PORT
@@ -103,13 +96,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 active_emby_devices[dev_id] = new
                 new_devices.append(new)
 
-            elif dev_id in inactive_emby_devices:
-                if emby.devices[dev_id].state != "Off":
-                    add = inactive_emby_devices.pop(dev_id)
-                    active_emby_devices[dev_id] = add
-                    _LOGGER.debug("Showing %s, item: %s", dev_id, add)
-                    add.set_available(True)
-                    add.set_hidden(False)
+            elif (
+                dev_id in inactive_emby_devices and emby.devices[dev_id].state != "Off"
+            ):
+                add = inactive_emby_devices.pop(dev_id)
+                active_emby_devices[dev_id] = add
+                _LOGGER.debug("Showing %s, item: %s", dev_id, add)
+                add.set_available(True)
 
         if new_devices:
             _LOGGER.debug("Adding new devices: %s", new_devices)
@@ -123,8 +116,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             inactive_emby_devices[data] = rem
             _LOGGER.debug("Inactive %s, item: %s", data, rem)
             rem.set_available(False)
-            if auto_hide:
-                rem.set_hidden(True)
 
     @callback
     def start_emby(event):
@@ -142,7 +133,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_emby)
 
 
-class EmbyDevice(MediaPlayerDevice):
+class EmbyDevice(MediaPlayerEntity):
     """Representation of an Emby device."""
 
     def __init__(self, emby, device_id):
@@ -152,7 +143,6 @@ class EmbyDevice(MediaPlayerDevice):
         self.device_id = device_id
         self.device = self.emby.devices[self.device_id]
 
-        self._hidden = False
         self._available = True
 
         self.media_status_last_position = None
@@ -175,16 +165,7 @@ class EmbyDevice(MediaPlayerDevice):
             self.media_status_last_position = None
             self.media_status_received = None
 
-        self.async_schedule_update_ha_state()
-
-    @property
-    def hidden(self):
-        """Return True if entity should be hidden from UI."""
-        return self._hidden
-
-    def set_hidden(self, value):
-        """Set hidden property."""
-        self._hidden = value
+        self.async_write_ha_state()
 
     @property
     def available(self):
@@ -208,9 +189,7 @@ class EmbyDevice(MediaPlayerDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        return (
-            f"Emby - {self.device.client} - {self.device.name}" or DEVICE_DEFAULT_NAME
-        )
+        return f"Emby {self.device.name}" or DEVICE_DEFAULT_NAME
 
     @property
     def should_poll(self):
@@ -325,46 +304,28 @@ class EmbyDevice(MediaPlayerDevice):
         """Flag media player features that are supported."""
         if self.supports_remote_control:
             return SUPPORT_EMBY
-        return None
+        return 0
 
-    def async_media_play(self):
-        """Play media.
+    async def async_media_play(self):
+        """Play media."""
+        await self.device.media_play()
 
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.device.media_play()
+    async def async_media_pause(self):
+        """Pause the media player."""
+        await self.device.media_pause()
 
-    def async_media_pause(self):
-        """Pause the media player.
+    async def async_media_stop(self):
+        """Stop the media player."""
+        await self.device.media_stop()
 
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.device.media_pause()
+    async def async_media_next_track(self):
+        """Send next track command."""
+        await self.device.media_next()
 
-    def async_media_stop(self):
-        """Stop the media player.
+    async def async_media_previous_track(self):
+        """Send next track command."""
+        await self.device.media_previous()
 
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.device.media_stop()
-
-    def async_media_next_track(self):
-        """Send next track command.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.device.media_next()
-
-    def async_media_previous_track(self):
-        """Send next track command.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.device.media_previous()
-
-    def async_media_seek(self, position):
-        """Send seek command.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.device.media_seek(position)
+    async def async_media_seek(self, position):
+        """Send seek command."""
+        await self.device.media_seek(position)

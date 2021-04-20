@@ -1,13 +1,17 @@
 """Support for GTFS (Google/General Transport Format Schema)."""
+from __future__ import annotations
+
 import datetime
 import logging
 import os
 import threading
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 
+import pygtfs
+from sqlalchemy.sql import text
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_NAME,
@@ -16,8 +20,11 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import (
+    ConfigType,
+    DiscoveryInfoType,
+    HomeAssistantType,
+)
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
@@ -70,6 +77,80 @@ ICONS = {
     5: "mdi:train-variant",
     6: "mdi:gondola",
     7: "mdi:stairs",
+    100: "mdi:train",
+    101: "mdi:train",
+    102: "mdi:train",
+    103: "mdi:train",
+    104: "mdi:train-car",
+    105: "mdi:train",
+    106: "mdi:train",
+    107: "mdi:train",
+    108: "mdi:train",
+    109: "mdi:train",
+    110: "mdi:train-variant",
+    111: "mdi:train-variant",
+    112: "mdi:train-variant",
+    113: "mdi:train-variant",
+    114: "mdi:train-variant",
+    115: "mdi:train-variant",
+    116: "mdi:train-variant",
+    117: "mdi:train-variant",
+    200: "mdi:bus",
+    201: "mdi:bus",
+    202: "mdi:bus",
+    203: "mdi:bus",
+    204: "mdi:bus",
+    205: "mdi:bus",
+    206: "mdi:bus",
+    207: "mdi:bus",
+    208: "mdi:bus",
+    209: "mdi:bus",
+    400: "mdi:subway-variant",
+    401: "mdi:subway-variant",
+    402: "mdi:subway",
+    403: "mdi:subway-variant",
+    404: "mdi:subway-variant",
+    405: "mdi:subway-variant",
+    700: "mdi:bus",
+    701: "mdi:bus",
+    702: "mdi:bus",
+    703: "mdi:bus",
+    704: "mdi:bus",
+    705: "mdi:bus",
+    706: "mdi:bus",
+    707: "mdi:bus",
+    708: "mdi:bus",
+    709: "mdi:bus",
+    710: "mdi:bus",
+    711: "mdi:bus",
+    712: "mdi:bus-school",
+    713: "mdi:bus-school",
+    714: "mdi:bus",
+    715: "mdi:bus",
+    716: "mdi:bus",
+    800: "mdi:bus",
+    900: "mdi:tram",
+    901: "mdi:tram",
+    902: "mdi:tram",
+    903: "mdi:tram",
+    904: "mdi:tram",
+    905: "mdi:tram",
+    906: "mdi:tram",
+    1000: "mdi:ferry",
+    1100: "mdi:airplane",
+    1200: "mdi:ferry",
+    1300: "mdi:airplane",
+    1400: "mdi:gondola",
+    1500: "mdi:taxi",
+    1501: "mdi:taxi",
+    1502: "mdi:ferry",
+    1503: "mdi:train-variant",
+    1504: "mdi:bicycle-basket",
+    1505: "mdi:taxi",
+    1506: "mdi:car-multiple",
+    1507: "mdi:taxi",
+    1700: "mdi:train-car",
+    1702: "mdi:horse-variant",
 }
 LOCATION_TYPE_DEFAULT = "Stop"
 LOCATION_TYPE_OPTIONS = {
@@ -94,6 +175,80 @@ ROUTE_TYPE_OPTIONS = {
     5: "Cable Tram",
     6: "Aerial Lift",
     7: "Funicular",
+    100: "Railway Service",
+    101: "High Speed Rail Service",
+    102: "Long Distance Trains",
+    103: "Inter Regional Rail Service",
+    104: "Car Transport Rail Service",
+    105: "Sleeper Rail Service",
+    106: "Regional Rail Service",
+    107: "Tourist Railway Service",
+    108: "Rail Shuttle (Within Complex)",
+    109: "Suburban Railway",
+    110: "Replacement Rail Service",
+    111: "Special Rail Service",
+    112: "Lorry Transport Rail Service",
+    113: "All Rail Services",
+    114: "Cross-Country Rail Service",
+    115: "Vehicle Transport Rail Service",
+    116: "Rack and Pinion Railway",
+    117: "Additional Rail Service",
+    200: "Coach Service",
+    201: "International Coach Service",
+    202: "National Coach Service",
+    203: "Shuttle Coach Service",
+    204: "Regional Coach Service",
+    205: "Special Coach Service",
+    206: "Sightseeing Coach Service",
+    207: "Tourist Coach Service",
+    208: "Commuter Coach Service",
+    209: "All Coach Services",
+    400: "Urban Railway Service",
+    401: "Metro Service",
+    402: "Underground Service",
+    403: "Urban Railway Service",
+    404: "All Urban Railway Services",
+    405: "Monorail",
+    700: "Bus Service",
+    701: "Regional Bus Service",
+    702: "Express Bus Service",
+    703: "Stopping Bus Service",
+    704: "Local Bus Service",
+    705: "Night Bus Service",
+    706: "Post Bus Service",
+    707: "Special Needs Bus",
+    708: "Mobility Bus Service",
+    709: "Mobility Bus for Registered Disabled",
+    710: "Sightseeing Bus",
+    711: "Shuttle Bus",
+    712: "School Bus",
+    713: "School and Public Service Bus",
+    714: "Rail Replacement Bus Service",
+    715: "Demand and Response Bus Service",
+    716: "All Bus Services",
+    800: "Trolleybus Service",
+    900: "Tram Service",
+    901: "City Tram Service",
+    902: "Local Tram Service",
+    903: "Regional Tram Service",
+    904: "Sightseeing Tram Service",
+    905: "Shuttle Tram Service",
+    906: "All Tram Services",
+    1000: "Water Transport Service",
+    1100: "Air Service",
+    1200: "Ferry Service",
+    1300: "Aerial Lift Service",
+    1400: "Funicular Service",
+    1500: "Taxi Service",
+    1501: "Communal Taxi Service",
+    1502: "Water Taxi Service",
+    1503: "Rail Taxi Service",
+    1504: "Bike Taxi Service",
+    1505: "Licensed Taxi Service",
+    1506: "Private Hire Service Vehicle",
+    1507: "All Taxi Services",
+    1700: "Miscellaneous Service",
+    1702: "Horse-drawn Carriage",
 }
 TIMEPOINT_DEFAULT = True
 TIMEPOINT_OPTIONS = {0: False, 1: True}
@@ -129,8 +284,6 @@ def get_next_departure(
     tomorrow = now + datetime.timedelta(days=1)
     tomorrow_date = tomorrow.strftime(dt_util.DATE_STR_FORMAT)
 
-    from sqlalchemy.sql import text
-
     # Fetch all departures for yesterday, today and optionally tomorrow,
     # up to an overkill maximum in case of a departure every minute for those
     # days.
@@ -143,7 +296,7 @@ def get_next_departure(
         tomorrow_where = f"OR calendar.{tomorrow_name} = 1"
         tomorrow_order = f"calendar.{tomorrow_name} DESC,"
 
-    sql_query = """
+    sql_query = f"""
         SELECT trip.trip_id, trip.route_id,
                time(origin_stop_time.arrival_time) AS origin_arrival_time,
                time(origin_stop_time.departure_time) AS origin_depart_time,
@@ -162,8 +315,8 @@ def get_next_departure(
                destination_stop_time.stop_headsign AS dest_stop_headsign,
                destination_stop_time.stop_sequence AS dest_stop_sequence,
                destination_stop_time.timepoint AS dest_stop_timepoint,
-               calendar.{yesterday_name} AS yesterday,
-               calendar.{today_name} AS today,
+               calendar.{yesterday.strftime("%A").lower()} AS yesterday,
+               calendar.{now.strftime("%A").lower()} AS today,
                {tomorrow_select}
                calendar.start_date AS start_date,
                calendar.end_date AS end_date
@@ -178,8 +331,8 @@ def get_next_departure(
                    ON trip.trip_id = destination_stop_time.trip_id
         INNER JOIN stops end_station
                    ON destination_stop_time.stop_id = end_station.stop_id
-        WHERE (calendar.{yesterday_name} = 1
-               OR calendar.{today_name} = 1
+        WHERE (calendar.{yesterday.strftime("%A").lower()} = 1
+               OR calendar.{now.strftime("%A").lower()} = 1
                {tomorrow_where}
                )
         AND start_station.stop_id = :origin_station_id
@@ -187,18 +340,12 @@ def get_next_departure(
         AND origin_stop_sequence < dest_stop_sequence
         AND calendar.start_date <= :today
         AND calendar.end_date >= :today
-        ORDER BY calendar.{yesterday_name} DESC,
-                 calendar.{today_name} DESC,
+        ORDER BY calendar.{yesterday.strftime("%A").lower()} DESC,
+                 calendar.{now.strftime("%A").lower()} DESC,
                  {tomorrow_order}
                  origin_stop_time.departure_time
         LIMIT :limit
-        """.format(
-        yesterday_name=yesterday.strftime("%A").lower(),
-        today_name=now.strftime("%A").lower(),
-        tomorrow_select=tomorrow_select,
-        tomorrow_where=tomorrow_where,
-        tomorrow_order=tomorrow_order,
-    )
+        """
     result = schedule.engine.execute(
         text(sql_query),
         origin_station_id=start_station_id,
@@ -220,7 +367,7 @@ def get_next_departure(
             if yesterday_start is None:
                 yesterday_start = row["origin_depart_date"]
             if yesterday_start != row["origin_depart_date"]:
-                idx = "{} {}".format(now_date, row["origin_depart_time"])
+                idx = f"{now_date} {row['origin_depart_time']}"
                 timetable[idx] = {**row, **extras}
                 yesterday_last = idx
 
@@ -233,7 +380,7 @@ def get_next_departure(
                 idx_prefix = now_date
             else:
                 idx_prefix = tomorrow_date
-            idx = "{} {}".format(idx_prefix, row["origin_depart_time"])
+            idx = f"{idx_prefix} {row['origin_depart_time']}"
             timetable[idx] = {**row, **extras}
             today_last = idx
 
@@ -247,7 +394,7 @@ def get_next_departure(
                 tomorrow_start = row["origin_depart_date"]
                 extras["first"] = True
             if tomorrow_start == row["origin_depart_date"]:
-                idx = "{} {}".format(tomorrow_date, row["origin_depart_time"])
+                idx = f"{tomorrow_date} {row['origin_depart_time']}"
                 timetable[idx] = {**row, **extras}
 
     # Flag last departures.
@@ -273,24 +420,27 @@ def get_next_departure(
     origin_arrival = now
     if item["origin_arrival_time"] > item["origin_depart_time"]:
         origin_arrival -= datetime.timedelta(days=1)
-    origin_arrival_time = "{} {}".format(
-        origin_arrival.strftime(dt_util.DATE_STR_FORMAT), item["origin_arrival_time"]
+    origin_arrival_time = (
+        f"{origin_arrival.strftime(dt_util.DATE_STR_FORMAT)} "
+        f"{item['origin_arrival_time']}"
     )
 
-    origin_depart_time = "{} {}".format(now_date, item["origin_depart_time"])
+    origin_depart_time = f"{now_date} {item['origin_depart_time']}"
 
     dest_arrival = now
     if item["dest_arrival_time"] < item["origin_depart_time"]:
         dest_arrival += datetime.timedelta(days=1)
-    dest_arrival_time = "{} {}".format(
-        dest_arrival.strftime(dt_util.DATE_STR_FORMAT), item["dest_arrival_time"]
+    dest_arrival_time = (
+        f"{dest_arrival.strftime(dt_util.DATE_STR_FORMAT)} "
+        f"{item['dest_arrival_time']}"
     )
 
     dest_depart = dest_arrival
     if item["dest_depart_time"] < item["dest_arrival_time"]:
         dest_depart += datetime.timedelta(days=1)
-    dest_depart_time = "{} {}".format(
-        dest_depart.strftime(dt_util.DATE_STR_FORMAT), item["dest_depart_time"]
+    dest_depart_time = (
+        f"{dest_depart.strftime(dt_util.DATE_STR_FORMAT)} "
+        f"{item['dest_depart_time']}"
     )
 
     depart_time = dt_util.parse_datetime(origin_depart_time)
@@ -335,7 +485,7 @@ def setup_platform(
     hass: HomeAssistantType,
     config: ConfigType,
     add_entities: Callable[[list], None],
-    discovery_info: Optional[dict] = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the GTFS sensor."""
     gtfs_dir = hass.config.path(DEFAULT_PATH)
@@ -353,8 +503,6 @@ def setup_platform(
         _LOGGER.error("The given GTFS data file/folder was not found")
         return
 
-    import pygtfs
-
     (gtfs_root, _) = os.path.splitext(data)
 
     sqlite_file = f"{gtfs_root}.sqlite?check_same_thread=False"
@@ -370,20 +518,20 @@ def setup_platform(
     )
 
 
-class GTFSDepartureSensor(Entity):
+class GTFSDepartureSensor(SensorEntity):
     """Implementation of a GTFS departure sensor."""
 
     def __init__(
         self,
-        pygtfs: Any,
-        name: Optional[Any],
+        gtfs: Any,
+        name: Any | None,
         origin: Any,
         destination: Any,
         offset: cv.time_period,
         include_tomorrow: bool,
     ) -> None:
         """Initialize the sensor."""
-        self._pygtfs = pygtfs
+        self._pygtfs = gtfs
         self.origin = origin
         self.destination = destination
         self._include_tomorrow = include_tomorrow
@@ -393,7 +541,7 @@ class GTFSDepartureSensor(Entity):
         self._available = False
         self._icon = ICON
         self._name = ""
-        self._state: Optional[str] = None
+        self._state: str | None = None
         self._attributes = {}
 
         self._agency = None
@@ -412,7 +560,7 @@ class GTFSDepartureSensor(Entity):
         return self._name
 
     @property
-    def state(self) -> Optional[str]:  # type: ignore
+    def state(self) -> str | None:  # type: ignore
         """Return the state of the sensor."""
         return self._state
 
@@ -422,7 +570,7 @@ class GTFSDepartureSensor(Entity):
         return self._available
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return the state attributes."""
         return self._attributes
 
@@ -513,15 +661,13 @@ class GTFSDepartureSensor(Entity):
             else:
                 self._icon = ICON
 
-            name = "{agency} {origin} to {destination} next departure"
-            if not self._departure:
-                name = "{default}"
-            self._name = self._custom_name or name.format(
-                agency=getattr(self._agency, "agency_name", DEFAULT_NAME),
-                default=DEFAULT_NAME,
-                origin=self.origin,
-                destination=self.destination,
+            name = (
+                f"{getattr(self._agency, 'agency_name', DEFAULT_NAME)} "
+                f"{self.origin} to {self.destination} next departure"
             )
+            if not self._departure:
+                name = f"{DEFAULT_NAME}"
+            self._name = self._custom_name or name
 
     def update_attributes(self) -> None:
         """Update state attributes."""
@@ -662,11 +808,11 @@ class GTFSDepartureSensor(Entity):
     @staticmethod
     def dict_for_table(resource: Any) -> dict:
         """Return a dictionary for the SQLAlchemy resource given."""
-        return dict(
-            (col, getattr(resource, col)) for col in resource.__table__.columns.keys()
-        )
+        return {
+            col: getattr(resource, col) for col in resource.__table__.columns.keys()
+        }
 
-    def append_keys(self, resource: dict, prefix: Optional[str] = None) -> None:
+    def append_keys(self, resource: dict, prefix: str | None = None) -> None:
         """Properly format key val pairs to append to attributes."""
         for attr, val in resource.items():
             if val == "" or val is None or attr == "feed_id":

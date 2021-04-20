@@ -1,15 +1,20 @@
 """Support for getting temperature from TEMPer devices."""
 import logging
+
+from temperusb.temper import TemperHandler
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, DEVICE_DEFAULT_NAME, TEMP_FAHRENHEIT
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_OFFSET,
+    DEVICE_DEFAULT_NAME,
+    TEMP_FAHRENHEIT,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SCALE = "scale"
-CONF_OFFSET = "offset"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -24,8 +29,6 @@ TEMPER_SENSORS = []
 
 def get_temper_devices():
     """Scan the Temper devices from temperusb."""
-    from temperusb.temper import TemperHandler
-
     return TemperHandler().get_devices()
 
 
@@ -38,7 +41,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     for idx, dev in enumerate(temper_devices):
         if idx != 0:
-            name = name + "_" + str(idx)
+            name = f"{name}_{idx!s}"
         TEMPER_SENSORS.append(TemperSensor(dev, temp_unit, name, scaling))
     add_entities(TEMPER_SENSORS)
 
@@ -54,7 +57,7 @@ def reset_devices():
         sensor.set_temper_device(device)
 
 
-class TemperSensor(Entity):
+class TemperSensor(SensorEntity):
     """Representation of a Temper temperature sensor."""
 
     def __init__(self, temper_device, temp_unit, name, scaling):

@@ -1,12 +1,20 @@
 """Support to help onboard new users."""
 from homeassistant.core import callback
-from homeassistant.loader import bind_hass
 from homeassistant.helpers.storage import Store
+from homeassistant.loader import bind_hass
 
-from .const import DOMAIN, STEP_USER, STEPS, STEP_INTEGRATION, STEP_CORE_CONFIG
+from . import views
+from .const import (
+    DOMAIN,
+    STEP_ANALYTICS,
+    STEP_CORE_CONFIG,
+    STEP_INTEGRATION,
+    STEP_USER,
+    STEPS,
+)
 
 STORAGE_KEY = DOMAIN
-STORAGE_VERSION = 3
+STORAGE_VERSION = 4
 
 
 class OnboadingStorage(Store):
@@ -19,6 +27,8 @@ class OnboadingStorage(Store):
             old_data["done"].append(STEP_INTEGRATION)
         if old_version < 3:
             old_data["done"].append(STEP_CORE_CONFIG)
+        if old_version < 4:
+            old_data["done"].append(STEP_ANALYTICS)
         return old_data
 
 
@@ -63,8 +73,6 @@ async def async_setup(hass, config):
         return True
 
     hass.data[DOMAIN] = data
-
-    from . import views
 
     await views.async_setup(hass, data, store)
 

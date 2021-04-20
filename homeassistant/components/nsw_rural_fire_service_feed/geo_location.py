@@ -1,8 +1,10 @@
 """Support for NSW Rural Fire Service Feeds."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import Optional
 
+from aio_geojson_nsw_rfs_incidents import NswRuralFireServiceIncidentsFeedManager
 import voluptuous as vol
 
 from homeassistant.components.geo_location import PLATFORM_SCHEMA, GeolocationEvent
@@ -14,11 +16,17 @@ from homeassistant.const import (
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP,
+    LENGTH_KILOMETERS,
 )
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
-from homeassistant.helpers.event import track_time_interval
+from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
+from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +43,6 @@ ATTR_TYPE = "type"
 CONF_CATEGORIES = "categories"
 
 DEFAULT_RADIUS_IN_KM = 20.0
-DEFAULT_UNIT_OF_MEASUREMENT = "km"
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
@@ -58,7 +65,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+):
     """Set up the NSW Rural Fire Service Feed platform."""
     scan_interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
     coordinates = (
@@ -68,30 +77,40 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     radius_in_km = config[CONF_RADIUS]
     categories = config.get(CONF_CATEGORIES)
     # Initialize the entity manager.
-    feed = NswRuralFireServiceFeedEntityManager(
-        hass, add_entities, scan_interval, coordinates, radius_in_km, categories
+    manager = NswRuralFireServiceFeedEntityManager(
+        hass, async_add_entities, scan_interval, coordinates, radius_in_km, categories
     )
 
-    def start_feed_manager(event):
+    async def start_feed_manager(event):
         """Start feed manager."""
-        feed.startup()
+        await manager.async_init()
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_feed_manager)
+    async def stop_feed_manager(event):
+        """Stop feed manager."""
+        await manager.async_stop()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_feed_manager)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_feed_manager)
+    hass.async_create_task(manager.async_update())
 
 
 class NswRuralFireServiceFeedEntityManager:
     """Feed Entity Manager for NSW Rural Fire Service GeoJSON feed."""
 
     def __init__(
-        self, hass, add_entities, scan_interval, coordinates, radius_in_km, categories
+        self,
+        hass,
+        async_add_entities,
+        scan_interval,
+        coordinates,
+        radius_in_km,
+        categories,
     ):
         """Initialize the Feed Entity Manager."""
-        from geojson_client.nsw_rural_fire_service_feed import (
-            NswRuralFireServiceFeedManager,
-        )
-
         self._hass = hass
-        self._feed_manager = NswRuralFireServiceFeedManager(
+        websession = aiohttp_client.async_get_clientsession(hass)
+        self._feed_manager = NswRuralFireServiceIncidentsFeedManager(
+            websession,
             self._generate_entity,
             self._update_entity,
             self._remove_entity,
@@ -99,37 +118,52 @@ class NswRuralFireServiceFeedEntityManager:
             filter_radius=radius_in_km,
             filter_categories=categories,
         )
-        self._add_entities = add_entities
+        self._async_add_entities = async_add_entities
         self._scan_interval = scan_interval
+        self._track_time_remove_callback = None
 
-    def startup(self):
-        """Start up this manager."""
-        self._feed_manager.update()
-        self._init_regular_updates()
+    async def async_init(self):
+        """Schedule initial and regular updates based on configured time interval."""
 
-    def _init_regular_updates(self):
-        """Schedule regular updates at the specified interval."""
-        track_time_interval(
-            self._hass, lambda now: self._feed_manager.update(), self._scan_interval
+        async def update(event_time):
+            """Update."""
+            await self.async_update()
+
+        # Trigger updates at regular intervals.
+        self._track_time_remove_callback = async_track_time_interval(
+            self._hass, update, self._scan_interval
         )
+
+        _LOGGER.debug("Feed entity manager initialized")
+
+    async def async_update(self):
+        """Refresh data."""
+        await self._feed_manager.update()
+        _LOGGER.debug("Feed entity manager updated")
+
+    async def async_stop(self):
+        """Stop this feed entity manager from refreshing."""
+        if self._track_time_remove_callback:
+            self._track_time_remove_callback()
+        _LOGGER.debug("Feed entity manager stopped")
 
     def get_entry(self, external_id):
         """Get feed entry by external id."""
         return self._feed_manager.feed_entries.get(external_id)
 
-    def _generate_entity(self, external_id):
+    async def _generate_entity(self, external_id):
         """Generate new entity."""
         new_entity = NswRuralFireServiceLocationEvent(self, external_id)
         # Add new entities to HA.
-        self._add_entities([new_entity], True)
+        self._async_add_entities([new_entity], True)
 
-    def _update_entity(self, external_id):
+    async def _update_entity(self, external_id):
         """Update entity."""
-        dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY.format(external_id))
+        async_dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY.format(external_id))
 
-    def _remove_entity(self, external_id):
+    async def _remove_entity(self, external_id):
         """Remove entity."""
-        dispatcher_send(self._hass, SIGNAL_DELETE_ENTITY.format(external_id))
+        async_dispatcher_send(self._hass, SIGNAL_DELETE_ENTITY.format(external_id))
 
 
 class NswRuralFireServiceLocationEvent(GeolocationEvent):
@@ -169,12 +203,15 @@ class NswRuralFireServiceLocationEvent(GeolocationEvent):
             self._update_callback,
         )
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Call when entity will be removed from hass."""
+        self._remove_signal_delete()
+        self._remove_signal_update()
+
     @callback
     def _delete_callback(self):
         """Remove this entity."""
-        self._remove_signal_delete()
-        self._remove_signal_update()
-        self.hass.async_create_task(self.async_remove())
+        self.hass.async_create_task(self.async_remove(force_remove=True))
 
     @callback
     def _update_callback(self):
@@ -223,32 +260,32 @@ class NswRuralFireServiceLocationEvent(GeolocationEvent):
         return SOURCE
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str | None:
         """Return the name of the entity."""
         return self._name
 
     @property
-    def distance(self) -> Optional[float]:
+    def distance(self) -> float | None:
         """Return distance value of this external event."""
         return self._distance
 
     @property
-    def latitude(self) -> Optional[float]:
+    def latitude(self) -> float | None:
         """Return latitude value of this external event."""
         return self._latitude
 
     @property
-    def longitude(self) -> Optional[float]:
+    def longitude(self) -> float | None:
         """Return longitude value of this external event."""
         return self._longitude
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return DEFAULT_UNIT_OF_MEASUREMENT
+        return LENGTH_KILOMETERS
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         attributes = {}
         for key, value in (

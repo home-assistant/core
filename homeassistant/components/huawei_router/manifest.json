@@ -1,10 +1,7 @@
 {
   "domain": "huawei_router",
-  "name": "Huawei router",
+  "name": "Huawei Router",
   "documentation": "https://www.home-assistant.io/integrations/huawei_router",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": [
-    "@abmantis"
-  ]
+  "codeowners": ["@abmantis"],
+  "iot_class": "local_polling"
 }

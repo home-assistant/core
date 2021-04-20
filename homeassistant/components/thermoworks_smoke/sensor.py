@@ -2,9 +2,6 @@
 Support for getting the state of a Thermoworks Smoke Thermometer.
 
 Requires Smoke Gateway Wifi with an internet connection.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.thermoworks_smoke/
 """
 import logging
 
@@ -14,7 +11,7 @@ from stringcase import camelcase, snakecase
 import thermoworks_smoke
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     CONF_EMAIL,
@@ -24,7 +21,6 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,7 +90,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             _LOGGER.error(msg)
 
 
-class ThermoworksSmokeSensor(Entity):
+class ThermoworksSmokeSensor(SensorEntity):
     """Implementation of a thermoworks smoke sensor."""
 
     def __init__(self, sensor_type, serial, mgr):
@@ -127,7 +123,7 @@ class ThermoworksSmokeSensor(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._attributes
 

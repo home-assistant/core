@@ -2,10 +2,11 @@
 from datetime import timedelta
 import logging
 
+import nikohomecontrol
 import voluptuous as vol
 
 # Import the device class from the component that you want to support
-from homeassistant.components.light import ATTR_BRIGHTNESS, PLATFORM_SCHEMA, Light
+from homeassistant.components.light import ATTR_BRIGHTNESS, PLATFORM_SCHEMA, LightEntity
 from homeassistant.const import CONF_HOST
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
@@ -20,8 +21,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Niko Home Control light platform."""
-    import nikohomecontrol
-
     host = config[CONF_HOST]
 
     try:
@@ -32,14 +31,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         await niko_data.async_update()
     except OSError as err:
         _LOGGER.error("Unable to access %s (%s)", host, err)
-        raise PlatformNotReady
+        raise PlatformNotReady from err
 
     async_add_entities(
         [NikoHomeControlLight(light, niko_data) for light in nhc.list_actions()], True
     )
 
 
-class NikoHomeControlLight(Light):
+class NikoHomeControlLight(LightEntity):
     """Representation of an Niko Light."""
 
     def __init__(self, light, data):

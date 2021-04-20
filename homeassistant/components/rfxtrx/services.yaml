@@ -1,0 +1,6 @@
+send:
+  description: Sends a raw event on radio.
+  fields:
+    event:
+      description: A hexadecimal string to send.
+      example: "0b11009e00e6116202020070"

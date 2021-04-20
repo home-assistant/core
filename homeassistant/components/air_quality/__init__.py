@@ -1,18 +1,22 @@
 """Component for handling Air Quality data for your location."""
 from datetime import timedelta
 import logging
+from typing import final
 
-from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.config_validation import (  # noqa
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+)
+from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_component import EntityComponent
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_AQI = "air_quality_index"
-ATTR_ATTRIBUTION = "attribution"
 ATTR_CO2 = "carbon_dioxide"
 ATTR_CO = "carbon_monoxide"
 ATTR_N2O = "nitrogen_oxide"
@@ -128,6 +132,7 @@ class AirQualityEntity(Entity):
         """Return the NO2 (nitrogen dioxide) level."""
         return None
 
+    @final
     @property
     def state_attributes(self):
         """Return the state attributes."""
@@ -144,3 +149,8 @@ class AirQualityEntity(Entity):
     def state(self):
         """Return the current state."""
         return self.particulate_matter_2_5
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity."""
+        return CONCENTRATION_MICROGRAMS_PER_CUBIC_METER

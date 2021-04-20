@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "existing_instance_updated": "Opdaterede eksisterende konfiguration.",
+            "single_instance_allowed": "Kun en enkelt konfiguration af AdGuard Home er tilladt."
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "Vil du konfigurere Home Assistant til at oprette forbindelse til AdGuard Home leveret af Supervisor-tilf\u00f8jelsen: {addon}?",
+                "title": "AdGuard Home via Supervisor-tilf\u00f8jelse"
+            },
+            "user": {
+                "data": {
+                    "password": "Adgangskode",
+                    "ssl": "AdGuard Home bruger et SSL-certifikat",
+                    "username": "Brugernavn",
+                    "verify_ssl": "AdGuard Home bruger et korrekt certifikat"
+                },
+                "description": "Konfigurer din AdGuard Home-instans for at tillade overv\u00e5gning og kontrol."
+            }
+        }
+    }
+}

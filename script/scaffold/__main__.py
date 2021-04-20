@@ -4,9 +4,8 @@ from pathlib import Path
 import subprocess
 import sys
 
-from . import gather_info, generate, error, docs
+from . import docs, error, gather_info, generate
 from .const import COMPONENT_DIR
-
 
 TEMPLATES = [
     p.name for p in (Path(__file__).parent / "templates").glob("*") if p.is_dir()
@@ -48,34 +47,60 @@ def main():
     args = get_arguments()
 
     info = gather_info.gather_info(args)
+    print()
 
-    generate.generate(args.template, info)
+    # If we are calling scaffold on a non-existing integration,
+    # We're going to first make it. If we're making an integration,
+    # we will also make a config flow to go with it.
 
-    # If creating new integration, create config flow too
-    if args.template == "integration":
-        if info.authentication or not info.discoverable:
-            template = "config_flow"
-        else:
-            template = "config_flow_discovery"
+    if info.is_new:
+        generate.generate("integration", info)
 
-        generate.generate(template, info)
+        # If it's a new integration and it's not a config flow,
+        # create a config flow too.
+        if not args.template.startswith("config_flow"):
+            if info.oauth2:
+                template = "config_flow_oauth2"
+            elif info.authentication or not info.discoverable:
+                template = "config_flow"
+            else:
+                template = "config_flow_discovery"
+
+            generate.generate(template, info)
+
+    # If we wanted a new integration, we've already done our work.
+    if args.template != "integration":
+        generate.generate(args.template, info)
+
+    pipe_null = {} if args.develop else {"stdout": subprocess.DEVNULL}
 
     print("Running hassfest to pick up new information.")
-    subprocess.run("python -m script.hassfest", shell=True)
+    subprocess.run(["python", "-m", "script.hassfest"], **pipe_null)
     print()
 
-    print("Running tests")
-    print(f"$ pytest -vvv tests/components/{info.domain}")
-    if (
-        subprocess.run(
-            f"pytest -vvv tests/components/{info.domain}", shell=True
-        ).returncode
-        != 0
-    ):
-        return 1
+    print("Running gen_requirements_all to pick up new information.")
+    subprocess.run(["python", "-m", "script.gen_requirements_all"], **pipe_null)
     print()
 
-    print(f"Done!")
+    print("Running script/translations_develop to pick up new translation strings.")
+    subprocess.run(
+        [
+            "python",
+            "-m",
+            "script.translations",
+            "develop",
+            "--integration",
+            info.domain,
+        ],
+        **pipe_null,
+    )
+    print()
+
+    if args.develop:
+        print("Running tests")
+        print(f"$ pytest -vvv tests/components/{info.domain}")
+        subprocess.run(["pytest", "-vvv", "tests/components/{info.domain}"])
+        print()
 
     docs.print_relevant_docs(args.template, info)
 

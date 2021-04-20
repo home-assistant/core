@@ -1,19 +1,26 @@
 """Tests for the Alexa integration."""
 from uuid import uuid4
 
-from homeassistant.core import Context
 from homeassistant.components.alexa import config, smart_home
+from homeassistant.core import Context, callback
 
 from tests.common import async_mock_service
 
 TEST_URL = "https://api.amazonalexa.com/v3/events"
 TEST_TOKEN_URL = "https://api.amazon.com/auth/o2/token"
+TEST_LOCALE = "en-US"
 
 
 class MockConfig(config.AbstractConfig):
     """Mock Alexa config."""
 
-    entity_config = {}
+    entity_config = {
+        "binary_sensor.test_doorbell": {"display_categories": "DOORBELL"},
+        "binary_sensor.test_contact_forced": {"display_categories": "CONTACT_SENSOR"},
+        "binary_sensor.test_motion_forced": {"display_categories": "MOTION_SENSOR"},
+        "binary_sensor.test_motion_camera_event": {"display_categories": "CAMERA"},
+        "camera.test": {"display_categories": "CAMERA"},
+    }
 
     @property
     def supports_auth(self):
@@ -25,6 +32,16 @@ class MockConfig(config.AbstractConfig):
         """Endpoint for report state."""
         return TEST_URL
 
+    @property
+    def locale(self):
+        """Return config locale."""
+        return TEST_LOCALE
+
+    @callback
+    def user_identifier(self):
+        """Return an identifier for the user that represents this config."""
+        return "mock-user-id"
+
     def should_expose(self, entity_id):
         """If an entity should be exposed."""
         return True
@@ -35,7 +52,6 @@ class MockConfig(config.AbstractConfig):
 
     async def async_accept_grant(self, code):
         """Accept a grant."""
-        pass
 
 
 DEFAULT_CONFIG = MockConfig(None)
@@ -67,13 +83,22 @@ def get_new_request(namespace, name, endpoint=None):
 
 
 async def assert_request_calls_service(
-    namespace, name, endpoint, service, hass, response_type="Response", payload=None
+    namespace,
+    name,
+    endpoint,
+    service,
+    hass,
+    response_type="Response",
+    payload=None,
+    instance=None,
 ):
     """Assert an API request calls a hass service."""
     context = Context()
     request = get_new_request(namespace, name, endpoint)
     if payload:
         request["directive"]["payload"] = payload
+    if instance:
+        request["directive"]["header"]["instance"] = instance
 
     domain, service_name = service.split(".")
     calls = async_mock_service(hass, domain, service_name)
@@ -184,4 +209,4 @@ class ReportedProperties:
                 assert prop["value"] == value
                 return prop
 
-        assert False, "property %s:%s not in %r" % (namespace, name, self.properties)
+        assert False, f"property {namespace}:{name} not in {self.properties!r}"

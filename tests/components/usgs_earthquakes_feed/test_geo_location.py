@@ -1,36 +1,38 @@
 """The tests for the USGS Earthquake Hazards Program Feed platform."""
 import datetime
-from unittest.mock import patch, MagicMock, call
+from unittest.mock import MagicMock, call, patch
 
 from homeassistant.components import geo_location
 from homeassistant.components.geo_location import ATTR_SOURCE
 from homeassistant.components.usgs_earthquakes_feed.geo_location import (
     ATTR_ALERT,
     ATTR_EXTERNAL_ID,
-    SCAN_INTERVAL,
-    ATTR_PLACE,
     ATTR_MAGNITUDE,
+    ATTR_PLACE,
     ATTR_STATUS,
-    ATTR_TYPE,
     ATTR_TIME,
+    ATTR_TYPE,
     ATTR_UPDATED,
     CONF_FEED_TYPE,
+    SCAN_INTERVAL,
 )
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START,
-    CONF_RADIUS,
+    ATTR_ATTRIBUTION,
+    ATTR_FRIENDLY_NAME,
+    ATTR_ICON,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
-    ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
-    ATTR_ATTRIBUTION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    ATTR_ICON,
+    CONF_RADIUS,
+    EVENT_HOMEASSISTANT_START,
+    LENGTH_KILOMETERS,
 )
 from homeassistant.setup import async_setup_component
-from tests.common import assert_setup_component, async_fire_time_changed
 import homeassistant.util.dt as dt_util
+
+from tests.common import assert_setup_component, async_fire_time_changed
 
 CONFIG = {
     geo_location.DOMAIN: [
@@ -119,6 +121,7 @@ async def test_setup(hass):
         )
         with assert_setup_component(1, geo_location.DOMAIN):
             assert await async_setup_component(hass, geo_location.DOMAIN, CONFIG)
+            await hass.async_block_till_done()
             # Artificially trigger update.
             hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
             # Collect events.
@@ -147,7 +150,7 @@ async def test_setup(hass):
                 ATTR_TYPE: "Type 1",
                 ATTR_ALERT: "Alert 1",
                 ATTR_MAGNITUDE: 5.7,
-                ATTR_UNIT_OF_MEASUREMENT: "km",
+                ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
                 ATTR_SOURCE: "usgs_earthquakes_feed",
                 ATTR_ICON: "mdi:pulse",
             }
@@ -161,7 +164,7 @@ async def test_setup(hass):
                 ATTR_LATITUDE: -31.1,
                 ATTR_LONGITUDE: 150.1,
                 ATTR_FRIENDLY_NAME: "Title 2",
-                ATTR_UNIT_OF_MEASUREMENT: "km",
+                ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
                 ATTR_SOURCE: "usgs_earthquakes_feed",
                 ATTR_ICON: "mdi:pulse",
             }
@@ -175,7 +178,7 @@ async def test_setup(hass):
                 ATTR_LATITUDE: -31.2,
                 ATTR_LONGITUDE: 150.2,
                 ATTR_FRIENDLY_NAME: "Title 3",
-                ATTR_UNIT_OF_MEASUREMENT: "km",
+                ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
                 ATTR_SOURCE: "usgs_earthquakes_feed",
                 ATTR_ICON: "mdi:pulse",
             }
@@ -226,6 +229,7 @@ async def test_setup_with_custom_location(hass):
             assert await async_setup_component(
                 hass, geo_location.DOMAIN, CONFIG_WITH_CUSTOM_LOCATION
             )
+            await hass.async_block_till_done()
 
             # Artificially trigger update.
             hass.bus.async_fire(EVENT_HOMEASSISTANT_START)

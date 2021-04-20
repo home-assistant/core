@@ -1,7 +1,28 @@
 """Support for HDMI CEC devices as media players."""
 import logging
 
-from homeassistant.components.media_player import MediaPlayerDevice
+from pycec.commands import CecCommand, KeyPressCommand, KeyReleaseCommand
+from pycec.const import (
+    KEY_BACKWARD,
+    KEY_FORWARD,
+    KEY_MUTE_TOGGLE,
+    KEY_PAUSE,
+    KEY_PLAY,
+    KEY_STOP,
+    KEY_VOLUME_DOWN,
+    KEY_VOLUME_UP,
+    POWER_OFF,
+    POWER_ON,
+    STATUS_PLAY,
+    STATUS_STILL,
+    STATUS_STOP,
+    TYPE_AUDIO,
+    TYPE_PLAYBACK,
+    TYPE_RECORDER,
+    TYPE_TUNER,
+)
+
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     DOMAIN,
     SUPPORT_NEXT_TRACK,
@@ -22,7 +43,7 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 
-from . import ATTR_NEW, CecDevice
+from . import ATTR_NEW, CecEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,22 +57,20 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         entities = []
         for device in discovery_info[ATTR_NEW]:
             hdmi_device = hass.data.get(device)
-            entities.append(CecPlayerDevice(hdmi_device, hdmi_device.logical_address))
+            entities.append(CecPlayerEntity(hdmi_device, hdmi_device.logical_address))
         add_entities(entities, True)
 
 
-class CecPlayerDevice(CecDevice, MediaPlayerDevice):
+class CecPlayerEntity(CecEntity, MediaPlayerEntity):
     """Representation of a HDMI device as a Media player."""
 
     def __init__(self, device, logical) -> None:
         """Initialize the HDMI device."""
-        CecDevice.__init__(self, device, logical)
-        self.entity_id = "%s.%s_%s" % (DOMAIN, "hdmi", hex(self._logical_address)[2:])
+        CecEntity.__init__(self, device, logical)
+        self.entity_id = f"{DOMAIN}.hdmi_{hex(self._logical_address)[2:]}"
 
     def send_keypress(self, key):
         """Send keypress to CEC adapter."""
-        from pycec.commands import KeyPressCommand, KeyReleaseCommand
-
         _LOGGER.debug(
             "Sending keypress %s to device %s", hex(key), hex(self._logical_address)
         )
@@ -60,20 +79,14 @@ class CecPlayerDevice(CecDevice, MediaPlayerDevice):
 
     def send_playback(self, key):
         """Send playback status to CEC adapter."""
-        from pycec.commands import CecCommand
-
         self._device.async_send_command(CecCommand(key, dst=self._logical_address))
 
     def mute_volume(self, mute):
         """Mute volume."""
-        from pycec.const import KEY_MUTE_TOGGLE
-
         self.send_keypress(KEY_MUTE_TOGGLE)
 
     def media_previous_track(self):
         """Go to previous track."""
-        from pycec.const import KEY_BACKWARD
-
         self.send_keypress(KEY_BACKWARD)
 
     def turn_on(self):
@@ -92,8 +105,6 @@ class CecPlayerDevice(CecDevice, MediaPlayerDevice):
 
     def media_stop(self):
         """Stop playback."""
-        from pycec.const import KEY_STOP
-
         self.send_keypress(KEY_STOP)
         self._state = STATE_IDLE
 
@@ -103,8 +114,6 @@ class CecPlayerDevice(CecDevice, MediaPlayerDevice):
 
     def media_next_track(self):
         """Skip to next track."""
-        from pycec.const import KEY_FORWARD
-
         self.send_keypress(KEY_FORWARD)
 
     def media_seek(self, position):
@@ -117,8 +126,6 @@ class CecPlayerDevice(CecDevice, MediaPlayerDevice):
 
     def media_pause(self):
         """Pause playback."""
-        from pycec.const import KEY_PAUSE
-
         self.send_keypress(KEY_PAUSE)
         self._state = STATE_PAUSED
 
@@ -128,22 +135,16 @@ class CecPlayerDevice(CecDevice, MediaPlayerDevice):
 
     def media_play(self):
         """Start playback."""
-        from pycec.const import KEY_PLAY
-
         self.send_keypress(KEY_PLAY)
         self._state = STATE_PLAYING
 
     def volume_up(self):
         """Increase volume."""
-        from pycec.const import KEY_VOLUME_UP
-
         _LOGGER.debug("%s: volume up", self._logical_address)
         self.send_keypress(KEY_VOLUME_UP)
 
     def volume_down(self):
         """Decrease volume."""
-        from pycec.const import KEY_VOLUME_DOWN
-
         _LOGGER.debug("%s: volume down", self._logical_address)
         self.send_keypress(KEY_VOLUME_DOWN)
 
@@ -155,14 +156,6 @@ class CecPlayerDevice(CecDevice, MediaPlayerDevice):
     def update(self):
         """Update device status."""
         device = self._device
-        from pycec.const import (
-            STATUS_PLAY,
-            STATUS_STOP,
-            STATUS_STILL,
-            POWER_OFF,
-            POWER_ON,
-        )
-
         if device.power_status in [POWER_OFF, 3]:
             self._state = STATE_OFF
         elif not self.support_pause:
@@ -180,8 +173,6 @@ class CecPlayerDevice(CecDevice, MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        from pycec.const import TYPE_RECORDER, TYPE_PLAYBACK, TYPE_TUNER, TYPE_AUDIO
-
         if self.type_id == TYPE_RECORDER or self.type == TYPE_PLAYBACK:
             return (
                 SUPPORT_TURN_ON

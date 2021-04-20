@@ -1,46 +1,57 @@
 """Support for powering relays in a DoorBird video doorbell."""
 import datetime
-import logging
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
+from homeassistant.core import callback
+from homeassistant.helpers.event import async_track_point_in_utc_time
 import homeassistant.util.dt as dt_util
 
-from . import DOMAIN as DOORBIRD_DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN, DOOR_STATION, DOOR_STATION_INFO
+from .entity import DoorBirdEntity
 
 IR_RELAY = "__ir_light__"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the DoorBird switch platform."""
-    switches = []
+    entities = []
+    config_entry_id = config_entry.entry_id
 
-    for doorstation in hass.data[DOORBIRD_DOMAIN]:
-        relays = doorstation.device.info()["RELAYS"]
-        relays.append(IR_RELAY)
+    data = hass.data[DOMAIN][config_entry_id]
+    doorstation = data[DOOR_STATION]
+    doorstation_info = data[DOOR_STATION_INFO]
 
-        for relay in relays:
-            switch = DoorBirdSwitch(doorstation, relay)
-            switches.append(switch)
+    relays = doorstation_info["RELAYS"]
+    relays.append(IR_RELAY)
 
-    add_entities(switches)
+    for relay in relays:
+        switch = DoorBirdSwitch(doorstation, doorstation_info, relay)
+        entities.append(switch)
+
+    async_add_entities(entities)
 
 
-class DoorBirdSwitch(SwitchDevice):
+class DoorBirdSwitch(DoorBirdEntity, SwitchEntity):
     """A relay in a DoorBird device."""
 
-    def __init__(self, doorstation, relay):
+    def __init__(self, doorstation, doorstation_info, relay):
         """Initialize a relay in a DoorBird device."""
+        super().__init__(doorstation, doorstation_info)
         self._doorstation = doorstation
         self._relay = relay
         self._state = False
-        self._assume_off = datetime.datetime.min
 
         if relay == IR_RELAY:
             self._time = datetime.timedelta(minutes=5)
         else:
             self._time = datetime.timedelta(seconds=5)
+        self._unique_id = f"{self._mac_addr}_{self._relay}"
+        self._reset_sub = None
+
+    @property
+    def unique_id(self):
+        """Switch unique id."""
+        return self._unique_id
 
     @property
     def name(self):
@@ -56,26 +67,40 @@ class DoorBirdSwitch(SwitchDevice):
         return "mdi:lightbulb" if self._relay == IR_RELAY else "mdi:dip-switch"
 
     @property
+    def should_poll(self):
+        """No need to poll."""
+        return False
+
+    @property
     def is_on(self):
         """Get the assumed state of the relay."""
         return self._state
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
+        """Power the relay."""
+        if self._reset_sub is not None:
+            self._reset_sub()
+            self._reset_sub = None
+        self._reset_sub = async_track_point_in_utc_time(
+            self.hass, self._async_turn_off, dt_util.utcnow() + self._time
+        )
+        await self.hass.async_add_executor_job(self._turn_on)
+        self.async_write_ha_state()
+
+    def _turn_on(self):
         """Power the relay."""
         if self._relay == IR_RELAY:
             self._state = self._doorstation.device.turn_light_on()
         else:
             self._state = self._doorstation.device.energize_relay(self._relay)
 
-        now = dt_util.utcnow()
-        self._assume_off = now + self._time
-
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn off the relays is not needed. They are time-based."""
         raise NotImplementedError("DoorBird relays cannot be manually turned off.")
 
-    def update(self):
+    @callback
+    def _async_turn_off(self, *_):
         """Wait for the correct amount of assumed time to pass."""
-        if self._state and self._assume_off <= dt_util.utcnow():
-            self._state = False
-            self._assume_off = datetime.datetime.min
+        self._state = False
+        self._reset_sub = None
+        self.async_write_ha_state()

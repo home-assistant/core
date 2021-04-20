@@ -1,10 +1,9 @@
 {
   "domain": "elkm1",
-  "name": "Elkm1",
+  "name": "Elk-M1 Control",
   "documentation": "https://www.home-assistant.io/integrations/elkm1",
-  "requirements": [
-    "elkm1-lib==0.7.15"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "requirements": ["elkm1-lib==0.8.10"],
+  "codeowners": ["@gwww", "@bdraco"],
+  "config_flow": true,
+  "iot_class": "local_push"
 }

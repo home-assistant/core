@@ -1,136 +1,53 @@
 """This component provides HA sensor support for Ring Door Bell/Chimes."""
-import logging
-
-import voluptuous as vol
-
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_ENTITY_NAMESPACE,
-    CONF_MONITORED_CONDITIONS,
+    DEVICE_CLASS_TIMESTAMP,
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
 )
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.icon import icon_for_battery_level
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.core import callback
+from homeassistant.helpers.icon import icon_for_battery_level
 
-from . import (
-    ATTRIBUTION,
-    DATA_RING_CHIMES,
-    DATA_RING_DOORBELLS,
-    DATA_RING_STICKUP_CAMS,
-    DEFAULT_ENTITY_NAMESPACE,
-    SIGNAL_UPDATE_RING,
-)
-
-_LOGGER = logging.getLogger(__name__)
-
-# Sensor types: Name, category, units, icon, kind
-SENSOR_TYPES = {
-    "battery": ["Battery", ["doorbell", "stickup_cams"], "%", "battery-50", None],
-    "last_activity": [
-        "Last Activity",
-        ["doorbell", "stickup_cams"],
-        None,
-        "history",
-        None,
-    ],
-    "last_ding": ["Last Ding", ["doorbell"], None, "history", "ding"],
-    "last_motion": [
-        "Last Motion",
-        ["doorbell", "stickup_cams"],
-        None,
-        "history",
-        "motion",
-    ],
-    "volume": [
-        "Volume",
-        ["chime", "doorbell", "stickup_cams"],
-        None,
-        "bell-ring",
-        None,
-    ],
-    "wifi_signal_category": [
-        "WiFi Signal Category",
-        ["chime", "doorbell", "stickup_cams"],
-        None,
-        "wifi",
-        None,
-    ],
-    "wifi_signal_strength": [
-        "WiFi Signal Strength",
-        ["chime", "doorbell", "stickup_cams"],
-        "dBm",
-        "wifi",
-        None,
-    ],
-}
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(
-            CONF_ENTITY_NAMESPACE, default=DEFAULT_ENTITY_NAMESPACE
-        ): cv.string,
-        vol.Required(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
-        ),
-    }
-)
+from . import DOMAIN
+from .entity import RingEntityMixin
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up a sensor for a Ring device."""
-    ring_chimes = hass.data[DATA_RING_CHIMES]
-    ring_doorbells = hass.data[DATA_RING_DOORBELLS]
-    ring_stickup_cams = hass.data[DATA_RING_STICKUP_CAMS]
+    devices = hass.data[DOMAIN][config_entry.entry_id]["devices"]
 
     sensors = []
-    for device in ring_chimes:
-        for sensor_type in config[CONF_MONITORED_CONDITIONS]:
-            if "chime" in SENSOR_TYPES[sensor_type][1]:
-                sensors.append(RingSensor(hass, device, sensor_type))
 
-    for device in ring_doorbells:
-        for sensor_type in config[CONF_MONITORED_CONDITIONS]:
-            if "doorbell" in SENSOR_TYPES[sensor_type][1]:
-                sensors.append(RingSensor(hass, device, sensor_type))
+    for device_type in ("chimes", "doorbots", "authorized_doorbots", "stickup_cams"):
+        for sensor_type in SENSOR_TYPES:
+            if device_type not in SENSOR_TYPES[sensor_type][1]:
+                continue
 
-    for device in ring_stickup_cams:
-        for sensor_type in config[CONF_MONITORED_CONDITIONS]:
-            if "stickup_cams" in SENSOR_TYPES[sensor_type][1]:
-                sensors.append(RingSensor(hass, device, sensor_type))
+            for device in devices[device_type]:
+                if device_type == "battery" and device.battery_life is None:
+                    continue
 
-    add_entities(sensors, True)
-    return True
+                sensors.append(
+                    SENSOR_TYPES[sensor_type][6](
+                        config_entry.entry_id, device, sensor_type
+                    )
+                )
+
+    async_add_entities(sensors)
 
 
-class RingSensor(Entity):
+class RingSensor(RingEntityMixin, SensorEntity):
     """A sensor implementation for Ring device."""
 
-    def __init__(self, hass, data, sensor_type):
+    def __init__(self, config_entry_id, device, sensor_type):
         """Initialize a sensor for Ring device."""
-        super().__init__()
+        super().__init__(config_entry_id, device)
         self._sensor_type = sensor_type
-        self._data = data
         self._extra = None
-        self._icon = "mdi:{}".format(SENSOR_TYPES.get(self._sensor_type)[3])
-        self._kind = SENSOR_TYPES.get(self._sensor_type)[4]
-        self._name = "{0} {1}".format(
-            self._data.name, SENSOR_TYPES.get(self._sensor_type)[0]
-        )
-        self._state = None
-        self._tz = str(hass.config.time_zone)
-        self._unique_id = f"{self._data.id}-{self._sensor_type}"
-
-    async def async_added_to_hass(self):
-        """Register callbacks."""
-        async_dispatcher_connect(self.hass, SIGNAL_UPDATE_RING, self._update_callback)
-
-    @callback
-    def _update_callback(self):
-        """Call update method."""
-        self.async_schedule_update_ha_state(True)
+        self._icon = f"mdi:{SENSOR_TYPES.get(sensor_type)[3]}"
+        self._kind = SENSOR_TYPES.get(sensor_type)[4]
+        self._name = f"{self._device.name} {SENSOR_TYPES.get(sensor_type)[0]}"
+        self._unique_id = f"{device.id}-{sensor_type}"
 
     @property
     def should_poll(self):
@@ -145,7 +62,11 @@ class RingSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._state
+        if self._sensor_type == "volume":
+            return self._device.volume
+
+        if self._sensor_type == "battery":
+            return self._device.battery_life
 
     @property
     def unique_id(self):
@@ -153,32 +74,16 @@ class RingSensor(Entity):
         return self._unique_id
 
     @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        attrs = {}
-
-        attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
-        attrs["device_id"] = self._data.id
-        attrs["firmware"] = self._data.firmware
-        attrs["kind"] = self._data.kind
-        attrs["timezone"] = self._data.timezone
-        attrs["type"] = self._data.family
-        attrs["wifi_name"] = self._data.wifi_name
-
-        if self._extra and self._sensor_type.startswith("last_"):
-            attrs["created_at"] = self._extra["created_at"]
-            attrs["answered"] = self._extra["answered"]
-            attrs["recording_status"] = self._extra["recording"]["status"]
-            attrs["category"] = self._extra["kind"]
-
-        return attrs
+    def device_class(self):
+        """Return sensor device class."""
+        return SENSOR_TYPES[self._sensor_type][5]
 
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        if self._sensor_type == "battery" and self._state is not None:
+        if self._sensor_type == "battery" and self._device.battery_life is not None:
             return icon_for_battery_level(
-                battery_level=int(self._state), charging=False
+                battery_level=self._device.battery_life, charging=False
             )
         return self._icon
 
@@ -187,29 +92,174 @@ class RingSensor(Entity):
         """Return the units of measurement."""
         return SENSOR_TYPES.get(self._sensor_type)[2]
 
-    def update(self):
-        """Get the latest data and updates the state."""
-        _LOGGER.debug("Updating data from %s sensor", self._name)
 
-        if self._sensor_type == "volume":
-            self._state = self._data.volume
+class HealthDataRingSensor(RingSensor):
+    """Ring sensor that relies on health data."""
 
-        if self._sensor_type == "battery":
-            self._state = self._data.battery_life
+    async def async_added_to_hass(self):
+        """Register callbacks."""
+        await super().async_added_to_hass()
 
-        if self._sensor_type.startswith("last_"):
-            history = self._data.history(
-                limit=5, timezone=self._tz, kind=self._kind, enforce_limit=True
-            )
-            if history:
-                self._extra = history[0]
-                created_at = self._extra["created_at"]
-                self._state = "{0:0>2}:{1:0>2}".format(
-                    created_at.hour, created_at.minute
-                )
+        await self.ring_objects["health_data"].async_track_device(
+            self._device, self._health_update_callback
+        )
 
+    async def async_will_remove_from_hass(self):
+        """Disconnect callbacks."""
+        await super().async_will_remove_from_hass()
+
+        self.ring_objects["health_data"].async_untrack_device(
+            self._device, self._health_update_callback
+        )
+
+    @callback
+    def _health_update_callback(self, _health_data):
+        """Call update method."""
+        self.async_write_ha_state()
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        # These sensors are data hungry and not useful. Disable by default.
+        return False
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
         if self._sensor_type == "wifi_signal_category":
-            self._state = self._data.wifi_signal_category
+            return self._device.wifi_signal_category
 
         if self._sensor_type == "wifi_signal_strength":
-            self._state = self._data.wifi_signal_strength
+            return self._device.wifi_signal_strength
+
+
+class HistoryRingSensor(RingSensor):
+    """Ring sensor that relies on history data."""
+
+    _latest_event = None
+
+    async def async_added_to_hass(self):
+        """Register callbacks."""
+        await super().async_added_to_hass()
+
+        await self.ring_objects["history_data"].async_track_device(
+            self._device, self._history_update_callback
+        )
+
+    async def async_will_remove_from_hass(self):
+        """Disconnect callbacks."""
+        await super().async_will_remove_from_hass()
+
+        self.ring_objects["history_data"].async_untrack_device(
+            self._device, self._history_update_callback
+        )
+
+    @callback
+    def _history_update_callback(self, history_data):
+        """Call update method."""
+        if not history_data:
+            return
+
+        found = None
+        if self._kind is None:
+            found = history_data[0]
+        else:
+            for entry in history_data:
+                if entry["kind"] == self._kind:
+                    found = entry
+                    break
+
+        if not found:
+            return
+
+        self._latest_event = found
+        self.async_write_ha_state()
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        if self._latest_event is None:
+            return None
+
+        return self._latest_event["created_at"].isoformat()
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        attrs = super().extra_state_attributes
+
+        if self._latest_event:
+            attrs["created_at"] = self._latest_event["created_at"]
+            attrs["answered"] = self._latest_event["answered"]
+            attrs["recording_status"] = self._latest_event["recording"]["status"]
+            attrs["category"] = self._latest_event["kind"]
+
+        return attrs
+
+
+# Sensor types: Name, category, units, icon, kind, device_class, class
+SENSOR_TYPES = {
+    "battery": [
+        "Battery",
+        ["doorbots", "authorized_doorbots", "stickup_cams"],
+        PERCENTAGE,
+        None,
+        None,
+        "battery",
+        RingSensor,
+    ],
+    "last_activity": [
+        "Last Activity",
+        ["doorbots", "authorized_doorbots", "stickup_cams"],
+        None,
+        "history",
+        None,
+        DEVICE_CLASS_TIMESTAMP,
+        HistoryRingSensor,
+    ],
+    "last_ding": [
+        "Last Ding",
+        ["doorbots", "authorized_doorbots"],
+        None,
+        "history",
+        "ding",
+        DEVICE_CLASS_TIMESTAMP,
+        HistoryRingSensor,
+    ],
+    "last_motion": [
+        "Last Motion",
+        ["doorbots", "authorized_doorbots", "stickup_cams"],
+        None,
+        "history",
+        "motion",
+        DEVICE_CLASS_TIMESTAMP,
+        HistoryRingSensor,
+    ],
+    "volume": [
+        "Volume",
+        ["chimes", "doorbots", "authorized_doorbots", "stickup_cams"],
+        None,
+        "bell-ring",
+        None,
+        None,
+        RingSensor,
+    ],
+    "wifi_signal_category": [
+        "WiFi Signal Category",
+        ["chimes", "doorbots", "authorized_doorbots", "stickup_cams"],
+        None,
+        "wifi",
+        None,
+        None,
+        HealthDataRingSensor,
+    ],
+    "wifi_signal_strength": [
+        "WiFi Signal Strength",
+        ["chimes", "doorbots", "authorized_doorbots", "stickup_cams"],
+        SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        "wifi",
+        None,
+        "signal_strength",
+        HealthDataRingSensor,
+    ],
+}

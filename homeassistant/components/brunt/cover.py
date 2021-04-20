@@ -2,23 +2,24 @@
 
 import logging
 
+from brunt import BruntAPI
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    CoverDevice,
+    DEVICE_CLASS_WINDOW,
     PLATFORM_SCHEMA,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
+    CoverEntity,
 )
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 COVER_FEATURES = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
-DEVICE_CLASS = "window"
 
 ATTR_REQUEST_POSITION = "request_position"
 NOTIFICATION_ID = "brunt_notification"
@@ -35,8 +36,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the brunt platform."""
-    # pylint: disable=no-name-in-module
-    from brunt import BruntAPI
 
     username = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]
@@ -45,7 +44,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     try:
         things = bapi.getThings()["things"]
         if not things:
-            _LOGGER.error("No things present in account.")
+            _LOGGER.error("No things present in account")
         else:
             add_entities(
                 [
@@ -57,15 +56,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     except (TypeError, KeyError, NameError, ValueError) as ex:
         _LOGGER.error("%s", ex)
         hass.components.persistent_notification.create(
-            "Error: {}<br />"
-            "You will need to restart hass after fixing."
-            "".format(ex),
+            "Error: {ex}<br />You will need to restart hass after fixing.",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
         )
 
 
-class BruntDevice(CoverDevice):
+class BruntDevice(CoverEntity):
     """
     Representation of a Brunt cover device.
 
@@ -134,7 +131,7 @@ class BruntDevice(CoverDevice):
         return self.move_state == 2
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the detailed device state attributes."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
@@ -144,7 +141,7 @@ class BruntDevice(CoverDevice):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS
+        return DEVICE_CLASS_WINDOW
 
     @property
     def supported_features(self):

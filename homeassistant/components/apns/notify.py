@@ -1,28 +1,31 @@
 """APNS Notification platform."""
+from contextlib import suppress
 import logging
 
+from apns2.client import APNsClient
+from apns2.errors import Unregistered
+from apns2.payload import Payload
 import voluptuous as vol
 
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
+from homeassistant.components.notify import (
+    ATTR_DATA,
+    ATTR_TARGET,
+    PLATFORM_SCHEMA,
+    BaseNotificationService,
+)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import ATTR_NAME, CONF_NAME, CONF_PLATFORM
 from homeassistant.helpers import template as template_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_state_change
 
-from homeassistant.components.notify import (
-    ATTR_DATA,
-    ATTR_TARGET,
-    DOMAIN,
-    PLATFORM_SCHEMA,
-    BaseNotificationService,
-)
+from .const import DOMAIN
 
 APNS_DEVICES = "apns.yaml"
 CONF_CERTFILE = "cert_file"
 CONF_TOPIC = "topic"
 CONF_SANDBOX = "sandbox"
-DEVICE_TRACKER_DOMAIN = "device_tracker"
-SERVICE_REGISTER = "apns_register"
 
 ATTR_PUSH_ID = "push_id"
 
@@ -43,10 +46,10 @@ REGISTER_SERVICE_SCHEMA = vol.Schema(
 
 def get_service(hass, config, discovery_info=None):
     """Return push service."""
-    name = config.get(CONF_NAME)
-    cert_file = config.get(CONF_CERTFILE)
-    topic = config.get(CONF_TOPIC)
-    sandbox = config.get(CONF_SANDBOX)
+    name = config[CONF_NAME]
+    cert_file = config[CONF_CERTFILE]
+    topic = config[CONF_TOPIC]
+    sandbox = config[CONF_SANDBOX]
 
     service = ApnsNotificationService(hass, name, topic, sandbox, cert_file)
     hass.services.register(
@@ -148,12 +151,12 @@ class ApnsNotificationService(BaseNotificationService):
         self.app_name = app_name
         self.sandbox = sandbox
         self.certificate = cert_file
-        self.yaml_path = hass.config.path(app_name + "_" + APNS_DEVICES)
+        self.yaml_path = hass.config.path(f"{app_name}_{APNS_DEVICES}")
         self.devices = {}
         self.device_states = {}
         self.topic = topic
 
-        try:
+        with suppress(FileNotFoundError):
             self.devices = {
                 str(key): ApnsDevice(
                     str(key),
@@ -163,8 +166,6 @@ class ApnsNotificationService(BaseNotificationService):
                 )
                 for (key, value) in load_yaml_config_file(self.yaml_path).items()
             }
-        except FileNotFoundError:
-            pass
 
         tracking_ids = [
             device.full_tracking_device_id
@@ -175,7 +176,7 @@ class ApnsNotificationService(BaseNotificationService):
 
     def device_state_changed_listener(self, entity_id, from_s, to_s):
         """
-        Listen for sate change.
+        Listen for state change.
 
         Track device state change if a device has a tracking id specified.
         """
@@ -184,7 +185,7 @@ class ApnsNotificationService(BaseNotificationService):
     def write_devices(self):
         """Write all known devices to file."""
         with open(self.yaml_path, "w+") as out:
-            for _, device in self.devices.items():
+            for device in self.devices.values():
                 _write_device(out, device)
 
     def register(self, call):
@@ -213,9 +214,6 @@ class ApnsNotificationService(BaseNotificationService):
 
     def send_message(self, message=None, **kwargs):
         """Send push message to registered devices."""
-        from apns2.client import APNsClient
-        from apns2.payload import Payload
-        from apns2.errors import Unregistered
 
         apns = APNsClient(
             self.certificate, use_sandbox=self.sandbox, use_alternative_port=False
@@ -230,7 +228,7 @@ class ApnsNotificationService(BaseNotificationService):
         if isinstance(message, str):
             rendered_message = message
         elif isinstance(message, template_helper.Template):
-            rendered_message = message.render()
+            rendered_message = message.render(parse_result=False)
         else:
             rendered_message = ""
 

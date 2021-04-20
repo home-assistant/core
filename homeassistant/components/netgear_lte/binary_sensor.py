@@ -1,13 +1,9 @@
 """Support for Netgear LTE binary sensors."""
-import logging
-
-from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDevice
+from homeassistant.components.binary_sensor import DOMAIN, BinarySensorEntity
 from homeassistant.exceptions import PlatformNotReady
 
 from . import CONF_MONITORED_CONDITIONS, DATA_KEY, LTEEntity
 from .sensor_types import BINARY_SENSOR_CLASSES
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info):
@@ -30,7 +26,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info)
     async_add_entities(binary_sensors)
 
 
-class LTEBinarySensor(LTEEntity, BinarySensorDevice):
+class LTEBinarySensor(LTEEntity, BinarySensorEntity):
     """Netgear LTE binary sensor entity."""
 
     @property

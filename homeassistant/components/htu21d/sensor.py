@@ -3,12 +3,13 @@ from datetime import timedelta
 from functools import partial
 import logging
 
+from i2csense.htu21d import HTU21D  # pylint: disable=import-error
+import smbus
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import CONF_NAME, PERCENTAGE, TEMP_FAHRENHEIT
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_NAME, TEMP_FAHRENHEIT
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.util.temperature import celsius_to_fahrenheit
 
@@ -34,24 +35,21 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the HTU21D sensor."""
-    import smbus  # pylint: disable=import-error
-    from i2csense.htu21d import HTU21D  # pylint: disable=import-error
-
     name = config.get(CONF_NAME)
     bus_number = config.get(CONF_I2C_BUS)
     temp_unit = hass.config.units.temperature_unit
 
     bus = smbus.SMBus(config.get(CONF_I2C_BUS))
-    sensor = await hass.async_add_job(partial(HTU21D, bus, logger=_LOGGER))
+    sensor = await hass.async_add_executor_job(partial(HTU21D, bus, logger=_LOGGER))
     if not sensor.sample_ok:
         _LOGGER.error("HTU21D sensor not detected in bus %s", bus_number)
         return False
 
-    sensor_handler = await hass.async_add_job(HTU21DHandler, sensor)
+    sensor_handler = await hass.async_add_executor_job(HTU21DHandler, sensor)
 
     dev = [
         HTU21DSensor(sensor_handler, name, SENSOR_TEMPERATURE, temp_unit),
-        HTU21DSensor(sensor_handler, name, SENSOR_HUMIDITY, "%"),
+        HTU21DSensor(sensor_handler, name, SENSOR_HUMIDITY, PERCENTAGE),
     ]
 
     async_add_entities(dev)
@@ -71,7 +69,7 @@ class HTU21DHandler:
         self.sensor.update()
 
 
-class HTU21DSensor(Entity):
+class HTU21DSensor(SensorEntity):
     """Implementation of the HTU21D sensor."""
 
     def __init__(self, htu21d_client, name, variable, unit):
@@ -99,7 +97,7 @@ class HTU21DSensor(Entity):
 
     async def async_update(self):
         """Get the latest data from the HTU21D sensor and update the state."""
-        await self.hass.async_add_job(self._client.update)
+        await self.hass.async_add_executor_job(self._client.update)
         if self._client.sensor.sample_ok:
             if self._variable == SENSOR_TEMPERATURE:
                 value = round(self._client.sensor.temperature, 1)

@@ -1,10 +1,8 @@
 {
   "domain": "bt_home_hub_5",
-  "name": "Bt home hub 5",
+  "name": "BT Home Hub 5",
   "documentation": "https://www.home-assistant.io/integrations/bt_home_hub_5",
-  "requirements": [
-    "bthomehub5-devicelist==0.1.1"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "requirements": ["bthomehub5-devicelist==0.1.1"],
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

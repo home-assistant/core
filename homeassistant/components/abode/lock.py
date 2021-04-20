@@ -1,34 +1,25 @@
 """Support for the Abode Security System locks."""
-import logging
-
 import abodepy.helpers.constants as CONST
 
-from homeassistant.components.lock import LockDevice
+from homeassistant.components.lock import LockEntity
 
 from . import AbodeDevice
 from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Platform uses config entry setup."""
-    pass
-
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Abode lock devices."""
-
     data = hass.data[DOMAIN]
 
-    devices = []
+    entities = []
+
     for device in data.abode.get_devices(generic_type=CONST.TYPE_LOCK):
-        devices.append(AbodeLock(data, device))
+        entities.append(AbodeLock(data, device))
 
-    async_add_entities(devices)
+    async_add_entities(entities)
 
 
-class AbodeLock(AbodeDevice, LockDevice):
+class AbodeLock(AbodeDevice, LockEntity):
     """Representation of an Abode lock."""
 
     def lock(self, **kwargs):

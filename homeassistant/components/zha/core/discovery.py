@@ -1,304 +1,274 @@
-"""
-Device discovery functions for Zigbee Home Automation.
+"""Device discovery functions for Zigbee Home Automation."""
+from __future__ import annotations
 
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/integrations/zha/
-"""
-
+from collections import Counter
 import logging
+from typing import Callable
 
 from homeassistant import const as ha_const
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
-from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
+from homeassistant.helpers.entity_registry import async_entries_for_device
+from homeassistant.helpers.typing import HomeAssistantType
 
-from .channels import AttributeListeningChannel, EventRelayChannel, ZDOChannel
-from .const import (
-    COMPONENTS,
-    CONF_DEVICE_CONFIG,
-    DATA_ZHA,
-    SENSOR_GENERIC,
-    SENSOR_TYPE,
-    UNKNOWN,
-    ZHA_DISCOVERY_NEW,
+from . import const as zha_const, registries as zha_regs, typing as zha_typing
+from .. import (  # noqa: F401 pylint: disable=unused-import,
+    binary_sensor,
+    climate,
+    cover,
+    device_tracker,
+    fan,
+    light,
+    lock,
+    number,
+    sensor,
+    switch,
 )
-from .registries import (
-    BINARY_SENSOR_TYPES,
-    CHANNEL_ONLY_CLUSTERS,
-    COMPONENT_CLUSTERS,
-    DEVICE_CLASS,
-    EVENT_RELAY_CLUSTERS,
-    OUTPUT_CHANNEL_ONLY_CLUSTERS,
-    REMOTE_DEVICE_TYPES,
-    SENSOR_TYPES,
-    SINGLE_INPUT_CLUSTER_DEVICE_CLASS,
-    SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS,
-    ZIGBEE_CHANNEL_REGISTRY,
-)
+from .channels import base
 
 _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def async_process_endpoint(
-    hass,
-    config,
-    endpoint_id,
-    endpoint,
-    discovery_infos,
-    device,
-    zha_device,
-    is_new_join,
-):
-    """Process an endpoint on a zigpy device."""
-    import zigpy.profiles
-
-    if endpoint_id == 0:  # ZDO
-        _async_create_cluster_channel(
-            endpoint, zha_device, is_new_join, channel_class=ZDOChannel
-        )
+async def async_add_entities(
+    _async_add_entities: Callable,
+    entities: list[
+        tuple[
+            zha_typing.ZhaEntityType,
+            tuple[str, zha_typing.ZhaDeviceType, list[zha_typing.ChannelType]],
+        ]
+    ],
+    update_before_add: bool = True,
+) -> None:
+    """Add entities helper."""
+    if not entities:
         return
+    to_add = [ent_cls(*args) for ent_cls, args in entities]
+    _async_add_entities(to_add, update_before_add=update_before_add)
+    entities.clear()
 
-    component = None
-    profile_clusters = []
-    device_key = f"{device.ieee}-{endpoint_id}"
-    node_config = {}
-    if CONF_DEVICE_CONFIG in config:
-        node_config = config[CONF_DEVICE_CONFIG].get(device_key, {})
 
-    if endpoint.profile_id in zigpy.profiles.PROFILES:
-        if DEVICE_CLASS.get(endpoint.profile_id, {}).get(endpoint.device_type, None):
-            profile_info = DEVICE_CLASS[endpoint.profile_id]
-            component = profile_info[endpoint.device_type]
+class ProbeEndpoint:
+    """All discovered channels and entities of an endpoint."""
 
-    if ha_const.CONF_TYPE in node_config:
-        component = node_config[ha_const.CONF_TYPE]
+    def __init__(self):
+        """Initialize instance."""
+        self._device_configs = {}
 
-    if component and component in COMPONENTS and component in COMPONENT_CLUSTERS:
-        profile_clusters = COMPONENT_CLUSTERS[component]
-        if profile_clusters:
-            profile_match = _async_handle_profile_match(
-                hass,
-                endpoint,
-                profile_clusters,
-                zha_device,
-                component,
-                device_key,
-                is_new_join,
+    @callback
+    def discover_entities(self, channel_pool: zha_typing.ChannelPoolType) -> None:
+        """Process an endpoint on a zigpy device."""
+        self.discover_by_device_type(channel_pool)
+        self.discover_by_cluster_id(channel_pool)
+
+    @callback
+    def discover_by_device_type(self, channel_pool: zha_typing.ChannelPoolType) -> None:
+        """Process an endpoint on a zigpy device."""
+
+        unique_id = channel_pool.unique_id
+
+        component = self._device_configs.get(unique_id, {}).get(ha_const.CONF_TYPE)
+        if component is None:
+            ep_profile_id = channel_pool.endpoint.profile_id
+            ep_device_type = channel_pool.endpoint.device_type
+            component = zha_regs.DEVICE_CLASS[ep_profile_id].get(ep_device_type)
+
+        if component and component in zha_const.PLATFORMS:
+            channels = channel_pool.unclaimed_channels()
+            entity_class, claimed = zha_regs.ZHA_ENTITIES.get_entity(
+                component, channel_pool.manufacturer, channel_pool.model, channels
             )
-            discovery_infos.append(profile_match)
+            if entity_class is None:
+                return
+            channel_pool.claim_channels(claimed)
+            channel_pool.async_new_entity(component, entity_class, unique_id, claimed)
 
-    discovery_infos.extend(
-        _async_handle_single_cluster_matches(
-            hass, endpoint, zha_device, profile_clusters, device_key, is_new_join
-        )
-    )
+    @callback
+    def discover_by_cluster_id(self, channel_pool: zha_typing.ChannelPoolType) -> None:
+        """Process an endpoint on a zigpy device."""
 
-
-@callback
-def _async_create_cluster_channel(
-    cluster, zha_device, is_new_join, channels=None, channel_class=None
-):
-    """Create a cluster channel and attach it to a device."""
-    # really ugly hack to deal with xiaomi using the door lock cluster
-    # incorrectly.
-    if hasattr(cluster, "ep_attribute") and cluster.ep_attribute == "multistate_input":
-        channel_class = AttributeListeningChannel
-    # end of ugly hack
-    if channel_class is None:
-        channel_class = ZIGBEE_CHANNEL_REGISTRY.get(
-            cluster.cluster_id, AttributeListeningChannel
-        )
-    channel = channel_class(cluster, zha_device)
-    zha_device.add_cluster_channel(channel)
-    if channels is not None:
-        channels.append(channel)
-
-
-@callback
-def async_dispatch_discovery_info(hass, is_new_join, discovery_info):
-    """Dispatch or store discovery information."""
-    if not discovery_info["channels"]:
-        _LOGGER.warning(
-            "there are no channels in the discovery info: %s", discovery_info
-        )
-        return
-    component = discovery_info["component"]
-    if is_new_join:
-        async_dispatcher_send(hass, ZHA_DISCOVERY_NEW.format(component), discovery_info)
-    else:
-        hass.data[DATA_ZHA][component][discovery_info["unique_id"]] = discovery_info
-
-
-@callback
-def _async_handle_profile_match(
-    hass, endpoint, profile_clusters, zha_device, component, device_key, is_new_join
-):
-    """Dispatch a profile match to the appropriate HA component."""
-    in_clusters = [
-        endpoint.in_clusters[c] for c in profile_clusters if c in endpoint.in_clusters
-    ]
-    out_clusters = [
-        endpoint.out_clusters[c] for c in profile_clusters if c in endpoint.out_clusters
-    ]
-
-    channels = []
-
-    for cluster in in_clusters:
-        _async_create_cluster_channel(
-            cluster, zha_device, is_new_join, channels=channels
-        )
-
-    for cluster in out_clusters:
-        _async_create_cluster_channel(
-            cluster, zha_device, is_new_join, channels=channels
-        )
-
-    discovery_info = {
-        "unique_id": device_key,
-        "zha_device": zha_device,
-        "channels": channels,
-        "component": component,
-    }
-
-    if component == BINARY_SENSOR:
-        discovery_info.update({SENSOR_TYPE: UNKNOWN})
-        for cluster_id in profile_clusters:
-            if cluster_id in BINARY_SENSOR_TYPES:
-                discovery_info.update(
-                    {SENSOR_TYPE: BINARY_SENSOR_TYPES.get(cluster_id, UNKNOWN)}
-                )
-                break
-
-    return discovery_info
-
-
-@callback
-def _async_handle_single_cluster_matches(
-    hass, endpoint, zha_device, profile_clusters, device_key, is_new_join
-):
-    """Dispatch single cluster matches to HA components."""
-    from zigpy.zcl.clusters.general import OnOff, PowerConfiguration
-
-    cluster_matches = []
-    cluster_match_results = []
-    matched_power_configuration = False
-    for cluster in endpoint.in_clusters.values():
-        if cluster.cluster_id in CHANNEL_ONLY_CLUSTERS:
-            cluster_match_results.append(
-                _async_handle_channel_only_cluster_match(
-                    zha_device, cluster, is_new_join
-                )
-            )
-            continue
-
-        if cluster.cluster_id not in profile_clusters:
-            # Only create one battery sensor per device
-            if cluster.cluster_id == PowerConfiguration.cluster_id and (
-                zha_device.is_mains_powered or matched_power_configuration
-            ):
+        items = zha_regs.SINGLE_INPUT_CLUSTER_DEVICE_CLASS.items()
+        single_input_clusters = {
+            cluster_class: match
+            for cluster_class, match in items
+            if not isinstance(cluster_class, int)
+        }
+        remaining_channels = channel_pool.unclaimed_channels()
+        for channel in remaining_channels:
+            if channel.cluster.cluster_id in zha_regs.CHANNEL_ONLY_CLUSTERS:
+                channel_pool.claim_channels([channel])
                 continue
 
-            if (
-                cluster.cluster_id == PowerConfiguration.cluster_id
-                and not zha_device.is_mains_powered
-            ):
-                matched_power_configuration = True
-
-            cluster_match_results.append(
-                _async_handle_single_cluster_match(
-                    hass,
-                    zha_device,
-                    cluster,
-                    device_key,
-                    SINGLE_INPUT_CLUSTER_DEVICE_CLASS,
-                    is_new_join,
-                )
+            component = zha_regs.SINGLE_INPUT_CLUSTER_DEVICE_CLASS.get(
+                channel.cluster.cluster_id
             )
+            if component is None:
+                for cluster_class, match in single_input_clusters.items():
+                    if isinstance(channel.cluster, cluster_class):
+                        component = match
+                        break
 
-    for cluster in endpoint.out_clusters.values():
-        if cluster.cluster_id in OUTPUT_CHANNEL_ONLY_CLUSTERS:
-            cluster_match_results.append(
-                _async_handle_channel_only_cluster_match(
-                    zha_device, cluster, is_new_join
-                )
-            )
-            continue
+            self.probe_single_cluster(component, channel, channel_pool)
 
-        device_type = cluster.endpoint.device_type
-        profile_id = cluster.endpoint.profile_id
+        # until we can get rid off registries
+        self.handle_on_off_output_cluster_exception(channel_pool)
 
-        if cluster.cluster_id not in profile_clusters:
-            # prevent remotes and controllers from getting entities
-            if not (
-                cluster.cluster_id == OnOff.cluster_id
-                and profile_id in REMOTE_DEVICE_TYPES
-                and device_type in REMOTE_DEVICE_TYPES[profile_id]
-            ):
-                cluster_match_results.append(
-                    _async_handle_single_cluster_match(
-                        hass,
-                        zha_device,
-                        cluster,
-                        device_key,
-                        SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS,
-                        is_new_join,
-                    )
-                )
+    @staticmethod
+    def probe_single_cluster(
+        component: str,
+        channel: zha_typing.ChannelType,
+        ep_channels: zha_typing.ChannelPoolType,
+    ) -> None:
+        """Probe specified cluster for specific component."""
+        if component is None or component not in zha_const.PLATFORMS:
+            return
+        channel_list = [channel]
+        unique_id = f"{ep_channels.unique_id}-{channel.cluster.cluster_id}"
 
-        if cluster.cluster_id in EVENT_RELAY_CLUSTERS:
-            _async_create_cluster_channel(
-                cluster, zha_device, is_new_join, channel_class=EventRelayChannel
-            )
-
-    for cluster_match in cluster_match_results:
-        if cluster_match is not None:
-            cluster_matches.append(cluster_match)
-    return cluster_matches
-
-
-@callback
-def _async_handle_channel_only_cluster_match(zha_device, cluster, is_new_join):
-    """Handle a channel only cluster match."""
-    _async_create_cluster_channel(cluster, zha_device, is_new_join)
-
-
-@callback
-def _async_handle_single_cluster_match(
-    hass, zha_device, cluster, device_key, device_classes, is_new_join
-):
-    """Dispatch a single cluster match to a HA component."""
-    component = None  # sub_component = None
-    for cluster_type, candidate_component in device_classes.items():
-        if isinstance(cluster_type, int):
-            if cluster.cluster_id == cluster_type:
-                component = candidate_component
-        elif isinstance(cluster, cluster_type):
-            component = candidate_component
-            break
-
-    if component is None or component not in COMPONENTS:
-        return
-    channels = []
-    _async_create_cluster_channel(cluster, zha_device, is_new_join, channels=channels)
-
-    cluster_key = f"{device_key}-{cluster.cluster_id}"
-    discovery_info = {
-        "unique_id": cluster_key,
-        "zha_device": zha_device,
-        "channels": channels,
-        "entity_suffix": f"_{cluster.cluster_id}",
-        "component": component,
-    }
-
-    if component == SENSOR:
-        discovery_info.update(
-            {SENSOR_TYPE: SENSOR_TYPES.get(cluster.cluster_id, SENSOR_GENERIC)}
+        entity_class, claimed = zha_regs.ZHA_ENTITIES.get_entity(
+            component, ep_channels.manufacturer, ep_channels.model, channel_list
         )
-    if component == BINARY_SENSOR:
-        discovery_info.update(
-            {SENSOR_TYPE: BINARY_SENSOR_TYPES.get(cluster.cluster_id, UNKNOWN)}
+        if entity_class is None:
+            return
+        ep_channels.claim_channels(claimed)
+        ep_channels.async_new_entity(component, entity_class, unique_id, claimed)
+
+    def handle_on_off_output_cluster_exception(
+        self, ep_channels: zha_typing.ChannelPoolType
+    ) -> None:
+        """Process output clusters of the endpoint."""
+
+        profile_id = ep_channels.endpoint.profile_id
+        device_type = ep_channels.endpoint.device_type
+        if device_type in zha_regs.REMOTE_DEVICE_TYPES.get(profile_id, []):
+            return
+
+        for cluster_id, cluster in ep_channels.endpoint.out_clusters.items():
+            component = zha_regs.SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS.get(
+                cluster.cluster_id
+            )
+            if component is None:
+                continue
+
+            channel_class = zha_regs.ZIGBEE_CHANNEL_REGISTRY.get(
+                cluster_id, base.ZigbeeChannel
+            )
+            channel = channel_class(cluster, ep_channels)
+            self.probe_single_cluster(component, channel, ep_channels)
+
+    def initialize(self, hass: HomeAssistantType) -> None:
+        """Update device overrides config."""
+        zha_config = hass.data[zha_const.DATA_ZHA].get(zha_const.DATA_ZHA_CONFIG, {})
+        overrides = zha_config.get(zha_const.CONF_DEVICE_CONFIG)
+        if overrides:
+            self._device_configs.update(overrides)
+
+
+class GroupProbe:
+    """Determine the appropriate component for a group."""
+
+    def __init__(self):
+        """Initialize instance."""
+        self._hass = None
+        self._unsubs = []
+
+    def initialize(self, hass: HomeAssistantType) -> None:
+        """Initialize the group probe."""
+        self._hass = hass
+        self._unsubs.append(
+            async_dispatcher_connect(
+                hass, zha_const.SIGNAL_GROUP_ENTITY_REMOVED, self._reprobe_group
+            )
         )
 
-    return discovery_info
+    def cleanup(self):
+        """Clean up on when zha shuts down."""
+        for unsub in self._unsubs[:]:
+            unsub()
+            self._unsubs.remove(unsub)
+
+    def _reprobe_group(self, group_id: int) -> None:
+        """Reprobe a group for entities after its members change."""
+        zha_gateway = self._hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]
+        zha_group = zha_gateway.groups.get(group_id)
+        if zha_group is None:
+            return
+        self.discover_group_entities(zha_group)
+
+    @callback
+    def discover_group_entities(self, group: zha_typing.ZhaGroupType) -> None:
+        """Process a group and create any entities that are needed."""
+        # only create a group entity if there are 2 or more members in a group
+        if len(group.members) < 2:
+            _LOGGER.debug(
+                "Group: %s:0x%04x has less than 2 members - skipping entity discovery",
+                group.name,
+                group.group_id,
+            )
+            return
+
+        entity_domains = GroupProbe.determine_entity_domains(self._hass, group)
+
+        if not entity_domains:
+            return
+
+        zha_gateway = self._hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]
+        for domain in entity_domains:
+            entity_class = zha_regs.ZHA_ENTITIES.get_group_entity(domain)
+            if entity_class is None:
+                continue
+            self._hass.data[zha_const.DATA_ZHA][domain].append(
+                (
+                    entity_class,
+                    (
+                        group.get_domain_entity_ids(domain),
+                        f"{domain}_zha_group_0x{group.group_id:04x}",
+                        group.group_id,
+                        zha_gateway.coordinator_zha_device,
+                    ),
+                )
+            )
+        async_dispatcher_send(self._hass, zha_const.SIGNAL_ADD_ENTITIES)
+
+    @staticmethod
+    def determine_entity_domains(
+        hass: HomeAssistantType, group: zha_typing.ZhaGroupType
+    ) -> list[str]:
+        """Determine the entity domains for this group."""
+        entity_domains: list[str] = []
+        zha_gateway = hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]
+        all_domain_occurrences = []
+        for member in group.members:
+            if member.device.is_coordinator:
+                continue
+            entities = async_entries_for_device(
+                zha_gateway.ha_entity_registry,
+                member.device.device_id,
+                include_disabled_entities=True,
+            )
+            all_domain_occurrences.extend(
+                [
+                    entity.domain
+                    for entity in entities
+                    if entity.domain in zha_regs.GROUP_ENTITY_DOMAINS
+                ]
+            )
+        if not all_domain_occurrences:
+            return entity_domains
+        # get all domains we care about if there are more than 2 entities of this domain
+        counts = Counter(all_domain_occurrences)
+        entity_domains = [domain[0] for domain in counts.items() if domain[1] >= 2]
+        _LOGGER.debug(
+            "The entity domains are: %s for group: %s:0x%04x",
+            entity_domains,
+            group.name,
+            group.group_id,
+        )
+        return entity_domains
+
+
+PROBE = ProbeEndpoint()
+GROUP_PROBE = GroupProbe()

@@ -1,0 +1,22 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_idle": "{entity_name} \u00e4r inaktiv",
+            "is_off": "{entity_name} \u00e4r avst\u00e4ngd",
+            "is_on": "{entity_name} \u00e4r p\u00e5",
+            "is_paused": "{entity_name} \u00e4r pausad",
+            "is_playing": "{entity_name} spelar"
+        }
+    },
+    "state": {
+        "_": {
+            "idle": "Inaktiv",
+            "off": "Av",
+            "on": "P\u00e5",
+            "paused": "Pausad",
+            "playing": "Spelar",
+            "standby": "Vilol\u00e4ge"
+        }
+    },
+    "title": "Mediaspelare"
+}

@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "unauthorized": "La vinculaci\u00f3 s'ha denegat, comprova si hi ha una sol\u00b7licitud d'autenticaci\u00f3 al dispositiu"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "Correu electr\u00f2nic",
+                    "host": "Amfitri\u00f3",
+                    "port": "Port"
+                },
+                "title": "Connexi\u00f3 amb el dispositiu"
+            }
+        }
+    }
+}

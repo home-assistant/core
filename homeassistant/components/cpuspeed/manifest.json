@@ -1,12 +1,8 @@
 {
   "domain": "cpuspeed",
-  "name": "Cpuspeed",
+  "name": "CPU Speed",
   "documentation": "https://www.home-assistant.io/integrations/cpuspeed",
-  "requirements": [
-    "py-cpuinfo==5.0.0"
-  ],
-  "dependencies": [],
-  "codeowners": [
-    "@fabaff"
-  ]
+  "requirements": ["py-cpuinfo==7.0.0"],
+  "codeowners": ["@fabaff"],
+  "iot_class": "local_push"
 }

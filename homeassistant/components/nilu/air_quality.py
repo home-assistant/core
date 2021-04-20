@@ -2,6 +2,22 @@
 from datetime import timedelta
 import logging
 
+from niluclient import (
+    CO,
+    CO2,
+    NO,
+    NO2,
+    NOX,
+    OZONE,
+    PM1,
+    PM10,
+    PM25,
+    POLLUTION_INDEX,
+    SO2,
+    create_location_client,
+    create_station_client,
+    lookup_stations_in_area,
+)
 import voluptuous as vol
 
 from homeassistant.components.air_quality import PLATFORM_SCHEMA, AirQualityEntity
@@ -95,8 +111,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the NILU air quality sensor."""
-    import niluclient as nilu
-
     name = config.get(CONF_NAME)
     area = config.get(CONF_AREA)
     stations = config.get(CONF_STATION)
@@ -105,15 +119,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     sensors = []
 
     if area:
-        stations = nilu.lookup_stations_in_area(area)
+        stations = lookup_stations_in_area(area)
     elif not area and not stations:
         latitude = config.get(CONF_LATITUDE, hass.config.latitude)
         longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-        location_client = nilu.create_location_client(latitude, longitude)
+        location_client = create_location_client(latitude, longitude)
         stations = location_client.station_names
 
     for station in stations:
-        client = NiluData(nilu.create_station_client(station))
+        client = NiluData(create_station_client(station))
         client.update()
         if client.data.sensors:
             sensors.append(NiluSensor(client, name, show_on_map))
@@ -161,7 +175,7 @@ class NiluSensor(AirQualityEntity):
         return ATTRIBUTION
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return other details about the sensor state."""
         return self._attrs
 
@@ -178,71 +192,51 @@ class NiluSensor(AirQualityEntity):
     @property
     def carbon_monoxide(self) -> str:
         """Return the CO (carbon monoxide) level."""
-        from niluclient import CO
-
         return self.get_component_state(CO)
 
     @property
     def carbon_dioxide(self) -> str:
         """Return the CO2 (carbon dioxide) level."""
-        from niluclient import CO2
-
         return self.get_component_state(CO2)
 
     @property
     def nitrogen_oxide(self) -> str:
         """Return the N2O (nitrogen oxide) level."""
-        from niluclient import NOX
-
         return self.get_component_state(NOX)
 
     @property
     def nitrogen_monoxide(self) -> str:
         """Return the NO (nitrogen monoxide) level."""
-        from niluclient import NO
-
         return self.get_component_state(NO)
 
     @property
     def nitrogen_dioxide(self) -> str:
         """Return the NO2 (nitrogen dioxide) level."""
-        from niluclient import NO2
-
         return self.get_component_state(NO2)
 
     @property
     def ozone(self) -> str:
         """Return the O3 (ozone) level."""
-        from niluclient import OZONE
-
         return self.get_component_state(OZONE)
 
     @property
     def particulate_matter_2_5(self) -> str:
         """Return the particulate matter 2.5 level."""
-        from niluclient import PM25
-
         return self.get_component_state(PM25)
 
     @property
     def particulate_matter_10(self) -> str:
         """Return the particulate matter 10 level."""
-        from niluclient import PM10
-
         return self.get_component_state(PM10)
 
     @property
     def particulate_matter_0_1(self) -> str:
         """Return the particulate matter 0.1 level."""
-        from niluclient import PM1
-
         return self.get_component_state(PM1)
 
     @property
     def sulphur_dioxide(self) -> str:
         """Return the SO2 (sulphur dioxide) level."""
-        from niluclient import SO2
-
         return self.get_component_state(SO2)
 
     def get_component_state(self, component_name: str) -> str:
@@ -254,14 +248,12 @@ class NiluSensor(AirQualityEntity):
 
     def update(self) -> None:
         """Update the sensor."""
-        import niluclient as nilu
-
         self._api.update()
 
         sensors = self._api.data.sensors.values()
         if sensors:
             max_index = max([s.pollution_index for s in sensors])
             self._max_aqi = max_index
-            self._attrs[ATTR_POLLUTION_INDEX] = nilu.POLLUTION_INDEX[self._max_aqi]
+            self._attrs[ATTR_POLLUTION_INDEX] = POLLUTION_INDEX[self._max_aqi]
 
         self._attrs[ATTR_AREA] = self._api.data.area

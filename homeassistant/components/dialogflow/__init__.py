@@ -1,15 +1,14 @@
 """Support for Dialogflow webhook."""
 import logging
 
-import voluptuous as vol
 from aiohttp import web
+import voluptuous as vol
 
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import intent, template, config_entry_flow
+from homeassistant.helpers import config_entry_flow, intent, template
 
 from .const import DOMAIN
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,11 +22,6 @@ V2 = 2
 
 class DialogFlowError(HomeAssistantError):
     """Raised when a DialogFlow error happens."""
-
-
-async def async_setup(hass, config):
-    """Set up the Dialogflow component."""
-    return True
 
 
 async def handle_webhook(hass, webhook_id, request):
@@ -81,7 +75,6 @@ async def async_unload_entry(hass, entry):
     return True
 
 
-# pylint: disable=invalid-name
 async_remove_entry = config_entry_flow.webhook_async_remove_entry
 
 
@@ -163,7 +156,7 @@ class DialogflowResponse:
         assert self.speech is None
 
         if isinstance(text, template.Template):
-            text = text.async_render(self.parameters)
+            text = text.async_render(self.parameters, parse_result=False)
 
         self.speech = text
 

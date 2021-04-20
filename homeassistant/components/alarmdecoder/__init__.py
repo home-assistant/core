@@ -1,160 +1,78 @@
 """Support for AlarmDecoder devices."""
+import asyncio
+from datetime import timedelta
 import logging
 
-from datetime import timedelta
-import voluptuous as vol
+from adext import AdExt
+from alarmdecoder.devices import SerialDevice, SocketDevice
+from alarmdecoder.util import NoDeviceError
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, CONF_HOST
-from homeassistant.helpers.discovery import load_platform
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PORT,
+    CONF_PROTOCOL,
+    EVENT_HOMEASSISTANT_STOP,
+)
+from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
-from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
+
+from .const import (
+    CONF_DEVICE_BAUD,
+    CONF_DEVICE_PATH,
+    DATA_AD,
+    DATA_REMOVE_STOP_LISTENER,
+    DATA_REMOVE_UPDATE_LISTENER,
+    DATA_RESTART,
+    DOMAIN,
+    PROTOCOL_SERIAL,
+    PROTOCOL_SOCKET,
+    SIGNAL_PANEL_MESSAGE,
+    SIGNAL_REL_MESSAGE,
+    SIGNAL_RFX_MESSAGE,
+    SIGNAL_ZONE_FAULT,
+    SIGNAL_ZONE_RESTORE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "alarmdecoder"
-
-DATA_AD = "alarmdecoder"
-
-CONF_DEVICE = "device"
-CONF_DEVICE_BAUD = "baudrate"
-CONF_DEVICE_PATH = "path"
-CONF_DEVICE_PORT = "port"
-CONF_DEVICE_TYPE = "type"
-CONF_PANEL_DISPLAY = "panel_display"
-CONF_ZONE_NAME = "name"
-CONF_ZONE_TYPE = "type"
-CONF_ZONE_LOOP = "loop"
-CONF_ZONE_RFID = "rfid"
-CONF_ZONES = "zones"
-CONF_RELAY_ADDR = "relayaddr"
-CONF_RELAY_CHAN = "relaychan"
-
-DEFAULT_DEVICE_TYPE = "socket"
-DEFAULT_DEVICE_HOST = "localhost"
-DEFAULT_DEVICE_PORT = 10000
-DEFAULT_DEVICE_PATH = "/dev/ttyUSB0"
-DEFAULT_DEVICE_BAUD = 115200
-
-DEFAULT_PANEL_DISPLAY = False
-
-DEFAULT_ZONE_TYPE = "opening"
-
-SIGNAL_PANEL_MESSAGE = "alarmdecoder.panel_message"
-SIGNAL_PANEL_ARM_AWAY = "alarmdecoder.panel_arm_away"
-SIGNAL_PANEL_ARM_HOME = "alarmdecoder.panel_arm_home"
-SIGNAL_PANEL_DISARM = "alarmdecoder.panel_disarm"
-
-SIGNAL_ZONE_FAULT = "alarmdecoder.zone_fault"
-SIGNAL_ZONE_RESTORE = "alarmdecoder.zone_restore"
-SIGNAL_RFX_MESSAGE = "alarmdecoder.rfx_message"
-SIGNAL_REL_MESSAGE = "alarmdecoder.rel_message"
-
-DEVICE_SOCKET_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_DEVICE_TYPE): "socket",
-        vol.Optional(CONF_HOST, default=DEFAULT_DEVICE_HOST): cv.string,
-        vol.Optional(CONF_DEVICE_PORT, default=DEFAULT_DEVICE_PORT): cv.port,
-    }
-)
-
-DEVICE_SERIAL_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_DEVICE_TYPE): "serial",
-        vol.Optional(CONF_DEVICE_PATH, default=DEFAULT_DEVICE_PATH): cv.string,
-        vol.Optional(CONF_DEVICE_BAUD, default=DEFAULT_DEVICE_BAUD): cv.string,
-    }
-)
-
-DEVICE_USB_SCHEMA = vol.Schema({vol.Required(CONF_DEVICE_TYPE): "usb"})
-
-ZONE_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_ZONE_NAME): cv.string,
-        vol.Optional(CONF_ZONE_TYPE, default=DEFAULT_ZONE_TYPE): vol.Any(
-            DEVICE_CLASSES_SCHEMA
-        ),
-        vol.Optional(CONF_ZONE_RFID): cv.string,
-        vol.Optional(CONF_ZONE_LOOP): vol.All(vol.Coerce(int), vol.Range(min=1, max=4)),
-        vol.Inclusive(
-            CONF_RELAY_ADDR,
-            "relaylocation",
-            "Relay address and channel must exist together",
-        ): cv.byte,
-        vol.Inclusive(
-            CONF_RELAY_CHAN,
-            "relaylocation",
-            "Relay address and channel must exist together",
-        ): cv.byte,
-    }
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_DEVICE): vol.Any(
-                    DEVICE_SOCKET_SCHEMA, DEVICE_SERIAL_SCHEMA, DEVICE_USB_SCHEMA
-                ),
-                vol.Optional(
-                    CONF_PANEL_DISPLAY, default=DEFAULT_PANEL_DISPLAY
-                ): cv.boolean,
-                vol.Optional(CONF_ZONES): {vol.Coerce(int): ZONE_SCHEMA},
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+PLATFORMS = ["alarm_control_panel", "sensor", "binary_sensor"]
 
 
-def setup(hass, config):
-    """Set up for the AlarmDecoder devices."""
-    from alarmdecoder import AlarmDecoder
-    from alarmdecoder.devices import SocketDevice, SerialDevice, USBDevice
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up AlarmDecoder config flow."""
+    undo_listener = entry.add_update_listener(_update_listener)
 
-    conf = config.get(DOMAIN)
-
-    restart = False
-    device = conf.get(CONF_DEVICE)
-    display = conf.get(CONF_PANEL_DISPLAY)
-    zones = conf.get(CONF_ZONES)
-
-    device_type = device.get(CONF_DEVICE_TYPE)
-    host = DEFAULT_DEVICE_HOST
-    port = DEFAULT_DEVICE_PORT
-    path = DEFAULT_DEVICE_PATH
-    baud = DEFAULT_DEVICE_BAUD
+    ad_connection = entry.data
+    protocol = ad_connection[CONF_PROTOCOL]
 
     def stop_alarmdecoder(event):
         """Handle the shutdown of AlarmDecoder."""
+        if not hass.data.get(DOMAIN):
+            return
         _LOGGER.debug("Shutting down alarmdecoder")
-        nonlocal restart
-        restart = False
+        hass.data[DOMAIN][entry.entry_id][DATA_RESTART] = False
         controller.close()
 
-    def open_connection(now=None):
+    async def open_connection(now=None):
         """Open a connection to AlarmDecoder."""
-        from alarmdecoder.util import NoDeviceError
-
-        nonlocal restart
         try:
-            controller.open(baud)
+            await hass.async_add_executor_job(controller.open, baud)
         except NoDeviceError:
-            _LOGGER.debug("Failed to connect.  Retrying in 5 seconds")
-            hass.helpers.event.track_point_in_time(
+            _LOGGER.debug("Failed to connect. Retrying in 5 seconds")
+            hass.helpers.event.async_track_point_in_time(
                 open_connection, dt_util.utcnow() + timedelta(seconds=5)
             )
             return
         _LOGGER.debug("Established a connection with the alarmdecoder")
-        restart = True
+        hass.data[DOMAIN][entry.entry_id][DATA_RESTART] = True
 
     def handle_closed_connection(event):
         """Restart after unexpected loss of connection."""
-        nonlocal restart
-        if not restart:
+        if not hass.data[DOMAIN][entry.entry_id][DATA_RESTART]:
             return
-        restart = False
-        _LOGGER.warning("AlarmDecoder unexpectedly lost connection.")
+        hass.data[DOMAIN][entry.entry_id][DATA_RESTART] = False
+        _LOGGER.warning("AlarmDecoder unexpectedly lost connection")
         hass.add_job(open_connection)
 
     def handle_message(sender, message):
@@ -177,18 +95,14 @@ def setup(hass, config):
         """Handle relay or zone expander message from AlarmDecoder."""
         hass.helpers.dispatcher.dispatcher_send(SIGNAL_REL_MESSAGE, message)
 
-    controller = False
-    if device_type == "socket":
-        host = device.get(CONF_HOST)
-        port = device.get(CONF_DEVICE_PORT)
-        controller = AlarmDecoder(SocketDevice(interface=(host, port)))
-    elif device_type == "serial":
-        path = device.get(CONF_DEVICE_PATH)
-        baud = device.get(CONF_DEVICE_BAUD)
-        controller = AlarmDecoder(SerialDevice(interface=path))
-    elif device_type == "usb":
-        AlarmDecoder(USBDevice.find())
-        return False
+    baud = ad_connection.get(CONF_DEVICE_BAUD)
+    if protocol == PROTOCOL_SOCKET:
+        host = ad_connection[CONF_HOST]
+        port = ad_connection[CONF_PORT]
+        controller = AdExt(SocketDevice(interface=(host, port)))
+    if protocol == PROTOCOL_SERIAL:
+        path = ad_connection[CONF_DEVICE_PATH]
+        controller = AdExt(SerialDevice(interface=path))
 
     controller.on_message += handle_message
     controller.on_rfx_message += handle_rfx_message
@@ -197,18 +111,56 @@ def setup(hass, config):
     controller.on_close += handle_closed_connection
     controller.on_expander_message += handle_rel_message
 
-    hass.data[DATA_AD] = controller
+    remove_stop_listener = hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, stop_alarmdecoder
+    )
 
-    open_connection()
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {
+        DATA_AD: controller,
+        DATA_REMOVE_UPDATE_LISTENER: undo_listener,
+        DATA_REMOVE_STOP_LISTENER: remove_stop_listener,
+        DATA_RESTART: False,
+    }
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_alarmdecoder)
+    await open_connection()
 
-    load_platform(hass, "alarm_control_panel", DOMAIN, conf, config)
+    for platform in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, platform)
+        )
+    return True
 
-    if zones:
-        load_platform(hass, "binary_sensor", DOMAIN, {CONF_ZONES: zones}, config)
 
-    if display:
-        load_platform(hass, "sensor", DOMAIN, conf, config)
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Unload a AlarmDecoder entry."""
+    hass.data[DOMAIN][entry.entry_id][DATA_RESTART] = False
+
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
+            ]
+        )
+    )
+
+    if not unload_ok:
+        return False
+
+    hass.data[DOMAIN][entry.entry_id][DATA_REMOVE_UPDATE_LISTENER]()
+    hass.data[DOMAIN][entry.entry_id][DATA_REMOVE_STOP_LISTENER]()
+    await hass.async_add_executor_job(hass.data[DOMAIN][entry.entry_id][DATA_AD].close)
+
+    if hass.data[DOMAIN][entry.entry_id]:
+        hass.data[DOMAIN].pop(entry.entry_id)
+        if not hass.data[DOMAIN]:
+            hass.data.pop(DOMAIN)
 
     return True
+
+
+async def _update_listener(hass: HomeAssistant, entry: ConfigEntry):
+    """Handle options update."""
+    _LOGGER.debug("AlarmDecoder options updated: %s", entry.as_dict()["options"])
+    await hass.config_entries.async_reload(entry.entry_id)

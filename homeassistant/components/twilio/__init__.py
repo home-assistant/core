@@ -1,9 +1,12 @@
 """Support for Twilio."""
+from twilio.rest import Client
+from twilio.twiml import TwiML
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.helpers import config_entry_flow
+import homeassistant.helpers.config_validation as cv
+
 from .const import DOMAIN
 
 CONF_ACCOUNT_SID = "account_sid"
@@ -28,8 +31,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the Twilio component."""
-    from twilio.rest import Client
-
     if DOMAIN not in config:
         return True
 
@@ -42,8 +43,6 @@ async def async_setup(hass, config):
 
 async def handle_webhook(hass, webhook_id, request):
     """Handle incoming webhook from Twilio for inbound messages and calls."""
-    from twilio.twiml import TwiML
-
     data = dict(await request.post())
     data["webhook_id"] = webhook_id
     hass.bus.async_fire(RECEIVED_DATA, dict(data))
@@ -65,5 +64,4 @@ async def async_unload_entry(hass, entry):
     return True
 
 
-# pylint: disable=invalid-name
 async_remove_entry = config_entry_flow.webhook_async_remove_entry

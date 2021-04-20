@@ -1,10 +1,8 @@
 {
   "domain": "flux_led",
-  "name": "Flux led",
+  "name": "Flux LED/MagicLight",
   "documentation": "https://www.home-assistant.io/integrations/flux_led",
-  "requirements": [
-    "flux_led==0.22"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "requirements": ["flux_led==0.22"],
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

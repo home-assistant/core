@@ -3,15 +3,16 @@
 from datetime import datetime, timedelta
 import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
+    PERCENTAGE,
     TEMP_CELSIUS,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN, METRIC_KEY_MODE, SIGNAL_VALLOX_STATE_UPDATE
 
@@ -39,7 +40,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             state_proxy=state_proxy,
             metric_key="A_CYC_FAN_SPEED",
             device_class=None,
-            unit_of_measurement="%",
+            unit_of_measurement=PERCENTAGE,
             icon="mdi:fan",
         ),
         ValloxSensor(
@@ -79,7 +80,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             state_proxy=state_proxy,
             metric_key="A_CYC_RH_VALUE",
             device_class=DEVICE_CLASS_HUMIDITY,
-            unit_of_measurement="%",
+            unit_of_measurement=PERCENTAGE,
             icon=None,
         ),
         ValloxFilterRemainingSensor(
@@ -95,7 +96,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(sensors, update_before_add=False)
 
 
-class ValloxSensor(Entity):
+class ValloxSensor(SensorEntity):
     """Representation of a Vallox sensor."""
 
     def __init__(
@@ -148,8 +149,10 @@ class ValloxSensor(Entity):
 
     async def async_added_to_hass(self):
         """Call to update."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_VALLOX_STATE_UPDATE, self._update_callback
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_VALLOX_STATE_UPDATE, self._update_callback
+            )
         )
 
     @callback

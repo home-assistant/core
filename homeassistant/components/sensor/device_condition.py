@@ -1,8 +1,11 @@
 """Provides device conditions for sensors."""
-from typing import Dict, List
+from __future__ import annotations
+
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant
+from homeassistant.components.device_automation.exceptions import (
+    InvalidDeviceAutomationConfig,
+)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -11,47 +14,62 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_TYPE,
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_CO,
+    DEVICE_CLASS_CO2,
+    DEVICE_CLASS_CURRENT,
+    DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
+    DEVICE_CLASS_POWER_FACTOR,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_TIMESTAMP,
+    DEVICE_CLASS_VOLTAGE,
 )
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.entity_registry import (
     async_entries_for_device,
     async_get_registry,
 )
-from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
-
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
 DEVICE_CLASS_NONE = "none"
 
 CONF_IS_BATTERY_LEVEL = "is_battery_level"
+CONF_IS_CO = "is_carbon_monoxide"
+CONF_IS_CO2 = "is_carbon_dioxide"
+CONF_IS_CURRENT = "is_current"
+CONF_IS_ENERGY = "is_energy"
 CONF_IS_HUMIDITY = "is_humidity"
 CONF_IS_ILLUMINANCE = "is_illuminance"
 CONF_IS_POWER = "is_power"
+CONF_IS_POWER_FACTOR = "is_power_factor"
 CONF_IS_PRESSURE = "is_pressure"
 CONF_IS_SIGNAL_STRENGTH = "is_signal_strength"
 CONF_IS_TEMPERATURE = "is_temperature"
-CONF_IS_TIMESTAMP = "is_timestamp"
+CONF_IS_VOLTAGE = "is_voltage"
 CONF_IS_VALUE = "is_value"
 
 ENTITY_CONDITIONS = {
     DEVICE_CLASS_BATTERY: [{CONF_TYPE: CONF_IS_BATTERY_LEVEL}],
+    DEVICE_CLASS_CO: [{CONF_TYPE: CONF_IS_CO}],
+    DEVICE_CLASS_CO2: [{CONF_TYPE: CONF_IS_CO2}],
+    DEVICE_CLASS_CURRENT: [{CONF_TYPE: CONF_IS_CURRENT}],
+    DEVICE_CLASS_ENERGY: [{CONF_TYPE: CONF_IS_ENERGY}],
     DEVICE_CLASS_HUMIDITY: [{CONF_TYPE: CONF_IS_HUMIDITY}],
     DEVICE_CLASS_ILLUMINANCE: [{CONF_TYPE: CONF_IS_ILLUMINANCE}],
     DEVICE_CLASS_POWER: [{CONF_TYPE: CONF_IS_POWER}],
+    DEVICE_CLASS_POWER_FACTOR: [{CONF_TYPE: CONF_IS_POWER_FACTOR}],
     DEVICE_CLASS_PRESSURE: [{CONF_TYPE: CONF_IS_PRESSURE}],
     DEVICE_CLASS_SIGNAL_STRENGTH: [{CONF_TYPE: CONF_IS_SIGNAL_STRENGTH}],
     DEVICE_CLASS_TEMPERATURE: [{CONF_TYPE: CONF_IS_TEMPERATURE}],
-    DEVICE_CLASS_TIMESTAMP: [{CONF_TYPE: CONF_IS_TIMESTAMP}],
+    DEVICE_CLASS_VOLTAGE: [{CONF_TYPE: CONF_IS_VOLTAGE}],
     DEVICE_CLASS_NONE: [{CONF_TYPE: CONF_IS_VALUE}],
 }
 
@@ -62,13 +80,18 @@ CONDITION_SCHEMA = vol.All(
             vol.Required(CONF_TYPE): vol.In(
                 [
                     CONF_IS_BATTERY_LEVEL,
+                    CONF_IS_CO,
+                    CONF_IS_CO2,
+                    CONF_IS_CURRENT,
+                    CONF_IS_ENERGY,
                     CONF_IS_HUMIDITY,
                     CONF_IS_ILLUMINANCE,
                     CONF_IS_POWER,
+                    CONF_IS_POWER_FACTOR,
                     CONF_IS_PRESSURE,
                     CONF_IS_SIGNAL_STRENGTH,
                     CONF_IS_TEMPERATURE,
-                    CONF_IS_TIMESTAMP,
+                    CONF_IS_VOLTAGE,
                     CONF_IS_VALUE,
                 ]
             ),
@@ -82,9 +105,9 @@ CONDITION_SCHEMA = vol.All(
 
 async def async_get_conditions(
     hass: HomeAssistant, device_id: str
-) -> List[Dict[str, str]]:
+) -> list[dict[str, str]]:
     """List device conditions."""
-    conditions: List[Dict[str, str]] = []
+    conditions: list[dict[str, str]] = []
     entity_registry = await async_get_registry(hass)
     entries = [
         entry
@@ -110,21 +133,20 @@ async def async_get_conditions(
         )
 
         conditions.extend(
-            (
-                {
-                    **template,
-                    "condition": "device",
-                    "device_id": device_id,
-                    "entity_id": entry.entity_id,
-                    "domain": DOMAIN,
-                }
-                for template in templates
-            )
+            {
+                **template,
+                "condition": "device",
+                "device_id": device_id,
+                "entity_id": entry.entity_id,
+                "domain": DOMAIN,
+            }
+            for template in templates
         )
 
     return conditions
 
 
+@callback
 def async_condition_from_config(
     config: ConfigType, config_validation: bool
 ) -> condition.ConditionCheckerType:
@@ -141,3 +163,30 @@ def async_condition_from_config(
         numeric_state_config[condition.CONF_BELOW] = config[CONF_BELOW]
 
     return condition.async_numeric_state_from_config(numeric_state_config)
+
+
+async def async_get_condition_capabilities(hass, config):
+    """List condition capabilities."""
+    state = hass.states.get(config[CONF_ENTITY_ID])
+    unit_of_measurement = (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) if state else None
+    )
+
+    if not state or not unit_of_measurement:
+        raise InvalidDeviceAutomationConfig(
+            "No state or unit of measurement found for "
+            f"condition entity {config[CONF_ENTITY_ID]}"
+        )
+
+    return {
+        "extra_fields": vol.Schema(
+            {
+                vol.Optional(
+                    CONF_ABOVE, description={"suffix": unit_of_measurement}
+                ): vol.Coerce(float),
+                vol.Optional(
+                    CONF_BELOW, description={"suffix": unit_of_measurement}
+                ): vol.Coerce(float),
+            }
+        )
+    }

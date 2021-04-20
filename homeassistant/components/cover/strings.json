@@ -1,10 +1,39 @@
 {
-    "device_automation": {
-        "condition_type": {
-            "is_open": "{entity_name} is open",
-            "is_closed": "{entity_name} is closed",
-            "is_opening": "{entity_name} is opening",
-            "is_closing": "{entity_name} is closing"
-        }
+  "title": "Cover",
+  "device_automation": {
+    "action_type": {
+      "open": "Open {entity_name}",
+      "close": "Close {entity_name}",
+      "stop": "Stop {entity_name}",
+      "open_tilt": "Open {entity_name} tilt",
+      "close_tilt": "Close {entity_name} tilt",
+      "set_position": "Set {entity_name} position",
+      "set_tilt_position": "Set {entity_name} tilt position"
+    },
+    "condition_type": {
+      "is_open": "{entity_name} is open",
+      "is_closed": "{entity_name} is closed",
+      "is_opening": "{entity_name} is opening",
+      "is_closing": "{entity_name} is closing",
+      "is_position": "Current {entity_name} position is",
+      "is_tilt_position": "Current {entity_name} tilt position is"
+    },
+    "trigger_type": {
+      "opened": "{entity_name} opened",
+      "closed": "{entity_name} closed",
+      "opening": "{entity_name} opening",
+      "closing": "{entity_name} closing",
+      "position": "{entity_name} position changes",
+      "tilt_position": "{entity_name} tilt position changes"
     }
+  },
+  "state": {
+    "_": {
+      "open": "[%key:common::state::open%]",
+      "opening": "Opening",
+      "closed": "[%key:common::state::closed%]",
+      "closing": "Closing",
+      "stopped": "Stopped"
+    }
+  }
 }

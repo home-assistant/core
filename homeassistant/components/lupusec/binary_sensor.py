@@ -1,22 +1,19 @@
 """Support for Lupusec Security System binary sensors."""
 from datetime import timedelta
-import logging
 
-from homeassistant.components.binary_sensor import DEVICE_CLASSES, BinarySensorDevice
+import lupupy.constants as CONST
+
+from homeassistant.components.binary_sensor import DEVICE_CLASSES, BinarySensorEntity
 
 from . import DOMAIN as LUPUSEC_DOMAIN, LupusecDevice
 
 SCAN_INTERVAL = timedelta(seconds=2)
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a sensor for an Lupusec device."""
     if discovery_info is None:
         return
-
-    import lupupy.constants as CONST
 
     data = hass.data[LUPUSEC_DOMAIN]
 
@@ -29,7 +26,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices)
 
 
-class LupusecBinarySensor(LupusecDevice, BinarySensorDevice):
+class LupusecBinarySensor(LupusecDevice, BinarySensorEntity):
     """A binary sensor implementation for Lupusec device."""
 
     @property

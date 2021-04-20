@@ -1,0 +1,34 @@
+start_recording:
+  description: Enable continuous recording.
+  fields:
+    entity_id:
+      description: "Name(s) of the entity to start recording."
+      example: "camera.camera_1"
+
+stop_recording:
+  description: Disable continuous recording.
+  fields:
+    entity_id:
+      description: "Name(s) of the entity to stop recording."
+      example: "camera.camera_1"
+
+enable_alerts:
+  description: Enable alerts
+  fields:
+    entity_id:
+      description: "Name(s) of the entity to enable alerts."
+      example: "camera.camera_1"
+
+disable_alerts:
+  description: Disable alerts
+  fields:
+    entity_id:
+      description: "Name(s) of the entity to disable alerts."
+      example: "camera.camera_1"
+
+snapshot:
+  description: Take a photo
+  fields:
+    entity_id:
+      description: "Name(s) of the entity to take a snapshot."
+      example: "camera.camera_1"

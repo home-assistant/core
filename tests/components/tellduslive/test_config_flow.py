@@ -13,9 +13,10 @@ from homeassistant.components.tellduslive import (
     SCAN_INTERVAL,
     config_flow,
 )
+from homeassistant.config_entries import SOURCE_DISCOVERY
 from homeassistant.const import CONF_HOST
 
-from tests.common import MockConfigEntry, MockDependency, mock_coro
+from tests.common import MockConfigEntry, mock_coro
 
 
 def init_config_flow(hass, side_effect=None):
@@ -42,13 +43,17 @@ def authorize():
 @pytest.fixture
 def mock_tellduslive(supports_local_api, authorize):
     """Mock tellduslive."""
-    with MockDependency("tellduslive") as mock_tellduslive_:
-        mock_tellduslive_.supports_local_api.return_value = supports_local_api
-        mock_tellduslive_.Session().authorize.return_value = authorize
-        mock_tellduslive_.Session().access_token = "token"
-        mock_tellduslive_.Session().access_token_secret = "token_secret"
-        mock_tellduslive_.Session().authorize_url = "https://example.com"
-        yield mock_tellduslive_
+    with patch(
+        "homeassistant.components.tellduslive.config_flow.Session"
+    ) as Session, patch(
+        "homeassistant.components.tellduslive.config_flow.supports_local_api"
+    ) as tellduslive_supports_local_api:
+        tellduslive_supports_local_api.return_value = supports_local_api
+        Session().authorize.return_value = authorize
+        Session().access_token = "token"
+        Session().access_token_secret = "token_secret"
+        Session().authorize_url = "https://example.com"
+        yield Session, tellduslive_supports_local_api
 
 
 async def test_abort_if_already_setup(hass):
@@ -69,6 +74,7 @@ async def test_abort_if_already_setup(hass):
 async def test_full_flow_implementation(hass, mock_tellduslive):
     """Test registering an implementation and finishing flow works."""
     flow = init_config_flow(hass)
+    flow.context = {"source": SOURCE_DISCOVERY}
     result = await flow.async_step_discovery(["localhost", "tellstick"])
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -162,6 +168,7 @@ async def test_step_import_load_json(hass, mock_tellduslive):
 async def test_step_disco_no_local_api(hass, mock_tellduslive):
     """Test that we trigger when configuring from discovery, not supporting local api."""
     flow = init_config_flow(hass)
+    flow.context = {"source": SOURCE_DISCOVERY}
 
     result = await flow.async_step_discovery(["localhost", "tellstick"])
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -194,7 +201,7 @@ async def test_wrong_auth_flow_implementation(hass, mock_tellduslive):
     result = await flow.async_step_auth("")
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "auth"
-    assert result["errors"]["base"] == "auth_error"
+    assert result["errors"]["base"] == "invalid_auth"
 
 
 async def test_not_pick_host_if_only_one(hass, mock_tellduslive):
@@ -222,7 +229,7 @@ async def test_abort_no_auth_url(hass, mock_tellduslive):
 
     result = await flow.async_step_user()
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "authorize_url_fail"
+    assert result["reason"] == "unknown_authorize_url_generation"
 
 
 async def test_abort_if_exception_generating_auth_url(hass, mock_tellduslive):
@@ -231,14 +238,14 @@ async def test_abort_if_exception_generating_auth_url(hass, mock_tellduslive):
 
     result = await flow.async_step_user()
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "authorize_url_fail"
+    assert result["reason"] == "unknown_authorize_url_generation"
 
 
 async def test_discovery_already_configured(hass, mock_tellduslive):
-    """Test abort if alredy configured fires from discovery."""
+    """Test abort if already configured fires from discovery."""
     MockConfigEntry(domain="tellduslive", data={"host": "some-host"}).add_to_hass(hass)
     flow = init_config_flow(hass)
+    flow.context = {"source": SOURCE_DISCOVERY}
 
-    result = await flow.async_step_discovery(["some-host", ""])
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_setup"
+    with pytest.raises(data_entry_flow.AbortFlow):
+        result = await flow.async_step_discovery(["some-host", ""])

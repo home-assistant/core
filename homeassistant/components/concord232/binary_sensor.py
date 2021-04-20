@@ -2,13 +2,18 @@
 import datetime
 import logging
 
+from concord232 import client as concord232_client
 import requests
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice,
-    PLATFORM_SCHEMA,
+    DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_OPENING,
+    DEVICE_CLASS_SAFETY,
+    DEVICE_CLASS_SMOKE,
     DEVICE_CLASSES,
+    PLATFORM_SCHEMA,
+    BinarySensorEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
 import homeassistant.helpers.config_validation as cv
@@ -42,12 +47,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Concord232 binary sensor platform."""
-    from concord232 import client as concord232_client
 
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
-    exclude = config.get(CONF_EXCLUDE_ZONES)
-    zone_types = config.get(CONF_ZONE_TYPES)
+    host = config[CONF_HOST]
+    port = config[CONF_PORT]
+    exclude = config[CONF_EXCLUDE_ZONES]
+    zone_types = config[CONF_ZONE_TYPES]
     sensors = []
 
     try:
@@ -85,17 +89,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 def get_opening_type(zone):
     """Return the result of the type guessing from name."""
     if "MOTION" in zone["name"]:
-        return "motion"
+        return DEVICE_CLASS_MOTION
     if "KEY" in zone["name"]:
-        return "safety"
+        return DEVICE_CLASS_SAFETY
     if "SMOKE" in zone["name"]:
-        return "smoke"
+        return DEVICE_CLASS_SMOKE
     if "WATER" in zone["name"]:
         return "water"
-    return "opening"
+    return DEVICE_CLASS_OPENING
 
 
-class Concord232ZoneSensor(BinarySensorDevice):
+class Concord232ZoneSensor(BinarySensorEntity):
     """Representation of a Concord232 zone as a sensor."""
 
     def __init__(self, hass, client, zone, zone_type):
@@ -110,11 +114,6 @@ class Concord232ZoneSensor(BinarySensorDevice):
     def device_class(self):
         """Return the class of this sensor, from DEVICE_CLASSES."""
         return self._zone_type
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return True
 
     @property
     def name(self):

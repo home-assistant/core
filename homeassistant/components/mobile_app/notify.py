@@ -2,6 +2,7 @@
 import asyncio
 import logging
 
+import aiohttp
 import async_timeout
 
 from homeassistant.components.notify import (
@@ -12,7 +13,12 @@ from homeassistant.components.notify import (
     ATTR_TITLE_DEFAULT,
     BaseNotificationService,
 )
-
+from homeassistant.const import (
+    HTTP_ACCEPTED,
+    HTTP_CREATED,
+    HTTP_OK,
+    HTTP_TOO_MANY_REQUESTS,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.util.dt as dt_util
 
@@ -30,8 +36,10 @@ from .const import (
     ATTR_PUSH_TOKEN,
     ATTR_PUSH_URL,
     DATA_CONFIG_ENTRIES,
+    DATA_NOTIFY,
     DOMAIN,
 )
+from .util import supports_push
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,15 +47,13 @@ _LOGGER = logging.getLogger(__name__)
 def push_registrations(hass):
     """Return a dictionary of push enabled registrations."""
     targets = {}
+
     for webhook_id, entry in hass.data[DOMAIN][DATA_CONFIG_ENTRIES].items():
-        data = entry.data
-        app_data = data[ATTR_APP_DATA]
-        if ATTR_PUSH_TOKEN in app_data and ATTR_PUSH_URL in app_data:
-            device_name = data[ATTR_DEVICE_NAME]
-            if device_name in targets:
-                _LOGGER.warning("Found duplicate device name %s", device_name)
-                continue
-            targets[device_name] = webhook_id
+        if not supports_push(hass, webhook_id):
+            continue
+
+        targets[entry.data[ATTR_DEVICE_NAME]] = webhook_id
+
     return targets
 
 
@@ -78,16 +84,16 @@ def log_rate_limits(hass, device_name, resp, level=logging.INFO):
 
 async def async_get_service(hass, config, discovery_info=None):
     """Get the mobile_app notification service."""
-    session = async_get_clientsession(hass)
-    return MobileAppNotificationService(session)
+    service = hass.data[DOMAIN][DATA_NOTIFY] = MobileAppNotificationService(hass)
+    return service
 
 
 class MobileAppNotificationService(BaseNotificationService):
     """Implement the notification service for mobile_app."""
 
-    def __init__(self, session):
+    def __init__(self, hass):
         """Initialize the service."""
-        self._session = session
+        self._hass = hass
 
     @property
     def targets(self):
@@ -98,10 +104,12 @@ class MobileAppNotificationService(BaseNotificationService):
         """Send a message to the Lambda APNS gateway."""
         data = {ATTR_MESSAGE: message}
 
-        if kwargs.get(ATTR_TITLE) is not None:
-            # Remove default title from notifications.
-            if kwargs.get(ATTR_TITLE) != ATTR_TITLE_DEFAULT:
-                data[ATTR_TITLE] = kwargs.get(ATTR_TITLE)
+        # Remove default title from notifications.
+        if (
+            kwargs.get(ATTR_TITLE) is not None
+            and kwargs.get(ATTR_TITLE) != ATTR_TITLE_DEFAULT
+        ):
+            data[ATTR_TITLE] = kwargs.get(ATTR_TITLE)
 
         targets = kwargs.get(ATTR_TARGET)
 
@@ -132,19 +140,29 @@ class MobileAppNotificationService(BaseNotificationService):
 
             try:
                 with async_timeout.timeout(10):
-                    response = await self._session.post(push_url, json=data)
+                    response = await async_get_clientsession(self._hass).post(
+                        push_url, json=data
+                    )
                     result = await response.json()
 
-                if response.status == 201:
+                if response.status in [HTTP_OK, HTTP_CREATED, HTTP_ACCEPTED]:
                     log_rate_limits(self.hass, entry_data[ATTR_DEVICE_NAME], result)
-                    return
+                    continue
 
                 fallback_error = result.get("errorMessage", "Unknown error")
                 fallback_message = (
-                    "Internal server error, " "please try again later: " "{}"
-                ).format(fallback_error)
+                    f"Internal server error, please try again later: {fallback_error}"
+                )
                 message = result.get("message", fallback_message)
-                if response.status == 429:
+
+                if "message" in result:
+                    if message[-1] not in [".", "?", "!"]:
+                        message += "."
+                    message += (
+                        " This message is generated externally to Home Assistant."
+                    )
+
+                if response.status == HTTP_TOO_MANY_REQUESTS:
                     _LOGGER.warning(message)
                     log_rate_limits(
                         self.hass, entry_data[ATTR_DEVICE_NAME], result, logging.WARNING
@@ -154,3 +172,5 @@ class MobileAppNotificationService(BaseNotificationService):
 
             except asyncio.TimeoutError:
                 _LOGGER.error("Timeout sending notification to %s", push_url)
+            except aiohttp.ClientError as err:
+                _LOGGER.error("Error sending notification to %s: %r", push_url, err)

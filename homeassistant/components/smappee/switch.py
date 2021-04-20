@@ -1,62 +1,99 @@
-"""Support for interacting with Smappee Comport Plugs."""
-import logging
+"""Support for interacting with Smappee Comport Plugs, Switches and Output Modules."""
+from homeassistant.components.switch import SwitchEntity
 
-from homeassistant.components.switch import SwitchDevice
+from .const import DOMAIN
 
-from . import DATA_SMAPPEE
-
-_LOGGER = logging.getLogger(__name__)
-
-ICON = "mdi:power-plug"
+SWITCH_PREFIX = "Switch"
+ICON = "mdi:toggle-switch"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Smappee Comfort Plugs."""
-    smappee = hass.data[DATA_SMAPPEE]
+    smappee_base = hass.data[DOMAIN][config_entry.entry_id]
 
-    dev = []
-    if smappee.is_remote_active:
-        for location_id in smappee.locations.keys():
-            for items in smappee.info[location_id].get("actuators"):
-                if items.get("name") != "":
-                    _LOGGER.debug("Remote actuator %s", items)
-                    dev.append(
-                        SmappeeSwitch(
-                            smappee, items.get("name"), location_id, items.get("id")
+    entities = []
+    for service_location in smappee_base.smappee.service_locations.values():
+        for actuator_id, actuator in service_location.actuators.items():
+            if actuator.type in ["SWITCH", "COMFORT_PLUG"]:
+                entities.append(
+                    SmappeeActuator(
+                        smappee_base,
+                        service_location,
+                        actuator.name,
+                        actuator_id,
+                        actuator.type,
+                        actuator.serialnumber,
+                    )
+                )
+            elif actuator.type == "INFINITY_OUTPUT_MODULE":
+                for option in actuator.state_options:
+                    entities.append(
+                        SmappeeActuator(
+                            smappee_base,
+                            service_location,
+                            actuator.name,
+                            actuator_id,
+                            actuator.type,
+                            actuator.serialnumber,
+                            actuator_state_option=option,
                         )
                     )
-    elif smappee.is_local_active:
-        for items in smappee.local_devices:
-            _LOGGER.debug("Local actuator %s", items)
-            dev.append(
-                SmappeeSwitch(smappee, items.get("value"), None, items.get("key"))
-            )
-    add_entities(dev)
+
+    async_add_entities(entities, True)
 
 
-class SmappeeSwitch(SwitchDevice):
+class SmappeeActuator(SwitchEntity):
     """Representation of a Smappee Comport Plug."""
 
-    def __init__(self, smappee, name, location_id, switch_id):
+    def __init__(
+        self,
+        smappee_base,
+        service_location,
+        name,
+        actuator_id,
+        actuator_type,
+        actuator_serialnumber,
+        actuator_state_option=None,
+    ):
         """Initialize a new Smappee Comfort Plug."""
-        self._name = name
-        self._state = False
-        self._smappee = smappee
-        self._location_id = location_id
-        self._switch_id = switch_id
-        self._remoteswitch = True
-        if location_id is None:
-            self._remoteswitch = False
+        self._smappee_base = smappee_base
+        self._service_location = service_location
+        self._actuator_name = name
+        self._actuator_id = actuator_id
+        self._actuator_type = actuator_type
+        self._actuator_serialnumber = actuator_serialnumber
+        self._actuator_state_option = actuator_state_option
+        self._state = self._service_location.actuators.get(actuator_id).state
+        self._connection_state = self._service_location.actuators.get(
+            actuator_id
+        ).connection_state
 
     @property
     def name(self):
         """Return the name of the switch."""
-        return self._name
+        if self._actuator_type == "INFINITY_OUTPUT_MODULE":
+            return (
+                f"{self._service_location.service_location_name} - "
+                f"Output module - {self._actuator_name} - {self._actuator_state_option}"
+            )
+
+        # Switch or comfort plug
+        return (
+            f"{self._service_location.service_location_name} - "
+            f"{self._actuator_type.title()} - {self._actuator_name}"
+        )
 
     @property
     def is_on(self):
         """Return true if switch is on."""
-        return self._state
+        if self._actuator_type == "INFINITY_OUTPUT_MODULE":
+            return (
+                self._service_location.actuators.get(self._actuator_id).state
+                == self._actuator_state_option
+            )
+
+        # Switch or comfort plug
+        return self._state == "ON_ON"
 
     @property
     def icon(self):
@@ -65,24 +102,82 @@ class SmappeeSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn on Comport Plug."""
-        if self._smappee.actuator_on(
-            self._location_id, self._switch_id, self._remoteswitch
-        ):
-            self._state = True
+        if self._actuator_type in ["SWITCH", "COMFORT_PLUG"]:
+            self._service_location.set_actuator_state(self._actuator_id, state="ON_ON")
+        elif self._actuator_type == "INFINITY_OUTPUT_MODULE":
+            self._service_location.set_actuator_state(
+                self._actuator_id, state=self._actuator_state_option
+            )
 
     def turn_off(self, **kwargs):
         """Turn off Comport Plug."""
-        if self._smappee.actuator_off(
-            self._location_id, self._switch_id, self._remoteswitch
-        ):
-            self._state = False
+        if self._actuator_type in ["SWITCH", "COMFORT_PLUG"]:
+            self._service_location.set_actuator_state(
+                self._actuator_id, state="OFF_OFF"
+            )
+        elif self._actuator_type == "INFINITY_OUTPUT_MODULE":
+            self._service_location.set_actuator_state(
+                self._actuator_id, state="PLACEHOLDER", api=False
+            )
 
     @property
-    def device_state_attributes(self):
-        """Return the state attributes of the device."""
-        attr = {}
-        if self._remoteswitch:
-            attr["Location Id"] = self._location_id
-            attr["Location Name"] = self._smappee.locations[self._location_id]
-        attr["Switch Id"] = self._switch_id
-        return attr
+    def available(self):
+        """Return True if entity is available. Unavailable for COMFORT_PLUGS."""
+        return (
+            self._connection_state == "CONNECTED"
+            or self._actuator_type == "COMFORT_PLUG"
+        )
+
+    @property
+    def today_energy_kwh(self):
+        """Return the today total energy usage in kWh."""
+        if self._actuator_type == "SWITCH":
+            cons = self._service_location.actuators.get(
+                self._actuator_id
+            ).consumption_today
+            if cons is not None:
+                return round(cons / 1000.0, 2)
+        return None
+
+    @property
+    def unique_id(
+        self,
+    ):
+        """Return the unique ID for this switch."""
+        if self._actuator_type == "INFINITY_OUTPUT_MODULE":
+            return (
+                f"{self._service_location.device_serial_number}-"
+                f"{self._service_location.service_location_id}-actuator-"
+                f"{self._actuator_id}-{self._actuator_state_option}"
+            )
+
+        # Switch or comfort plug
+        return (
+            f"{self._service_location.device_serial_number}-"
+            f"{self._service_location.service_location_id}-actuator-"
+            f"{self._actuator_id}"
+        )
+
+    @property
+    def device_info(self):
+        """Return the device info for this switch."""
+        return {
+            "identifiers": {(DOMAIN, self._service_location.device_serial_number)},
+            "name": self._service_location.service_location_name,
+            "manufacturer": "Smappee",
+            "model": self._service_location.device_model,
+            "sw_version": self._service_location.firmware_version,
+        }
+
+    async def async_update(self):
+        """Get the latest data from Smappee and update the state."""
+        await self._smappee_base.async_update()
+
+        new_state = self._service_location.actuators.get(self._actuator_id).state
+        if new_state != self._state:
+            self._state = new_state
+            self.async_write_ha_state()
+
+        self._connection_state = self._service_location.actuators.get(
+            self._actuator_id
+        ).connection_state

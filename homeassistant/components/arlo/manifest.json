@@ -2,11 +2,8 @@
   "domain": "arlo",
   "name": "Arlo",
   "documentation": "https://www.home-assistant.io/integrations/arlo",
-  "requirements": [
-    "pyarlo==0.2.3"
-  ],
-  "dependencies": [
-    "ffmpeg"
-  ],
-  "codeowners": []
+  "requirements": ["pyarlo==0.2.4"],
+  "dependencies": ["ffmpeg"],
+  "codeowners": [],
+  "iot_class": "cloud_polling"
 }

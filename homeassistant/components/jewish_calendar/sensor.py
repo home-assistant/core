@@ -3,8 +3,8 @@ import logging
 
 import hdate
 
-from homeassistant.const import SUN_EVENT_SUNSET
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import DEVICE_CLASS_TIMESTAMP, SUN_EVENT_SUNSET
 from homeassistant.helpers.sun import get_astral_event_date
 import homeassistant.util.dt as dt_util
 
@@ -30,7 +30,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(sensors)
 
 
-class JewishCalendarSensor(Entity):
+class JewishCalendarSensor(SensorEntity):
     """Representation of an Jewish calendar sensor."""
 
     def __init__(self, data, sensor, sensor_info):
@@ -44,11 +44,18 @@ class JewishCalendarSensor(Entity):
         self._havdalah_offset = data["havdalah_offset"]
         self._diaspora = data["diaspora"]
         self._state = None
+        self._prefix = data["prefix"]
+        self._holiday_attrs = {}
 
     @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
+
+    @property
+    def unique_id(self) -> str:
+        """Generate a unique id."""
+        return f"{self._prefix}_{self._type}"
 
     @property
     def icon(self):
@@ -72,7 +79,7 @@ class JewishCalendarSensor(Entity):
 
         _LOGGER.debug("Now: %s Sunset: %s", now, sunset)
 
-        date = hdate.HDate(today, diaspora=self._diaspora, hebrew=self._hebrew)
+        daytime_date = hdate.HDate(today, diaspora=self._diaspora, hebrew=self._hebrew)
 
         # The Jewish day starts after darkness (called "tzais") and finishes at
         # sunset ("shkia"). The time in between is a gray area (aka "Bein
@@ -81,16 +88,16 @@ class JewishCalendarSensor(Entity):
         # For some sensors, it is more interesting to consider the date to be
         # tomorrow based on sunset ("shkia"), for others based on "tzais".
         # Hence the following variables.
-        after_tzais_date = after_shkia_date = date
+        after_tzais_date = after_shkia_date = daytime_date
         today_times = self.make_zmanim(today)
 
         if now > sunset:
-            after_shkia_date = date.next_day
+            after_shkia_date = daytime_date.next_day
 
         if today_times.havdalah and now > today_times.havdalah:
-            after_tzais_date = date.next_day
+            after_tzais_date = daytime_date.next_day
 
-        self._state = self.get_state(after_shkia_date, after_tzais_date)
+        self._state = self.get_state(daytime_date, after_shkia_date, after_tzais_date)
         _LOGGER.debug("New value for %s: %s", self._type, self._state)
 
     def make_zmanim(self, date):
@@ -103,7 +110,14 @@ class JewishCalendarSensor(Entity):
             hebrew=self._hebrew,
         )
 
-    def get_state(self, after_shkia_date, after_tzais_date):
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        if self._type != "holiday":
+            return {}
+        return self._holiday_attrs
+
+    def get_state(self, daytime_date, after_shkia_date, after_tzais_date):
         """For a given type of sensor, return the state."""
         # Terminology note: by convention in py-libhdate library, "upcoming"
         # refers to "current" or "upcoming" dates.
@@ -112,12 +126,15 @@ class JewishCalendarSensor(Entity):
         if self._type == "weekly_portion":
             # Compute the weekly portion based on the upcoming shabbat.
             return after_tzais_date.upcoming_shabbat.parasha
-        if self._type == "holiday_name":
+        if self._type == "holiday":
+            self._holiday_attrs["id"] = after_shkia_date.holiday_name
+            self._holiday_attrs["type"] = after_shkia_date.holiday_type.name
+            self._holiday_attrs["type_id"] = after_shkia_date.holiday_type.value
             return after_shkia_date.holiday_description
-        if self._type == "holiday_type":
-            return after_shkia_date.holiday_type
         if self._type == "omer_count":
             return after_shkia_date.omer_day
+        if self._type == "daf_yomi":
+            return daytime_date.daf_yomi
 
         return None
 
@@ -133,21 +150,19 @@ class JewishCalendarTimeSensor(JewishCalendarSensor):
     @property
     def device_class(self):
         """Return the class of this sensor."""
-        return "timestamp"
+        return DEVICE_CLASS_TIMESTAMP
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {}
 
         if self._state is None:
             return attrs
 
-        attrs["timestamp"] = self._state.timestamp()
-
         return attrs
 
-    def get_state(self, after_shkia_date, after_tzais_date):
+    def get_state(self, daytime_date, after_shkia_date, after_tzais_date):
         """For a given type of sensor, return the state."""
         if self._type == "upcoming_shabbat_candle_lighting":
             times = self.make_zmanim(

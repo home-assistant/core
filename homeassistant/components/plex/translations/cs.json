@@ -1,0 +1,58 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "V\u0161echny propojen\u00e9 servery jsou ji\u017e nastaveny",
+            "already_configured": "Tento server Plex je ji\u017e nastaven",
+            "already_in_progress": "Konfigurace ji\u017e prob\u00edh\u00e1",
+            "reauth_successful": "Op\u011btovn\u00e9 ov\u011b\u0159en\u00ed bylo \u00fasp\u011b\u0161n\u00e9",
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
+        },
+        "error": {
+            "faulty_credentials": "Autorizace se nezda\u0159ila, ov\u011b\u0159te token",
+            "host_or_token": "Je t\u0159eba poskytnout alespo\u0148 jeden hostitel nebo token",
+            "no_servers": "\u017d\u00e1dn\u00e9 servery propojen\u00e9 s \u00fa\u010dtem Plex",
+            "not_found": "Server Plex nebyl nalezen",
+            "ssl_error": "Probl\u00e9m s SSL certifik\u00e1tem"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "manual_setup": {
+                "data": {
+                    "host": "Hostitel",
+                    "port": "Port",
+                    "ssl": "Pou\u017e\u00edv\u00e1 SSL certifik\u00e1t",
+                    "token": "Token (voliteln\u00fd)",
+                    "verify_ssl": "Ov\u011b\u0159it certifik\u00e1t SSL"
+                },
+                "title": "Ru\u010dn\u00ed nastaven\u00ed Plex"
+            },
+            "select_server": {
+                "data": {
+                    "server": "Server"
+                },
+                "description": "K dispozici je v\u00edce server\u016f, vyberte jeden:",
+                "title": "Vyberte server Plex"
+            },
+            "user": {
+                "title": "Plex Media Server"
+            },
+            "user_advanced": {
+                "data": {
+                    "setup_method": "Metoda nastaven\u00ed"
+                },
+                "title": "Plex Media Server"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "plex_mp_settings": {
+                "data": {
+                    "ignore_plex_web_clients": "Ignorujte webov\u00e9 klienty Plex",
+                    "monitored_users": "Sledovan\u00ed u\u017eivatel\u00e9"
+                },
+                "description": "Mo\u017enosti pro p\u0159ehr\u00e1va\u010de m\u00e9di\u00ed Plex"
+            }
+        }
+    }
+}

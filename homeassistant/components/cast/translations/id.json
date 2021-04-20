@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Tidak ada perangkat yang ditemukan di jaringan",
+            "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
+        },
+        "error": {
+            "invalid_known_hosts": "Host yang diketahui harus berupa daftar host yang dipisahkan koma."
+        },
+        "step": {
+            "config": {
+                "data": {
+                    "known_hosts": "Daftar opsional host yang diketahui jika penemuan mDNS tidak berfungsi."
+                },
+                "description": "Masukkan konfigurasi Google Cast.",
+                "title": "Google Cast"
+            },
+            "confirm": {
+                "description": "Ingin memulai penyiapan?"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_known_hosts": "Host yang diketahui harus berupa daftar host yang dipisahkan koma."
+        },
+        "step": {
+            "options": {
+                "data": {
+                    "ignore_cec": "Daftar opsional yang akan diteruskan ke pychromecast.IGNORE_CEC.",
+                    "known_hosts": "Daftar opsional host yang diketahui jika penemuan mDNS tidak berfungsi.",
+                    "uuid": "Daftar opsional UUID. Cast yang tidak tercantum tidak akan ditambahkan."
+                },
+                "description": "Masukkan konfigurasi Google Cast."
+            }
+        }
+    }
+}

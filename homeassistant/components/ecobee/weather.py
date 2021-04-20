@@ -1,5 +1,5 @@
 """Support for displaying weather info from Ecobee API."""
-from datetime import datetime
+from datetime import timedelta
 
 from pyecobee.const import ECOBEE_STATE_UNKNOWN
 
@@ -13,25 +13,21 @@ from homeassistant.components.weather import (
     WeatherEntity,
 )
 from homeassistant.const import TEMP_FAHRENHEIT
+from homeassistant.util import dt as dt_util
 
 from .const import (
+    _LOGGER,
     DOMAIN,
     ECOBEE_MODEL_TO_NAME,
     ECOBEE_WEATHER_SYMBOL_TO_HASS,
     MANUFACTURER,
-    _LOGGER,
 )
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up the ecobee weather platform."""
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the ecobee weather platform."""
     data = hass.data[DOMAIN]
-    dev = list()
+    dev = []
     for index in range(len(data.ecobee.thermostats)):
         thermostat = data.ecobee.get_thermostat(index)
         if "weather" in thermostat:
@@ -55,8 +51,8 @@ class EcobeeWeather(WeatherEntity):
         try:
             forecast = self.weather["forecasts"][index]
             return forecast[param]
-        except (ValueError, IndexError, KeyError):
-            raise ValueError
+        except (IndexError, KeyError) as err:
+            raise ValueError from err
 
     @property
     def name(self):
@@ -78,7 +74,7 @@ class EcobeeWeather(WeatherEntity):
             _LOGGER.error(
                 "Model number for ecobee thermostat %s not recognized. "
                 "Please visit this link and provide the following information: "
-                "https://github.com/home-assistant/home-assistant/issues/27172 "
+                "https://github.com/home-assistant/core/issues/27172 "
                 "Unrecognized model number: %s",
                 thermostat["name"],
                 thermostat["modelNumber"],
@@ -169,11 +165,14 @@ class EcobeeWeather(WeatherEntity):
         if "forecasts" not in self.weather:
             return None
 
-        forecasts = list()
-        for day in range(1, 5):
+        forecasts = []
+        date = dt_util.utcnow()
+        for day in range(0, 5):
             forecast = _process_forecast(self.weather["forecasts"][day])
             if forecast is None:
                 continue
+            forecast[ATTR_FORECAST_TIME] = date.isoformat()
+            date += timedelta(days=1)
             forecasts.append(forecast)
 
         if forecasts:
@@ -184,16 +183,13 @@ class EcobeeWeather(WeatherEntity):
         """Get the latest weather data."""
         await self.data.update()
         thermostat = self.data.ecobee.get_thermostat(self._index)
-        self.weather = thermostat.get("weather", None)
+        self.weather = thermostat.get("weather")
 
 
 def _process_forecast(json):
     """Process a single ecobee API forecast to return expected values."""
-    forecast = dict()
+    forecast = {}
     try:
-        forecast[ATTR_FORECAST_TIME] = datetime.strptime(
-            json["dateTime"], "%Y-%m-%d %H:%M:%S"
-        ).isoformat()
         forecast[ATTR_FORECAST_CONDITION] = ECOBEE_WEATHER_SYMBOL_TO_HASS[
             json["weatherSymbol"]
         ]

@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "addr_in_use": "El puerto del servidor ya est\u00e1 en uso.",
+            "start_server_failed": "No se pudo iniciar el servidor."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Puerto del servidor"
+                },
+                "title": "Configurar servidor TCP para dispositivos WIFFI"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timeout": "Tiempo de espera (minutos)"
+                }
+            }
+        }
+    }
+}

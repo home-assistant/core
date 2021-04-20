@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "unknown": "Error inesperat"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
+        "flow_title": "DirecTV: {name}",
+        "step": {
+            "ssdp_confirm": {
+                "description": "Vols configurar {name}?"
+            },
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3"
+                }
+            }
+        }
+    }
+}

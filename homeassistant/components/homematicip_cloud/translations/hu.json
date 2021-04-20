@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "connection_aborted": "Sikertelen csatlakoz\u00e1s",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "error": {
+            "invalid_sgtin_or_pin": "\u00c9rv\u00e9nytelen PIN-k\u00f3d, pr\u00f3b\u00e1lkozz \u00fajra.",
+            "press_the_button": "Nyomd meg a k\u00e9k gombot.",
+            "register_failed": "Regisztr\u00e1ci\u00f3 nem siker\u00fclt, pr\u00f3b\u00e1ld \u00fajra.",
+            "timeout_button": "K\u00e9k gomb megnyom\u00e1s\u00e1nak id\u0151t\u00fall\u00e9p\u00e9se, pr\u00f3b\u00e1lkozz \u00fajra."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "hapid": "Hozz\u00e1f\u00e9r\u00e9si pont azonos\u00edt\u00f3ja (SGTIN)",
+                    "name": "N\u00e9v (opcion\u00e1lis, minden eszk\u00f6z n\u00e9vel\u0151tagjak\u00e9nt haszn\u00e1latos)",
+                    "pin": "PIN-k\u00f3d"
+                },
+                "title": "V\u00e1lassz HomematicIP hozz\u00e1f\u00e9r\u00e9si pontot"
+            },
+            "link": {
+                "title": "Link Hozz\u00e1f\u00e9r\u00e9si pont"
+            }
+        }
+    }
+}

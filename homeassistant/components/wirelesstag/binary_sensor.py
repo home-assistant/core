@@ -1,9 +1,7 @@
 """Binary sensor support for Wireless Sensor Tags."""
-import logging
-
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import CONF_MONITORED_CONDITIONS, STATE_OFF, STATE_ON
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -14,8 +12,6 @@ from . import (
     SIGNAL_BINARY_EVENT_UPDATE,
     WirelessTagBaseSensor,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 # On means in range, Off means out of range
 SENSOR_PRESENCE = "presence"
@@ -88,7 +84,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     hass.add_job(platform.install_push_notifications, sensors)
 
 
-class WirelessTagBinarySensor(WirelessTagBaseSensor, BinarySensorDevice):
+class WirelessTagBinarySensor(WirelessTagBaseSensor, BinarySensorEntity):
     """A binary sensor implementation for WirelessTags."""
 
     def __init__(self, api, tag, sensor_type):
@@ -102,10 +98,12 @@ class WirelessTagBinarySensor(WirelessTagBaseSensor, BinarySensorDevice):
         tag_id = self.tag_id
         event_type = self.device_class
         mac = self.tag_manager_mac
-        async_dispatcher_connect(
-            self.hass,
-            SIGNAL_BINARY_EVENT_UPDATE.format(tag_id, event_type, mac),
-            self._on_binary_event_callback,
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_BINARY_EVENT_UPDATE.format(tag_id, event_type, mac),
+                self._on_binary_event_callback,
+            )
         )
 
     @property
@@ -140,4 +138,4 @@ class WirelessTagBinarySensor(WirelessTagBaseSensor, BinarySensorDevice):
         """Update state from arrived push notification."""
         # state should be 'on' or 'off'
         self._state = event.data.get("state")
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()

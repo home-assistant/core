@@ -1,361 +1,395 @@
 """The tests for the Modbus sensor component."""
 import pytest
-from datetime import timedelta
-from unittest import mock
 
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_OFFSET,
-    CONF_PLATFORM,
-    CONF_SCAN_INTERVAL,
-)
-from homeassistant.components.modbus import DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN
-from homeassistant.components.modbus.sensor import (
-    CONF_COUNT,
+from homeassistant.components.modbus.const import (
+    CALL_TYPE_REGISTER_HOLDING,
+    CALL_TYPE_REGISTER_INPUT,
     CONF_DATA_TYPE,
+    CONF_INPUT_TYPE,
     CONF_PRECISION,
     CONF_REGISTER,
     CONF_REGISTER_TYPE,
     CONF_REGISTERS,
     CONF_REVERSE_ORDER,
     CONF_SCALE,
+    DATA_TYPE_CUSTOM,
     DATA_TYPE_FLOAT,
     DATA_TYPE_INT,
+    DATA_TYPE_STRING,
     DATA_TYPE_UINT,
-    REGISTER_TYPE_HOLDING,
-    REGISTER_TYPE_INPUT,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
-from tests.common import MockModule, mock_integration, async_fire_time_changed
+from homeassistant.const import (
+    CONF_ADDRESS,
+    CONF_COUNT,
+    CONF_DEVICE_CLASS,
+    CONF_NAME,
+    CONF_OFFSET,
+    CONF_SENSORS,
+    CONF_SLAVE,
+    CONF_STRUCTURE,
+)
+
+from .conftest import base_config_test, base_test
 
 
-@pytest.fixture()
-def mock_hub(hass):
-    """Mock hub."""
-    mock_integration(hass, MockModule(MODBUS_DOMAIN))
-    hub = mock.MagicMock()
-    hub.name = "hub"
-    hass.data[MODBUS_DOMAIN] = {DEFAULT_HUB: hub}
-    return hub
-
-
-common_register_config = {CONF_NAME: "test-config", CONF_REGISTER: 1234}
-
-
-class ReadResult:
-    """Storage class for register read results."""
-
-    def __init__(self, register_words):
-        """Init."""
-        self.registers = register_words
-
-
-async def run_test(hass, mock_hub, register_config, register_words, expected):
-    """Run test for given config and check that sensor outputs expected result."""
-
-    # Full sensor configuration
-    sensor_name = "modbus_test_sensor"
-    scan_interval = 5
-    config = {
-        SENSOR_DOMAIN: {
-            CONF_PLATFORM: "modbus",
-            CONF_SCAN_INTERVAL: scan_interval,
-            CONF_REGISTERS: [
-                dict(**{CONF_NAME: sensor_name, CONF_REGISTER: 1234}, **register_config)
-            ],
-        }
+@pytest.mark.parametrize(
+    "do_discovery, do_config",
+    [
+        (
+            False,
+            {
+                CONF_REGISTER: 51,
+            },
+        ),
+        (
+            False,
+            {
+                CONF_REGISTER: 51,
+                CONF_SLAVE: 10,
+                CONF_COUNT: 1,
+                CONF_DATA_TYPE: "int",
+                CONF_PRECISION: 0,
+                CONF_SCALE: 1,
+                CONF_REVERSE_ORDER: False,
+                CONF_OFFSET: 0,
+                CONF_REGISTER_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                CONF_DEVICE_CLASS: "battery",
+            },
+        ),
+        (
+            False,
+            {
+                CONF_REGISTER: 51,
+                CONF_SLAVE: 10,
+                CONF_COUNT: 1,
+                CONF_DATA_TYPE: "int",
+                CONF_PRECISION: 0,
+                CONF_SCALE: 1,
+                CONF_REVERSE_ORDER: False,
+                CONF_OFFSET: 0,
+                CONF_REGISTER_TYPE: CALL_TYPE_REGISTER_INPUT,
+                CONF_DEVICE_CLASS: "battery",
+            },
+        ),
+        (
+            True,
+            {
+                CONF_ADDRESS: 51,
+            },
+        ),
+        (
+            True,
+            {
+                CONF_ADDRESS: 51,
+                CONF_SLAVE: 10,
+                CONF_COUNT: 1,
+                CONF_DATA_TYPE: "int",
+                CONF_PRECISION: 0,
+                CONF_SCALE: 1,
+                CONF_REVERSE_ORDER: False,
+                CONF_OFFSET: 0,
+                CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                CONF_DEVICE_CLASS: "battery",
+            },
+        ),
+        (
+            True,
+            {
+                CONF_ADDRESS: 51,
+                CONF_SLAVE: 10,
+                CONF_COUNT: 1,
+                CONF_DATA_TYPE: "int",
+                CONF_PRECISION: 0,
+                CONF_SCALE: 1,
+                CONF_REVERSE_ORDER: False,
+                CONF_OFFSET: 0,
+                CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
+                CONF_DEVICE_CLASS: "battery",
+            },
+        ),
+    ],
+)
+async def test_config_sensor(hass, do_discovery, do_config):
+    """Run test for sensor."""
+    sensor_name = "test_sensor"
+    config_sensor = {
+        CONF_NAME: sensor_name,
+        **do_config,
     }
+    await base_config_test(
+        hass,
+        config_sensor,
+        sensor_name,
+        SENSOR_DOMAIN,
+        CONF_SENSORS,
+        CONF_REGISTERS,
+        method_discovery=do_discovery,
+    )
 
-    # Setup inputs for the sensor
-    read_result = ReadResult(register_words)
-    if register_config.get(CONF_REGISTER_TYPE) == REGISTER_TYPE_INPUT:
-        mock_hub.read_input_registers.return_value = read_result
-    else:
-        mock_hub.read_holding_registers.return_value = read_result
 
-    # Initialize sensor
-    now = dt_util.utcnow()
-    with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
-        assert await async_setup_component(hass, SENSOR_DOMAIN, config)
+@pytest.mark.parametrize(
+    "cfg,regs,expected",
+    [
+        (
+            {
+                CONF_COUNT: 1,
+                CONF_DATA_TYPE: DATA_TYPE_INT,
+                CONF_SCALE: 1,
+                CONF_OFFSET: 0,
+                CONF_PRECISION: 0,
+            },
+            [0],
+            "0",
+        ),
+        (
+            {},
+            [0x8000],
+            "-32768",
+        ),
+        (
+            {
+                CONF_COUNT: 1,
+                CONF_DATA_TYPE: DATA_TYPE_INT,
+                CONF_SCALE: 1,
+                CONF_OFFSET: 13,
+                CONF_PRECISION: 0,
+            },
+            [7],
+            "20",
+        ),
+        (
+            {
+                CONF_COUNT: 1,
+                CONF_DATA_TYPE: DATA_TYPE_INT,
+                CONF_SCALE: 3,
+                CONF_OFFSET: 13,
+                CONF_PRECISION: 0,
+            },
+            [7],
+            "34",
+        ),
+        (
+            {
+                CONF_COUNT: 1,
+                CONF_DATA_TYPE: DATA_TYPE_UINT,
+                CONF_SCALE: 3,
+                CONF_OFFSET: 13,
+                CONF_PRECISION: 4,
+            },
+            [7],
+            "34.0000",
+        ),
+        (
+            {
+                CONF_COUNT: 1,
+                CONF_DATA_TYPE: DATA_TYPE_INT,
+                CONF_SCALE: 1.5,
+                CONF_OFFSET: 0,
+                CONF_PRECISION: 0,
+            },
+            [1],
+            "2",
+        ),
+        (
+            {
+                CONF_COUNT: 1,
+                CONF_DATA_TYPE: DATA_TYPE_INT,
+                CONF_SCALE: "1.5",
+                CONF_OFFSET: "5",
+                CONF_PRECISION: "1",
+            },
+            [9],
+            "18.5",
+        ),
+        (
+            {
+                CONF_COUNT: 1,
+                CONF_DATA_TYPE: DATA_TYPE_INT,
+                CONF_SCALE: 2.4,
+                CONF_OFFSET: 0,
+                CONF_PRECISION: 2,
+            },
+            [1],
+            "2.40",
+        ),
+        (
+            {
+                CONF_COUNT: 1,
+                CONF_DATA_TYPE: DATA_TYPE_INT,
+                CONF_SCALE: 1,
+                CONF_OFFSET: -10.3,
+                CONF_PRECISION: 1,
+            },
+            [2],
+            "-8.3",
+        ),
+        (
+            {
+                CONF_COUNT: 2,
+                CONF_DATA_TYPE: DATA_TYPE_INT,
+                CONF_SCALE: 1,
+                CONF_OFFSET: 0,
+                CONF_PRECISION: 0,
+            },
+            [0x89AB, 0xCDEF],
+            "-1985229329",
+        ),
+        (
+            {
+                CONF_COUNT: 2,
+                CONF_DATA_TYPE: DATA_TYPE_UINT,
+                CONF_SCALE: 1,
+                CONF_OFFSET: 0,
+                CONF_PRECISION: 0,
+            },
+            [0x89AB, 0xCDEF],
+            str(0x89ABCDEF),
+        ),
+        (
+            {
+                CONF_COUNT: 2,
+                CONF_DATA_TYPE: DATA_TYPE_UINT,
+                CONF_REVERSE_ORDER: True,
+            },
+            [0x89AB, 0xCDEF],
+            str(0xCDEF89AB),
+        ),
+        (
+            {
+                CONF_COUNT: 4,
+                CONF_DATA_TYPE: DATA_TYPE_UINT,
+                CONF_SCALE: 1,
+                CONF_OFFSET: 0,
+                CONF_PRECISION: 0,
+            },
+            [0x89AB, 0xCDEF, 0x0123, 0x4567],
+            "9920249030613615975",
+        ),
+        (
+            {
+                CONF_COUNT: 4,
+                CONF_DATA_TYPE: DATA_TYPE_UINT,
+                CONF_SCALE: 2,
+                CONF_OFFSET: 3,
+                CONF_PRECISION: 0,
+            },
+            [0x0123, 0x4567, 0x89AB, 0xCDEF],
+            "163971058432973793",
+        ),
+        (
+            {
+                CONF_COUNT: 4,
+                CONF_DATA_TYPE: DATA_TYPE_UINT,
+                CONF_SCALE: 2.0,
+                CONF_OFFSET: 3.0,
+                CONF_PRECISION: 0,
+            },
+            [0x0123, 0x4567, 0x89AB, 0xCDEF],
+            "163971058432973792",
+        ),
+        (
+            {
+                CONF_COUNT: 2,
+                CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
+                CONF_DATA_TYPE: DATA_TYPE_UINT,
+                CONF_SCALE: 1,
+                CONF_OFFSET: 0,
+                CONF_PRECISION: 0,
+            },
+            [0x89AB, 0xCDEF],
+            str(0x89ABCDEF),
+        ),
+        (
+            {
+                CONF_COUNT: 2,
+                CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                CONF_DATA_TYPE: DATA_TYPE_UINT,
+                CONF_SCALE: 1,
+                CONF_OFFSET: 0,
+                CONF_PRECISION: 0,
+            },
+            [0x89AB, 0xCDEF],
+            str(0x89ABCDEF),
+        ),
+        (
+            {
+                CONF_COUNT: 2,
+                CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                CONF_DATA_TYPE: DATA_TYPE_FLOAT,
+                CONF_SCALE: 1,
+                CONF_OFFSET: 0,
+                CONF_PRECISION: 5,
+            },
+            [16286, 1617],
+            "1.23457",
+        ),
+        (
+            {
+                CONF_COUNT: 8,
+                CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                CONF_DATA_TYPE: DATA_TYPE_STRING,
+                CONF_SCALE: 1,
+                CONF_OFFSET: 0,
+                CONF_PRECISION: 0,
+            },
+            [0x3037, 0x2D30, 0x352D, 0x3230, 0x3230, 0x2031, 0x343A, 0x3335],
+            "07-05-2020 14:35",
+        ),
+    ],
+)
+async def test_all_sensor(hass, cfg, regs, expected):
+    """Run test for sensor."""
 
-    # Trigger update call with time_changed event
-    now += timedelta(seconds=scan_interval + 1)
-    with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
-        async_fire_time_changed(hass, now)
-        await hass.async_block_till_done()
-
-    # Check state
-    entity_id = f"{SENSOR_DOMAIN}.{sensor_name}"
-    state = hass.states.get(entity_id).state
+    sensor_name = "modbus_test_sensor"
+    state = await base_test(
+        hass,
+        {CONF_NAME: sensor_name, CONF_ADDRESS: 1234, **cfg},
+        sensor_name,
+        SENSOR_DOMAIN,
+        CONF_SENSORS,
+        CONF_REGISTERS,
+        regs,
+        expected,
+        method_discovery=True,
+        scan_interval=5,
+    )
     assert state == expected
 
 
-async def test_simple_word_register(hass, mock_hub):
-    """Test conversion of single word register."""
-    register_config = {
-        CONF_COUNT: 1,
-        CONF_DATA_TYPE: DATA_TYPE_INT,
-        CONF_SCALE: 1,
-        CONF_OFFSET: 0,
-        CONF_PRECISION: 0,
-    }
-    await run_test(hass, mock_hub, register_config, register_words=[0], expected="0")
+async def test_struct_sensor(hass):
+    """Run test for sensor struct."""
 
-
-async def test_optional_conf_keys(hass, mock_hub):
-    """Test handling of optional configuration keys."""
-    register_config = {}
-    await run_test(
-        hass, mock_hub, register_config, register_words=[0x8000], expected="-32768"
-    )
-
-
-async def test_offset(hass, mock_hub):
-    """Test offset calculation."""
-    register_config = {
-        CONF_COUNT: 1,
-        CONF_DATA_TYPE: DATA_TYPE_INT,
-        CONF_SCALE: 1,
-        CONF_OFFSET: 13,
-        CONF_PRECISION: 0,
-    }
-    await run_test(hass, mock_hub, register_config, register_words=[7], expected="20")
-
-
-async def test_scale_and_offset(hass, mock_hub):
-    """Test handling of scale and offset."""
-    register_config = {
-        CONF_COUNT: 1,
-        CONF_DATA_TYPE: DATA_TYPE_INT,
-        CONF_SCALE: 3,
-        CONF_OFFSET: 13,
-        CONF_PRECISION: 0,
-    }
-    await run_test(hass, mock_hub, register_config, register_words=[7], expected="34")
-
-
-async def test_ints_can_have_precision(hass, mock_hub):
-    """Test precision can be specified event if using integer values only."""
-    register_config = {
-        CONF_COUNT: 1,
-        CONF_DATA_TYPE: DATA_TYPE_UINT,
-        CONF_SCALE: 3,
-        CONF_OFFSET: 13,
-        CONF_PRECISION: 4,
-    }
-    await run_test(
-        hass, mock_hub, register_config, register_words=[7], expected="34.0000"
-    )
-
-
-async def test_floats_get_rounded_correctly(hass, mock_hub):
-    """Test that floating point values get rounded correctly."""
-    register_config = {
-        CONF_COUNT: 1,
-        CONF_DATA_TYPE: DATA_TYPE_INT,
-        CONF_SCALE: 1.5,
-        CONF_OFFSET: 0,
-        CONF_PRECISION: 0,
-    }
-    await run_test(hass, mock_hub, register_config, register_words=[1], expected="2")
-
-
-async def test_parameters_as_strings(hass, mock_hub):
-    """Test that scale, offset and precision can be given as strings."""
-    register_config = {
-        CONF_COUNT: 1,
-        CONF_DATA_TYPE: DATA_TYPE_INT,
-        CONF_SCALE: "1.5",
-        CONF_OFFSET: "5",
-        CONF_PRECISION: "1",
-    }
-    await run_test(hass, mock_hub, register_config, register_words=[9], expected="18.5")
-
-
-async def test_floating_point_scale(hass, mock_hub):
-    """Test use of floating point scale."""
-    register_config = {
-        CONF_COUNT: 1,
-        CONF_DATA_TYPE: DATA_TYPE_INT,
-        CONF_SCALE: 2.4,
-        CONF_OFFSET: 0,
-        CONF_PRECISION: 2,
-    }
-    await run_test(hass, mock_hub, register_config, register_words=[1], expected="2.40")
-
-
-async def test_floating_point_offset(hass, mock_hub):
-    """Test use of floating point scale."""
-    register_config = {
-        CONF_COUNT: 1,
-        CONF_DATA_TYPE: DATA_TYPE_INT,
-        CONF_SCALE: 1,
-        CONF_OFFSET: -10.3,
-        CONF_PRECISION: 1,
-    }
-    await run_test(hass, mock_hub, register_config, register_words=[2], expected="-8.3")
-
-
-async def test_signed_two_word_register(hass, mock_hub):
-    """Test reading of signed register with two words."""
-    register_config = {
-        CONF_COUNT: 2,
-        CONF_DATA_TYPE: DATA_TYPE_INT,
-        CONF_SCALE: 1,
-        CONF_OFFSET: 0,
-        CONF_PRECISION: 0,
-    }
-    await run_test(
+    sensor_name = "modbus_test_sensor"
+    # floats: 7.931250095367432, 10.600000381469727,
+    #         1.000879611487865e-28, 10.566553115844727
+    expected = "7.93,10.60,0.00,10.57"
+    state = await base_test(
         hass,
-        mock_hub,
-        register_config,
-        register_words=[0x89AB, 0xCDEF],
-        expected="-1985229329",
+        {
+            CONF_NAME: sensor_name,
+            CONF_REGISTER: 1234,
+            CONF_COUNT: 8,
+            CONF_PRECISION: 2,
+            CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+            CONF_STRUCTURE: ">4f",
+        },
+        sensor_name,
+        SENSOR_DOMAIN,
+        CONF_SENSORS,
+        CONF_REGISTERS,
+        [
+            0x40FD,
+            0xCCCD,
+            0x4129,
+            0x999A,
+            0x10FD,
+            0xC0CD,
+            0x4129,
+            0x109A,
+        ],
+        expected,
+        method_discovery=False,
+        scan_interval=5,
     )
-
-
-async def test_unsigned_two_word_register(hass, mock_hub):
-    """Test reading of unsigned register with two words."""
-    register_config = {
-        CONF_COUNT: 2,
-        CONF_DATA_TYPE: DATA_TYPE_UINT,
-        CONF_SCALE: 1,
-        CONF_OFFSET: 0,
-        CONF_PRECISION: 0,
-    }
-    await run_test(
-        hass,
-        mock_hub,
-        register_config,
-        register_words=[0x89AB, 0xCDEF],
-        expected=str(0x89ABCDEF),
-    )
-
-
-async def test_reversed(hass, mock_hub):
-    """Test handling of reversed register words."""
-    register_config = {
-        CONF_COUNT: 2,
-        CONF_DATA_TYPE: DATA_TYPE_UINT,
-        CONF_REVERSE_ORDER: True,
-    }
-    await run_test(
-        hass,
-        mock_hub,
-        register_config,
-        register_words=[0x89AB, 0xCDEF],
-        expected=str(0xCDEF89AB),
-    )
-
-
-async def test_four_word_register(hass, mock_hub):
-    """Test reading of 64-bit register."""
-    register_config = {
-        CONF_COUNT: 4,
-        CONF_DATA_TYPE: DATA_TYPE_UINT,
-        CONF_SCALE: 1,
-        CONF_OFFSET: 0,
-        CONF_PRECISION: 0,
-    }
-    await run_test(
-        hass,
-        mock_hub,
-        register_config,
-        register_words=[0x89AB, 0xCDEF, 0x0123, 0x4567],
-        expected="9920249030613615975",
-    )
-
-
-async def test_four_word_register_precision_is_intact_with_int_params(hass, mock_hub):
-    """Test that precision is not lost when doing integer arithmetic for 64-bit register."""
-    register_config = {
-        CONF_COUNT: 4,
-        CONF_DATA_TYPE: DATA_TYPE_UINT,
-        CONF_SCALE: 2,
-        CONF_OFFSET: 3,
-        CONF_PRECISION: 0,
-    }
-    await run_test(
-        hass,
-        mock_hub,
-        register_config,
-        register_words=[0x0123, 0x4567, 0x89AB, 0xCDEF],
-        expected="163971058432973793",
-    )
-
-
-async def test_four_word_register_precision_is_lost_with_float_params(hass, mock_hub):
-    """Test that precision is affected when floating point conversion is done."""
-    register_config = {
-        CONF_COUNT: 4,
-        CONF_DATA_TYPE: DATA_TYPE_UINT,
-        CONF_SCALE: 2.0,
-        CONF_OFFSET: 3.0,
-        CONF_PRECISION: 0,
-    }
-    await run_test(
-        hass,
-        mock_hub,
-        register_config,
-        register_words=[0x0123, 0x4567, 0x89AB, 0xCDEF],
-        expected="163971058432973792",
-    )
-
-
-async def test_two_word_input_register(hass, mock_hub):
-    """Test reaging of input register."""
-    register_config = {
-        CONF_COUNT: 2,
-        CONF_REGISTER_TYPE: REGISTER_TYPE_INPUT,
-        CONF_DATA_TYPE: DATA_TYPE_UINT,
-        CONF_SCALE: 1,
-        CONF_OFFSET: 0,
-        CONF_PRECISION: 0,
-    }
-    await run_test(
-        hass,
-        mock_hub,
-        register_config,
-        register_words=[0x89AB, 0xCDEF],
-        expected=str(0x89ABCDEF),
-    )
-
-
-async def test_two_word_holding_register(hass, mock_hub):
-    """Test reaging of holding register."""
-    register_config = {
-        CONF_COUNT: 2,
-        CONF_REGISTER_TYPE: REGISTER_TYPE_HOLDING,
-        CONF_DATA_TYPE: DATA_TYPE_UINT,
-        CONF_SCALE: 1,
-        CONF_OFFSET: 0,
-        CONF_PRECISION: 0,
-    }
-    await run_test(
-        hass,
-        mock_hub,
-        register_config,
-        register_words=[0x89AB, 0xCDEF],
-        expected=str(0x89ABCDEF),
-    )
-
-
-async def test_float_data_type(hass, mock_hub):
-    """Test floating point register data type."""
-    register_config = {
-        CONF_COUNT: 2,
-        CONF_REGISTER_TYPE: REGISTER_TYPE_HOLDING,
-        CONF_DATA_TYPE: DATA_TYPE_FLOAT,
-        CONF_SCALE: 1,
-        CONF_OFFSET: 0,
-        CONF_PRECISION: 5,
-    }
-    await run_test(
-        hass,
-        mock_hub,
-        register_config,
-        register_words=[16286, 1617],
-        expected="1.23457",
-    )
+    assert state == expected

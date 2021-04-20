@@ -1,31 +1,27 @@
 """Support for ADS covers."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.cover import (
-    PLATFORM_SCHEMA,
-    SUPPORT_OPEN,
-    SUPPORT_CLOSE,
-    SUPPORT_STOP,
-    SUPPORT_SET_POSITION,
     ATTR_POSITION,
     DEVICE_CLASSES_SCHEMA,
-    CoverDevice,
+    PLATFORM_SCHEMA,
+    SUPPORT_CLOSE,
+    SUPPORT_OPEN,
+    SUPPORT_SET_POSITION,
+    SUPPORT_STOP,
+    CoverEntity,
 )
-from homeassistant.const import CONF_NAME, CONF_DEVICE_CLASS
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
 from . import (
     CONF_ADS_VAR,
     CONF_ADS_VAR_POSITION,
     DATA_ADS,
-    AdsEntity,
-    STATE_KEY_STATE,
     STATE_KEY_POSITION,
+    STATE_KEY_STATE,
+    AdsEntity,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "ADS Cover"
 
@@ -78,7 +74,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class AdsCover(AdsEntity, CoverDevice):
+class AdsCover(AdsEntity, CoverEntity):
     """Representation of ADS cover."""
 
     def __init__(

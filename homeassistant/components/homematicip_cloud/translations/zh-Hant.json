@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "connection_aborted": "\u9023\u7dda\u5931\u6557",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "error": {
+            "invalid_sgtin_or_pin": "SGTIN \u6216 PIN \u78bc\u7121\u6548\uff0c\u8acb\u518d\u8a66\u4e00\u6b21\u3002",
+            "press_the_button": "\u8acb\u6309\u4e0b\u85cd\u8272\u6309\u9215\u3002",
+            "register_failed": "\u8a3b\u518a\u5931\u6557\uff0c\u8acb\u518d\u8a66\u4e00\u6b21\u3002",
+            "timeout_button": "\u85cd\u8272\u6309\u9215\u903e\u6642\uff0c\u8acb\u518d\u8a66\u4e00\u6b21\u3002"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "hapid": "Access point ID (SGTIN)",
+                    "name": "\u540d\u7a31\uff08\u9078\u9805\uff0c\u7528\u4ee5\u4f5c\u70ba\u6240\u6709\u88dd\u7f6e\u7684\u5b57\u9996\u7528\uff09",
+                    "pin": "PIN \u78bc"
+                },
+                "title": "\u9078\u64c7 HomematicIP Access point"
+            },
+            "link": {
+                "description": "\u6309\u4e0b AP \u4e0a\u7684\u85cd\u8272\u6309\u9215\u8207\u50b3\u9001\u6309\u9215\uff0c\u4ee5\u65bc Home Assistant \u4e0a\u9032\u884c HomematicIP \u8a3b\u518a\u3002\n\n![\u6a4b\u63a5\u5668\u4e0a\u7684\u6309\u9215\u4f4d\u7f6e](/static/images/config_flows/config_homematicip_cloud.png)",
+                "title": "\u9023\u7d50 Access point"
+            }
+        }
+    }
+}

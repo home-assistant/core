@@ -1,32 +1,40 @@
 """Constants used in the Mikrotik components."""
 
 DOMAIN = "mikrotik"
-MIKROTIK = DOMAIN
-HOSTS = "hosts"
-MTK_LOGIN_PLAIN = "plain"
-MTK_LOGIN_TOKEN = "token"
+DEFAULT_NAME = "Mikrotik"
+DEFAULT_API_PORT = 8728
+DEFAULT_DETECTION_TIME = 300
+
+ATTR_MANUFACTURER = "Mikrotik"
+ATTR_SERIAL_NUMBER = "serial-number"
+ATTR_FIRMWARE = "current-firmware"
+ATTR_MODEL = "model"
 
 CONF_ARP_PING = "arp_ping"
-CONF_TRACK_DEVICES = "track_devices"
-CONF_LOGIN_METHOD = "login_method"
-CONF_ENCODING = "encoding"
-DEFAULT_ENCODING = "utf-8"
+CONF_FORCE_DHCP = "force_dhcp"
+CONF_DETECTION_TIME = "detection_time"
+
 
 NAME = "name"
 INFO = "info"
 IDENTITY = "identity"
 ARP = "arp"
+
+CAPSMAN = "capsman"
 DHCP = "dhcp"
 WIRELESS = "wireless"
-CAPSMAN = "capsman"
+IS_WIRELESS = "is_wireless"
+IS_CAPSMAN = "is_capsman"
 
 MIKROTIK_SERVICES = {
-    INFO: "/system/routerboard/getall",
-    IDENTITY: "/system/identity/getall",
     ARP: "/ip/arp/getall",
-    DHCP: "/ip/dhcp-server/lease/getall",
-    WIRELESS: "/interface/wireless/registration-table/getall",
     CAPSMAN: "/caps-man/registration-table/getall",
+    DHCP: "/ip/dhcp-server/lease/getall",
+    IDENTITY: "/system/identity/getall",
+    INFO: "/system/routerboard/getall",
+    WIRELESS: "/interface/wireless/registration-table/getall",
+    IS_WIRELESS: "/interface/wireless/print",
+    IS_CAPSMAN: "/caps-man/interface/print",
 }
 
 ATTR_DEVICE_TRACKER = [
@@ -34,16 +42,8 @@ ATTR_DEVICE_TRACKER = [
     "mac-address",
     "ssid",
     "interface",
-    "host-name",
-    "last-seen",
-    "rx-signal",
     "signal-strength",
-    "tx-ccq",
     "signal-to-noise",
-    "wmm-enabled",
-    "authentication-type",
-    "encryption",
-    "tx-rate-set",
     "rx-rate",
     "tx-rate",
     "uptime",

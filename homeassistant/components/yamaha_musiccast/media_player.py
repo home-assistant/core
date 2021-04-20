@@ -1,11 +1,11 @@
 """Support for Yamaha MusicCast Receivers."""
 import logging
-
 import socket
+
 import pymusiccast
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     SUPPORT_NEXT_TRACK,
@@ -105,7 +105,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         known_hosts.remove(reg_host)
 
 
-class YamahaDevice(MediaPlayerDevice):
+class YamahaDevice(MediaPlayerEntity):
     """Representation of a Yamaha MusicCast device."""
 
     def __init__(self, recv, zone):
@@ -133,14 +133,9 @@ class YamahaDevice(MediaPlayerDevice):
     @property
     def state(self):
         """Return the state of the device."""
-        if self.power == STATE_ON and self.status is not STATE_UNKNOWN:
+        if self.power == STATE_ON and self.status != STATE_UNKNOWN:
             return self.status
         return self.power
-
-    @property
-    def should_poll(self):
-        """Push an update after each command."""
-        return True
 
     @property
     def is_volume_muted(self):
@@ -232,7 +227,7 @@ class YamahaDevice(MediaPlayerDevice):
         self._zone.update_status()
 
     def update_hass(self):
-        """Push updates to HASS."""
+        """Push updates to Home Assistant."""
         if self.entity_id:
             _LOGGER.debug("update_hass: pushing updates")
             self.schedule_update_ha_state()

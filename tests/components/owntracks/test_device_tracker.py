@@ -1,33 +1,28 @@
 """The tests for the Owntracks device tracker."""
 import json
+from unittest.mock import patch
 
-from asynctest import patch
 import pytest
 
 from homeassistant.components import owntracks
 from homeassistant.const import STATE_NOT_HOME
 from homeassistant.setup import async_setup_component
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_mqtt_message,
-    async_mock_mqtt_component,
-    mock_coro,
-)
+from tests.common import MockConfigEntry, async_fire_mqtt_message, mock_coro
 
 USER = "greg"
 DEVICE = "phone"
 
-LOCATION_TOPIC = "owntracks/{}/{}".format(USER, DEVICE)
-EVENT_TOPIC = "owntracks/{}/{}/event".format(USER, DEVICE)
-WAYPOINTS_TOPIC = "owntracks/{}/{}/waypoints".format(USER, DEVICE)
-WAYPOINT_TOPIC = "owntracks/{}/{}/waypoint".format(USER, DEVICE)
+LOCATION_TOPIC = f"owntracks/{USER}/{DEVICE}"
+EVENT_TOPIC = f"owntracks/{USER}/{DEVICE}/event"
+WAYPOINTS_TOPIC = f"owntracks/{USER}/{DEVICE}/waypoints"
+WAYPOINT_TOPIC = f"owntracks/{USER}/{DEVICE}/waypoint"
 USER_BLACKLIST = "ram"
-WAYPOINTS_TOPIC_BLOCKED = "owntracks/{}/{}/waypoints".format(USER_BLACKLIST, DEVICE)
-LWT_TOPIC = "owntracks/{}/{}/lwt".format(USER, DEVICE)
-BAD_TOPIC = "owntracks/{}/{}/unsupported".format(USER, DEVICE)
+WAYPOINTS_TOPIC_BLOCKED = f"owntracks/{USER_BLACKLIST}/{DEVICE}/waypoints"
+LWT_TOPIC = f"owntracks/{USER}/{DEVICE}/lwt"
+BAD_TOPIC = f"owntracks/{USER}/{DEVICE}/unsupported"
 
-DEVICE_TRACKER_STATE = "device_tracker.{}_{}".format(USER, DEVICE)
+DEVICE_TRACKER_STATE = f"device_tracker.{USER}_{DEVICE}"
 
 IBEACON_DEVICE = "keys"
 MOBILE_BEACON_FMT = "device_tracker.beacon_{}"
@@ -286,13 +281,12 @@ BAD_JSON_SUFFIX = "** and it ends here ^^"
 
 
 @pytest.fixture
-def setup_comp(hass, mock_device_tracker_conf):
+def setup_comp(hass, mock_device_tracker_conf, mqtt_mock):
     """Initialize components."""
     assert hass.loop.run_until_complete(
         async_setup_component(hass, "persistent_notification", {})
     )
     hass.loop.run_until_complete(async_setup_component(hass, "device_tracker", {}))
-    hass.loop.run_until_complete(async_mock_mqtt_component(hass))
 
     hass.states.async_set("zone.inner", "zoning", INNER_ZONE)
 
@@ -1234,8 +1228,8 @@ async def test_waypoint_import_simple(hass, context):
     assert wayp is not None
 
 
-async def test_waypoint_import_blacklist(hass, context):
-    """Test import of list of waypoints for blacklisted user."""
+async def test_waypoint_import_block(hass, context):
+    """Test import of list of waypoints for blocked user."""
     waypoints_message = WAYPOINTS_EXPORTED_MESSAGE.copy()
     await send_message(hass, WAYPOINTS_TOPIC_BLOCKED, waypoints_message)
     # Check if it made it into states
@@ -1300,7 +1294,7 @@ async def test_single_waypoint_import(hass, context):
 async def test_not_implemented_message(hass, context):
     """Handle not implemented message type."""
     patch_handler = patch(
-        "homeassistant.components.owntracks." "messages.async_handle_not_impl_msg",
+        "homeassistant.components.owntracks.messages.async_handle_not_impl_msg",
         return_value=mock_coro(False),
     )
     patch_handler.start()
@@ -1311,7 +1305,7 @@ async def test_not_implemented_message(hass, context):
 async def test_unsupported_message(hass, context):
     """Handle not implemented message type."""
     patch_handler = patch(
-        "homeassistant.components.owntracks." "messages.async_handle_unsupported_msg",
+        "homeassistant.components.owntracks.messages.async_handle_unsupported_msg",
         return_value=mock_coro(False),
     )
     patch_handler.start()
@@ -1324,12 +1318,12 @@ def generate_ciphers(secret):
     # PyNaCl ciphertext generation will fail if the module
     # cannot be imported. However, the test for decryption
     # also relies on this library and won't be run without it.
-    import pickle
     import base64
+    import pickle
 
     try:
-        from nacl.secret import SecretBox
         from nacl.encoding import Base64Encoder
+        from nacl.secret import SecretBox
 
         keylen = SecretBox.KEY_SIZE
         key = secret.encode("utf-8")
@@ -1375,8 +1369,8 @@ def mock_cipher():
 
     def mock_decrypt(ciphertext, key):
         """Decrypt/unpickle."""
-        import pickle
         import base64
+        import pickle
 
         (mkey, plaintext) = pickle.loads(base64.b64decode(ciphertext))
         if key != mkey:
@@ -1396,7 +1390,7 @@ def config_context(hass, setup_comp):
     patch_load.start()
 
     patch_save = patch(
-        "homeassistant.components.device_tracker." "DeviceTracker.async_update_config"
+        "homeassistant.components.device_tracker.DeviceTracker.async_update_config"
     )
     patch_save.start()
 
@@ -1404,6 +1398,25 @@ def config_context(hass, setup_comp):
 
     patch_load.stop()
     patch_save.stop()
+
+
+@pytest.fixture(name="not_supports_encryption")
+def mock_not_supports_encryption():
+    """Mock non successful nacl import."""
+    with patch(
+        "homeassistant.components.owntracks.messages.supports_encryption",
+        return_value=False,
+    ):
+        yield
+
+
+@pytest.fixture(name="get_cipher_error")
+def mock_get_cipher_error():
+    """Mock non successful cipher."""
+    with patch(
+        "homeassistant.components.owntracks.messages.get_cipher", side_effect=OSError()
+    ):
+        yield
 
 
 @patch("homeassistant.components.owntracks.messages.get_cipher", mock_cipher)
@@ -1420,6 +1433,22 @@ async def test_encrypted_payload_topic_key(hass, setup_comp):
     await setup_owntracks(hass, {CONF_SECRET: {LOCATION_TOPIC: TEST_SECRET_KEY}})
     await send_message(hass, LOCATION_TOPIC, MOCK_ENCRYPTED_LOCATION_MESSAGE)
     assert_location_latitude(hass, LOCATION_MESSAGE["lat"])
+
+
+async def test_encrypted_payload_not_supports_encryption(
+    hass, setup_comp, not_supports_encryption
+):
+    """Test encrypted payload with no supported encryption."""
+    await setup_owntracks(hass, {CONF_SECRET: TEST_SECRET_KEY})
+    await send_message(hass, LOCATION_TOPIC, MOCK_ENCRYPTED_LOCATION_MESSAGE)
+    assert hass.states.get(DEVICE_TRACKER_STATE) is None
+
+
+async def test_encrypted_payload_get_cipher_error(hass, setup_comp, get_cipher_error):
+    """Test encrypted payload with no supported encryption."""
+    await setup_owntracks(hass, {CONF_SECRET: TEST_SECRET_KEY})
+    await send_message(hass, LOCATION_TOPIC, MOCK_ENCRYPTED_LOCATION_MESSAGE)
+    assert hass.states.get(DEVICE_TRACKER_STATE) is None
 
 
 @patch("homeassistant.components.owntracks.messages.get_cipher", mock_cipher)
@@ -1460,8 +1489,7 @@ async def test_encrypted_payload_no_topic_key(hass, setup_comp):
 async def test_encrypted_payload_libsodium(hass, setup_comp):
     """Test sending encrypted message payload."""
     try:
-        # pylint: disable=unused-import
-        import nacl  # noqa: F401
+        import nacl  # noqa: F401 pylint: disable=unused-import
     except (ImportError, OSError):
         pytest.skip("PyNaCl/libsodium is not installed")
         return
@@ -1476,7 +1504,7 @@ async def test_customized_mqtt_topic(hass, setup_comp):
     """Test subscribing to a custom mqtt topic."""
     await setup_owntracks(hass, {CONF_MQTT_TOPIC: "mytracks/#"})
 
-    topic = "mytracks/{}/{}".format(USER, DEVICE)
+    topic = f"mytracks/{USER}/{DEVICE}"
 
     await send_message(hass, topic, LOCATION_MESSAGE)
     assert_location_latitude(hass, LOCATION_MESSAGE["lat"])
@@ -1531,3 +1559,72 @@ async def test_restore_state(hass, hass_client):
     assert state_1.attributes["longitude"] == state_2.attributes["longitude"]
     assert state_1.attributes["battery_level"] == state_2.attributes["battery_level"]
     assert state_1.attributes["source_type"] == state_2.attributes["source_type"]
+
+
+async def test_returns_empty_friends(hass, hass_client):
+    """Test that an empty list of persons' locations is returned."""
+    entry = MockConfigEntry(
+        domain="owntracks", data={"webhook_id": "owntracks_test", "secret": "abcd"}
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/webhook/owntracks_test",
+        json=LOCATION_MESSAGE,
+        headers={"X-Limit-u": "Paulus", "X-Limit-d": "Pixel"},
+    )
+
+    assert resp.status == 200
+    assert await resp.text() == "[]"
+
+
+async def test_returns_array_friends(hass, hass_client):
+    """Test that a list of persons' current locations is returned."""
+    otracks = MockConfigEntry(
+        domain="owntracks", data={"webhook_id": "owntracks_test", "secret": "abcd"}
+    )
+    otracks.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(otracks.entry_id)
+    await hass.async_block_till_done()
+
+    # Setup device_trackers
+    assert await async_setup_component(
+        hass,
+        "person",
+        {
+            "person": [
+                {
+                    "name": "person 1",
+                    "id": "person1",
+                    "device_trackers": ["device_tracker.person_1_tracker_1"],
+                },
+                {
+                    "name": "person2",
+                    "id": "person2",
+                    "device_trackers": ["device_tracker.person_2_tracker_1"],
+                },
+            ]
+        },
+    )
+    hass.states.async_set(
+        "device_tracker.person_1_tracker_1", "home", {"latitude": 10, "longitude": 20}
+    )
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/webhook/owntracks_test",
+        json=LOCATION_MESSAGE,
+        headers={"X-Limit-u": "Paulus", "X-Limit-d": "Pixel"},
+    )
+
+    assert resp.status == 200
+    response_json = json.loads(await resp.text())
+
+    assert response_json[0]["lat"] == 10
+    assert response_json[0]["lon"] == 20
+    assert response_json[0]["tid"] == "p1"

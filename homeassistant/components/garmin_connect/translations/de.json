@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dieses Konto ist bereits konfiguriert."
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "too_many_requests": "Zu viele Anfragen, versuche es sp\u00e4ter erneut.",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "description": "Geben Sie Ihre Zugangsdaten ein.",
+                "title": "Garmin Connect"
+            }
+        }
+    }
+}

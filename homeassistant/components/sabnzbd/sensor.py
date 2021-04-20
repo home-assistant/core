@@ -1,12 +1,8 @@
 """Support for monitoring an SABnzbd NZB client."""
-import logging
-
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 
 from . import DATA_SABNZBD, SENSOR_TYPES, SIGNAL_SABNZBD_UPDATED
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -22,7 +18,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class SabnzbdSensor(Entity):
+class SabnzbdSensor(SensorEntity):
     """Representation of an SABnzbd sensor."""
 
     def __init__(self, sensor_type, sabnzbd_api_data, client_name):
@@ -37,7 +33,11 @@ class SabnzbdSensor(Entity):
 
     async def async_added_to_hass(self):
         """Call when entity about to be added to hass."""
-        async_dispatcher_connect(self.hass, SIGNAL_SABNZBD_UPDATED, self.update_state)
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_SABNZBD_UPDATED, self.update_state
+            )
+        )
 
     @property
     def name(self):

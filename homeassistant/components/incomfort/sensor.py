@@ -1,18 +1,18 @@
 """Support for an Intergas heater via an InComfort/InTouch Lan2RF gateway."""
-from typing import Any, Dict, Optional
+from __future__ import annotations
 
+from typing import Any
+
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorEntity
 from homeassistant.const import (
-    PRESSURE_BAR,
-    TEMP_CELSIUS,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
+    PRESSURE_BAR,
+    TEMP_CELSIUS,
 )
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
-from . import DOMAIN
+from . import DOMAIN, IncomfortChild
 
 INCOMFORT_HEATER_TEMP = "CV Temp"
 INCOMFORT_PRESSURE = "CV Pressure"
@@ -31,68 +31,47 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         return
 
     client = hass.data[DOMAIN]["client"]
-    heater = hass.data[DOMAIN]["heater"]
+    heaters = hass.data[DOMAIN]["heaters"]
 
     async_add_entities(
-        [
-            IncomfortPressure(client, heater, INCOMFORT_PRESSURE),
-            IncomfortTemperature(client, heater, INCOMFORT_HEATER_TEMP),
-            IncomfortTemperature(client, heater, INCOMFORT_TAP_TEMP),
-        ]
+        [IncomfortPressure(client, h, INCOMFORT_PRESSURE) for h in heaters]
+        + [IncomfortTemperature(client, h, INCOMFORT_HEATER_TEMP) for h in heaters]
+        + [IncomfortTemperature(client, h, INCOMFORT_TAP_TEMP) for h in heaters]
     )
 
 
-class IncomfortSensor(Entity):
+class IncomfortSensor(IncomfortChild, SensorEntity):
     """Representation of an InComfort/InTouch sensor device."""
 
     def __init__(self, client, heater, name) -> None:
         """Initialize the sensor."""
+        super().__init__()
+
         self._client = client
         self._heater = heater
 
         self._unique_id = f"{heater.serial_no}_{slugify(name)}"
+        self.entity_id = f"{SENSOR_DOMAIN}.{DOMAIN}_{slugify(name)}"
+        self._name = f"Boiler {name}"
 
-        self._name = name
         self._device_class = None
+        self._state_attr = INCOMFORT_MAP_ATTRS[name][0]
         self._unit_of_measurement = None
 
-    async def async_added_to_hass(self) -> None:
-        """Set up a listener when this entity is added to HA."""
-        async_dispatcher_connect(self.hass, DOMAIN, self._refresh)
-
-    @callback
-    def _refresh(self) -> None:
-        self.async_schedule_update_ha_state(force_refresh=True)
-
     @property
-    def unique_id(self) -> Optional[str]:
-        """Return a unique ID."""
-        return self._unique_id
-
-    @property
-    def name(self) -> Optional[str]:
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self) -> Optional[str]:
+    def state(self) -> str | None:
         """Return the state of the sensor."""
-        return self._heater.status[INCOMFORT_MAP_ATTRS[self._name][0]]
+        return self._heater.status[self._state_attr]
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the device class of the sensor."""
         return self._device_class
 
     @property
-    def unit_of_measurement(self) -> Optional[str]:
+    def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the sensor."""
         return self._unit_of_measurement
-
-    @property
-    def should_poll(self) -> bool:
-        """Return False as this device should never be polled."""
-        return False
 
 
 class IncomfortPressure(IncomfortSensor):
@@ -113,11 +92,11 @@ class IncomfortTemperature(IncomfortSensor):
         """Initialize the signal strength sensor."""
         super().__init__(client, heater, name)
 
+        self._attr = INCOMFORT_MAP_ATTRS[name][1]
         self._device_class = DEVICE_CLASS_TEMPERATURE
         self._unit_of_measurement = TEMP_CELSIUS
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the device state attributes."""
-        key = INCOMFORT_MAP_ATTRS[self._name][1]
-        return {key: self._heater.status[key]}
+        return {self._attr: self._heater.status[self._attr]}

@@ -96,7 +96,7 @@ class KaiterraAirQuality(AirQualityEntity):
         return f"{self._device_id}_air_quality"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         data = {}
         attributes = [
@@ -113,6 +113,8 @@ class KaiterraAirQuality(AirQualityEntity):
 
     async def async_added_to_hass(self):
         """Register callback."""
-        async_dispatcher_connect(
-            self.hass, DISPATCHER_KAITERRA, self.async_write_ha_state
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, DISPATCHER_KAITERRA, self.async_write_ha_state
+            )
         )
