@@ -174,21 +174,6 @@ def modbus_hub():
     return hub
 
 
-async def test_class_ModbusHub_logger(hass, caplog, modbus_hub):
-    """Run general test of class modbusHub."""
-
-    caplog.set_level(logging.DEBUG)
-    e = ModbusException("test logger")
-    caplog.clear()
-    modbus_hub._log_error(e)
-    assert len(caplog.records) == 1
-    assert caplog.records[0].levelname == "ERROR"
-
-    modbus_hub._log_error(e)
-    assert len(caplog.records) == 2
-    assert caplog.records[1].levelname == "DEBUG"
-
-
 async def test_pb_create_exception(hass, caplog, modbus_hub):
     """Run general test of class modbusHub."""
 
