@@ -68,7 +68,7 @@ class SonosBatteryEntity(SonosEntity, Entity):
 
     def __init__(self, soco: SoCo, sonos_data: SonosData, battery_info: Dict[str, Any]):
         """Initialize a SonosBatteryEntity."""
-        super.__init__(soco, sonos_data)
+        super().__init__(soco, sonos_data)
         self._battery_info = battery_info
 
     async def async_added_to_hass(self) -> None:
