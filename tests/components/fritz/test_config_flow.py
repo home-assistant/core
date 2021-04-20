@@ -156,7 +156,7 @@ async def test_reauth_successful(hass: HomeAssistantType, fc_class_mock):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_REAUTH, "entry_id": mock_config.entry_id},
-            data=mock_config,
+            data=mock_config.data,
         )
 
         assert result["type"] == RESULT_TYPE_FORM
@@ -188,7 +188,7 @@ async def test_reauth_not_successful(hass: HomeAssistantType, fc_class_mock):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_REAUTH, "entry_id": mock_config.entry_id},
-            data=mock_config,
+            data=mock_config.data,
         )
 
         assert result["type"] == RESULT_TYPE_FORM

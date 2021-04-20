@@ -2,13 +2,20 @@
 from unittest import mock
 
 from homeassistant.components.fritz.const import DOMAIN
-from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_DEVICES,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+)
 
 MOCK_CONFIG = {
     DOMAIN: {
         CONF_DEVICES: [
             {
                 CONF_HOST: "fake_host",
+                CONF_PORT: "1234",
                 CONF_PASSWORD: "fake_pass",
                 CONF_USERNAME: "fake_user",
             }

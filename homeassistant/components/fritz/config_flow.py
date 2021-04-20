@@ -115,8 +115,8 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
 
         errors = {}
 
-        self._username = user_input.get(CONF_USERNAME)
-        self._password = user_input.get(CONF_PASSWORD)
+        self._username = user_input[CONF_USERNAME]
+        self._password = user_input[CONF_PASSWORD]
 
         error = await self.fritz_tools_init()
 
@@ -220,8 +220,8 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
 
         errors = {}
 
-        self._username = user_input.get(CONF_USERNAME)
-        self._password = user_input.get(CONF_PASSWORD)
+        self._username = user_input[CONF_USERNAME]
+        self._password = user_input[CONF_PASSWORD]
 
         error = await self.fritz_tools_init()
 
