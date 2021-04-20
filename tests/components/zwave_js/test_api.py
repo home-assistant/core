@@ -419,7 +419,7 @@ async def test_update_log_config(hass, client, integration, hass_ws_client):
 
     assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args[0][0]
-    assert args["command"] == "update_log_config"
+    assert args["command"] == "driver.update_log_config"
     assert args["config"] == {"level": "error"}
 
     client.async_send_command.reset_mock()
@@ -439,7 +439,7 @@ async def test_update_log_config(hass, client, integration, hass_ws_client):
 
     assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args[0][0]
-    assert args["command"] == "update_log_config"
+    assert args["command"] == "driver.update_log_config"
     assert args["config"] == {"logToFile": True, "filename": "/test"}
 
     client.async_send_command.reset_mock()
@@ -465,7 +465,7 @@ async def test_update_log_config(hass, client, integration, hass_ws_client):
 
     assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args[0][0]
-    assert args["command"] == "update_log_config"
+    assert args["command"] == "driver.update_log_config"
     assert args["config"] == {
         "level": "error",
         "logToFile": True,
