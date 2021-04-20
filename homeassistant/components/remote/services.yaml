@@ -108,8 +108,8 @@ learn_command:
       selector:
         number:
           min: 0
-          max: 255
-          step: 1
+          max: 60
+          step: 5
           mode: slider
 
 delete_command:
