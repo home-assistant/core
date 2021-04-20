@@ -445,7 +445,9 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
     )
 
     # Clean up at end
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, router.cleanup)
+    config_entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, router.cleanup)
+    )
 
     return True
 
