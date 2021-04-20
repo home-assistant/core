@@ -13,11 +13,6 @@ from .coordinator import PicnicUpdateCoordinator
 PLATFORMS = ["sensor"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Picnic component."""
-    return True
-
-
 def create_picnic_client(entry: ConfigEntry):
     """Create an instance of the PicnicAPI client."""
     return PicnicAPI(

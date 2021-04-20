@@ -143,8 +143,7 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
         updated_token = self.picnic_api_client.session.auth_token
         if self.config_entry.data.get(CONF_ACCESS_TOKEN) != updated_token:
             # Create an updated data dict
-            data = self.config_entry.data.copy()
-            data.update({CONF_ACCESS_TOKEN: updated_token})
+            data = {**self.config_entry.data, CONF_ACCESS_TOKEN: updated_token}
 
             # Update the config entry
             self.hass.config_entries.async_update_entry(self.config_entry, data=data)
