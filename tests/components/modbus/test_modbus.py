@@ -203,82 +203,6 @@ async def test_pb_read_holding_registers(hass, modbus_hub):
         assert result is None
 
 
-async def test_pb_write_coil(hass, modbus_hub):
-    """Run test for pymodbus write_coil calls."""
-
-    mock_pb = mock.MagicMock()
-    with mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusTcpClient", return_value=mock_pb
-    ):
-        modbus_hub.setup()
-
-        addr = 17
-        data = 16
-        assert modbus_hub.write_coil(None, addr, data)
-        assert mock_pb.write_coil.called
-        assert mock_pb.write_coil.call_args[0] == (addr, data)
-
-        mock_pb.write_coil.side_effect = ModbusException("fail write_coil")
-        assert not modbus_hub.write_coil(None, addr, data)
-
-
-async def test_pb_write_coils(hass, modbus_hub):
-    """Run test for pymodbus write_coils calls."""
-
-    mock_pb = mock.MagicMock()
-    with mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusTcpClient", return_value=mock_pb
-    ):
-        modbus_hub.setup()
-
-        addr = 17
-        data = 16
-        assert modbus_hub.write_coils(None, addr, data)
-        assert mock_pb.write_coils.called
-        assert mock_pb.write_coils.call_args[0] == (addr, data)
-
-        mock_pb.write_coils.side_effect = ModbusException("fail write_coils")
-        assert not modbus_hub.write_coils(None, addr, data)
-
-
-async def test_pb_write_register(hass, modbus_hub):
-    """Run test for pymodbus write_register calls."""
-
-    mock_pb = mock.MagicMock()
-    with mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusTcpClient", return_value=mock_pb
-    ):
-        modbus_hub.setup()
-
-        addr = 17
-        data = 16
-        assert modbus_hub.write_register(None, addr, data)
-        assert mock_pb.write_register.called
-        assert mock_pb.write_register.call_args[0] == (addr, data)
-
-        mock_pb.write_register.side_effect = ModbusException("fail write_")
-        assert not modbus_hub.write_register(None, addr, data)
-
-
-async def test_pb_write_registers(hass, modbus_hub):
-    """Run test for pymodbus write_registers calls."""
-
-    mock_pb = mock.MagicMock()
-    with mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusTcpClient", return_value=mock_pb
-    ):
-        modbus_hub.setup()
-
-        addr = 17
-        data = 16
-        assert modbus_hub.write_registers(None, addr, data)
-        assert mock_pb.write_registers.called
-        assert mock_pb.write_registers.call_args[0] == (addr, data)
-
-        mock_pb.write_registers.side_effect = ModbusException("fail write_")
-        assert not modbus_hub.write_registers(None, addr, data)
-
-
 async def test_pb_service_write_register(hass):
     """Run test for service write_register."""
 
@@ -309,6 +233,11 @@ async def test_pb_service_write_register(hass):
         assert mock_pb.write_register.call_args[0] == (
             data[ATTR_ADDRESS],
             data[ATTR_VALUE],
+        )
+
+        mock_pb.write_registers.side_effect = ModbusException("fail write_")
+        await hass.services.async_call(
+            DOMAIN, SERVICE_WRITE_REGISTER, data, blocking=True
         )
 
         data[ATTR_VALUE] = [1, 2, 3]
@@ -351,6 +280,9 @@ async def test_pb_service_write_coil(hass):
             data[ATTR_ADDRESS],
             data[ATTR_STATE],
         )
+
+        mock_pb.write_registers.side_effect = ModbusException("fail write_")
+        await hass.services.async_call(DOMAIN, SERVICE_WRITE_COIL, data, blocking=True)
 
         data[ATTR_STATE] = [True, False, True]
         await hass.services.async_call(DOMAIN, SERVICE_WRITE_COIL, data, blocking=True)
