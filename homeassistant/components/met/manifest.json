@@ -3,6 +3,6 @@
   "name": "Meteorologisk institutt (Met.no)",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/met",
-  "requirements": ["pyMetno==0.8.1"],
+  "requirements": ["pyMetno==0.8.2"],
   "codeowners": ["@danielhiversen", "@thimic"]
 }
