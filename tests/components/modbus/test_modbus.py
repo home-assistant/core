@@ -116,15 +116,16 @@ async def _config_helper(hass, do_config):
         },
     ],
 )
-async def test_config_modbus(hass, do_config):
+async def test_config_modbus(hass, caplog, do_config):
     """Run test for modbus."""
 
+    caplog.set_level(logging.ERROR)
     await _config_helper(hass, do_config)
-    assert DOMAIN in hass.data
-    assert len(hass.data[DOMAIN]) == 1
+    assert DOMAIN in hass.config.components
+    assert len(caplog.records) == 0
 
 
-async def test_config_multiple_modbus(hass):
+async def test_config_multiple_modbus(hass, caplog):
     """Run test for multiple modbus."""
 
     do_config = [
@@ -152,9 +153,10 @@ async def test_config_multiple_modbus(hass):
         },
     ]
 
+    caplog.set_level(logging.ERROR)
     await _config_helper(hass, do_config)
-    assert DOMAIN in hass.data
-    assert len(hass.data[DOMAIN]) == len(do_config)
+    assert DOMAIN in hass.config.components
+    assert len(caplog.records) == 0
 
 
 @pytest.fixture()
