@@ -57,6 +57,13 @@ def join_or_interrupt_threads(
 class InterruptibleThreadPoolExecutor(ThreadPoolExecutor):
     """A ThreadPoolExecutor instance that will not deadlock on shutdown."""
 
+    def submit(self, fn, /, *args, **kwargs):  # type: ignore
+        """Log submit."""
+        _LOGGER.debug(
+            "Calling executor with function: %s, args: %s, kwargs: %s", fn, args, kwargs
+        )
+        super().submit(fn, *args, **kwargs)
+
     def logged_shutdown(self) -> None:
         """Shutdown backport from cpython 3.9 with interrupt support added."""
         with self._shutdown_lock:  # type: ignore[attr-defined]
