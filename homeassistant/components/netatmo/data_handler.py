@@ -59,7 +59,7 @@ class NetatmoDataHandler:
         self.listeners: list[CALLBACK_TYPE] = []
         self._data_classes: dict = {}
         self.data = {}
-        self._queue: deque = deque()
+        self._queue = deque()
         self._webhook: bool = False
 
     async def async_setup(self):
