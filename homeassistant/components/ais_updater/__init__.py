@@ -348,24 +348,41 @@ def get_current_android_apk_version():
                 .strip()
                 .replace("versionName=", "")
             )
+            # TTS
+            try:
+                apk_tts_version = subprocess.check_output(
+                    'su -c "dumpsys package com.google.android.tts | grep versionName"',
+                    shell=True,  # nosec
+                    timeout=15,
+                )
+                apk_tts_version = (
+                    apk_tts_version.decode("utf-8")
+                    .replace("\n", "")
+                    .strip()
+                    .replace("versionName=", "")
+                )
+            except Exception as e:
+                _LOGGER.info("Can't get android android.tts apk version! " + str(e))
+            # STT
+            try:
+                apk_stt_version = subprocess.check_output(
+                    'su -c "dumpsys package com.google.android.googlequicksearchbox | grep versionName"',
+                    shell=True,  # nosec
+                    timeout=15,
+                )
+            except Exception as e:
+                _LOGGER.info(
+                    "Can't get android googlequicksearchbox apk version! " + str(e)
+                )
+                try:
+                    apk_stt_version = subprocess.check_output(
+                        'su -c "dumpsys package com.google.android.katniss | grep versionName"',
+                        shell=True,  # nosec
+                        timeout=15,
+                    )
+                except Exception as e:
+                    _LOGGER.info("Can't get android katniss apk version! " + str(e))
 
-            apk_tts_version = subprocess.check_output(
-                'su -c "dumpsys package com.google.android.tts | grep versionName"',
-                shell=True,  # nosec
-                timeout=15,
-            )
-            apk_tts_version = (
-                apk_tts_version.decode("utf-8")
-                .replace("\n", "")
-                .strip()
-                .replace("versionName=", "")
-            )
-
-            apk_stt_version = subprocess.check_output(
-                'su -c "dumpsys package com.google.android.googlequicksearchbox | grep versionName"',
-                shell=True,  # nosec
-                timeout=15,
-            )
             apk_stt_version = (
                 apk_stt_version.decode("utf-8")
                 .replace("\n", "")
