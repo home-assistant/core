@@ -400,7 +400,7 @@ class HueOneLightChangeView(HomeAssistantView):
 
         if HUE_API_STATE_BRI in request_json:
             if entity.domain == light.DOMAIN:
-                if any(mode in color_modes for mode in light.COLOR_MODES_BRIGHTNESS):
+                if light.brightness_supported(color_modes):
                     parsed[STATE_ON] = parsed[STATE_BRIGHTNESS] > 0
                 else:
                     parsed[STATE_BRIGHTNESS] = None
@@ -439,14 +439,14 @@ class HueOneLightChangeView(HomeAssistantView):
         if entity.domain == light.DOMAIN:
             if parsed[STATE_ON]:
                 if (
-                    any(mode in color_modes for mode in light.COLOR_MODES_BRIGHTNESS)
+                    light.brightness_supported(color_modes)
                     and parsed[STATE_BRIGHTNESS] is not None
                 ):
                     data[ATTR_BRIGHTNESS] = hue_brightness_to_hass(
                         parsed[STATE_BRIGHTNESS]
                     )
 
-                if any(mode in color_modes for mode in light.COLOR_MODES_COLOR):
+                if light.color_supported(color_modes):
                     if any((parsed[STATE_HUE], parsed[STATE_SATURATION])):
                         if parsed[STATE_HUE] is not None:
                             hue = parsed[STATE_HUE]
@@ -468,7 +468,7 @@ class HueOneLightChangeView(HomeAssistantView):
                         data[ATTR_XY_COLOR] = parsed[STATE_XY]
 
                 if (
-                    light.COLOR_MODE_COLOR_TEMP in color_modes
+                    light.color_temp_supported(color_modes)
                     and parsed[STATE_COLOR_TEMP] is not None
                 ):
                     data[ATTR_COLOR_TEMP] = parsed[STATE_COLOR_TEMP]
@@ -747,10 +747,7 @@ def entity_to_json(config, entity):
         "swversion": "123",
     }
 
-    if (
-        any(mode in color_modes for mode in light.COLOR_MODES_COLOR)
-        and light.COLOR_MODE_COLOR_TEMP in color_modes
-    ):
+    if light.color_supported(color_modes) and light.color_temp_supported(color_modes):
         # Extended Color light (Zigbee Device ID: 0x0210)
         # Same as Color light, but which supports additional setting of color temperature
         retval["type"] = "Extended color light"
@@ -768,7 +765,7 @@ def entity_to_json(config, entity):
             retval["state"][HUE_API_STATE_COLORMODE] = "hs"
         else:
             retval["state"][HUE_API_STATE_COLORMODE] = "ct"
-    elif any(mode in color_modes for mode in light.COLOR_MODES_COLOR):
+    elif light.color_supported(color_modes):
         # Color light (Zigbee Device ID: 0x0200)
         # Supports on/off, dimming and color control (hue/saturation, enhanced hue, color loop and XY)
         retval["type"] = "Color light"
@@ -782,7 +779,7 @@ def entity_to_json(config, entity):
                 HUE_API_STATE_EFFECT: "none",
             }
         )
-    elif light.COLOR_MODE_COLOR_TEMP in color_modes:
+    elif light.color_temp_supported(color_modes):
         # Color temperature light (Zigbee Device ID: 0x0220)
         # Supports groups, scenes, on/off, dimming, and setting of a color temperature
         retval["type"] = "Color temperature light"
@@ -799,7 +796,7 @@ def entity_to_json(config, entity):
         | SUPPORT_SET_SPEED
         | SUPPORT_VOLUME_SET
         | SUPPORT_TARGET_TEMPERATURE
-    ) or any(mode in color_modes for mode in light.COLOR_MODES_BRIGHTNESS):
+    ) or light.brightness_supported(color_modes):
         # Dimmable light (Zigbee Device ID: 0x0100)
         # Supports groups, scenes, on/off and dimming
         retval["type"] = "Dimmable light"
