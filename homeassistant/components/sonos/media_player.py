@@ -63,6 +63,7 @@ from homeassistant.helpers import config_validation as cv, entity_platform, serv
 from homeassistant.helpers.network import is_internal_request
 from homeassistant.util.dt import utcnow
 
+from . import SonosData
 from .const import (
     DATA_SONOS,
     DOMAIN as SONOS_DOMAIN,
@@ -147,7 +148,10 @@ async def async_setup_entry(
         soco = event.data.get("soco")
         if soco and soco.uid not in hass.data[DATA_SONOS].media_player_entities:
             hass.data[DATA_SONOS].media_player_entities[soco.uid] = None
-            hass.add_job(async_add_entities, [SonosMediaPlayerEntity(soco)])
+            hass.add_job(
+                async_add_entities,
+                [SonosMediaPlayerEntity(soco, hass.data[DATA_SONOS])],
+            )
 
     @service.verify_domain_control(hass, SONOS_DOMAIN)
     async def async_service_handle(service_call: ServiceCall) -> None:
@@ -187,7 +191,10 @@ async def async_setup_entry(
     for uid, soco in hass.data[DATA_SONOS].discovered.items():
         if uid not in hass.data[DATA_SONOS].media_player_entities:
             hass.data[DATA_SONOS].media_player_entities[soco.uid] = None
-            hass.add_job(async_add_entities, [SonosMediaPlayerEntity(soco)])
+            hass.add_job(
+                async_add_entities,
+                [SonosMediaPlayerEntity(soco, hass.data[DATA_SONOS])],
+            )
 
     hass.services.async_register(
         SONOS_DOMAIN,
@@ -316,9 +323,9 @@ def _timespan_secs(timespan: str | None) -> None | float:
 class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     """Representation of a Sonos entity."""
 
-    def __init__(self, player: SoCo) -> None:
+    def __init__(self, player: SoCo, sonos_data: SonosData) -> None:
         """Initialize the Sonos entity."""
-        super.__init__(player)
+        super.__init__(player, sonos_data)
         self._subscriptions: list[SubscriptionBase] = []
         self._poll_timer: Callable | None = None
         self._seen_timer: Callable | None = None
@@ -351,11 +358,11 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
     async def async_added_to_hass(self) -> None:
         """Subscribe sonos events."""
-        self.hass.data[DATA_SONOS].media_player_entities[self.unique_id] = self
+        self.data.media_player_entities[self.unique_id] = self
 
         await self.async_seen(self.soco)
 
-        media_players = self.hass.data[DATA_SONOS].media_player_entities.values()
+        media_players = self.data.media_player_entities.values()
         for entity in media_players:
             await entity.create_update_groups_coro()
 
@@ -371,7 +378,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     @property
     def name(self) -> str:
         """Return the name of the entity."""
-        speaker_info = self.hass.data[DATA_SONOS].speaker_info[self._player.uid]
+        speaker_info = self.data.speaker_info[self._player.uid]
         return speaker_info["zone_name"]  # type: ignore[no-any-return]
 
     @property  # type: ignore[misc]
@@ -585,7 +592,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         self.schedule_update_ha_state()
 
         # Also update slaves
-        entities = self.hass.data[DATA_SONOS].media_player_entities.values()
+        entities = self.data.media_player_entities.values()
         for entity in entities:
             coordinator = entity.coordinator
             if coordinator and coordinator.unique_id == self.unique_id:
@@ -771,13 +778,13 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 self._poll_timer()
                 self._poll_timer = None
 
-            async with self.hass.data[DATA_SONOS].topology_condition:
+            async with self.data.topology_condition:
                 group = await _async_extract_group(event)
 
                 if self.unique_id == group[0]:
                     _async_regroup(group)
 
-                    self.hass.data[DATA_SONOS].topology_condition.notify_all()
+                    self.data.topology_condition.notify_all()
 
         if event and not hasattr(event, "zone_player_uui_ds_in_group"):
             return None
@@ -957,7 +964,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         """List of available input sources."""
         sources = [fav.title for fav in self._favorites]
 
-        speaker_info = self.hass.data[DATA_SONOS].speaker_info[self._player.uid]
+        speaker_info = self.data.speaker_info[self._player.uid]
         model = speaker_info["model_name"].upper()
         if "PLAY:5" in model or "CONNECT" in model:
             sources += [SOURCE_LINEIN]

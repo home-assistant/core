@@ -7,10 +7,11 @@ from pysonos.core import SoCo
 from pysonos.exceptions import SoCoException
 
 from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE, STATE_UNKNOWN
-from homeassistant.core import Event
+from homeassistant.core import Event, callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 
+from . import SonosData
 from .const import DATA_SONOS, SCAN_INTERVAL, SONOS_DISCOVERY_UPDATE
 from .entity import SonosEntity
 
@@ -34,14 +35,16 @@ def fetch_batery_info_or_none(soco: SoCo) -> Optional[Dict[str, Any]]:
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Sonos from a config entry."""
 
+    sonos_data = hass.data[DATA_SONOS]
+
     async def _async_create_entity(soco: SoCo) -> Optional[SonosBatteryEntity]:
-        if not soco or soco.uid in hass.data[DATA_SONOS].battery_entities:
+        if not soco or soco.uid in sonos_data.battery_entities:
             return None
-        hass.data[DATA_SONOS].battery_entities[soco.uid] = None
+        sonos_data.battery_entities[soco.uid] = None
         if battery_info := await hass.async_add_executor_job(
             fetch_batery_info_or_none, soco
         ):
-            return SonosBatteryEntity(soco, battery_info)
+            return SonosBatteryEntity(soco, sonos_data, battery_info)
         return None
 
     async def _async_create_entities(event: Event):
@@ -52,7 +55,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     entities = []
     # create any entities for devices that exist already
-    for soco in hass.data[DATA_SONOS].discovered.values():
+    for soco in sonos_data.discovered.values():
         if entity := await _async_create_entity(soco):
             entities.append(entity)
 
@@ -63,11 +66,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class SonosBatteryEntity(SonosEntity, Entity):
     """Representation of a Sonos Battery entity."""
 
-    def __init__(self, soco: SoCo, battery_info: Dict[str, Any]):
+    def __init__(self, soco: SoCo, sonos_data: SonosData, battery_info: Dict[str, Any]):
         """Initialize a SonosBatteryEntity."""
-        super.__init__(soco)
+        super.__init__(soco, sonos_data)
         self._battery_info = battery_info
-        self._available = True
 
     async def async_added_to_hass(self) -> None:
         """Register polling callback when added to hass."""
@@ -76,7 +78,17 @@ class SonosBatteryEntity(SonosEntity, Entity):
         )
         self.async_on_remove(cancel_timer)
 
-        self.hass.data[DATA_SONOS].battery_entities[self.unique_id] = self
+        self.data.battery_entities[self.unique_id] = self
+
+    async def async_seen(self, soco) -> None:
+        """Record that this player was seen right now."""
+        self._soco = soco
+        self.async_write_ha_state()
+
+    @callback
+    def async_unseen(self, now=None):
+        """Make this player unavailable when it was not seen recently."""
+        self.async_write_ha_state()
 
     # Identification of this Entity
     @property
@@ -87,7 +99,7 @@ class SonosBatteryEntity(SonosEntity, Entity):
     @property
     def name(self) -> str:
         """Return the name of the sensor."""
-        speaker_info = self.hass.data[DATA_SONOS].speaker_info[self._soco.uid]
+        speaker_info = self.data.speaker_info[self._soco.uid]
         return f"{speaker_info['zone_name']} Battery"
 
     @property
@@ -110,12 +122,6 @@ class SonosBatteryEntity(SonosEntity, Entity):
         if battery_info is not None:
             self._battery_info = battery_info
             self.schedule_update_ha_state()
-
-    # Current state
-    @property
-    def available(self) -> bool:
-        """Return whether this device is available."""
-        return self._soco.uid in self.hass.data[DATA_SONOS].seen_timers
 
     @property
     def battery_level(self) -> int:
