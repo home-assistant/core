@@ -5,7 +5,6 @@ from typing import Any, Optional
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -20,11 +19,6 @@ async def async_setup_entry(
 ):
     """Set up Picnic sensor entries."""
     picnic_coordinator = hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
-
-    # Fetch initial data so we have data when entities subscribe
-    await picnic_coordinator.async_refresh()
-    if not picnic_coordinator.last_update_success:
-        raise PlatformNotReady()
 
     # Add an entity for each sensor type
     async_add_entities(
@@ -71,11 +65,8 @@ class PicnicSensor(CoordinatorEntity):
     @property
     def state(self) -> StateType:
         """Return the state of the entity."""
-        try:
-            data_set = self.coordinator.data.get(self.properties["data_type"])
-            return self.properties["state"](data_set)
-        except (IndexError, KeyError):
-            return None
+        data_set = self.coordinator.data.get(self.properties["data_type"], {})
+        return self.properties["state"](data_set)
 
     @property
     def device_class(self) -> Optional[str]:
@@ -96,11 +87,6 @@ class PicnicSensor(CoordinatorEntity):
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return self.properties.get("default_enabled", False)
-
-    @property
-    def attribution(self):
-        """Return the attribution."""
-        return ATTRIBUTION
 
     @property
     def extra_state_attributes(self):

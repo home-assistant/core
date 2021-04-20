@@ -30,8 +30,6 @@ async def test_form(hass):
     with patch(
         "homeassistant.components.picnic.config_flow.PicnicAPI",
     ) as mock_picnic, patch(
-        "homeassistant.components.picnic.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.picnic.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -54,7 +52,6 @@ async def test_form(hass):
         CONF_ACCESS_TOKEN: auth_token,
         CONF_COUNTRY_CODE: "NL",
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 

@@ -6,7 +6,7 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "country_code": "[%key:common::config_flow::data::country_code%]"
+          "country_code": "Country code"
         }
       }
     },
