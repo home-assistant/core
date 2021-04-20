@@ -362,6 +362,11 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         await self.async_seen(self.soco)
 
+        if self._subscriptions:
+            # If we can subscribe, we will shortly
+            # get an event that calls create_update_groups_coro
+            return
+
         media_players = self.data.media_player_entities.values()
         for entity in media_players:
             await entity.create_update_groups_coro()
