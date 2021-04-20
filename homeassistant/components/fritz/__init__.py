@@ -17,10 +17,10 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Set up fritzboxtools from config entry."""
     _LOGGER.debug("Setting up FRITZ!Box Tools component")
-    host = entry.data.get(CONF_HOST, DEFAULT_HOST)
-    port = entry.data.get(CONF_PORT, DEFAULT_PORT)
-    username = entry.data.get(CONF_USERNAME)
-    password = entry.data.get(CONF_PASSWORD)
+    host = entry.data[CONF_HOST]
+    port = entry.data[CONF_PORT]
+    username = entry.data[CONF_USERNAME]
+    password = entry.data[CONF_PASSWORD]
 
     fritz_tools = FritzBoxTools(
         hass=hass,
