@@ -166,10 +166,10 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
 
         errors = {}
 
-        self._host = user_input.get(CONF_HOST, DEFAULT_HOST)
-        self._port = user_input.get(CONF_PORT, DEFAULT_PORT)
-        self._username = user_input.get(CONF_USERNAME)
-        self._password = user_input.get(CONF_PASSWORD)
+        self._host = user_input[CONF_HOST]
+        self._port = user_input[CONF_PORT]
+        self._username = user_input[CONF_USERNAME]
+        self._password = user_input[CONF_PASSWORD]
 
         error = await self.fritz_tools_init()
 
