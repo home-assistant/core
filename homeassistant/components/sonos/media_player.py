@@ -60,7 +60,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TIME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, entity_platform, service
-import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.network import is_internal_request
 from homeassistant.util.dt import utcnow
 
@@ -73,6 +72,7 @@ from .const import (
     SEEN_EXPIRE_TIME,
     SONOS_DISCOVERY_UPDATE,
 )
+from .entity import SonosEntity
 from .media_browser import build_item_response, get_media, library_payload
 
 _LOGGER = logging.getLogger(__name__)
@@ -313,11 +313,12 @@ def _timespan_secs(timespan: str | None) -> None | float:
     return sum(60 ** x[0] * int(x[1]) for x in enumerate(reversed(timespan.split(":"))))
 
 
-class SonosMediaPlayerEntity(MediaPlayerEntity):
+class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     """Representation of a Sonos entity."""
 
     def __init__(self, player: SoCo) -> None:
         """Initialize the Sonos entity."""
+        super.__init__(player)
         self._subscriptions: list[SubscriptionBase] = []
         self._poll_timer: Callable | None = None
         self._seen_timer: Callable | None = None
@@ -372,20 +373,6 @@ class SonosMediaPlayerEntity(MediaPlayerEntity):
         """Return the name of the entity."""
         speaker_info = self.hass.data[DATA_SONOS].speaker_info[self._player.uid]
         return speaker_info["zone_name"]  # type: ignore[no-any-return]
-
-    @property
-    def device_info(self) -> dict:
-        """Return information about the device."""
-        speaker_info = self.hass.data[DATA_SONOS].speaker_info[self._player.uid]
-        return {
-            "identifiers": {(SONOS_DOMAIN, self._player.uid)},
-            "name": speaker_info["zone_name"],
-            "model": speaker_info["model_name"].replace("Sonos ", ""),
-            "sw_version": speaker_info["software_version"],
-            "connections": {(dr.CONNECTION_NETWORK_MAC, speaker_info["mac_address"])},
-            "manufacturer": "Sonos",
-            "suggested_area": speaker_info["zone_name"],
-        }
 
     @property  # type: ignore[misc]
     @soco_coordinator

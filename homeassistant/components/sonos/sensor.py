@@ -7,17 +7,12 @@ from pysonos.core import SoCo
 from pysonos.exceptions import SoCoException
 
 from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE, STATE_UNKNOWN
-from homeassistant.core import Event, callback
-import homeassistant.helpers.device_registry as dr
+from homeassistant.core import Event
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 
-from .const import (
-    DATA_SONOS,
-    DOMAIN as SONOS_DOMAIN,
-    SCAN_INTERVAL,
-    SONOS_DISCOVERY_UPDATE,
-)
+from .const import DATA_SONOS, SCAN_INTERVAL, SONOS_DISCOVERY_UPDATE
+from .entity import SonosEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,12 +60,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_add_entities(entities)
 
 
-class SonosBatteryEntity(Entity):
+class SonosBatteryEntity(SonosEntity, Entity):
     """Representation of a Sonos Battery entity."""
 
     def __init__(self, soco: SoCo, battery_info: Dict[str, Any]):
         """Initialize a SonosBatteryEntity."""
-        self._soco = soco
+        super.__init__(soco)
         self._battery_info = battery_info
         self._available = True
 
@@ -83,19 +78,6 @@ class SonosBatteryEntity(Entity):
 
         self.hass.data[DATA_SONOS].battery_entities[self.unique_id] = self
 
-    async def async_seen(self, soco) -> None:
-        """Record that this player was seen right now."""
-        self._soco = soco
-
-        self.async_write_ha_state()
-
-    @callback
-    def async_unseen(self, now=None):
-        """Make this player unavailable when it was not seen recently."""
-        self._available = False
-
-        self.async_write_ha_state()
-
     # Identification of this Entity
     @property
     def unique_id(self) -> str:
@@ -107,20 +89,6 @@ class SonosBatteryEntity(Entity):
         """Return the name of the sensor."""
         speaker_info = self.hass.data[DATA_SONOS].speaker_info[self._soco.uid]
         return f"{speaker_info['zone_name']} Battery"
-
-    @property
-    def device_info(self) -> Dict[str, Any]:
-        """Return information about the device."""
-        speaker_info = self.hass.data[DATA_SONOS].speaker_info[self._soco.uid]
-        return {
-            "identifiers": {(SONOS_DOMAIN, self._soco.uid)},
-            "name": speaker_info["zone_name"],
-            "model": speaker_info["model_name"].replace("Sonos ", ""),
-            "sw_version": speaker_info["software_version"],
-            "connections": {(dr.CONNECTION_NETWORK_MAC, speaker_info["mac_address"])},
-            "manufacturer": "Sonos",
-            "suggested_area": speaker_info["zone_name"],
-        }
 
     @property
     def device_class(self) -> str:
