@@ -127,6 +127,7 @@ PLAYABLE_MEDIA_TYPES = [
 SONOS_DISCOVERY_UPDATE = "sonos_discovery_update"
 SONOS_GROUP_UPDATE = "sonos_group_update"
 
+BATTERY_SCAN_INTERVAL = datetime.timedelta(minutes=15)
 SCAN_INTERVAL = datetime.timedelta(seconds=10)
 DISCOVERY_INTERVAL = datetime.timedelta(seconds=60)
 SEEN_EXPIRE_TIME = 3.5 * DISCOVERY_INTERVAL

@@ -58,7 +58,7 @@ from homeassistant.components.plex.const import PLEX_URI_SCHEME
 from homeassistant.components.plex.services import play_on_sonos
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TIME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING
-from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, entity_platform, service
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -147,10 +147,10 @@ async def async_setup_entry(
     """Set up Sonos from a config entry."""
     platform = entity_platform.current_platform.get()
 
-    async def async_create_entities(event: Event) -> None:
+    async def async_create_entities(data: dict) -> None:
         """Handle device discovery and create entities."""
         # Make sure that all known SoCo devices have Media Player entities
-        soco = event.data.get("soco")
+        soco = data["soco"]
         if soco and soco.uid not in hass.data[DATA_SONOS].media_player_entities:
             hass.data[DATA_SONOS].media_player_entities[soco.uid] = None
             hass.add_job(
