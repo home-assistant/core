@@ -11,10 +11,6 @@ from homeassistant.components.modbus.const import (
     ATTR_STATE,
     ATTR_UNIT,
     ATTR_VALUE,
-    CONF_BAUDRATE,
-    CONF_BYTESIZE,
-    CONF_PARITY,
-    CONF_STOPBITS,
     DEFAULT_HUB,
     MODBUS_DOMAIN as DOMAIN,
     SERVICE_WRITE_COIL,
@@ -24,7 +20,6 @@ from homeassistant.components.modbus.modbus import ModbusHub
 from homeassistant.const import (
     CONF_DELAY,
     CONF_HOST,
-    CONF_METHOD,
     CONF_NAME,
     CONF_PORT,
     CONF_TIMEOUT,
@@ -33,130 +28,6 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 
 from .conftest import ReadResult
-
-
-async def _config_helper(hass, do_config):
-    """Run test for modbus."""
-
-    config = {DOMAIN: do_config}
-
-    with mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusTcpClient"
-    ), mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusSerialClient"
-    ), mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusUdpClient"
-    ):
-        assert await async_setup_component(hass, DOMAIN, config) is True
-        await hass.async_block_till_done()
-
-
-@pytest.mark.parametrize(
-    "do_config",
-    [
-        {
-            CONF_TYPE: "tcp",
-            CONF_HOST: "modbusTestHost",
-            CONF_PORT: 5501,
-        },
-        {
-            CONF_TYPE: "tcp",
-            CONF_HOST: "modbusTestHost",
-            CONF_PORT: 5501,
-            CONF_NAME: "modbusTest",
-            CONF_TIMEOUT: 30,
-            CONF_DELAY: 10,
-        },
-        {
-            CONF_TYPE: "udp",
-            CONF_HOST: "modbusTestHost",
-            CONF_PORT: 5501,
-        },
-        {
-            CONF_TYPE: "udp",
-            CONF_HOST: "modbusTestHost",
-            CONF_PORT: 5501,
-            CONF_NAME: "modbusTest",
-            CONF_TIMEOUT: 30,
-            CONF_DELAY: 10,
-        },
-        {
-            CONF_TYPE: "rtuovertcp",
-            CONF_HOST: "modbusTestHost",
-            CONF_PORT: 5501,
-        },
-        {
-            CONF_TYPE: "rtuovertcp",
-            CONF_HOST: "modbusTestHost",
-            CONF_PORT: 5501,
-            CONF_NAME: "modbusTest",
-            CONF_TIMEOUT: 30,
-            CONF_DELAY: 10,
-        },
-        {
-            CONF_TYPE: "serial",
-            CONF_BAUDRATE: 9600,
-            CONF_BYTESIZE: 8,
-            CONF_METHOD: "rtu",
-            CONF_PORT: "usb01",
-            CONF_PARITY: "E",
-            CONF_STOPBITS: 1,
-        },
-        {
-            CONF_TYPE: "serial",
-            CONF_BAUDRATE: 9600,
-            CONF_BYTESIZE: 8,
-            CONF_METHOD: "rtu",
-            CONF_PORT: "usb01",
-            CONF_PARITY: "E",
-            CONF_STOPBITS: 1,
-            CONF_NAME: "modbusTest",
-            CONF_TIMEOUT: 30,
-            CONF_DELAY: 10,
-        },
-    ],
-)
-async def test_config_modbus(hass, caplog, do_config):
-    """Run test for modbus."""
-
-    caplog.set_level(logging.ERROR)
-    await _config_helper(hass, do_config)
-    assert DOMAIN in hass.config.components
-    assert len(caplog.records) == 0
-
-
-async def test_config_multiple_modbus(hass, caplog):
-    """Run test for multiple modbus."""
-
-    do_config = [
-        {
-            CONF_TYPE: "tcp",
-            CONF_HOST: "modbusTestHost",
-            CONF_PORT: 5501,
-            CONF_NAME: "modbusTest1",
-        },
-        {
-            CONF_TYPE: "tcp",
-            CONF_HOST: "modbusTestHost",
-            CONF_PORT: 5501,
-            CONF_NAME: "modbusTest2",
-        },
-        {
-            CONF_TYPE: "serial",
-            CONF_BAUDRATE: 9600,
-            CONF_BYTESIZE: 8,
-            CONF_METHOD: "rtu",
-            CONF_PORT: "usb01",
-            CONF_PARITY: "E",
-            CONF_STOPBITS: 1,
-            CONF_NAME: "modbusTest3",
-        },
-    ]
-
-    caplog.set_level(logging.ERROR)
-    await _config_helper(hass, do_config)
-    assert DOMAIN in hass.config.components
-    assert len(caplog.records) == 0
 
 
 @pytest.fixture()
