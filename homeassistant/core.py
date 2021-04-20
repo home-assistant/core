@@ -541,7 +541,7 @@ class HomeAssistant:
                     import subprocess
 
                     subprocess.Popen(
-                        "sleep 7 &&  su -c reboot -p'",
+                        "sleep 7 &&  su -c 'reboot -p'",
                         shell=True,  # nosec
                         stdout=None,
                         stderr=None,
