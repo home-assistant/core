@@ -25,15 +25,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
-        if import_config is not None:
-            for entry in self._async_current_entries(include_ignore=True):
-                if import_config[CONF_HOST] == entry.data[CONF_HOST]:
-                    return self.async_abort(reason="already_configured")
-            await self.async_set_unique_id()
-            self._abort_if_unique_id_configured()
-            return self.async_create_entry(
-                title=import_config.pop(CONF_NAME), data=import_config
-            )
+        for entry in self._async_current_entries(include_ignore=True):
+            if import_config[CONF_HOST] == entry.data[CONF_HOST]:
+                return self.async_abort(reason="already_configured")
+        await self.async_set_unique_id()
+        self._abort_if_unique_id_configured()
+        return self.async_create_entry(
+            title=import_config.pop(CONF_NAME), data=import_config
+        )
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
