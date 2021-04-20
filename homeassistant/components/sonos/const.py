@@ -125,6 +125,7 @@ PLAYABLE_MEDIA_TYPES = [
 ]
 
 SONOS_DISCOVERY_UPDATE = "sonos_discovery_update"
+SONOS_GROUP_UPDATE = "sonos_group_update"
 
 SCAN_INTERVAL = datetime.timedelta(seconds=10)
 DISCOVERY_INTERVAL = datetime.timedelta(seconds=60)

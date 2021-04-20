@@ -60,7 +60,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TIME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, entity_platform, service
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.network import is_internal_request
 from homeassistant.util.dt import utcnow
 
@@ -73,6 +76,7 @@ from .const import (
     SCAN_INTERVAL,
     SEEN_EXPIRE_TIME,
     SONOS_DISCOVERY_UPDATE,
+    SONOS_GROUP_UPDATE,
 )
 from .entity import SonosEntity
 from .media_browser import build_item_response, get_media, library_payload
@@ -363,9 +367,14 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         await self.async_seen(self.soco)
 
-        media_players = self.data.media_player_entities.values()
-        for entity in media_players:
-            await entity.create_update_groups_coro()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SONOS_GROUP_UPDATE, self.async_update_groups
+            )
+        )
+
+        if self.hass.is_running:
+            async_dispatcher_send(self.hass, SONOS_GROUP_UPDATE)
 
     @property
     def unique_id(self) -> str:
