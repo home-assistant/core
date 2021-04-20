@@ -38,11 +38,12 @@ class Device(CoordinatorEntity, LightEntity):
         """Initialize the Freedompro light."""
         super().__init__(coordinator)
         self._hass = hass
+        self._session = aiohttp_client.async_get_clientsession(self._hass)
         self._api_key = api_key
-        self._name = device["name"]
-        self._uid = device["uid"]
-        self._type = device["type"]
-        self._characteristics = device["characteristics"]
+        self._name = device.get("name")
+        self._uid = device.get("uid")
+        self._type = device.get("type")
+        self._characteristics = device.get("characteristics")
         self._on = False
         self._brightness = 0
         self._saturation = 0
@@ -72,44 +73,53 @@ class Device(CoordinatorEntity, LightEntity):
     def is_on(self):
         """Return the status of the light."""
         device = next(
-            (device for device in self.coordinator.data if device["uid"] == self._uid),
+            (
+                device
+                for device in self.coordinator.data
+                if device.get("uid") == self._uid
+            ),
             None,
         )
-        if device is not None:
-            if "state" in device:
-                state = device["state"]
-                if "on" in state:
-                    self._on = state["on"]
+        if device is not None and "state" in device:
+            state = device.get("state")
+            if "on" in state:
+                self._on = state.get("on")
         return self._on
 
     @property
     def brightness(self):
         """Return the status of the light brightness."""
         device = next(
-            (device for device in self.coordinator.data if device["uid"] == self._uid),
+            (
+                device
+                for device in self.coordinator.data
+                if device.get("uid") == self._uid
+            ),
             None,
         )
-        if device is not None:
-            if "state" in device:
-                state = device["state"]
-                if "brightness" in state:
-                    self._brightness = state["brightness"]
+        if device is not None and "state" in device:
+            state = device.get("state")
+            if "brightness" in state:
+                self._brightness = state.get("brightness")
         return math.floor(self._brightness / 100 * 255)
 
     @property
     def hs_color(self):
         """Return the status of the light hs_color."""
         device = next(
-            (device for device in self.coordinator.data if device["uid"] == self._uid),
+            (
+                device
+                for device in self.coordinator.data
+                if device.get("uid") == self._uid
+            ),
             None,
         )
-        if device is not None:
-            if "state" in device:
-                state = device["state"]
-                if "hue" in state:
-                    self._hue = state["hue"]
-                if "saturation" in state:
-                    self._saturation = state["saturation"]
+        if device is not None and "state" in device:
+            state = device.get("state")
+            if "hue" in state:
+                self._hue = state.get("hue")
+            if "saturation" in state:
+                self._saturation = state.get("saturation")
         return [self._hue, self._saturation]
 
     async def async_turn_on(self, **kwargs):
@@ -126,7 +136,7 @@ class Device(CoordinatorEntity, LightEntity):
             payload["hue"] = self._hue
         payload = json.dumps(payload)
         await put_state(
-            aiohttp_client.async_get_clientsession(self._hass),
+            self._session,
             self._api_key,
             self._uid,
             payload,
@@ -139,7 +149,7 @@ class Device(CoordinatorEntity, LightEntity):
         payload = {"on": self._on}
         payload = json.dumps(payload)
         await put_state(
-            aiohttp_client.async_get_clientsession(self._hass),
+            self._session,
             self._api_key,
             self._uid,
             payload,
