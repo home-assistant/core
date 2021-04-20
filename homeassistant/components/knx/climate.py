@@ -1,7 +1,8 @@
 """Support for KNX/IP climate devices."""
 from __future__ import annotations
 
-from typing import Any, Callable, Iterable
+from collections.abc import Iterable
+from typing import Any, Callable
 
 from xknx.devices import Climate as XknxClimate
 from xknx.dpt.dpt_hvac_mode import HVACControllerMode, HVACOperationMode

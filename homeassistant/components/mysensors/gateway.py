@@ -3,10 +3,11 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
+from collections.abc import Coroutine
 import logging
 import socket
 import sys
-from typing import Any, Callable, Coroutine
+from typing import Any, Callable
 
 import async_timeout
 from mysensors import BaseAsyncGateway, Message, Sensor, mysensors
