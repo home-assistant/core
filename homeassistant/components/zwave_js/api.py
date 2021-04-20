@@ -30,10 +30,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntry
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
     CONF_DATA_COLLECTION_OPTED_IN,
@@ -95,8 +92,7 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_remove_node)
     websocket_api.async_register_command(hass, websocket_stop_exclusion)
     websocket_api.async_register_command(hass, websocket_refresh_node_info)
-    websocket_api.async_register_command(hass, websocket_start_listening_logs)
-    websocket_api.async_register_command(hass, websocket_stop_listening_logs)
+    websocket_api.async_register_command(hass, websocket_subscribe_logs)
     websocket_api.async_register_command(hass, websocket_update_log_config)
     websocket_api.async_register_command(hass, websocket_get_log_config)
     websocket_api.async_register_command(hass, websocket_get_config_parameters)
@@ -502,10 +498,10 @@ def filename_is_present_if_logging_to_file(obj: dict) -> dict:
         vol.Required(ENTRY_ID): str,
     }
 )
-async def websocket_start_listening_logs(
+async def websocket_subscribe_logs(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict
 ) -> None:
-    """Start listening to logging messages from the server."""
+    """Subscribe to log message events from the server."""
     entry_id = msg[ENTRY_ID]
     client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
     driver = client.driver
@@ -514,8 +510,7 @@ async def websocket_start_listening_logs(
     def async_cleanup() -> None:
         """Remove signal listeners."""
         hass.async_create_task(driver.async_stop_listening_logs())
-        for unsub in unsubs:
-            unsub()
+        unsub()
 
     @callback
     def forward_event(event: dict) -> None:
@@ -532,29 +527,10 @@ async def websocket_start_listening_logs(
             )
         )
 
-    connection.subscriptions[msg["id"]] = driver.on("logging", forward_event)
+    unsub = driver.on("logging", forward_event)
+    connection.subscriptions[msg["id"]] = async_cleanup
 
     await driver.async_start_listening_logs()
-    connection.send_result(msg[ID])
-
-
-@websocket_api.require_admin  # type: ignore
-@websocket_api.async_response
-@websocket_api.websocket_command(
-    {
-        vol.Required(TYPE): "zwave_js/stop_listening_logs",
-        vol.Required(ENTRY_ID): str,
-    }
-)
-async def websocket_stop_listening_logs(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
-) -> None:
-    """Stop listening to logging messages from the server."""
-    entry_id = msg[ENTRY_ID]
-    client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
-    driver = client.driver
-    await driver.async_stop_listening_logs()
-    async_dispatcher_send(hass, f"{entry_id}_stop_listening_logs")
     connection.send_result(msg[ID])
 
 
