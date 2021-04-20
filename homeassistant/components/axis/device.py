@@ -58,8 +58,6 @@ class AxisNetworkDevice:
         self.fw_version = None
         self.product_type = None
 
-        self.listeners = []
-
     @property
     def host(self):
         """Return the host address of this device."""
@@ -190,7 +188,7 @@ class AxisNetworkDevice:
             status = {}
 
         if status.get("data", {}).get("status", {}).get("state") == "active":
-            self.listeners.append(
+            self.config_entry.async_on_unload(
                 await mqtt.async_subscribe(
                     hass, f"{self.api.vapix.serial_number}/#", self.mqtt_message
                 )
@@ -278,9 +276,6 @@ class AxisNetworkDevice:
         )
         if not unload_ok:
             return False
-
-        for unsubscribe_listener in self.listeners:
-            unsubscribe_listener()
 
         return True
 

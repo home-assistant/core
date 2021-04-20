@@ -53,7 +53,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         ):
             async_add_entities([AxisBinarySensor(event, device)])
 
-    device.listeners.append(
+    config_entry.async_on_unload(
         async_dispatcher_connect(hass, device.signal_new_event, async_add_sensor)
     )
 
