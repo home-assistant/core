@@ -181,28 +181,40 @@ def _better_snakecase(text: str) -> str:
 class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
     """Huawei LTE router scanner entity."""
 
-    mac: str = attr.ib()
+    _mac_address: str = attr.ib()
 
+    _ip_address: str | None = attr.ib(init=False, default=None)
     _is_connected: bool = attr.ib(init=False, default=False)
     _hostname: str | None = attr.ib(init=False, default=None)
     _extra_state_attributes: dict[str, Any] = attr.ib(init=False, factory=dict)
 
-    def __attrs_post_init__(self) -> None:
-        """Initialize internal state."""
-        self._extra_state_attributes["mac_address"] = self.mac
-
     @property
     def _entity_name(self) -> str:
-        return self._hostname or self.mac
+        return self.hostname or self.mac_address
 
     @property
     def _device_unique_id(self) -> str:
-        return self.mac
+        return self.mac_address
 
     @property
     def source_type(self) -> str:
         """Return SOURCE_TYPE_ROUTER."""
         return SOURCE_TYPE_ROUTER
+
+    @property
+    def ip_address(self) -> str | None:
+        """Return the primary ip address of the device."""
+        return self._ip_address
+
+    @property
+    def mac_address(self) -> str:
+        """Return the mac address of the device."""
+        return self._mac_address
+
+    @property
+    def hostname(self) -> str | None:
+        """Return hostname of the device."""
+        return self._hostname
 
     @property
     def is_connected(self) -> bool:
@@ -221,9 +233,12 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
             self._available = False
             return
         self._available = True
-        host = next((x for x in hosts if x.get("MacAddress") == self.mac), None)
+        host = next(
+            (x for x in hosts if x.get("MacAddress") == self._mac_address), None
+        )
         self._is_connected = _is_connected(host)
         if host is not None:
+            self._ip_address = host.get("IpAddress")
             self._hostname = host.get("HostName")
             self._extra_state_attributes = {
                 _better_snakecase(k): v
@@ -233,7 +248,5 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
                     "AddressSource",
                     "AssociatedSsid",
                     "InterfaceType",
-                    "IpAddress",
-                    "MacAddress",
                 }
             }
