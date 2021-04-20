@@ -17,7 +17,11 @@ from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component, setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import get_test_home_assistant, init_recorder_component
+from tests.common import (
+    async_init_recorder_component,
+    get_test_home_assistant,
+    init_recorder_component,
+)
 
 
 class TestHistoryStatsSensor(unittest.TestCase):
@@ -228,9 +232,7 @@ class TestHistoryStatsSensor(unittest.TestCase):
 
 async def test_reload(hass):
     """Verify we can reload history_stats sensors."""
-    await hass.async_add_executor_job(
-        init_recorder_component, hass
-    )  # force in memory db
+    await async_init_recorder_component(hass)
 
     hass.state = ha.CoreState.not_running
     hass.states.async_set("binary_sensor.test_id", "on")
@@ -278,7 +280,9 @@ async def test_reload(hass):
 
 
 async def test_measure_multiple(hass):
-    """Test the history statistics sensor measure for multiple states."""
+    """Test the history statistics sensor measure for multiple ."""
+    await async_init_recorder_component(hass)
+
     t0 = dt_util.utcnow() - timedelta(minutes=40)
     t1 = t0 + timedelta(minutes=20)
     t2 = dt_util.utcnow() - timedelta(minutes=10)
@@ -295,70 +299,63 @@ async def test_measure_multiple(hass):
         ]
     }
 
-    start = Template("{{ as_timestamp(now()) - 3600 }}", hass)
-    end = Template("{{ now() }}", hass)
-
-    sensor1 = HistoryStatsSensor(
+    await async_setup_component(
         hass,
-        "input_select.test_id",
-        ["orange", "blue"],
-        start,
-        end,
-        None,
-        "time",
-        "Test",
+        "sensor",
+        {
+            "sensor": [
+                {
+                    "platform": "history_stats",
+                    "entity_id": "input_select.test_id",
+                    "name": "sensor1",
+                    "state": ["orange", "blue"],
+                    "start": "{{ as_timestamp(now()) - 3600 }}",
+                    "end": "{{ now() }}",
+                    "type": "time",
+                },
+                {
+                    "platform": "history_stats",
+                    "entity_id": "unknown.test_id",
+                    "name": "sensor2",
+                    "state": ["orange", "blue"],
+                    "start": "{{ as_timestamp(now()) - 3600 }}",
+                    "end": "{{ now() }}",
+                    "type": "time",
+                },
+                {
+                    "platform": "history_stats",
+                    "entity_id": "input_select.test_id",
+                    "name": "sensor3",
+                    "state": ["orange", "blue"],
+                    "start": "{{ as_timestamp(now()) - 3600 }}",
+                    "end": "{{ now() }}",
+                    "type": "count",
+                },
+                {
+                    "platform": "history_stats",
+                    "entity_id": "input_select.test_id",
+                    "name": "sensor4",
+                    "state": ["orange", "blue"],
+                    "start": "{{ as_timestamp(now()) - 3600 }}",
+                    "end": "{{ now() }}",
+                    "type": "ratio",
+                },
+            ]
+        },
     )
-
-    sensor2 = HistoryStatsSensor(
-        hass,
-        "unknown.id",
-        ["orange", "blue"],
-        start,
-        end,
-        None,
-        "time",
-        "Test",
-    )
-
-    sensor3 = HistoryStatsSensor(
-        hass,
-        "input_select.test_id",
-        ["orange", "blue"],
-        start,
-        end,
-        None,
-        "count",
-        "test",
-    )
-
-    sensor4 = HistoryStatsSensor(
-        hass,
-        "input_select.test_id",
-        ["orange", "blue"],
-        start,
-        end,
-        None,
-        "ratio",
-        "test",
-    )
-
-    assert sensor1._type == "time"
-    assert sensor3._type == "count"
-    assert sensor4._type == "ratio"
 
     with patch(
         "homeassistant.components.history.state_changes_during_period",
         return_value=fake_states,
     ), patch("homeassistant.components.history.get_state", return_value=None):
-        await sensor1.async_update()
-        await sensor2.async_update()
-        await sensor3.async_update()
-        await sensor4.async_update()
+        for i in range(1, 5):
+            await hass.helpers.entity_component.async_update_entity(f"sensor.sensor{i}")
+        await hass.async_block_till_done()
 
-    assert sensor1.state == 0.5
-    assert sensor2.state is None
-    assert sensor3.state == 2
-    assert sensor4.state == 50
+    assert hass.states.get("sensor.sensor1").state == "0.5"
+    assert hass.states.get("sensor.sensor2").state == STATE_UNKNOWN
+    assert hass.states.get("sensor.sensor3").state == "2"
+    assert hass.states.get("sensor.sensor4").state == "50.0"
 
 
 async def async_test_measure(hass):
@@ -379,42 +376,63 @@ async def async_test_measure(hass):
         ]
     }
 
-    start = Template("{{ as_timestamp(now()) - 3600 }}", hass)
-    end = Template("{{ now() }}", hass)
-
-    sensor1 = HistoryStatsSensor(
-        hass, "binary_sensor.test_id", "on", start, end, None, "time", "Test"
+    await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": [
+                {
+                    "platform": "history_stats",
+                    "entity_id": "binary_sensor.test_id",
+                    "name": "sensor1",
+                    "state": "on",
+                    "start": "{{ as_timestamp(now()) - 3600 }}",
+                    "end": "{{ now() }}",
+                    "type": "time",
+                },
+                {
+                    "platform": "history_stats",
+                    "entity_id": "binary_sensor.test_id",
+                    "name": "sensor2",
+                    "state": "on",
+                    "start": "{{ as_timestamp(now()) - 3600 }}",
+                    "end": "{{ now() }}",
+                    "type": "time",
+                },
+                {
+                    "platform": "history_stats",
+                    "entity_id": "binary_sensor.test_id",
+                    "name": "sensor3",
+                    "state": "on",
+                    "start": "{{ as_timestamp(now()) - 3600 }}",
+                    "end": "{{ now() }}",
+                    "type": "count",
+                },
+                {
+                    "platform": "history_stats",
+                    "entity_id": "binary_sensor.test_id",
+                    "name": "sensor4",
+                    "state": "on",
+                    "start": "{{ as_timestamp(now()) - 3600 }}",
+                    "end": "{{ now() }}",
+                    "type": "ratio",
+                },
+            ]
+        },
     )
-
-    sensor2 = HistoryStatsSensor(
-        hass, "unknown.id", "on", start, end, None, "time", "Test"
-    )
-
-    sensor3 = HistoryStatsSensor(
-        hass, "binary_sensor.test_id", "on", start, end, None, "count", "test"
-    )
-
-    sensor4 = HistoryStatsSensor(
-        hass, "binary_sensor.test_id", "on", start, end, None, "ratio", "test"
-    )
-
-    assert sensor1._type == "time"
-    assert sensor3._type == "count"
-    assert sensor4._type == "ratio"
 
     with patch(
         "homeassistant.components.history.state_changes_during_period",
         return_value=fake_states,
     ), patch("homeassistant.components.history.get_state", return_value=None):
-        await sensor1.async_update()
-        await sensor2.async_update()
-        await sensor3.async_update()
-        await sensor4.async_update()
+        for i in range(1, 5):
+            await hass.helpers.entity_component.async_update_entity(f"sensor.sensor{i}")
+        await hass.async_block_till_done()
 
-    assert sensor1.state == 0.5
-    assert sensor2.state is None
-    assert sensor3.state == 2
-    assert sensor4.state == 50
+    assert hass.states.get("sensor.sensor1").state == "0.5"
+    assert hass.states.get("sensor.sensor2").state == STATE_UNKNOWN
+    assert hass.states.get("sensor.sensor3").state == "2"
+    assert hass.states.get("sensor.sensor4").state == "50.0"
 
 
 def _get_fixtures_base_path():
