@@ -7,13 +7,13 @@ from pysonos.core import SoCo
 from pysonos.exceptions import SoCoException
 
 from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE, STATE_UNKNOWN
-from homeassistant.core import Event, callback
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 
 from . import SonosData
-from .const import DATA_SONOS, SCAN_INTERVAL, SONOS_DISCOVERY_UPDATE
+from .const import BATTERY_SCAN_INTERVAL, DATA_SONOS, SONOS_DISCOVERY_UPDATE
 from .entity import SonosEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,8 +48,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             return SonosBatteryEntity(soco, sonos_data, battery_info)
         return None
 
-    async def _async_create_entities(event: Event):
-        if entity := await _async_create_entity(event.data.get("soco")):
+    async def _async_create_entities(data: dict):
+        if entity := await _async_create_entity(data["soco"]):
             async_add_entities([entity])
 
     async_dispatcher_connect(hass, SONOS_DISCOVERY_UPDATE, _async_create_entities)
@@ -75,7 +75,7 @@ class SonosBatteryEntity(SonosEntity, Entity):
     async def async_added_to_hass(self) -> None:
         """Register polling callback when added to hass."""
         cancel_timer = self.hass.helpers.event.async_track_time_interval(
-            self.update, SCAN_INTERVAL
+            self.update, BATTERY_SCAN_INTERVAL
         )
         self.async_on_remove(cancel_timer)
 
