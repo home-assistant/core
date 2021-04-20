@@ -123,6 +123,10 @@ SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA = ZWaveValueDiscoverySchema(
     type={"number"},
 )
 
+SWITCH_BINARY_CURRENT_VALUE_SCHEMA = ZWaveValueDiscoverySchema(
+    command_class={CommandClass.SWITCH_BINARY}, property={"currentValue"}
+)
+
 # For device class mapping see:
 # https://github.com/zwave-js/node-zwave-js/blob/master/packages/config/config/deviceClasses.json
 DISCOVERY_SCHEMAS = [
@@ -196,6 +200,15 @@ DISCOVERY_SCHEMAS = [
         product_id={0x000D},
         product_type={0x0003},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+    ),
+    # Vision Security ZL7432 In Wall Dual Relay Switch
+    ZWaveDiscoverySchema(
+        platform="switch",
+        hint="force_update",
+        manufacturer_id={0x0109},
+        product_id={0x1711, 0x1717},
+        product_type={0x2017},
+        primary_value=SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
     ),
     # ====== START OF CONFIG PARAMETER SPECIFIC MAPPING SCHEMAS =======
     # Door lock mode config parameter. Functionality equivalent to Notification CC
@@ -365,9 +378,7 @@ DISCOVERY_SCHEMAS = [
     # binary switches
     ZWaveDiscoverySchema(
         platform="switch",
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.SWITCH_BINARY}, property={"currentValue"}
-        ),
+        primary_value=SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
     ),
     # binary switch
     # barrier operator signaling states
