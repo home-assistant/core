@@ -9,7 +9,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .common import FritzBoxTools
-from .const import DEFAULT_HOST, DEFAULT_PORT, DOMAIN, SUPPORTED_DOMAINS
+from .const import DOMAIN, SUPPORTED_DOMAINS
 
 _LOGGER = logging.getLogger(__name__)
 
