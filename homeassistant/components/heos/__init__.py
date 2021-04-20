@@ -82,7 +82,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     async def disconnect_controller(event):
         await controller.disconnect()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, disconnect_controller)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, disconnect_controller)
+    )
 
     # Get players and sources
     try:
