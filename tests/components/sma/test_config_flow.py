@@ -11,21 +11,18 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_CREATE_ENTRY,
     RESULT_TYPE_FORM,
 )
-from homeassistant.helpers import entity_registry as er
 
 from . import (
-    MOCK_CONFIG_ENTRY,
     MOCK_DEVICE,
     MOCK_IMPORT,
     MOCK_IMPORT_DICT,
-    MOCK_LEGACY_ENTRY,
     MOCK_SETUP_DATA,
     MOCK_USER_INPUT,
     _patch_async_setup_entry,
 )
 
 
-async def test_form(hass, aioclient_mock):
+async def test_form(hass):
     """Test we get the form."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
@@ -50,15 +47,15 @@ async def test_form(hass, aioclient_mock):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_cannot_connect(hass, aioclient_mock):
+async def test_form_cannot_connect(hass):
     """Test we handle cannot connect error."""
-    aioclient_mock.get("https://1.1.1.1/data/l10n/en-US.json", exc=aiohttp.ClientError)
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    with _patch_async_setup_entry() as mock_setup_entry:
+    with patch(
+        "pysma.SMA.new_session", side_effect=aiohttp.ClientError
+    ), _patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             MOCK_USER_INPUT,
@@ -69,7 +66,7 @@ async def test_form_cannot_connect(hass, aioclient_mock):
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test_form_invalid_auth(hass, aioclient_mock):
+async def test_form_invalid_auth(hass):
     """Test we handle invalid auth error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -88,7 +85,7 @@ async def test_form_invalid_auth(hass, aioclient_mock):
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test_form_cannot_retrieve_device_info(hass, aioclient_mock):
+async def test_form_cannot_retrieve_device_info(hass):
     """Test we handle cannot retrieve device info error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -126,9 +123,9 @@ async def test_form_unexpected_exception(hass):
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test_form_already_configured(hass):
+async def test_form_already_configured(hass, mock_config_entry):
     """Test starting a flow by user when already configured."""
-    MOCK_CONFIG_ENTRY.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -152,9 +149,6 @@ async def test_form_already_configured(hass):
 
 async def test_import(hass):
     """Test we can import."""
-    entity_registry = er.async_get(hass)
-    entity_registry._register_entry(MOCK_LEGACY_ENTRY)
-
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch("pysma.SMA.new_session", return_value=True), patch(
@@ -176,9 +170,6 @@ async def test_import(hass):
 
 async def test_import_sensor_dict(hass):
     """Test we can import."""
-    entity_registry = er.async_get(hass)
-    entity_registry._register_entry(MOCK_LEGACY_ENTRY)
-
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch("pysma.SMA.new_session", return_value=True), patch(

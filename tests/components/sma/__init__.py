@@ -1,11 +1,6 @@
 """Tests for the sma integration."""
 from unittest.mock import patch
 
-from homeassistant.components.sma.const import DOMAIN
-from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
-
 MOCK_DEVICE = {
     "manufacturer": "SMA",
     "name": "SMA Device Name",
@@ -101,32 +96,6 @@ MOCK_CUSTOM_SETUP_DATA = dict(
     },
     **MOCK_USER_INPUT,
 )
-
-MOCK_LEGACY_ENTRY = er.RegistryEntry(
-    entity_id="sensor.pv_power",
-    unique_id="sma-6100_0046C200-pv_power",
-    platform="sma",
-    unit_of_measurement="W",
-    original_name="pv_power",
-)
-
-MOCK_CONFIG_ENTRY = MockConfigEntry(
-    domain=DOMAIN,
-    title=MOCK_DEVICE["name"],
-    unique_id=MOCK_DEVICE["serial"],
-    data=MOCK_CUSTOM_SETUP_DATA,
-    source="import",
-)
-
-
-async def init_integration(hass):
-    """Create a fake SMA Config Entry."""
-    MOCK_CONFIG_ENTRY.add_to_hass(hass)
-
-    with patch("pysma.SMA.read"):
-        await hass.config_entries.async_setup(MOCK_CONFIG_ENTRY.entry_id)
-    await hass.async_block_till_done()
-    return MOCK_CONFIG_ENTRY
 
 
 def _patch_async_setup_entry(return_value=True):
