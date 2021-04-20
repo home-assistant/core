@@ -775,7 +775,9 @@ class DataManager:
         """Get the measures data."""
         _LOGGER.debug("Updating withings measures")
 
-        response = await self._hass.async_add_executor_job(self._api.measure_get_meas)
+        response = await self._hass.async_add_executor_job(
+            self._api.measure_get_meas, None, None, None, None, None, None
+        )
 
         # Sort from oldest to newest.
         groups = sorted(
