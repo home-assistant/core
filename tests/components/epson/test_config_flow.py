@@ -97,24 +97,6 @@ async def test_import(hass):
         assert result["data"] == {CONF_HOST: "1.1.1.1"}
 
 
-async def test_import_cannot_connect(hass):
-    """Test we handle cannot connect error with import."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
-    )
-
-    with patch(
-        "homeassistant.components.epson.Projector.get_power",
-        return_value=STATE_UNAVAILABLE,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_HOST: "1.1.1.1", CONF_NAME: "test-epson"},
-        )
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "cannot_connect"}
-
-
 async def test_already_imported(hass):
     """Test config.yaml imported twice."""
     await test_import(hass)
