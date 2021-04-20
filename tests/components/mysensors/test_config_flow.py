@@ -50,9 +50,7 @@ async def get_form(
     return result
 
 
-async def test_config_mqtt(
-    hass: HomeAssistantType, mqtt: config_entries.ConfigEntry
-) -> None:
+async def test_config_mqtt(hass: HomeAssistantType, mqtt: None) -> None:
     """Test configuring a mqtt gateway."""
     step = await get_form(hass, CONF_GATEWAY_TYPE_MQTT, "gw_mqtt")
     flow_id = step["flow_id"]
@@ -442,9 +440,7 @@ async def test_config_invalid(
         },
     ],
 )
-async def test_import(
-    hass: HomeAssistantType, mqtt: config_entries.ConfigEntry, user_input: dict
-) -> None:
+async def test_import(hass: HomeAssistantType, mqtt: None, user_input: dict) -> None:
     """Test importing a gateway."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
@@ -736,7 +732,7 @@ async def test_import(
 )
 async def test_duplicate(
     hass: HomeAssistantType,
-    mqtt: config_entries.ConfigEntry,
+    mqtt: None,
     first_input: dict,
     second_input: dict,
     expected_result: tuple[str, str] | None,
