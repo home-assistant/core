@@ -355,7 +355,11 @@ async def async_setup_entry(hass, config_entry):
     async def _async_disconnect_websocket(*_):
         await ambient.client.websocket.disconnect()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_disconnect_websocket)
+    config_entry.async_on_unload(
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, _async_disconnect_websocket
+        )
+    )
 
     return True
 
