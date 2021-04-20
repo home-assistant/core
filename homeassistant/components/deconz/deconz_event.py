@@ -65,7 +65,7 @@ async def async_setup_events(gateway) -> None:
             gateway.hass.async_create_task(new_event.async_update_device_registry())
             gateway.events.append(new_event)
 
-    gateway.listeners.append(
+    gateway.config_entry.async_on_unload(
         async_dispatcher_connect(
             gateway.hass, gateway.async_signal_new_device(NEW_SENSOR), async_add_sensor
         )
