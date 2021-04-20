@@ -498,7 +498,7 @@ def filename_is_present_if_logging_to_file(obj: dict) -> dict:
 @websocket_api.async_response
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/start_listening_logs",
+        vol.Required(TYPE): "zwave_js/subscribe_logs",
         vol.Required(ENTRY_ID): str,
     }
 )
