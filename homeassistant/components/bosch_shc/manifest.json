@@ -7,6 +7,7 @@
   "zeroconf": [
     {"type": "_http._tcp.local.", "name": "bosch shc*"}
   ],
+  "iot_class": "local_polling",
   "codeowners": ["@tschamm"],
   "after_dependencies": ["zeroconf"]
 }
