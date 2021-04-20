@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Coroutine
 from contextlib import suppress
 import datetime
 import functools as ft
 import logging
 import socket
-from typing import Any, Callable, Coroutine
+from typing import Any, Callable
 import urllib.parse
 
 import async_timeout

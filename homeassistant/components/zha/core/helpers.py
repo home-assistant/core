@@ -8,13 +8,14 @@ from __future__ import annotations
 
 import asyncio
 import binascii
+from collections.abc import Iterator
 from dataclasses import dataclass
 import functools
 import itertools
 import logging
 from random import uniform
 import re
-from typing import Any, Callable, Iterator
+from typing import Any, Callable
 
 import voluptuous as vol
 import zigpy.exceptions

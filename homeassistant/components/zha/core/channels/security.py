@@ -4,8 +4,10 @@ Security channels module for Zigbee Home Automation.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/integrations/zha/
 """
+from __future__ import annotations
+
 import asyncio
-from typing import Coroutine
+from collections.abc import Coroutine
 
 from zigpy.exceptions import ZigbeeException
 import zigpy.zcl.clusters.security as security

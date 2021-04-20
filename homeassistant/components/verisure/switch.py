@@ -1,8 +1,9 @@
 """Support for Verisure Smartplugs."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 from time import monotonic
-from typing import Any, Callable, Iterable
+from typing import Any, Callable
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry

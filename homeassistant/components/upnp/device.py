@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 from ipaddress import IPv4Address
-from typing import Mapping
 from urllib.parse import urlparse
 
 from async_upnp_client import UpnpFactory

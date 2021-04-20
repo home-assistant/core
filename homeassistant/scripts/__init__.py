@@ -3,11 +3,11 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+from collections.abc import Sequence
 import importlib
 import logging
 import os
 import sys
-from typing import Sequence
 
 from homeassistant import runner
 from homeassistant.bootstrap import async_mount_local_lib_path

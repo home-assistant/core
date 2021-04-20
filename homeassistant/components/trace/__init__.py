@@ -1,9 +1,10 @@
 """Support for script and automation tracing and debugging."""
 from __future__ import annotations
 
+from collections import deque
 import datetime as dt
 from itertools import count
-from typing import Any, Deque
+from typing import Any
 
 from homeassistant.core import Context
 from homeassistant.helpers.trace import (
@@ -52,7 +53,7 @@ class ActionTrace:
         context: Context,
     ):
         """Container for script trace."""
-        self._trace: dict[str, Deque[TraceElement]] | None = None
+        self._trace: dict[str, deque[TraceElement]] | None = None
         self._config: dict[str, Any] = config
         self._blueprint_inputs: dict[str, Any] = blueprint_inputs
         self.context: Context = context
@@ -67,7 +68,7 @@ class ActionTrace:
             trace_set_child_id(self.key, self.run_id)
         trace_id_set((key, self.run_id))
 
-    def set_trace(self, trace: dict[str, Deque[TraceElement]]) -> None:
+    def set_trace(self, trace: dict[str, deque[TraceElement]]) -> None:
         """Set trace."""
         self._trace = trace
 

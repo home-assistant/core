@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from collections.abc import Mapping
 import logging
-from typing import Any, Callable, Mapping
+from typing import Any, Callable
 
 from pyclimacell.const import CURRENT
 

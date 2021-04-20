@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Generator
 import contextlib
 import logging
-from typing import Any, Generator
+from typing import Any
 
 import async_timeout
 from pywemo import WeMoDevice

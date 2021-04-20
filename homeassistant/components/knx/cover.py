@@ -1,8 +1,9 @@
 """Support for KNX/IP covers."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import datetime
-from typing import Any, Callable, Iterable
+from typing import Any, Callable
 
 from xknx.devices import Cover as XknxCover, Device as XknxDevice
 

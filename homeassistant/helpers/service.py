@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Iterable
 import dataclasses
 from functools import partial, wraps
 import logging
-from typing import TYPE_CHECKING, Any, Awaitable, Callable, Iterable, TypedDict
+from typing import TYPE_CHECKING, Any, Callable, TypedDict
 
 import voluptuous as vol
 

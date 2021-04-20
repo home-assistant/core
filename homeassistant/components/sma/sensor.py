@@ -1,8 +1,9 @@
 """SMA Solar Webconnect interface."""
 from __future__ import annotations
 
+from collections.abc import Coroutine
 import logging
-from typing import Any, Callable, Coroutine
+from typing import Any, Callable
 
 import pysma
 import voluptuous as vol

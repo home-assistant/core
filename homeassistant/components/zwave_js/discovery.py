@@ -1,8 +1,9 @@
 """Map Z-Wave nodes and values to Home Assistant entities."""
 from __future__ import annotations
 
+from collections.abc import Generator
 from dataclasses import dataclass
-from typing import Any, Generator
+from typing import Any
 
 from zwave_js_server.const import CommandClass
 from zwave_js_server.model.device_class import DeviceClassItem

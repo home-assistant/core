@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections import defaultdict
 from enum import IntEnum
 import logging
-from typing import Callable, DefaultDict
+from typing import Callable
 
 from mysensors import BaseAsyncGateway, Message
 from mysensors.sensor import ChildSensor
@@ -174,9 +174,9 @@ def validate_child(
     node_id: int,
     child: ChildSensor,
     value_type: int | None = None,
-) -> DefaultDict[str, list[DevId]]:
+) -> defaultdict[str, list[DevId]]:
     """Validate a child. Returns a dict mapping hass platform names to list of DevId."""
-    validated: DefaultDict[str, list[DevId]] = defaultdict(list)
+    validated: defaultdict[str, list[DevId]] = defaultdict(list)
     pres: IntEnum = gateway.const.Presentation
     set_req: IntEnum = gateway.const.SetReq
     child_type_name: SensorType | None = next(

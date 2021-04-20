@@ -3,13 +3,14 @@ from __future__ import annotations
 
 import asyncio
 from collections import deque
+from collections.abc import Container, Generator
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 import functools as ft
 import logging
 import re
 import sys
-from typing import Any, Callable, Container, Generator, cast
+from typing import Any, Callable, cast
 
 from homeassistant.components import zone as zone_cmp
 from homeassistant.components.device_automation import (

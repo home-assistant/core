@@ -1,10 +1,11 @@
 """Support to interface with universal remote control devices."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import timedelta
 import functools as ft
 import logging
-from typing import Any, Iterable, cast, final
+from typing import Any, cast, final
 
 import voluptuous as vol
 

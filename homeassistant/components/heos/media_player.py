@@ -1,8 +1,10 @@
 """Denon HEOS Media Player."""
+from __future__ import annotations
+
+from collections.abc import Sequence
 from functools import reduce, wraps
 import logging
 from operator import ior
-from typing import Sequence
 
 from pyheos import HeosError, const as heos_const
 

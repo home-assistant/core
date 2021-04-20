@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Callable, Hashable
+from collections.abc import Hashable
+from typing import Any, Callable
 
 import voluptuous as vol
 

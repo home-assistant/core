@@ -4,7 +4,7 @@ from __future__ import annotations
 from bisect import bisect
 import logging
 import re
-from typing import Callable, NamedTuple, Pattern
+from typing import Callable, NamedTuple
 
 import attr
 
@@ -52,8 +52,8 @@ class SensorMeta(NamedTuple):
     icon: str | Callable[[StateType], str] | None = None
     unit: str | None = None
     enabled_default: bool = False
-    include: Pattern[str] | None = None
-    exclude: Pattern[str] | None = None
+    include: re.Pattern[str] | None = None
+    exclude: re.Pattern[str] | None = None
     formatter: Callable[[str], tuple[StateType, str | None]] | None = None
 
 

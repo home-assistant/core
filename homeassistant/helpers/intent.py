@@ -1,9 +1,10 @@
 """Module to coordinate user intentions."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 import logging
 import re
-from typing import Any, Callable, Dict, Iterable
+from typing import Any, Callable, Dict
 
 import voluptuous as vol
 

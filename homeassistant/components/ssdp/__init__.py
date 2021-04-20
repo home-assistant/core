@@ -1,8 +1,11 @@
 """The SSDP integration."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Mapping
 from datetime import timedelta
 import logging
-from typing import Any, Mapping
+from typing import Any
 
 import aiohttp
 from async_upnp_client.search import async_search

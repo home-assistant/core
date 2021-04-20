@@ -1,7 +1,8 @@
 """Light support for switch entities."""
 from __future__ import annotations
 
-from typing import Any, Callable, Sequence, cast
+from collections.abc import Sequence
+from typing import Any, Callable, cast
 
 import voluptuous as vol
 

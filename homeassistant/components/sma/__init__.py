@@ -1,8 +1,9 @@
 """The sma integration."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
-from typing import List
 
 import pysma
 
@@ -40,7 +41,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def _parse_legacy_options(entry: ConfigEntry, sensor_def: pysma.Sensors) -> List[str]:
+def _parse_legacy_options(entry: ConfigEntry, sensor_def: pysma.Sensors) -> list[str]:
     """Parse legacy configuration options.
 
     This will parse the legacy CONF_SENSORS and CONF_CUSTOM configuration options
@@ -89,7 +90,7 @@ def _migrate_old_unique_ids(
     hass: HomeAssistant,
     entry: ConfigEntry,
     sensor_def: pysma.Sensors,
-    config_sensors: List[str],
+    config_sensors: list[str],
 ) -> None:
     """Migrate legacy sensor entity_id format to new format."""
     entity_registry = er.async_get(hass)
