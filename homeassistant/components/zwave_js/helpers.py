@@ -23,10 +23,9 @@ async def async_enable_statistics(client: ZwaveClient) -> None:
 
 @callback
 def update_data_collection_preference(
-    hass: HomeAssistant, entry_id: str, preference: bool
+    hass: HomeAssistant, entry: ConfigEntry, preference: bool
 ) -> None:
     """Update data collection preference on config entry."""
-    entry = hass.config_entries.async_get_entry(entry_id)
     if not entry:
         raise NotFoundError("Config entry cannot be found")
     new_data = entry.data.copy()

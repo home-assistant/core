@@ -8,7 +8,7 @@ from typing import Callable
 
 from aiohttp import hdrs, web, web_exceptions
 import voluptuous as vol
-from zwave_js_server import dump
+from zwave_js_server import client, dump
 from zwave_js_server.const import LogLevel
 from zwave_js_server.exceptions import InvalidNewValue, NotFoundError, SetValueFailed
 from zwave_js_server.model.log_config import LogConfig
@@ -80,7 +80,9 @@ def async_get_entry(orig_func: Callable) -> Callable:
             )
             return
 
-        await orig_func(hass, connection, msg, entry_id, entry)
+        client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
+
+        await orig_func(hass, connection, msg, entry, client)
 
     return async_get_entry_func
 
@@ -178,12 +180,15 @@ def websocket_node_status(
         vol.Optional("secure", default=False): bool,
     }
 )
+@async_get_entry
 async def websocket_add_node(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    entry: ConfigEntry,
+    client: client.Client,
 ) -> None:
     """Add a node to the Z-Wave network."""
-    entry_id = msg[ENTRY_ID]
-    client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
     controller = client.driver.controller
     include_non_secure = not msg["secure"]
 
@@ -248,12 +253,15 @@ async def websocket_add_node(
         vol.Required(ENTRY_ID): str,
     }
 )
+@async_get_entry
 async def websocket_stop_inclusion(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    entry: ConfigEntry,
+    client: client.Client,
 ) -> None:
     """Cancel adding a node to the Z-Wave network."""
-    entry_id = msg[ENTRY_ID]
-    client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
     controller = client.driver.controller
     result = await controller.async_stop_inclusion()
     connection.send_result(
@@ -270,12 +278,15 @@ async def websocket_stop_inclusion(
         vol.Required(ENTRY_ID): str,
     }
 )
+@async_get_entry
 async def websocket_stop_exclusion(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    entry: ConfigEntry,
+    client: client.Client,
 ) -> None:
     """Cancel removing a node from the Z-Wave network."""
-    entry_id = msg[ENTRY_ID]
-    client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
     controller = client.driver.controller
     result = await controller.async_stop_exclusion()
     connection.send_result(
@@ -292,12 +303,15 @@ async def websocket_stop_exclusion(
         vol.Required(ENTRY_ID): str,
     }
 )
+@async_get_entry
 async def websocket_remove_node(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    entry: ConfigEntry,
+    client: client.Client,
 ) -> None:
     """Remove a node from the Z-Wave network."""
-    entry_id = msg[ENTRY_ID]
-    client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
     controller = client.driver.controller
 
     @callback
@@ -349,13 +363,16 @@ async def websocket_remove_node(
         vol.Required(NODE_ID): int,
     },
 )
+@async_get_entry
 async def websocket_refresh_node_info(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    entry: ConfigEntry,
+    client: client.Client,
 ) -> None:
     """Re-interview a node."""
-    entry_id = msg[ENTRY_ID]
     node_id = msg[NODE_ID]
-    client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
     node = client.driver.controller.nodes.get(node_id)
 
     if node is None:
@@ -378,16 +395,19 @@ async def websocket_refresh_node_info(
         vol.Required(VALUE): int,
     }
 )
+@async_get_entry
 async def websocket_set_config_parameter(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    entry: ConfigEntry,
+    client: client.Client,
 ) -> None:
     """Set a config parameter value for a Z-Wave node."""
-    entry_id = msg[ENTRY_ID]
     node_id = msg[NODE_ID]
     property_ = msg[PROPERTY]
     property_key = msg.get(PROPERTY_KEY)
     value = msg[VALUE]
-    client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
     node = client.driver.controller.nodes[node_id]
     try:
         zwave_value, cmd_status = await async_set_config_parameter(
@@ -502,12 +522,15 @@ def filename_is_present_if_logging_to_file(obj: dict) -> dict:
         ),
     },
 )
+@async_get_entry
 async def websocket_update_log_config(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    entry: ConfigEntry,
+    client: client.Client,
 ) -> None:
     """Update the driver log config."""
-    entry_id = msg[ENTRY_ID]
-    client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
     await client.driver.async_update_log_config(LogConfig(**msg[CONFIG]))
     connection.send_result(
         msg[ID],
@@ -522,12 +545,15 @@ async def websocket_update_log_config(
         vol.Required(ENTRY_ID): str,
     },
 )
+@async_get_entry
 async def websocket_get_log_config(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    entry: ConfigEntry,
+    client: client.Client,
 ) -> None:
     """Get log configuration for the Z-Wave JS driver."""
-    entry_id = msg[ENTRY_ID]
-    client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
     result = await client.driver.async_get_log_config()
     connection.send_result(
         msg[ID],
@@ -549,14 +575,13 @@ async def websocket_update_data_collection_preference(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict,
-    entry_id: str,
     entry: ConfigEntry,
+    client: client.Client,
 ) -> None:
     """Opt in to statistics collection."""
     opted_in = msg[OPTED_IN]
-    update_data_collection_preference(hass, entry_id, opted_in)
+    update_data_collection_preference(hass, entry, opted_in)
 
-    client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
     if opted_in:
         await async_enable_statistics(client)
     else:
@@ -580,11 +605,10 @@ async def websocket_data_collection_status(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict,
-    entry_id: str,
     entry: ConfigEntry,
+    client: client.Client,
 ) -> None:
     """Opt out to statistics collection."""
-    client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
     result = {
         OPTED_IN: entry.data.get(CONF_DATA_COLLECTION_OPTED_IN),
         ENABLED: await client.driver.async_is_statistics_enabled(),
