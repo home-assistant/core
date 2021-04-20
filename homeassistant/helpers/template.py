@@ -857,6 +857,9 @@ def result_as_boolean(template_result: str | None) -> bool:
     False/0/None/'0'/'false'/'no'/'off'/'disable' are considered falsy
 
     """
+    if template_result is None:
+        return False
+
     try:
         # Import here, not at top-level to avoid circular import
         from homeassistant.helpers import (  # pylint: disable=import-outside-toplevel
