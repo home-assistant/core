@@ -8,7 +8,8 @@ from typing import Callable
 
 from aiohttp import hdrs, web, web_exceptions
 import voluptuous as vol
-from zwave_js_server import client, dump
+from zwave_js_server import dump
+from zwave_js_server.client import Client
 from zwave_js_server.const import LogLevel
 from zwave_js_server.exceptions import InvalidNewValue, NotFoundError, SetValueFailed
 from zwave_js_server.model.log_config import LogConfig
@@ -186,7 +187,7 @@ async def websocket_add_node(
     connection: ActiveConnection,
     msg: dict,
     entry: ConfigEntry,
-    client: client.Client,
+    client: Client,
 ) -> None:
     """Add a node to the Z-Wave network."""
     controller = client.driver.controller
@@ -259,7 +260,7 @@ async def websocket_stop_inclusion(
     connection: ActiveConnection,
     msg: dict,
     entry: ConfigEntry,
-    client: client.Client,
+    client: Client,
 ) -> None:
     """Cancel adding a node to the Z-Wave network."""
     controller = client.driver.controller
@@ -284,7 +285,7 @@ async def websocket_stop_exclusion(
     connection: ActiveConnection,
     msg: dict,
     entry: ConfigEntry,
-    client: client.Client,
+    client: Client,
 ) -> None:
     """Cancel removing a node from the Z-Wave network."""
     controller = client.driver.controller
@@ -309,7 +310,7 @@ async def websocket_remove_node(
     connection: ActiveConnection,
     msg: dict,
     entry: ConfigEntry,
-    client: client.Client,
+    client: Client,
 ) -> None:
     """Remove a node from the Z-Wave network."""
     controller = client.driver.controller
@@ -369,7 +370,7 @@ async def websocket_refresh_node_info(
     connection: ActiveConnection,
     msg: dict,
     entry: ConfigEntry,
-    client: client.Client,
+    client: Client,
 ) -> None:
     """Re-interview a node."""
     node_id = msg[NODE_ID]
@@ -401,7 +402,7 @@ async def websocket_set_config_parameter(
     connection: ActiveConnection,
     msg: dict,
     entry: ConfigEntry,
-    client: client.Client,
+    client: Client,
 ) -> None:
     """Set a config parameter value for a Z-Wave node."""
     node_id = msg[NODE_ID]
@@ -528,7 +529,7 @@ async def websocket_update_log_config(
     connection: ActiveConnection,
     msg: dict,
     entry: ConfigEntry,
-    client: client.Client,
+    client: Client,
 ) -> None:
     """Update the driver log config."""
     await client.driver.async_update_log_config(LogConfig(**msg[CONFIG]))
@@ -551,7 +552,7 @@ async def websocket_get_log_config(
     connection: ActiveConnection,
     msg: dict,
     entry: ConfigEntry,
-    client: client.Client,
+    client: Client,
 ) -> None:
     """Get log configuration for the Z-Wave JS driver."""
     result = await client.driver.async_get_log_config()
@@ -576,7 +577,7 @@ async def websocket_update_data_collection_preference(
     connection: ActiveConnection,
     msg: dict,
     entry: ConfigEntry,
-    client: client.Client,
+    client: Client,
 ) -> None:
     """Opt in to statistics collection."""
     opted_in = msg[OPTED_IN]
@@ -606,7 +607,7 @@ async def websocket_data_collection_status(
     connection: ActiveConnection,
     msg: dict,
     entry: ConfigEntry,
-    client: client.Client,
+    client: Client,
 ) -> None:
     """Opt out to statistics collection."""
     result = {
