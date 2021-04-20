@@ -188,7 +188,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         except pyatmo.ApiError as err:
             _LOGGER.error("Error during webhook registration - %s", err)
 
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unregister_webhook)
+        entry.async_on_unload(
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unregister_webhook)
+        )
 
     if hass.state == CoreState.running:
         await register_webhook(None)
