@@ -94,7 +94,7 @@ class WemoEntity(Entity):
 
         try:
             async with async_timeout.timeout(
-                self.platform.scan_interval.seconds - 0.1
+                self.platform.scan_interval.total_seconds() - 0.1
             ) as timeout:
                 await asyncio.shield(self._async_locked_update(True, timeout))
         except asyncio.TimeoutError:
