@@ -288,7 +288,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 ): str,
                 vol.Optional(
                     CONF_TRACK_WIRED_CLIENTS,
-                    default=DEFAULT_TRACK_WIRED_CLIENTS,
+                    default=self.config_entry.options.get(
+                        CONF_TRACK_WIRED_CLIENTS, DEFAULT_TRACK_WIRED_CLIENTS
+                    ),
                 ): bool,
             }
         )
