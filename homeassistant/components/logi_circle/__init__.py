@@ -220,7 +220,9 @@ async def async_setup_entry(hass, entry):
         """Close Logi Circle aiohttp session."""
         await logi_circle.auth_provider.close()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shut_down)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shut_down)
+    )
 
     return True
 
