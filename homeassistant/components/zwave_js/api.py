@@ -75,14 +75,7 @@ def async_get_entry(orig_func: Callable) -> Callable:
         """Provide user specific data and store to function."""
         entry_id = msg[ENTRY_ID]
         entry = hass.config_entries.async_get_entry(entry_id)
-        if not entry:
-            connection.send_error(
-                msg[ID], ERR_NOT_FOUND, "Specified config entry cannot be found"
-            )
-            return
-
         client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
-
         await orig_func(hass, connection, msg, entry, client)
 
     return async_get_entry_func
