@@ -2027,7 +2027,7 @@ scapy==2.4.5
 schiene==0.23
 
 # homeassistant.components.screenlogic
-screenlogicpy==0.2.1
+screenlogicpy==0.3.0
 
 # homeassistant.components.scsgate
 scsgate==0.1.0
