@@ -325,7 +325,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
     def __init__(self, player: SoCo, sonos_data: SonosData) -> None:
         """Initialize the Sonos entity."""
-        super.__init__(player, sonos_data)
+        super().__init__(player, sonos_data)
         self._subscriptions: list[SubscriptionBase] = []
         self._poll_timer: Callable | None = None
         self._seen_timer: Callable | None = None
