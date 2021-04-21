@@ -61,5 +61,8 @@ async def test_vision_security_zl7432(hass, client, vision_security_zl7432):
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert len(disc_infos) == 1
-    assert disc_infos[0].platform_hint == "force_update"
+
+    # We only get this platform hint if we are not using the standard switch discovery
+    # scheme
+    for disc_info in disc_infos:
+        assert disc_info.platform_hint == "force_update"
