@@ -285,28 +285,29 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
             _LOGGER.error("Failed to call %s: %s", service, err_msg)
             raise ValueError(err_msg)
 
-        at_least_one_sent = False
-        for _, codes in product(range(repeat), code_list):
+        async with self._lock:
+            at_least_one_sent = False
+            for _, codes in product(range(repeat), code_list):
+                if at_least_one_sent:
+                    await asyncio.sleep(delay)
+
+                if len(codes) > 1:
+                    code = codes[self._flags[device]]
+                else:
+                    code = codes[0]
+
+                try:
+                    await self._device.async_request(self._device.api.send_data, code)
+                except (BroadlinkException, OSError) as err:
+                    _LOGGER.error("Error during %s: %s", service, err)
+                    break
+
+                if len(codes) > 1:
+                    self._flags[device] ^= 1
+                at_least_one_sent = True
+
             if at_least_one_sent:
-                await asyncio.sleep(delay)
-
-            if len(codes) > 1:
-                code = codes[self._flags[device]]
-            else:
-                code = codes[0]
-
-            try:
-                await self._device.async_request(self._device.api.send_data, code)
-            except (BroadlinkException, OSError) as err:
-                _LOGGER.error("Error during %s: %s", service, err)
-                break
-
-            if len(codes) > 1:
-                self._flags[device] ^= 1
-            at_least_one_sent = True
-
-        if at_least_one_sent:
-            self._flag_storage.async_delay_save(self._get_flags, FLAG_SAVE_DELAY)
+                self._flag_storage.async_delay_save(self._get_flags, FLAG_SAVE_DELAY)
 
     async def async_learn_command(self, **kwargs):
         """Learn a list of commands from a remote."""
