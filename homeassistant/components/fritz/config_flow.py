@@ -11,7 +11,7 @@ from homeassistant.components.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_UDN,
 )
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import callback
 
@@ -68,6 +68,13 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
 
         return None
 
+    async def async_check_configured_entry(self) -> ConfigEntry:
+        """Check if entry is configured."""
+        for entry in self._async_current_entries(include_ignore=False):
+            if entry.data[CONF_HOST] == self._host:
+                return entry
+        return None
+
     @callback
     def _async_create_entry(self):
         """Async create flow handler entry."""
@@ -99,11 +106,10 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
             if progress.get("context", {}).get(CONF_HOST) == self._host:
                 return self.async_abort(reason="already_in_progress")
 
-        for entry in self._async_current_entries(include_ignore=False):
-            if entry.data[CONF_HOST] == self._host:
-                if uuid and not entry.unique_id:
-                    self.hass.config_entries.async_update_entry(entry, unique_id=uuid)
-                return self.async_abort(reason="already_configured")
+        if entry := await self.async_check_configured_entry():
+            if uuid and not entry.unique_id:
+                self.hass.config_entries.async_update_entry(entry, unique_id=uuid)
+            return self.async_abort(reason="already_configured")
 
         self.context["title_placeholders"] = {
             "name": self._name.replace("FRITZ!Box ", "")
@@ -177,9 +183,8 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
         if not (error := await self.fritz_tools_init()):
             self._name = self.fritz_tools.device_info["model"]
 
-            for entry in self._async_current_entries(include_ignore=False):
-                if entry.data[CONF_HOST] == self._host:
-                    error = "already_configured"
+            if await self.async_check_configured_entry():
+                error = "already_configured"
 
         if error:
             errors["base"] = error
