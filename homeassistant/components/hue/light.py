@@ -313,11 +313,10 @@ class HueLight(CoordinatorEntity, LightEntity):
         """Return the warmest color_temp that this light supports."""
         if self.is_group:
             return super().max_mireds
+        if self.is_livarno:
+            return 500
 
         max_mireds = self.light.controlcapabilities.get("ct", {}).get("max")
-
-        if self.is_livarno:
-            max_mireds = 500
 
         if not max_mireds:
             return super().max_mireds
