@@ -202,9 +202,10 @@ class FritzDevice:
 
         if not self._connected:
             self._ip_address = None
-        else:
-            self._last_activity = utc_point_in_time
-            self._ip_address = dev_info.ip_address
+            return
+
+        self._last_activity = utc_point_in_time
+        self._ip_address = dev_info.ip_address
 
     @property
     def is_connected(self):
