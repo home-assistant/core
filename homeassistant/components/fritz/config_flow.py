@@ -85,8 +85,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
         self._name = discovery_info.get(ATTR_UPNP_FRIENDLY_NAME)
         self.context[CONF_HOST] = self._host
 
-        uuid = discovery_info.get(ATTR_UPNP_UDN)
-        if uuid:
+        if uuid := discovery_info.get(ATTR_UPNP_UDN):
             if uuid.startswith("uuid:"):
                 uuid = uuid[5:]
             await self.async_set_unique_id(uuid)
