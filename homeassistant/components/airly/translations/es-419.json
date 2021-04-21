@@ -18,5 +18,11 @@
                 "title": "Airly"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "requests_per_day": "Solicitudes permitidas por d\u00eda",
+            "requests_remaining": "Solicitudes permitidas restantes"
+        }
     }
 }

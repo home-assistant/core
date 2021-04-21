@@ -3,7 +3,7 @@
         "abort": {
             "authorize_url_fail": "Onbekende fout bij het genereren van een autoriseer-URL.",
             "authorize_url_timeout": "Time-out tijdens genereren autorisatie url.",
-            "missing_configuration": "De Netatmo-component is niet geconfigureerd. Gelieve de documentatie volgen.",
+            "missing_configuration": "De component is niet geconfigureerd. Gelieve de documentatie volgen.",
             "no_url_available": "Geen URL beschikbaar. Voor informatie over deze fout, [check de helpsectie]({docs_url})",
             "reauth_successful": "Herauthenticatie was succesvol",
             "single_instance_allowed": "Al geconfigureerd. Slechts een enkele configuratie mogelijk.",
