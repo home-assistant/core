@@ -3,6 +3,7 @@ join:
   description: Group player together.
   fields:
     master:
+      name: Master
       description:
         Entity ID of the player that should become the coordinator of the group.
       example: "media_player.living_room_sonos"
@@ -11,7 +12,8 @@ join:
           integration: sonos
           domain: media_player
     entity_id:
-      description: Name(s) of entities that will join the master.
+      name: Entity
+      description: Name of entity that will join the master.
       example: "media_player.living_room_sonos"
       selector:
         entity:
@@ -23,7 +25,8 @@ unjoin:
   description: Unjoin the player from a group.
   fields:
     entity_id:
-      description: Name(s) of entities that will be unjoined from their group.
+      name: Entity
+      description: Name of entity that will be unjoined from their group.
       example: "media_player.living_room_sonos"
       selector:
         entity:
@@ -35,87 +38,91 @@ snapshot:
   description: Take a snapshot of the media player.
   fields:
     entity_id:
-      description: Name(s) of entities that will be snapshot.
+      name: Entity
+      description: Name of entity that will be snapshot.
       example: "media_player.living_room_sonos"
       selector:
         entity:
           integration: sonos
           domain: media_player
     with_group:
-      description: True (default) or False. Also snapshot the group layout.
+      name: With group
+      description: True or False. Also snapshot the group layout.
       example: "true"
+      default: true
+      selector:
+        boolean:
 
 restore:
   name: Restore
   description: Restore a snapshot of the media player.
   fields:
     entity_id:
-      description: Name(s) of entities that will be restored.
+      name: Entity
+      description: Name of entity that will be restored.
       example: "media_player.living_room_sonos"
       selector:
         entity:
           integration: sonos
           domain: media_player
     with_group:
-      description: True (default) or False. Also restore the group layout.
+      name: With group
+      description: True or False. Also restore the group layout.
       example: "true"
+      default: true
+      selector:
+        boolean:
 
 set_sleep_timer:
   name: Set timer
   description: Set a Sonos timer.
+  target:
+    entity:
+      integration: sonos
+      domain: media_player
   fields:
-    entity_id:
-      description: Name(s) of entities that will have a timer set.
-      example: "media_player.living_room_sonos"
-      selector:
-        entity:
-          integration: sonos
-          domain: media_player
     sleep_time:
+      name: Sleep Time
       description: Number of seconds to set the timer.
       example: "900"
       selector:
         number:
           min: 0
-          max: 3600
-          step: 1
+          max: 7200
+          step: 60
           unit_of_measurement: seconds
           mode: slider
 
 clear_sleep_timer:
   name: Clear timer
   description: Clear a Sonos timer.
-  fields:
-    entity_id:
-      description: Name(s) of entities that will have the timer cleared.
-      example: "media_player.living_room_sonos"
-      selector:
-        entity:
-          integration: sonos
-          domain: media_player
+  target:
+    entity:
+      integration: sonos
+      domain: media_player
 
 set_option:
   name: Set option
   description: Set Sonos sound options.
+  target:
+    entity:
+      integration: sonos
+      domain: media_player
   fields:
-    entity_id:
-      description: Name(s) of entities that will have options set.
-      example: "media_player.living_room_sonos"
-      selector:
-        entity:
-          integration: sonos
-          domain: media_player
     night_sound:
+      name: Night sound
       description: Enable Night Sound mode
       example: "true"
       selector:
         boolean:
     speech_enhance:
+      name: Speech enhance
       description: Enable Speech Enhancement mode
       example: "true"
       selector:
         boolean:
     status_light:
+      name: Status light
       description: Enable Status (LED) Light
       example: "true"
       selector:
@@ -124,59 +131,82 @@ set_option:
 play_queue:
   name: Play queue
   description: Start playing the queue from the first item.
+  target:
+    entity:
+      integration: sonos
+      domain: media_player
   fields:
-    entity_id:
-      description: Name(s) of entities that will start playing.
-      example: "media_player.living_room_sonos"
-      selector:
-        entity:
-          integration: sonos
-          domain: media_player
     queue_position:
+      name: Queue position
       description: Position of the song in the queue to start playing from.
       example: "0"
       selector:
         number:
           min: 0
-          max: 100000000
+          max: 100
           mode: box
 
 remove_from_queue:
   name: Remove from queue
   description: Removes an item from the queue.
+  target:
+    entity:
+      integration: sonos
+      domain: media_player
   fields:
-    entity_id:
-      description: Name(s) of entities that will remove an item.
-      example: "media_player.living_room_sonos"
-      selector:
-        entity:
-          integration: sonos
-          domain: media_player
     queue_position:
+      name: Queue position
       description: Position in the queue to remove.
       example: "0"
       selector:
         number:
           min: 0
-          max: 100000000
+          max: 100
           mode: box
 
 update_alarm:
   name: Update alarm
   description: Updates an alarm with new time and volume settings.
+  target:
+    entity:
+      integration: sonos
+      domain: media_player
   fields:
     alarm_id:
+      name: Alarm ID
       description: ID for the alarm to be updated.
       example: "1"
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 1440
+          mode: box
     time:
+      name: Time
       description: Set time for the alarm.
       example: "07:00"
+      selector:
+        time:
     volume:
+      name: Volume
       description: Set alarm volume level.
       example: "0.75"
+      selector:
+        number:
+          min: 0
+          max: 1
+          step: 0.01
+          mode: slider
     enabled:
+      name: Alarm enabled
       description: Enable or disable the alarm.
       example: "true"
+      selector:
+        boolean:
     include_linked_zones:
+      name: Include linked zones
       description: Enable or disable including grouped rooms.
       example: "true"
+      selector:
+        boolean:
