@@ -812,7 +812,11 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     @callback
     def async_update_properties(self, event: SonosEvent | None = None) -> None:
         """Update information from properties."""
-        _LOGGER.critical("async_update_properties: event: %s", event)
+        if not event:
+            return
+        _LOGGER.critical(
+            "async_update_properties: event: %s variables: %s", event, event.variables
+        )
 
     @property
     def volume_level(self) -> float | None:
