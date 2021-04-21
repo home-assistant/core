@@ -1,4 +1,5 @@
 """Support for AVM Fritz!Box functions."""
+import asyncio
 import logging
 
 from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
@@ -64,8 +65,15 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigType) -> bool
     fritzbox: FritzBoxTools = hass.data[DOMAIN][entry.entry_id]
     fritzbox.async_unload()
 
-    hass.data[DOMAIN].pop(entry.entry_id)
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
+            ]
+        )
+    )
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
 
-    for domain in SUPPORTED_DOMAINS:
-        await hass.config_entries.async_forward_entry_unload(entry, domain)
-    return True
+    return unload_ok
