@@ -274,6 +274,24 @@ async def test_refresh_node_info(
     assert msg["event"]["event"] == "interview stage completed"
     assert msg["event"]["stage"] == "NodeInfo"
 
+    event = Event(
+        type="interview completed",
+        data={"source": "node", "event": "interview completed", "nodeId": 52},
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "interview completed"
+
+    event = Event(
+        type="interview failed",
+        data={"source": "node", "event": "interview failed", "nodeId": 52},
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "interview failed"
+
     client.async_send_command_no_wait.reset_mock()
 
     await ws_client.send_json(
