@@ -15,15 +15,15 @@ class SonosEntity(Entity):
 
     def __init__(self, soco: SoCo, sonos_data: SonosData):
         """Initialize a SonosEntity."""
-        self._soco = soco
+        self.soco = soco
         self.data = sonos_data
 
     @property
     def device_info(self) -> Dict[str, Any]:
         """Return information about the device."""
-        speaker_info = self.data.speaker_info[self._soco.uid]
+        speaker_info = self.data.speaker_info[self.soco.uid]
         return {
-            "identifiers": {(SONOS_DOMAIN, self._soco.uid)},
+            "identifiers": {(SONOS_DOMAIN, self.soco.uid)},
             "name": speaker_info["zone_name"],
             "model": speaker_info["model_name"].replace("Sonos ", ""),
             "sw_version": speaker_info["software_version"],
@@ -36,4 +36,4 @@ class SonosEntity(Entity):
     @property
     def available(self) -> bool:
         """Return whether this device is available."""
-        return self._soco.uid in self.data.seen_timers
+        return self.soco.uid in self.data.seen_timers

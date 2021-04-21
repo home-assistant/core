@@ -83,7 +83,7 @@ class SonosBatteryEntity(SonosEntity, Entity):
 
     async def async_seen(self, soco) -> None:
         """Record that this player was seen right now."""
-        self._soco = soco
+        self.soco = soco
         self.async_write_ha_state()
 
     @callback
@@ -95,12 +95,12 @@ class SonosBatteryEntity(SonosEntity, Entity):
     @property
     def unique_id(self) -> str:
         """Return the unique ID of the sensor."""
-        return f"{self._soco.uid}-battery"
+        return f"{self.soco.uid}-battery"
 
     @property
     def name(self) -> str:
         """Return the name of the sensor."""
-        speaker_info = self.data.speaker_info[self._soco.uid]
+        speaker_info = self.data.speaker_info[self.soco.uid]
         return f"{speaker_info['zone_name']} Battery"
 
     @property
@@ -119,7 +119,7 @@ class SonosBatteryEntity(SonosEntity, Entity):
         if not self.available:
             # wait for the Sonos device to come back online
             return
-        battery_info = fetch_battery_info_or_none(self._soco)
+        battery_info = fetch_battery_info_or_none(self.soco)
         if battery_info is not None:
             self._battery_info = battery_info
             self.schedule_update_ha_state()

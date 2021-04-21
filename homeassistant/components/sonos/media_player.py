@@ -335,8 +335,6 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         self._poll_timer: Callable | None = None
         self._seen_timer: Callable | None = None
         self._volume_increment = 2
-        self._unique_id: str = player.uid
-        self._player: SoCo = player
         self._player_volume: int | None = None
         self._player_muted: bool | None = None
         self._play_mode: str | None = None
@@ -379,7 +377,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return self._unique_id
+        return self.soco.uid  # type: ignore[no-any-return]
 
     def __hash__(self) -> int:
         """Return a hash of self."""
@@ -388,7 +386,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     @property
     def name(self) -> str:
         """Return the name of the entity."""
-        speaker_info = self.data.speaker_info[self._player.uid]
+        speaker_info = self.data.speaker_info[self.unique_id]
         return speaker_info["zone_name"]  # type: ignore[no-any-return]
 
     @property  # type: ignore[misc]
@@ -412,11 +410,6 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     def is_coordinator(self) -> bool:
         """Return true if player is a coordinator."""
         return self._coordinator is None
-
-    @property
-    def soco(self) -> SoCo:
-        """Return soco object."""
-        return self._player
 
     @property
     def coordinator(self) -> SoCo:
@@ -912,12 +905,12 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     @soco_error()
     def volume_up(self) -> None:
         """Volume up media player."""
-        self._player.volume += self._volume_increment
+        self.soco.volume += self._volume_increment
 
     @soco_error()
     def volume_down(self) -> None:
         """Volume down media player."""
-        self._player.volume -= self._volume_increment
+        self.soco.volume -= self._volume_increment
 
     @soco_error()
     def set_volume_level(self, volume: str) -> None:
@@ -974,7 +967,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         """List of available input sources."""
         sources = [fav.title for fav in self._favorites]
 
-        speaker_info = self.data.speaker_info[self._player.uid]
+        speaker_info = self.data.speaker_info[self.unique_id]
         model = speaker_info["model_name"].upper()
         if "PLAY:5" in model or "CONNECT" in model:
             sources += [SOURCE_LINEIN]
