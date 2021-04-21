@@ -24,13 +24,6 @@ PLATFORMS = ["switch"]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the kmtronic component."""
-    hass.data[DOMAIN] = {}
-
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up kmtronic from a config entry."""
     session = aiohttp_client.async_get_clientsession(hass)
@@ -60,6 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
     await coordinator.async_config_entry_first_refresh()
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_HUB: hub,
         DATA_COORDINATOR: coordinator,

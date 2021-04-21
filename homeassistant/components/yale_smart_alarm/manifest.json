@@ -3,5 +3,6 @@
   "name": "Yale Smart Living",
   "documentation": "https://www.home-assistant.io/integrations/yale_smart_alarm",
   "requirements": ["yalesmartalarmclient==0.1.6"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "cloud_polling"
 }

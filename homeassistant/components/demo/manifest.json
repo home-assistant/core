@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/demo",
   "dependencies": ["conversation", "zone", "group"],
   "codeowners": ["@home-assistant/core"],
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "iot_class": "calculated"
 }

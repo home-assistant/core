@@ -69,7 +69,9 @@ class NZBGetConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> dict[str, Any]:
         """Handle a flow initiated by configuration file."""
         if CONF_SCAN_INTERVAL in user_input:
-            user_input[CONF_SCAN_INTERVAL] = user_input[CONF_SCAN_INTERVAL].seconds
+            user_input[CONF_SCAN_INTERVAL] = user_input[
+                CONF_SCAN_INTERVAL
+            ].total_seconds()
 
         return await self.async_step_user(user_input)
 

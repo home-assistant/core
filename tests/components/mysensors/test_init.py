@@ -227,12 +227,14 @@ from homeassistant.setup import async_setup_component
 )
 async def test_import(
     hass: HomeAssistantType,
+    mqtt: None,
     config: ConfigType,
     expected_calls: int,
     expected_to_succeed: bool,
     expected_config_flow_user_input: dict[str, any],
-):
+) -> None:
     """Test importing a gateway."""
+    await async_setup_component(hass, "persistent_notification", {})
     with patch("sys.platform", "win32"), patch(
         "homeassistant.components.mysensors.config_flow.try_connect", return_value=True
     ), patch(

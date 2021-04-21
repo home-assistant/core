@@ -67,7 +67,7 @@ class Integration:
         return integrations
 
     path: pathlib.Path = attr.ib()
-    manifest: dict | None = attr.ib(default=None)
+    manifest: dict[str, Any] | None = attr.ib(default=None)
     errors: list[Error] = attr.ib(factory=list)
     warnings: list[Error] = attr.ib(factory=list)
 

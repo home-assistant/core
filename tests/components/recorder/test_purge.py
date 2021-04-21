@@ -2,9 +2,9 @@
 from datetime import datetime, timedelta
 import json
 import sqlite3
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
-from sqlalchemy.exc import DatabaseError
+from sqlalchemy.exc import DatabaseError, OperationalError
 from sqlalchemy.orm.session import Session
 
 from homeassistant.components import recorder
@@ -86,6 +86,67 @@ async def test_purge_old_states_encouters_database_corruption(
     with session_scope(hass=hass) as session:
         states_after_purge = session.query(States)
         assert states_after_purge.count() == 0
+
+
+async def test_purge_old_states_encounters_temporary_mysql_error(
+    hass: HomeAssistantType,
+    async_setup_recorder_instance: SetupRecorderInstanceT,
+    caplog,
+):
+    """Test retry on specific mysql operational errors."""
+    instance = await async_setup_recorder_instance(hass)
+
+    await _add_test_states(hass, instance)
+    await async_wait_recording_done_without_instance(hass)
+
+    mysql_exception = OperationalError("statement", {}, [])
+    mysql_exception.orig = MagicMock(args=(1205, "retryable"))
+
+    with patch(
+        "homeassistant.components.recorder.purge.time.sleep"
+    ) as sleep_mock, patch(
+        "homeassistant.components.recorder.purge._purge_old_recorder_runs",
+        side_effect=[mysql_exception, None],
+    ), patch.object(
+        instance.engine.dialect, "name", "mysql"
+    ):
+        await hass.services.async_call(
+            recorder.DOMAIN, recorder.SERVICE_PURGE, {"keep_days": 0}
+        )
+        await hass.async_block_till_done()
+        await async_wait_recording_done_without_instance(hass)
+        await async_wait_recording_done_without_instance(hass)
+
+    assert "retrying" in caplog.text
+    assert sleep_mock.called
+
+
+async def test_purge_old_states_encounters_operational_error(
+    hass: HomeAssistantType,
+    async_setup_recorder_instance: SetupRecorderInstanceT,
+    caplog,
+):
+    """Test error on operational errors that are not mysql does not retry."""
+    instance = await async_setup_recorder_instance(hass)
+
+    await _add_test_states(hass, instance)
+    await async_wait_recording_done_without_instance(hass)
+
+    exception = OperationalError("statement", {}, [])
+
+    with patch(
+        "homeassistant.components.recorder.purge._purge_old_recorder_runs",
+        side_effect=exception,
+    ):
+        await hass.services.async_call(
+            recorder.DOMAIN, recorder.SERVICE_PURGE, {"keep_days": 0}
+        )
+        await hass.async_block_till_done()
+        await async_wait_recording_done_without_instance(hass)
+        await async_wait_recording_done_without_instance(hass)
+
+    assert "retrying" not in caplog.text
+    assert "Error purging history" in caplog.text
 
 
 async def test_purge_old_events(

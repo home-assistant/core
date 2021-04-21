@@ -66,7 +66,7 @@ class GeonetnzQuakesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         scan_interval = user_input.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-        user_input[CONF_SCAN_INTERVAL] = scan_interval.seconds
+        user_input[CONF_SCAN_INTERVAL] = scan_interval.total_seconds()
 
         minimum_magnitude = user_input.get(
             CONF_MINIMUM_MAGNITUDE, DEFAULT_MINIMUM_MAGNITUDE

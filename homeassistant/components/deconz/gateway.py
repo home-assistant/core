@@ -53,7 +53,6 @@ class DeconzGateway:
         self.deconz_ids = {}
         self.entities = {}
         self.events = []
-        self.listeners = []
 
     @property
     def bridgeid(self) -> str:
@@ -255,10 +254,6 @@ class DeconzGateway:
             await self.hass.config_entries.async_forward_entry_unload(
                 self.config_entry, platform
             )
-
-        for unsub_dispatcher in self.listeners:
-            unsub_dispatcher()
-        self.listeners = []
 
         async_unload_events(self)
 

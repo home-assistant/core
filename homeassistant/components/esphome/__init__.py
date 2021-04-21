@@ -473,7 +473,7 @@ async def _async_setup_device_registry(
 async def _register_service(
     hass: HomeAssistantType, entry_data: RuntimeEntryData, service: UserService
 ):
-    service_name = f"{entry_data.device_info.name}_{service.name}"
+    service_name = f"{entry_data.device_info.name.replace('-', '_')}_{service.name}"
     schema = {}
     fields = {}
 

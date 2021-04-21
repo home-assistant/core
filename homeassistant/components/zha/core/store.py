@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 from collections import OrderedDict
+from collections.abc import MutableMapping
 import datetime
 import time
-from typing import MutableMapping, cast
+from typing import cast
 
 import attr
 

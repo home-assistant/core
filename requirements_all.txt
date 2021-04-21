@@ -147,7 +147,7 @@ aioazuredevops==1.3.5
 aiobotocore==1.2.2
 
 # homeassistant.components.dhcp
-aiodiscover==1.3.4
+aiodiscover==1.4.0
 
 # homeassistant.components.dnsip
 # homeassistant.components.minecraft_server
@@ -506,7 +506,7 @@ doorbirdpy==2.1.0
 dovado==0.4.1
 
 # homeassistant.components.dsmr
-dsmr_parser==0.28
+dsmr_parser==0.29
 
 # homeassistant.components.dwd_weather_warnings
 dwdwfsapi==1.0.3
@@ -578,7 +578,7 @@ eternalegypt==0.0.12
 evohome-async==0.3.8
 
 # homeassistant.components.faa_delays
-faadelays==0.0.6
+faadelays==0.0.7
 
 # homeassistant.components.dlib_face_detect
 # homeassistant.components.dlib_face_identify
@@ -623,7 +623,7 @@ freesms==0.1.2
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
 # homeassistant.components.fritzbox_netmonitor
-fritzconnection==1.4.0
+fritzconnection==1.4.2
 
 # homeassistant.components.google_translate
 gTTS==2.2.2
@@ -735,7 +735,7 @@ hass-nabucasa==0.43.0
 hass_splunk==0.1.1
 
 # homeassistant.components.tasmota
-hatasmota==0.2.9
+hatasmota==0.2.10
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.2
@@ -762,7 +762,7 @@ hole==0.5.1
 holidays==0.11.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210407.3
+home-assistant-frontend==20210416.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -793,7 +793,7 @@ huisbaasje-client==0.1.0
 hydrawiser==0.2
 
 # homeassistant.components.hyperion
-hyperion-py==0.7.0
+hyperion-py==0.7.4
 
 # homeassistant.components.bh1750
 # homeassistant.components.bme280
@@ -1235,7 +1235,7 @@ pyMetEireann==0.2
 
 # homeassistant.components.met
 # homeassistant.components.norway_air
-pyMetno==0.8.1
+pyMetno==0.8.2
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.26.1
@@ -1343,7 +1343,7 @@ pydaikin==2.4.1
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==78
+pydeconz==79
 
 # homeassistant.components.delijn
 pydelijn==0.6.1
@@ -1551,7 +1551,7 @@ pymitv==1.4.3
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==2.3.0
+pymodbus==2.5.1
 
 # homeassistant.components.monoprice
 pymonoprice==0.3
@@ -1732,7 +1732,7 @@ pysnmp==4.4.12
 pysoma==0.0.10
 
 # homeassistant.components.sonos
-pysonos==0.0.42
+pysonos==0.0.43
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
@@ -1771,7 +1771,7 @@ python-clementine-remote==1.0.1
 python-digitalocean==1.13.2
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.2.10
+python-ecobee-api==0.2.11
 
 # homeassistant.components.eq3btsmart
 # python-eq3bt==0.1.11
@@ -2172,7 +2172,7 @@ sunwatcher==0.2.1
 surepy==0.4.0
 
 # homeassistant.components.swiss_hydrological_data
-swisshydrodata==0.0.3
+swisshydrodata==0.1.0
 
 # homeassistant.components.synology_srm
 synology-srm==0.2.0
@@ -2363,13 +2363,13 @@ yalesmartalarmclient==0.1.6
 yalexs==1.1.10
 
 # homeassistant.components.yeelight
-yeelight==0.6.0
+yeelight==0.6.1
 
 # homeassistant.components.yeelightsunflower
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2021.03.14
+youtube_dl==2021.04.17
 
 # homeassistant.components.onvif
 zeep[async]==4.0.0
@@ -2411,4 +2411,4 @@ zigpy==0.33.0
 zm-py==0.5.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.23.1
+zwave-js-server-python==0.24.0

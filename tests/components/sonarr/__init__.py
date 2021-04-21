@@ -227,13 +227,6 @@ async def setup_integration(
     return entry
 
 
-def _patch_async_setup(return_value=True):
-    """Patch the async setup of sonarr."""
-    return patch(
-        "homeassistant.components.sonarr.async_setup", return_value=return_value
-    )
-
-
 def _patch_async_setup_entry(return_value=True):
     """Patch the async entry setup of sonarr."""
     return patch(

@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 from collections import OrderedDict
+from collections.abc import Sequence
 import logging
 import os
 from pathlib import Path
 import re
 import shutil
 from types import ModuleType
-from typing import Any, Callable, Sequence
+from typing import Any, Callable
 
 from awesomeversion import AwesomeVersion
 import voluptuous as vol

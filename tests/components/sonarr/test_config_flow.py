@@ -21,7 +21,6 @@ from tests.components.sonarr import (
     HOST,
     MOCK_REAUTH_INPUT,
     MOCK_USER_INPUT,
-    _patch_async_setup,
     _patch_async_setup_entry,
     mock_connection,
     mock_connection_error,
@@ -123,7 +122,7 @@ async def test_full_reauth_flow_implementation(
     assert result["step_id"] == "user"
 
     user_input = MOCK_REAUTH_INPUT.copy()
-    with _patch_async_setup(), _patch_async_setup_entry() as mock_setup_entry:
+    with _patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=user_input
         )
@@ -153,7 +152,7 @@ async def test_full_user_flow_implementation(
 
     user_input = MOCK_USER_INPUT.copy()
 
-    with _patch_async_setup(), _patch_async_setup_entry():
+    with _patch_async_setup_entry():
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=user_input,
@@ -184,7 +183,7 @@ async def test_full_user_flow_advanced_options(
         CONF_VERIFY_SSL: True,
     }
 
-    with _patch_async_setup(), _patch_async_setup_entry():
+    with _patch_async_setup_entry():
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=user_input,
@@ -211,7 +210,7 @@ async def test_options_flow(hass, aioclient_mock: AiohttpClientMocker):
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "init"
 
-    with _patch_async_setup(), _patch_async_setup_entry():
+    with _patch_async_setup_entry():
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={CONF_UPCOMING_DAYS: 2, CONF_WANTED_MAX_ITEMS: 100},

@@ -1,4 +1,8 @@
 """Config flow for Coronavirus integration."""
+from __future__ import annotations
+
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -15,13 +19,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     _options = None
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Handle the initial step."""
         errors = {}
 
         if self._options is None:
-            self._options = {OPTION_WORLDWIDE: "Worldwide"}
             coordinator = await get_coordinator(self.hass)
+            if not coordinator.last_update_success:
+                return self.async_abort(reason="cannot_connect")
+
+            self._options = {OPTION_WORLDWIDE: "Worldwide"}
             for case in sorted(
                 coordinator.data.values(), key=lambda case: case.country
             ):
