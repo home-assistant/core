@@ -74,10 +74,11 @@ class SonosBatteryEntity(SonosEntity, Entity):
 
     async def async_added_to_hass(self) -> None:
         """Register polling callback when added to hass."""
-        cancel_timer = self.hass.helpers.event.async_track_time_interval(
-            self.update, BATTERY_SCAN_INTERVAL
+        self.async_on_remove(
+            self.hass.helpers.event.async_track_time_interval(
+                self.update, BATTERY_SCAN_INTERVAL
+            )
         )
-        self.async_on_remove(cancel_timer)
 
         self.data.battery_entities[self.unique_id] = self
 
