@@ -354,11 +354,25 @@ async def test_ssdp_exception(hass: HomeAssistantType):
         assert result["step_id"] == "confirm"
 
 
-async def test_import(hass: HomeAssistantType):
+async def test_import(hass: HomeAssistantType, fc_class_mock):
     """Test importing."""
+    with patch(
+        "homeassistant.components.fritz.common.FritzConnection",
+        side_effect=fc_class_mock,
+    ), patch("homeassistant.components.fritz.common.FritzStatus"):
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_IMPORT_CONFIG
-    )
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "start_config"
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_IMPORT_CONFIG
+        )
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "start_config"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=MOCK_USER_DATA,
+        )
+
+        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert result["data"][CONF_HOST] == "fake_host"
+        assert result["data"][CONF_PASSWORD] == "fake_pass"
+        assert result["data"][CONF_USERNAME] == "fake_user"

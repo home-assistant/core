@@ -166,16 +166,22 @@ class FritzBoxTools:
     def _fetch_device_info(self):
         """Fetch device info."""
         info = self.connection.call_action("DeviceInfo:1", "GetInfo")
-        return {
-            "identifiers": {
-                # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, self.unique_id)
-            },
-            "name": info.get("NewName"),
-            "manufacturer": "AVM",
-            "model": info.get("NewModelName"),
-            "sw_version": info.get("NewSoftwareVersion"),
+
+        dev_info = {}
+        dev_info["identifiers"] = {
+            # Serial numbers are unique identifiers within a specific domain
+            (DOMAIN, self.unique_id)
         }
+        dev_info["manufacturer"] = "AVM"
+
+        if dev_name := info.get("NewName"):
+            dev_info["name"] = dev_name
+        if dev_model := info.get("NewModelName"):
+            dev_info["model"] = dev_model
+        if dev_sw_ver := info.get("NewSoftwareVersion"):
+            dev_info["sw_version"] = dev_sw_ver
+
+        return dev_info
 
 
 class FritzDevice:
