@@ -498,12 +498,15 @@ def filename_is_present_if_logging_to_file(obj: dict) -> dict:
         vol.Required(ENTRY_ID): str,
     }
 )
+@async_get_entry
 async def websocket_subscribe_logs(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    entry: ConfigEntry,
+    client: Client,
 ) -> None:
     """Subscribe to log message events from the server."""
-    entry_id = msg[ENTRY_ID]
-    client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
     driver = client.driver
 
     @callback
