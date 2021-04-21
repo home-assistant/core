@@ -793,7 +793,7 @@ huisbaasje-client==0.1.0
 hydrawiser==0.2
 
 # homeassistant.components.hyperion
-hyperion-py==0.7.2
+hyperion-py==0.7.4
 
 # homeassistant.components.bh1750
 # homeassistant.components.bme280
@@ -1343,7 +1343,7 @@ pydaikin==2.4.1
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==78
+pydeconz==79
 
 # homeassistant.components.delijn
 pydelijn==0.6.1
@@ -1554,7 +1554,7 @@ pymitv==1.4.3
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==2.3.0
+pymodbus==2.5.1
 
 # homeassistant.components.monoprice
 pymonoprice==0.3
@@ -2363,13 +2363,13 @@ yalesmartalarmclient==0.1.6
 yalexs==1.1.10
 
 # homeassistant.components.yeelight
-yeelight==0.6.0
+yeelight==0.6.1
 
 # homeassistant.components.yeelightsunflower
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2021.03.14
+youtube_dl==2021.04.17
 
 # homeassistant.components.onvif
 zeep[async]==4.0.0
@@ -2411,4 +2411,4 @@ zigpy==0.33.0
 zm-py==0.5.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.23.1
+zwave-js-server-python==0.24.0

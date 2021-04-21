@@ -294,6 +294,7 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
             )
         if result is None:
             self._available = False
+            self.schedule_update_ha_state()
             return
 
         registers = result.registers

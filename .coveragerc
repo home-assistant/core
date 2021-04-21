@@ -629,6 +629,7 @@ omit =
     homeassistant/components/modbus/modbus.py
     homeassistant/components/modbus/switch.py
     homeassistant/components/modbus/sensor.py
+    homeassistant/components/modbus/binary_sensor.py
     homeassistant/components/modem_callerid/sensor.py
     homeassistant/components/motion_blinds/__init__.py
     homeassistant/components/motion_blinds/const.py

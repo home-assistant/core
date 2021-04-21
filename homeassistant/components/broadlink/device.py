@@ -68,6 +68,7 @@ class BroadlinkDevice:
         self.api.auth()
         with suppress(BroadlinkException, OSError):
             return self.api.get_fwversion()
+        return None
 
     async def async_setup(self):
         """Set up the device and related entities."""

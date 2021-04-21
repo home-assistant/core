@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Generator, Iterable
 import contextlib
 import logging.handlers
 from timeit import default_timer as timer
 from types import ModuleType
-from typing import Awaitable, Callable, Generator, Iterable
+from typing import Callable
 
 from homeassistant import config as conf_util, core, loader, requirements
 from homeassistant.config import async_notify_setup_error

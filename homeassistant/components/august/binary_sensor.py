@@ -21,8 +21,10 @@ from .entity import AugustEntityMixin
 
 _LOGGER = logging.getLogger(__name__)
 
-TIME_TO_DECLARE_DETECTION = timedelta(seconds=ACTIVITY_UPDATE_INTERVAL.seconds)
-TIME_TO_RECHECK_DETECTION = timedelta(seconds=ACTIVITY_UPDATE_INTERVAL.seconds * 3)
+TIME_TO_DECLARE_DETECTION = timedelta(seconds=ACTIVITY_UPDATE_INTERVAL.total_seconds())
+TIME_TO_RECHECK_DETECTION = timedelta(
+    seconds=ACTIVITY_UPDATE_INTERVAL.total_seconds() * 3
+)
 
 
 def _retrieve_online_state(data, detail):
@@ -260,7 +262,7 @@ class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorEntity):
                 self.async_write_ha_state()
 
         self._check_for_off_update_listener = async_call_later(
-            self.hass, TIME_TO_RECHECK_DETECTION.seconds, _scheduled_update
+            self.hass, TIME_TO_RECHECK_DETECTION.total_seconds(), _scheduled_update
         )
 
     def _cancel_any_pending_updates(self):

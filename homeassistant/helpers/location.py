@@ -1,8 +1,8 @@
 """Location helpers for Home Assistant."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 import logging
-from typing import Iterable
 
 import voluptuous as vol
 
