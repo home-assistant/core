@@ -2,7 +2,7 @@
 
 DOMAIN = "fritz"
 
-SUPPORTED_DOMAINS = ["device_tracker"]
+PLATFORMS = ["device_tracker"]
 
 ATTR_HOST = "host"
 
