@@ -250,6 +250,48 @@ async def test_refresh_node_info(
     assert args["command"] == "node.refresh_info"
     assert args["nodeId"] == 52
 
+    event = Event(
+        type="interview started",
+        data={"source": "node", "event": "interview started", "nodeId": 52},
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "interview started"
+
+    event = Event(
+        type="interview stage completed",
+        data={
+            "source": "node",
+            "event": "interview stage completed",
+            "stageName": "NodeInfo",
+            "nodeId": 52,
+        },
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "interview stage completed"
+    assert msg["event"]["stage"] == "NodeInfo"
+
+    event = Event(
+        type="interview completed",
+        data={"source": "node", "event": "interview completed", "nodeId": 52},
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "interview completed"
+
+    event = Event(
+        type="interview failed",
+        data={"source": "node", "event": "interview failed", "nodeId": 52},
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "interview failed"
+
     client.async_send_command_no_wait.reset_mock()
 
     await ws_client.send_json(
