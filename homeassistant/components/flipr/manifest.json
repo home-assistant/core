@@ -8,5 +8,6 @@
     "pycryptodome==3.10.1"],
   "codeowners": [
     "@cnico"
-  ]
+  ],
+  "iot_class": "cloud_polling"
 }
