@@ -711,147 +711,147 @@ class TestMediaPlayer(unittest.TestCase):
         }
 
         service = mock_service(self.hass, "media_player", "test")
-        self.hass.services.call(
+        await self.hass.services.async_call(
             "media_player",
             "turn_on",
             service_data={"entity_id": "media_player.test"},
             blocking=True,
         )
         assert len(service) == 1
-        self.hass.services.call(
+        await self.hass.services.async_call(
             "media_player",
             "turn_off",
             service_data={"entity_id": "media_player.test"},
             blocking=True,
         )
         assert len(service) == 2
-        self.hass.services.call(
+        await self.hass.services.async_call(
             "media_player",
             "volume_up",
             service_data={"entity_id": "media_player.test"},
             blocking=True,
         )
         assert len(service) == 3
-        self.hass.services.call(
+        await self.hass.services.async_call(
             "media_player",
             "volume_down",
             service_data={"entity_id": "media_player.test"},
             blocking=True,
         )
         assert len(service) == 4
-        self.hass.services.call(
+        await self.hass.services.async_call(
             "media_player",
             "volume_mute",
             service_data={"entity_id": "media_player.test"},
             blocking=True,
         )
         assert len(service) == 5
-        self.hass.services.call(
+        await self.hass.services.async_call(
             "media_player",
             "volume_set",
             service_data={"entity_id": "media_player.test"},
             blocking=True,
         )
         assert len(service) == 6
-        self.hass.services.call(
+        await self.hass.services.async_call(
             "media_player",
             "select_sound_mode",
             service_data={"entity_id": "media_player.test"},
             blocking=True,
         )
         assert len(service) == 7
-        self.hass.services.call(
+        await self.hass.services.async_call(
             "media_player",
             "select_source",
             service_data={"entity_id": "media_player.test"},
             blocking=True,
         )
         assert len(service) == 8
-        self.hass.services.call(
+        await self.hass.services.async_call(
             "media_player",
             "repeat_set",
             service_data={"entity_id": "media_player.test"},
             blocking=True,
         )
         assert len(service) == 9
-        self.hass.services.call(
+        await self.hass.services.async_call(
             "media_player",
             "shuffle_set",
             service_data={"entity_id": "media_player.test"},
             blocking=True,
         )
         assert len(service) == 10
-        self.hass.services.call(
+        await self.hass.services.async_call(
             "media_player",
             "media_play",
             service_data={"entity_id": "media_player.test"},
             blocking=True,
         )
         assert len(service) == 11
-        self.hass.services.call(
+        await self.hass.services.async_call(
             "media_player",
             "media_pause",
             service_data={"entity_id": "media_player.test"},
             blocking=True,
         )
         assert len(service) == 12
-        self.hass.services.call(
+        await self.hass.services.async_call(
             "media_player",
             "media_stop",
             service_data={"entity_id": "media_player.test"},
             blocking=True,
         )
         assert len(service) == 13
-        self.hass.services.call(
+        await self.hass.services.async_call(
             "media_player",
             "media_next_track",
             service_data={"entity_id": "media_player.test"},
             blocking=True,
         )
         assert len(service) == 14
-        self.hass.services.call(
+        await self.hass.services.async_call(
             "media_player",
             "media_previous_track",
             service_data={"entity_id": "media_player.test"},
             blocking=True,
         )
         assert len(service) == 15
-        self.hass.services.call(
+        await self.hass.services.async_call(
             "media_player",
             "toggle",
             service_data={"entity_id": "media_player.test"},
             blocking=True,
         )
         assert len(service) == 16
-        self.hass.services.call(
+        await self.hass.services.async_call(
             "media_player",
             "clear_playlist",
             service_data={"entity_id": "media_player.test"},
             blocking=True,
         )
         assert len(service) == 17
-        self.hass.services.call(
+        await self.hass.services.async_call(
             "media_player",
             "media_play_pause",
             service_data={"entity_id": "media_player.test"},
             blocking=True,
         )
         assert len(service) == 18
-        self.hass.services.call(
+        await self.hass.services.async_call(
             "media_player",
             "play_media",
             service_data={"entity_id": "media_player.test"},
             blocking=True,
         )
         assert len(service) == 19
-        self.hass.services.call(
+        await self.hass.services.async_call(
             "media_player",
             "media_seek",
             service_data={"entity_id": "media_player.test"},
             blocking=True,
         )
         assert len(service) == 20
-        self.hass.services.call(
+        await self.hass.services.async_call(
             "media_player",
             "toggle",
             service_data={"entity_id": "media_player.test"},
