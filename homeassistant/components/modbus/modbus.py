@@ -209,11 +209,11 @@ class ModbusHub:
         """Disconnect client."""
         with self._lock:
             try:
-                self._client.close()
-                del self._client
-                self._client = None
+                if self._client:
+                    self._client.close()
+                    self._client = None
             except ModbusException as exception_error:
-                self._log_error(exception_error, error_state=False)
+                self._log_error(exception_error)
                 return
 
     def connect(self):
