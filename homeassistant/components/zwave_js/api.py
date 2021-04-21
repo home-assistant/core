@@ -370,6 +370,10 @@ async def websocket_refresh_node_info(
     controller = client.driver.controller
     node = controller.nodes.get(node_id)
 
+    if node is None:
+        connection.send_error(msg[ID], ERR_NOT_FOUND, f"Node {node_id} not found")
+        return
+
     @callback
     def async_cleanup() -> None:
         """Remove signal listeners."""
@@ -389,10 +393,6 @@ async def websocket_refresh_node_info(
                 msg[ID], {"event": event["event"], "stage": event["stageName"]}
             )
         )
-
-    if node is None:
-        connection.send_error(msg[ID], ERR_NOT_FOUND, f"Node {node_id} not found")
-        return
 
     connection.subscriptions[msg["id"]] = async_cleanup
     unsubs = [
