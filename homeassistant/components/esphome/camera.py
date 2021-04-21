@@ -8,14 +8,14 @@ from aioesphomeapi import CameraInfo, CameraState
 from homeassistant.components import camera
 from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import HomeAssistantType
 
 from . import EsphomeBaseEntity, platform_async_setup_entry
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up esphome cameras based on a config entry."""
     await platform_async_setup_entry(
