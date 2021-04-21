@@ -28,8 +28,8 @@ create_vacation:
       example: 23
       selector:
         number:
-          min: -23
-          max: 120
+          min: 5
+          max: 100
           step: 0.5
           unit_of_measurement: "°"
     heat_temp:
@@ -40,7 +40,7 @@ create_vacation:
       selector:
         number:
           min: 45
-          max: 120
+          max: 100
           step: 0.5
           unit_of_measurement: "°"
     start_date:
@@ -128,8 +128,9 @@ resume_program:
           domain: climate
     resume_all:
       name: Resume all
-      description: Resume all events and return to the scheduled program. This defaults to false which removes only the top event.
+      description: Resume all events and return to the scheduled program.
       example: true
+      default: false
       selector:
         boolean:
 
@@ -159,15 +160,11 @@ set_fan_min_on_time:
 set_dst_mode:
   name: Set Daylight savings time mode
   description: Enable/disable automatic daylight savings time.
+  target:
+    entity:
+      integration: ecobee
+      domain: climate
   fields:
-    entity_id:
-      name: Entity
-      description: Name(s) of entities to change.
-      example: "climate.kitchen"
-      selector:
-        entity:
-          integration: ecobee
-          domain: climate
     dst_enabled:
       name: Daylight savings time enabled
       description: Enable automatic daylight savings time.
@@ -179,15 +176,11 @@ set_dst_mode:
 set_mic_mode:
   name: Set mic mode
   description: Enable/disable Alexa mic (only for Ecobee 4).
+  target:
+    entity:
+      integration: ecobee
+      domain: climate
   fields:
-    entity_id:
-      name: Entity
-      description: Name(s) of entities to change.
-      example: "climate.kitchen"
-      selector:
-        entity:
-          integration: ecobee
-          domain: climate
     mic_enabled:
       name: Mic enabled
       description: Enable Alexa mic.
@@ -199,15 +192,11 @@ set_mic_mode:
 set_occupancy_modes:
   name: Set occupancy modes
   description: Enable/disable Smart Home/Away and Follow Me modes.
+  target:
+    entity:
+      integration: ecobee
+      domain: climate
   fields:
-    entity_id:
-      name: Entity
-      description: Name(s) of entities to change.
-      example: "climate.kitchen"
-      selector:
-        entity:
-          integration: ecobee
-          domain: climate
     auto_away:
       name: Auto away
       description: Enable Smart Home/Away mode.
