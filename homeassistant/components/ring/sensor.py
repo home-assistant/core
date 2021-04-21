@@ -44,9 +44,9 @@ class RingSensor(RingEntityMixin, SensorEntity):
         super().__init__(config_entry_id, device)
         self._sensor_type = sensor_type
         self._extra = None
-        self._icon = "mdi:{}".format(SENSOR_TYPES.get(sensor_type)[3])
+        self._icon = f"mdi:{SENSOR_TYPES.get(sensor_type)[3]}"
         self._kind = SENSOR_TYPES.get(sensor_type)[4]
-        self._name = "{} {}".format(self._device.name, SENSOR_TYPES.get(sensor_type)[0])
+        self._name = f"{self._device.name} {SENSOR_TYPES.get(sensor_type)[0]}"
         self._unique_id = f"{device.id}-{sensor_type}"
 
     @property

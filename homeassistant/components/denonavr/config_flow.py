@@ -1,6 +1,8 @@
 """Config flow to configure Denon AVR receivers using their HTTP interface."""
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 from urllib.parse import urlparse
 
 import denonavr
@@ -44,7 +46,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Init object."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input: Optional[Dict[str, Any]] = None):
+    async def async_step_init(self, user_input: dict[str, Any] | None = None):
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
@@ -96,7 +98,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow."""
         return OptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input: Optional[Dict[str, Any]] = None):
+    async def async_step_user(self, user_input: dict[str, Any] | None = None):
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
@@ -123,8 +125,8 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_select(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Handle multiple receivers found."""
         errors = {}
         if user_input is not None:
@@ -144,8 +146,8 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_confirm(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Allow the user to confirm adding the device."""
         if user_input is not None:
             return await self.async_step_connect()
@@ -154,8 +156,8 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="confirm")
 
     async def async_step_connect(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Connect to the receiver."""
         connect_denonavr = ConnectDenonAVR(
             self.host,
@@ -204,7 +206,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_ssdp(self, discovery_info: Dict[str, Any]) -> Dict[str, Any]:
+    async def async_step_ssdp(self, discovery_info: dict[str, Any]) -> dict[str, Any]:
         """Handle a discovered Denon AVR.
 
         This flow is triggered by the SSDP component. It will check if the

@@ -1,9 +1,15 @@
 """Tests for the AVM Fritz!Box integration."""
-from unittest.mock import Mock, call
+from unittest.mock import Mock, call, patch
+
+from pyfritzhome import LoginError
 
 from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.config_entries import ENTRY_STATE_LOADED, ENTRY_STATE_NOT_LOADED
+from homeassistant.config_entries import (
+    ENTRY_STATE_LOADED,
+    ENTRY_STATE_NOT_LOADED,
+    ENTRY_STATE_SETUP_ERROR,
+)
 from homeassistant.const import (
     CONF_DEVICES,
     CONF_HOST,
@@ -88,3 +94,23 @@ async def test_unload_remove(hass: HomeAssistantType, fritz: Mock):
     assert entry.state == ENTRY_STATE_NOT_LOADED
     state = hass.states.get(entity_id)
     assert state is None
+
+
+async def test_raise_config_entry_not_ready_when_offline(hass):
+    """Config entry state is ENTRY_STATE_SETUP_RETRY when fritzbox is offline."""
+    entry = MockConfigEntry(
+        domain=FB_DOMAIN,
+        data={CONF_HOST: "any", **MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0]},
+        unique_id="any",
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.fritzbox.Fritzhome.login",
+        side_effect=LoginError("user"),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries()
+    config_entry = entries[0]
+    assert config_entry.state == ENTRY_STATE_SETUP_ERROR

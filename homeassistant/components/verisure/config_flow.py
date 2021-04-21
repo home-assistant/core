@@ -126,7 +126,7 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, data: dict[str, Any]) -> dict[str, Any]:
         """Handle initiation of re-authentication with Verisure."""
-        self.entry = data["entry"]
+        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(

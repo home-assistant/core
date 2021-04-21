@@ -34,7 +34,7 @@
                     "blid": "BLID",
                     "host": "H\u00f4te"
                 },
-                "description": "Aucun Roomba ou Braava d\u00e9couvert sur votre r\u00e9seau. Le BLID est la partie du nom d'h\u00f4te du p\u00e9riph\u00e9rique apr\u00e8s `iRobot-`. Veuillez suivre les \u00e9tapes d\u00e9crites dans la documentation \u00e0 {auth_help_url}",
+                "description": "Aucun Roomba ou Braava d\u00e9couvert sur votre r\u00e9seau. Le BLID est la partie du nom d'h\u00f4te du p\u00e9riph\u00e9rique apr\u00e8s `iRobot-`. Veuillez suivre les \u00e9tapes d\u00e9crites dans la documentation \u00e0 {auth_help_url}\u00b4",
                 "title": "Se connecter manuellement \u00e0 l'appareil"
             },
             "user": {

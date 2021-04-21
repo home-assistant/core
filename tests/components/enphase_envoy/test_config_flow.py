@@ -302,3 +302,43 @@ async def test_zeroconf_host_already_exists(hass: HomeAssistant) -> None:
     assert config_entry.unique_id == "1234"
     assert config_entry.title == "Envoy 1234"
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_reauth(hass: HomeAssistant) -> None:
+    """Test we reauth auth."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": "1.1.1.1",
+            "name": "Envoy",
+            "username": "test-username",
+            "password": "test-password",
+        },
+        title="Envoy",
+    )
+    config_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "unique_id": config_entry.unique_id,
+            "entry_id": config_entry.entry_id,
+        },
+    )
+
+    with patch(
+        "homeassistant.components.enphase_envoy.config_flow.EnvoyReader.getData",
+        return_value=True,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "reauth_successful"

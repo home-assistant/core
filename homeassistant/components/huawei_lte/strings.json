@@ -34,7 +34,7 @@
         "data": {
           "name": "Notification service name (change requires restart)",
           "recipient": "SMS notification recipients",
-          "track_new_devices": "Track new devices"
+          "track_wired_clients": "Track wired network clients"
         }
       }
     }

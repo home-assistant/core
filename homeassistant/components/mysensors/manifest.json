@@ -5,5 +5,6 @@
   "requirements": ["pymysensors==0.21.0"],
   "after_dependencies": ["mqtt"],
   "codeowners": ["@MartinHjelmare", "@functionpointer"],
-  "config_flow": true
+  "config_flow": true,
+  "iot_class": "local_push"
 }

@@ -6,8 +6,8 @@ from aiohttp import ClientError, ClientTimeout
 from bond_api import Bond, BPUPSubscriptions, start_bpup
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -18,6 +18,7 @@ from .utils import BondHub
 
 PLATFORMS = ["cover", "fan", "light", "switch"]
 _API_TIMEOUT = SLOW_UPDATE_WARNING - 1
+_STOP_CANCEL = "stop_cancel"
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -41,11 +42,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     bpup_subs = BPUPSubscriptions()
     stop_bpup = await start_bpup(host, bpup_subs)
 
+    @callback
+    def _async_stop_event(event: Event) -> None:
+        stop_bpup()
+
+    stop_event_cancel = hass.bus.async_listen(
+        EVENT_HOMEASSISTANT_STOP, _async_stop_event
+    )
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         HUB: hub,
         BPUP_SUBS: bpup_subs,
         BPUP_STOP: stop_bpup,
+        _STOP_CANCEL: stop_event_cancel,
     }
 
     if not entry.unique_id:
@@ -86,6 +95,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     data = hass.data[DOMAIN][entry.entry_id]
+    data[_STOP_CANCEL]()
     if BPUP_STOP in data:
         data[BPUP_STOP]()
 

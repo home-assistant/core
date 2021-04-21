@@ -255,6 +255,7 @@ omit =
     homeassistant/components/envirophat/sensor.py
     homeassistant/components/envisalink/*
     homeassistant/components/ephember/climate.py
+    homeassistant/components/epson/__init__.py
     homeassistant/components/epson/const.py
     homeassistant/components/epson/media_player.py
     homeassistant/components/epsonworkforce/sensor.py
@@ -274,7 +275,13 @@ omit =
     homeassistant/components/eufy/*
     homeassistant/components/everlights/light.py
     homeassistant/components/evohome/*
-    homeassistant/components/ezviz/*
+    homeassistant/components/ezviz/__init__.py
+    homeassistant/components/ezviz/camera.py
+    homeassistant/components/ezviz/coordinator.py
+    homeassistant/components/ezviz/const.py
+    homeassistant/components/ezviz/binary_sensor.py
+    homeassistant/components/ezviz/sensor.py
+    homeassistant/components/ezviz/switch.py
     homeassistant/components/familyhub/camera.py
     homeassistant/components/faa_delays/__init__.py
     homeassistant/components/faa_delays/binary_sensor.py
@@ -425,6 +432,7 @@ omit =
     homeassistant/components/hvv_departures/sensor.py
     homeassistant/components/hvv_departures/__init__.py
     homeassistant/components/hydrawise/*
+    homeassistant/components/ialarm/alarm_control_panel.py
     homeassistant/components/iammeter/sensor.py
     homeassistant/components/iaqualink/binary_sensor.py
     homeassistant/components/iaqualink/climate.py
@@ -611,6 +619,7 @@ omit =
     homeassistant/components/modbus/modbus.py
     homeassistant/components/modbus/switch.py
     homeassistant/components/modbus/sensor.py
+    homeassistant/components/modbus/binary_sensor.py
     homeassistant/components/modem_callerid/sensor.py
     homeassistant/components/motion_blinds/__init__.py
     homeassistant/components/motion_blinds/const.py
@@ -770,6 +779,7 @@ omit =
     homeassistant/components/poolsense/__init__.py
     homeassistant/components/poolsense/sensor.py
     homeassistant/components/poolsense/binary_sensor.py
+    homeassistant/components/powerwall/__init__.py
     homeassistant/components/proliphix/climate.py
     homeassistant/components/progettihwsw/__init__.py
     homeassistant/components/progettihwsw/binary_sensor.py
@@ -818,9 +828,13 @@ omit =
     homeassistant/components/rest/switch.py
     homeassistant/components/ring/camera.py
     homeassistant/components/ripple/sensor.py
+    homeassistant/components/rituals_perfume_genie/binary_sensor.py
+    homeassistant/components/rituals_perfume_genie/entity.py
+    homeassistant/components/rituals_perfume_genie/sensor.py
     homeassistant/components/rituals_perfume_genie/switch.py
     homeassistant/components/rituals_perfume_genie/__init__.py
     homeassistant/components/rocketchat/notify.py
+    homeassistant/components/roomba/__init__.py
     homeassistant/components/roomba/binary_sensor.py
     homeassistant/components/roomba/braava.py
     homeassistant/components/roomba/irobot_base.py
@@ -889,6 +903,7 @@ omit =
     homeassistant/components/slack/notify.py
     homeassistant/components/sinch/*
     homeassistant/components/slide/*
+    homeassistant/components/sma/__init__.py
     homeassistant/components/sma/sensor.py
     homeassistant/components/smappee/__init__.py
     homeassistant/components/smappee/api.py

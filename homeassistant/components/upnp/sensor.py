@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any, Mapping
+from typing import Any, Callable, Mapping
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -23,7 +23,6 @@ from .const import (
     DATA_RATE_PACKETS_PER_SECOND,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    DOMAIN_COORDINATORS,
     DOMAIN_DEVICES,
     KIBIBYTE,
     LOGGER as _LOGGER,
@@ -83,7 +82,7 @@ async def async_setup_platform(
 
 
 async def async_setup_entry(
-    hass, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities: Callable
 ) -> None:
     """Set up the UPnP/IGD sensors."""
     udn = config_entry.data[CONFIG_ENTRY_UDN]
@@ -102,8 +101,9 @@ async def async_setup_entry(
         update_method=device.async_get_traffic_data,
         update_interval=update_interval,
     )
+    device.coordinator = coordinator
+
     await coordinator.async_refresh()
-    hass.data[DOMAIN][DOMAIN_COORDINATORS][udn] = coordinator
 
     sensors = [
         RawUpnpSensor(coordinator, device, SENSOR_TYPES[BYTES_RECEIVED]),
@@ -126,14 +126,11 @@ class UpnpSensor(CoordinatorEntity, SensorEntity):
         coordinator: DataUpdateCoordinator[Mapping[str, Any]],
         device: Device,
         sensor_type: Mapping[str, str],
-        update_multiplier: int = 2,
     ) -> None:
         """Initialize the base sensor."""
         super().__init__(coordinator)
         self._device = device
         self._sensor_type = sensor_type
-        self._update_counter_max = update_multiplier
-        self._update_counter = 0
 
     @property
     def icon(self) -> str:
@@ -235,10 +232,10 @@ class DerivedUpnpSensor(UpnpSensor):
         if self._sensor_type["unit"] == DATA_BYTES:
             delta_value /= KIBIBYTE
         delta_time = current_timestamp - self._last_timestamp
-        if delta_time.seconds == 0:
+        if delta_time.total_seconds() == 0:
             # Prevent division by 0.
             return None
-        derived = delta_value / delta_time.seconds
+        derived = delta_value / delta_time.total_seconds()
 
         # Store current values for future use.
         self._last_value = current_value

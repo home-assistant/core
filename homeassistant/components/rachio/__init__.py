@@ -26,14 +26,6 @@ PLATFORMS = ["switch", "binary_sensor"]
 CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the rachio component from YAML."""
-
-    hass.data.setdefault(DOMAIN, {})
-
-    return True
-
-
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     unload_ok = all(
@@ -84,7 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     # Get the API user
     try:
-        await hass.async_add_executor_job(person.setup, hass)
+        await person.async_setup(hass)
     except ConnectTimeout as error:
         _LOGGER.error("Could not reach the Rachio API: %s", error)
         raise ConfigEntryNotReady from error
@@ -100,6 +92,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
 
     # Enable platform
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = person
     async_register_webhook(hass, webhook_id, entry.entry_id)
 

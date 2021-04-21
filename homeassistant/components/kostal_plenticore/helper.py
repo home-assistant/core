@@ -1,9 +1,10 @@
 """Code to handle the Plenticore API."""
+from __future__ import annotations
+
 import asyncio
 from collections import defaultdict
 from datetime import datetime, timedelta
 import logging
-from typing import Dict, Union
 
 from aiohttp.client_exceptions import ClientError
 from kostal.plenticore import PlenticoreApiClient, PlenticoreAuthenticationException
@@ -151,7 +152,7 @@ class PlenticoreUpdateCoordinator(DataUpdateCoordinator):
 class ProcessDataUpdateCoordinator(PlenticoreUpdateCoordinator):
     """Implementation of PlenticoreUpdateCoordinator for process data."""
 
-    async def _async_update_data(self) -> Dict[str, Dict[str, str]]:
+    async def _async_update_data(self) -> dict[str, dict[str, str]]:
         client = self._plenticore.client
 
         if not self._fetch or client is None:
@@ -172,7 +173,7 @@ class ProcessDataUpdateCoordinator(PlenticoreUpdateCoordinator):
 class SettingDataUpdateCoordinator(PlenticoreUpdateCoordinator):
     """Implementation of PlenticoreUpdateCoordinator for settings data."""
 
-    async def _async_update_data(self) -> Dict[str, Dict[str, str]]:
+    async def _async_update_data(self) -> dict[str, dict[str, str]]:
         client = self._plenticore.client
 
         if not self._fetch or client is None:
@@ -223,7 +224,7 @@ class PlenticoreDataFormatter:
         return getattr(cls, name)
 
     @staticmethod
-    def format_round(state: str) -> Union[int, str]:
+    def format_round(state: str) -> int | str:
         """Return the given state value as rounded integer."""
         try:
             return round(float(state))
@@ -231,7 +232,7 @@ class PlenticoreDataFormatter:
             return state
 
     @staticmethod
-    def format_energy(state: str) -> Union[float, str]:
+    def format_energy(state: str) -> float | str:
         """Return the given state value as energy value, scaled to kWh."""
         try:
             return round(float(state) / 1000, 1)

@@ -125,7 +125,7 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
                     count=PING_ATTEMPTS_COUNT,
                     timeout=ICMP_TIMEOUT,
                     privileged=privileged,
-                    id=async_get_next_ping_id(hass),
+                    id=async_get_next_ping_id(hass, len(ip_to_dev_id)),
                 )
             )
             _LOGGER.debug("Multiping responses: %s", responses)
@@ -141,9 +141,10 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
         try:
             await async_update(now)
         finally:
-            async_track_point_in_utc_time(
-                hass, _async_update_interval, util.dt.utcnow() + interval
-            )
+            if not hass.is_stopping:
+                async_track_point_in_utc_time(
+                    hass, _async_update_interval, util.dt.utcnow() + interval
+                )
 
     await _async_update_interval(None)
     return True

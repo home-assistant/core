@@ -14,6 +14,9 @@ SENSE_DEVICES_DATA = "sense_devices_data"
 SENSE_DISCOVERED_DEVICES_DATA = "sense_discovered_devices"
 SENSE_TRENDS_COORDINATOR = "sense_trends_coordinator"
 
+TRACK_TIME_REMOVE = "track_time_remove_callback"
+EVENT_STOP_REMOVE = "event_stop_remove_callback"
+
 ACTIVE_NAME = "Energy"
 ACTIVE_TYPE = "active"
 

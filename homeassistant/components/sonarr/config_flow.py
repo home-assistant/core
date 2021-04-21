@@ -79,7 +79,8 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle configuration by re-auth."""
         self._reauth = True
         self._entry_data = dict(data)
-        self._entry_id = self._entry_data.pop("config_entry_id")
+        entry = await self.async_set_unique_id(self.unique_id)
+        self._entry_id = entry.entry_id
 
         return await self.async_step_reauth_confirm()
 

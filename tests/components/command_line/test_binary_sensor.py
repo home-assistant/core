@@ -1,12 +1,16 @@
 """The tests for the Command line Binary sensor platform."""
+from __future__ import annotations
+
+from typing import Any
+
 from homeassistant import setup
 from homeassistant.components.binary_sensor import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.helpers.typing import Any, Dict, HomeAssistantType
+from homeassistant.helpers.typing import HomeAssistantType
 
 
 async def setup_test_entity(
-    hass: HomeAssistantType, config_dict: Dict[str, Any]
+    hass: HomeAssistantType, config_dict: dict[str, Any]
 ) -> None:
     """Set up a test command line binary_sensor entity."""
     assert await setup.async_setup_component(

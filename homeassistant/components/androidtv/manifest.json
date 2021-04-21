@@ -3,9 +3,10 @@
   "name": "Android TV",
   "documentation": "https://www.home-assistant.io/integrations/androidtv",
   "requirements": [
-    "adb-shell[async]==0.2.1",
-    "androidtv[async]==0.0.57",
+    "adb-shell[async]==0.3.1",
+    "androidtv[async]==0.0.58",
     "pure-python-adb[async]==0.3.0.dev0"
   ],
-  "codeowners": ["@JeffLIrion"]
+  "codeowners": ["@JeffLIrion"],
+  "iot_class": "local_polling"
 }

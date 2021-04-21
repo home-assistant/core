@@ -7,6 +7,7 @@ from datetime import timedelta
 import functools as ft
 import json
 import logging
+from urllib.parse import quote
 
 import pychromecast
 from pychromecast.controllers.homeassistant import HomeAssistantController
@@ -51,11 +52,10 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.network import NoURLAvailableError, get_url
-from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.dt as dt_util
 from homeassistant.util.logging import async_create_catching_coro
 
@@ -97,7 +97,7 @@ ENTITY_SCHEMA = vol.All(
 
 
 @callback
-def _async_create_cast_device(hass: HomeAssistantType, info: ChromecastInfo):
+def _async_create_cast_device(hass: HomeAssistant, info: ChromecastInfo):
     """Create a CastDevice Entity from the chromecast object.
 
     Returns None if the cast device has already been added.
@@ -472,8 +472,8 @@ class CastDevice(MediaPlayerEntity):
                 media_id = async_sign_path(
                     self.hass,
                     refresh_token.id,
-                    media_id,
-                    timedelta(minutes=5),
+                    quote(media_id),
+                    timedelta(seconds=media_source.DEFAULT_EXPIRY_TIME),
                 )
 
             # prepend external URL

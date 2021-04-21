@@ -72,8 +72,6 @@ async def test_form(
 
     user_input = {CONF_HOST: HOST}
     with patch(
-        "homeassistant.components.roku.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.roku.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -88,7 +86,6 @@ async def test_form(
     assert result["data"]
     assert result["data"][CONF_HOST] == HOST
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -188,8 +185,6 @@ async def test_homekit_discovery(
     assert result["description_placeholders"] == {CONF_NAME: NAME_ROKUTV}
 
     with patch(
-        "homeassistant.components.roku.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.roku.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -205,7 +200,6 @@ async def test_homekit_discovery(
     assert result["data"][CONF_HOST] == HOMEKIT_HOST
     assert result["data"][CONF_NAME] == NAME_ROKUTV
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
     # test abort on existing host
@@ -270,8 +264,6 @@ async def test_ssdp_discovery(
     assert result["description_placeholders"] == {CONF_NAME: UPNP_FRIENDLY_NAME}
 
     with patch(
-        "homeassistant.components.roku.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.roku.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -287,5 +279,4 @@ async def test_ssdp_discovery(
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_NAME] == UPNP_FRIENDLY_NAME
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1

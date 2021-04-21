@@ -103,7 +103,9 @@ async def test_reauth_success(hass: HomeAssistantType, fritz: Mock):
     mock_config.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_REAUTH}, data=mock_config
+        DOMAIN,
+        context={"source": SOURCE_REAUTH, "entry_id": mock_config.entry_id},
+        data=mock_config.data,
     )
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "reauth_confirm"
@@ -130,7 +132,9 @@ async def test_reauth_auth_failed(hass: HomeAssistantType, fritz: Mock):
     mock_config.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_REAUTH}, data=mock_config
+        DOMAIN,
+        context={"source": SOURCE_REAUTH, "entry_id": mock_config.entry_id},
+        data=mock_config.data,
     )
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "reauth_confirm"
@@ -156,7 +160,9 @@ async def test_reauth_not_successful(hass: HomeAssistantType, fritz: Mock):
     mock_config.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_REAUTH}, data=mock_config
+        DOMAIN,
+        context={"source": SOURCE_REAUTH, "entry_id": mock_config.entry_id},
+        data=mock_config.data,
     )
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "reauth_confirm"

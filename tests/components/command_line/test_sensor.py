@@ -1,13 +1,16 @@
 """The tests for the Command line sensor platform."""
+from __future__ import annotations
+
+from typing import Any
 from unittest.mock import patch
 
 from homeassistant import setup
 from homeassistant.components.sensor import DOMAIN
-from homeassistant.helpers.typing import Any, Dict, HomeAssistantType
+from homeassistant.helpers.typing import HomeAssistantType
 
 
 async def setup_test_entities(
-    hass: HomeAssistantType, config_dict: Dict[str, Any]
+    hass: HomeAssistantType, config_dict: dict[str, Any]
 ) -> None:
     """Set up a test command line sensor entity."""
     assert await setup.async_setup_component(

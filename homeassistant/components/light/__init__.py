@@ -87,6 +87,27 @@ def valid_supported_color_modes(color_modes):
     return color_modes
 
 
+def brightness_supported(color_modes):
+    """Test if brightness is supported."""
+    if not color_modes:
+        return False
+    return any(mode in COLOR_MODES_BRIGHTNESS for mode in color_modes)
+
+
+def color_supported(color_modes):
+    """Test if color is supported."""
+    if not color_modes:
+        return False
+    return any(mode in COLOR_MODES_COLOR for mode in color_modes)
+
+
+def color_temp_supported(color_modes):
+    """Test if color temperature is supported."""
+    if not color_modes:
+        return False
+    return COLOR_MODE_COLOR_TEMP in color_modes
+
+
 # Float that represents transition time in seconds to make change.
 ATTR_TRANSITION = "transition"
 
@@ -751,3 +772,20 @@ class Light(LightEntity):
             "Light is deprecated, modify %s to extend LightEntity",
             cls.__name__,
         )
+
+
+def legacy_supported_features(
+    supported_features: int, supported_color_modes: list[str] | None
+) -> int:
+    """Calculate supported features with backwards compatibility."""
+    # Backwards compatibility for supported_color_modes added in 2021.4
+    if supported_color_modes is None:
+        return supported_features
+    if any(mode in supported_color_modes for mode in COLOR_MODES_COLOR):
+        supported_features |= SUPPORT_COLOR
+    if any(mode in supported_color_modes for mode in COLOR_MODES_BRIGHTNESS):
+        supported_features |= SUPPORT_BRIGHTNESS
+    if COLOR_MODE_COLOR_TEMP in supported_color_modes:
+        supported_features |= SUPPORT_COLOR_TEMP
+
+    return supported_features

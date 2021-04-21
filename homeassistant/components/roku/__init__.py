@@ -39,18 +39,15 @@ SCAN_INTERVAL = timedelta(seconds=15)
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistantType, config: dict) -> bool:
-    """Set up the Roku integration."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Set up Roku from a config entry."""
-    coordinator = RokuDataUpdateCoordinator(hass, host=entry.data[CONF_HOST])
-    await coordinator.async_config_entry_first_refresh()
+    hass.data.setdefault(DOMAIN, {})
+    coordinator = hass.data[DOMAIN].get(entry.entry_id)
+    if not coordinator:
+        coordinator = RokuDataUpdateCoordinator(hass, host=entry.data[CONF_HOST])
+        hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    await coordinator.async_config_entry_first_refresh()
 
     for platform in PLATFORMS:
         hass.async_create_task(

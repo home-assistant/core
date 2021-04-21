@@ -13,11 +13,6 @@ from .onewirehub import CannotConnect, OneWireHub
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass, config):
-    """Set up 1-Wire integrations."""
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry):
     """Set up a 1-Wire proxy for a config entry."""
     hass.data.setdefault(DOMAIN, {})
