@@ -34,6 +34,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     try:
         await fritz_tools.async_setup()
+        await fritz_tools.async_start()
     except FritzSecurityError as ex:
         raise ConfigEntryAuthFailed from ex
     except FritzConnectionException as ex:
