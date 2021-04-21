@@ -170,9 +170,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
         self._username = user_input[CONF_USERNAME]
         self._password = user_input[CONF_PASSWORD]
 
-        error = await self.fritz_tools_init()
-
-        if not error:
+        if not (error := await self.fritz_tools_init()):
             self._name = self.fritz_tools.device_info["model"]
 
             for entry in self._async_current_entries(include_ignore=False):
