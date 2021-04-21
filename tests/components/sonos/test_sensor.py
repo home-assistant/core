@@ -42,15 +42,7 @@ async def test_battery_missing_attributes(hass, config_entry, config, soco):
 
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
-    battery = entity_registry.entities["sensor.zone_a_battery"]
-    battery_state = hass.states.get(battery.entity_id)
-
-    # confirm initial state from conftest
-    assert battery_state.state == "unknown"
-    assert battery_state.attributes.get("unit_of_measurement") == "%"
-    assert battery_state.attributes.get("icon") == "mdi:battery-alert"
-    assert not battery_state.attributes.get("charging")
-    assert battery_state.attributes.get("power_source") == "unknown"
+    assert entity_registry.entities.get("sensor.zone_a_battery") is None
 
 
 async def test_battery_attributes(hass, config_entry, config, soco):
