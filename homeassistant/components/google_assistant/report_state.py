@@ -1,8 +1,11 @@
 """Google Report State implementation."""
+from __future__ import annotations
+
+import asyncio
 import logging
 
 from homeassistant.const import MATCH_ALL
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.significant_change import create_checker
 
@@ -14,6 +17,8 @@ from .helpers import AbstractConfig, GoogleEntity, async_get_entities
 # https://github.com/actions-on-google/smart-home-nodejs/issues/196#issuecomment-439156639
 INITIAL_REPORT_DELAY = 60
 
+# Seconds to wait to group states
+REPORT_STATE_WINDOW = 1
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,8 +27,37 @@ _LOGGER = logging.getLogger(__name__)
 def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig):
     """Enable state reporting."""
     checker = None
+    unsub_pending: CALLBACK_TYPE | None = None
+    pending = {}
+    flush_lock = asyncio.Lock()
+
+    async def flush_pending(now=None):
+        """Flush pending states."""
+        nonlocal pending
+        nonlocal unsub_pending
+
+        # If triggered from call later listener
+        if now:
+            unsub_pending = None
+
+        # If triggered because in this window we got 2 significant states
+        elif unsub_pending:
+            unsub_pending()  # pylint: disable=not-callable
+            unsub_pending = None
+
+        async with flush_lock:
+            if not pending:
+                return
+
+            await google_config.async_report_state_all({"devices": {"states": pending}})
+
+            pending = {}
+
+    flush_pending_job = HassJob(flush_pending)
 
     async def async_entity_state_listener(changed_entity, old_state, new_state):
+        nonlocal unsub_pending
+
         if not hass.is_running:
             return
 
@@ -47,11 +81,19 @@ def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig
         if not checker.async_is_significant_change(new_state, extra_arg=entity_data):
             return
 
-        _LOGGER.debug("Reporting state for %s: %s", changed_entity, entity_data)
+        _LOGGER.debug("Scheduling report state for %s: %s", changed_entity, entity_data)
 
-        await google_config.async_report_state_all(
-            {"devices": {"states": {changed_entity: entity_data}}}
-        )
+        # If a significant change is already scheduled and we have another significant one,
+        # flush old set and schedule another change
+        if changed_entity in pending:
+            await flush_pending()
+
+        pending[changed_entity] = entity_data
+
+        if unsub_pending is None:
+            unsub_pending = async_call_later(
+                hass, REPORT_STATE_WINDOW, flush_pending_job
+            )
 
     @callback
     def extra_significant_check(
@@ -102,5 +144,10 @@ def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig
 
     unsub = async_call_later(hass, INITIAL_REPORT_DELAY, inital_report)
 
-    # pylint: disable=unnecessary-lambda
-    return lambda: unsub()
+    @callback
+    def unsub_all():
+        unsub()
+        if unsub_pending:
+            unsub_pending()  # pylint: disable=not-callable
+
+    return unsub_all
