@@ -259,6 +259,21 @@ async def test_refresh_node_info(
     msg = await ws_client.receive_json()
     assert msg["event"]["event"] == "interview started"
 
+    event = Event(
+        type="interview stage completed",
+        data={
+            "source": "node",
+            "event": "interview stage completed",
+            "stageName": "NodeInfo",
+            "nodeId": 52,
+        },
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "interview stage completed"
+    assert msg["event"]["stage"] == "NodeInfo"
+
     client.async_send_command_no_wait.reset_mock()
 
     await ws_client.send_json(
