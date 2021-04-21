@@ -382,6 +382,14 @@ async def websocket_refresh_node_info(
             websocket_api.event_message(msg[ID], {"event": event["event"]})
         )
 
+    @callback
+    def forward_stage(event: dict) -> None:
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID], {"event": event["event"], "stage": event["stageName"]}
+            )
+        )
+
     if node is None:
         connection.send_error(msg[ID], ERR_NOT_FOUND, f"Node {node_id} not found")
         return
@@ -390,6 +398,7 @@ async def websocket_refresh_node_info(
     unsubs = [
         node.on("interview started", forward_event),
         node.on("interview completed", forward_event),
+        node.on("interview stage completed", forward_stage),
         node.on("interview failed", forward_event),
     ]
 
