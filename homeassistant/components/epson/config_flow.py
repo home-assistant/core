@@ -20,13 +20,13 @@ _LOGGER = logging.getLogger(__name__)
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for epson."""
 
-    VERSION = 1
+    VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
         for entry in self._async_current_entries(include_ignore=True):
-            if import_config[CONF_HOST] == entry.data[CONF_HOST] and entry.unique_id:
+            if import_config[CONF_HOST] == entry.data[CONF_HOST]:
                 return self.async_abort(reason="already_configured")
         try:
             projector = await validate_projector(
