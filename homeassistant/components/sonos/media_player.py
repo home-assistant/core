@@ -77,6 +77,7 @@ from .const import (
     SEEN_EXPIRE_TIME,
     SONOS_DISCOVERY_UPDATE,
     SONOS_GROUP_UPDATE,
+    SONOS_PROPERTIES_UPDATE,
     SONOS_SEEN,
     SONOS_UNSEEN,
 )
@@ -506,6 +507,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             await self._subscribe(player.renderingControl, self.async_update_volume)
             await self._subscribe(player.zoneGroupTopology, self.async_update_groups)
             await self._subscribe(player.contentDirectory, self.async_update_content)
+            await self._subscribe(player.deviceProperties, self.async_update_properties)
             return True
         except SoCoException as ex:
             _LOGGER.warning("Could not connect %s: %s", self.entity_id, ex)
@@ -801,6 +803,15 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         if event and "favorites_update_id" in event.variables:
             self.hass.async_add_job(self._set_favorites)
             self.async_write_ha_state()
+
+    @callback
+    def async_update_properties(self, event: SonosEvent | None = None) -> None:
+        """Update information from properties."""
+        if not event:
+            return
+        async_dispatcher_send(
+            self.hass, f"{SONOS_PROPERTIES_UPDATE}-{self.unique_id}", event
+        )
 
     @property
     def volume_level(self) -> float | None:

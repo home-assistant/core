@@ -126,6 +126,7 @@ PLAYABLE_MEDIA_TYPES = [
 
 SONOS_DISCOVERY_UPDATE = "sonos_discovery_update"
 SONOS_GROUP_UPDATE = "sonos_group_update"
+SONOS_PROPERTIES_UPDATE = "sonos_properties_update"
 SONOS_SEEN = "sonos_seen"
 SONOS_UNSEEN = "sonos_unseen"
 

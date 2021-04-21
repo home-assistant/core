@@ -1,9 +1,10 @@
-"""Entity representing a Sonos Move battery level."""
+"""Entity representing a Sonos battery level."""
 import contextlib
 import logging
 from typing import Any, Dict, Optional
 
 from pysonos.core import SoCo
+from pysonos.events_base import Event as SonosEvent
 from pysonos.exceptions import SoCoException
 
 from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE, STATE_UNKNOWN
@@ -17,6 +18,7 @@ from .const import (
     BATTERY_SCAN_INTERVAL,
     DATA_SONOS,
     SONOS_DISCOVERY_UPDATE,
+    SONOS_PROPERTIES_UPDATE,
     SONOS_SEEN,
     SONOS_UNSEEN,
 )
@@ -27,6 +29,11 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_BATTERY_LEVEL = "battery_level"
 ATTR_BATTERY_CHARGING = "charging"
 ATTR_BATTERY_POWERSOURCE = "power_source"
+
+EVENT_CHARGING = {
+    "CHARGING": True,
+    "NOT_CHARGING": False,
+}
 
 
 def fetch_battery_info_or_none(soco: SoCo) -> Optional[Dict[str, Any]]:
@@ -92,6 +99,34 @@ class SonosBatteryEntity(SonosEntity, Entity):
                 self.hass, f"{SONOS_UNSEEN}-{self.soco.uid}", self.async_unseen
             )
         )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{SONOS_PROPERTIES_UPDATE}-{self.soco.uid}",
+                self.async_update_battery_info,
+            )
+        )
+
+    async def async_update_battery_info(self, event: SonosEvent = None) -> None:
+        """Update battery info using the provided SonosEvent."""
+        if event is None:
+            return
+
+        if (more_info := event.variables.get("more_info")) is None:
+            return
+
+        more_info_dict = dict(x.split(":") for x in more_info.split(","))
+
+        is_charging = EVENT_CHARGING[more_info_dict["BattChg"]]
+        if is_charging == self.charging:
+            self._battery_info.update({"Level": int(more_info_dict["BattPct"])})
+        else:
+            if battery_info := await self.hass.async_add_executor_job(
+                fetch_battery_info_or_none, self.soco
+            ):
+                self._battery_info = battery_info
+
+        self.schedule_update_ha_state()
 
     async def async_seen(self, soco) -> None:
         """Record that this player was seen right now."""
