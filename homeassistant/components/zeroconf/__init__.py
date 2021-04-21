@@ -113,9 +113,9 @@ async def _async_get_instance(hass: HomeAssistant, **zcargs: Any) -> HaZeroconf:
     return zeroconf
 
 
-def _get_ip_route(ip: str) -> Any:
+def _get_ip_route(dst_ip: str) -> Any:
     """Get ip next hop."""
-    return IPRoute().route("get", dst=ip)
+    return IPRoute().route("get", dst=dst_ip)
 
 
 def _first_ip_nexthop_from_route(routes: Iterable) -> None | str:
