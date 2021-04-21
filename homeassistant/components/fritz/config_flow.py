@@ -220,9 +220,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
         self._username = user_input[CONF_USERNAME]
         self._password = user_input[CONF_PASSWORD]
 
-        error = await self.fritz_tools_init()
-
-        if error:
+        if error := await self.fritz_tools_init():
             errors["base"] = error
             return self._show_setup_form_reauth_confirm(
                 user_input=user_input, errors=errors
