@@ -48,8 +48,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             return SonosBatteryEntity(soco, sonos_data, battery_info)
         return None
 
-    async def _async_create_entities(data: dict):
-        if entity := await _async_create_entity(data["soco"]):
+    async def _async_create_entities(soco: SoCo):
+        if entity := await _async_create_entity(soco):
             async_add_entities([entity])
 
     async_dispatcher_connect(hass, SONOS_DISCOVERY_UPDATE, _async_create_entities)

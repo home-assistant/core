@@ -147,16 +147,9 @@ async def async_setup_entry(
     """Set up Sonos from a config entry."""
     platform = entity_platform.current_platform.get()
 
-    async def async_create_entities(data: dict) -> None:
+    async def async_create_entities(soco: SoCo) -> None:
         """Handle device discovery and create entities."""
-        # Make sure that all known SoCo devices have Media Player entities
-        soco = data["soco"]
-        if soco and soco.uid not in hass.data[DATA_SONOS].media_player_entities:
-            hass.data[DATA_SONOS].media_player_entities[soco.uid] = None
-            hass.add_job(
-                async_add_entities,
-                [SonosMediaPlayerEntity(soco, hass.data[DATA_SONOS])],
-            )
+        async_add_entities([SonosMediaPlayerEntity(soco, hass.data[DATA_SONOS])])
 
     @service.verify_domain_control(hass, SONOS_DOMAIN)
     async def async_service_handle(service_call: ServiceCall) -> None:

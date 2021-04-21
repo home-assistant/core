@@ -133,7 +133,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
                     # Set these early since device_info() needs them
                     data.speaker_info[soco.uid] = soco.get_speaker_info(True)
 
-                    dispatcher_send(hass, SONOS_DISCOVERY_UPDATE, {"soco": soco})
+                    dispatcher_send(hass, SONOS_DISCOVERY_UPDATE, soco)
                 else:
                     entity = data.media_player_entities.get(soco.uid)
                     if entity and (entity.soco == soco or not entity.available):
