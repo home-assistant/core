@@ -1,4 +1,11 @@
 """Test discovery of entities for device-specific schemas for the Z-Wave JS integration."""
+from typing import List
+
+from homeassistant.components.zwave_js.const import DOMAIN
+from homeassistant.components.zwave_js.discovery import ZwaveDiscoveryInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from tests.common import MockConfigEntry
 
 
 async def test_iblinds_v2(hass, client, iblinds_v2, integration):
@@ -35,3 +42,24 @@ async def test_inovelli_lzw36(hass, client, inovelli_lzw36, integration):
 
     state = hass.states.get("fan.family_room_combo_2")
     assert state
+
+
+async def test_vision_security_zl7432(hass, client, vision_security_zl7432):
+    """Test Vision Security ZL7432 is caught by the device specific discovery."""
+    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry.add_to_hass(hass)
+
+    disc_infos: List[ZwaveDiscoveryInfo] = []
+
+    def _capture_discovery_info(info: ZwaveDiscoveryInfo) -> None:
+        """Capture switch discovery info."""
+        disc_infos.append(info)
+
+    async_dispatcher_connect(
+        hass, f"{DOMAIN}_{entry.entry_id}_add_switch", _capture_discovery_info
+    )
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert len(disc_infos) == 1
+    assert disc_infos[0].platform_hint == "force_update"
