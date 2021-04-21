@@ -66,6 +66,54 @@ async def test_initialized_timeout(hass, client, connect_timeout):
     assert entry.state == ENTRY_STATE_SETUP_RETRY
 
 
+async def test_enabled_statistics(hass, client):
+    """Test that we enabled statistics if the entry is opted in."""
+    entry = MockConfigEntry(
+        domain="zwave_js",
+        data={"url": "ws://test.org", "data_collection_opted_in": True},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "zwave_js_server.model.driver.Driver.async_enable_statistics"
+    ) as mock_cmd:
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert mock_cmd.called
+
+
+async def test_disabled_statistics(hass, client):
+    """Test that we diisabled statistics if the entry is opted out."""
+    entry = MockConfigEntry(
+        domain="zwave_js",
+        data={"url": "ws://test.org", "data_collection_opted_in": False},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "zwave_js_server.model.driver.Driver.async_disable_statistics"
+    ) as mock_cmd:
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert mock_cmd.called
+
+
+async def test_noop_statistics(hass, client):
+    """Test that we don't make any statistics calls if user hasn't provided preference."""
+    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry.add_to_hass(hass)
+
+    with patch(
+        "zwave_js_server.model.driver.Driver.async_enable_statistics"
+    ) as mock_cmd1, patch(
+        "zwave_js_server.model.driver.Driver.async_disable_statistics"
+    ) as mock_cmd2:
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert not mock_cmd1.called
+        assert not mock_cmd2.called
+
+
 @pytest.mark.parametrize("error", [BaseZwaveJSServerError("Boom"), Exception("Boom")])
 async def test_listen_failure(hass, client, error):
     """Test we handle errors during client listen."""
