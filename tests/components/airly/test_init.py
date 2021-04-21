@@ -95,7 +95,9 @@ async def test_update_interval(hass, aioclient_mock):
         year=2030, month=3, day=2, hour=21, minute=20, second=0, tzinfo=NATIVE_UTC
     )
 
-    with patch("homeassistant.components.airly.dt_util.utcnow", return_value=POINT):
+    with patch(
+        "homeassistant.components.airly.dt_util.utcnow", return_value=POINT
+    ), patch("homeassistant.helpers.update_coordinator.utcnow", return_value=POINT):
         async_fire_time_changed(hass, POINT)
         await hass.async_block_till_done()
 
@@ -124,17 +126,23 @@ async def test_update_interval(hass, aioclient_mock):
         assert len(hass.config_entries.async_entries(DOMAIN)) == 1
         assert entry.state == ENTRY_STATE_LOADED
 
-        # We have 160 minutes to midnight, 15 remaining requests and one instance so
-        # next update will be after ceil(160 / 15 * 1) = 11 minutes
-        future = POINT + timedelta(minutes=11)
+    # We have 160 minutes to midnight, 15 remaining requests and one instance so next
+    # update will be after ceil(160 / 15 * 1) = 11 minutes
+    future = POINT + timedelta(minutes=11, seconds=1)
+    with patch(
+        "homeassistant.components.airly.dt_util.utcnow", return_value=future
+    ), patch("homeassistant.helpers.update_coordinator.utcnow", return_value=future):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
         assert aioclient_mock.call_count == 2
 
-        # We have 160 minutes to midnight, 15 remaining requests and one instance so
-        # next update will be after ceil(160 / 15 * 1) = 11 minutes
-        future = future + timedelta(minutes=11)
+    # We have 149 minutes to midnight, 15 remaining requests and one instance so next
+    # update will be after ceil(149 / 15 * 1) = 10 minutes
+    future = future + timedelta(minutes=10, seconds=1)
+    with patch(
+        "homeassistant.components.airly.dt_util.utcnow", return_value=future
+    ), patch("homeassistant.helpers.update_coordinator.utcnow", return_value=future):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
@@ -166,9 +174,12 @@ async def test_update_interval(hass, aioclient_mock):
         assert len(hass.config_entries.async_entries(DOMAIN)) == 2
         assert entry.state == ENTRY_STATE_LOADED
 
-        # We have 160 minutes to midnight, 15 remaining requests and two instances so
-        # next update will be after ceil(160 / 15 * 2) = 22 minutes
-        future = future + timedelta(minutes=22)
+    # We have 139 minutes to midnight, 15 remaining requests and two instances so next
+    # update will be after ceil(139 / 15 * 2) = 19 minutes
+    future = future + timedelta(minutes=19, seconds=1)
+    with patch(
+        "homeassistant.components.airly.dt_util.utcnow", return_value=future
+    ), patch("homeassistant.helpers.update_coordinator.utcnow", return_value=future):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
