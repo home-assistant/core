@@ -277,13 +277,6 @@ async def _async_start_zeroconf_browser(
         if state_change == ServiceStateChange.Removed:
             return
 
-        _LOGGER.debug(
-            "Service change - updated: service_type=%s name=%s state_changed=%s",
-            service_type,
-            name,
-            state_change,
-        )
-
         try:
             service_info = zeroconf.get_service_info(service_type, name)
         except ZeroconfError:
