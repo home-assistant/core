@@ -13,6 +13,7 @@ from zwave_js_server.client import Client
 from zwave_js_server.const import LogLevel
 from zwave_js_server.exceptions import InvalidNewValue, NotFoundError, SetValueFailed
 from zwave_js_server.model.log_config import LogConfig
+from zwave_js_server.model.log_message import LogMessage
 from zwave_js_server.util.node import async_set_config_parameter
 
 from homeassistant.components import websocket_api
@@ -91,6 +92,7 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_remove_node)
     websocket_api.async_register_command(hass, websocket_stop_exclusion)
     websocket_api.async_register_command(hass, websocket_refresh_node_info)
+    websocket_api.async_register_command(hass, websocket_subscribe_logs)
     websocket_api.async_register_command(hass, websocket_update_log_config)
     websocket_api.async_register_command(hass, websocket_get_log_config)
     websocket_api.async_register_command(hass, websocket_get_config_parameters)
@@ -515,6 +517,53 @@ def filename_is_present_if_logging_to_file(obj: dict) -> dict:
     if obj.get(LOG_TO_FILE, False) and FILENAME not in obj:
         raise vol.Invalid("`filename` must be provided if logging to file")
     return obj
+
+
+@websocket_api.require_admin  # type: ignore
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/subscribe_logs",
+        vol.Required(ENTRY_ID): str,
+    }
+)
+@async_get_entry
+async def websocket_subscribe_logs(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    entry: ConfigEntry,
+    client: Client,
+) -> None:
+    """Subscribe to log message events from the server."""
+    driver = client.driver
+
+    @callback
+    def async_cleanup() -> None:
+        """Remove signal listeners."""
+        hass.async_create_task(driver.async_stop_listening_logs())
+        unsub()
+
+    @callback
+    def forward_event(event: dict) -> None:
+        log_msg: LogMessage = event["log_message"]
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    "timestamp": log_msg.timestamp,
+                    "level": log_msg.level,
+                    "primary_tags": log_msg.primary_tags,
+                    "message": log_msg.formatted_message,
+                },
+            )
+        )
+
+    unsub = driver.on("logging", forward_event)
+    connection.subscriptions[msg["id"]] = async_cleanup
+
+    await driver.async_start_listening_logs()
+    connection.send_result(msg[ID])
 
 
 @websocket_api.require_admin  # type: ignore
