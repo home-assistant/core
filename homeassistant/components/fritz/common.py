@@ -133,9 +133,6 @@ class FritzBoxTools:
 
     def _update_info(self):
         """Retrieve latest information from the FRITZ!Box."""
-        if self.error:
-            return None
-
         return self.fritzhosts.get_hosts_info()
 
     def scan_devices(self, now: Optional[datetime] = None) -> None:
