@@ -1037,7 +1037,7 @@ objgraph==3.4.1
 oemthermostat==1.1.1
 
 # homeassistant.components.omnilogic
-omnilogic==0.4.4
+omnilogic==0.4.5
 
 # homeassistant.components.ondilo_ico
 ondilo==0.2.0
