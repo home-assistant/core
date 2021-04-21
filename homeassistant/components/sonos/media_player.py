@@ -77,6 +77,8 @@ from .const import (
     SEEN_EXPIRE_TIME,
     SONOS_DISCOVERY_UPDATE,
     SONOS_GROUP_UPDATE,
+    SONOS_SEEN,
+    SONOS_UNSEEN,
 )
 from .entity import SonosEntity
 from .media_browser import build_item_response, get_media, library_payload
@@ -188,11 +190,7 @@ async def async_setup_entry(
     # create any entities for devices that exist already
     for uid, soco in hass.data[DATA_SONOS].discovered.items():
         if uid not in hass.data[DATA_SONOS].media_player_entities:
-            hass.data[DATA_SONOS].media_player_entities[soco.uid] = None
-            hass.add_job(
-                async_add_entities,
-                [SonosMediaPlayerEntity(soco, hass.data[DATA_SONOS])],
-            )
+            async_add_entities([SonosMediaPlayerEntity(soco, hass.data[DATA_SONOS])])
 
     hass.services.async_register(
         SONOS_DOMAIN,
@@ -361,6 +359,16 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass, SONOS_GROUP_UPDATE, self.async_update_groups
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, f"{SONOS_SEEN}-{self.unique_id}", self.async_seen
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, f"{SONOS_UNSEEN}-{self.unique_id}", self.async_unseen
             )
         )
 

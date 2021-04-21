@@ -13,7 +13,13 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 
 from . import SonosData
-from .const import BATTERY_SCAN_INTERVAL, DATA_SONOS, SONOS_DISCOVERY_UPDATE
+from .const import (
+    BATTERY_SCAN_INTERVAL,
+    DATA_SONOS,
+    SONOS_DISCOVERY_UPDATE,
+    SONOS_SEEN,
+    SONOS_UNSEEN,
+)
 from .entity import SonosEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,9 +45,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     sonos_data = hass.data[DATA_SONOS]
 
     async def _async_create_entity(soco: SoCo) -> Optional[SonosBatteryEntity]:
-        if not soco or soco.uid in sonos_data.battery_entities:
-            return None
-        sonos_data.battery_entities[soco.uid] = None
         if battery_info := await hass.async_add_executor_job(
             fetch_battery_info_or_none, soco
         ):
@@ -79,8 +82,16 @@ class SonosBatteryEntity(SonosEntity, Entity):
                 self.update, BATTERY_SCAN_INTERVAL
             )
         )
-
-        self.data.battery_entities[self.unique_id] = self
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, f"{SONOS_SEEN}-{self.soco.uid}", self.async_seen
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, f"{SONOS_UNSEEN}-{self.soco.uid}", self.async_unseen
+            )
+        )
 
     async def async_seen(self, soco) -> None:
         """Record that this player was seen right now."""

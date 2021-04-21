@@ -32,6 +32,8 @@ from .const import (
     SEEN_EXPIRE_TIME,
     SONOS_DISCOVERY_UPDATE,
     SONOS_GROUP_UPDATE,
+    SONOS_SEEN,
+    SONOS_UNSEEN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -69,7 +71,6 @@ class SonosData:
         """Initialize the data."""
         self.discovered = {}
         self.speaker_info = {}
-        self.battery_entities = {}
         self.media_player_entities = {}
         self.topology_condition = asyncio.Condition()
         self.discovery_thread = None
@@ -135,13 +136,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
                     dispatcher_send(hass, SONOS_DISCOVERY_UPDATE, soco)
                 else:
-                    entity = data.media_player_entities.get(soco.uid)
-                    if entity and (entity.soco == soco or not entity.available):
-                        hass.add_job(entity.async_seen(soco))
-
-                    entity = data.battery_entities.get(soco.uid)
-                    if entity and (entity.soco == soco or not entity.available):
-                        hass.add_job(entity.async_seen(soco))
+                    dispatcher_send(hass, f"{SONOS_SEEN}-{soco.uid}", soco)
 
                 # watch for this soco to become unavailable
                 seen_timers = data.seen_timers
@@ -158,12 +153,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
             """Handle a player that has disappeared."""
             data = hass.data[DATA_SONOS]
             del data.seen_timers[soco.uid]
-            entity = data.media_player_entities.get(soco.uid)
-            if entity:
-                entity.async_unseen()
-            entity = data.battery_entities.get(soco.uid)
-            if entity:
-                entity.async_unseen()
+            dispatcher_send(hass, f"{SONOS_UNSEEN}-{soco.uid}")
 
         if hosts:
             for host in hosts:
