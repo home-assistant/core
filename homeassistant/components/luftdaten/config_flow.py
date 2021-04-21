@@ -92,6 +92,6 @@ class LuftDatenFlowHandler(config_entries.ConfigFlow):
             )
 
         scan_interval = user_input.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-        user_input.update({CONF_SCAN_INTERVAL: scan_interval.seconds})
+        user_input.update({CONF_SCAN_INTERVAL: scan_interval.total_seconds()})
 
         return self.async_create_entry(title=str(sensor_id), data=user_input)
