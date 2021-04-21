@@ -353,9 +353,9 @@ async def test_ssdp_exception(hass: HomeAssistantType):
 async def test_import(hass: HomeAssistantType):
     """Test importing."""
 
-    flow = config_flow.FritzBoxToolsFlowHandler()
-    flow.hass = hass
-
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data= MOCK_IMPORT_CONFIG
+    )
     result = await flow.async_step_import(MOCK_IMPORT_CONFIG)
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "start_config"
