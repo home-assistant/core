@@ -99,7 +99,7 @@ async def test_disabled_statistics(hass, client):
 
 
 async def test_noop_statistics(hass, client):
-    """Test that we don't make any statistics calls if user hasn't provided preferencee."""
+    """Test that we don't make any statistics calls if user hasn't provided preference."""
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
 
