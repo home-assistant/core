@@ -4,14 +4,18 @@ from unittest.mock import patch
 from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
 import pytest
 
-from homeassistant.components.fritz import config_flow
 from homeassistant.components.fritz.const import ATTR_HOST, DOMAIN
 from homeassistant.components.ssdp import (
     ATTR_SSDP_LOCATION,
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_UDN,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_SSDP, SOURCE_USER
+from homeassistant.config_entries import (
+    SOURCE_IMPORT,
+    SOURCE_REAUTH,
+    SOURCE_SSDP,
+    SOURCE_USER,
+)
 from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -354,8 +358,7 @@ async def test_import(hass: HomeAssistantType):
     """Test importing."""
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data= MOCK_IMPORT_CONFIG
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_IMPORT_CONFIG
     )
-    result = await flow.async_step_import(MOCK_IMPORT_CONFIG)
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "start_config"
