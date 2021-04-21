@@ -36,7 +36,11 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = fritz_tools
+    @callback
+    def _async_unload(event):
+        fritzbox.async_unload()
 
+    entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_unload))
     # Load the other platforms like switch
     for domain in SUPPORTED_DOMAINS:
         hass.async_create_task(
