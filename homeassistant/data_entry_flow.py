@@ -72,6 +72,7 @@ class FlowResultDict(TypedDict, total=False):
     reason: str
     context: dict[str, Any]
     result: Any
+    last_step: bool
 
 
 class FlowManager(abc.ABC):
