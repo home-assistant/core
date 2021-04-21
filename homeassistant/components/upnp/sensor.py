@@ -232,10 +232,10 @@ class DerivedUpnpSensor(UpnpSensor):
         if self._sensor_type["unit"] == DATA_BYTES:
             delta_value /= KIBIBYTE
         delta_time = current_timestamp - self._last_timestamp
-        if delta_time.seconds == 0:
+        if delta_time.total_seconds() == 0:
             # Prevent division by 0.
             return None
-        derived = delta_value / delta_time.seconds
+        derived = delta_value / delta_time.total_seconds()
 
         # Store current values for future use.
         self._last_value = current_value

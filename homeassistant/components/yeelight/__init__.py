@@ -319,7 +319,7 @@ class YeelightScanner:
                     if len(self._callbacks) == 0:
                         self._async_stop_scan()
 
-        await asyncio.sleep(SCAN_INTERVAL.seconds)
+        await asyncio.sleep(SCAN_INTERVAL.total_seconds())
         self._scan_task = self._hass.loop.create_task(self._async_scan())
 
     @callback

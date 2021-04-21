@@ -418,7 +418,9 @@ class RachioZone(RachioSwitch):
                 CONF_MANUAL_RUN_MINS, DEFAULT_MANUAL_RUN_MINS
             )
         )
-        self._controller.rachio.zone.start(self.zone_id, manual_run_time.seconds)
+        self._controller.rachio.zone.start(
+            self.zone_id, manual_run_time.total_seconds()
+        )
         _LOGGER.debug(
             "Watering %s on %s for %s",
             self.name,

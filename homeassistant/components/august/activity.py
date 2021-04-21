@@ -52,7 +52,7 @@ class ActivityStream(AugustSubscriberMixin):
         return Debouncer(
             self._hass,
             _LOGGER,
-            cooldown=ACTIVITY_UPDATE_INTERVAL.seconds,
+            cooldown=ACTIVITY_UPDATE_INTERVAL.total_seconds(),
             immediate=True,
             function=_async_update_house_id,
         )
@@ -121,7 +121,9 @@ class ActivityStream(AugustSubscriberMixin):
         # we catch the case where the lock operator is
         # not updated or the lock failed
         self._schedule_updates[house_id] = async_call_later(
-            self._hass, ACTIVITY_UPDATE_INTERVAL.seconds + 1, _update_house_activities
+            self._hass,
+            ACTIVITY_UPDATE_INTERVAL.total_seconds() + 1,
+            _update_house_activities,
         )
 
     async def _async_update_house_id(self, house_id):

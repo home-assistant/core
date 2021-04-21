@@ -130,7 +130,7 @@ async def async_attach_trigger(
 
         trigger_variables["for"] = period
 
-        delay_cancel = async_call_later(hass, period.seconds, call_action)
+        delay_cancel = async_call_later(hass, period.total_seconds(), call_action)
 
     info = async_track_template_result(
         hass,

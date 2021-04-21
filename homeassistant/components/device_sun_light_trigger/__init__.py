@@ -141,7 +141,7 @@ async def activate_automation(
             SERVICE_TURN_ON,
             {
                 ATTR_ENTITY_ID: light_id,
-                ATTR_TRANSITION: LIGHT_TRANSITION_TIME.seconds,
+                ATTR_TRANSITION: LIGHT_TRANSITION_TIME.total_seconds(),
                 ATTR_PROFILE: light_profile,
             },
         )

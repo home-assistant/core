@@ -86,7 +86,9 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_config):
         """Import from Transmission client config."""
-        import_config[CONF_SCAN_INTERVAL] = import_config[CONF_SCAN_INTERVAL].seconds
+        import_config[CONF_SCAN_INTERVAL] = import_config[
+            CONF_SCAN_INTERVAL
+        ].total_seconds()
         return await self.async_step_user(user_input=import_config)
 
 

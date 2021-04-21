@@ -431,7 +431,7 @@ def _update(
                 state = round(
                     (counter - data.value)
                     / 1000 ** 2
-                    / (now - (data.update_time or now)).seconds,
+                    / (now - (data.update_time or now)).total_seconds(),
                     3,
                 )
             else:

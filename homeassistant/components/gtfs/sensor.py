@@ -527,7 +527,7 @@ class GTFSDepartureSensor(SensorEntity):
         name: Any | None,
         origin: Any,
         destination: Any,
-        offset: cv.time_period,
+        offset: datetime.timedelta,
         include_tomorrow: bool,
     ) -> None:
         """Initialize the sensor."""
@@ -699,7 +699,7 @@ class GTFSDepartureSensor(SensorEntity):
                 del self._attributes[ATTR_LAST]
 
         # Add contextual information
-        self._attributes[ATTR_OFFSET] = self._offset.seconds / 60
+        self._attributes[ATTR_OFFSET] = self._offset.total_seconds() / 60
 
         if self._state is None:
             self._attributes[ATTR_INFO] = (

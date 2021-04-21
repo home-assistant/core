@@ -187,12 +187,13 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
     )
     if migrated_scan_interval and (
         not config_entry.options.get(CONF_SCAN_INTERVAL)
-        or config_entry.options[CONF_SCAN_INTERVAL] == DEFAULT_SCAN_INTERVAL.seconds
+        or config_entry.options[CONF_SCAN_INTERVAL]
+        == DEFAULT_SCAN_INTERVAL.total_seconds()
     ):
         update_interval = migrated_scan_interval
         hass.config_entries.async_update_entry(
             config_entry,
-            options={CONF_SCAN_INTERVAL: update_interval.seconds},
+            options={CONF_SCAN_INTERVAL: update_interval.total_seconds()},
         )
     elif config_entry.options.get(CONF_SCAN_INTERVAL):
         update_interval = timedelta(seconds=config_entry.options[CONF_SCAN_INTERVAL])
