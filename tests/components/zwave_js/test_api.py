@@ -253,18 +253,6 @@ async def test_refresh_node_info(
 
     client.async_send_command_no_wait.reset_mock()
 
-    await ws_client.send_json(
-        {
-            ID: 2,
-            TYPE: "zwave_js/refresh_node_info",
-            ENTRY_ID: entry.entry_id,
-            NODE_ID: 999,
-        }
-    )
-    msg = await ws_client.receive_json()
-    assert not msg["success"]
-    assert msg["error"]["code"] == "not_found"
-
 
 async def test_refresh_node_values(
     hass, client, integration, hass_ws_client, multisensor_6
@@ -291,18 +279,6 @@ async def test_refresh_node_values(
     assert args["nodeId"] == 52
 
     client.async_send_command_no_wait.reset_mock()
-
-    await ws_client.send_json(
-        {
-            ID: 2,
-            TYPE: "zwave_js/refresh_node_values",
-            ENTRY_ID: entry.entry_id,
-            NODE_ID: 999,
-        }
-    )
-    msg = await ws_client.receive_json()
-    assert not msg["success"]
-    assert msg["error"]["code"] == "not_found"
 
 
 async def test_refresh_node_cc_values(
@@ -332,19 +308,6 @@ async def test_refresh_node_cc_values(
     assert args["commandClass"] == 112
 
     client.async_send_command_no_wait.reset_mock()
-
-    await ws_client.send_json(
-        {
-            ID: 2,
-            TYPE: "zwave_js/refresh_node_cc_values",
-            ENTRY_ID: entry.entry_id,
-            NODE_ID: 999,
-            COMMAND_CLASS_ID: 112,
-        }
-    )
-    msg = await ws_client.receive_json()
-    assert not msg["success"]
-    assert msg["error"]["code"] == "not_found"
 
 
 async def test_set_config_parameter(
