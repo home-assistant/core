@@ -17,7 +17,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     STATE_UNAVAILABLE,
 )
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import MOCK_CONFIG, FritzDeviceSwitchMock
@@ -25,7 +25,7 @@ from . import MOCK_CONFIG, FritzDeviceSwitchMock
 from tests.common import MockConfigEntry
 
 
-async def test_setup(hass: HomeAssistantType, fritz: Mock):
+async def test_setup(hass: HomeAssistant, fritz: Mock):
     """Test setup of integration."""
     assert await async_setup_component(hass, FB_DOMAIN, MOCK_CONFIG)
     await hass.async_block_till_done()
@@ -40,7 +40,7 @@ async def test_setup(hass: HomeAssistantType, fritz: Mock):
     ]
 
 
-async def test_setup_duplicate_config(hass: HomeAssistantType, fritz: Mock, caplog):
+async def test_setup_duplicate_config(hass: HomeAssistant, fritz: Mock, caplog):
     """Test duplicate config of integration."""
     DUPLICATE = {
         FB_DOMAIN: {
@@ -57,7 +57,7 @@ async def test_setup_duplicate_config(hass: HomeAssistantType, fritz: Mock, capl
     assert "duplicate host entries found" in caplog.text
 
 
-async def test_unload_remove(hass: HomeAssistantType, fritz: Mock):
+async def test_unload_remove(hass: HomeAssistant, fritz: Mock):
     """Test unload and remove of integration."""
     fritz().get_devices.return_value = [FritzDeviceSwitchMock()]
     entity_id = f"{SWITCH_DOMAIN}.fake_name"
