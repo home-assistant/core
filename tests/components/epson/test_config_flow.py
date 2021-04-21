@@ -7,6 +7,8 @@ from homeassistant import config_entries, setup
 from homeassistant.components.epson.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_UNAVAILABLE
 
+from tests.common import MockConfigEntry
+
 
 async def test_form(hass):
     """Test we get the form."""
@@ -99,7 +101,13 @@ async def test_import(hass):
 
 async def test_already_imported(hass):
     """Test config.yaml imported twice."""
-    await test_import(hass)
+    MockConfigEntry(
+        domain=DOMAIN,
+        source=config_entries.SOURCE_IMPORT,
+        unique_id="bla",
+        data={CONF_HOST: "1.1.1.1", "title": "test-epson"},
+    ).add_to_hass(hass)
+
     with patch(
         "homeassistant.components.epson.Projector.get_power",
         return_value="01",
