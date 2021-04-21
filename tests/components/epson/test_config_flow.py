@@ -105,7 +105,8 @@ async def test_already_imported(hass):
         domain=DOMAIN,
         source=config_entries.SOURCE_IMPORT,
         unique_id="bla",
-        data={CONF_HOST: "1.1.1.1", "title": "test-epson"},
+        title="test-epson",
+        data={CONF_HOST: "1.1.1.1"},
     ).add_to_hass(hass)
 
     with patch(
