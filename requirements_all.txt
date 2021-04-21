@@ -1675,6 +1675,9 @@ pyrisco==0.3.1
 # homeassistant.components.rituals_perfume_genie
 pyrituals==0.0.2
 
+# homeassistant.components.zeroconf
+pyroute2==0.5.18
+
 # homeassistant.components.ruckus_unleashed
 pyruckus==0.12
 
