@@ -17,12 +17,16 @@ from homeassistant.components.zwave_js.api import (
     LEVEL,
     LOG_TO_FILE,
     NODE_ID,
+    OPTED_IN,
     PROPERTY,
     PROPERTY_KEY,
     TYPE,
     VALUE,
 )
-from homeassistant.components.zwave_js.const import DOMAIN
+from homeassistant.components.zwave_js.const import (
+    CONF_DATA_COLLECTION_OPTED_IN,
+    DOMAIN,
+)
 from homeassistant.helpers import device_registry as dr
 
 
@@ -552,3 +556,72 @@ async def test_get_log_config(hass, client, integration, hass_ws_client):
     assert log_config["log_to_file"] is False
     assert log_config["filename"] == "/test.txt"
     assert log_config["force_console"] is False
+
+
+async def test_data_collection(hass, client, integration, hass_ws_client):
+    """Test that the data collection WS API commands work."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    client.async_send_command.return_value = {"statisticsEnabled": False}
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "zwave_js/data_collection_status",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+    result = msg["result"]
+    assert result == {"opted_in": None, "enabled": False}
+
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "driver.is_statistics_enabled"
+    }
+
+    assert CONF_DATA_COLLECTION_OPTED_IN not in entry.data
+
+    client.async_send_command.reset_mock()
+
+    client.async_send_command.return_value = {}
+    await ws_client.send_json(
+        {
+            ID: 2,
+            TYPE: "zwave_js/update_data_collection_preference",
+            ENTRY_ID: entry.entry_id,
+            OPTED_IN: True,
+        }
+    )
+    msg = await ws_client.receive_json()
+    result = msg["result"]
+    assert result is None
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "driver.enable_statistics"
+    assert args["applicationName"] == "Home Assistant"
+    assert entry.data[CONF_DATA_COLLECTION_OPTED_IN]
+
+    client.async_send_command.reset_mock()
+
+    client.async_send_command.return_value = {}
+    await ws_client.send_json(
+        {
+            ID: 3,
+            TYPE: "zwave_js/update_data_collection_preference",
+            ENTRY_ID: entry.entry_id,
+            OPTED_IN: False,
+        }
+    )
+    msg = await ws_client.receive_json()
+    result = msg["result"]
+    assert result is None
+
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "driver.disable_statistics"
+    }
+    assert not entry.data[CONF_DATA_COLLECTION_OPTED_IN]
+
+    client.async_send_command.reset_mock()
