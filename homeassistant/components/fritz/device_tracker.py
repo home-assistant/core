@@ -12,11 +12,11 @@ from homeassistant.components.device_tracker import (
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from .common import FritzBoxTools
 from .const import DEFAULT_DEVICE_NAME, DOMAIN
@@ -40,7 +40,7 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-async def async_get_scanner(hass: HomeAssistantType, config: ConfigType):
+async def async_get_scanner(hass: HomeAssistant, config: ConfigType):
     """Import legacy FRITZ!Box configuration."""
 
     _LOGGER.debug("Import legacy FRITZ!Box configuration from YAML")
@@ -63,7 +63,7 @@ async def async_get_scanner(hass: HomeAssistantType, config: ConfigType):
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up device tracker for FRITZ!Box component."""
     _LOGGER.debug("Starting FRITZ!Box device tracker")
