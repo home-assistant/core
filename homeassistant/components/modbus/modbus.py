@@ -211,7 +211,6 @@ class ModbusHub:
             try:
                 if self._client:
                     self._client.close()
-                    del self._client
                     self._client = None
             except ModbusException as exception_error:
                 self._log_error(exception_error)
