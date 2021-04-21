@@ -9,7 +9,8 @@ from python_picnic_api.session import PicnicAuthError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import ADDRESS, CART_DATA, LAST_ORDER_DATA, SLOT_DATA
@@ -46,14 +47,14 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
                 data = await self.hass.async_add_executor_job(self.fetch_data)
 
             # Update the auth token in the config entry if applicable
-            await self._update_auth_token()
+            self._update_auth_token()
 
             # Return the fetched data
             return data
         except ValueError as error:
             raise UpdateFailed(f"API response was malformed: {error}") from error
         except PicnicAuthError as error:
-            raise UpdateFailed(f"API authentication expired: {error}") from error
+            raise ConfigEntryAuthFailed from error
 
     def fetch_data(self):
         """Fetch the data from the Picnic API and return a flat dict with only needed sensor data."""
@@ -138,7 +139,8 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
         # Make a copy because some references are local
         return last_order
 
-    async def _update_auth_token(self):
+    @callback
+    def _update_auth_token(self):
         """Set the updated authentication token."""
         updated_token = self.picnic_api_client.session.auth_token
         if self.config_entry.data.get(CONF_ACCESS_TOKEN) != updated_token:

@@ -6,7 +6,6 @@ from python_picnic_api import PicnicAPI
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import CONF_API, CONF_COORDINATOR, CONF_COUNTRY_CODE, DOMAIN
 from .coordinator import PicnicUpdateCoordinator
@@ -28,9 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     picnic_coordinator = PicnicUpdateCoordinator(hass, picnic_client, entry)
 
     # Fetch initial data so we have data when entities subscribe
-    await picnic_coordinator.async_refresh()
-    if not picnic_coordinator.last_update_success:
-        raise ConfigEntryNotReady()
+    await picnic_coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
