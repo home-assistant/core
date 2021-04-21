@@ -69,7 +69,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     unique_id = config_entry.unique_id
     projector = hass.data[DOMAIN][entry_id]
     projector_entity = EpsonProjectorMediaPlayer(
-        projector, config_entry.title, unique_id if unique_id else entry_id
+        projector=projector,
+        name=config_entry.title,
+        unique_id=unique_id,
+        entry=config_entry,
     )
     async_add_entities([projector_entity], True)
     platform = entity_platform.current_platform.get()
@@ -92,10 +95,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class EpsonProjectorMediaPlayer(MediaPlayerEntity):
     """Representation of Epson Projector Device."""
 
-    def __init__(self, projector, name, unique_id):
+    def __init__(self, projector, name, unique_id, entry):
         """Initialize entity to control Epson projector."""
-        self._name = name
         self._projector = projector
+        self._entry = entry
+        self._name = name
         self._available = False
         self._cmode = None
         self._source_list = list(DEFAULT_SOURCES.values())
@@ -103,6 +107,16 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
         self._volume = None
         self._state = None
         self._unique_id = unique_id
+
+    async def set_unique_id(self):
+        """Set unique id for projector config entry."""
+        _LOGGER.debug("Setting unique_id for projector.")
+        if not self._unique_id:
+            if await self._projector.get_serial_number():
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(self._entry.entry_id)
+                )
+                return True
 
     async def async_update(self):
         """Update state of device."""
@@ -114,6 +128,9 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
         self._available = True
         if power_state == EPSON_CODES[POWER]:
             self._state = STATE_ON
+            uid_setup = await self.set_unique_id()
+            if uid_setup:
+                return
             self._source_list = list(DEFAULT_SOURCES.values())
             cmode = await self._projector.get_property(CMODE)
             self._cmode = CMODE_LIST.get(cmode, self._cmode)

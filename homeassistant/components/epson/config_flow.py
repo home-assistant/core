@@ -26,13 +26,25 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
         for entry in self._async_current_entries(include_ignore=True):
-            if import_config[CONF_HOST] == entry.data[CONF_HOST]:
+            if import_config[CONF_HOST] == entry.data[CONF_HOST] and entry.unique_id:
                 return self.async_abort(reason="already_configured")
-        await self.async_set_unique_id()
-        self._abort_if_unique_id_configured()
-        return self.async_create_entry(
-            title=import_config.pop(CONF_NAME), data=import_config
-        )
+        try:
+            projector = await validate_projector(
+                self.hass,
+                import_config[CONF_HOST],
+                check_power=True,
+                check_powered_on=False,
+            )
+        except CannotConnect:
+            _LOGGER.warning("Cannot connect to projector")
+            return self.async_abort(reason="cannot_connect")
+        else:
+            serial_no = await projector.get_serial_number()
+            await self.async_set_unique_id(serial_no)
+            self._abort_if_unique_id_configured()
+            return self.async_create_entry(
+                title=import_config.pop(CONF_NAME), data=import_config
+            )
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -40,9 +52,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 projector = await validate_projector(self.hass, user_input[CONF_HOST])
-                serial_no = await projector.get_serial_number()
-                await self.async_set_unique_id(serial_no)
-                self._abort_if_unique_id_configured()
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except PoweredOff:
@@ -51,6 +60,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
                 errors["base"] = "powered_off"
             else:
+                serial_no = await projector.get_serial_number()
+                await self.async_set_unique_id(serial_no)
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=user_input.pop(CONF_NAME), data=user_input
                 )

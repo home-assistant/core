@@ -92,9 +92,9 @@ async def test_import(hass):
             context={"source": config_entries.SOURCE_IMPORT},
             data={CONF_HOST: "1.1.1.1", CONF_NAME: "test-epson"},
         )
-        assert result["type"] == "create_entry"
-        assert result["title"] == "test-epson"
-        assert result["data"] == {CONF_HOST: "1.1.1.1"}
+    assert result["type"] == "create_entry"
+    assert result["title"] == "test-epson"
+    assert result["data"] == {CONF_HOST: "1.1.1.1"}
 
 
 async def test_already_imported(hass):
@@ -115,5 +115,5 @@ async def test_already_imported(hass):
             context={"source": config_entries.SOURCE_IMPORT},
             data={CONF_HOST: "1.1.1.1", CONF_NAME: "test-epson"},
         )
-        assert result["type"] == "abort"
-        assert result["reason"] == "already_configured"
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
