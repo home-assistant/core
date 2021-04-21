@@ -4,7 +4,6 @@ from __future__ import annotations
 from typing import cast
 
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.exceptions import NotFoundError
 from zwave_js_server.model.node import Node as ZwaveNode
 
 from homeassistant.config_entries import ConfigEntry
@@ -26,8 +25,6 @@ def update_data_collection_preference(
     hass: HomeAssistant, entry: ConfigEntry, preference: bool
 ) -> None:
     """Update data collection preference on config entry."""
-    if not entry:
-        raise NotFoundError("Config entry cannot be found")
     new_data = entry.data.copy()
     new_data[CONF_DATA_COLLECTION_OPTED_IN] = preference
     hass.config_entries.async_update_entry(entry, data=new_data)
