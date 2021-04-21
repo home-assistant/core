@@ -43,7 +43,7 @@ def set_update_interval(instances, requests_remaining):
     midnight = dt_util.find_next_time_expression_time(
         now, seconds=[0], minutes=[0], hours=[0]
     )
-    minutes_to_midnight = (midnight - now).seconds / 60
+    minutes_to_midnight = (midnight - now).total_seconds() / 60
     interval = timedelta(
         minutes=min(
             max(
