@@ -561,12 +561,12 @@ class UniversalMediaPlayer(MediaPlayerEntity):
     async def async_media_seek(self, position):
         """Send seek command."""
         data = {ATTR_MEDIA_SEEK_POSITION: position}
-        await self._async_call_service(SERVICE_MEDIA_SEEK, data)
+        await self._async_call_service(SERVICE_MEDIA_SEEK, data, allow_override=True)
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
         data = {ATTR_MEDIA_CONTENT_TYPE: media_type, ATTR_MEDIA_CONTENT_ID: media_id}
-        await self._async_call_service(SERVICE_PLAY_MEDIA, data)
+        await self._async_call_service(SERVICE_PLAY_MEDIA, data, allow_override=True)
 
     async def async_volume_up(self):
         """Turn volume up for media player."""
@@ -608,7 +608,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
 
     async def async_toggle(self):
         """Toggle the power on the media player."""
-        await self._async_call_service(SERVICE_TOGGLE)
+        await self._async_call_service(SERVICE_TOGGLE, allow_override=True)
 
     async def async_update(self):
         """Update state in HA."""
