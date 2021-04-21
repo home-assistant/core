@@ -2,14 +2,10 @@
 set_color_mode:
   name: Set Color Mode
   description: Sets the color mode for all color-capable lights attached to this ScreenLogic gateway.
+  target:
+    device:
+      integration: screenlogic
   fields:
-    device_id:
-      name: Gateway Device ID
-      description: The Home Assistant device_id of the ScreenLogic Gateway device
-      required: true
-      selector:
-        device:
-          integration: screenlogic
     color_mode:
       name: Color Mode
       description: The ScreenLogic color mode to set
