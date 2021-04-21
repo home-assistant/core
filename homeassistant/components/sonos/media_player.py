@@ -423,7 +423,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         was_available = self.available
         _LOGGER.debug("Async seen: %s, was_available: %s", player, was_available)
 
-        self._player = player
+        self.soco = player
 
         if self._seen_timer:
             self._seen_timer()
@@ -447,7 +447,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         self.async_write_ha_state()
 
-    async def async_unseen(self, now: datetime.datetime | None = None) -> None:
+    async def async_unseen(self) -> None:
         """Make this player unavailable when it was not seen recently."""
         self._seen_timer = None
 

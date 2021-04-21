@@ -134,7 +134,7 @@ class SonosBatteryEntity(SonosEntity, Entity):
         self.async_write_ha_state()
 
     @callback
-    def async_unseen(self, now=None):
+    def async_unseen(self) -> None:
         """Make this player unavailable when it was not seen recently."""
         self.async_write_ha_state()
 
