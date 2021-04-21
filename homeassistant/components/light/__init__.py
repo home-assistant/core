@@ -197,6 +197,8 @@ LIGHT_TURN_ON_SCHEMA = {
     ATTR_EFFECT: cv.string,
 }
 
+LIGHT_TURN_OFF_SCHEMA = {ATTR_TRANSITION: VALID_TRANSITION, ATTR_FLASH: VALID_FLASH}
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -271,6 +273,11 @@ async def async_setup(hass, config):
         """
         params = dict(call.data["params"])
 
+        # Zero brightness: Light will be turned off
+        if params.get(ATTR_BRIGHTNESS) == 0:
+            await async_handle_light_off_service(light, call)
+            return
+
         # Only process params once we processed brightness step
         if params and (
             ATTR_BRIGHTNESS_STEP in params or ATTR_BRIGHTNESS_STEP_PCT in params
@@ -289,6 +296,9 @@ async def async_setup(hass, config):
 
         if not params or not light.is_on:
             profiles.apply_default(light.entity_id, params)
+
+        if params and ATTR_TRANSITION not in params:
+            profiles.apply_default_transition(light.entity_id, params)
 
         supported_color_modes = light.supported_color_modes
         # Backwards compatibility: if an RGBWW color is specified, convert to RGB + W
@@ -336,17 +346,21 @@ async def async_setup(hass, config):
         if supported_color_modes:
             params.pop(ATTR_WHITE_VALUE, None)
 
-        # Zero brightness: Light will be turned off
-        if params.get(ATTR_BRIGHTNESS) == 0:
-            await light.async_turn_off(**filter_turn_off_params(params))
-        else:
-            await light.async_turn_on(**params)
+        await light.async_turn_on(**params)
+
+    async def async_handle_light_off_service(light, call):
+        """Handle turning off a light."""
+        params = dict(call.data["params"])
+
+        if ATTR_TRANSITION not in params:
+            profiles.apply_default_transition(light.entity_id, params)
+
+        await light.async_turn_off(**filter_turn_off_params(params))
 
     async def async_handle_toggle_service(light, call):
         """Handle toggling a light."""
         if light.is_on:
-            off_params = filter_turn_off_params(call.data["params"])
-            await light.async_turn_off(**off_params)
+            await async_handle_light_off_service(light, call)
         else:
             await async_handle_light_on_service(light, call)
 
@@ -360,8 +374,8 @@ async def async_setup(hass, config):
 
     component.async_register_entity_service(
         SERVICE_TURN_OFF,
-        {ATTR_TRANSITION: VALID_TRANSITION, ATTR_FLASH: VALID_FLASH},
-        "async_turn_off",
+        vol.All(cv.make_entity_service_schema(LIGHT_TURN_OFF_SCHEMA), preprocess_data),
+        async_handle_light_off_service,
     )
 
     component.async_register_entity_service(
@@ -488,11 +502,20 @@ class Profiles:
 
     @callback
     def apply_default(self, entity_id: str, params: dict) -> None:
-        """Return the default turn-on profile for the given light."""
+        """Return the default profile for the given light."""
         for _entity_id in (entity_id, "group.all_lights"):
             name = f"{_entity_id}.default"
             if name in self.data:
                 self.apply_profile(name, params)
+                return
+
+    @callback
+    def apply_default_transition(self, entity_id: str, params: dict) -> None:
+        """Return the transition attribute from the default profile for the given light"""
+        for _entity_id in (entity_id, "group.all_lights"):
+            name = f"{_entity_id}.default"
+            if name in self.data and self.data[name].transition is not None:
+                params.setdefault(ATTR_TRANSITION, self.data[name].transition)
                 return
 
     @callback
