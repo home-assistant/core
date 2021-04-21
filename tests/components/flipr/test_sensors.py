@@ -91,19 +91,3 @@ async def test_sensors(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_ICON) == "mdi:pool"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "mV"
     assert state.state == "0.23654886"
-
-    state = hass.states.get("binary_sensor.flipr_myfliprid_ph_status")
-    assert state
-    assert state.attributes.get(ATTR_ICON) is None
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
-    assert state.state == "on"
-
-    state = hass.states.get("binary_sensor.flipr_myfliprid_chlorine_status")
-    assert state
-    assert state.attributes.get(ATTR_ICON) is None
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
-    assert state.state == "off"
-
-    entry = registry.async_get("binary_sensor.flipr_myfliprid_chlorine_status")
-    assert entry
-    assert entry.unique_id == "myfliprid-chlorine_status"

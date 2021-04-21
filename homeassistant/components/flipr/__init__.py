@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(minutes=60)
 
 
-PLATFORMS = ["sensor", "binary_sensor"]
+PLATFORMS = ["sensor"]
 
 
 async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
