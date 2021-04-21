@@ -51,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_unload)
     )
     # Load the other platforms like switch
-    for domain in SUPPORTED_DOMAINS:
+    for domain in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, domain)
         )
