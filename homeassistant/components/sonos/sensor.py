@@ -23,7 +23,7 @@ ATTR_BATTERY_CHARGING = "charging"
 ATTR_BATTERY_POWERSOURCE = "power_source"
 
 
-def fetch_batery_info_or_none(soco: SoCo) -> Optional[Dict[str, Any]]:
+def fetch_battery_info_or_none(soco: SoCo) -> Optional[Dict[str, Any]]:
     """Fetch battery_info from the given SoCo object.
 
     Returns None if the device doesn't support battery info
@@ -43,7 +43,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             return None
         sonos_data.battery_entities[soco.uid] = None
         if battery_info := await hass.async_add_executor_job(
-            fetch_batery_info_or_none, soco
+            fetch_battery_info_or_none, soco
         ):
             return SonosBatteryEntity(soco, sonos_data, battery_info)
         return None
@@ -119,7 +119,7 @@ class SonosBatteryEntity(SonosEntity, Entity):
         if not self.available:
             # wait for the Sonos device to come back online
             return
-        battery_info = fetch_batery_info_or_none(self._soco)
+        battery_info = fetch_battery_info_or_none(self._soco)
         if battery_info is not None:
             self._battery_info = battery_info
             self.schedule_update_ha_state()
