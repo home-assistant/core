@@ -1,315 +1,38 @@
 {
-	"id": 7,
-	"deviceId": "265-5911-8215",
-	"manufacturer": "Vision Security",
-	"manufacturerId": 265,
-	"productType": 8215,
-	"productId": 5911,
-	"name": "",
-	"loc": "",
 	"nodeId": 7,
-	"values": [
-		{
-			"id": "7-96-0-endpointIndizes",
-			"nodeId": 7,
-			"commandClass": 96,
-			"commandClassName": "Multi Channel",
-			"endpoint": 0,
-			"property": "endpointIndizes",
-			"propertyName": "endpointIndizes",
-			"type": "any",
-			"readable": true,
-			"writeable": true,
-			"label": "endpointIndizes (property)",
-			"stateless": false,
-			"list": false,
-			"value": [1, 2],
-			"lastUpdate": 1618885589461,
-			"newValue": [1, 2]
+	"index": 0,
+	"status": 4,
+	"ready": true,
+	"isListening": true,
+	"isRouting": true,
+	"isSecure": false,
+	"manufacturerId": 265,
+	"productId": 5911,
+	"productType": 8215,
+	"firmwareVersion": "13.7",
+	"deviceConfig": {
+		"filename": "/opt/node_modules/@zwave-js/config/config/devices/0x0109/zl7432.json",
+		"manufacturer": "Vision Security",
+		"manufacturerId": 265,
+		"label": "ZL7432",
+		"description": "In Wall Dual Relay Switch",
+		"devices": [
+			{
+				"productType": 8215,
+				"productId": 5905
+			},
+			{
+				"productType": 8215,
+				"productId": 5911
+			}
+		],
+		"firmwareVersion": {
+			"min": "0.0",
+			"max": "255.255"
 		},
-		{
-			"id": "7-114-0-manufacturerId",
-			"nodeId": 7,
-			"commandClass": 114,
-			"commandClassName": "Manufacturer Specific",
-			"endpoint": 0,
-			"property": "manufacturerId",
-			"propertyName": "manufacturerId",
-			"type": "number",
-			"readable": true,
-			"writeable": false,
-			"label": "Manufacturer ID",
-			"stateless": false,
-			"min": 0,
-			"max": 65535,
-			"list": false,
-			"value": 265,
-			"lastUpdate": 1618885589461,
-			"newValue": 265
-		},
-		{
-			"id": "7-114-0-productType",
-			"nodeId": 7,
-			"commandClass": 114,
-			"commandClassName": "Manufacturer Specific",
-			"endpoint": 0,
-			"property": "productType",
-			"propertyName": "productType",
-			"type": "number",
-			"readable": true,
-			"writeable": false,
-			"label": "Product type",
-			"stateless": false,
-			"min": 0,
-			"max": 65535,
-			"list": false,
-			"value": 8215,
-			"lastUpdate": 1618885589461,
-			"newValue": 8215
-		},
-		{
-			"id": "7-114-0-productId",
-			"nodeId": 7,
-			"commandClass": 114,
-			"commandClassName": "Manufacturer Specific",
-			"endpoint": 0,
-			"property": "productId",
-			"propertyName": "productId",
-			"type": "number",
-			"readable": true,
-			"writeable": false,
-			"label": "Product ID",
-			"stateless": false,
-			"min": 0,
-			"max": 65535,
-			"list": false,
-			"value": 5911,
-			"lastUpdate": 1618885589461,
-			"newValue": 5911
-		},
-		{
-			"id": "7-134-0-libraryType",
-			"nodeId": 7,
-			"commandClass": 134,
-			"commandClassName": "Version",
-			"endpoint": 0,
-			"property": "libraryType",
-			"propertyName": "libraryType",
-			"type": "any",
-			"readable": true,
-			"writeable": false,
-			"label": "Library type",
-			"stateless": false,
-			"list": false,
-			"value": 6,
-			"lastUpdate": 1618885589461,
-			"newValue": 6
-		},
-		{
-			"id": "7-134-0-protocolVersion",
-			"nodeId": 7,
-			"commandClass": 134,
-			"commandClassName": "Version",
-			"endpoint": 0,
-			"property": "protocolVersion",
-			"propertyName": "protocolVersion",
-			"type": "any",
-			"readable": true,
-			"writeable": false,
-			"label": "Z-Wave protocol version",
-			"stateless": false,
-			"list": false,
-			"value": "3.67",
-			"lastUpdate": 1618885589461,
-			"newValue": "3.67"
-		},
-		{
-			"id": "7-134-0-firmwareVersions",
-			"nodeId": 7,
-			"commandClass": 134,
-			"commandClassName": "Version",
-			"endpoint": 0,
-			"property": "firmwareVersions",
-			"propertyName": "firmwareVersions",
-			"type": "any",
-			"readable": true,
-			"writeable": false,
-			"label": "Z-Wave chip firmware versions",
-			"stateless": false,
-			"list": false,
-			"value": ["13.7"],
-			"lastUpdate": 1618885589461,
-			"newValue": ["13.7"]
-		},
-		{
-			"id": "7-32-1-currentValue",
-			"nodeId": 7,
-			"commandClass": 32,
-			"commandClassName": "Basic",
-			"endpoint": 1,
-			"property": "currentValue",
-			"propertyName": "currentValue",
-			"type": "number",
-			"readable": true,
-			"writeable": false,
-			"label": "Current value",
-			"stateless": false,
-			"min": 0,
-			"max": 99,
-			"list": false,
-			"isCurrentValue": true,
-			"targetValue": "32-1-targetValue",
-			"lastUpdate": 1618885589462
-		},
-		{
-			"id": "7-32-1-targetValue",
-			"nodeId": 7,
-			"commandClass": 32,
-			"commandClassName": "Basic",
-			"endpoint": 1,
-			"property": "targetValue",
-			"propertyName": "targetValue",
-			"type": "number",
-			"readable": true,
-			"writeable": true,
-			"label": "Target value",
-			"stateless": false,
-			"min": 0,
-			"max": 99,
-			"list": false,
-			"lastUpdate": 1618885589462
-		},
-		{
-			"id": "7-37-1-currentValue",
-			"nodeId": 7,
-			"commandClass": 37,
-			"commandClassName": "Binary Switch",
-			"endpoint": 1,
-			"property": "currentValue",
-			"propertyName": "currentValue",
-			"type": "boolean",
-			"readable": true,
-			"writeable": false,
-			"label": "Current value",
-			"stateless": false,
-			"list": false,
-			"value": false,
-			"isCurrentValue": true,
-			"targetValue": "37-1-targetValue",
-			"lastUpdate": 1618885589465,
-			"newValue": false
-		},
-		{
-			"id": "7-37-1-targetValue",
-			"nodeId": 7,
-			"commandClass": 37,
-			"commandClassName": "Binary Switch",
-			"endpoint": 1,
-			"property": "targetValue",
-			"propertyName": "targetValue",
-			"type": "boolean",
-			"readable": true,
-			"writeable": true,
-			"label": "Target value",
-			"stateless": false,
-			"list": false,
-			"value": false,
-			"lastUpdate": 1618885589465,
-			"newValue": false
-		},
-		{
-			"id": "7-32-2-currentValue",
-			"nodeId": 7,
-			"commandClass": 32,
-			"commandClassName": "Basic",
-			"endpoint": 2,
-			"property": "currentValue",
-			"propertyName": "currentValue",
-			"type": "number",
-			"readable": true,
-			"writeable": false,
-			"label": "Current value",
-			"stateless": false,
-			"min": 0,
-			"max": 99,
-			"list": false,
-			"isCurrentValue": true,
-			"targetValue": "32-2-targetValue",
-			"lastUpdate": 1618885589466
-		},
-		{
-			"id": "7-32-2-targetValue",
-			"nodeId": 7,
-			"commandClass": 32,
-			"commandClassName": "Basic",
-			"endpoint": 2,
-			"property": "targetValue",
-			"propertyName": "targetValue",
-			"type": "number",
-			"readable": true,
-			"writeable": true,
-			"label": "Target value",
-			"stateless": false,
-			"min": 0,
-			"max": 99,
-			"list": false,
-			"lastUpdate": 1618885589466
-		},
-		{
-			"id": "7-37-2-currentValue",
-			"nodeId": 7,
-			"commandClass": 37,
-			"commandClassName": "Binary Switch",
-			"endpoint": 2,
-			"property": "currentValue",
-			"propertyName": "currentValue",
-			"type": "boolean",
-			"readable": true,
-			"writeable": false,
-			"label": "Current value",
-			"stateless": false,
-			"list": false,
-			"value": false,
-			"isCurrentValue": true,
-			"targetValue": "37-2-targetValue",
-			"lastUpdate": 1618885589468,
-			"newValue": false
-		},
-		{
-			"id": "7-37-2-targetValue",
-			"nodeId": 7,
-			"commandClass": 37,
-			"commandClassName": "Binary Switch",
-			"endpoint": 2,
-			"property": "targetValue",
-			"propertyName": "targetValue",
-			"type": "boolean",
-			"readable": true,
-			"writeable": true,
-			"label": "Target value",
-			"stateless": false,
-			"list": false,
-			"value": false,
-			"lastUpdate": 1618885589468,
-			"newValue": false
-		}
-	],
-	"groups": [
-		{
-			"text": "Update Controller",
-			"value": 1,
-			"maxNodes": 5,
-			"isLifeline": true,
-			"multiChannel": false
-		},
-		{
-			"text": "Update Controller",
-			"value": 1,
-			"maxNodes": 5,
-			"isLifeline": true,
-			"multiChannel": false
-		}
-	],
+		"associations": {}
+	},
+	"label": "ZL7432",
 	"neighbors": [
 		1,
 		10,
@@ -321,20 +44,16 @@
 		17,
 		18,
 		19,
-		2,
 		20,
 		21,
 		22,
 		23,
 		24,
-		25,
 		26,
 		27,
 		28,
 		29,
 		3,
-		30,
-		31,
 		32,
 		33,
 		34,
@@ -347,38 +66,368 @@
 		52,
 		53,
 		56,
-		57,
 		58,
 		59,
+		69,
 		8,
 		9
 	],
-	"ready": true,
-	"available": true,
-	"hassDevices": {},
-	"failed": false,
-	"lastActive": 1618885589468,
-	"firmwareVersion": "13.7",
+	"endpointCountIsDynamic": false,
+	"endpointsHaveIdenticalCapabilities": true,
+	"individualEndpointCount": 2,
+	"interviewAttempts": 0,
+	"endpoints": [
+		{
+			"nodeId": 7,
+			"index": 0,
+			"deviceClass": {
+				"basic": {
+					"key": 4,
+					"label": "Routing Slave"
+				},
+				"generic": {
+					"key": 16,
+					"label": "Binary Switch"
+				},
+				"specific": {
+					"key": 1,
+					"label": "Binary Power Switch"
+				},
+				"mandatorySupportedCCs": [32, 37, 39],
+				"mandatoryControlledCCs": []
+			}
+		},
+		{
+			"nodeId": 7,
+			"index": 1,
+			"deviceClass": {
+				"basic": {
+					"key": 4,
+					"label": "Routing Slave"
+				},
+				"generic": {
+					"key": 16,
+					"label": "Binary Switch"
+				},
+				"specific": {
+					"key": 1,
+					"label": "Binary Power Switch"
+				},
+				"mandatorySupportedCCs": [32, 37, 39],
+				"mandatoryControlledCCs": []
+			}
+		},
+		{
+			"nodeId": 7,
+			"index": 2,
+			"deviceClass": {
+				"basic": {
+					"key": 4,
+					"label": "Routing Slave"
+				},
+				"generic": {
+					"key": 16,
+					"label": "Binary Switch"
+				},
+				"specific": {
+					"key": 1,
+					"label": "Binary Power Switch"
+				},
+				"mandatorySupportedCCs": [32, 37, 39],
+				"mandatoryControlledCCs": []
+			}
+		}
+	],
+	"values": [
+		{
+			"endpoint": 0,
+			"commandClass": 96,
+			"commandClassName": "Multi Channel",
+			"property": "endpointIndizes",
+			"propertyName": "endpointIndizes",
+			"ccVersion": 3,
+			"metadata": {
+				"type": "any",
+				"readable": true,
+				"writeable": true
+			},
+			"value": [1, 2]
+		},
+		{
+			"endpoint": 0,
+			"commandClass": 114,
+			"commandClassName": "Manufacturer Specific",
+			"property": "manufacturerId",
+			"propertyName": "manufacturerId",
+			"ccVersion": 1,
+			"metadata": {
+				"type": "number",
+				"readable": true,
+				"writeable": false,
+				"label": "Manufacturer ID",
+				"min": 0,
+				"max": 65535
+			},
+			"value": 265
+		},
+		{
+			"endpoint": 0,
+			"commandClass": 114,
+			"commandClassName": "Manufacturer Specific",
+			"property": "productType",
+			"propertyName": "productType",
+			"ccVersion": 1,
+			"metadata": {
+				"type": "number",
+				"readable": true,
+				"writeable": false,
+				"label": "Product type",
+				"min": 0,
+				"max": 65535
+			},
+			"value": 8215
+		},
+		{
+			"endpoint": 0,
+			"commandClass": 114,
+			"commandClassName": "Manufacturer Specific",
+			"property": "productId",
+			"propertyName": "productId",
+			"ccVersion": 1,
+			"metadata": {
+				"type": "number",
+				"readable": true,
+				"writeable": false,
+				"label": "Product ID",
+				"min": 0,
+				"max": 65535
+			},
+			"value": 5911
+		},
+		{
+			"endpoint": 0,
+			"commandClass": 134,
+			"commandClassName": "Version",
+			"property": "libraryType",
+			"propertyName": "libraryType",
+			"ccVersion": 1,
+			"metadata": {
+				"type": "any",
+				"readable": true,
+				"writeable": false,
+				"label": "Library type"
+			},
+			"value": 6
+		},
+		{
+			"endpoint": 0,
+			"commandClass": 134,
+			"commandClassName": "Version",
+			"property": "protocolVersion",
+			"propertyName": "protocolVersion",
+			"ccVersion": 1,
+			"metadata": {
+				"type": "any",
+				"readable": true,
+				"writeable": false,
+				"label": "Z-Wave protocol version"
+			},
+			"value": "3.67"
+		},
+		{
+			"endpoint": 0,
+			"commandClass": 134,
+			"commandClassName": "Version",
+			"property": "firmwareVersions",
+			"propertyName": "firmwareVersions",
+			"ccVersion": 1,
+			"metadata": {
+				"type": "any",
+				"readable": true,
+				"writeable": false,
+				"label": "Z-Wave chip firmware versions"
+			},
+			"value": ["13.7"]
+		},
+		{
+			"endpoint": 1,
+			"commandClass": 32,
+			"commandClassName": "Basic",
+			"property": "currentValue",
+			"propertyName": "currentValue",
+			"ccVersion": 0,
+			"metadata": {
+				"type": "number",
+				"readable": true,
+				"writeable": false,
+				"label": "Current value",
+				"min": 0,
+				"max": 99
+			}
+		},
+		{
+			"endpoint": 1,
+			"commandClass": 32,
+			"commandClassName": "Basic",
+			"property": "targetValue",
+			"propertyName": "targetValue",
+			"ccVersion": 0,
+			"metadata": {
+				"type": "number",
+				"readable": true,
+				"writeable": true,
+				"label": "Target value",
+				"min": 0,
+				"max": 99
+			}
+		},
+		{
+			"endpoint": 1,
+			"commandClass": 37,
+			"commandClassName": "Binary Switch",
+			"property": "currentValue",
+			"propertyName": "currentValue",
+			"ccVersion": 1,
+			"metadata": {
+				"type": "boolean",
+				"readable": true,
+				"writeable": false,
+				"label": "Current value"
+			},
+			"value": false
+		},
+		{
+			"endpoint": 1,
+			"commandClass": 37,
+			"commandClassName": "Binary Switch",
+			"property": "targetValue",
+			"propertyName": "targetValue",
+			"ccVersion": 1,
+			"metadata": {
+				"type": "boolean",
+				"readable": true,
+				"writeable": true,
+				"label": "Target value"
+			},
+			"value": false
+		},
+		{
+			"endpoint": 2,
+			"commandClass": 32,
+			"commandClassName": "Basic",
+			"property": "currentValue",
+			"propertyName": "currentValue",
+			"ccVersion": 0,
+			"metadata": {
+				"type": "number",
+				"readable": true,
+				"writeable": false,
+				"label": "Current value",
+				"min": 0,
+				"max": 99
+			}
+		},
+		{
+			"endpoint": 2,
+			"commandClass": 32,
+			"commandClassName": "Basic",
+			"property": "targetValue",
+			"propertyName": "targetValue",
+			"ccVersion": 0,
+			"metadata": {
+				"type": "number",
+				"readable": true,
+				"writeable": true,
+				"label": "Target value",
+				"min": 0,
+				"max": 99
+			}
+		},
+		{
+			"endpoint": 2,
+			"commandClass": 37,
+			"commandClassName": "Binary Switch",
+			"property": "currentValue",
+			"propertyName": "currentValue",
+			"ccVersion": 1,
+			"metadata": {
+				"type": "boolean",
+				"readable": true,
+				"writeable": false,
+				"label": "Current value"
+			},
+			"value": false
+		},
+		{
+			"endpoint": 2,
+			"commandClass": 37,
+			"commandClassName": "Binary Switch",
+			"property": "targetValue",
+			"propertyName": "targetValue",
+			"ccVersion": 1,
+			"metadata": {
+				"type": "boolean",
+				"readable": true,
+				"writeable": true,
+				"label": "Target value"
+			},
+			"value": false
+		}
+	],
+	"interviewStage": 6,
+	"isFrequentListening": false,
+	"maxDataRate": 40000,
+	"supportedDataRates": [40000],
+	"protocolVersion": 3,
 	"supportsBeaming": true,
 	"supportsSecurity": false,
-	"isSecure": false,
-	"keepAwake": false,
-	"maxBaudRate": null,
-	"isRouting": true,
-	"isFrequentListening": false,
-	"isListening": true,
-	"inited": true,
-	"hexId": "0x0109-0x2017-0x1717",
-	"dbLink": "https://devices.zwave-js.io/?jumpTo=0x0109:0x2017:0x1717:13.7",
-	"productLabel": "ZL7432",
-	"productDescription": "In Wall Dual Relay Switch",
-	"protocolVersion": 3,
 	"nodeType": 1,
-	"endpointsCount": 2,
-	"isControllerNode": false,
-	"dataRate": 40000,
-	"deviceClass": { "basic": 4, "generic": 16, "specific": 1 },
-	"status": "Alive",
-	"interviewStage": "Complete",
-	"_name": "NodeID_7"
+	"deviceClass": {
+		"basic": {
+			"key": 4,
+			"label": "Routing Slave"
+		},
+		"generic": {
+			"key": 16,
+			"label": "Binary Switch"
+		},
+		"specific": {
+			"key": 1,
+			"label": "Binary Power Switch"
+		},
+		"mandatorySupportedCCs": [32, 37, 39],
+		"mandatoryControlledCCs": []
+	},
+	"commandClasses": [
+		{
+			"id": 37,
+			"name": "Binary Switch",
+			"version": 1,
+			"isSecure": false
+		},
+		{
+			"id": 96,
+			"name": "Multi Channel",
+			"version": 3,
+			"isSecure": false
+		},
+		{
+			"id": 114,
+			"name": "Manufacturer Specific",
+			"version": 1,
+			"isSecure": false
+		},
+		{
+			"id": 133,
+			"name": "Association",
+			"version": 1,
+			"isSecure": false
+		},
+		{
+			"id": 134,
+			"name": "Version",
+			"version": 1,
+			"isSecure": false
+		}
+	]
 }
