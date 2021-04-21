@@ -27,10 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     api_key = entry.data[CONF_API_KEY]
 
     coordinator = FreedomproDataUpdateCoordinator(hass, api_key)
-    await coordinator.async_refresh()
-
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
 
     undo_listener = entry.add_update_listener(update_listener)
 
