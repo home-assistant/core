@@ -83,6 +83,10 @@ class ISYFanEntity(ISYNodeEntity, FanEntity):
         **kwargs,
     ) -> None:
         """Send the turn on command to the ISY994 fan device."""
+        if percentage is None:
+            self._node.turn_on()
+            return
+
         self.set_percentage(percentage)
 
     def turn_off(self, **kwargs) -> None:
