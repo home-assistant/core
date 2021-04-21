@@ -511,7 +511,7 @@ class Profiles:
 
     @callback
     def apply_default_transition(self, entity_id: str, params: dict) -> None:
-        """Return the transition attribute from the default profile for the given light"""
+        """Return the transition attribute from the default profile for the given light."""
         for _entity_id in (entity_id, "group.all_lights"):
             name = f"{_entity_id}.default"
             if name in self.data and self.data[name].transition is not None:
