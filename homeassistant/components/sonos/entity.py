@@ -37,3 +37,8 @@ class SonosEntity(Entity):
     def available(self) -> bool:
         """Return whether this device is available."""
         return self.soco.uid in self.data.seen_timers
+
+    @property
+    def should_poll(self) -> bool:
+        """Return that we should not be polled (we handle that internally)."""
+        return False

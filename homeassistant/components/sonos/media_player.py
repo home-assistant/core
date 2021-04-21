@@ -521,11 +521,6 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         subscription.callback = sub_callback
         self._subscriptions.append(subscription)
 
-    @property
-    def should_poll(self) -> bool:
-        """Return that we should not be polled (we handle that internally)."""
-        return False
-
     def update(self, now: datetime.datetime | None = None) -> None:
         """Retrieve latest state."""
         try:

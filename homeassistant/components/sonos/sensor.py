@@ -160,6 +160,11 @@ class SonosBatteryEntity(SonosEntity, Entity):
         """Get the unit of measurement."""
         return PERCENTAGE
 
+    @property
+    def should_poll(self) -> bool:
+        """Return that we should not be polled (we handle that internally)."""
+        return False
+
     # Update the current state
     def update(self, event=None):
         """Poll the device for the current state."""
