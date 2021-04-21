@@ -1,6 +1,5 @@
 """Support for Soma sensors."""
 from datetime import timedelta
-import logging
 
 from requests import RequestException
 
@@ -13,10 +12,14 @@ from homeassistant.util import Throttle
 
 from . import DEVICES, SomaEntity
 from .const import API, DOMAIN
+from .utils import (
+    is_api_response_success,
+    log_connect_api_unreachable,
+    log_debug_msg,
+    log_device_unreachable,
+)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -53,18 +56,16 @@ class SomaSensor(SomaEntity, SensorEntity):
     async def async_update(self):
         """Update the sensor with the latest data."""
         try:
-            _LOGGER.debug("Soma Sensor Update")
+            log_debug_msg("Soma Sensor Update")
             response = await self.hass.async_add_executor_job(
                 self.api.get_battery_level, self.device["mac"]
             )
         except RequestException:
-            _LOGGER.error("Connection to SOMA Connect failed")
+            log_connect_api_unreachable()
             self.is_available = False
             return
-        if response["result"] != "success":
-            _LOGGER.error(
-                "Unable to reach device %s (%s)", self.device["name"], response["msg"]
-            )
+        if not is_api_response_success(response):
+            log_device_unreachable(self.device["name"], response["msg"])
             self.is_available = False
             return
         # https://support.somasmarthome.com/hc/en-us/articles/360026064234-HTTP-API
