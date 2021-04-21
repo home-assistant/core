@@ -71,9 +71,7 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Optional(
-                    CONF_DEFAULT_INTERFACE, default=DEFAULT_DEFAULT_INTERFACE
-                ): cv.boolean,
+                vol.Optional(CONF_DEFAULT_INTERFACE): cv.boolean,
                 vol.Optional(CONF_IPV6, default=DEFAULT_IPV6): cv.boolean,
             }
         )
@@ -124,9 +122,9 @@ def _first_ip_nexthop_from_route(routes: Iterable) -> None | str:
     """Find the first RTA_PREFSRC in the routes."""
     _LOGGER.debug("Routes: %s", routes)
     for route in routes:
-        for attr in route["attrs"]:
-            if "RTA_PREFSRC" in attr:
-                return cast(str, attr["RTA_PREFSRC"])
+        for key, value in route["attrs"]:
+            if key == "RTA_PREFSRC":
+                return cast(str, value)
     return None
 
 
