@@ -10,7 +10,7 @@ from aiohttp import hdrs, web, web_exceptions
 import voluptuous as vol
 from zwave_js_server import dump
 from zwave_js_server.client import Client
-from zwave_js_server.const import LogLevel
+from zwave_js_server.const import CommandClass, LogLevel
 from zwave_js_server.exceptions import InvalidNewValue, NotFoundError, SetValueFailed
 from zwave_js_server.model.log_config import LogConfig
 from zwave_js_server.util.node import async_set_config_parameter
@@ -43,6 +43,7 @@ from .helpers import async_enable_statistics, update_data_collection_preference
 ID = "id"
 ENTRY_ID = "entry_id"
 NODE_ID = "node_id"
+COMMAND_CLASS_ID = "command_class_id"
 TYPE = "type"
 PROPERTY = "property"
 PROPERTY_KEY = "property_key"
@@ -91,6 +92,8 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_remove_node)
     websocket_api.async_register_command(hass, websocket_stop_exclusion)
     websocket_api.async_register_command(hass, websocket_refresh_node_info)
+    websocket_api.async_register_command(hass, websocket_refresh_node_values)
+    websocket_api.async_register_command(hass, websocket_refresh_node_cc_values)
     websocket_api.async_register_command(hass, websocket_update_log_config)
     websocket_api.async_register_command(hass, websocket_get_log_config)
     websocket_api.async_register_command(hass, websocket_get_config_parameters)
@@ -374,6 +377,66 @@ async def websocket_refresh_node_info(
         return
 
     await node.async_refresh_info()
+    connection.send_result(msg[ID])
+
+
+@websocket_api.require_admin  # type: ignore
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/refresh_node_values",
+        vol.Required(ENTRY_ID): str,
+        vol.Required(NODE_ID): int,
+    },
+)
+@async_get_entry
+async def websocket_refresh_node_values(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    entry: ConfigEntry,
+    client: Client,
+) -> None:
+    """Refresh node values."""
+    node_id = msg[NODE_ID]
+    node = client.driver.controller.nodes.get(node_id)
+
+    if node is None:
+        connection.send_error(msg[ID], ERR_NOT_FOUND, f"Node {node_id} not found")
+        return
+
+    await node.async_refresh_values()
+    connection.send_result(msg[ID])
+
+
+@websocket_api.require_admin  # type: ignore
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/refresh_node_cc_values",
+        vol.Required(ENTRY_ID): str,
+        vol.Required(NODE_ID): int,
+        vol.Required(COMMAND_CLASS_ID): int,
+    },
+)
+@async_get_entry
+async def websocket_refresh_node_cc_values(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    entry: ConfigEntry,
+    client: Client,
+) -> None:
+    """Refresh node values for a particular CommandClass."""
+    node_id = msg[NODE_ID]
+    node = client.driver.controller.nodes.get(node_id)
+    command_class = CommandClass(msg[COMMAND_CLASS_ID])
+
+    if node is None:
+        connection.send_error(msg[ID], ERR_NOT_FOUND, f"Node {node_id} not found")
+        return
+
+    await node.async_refresh_cc_values(command_class)
     connection.send_result(msg[ID])
 
 
