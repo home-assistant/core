@@ -22,7 +22,7 @@ from openzwavemqtt.util.mqtt_client import MQTTClient
 
 from homeassistant.components import mqtt
 from homeassistant.components.hassio.handler import HassioAPIError
-from homeassistant.config_entries import ENTRY_STATE_LOADED, ConfigEntry
+from homeassistant.config_entries import ConfigEntry, EntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -92,7 +92,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):  # noqa: C
 
     else:
         mqtt_entries = hass.config_entries.async_entries("mqtt")
-        if not mqtt_entries or mqtt_entries[0].state != ENTRY_STATE_LOADED:
+        if not mqtt_entries or mqtt_entries[0].state is not EntryState.LOADED:
             _LOGGER.error("MQTT integration is not set up")
             return False
 
@@ -100,7 +100,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):  # noqa: C
 
         @callback
         def send_message(topic, payload):
-            if mqtt_entry.state != ENTRY_STATE_LOADED:
+            if mqtt_entry.state is not EntryState.LOADED:
                 _LOGGER.error("MQTT integration is not set up")
                 return
 

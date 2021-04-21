@@ -144,7 +144,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Handle options flow."""
 
-        if self.config_entry.state != config_entries.ENTRY_STATE_LOADED:
+        if self.config_entry.state is not config_entries.EntryState.LOADED:
             _LOGGER.error("MyLink must be connected to manage device options")
             return self.async_abort(reason="cannot_connect")
 

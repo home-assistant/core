@@ -104,4 +104,4 @@ async def test_two_entries(hass):
             data={dynalite.CONF_HOST: host2},
         )
     assert result["type"] == "create_entry"
-    assert result["result"].state == "loaded"
+    assert result["result"].state == config_entries.EntryState.LOADED

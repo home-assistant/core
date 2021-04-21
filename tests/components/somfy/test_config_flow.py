@@ -97,10 +97,10 @@ async def test_full_flow(
 
     assert DOMAIN in hass.config.components
     entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert entry.state == config_entries.ENTRY_STATE_LOADED
+    assert entry.state is config_entries.EntryState.LOADED
 
     assert await hass.config_entries.async_unload(entry.entry_id)
-    assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
+    assert entry.state is config_entries.EntryState.NOT_LOADED
 
 
 async def test_abort_if_authorization_timeout(hass, current_request_with_host):
