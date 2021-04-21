@@ -4,7 +4,13 @@ from unittest.mock import patch
 from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
 import pytest
 
-from homeassistant.components.fritz.const import ATTR_HOST, DOMAIN
+from homeassistant.components.fritz.const import (
+    ATTR_HOST,
+    DOMAIN,
+    ERROR_AUTH_INVALID,
+    ERROR_CONNECTION_ERROR,
+    ERROR_UNKNOWN,
+)
 from homeassistant.components.ssdp import (
     ATTR_SSDP_LOCATION,
     ATTR_UPNP_FRIENDLY_NAME,
@@ -122,7 +128,7 @@ async def test_exception_security(hass: HomeAssistantType):
 
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "start_config"
-        assert result["errors"]["base"] == "invalid_auth"
+        assert result["errors"]["base"] == ERROR_AUTH_INVALID
 
 
 async def test_exception_connection(hass: HomeAssistantType):
@@ -145,7 +151,30 @@ async def test_exception_connection(hass: HomeAssistantType):
 
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "start_config"
-        assert result["errors"]["base"] == "connection_error"
+        assert result["errors"]["base"] == ERROR_CONNECTION_ERROR
+
+
+async def test_exception_unknown(hass: HomeAssistantType):
+    """Test starting a flow by user."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "start_config"
+
+    with patch(
+        "homeassistant.components.fritz.common.FritzConnection",
+        side_effect=OSError,
+    ), patch("homeassistant.components.fritz.common.FritzStatus"):
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_DATA
+        )
+
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "start_config"
+        assert result["errors"]["base"] == ERROR_UNKNOWN
 
 
 async def test_reauth_successful(hass: HomeAssistantType, fc_class_mock):

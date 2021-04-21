@@ -22,6 +22,7 @@ from .const import (
     DOMAIN,
     ERROR_AUTH_INVALID,
     ERROR_CONNECTION_ERROR,
+    ERROR_UNKNOWN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,6 +62,9 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
             return ERROR_AUTH_INVALID
         except FritzConnectionException:
             return ERROR_CONNECTION_ERROR
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            return ERROR_UNKNOWN
 
         return None
 

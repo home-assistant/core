@@ -13,7 +13,8 @@ DEFAULT_USERNAME = ""
 
 DEFAULT_USE_TRACKER = True
 
-ERROR_CONNECTION_ERROR = "connection_error"
 ERROR_AUTH_INVALID = "invalid_auth"
+ERROR_CONNECTION_ERROR = "connection_error"
+ERROR_UNKNOWN = "unknown_error "
 
 TRACKER_SCAN_INTERVAL = 30
