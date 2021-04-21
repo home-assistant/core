@@ -1,7 +1,7 @@
 """Test init of Airly integration."""
-from datetime import datetime, timedelta
 from unittest.mock import patch
 
+from homeassistant.components.airly import set_update_interval
 from homeassistant.components.airly.const import DOMAIN
 from homeassistant.config_entries import (
     ENTRY_STATE_LOADED,
@@ -9,7 +9,7 @@ from homeassistant.config_entries import (
     ENTRY_STATE_SETUP_RETRY,
 )
 from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.util.dt import NATIVE_UTC
+from homeassistant.util.dt import utcnow
 
 from . import API_POINT_URL
 
@@ -90,101 +90,82 @@ async def test_config_with_turned_off_station(hass, aioclient_mock):
 
 async def test_update_interval(hass, aioclient_mock):
     """Test correct update interval when the number of configured instances changes."""
-    HEADERS = {"X-RateLimit-Limit-day": "100", "X-RateLimit-Remaining-day": "15"}
-    POINT = datetime(
-        year=2030, month=3, day=2, hour=21, minute=20, second=0, tzinfo=NATIVE_UTC
+    REMAINING_RQUESTS = 15
+    HEADERS = {
+        "X-RateLimit-Limit-day": "100",
+        "X-RateLimit-Remaining-day": str(REMAINING_RQUESTS),
+    }
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Home",
+        unique_id="123-456",
+        data={
+            "api_key": "foo",
+            "latitude": 123,
+            "longitude": 456,
+            "name": "Home",
+        },
     )
 
-    with patch(
-        "homeassistant.components.airly.dt_util.utcnow", return_value=POINT
-    ), patch("homeassistant.helpers.update_coordinator.utcnow", return_value=POINT):
-        async_fire_time_changed(hass, POINT)
-        await hass.async_block_till_done()
+    aioclient_mock.get(
+        API_POINT_URL,
+        text=load_fixture("airly_valid_station.json"),
+        headers=HEADERS,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    instances = 1
 
-        entry = MockConfigEntry(
-            domain=DOMAIN,
-            title="Home",
-            unique_id="123-456",
-            data={
-                "api_key": "foo",
-                "latitude": 123,
-                "longitude": 456,
-                "name": "Home",
-            },
-        )
+    assert aioclient_mock.call_count == 1
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert entry.state == ENTRY_STATE_LOADED
 
-        aioclient_mock.get(
-            API_POINT_URL,
-            text=load_fixture("airly_valid_station.json"),
-            headers=HEADERS,
-        )
-        entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-        assert aioclient_mock.call_count == 1
-        assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-        assert entry.state == ENTRY_STATE_LOADED
-
-    # We have 160 minutes to midnight, 15 remaining requests and one instance so next
-    # update will be after ceil(160 / 15 * 1) = 11 minutes
-    future = POINT + timedelta(minutes=11, seconds=1)
-    with patch(
-        "homeassistant.components.airly.dt_util.utcnow", return_value=future
-    ), patch("homeassistant.helpers.update_coordinator.utcnow", return_value=future):
+    update_interval = set_update_interval(instances, REMAINING_RQUESTS)
+    future = utcnow() + update_interval
+    with patch("homeassistant.util.dt.utcnow", return_value=future):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-        assert aioclient_mock.call_count == 2
+    # call_count should increase by one because we have one instance configured
+    assert aioclient_mock.call_count == 2
 
-    # We have 149 minutes to midnight, 15 remaining requests and one instance so next
-    # update will be after ceil(149 / 15 * 1) = 10 minutes
-    future = future + timedelta(minutes=10, seconds=1)
-    with patch(
-        "homeassistant.components.airly.dt_util.utcnow", return_value=future
-    ), patch("homeassistant.helpers.update_coordinator.utcnow", return_value=future):
+    # Now we add the second Airly instance
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Work",
+        unique_id="66.66-111.11",
+        data={
+            "api_key": "foo",
+            "latitude": 66.66,
+            "longitude": 111.11,
+            "name": "Work",
+        },
+    )
+
+    aioclient_mock.get(
+        "https://airapi.airly.eu/v2/measurements/point?lat=66.660000&lng=111.110000",
+        text=load_fixture("airly_valid_station.json"),
+        headers=HEADERS,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    instances = 2
+
+    assert aioclient_mock.call_count == 3
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
+    assert entry.state == ENTRY_STATE_LOADED
+
+    update_interval = set_update_interval(instances, REMAINING_RQUESTS)
+    future = utcnow() + update_interval
+    with patch("homeassistant.util.dt.utcnow", return_value=future):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-        assert aioclient_mock.call_count == 3
-
-        # Now we add the second Airly instance
-        entry = MockConfigEntry(
-            domain=DOMAIN,
-            title="Work",
-            unique_id="66.66-111.11",
-            data={
-                "api_key": "foo",
-                "latitude": 66.66,
-                "longitude": 111.11,
-                "name": "Work",
-            },
-        )
-
-        aioclient_mock.get(
-            "https://airapi.airly.eu/v2/measurements/point?lat=66.660000&lng=111.110000",
-            text=load_fixture("airly_valid_station.json"),
-            headers=HEADERS,
-        )
-        entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-        assert aioclient_mock.call_count == 4
-        assert len(hass.config_entries.async_entries(DOMAIN)) == 2
-        assert entry.state == ENTRY_STATE_LOADED
-
-    # We have 139 minutes to midnight, 15 remaining requests and two instances so next
-    # update will be after ceil(139 / 15 * 2) = 19 minutes
-    future = future + timedelta(minutes=19, seconds=1)
-    with patch(
-        "homeassistant.components.airly.dt_util.utcnow", return_value=future
-    ), patch("homeassistant.helpers.update_coordinator.utcnow", return_value=future):
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
-
-        # Both instances should be updated so call_count will increase by 2
-        assert aioclient_mock.call_count == 6
+    # call_count should increase by two because we have two instances configured
+    assert aioclient_mock.call_count == 5
 
 
 async def test_unload_entry(hass, aioclient_mock):
