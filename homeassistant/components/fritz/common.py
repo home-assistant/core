@@ -51,7 +51,6 @@ class FritzBoxTools:
         self._devices: Dict[str, Any] = {}
         self._unique_id = None
         self.connection = None
-        self.error = None
         self.fritzhosts = None
         self.fritzstatus = None
         self.hass = hass
