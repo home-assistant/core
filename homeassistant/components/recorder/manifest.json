@@ -2,7 +2,7 @@
   "domain": "recorder",
   "name": "Recorder",
   "documentation": "https://www.home-assistant.io/integrations/recorder",
-  "requirements": ["sqlalchemy==1.3.23"],
+  "requirements": ["sqlalchemy==1.4.11"],
   "codeowners": [],
   "quality_scale": "internal",
   "iot_class": "local_push"
