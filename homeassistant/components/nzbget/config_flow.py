@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResultDict
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .const import (
@@ -66,7 +67,7 @@ class NZBGetConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(
         self, user_input: ConfigType | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResultDict:
         """Handle a flow initiated by configuration file."""
         if CONF_SCAN_INTERVAL in user_input:
             user_input[CONF_SCAN_INTERVAL] = user_input[
@@ -77,7 +78,7 @@ class NZBGetConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: ConfigType | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResultDict:
         """Handle a flow initiated by the user."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")

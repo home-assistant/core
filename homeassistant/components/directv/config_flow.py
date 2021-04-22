@@ -12,6 +12,7 @@ from homeassistant.components.ssdp import ATTR_SSDP_LOCATION, ATTR_UPNP_SERIAL
 from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultDict
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -47,7 +48,7 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: ConfigType | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResultDict:
         """Handle a flow initiated by the user."""
         if user_input is None:
             return self._show_setup_form()
@@ -69,7 +70,7 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp(
         self, discovery_info: DiscoveryInfoType
-    ) -> dict[str, Any]:
+    ) -> FlowResultDict:
         """Handle SSDP discovery."""
         host = urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname
         receiver_id = None
@@ -102,7 +103,7 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp_confirm(
         self, user_input: ConfigType = None
-    ) -> dict[str, Any]:
+    ) -> FlowResultDict:
         """Handle a confirmation flow initiated by SSDP."""
         if user_input is None:
             return self.async_show_form(
@@ -116,7 +117,7 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
             data=self.discovery_info,
         )
 
-    def _show_setup_form(self, errors: dict | None = None) -> dict[str, Any]:
+    def _show_setup_form(self, errors: dict | None = None) -> FlowResultDict:
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
