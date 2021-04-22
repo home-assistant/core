@@ -34,7 +34,8 @@
                 "data": {
                     "name": "Naam meldingsservice (wijziging vereist opnieuw opstarten)",
                     "recipient": "Ontvangers van sms-berichten",
-                    "track_new_devices": "Volg nieuwe apparaten"
+                    "track_new_devices": "Volg nieuwe apparaten",
+                    "track_wired_clients": "Volg bekabelde netwerkclients"
                 }
             }
         }
