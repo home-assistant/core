@@ -31,10 +31,7 @@ from .const import (
 )
 
 ATTR_COUNTER = "counter"
-ATTR_FIRMWARE = "firmware"
-ATTR_MODEL = "model"
 ATTR_REMAINING_PAGES = "remaining_pages"
-ATTR_SERIAL = "serial"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -44,11 +41,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     sensors = []
 
     device_info = {
-        "identifiers": {(DOMAIN, coordinator.data[ATTR_SERIAL])},
-        "name": coordinator.data[ATTR_MODEL],
+        "identifiers": {(DOMAIN, coordinator.data.serial)},
+        "name": coordinator.data.model,
         "manufacturer": ATTR_MANUFACTURER,
-        "model": coordinator.data[ATTR_MODEL],
-        "sw_version": coordinator.data.get(ATTR_FIRMWARE),
+        "model": coordinator.data.model,
+        "sw_version": getattr(coordinator.data, "firmware", None),
     }
 
     for sensor in SENSOR_TYPES:
@@ -63,8 +60,8 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
     def __init__(self, coordinator, kind, device_info):
         """Initialize."""
         super().__init__(coordinator)
-        self._name = f"{coordinator.data[ATTR_MODEL]} {SENSOR_TYPES[kind][ATTR_LABEL]}"
-        self._unique_id = f"{coordinator.data[ATTR_SERIAL].lower()}_{kind}"
+        self._name = f"{coordinator.data.model} {SENSOR_TYPES[kind][ATTR_LABEL]}"
+        self._unique_id = f"{coordinator.data.serial.lower()}_{kind}"
         self._device_info = device_info
         self.kind = kind
         self._attrs = {}
@@ -78,8 +75,8 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
     def state(self):
         """Return the state."""
         if self.kind == ATTR_UPTIME:
-            return self.coordinator.data.get(self.kind).isoformat()
-        return self.coordinator.data.get(self.kind)
+            return getattr(self.coordinator.data, self.kind).isoformat()
+        return getattr(self.coordinator.data, self.kind)
 
     @property
     def device_class(self):
@@ -109,10 +106,10 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
             remaining_pages = ATTR_YELLOW_DRUM_REMAINING_PAGES
             drum_counter = ATTR_YELLOW_DRUM_COUNTER
         if remaining_pages and drum_counter:
-            self._attrs[ATTR_REMAINING_PAGES] = self.coordinator.data.get(
-                remaining_pages
+            self._attrs[ATTR_REMAINING_PAGES] = getattr(
+                self.coordinator.data, remaining_pages
             )
-            self._attrs[ATTR_COUNTER] = self.coordinator.data.get(drum_counter)
+            self._attrs[ATTR_COUNTER] = getattr(self.coordinator.data, drum_counter)
         return self._attrs
 
     @property
