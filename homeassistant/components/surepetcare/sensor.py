@@ -34,7 +34,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     spc: SurePetcareAPI = hass.data[DOMAIN][SPC]
 
     # for entity in spc.ids:
-    for surepy_entity in await spc.states:
+    for surepy_entity in spc.states.values():
 
         if surepy_entity.type in [
             EntityType.CAT_FLAP,
