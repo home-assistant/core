@@ -896,7 +896,10 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> str | None:
     # pylint: disable=import-outside-toplevel
     import homeassistant.helpers.check_config as check_config
 
-    res = await check_config.async_check_ha_config_file(hass)
+    try:
+        res = await check_config.async_check_ha_config_file(hass)
+    except Exception as ex:  # pylint: disable=broad-except
+        return f"Unhandled exception while checking configuration: {ex}"
 
     if not res.errors:
         return None
