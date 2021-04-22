@@ -5,7 +5,6 @@ import logging
 from typing import Any
 
 from motioneye_client.client import (
-    MotionEyeClient,
     MotionEyeClientConnectionError,
     MotionEyeClientInvalidAuthError,
     MotionEyeClientRequestError,
@@ -18,8 +17,10 @@ from homeassistant.config_entries import (
     ConfigFlow,
 )
 from homeassistant.const import CONF_SOURCE, CONF_URL
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
+from . import create_motioneye_client
 from .const import (  # pylint:disable=unused-import
     CONF_ADMIN_PASSWORD,
     CONF_ADMIN_USERNAME,
@@ -48,44 +49,56 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
             entry = self.context.get(CONF_CONFIG_ENTRY)
             user_input = entry.data if entry else {}
         else:
-            client = MotionEyeClient(
-                user_input[CONF_URL],
-                admin_username=user_input.get(CONF_ADMIN_USERNAME),
-                admin_password=user_input.get(CONF_ADMIN_PASSWORD),
-                surveillance_username=user_input.get(CONF_SURVEILLANCE_USERNAME),
-                surveillance_password=user_input.get(CONF_SURVEILLANCE_PASSWORD),
-            )
-
             try:
-                await client.async_client_login()
-            except MotionEyeClientConnectionError:
-                errors["base"] = "cannot_connect"
-            except MotionEyeClientInvalidAuthError:
-                errors["base"] = "invalid_auth"
-            except MotionEyeClientRequestError:
-                errors["base"] = "unknown"
+                # Cannot use cv.url validation in the schema itself, so
+                # apply extra validation here.
+                cv.url(user_input[CONF_URL])
+            except vol.Invalid:
+                errors["base"] = "invalid_url"
             else:
-                entry = self.context.get(CONF_CONFIG_ENTRY)
-                if self.context.get(CONF_SOURCE) == SOURCE_REAUTH and entry is not None:
-                    self.hass.config_entries.async_update_entry(entry, data=user_input)
-                    # Need to manually reload, as the listener won't have been installed because
-                    # the initial load did not succeed (the reauth flow will not be initiated if
-                    # the load succeeds).
-                    await self.hass.config_entries.async_reload(entry.entry_id)
-                    out = self.async_abort(reason="reauth_successful")
-                    return out
-
-                out = self.async_create_entry(
-                    title=f"{user_input[CONF_URL]}",
-                    data=user_input,
+                client = create_motioneye_client(
+                    user_input[CONF_URL],
+                    admin_username=user_input.get(CONF_ADMIN_USERNAME),
+                    admin_password=user_input.get(CONF_ADMIN_PASSWORD),
+                    surveillance_username=user_input.get(CONF_SURVEILLANCE_USERNAME),
+                    surveillance_password=user_input.get(CONF_SURVEILLANCE_PASSWORD),
                 )
-                return out
+
+                try:
+                    await client.async_client_login()
+                except MotionEyeClientConnectionError:
+                    errors["base"] = "cannot_connect"
+                except MotionEyeClientInvalidAuthError:
+                    errors["base"] = "invalid_auth"
+                except MotionEyeClientRequestError:
+                    errors["base"] = "unknown"
+                else:
+                    entry = self.context.get(CONF_CONFIG_ENTRY)
+                    if (
+                        self.context.get(CONF_SOURCE) == SOURCE_REAUTH
+                        and entry is not None
+                    ):
+                        self.hass.config_entries.async_update_entry(
+                            entry, data=user_input
+                        )
+                        # Need to manually reload, as the listener won't have been
+                        # installed because the initial load did not succeed (the reauth
+                        # flow will not be initiated if the load succeeds).
+                        await self.hass.config_entries.async_reload(entry.entry_id)
+                        out = self.async_abort(reason="reauth_successful")
+                        return out
+
+                    out = self.async_create_entry(
+                        title=f"{user_input[CONF_URL]}",
+                        data=user_input,
+                    )
+                    return out
 
         out = self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_URL, default=user_input.get(CONF_URL)): str,
+                    vol.Required(CONF_URL, default=user_input.get(CONF_URL, "")): str,
                     vol.Optional(
                         CONF_ADMIN_USERNAME, default=user_input.get(CONF_ADMIN_USERNAME)
                     ): str,

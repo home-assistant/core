@@ -37,7 +37,7 @@ async def test_user_success(hass: HomeAssistantType) -> None:
     mock_client = create_mock_motioneye_client()
 
     with patch(
-        "homeassistant.components.motioneye.config_flow.MotionEyeClient",
+        "homeassistant.components.motioneye.MotionEyeClient",
         return_value=mock_client,
     ), patch(
         "homeassistant.components.motioneye.async_setup", return_value=True
@@ -82,7 +82,7 @@ async def test_user_invalid_auth(hass: HomeAssistantType) -> None:
     )
 
     with patch(
-        "homeassistant.components.motioneye.config_flow.MotionEyeClient",
+        "homeassistant.components.motioneye.MotionEyeClient",
         return_value=mock_client,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -101,6 +101,32 @@ async def test_user_invalid_auth(hass: HomeAssistantType) -> None:
     assert result["errors"] == {"base": "invalid_auth"}
 
 
+async def test_user_invalid_url(hass: HomeAssistantType) -> None:
+    """Test invalid url is handled correctly."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.motioneye.MotionEyeClient",
+        return_value=create_mock_motioneye_client(),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_URL: "not a url",
+                CONF_ADMIN_USERNAME: "admin-username",
+                CONF_ADMIN_PASSWORD: "admin-password",
+                CONF_SURVEILLANCE_USERNAME: "surveillance-username",
+                CONF_SURVEILLANCE_PASSWORD: "surveillance-password",
+            },
+        )
+
+    assert result["type"] == "form"
+    assert result["errors"] == {"base": "invalid_url"}
+
+
 async def test_user_cannot_connect(hass: HomeAssistantType) -> None:
     """Test connection failure is handled correctly."""
     result = await hass.config_entries.flow.async_init(
@@ -113,7 +139,7 @@ async def test_user_cannot_connect(hass: HomeAssistantType) -> None:
     )
 
     with patch(
-        "homeassistant.components.motioneye.config_flow.MotionEyeClient",
+        "homeassistant.components.motioneye.MotionEyeClient",
         return_value=mock_client,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -142,7 +168,7 @@ async def test_user_request_error(hass: HomeAssistantType) -> None:
     mock_client.async_client_login = AsyncMock(side_effect=MotionEyeClientRequestError)
 
     with patch(
-        "homeassistant.components.motioneye.config_flow.MotionEyeClient",
+        "homeassistant.components.motioneye.MotionEyeClient",
         return_value=mock_client,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -191,7 +217,7 @@ async def test_reauth(hass: HomeAssistantType) -> None:
     }
 
     with patch(
-        "homeassistant.components.motioneye.config_flow.MotionEyeClient",
+        "homeassistant.components.motioneye.MotionEyeClient",
         return_value=mock_client,
     ), patch(
         "homeassistant.components.motioneye.async_setup", return_value=True
