@@ -29,7 +29,7 @@ pyyaml==5.4.1
 requests==2.25.1
 ruamel.yaml==0.15.100
 scapy==2.4.4
-sqlalchemy==1.3.23
+sqlalchemy==1.4.10
 voluptuous-serialize==2.4.0
 voluptuous==0.12.1
 yarl==1.6.3
