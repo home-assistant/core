@@ -155,7 +155,7 @@ class SurePetcareAPI:
         self.hass = hass
         self.surepy = surepy
         self.ids = ids
-        self._states = {}
+        self.states = {}
 
     async def async_update(self, _: Any = None) -> None:
         """Get the latest data from the Pi-hole."""
