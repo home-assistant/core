@@ -135,6 +135,7 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> HomeAssistantConfig
         except (RequirementsNotFound, loader.IntegrationNotFound) as ex:
             result.add_error(f"Component error: {domain} - {ex}")
             continue
+        _LOGGER.warning("async_check_ha_config_file 0: %s", domain)
 
         try:
             component = integration.get_component()
