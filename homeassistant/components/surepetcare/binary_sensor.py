@@ -36,7 +36,7 @@ async def async_setup_platform(
     for entity in (await spc.surepy.get_entities()).values():
 
         # connectivity
-        if entity.type in [
+        if surepy_entity.type in [
             EntityType.CAT_FLAP,
             EntityType.PET_FLAP,
             EntityType.FEEDER,
