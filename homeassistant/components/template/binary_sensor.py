@@ -340,7 +340,7 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity):
         hass: HomeAssistant,
         coordinator: TriggerUpdateCoordinator,
         config: dict,
-    ):
+    ) -> None:
         """Initialize the entity."""
         super().__init__(hass, coordinator, config)
 
@@ -388,10 +388,9 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity):
             return
 
         if not isinstance(delay, timedelta):
-            print(type(delay), delay)
             try:
                 delay = cv.positive_time_period(delay)
-            except (template.TemplateError, vol.Invalid) as err:
+            except vol.Invalid as err:
                 logging.getLogger(__name__).warning(
                     "Error rendering %s template: %s", key, err
                 )
