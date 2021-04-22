@@ -1,43 +1,44 @@
 {
-  "config": {
-    "flow_title": "FRITZ!Box Tools: {name}",
-    "step": {
-      "confirm": {
-        "title": "Setup FRITZ!Box Tools",
-        "description": "Discovered FRITZ!Box: {name}\n\nSetup FRITZ!Box Tools to control your {name}",
-        "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "connection_error": "Failed to connect",
+            "invalid_auth": "Invalid authentication"
+        },
+        "flow_title": "FRITZ!Box Tools: {name}",
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "Discovered FRITZ!Box: {name}\n\nSetup FRITZ!Box Tools to control your {name}",
+                "title": "Setup FRITZ!Box Tools"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "Update FRITZ!Box Tools credentials for: {host}.\n\nFRITZ!Box Tools is unable to log in to your FRITZ!Box.",
+                "title": "Updating FRITZ!Box Tools - credentials"
+            },
+            "start_config": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Port",
+                    "username": "Username"
+                },
+                "description": "Setup FRITZ!Box Tools to control your FRITZ!Box.\nMinimum needed: username, password.",
+                "title": "Setup FRITZ!Box Tools - mandatory"
+            }
         }
-      },
-      "start_config": {
-        "title": "Setup FRITZ!Box Tools - mandatory",
-        "description": "Setup FRITZ!Box Tools to control your FRITZ!Box.\nMinimum needed: username, password.",
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        }
-      },
-      "reauth_confirm": {
-        "title": "Updating FRITZ!Box Tools - credentials",
-        "description": "Update FRITZ!Box Tools credentials for: {host}.\n\nFRITZ!Box Tools is unable to log in to your FRITZ!Box.",
-        "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        }
-      }
-    },
-    "abort": {
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
-    },
-    "error": {
-      "connection_error": "[%key:common::config_flow::error::cannot_connect%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
-  }
 }
