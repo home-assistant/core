@@ -74,6 +74,7 @@ class KNXExposeSensor:
         self.address = address
         self._remove_listener: Callable[[], None] | None = None
         self.device: ExposeSensor = self.async_register()
+        self._init_expose_state()
 
     @callback
     def async_register(self) -> ExposeSensor:
@@ -92,6 +93,13 @@ class KNXExposeSensor:
             self.hass, [self.entity_id], self._async_entity_changed
         )
         return device
+
+    def _init_expose_state(self) -> None:
+        """Initialize state of the exposure."""
+        init_state = self.hass.states.get(self.entity_id)
+        init_value = self._get_expose_value(init_state)
+        if init_value is not None:
+            self.device.sensor_value.value = init_value
 
     @callback
     def shutdown(self) -> None:
