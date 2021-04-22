@@ -58,12 +58,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     coordinator = hass.data[DATA_NSW_FUEL_STATION]
 
-    add_entities(
-        [
-            StationPriceSensor(coordinator, station_id, fuel_type)
-            for fuel_type in fuel_types
-        ]
-    )
+    entities = []
+    for fuel_type in fuel_types:
+        if coordinator.data.prices.get((station_id, fuel_type)) is None:
+            _LOGGER.error(
+                "Fuel station price data not available for station %d and fuel type %s",
+                station_id,
+                fuel_type,
+            )
+            continue
+
+        entities.append(StationPriceSensor(coordinator, station_id, fuel_type))
+
+    add_entities(entities)
 
 
 class StationPriceSensor(CoordinatorEntity, SensorEntity):
