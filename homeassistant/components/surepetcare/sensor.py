@@ -34,21 +34,15 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     spc: SurePetcareAPI = hass.data[DOMAIN][SPC]
 
     # for entity in spc.ids:
-    for entity in await spc.surepy.get_devices():
+    for surepy_entity in await spc.states:
 
-        # entities.append(surepy_entity)
-        # sure_type = entity.type
-
-        if entity.type in [
+        if surepy_entity.type in [
             EntityType.CAT_FLAP,
             EntityType.PET_FLAP,
             EntityType.FEEDER,
             EntityType.FELAQUA,
         ]:
-            entities.append(SureBattery(entity.id, spc))
-
-        # if sure_type in [EntityType.CAT_FLAP, EntityType.PET_FLAP]:
-        #     entities.append(Flap(entity[CONF_ID], sure_type, spc))
+            entities.append(SureBattery(surepy_entity.id, spc))
 
     async_add_entities(entities, True)
 
@@ -60,13 +54,13 @@ class SurePetcareSensor(SensorEntity):
         """Initialize a Sure Petcare sensor."""
 
         self._id = _id
-        self._spapi: SurePetcareAPI = spc
+        self._spc: SurePetcareAPI = spc
 
-        self._entity: SurepyEntity = self._spapi._states[_id]
+        self._surepy_entity: SurepyEntity = self._spc.states[_id]
         self._state: dict[str, Any] = {}
         self._name = (
-            f"{self._entity.type.name.capitalize()} "
-            f"{self._entity.name.capitalize()}"
+            f"{self._surepy_entity.type.name.capitalize()} "
+            f"{self._surepy_entity.name.capitalize()}"
         )
 
         self._async_unsub_dispatcher_connect = None
@@ -79,7 +73,7 @@ class SurePetcareSensor(SensorEntity):
     @property
     def unique_id(self) -> str:
         """Return an unique ID."""
-        return f"{self._entity.household_id}-{self._entity.id}"
+        return f"{self._surepy_entity.household_id}-{self._surepy_entity.id}"
 
     @property
     def available(self) -> bool:
@@ -93,8 +87,8 @@ class SurePetcareSensor(SensorEntity):
 
     async def async_update(self) -> None:
         """Get the latest data and update the state."""
-        self._entity = self._spapi._states[self._id]
-        self._state = self._entity._data["status"]
+        self._surepy_entity = self._spc.states[self._id]
+        self._state = self._surepy_entity.raw_data()["status"]
         _LOGGER.debug("%s -> self._state: %s", self._name, self._state)
 
     async def async_added_to_hass(self) -> None:
@@ -157,7 +151,7 @@ class SureBattery(SurePetcareSensor):
     @property
     def unique_id(self) -> str:
         """Return an unique ID."""
-        return f"{self._entity.household_id}-{self._entity.id}-battery"
+        return f"{self._surepy_entity.household_id}-{self._surepy_entity.id}-battery"
 
     @property
     def device_class(self) -> str:

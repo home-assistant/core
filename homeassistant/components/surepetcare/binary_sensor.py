@@ -33,7 +33,7 @@ async def async_setup_platform(
     spc: SurePetcareAPI = hass.data[DOMAIN][SPC]
 
     # for thing in spc.ids:
-    for entity in (await spc.surepy.get_entities()).values():
+    for surepy_entity in spc.states.values():
 
         # connectivity
         if surepy_entity.type in [
@@ -42,7 +42,9 @@ async def async_setup_platform(
             EntityType.FEEDER,
             EntityType.FELAQUA,
         ]:
-            entities.append(DeviceConnectivity(surepy_entity.id, surepy_entity.type, spc))
+            entities.append(
+                DeviceConnectivity(surepy_entity.id, surepy_entity.type, spc)
+            )
 
         if surepy_entity.type == EntityType.PET:
             entity = Pet(surepy_entity.id, spc)
@@ -113,8 +115,8 @@ class SurePetcareBinarySensor(BinarySensorEntity):
 
     async def async_update(self) -> None:
         """Get the latest data and update the state."""
-        self._surepy_entity = self._spc_.states[self._id]
-        self._state = self._entity._data["status"]
+        self._surepy_entity = self._spc.states[self._id]
+        self._state = self._surepy_entity.raw_data()["status"]
         _LOGGER.debug("%s -> self._state: %s", self._name, self._state)
 
     async def async_added_to_hass(self) -> None:
@@ -156,10 +158,12 @@ class Hub(SurePetcareBinarySensor):
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the device."""
         attributes = None
-        if self._entity._data:
+        if self._surepy_entity.raw_data():
             attributes = {
-                "led_mode": int(self._entity._data["status"]["led_mode"]),
-                "pairing_mode": bool(self._entity._data["status"]["pairing_mode"]),
+                "led_mode": int(self._surepy_entity.raw_data()["status"]["led_mode"]),
+                "pairing_mode": bool(
+                    self._surepy_entity.raw_data()["status"]["pairing_mode"]
+                ),
             }
 
         return attributes
@@ -191,8 +195,8 @@ class Pet(SurePetcareBinarySensor):
 
     async def async_update(self) -> None:
         """Get the latest data and update the state."""
-        self._entity = self._spapi._states[self._id]
-        self._state = self._entity.location
+        self._surepy_entity = self._spc.states[self._id]
+        self._state = self._surepy_entity.location
         _LOGGER.debug("%s -> self._state: %s", self._name, self._state)
 
 
@@ -216,7 +220,7 @@ class DeviceConnectivity(SurePetcareBinarySensor):
     @property
     def unique_id(self) -> str:
         """Return an unique ID."""
-        return f"{self._entity.household_id}-{self._id}-connectivity"
+        return f"{self._surepy_entity.household_id}-{self._id}-connectivity"
 
     @property
     def available(self) -> bool:
