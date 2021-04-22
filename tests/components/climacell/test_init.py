@@ -10,7 +10,7 @@ from homeassistant.components.climacell.config_flow import (
 from homeassistant.components.climacell.const import CONF_TIMESTEP, DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.const import CONF_API_VERSION
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from .const import API_V3_ENTRY_DATA, MIN_CONFIG, V1_ENTRY_DATA
 
@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def test_load_and_unload(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     climacell_config_entry_update: pytest.fixture,
 ) -> None:
     """Test loading and unloading entry."""
@@ -42,7 +42,7 @@ async def test_load_and_unload(
 
 
 async def test_v3_load_and_unload(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     climacell_config_entry_update: pytest.fixture,
 ) -> None:
     """Test loading and unloading v3 entry."""
@@ -67,7 +67,7 @@ async def test_v3_load_and_unload(
     "old_timestep, new_timestep", [(2, 1), (7, 5), (20, 15), (21, 30)]
 )
 async def test_migrate_timestep(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     climacell_config_entry_update: pytest.fixture,
     old_timestep: int,
     new_timestep: int,

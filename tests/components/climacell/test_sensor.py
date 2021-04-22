@@ -16,9 +16,8 @@ from homeassistant.components.climacell.config_flow import (
 from homeassistant.components.climacell.const import ATTRIBUTION, DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import ATTR_ATTRIBUTION
-from homeassistant.core import State, callback
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.entity_registry import async_get
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import API_V3_ENTRY_DATA, API_V4_ENTRY_DATA
 
@@ -45,7 +44,7 @@ TREE_POLLEN = "tree_pollen_index"
 
 
 @callback
-def _enable_entity(hass: HomeAssistantType, entity_name: str) -> None:
+def _enable_entity(hass: HomeAssistant, entity_name: str) -> None:
     """Enable disabled entity."""
     ent_reg = async_get(hass)
     entry = ent_reg.async_get(entity_name)
@@ -56,7 +55,7 @@ def _enable_entity(hass: HomeAssistantType, entity_name: str) -> None:
     assert updated_entry.disabled is False
 
 
-async def _setup(hass: HomeAssistantType, config: dict[str, Any]) -> State:
+async def _setup(hass: HomeAssistant, config: dict[str, Any]) -> State:
     """Set up entry and return entity state."""
     with patch(
         "homeassistant.util.dt.utcnow",
@@ -94,7 +93,7 @@ async def _setup(hass: HomeAssistantType, config: dict[str, Any]) -> State:
         assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 15
 
 
-def check_sensor_state(hass: HomeAssistantType, entity_name: str, value: str):
+def check_sensor_state(hass: HomeAssistant, entity_name: str, value: str):
     """Check the state of a ClimaCell sensor."""
     state = hass.states.get(CC_SENSOR_ENTITY_ID.format(entity_name))
     assert state
@@ -103,7 +102,7 @@ def check_sensor_state(hass: HomeAssistantType, entity_name: str, value: str):
 
 
 async def test_v3_sensor(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     climacell_config_entry_update: pytest.fixture,
 ) -> None:
     """Test v3 sensor data."""
@@ -126,7 +125,7 @@ async def test_v3_sensor(
 
 
 async def test_v4_sensor(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     climacell_config_entry_update: pytest.fixture,
 ) -> None:
     """Test v4 sensor data."""
