@@ -5,11 +5,10 @@ import logging
 from screenlogicpy import ScreenLogicError
 import voluptuous as vol
 
-from homeassistant.core import ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import async_extract_config_entry_ids
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     ATTR_COLOR_MODE,
@@ -28,7 +27,7 @@ SET_COLOR_MODE_SCHEMA = cv.make_entity_service_schema(
 
 
 @callback
-def async_load_screenlogic_services(hass: HomeAssistantType):
+def async_load_screenlogic_services(hass: HomeAssistant):
     """Set up services for the ScreenLogic integration."""
     if hass.services.has_service(DOMAIN, SERVICE_SET_COLOR_MODE):
         # Integration-level services have already been added. Return.
@@ -76,7 +75,7 @@ def async_load_screenlogic_services(hass: HomeAssistantType):
 
 
 @callback
-def async_unload_screenlogic_services(hass: HomeAssistantType):
+def async_unload_screenlogic_services(hass: HomeAssistant):
     """Unload services for the ScreenLogic integration."""
     if hass.data[DOMAIN]:
         # There is still another config entry for this domain, don't remove services.

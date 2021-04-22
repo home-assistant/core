@@ -11,7 +11,7 @@ import time
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm.session import Session
 
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
 from .const import DATA_INSTANCE, SQLITE_URL_PREFIX
@@ -37,7 +37,7 @@ MAX_RESTART_TIME = timedelta(minutes=10)
 
 @contextmanager
 def session_scope(
-    *, hass: HomeAssistantType | None = None, session: Session | None = None
+    *, hass: HomeAssistant | None = None, session: Session | None = None
 ) -> Generator[Session, None, None]:
     """Provide a transactional scope around a series of operations."""
     if session is None and hass is not None:

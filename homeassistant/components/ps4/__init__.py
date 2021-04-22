@@ -18,10 +18,9 @@ from homeassistant.const import (
     CONF_REGION,
     CONF_TOKEN,
 )
-from homeassistant.core import split_entity_id
+from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import location
 from homeassistant.util.json import load_json, save_json
 
@@ -157,7 +156,7 @@ def format_unique_id(creds, mac_address):
     return f"{mac_address}_{suffix}"
 
 
-def load_games(hass: HomeAssistantType, unique_id: str) -> dict:
+def load_games(hass: HomeAssistant, unique_id: str) -> dict:
     """Load games for sources."""
     g_file = hass.config.path(GAMES_FILE.format(unique_id))
     try:
@@ -176,7 +175,7 @@ def load_games(hass: HomeAssistantType, unique_id: str) -> dict:
     return games
 
 
-def save_games(hass: HomeAssistantType, games: dict, unique_id: str):
+def save_games(hass: HomeAssistant, games: dict, unique_id: str):
     """Save games to file."""
     g_file = hass.config.path(GAMES_FILE.format(unique_id))
     try:
@@ -185,7 +184,7 @@ def save_games(hass: HomeAssistantType, games: dict, unique_id: str):
         _LOGGER.error("Could not save game list, %s", error)
 
 
-def _reformat_data(hass: HomeAssistantType, games: dict, unique_id: str) -> dict:
+def _reformat_data(hass: HomeAssistant, games: dict, unique_id: str) -> dict:
     """Reformat data to correct format."""
     data_reformatted = False
 
@@ -208,7 +207,7 @@ def _reformat_data(hass: HomeAssistantType, games: dict, unique_id: str) -> dict
     return games
 
 
-def service_handle(hass: HomeAssistantType):
+def service_handle(hass: HomeAssistant):
     """Handle for services."""
 
     async def async_service_command(call):

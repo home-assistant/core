@@ -5,14 +5,14 @@ from typing import Callable
 
 from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from . import RokuDataUpdateCoordinator, RokuEntity, roku_exception_handler
 from .const import DOMAIN
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: Callable[[list, bool], None],
 ) -> bool:
