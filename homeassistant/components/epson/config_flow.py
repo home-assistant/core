@@ -28,30 +28,25 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         for entry in self._async_current_entries(include_ignore=True):
             if import_config[CONF_HOST] == entry.data[CONF_HOST]:
                 return self.async_abort(reason="already_configured")
-        try:
-            projector = await validate_projector(
-                self.hass,
-                import_config[CONF_HOST],
-                check_power=True,
-                check_powered_on=False,
-            )
-        except CannotConnect:
-            _LOGGER.warning("Cannot connect to projector")
-            return self.async_abort(reason="cannot_connect")
-        else:
-            serial_no = await projector.get_serial_number()
-            await self.async_set_unique_id(serial_no)
-            self._abort_if_unique_id_configured()
-            return self.async_create_entry(
-                title=import_config.pop(CONF_NAME), data=import_config
-            )
+        return await self.combine_steps(
+            import_config, check_power=True, check_powered_on=False
+        )
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
+        return await self.combine_steps(user_input)
+
+    async def combine_steps(self, user_input, check_power=True, check_powered_on=True):
+        """Create entry from yaml or config flow."""
         errors = {}
         if user_input is not None:
             try:
-                projector = await validate_projector(self.hass, user_input[CONF_HOST])
+                projector = await validate_projector(
+                    hass=self.hass,
+                    host=user_input[CONF_HOST],
+                    check_power=check_power,
+                    check_powered_on=check_powered_on,
+                )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except PoweredOff:
