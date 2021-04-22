@@ -1009,7 +1009,7 @@ notify-events==1.0.4
 nsapi==3.0.4
 
 # homeassistant.components.nsw_fuel_station
-nsw-fuel-api-client==1.0.10
+nsw-fuel-api-client==1.1.0
 
 # homeassistant.components.nuheat
 nuheat==0.3.0

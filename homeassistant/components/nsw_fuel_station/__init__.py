@@ -40,11 +40,14 @@ async def async_setup(hass, config):
 
 @dataclass
 class StationPriceData:
+    """Data structure for O(1) price and name lookups."""
+
     stations: Dict[int, Station]
     prices: Dict[Tuple[int, str], float]
 
 
 def fetch_station_price_data(client: FuelCheckClient) -> StationPriceData | None:
+    """Fetch fuel price and station data."""
     try:
         raw_price_data = client.get_fuel_prices()
         # Restructure prices and station details to be indexed by station code

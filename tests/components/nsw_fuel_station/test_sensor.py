@@ -4,7 +4,6 @@ from unittest.mock import patch
 from homeassistant.components import sensor
 from homeassistant.components.nsw_fuel_station import DOMAIN
 from homeassistant.setup import async_setup_component
-
 from tests.common import assert_setup_component
 
 VALID_CONFIG = {
@@ -44,37 +43,32 @@ class MockGetFuelPricesResponse:
         self.stations = stations
 
 
-class FuelCheckClientMock:
-    """Mock FuelCheckClient implementation."""
-
-    def get_fuel_prices(self):
-        """Return a mock fuel prices response."""
-        return MockGetFuelPricesResponse(
-            prices=[
-                MockPrice(
-                    price=150.0,
-                    fuel_type="P95",
-                    last_updated=None,
-                    price_unit=None,
-                    station_code=350,
-                ),
-                MockPrice(
-                    price=140.0,
-                    fuel_type="E10",
-                    last_updated=None,
-                    price_unit=None,
-                    station_code=350,
-                ),
-            ],
-            stations=[MockStation(code=350, name="My Fake Station")],
-        )
+MOCK_FUEL_PRICES_RESPONSE = MockGetFuelPricesResponse(
+    prices=[
+        MockPrice(
+            price=150.0,
+            fuel_type="P95",
+            last_updated=None,
+            price_unit=None,
+            station_code=350,
+        ),
+        MockPrice(
+            price=140.0,
+            fuel_type="E10",
+            last_updated=None,
+            price_unit=None,
+            station_code=350,
+        ),
+    ],
+    stations=[MockStation(code=350, name="My Fake Station")],
+)
 
 
 @patch(
-    "homeassistant.components.nsw_fuel_station.FuelCheckClient",
-    new=FuelCheckClientMock,
+    "homeassistant.components.nsw_fuel_station.FuelCheckClient.get_fuel_prices",
+    return_value=MOCK_FUEL_PRICES_RESPONSE,
 )
-async def test_setup(hass):
+async def test_setup(get_fuel_prices, hass):
     """Test the setup with custom settings."""
     assert await async_setup_component(hass, DOMAIN, {})
     with assert_setup_component(1, sensor.DOMAIN):
@@ -91,10 +85,10 @@ async def test_setup(hass):
 
 
 @patch(
-    "homeassistant.components.nsw_fuel_station.FuelCheckClient",
-    new=FuelCheckClientMock,
+    "homeassistant.components.nsw_fuel_station.FuelCheckClient.get_fuel_prices",
+    return_value=MOCK_FUEL_PRICES_RESPONSE,
 )
-async def test_sensor_values(hass):
+async def test_sensor_values(get_fuel_prices, hass):
     """Test retrieval of sensor values."""
     assert await async_setup_component(hass, DOMAIN, {})
     assert await async_setup_component(hass, sensor.DOMAIN, {"sensor": VALID_CONFIG})

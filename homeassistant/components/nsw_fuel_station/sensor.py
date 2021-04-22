@@ -123,4 +123,5 @@ class StationPriceSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def unique_id(self) -> str | None:
+        """Return a unique ID."""
         return "nsw_fuel_station_{}_{}".format(self._station_id, self._fuel_type)
