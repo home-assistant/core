@@ -15,7 +15,7 @@ from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import DOMAIN
 
 
 class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -31,27 +31,27 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         return await self._handle_config_flow(user_input)
 
     async def async_step_zeroconf(
-        self, user_input: ConfigType | None = None
+        self, discovery_info: ConfigType | None = None
     ) -> dict[str, Any]:
         """Handle zeroconf discovery."""
-        if user_input is None:
+        if discovery_info is None:
             return self.async_abort(reason="cannot_connect")
 
         # Hostname is format: wled-livingroom.local.
-        host = user_input["hostname"].rstrip(".")
+        host = discovery_info["hostname"].rstrip(".")
         name, _ = host.rsplit(".")
 
         self.context.update(
             {
-                CONF_HOST: user_input["host"],
+                CONF_HOST: discovery_info["host"],
                 CONF_NAME: name,
-                CONF_MAC: user_input["properties"].get(CONF_MAC),
+                CONF_MAC: discovery_info["properties"].get(CONF_MAC),
                 "title_placeholders": {"name": name},
             }
         )
 
         # Prepare configuration flow
-        return await self._handle_config_flow(user_input, True)
+        return await self._handle_config_flow(discovery_info, True)
 
     async def async_step_zeroconf_confirm(
         self, user_input: ConfigType = None

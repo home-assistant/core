@@ -22,12 +22,12 @@ from .const import (
     DEFAULT_HOST,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
     KEY_STATUS,
     KEY_STATUS_DISPLAY,
     SENSOR_NAME,
     SENSOR_TYPES,
 )
-from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 

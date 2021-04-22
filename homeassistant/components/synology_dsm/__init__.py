@@ -36,11 +36,10 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -119,7 +118,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Synology DSM sensors."""
 
     # Migrate old unique_id
@@ -294,7 +293,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload Synology DSM sensors."""
     unload_ok = all(
         await asyncio.gather(
@@ -314,12 +313,12 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     return unload_ok
 
 
-async def _async_update_listener(hass: HomeAssistantType, entry: ConfigEntry):
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def _async_setup_services(hass: HomeAssistantType):
+async def _async_setup_services(hass: HomeAssistant):
     """Service handler setup."""
 
     async def service_handler(call: ServiceCall):
@@ -358,7 +357,7 @@ async def _async_setup_services(hass: HomeAssistantType):
 class SynoApi:
     """Class to interface with Synology DSM API."""
 
-    def __init__(self, hass: HomeAssistantType, entry: ConfigEntry):
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry):
         """Initialize the API wrapper class."""
         self._hass = hass
         self._entry = entry
@@ -441,12 +440,11 @@ class SynoApi:
             )
             return
 
+        # surveillance_station is updated by own coordinator
+        self.dsm.reset(self.surveillance_station)
+
         # Determine if we should fetch an API
         self._with_system = bool(self.dsm.apis.get(SynoCoreSystem.API_KEY))
-        self._with_surveillance_station = bool(
-            self.dsm.apis.get(SynoSurveillanceStation.CAMERA_API_KEY)
-        ) or bool(self.dsm.apis.get(SynoSurveillanceStation.HOME_MODE_API_KEY))
-
         self._with_security = bool(
             self._fetching_entities.get(SynoCoreSecurity.API_KEY)
         )
@@ -496,14 +494,6 @@ class SynoApi:
             )
             self.dsm.reset(self.utilisation)
             self.utilisation = None
-
-        if not self._with_surveillance_station:
-            _LOGGER.debug(
-                "Disable surveillance_station api from being updated for '%s'",
-                self._entry.unique_id,
-            )
-            self.dsm.reset(self.surveillance_station)
-            self.surveillance_station = None
 
     def _fetch_device_configuration(self):
         """Fetch initial device config."""

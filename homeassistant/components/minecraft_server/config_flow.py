@@ -11,12 +11,7 @@ from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 
 from . import MinecraftServer, helpers
-from .const import (  # pylint: disable=unused-import
-    DEFAULT_HOST,
-    DEFAULT_NAME,
-    DEFAULT_PORT,
-    DOMAIN,
-)
+from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 
 
 class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):

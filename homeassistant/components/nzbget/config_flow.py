@@ -17,8 +17,8 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import callback
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     DEFAULT_NAME,
@@ -26,14 +26,14 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SSL,
     DEFAULT_VERIFY_SSL,
+    DOMAIN,
 )
-from .const import DOMAIN  # pylint: disable=unused-import
 from .coordinator import NZBGetAPI, NZBGetAPIException
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def validate_input(hass: HomeAssistantType, data: dict) -> dict[str, Any]:
+def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -69,7 +69,9 @@ class NZBGetConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> dict[str, Any]:
         """Handle a flow initiated by configuration file."""
         if CONF_SCAN_INTERVAL in user_input:
-            user_input[CONF_SCAN_INTERVAL] = user_input[CONF_SCAN_INTERVAL].seconds
+            user_input[CONF_SCAN_INTERVAL] = user_input[
+                CONF_SCAN_INTERVAL
+            ].total_seconds()
 
         return await self.async_step_user(user_input)
 

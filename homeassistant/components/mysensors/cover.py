@@ -70,12 +70,12 @@ class MySensorsCover(mysensors.device.MySensorsEntity, CoverEntity):
         else:
             amount = 100 if self._values.get(set_req.V_LIGHT) == STATE_ON else 0
 
+        if amount == 0:
+            return CoverState.CLOSED
         if v_up and not v_down and not v_stop:
             return CoverState.OPENING
         if not v_up and v_down and not v_stop:
             return CoverState.CLOSING
-        if not v_up and not v_down and v_stop and amount == 0:
-            return CoverState.CLOSED
         return CoverState.OPEN
 
     @property

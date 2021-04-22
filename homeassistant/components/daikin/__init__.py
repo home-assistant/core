@@ -10,10 +10,10 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_HOSTS, CONF_PASSWORD
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import Throttle
 
 from .const import CONF_UUID, DOMAIN, KEY_MAC, TIMEOUT
@@ -63,7 +63,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Establish connection with Daikin."""
     conf = entry.data
     # For backwards compat, set unique ID

@@ -9,11 +9,6 @@ from homeassistant.core import HomeAssistant
 from .const import DATA_LISTENER, DATA_TASK, DOMAIN, PLATFORMS
 
 
-async def async_setup(hass, config: dict):
-    """Set up the DSMR platform."""
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up DSMR from a config entry."""
     hass.data.setdefault(DOMAIN, {})

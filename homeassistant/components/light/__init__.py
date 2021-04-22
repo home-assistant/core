@@ -16,7 +16,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -25,7 +25,6 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import bind_hass
 import homeassistant.util.color as color_util
 
@@ -73,6 +72,41 @@ VALID_COLOR_MODES = {
 }
 COLOR_MODES_BRIGHTNESS = VALID_COLOR_MODES - {COLOR_MODE_ONOFF}
 COLOR_MODES_COLOR = {COLOR_MODE_HS, COLOR_MODE_RGB, COLOR_MODE_XY}
+
+
+def valid_supported_color_modes(color_modes):
+    """Validate the given color modes."""
+    color_modes = set(color_modes)
+    if (
+        not color_modes
+        or COLOR_MODE_UNKNOWN in color_modes
+        or (COLOR_MODE_BRIGHTNESS in color_modes and len(color_modes) > 1)
+        or (COLOR_MODE_ONOFF in color_modes and len(color_modes) > 1)
+    ):
+        raise vol.Error(f"Invalid supported_color_modes {sorted(color_modes)}")
+    return color_modes
+
+
+def brightness_supported(color_modes):
+    """Test if brightness is supported."""
+    if not color_modes:
+        return False
+    return any(mode in COLOR_MODES_BRIGHTNESS for mode in color_modes)
+
+
+def color_supported(color_modes):
+    """Test if color is supported."""
+    if not color_modes:
+        return False
+    return any(mode in COLOR_MODES_COLOR for mode in color_modes)
+
+
+def color_temp_supported(color_modes):
+    """Test if color temperature is supported."""
+    if not color_modes:
+        return False
+    return COLOR_MODE_COLOR_TEMP in color_modes
+
 
 # Float that represents transition time in seconds to make change.
 ATTR_TRANSITION = "transition"
@@ -411,7 +445,7 @@ class Profile:
 class Profiles:
     """Representation of available color profiles."""
 
-    def __init__(self, hass: HomeAssistantType):
+    def __init__(self, hass: HomeAssistant):
         """Initialize profiles."""
         self.hass = hass
         self.data: dict[str, Profile] = {}
@@ -738,3 +772,20 @@ class Light(LightEntity):
             "Light is deprecated, modify %s to extend LightEntity",
             cls.__name__,
         )
+
+
+def legacy_supported_features(
+    supported_features: int, supported_color_modes: list[str] | None
+) -> int:
+    """Calculate supported features with backwards compatibility."""
+    # Backwards compatibility for supported_color_modes added in 2021.4
+    if supported_color_modes is None:
+        return supported_features
+    if any(mode in supported_color_modes for mode in COLOR_MODES_COLOR):
+        supported_features |= SUPPORT_COLOR
+    if any(mode in supported_color_modes for mode in COLOR_MODES_BRIGHTNESS):
+        supported_features |= SUPPORT_BRIGHTNESS
+    if COLOR_MODE_COLOR_TEMP in supported_color_modes:
+        supported_features |= SUPPORT_COLOR_TEMP
+
+    return supported_features

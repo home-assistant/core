@@ -125,32 +125,45 @@ class GenericCamera(Camera):
         ).result()
 
     async def async_camera_image(self):
+        """Wrap _async_camera_image with an asyncio.shield."""
+        # Shield the request because of https://github.com/encode/httpx/issues/1461
+        try:
+            self._last_url, self._last_image = await asyncio.shield(
+                self._async_camera_image()
+            )
+        except asyncio.CancelledError as err:
+            _LOGGER.warning("Timeout getting camera image from %s", self._name)
+            raise err
+        return self._last_image
+
+    async def _async_camera_image(self):
         """Return a still image response from the camera."""
         try:
             url = self._still_image_url.async_render(parse_result=False)
         except TemplateError as err:
             _LOGGER.error("Error parsing template %s: %s", self._still_image_url, err)
-            return self._last_image
+            return self._last_url, self._last_image
 
         if url == self._last_url and self._limit_refetch:
-            return self._last_image
-
+            return self._last_url, self._last_image
+        response = None
         try:
             async_client = get_async_client(self.hass, verify_ssl=self.verify_ssl)
             response = await async_client.get(
                 url, auth=self._auth, timeout=GET_IMAGE_TIMEOUT
             )
             response.raise_for_status()
-            self._last_image = response.content
+            image = response.content
         except httpx.TimeoutException:
             _LOGGER.error("Timeout getting camera image from %s", self._name)
-            return self._last_image
+            return self._last_url, self._last_image
         except (httpx.RequestError, httpx.HTTPStatusError) as err:
             _LOGGER.error("Error getting new camera image from %s: %s", self._name, err)
-            return self._last_image
-
-        self._last_url = url
-        return self._last_image
+            return self._last_url, self._last_image
+        finally:
+            if response:
+                await response.aclose()
+        return url, image
 
     @property
     def name(self):

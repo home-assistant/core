@@ -21,8 +21,8 @@
                 "data": {
                     "discovery": "Detectie inschakelen"
                 },
-                "description": "Wilt u Home Assistant configureren om verbinding te maken met de MQTT-broker die wordt aangeboden door de Supervisor add-on {addon} ?",
-                "title": "MQTT Broker via Supervisor add-on"
+                "description": "Wilt u Home Assistant configureren om verbinding te maken met de MQTT-broker die wordt aangeboden door de add-on {addon}?",
+                "title": "MQTT Broker via Home Assistant add-on"
             }
         }
     },

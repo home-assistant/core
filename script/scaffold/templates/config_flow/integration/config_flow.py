@@ -10,7 +10,7 @@ from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -60,7 +60,7 @@ async def async_setup_entry(hass, entry):
     async def _close(event):
         await tibber_connection.rt_disconnect()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close)
+    entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close))
 
     try:
         await tibber_connection.update_info()

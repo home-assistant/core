@@ -23,12 +23,6 @@ class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
-async def async_setup(hass, config):
-    """Set up the sharkiq environment."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
-
-
 async def async_connect_or_timeout(ayla_api: AylaApi) -> bool:
     """Connect to vacuum."""
     try:
@@ -64,11 +58,9 @@ async def async_setup_entry(hass, config_entry):
     _LOGGER.debug("Found %d Shark IQ device(s): %s", len(shark_vacs), device_names)
     coordinator = SharkIqUpdateCoordinator(hass, config_entry, ayla_api, shark_vacs)
 
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
-    if not coordinator.last_update_success:
-        raise exceptions.ConfigEntryNotReady
-
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = coordinator
 
     for platform in PLATFORMS:

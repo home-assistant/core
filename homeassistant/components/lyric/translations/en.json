@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "authorize_url_timeout": "Timeout generating authorize URL.",
-            "missing_configuration": "The component is not configured. Please follow the documentation."
+            "missing_configuration": "The component is not configured. Please follow the documentation.",
+            "reauth_successful": "Re-authentication was successful"
         },
         "create_entry": {
             "default": "Successfully authenticated"
@@ -10,6 +11,10 @@
         "step": {
             "pick_implementation": {
                 "title": "Pick Authentication Method"
+            },
+            "reauth_confirm": {
+                "description": "The Lyric integration needs to re-authenticate your account.",
+                "title": "Reauthenticate Integration"
             }
         }
     }

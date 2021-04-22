@@ -26,7 +26,7 @@ import homeassistant.util.dt as dt_util
 from tests.common import assert_setup_component, async_fire_time_changed
 
 
-async def test_template(hass):
+async def test_template_legacy(hass):
     """Test template."""
     with assert_setup_component(1, sensor.DOMAIN):
         assert await async_setup_component(
@@ -998,14 +998,14 @@ async def test_trigger_entity(hass):
         {
             "template": [
                 {"invalid": "config"},
-                # This one should still be set up
+                # Config after invalid should still be set up
                 {
                     "unique_id": "listening-test-event",
                     "trigger": {"platform": "event", "event_type": "test_event"},
                     "sensors": {
                         "hello": {
                             "friendly_name": "Hello Name",
-                            "unique_id": "just_a_test",
+                            "unique_id": "hello_name-id",
                             "device_class": "battery",
                             "unit_of_measurement": "%",
                             "value_template": "{{ trigger.event.data.beer }}",
@@ -1014,7 +1014,29 @@ async def test_trigger_entity(hass):
                             "attribute_templates": {
                                 "plus_one": "{{ trigger.event.data.beer + 1 }}"
                             },
+                        },
+                    },
+                    "sensor": [
+                        {
+                            "name": "via list",
+                            "unique_id": "via_list-id",
+                            "device_class": "battery",
+                            "unit_of_measurement": "%",
+                            "state": "{{ trigger.event.data.beer + 1 }}",
+                            "picture": "{{ '/local/dogs.png' }}",
+                            "icon": "{{ 'mdi:pirate' }}",
+                            "attributes": {
+                                "plus_one": "{{ trigger.event.data.beer + 1 }}"
+                            },
                         }
+                    ],
+                },
+                {
+                    "trigger": [],
+                    "sensors": {
+                        "bare_minimum": {
+                            "value_template": "{{ trigger.event.data.beer }}"
+                        },
                     },
                 },
             ],
@@ -1023,7 +1045,11 @@ async def test_trigger_entity(hass):
 
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.hello")
+    state = hass.states.get("sensor.hello_name")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    state = hass.states.get("sensor.bare_minimum")
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
@@ -1031,7 +1057,7 @@ async def test_trigger_entity(hass):
     hass.bus.async_fire("test_event", {"beer": 2}, context=context)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.hello")
+    state = hass.states.get("sensor.hello_name")
     assert state.state == "2"
     assert state.attributes.get("device_class") == "battery"
     assert state.attributes.get("icon") == "mdi:pirate"
@@ -1041,10 +1067,24 @@ async def test_trigger_entity(hass):
     assert state.context is context
 
     ent_reg = entity_registry.async_get(hass)
-    assert len(ent_reg.entities) == 1
+    assert len(ent_reg.entities) == 2
     assert (
-        ent_reg.entities["sensor.hello"].unique_id == "listening-test-event-just_a_test"
+        ent_reg.entities["sensor.hello_name"].unique_id
+        == "listening-test-event-hello_name-id"
     )
+    assert (
+        ent_reg.entities["sensor.via_list"].unique_id
+        == "listening-test-event-via_list-id"
+    )
+
+    state = hass.states.get("sensor.via_list")
+    assert state.state == "3"
+    assert state.attributes.get("device_class") == "battery"
+    assert state.attributes.get("icon") == "mdi:pirate"
+    assert state.attributes.get("entity_picture") == "/local/dogs.png"
+    assert state.attributes.get("plus_one") == 3
+    assert state.attributes.get("unit_of_measurement") == "%"
+    assert state.context is context
 
 
 async def test_trigger_entity_render_error(hass):

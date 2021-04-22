@@ -30,7 +30,7 @@ from homeassistant.const import (
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import Event, State, callback
+from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
@@ -42,7 +42,6 @@ from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 # Import config flow so that it's added to the registry
 from .entry_data import RuntimeEntryData
@@ -56,12 +55,7 @@ STORAGE_VERSION = 1
 CONFIG_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
-    """Stub to allow setting up this component."""
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the esphome component."""
     hass.data.setdefault(DOMAIN, {})
 
@@ -227,7 +221,7 @@ class ReconnectLogic(RecordUpdateListener):
 
     def __init__(
         self,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         cli: APIClient,
         entry: ConfigEntry,
         host: str,
@@ -244,6 +238,8 @@ class ReconnectLogic(RecordUpdateListener):
         # Flag to check if the device is connected
         self._connected = True
         self._connected_lock = asyncio.Lock()
+        self._zc_lock = asyncio.Lock()
+        self._zc_listening = False
         # Event the different strategies use for issuing a reconnect attempt.
         self._reconnect_event = asyncio.Event()
         # The task containing the infinite reconnect loop while running
@@ -275,6 +271,7 @@ class ReconnectLogic(RecordUpdateListener):
         self._entry_data.disconnect_callbacks = []
         self._entry_data.available = False
         self._entry_data.async_update_device_state(self._hass)
+        await self._start_zc_listen()
 
         # Reset tries
         async with self._tries_lock:
@@ -320,6 +317,7 @@ class ReconnectLogic(RecordUpdateListener):
                 self._host,
                 error,
             )
+            await self._start_zc_listen()
             # Schedule re-connect in event loop in order not to delay HA
             # startup. First connect is scheduled in tracked tasks.
             async with self._wait_task_lock:
@@ -337,6 +335,7 @@ class ReconnectLogic(RecordUpdateListener):
                 self._tries = 0
             async with self._connected_lock:
                 self._connected = True
+            await self._stop_zc_listen()
             self._hass.async_create_task(self._on_login())
 
     async def _reconnect_once(self):
@@ -380,9 +379,6 @@ class ReconnectLogic(RecordUpdateListener):
         # Create reconnection loop outside of HA's tracked tasks in order
         # not to delay startup.
         self._loop_task = self._hass.loop.create_task(self._reconnect_loop())
-        # Listen for mDNS records so we can reconnect directly if a received mDNS record
-        # indicates the node is up again
-        await self._hass.async_add_executor_job(self._zc.add_listener, self, None)
 
         async with self._connected_lock:
             self._connected = False
@@ -393,11 +389,31 @@ class ReconnectLogic(RecordUpdateListener):
         if self._loop_task is not None:
             self._loop_task.cancel()
             self._loop_task = None
-        await self._hass.async_add_executor_job(self._zc.remove_listener, self)
         async with self._wait_task_lock:
             if self._wait_task is not None:
                 self._wait_task.cancel()
             self._wait_task = None
+        await self._stop_zc_listen()
+
+    async def _start_zc_listen(self):
+        """Listen for mDNS records.
+
+        This listener allows us to schedule a reconnect as soon as a
+        received mDNS record indicates the node is up again.
+        """
+        async with self._zc_lock:
+            if not self._zc_listening:
+                await self._hass.async_add_executor_job(
+                    self._zc.add_listener, self, None
+                )
+                self._zc_listening = True
+
+    async def _stop_zc_listen(self):
+        """Stop listening for zeroconf updates."""
+        async with self._zc_lock:
+            if self._zc_listening:
+                await self._hass.async_add_executor_job(self._zc.remove_listener, self)
+                self._zc_listening = False
 
     @callback
     def stop_callback(self):
@@ -435,7 +451,7 @@ class ReconnectLogic(RecordUpdateListener):
 
 
 async def _async_setup_device_registry(
-    hass: HomeAssistantType, entry: ConfigEntry, device_info: DeviceInfo
+    hass: HomeAssistant, entry: ConfigEntry, device_info: DeviceInfo
 ):
     """Set up device registry feature for a particular config entry."""
     sw_version = device_info.esphome_version
@@ -454,9 +470,9 @@ async def _async_setup_device_registry(
 
 
 async def _register_service(
-    hass: HomeAssistantType, entry_data: RuntimeEntryData, service: UserService
+    hass: HomeAssistant, entry_data: RuntimeEntryData, service: UserService
 ):
-    service_name = f"{entry_data.device_info.name}_{service.name}"
+    service_name = f"{entry_data.device_info.name.replace('-', '_')}_{service.name}"
     schema = {}
     fields = {}
 
@@ -532,7 +548,7 @@ async def _register_service(
 
 
 async def _setup_services(
-    hass: HomeAssistantType, entry_data: RuntimeEntryData, services: list[UserService]
+    hass: HomeAssistant, entry_data: RuntimeEntryData, services: list[UserService]
 ):
     old_services = entry_data.services.copy()
     to_unregister = []
@@ -563,7 +579,7 @@ async def _setup_services(
 
 
 async def _cleanup_instance(
-    hass: HomeAssistantType, entry: ConfigEntry
+    hass: HomeAssistant, entry: ConfigEntry
 ) -> RuntimeEntryData:
     """Cleanup the esphome client if it exists."""
     data: RuntimeEntryData = hass.data[DOMAIN].pop(entry.entry_id)
@@ -575,7 +591,7 @@ async def _cleanup_instance(
     return data
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an esphome config entry."""
     entry_data = await _cleanup_instance(hass, entry)
     tasks = []
@@ -587,7 +603,7 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
 
 
 async def platform_async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities,
     *,

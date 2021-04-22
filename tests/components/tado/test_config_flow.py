@@ -34,8 +34,6 @@ async def test_form(hass):
         "homeassistant.components.tado.config_flow.Tado",
         return_value=mock_tado_api,
     ), patch(
-        "homeassistant.components.tado.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.tado.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -51,7 +49,6 @@ async def test_form(hass):
         "username": "test-username",
         "password": "test-password",
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 

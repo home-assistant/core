@@ -8,7 +8,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_NAME
 
 from .board import get_board
-from .const import CONF_SERIAL_PORT, DOMAIN  # pylint: disable=unused-import
+from .const import CONF_SERIAL_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

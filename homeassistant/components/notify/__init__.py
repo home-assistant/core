@@ -9,15 +9,14 @@ from typing import Any, cast
 import voluptuous as vol
 
 import homeassistant.components.persistent_notification as pn
-from homeassistant.const import CONF_NAME, CONF_PLATFORM
-from homeassistant.core import ServiceCall
+from homeassistant.const import CONF_DESCRIPTION, CONF_NAME, CONF_PLATFORM
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import async_set_service_schema
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import async_get_integration, bind_hass
-from homeassistant.setup import async_prepare_setup_platform
+from homeassistant.setup import async_prepare_setup_platform, async_start_setup
 from homeassistant.util import slugify
 from homeassistant.util.yaml import load_yaml
 
@@ -45,7 +44,6 @@ SERVICE_PERSISTENT_NOTIFICATION = "persistent_notification"
 
 NOTIFY_SERVICES = "notify_services"
 
-CONF_DESCRIPTION = "description"
 CONF_FIELDS = "fields"
 
 PLATFORM_SCHEMA = vol.Schema(
@@ -71,7 +69,7 @@ PERSISTENT_NOTIFICATION_SERVICE_SCHEMA = vol.Schema(
 
 
 @bind_hass
-async def async_reload(hass: HomeAssistantType, integration_name: str) -> None:
+async def async_reload(hass: HomeAssistant, integration_name: str) -> None:
     """Register notify services for an integration."""
     if not _async_integration_has_notify_services(hass, integration_name):
         return
@@ -85,7 +83,7 @@ async def async_reload(hass: HomeAssistantType, integration_name: str) -> None:
 
 
 @bind_hass
-async def async_reset_platform(hass: HomeAssistantType, integration_name: str) -> None:
+async def async_reset_platform(hass: HomeAssistant, integration_name: str) -> None:
     """Unregister notify services for an integration."""
     if not _async_integration_has_notify_services(hass, integration_name):
         return
@@ -101,7 +99,7 @@ async def async_reset_platform(hass: HomeAssistantType, integration_name: str) -
 
 
 def _async_integration_has_notify_services(
-    hass: HomeAssistantType, integration_name: str
+    hass: HomeAssistant, integration_name: str
 ) -> bool:
     """Determine if an integration has notify services registered."""
     if (
@@ -119,7 +117,7 @@ class BaseNotificationService:
     # While not purely typed, it makes typehinting more useful for us
     # and removes the need for constant None checks or asserts.
     # Ignore types: https://github.com/PyCQA/pylint/issues/3167
-    hass: HomeAssistantType = None  # type: ignore
+    hass: HomeAssistant = None  # type: ignore
 
     # Name => target
     registered_targets: dict[str, str]
@@ -163,7 +161,7 @@ class BaseNotificationService:
 
     async def async_setup(
         self,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         service_name: str,
         target_service_name_prefix: str,
     ) -> None:
@@ -291,47 +289,52 @@ async def async_setup(hass, config):
             _LOGGER.error("Unknown notification service specified")
             return
 
-        _LOGGER.info("Setting up %s.%s", DOMAIN, integration_name)
-        notify_service = None
-        try:
-            if hasattr(platform, "async_get_service"):
-                notify_service = await platform.async_get_service(
-                    hass, p_config, discovery_info
-                )
-            elif hasattr(platform, "get_service"):
-                notify_service = await hass.async_add_executor_job(
-                    platform.get_service, hass, p_config, discovery_info
-                )
-            else:
-                raise HomeAssistantError("Invalid notify platform.")
-
-            if notify_service is None:
-                # Platforms can decide not to create a service based
-                # on discovery data.
-                if discovery_info is None:
-                    _LOGGER.error(
-                        "Failed to initialize notification service %s", integration_name
+        full_name = f"{DOMAIN}.{integration_name}"
+        _LOGGER.info("Setting up %s", full_name)
+        with async_start_setup(hass, [full_name]):
+            notify_service = None
+            try:
+                if hasattr(platform, "async_get_service"):
+                    notify_service = await platform.async_get_service(
+                        hass, p_config, discovery_info
                     )
+                elif hasattr(platform, "get_service"):
+                    notify_service = await hass.async_add_executor_job(
+                        platform.get_service, hass, p_config, discovery_info
+                    )
+                else:
+                    raise HomeAssistantError("Invalid notify platform.")
+
+                if notify_service is None:
+                    # Platforms can decide not to create a service based
+                    # on discovery data.
+                    if discovery_info is None:
+                        _LOGGER.error(
+                            "Failed to initialize notification service %s",
+                            integration_name,
+                        )
+                    return
+
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Error setting up platform %s", integration_name)
                 return
 
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Error setting up platform %s", integration_name)
-            return
+            if discovery_info is None:
+                discovery_info = {}
 
-        if discovery_info is None:
-            discovery_info = {}
+            conf_name = p_config.get(CONF_NAME) or discovery_info.get(CONF_NAME)
+            target_service_name_prefix = conf_name or integration_name
+            service_name = slugify(conf_name or SERVICE_NOTIFY)
 
-        conf_name = p_config.get(CONF_NAME) or discovery_info.get(CONF_NAME)
-        target_service_name_prefix = conf_name or integration_name
-        service_name = slugify(conf_name or SERVICE_NOTIFY)
+            await notify_service.async_setup(
+                hass, service_name, target_service_name_prefix
+            )
+            await notify_service.async_register_services()
 
-        await notify_service.async_setup(hass, service_name, target_service_name_prefix)
-        await notify_service.async_register_services()
-
-        hass.data[NOTIFY_SERVICES].setdefault(integration_name, []).append(
-            notify_service
-        )
-        hass.config.components.add(f"{DOMAIN}.{integration_name}")
+            hass.data[NOTIFY_SERVICES].setdefault(integration_name, []).append(
+                notify_service
+            )
+            hass.config.components.add(f"{DOMAIN}.{integration_name}")
 
         return True
 

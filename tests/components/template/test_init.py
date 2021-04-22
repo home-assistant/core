@@ -27,16 +27,38 @@ async def test_reloadable(hass):
                         "value_template": "{{ states.sensor.test_sensor.state }}"
                     },
                 },
-            }
+            },
+            "template": [
+                {
+                    "trigger": {"platform": "event", "event_type": "event_1"},
+                    "sensor": {
+                        "name": "top level",
+                        "state": "{{ trigger.event.data.source }}",
+                    },
+                },
+                {
+                    "sensor": {
+                        "name": "top level state",
+                        "state": "{{ states.sensor.top_level.state }} + 2",
+                    },
+                },
+            ],
         },
     )
     await hass.async_block_till_done()
 
     await hass.async_start()
     await hass.async_block_till_done()
+    assert hass.states.get("sensor.top_level_state").state == "unknown + 2"
 
+    hass.bus.async_fire("event_1", {"source": "init"})
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 4
     assert hass.states.get("sensor.state").state == "mytest"
-    assert len(hass.states.async_all()) == 2
+    assert hass.states.get("sensor.top_level").state == "init"
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.top_level_state").state == "init + 2"
 
     yaml_path = path.join(
         _get_fixtures_base_path(),
@@ -52,11 +74,16 @@ async def test_reloadable(hass):
         )
         await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 4
+
+    hass.bus.async_fire("event_2", {"source": "reload"})
+    await hass.async_block_till_done()
 
     assert hass.states.get("sensor.state") is None
+    assert hass.states.get("sensor.top_level") is None
     assert hass.states.get("sensor.watching_tv_in_master_bedroom").state == "off"
     assert float(hass.states.get("sensor.combined_sensor_energy_usage").state) == 0
+    assert hass.states.get("sensor.top_level_2").state == "reload"
 
 
 async def test_reloadable_can_remove(hass):
@@ -74,7 +101,14 @@ async def test_reloadable_can_remove(hass):
                         "value_template": "{{ states.sensor.test_sensor.state }}"
                     },
                 },
-            }
+            },
+            "template": {
+                "trigger": {"platform": "event", "event_type": "event_1"},
+                "sensor": {
+                    "name": "top level",
+                    "state": "{{ trigger.event.data.source }}",
+                },
+            },
         },
     )
     await hass.async_block_till_done()
@@ -82,8 +116,12 @@ async def test_reloadable_can_remove(hass):
     await hass.async_start()
     await hass.async_block_till_done()
 
+    hass.bus.async_fire("event_1", {"source": "init"})
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 3
     assert hass.states.get("sensor.state").state == "mytest"
-    assert len(hass.states.async_all()) == 2
+    assert hass.states.get("sensor.top_level").state == "init"
 
     yaml_path = path.join(
         _get_fixtures_base_path(),
@@ -251,11 +289,12 @@ async def test_reloadable_multiple_platforms(hass):
         )
         await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 4
 
     assert hass.states.get("sensor.state") is None
     assert hass.states.get("sensor.watching_tv_in_master_bedroom").state == "off"
     assert float(hass.states.get("sensor.combined_sensor_energy_usage").state) == 0
+    assert hass.states.get("sensor.top_level_2") is not None
 
 
 async def test_reload_sensors_that_reference_other_template_sensors(hass):

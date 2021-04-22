@@ -55,7 +55,7 @@
                     "entities": "Entiteter",
                     "mode": "Modus"
                 },
-                "description": "Velg enhetene som skal inkluderes. I tilbeh\u00f8rsmodus er bare en enkelt enhet inkludert. I bridge-inkluderingsmodus vil alle enheter i domenet bli inkludert, med mindre spesifikke enheter er valgt. I bridge-ekskluderingsmodus vil alle enheter i domenet bli inkludert, bortsett fra de ekskluderte enhetene. For best ytelse opprettes et eget HomeKit-tilbeh\u00f8r for hver tv-mediaspiller og kamera.",
+                "description": "Velg enhetene som skal inkluderes. I tilbeh\u00f8rsmodus er bare en enkelt enhet inkludert. I bridge-inkluderingsmodus vil alle enheter i domenet bli inkludert, med mindre spesifikke enheter er valgt. I bridge-ekskluderingsmodus vil alle enheter i domenet bli inkludert, bortsett fra de ekskluderte enhetene. For best ytelse opprettes et eget HomeKit-tilbeh\u00f8r for hver tv-mediaspiller, aktivitetsbasert fjernkontroll, l\u00e5s og kamera.",
                 "title": "Velg enheter som skal inkluderes"
             },
             "init": {

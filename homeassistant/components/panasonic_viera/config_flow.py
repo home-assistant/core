@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN, CONF_PORT
 
-from .const import (  # pylint: disable=unused-import
+from .const import (
     ATTR_DEVICE_INFO,
     ATTR_FRIENDLY_NAME,
     ATTR_UDN,

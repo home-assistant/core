@@ -138,9 +138,12 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             raise ValueError(f"Expected attribute {ATTR_TEMPERATURE}")
 
-        if await self.hass.async_add_executor_job(
-            self.gateway.set_heat_temp, int(self._data_key), int(temperature)
-        ):
+        async with self.coordinator.api_lock:
+            success = await self.hass.async_add_executor_job(
+                self.gateway.set_heat_temp, int(self._data_key), int(temperature)
+            )
+
+        if success:
             await self.coordinator.async_request_refresh()
         else:
             raise HomeAssistantError(
@@ -153,9 +156,13 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
             mode = HEAT_MODE.OFF
         else:
             mode = HEAT_MODE.NUM_FOR_NAME[self.preset_mode]
-        if await self.hass.async_add_executor_job(
-            self.gateway.set_heat_mode, int(self._data_key), int(mode)
-        ):
+
+        async with self.coordinator.api_lock:
+            success = await self.hass.async_add_executor_job(
+                self.gateway.set_heat_mode, int(self._data_key), int(mode)
+            )
+
+        if success:
             await self.coordinator.async_request_refresh()
         else:
             raise HomeAssistantError(
@@ -168,9 +175,13 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
         self._last_preset = mode = HEAT_MODE.NUM_FOR_NAME[preset_mode]
         if self.hvac_mode == HVAC_MODE_OFF:
             return
-        if await self.hass.async_add_executor_job(
-            self.gateway.set_heat_mode, int(self._data_key), int(mode)
-        ):
+
+        async with self.coordinator.api_lock:
+            success = await self.hass.async_add_executor_job(
+                self.gateway.set_heat_mode, int(self._data_key), int(mode)
+            )
+
+        if success:
             await self.coordinator.async_request_refresh()
         else:
             raise HomeAssistantError(

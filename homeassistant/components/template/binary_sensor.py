@@ -1,4 +1,6 @@
 """Support for exposing a templated binary sensor."""
+from __future__ import annotations
+
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -12,26 +14,64 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     CONF_DEVICE_CLASS,
     CONF_ENTITY_PICTURE_TEMPLATE,
+    CONF_FRIENDLY_NAME,
+    CONF_FRIENDLY_NAME_TEMPLATE,
+    CONF_ICON,
     CONF_ICON_TEMPLATE,
+    CONF_NAME,
     CONF_SENSORS,
+    CONF_STATE,
     CONF_UNIQUE_ID,
+    CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
+from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.template import result_as_boolean
 
-from .const import CONF_AVAILABILITY_TEMPLATE
+from .const import (
+    CONF_ATTRIBUTES,
+    CONF_AVAILABILITY,
+    CONF_AVAILABILITY_TEMPLATE,
+    CONF_OBJECT_ID,
+    CONF_PICTURE,
+)
 from .template_entity import TemplateEntity
 
 CONF_DELAY_ON = "delay_on"
 CONF_DELAY_OFF = "delay_off"
 CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
 
-SENSOR_SCHEMA = vol.All(
+LEGACY_FIELDS = {
+    CONF_ICON_TEMPLATE: CONF_ICON,
+    CONF_ENTITY_PICTURE_TEMPLATE: CONF_PICTURE,
+    CONF_AVAILABILITY_TEMPLATE: CONF_AVAILABILITY,
+    CONF_ATTRIBUTE_TEMPLATES: CONF_ATTRIBUTES,
+    CONF_FRIENDLY_NAME_TEMPLATE: CONF_NAME,
+    CONF_FRIENDLY_NAME: CONF_NAME,
+    CONF_VALUE_TEMPLATE: CONF_STATE,
+}
+
+BINARY_SENSOR_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_NAME): cv.template,
+        vol.Required(CONF_STATE): cv.template,
+        vol.Optional(CONF_ICON): cv.template,
+        vol.Optional(CONF_PICTURE): cv.template,
+        vol.Optional(CONF_AVAILABILITY): cv.template,
+        vol.Optional(CONF_ATTRIBUTES): vol.Schema({cv.string: cv.template}),
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
+        vol.Optional(CONF_DELAY_ON): vol.Any(cv.positive_time_period, cv.template),
+        vol.Optional(CONF_DELAY_OFF): vol.Any(cv.positive_time_period, cv.template),
+    }
+)
+
+LEGACY_BINARY_SENSOR_SCHEMA = vol.All(
     cv.deprecated(ATTR_ENTITY_ID),
     vol.Schema(
         {
@@ -52,51 +92,85 @@ SENSOR_SCHEMA = vol.All(
     ),
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(SENSOR_SCHEMA)}
-)
 
-
-async def _async_create_entities(hass, config):
-    """Create the template binary sensors."""
+def rewrite_legacy_to_modern_conf(cfg: dict[str, dict]) -> list[dict]:
+    """Rewrite legacy binary sensor definitions to modern ones."""
     sensors = []
 
-    for device, device_config in config[CONF_SENSORS].items():
-        value_template = device_config[CONF_VALUE_TEMPLATE]
-        icon_template = device_config.get(CONF_ICON_TEMPLATE)
-        entity_picture_template = device_config.get(CONF_ENTITY_PICTURE_TEMPLATE)
-        availability_template = device_config.get(CONF_AVAILABILITY_TEMPLATE)
-        attribute_templates = device_config.get(CONF_ATTRIBUTE_TEMPLATES, {})
+    for object_id, entity_cfg in cfg.items():
+        entity_cfg = {**entity_cfg, CONF_OBJECT_ID: object_id}
 
-        friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
-        device_class = device_config.get(CONF_DEVICE_CLASS)
-        delay_on_raw = device_config.get(CONF_DELAY_ON)
-        delay_off_raw = device_config.get(CONF_DELAY_OFF)
-        unique_id = device_config.get(CONF_UNIQUE_ID)
+        for from_key, to_key in LEGACY_FIELDS.items():
+            if from_key not in entity_cfg or to_key in entity_cfg:
+                continue
 
-        sensors.append(
-            BinarySensorTemplate(
-                hass,
-                device,
-                friendly_name,
-                device_class,
-                value_template,
-                icon_template,
-                entity_picture_template,
-                availability_template,
-                delay_on_raw,
-                delay_off_raw,
-                attribute_templates,
-                unique_id,
-            )
-        )
+            val = entity_cfg.pop(from_key)
+            if isinstance(val, str):
+                val = template.Template(val)
+            entity_cfg[to_key] = val
+
+        if CONF_NAME not in entity_cfg:
+            entity_cfg[CONF_NAME] = template.Template(object_id)
+
+        sensors.append(entity_cfg)
 
     return sensors
 
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(
+            LEGACY_BINARY_SENSOR_SCHEMA
+        ),
+    }
+)
+
+
+@callback
+def _async_create_template_tracking_entities(async_add_entities, hass, definitions):
+    """Create the template binary sensors."""
+    sensors = []
+
+    for entity_conf in definitions:
+        # Still available on legacy
+        object_id = entity_conf.get(CONF_OBJECT_ID)
+
+        value = entity_conf[CONF_STATE]
+        icon = entity_conf.get(CONF_ICON)
+        entity_picture = entity_conf.get(CONF_PICTURE)
+        availability = entity_conf.get(CONF_AVAILABILITY)
+        attributes = entity_conf.get(CONF_ATTRIBUTES, {})
+        friendly_name = entity_conf.get(CONF_NAME)
+        device_class = entity_conf.get(CONF_DEVICE_CLASS)
+        delay_on_raw = entity_conf.get(CONF_DELAY_ON)
+        delay_off_raw = entity_conf.get(CONF_DELAY_OFF)
+        unique_id = entity_conf.get(CONF_UNIQUE_ID)
+
+        sensors.append(
+            BinarySensorTemplate(
+                hass,
+                object_id,
+                friendly_name,
+                device_class,
+                value,
+                icon,
+                entity_picture,
+                availability,
+                delay_on_raw,
+                delay_off_raw,
+                attributes,
+                unique_id,
+            )
+        )
+
+    async_add_entities(sensors)
+
+
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the template binary sensors."""
-    async_add_entities(await _async_create_entities(hass, config))
+    _async_create_template_tracking_entities(
+        async_add_entities, hass, rewrite_legacy_to_modern_conf(config[CONF_SENSORS])
+    )
 
 
 class BinarySensorTemplate(TemplateEntity, BinarySensorEntity):
@@ -104,18 +178,18 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        hass,
-        device,
-        friendly_name,
-        device_class,
-        value_template,
-        icon_template,
-        entity_picture_template,
-        availability_template,
+        hass: HomeAssistant,
+        object_id: str | None,
+        friendly_name: template.Template | None,
+        device_class: str,
+        value_template: template.Template,
+        icon_template: template.Template | None,
+        entity_picture_template: template.Template | None,
+        availability_template: template.Template | None,
         delay_on_raw,
         delay_off_raw,
-        attribute_templates,
-        unique_id,
+        attribute_templates: dict[str, template.Template],
+        unique_id: str | None,
     ):
         """Initialize the Template binary sensor."""
         super().__init__(
@@ -124,8 +198,22 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity):
             icon_template=icon_template,
             entity_picture_template=entity_picture_template,
         )
-        self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, device, hass=hass)
-        self._name = friendly_name
+        if object_id is not None:
+            self.entity_id = async_generate_entity_id(
+                ENTITY_ID_FORMAT, object_id, hass=hass
+            )
+
+        self._name: str | None = None
+        self._friendly_name_template: template.Template | None = friendly_name
+
+        # Try to render the name as it can influence the entity ID
+        if friendly_name:
+            friendly_name.hass = hass
+            try:
+                self._name = friendly_name.async_render(parse_result=False)
+            except template.TemplateError:
+                pass
+
         self._device_class = device_class
         self._template = value_template
         self._state = None
@@ -139,6 +227,11 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity):
     async def async_added_to_hass(self):
         """Register callbacks."""
         self.add_template_attribute("_state", self._template, None, self._update_state)
+        if (
+            self._friendly_name_template is not None
+            and not self._friendly_name_template.is_static
+        ):
+            self.add_template_attribute("_name", self._friendly_name_template)
 
         if self._delay_on_raw is not None:
             try:
@@ -166,7 +259,11 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity):
             self._delay_cancel()
             self._delay_cancel = None
 
-        state = None if isinstance(result, TemplateError) else result_as_boolean(result)
+        state = (
+            None
+            if isinstance(result, TemplateError)
+            else template.result_as_boolean(result)
+        )
 
         if state == self._state:
             return

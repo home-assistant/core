@@ -14,11 +14,6 @@ from .const import DATA_INFO, DATA_VOLUMIO, DOMAIN
 PLATFORMS = ["media_player"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Volumio component."""
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Volumio from a config entry."""
 

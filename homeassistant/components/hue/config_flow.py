@@ -17,7 +17,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
 from .bridge import authenticate_bridge
-from .const import (  # pylint: disable=unused-import
+from .const import (
     CONF_ALLOW_HUE_GROUPS,
     CONF_ALLOW_UNREACHABLE,
     DEFAULT_ALLOW_HUE_GROUPS,

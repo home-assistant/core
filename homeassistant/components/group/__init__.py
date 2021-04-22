@@ -3,9 +3,10 @@ from __future__ import annotations
 
 from abc import abstractmethod
 import asyncio
+from collections.abc import Iterable
 from contextvars import ContextVar
 import logging
-from typing import Any, Iterable, List, cast
+from typing import Any, List, cast
 
 import voluptuous as vol
 
@@ -25,7 +26,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import CoreState, callback, split_entity_id
+from homeassistant.core import CoreState, HomeAssistant, callback, split_entity_id
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
@@ -34,7 +35,6 @@ from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
 from homeassistant.helpers.reload import async_reload_integration_platforms
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import bind_hass
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
@@ -130,7 +130,7 @@ def is_on(hass, entity_id):
 
 
 @bind_hass
-def expand_entity_ids(hass: HomeAssistantType, entity_ids: Iterable[Any]) -> list[str]:
+def expand_entity_ids(hass: HomeAssistant, entity_ids: Iterable[Any]) -> list[str]:
     """Return entity_ids with group entity ids replaced by their members.
 
     Async friendly.
@@ -173,7 +173,7 @@ def expand_entity_ids(hass: HomeAssistantType, entity_ids: Iterable[Any]) -> lis
 
 @bind_hass
 def get_entity_ids(
-    hass: HomeAssistantType, entity_id: str, domain_filter: str | None = None
+    hass: HomeAssistant, entity_id: str, domain_filter: str | None = None
 ) -> list[str]:
     """Get members of this group.
 
@@ -194,7 +194,7 @@ def get_entity_ids(
 
 
 @bind_hass
-def groups_with_entity(hass: HomeAssistantType, entity_id: str) -> list[str]:
+def groups_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
     """Get all groups that contain this entity.
 
     Async friendly.

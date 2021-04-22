@@ -27,11 +27,6 @@ PLATFORMS = ["binary_sensor", "sensor"]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
-    """Set up the Minecraft Server component."""
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) -> bool:
     """Set up Minecraft Server from a config entry."""
     domain_data = hass.data.setdefault(DOMAIN, {})

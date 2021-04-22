@@ -1,8 +1,10 @@
 """Support for deCONZ sensors."""
 from pydeconz.sensor import (
+    AncillaryControl,
     Battery,
     Consumption,
     Daylight,
+    DoorLock,
     Humidity,
     LightLevel,
     Power,
@@ -103,7 +105,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             if (
                 not sensor.BINARY
                 and sensor.type
-                not in Battery.ZHATYPE + Switch.ZHATYPE + Thermostat.ZHATYPE
+                not in AncillaryControl.ZHATYPE
+                + Battery.ZHATYPE
+                + DoorLock.ZHATYPE
+                + Switch.ZHATYPE
+                + Thermostat.ZHATYPE
                 and sensor.uniqueid not in gateway.entities[DOMAIN]
             ):
                 entities.append(DeconzSensor(sensor, gateway))
@@ -111,7 +117,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if entities:
             async_add_entities(entities)
 
-    gateway.listeners.append(
+    config_entry.async_on_unload(
         async_dispatcher_connect(
             hass, gateway.async_signal_new_device(NEW_SENSOR), async_add_sensor
         )

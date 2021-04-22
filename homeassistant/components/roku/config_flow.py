@@ -15,11 +15,10 @@ from homeassistant.components.ssdp import (
 )
 from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import DOMAIN
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
@@ -29,7 +28,7 @@ ERROR_UNKNOWN = "unknown"
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_input(hass: HomeAssistantType, data: dict) -> dict:
+async def validate_input(hass: HomeAssistant, data: dict) -> dict:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.

@@ -141,6 +141,37 @@ async def test_setup_fails(hass, mqtt_mock):
     assert hass.states.get("light.test") is None
 
 
+async def test_rgb_light(hass, mqtt_mock):
+    """Test RGB light flags brightness support."""
+    assert await async_setup_component(
+        hass,
+        light.DOMAIN,
+        {
+            light.DOMAIN: {
+                "platform": "mqtt",
+                "schema": "template",
+                "name": "test",
+                "command_topic": "test_light_rgb/set",
+                "command_on_template": "on",
+                "command_off_template": "off",
+                "red_template": '{{ value.split(",")[4].' 'split("-")[0] }}',
+                "green_template": '{{ value.split(",")[4].' 'split("-")[1] }}',
+                "blue_template": '{{ value.split(",")[4].' 'split("-")[2] }}',
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.test")
+    expected_features = (
+        light.SUPPORT_TRANSITION
+        | light.SUPPORT_COLOR
+        | light.SUPPORT_FLASH
+        | light.SUPPORT_BRIGHTNESS
+    )
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == expected_features
+
+
 async def test_state_change_via_topic(hass, mqtt_mock):
     """Test state change via topic."""
     with assert_setup_component(1, light.DOMAIN):

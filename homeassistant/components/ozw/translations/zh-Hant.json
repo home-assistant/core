@@ -4,7 +4,7 @@
             "addon_info_failed": "\u53d6\u5f97 OpenZWave \u9644\u52a0\u5143\u4ef6\u8cc7\u8a0a\u5931\u6557\u3002",
             "addon_install_failed": "OpenZWave \u9644\u52a0\u5143\u4ef6\u5b89\u88dd\u5931\u6557\u3002",
             "addon_set_config_failed": "OpenZWave a\u9644\u52a0\u5143\u4ef6\u8a2d\u5b9a\u5931\u6557\u3002",
-            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "already_in_progress": "\u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d",
             "mqtt_required": "MQTT \u6574\u5408\u5c1a\u672a\u8a2d\u5b9a",
             "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002"

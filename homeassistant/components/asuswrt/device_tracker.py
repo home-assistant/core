@@ -4,10 +4,9 @@ from __future__ import annotations
 from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DATA_ASUSWRT, DOMAIN
 from .router import AsusWrtRouter
@@ -16,7 +15,7 @@ DEFAULT_DEVICE_NAME = "Unknown device"
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up device tracker for AsusWrt component."""
     router = hass.data[DOMAIN][entry.entry_id][DATA_ASUSWRT]
@@ -81,15 +80,27 @@ class AsusWrtDevice(ScannerEntity):
     @property
     def extra_state_attributes(self) -> dict[str, any]:
         """Return the attributes."""
-        attrs = {
-            "mac": self._device.mac,
-            "ip_address": self._device.ip_address,
-        }
+        attrs = {}
         if self._device.last_activity:
             attrs["last_time_reachable"] = self._device.last_activity.isoformat(
                 timespec="seconds"
             )
         return attrs
+
+    @property
+    def hostname(self) -> str:
+        """Return the hostname of device."""
+        return self._device.name
+
+    @property
+    def ip_address(self) -> str:
+        """Return the primary ip address of the device."""
+        return self._device.ip_address
+
+    @property
+    def mac_address(self) -> str:
+        """Return the mac address of the device."""
+        return self._device.mac
 
     @property
     def device_info(self) -> dict[str, any]:

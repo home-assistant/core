@@ -15,8 +15,7 @@ from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_ID
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_HOUSE_LETTER, CONF_HOUSE_NUMBER, CONF_POST_CODE
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import CONF_HOUSE_LETTER, CONF_HOUSE_NUMBER, CONF_POST_CODE, DOMAIN
 
 
 class TwenteMilieuFlowHandler(ConfigFlow, domain=DOMAIN):

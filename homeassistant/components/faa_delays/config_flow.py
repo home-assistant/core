@@ -9,7 +9,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_ID
 from homeassistant.helpers import aiohttp_client
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

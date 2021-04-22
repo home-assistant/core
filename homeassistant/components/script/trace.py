@@ -19,7 +19,7 @@ class ScriptTrace(ActionTrace):
     ):
         """Container for automation trace."""
         key = ("script", item_id)
-        super().__init__(key, config, context)
+        super().__init__(key, config, None, context)
 
 
 @contextmanager
@@ -30,7 +30,7 @@ def trace_script(hass, item_id, config, context):
 
     try:
         yield trace
-    except Exception as ex:  # pylint: disable=broad-except
+    except Exception as ex:
         if item_id:
             trace.set_error(ex)
         raise ex

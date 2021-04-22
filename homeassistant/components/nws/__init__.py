@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable
 import datetime
 import logging
-from typing import Awaitable, Callable
+from typing import Callable
 
 from pynws import SimpleNWS
 
@@ -28,7 +29,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["weather"]
+PLATFORMS = ["sensor", "weather"]
 
 DEFAULT_SCAN_INTERVAL = datetime.timedelta(minutes=10)
 FAILED_SCAN_INTERVAL = datetime.timedelta(minutes=1)
@@ -38,11 +39,6 @@ DEBOUNCE_TIME = 60  # in seconds
 def base_unique_id(latitude, longitude):
     """Return unique id for entries in configuration."""
     return f"{latitude}_{longitude}"
-
-
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the National Weather Service (NWS) component."""
-    return True
 
 
 class NwsDataUpdateCoordinator(DataUpdateCoordinator):

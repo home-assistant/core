@@ -1,4 +1,6 @@
 """Base class for KNX devices."""
+from __future__ import annotations
+
 from typing import cast
 
 from xknx.devices import Climate as XknxClimate, Device as XknxDevice
@@ -31,6 +33,11 @@ class KnxEntity(Entity):
     def should_poll(self) -> bool:
         """No polling needed within KNX."""
         return False
+
+    @property
+    def unique_id(self) -> str | None:
+        """Return the unique id of the device."""
+        return self._device.unique_id
 
     async def async_update(self) -> None:
         """Request a state update from KNX bus."""

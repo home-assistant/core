@@ -320,7 +320,17 @@ async def test_create_account(hass, client):
         "title": "Test Entry",
         "type": "create_entry",
         "version": 1,
-        "result": entries[0].entry_id,
+        "result": {
+            "connection_class": "unknown",
+            "disabled_by": None,
+            "domain": "test",
+            "entry_id": entries[0].entry_id,
+            "source": "user",
+            "state": "loaded",
+            "supports_options": False,
+            "supports_unload": False,
+            "title": "Test Entry",
+        },
         "description": None,
         "description_placeholders": None,
     }

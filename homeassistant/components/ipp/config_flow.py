@@ -26,8 +26,7 @@ from homeassistant.const import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from .const import CONF_BASE_PATH, CONF_SERIAL, CONF_UUID
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import CONF_BASE_PATH, CONF_SERIAL, CONF_UUID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

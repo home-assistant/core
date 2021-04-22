@@ -11,6 +11,7 @@ from homeassistant.components.opentherm_gw.const import (
     CONF_PRECISION,
     CONF_READ_PRECISION,
     CONF_SET_PRECISION,
+    CONF_TEMPORARY_OVRD_MODE,
     DOMAIN,
 )
 from homeassistant.const import (
@@ -251,12 +252,14 @@ async def test_options_form(hass):
             CONF_FLOOR_TEMP: True,
             CONF_READ_PRECISION: PRECISION_HALVES,
             CONF_SET_PRECISION: PRECISION_HALVES,
+            CONF_TEMPORARY_OVRD_MODE: True,
         },
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"][CONF_READ_PRECISION] == PRECISION_HALVES
     assert result["data"][CONF_SET_PRECISION] == PRECISION_HALVES
+    assert result["data"][CONF_TEMPORARY_OVRD_MODE] is True
     assert result["data"][CONF_FLOOR_TEMP] is True
 
     result = await hass.config_entries.options.async_init(
@@ -270,6 +273,7 @@ async def test_options_form(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"][CONF_READ_PRECISION] == 0.0
     assert result["data"][CONF_SET_PRECISION] == PRECISION_HALVES
+    assert result["data"][CONF_TEMPORARY_OVRD_MODE] is True
     assert result["data"][CONF_FLOOR_TEMP] is True
 
     result = await hass.config_entries.options.async_init(
@@ -282,10 +286,12 @@ async def test_options_form(hass):
             CONF_FLOOR_TEMP: False,
             CONF_READ_PRECISION: PRECISION_TENTHS,
             CONF_SET_PRECISION: PRECISION_HALVES,
+            CONF_TEMPORARY_OVRD_MODE: False,
         },
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"][CONF_READ_PRECISION] == PRECISION_TENTHS
     assert result["data"][CONF_SET_PRECISION] == PRECISION_HALVES
+    assert result["data"][CONF_TEMPORARY_OVRD_MODE] is False
     assert result["data"][CONF_FLOOR_TEMP] is False

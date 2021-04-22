@@ -49,14 +49,28 @@ ZEROCONF = {
             "domain": "daikin"
         }
     ],
+    "_dvl-deviceapi._tcp.local.": [
+        {
+            "domain": "devolo_home_control"
+        }
+    ],
     "_elg._tcp.local.": [
         {
             "domain": "elgato"
         }
     ],
+    "_enphase-envoy._tcp.local.": [
+        {
+            "domain": "enphase_envoy"
+        }
+    ],
     "_esphomelib._tcp.local.": [
         {
             "domain": "esphome"
+        },
+        {
+            "domain": "zha",
+            "name": "tube*"
         }
     ],
     "_fbx-api._tcp.local.": [
@@ -148,6 +162,10 @@ ZEROCONF = {
         {
             "domain": "smappee",
             "name": "smappee2*"
+        },
+        {
+            "domain": "smappee",
+            "name": "smappee50*"
         }
     ],
     "_touch-able._tcp.local.": [
@@ -185,6 +203,7 @@ HOMEKIT = {
     "Healty Home Coach": "netatmo",
     "Iota": "abode",
     "LIFX": "lifx",
+    "MYQ": "myq",
     "Netatmo Relay": "netatmo",
     "PowerView": "hunterdouglas_powerview",
     "Presence": "netatmo",

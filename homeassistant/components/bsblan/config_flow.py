@@ -12,11 +12,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNA
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (  # pylint:disable=unused-import
-    CONF_DEVICE_IDENT,
-    CONF_PASSKEY,
-    DOMAIN,
-)
+from .const import CONF_DEVICE_IDENT, CONF_PASSKEY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

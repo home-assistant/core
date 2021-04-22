@@ -1,6 +1,7 @@
 """Adds support for generic thermostat units."""
 import asyncio
 import logging
+import math
 
 import voluptuous as vol
 
@@ -419,7 +420,10 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
     def _async_update_temp(self, state):
         """Update thermostat with latest state from sensor."""
         try:
-            self._cur_temp = float(state.state)
+            cur_temp = float(state.state)
+            if math.isnan(cur_temp) or math.isinf(cur_temp):
+                raise ValueError(f"Sensor has illegal state {state.state}")
+            self._cur_temp = cur_temp
         except ValueError as ex:
             _LOGGER.error("Unable to update from sensor: %s", ex)
 

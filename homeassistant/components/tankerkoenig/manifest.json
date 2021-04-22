@@ -3,5 +3,6 @@
   "name": "Tankerkoenig",
   "documentation": "https://www.home-assistant.io/integrations/tankerkoenig",
   "requirements": ["pytankerkoenig==0.0.6"],
-  "codeowners": ["@guillempages"]
+  "codeowners": ["@guillempages"],
+  "iot_class": "cloud_polling"
 }

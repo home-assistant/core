@@ -6,17 +6,11 @@ from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
 from .common import get_data_update_coordinator
 from .const import DEVICE_TYPE_GOGOGATE2
 
 PLATFORMS = [COVER, SENSOR]
-
-
-async def async_setup(hass: HomeAssistant, base_config: dict) -> bool:
-    """Set up for Gogogate2 controllers."""
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -34,10 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         hass.config_entries.async_update_entry(config_entry, **config_updates)
 
     data_update_coordinator = get_data_update_coordinator(hass, config_entry)
-    await data_update_coordinator.async_refresh()
-
-    if not data_update_coordinator.last_update_success:
-        raise ConfigEntryNotReady()
+    await data_update_coordinator.async_config_entry_first_refresh()
 
     for platform in PLATFORMS:
         hass.async_create_task(

@@ -16,7 +16,7 @@ from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 
-from .const import (  # pylint:disable=unused-import
+from .const import (
     CONF_DSMR_VERSION,
     CONF_SERIAL_ID,
     CONF_SERIAL_ID_GAS,

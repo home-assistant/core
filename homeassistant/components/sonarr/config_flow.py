@@ -15,9 +15,9 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_BASE_PATH,
@@ -29,13 +29,13 @@ from .const import (
     DEFAULT_UPCOMING_DAYS,
     DEFAULT_VERIFY_SSL,
     DEFAULT_WANTED_MAX_ITEMS,
+    DOMAIN,
 )
-from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_input(hass: HomeAssistantType, data: dict) -> dict[str, Any]:
+async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -79,7 +79,8 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle configuration by re-auth."""
         self._reauth = True
         self._entry_data = dict(data)
-        self._entry_id = self._entry_data.pop("config_entry_id")
+        entry = await self.async_set_unique_id(self.unique_id)
+        self._entry_id = entry.entry_id
 
         return await self.async_step_reauth_confirm()
 

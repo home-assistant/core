@@ -43,7 +43,7 @@ class HassHttpXAsyncClient(httpx.AsyncClient):
         """Prevent an integration from reopen of the client via context manager."""
         return self
 
-    async def __aexit__(self, *args: Any) -> None:  # pylint: disable=signature-differs
+    async def __aexit__(self, *args: Any) -> None:
         """Prevent an integration from close of the client via context manager."""
 
 

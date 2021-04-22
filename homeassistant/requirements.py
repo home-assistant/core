@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Iterable
 import os
-from typing import Any, Iterable, cast
+from typing import Any, cast
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -97,12 +98,21 @@ async def async_get_integration_with_requirements(
             deps_to_check.append(check_domain)
 
     if deps_to_check:
-        await asyncio.gather(
+        results = await asyncio.gather(
             *[
                 async_get_integration_with_requirements(hass, dep, done)
                 for dep in deps_to_check
-            ]
+            ],
+            return_exceptions=True,
         )
+        for result in results:
+            if not isinstance(result, BaseException):
+                continue
+            if not isinstance(result, IntegrationNotFound) or not (
+                not integration.is_built_in
+                and result.domain in integration.after_dependencies
+            ):
+                raise result
 
     cache[domain] = integration
     event.set()

@@ -4,9 +4,12 @@ from copy import deepcopy
 from unittest.mock import Mock, patch
 
 import pydeconz
-from pydeconz.websocket import STATE_RUNNING, STATE_STARTING
+from pydeconz.websocket import STATE_RETRYING, STATE_RUNNING
 import pytest
 
+from homeassistant.components.alarm_control_panel import (
+    DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
+)
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
@@ -148,16 +151,20 @@ async def test_gateway_setup(hass, aioclient_mock):
 
         assert forward_entry_setup.mock_calls[0][1] == (
             config_entry,
+            ALARM_CONTROL_PANEL_DOMAIN,
+        )
+        assert forward_entry_setup.mock_calls[1][1] == (
+            config_entry,
             BINARY_SENSOR_DOMAIN,
         )
-        assert forward_entry_setup.mock_calls[1][1] == (config_entry, CLIMATE_DOMAIN)
-        assert forward_entry_setup.mock_calls[2][1] == (config_entry, COVER_DOMAIN)
-        assert forward_entry_setup.mock_calls[3][1] == (config_entry, FAN_DOMAIN)
-        assert forward_entry_setup.mock_calls[4][1] == (config_entry, LIGHT_DOMAIN)
-        assert forward_entry_setup.mock_calls[5][1] == (config_entry, LOCK_DOMAIN)
-        assert forward_entry_setup.mock_calls[6][1] == (config_entry, SCENE_DOMAIN)
-        assert forward_entry_setup.mock_calls[7][1] == (config_entry, SENSOR_DOMAIN)
-        assert forward_entry_setup.mock_calls[8][1] == (config_entry, SWITCH_DOMAIN)
+        assert forward_entry_setup.mock_calls[2][1] == (config_entry, CLIMATE_DOMAIN)
+        assert forward_entry_setup.mock_calls[3][1] == (config_entry, COVER_DOMAIN)
+        assert forward_entry_setup.mock_calls[4][1] == (config_entry, FAN_DOMAIN)
+        assert forward_entry_setup.mock_calls[5][1] == (config_entry, LIGHT_DOMAIN)
+        assert forward_entry_setup.mock_calls[6][1] == (config_entry, LOCK_DOMAIN)
+        assert forward_entry_setup.mock_calls[7][1] == (config_entry, SCENE_DOMAIN)
+        assert forward_entry_setup.mock_calls[8][1] == (config_entry, SENSOR_DOMAIN)
+        assert forward_entry_setup.mock_calls[9][1] == (config_entry, SWITCH_DOMAIN)
 
 
 async def test_gateway_retry(hass):
@@ -199,7 +206,7 @@ async def test_connection_status_signalling(
 
     assert hass.states.get("binary_sensor.presence").state == STATE_OFF
 
-    await mock_deconz_websocket(state=STATE_STARTING)
+    await mock_deconz_websocket(state=STATE_RETRYING)
     await hass.async_block_till_done()
 
     assert hass.states.get("binary_sensor.presence").state == STATE_UNAVAILABLE

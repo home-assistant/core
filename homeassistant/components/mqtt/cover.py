@@ -267,6 +267,10 @@ class MqttCover(MqttEntity, CoverEntity):
                     payload
                 )
 
+            if not payload:
+                _LOGGER.debug("Ignoring empty tilt message from '%s'", msg.topic)
+                return
+
             if not payload.isnumeric():
                 _LOGGER.warning("Payload '%s' is not numeric", payload)
             elif (
@@ -296,6 +300,10 @@ class MqttCover(MqttEntity, CoverEntity):
             value_template = self._config.get(CONF_VALUE_TEMPLATE)
             if value_template is not None:
                 payload = value_template.async_render_with_possible_json_value(payload)
+
+            if not payload:
+                _LOGGER.debug("Ignoring empty state message from '%s'", msg.topic)
+                return
 
             if payload == self._config[CONF_STATE_STOPPED]:
                 if self._config.get(CONF_GET_POSITION_TOPIC) is not None:
@@ -340,6 +348,10 @@ class MqttCover(MqttEntity, CoverEntity):
 
             if template is not None:
                 payload = template.async_render_with_possible_json_value(payload)
+
+            if not payload:
+                _LOGGER.debug("Ignoring empty position message from '%s'", msg.topic)
+                return
 
             if payload.isnumeric():
                 percentage_payload = self.find_percentage_in_range(
