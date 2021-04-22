@@ -247,7 +247,7 @@ async def test_get_stream_from_camera(
     stream_server = await aiohttp_server(app)
 
     client = create_mock_motioneye_client()
-    client.get_camera_steam_url = Mock(
+    client.get_camera_stream_url = Mock(
         return_value=f"http://localhost:{stream_server.port}/"
     )
     config_entry = create_mock_motioneye_config_entry(

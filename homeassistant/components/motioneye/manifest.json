@@ -1,8 +1,9 @@
 {
   "domain": "motioneye",
   "name": "motionEye",
-  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/motioneye",
+  "config_flow": true,
+  "dependencies": ["http"],
   "requirements": [
     "motioneye-client==0.3.2"
   ],

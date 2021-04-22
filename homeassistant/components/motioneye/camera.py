@@ -138,7 +138,7 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
             CONF_NAME: camera[KEY_NAME],
             CONF_USERNAME: self._surveillance_username if auth is not None else None,
             CONF_PASSWORD: self._surveillance_password if auth is not None else None,
-            CONF_MJPEG_URL: self._client.get_camera_steam_url(camera) or "",
+            CONF_MJPEG_URL: self._client.get_camera_stream_url(camera) or "",
             CONF_STILL_IMAGE_URL: self._client.get_camera_snapshot_url(camera),
             CONF_AUTHENTICATION: auth,
         }

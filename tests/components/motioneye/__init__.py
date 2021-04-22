@@ -141,7 +141,7 @@ def create_mock_motioneye_client() -> AsyncMock:
     mock_client.async_get_cameras = AsyncMock(return_value=TEST_CAMERAS)
     mock_client.async_client_close = AsyncMock(return_value=True)
     mock_client.get_camera_snapshot_url = Mock(return_value="")
-    mock_client.get_camera_steam_url = Mock(return_value="")
+    mock_client.get_camera_stream_url = Mock(return_value="")
     return mock_client
 
 
