@@ -328,9 +328,8 @@ class MqttClimate(MqttEntity, ClimateEntity):
         self._topic = {key: config.get(key) for key in TOPIC_KEYS}
 
         # set to None in non-optimistic mode
-        self._target_temp = (
-            self._current_fan_mode
-        ) = self._current_operation = self._current_swing_mode = self._current_swingh_mode = None
+        self._target_temp = self._current_fan_mode = self._current_operation = None
+        self._current_swing_mode = self._current_swingh_mode = None
         self._target_temp_low = None
         self._target_temp_high = None
 
