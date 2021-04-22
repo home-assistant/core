@@ -112,6 +112,7 @@ async def async_get_integration_with_requirements(
                 not integration.is_built_in
                 and result.domain in integration.after_dependencies
             ):
+                event.set()
                 raise result
 
     cache[domain] = integration
