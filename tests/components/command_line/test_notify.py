@@ -9,12 +9,10 @@ from unittest.mock import patch
 
 from homeassistant import setup
 from homeassistant.components.notify import DOMAIN
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 
-async def setup_test_service(
-    hass: HomeAssistantType, config_dict: dict[str, Any]
-) -> None:
+async def setup_test_service(hass: HomeAssistant, config_dict: dict[str, Any]) -> None:
     """Set up a test command line notify service."""
     assert await setup.async_setup_component(
         hass,
@@ -28,19 +26,19 @@ async def setup_test_service(
     await hass.async_block_till_done()
 
 
-async def test_setup(hass: HomeAssistantType) -> None:
+async def test_setup(hass: HomeAssistant) -> None:
     """Test sensor setup."""
     await setup_test_service(hass, {"command": "exit 0"})
     assert hass.services.has_service(DOMAIN, "test")
 
 
-async def test_bad_config(hass: HomeAssistantType) -> None:
+async def test_bad_config(hass: HomeAssistant) -> None:
     """Test set up the platform with bad/missing configuration."""
     await setup_test_service(hass, {})
     assert not hass.services.has_service(DOMAIN, "test")
 
 
-async def test_command_line_output(hass: HomeAssistantType) -> None:
+async def test_command_line_output(hass: HomeAssistant) -> None:
     """Test the command line output."""
     with tempfile.TemporaryDirectory() as tempdirname:
         filename = os.path.join(tempdirname, "message.txt")
@@ -62,9 +60,7 @@ async def test_command_line_output(hass: HomeAssistantType) -> None:
             assert message == handle.read()
 
 
-async def test_error_for_none_zero_exit_code(
-    caplog: Any, hass: HomeAssistantType
-) -> None:
+async def test_error_for_none_zero_exit_code(caplog: Any, hass: HomeAssistant) -> None:
     """Test if an error is logged for non zero exit codes."""
     await setup_test_service(
         hass,
@@ -79,7 +75,7 @@ async def test_error_for_none_zero_exit_code(
     assert "Command failed" in caplog.text
 
 
-async def test_timeout(caplog: Any, hass: HomeAssistantType) -> None:
+async def test_timeout(caplog: Any, hass: HomeAssistant) -> None:
     """Test blocking is not forever."""
     await setup_test_service(
         hass,
@@ -94,7 +90,7 @@ async def test_timeout(caplog: Any, hass: HomeAssistantType) -> None:
     assert "Timeout" in caplog.text
 
 
-async def test_subprocess_exceptions(caplog: Any, hass: HomeAssistantType) -> None:
+async def test_subprocess_exceptions(caplog: Any, hass: HomeAssistant) -> None:
     """Test that notify subprocess exceptions are handled correctly."""
 
     with patch(
