@@ -30,11 +30,13 @@ CONF_ZONE3 = "zone3"
 CONF_MODEL = "model"
 CONF_MANUFACTURER = "manufacturer"
 CONF_SERIAL_NUMBER = "serial_number"
+CONF_UPDATE_AUDYSSEY = "update_audyssey"
 
 DEFAULT_SHOW_SOURCES = False
 DEFAULT_TIMEOUT = 5
 DEFAULT_ZONE2 = False
 DEFAULT_ZONE3 = False
+DEFAULT_UPDATE_AUDYSSEY = False
 
 CONFIG_SCHEMA = vol.Schema({vol.Optional(CONF_HOST): str})
 
@@ -66,6 +68,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Optional(
                     CONF_ZONE3,
                     default=self.config_entry.options.get(CONF_ZONE3, DEFAULT_ZONE3),
+                ): bool,
+                vol.Optional(
+                    CONF_UPDATE_AUDYSSEY,
+                    default=self.config_entry.options.get(
+                        CONF_UPDATE_AUDYSSEY, DEFAULT_UPDATE_AUDYSSEY
+                    ),
                 ): bool,
             }
         )
