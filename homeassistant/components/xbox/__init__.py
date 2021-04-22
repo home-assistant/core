@@ -29,7 +29,6 @@ from homeassistant.helpers import (
     config_entry_oauth2_flow,
     config_validation as cv,
 )
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import api, config_flow
@@ -168,7 +167,7 @@ class XboxUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(
         self,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         client: XboxLiveClient,
         consoles: SmartglassConsoleList,
     ) -> None:
