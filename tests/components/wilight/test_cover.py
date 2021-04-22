@@ -20,8 +20,8 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.typing import HomeAssistantType
 
 from . import (
     HOST,
@@ -56,7 +56,7 @@ def mock_dummy_device_from_host_light_fan():
 
 
 async def test_loading_cover(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     dummy_device_from_host_cover,
 ) -> None:
     """Test the WiLight configuration entry loading."""
@@ -78,7 +78,7 @@ async def test_loading_cover(
 
 
 async def test_open_close_cover_state(
-    hass: HomeAssistantType, dummy_device_from_host_cover
+    hass: HomeAssistant, dummy_device_from_host_cover
 ) -> None:
     """Test the change of state of the cover."""
     await setup_integration(hass)
