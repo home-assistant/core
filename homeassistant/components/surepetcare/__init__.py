@@ -161,7 +161,7 @@ class SurePetcareAPI:
         """Get the latest data from the Pi-hole."""
 
         try:
-            self._states = await self.surepy.get_entities()
+            self.states = await self.surepy.get_entities()
         except SurePetcareError as error:
             _LOGGER.error("Unable to fetch data: %s", error)
 
