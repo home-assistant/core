@@ -45,7 +45,7 @@ MOCK_DEVICE_INFO = {
     ATTR_HOST: MOCK_HOST,
     ATTR_NEW_SERIAL_NUMBER: MOCK_SERIAL_NUMBER,
 }
-MOCK_IMPORT_CONFIG = {CONF_HOST: "yaml_host"}
+MOCK_IMPORT_CONFIG = {CONF_HOST: MOCK_HOST, CONF_USERNAME: "username"}
 MOCK_SSDP_DATA = {
     ATTR_SSDP_LOCATION: "https://fake_host:12345/test",
     ATTR_UPNP_FRIENDLY_NAME: "fake_name",
@@ -66,13 +66,15 @@ async def test_user(hass: HomeAssistant, fc_class_mock):
     with patch(
         "homeassistant.components.fritz.common.FritzConnection",
         side_effect=fc_class_mock,
-    ), patch("homeassistant.components.fritz.common.FritzStatus"):
+    ), patch("homeassistant.components.fritz.common.FritzStatus"), patch(
+        "homeassistant.components.fritz.async_setup_entry"
+    ) as mock_setup_entry:
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
         assert result["type"] == RESULT_TYPE_FORM
-        assert result["step_id"] == "start_config"
+        assert result["step_id"] == "user"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_USER_DATA
@@ -82,6 +84,9 @@ async def test_user(hass: HomeAssistant, fc_class_mock):
         assert result["data"][CONF_PASSWORD] == "fake_pass"
         assert result["data"][CONF_USERNAME] == "fake_user"
         assert not result["result"].unique_id
+        await hass.async_block_till_done()
+
+    assert mock_setup_entry.called
 
 
 async def test_user_already_configured(hass: HomeAssistant, fc_class_mock):
@@ -99,13 +104,13 @@ async def test_user_already_configured(hass: HomeAssistant, fc_class_mock):
             DOMAIN, context={"source": SOURCE_USER}
         )
         assert result["type"] == RESULT_TYPE_FORM
-        assert result["step_id"] == "start_config"
+        assert result["step_id"] == "user"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_USER_DATA
         )
         assert result["type"] == RESULT_TYPE_FORM
-        assert result["step_id"] == "start_config"
+        assert result["step_id"] == "user"
 
 
 async def test_exception_security(hass: HomeAssistant):
@@ -115,7 +120,7 @@ async def test_exception_security(hass: HomeAssistant):
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "start_config"
+    assert result["step_id"] == "user"
 
     with patch(
         "homeassistant.components.fritz.common.FritzConnection",
@@ -127,7 +132,7 @@ async def test_exception_security(hass: HomeAssistant):
         )
 
         assert result["type"] == RESULT_TYPE_FORM
-        assert result["step_id"] == "start_config"
+        assert result["step_id"] == "user"
         assert result["errors"]["base"] == ERROR_AUTH_INVALID
 
 
@@ -138,7 +143,7 @@ async def test_exception_connection(hass: HomeAssistant):
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "start_config"
+    assert result["step_id"] == "user"
 
     with patch(
         "homeassistant.components.fritz.common.FritzConnection",
@@ -150,7 +155,7 @@ async def test_exception_connection(hass: HomeAssistant):
         )
 
         assert result["type"] == RESULT_TYPE_FORM
-        assert result["step_id"] == "start_config"
+        assert result["step_id"] == "user"
         assert result["errors"]["base"] == ERROR_CONNECTION_ERROR
 
 
@@ -161,7 +166,7 @@ async def test_exception_unknown(hass: HomeAssistant):
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "start_config"
+    assert result["step_id"] == "user"
 
     with patch(
         "homeassistant.components.fritz.common.FritzConnection",
@@ -173,7 +178,7 @@ async def test_exception_unknown(hass: HomeAssistant):
         )
 
         assert result["type"] == RESULT_TYPE_FORM
-        assert result["step_id"] == "start_config"
+        assert result["step_id"] == "user"
         assert result["errors"]["base"] == ERROR_UNKNOWN
 
 
@@ -386,20 +391,18 @@ async def test_import(hass: HomeAssistant, fc_class_mock):
     with patch(
         "homeassistant.components.fritz.common.FritzConnection",
         side_effect=fc_class_mock,
-    ), patch("homeassistant.components.fritz.common.FritzStatus"):
+    ), patch("homeassistant.components.fritz.common.FritzStatus"), patch(
+        "homeassistant.components.fritz.async_setup_entry"
+    ) as mock_setup_entry:
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_IMPORT_CONFIG
         )
-        assert result["type"] == RESULT_TYPE_FORM
-        assert result["step_id"] == "start_config"
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input=MOCK_USER_DATA,
-        )
 
         assert result["type"] == RESULT_TYPE_CREATE_ENTRY
         assert result["data"][CONF_HOST] == "fake_host"
-        assert result["data"][CONF_PASSWORD] == "fake_pass"
-        assert result["data"][CONF_USERNAME] == "fake_user"
+        assert result["data"][CONF_PASSWORD] is None
+        assert result["data"][CONF_USERNAME] == "username"
+        await hass.async_block_till_done()
+
+    assert mock_setup_entry.called

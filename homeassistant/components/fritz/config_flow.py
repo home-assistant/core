@@ -138,7 +138,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
     def _show_setup_form_init(self, errors=None):
         """Show the setup form to the user."""
         return self.async_show_form(
-            step_id="start_config",
+            step_id="user",
             data_schema=vol.Schema(
                 {
                     vol.Optional(CONF_HOST, default=DEFAULT_HOST): str,
@@ -166,10 +166,6 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
-        return await self.async_step_start_config()
-
-    async def async_step_start_config(self, user_input=None):
-        """Handle a flow start config."""
         if user_input is None:
             return self._show_setup_form_init()
 
@@ -249,4 +245,11 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
 
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
-        return await self.async_step_user(import_config)
+        return await self.async_step_user(
+            {
+                CONF_HOST: import_config[CONF_HOST],
+                CONF_USERNAME: import_config[CONF_USERNAME],
+                CONF_PASSWORD: import_config.get(CONF_PASSWORD),
+                CONF_PORT: import_config.get(CONF_PORT, DEFAULT_PORT),
+            }
+        )
