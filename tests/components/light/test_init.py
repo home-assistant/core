@@ -560,11 +560,6 @@ async def test_default_profiles_group(hass, mock_light_profiles):
         light.ATTR_TRANSITION: 2,
     }
 
-    _, data = ent.last_call("turn_off")
-    assert data == {
-        light.ATTR_TRANSITION: 2,
-    }
-
 
 @pytest.mark.parametrize(
     "extra_call_params, expected_params",

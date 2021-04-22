@@ -273,11 +273,6 @@ async def async_setup(hass, config):
         """
         params = dict(call.data["params"])
 
-        # Zero brightness: Light will be turned off
-        if params.get(ATTR_BRIGHTNESS) == 0:
-            await async_handle_light_off_service(light, call)
-            return
-
         # Only process params once we processed brightness step
         if params and (
             ATTR_BRIGHTNESS_STEP in params or ATTR_BRIGHTNESS_STEP_PCT in params
@@ -294,11 +289,10 @@ async def async_setup(hass, config):
 
             preprocess_turn_on_alternatives(hass, params)
 
-        if not params or not light.is_on:
-            profiles.apply_default(light.entity_id, params)
-
-        if params and ATTR_TRANSITION not in params:
-            profiles.apply_default_transition(light.entity_id, params)
+        if (not params or not light.is_on) or (
+            params and ATTR_TRANSITION not in params
+        ):
+            profiles.apply_default(light.entity_id, light.is_on, params)
 
         supported_color_modes = light.supported_color_modes
         # Backwards compatibility: if an RGBWW color is specified, convert to RGB + W
@@ -346,14 +340,17 @@ async def async_setup(hass, config):
         if supported_color_modes:
             params.pop(ATTR_WHITE_VALUE, None)
 
-        await light.async_turn_on(**params)
+        if params.get(ATTR_BRIGHTNESS) == 0:
+            await async_handle_light_off_service(light, call)
+        else:
+            await light.async_turn_on(**params)
 
     async def async_handle_light_off_service(light, call):
         """Handle turning off a light."""
         params = dict(call.data["params"])
 
         if ATTR_TRANSITION not in params:
-            profiles.apply_default_transition(light.entity_id, params)
+            profiles.apply_default(light.entity_id, True, params)
 
         await light.async_turn_off(**filter_turn_off_params(params))
 
@@ -501,21 +498,15 @@ class Profiles:
         self.data = await self.hass.async_add_executor_job(self._load_profile_data)
 
     @callback
-    def apply_default(self, entity_id: str, params: dict) -> None:
+    def apply_default(self, entity_id: str, is_on: bool, params: dict) -> None:
         """Return the default profile for the given light."""
         for _entity_id in (entity_id, "group.all_lights"):
             name = f"{_entity_id}.default"
             if name in self.data:
-                self.apply_profile(name, params)
-                return
-
-    @callback
-    def apply_default_transition(self, entity_id: str, params: dict) -> None:
-        """Return the transition attribute from the default profile for the given light."""
-        for _entity_id in (entity_id, "group.all_lights"):
-            name = f"{_entity_id}.default"
-            if name in self.data and self.data[name].transition is not None:
-                params.setdefault(ATTR_TRANSITION, self.data[name].transition)
+                if not is_on or (not params and is_on):
+                    self.apply_profile(name, params)
+                elif self.data[name].transition is not None:
+                    params.setdefault(ATTR_TRANSITION, self.data[name].transition)
                 return
 
     @callback
