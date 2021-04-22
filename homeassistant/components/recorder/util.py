@@ -49,7 +49,7 @@ def session_scope(
     need_rollback = False
     try:
         yield session
-        if session.transaction:
+        if session.get_transaction():
             need_rollback = True
             session.commit()
     except Exception as err:
