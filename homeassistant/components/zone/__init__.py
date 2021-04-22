@@ -291,7 +291,7 @@ class Zone(entity.Entity):
         """Return entity instance initialized from yaml storage."""
         zone = cls(config)
         zone.editable = False
-        zone._generate_attrs()  # pylint:disable=protected-access
+        zone._generate_attrs()
         return zone
 
     @property
