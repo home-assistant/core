@@ -4,7 +4,7 @@ import pytest
 from homeassistant.components.media_player.const import DOMAIN as MP_DOMAIN
 from homeassistant.components.vizio.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .const import MOCK_SPEAKER_CONFIG, MOCK_USER_VALID_TV_CONFIG, UNIQUE_ID
@@ -13,7 +13,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_setup_component(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_update: pytest.fixture,
 ) -> None:
@@ -26,7 +26,7 @@ async def test_setup_component(
 
 
 async def test_tv_load_and_unload(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_update: pytest.fixture,
 ) -> None:
@@ -50,7 +50,7 @@ async def test_tv_load_and_unload(
 
 
 async def test_speaker_load_and_unload(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_update: pytest.fixture,
 ) -> None:

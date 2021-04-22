@@ -11,8 +11,8 @@ from async_upnp_client.aiohttp import AiohttpSessionRequester
 from async_upnp_client.device_updater import DeviceUpdater
 from async_upnp_client.profiles.igd import IgdDevice
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 import homeassistant.util.dt as dt_util
 
@@ -36,7 +36,7 @@ from .const import (
 )
 
 
-def _get_local_ip(hass: HomeAssistantType) -> IPv4Address | None:
+def _get_local_ip(hass: HomeAssistant) -> IPv4Address | None:
     """Get the configured local ip."""
     if DOMAIN in hass.data and DOMAIN_CONFIG in hass.data[DOMAIN]:
         local_ip = hass.data[DOMAIN][DOMAIN_CONFIG].get(CONF_LOCAL_IP)
@@ -55,7 +55,7 @@ class Device:
         self.coordinator: DataUpdateCoordinator = None
 
     @classmethod
-    async def async_discover(cls, hass: HomeAssistantType) -> list[Mapping]:
+    async def async_discover(cls, hass: HomeAssistant) -> list[Mapping]:
         """Discover UPnP/IGD devices."""
         _LOGGER.debug("Discovering UPnP/IGD devices")
         local_ip = _get_local_ip(hass)
@@ -73,7 +73,7 @@ class Device:
 
     @classmethod
     async def async_supplement_discovery(
-        cls, hass: HomeAssistantType, discovery: Mapping
+        cls, hass: HomeAssistant, discovery: Mapping
     ) -> Mapping:
         """Get additional data from device and supplement discovery."""
         location = discovery[DISCOVERY_LOCATION]
@@ -86,7 +86,7 @@ class Device:
 
     @classmethod
     async def async_create_device(
-        cls, hass: HomeAssistantType, ssdp_location: str
+        cls, hass: HomeAssistant, ssdp_location: str
     ) -> Device:
         """Create UPnP/IGD device."""
         # Build async_upnp_client requester.

@@ -3,19 +3,19 @@
 import twinkly_client
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import CONF_ENTRY_HOST, CONF_ENTRY_ID, DOMAIN
 
 
-async def async_setup(hass: HomeAssistantType, config: dict):
+async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the twinkly integration."""
 
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Set up entries from config flow."""
 
     # We setup the client here so if at some point we add any other entity for this device,
@@ -33,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, config_entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Remove a twinkly entry."""
 
     # For now light entries don't have unload method, so we don't have to async_forward_entry_unload
