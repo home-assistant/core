@@ -7,7 +7,7 @@ of entities and react to changes.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Collection, Iterable, Mapping
+from collections.abc import Awaitable, Collection, Coroutine, Iterable, Mapping
 import datetime
 import enum
 import functools
@@ -18,7 +18,7 @@ import re
 import threading
 from time import monotonic
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Callable, Coroutine, Optional, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Callable, Optional, TypeVar, cast
 
 import attr
 import voluptuous as vol

@@ -1,6 +1,7 @@
 """Config flow for Picnic integration."""
+from __future__ import annotations
+
 import logging
-from typing import Tuple
 
 from python_picnic_api import PicnicAPI
 from python_picnic_api.session import PicnicAuthError
@@ -33,7 +34,7 @@ class PicnicHub:
     """Hub class to test user authentication."""
 
     @staticmethod
-    def authenticate(username, password, country_code) -> Tuple[str, dict]:
+    def authenticate(username, password, country_code) -> tuple[str, dict]:
         """Test if we can authenticate with the Picnic API."""
         picnic = PicnicAPI(username, password, country_code)
         return picnic.session.auth_token, picnic.get_user()
