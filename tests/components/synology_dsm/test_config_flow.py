@@ -36,7 +36,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from .consts import (
     DEVICE_TOKEN,
@@ -114,7 +114,7 @@ def mock_controller_service_failed():
         yield service_mock
 
 
-async def test_user(hass: HomeAssistantType, service: MagicMock):
+async def test_user(hass: HomeAssistant, service: MagicMock):
     """Test user config."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=None
@@ -177,7 +177,7 @@ async def test_user(hass: HomeAssistantType, service: MagicMock):
     assert result["data"].get(CONF_VOLUMES) is None
 
 
-async def test_user_2sa(hass: HomeAssistantType, service_2sa: MagicMock):
+async def test_user_2sa(hass: HomeAssistant, service_2sa: MagicMock):
     """Test user with 2sa authentication config."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -220,7 +220,7 @@ async def test_user_2sa(hass: HomeAssistantType, service_2sa: MagicMock):
     assert result["data"].get(CONF_VOLUMES) is None
 
 
-async def test_user_vdsm(hass: HomeAssistantType, service_vdsm: MagicMock):
+async def test_user_vdsm(hass: HomeAssistant, service_vdsm: MagicMock):
     """Test user config."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=None
@@ -256,7 +256,7 @@ async def test_user_vdsm(hass: HomeAssistantType, service_vdsm: MagicMock):
     assert result["data"].get(CONF_VOLUMES) is None
 
 
-async def test_import(hass: HomeAssistantType, service: MagicMock):
+async def test_import(hass: HomeAssistant, service: MagicMock):
     """Test import step."""
     # import with minimum setup
     result = await hass.config_entries.flow.async_init(
@@ -309,7 +309,7 @@ async def test_import(hass: HomeAssistantType, service: MagicMock):
     assert result["data"][CONF_VOLUMES] == ["volume_1"]
 
 
-async def test_abort_if_already_setup(hass: HomeAssistantType, service: MagicMock):
+async def test_abort_if_already_setup(hass: HomeAssistant, service: MagicMock):
     """Test we abort if the account is already setup."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -336,7 +336,7 @@ async def test_abort_if_already_setup(hass: HomeAssistantType, service: MagicMoc
     assert result["reason"] == "already_configured"
 
 
-async def test_login_failed(hass: HomeAssistantType, service: MagicMock):
+async def test_login_failed(hass: HomeAssistant, service: MagicMock):
     """Test when we have errors during login."""
     service.return_value.login = Mock(
         side_effect=(SynologyDSMLoginInvalidException(USERNAME))
@@ -351,7 +351,7 @@ async def test_login_failed(hass: HomeAssistantType, service: MagicMock):
     assert result["errors"] == {CONF_USERNAME: "invalid_auth"}
 
 
-async def test_connection_failed(hass: HomeAssistantType, service: MagicMock):
+async def test_connection_failed(hass: HomeAssistant, service: MagicMock):
     """Test when we have errors during connection."""
     service.return_value.login = Mock(
         side_effect=SynologyDSMRequestException(IOError("arg"))
@@ -367,7 +367,7 @@ async def test_connection_failed(hass: HomeAssistantType, service: MagicMock):
     assert result["errors"] == {CONF_HOST: "cannot_connect"}
 
 
-async def test_unknown_failed(hass: HomeAssistantType, service: MagicMock):
+async def test_unknown_failed(hass: HomeAssistant, service: MagicMock):
     """Test when we have an unknown error."""
     service.return_value.login = Mock(side_effect=SynologyDSMException(None, None))
 
@@ -381,9 +381,7 @@ async def test_unknown_failed(hass: HomeAssistantType, service: MagicMock):
     assert result["errors"] == {"base": "unknown"}
 
 
-async def test_missing_data_after_login(
-    hass: HomeAssistantType, service_failed: MagicMock
-):
+async def test_missing_data_after_login(hass: HomeAssistant, service_failed: MagicMock):
     """Test when we have errors during connection."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -394,9 +392,7 @@ async def test_missing_data_after_login(
     assert result["errors"] == {"base": "missing_data"}
 
 
-async def test_form_ssdp_already_configured(
-    hass: HomeAssistantType, service: MagicMock
-):
+async def test_form_ssdp_already_configured(hass: HomeAssistant, service: MagicMock):
     """Test ssdp abort when the serial number is already configured."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
@@ -423,7 +419,7 @@ async def test_form_ssdp_already_configured(
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
 
 
-async def test_form_ssdp(hass: HomeAssistantType, service: MagicMock):
+async def test_form_ssdp(hass: HomeAssistant, service: MagicMock):
     """Test we can setup from ssdp."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
@@ -459,7 +455,7 @@ async def test_form_ssdp(hass: HomeAssistantType, service: MagicMock):
     assert result["data"].get(CONF_VOLUMES) is None
 
 
-async def test_options_flow(hass: HomeAssistantType, service: MagicMock):
+async def test_options_flow(hass: HomeAssistant, service: MagicMock):
     """Test config flow options."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,

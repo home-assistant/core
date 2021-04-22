@@ -17,9 +17,9 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultDict
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     DEFAULT_NAME,
@@ -34,7 +34,7 @@ from .coordinator import NZBGetAPI, NZBGetAPIException
 _LOGGER = logging.getLogger(__name__)
 
 
-def validate_input(hass: HomeAssistantType, data: dict) -> dict[str, Any]:
+def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
