@@ -21,7 +21,7 @@ from homeassistant.components.upnp.const import (
     DOMAIN,
 )
 from homeassistant.components.upnp.device import Device
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
@@ -30,7 +30,7 @@ from .mock_device import MockDevice
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_flow_ssdp_discovery(hass: HomeAssistantType):
+async def test_flow_ssdp_discovery(hass: HomeAssistant):
     """Test config flow: discovered + configured through ssdp."""
     udn = "uuid:device_1"
     location = "dummy"
@@ -82,7 +82,7 @@ async def test_flow_ssdp_discovery(hass: HomeAssistantType):
         }
 
 
-async def test_flow_ssdp_incomplete_discovery(hass: HomeAssistantType):
+async def test_flow_ssdp_incomplete_discovery(hass: HomeAssistant):
     """Test config flow: incomplete discovery through ssdp."""
     udn = "uuid:device_1"
     location = "dummy"
@@ -103,7 +103,7 @@ async def test_flow_ssdp_incomplete_discovery(hass: HomeAssistantType):
     assert result["reason"] == "incomplete_discovery"
 
 
-async def test_flow_ssdp_discovery_ignored(hass: HomeAssistantType):
+async def test_flow_ssdp_discovery_ignored(hass: HomeAssistant):
     """Test config flow: discovery through ssdp, but ignored."""
     udn = "uuid:device_random_1"
     location = "dummy"
@@ -151,7 +151,7 @@ async def test_flow_ssdp_discovery_ignored(hass: HomeAssistantType):
         assert result["reason"] == "discovery_ignored"
 
 
-async def test_flow_user(hass: HomeAssistantType):
+async def test_flow_user(hass: HomeAssistant):
     """Test config flow: discovered + configured through user."""
     udn = "uuid:device_1"
     location = "dummy"
@@ -197,7 +197,7 @@ async def test_flow_user(hass: HomeAssistantType):
         }
 
 
-async def test_flow_import(hass: HomeAssistantType):
+async def test_flow_import(hass: HomeAssistant):
     """Test config flow: discovered + configured through configuration.yaml."""
     udn = "uuid:device_1"
     mock_device = MockDevice(udn)
@@ -235,7 +235,7 @@ async def test_flow_import(hass: HomeAssistantType):
         }
 
 
-async def test_flow_import_already_configured(hass: HomeAssistantType):
+async def test_flow_import_already_configured(hass: HomeAssistant):
     """Test config flow: discovered, but already configured."""
     udn = "uuid:device_1"
     mock_device = MockDevice(udn)
@@ -261,7 +261,7 @@ async def test_flow_import_already_configured(hass: HomeAssistantType):
     assert result["reason"] == "already_configured"
 
 
-async def test_flow_import_incomplete(hass: HomeAssistantType):
+async def test_flow_import_incomplete(hass: HomeAssistant):
     """Test config flow: incomplete discovery, configured through configuration.yaml."""
     udn = "uuid:device_1"
     mock_device = MockDevice(udn)
@@ -288,7 +288,7 @@ async def test_flow_import_incomplete(hass: HomeAssistantType):
         assert result["reason"] == "incomplete_discovery"
 
 
-async def test_options_flow(hass: HomeAssistantType):
+async def test_options_flow(hass: HomeAssistant):
     """Test options flow."""
     # Set up config entry.
     udn = "uuid:device_1"
