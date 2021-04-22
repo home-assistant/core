@@ -7,6 +7,7 @@ import voluptuous as vol
 from homeassistant.components.lock import PLATFORM_SCHEMA, SUPPORT_OPEN, LockEntity
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.helpers import config_validation as cv, entity_platform
+from pynuki import MODE_OPENER_CONTINUOUS
 
 from . import NukiEntity
 from .const import (
@@ -145,7 +146,7 @@ class NukiOpenerEntity(NukiDeviceEntity):
     @property
     def is_locked(self):
         """Return true if ring-to-open is enabled."""
-        return not self._nuki_device.is_rto_activated
+        return not (self._nuki_device.is_rto_activated or self._nuki_device.mode == MODE_OPENER_CONTINUOUS)
 
     def lock(self, **kwargs):
         """Disable ring-to-open."""
