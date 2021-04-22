@@ -21,14 +21,10 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.const import ATTR_ICON, CONF_API_KEY, CONF_ICON, CONF_USERNAME
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 import homeassistant.helpers.template as template
-from homeassistant.helpers.typing import (
-    ConfigType,
-    DiscoveryInfoType,
-    HomeAssistantType,
-)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -109,7 +105,7 @@ class MessageT(TypedDict, total=False):
 
 
 async def async_get_service(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> SlackNotificationService | None:
@@ -152,7 +148,7 @@ def _async_sanitize_channel_names(channel_list: list[str]) -> list[str]:
 
 
 @callback
-def _async_templatize_blocks(hass: HomeAssistantType, value: Any) -> Any:
+def _async_templatize_blocks(hass: HomeAssistant, value: Any) -> Any:
     """Recursive template creator helper function."""
     if isinstance(value, list):
         return [_async_templatize_blocks(hass, item) for item in value]
@@ -170,7 +166,7 @@ class SlackNotificationService(BaseNotificationService):
 
     def __init__(
         self,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         client: WebClient,
         default_channel: str,
         username: str | None,
