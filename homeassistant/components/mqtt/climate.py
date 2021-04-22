@@ -31,6 +31,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
     SUPPORT_SWING_MODE,
+    SUPPORT_SWINGH_MODE,
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
@@ -102,6 +103,11 @@ CONF_SWING_MODE_COMMAND_TOPIC = "swing_mode_command_topic"
 CONF_SWING_MODE_LIST = "swing_modes"
 CONF_SWING_MODE_STATE_TEMPLATE = "swing_mode_state_template"
 CONF_SWING_MODE_STATE_TOPIC = "swing_mode_state_topic"
+CONF_SWINGH_MODE_COMMAND_TEMPLATE = "swingh_mode_command_template"
+CONF_SWINGH_MODE_COMMAND_TOPIC = "swingh_mode_command_topic"
+CONF_SWINGH_MODE_LIST = "swingh_modes"
+CONF_SWINGH_MODE_STATE_TEMPLATE = "swingh_mode_state_template"
+CONF_SWINGH_MODE_STATE_TOPIC = "swingh_mode_state_topic"
 CONF_TEMP_COMMAND_TEMPLATE = "temperature_command_template"
 CONF_TEMP_COMMAND_TOPIC = "temperature_command_topic"
 CONF_TEMP_HIGH_COMMAND_TEMPLATE = "temperature_high_command_template"
@@ -129,6 +135,7 @@ VALUE_TEMPLATE_KEYS = (
     CONF_POWER_STATE_TEMPLATE,
     CONF_ACTION_TEMPLATE,
     CONF_SWING_MODE_STATE_TEMPLATE,
+    CONF_SWINGH_MODE_STATE_TEMPLATE,
     CONF_TEMP_HIGH_STATE_TEMPLATE,
     CONF_TEMP_LOW_STATE_TEMPLATE,
     CONF_TEMP_STATE_TEMPLATE,
@@ -139,6 +146,7 @@ COMMAND_TEMPLATE_KEYS = {
     CONF_HOLD_COMMAND_TEMPLATE,
     CONF_MODE_COMMAND_TEMPLATE,
     CONF_SWING_MODE_COMMAND_TEMPLATE,
+    CONF_SWINGH_MODE_COMMAND_TEMPLATE,
     CONF_TEMP_COMMAND_TEMPLATE,
     CONF_TEMP_HIGH_COMMAND_TEMPLATE,
     CONF_TEMP_LOW_COMMAND_TEMPLATE,
@@ -161,6 +169,8 @@ TOPIC_KEYS = (
     CONF_ACTION_TOPIC,
     CONF_SWING_MODE_COMMAND_TOPIC,
     CONF_SWING_MODE_STATE_TOPIC,
+    CONF_SWINGH_MODE_COMMAND_TOPIC,
+    CONF_SWINGH_MODE_STATE_TOPIC,
     CONF_TEMP_COMMAND_TOPIC,
     CONF_TEMP_HIGH_COMMAND_TOPIC,
     CONF_TEMP_HIGH_STATE_TOPIC,
@@ -228,6 +238,13 @@ PLATFORM_SCHEMA = SCHEMA_BASE.extend(
         ): cv.ensure_list,
         vol.Optional(CONF_SWING_MODE_STATE_TEMPLATE): cv.template,
         vol.Optional(CONF_SWING_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_SWINGH_MODE_COMMAND_TEMPLATE): cv.template,
+        vol.Optional(CONF_SWINGH_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(
+            CONF_SWINGH_MODE_LIST, default=[STATE_ON, HVAC_MODE_OFF]
+        ): cv.ensure_list,
+        vol.Optional(CONF_SWINGH_MODE_STATE_TEMPLATE): cv.template,
+        vol.Optional(CONF_SWINGH_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
         vol.Optional(CONF_TEMP_INITIAL, default=21): cv.positive_int,
         vol.Optional(CONF_TEMP_MIN, default=DEFAULT_MIN_TEMP): vol.Coerce(float),
         vol.Optional(CONF_TEMP_MAX, default=DEFAULT_MAX_TEMP): vol.Coerce(float),
@@ -284,6 +301,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
         self._current_fan_mode = None
         self._current_operation = None
         self._current_swing_mode = None
+        self._current_swingh_mode = None
         self._current_temp = None
         self._hold = None
         self._target_temp = None
@@ -312,7 +330,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
         # set to None in non-optimistic mode
         self._target_temp = (
             self._current_fan_mode
-        ) = self._current_operation = self._current_swing_mode = None
+        ) = self._current_operation = self._current_swing_mode = self._current_swingh_mode = None
         self._target_temp_low = None
         self._target_temp_high = None
 
@@ -327,6 +345,8 @@ class MqttClimate(MqttEntity, ClimateEntity):
             self._current_fan_mode = FAN_LOW
         if self._topic[CONF_SWING_MODE_STATE_TOPIC] is None:
             self._current_swing_mode = HVAC_MODE_OFF
+        if self._topic[CONF_SWINGH_MODE_STATE_TOPIC] is None:
+            self._current_swingh_mode = HVAC_MODE_OFF
         if self._topic[CONF_MODE_STATE_TOPIC] is None:
             self._current_operation = HVAC_MODE_OFF
         self._action = None
@@ -491,6 +511,21 @@ class MqttClimate(MqttEntity, ClimateEntity):
 
         add_subscription(
             topics, CONF_SWING_MODE_STATE_TOPIC, handle_swing_mode_received
+        )
+
+        @callback
+        @log_messages(self.hass, self.entity_id)
+        def handle_swingh_mode_received(msg):
+            """Handle receiving horizontal swing mode via MQTT."""
+            handle_mode_received(
+                msg,
+                CONF_SWINGH_MODE_STATE_TEMPLATE,
+                "_current_swingh_mode",
+                CONF_SWINGH_MODE_LIST,
+            )
+
+        add_subscription(
+            topics, CONF_SWINGH_MODE_STATE_TOPIC, handle_swingh_mode_received
         )
 
         @callback
@@ -704,6 +739,18 @@ class MqttClimate(MqttEntity, ClimateEntity):
             self._current_swing_mode = swing_mode
             self.async_write_ha_state()
 
+    async def async_set_swingh_mode(self, swingh_mode):
+        """Set new horizontal swing mode."""
+        if self._config[CONF_SEND_IF_OFF] or self._current_operation != HVAC_MODE_OFF:
+            payload = self._command_templates[CONF_SWINGH_MODE_COMMAND_TEMPLATE](
+                swingh_mode
+            )
+            self._publish(CONF_SWINGH_MODE_COMMAND_TOPIC, payload)
+
+        if self._topic[CONF_SWINGH_MODE_STATE_TOPIC] is None:
+            self._current_swingh_mode = swingh_mode
+            self.async_write_ha_state()
+
     async def async_set_fan_mode(self, fan_mode):
         """Set new target temperature."""
         if self._config[CONF_SEND_IF_OFF] or self._current_operation != HVAC_MODE_OFF:
@@ -737,6 +784,11 @@ class MqttClimate(MqttEntity, ClimateEntity):
     def swing_modes(self):
         """List of available swing modes."""
         return self._config[CONF_SWING_MODE_LIST]
+
+    @property
+    def swingh_modes(self):
+        """List of available horizontal swing modes."""
+        return self._config[CONF_SWINGH_MODE_LIST]
 
     async def async_set_preset_mode(self, preset_mode):
         """Set a preset mode."""
@@ -840,6 +892,11 @@ class MqttClimate(MqttEntity, ClimateEntity):
             self._topic[CONF_SWING_MODE_COMMAND_TOPIC] is not None
         ):
             support |= SUPPORT_SWING_MODE
+
+        if (self._topic[CONF_SWINGH_MODE_STATE_TOPIC] is not None) or (
+            self._topic[CONF_SWINGH_MODE_COMMAND_TOPIC] is not None
+        ):
+            support |= SUPPORT_SWINGH_MODE
 
         if (
             (self._topic[CONF_AWAY_MODE_STATE_TOPIC] is not None)
