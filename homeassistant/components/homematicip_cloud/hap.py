@@ -13,7 +13,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import COMPONENTS, HMIPC_AUTHTOKEN, HMIPC_HAPID, HMIPC_NAME, HMIPC_PIN
+from .const import HMIPC_AUTHTOKEN, HMIPC_HAPID, HMIPC_NAME, HMIPC_PIN, PLATFORMS
 from .errors import HmipcConnectionError
 
 _LOGGER = logging.getLogger(__name__)
@@ -102,10 +102,10 @@ class HomematicipHAP:
             "Connected to HomematicIP with HAP %s", self.config_entry.unique_id
         )
 
-        for component in COMPONENTS:
+        for platform in PLATFORMS:
             self.hass.async_create_task(
                 self.hass.config_entries.async_forward_entry_setup(
-                    self.config_entry, component
+                    self.config_entry, platform
                 )
             )
         return True
@@ -215,9 +215,9 @@ class HomematicipHAP:
             self._retry_task.cancel()
         await self.home.disable_events()
         _LOGGER.info("Closed connection to HomematicIP cloud server")
-        for component in COMPONENTS:
+        for platform in PLATFORMS:
             await self.hass.config_entries.async_forward_entry_unload(
-                self.config_entry, component
+                self.config_entry, platform
             )
         self.hmip_device_by_entity_id = {}
         return True
@@ -240,8 +240,9 @@ class HomematicipHAP:
         home = AsyncHome(hass.loop, async_get_clientsession(hass))
 
         home.name = name
-        home.label = "Access Point"
-        home.modelType = "HmIP-HAP"
+        # Use the title of the config entry as title for the home.
+        home.label = self.config_entry.title
+        home.modelType = "HomematicIP Cloud Home"
 
         home.set_auth_token(authtoken)
         try:

@@ -5,7 +5,7 @@ import math
 import voluptuous as vol
 
 from homeassistant import util
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
@@ -17,7 +17,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change_event
 
 _LOGGER = logging.getLogger(__name__)
@@ -69,7 +68,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class MoldIndicator(Entity):
+class MoldIndicator(SensorEntity):
     """Represents a MoldIndication sensor."""
 
     def __init__(
@@ -375,10 +374,13 @@ class MoldIndicator(Entity):
         return self._available
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self._is_metric:
-            return {ATTR_DEWPOINT: self._dewpoint, ATTR_CRITICAL_TEMP: self._crit_temp}
+            return {
+                ATTR_DEWPOINT: round(self._dewpoint, 2),
+                ATTR_CRITICAL_TEMP: round(self._crit_temp, 2),
+            }
 
         dewpoint = (
             util.temperature.celsius_to_fahrenheit(self._dewpoint)
@@ -392,4 +394,7 @@ class MoldIndicator(Entity):
             else None
         )
 
-        return {ATTR_DEWPOINT: dewpoint, ATTR_CRITICAL_TEMP: crit_temp}
+        return {
+            ATTR_DEWPOINT: round(dewpoint, 2),
+            ATTR_CRITICAL_TEMP: round(crit_temp, 2),
+        }

@@ -1,7 +1,7 @@
 {
     "config": {
         "error": {
-            "name_exists": "Ort existiert bereits"
+            "already_configured": "Der Dienst ist bereits konfiguriert"
         },
         "step": {
             "user": {

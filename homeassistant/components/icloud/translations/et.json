@@ -7,7 +7,6 @@
         },
         "error": {
             "invalid_auth": "Tuvastamise viga",
-            "login": "Sisselogimise viga: palun kontrolli oma e-posti ja salas\u00f5na",
             "send_verification_code": "Kinnituskoodi saatmine nurjus",
             "validate_verification_code": "Tuvastuskoodi kinnitamine nurjus. Vali usaldusseade ja proovi uuesti"
         },
@@ -16,7 +15,7 @@
                 "data": {
                     "password": "Salas\u00f5na"
                 },
-                "description": "Varem sisestatud salas\u00f5na kasutajale {username} ei t\u00f6\u00f6ta enam. Selle sidumise kasutamise j\u00e4tkamiseks v\u00e4rskendage oma salas\u00f5na.",
+                "description": "Varem sisestatud salas\u00f5na kasutajale {username} ei t\u00f6\u00f6ta enam. Selle sidumise kasutamise j\u00e4tkamiseks v\u00e4rskenda oma salas\u00f5na.",
                 "title": "iCloudi tuvastusandmed"
             },
             "trusted_device": {

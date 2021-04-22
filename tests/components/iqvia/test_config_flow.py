@@ -1,9 +1,10 @@
 """Define tests for the IQVIA config flow."""
+from unittest.mock import patch
+
 from homeassistant import data_entry_flow
 from homeassistant.components.iqvia import CONF_ZIP_CODE, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

@@ -1,25 +1,12 @@
 """Test Axis device."""
 from copy import deepcopy
 from unittest import mock
+from unittest.mock import Mock, patch
 
 import axis as axislib
-from axis.api_discovery import URL as API_DISCOVERY_URL
-from axis.applications import URL_LIST as APPLICATIONS_URL
-from axis.applications.vmd4 import URL as VMD4_URL
-from axis.basic_device_info import URL as BASIC_DEVICE_INFO_URL
 from axis.event_stream import OPERATION_INITIALIZED
-from axis.light_control import URL as LIGHT_CONTROL_URL
-from axis.mqtt import URL_CLIENT as MQTT_CLIENT_URL
-from axis.param_cgi import (
-    BRAND as BRAND_URL,
-    INPUT as INPUT_URL,
-    IOPORT as IOPORT_URL,
-    OUTPUT as OUTPUT_URL,
-    PROPERTIES as PROPERTIES_URL,
-    STREAM_PROFILES as STREAM_PROFILES_URL,
-)
-from axis.port_management import URL as PORT_MANAGEMENT_URL
 import pytest
+import respx
 
 from homeassistant import config_entries
 from homeassistant.components import axis
@@ -32,29 +19,31 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAI
 from homeassistant.config_entries import SOURCE_ZEROCONF
 from homeassistant.const import (
     CONF_HOST,
-    CONF_MAC,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
+    STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
 )
 
-from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import MockConfigEntry, async_fire_mqtt_message
 
-MAC = "00408C12345"
+MAC = "00408C123456"
+FORMATTED_MAC = "00:40:8c:12:34:56"
 MODEL = "model"
 NAME = "name"
+
+DEFAULT_HOST = "1.2.3.4"
 
 ENTRY_OPTIONS = {CONF_EVENTS: True}
 
 ENTRY_CONFIG = {
-    CONF_HOST: "1.2.3.4",
+    CONF_HOST: DEFAULT_HOST,
     CONF_USERNAME: "root",
     CONF_PASSWORD: "pass",
     CONF_PORT: 80,
-    CONF_MAC: MAC,
     CONF_MODEL: MODEL,
     CONF_NAME: NAME,
 }
@@ -92,7 +81,7 @@ BASIC_DEVICE_INFO_RESPONSE = {
         "propertyList": {
             "ProdNbr": "M1065-LW",
             "ProdType": "Network Camera",
-            "SerialNumber": "00408C12345",
+            "SerialNumber": MAC,
             "Version": "9.80.1",
         }
     },
@@ -166,6 +155,14 @@ root.Brand.ProdVariant=
 root.Brand.WebURL=http://www.axis.com
 """
 
+IMAGE_RESPONSE = """root.Image.I0.Enabled=yes
+root.Image.I0.Name=View Area 1
+root.Image.I0.Source=0
+root.Image.I1.Enabled=no
+root.Image.I1.Name=View Area 2
+root.Image.I1.Source=0
+"""
+
 PORTS_RESPONSE = """root.Input.NbrOfInputs=1
 root.IOPort.I0.Configurable=no
 root.IOPort.I0.Direction=input
@@ -174,7 +171,7 @@ root.IOPort.I0.Input.Trig=closed
 root.Output.NbrOfOutputs=0
 """
 
-PROPERTIES_RESPONSE = """root.Properties.API.HTTP.Version=3
+PROPERTIES_RESPONSE = f"""root.Properties.API.HTTP.Version=3
 root.Properties.API.Metadata.Metadata=yes
 root.Properties.API.Metadata.Version=1.0
 root.Properties.EmbeddedDevelopment.Version=2.16
@@ -185,8 +182,11 @@ root.Properties.Image.Format=jpeg,mjpeg,h264
 root.Properties.Image.NbrOfViews=2
 root.Properties.Image.Resolution=1920x1080,1280x960,1280x720,1024x768,1024x576,800x600,640x480,640x360,352x240,320x240
 root.Properties.Image.Rotation=0,180
-root.Properties.System.SerialNumber=00408C12345
+root.Properties.System.SerialNumber={MAC}
 """
+
+PTZ_RESPONSE = ""
+
 
 STREAM_PROFILES_RESPONSE = """root.StreamProfile.MaxGroups=26
 root.StreamProfile.S0.Description=profile_1_description
@@ -197,31 +197,85 @@ root.StreamProfile.S1.Name=profile_2
 root.StreamProfile.S1.Parameters=videocodec=h265
 """
 
+VIEW_AREAS_RESPONSE = {"apiVersion": "1.0", "method": "list", "data": {"viewAreas": []}}
 
-async def vapix_request(self, session, url, **kwargs):
-    """Return data based on url."""
-    if API_DISCOVERY_URL in url:
-        return API_DISCOVERY_RESPONSE
-    if APPLICATIONS_URL in url:
-        return APPLICATIONS_LIST_RESPONSE
-    if BASIC_DEVICE_INFO_URL in url:
-        return BASIC_DEVICE_INFO_RESPONSE
-    if LIGHT_CONTROL_URL in url:
-        return LIGHT_CONTROL_RESPONSE
-    if MQTT_CLIENT_URL in url:
-        return MQTT_CLIENT_RESPONSE
-    if PORT_MANAGEMENT_URL in url:
-        return PORT_MANAGEMENT_RESPONSE
-    if VMD4_URL in url:
-        return VMD4_RESPONSE
-    if BRAND_URL in url:
-        return BRAND_RESPONSE
-    if IOPORT_URL in url or INPUT_URL in url or OUTPUT_URL in url:
-        return PORTS_RESPONSE
-    if PROPERTIES_URL in url:
-        return PROPERTIES_RESPONSE
-    if STREAM_PROFILES_URL in url:
-        return STREAM_PROFILES_RESPONSE
+
+def mock_default_vapix_requests(respx: respx, host: str = DEFAULT_HOST) -> None:
+    """Mock default Vapix requests responses."""
+    respx.post(f"http://{host}:80/axis-cgi/apidiscovery.cgi").respond(
+        json=API_DISCOVERY_RESPONSE,
+    )
+    respx.post(f"http://{host}:80/axis-cgi/basicdeviceinfo.cgi").respond(
+        json=BASIC_DEVICE_INFO_RESPONSE,
+    )
+    respx.post(f"http://{host}:80/axis-cgi/io/portmanagement.cgi").respond(
+        json=PORT_MANAGEMENT_RESPONSE,
+    )
+    respx.post(f"http://{host}:80/axis-cgi/lightcontrol.cgi").respond(
+        json=LIGHT_CONTROL_RESPONSE,
+    )
+    respx.post(f"http://{host}:80/axis-cgi/mqtt/client.cgi").respond(
+        json=MQTT_CLIENT_RESPONSE,
+    )
+    respx.post(f"http://{host}:80/axis-cgi/streamprofile.cgi").respond(
+        json=STREAM_PROFILES_RESPONSE,
+    )
+    respx.post(f"http://{host}:80/axis-cgi/viewarea/info.cgi").respond(
+        json=VIEW_AREAS_RESPONSE
+    )
+    respx.get(
+        f"http://{host}:80/axis-cgi/param.cgi?action=list&group=root.Brand"
+    ).respond(
+        text=BRAND_RESPONSE,
+        headers={"Content-Type": "text/plain"},
+    )
+    respx.get(
+        f"http://{host}:80/axis-cgi/param.cgi?action=list&group=root.Image"
+    ).respond(
+        text=IMAGE_RESPONSE,
+        headers={"Content-Type": "text/plain"},
+    )
+    respx.get(
+        f"http://{host}:80/axis-cgi/param.cgi?action=list&group=root.Input"
+    ).respond(
+        text=PORTS_RESPONSE,
+        headers={"Content-Type": "text/plain"},
+    )
+    respx.get(
+        f"http://{host}:80/axis-cgi/param.cgi?action=list&group=root.IOPort"
+    ).respond(
+        text=PORTS_RESPONSE,
+        headers={"Content-Type": "text/plain"},
+    )
+    respx.get(
+        f"http://{host}:80/axis-cgi/param.cgi?action=list&group=root.Output"
+    ).respond(
+        text=PORTS_RESPONSE,
+        headers={"Content-Type": "text/plain"},
+    )
+    respx.get(
+        f"http://{host}:80/axis-cgi/param.cgi?action=list&group=root.Properties"
+    ).respond(
+        text=PROPERTIES_RESPONSE,
+        headers={"Content-Type": "text/plain"},
+    )
+    respx.get(
+        f"http://{host}:80/axis-cgi/param.cgi?action=list&group=root.PTZ"
+    ).respond(
+        text=PTZ_RESPONSE,
+        headers={"Content-Type": "text/plain"},
+    )
+    respx.get(
+        f"http://{host}:80/axis-cgi/param.cgi?action=list&group=root.StreamProfile"
+    ).respond(
+        text=STREAM_PROFILES_RESPONSE,
+        headers={"Content-Type": "text/plain"},
+    )
+    respx.post(f"http://{host}:80/axis-cgi/applications/list.cgi").respond(
+        text=APPLICATIONS_LIST_RESPONSE,
+        headers={"Content-Type": "text/xml"},
+    )
+    respx.post(f"http://{host}:80/local/vmd/control.cgi").respond(json=VMD4_RESPONSE)
 
 
 async def setup_axis_integration(hass, config=ENTRY_CONFIG, options=ENTRY_OPTIONS):
@@ -231,14 +285,13 @@ async def setup_axis_integration(hass, config=ENTRY_CONFIG, options=ENTRY_OPTION
         data=deepcopy(config),
         connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
         options=deepcopy(options),
-        version=2,
+        version=3,
+        unique_id=FORMATTED_MAC,
     )
     config_entry.add_to_hass(hass)
 
-    with patch("axis.vapix.Vapix.request", new=vapix_request), patch(
-        "axis.rtsp.RTSPClient.start",
-        return_value=True,
-    ):
+    with respx.mock:
+        mock_default_vapix_requests(respx)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -257,7 +310,7 @@ async def test_device_setup(hass):
     assert device.api.vapix.firmware_version == "9.10.1"
     assert device.api.vapix.product_number == "M1065-LW"
     assert device.api.vapix.product_type == "Network Camera"
-    assert device.api.vapix.serial_number == "00408C12345"
+    assert device.api.vapix.serial_number == "00408C123456"
 
     entry = device.config_entry
 
@@ -270,7 +323,7 @@ async def test_device_setup(hass):
     assert device.host == ENTRY_CONFIG[CONF_HOST]
     assert device.model == ENTRY_CONFIG[CONF_MODEL]
     assert device.name == ENTRY_CONFIG[CONF_NAME]
-    assert device.serial == ENTRY_CONFIG[CONF_MAC]
+    assert device.unique_id == FORMATTED_MAC
 
 
 async def test_device_info(hass):
@@ -285,7 +338,7 @@ async def test_device_info(hass):
     assert device.api.vapix.firmware_version == "9.80.1"
     assert device.api.vapix.product_number == "M1065-LW"
     assert device.api.vapix.product_type == "Network Camera"
-    assert device.api.vapix.serial_number == "00408C12345"
+    assert device.api.vapix.serial_number == "00408C123456"
 
 
 async def test_device_support_mqtt(hass, mqtt_mock):
@@ -317,16 +370,17 @@ async def test_update_address(hass):
     device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
     assert device.api.config.host == "1.2.3.4"
 
-    with patch("axis.vapix.Vapix.request", new=vapix_request), patch(
+    with patch(
         "homeassistant.components.axis.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry:
+    ) as mock_setup_entry, respx.mock:
+        mock_default_vapix_requests(respx, "2.3.4.5")
         await hass.config_entries.flow.async_init(
             AXIS_DOMAIN,
             data={
                 "host": "2.3.4.5",
                 "port": 80,
-                "hostname": "name",
+                "name": "name",
                 "properties": {"macaddress": MAC},
             },
             context={"source": SOURCE_ZEROCONF},
@@ -337,12 +391,38 @@ async def test_update_address(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_device_unavailable(hass):
+async def test_device_unavailable(hass, mock_rtsp_event, mock_rtsp_signal_state):
     """Successful setup."""
-    config_entry = await setup_axis_integration(hass)
-    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
-    device.async_connection_status_callback(status=False)
-    assert not device.available
+    await setup_axis_integration(hass)
+
+    # Provide an entity that can be used to verify connection state on
+    mock_rtsp_event(
+        topic="tns1:AudioSource/tnsaxis:TriggerLevel",
+        data_type="triggered",
+        data_value="10",
+        source_name="channel",
+        source_idx="1",
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(f"{BINARY_SENSOR_DOMAIN}.{NAME}_sound_1").state == STATE_OFF
+
+    # Connection to device has failed
+
+    mock_rtsp_signal_state(connected=False)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get(f"{BINARY_SENSOR_DOMAIN}.{NAME}_sound_1").state
+        == STATE_UNAVAILABLE
+    )
+
+    # Connection to device has been restored
+
+    mock_rtsp_signal_state(connected=True)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(f"{BINARY_SENSOR_DOMAIN}.{NAME}_sound_1").state == STATE_OFF
 
 
 async def test_device_reset(hass):
@@ -357,6 +437,16 @@ async def test_device_not_accessible(hass):
     """Failed setup schedules a retry of setup."""
     with patch.object(axis.device, "get_device", side_effect=axis.errors.CannotConnect):
         await setup_axis_integration(hass)
+    assert hass.data[AXIS_DOMAIN] == {}
+
+
+async def test_device_trigger_reauth_flow(hass):
+    """Failed authentication trigger a reauthentication flow."""
+    with patch.object(
+        axis.device, "get_device", side_effect=axis.errors.AuthenticationRequired
+    ), patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
+        await setup_axis_integration(hass)
+        mock_flow_init.assert_called_once()
     assert hass.data[AXIS_DOMAIN] == {}
 
 
@@ -390,12 +480,10 @@ async def test_shutdown():
 
     axis_device = axis.device.AxisNetworkDevice(hass, entry)
     axis_device.api = Mock()
-    axis_device.api.vapix.close = AsyncMock()
 
     await axis_device.shutdown(None)
 
     assert len(axis_device.api.stream.stop.mock_calls) == 1
-    assert len(axis_device.api.vapix.close.mock_calls) == 1
 
 
 async def test_get_device_fails(hass):

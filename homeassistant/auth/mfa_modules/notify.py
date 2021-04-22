@@ -2,16 +2,19 @@
 
 Sending HOTP through notify service
 """
+from __future__ import annotations
+
 import asyncio
 from collections import OrderedDict
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 import attr
 import voluptuous as vol
 
 from homeassistant.const import CONF_EXCLUDE, CONF_INCLUDE
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultDict
 from homeassistant.exceptions import ServiceNotFound
 from homeassistant.helpers import config_validation as cv
 
@@ -79,8 +82,8 @@ class NotifySetting:
 
     secret: str = attr.ib(factory=_generate_secret)  # not persistent
     counter: int = attr.ib(factory=_generate_random)  # not persistent
-    notify_service: Optional[str] = attr.ib(default=None)
-    target: Optional[str] = attr.ib(default=None)
+    notify_service: str | None = attr.ib(default=None)
+    target: str | None = attr.ib(default=None)
 
 
 _UsersDict = Dict[str, NotifySetting]
@@ -92,10 +95,10 @@ class NotifyAuthModule(MultiFactorAuthModule):
 
     DEFAULT_TITLE = "Notify One-Time Password"
 
-    def __init__(self, hass: HomeAssistant, config: Dict[str, Any]) -> None:
+    def __init__(self, hass: HomeAssistant, config: dict[str, Any]) -> None:
         """Initialize the user data store."""
         super().__init__(hass, config)
-        self._user_settings: Optional[_UsersDict] = None
+        self._user_settings: _UsersDict | None = None
         self._user_store = hass.helpers.storage.Store(
             STORAGE_VERSION, STORAGE_KEY, private=True
         )
@@ -146,7 +149,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
         )
 
     @callback
-    def aync_get_available_notify_services(self) -> List[str]:
+    def aync_get_available_notify_services(self) -> list[str]:
         """Return list of notify services."""
         unordered_services = set()
 
@@ -198,7 +201,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
 
         return user_id in self._user_settings
 
-    async def async_validate(self, user_id: str, user_input: Dict[str, Any]) -> bool:
+    async def async_validate(self, user_id: str, user_input: dict[str, Any]) -> bool:
         """Return True if validation passed."""
         if self._user_settings is None:
             await self._async_load()
@@ -258,7 +261,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
         )
 
     async def async_notify(
-        self, code: str, notify_service: str, target: Optional[str] = None
+        self, code: str, notify_service: str, target: str | None = None
     ) -> None:
         """Send code by notify service."""
         data = {"message": self._message_template.format(code)}
@@ -276,23 +279,23 @@ class NotifySetupFlow(SetupFlow):
         auth_module: NotifyAuthModule,
         setup_schema: vol.Schema,
         user_id: str,
-        available_notify_services: List[str],
+        available_notify_services: list[str],
     ) -> None:
         """Initialize the setup flow."""
         super().__init__(auth_module, setup_schema, user_id)
         # to fix typing complaint
         self._auth_module: NotifyAuthModule = auth_module
         self._available_notify_services = available_notify_services
-        self._secret: Optional[str] = None
-        self._count: Optional[int] = None
-        self._notify_service: Optional[str] = None
-        self._target: Optional[str] = None
+        self._secret: str | None = None
+        self._count: int | None = None
+        self._notify_service: str | None = None
+        self._target: str | None = None
 
     async def async_step_init(
-        self, user_input: Optional[Dict[str, str]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, str] | None = None
+    ) -> FlowResultDict:
         """Let user select available notify services."""
-        errors: Dict[str, str] = {}
+        errors: dict[str, str] = {}
 
         hass = self._auth_module.hass
         if user_input:
@@ -306,7 +309,7 @@ class NotifySetupFlow(SetupFlow):
         if not self._available_notify_services:
             return self.async_abort(reason="no_available_service")
 
-        schema: Dict[str, Any] = OrderedDict()
+        schema: dict[str, Any] = OrderedDict()
         schema["notify_service"] = vol.In(self._available_notify_services)
         schema["target"] = vol.Optional(str)
 
@@ -315,10 +318,10 @@ class NotifySetupFlow(SetupFlow):
         )
 
     async def async_step_setup(
-        self, user_input: Optional[Dict[str, str]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, str] | None = None
+    ) -> FlowResultDict:
         """Verify user can receive one-time password."""
-        errors: Dict[str, str] = {}
+        errors: dict[str, str] = {}
 
         hass = self._auth_module.hass
         if user_input:

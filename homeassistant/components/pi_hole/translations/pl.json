@@ -7,6 +7,11 @@
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
         "step": {
+            "api_key": {
+                "data": {
+                    "api_key": "Klucz API"
+                }
+            },
             "user": {
                 "data": {
                     "api_key": "Klucz API",
@@ -15,6 +20,7 @@
                     "name": "Nazwa",
                     "port": "Port",
                     "ssl": "Certyfikat SSL",
+                    "statistics_only": "Tylko statystyki",
                     "verify_ssl": "Weryfikacja certyfikatu SSL"
                 }
             }

@@ -2,7 +2,7 @@
 
 import logging
 
-from Plugwise_Smile.Smile import Smile
+from plugwise.exceptions import PlugwiseException
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -124,7 +124,7 @@ class PwThermostat(SmileGateway, ClimateEntity):
         return SUPPORT_FLAGS
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
         attributes = {}
         if self._schema_names:
@@ -192,7 +192,7 @@ class PwThermostat(SmileGateway, ClimateEntity):
                 await self._api.set_temperature(self._loc_id, temperature)
                 self._setpoint = temperature
                 self.async_write_ha_state()
-            except Smile.PlugwiseError:
+            except PlugwiseException:
                 _LOGGER.error("Error while communicating to device")
         else:
             _LOGGER.error("Invalid temperature requested")
@@ -205,7 +205,7 @@ class PwThermostat(SmileGateway, ClimateEntity):
             try:
                 await self._api.set_temperature(self._loc_id, self._schedule_temp)
                 self._setpoint = self._schedule_temp
-            except Smile.PlugwiseError:
+            except PlugwiseException:
                 _LOGGER.error("Error while communicating to device")
         try:
             await self._api.set_schedule_state(
@@ -213,7 +213,7 @@ class PwThermostat(SmileGateway, ClimateEntity):
             )
             self._hvac_mode = hvac_mode
             self.async_write_ha_state()
-        except Smile.PlugwiseError:
+        except PlugwiseException:
             _LOGGER.error("Error while communicating to device")
 
     async def async_set_preset_mode(self, preset_mode):
@@ -223,7 +223,7 @@ class PwThermostat(SmileGateway, ClimateEntity):
             self._preset_mode = preset_mode
             self._setpoint = self._presets.get(self._preset_mode, "none")[0]
             self.async_write_ha_state()
-        except Smile.PlugwiseError:
+        except PlugwiseException:
             _LOGGER.error("Error while communicating to device")
 
     @callback

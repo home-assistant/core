@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
@@ -19,6 +19,5 @@
                 "title": "\u9023\u7dda\u81f3 PowerView Hub"
             }
         }
-    },
-    "title": "Hunter Douglas PowerView"
+    }
 }

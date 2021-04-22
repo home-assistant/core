@@ -1,7 +1,9 @@
 {
   "domain": "keenetic_ndms2",
-  "name": "Keenetic NDMS2 Routers",
+  "name": "Keenetic NDMS2 Router",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/keenetic_ndms2",
-  "requirements": ["ndms2_client==0.0.11"],
-  "codeowners": ["@foxel"]
+  "requirements": ["ndms2_client==0.1.1"],
+  "codeowners": ["@foxel"],
+  "iot_class": "local_polling"
 }

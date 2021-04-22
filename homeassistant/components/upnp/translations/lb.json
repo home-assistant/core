@@ -3,7 +3,6 @@
         "abort": {
             "already_configured": "Apparat ass scho konfigur\u00e9iert",
             "incomplete_discovery": "Entdeckung net komplett",
-            "no_devices_discovered": "Keng UPnP/IGDs entdeckt",
             "no_devices_found": "Keng Apparater am Netzwierk fonnt."
         },
         "error": {

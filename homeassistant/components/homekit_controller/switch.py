@@ -4,6 +4,7 @@ from aiohomekit.model.characteristics import (
     InUseValues,
     IsConfiguredValues,
 )
+from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import callback
@@ -38,7 +39,7 @@ class HomeKitSwitch(HomeKitEntity, SwitchEntity):
         await self.async_put_characteristics({CharacteristicsTypes.ON: False})
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the optional state attributes."""
         outlet_in_use = self.service.value(CharacteristicsTypes.OUTLET_IN_USE)
         if outlet_in_use is not None:
@@ -76,7 +77,7 @@ class HomeKitValve(HomeKitEntity, SwitchEntity):
         return self.service.value(CharacteristicsTypes.ACTIVE)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the optional state attributes."""
         attrs = {}
 
@@ -96,9 +97,9 @@ class HomeKitValve(HomeKitEntity, SwitchEntity):
 
 
 ENTITY_TYPES = {
-    "switch": HomeKitSwitch,
-    "outlet": HomeKitSwitch,
-    "valve": HomeKitValve,
+    ServicesTypes.SWITCH: HomeKitSwitch,
+    ServicesTypes.OUTLET: HomeKitSwitch,
+    ServicesTypes.VALVE: HomeKitValve,
 }
 
 
@@ -108,11 +109,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     conn = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
-    def async_add_service(aid, service):
-        entity_class = ENTITY_TYPES.get(service["stype"])
+    def async_add_service(service):
+        entity_class = ENTITY_TYPES.get(service.short_type)
         if not entity_class:
             return False
-        info = {"aid": aid, "iid": service["iid"]}
+        info = {"aid": service.accessory.aid, "iid": service.iid}
         async_add_entities([entity_class(conn, info)], True)
         return True
 

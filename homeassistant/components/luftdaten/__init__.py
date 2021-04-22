@@ -198,8 +198,9 @@ class LuftDatenData:
         try:
             await self.client.get_data()
 
-            self.data[DATA_LUFTDATEN] = self.client.values
-            self.data[DATA_LUFTDATEN].update(self.client.meta)
+            if self.client.values:
+                self.data[DATA_LUFTDATEN] = self.client.values
+                self.data[DATA_LUFTDATEN].update(self.client.meta)
 
         except LuftdatenError:
             _LOGGER.error("Unable to retrieve data from luftdaten.info")

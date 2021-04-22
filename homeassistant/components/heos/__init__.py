@@ -1,8 +1,9 @@
 """Denon HEOS Media Player."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Dict
 
 from pyheos import Heos, HeosError, const as heos_const
 import voluptuous as vol
@@ -81,7 +82,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     async def disconnect_controller(event):
         await controller.disconnect()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, disconnect_controller)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, disconnect_controller)
+    )
 
     # Get players and sources
     try:
@@ -191,12 +194,12 @@ class ControllerManager:
         # Update players
         self._hass.helpers.dispatcher.async_dispatcher_send(SIGNAL_HEOS_UPDATED)
 
-    def update_ids(self, mapped_ids: Dict[int, int]):
+    def update_ids(self, mapped_ids: dict[int, int]):
         """Update the IDs in the device and entity registry."""
         # mapped_ids contains the mapped IDs (new:old)
         for new_id, old_id in mapped_ids.items():
             # update device registry
-            entry = self._device_registry.async_get_device({(DOMAIN, old_id)}, set())
+            entry = self._device_registry.async_get_device({(DOMAIN, old_id)})
             new_identifiers = {(DOMAIN, new_id)}
             if entry:
                 self._device_registry.async_update_device(

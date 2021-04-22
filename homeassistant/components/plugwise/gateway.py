@@ -1,16 +1,26 @@
 """Plugwise platform for Home Assistant Core."""
+from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Dict
 
-from Plugwise_Smile.Smile import Smile
 import async_timeout
-import voluptuous as vol
+from plugwise.exceptions import (
+    InvalidAuthentication,
+    PlugwiseException,
+    XMLDataMissingError,
+)
+from plugwise.smile import Smile
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_SCAN_INTERVAL
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SCAN_INTERVAL,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -22,16 +32,18 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import (
-    ALL_PLATFORMS,
     COORDINATOR,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
+    DEFAULT_TIMEOUT,
+    DEFAULT_USERNAME,
     DOMAIN,
+    GATEWAY,
+    PLATFORMS_GATEWAY,
+    PW_TYPE,
     SENSOR_PLATFORMS,
     UNDO_UPDATE_LISTENER,
 )
-
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,6 +54,7 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     api = Smile(
         host=entry.data[CONF_HOST],
+        username=entry.data.get(CONF_USERNAME, DEFAULT_USERNAME),
         password=entry.data[CONF_PASSWORD],
         port=entry.data.get(CONF_PORT, DEFAULT_PORT),
         timeout=30,
@@ -55,16 +68,16 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.error("Unable to connect to Smile")
             raise ConfigEntryNotReady
 
-    except Smile.InvalidAuthentication:
-        _LOGGER.error("Invalid Smile ID")
+    except InvalidAuthentication:
+        _LOGGER.error("Invalid username or Smile ID")
         return False
 
-    except Smile.PlugwiseError as err:
-        _LOGGER.error("Error while communicating to device")
+    except PlugwiseException as err:
+        _LOGGER.error("Error while communicating to device %s", api.smile_name)
         raise ConfigEntryNotReady from err
 
     except asyncio.TimeoutError as err:
-        _LOGGER.error("Timeout while connecting to Smile")
+        _LOGGER.error("Timeout while connecting to Smile %s", api.smile_name)
         raise ConfigEntryNotReady from err
 
     update_interval = timedelta(
@@ -76,36 +89,33 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_update_data():
         """Update data via API endpoint."""
         try:
-            async with async_timeout.timeout(10):
+            async with async_timeout.timeout(DEFAULT_TIMEOUT):
                 await api.full_update_device()
                 return True
-        except Smile.XMLDataMissingError as err:
+        except XMLDataMissingError as err:
             raise UpdateFailed("Smile update failed") from err
 
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
-        name="Smile",
+        name=f"Smile {api.smile_name}",
         update_method=async_update_data,
         update_interval=update_interval,
     )
 
-    await coordinator.async_refresh()
-
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
 
     api.get_all_devices()
 
-    if entry.unique_id is None:
-        if api.smile_version[0] != "1.8.0":
-            hass.config_entries.async_update_entry(entry, unique_id=api.smile_hostname)
+    if entry.unique_id is None and api.smile_version[0] != "1.8.0":
+        hass.config_entries.async_update_entry(entry, unique_id=api.smile_hostname)
 
     undo_listener = entry.add_update_listener(_update_listener)
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "api": api,
         COORDINATOR: coordinator,
+        PW_TYPE: GATEWAY,
         UNDO_UPDATE_LISTENER: undo_listener,
     }
 
@@ -121,13 +131,13 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     single_master_thermostat = api.single_master_thermostat()
 
-    platforms = ALL_PLATFORMS
+    platforms = PLATFORMS_GATEWAY
     if single_master_thermostat is None:
         platforms = SENSOR_PLATFORMS
 
-    for component in platforms:
+    for platform in platforms:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -141,13 +151,13 @@ async def _update_listener(hass: HomeAssistant, entry: ConfigEntry):
     )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry_gw(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in ALL_PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS_GATEWAY
             ]
         )
     )
@@ -187,9 +197,8 @@ class SmileGateway(CoordinatorEntity):
         return self._name
 
     @property
-    def device_info(self) -> Dict[str, any]:
+    def device_info(self) -> dict[str, any]:
         """Return the device information."""
-
         device_information = {
             "identifiers": {(DOMAIN, self._dev_id)},
             "name": self._entity_name,

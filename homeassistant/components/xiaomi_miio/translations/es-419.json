@@ -1,7 +1,6 @@
 {
     "config": {
         "error": {
-            "connect_error": "No se pudo conectar, intente nuevamente",
             "no_device_selected": "Ning\u00fan dispositivo seleccionado, seleccione un dispositivo."
         },
         "step": {

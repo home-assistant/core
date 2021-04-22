@@ -18,7 +18,7 @@ HANDLERS = decorator.Registry()
 
 @HANDLERS.register("state")
 async def async_handle_state_update(hass, context, msg):
-    """Handle a binary sensor state update."""
+    """Handle a binary sensor or switch state update."""
     _LOGGER.debug("[state handler] context: %s  msg: %s", context, msg)
     entity_id = context.get(ATTR_ENTITY_ID)
     state = bool(int(msg.get(ATTR_STATE)))

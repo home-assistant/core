@@ -4,27 +4,27 @@
             "already_configured": "De service is al geconfigureerd"
         },
         "error": {
-            "cannot_connect": "Verbinding mislukt, probeer het opnieuw",
-            "invalid_auth": "Ongeldige authenticatie, controleer de 8 karakters van uw Smile-ID",
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie",
             "unknown": "Onverwachte fout"
         },
+        "flow_title": "Glimlach: {name}",
         "step": {
             "user": {
                 "data": {
-                    "flow_type": "Verbindingstype",
-                    "host": "Smile IP-adres",
-                    "password": "Smile-ID",
-                    "port": "Poort"
+                    "flow_type": "Verbindingstype"
                 },
-                "description": "Details",
-                "title": "Maak verbinding met de Smile"
+                "description": "Product:",
+                "title": "Plugwise type"
             },
             "user_gateway": {
                 "data": {
                     "host": "IP-adres",
                     "password": "Smile-ID",
-                    "port": "Poort"
+                    "port": "Poort",
+                    "username": "Smile Gebruikersnaam"
                 },
+                "description": "Voer in",
                 "title": "Maak verbinding met de Smile"
             }
         }
@@ -34,7 +34,8 @@
             "init": {
                 "data": {
                     "scan_interval": "Scaninterval (seconden)"
-                }
+                },
+                "description": "Plugwise opties aanpassen"
             }
         }
     }

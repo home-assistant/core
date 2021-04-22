@@ -7,7 +7,6 @@
         "error": {
             "identifier_exists": "Account already registered",
             "invalid_auth": "Invalid authentication",
-            "invalid_credentials": "Invalid credentials",
             "still_awaiting_mfa": "Still awaiting MFA email click",
             "unknown": "Unexpected error"
         },

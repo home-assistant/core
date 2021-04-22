@@ -1,5 +1,7 @@
 """Tests for homekit_controller config flow."""
 from unittest import mock
+import unittest.mock
+from unittest.mock import patch
 
 import aiohomekit
 from aiohomekit.model import Accessories, Accessory
@@ -10,8 +12,6 @@ import pytest
 from homeassistant.components.homekit_controller import config_flow
 from homeassistant.helpers import device_registry
 
-import tests.async_mock
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, mock_device_registry
 
 PAIRING_START_FORM_ERRORS = [
@@ -71,15 +71,15 @@ def _setup_flow_handler(hass, pairing=None):
     flow.hass = hass
     flow.context = {}
 
-    finish_pairing = tests.async_mock.AsyncMock(return_value=pairing)
+    finish_pairing = unittest.mock.AsyncMock(return_value=pairing)
 
     discovery = mock.Mock()
     discovery.device_id = "00:00:00:00:00:00"
-    discovery.start_pairing = tests.async_mock.AsyncMock(return_value=finish_pairing)
+    discovery.start_pairing = unittest.mock.AsyncMock(return_value=finish_pairing)
 
     flow.controller = mock.Mock()
     flow.controller.pairings = {}
-    flow.controller.find_ip_by_device_id = tests.async_mock.AsyncMock(
+    flow.controller.find_ip_by_device_id = unittest.mock.AsyncMock(
         return_value=discovery
     )
 
@@ -257,22 +257,30 @@ async def test_discovery_ignored_model(hass, controller):
     """Already paired."""
     device = setup_mock_accessory(controller)
     discovery_info = get_device_discovery_info(device)
+    discovery_info["properties"]["id"] = "AA:BB:CC:DD:EE:FF"
+    discovery_info["properties"]["md"] = "HHKBridge1,1"
+
+    # Device is discovered
+    result = await hass.config_entries.flow.async_init(
+        "homekit_controller", context={"source": "zeroconf"}, data=discovery_info
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "ignored_model"
+
+
+async def test_discovery_ignored_hk_bridge(hass, controller):
+    """Ensure we ignore homekit bridges and accessories created by the homekit integration."""
+    device = setup_mock_accessory(controller)
+    discovery_info = get_device_discovery_info(device)
 
     config_entry = MockConfigEntry(domain=config_flow.HOMEKIT_BRIDGE_DOMAIN, data={})
+    config_entry.add_to_hass(hass)
     formatted_mac = device_registry.format_mac("AA:BB:CC:DD:EE:FF")
 
     dev_reg = mock_device_registry(hass)
     dev_reg.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers={
-            (
-                config_flow.HOMEKIT_BRIDGE_DOMAIN,
-                config_entry.entry_id,
-                config_flow.HOMEKIT_BRIDGE_SERIAL_NUMBER,
-            )
-        },
         connections={(device_registry.CONNECTION_NETWORK_MAC, formatted_mac)},
-        model=config_flow.HOMEKIT_BRIDGE_MODEL,
     )
 
     discovery_info["properties"]["id"] = "AA:BB:CC:DD:EE:FF"
@@ -283,6 +291,30 @@ async def test_discovery_ignored_model(hass, controller):
     )
     assert result["type"] == "abort"
     assert result["reason"] == "ignored_model"
+
+
+async def test_discovery_does_not_ignore_non_homekit(hass, controller):
+    """Do not ignore devices that are not from the homekit integration."""
+    device = setup_mock_accessory(controller)
+    discovery_info = get_device_discovery_info(device)
+
+    config_entry = MockConfigEntry(domain="not_homekit", data={})
+    config_entry.add_to_hass(hass)
+    formatted_mac = device_registry.format_mac("AA:BB:CC:DD:EE:FF")
+
+    dev_reg = mock_device_registry(hass)
+    dev_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, formatted_mac)},
+    )
+
+    discovery_info["properties"]["id"] = "AA:BB:CC:DD:EE:FF"
+
+    # Device is discovered
+    result = await hass.config_entries.flow.async_init(
+        "homekit_controller", context={"source": "zeroconf"}, data=discovery_info
+    )
+    assert result["type"] == "form"
 
 
 async def test_discovery_invalid_config_entry(hass, controller):
@@ -460,7 +492,7 @@ async def test_pair_abort_errors_on_finish(hass, controller, exception, expected
 
     # User initiates pairing - this triggers the device to show a pairing code
     # and then HA to show a pairing form
-    finish_pairing = tests.async_mock.AsyncMock(side_effect=exception("error"))
+    finish_pairing = unittest.mock.AsyncMock(side_effect=exception("error"))
     with patch.object(device, "start_pairing", return_value=finish_pairing):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -500,7 +532,7 @@ async def test_pair_form_errors_on_finish(hass, controller, exception, expected)
 
     # User initiates pairing - this triggers the device to show a pairing code
     # and then HA to show a pairing form
-    finish_pairing = tests.async_mock.AsyncMock(side_effect=exception("error"))
+    finish_pairing = unittest.mock.AsyncMock(side_effect=exception("error"))
     with patch.object(device, "start_pairing", return_value=finish_pairing):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 

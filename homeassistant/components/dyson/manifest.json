@@ -2,7 +2,8 @@
   "domain": "dyson",
   "name": "Dyson",
   "documentation": "https://www.home-assistant.io/integrations/dyson",
-  "requirements": ["libpurecool==0.6.3"],
+  "requirements": ["libpurecool==0.6.4"],
   "after_dependencies": ["zeroconf"],
-  "codeowners": ["@etheralm"]
+  "codeowners": [],
+  "iot_class": "local_push"
 }

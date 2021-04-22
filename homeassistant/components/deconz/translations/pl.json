@@ -6,7 +6,6 @@
             "no_bridges": "Nie odkryto mostk\u00f3w deCONZ",
             "no_hardware_available": "Nie wykryto komponentu radiowego pod\u0142\u0105czonego do deCONZ",
             "not_deconz_bridge": "To nie jest mostek deCONZ",
-            "one_instance_only": "Komponent obs\u0142uguje tylko jedn\u0105 instancj\u0119 deCONZ",
             "updated_instance": "Zaktualizowano instancj\u0119 deCONZ o nowy adres hosta"
         },
         "error": {
@@ -15,11 +14,11 @@
         "flow_title": "Bramka deCONZ Zigbee ({host})",
         "step": {
             "hassio_confirm": {
-                "description": "Czy chcesz skonfigurowa\u0107 Home Assistant, aby po\u0142\u0105czy\u0142 si\u0119 z bramk\u0105 deCONZ dostarczon\u0105 przez dodatek Hass.io {addon}?",
-                "title": "Bramka deCONZ Zigbee przez dodatek Hass.io"
+                "description": "Czy chcesz skonfigurowa\u0107 Home Assistanta, aby po\u0142\u0105czy\u0142 si\u0119 z bramk\u0105 deCONZ dostarczon\u0105 przez dodatek {addon}?",
+                "title": "Bramka deCONZ Zigbee przez dodatek Home Assistant"
             },
             "link": {
-                "description": "Odblokuj bramk\u0119 deCONZ, aby zarejestrowa\u0107 j\u0105 w Home Assistant. \n\n 1. Przejd\u017a do ustawienia deCONZ > bramka > Zaawansowane\n 2. Naci\u015bnij przycisk \"Uwierzytelnij aplikacj\u0119\"",
+                "description": "Odblokuj bramk\u0119 deCONZ, aby zarejestrowa\u0107 j\u0105 w Home Assistantem. \n\n 1. Przejd\u017a do ustawienia deCONZ > bramka > Zaawansowane\n 2. Naci\u015bnij przycisk \"Uwierzytelnij aplikacj\u0119\"",
                 "title": "Po\u0142\u0105czenie z deCONZ"
             },
             "manual_input": {
@@ -39,10 +38,14 @@
         "trigger_subtype": {
             "both_buttons": "oba przyciski",
             "bottom_buttons": "dolne przyciski",
-            "button_1": "pierwszy przycisk",
-            "button_2": "drugi przycisk",
-            "button_3": "trzeci przycisk",
+            "button_1": "pierwszy",
+            "button_2": "drugi",
+            "button_3": "trzeci",
             "button_4": "czwarty",
+            "button_5": "pi\u0105ty",
+            "button_6": "sz\u00f3sty",
+            "button_7": "si\u00f3dmy",
+            "button_8": "\u00f3smy",
             "close": "zamknij",
             "dim_down": "zmniejszenie jasno\u015bci",
             "dim_up": "zwi\u0119kszenie jasno\u015bci",

@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "token": "Token de acceso"
+                },
+                "description": "La integraci\u00f3n de Nuki debe volver a autenticarse con tu bridge.",
+                "title": "Volver a autenticar la integraci\u00f3n"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Puerto",
+                    "token": "Token de acceso"
+                }
+            }
+        }
+    }
+}

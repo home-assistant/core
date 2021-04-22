@@ -4,8 +4,8 @@
             "already_configured": "Apparaat is al geconfigureerd"
         },
         "error": {
-            "cannot_connect": "Kan geen verbinding maken",
-            "device_unavailable": "Apparaat is niet beschikbaar"
+            "already_in_progress": "De configuratiestroom is al aan de gang",
+            "cannot_connect": "Kan geen verbinding maken"
         },
         "step": {
             "user": {
@@ -16,6 +16,5 @@
                 "title": "Stel Agent DVR in"
             }
         }
-    },
-    "title": "Agent DVR"
+    }
 }

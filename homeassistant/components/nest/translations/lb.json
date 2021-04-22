@@ -1,16 +1,18 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Dir k\u00ebnnt n\u00ebmmen een eenzegen Nest Kont konfigur\u00e9ieren.",
             "authorize_url_fail": "Onbekannte Feeler beim gener\u00e9ieren vun der Autorisatiouns URL.",
             "authorize_url_timeout": "Z\u00e4it Iwwerschreidung beim gener\u00e9ieren vun der Autorisatiouns URL.",
             "missing_configuration": "Komponent net konfigur\u00e9iert. Folleg w.e.g der Dokumentatioun.",
-            "no_flows": "Dir musst Nest konfigur\u00e9ieren, ier Dir d\u00ebs Authentifiz\u00e9ierung k\u00ebnnt benotzen.[Liest w.e.g. d'Instruktioune](https://www.home-assistant.io/components/nest/).",
-            "single_instance_allowed": "Scho konfigur\u00e9iert. N\u00ebmmen eng eenzeg Konfiguratioun m\u00e9iglech."
+            "reauth_successful": "Re-authentifikatioun war erfollegr\u00e4ich",
+            "single_instance_allowed": "Scho konfigur\u00e9iert. N\u00ebmmen eng eenzeg Konfiguratioun m\u00e9iglech.",
+            "unknown_authorize_url_generation": "Onbekannte Feeler beim erstellen vun der Authorisatiouns URL."
+        },
+        "create_entry": {
+            "default": "Erfollegr\u00e4ich authentifiz\u00e9iert"
         },
         "error": {
             "internal_error": "Interne Feeler beim valid\u00e9ieren vum Code",
-            "invalid_code": "Ong\u00ebltege Code",
             "invalid_pin": "Ong\u00eblte PIN Code",
             "timeout": "Z\u00e4it Iwwerschreidung beim valid\u00e9ieren vum Code",
             "unknown": "Onerwaarte Feeler"
@@ -33,6 +35,14 @@
             "pick_implementation": {
                 "title": "Authentifikatioun's Method auswielen"
             }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "camera_motion": "Bewegung erkannt",
+            "camera_person": "Persoun detekt\u00e9iert",
+            "camera_sound": "Toun detekt\u00e9iert",
+            "doorbell_chime": "Schell gedr\u00e9ckt"
         }
     }
 }

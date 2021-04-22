@@ -7,7 +7,6 @@
         "error": {
             "connection_error": "Ne morem se povezati z ESP. Poskrbite, da va\u0161a datoteka YAML vsebuje vrstico \"api:\".",
             "invalid_auth": "Neveljavna avtentikacija",
-            "invalid_password": "Neveljavno geslo!",
             "resolve_error": "Ne moremo razre\u0161iti naslova ESP. \u010ce se napaka ponovi, prosimo nastavite stati\u010dni IP naslov: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
         },
         "flow_title": "ESPHome: {name}",

@@ -1,7 +1,10 @@
 """Reproduce an Lock state."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Iterable
 import logging
-from typing import Any, Dict, Iterable, Optional
+from typing import Any
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -24,8 +27,8 @@ async def _async_reproduce_state(
     hass: HomeAssistantType,
     state: State,
     *,
-    context: Optional[Context] = None,
-    reproduce_options: Optional[Dict[str, Any]] = None,
+    context: Context | None = None,
+    reproduce_options: dict[str, Any] | None = None,
 ) -> None:
     """Reproduce a single state."""
     cur_state = hass.states.get(state.entity_id)
@@ -60,8 +63,8 @@ async def async_reproduce_states(
     hass: HomeAssistantType,
     states: Iterable[State],
     *,
-    context: Optional[Context] = None,
-    reproduce_options: Optional[Dict[str, Any]] = None,
+    context: Context | None = None,
+    reproduce_options: dict[str, Any] | None = None,
 ) -> None:
     """Reproduce Lock states."""
     await asyncio.gather(

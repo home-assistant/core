@@ -1,24 +1,30 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Airly-integratie voor deze co\u00f6rdinaten is al geconfigureerd."
+            "already_configured": "Locatie is al geconfigureerd."
         },
         "error": {
-            "auth": "API-sleutel is niet correct.",
             "invalid_api_key": "Ongeldige API-sleutel",
             "wrong_location": "Geen Airly meetstations in dit gebied."
         },
         "step": {
             "user": {
                 "data": {
-                    "api_key": "Airly API-sleutel",
+                    "api_key": "API-sleutel",
                     "latitude": "Breedtegraad",
                     "longitude": "Lengtegraad",
-                    "name": "Naam van de integratie"
+                    "name": "Naam"
                 },
                 "description": "Airly-integratie van luchtkwaliteit instellen. Ga naar https://developer.airly.eu/register om de API-sleutel te genereren",
                 "title": "Airly"
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Kan Airly server bereiken",
+            "requests_per_day": "Toegestane verzoeken per dag",
+            "requests_remaining": "Resterende toegestane verzoeken"
         }
     }
 }

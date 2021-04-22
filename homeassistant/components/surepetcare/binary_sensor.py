@@ -1,9 +1,11 @@
 """Support for Sure PetCare Flaps/Pets binary sensors."""
+from __future__ import annotations
+
 from datetime import datetime
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
-from surepy import SureLocationID, SureProductID
+from surepy import SureLocationID, SurepyProduct
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
@@ -37,15 +39,15 @@ async def async_setup_platform(
 
         # connectivity
         if sure_type in [
-            SureProductID.CAT_FLAP,
-            SureProductID.PET_FLAP,
-            SureProductID.FEEDER,
+            SurepyProduct.CAT_FLAP,
+            SurepyProduct.PET_FLAP,
+            SurepyProduct.FEEDER,
         ]:
             entities.append(DeviceConnectivity(sure_id, sure_type, spc))
 
-        if sure_type == SureProductID.PET:
+        if sure_type == SurepyProduct.PET:
             entity = Pet(sure_id, spc)
-        elif sure_type == SureProductID.HUB:
+        elif sure_type == SurepyProduct.HUB:
             entity = Hub(sure_id, spc)
         else:
             continue
@@ -63,7 +65,7 @@ class SurePetcareBinarySensor(BinarySensorEntity):
         _id: int,
         spc: SurePetcareAPI,
         device_class: str,
-        sure_type: SureProductID,
+        sure_type: SurepyProduct,
     ):
         """Initialize a Sure Petcare binary sensor."""
         self._id = _id
@@ -71,8 +73,8 @@ class SurePetcareBinarySensor(BinarySensorEntity):
         self._device_class = device_class
 
         self._spc: SurePetcareAPI = spc
-        self._spc_data: Dict[str, Any] = self._spc.states[self._sure_type].get(self._id)
-        self._state: Dict[str, Any] = {}
+        self._spc_data: dict[str, Any] = self._spc.states[self._sure_type].get(self._id)
+        self._state: dict[str, Any] = {}
 
         # cover special case where a device has no name set
         if "name" in self._spc_data:
@@ -85,7 +87,7 @@ class SurePetcareBinarySensor(BinarySensorEntity):
         self._async_unsub_dispatcher_connect = None
 
     @property
-    def is_on(self) -> Optional[bool]:
+    def is_on(self) -> bool | None:
         """Return true if entity is on/unlocked."""
         return bool(self._state)
 
@@ -138,7 +140,7 @@ class Hub(SurePetcareBinarySensor):
 
     def __init__(self, _id: int, spc: SurePetcareAPI) -> None:
         """Initialize a Sure Petcare Hub."""
-        super().__init__(_id, spc, DEVICE_CLASS_CONNECTIVITY, SureProductID.HUB)
+        super().__init__(_id, spc, DEVICE_CLASS_CONNECTIVITY, SurepyProduct.HUB)
 
     @property
     def available(self) -> bool:
@@ -151,7 +153,7 @@ class Hub(SurePetcareBinarySensor):
         return self.available
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the device."""
         attributes = None
         if self._state:
@@ -168,7 +170,7 @@ class Pet(SurePetcareBinarySensor):
 
     def __init__(self, _id: int, spc: SurePetcareAPI) -> None:
         """Initialize a Sure Petcare Pet."""
-        super().__init__(_id, spc, DEVICE_CLASS_PRESENCE, SureProductID.PET)
+        super().__init__(_id, spc, DEVICE_CLASS_PRESENCE, SurepyProduct.PET)
 
     @property
     def is_on(self) -> bool:
@@ -179,7 +181,7 @@ class Pet(SurePetcareBinarySensor):
             return False
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the device."""
         attributes = None
         if self._state:
@@ -205,7 +207,7 @@ class DeviceConnectivity(SurePetcareBinarySensor):
     def __init__(
         self,
         _id: int,
-        sure_type: SureProductID,
+        sure_type: SurepyProduct,
         spc: SurePetcareAPI,
     ) -> None:
         """Initialize a Sure Petcare Device."""
@@ -232,7 +234,7 @@ class DeviceConnectivity(SurePetcareBinarySensor):
         return self.available
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the device."""
         attributes = None
         if self._state:

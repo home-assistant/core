@@ -3,9 +3,6 @@
         "abort": {
             "already_configured": "Dessa koordinater \u00e4r redan registrerade."
         },
-        "error": {
-            "general_error": "Ett ok\u00e4nt fel intr\u00e4ffade."
-        },
         "step": {
             "user": {
                 "data": {

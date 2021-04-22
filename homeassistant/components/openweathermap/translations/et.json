@@ -4,9 +4,7 @@
             "already_configured": "Nende koordinaatidele on OpenWeatherMapi sidumine  juba tehtud."
         },
         "error": {
-            "auth": "API v\u00f5ti on vale.",
             "cannot_connect": "\u00dchendamine nurjus",
-            "connection": "OWM API-ga ei saa \u00fchendust luua",
             "invalid_api_key": "Vigane API v\u00f5ti"
         },
         "step": {
@@ -19,7 +17,7 @@
                     "mode": "Re\u017eiim",
                     "name": "Sidumise nimi"
                 },
-                "description": "Seadistage OpenWeatherMapi sidumine. API-v\u00f5tme loomiseks minge aadressile https://openweathermap.org/appid",
+                "description": "Seadista OpenWeatherMapi sidumine. API-v\u00f5tme loomiseks mine aadressile https://openweathermap.org/appid",
                 "title": "OpenWeatherMap"
             }
         }

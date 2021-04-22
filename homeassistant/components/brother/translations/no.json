@@ -6,7 +6,6 @@
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
-            "connection_error": "Tilkobling mislyktes",
             "snmp_error": "SNMP verten er skrudd av eller printeren er ikke st\u00f8ttet.",
             "wrong_host": "Ugyldig vertsnavn eller IP-adresse."
         },

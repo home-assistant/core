@@ -1,4 +1,6 @@
 """Allows the creation of a sensor that filters state property."""
+from __future__ import annotations
+
 from collections import Counter, deque
 from copy import copy
 from datetime import timedelta
@@ -6,13 +8,20 @@ from functools import partial
 import logging
 from numbers import Number
 import statistics
-from typing import Optional
 
 import voluptuous as vol
 
 from homeassistant.components import history
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
+from homeassistant.components.sensor import (
+    DEVICE_CLASSES as SENSOR_DEVICE_CLASSES,
+    DOMAIN as SENSOR_DOMAIN,
+    PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -23,7 +32,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.util.decorator import Registry
@@ -132,7 +140,11 @@ FILTER_TIME_THROTTLE_SCHEMA = FILTER_SCHEMA.extend(
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
+        vol.Required(CONF_ENTITY_ID): vol.Any(
+            cv.entity_domain(SENSOR_DOMAIN),
+            cv.entity_domain(BINARY_SENSOR_DOMAIN),
+            cv.entity_domain(INPUT_NUMBER_DOMAIN),
+        ),
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_FILTERS): vol.All(
             cv.ensure_list,
@@ -167,7 +179,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([SensorFilter(name, entity_id, filters)])
 
 
-class SensorFilter(Entity):
+class SensorFilter(SensorEntity):
     """Representation of a Filter Sensor."""
 
     def __init__(self, name, entity_id, filters):
@@ -178,16 +190,28 @@ class SensorFilter(Entity):
         self._state = None
         self._filters = filters
         self._icon = None
+        self._device_class = None
 
     @callback
     def _update_filter_sensor_state_event(self, event):
         """Handle device state changes."""
+        _LOGGER.debug("Update filter on event: %s", event)
         self._update_filter_sensor_state(event.data.get("new_state"))
 
     @callback
     def _update_filter_sensor_state(self, new_state, update_ha=True):
         """Process device state changes."""
-        if new_state is None or new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
+        if new_state is None:
+            _LOGGER.warning(
+                "While updating filter %s, the new_state is None", self._name
+            )
+            self._state = None
+            self.async_write_ha_state()
+            return
+
+        if new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
+            self._state = new_state.state
+            self.async_write_ha_state()
             return
 
         temp_state = new_state
@@ -206,13 +230,23 @@ class SensorFilter(Entity):
                     return
                 temp_state = filtered_state
         except ValueError:
-            _LOGGER.error("Could not convert state: %s to number", self._state)
+            _LOGGER.error(
+                "Could not convert state: %s (%s) to number",
+                new_state.state,
+                type(new_state.state),
+            )
             return
 
         self._state = temp_state.state
 
         if self._icon is None:
             self._icon = new_state.attributes.get(ATTR_ICON, ICON)
+
+        if (
+            self._device_class is None
+            and new_state.attributes.get(ATTR_DEVICE_CLASS) in SENSOR_DEVICE_CLASSES
+        ):
+            self._device_class = new_state.attributes.get(ATTR_DEVICE_CLASS)
 
         if self._unit_of_measurement is None:
             self._unit_of_measurement = new_state.attributes.get(
@@ -283,7 +317,8 @@ class SensorFilter(Entity):
 
             # Replay history through the filter chain
             for state in history_list:
-                self._update_filter_sensor_state(state, False)
+                if state.state not in [STATE_UNKNOWN, STATE_UNAVAILABLE, None]:
+                    self._update_filter_sensor_state(state, False)
 
         self.async_on_remove(
             async_track_state_change_event(
@@ -317,9 +352,14 @@ class SensorFilter(Entity):
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {ATTR_ENTITY_ID: self._entity}
+
+    @property
+    def device_class(self):
+        """Return device class."""
+        return self._device_class
 
 
 class FilterState:
@@ -355,8 +395,8 @@ class Filter:
         self,
         name,
         window_size: int = 1,
-        precision: Optional[int] = None,
-        entity: Optional[str] = None,
+        precision: int | None = None,
+        entity: str | None = None,
     ):
         """Initialize common attributes.
 
@@ -401,7 +441,7 @@ class Filter:
         """Implement a common interface for filters."""
         fstate = FilterState(new_state)
         if self._only_numbers and not isinstance(fstate.state, Number):
-            raise ValueError
+            raise ValueError(f"State <{fstate.state}> is not a Number")
 
         filtered = self._filter_state(fstate)
         filtered.set_precision(self.precision)
@@ -414,7 +454,7 @@ class Filter:
 
 
 @FILTERS.register(FILTER_NAME_RANGE)
-class RangeFilter(Filter):
+class RangeFilter(Filter, SensorEntity):
     """Range filter.
 
     Determines if new state is in the range of upper_bound and lower_bound.
@@ -424,9 +464,9 @@ class RangeFilter(Filter):
     def __init__(
         self,
         entity,
-        precision: Optional[int] = DEFAULT_PRECISION,
-        lower_bound: Optional[float] = None,
-        upper_bound: Optional[float] = None,
+        precision: int | None = DEFAULT_PRECISION,
+        lower_bound: float | None = None,
+        upper_bound: float | None = None,
     ):
         """Initialize Filter.
 
@@ -469,7 +509,7 @@ class RangeFilter(Filter):
 
 
 @FILTERS.register(FILTER_NAME_OUTLIER)
-class OutlierFilter(Filter):
+class OutlierFilter(Filter, SensorEntity):
     """BASIC outlier filter.
 
     Determines if new state is in a band around the median.
@@ -507,7 +547,7 @@ class OutlierFilter(Filter):
 
 
 @FILTERS.register(FILTER_NAME_LOWPASS)
-class LowPassFilter(Filter):
+class LowPassFilter(Filter, SensorEntity):
     """BASIC Low Pass Filter."""
 
     def __init__(self, window_size, precision, entity, time_constant: int):
@@ -531,7 +571,7 @@ class LowPassFilter(Filter):
 
 
 @FILTERS.register(FILTER_NAME_TIME_SMA)
-class TimeSMAFilter(Filter):
+class TimeSMAFilter(Filter, SensorEntity):
     """Simple Moving Average (SMA) Filter.
 
     The window_size is determined by time, and SMA is time weighted.
@@ -577,7 +617,7 @@ class TimeSMAFilter(Filter):
 
 
 @FILTERS.register(FILTER_NAME_THROTTLE)
-class ThrottleFilter(Filter):
+class ThrottleFilter(Filter, SensorEntity):
     """Throttle Filter.
 
     One sample per window.
@@ -600,7 +640,7 @@ class ThrottleFilter(Filter):
 
 
 @FILTERS.register(FILTER_NAME_TIME_THROTTLE)
-class TimeThrottleFilter(Filter):
+class TimeThrottleFilter(Filter, SensorEntity):
     """Time Throttle Filter.
 
     One sample per time period.

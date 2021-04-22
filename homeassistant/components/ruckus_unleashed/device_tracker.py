@@ -1,5 +1,5 @@
 """Support for Ruckus Unleashed devices."""
-from typing import Optional
+from __future__ import annotations
 
 from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
@@ -67,14 +67,17 @@ def restore_entities(registry, coordinator, entry, async_add_entities, tracked):
     missing = []
 
     for entity in registry.entities.values():
-        if entity.config_entry_id == entry.entry_id and entity.platform == DOMAIN:
-            if entity.unique_id not in coordinator.data[API_CLIENTS]:
-                missing.append(
-                    RuckusUnleashedDevice(
-                        coordinator, entity.unique_id, entity.original_name
-                    )
+        if (
+            entity.config_entry_id == entry.entry_id
+            and entity.platform == DOMAIN
+            and entity.unique_id not in coordinator.data[API_CLIENTS]
+        ):
+            missing.append(
+                RuckusUnleashedDevice(
+                    coordinator, entity.unique_id, entity.original_name
                 )
-                tracked.add(entity.unique_id)
+            )
+            tracked.add(entity.unique_id)
 
     if missing:
         async_add_entities(missing)
@@ -115,7 +118,7 @@ class RuckusUnleashedDevice(CoordinatorEntity, ScannerEntity):
         return SOURCE_TYPE_ROUTER
 
     @property
-    def device_info(self) -> Optional[dict]:
+    def device_info(self) -> dict | None:
         """Return the device information."""
         if self.is_connected:
             return {

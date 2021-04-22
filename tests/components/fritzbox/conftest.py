@@ -1,7 +1,7 @@
 """Fixtures for the AVM Fritz!Box integration."""
-import pytest
+from unittest.mock import Mock, patch
 
-from tests.async_mock import Mock, patch
+import pytest
 
 
 @pytest.fixture(name="fritz")

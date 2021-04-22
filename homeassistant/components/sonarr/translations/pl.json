@@ -23,8 +23,7 @@
                     "port": "Port",
                     "ssl": "Certyfikat SSL",
                     "verify_ssl": "Weryfikacja certyfikatu SSL"
-                },
-                "title": "Po\u0142\u0105czenie z Sonarr"
+                }
             }
         }
     },
@@ -37,6 +36,5 @@
                 }
             }
         }
-    },
-    "title": "Sonarr"
+    }
 }

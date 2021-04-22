@@ -2,18 +2,18 @@
     "config": {
         "abort": {
             "already_configured_device": "Dit apparaat is al geconfigureerd",
+            "cannot_connect": "Kan geen verbinding maken",
             "updated_entry": "Dit item is al ingesteld, maar de naam en/of opties die zijn gedefinieerd in de configuratie komen niet overeen met de eerder ge\u00efmporteerde configuratie, dus het configuratie-item is dienovereenkomstig bijgewerkt."
         },
         "error": {
             "cannot_connect": "Verbinding mislukt",
             "complete_pairing_failed": "Kan het koppelen niet voltooien. Zorg ervoor dat de door u opgegeven pincode correct is en dat de tv nog steeds van stroom wordt voorzien en is verbonden met het netwerk voordat u opnieuw verzendt.",
-            "host_exists": "Vizio apparaat met opgegeven host al geconfigureerd.",
-            "name_exists": "Vizio apparaat met opgegeven naam al geconfigureerd."
+            "existing_config_entry_found": "Een bestaande VIZIO SmartCast-apparaat config entry met hetzelfde serienummer is reeds geconfigureerd. U moet de bestaande invoer verwijderen om deze te kunnen configureren."
         },
         "step": {
             "pair_tv": {
                 "data": {
-                    "pin": "PIN"
+                    "pin": "PIN-code"
                 },
                 "description": "Uw TV zou een code moeten weergeven. Voer die code in het formulier in en ga dan door naar de volgende stap om de koppeling te voltooien.",
                 "title": "Voltooi het koppelingsproces"
@@ -30,11 +30,11 @@
                 "data": {
                     "access_token": "Toegangstoken",
                     "device_class": "Apparaattype",
-                    "host": "<Host/IP>:<Port>",
+                    "host": "Host",
                     "name": "Naam"
                 },
                 "description": "Een toegangstoken is alleen nodig voor tv's. Als u een TV configureert en nog geen toegangstoken heeft, laat dit dan leeg en doorloop het koppelingsproces.",
-                "title": "Vizio SmartCast Client instellen"
+                "title": "VIZIO SmartCast-apparaat"
             }
         }
     },
@@ -47,7 +47,7 @@
                     "volume_step": "Volume Stapgrootte"
                 },
                 "description": "Als je een Smart TV hebt, kun je optioneel je bronnenlijst filteren door te kiezen welke apps je in je bronnenlijst wilt opnemen of uitsluiten.",
-                "title": "Update Vizo SmartCast Opties"
+                "title": "Update VIZIO SmartCast-apparaat opties"
             }
         }
     }

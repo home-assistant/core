@@ -3,8 +3,7 @@
   "name": "UPnP",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/upnp",
-  "requirements": ["async-upnp-client==0.14.13"],
-  "dependencies": [],
+  "requirements": ["async-upnp-client==0.16.0"],
   "codeowners": ["@StevenLooman"],
   "ssdp": [
     {
@@ -13,5 +12,6 @@
     {
       "st": "urn:schemas-upnp-org:device:InternetGatewayDevice:2"
     }
-  ]
+  ],
+  "iot_class": "local_polling"
 }

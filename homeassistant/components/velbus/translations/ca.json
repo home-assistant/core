@@ -1,14 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El dispositiu ja est\u00e0 configurat",
-            "port_exists": "El port ja est\u00e0 configurat"
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
         },
         "error": {
             "already_configured": "El dispositiu ja est\u00e0 configurat",
-            "cannot_connect": "Ha fallat la connexi\u00f3",
-            "connection_failed": "Ha fallat la connexi\u00f3 Velbus",
-            "port_exists": "El port ja est\u00e0 configurat"
+            "cannot_connect": "Ha fallat la connexi\u00f3"
         },
         "step": {
             "user": {

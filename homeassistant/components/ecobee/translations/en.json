@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "one_instance_only": "This integration currently supports only one ecobee instance.",
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "error": {
@@ -10,7 +9,7 @@
         },
         "step": {
             "authorize": {
-                "description": "Please authorize this app at https://www.ecobee.com/consumerportal/index.html with pin code:\n\n{pin}\n\nThen, press Submit.",
+                "description": "Please authorize this app at https://www.ecobee.com/consumerportal/index.html with PIN code:\n\n{pin}\n\nThen, press Submit.",
                 "title": "Authorize app on ecobee.com"
             },
             "user": {

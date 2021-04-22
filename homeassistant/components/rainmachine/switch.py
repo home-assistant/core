@@ -1,14 +1,19 @@
 """This component provides support for RainMachine programs and zones."""
+from __future__ import annotations
+
+from collections.abc import Coroutine
 from datetime import datetime
-from typing import Callable, Coroutine
+from typing import Callable
 
 from regenmaschine.controller import Controller
 from regenmaschine.errors import RequestError
+import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ID
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import RainMachineEntity, async_update_programs_and_zones
@@ -18,6 +23,7 @@ from .const import (
     DATA_COORDINATOR,
     DATA_PROGRAMS,
     DATA_ZONES,
+    DEFAULT_ZONE_RUN,
     DOMAIN,
     LOGGER,
 )
@@ -42,6 +48,10 @@ ATTR_SUN_EXPOSURE = "sun_exposure"
 ATTR_TIME_REMAINING = "time_remaining"
 ATTR_VEGETATION_TYPE = "vegetation_type"
 ATTR_ZONES = "zones"
+
+CONF_PROGRAM_ID = "program_id"
+CONF_SECONDS = "seconds"
+CONF_ZONE_ID = "zone_id"
 
 DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
@@ -103,6 +113,47 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
 ) -> None:
     """Set up RainMachine switches based on a config entry."""
+    platform = entity_platform.current_platform.get()
+
+    alter_program_schema = {vol.Required(CONF_PROGRAM_ID): cv.positive_int}
+    alter_zone_schema = {vol.Required(CONF_ZONE_ID): cv.positive_int}
+
+    for service_name, schema, method in [
+        ("disable_program", alter_program_schema, "async_disable_program"),
+        ("disable_zone", alter_zone_schema, "async_disable_zone"),
+        ("enable_program", alter_program_schema, "async_enable_program"),
+        ("enable_zone", alter_zone_schema, "async_enable_zone"),
+        (
+            "pause_watering",
+            {vol.Required(CONF_SECONDS): cv.positive_int},
+            "async_pause_watering",
+        ),
+        (
+            "start_program",
+            {vol.Required(CONF_PROGRAM_ID): cv.positive_int},
+            "async_start_program",
+        ),
+        (
+            "start_zone",
+            {
+                vol.Required(CONF_ZONE_ID): cv.positive_int,
+                vol.Optional(
+                    CONF_ZONE_RUN_TIME, default=DEFAULT_ZONE_RUN
+                ): cv.positive_int,
+            },
+            "async_start_zone",
+        ),
+        ("stop_all", {}, "async_stop_all"),
+        (
+            "stop_program",
+            {vol.Required(CONF_PROGRAM_ID): cv.positive_int},
+            "async_stop_program",
+        ),
+        ("stop_zone", {vol.Required(CONF_ZONE_ID): cv.positive_int}, "async_stop_zone"),
+        ("unpause_watering", {}, "async_unpause_watering"),
+    ]:
+        platform.async_register_entity_service(service_name, schema, method)
+
     controller = hass.data[DOMAIN][DATA_CONTROLLER][entry.entry_id]
     programs_coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
         DATA_PROGRAMS
@@ -192,6 +243,61 @@ class RainMachineSwitch(RainMachineEntity, SwitchEntity):
         self.hass.async_create_task(
             async_update_programs_and_zones(self.hass, self._entry)
         )
+
+    async def async_disable_program(self, *, program_id):
+        """Disable a program."""
+        await self._controller.programs.disable(program_id)
+        await async_update_programs_and_zones(self.hass, self._entry)
+
+    async def async_disable_zone(self, *, zone_id):
+        """Disable a zone."""
+        await self._controller.zones.disable(zone_id)
+        await async_update_programs_and_zones(self.hass, self._entry)
+
+    async def async_enable_program(self, *, program_id):
+        """Enable a program."""
+        await self._controller.programs.enable(program_id)
+        await async_update_programs_and_zones(self.hass, self._entry)
+
+    async def async_enable_zone(self, *, zone_id):
+        """Enable a zone."""
+        await self._controller.zones.enable(zone_id)
+        await async_update_programs_and_zones(self.hass, self._entry)
+
+    async def async_pause_watering(self, *, seconds):
+        """Pause watering for a set number of seconds."""
+        await self._controller.watering.pause_all(seconds)
+        await async_update_programs_and_zones(self.hass, self._entry)
+
+    async def async_start_program(self, *, program_id):
+        """Start a particular program."""
+        await self._controller.programs.start(program_id)
+        await async_update_programs_and_zones(self.hass, self._entry)
+
+    async def async_start_zone(self, *, zone_id, zone_run_time):
+        """Start a particular zone for a certain amount of time."""
+        await self._controller.zones.start(zone_id, zone_run_time)
+        await async_update_programs_and_zones(self.hass, self._entry)
+
+    async def async_stop_all(self):
+        """Stop all watering."""
+        await self._controller.watering.stop_all()
+        await async_update_programs_and_zones(self.hass, self._entry)
+
+    async def async_stop_program(self, *, program_id):
+        """Stop a program."""
+        await self._controller.programs.stop(program_id)
+        await async_update_programs_and_zones(self.hass, self._entry)
+
+    async def async_stop_zone(self, *, zone_id):
+        """Stop a zone."""
+        await self._controller.zones.stop(zone_id)
+        await async_update_programs_and_zones(self.hass, self._entry)
+
+    async def async_unpause_watering(self):
+        """Unpause watering."""
+        await self._controller.watering.unpause_all()
+        await async_update_programs_and_zones(self.hass, self._entry)
 
     @callback
     def update_from_latest_data(self) -> None:

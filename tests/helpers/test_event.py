@@ -2,8 +2,10 @@
 # pylint: disable=protected-access
 import asyncio
 from datetime import datetime, timedelta
+from unittest.mock import patch
 
-from astral import Astral
+from astral import LocationInfo
+import astral.sun
 import jinja2
 import pytest
 
@@ -39,7 +41,6 @@ from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 
 DEFAULT_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
@@ -906,6 +907,33 @@ async def test_track_template_error_can_recover(hass, caplog):
     caplog.clear()
 
     assert "UndefinedError" not in caplog.text
+
+
+async def test_track_template_time_change(hass, caplog):
+    """Test tracking template with time change."""
+    template_error = Template("{{ utcnow().minute % 2 == 0 }}", hass)
+    calls = []
+
+    @ha.callback
+    def error_callback(entity_id, old_state, new_state):
+        calls.append((entity_id, old_state, new_state))
+
+    start_time = dt_util.utcnow() + timedelta(hours=24)
+    time_that_will_not_match_right_away = start_time.replace(minute=1, second=0)
+    with patch(
+        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
+    ):
+        async_track_template(hass, template_error, error_callback)
+        await hass.async_block_till_done()
+        assert not calls
+
+    first_time = start_time.replace(minute=2, second=0)
+    with patch("homeassistant.util.dt.utcnow", return_value=first_time):
+        async_fire_time_changed(hass, first_time)
+        await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0] == (None, None, None)
 
 
 async def test_track_template_result(hass):
@@ -2406,15 +2434,18 @@ async def test_track_sunrise(hass, legacy_patchable_time):
         hass, sun.DOMAIN, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}}
     )
 
+    location = LocationInfo(
+        latitude=hass.config.latitude, longitude=hass.config.longitude
+    )
+
     # Get next sunrise/sunset
-    astral = Astral()
     utc_now = datetime(2014, 5, 24, 12, 0, 0, tzinfo=dt_util.UTC)
     utc_today = utc_now.date()
 
     mod = -1
     while True:
-        next_rising = astral.sunrise_utc(
-            utc_today + timedelta(days=mod), latitude, longitude
+        next_rising = astral.sun.sunrise(
+            location.observer, date=utc_today + timedelta(days=mod)
         )
         if next_rising > utc_now:
             break
@@ -2466,15 +2497,18 @@ async def test_track_sunrise_update_location(hass, legacy_patchable_time):
         hass, sun.DOMAIN, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}}
     )
 
+    location = LocationInfo(
+        latitude=hass.config.latitude, longitude=hass.config.longitude
+    )
+
     # Get next sunrise
-    astral = Astral()
     utc_now = datetime(2014, 5, 24, 12, 0, 0, tzinfo=dt_util.UTC)
     utc_today = utc_now.date()
 
     mod = -1
     while True:
-        next_rising = astral.sunrise_utc(
-            utc_today + timedelta(days=mod), hass.config.latitude, hass.config.longitude
+        next_rising = astral.sun.sunrise(
+            location.observer, date=utc_today + timedelta(days=mod)
         )
         if next_rising > utc_now:
             break
@@ -2495,6 +2529,11 @@ async def test_track_sunrise_update_location(hass, legacy_patchable_time):
         await hass.config.async_update(latitude=40.755931, longitude=-73.984606)
         await hass.async_block_till_done()
 
+    # update location for astral
+    location = LocationInfo(
+        latitude=hass.config.latitude, longitude=hass.config.longitude
+    )
+
     # Mimic sunrise
     async_fire_time_changed(hass, next_rising)
     await hass.async_block_till_done()
@@ -2504,8 +2543,8 @@ async def test_track_sunrise_update_location(hass, legacy_patchable_time):
     # Get next sunrise
     mod = -1
     while True:
-        next_rising = astral.sunrise_utc(
-            utc_today + timedelta(days=mod), hass.config.latitude, hass.config.longitude
+        next_rising = astral.sun.sunrise(
+            location.observer, date=utc_today + timedelta(days=mod)
         )
         if next_rising > utc_now:
             break
@@ -2522,6 +2561,8 @@ async def test_track_sunset(hass, legacy_patchable_time):
     latitude = 32.87336
     longitude = 117.22743
 
+    location = LocationInfo(latitude=latitude, longitude=longitude)
+
     # Setup sun component
     hass.config.latitude = latitude
     hass.config.longitude = longitude
@@ -2530,14 +2571,13 @@ async def test_track_sunset(hass, legacy_patchable_time):
     )
 
     # Get next sunrise/sunset
-    astral = Astral()
     utc_now = datetime(2014, 5, 24, 12, 0, 0, tzinfo=dt_util.UTC)
     utc_today = utc_now.date()
 
     mod = -1
     while True:
-        next_setting = astral.sunset_utc(
-            utc_today + timedelta(days=mod), latitude, longitude
+        next_setting = astral.sun.sunset(
+            location.observer, date=utc_today + timedelta(days=mod)
         )
         if next_setting > utc_now:
             break

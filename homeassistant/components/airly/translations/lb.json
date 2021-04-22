@@ -4,7 +4,6 @@
             "already_configured": "Standuert ass scho konfigur\u00e9iert"
         },
         "error": {
-            "auth": "Api Schl\u00ebssel ass net korrekt.",
             "invalid_api_key": "Ong\u00ebltegen API Schl\u00ebssel",
             "wrong_location": "Keng Airly Moos Statioun an d\u00ebsem Ber\u00e4ich"
         },
@@ -19,6 +18,11 @@
                 "description": "Airly Loft Qualit\u00e9it Integratioun ariichten. Fir een API Schl\u00ebssel z'erstelle gitt op https://developer.airly.eu/register",
                 "title": "Airly"
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Airly Server ereechbar"
         }
     }
 }

@@ -1,4 +1,6 @@
 """Tests for the Sonsrr integration."""
+from unittest.mock import patch
+
 from homeassistant.components.sonarr.const import DOMAIN
 from homeassistant.config_entries import (
     ENTRY_STATE_LOADED,
@@ -10,7 +12,6 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_SOURCE
 from homeassistant.core import HomeAssistant
 
-from tests.async_mock import patch
 from tests.components.sonarr import setup_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -34,8 +35,12 @@ async def test_config_entry_reauth(
 
     mock_flow_init.assert_called_once_with(
         DOMAIN,
-        context={CONF_SOURCE: SOURCE_REAUTH},
-        data={"config_entry_id": entry.entry_id, **entry.data},
+        context={
+            CONF_SOURCE: SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+            "unique_id": entry.unique_id,
+        },
+        data=entry.data,
     )
 
 

@@ -64,11 +64,11 @@
                     "off_delay": "Retraso de apagado",
                     "off_delay_enabled": "Activar retardo de apagado",
                     "replace_device": "Seleccione el dispositivo que desea reemplazar",
-                    "signal_repetitions": "N\u00famero de repeticiones de la se\u00f1al"
+                    "signal_repetitions": "N\u00famero de repeticiones de la se\u00f1al",
+                    "venetian_blind_mode": "Modo de persiana veneciana"
                 },
                 "title": "Configurar las opciones del dispositivo"
             }
         }
-    },
-    "title": "Rfxtrx"
+    }
 }

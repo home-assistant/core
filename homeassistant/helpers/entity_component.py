@@ -1,17 +1,24 @@
 """Helpers for components that manage entities."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Iterable
 from datetime import timedelta
 from itertools import chain
 import logging
 from types import ModuleType
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Callable
 
 import voluptuous as vol
 
 from homeassistant import config as conf_util
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ENTITY_NAMESPACE, CONF_SCAN_INTERVAL
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.const import (
+    CONF_ENTITY_NAMESPACE,
+    CONF_SCAN_INTERVAL,
+    EVENT_HOMEASSISTANT_STOP,
+)
+from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_per_platform,
@@ -76,10 +83,10 @@ class EntityComponent:
         self.domain = domain
         self.scan_interval = scan_interval
 
-        self.config: Optional[ConfigType] = None
+        self.config: ConfigType | None = None
 
-        self._platforms: Dict[
-            Union[str, Tuple[str, Optional[timedelta], Optional[str]]], EntityPlatform
+        self._platforms: dict[
+            str | tuple[str, timedelta | None, str | None], EntityPlatform
         ] = {domain: self._async_init_entity_platform(domain, None)}
         self.async_add_entities = self._platforms[domain].async_add_entities
         self.add_entities = self._platforms[domain].add_entities
@@ -93,7 +100,7 @@ class EntityComponent:
             platform.entities.values() for platform in self._platforms.values()
         )
 
-    def get_entity(self, entity_id: str) -> Optional[entity.Entity]:
+    def get_entity(self, entity_id: str) -> entity.Entity | None:
         """Get an entity."""
         for platform in self._platforms.values():
             entity_obj = platform.entities.get(entity_id)
@@ -116,6 +123,8 @@ class EntityComponent:
 
         This method must be run in the event loop.
         """
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
+
         self.config = config
 
         # Look in config for Domain, Domain 2, Domain 3 etc and load them
@@ -125,7 +134,7 @@ class EntityComponent:
         # Generic discovery listener for loading platform dynamically
         # Refer to: homeassistant.helpers.discovery.async_load_platform()
         async def component_platform_discovered(
-            platform: str, info: Optional[Dict[str, Any]]
+            platform: str, info: dict[str, Any] | None
         ) -> None:
             """Handle the loading of a platform."""
             await self.async_setup_platform(platform, {}, info)
@@ -176,7 +185,7 @@ class EntityComponent:
 
     async def async_extract_from_service(
         self, service_call: ServiceCall, expand_group: bool = True
-    ) -> List[entity.Entity]:
+    ) -> list[entity.Entity]:
         """Extract all known and available entities from a service call.
 
         Will return an empty list if entities specified but unknown.
@@ -191,9 +200,9 @@ class EntityComponent:
     def async_register_entity_service(
         self,
         name: str,
-        schema: Union[Dict[str, Any], vol.Schema],
-        func: str,
-        required_features: Optional[List[int]] = None,
+        schema: dict[str, Any] | vol.Schema,
+        func: str | Callable[..., Any],
+        required_features: list[int] | None = None,
     ) -> None:
         """Register an entity service."""
         if isinstance(schema, dict):
@@ -211,7 +220,7 @@ class EntityComponent:
         self,
         platform_type: str,
         platform_config: ConfigType,
-        discovery_info: Optional[DiscoveryInfoType] = None,
+        discovery_info: DiscoveryInfoType | None = None,
     ) -> None:
         """Set up a platform for this component."""
         if self.config is None:
@@ -272,7 +281,9 @@ class EntityComponent:
         if found:
             await found.async_remove_entity(entity_id)
 
-    async def async_prepare_reload(self, *, skip_reset: bool = False) -> Optional[dict]:
+    async def async_prepare_reload(
+        self, *, skip_reset: bool = False
+    ) -> ConfigType | None:
         """Prepare reloading this entity component.
 
         This method must be run in the event loop.
@@ -301,9 +312,9 @@ class EntityComponent:
     def _async_init_entity_platform(
         self,
         platform_type: str,
-        platform: Optional[ModuleType],
-        scan_interval: Optional[timedelta] = None,
-        entity_namespace: Optional[str] = None,
+        platform: ModuleType | None,
+        scan_interval: timedelta | None = None,
+        entity_namespace: str | None = None,
     ) -> EntityPlatform:
         """Initialize an entity platform."""
         if scan_interval is None:
@@ -317,4 +328,10 @@ class EntityComponent:
             platform=platform,
             scan_interval=scan_interval,
             entity_namespace=entity_namespace,
+        )
+
+    async def _async_shutdown(self, event: Event) -> None:
+        """Call when Home Assistant is stopping."""
+        await asyncio.gather(
+            *[platform.async_shutdown() for platform in chain(self._platforms.values())]
         )

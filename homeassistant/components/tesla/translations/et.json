@@ -1,14 +1,13 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Kasutaja on juba seadistatud",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
+        },
         "error": {
             "already_configured": "Konto on juba h\u00e4\u00e4lestatud",
-            "already_configured_account": "Kasutaja on juba lisatud",
             "cannot_connect": "\u00dchendamine nurjus",
-            "connection_error": "Viga \u00fchenduse loomisel:  kontrolli v\u00f5rku ja proovi uuesti",
-            "identifier_exists": "E-post on juba registreeritud",
-            "invalid_auth": "Tuvastamise viga",
-            "invalid_credentials": "Sobimatu mandaat",
-            "unknown_error": "Tundmatu viga, palun lisa logid"
+            "invalid_auth": "Tuvastamise viga"
         },
         "step": {
             "user": {
@@ -25,6 +24,7 @@
         "step": {
             "init": {
                 "data": {
+                    "enable_wake_on_start": "Sunni autod k\u00e4ivitamisel \u00e4rkama (?)",
                     "scan_interval": "P\u00e4ringute vahe sekundites"
                 }
             }

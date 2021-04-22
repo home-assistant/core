@@ -23,10 +23,8 @@
             "user": {
                 "data": {
                     "host": "Hostitel"
-                },
-                "title": "Nastaven\u00ed Logitech Media Server"
+                }
             }
         }
-    },
-    "title": "Logitech Squeezebox"
+    }
 }

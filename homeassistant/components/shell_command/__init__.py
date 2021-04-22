@@ -1,5 +1,6 @@
 """Expose regular shell commands as services."""
 import asyncio
+from contextlib import suppress
 import logging
 import shlex
 
@@ -87,10 +88,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
                 "Timed out running command: `%s`, after: %ss", cmd, COMMAND_TIMEOUT
             )
             if process:
-                try:
+                with suppress(TypeError):
                     await process.kill()
-                except TypeError:
-                    pass
                 del process
 
             return

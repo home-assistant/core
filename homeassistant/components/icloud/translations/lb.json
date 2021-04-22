@@ -7,7 +7,6 @@
         },
         "error": {
             "invalid_auth": "Ong\u00eblteg Authentifikatioun",
-            "login": "Feeler beim Login: iwwerpr\u00e9ift \u00e4r E-Mail & Passwuert",
             "send_verification_code": "Feeler beim sch\u00e9cken vum Verifikatiouns Code",
             "validate_verification_code": "Feeler beim iwwerpr\u00e9iwe vum Verifikatiouns Code, wielt ee vertrauten Apparat aus a start d'Iwwerpr\u00e9iwung nei"
         },

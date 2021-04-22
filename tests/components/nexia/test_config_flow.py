@@ -1,11 +1,11 @@
 """Test the nexia config flow."""
+from unittest.mock import MagicMock, patch
+
 from requests.exceptions import ConnectTimeout, HTTPError
 
 from homeassistant import config_entries, setup
 from homeassistant.components.nexia.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-
-from tests.async_mock import MagicMock, patch
 
 
 async def test_form(hass):
@@ -24,8 +24,6 @@ async def test_form(hass):
         "homeassistant.components.nexia.config_flow.NexiaHome.login",
         side_effect=MagicMock(),
     ), patch(
-        "homeassistant.components.nexia.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.nexia.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -41,7 +39,6 @@ async def test_form(hass):
         CONF_USERNAME: "username",
         CONF_PASSWORD: "password",
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -139,45 +136,3 @@ async def test_form_broad_exception(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "unknown"}
-
-
-async def test_form_import(hass):
-    """Test we get the form with import source."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    with patch(
-        "homeassistant.components.nexia.config_flow.NexiaHome.get_name",
-        return_value="myhouse",
-    ), patch(
-        "homeassistant.components.nexia.config_flow.NexiaHome.login",
-        side_effect=MagicMock(),
-    ), patch(
-        "homeassistant.components.nexia.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.nexia.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={CONF_USERNAME: "username", CONF_PASSWORD: "password"},
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == "myhouse"
-    assert result["data"] == {
-        CONF_USERNAME: "username",
-        CONF_PASSWORD: "password",
-    }
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
-
-    result2 = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={CONF_USERNAME: "username", CONF_PASSWORD: "password"},
-    )
-
-    assert result2["type"] == "abort"
-    assert result2["reason"] == "already_configured"

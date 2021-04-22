@@ -1,14 +1,11 @@
 {
     "config": {
         "abort": {
-            "auth_failed": "Autenticaci\u00f3 inv\u00e0lida",
             "cannot_connect": "Ha fallat la connexi\u00f3",
-            "conn_error": "Ha fallat la connexi\u00f3",
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
             "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
         },
         "error": {
-            "auth_failed": "Autenticaci\u00f3 inv\u00e0lida",
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
         },
         "flow_title": "Configuraci\u00f3 de Tuya",
@@ -20,12 +17,15 @@
                     "platform": "L'aplicaci\u00f3 on es registra el teu compte",
                     "username": "Nom d'usuari"
                 },
-                "description": "Introdueix la teva credencial de Tuya.",
+                "description": "Introdueix les teves credencial de Tuya.",
                 "title": "Tuya"
             }
         }
     },
     "options": {
+        "abort": {
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
         "error": {
             "dev_multi_type": "Per configurar una selecci\u00f3 de m\u00faltiples dispositius, aquests han de ser del mateix tipus",
             "dev_not_config": "El tipus d'aquest dispositiu no \u00e9s configurable",
@@ -36,17 +36,18 @@
                 "data": {
                     "brightness_range_mode": "Rang de brillantor utilitzat pel dispositiu",
                     "curr_temp_divider": "Divisor del valor de temperatura actual (0 = predeterminat)",
-                    "ext_temp_sensor": "Sensor per a la temperatura actual",
                     "max_kelvin": "Temperatura del color m\u00e0xima suportada, en Kelvin",
                     "max_temp": "Temperatura desitjada m\u00e0xima (utilitza min i max = 0 per defecte)",
                     "min_kelvin": "Temperatura del color m\u00ednima suportada, en Kelvin",
                     "min_temp": "Temperatura desitjada m\u00ednima (utilitza min i max = 0 per defecte)",
+                    "set_temp_divided": "Utilitza el valor de temperatura dividit per a ordres de configuraci\u00f3 de temperatura",
                     "support_color": "For\u00e7a el suport de color",
                     "temp_divider": "Divisor del valor de temperatura (0 = predeterminat)",
+                    "temp_step_override": "Pas de temperatura objectiu",
                     "tuya_max_coltemp": "Temperatura de color m\u00e0xima enviada pel dispositiu",
                     "unit_of_measurement": "Unitat de temperatura utilitzada pel dispositiu"
                 },
-                "description": "Configura les opcions per ajustar la informaci\u00f3 mostrada per {device_type} dispositiu `{device_name}`",
+                "description": "Configura les opcions per ajustar la informaci\u00f3 mostrada pel dispositiu {device_type} `{device_name}`",
                 "title": "Configuraci\u00f3 de dispositiu Tuya"
             },
             "init": {

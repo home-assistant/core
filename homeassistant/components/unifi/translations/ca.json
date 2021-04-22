@@ -1,13 +1,16 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El lloc del controlador ja est\u00e0 configurat"
+            "already_configured": "El lloc del controlador ja est\u00e0 configurat",
+            "configuration_updated": "S'ha actualitzat la configuraci\u00f3.",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
         },
         "error": {
             "faulty_credentials": "[%key::common::config_flow::error::invalid_auth%]",
             "service_unavailable": "[%key::common::config_flow::error::cannot_connect%]",
             "unknown_client_mac": "No hi ha cap client disponible en aquesta adre\u00e7a MAC"
         },
+        "flow_title": "Xarxa UniFi {site} ({host})",
         "step": {
             "user": {
                 "data": {

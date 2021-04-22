@@ -1,5 +1,6 @@
 """Support for Homekit Alarm Control Panel."""
 from aiohomekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
 from homeassistant.components.alarm_control_panel.const import (
@@ -43,10 +44,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     conn = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
-    def async_add_service(aid, service):
-        if service["stype"] != "security-system":
+    def async_add_service(service):
+        if service.short_type != ServicesTypes.SECURITY_SYSTEM:
             return False
-        info = {"aid": aid, "iid": service["iid"]}
+        info = {"aid": service.accessory.aid, "iid": service.iid}
         async_add_entities([HomeKitAlarmControlPanelEntity(conn, info)], True)
         return True
 
@@ -104,7 +105,7 @@ class HomeKitAlarmControlPanelEntity(HomeKitEntity, AlarmControlPanelEntity):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the optional state attributes."""
         battery_level = self.service.value(CharacteristicsTypes.BATTERY_LEVEL)
 

@@ -34,9 +34,11 @@ from .const import (
     DEBOUNCE_TIMEOUT,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
+    GDM_DEBOUNCER,
     GDM_SCANNER,
     PLAYER_SOURCE,
     PLEX_NEW_MP_SIGNAL,
+    PLEX_UPDATE_MEDIA_PLAYER_SESSION_SIGNAL,
     PLEX_UPDATE_MEDIA_PLAYER_SIGNAL,
     PLEX_UPDATE_SENSOR_SIGNAL,
     PLEXTV_THROTTLE,
@@ -52,6 +54,7 @@ from .errors import (
     ShouldUpdateConfigEntry,
 )
 from .media_search import lookup_movie, lookup_music, lookup_tv
+from .models import PlexSession
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,6 +74,7 @@ class PlexServer:
         """Initialize a Plex server instance."""
         self.hass = hass
         self.entry_id = entry_id
+        self.active_sessions = {}
         self._plex_account = None
         self._plex_server = None
         self._created_clients = set()
@@ -97,6 +101,7 @@ class PlexServer:
             immediate=True,
             function=self._async_update_platforms,
         ).async_call
+        self.thumbnail_cache = {}
 
         # Header conditionally added as it is not available in config entry v1
         if CONF_CLIENT_ID in server_config:
@@ -142,7 +147,7 @@ class PlexServer:
             available_servers = [
                 (x.name, x.clientIdentifier)
                 for x in self.account.resources()
-                if "server" in x.provides
+                if "server" in x.provides and x.presence
             ]
 
             if not available_servers:
@@ -185,7 +190,7 @@ class PlexServer:
                 _connect_with_url()
             except requests.exceptions.SSLError as error:
                 while error and not isinstance(error, ssl.SSLCertVerificationError):
-                    error = error.__context__  # pylint: disable=no-member
+                    error = error.__context__
                 if isinstance(error, ssl.SSLCertVerificationError):
                     domain = urlparse(self._url).netloc.split(":")[0]
                     if domain.endswith("plex.direct") and error.args[0].startswith(
@@ -209,21 +214,27 @@ class PlexServer:
 
         try:
             system_accounts = self._plex_server.systemAccounts()
+            shared_users = self.account.users() if self.account else []
         except Unauthorized:
             _LOGGER.warning(
                 "Plex account has limited permissions, shared account filtering will not be available"
             )
         else:
-            self._accounts = [
-                account.name for account in system_accounts if account.name
-            ]
+            self._accounts = []
+            for user in shared_users:
+                for shared_server in user.servers:
+                    if shared_server.machineIdentifier == self.machine_identifier:
+                        self._accounts.append(user.title)
+
             _LOGGER.debug("Linked accounts: %s", self.accounts)
 
-            owner_account = [
-                account.name for account in system_accounts if account.accountID == 1
-            ]
+            owner_account = next(
+                (account.name for account in system_accounts if account.accountID == 1),
+                None,
+            )
             if owner_account:
-                self._owner_username = owner_account[0]
+                self._owner_username = owner_account
+                self._accounts.append(owner_account)
                 _LOGGER.debug("Server owner found: '%s'", self._owner_username)
 
         self._version = self._plex_server.version
@@ -232,7 +243,7 @@ class PlexServer:
             raise ShouldUpdateConfigEntry
 
     @callback
-    def async_refresh_entity(self, machine_identifier, device, session):
+    def async_refresh_entity(self, machine_identifier, device, session, source):
         """Forward refresh dispatch to media_player."""
         unique_id = f"{self.machine_identifier}:{machine_identifier}"
         _LOGGER.debug("Refreshing %s", unique_id)
@@ -241,6 +252,60 @@ class PlexServer:
             PLEX_UPDATE_MEDIA_PLAYER_SIGNAL.format(unique_id),
             device,
             session,
+            source,
+        )
+
+    async def async_update_session(self, payload):
+        """Process a session payload received from a websocket callback."""
+        session_payload = payload["PlaySessionStateNotification"][0]
+
+        state = session_payload["state"]
+        if state == "buffering":
+            return
+
+        session_key = int(session_payload["sessionKey"])
+        offset = int(session_payload["viewOffset"])
+        rating_key = int(session_payload["ratingKey"])
+
+        unique_id, active_session = next(
+            (
+                (unique_id, session)
+                for unique_id, session in self.active_sessions.items()
+                if session.session_key == session_key
+            ),
+            (None, None),
+        )
+
+        if not active_session:
+            await self.async_update_platforms()
+            return
+
+        if state == "stopped":
+            self.active_sessions.pop(unique_id, None)
+        else:
+            active_session.state = state
+            active_session.media_position = offset
+
+        def update_with_new_media():
+            """Update an existing session with new media details."""
+            media = self.fetch_item(rating_key)
+            active_session.update_media(media)
+
+        if active_session.media_content_id != rating_key and state in [
+            "playing",
+            "paused",
+        ]:
+            await self.hass.async_add_executor_job(update_with_new_media)
+
+        async_dispatcher_send(
+            self.hass,
+            PLEX_UPDATE_MEDIA_PLAYER_SESSION_SIGNAL.format(unique_id),
+            state,
+        )
+
+        async_dispatcher_send(
+            self.hass,
+            PLEX_UPDATE_SENSOR_SIGNAL.format(self.machine_identifier),
         )
 
     def _fetch_platform_data(self):
@@ -254,6 +319,8 @@ class PlexServer:
     async def _async_update_platforms(self):
         """Update the platform entities."""
         _LOGGER.debug("Updating devices")
+
+        await self.hass.data[DOMAIN][GDM_DEBOUNCER]()
 
         available_clients = {}
         ignored_clients = set()
@@ -298,17 +365,20 @@ class PlexServer:
                 PLAYER_SOURCE, source
             )
 
-            if device.machineIdentifier not in ignored_clients:
-                if self.option_ignore_plexweb_clients and device.product == "Plex Web":
-                    ignored_clients.add(device.machineIdentifier)
-                    if device.machineIdentifier not in self._known_clients:
-                        _LOGGER.debug(
-                            "Ignoring %s %s: %s",
-                            "Plex Web",
-                            source,
-                            device.machineIdentifier,
-                        )
-                    return
+            if (
+                device.machineIdentifier not in ignored_clients
+                and self.option_ignore_plexweb_clients
+                and device.product == "Plex Web"
+            ):
+                ignored_clients.add(device.machineIdentifier)
+                if device.machineIdentifier not in self._known_clients:
+                    _LOGGER.debug(
+                        "Ignoring %s %s: %s",
+                        "Plex Web",
+                        source,
+                        device.machineIdentifier,
+                    )
+                return
 
             if device.machineIdentifier not in (
                 self._created_clients | ignored_clients | new_clients
@@ -321,18 +391,16 @@ class PlexServer:
                     device.machineIdentifier,
                 )
 
-        for device in devices:
-            process_device("PMS", device)
-
         def connect_to_client(source, baseurl, machine_identifier, name="Unknown"):
             """Connect to a Plex client and return a PlexClient instance."""
             try:
                 client = PlexClient(
                     server=self._plex_server,
                     baseurl=baseurl,
+                    identifier=machine_identifier,
                     token=self._plex_server.createToken(),
                 )
-            except requests.exceptions.ConnectionError:
+            except (NotFound, requests.exceptions.ConnectionError):
                 _LOGGER.error(
                     "Direct client connection failed, will try again: %s (%s)",
                     name,
@@ -353,9 +421,11 @@ class PlexServer:
             """Connect to a plex.tv resource and return a Plex client."""
             try:
                 client = resource.connect(timeout=3)
-                _LOGGER.debug("plex.tv resource connection successful: %s", client)
+                _LOGGER.debug("Resource connection successful to plex.tv: %s", client)
             except NotFound:
-                _LOGGER.error("plex.tv resource connection failed: %s", resource.name)
+                _LOGGER.error(
+                    "Resource connection failed to plex.tv: %s", resource.name
+                )
             else:
                 client.proxyThroughServer(value=False, server=self._plex_server)
                 self._client_device_cache[client.machineIdentifier] = client
@@ -384,25 +454,46 @@ class PlexServer:
                 elif plextv_client.clientIdentifier not in available_clients:
                     connect_to_resource(plextv_client)
 
-        await self.hass.async_add_executor_job(connect_new_clients)
+        def process_sessions():
+            live_session_keys = {x.sessionKey for x in sessions}
+            for unique_id, session in list(self.active_sessions.items()):
+                if session.session_key not in live_session_keys:
+                    _LOGGER.debug("Purging unknown session: %s", session.session_key)
+                    self.active_sessions.pop(unique_id)
 
-        for session in sessions:
-            if session.TYPE == "photo":
-                _LOGGER.debug("Photo session detected, skipping: %s", session)
-                continue
-
-            session_username = session.usernames[0]
-            for player in session.players:
-                if session_username and session_username not in monitored_users:
-                    ignored_clients.add(player.machineIdentifier)
-                    _LOGGER.debug(
-                        "Ignoring %s client owned by '%s'",
-                        player.product,
-                        session_username,
-                    )
+            for session in sessions:
+                if session.TYPE == "photo":
+                    _LOGGER.debug("Photo session detected, skipping: %s", session)
                     continue
-                process_device("session", player)
-                available_clients[player.machineIdentifier]["session"] = session
+
+                session_username = session.usernames[0]
+                for player in session.players:
+                    unique_id = f"{self.machine_identifier}:{player.machineIdentifier}"
+                    if unique_id not in self.active_sessions:
+                        _LOGGER.debug("Creating new Plex session: %s", session)
+                        self.active_sessions[unique_id] = PlexSession(self, session)
+                    if session_username and session_username not in monitored_users:
+                        ignored_clients.add(player.machineIdentifier)
+                        _LOGGER.debug(
+                            "Ignoring %s client owned by '%s'",
+                            player.product,
+                            session_username,
+                        )
+                        continue
+
+                    process_device("session", player)
+                    available_clients[player.machineIdentifier][
+                        "session"
+                    ] = self.active_sessions[unique_id]
+
+        for device in devices:
+            process_device("PMS", device)
+
+        def sync_tasks():
+            connect_new_clients()
+            process_sessions()
+
+        await self.hass.async_add_executor_job(sync_tasks)
 
         new_entity_configs = []
         for client_id, client_data in available_clients.items():
@@ -413,7 +504,10 @@ class PlexServer:
                 self._created_clients.add(client_id)
             else:
                 self.async_refresh_entity(
-                    client_id, client_data["device"], client_data.get("session")
+                    client_id,
+                    client_data["device"],
+                    client_data.get("session"),
+                    client_data.get(PLAYER_SOURCE),
                 )
 
         self._known_clients.update(new_clients | ignored_clients)
@@ -422,7 +516,7 @@ class PlexServer:
             self._known_clients - self._known_idle - ignored_clients
         ).difference(available_clients)
         for client_id in idle_clients:
-            self.async_refresh_entity(client_id, None, None)
+            self.async_refresh_entity(client_id, None, None, None)
             self._known_idle.add(client_id)
             self._client_device_cache.pop(client_id, None)
 
@@ -436,7 +530,6 @@ class PlexServer:
         async_dispatcher_send(
             self.hass,
             PLEX_UPDATE_SENSOR_SIGNAL.format(self.machine_identifier),
-            sessions,
         )
 
     @property
@@ -511,6 +604,10 @@ class PlexServer:
         """Create playqueue on Plex server."""
         return plexapi.playqueue.PlayQueue.create(self._plex_server, media, **kwargs)
 
+    def get_playqueue(self, playqueue_id):
+        """Retrieve existing playqueue from Plex server."""
+        return plexapi.playqueue.PlayQueue.get(self._plex_server, playqueue_id)
+
     def fetch_item(self, item):
         """Fetch item from Plex server."""
         return self._plex_server.fetchItem(item)
@@ -571,3 +668,8 @@ class PlexServer:
         except MediaNotFound as failed_item:
             _LOGGER.error("%s not found in %s", failed_item, library_name)
             return None
+
+    @property
+    def sensor_attributes(self):
+        """Return active session information for use in activity sensor."""
+        return {x.sensor_user: x.sensor_title for x in self.active_sessions.values()}

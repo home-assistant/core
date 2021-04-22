@@ -1,9 +1,9 @@
 """Test the Elk-M1 Control config flow."""
 
+from unittest.mock import MagicMock, patch
+
 from homeassistant import config_entries, setup
 from homeassistant.components.elkm1.const import DOMAIN
-
-from tests.async_mock import MagicMock, patch
 
 
 def mock_elk(invalid_auth=None, sync_complete=None):
@@ -15,9 +15,8 @@ def mock_elk(invalid_auth=None, sync_complete=None):
         if type_ == "login":
             if invalid_auth is not None:
                 callback(not invalid_auth)
-        elif type_ == "sync_complete":
-            if sync_complete:
-                callback()
+        elif type_ == "sync_complete" and sync_complete:
+            callback()
 
     mocked_elk = MagicMock()
     mocked_elk.add_handler.side_effect = handler_callbacks

@@ -4,17 +4,32 @@
             "port_name_in_use": "Et tilbeh\u00f8r eller bro med samme navn eller port er allerede konfigurert."
         },
         "step": {
+            "accessory_mode": {
+                "data": {
+                    "entity_id": "Enhet"
+                },
+                "description": "Velg enheten som skal inkluderes. I tilbeh\u00f8rsmodus er bare en enkelt enhet inkludert.",
+                "title": "Velg enhet som skal inkluderes"
+            },
+            "bridge_mode": {
+                "data": {
+                    "include_domains": "Domener \u00e5 inkludere"
+                },
+                "description": "Velg domenene som skal inkluderes. Alle st\u00f8ttede enheter i domenet vil bli inkludert.",
+                "title": "Velg domener som skal inkluderes"
+            },
             "pairing": {
-                "description": "S\u00e5 snart {name} er klart, vil sammenkobling v\u00e6re tilgjengelig i \"Notifications\" som \"HomeKit Bridge Setup\".",
+                "description": "For \u00e5 fullf\u00f8re sammenkoblingen ved \u00e5 f\u00f8lge instruksjonene i \"Varsler\" under \"Sammenkobling av HomeKit\".",
                 "title": "Koble sammen HomeKit"
             },
             "user": {
                 "data": {
                     "auto_start": "Autostart (deaktiver hvis du bruker Z-Wave eller annet forsinket startsystem)",
-                    "include_domains": "Domener \u00e5 inkludere"
+                    "include_domains": "Domener \u00e5 inkludere",
+                    "mode": "Modus"
                 },
-                "description": "HomeKit-integrasjonen gir deg tilgang til Home Assistant-entitetene dine i HomeKit. I bromodus er HomeKit Broer begrenset til 150 tilbeh\u00f8rsenhet per forekomst inkludert selve broen. Hvis du \u00f8nsker \u00e5 \u00f8ke maksimalt antall tilbeh\u00f8rsenheter, anbefales det at du bruker flere HomeKit-broer for forskjellige domener. Detaljert entitetskonfigurasjon er bare tilgjengelig via YAML for den prim\u00e6re broen.",
-                "title": "Aktiver HomeKit"
+                "description": "Velg domenene som skal inkluderes. Alle st\u00f8ttede enheter i domenet vil bli inkludert. Det opprettes en egen HomeKit-forekomst i tilbeh\u00f8rsmodus for hver tv-mediaspiller og kamera.",
+                "title": "Velg domener som skal inkluderes"
             }
         }
     },
@@ -22,7 +37,7 @@
         "step": {
             "advanced": {
                 "data": {
-                    "auto_start": "Autostart (deaktiver hvis du bruker Z-Wave eller annet forsinket startsystem)",
+                    "auto_start": "Autostart (deaktiver hvis du ringer til homekit.start-tjenesten manuelt)",
                     "safe_mode": "Sikker modus (aktiver bare hvis sammenkoblingen mislykkes)"
                 },
                 "description": "Disse innstillingene m\u00e5 bare justeres hvis HomeKit ikke fungerer.",
@@ -35,34 +50,26 @@
                 "description": "Sjekk alle kameraer som st\u00f8tter opprinnelige H.264-str\u00f8mmer. Hvis kameraet ikke sender ut en H.264-str\u00f8m, vil systemet omkode videoen til H.264 for HomeKit. Transkoding krever en potent prosessor og er usannsynlig \u00e5 fungere p\u00e5 enkeltkortdatamaskiner som Raspberry Pi o.l.",
                 "title": "Velg videokodek for kamera."
             },
-            "exclude": {
-                "data": {
-                    "exclude_entities": "Entiteter \u00e5 ekskludere"
-                },
-                "description": "Velg entitetene du IKKE vil koble til broen.",
-                "title": "Ekskluder entiteter i utvalgte domener fra bro"
-            },
             "include_exclude": {
                 "data": {
                     "entities": "Entiteter",
                     "mode": "Modus"
                 },
-                "description": "Velg entitene som skal eksponeres. I tilbeh\u00f8rsmodus er bare en enkelt entitet eksponert. I bro-inkluderingsmodus vil alle entiteter i domenet bli eksponert med mindre spesifikke entiteter er valgt. I bro-ekskluderingsmodus vil alle entiteter i domenet bli eksponert bortsett fra de ekskluderte entitetene.",
-                "title": "Velg entiteter som skal eksponeres"
+                "description": "Velg enhetene som skal inkluderes. I tilbeh\u00f8rsmodus er bare en enkelt enhet inkludert. I bridge-inkluderingsmodus vil alle enheter i domenet bli inkludert, med mindre spesifikke enheter er valgt. I bridge-ekskluderingsmodus vil alle enheter i domenet bli inkludert, bortsett fra de ekskluderte enhetene. For best ytelse opprettes et eget HomeKit-tilbeh\u00f8r for hver tv-mediaspiller, aktivitetsbasert fjernkontroll, l\u00e5s og kamera.",
+                "title": "Velg enheter som skal inkluderes"
             },
             "init": {
                 "data": {
                     "include_domains": "Domener \u00e5 inkludere",
                     "mode": "Modus"
                 },
-                "description": "HomeKit kan konfigureres for \u00e5 eksponere en bro eller en enkelt tilbeh\u00f8rsenhet. I tilbeh\u00f8rsmodus kan bare en enkelt entitet brukes. Tilbeh\u00f8rsmodus er n\u00f8dvendig for at mediaspillere med TV-enhetsklasse skal fungere skikkelig. Entiteter i \u201cDomains to include\u201d vil bli eksponert for HomeKit. Du vil kunne velge hvilke entiteter du vil inkludere eller ekskludere fra denne listen p\u00e5 neste skjermbilde.",
-                "title": "Velg domener du vil eksponere."
+                "description": "HomeKit kan konfigureres vise en bro eller ett enkelt tilbeh\u00f8r. I tilbeh\u00f8rsmodus kan bare \u00e9n enkelt enhet brukes. Tilbeh\u00f8rsmodus kreves for at mediespillere med TV-enhetsklassen skal fungere som de skal. Enheter i \"Domener som skal inkluderes\" inkluderes i HomeKit. Du kan velge hvilke enheter som skal inkluderes eller ekskluderes fra denne listen p\u00e5 neste skjermbilde.",
+                "title": "Velg domener som skal inkluderes."
             },
             "yaml": {
                 "description": "Denne oppf\u00f8ringen kontrolleres via YAML",
                 "title": "Juster HomeKit-alternativer"
             }
         }
-    },
-    "title": ""
+    }
 }

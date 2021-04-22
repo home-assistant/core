@@ -1,20 +1,23 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Kontroller nettstedet er allerede konfigurert"
+            "already_configured": "Kontroller nettstedet er allerede konfigurert",
+            "configuration_updated": "Konfigurasjonen er oppdatert.",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
         },
         "error": {
             "faulty_credentials": "Ugyldig godkjenning",
             "service_unavailable": "Tilkobling mislyktes",
             "unknown_client_mac": "Ingen klient tilgjengelig p\u00e5 den MAC-adressen"
         },
+        "flow_title": "UniFi-nettverk {site} ({host})",
         "step": {
             "user": {
                 "data": {
                     "host": "Vert",
                     "password": "Passord",
                     "port": "Port",
-                    "site": "Nettsted-ID",
+                    "site": "Nettsted ID",
                     "username": "Brukernavn",
                     "verify_ssl": "Verifisere SSL-sertifikat"
                 },

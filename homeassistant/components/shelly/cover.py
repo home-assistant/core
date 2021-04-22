@@ -3,6 +3,7 @@ from aioshelly import Block
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    DEVICE_CLASS_SHUTTER,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
@@ -12,13 +13,13 @@ from homeassistant.components.cover import (
 from homeassistant.core import callback
 
 from . import ShellyDeviceWrapper
-from .const import DATA_CONFIG_ENTRY, DOMAIN
+from .const import COAP, DATA_CONFIG_ENTRY, DOMAIN
 from .entity import ShellyBlockEntity
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up cover for device."""
-    wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id]
+    wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][COAP]
     blocks = [block for block in wrapper.device.blocks if block.type == "roller"]
 
     if not blocks:
@@ -74,6 +75,11 @@ class ShellyCover(ShellyBlockEntity, CoverEntity):
     def supported_features(self):
         """Flag supported features."""
         return self._supported_features
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of the device."""
+        return DEVICE_CLASS_SHUTTER
 
     async def async_close_cover(self, **kwargs):
         """Close cover."""

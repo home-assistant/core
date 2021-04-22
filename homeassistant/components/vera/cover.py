@@ -1,5 +1,7 @@
 """Support for Vera cover - curtains, rollershutters etc."""
-from typing import Any, Callable, List
+from __future__ import annotations
+
+from typing import Any, Callable
 
 import pyvera as veraApi
 
@@ -20,7 +22,7 @@ from .common import ControllerData, get_controller_data
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
     """Set up the sensor config entry."""
     controller_data = get_controller_data(hass, entry)
@@ -28,7 +30,8 @@ async def async_setup_entry(
         [
             VeraCover(device, controller_data)
             for device in controller_data.devices.get(PLATFORM_DOMAIN)
-        ]
+        ],
+        True,
     )
 
 

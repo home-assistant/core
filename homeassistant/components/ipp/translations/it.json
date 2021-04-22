@@ -3,7 +3,6 @@
         "abort": {
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
             "cannot_connect": "Impossibile connettersi",
-            "connection_error": "Impossibile connettersi",
             "connection_upgrade": "Impossibile connettersi alla stampante a causa della necessit\u00e0 dell'aggiornamento della connessione.",
             "ipp_error": "Si \u00e8 verificato un errore IPP.",
             "ipp_version_error": "Versione IPP non supportata dalla stampante.",
@@ -12,7 +11,6 @@
         },
         "error": {
             "cannot_connect": "Impossibile connettersi",
-            "connection_error": "Impossibile connettersi",
             "connection_upgrade": "Impossibile connettersi alla stampante. Riprovare selezionando l'opzione SSL/TLS."
         },
         "flow_title": "Stampante: {name}",

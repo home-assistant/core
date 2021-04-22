@@ -1,5 +1,7 @@
 """Binary sensors for the Elexa Guardian integration."""
-from typing import Callable, Dict, Optional
+from __future__ import annotations
+
+from typing import Callable
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
@@ -122,8 +124,8 @@ class PairedSensorBinarySensor(PairedSensorEntity, BinarySensorEntity):
         coordinator: DataUpdateCoordinator,
         kind: str,
         name: str,
-        device_class: Optional[str],
-        icon: Optional[str],
+        device_class: str | None,
+        icon: str | None,
     ) -> None:
         """Initialize."""
         super().__init__(entry, coordinator, kind, name, device_class, icon)
@@ -155,11 +157,11 @@ class ValveControllerBinarySensor(ValveControllerEntity, BinarySensorEntity):
     def __init__(
         self,
         entry: ConfigEntry,
-        coordinators: Dict[str, DataUpdateCoordinator],
+        coordinators: dict[str, DataUpdateCoordinator],
         kind: str,
         name: str,
-        device_class: Optional[str],
-        icon: Optional[str],
+        device_class: str | None,
+        icon: str | None,
     ) -> None:
         """Initialize."""
         super().__init__(entry, coordinators, kind, name, device_class, icon)

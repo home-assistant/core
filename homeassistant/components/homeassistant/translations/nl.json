@@ -1,3 +1,21 @@
 {
-    "title": "Home Assistant"
+    "system_health": {
+        "info": {
+            "arch": "CPU-architectuur",
+            "chassis": "Chassis",
+            "dev": "Ontwikkeling",
+            "docker": "Docker",
+            "docker_version": "Docker",
+            "hassio": "Supervisor",
+            "host_os": "Home Assistant OS",
+            "installation_type": "Type installatie",
+            "os_name": "Besturingssysteem",
+            "os_version": "Versie van het besturingssysteem",
+            "python_version": "Python-versie",
+            "supervisor": "Supervisor",
+            "timezone": "Tijdzone",
+            "version": "Versie",
+            "virtualenv": "Virtuele omgeving"
+        }
+    }
 }

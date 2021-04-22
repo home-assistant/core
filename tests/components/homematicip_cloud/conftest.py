@@ -1,4 +1,6 @@
 """Initializer helpers for HomematicIP fake server."""
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
+
 from homematicip.aio.auth import AsyncAuth
 from homematicip.aio.connection import AsyncConnection
 from homematicip.aio.home import AsyncHome
@@ -22,9 +24,8 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .helper import AUTH_TOKEN, HAPID, HAPPIN, HomeFactory
 
-from tests.async_mock import AsyncMock, MagicMock, Mock, patch
 from tests.common import MockConfigEntry
-from tests.components.light.conftest import mock_light_profiles  # noqa
+from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 
 @pytest.fixture(name="mock_connection")
@@ -46,7 +47,7 @@ def mock_connection_fixture() -> AsyncConnection:
 
 @pytest.fixture(name="hmip_config_entry")
 def hmip_config_entry_fixture() -> config_entries.ConfigEntry:
-    """Create a mock config entriy for homematic ip cloud."""
+    """Create a mock config entry for homematic ip cloud."""
     entry_data = {
         HMIPC_HAPID: HAPID,
         HMIPC_AUTHTOKEN: AUTH_TOKEN,
@@ -56,7 +57,7 @@ def hmip_config_entry_fixture() -> config_entries.ConfigEntry:
     config_entry = MockConfigEntry(
         version=1,
         domain=HMIPC_DOMAIN,
-        title=HAPID,
+        title="Home Test SN",
         unique_id=HAPID,
         data=entry_data,
         source=SOURCE_IMPORT,

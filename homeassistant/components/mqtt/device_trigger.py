@@ -1,34 +1,43 @@
 """Provides device automations for MQTT."""
+from __future__ import annotations
+
 import logging
-from typing import Callable, List, Optional
+from typing import Callable
 
 import attr
 import voluptuous as vol
 
-from homeassistant.components import mqtt
 from homeassistant.components.automation import AutomationActionType
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
-from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
+from homeassistant.const import (
+    CONF_DEVICE,
+    CONF_DEVICE_ID,
+    CONF_DOMAIN,
+    CONF_PLATFORM,
+    CONF_TYPE,
+    CONF_VALUE_TEMPLATE,
+)
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from . import (
-    ATTR_DISCOVERY_HASH,
-    ATTR_DISCOVERY_TOPIC,
+from . import CONF_PAYLOAD, CONF_QOS, DOMAIN, debug_info, trigger as mqtt_trigger
+from .. import mqtt
+from .const import ATTR_DISCOVERY_HASH, ATTR_DISCOVERY_TOPIC
+from .discovery import MQTT_DISCOVERY_DONE, MQTT_DISCOVERY_UPDATED, clear_discovery_hash
+from .mixins import (
     CONF_CONNECTIONS,
-    CONF_DEVICE,
     CONF_IDENTIFIERS,
-    CONF_PAYLOAD,
-    CONF_QOS,
-    DOMAIN,
+    MQTT_ENTITY_DEVICE_INFO_SCHEMA,
     cleanup_device_registry,
-    debug_info,
-    trigger as mqtt_trigger,
+    device_info_from_config,
+    validate_device_has_at_least_one_identifier,
 )
-from .discovery import MQTT_DISCOVERY_UPDATED, clear_discovery_hash
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,13 +68,14 @@ TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
 TRIGGER_DISCOVERY_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_AUTOMATION_TYPE): str,
-        vol.Required(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-        vol.Required(CONF_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Required(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
         vol.Optional(CONF_PAYLOAD, default=None): vol.Any(None, cv.string),
-        vol.Required(CONF_TYPE): cv.string,
         vol.Required(CONF_SUBTYPE): cv.string,
+        vol.Required(CONF_TOPIC): cv.string,
+        vol.Required(CONF_TYPE): cv.string,
+        vol.Optional(CONF_VALUE_TEMPLATE, default=None): vol.Any(None, cv.string),
     },
-    mqtt.validate_device_has_at_least_one_identifier,
+    validate_device_has_at_least_one_identifier,
 )
 
 DEVICE_TRIGGERS = "mqtt_device_triggers"
@@ -77,18 +87,22 @@ class TriggerInstance:
 
     action: AutomationActionType = attr.ib()
     automation_info: dict = attr.ib()
-    trigger: "Trigger" = attr.ib()
-    remove: Optional[CALLBACK_TYPE] = attr.ib(default=None)
+    trigger: Trigger = attr.ib()
+    remove: CALLBACK_TYPE | None = attr.ib(default=None)
 
     async def async_attach_trigger(self):
         """Attach MQTT trigger."""
         mqtt_config = {
+            mqtt_trigger.CONF_PLATFORM: mqtt.DOMAIN,
             mqtt_trigger.CONF_TOPIC: self.trigger.topic,
             mqtt_trigger.CONF_ENCODING: DEFAULT_ENCODING,
             mqtt_trigger.CONF_QOS: self.trigger.qos,
         }
         if self.trigger.payload:
             mqtt_config[CONF_PAYLOAD] = self.trigger.payload
+        if self.trigger.value_template:
+            mqtt_config[CONF_VALUE_TEMPLATE] = self.trigger.value_template
+        mqtt_config = mqtt_trigger.TRIGGER_SCHEMA(mqtt_config)
 
         if self.remove:
             self.remove()
@@ -113,7 +127,8 @@ class Trigger:
     subtype: str = attr.ib()
     topic: str = attr.ib()
     type: str = attr.ib()
-    trigger_instances: List[TriggerInstance] = attr.ib(factory=list)
+    value_template: str = attr.ib()
+    trigger_instances: list[TriggerInstance] = attr.ib(factory=list)
 
     async def add_trigger(self, action, automation_info):
         """Add MQTT trigger."""
@@ -145,6 +160,7 @@ class Trigger:
         self.qos = config[CONF_QOS]
         topic_changed = self.topic != config[CONF_TOPIC]
         self.topic = config[CONF_TOPIC]
+        self.value_template = config[CONF_VALUE_TEMPLATE]
 
         # Unsubscribe+subscribe if this trigger is in use and topic has changed
         # If topic is same unsubscribe+subscribe will execute in the wrong order
@@ -169,7 +185,7 @@ async def _update_device(hass, config_entry, config):
     """Update device registry."""
     device_registry = await hass.helpers.device_registry.async_get_registry()
     config_entry_id = config_entry.entry_id
-    device_info = mqtt.device_info_from_config(config[CONF_DEVICE])
+    device_info = device_info_from_config(config[CONF_DEVICE])
 
     if config_entry_id is not None and device_info is not None:
         device_info["config_entry_id"] = config_entry_id
@@ -206,6 +222,7 @@ async def async_setup_trigger(hass, config, config_entry, discovery_data):
             await _update_device(hass, config_entry, config)
             device_trigger = hass.data[DEVICE_TRIGGERS][discovery_id]
             await device_trigger.update_trigger(config, discovery_hash, remove_signal)
+        async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None)
 
     remove_signal = async_dispatcher_connect(
         hass, MQTT_DISCOVERY_UPDATED.format(discovery_hash), discovery_update
@@ -220,6 +237,7 @@ async def async_setup_trigger(hass, config, config_entry, discovery_data):
     )
 
     if device is None:
+        async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None)
         return
 
     if DEVICE_TRIGGERS not in hass.data:
@@ -235,6 +253,7 @@ async def async_setup_trigger(hass, config, config_entry, discovery_data):
             payload=config[CONF_PAYLOAD],
             qos=config[CONF_QOS],
             remove_signal=remove_signal,
+            value_template=config[CONF_VALUE_TEMPLATE],
         )
     else:
         await hass.data[DEVICE_TRIGGERS][discovery_id].update_trigger(
@@ -243,6 +262,8 @@ async def async_setup_trigger(hass, config, config_entry, discovery_data):
     debug_info.add_trigger_discovery_data(
         hass, discovery_hash, discovery_data, device.id
     )
+
+    async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None)
 
 
 async def async_device_removed(hass: HomeAssistant, device_id: str):
@@ -266,7 +287,7 @@ async def async_device_removed(hass: HomeAssistant, device_id: str):
             )
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device triggers for MQTT devices."""
     triggers = []
 
@@ -298,7 +319,6 @@ async def async_attach_trigger(
     """Attach a trigger."""
     if DEVICE_TRIGGERS not in hass.data:
         hass.data[DEVICE_TRIGGERS] = {}
-    config = TRIGGER_SCHEMA(config)
     device_id = config[CONF_DEVICE_ID]
     discovery_id = config[CONF_DISCOVERY_ID]
 
@@ -313,6 +333,7 @@ async def async_attach_trigger(
             topic=None,
             payload=None,
             qos=None,
+            value_template=None,
         )
     return await hass.data[DEVICE_TRIGGERS][discovery_id].add_trigger(
         action, automation_info

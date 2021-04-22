@@ -17,10 +17,8 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Voer de hostnaam of het IP-adres van uw Roon-server in.",
-                "title": "Configureer Roon Server"
+                "description": "Voer de hostnaam of het IP-adres van uw Roon-server in."
             }
         }
-    },
-    "title": "Roon"
+    }
 }

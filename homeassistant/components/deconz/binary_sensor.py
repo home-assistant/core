@@ -39,7 +39,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_sensor(sensors):
+    def async_add_sensor(sensors=gateway.api.sensors.values()):
         """Add binary sensor from deCONZ."""
         entities = []
 
@@ -58,7 +58,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if entities:
             async_add_entities(entities)
 
-    gateway.listeners.append(
+    config_entry.async_on_unload(
         async_dispatcher_connect(
             hass, gateway.async_signal_new_device(NEW_SENSOR), async_add_sensor
         )
@@ -84,7 +84,7 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
     @property
     def is_on(self):
         """Return true if sensor is on."""
-        return self._device.is_tripped
+        return self._device.state
 
     @property
     def device_class(self):
@@ -92,7 +92,7 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
         return DEVICE_CLASS.get(type(self._device))
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         attr = {}
 

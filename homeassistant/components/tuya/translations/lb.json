@@ -1,14 +1,11 @@
 {
     "config": {
         "abort": {
-            "auth_failed": "Ong\u00eblteg Authentifikatioun",
             "cannot_connect": "Feeler beim verbannen",
-            "conn_error": "Feeler beim verbannen",
             "invalid_auth": "Ong\u00eblteg Authentifikatioun",
             "single_instance_allowed": "Scho konfigur\u00e9iert. N\u00ebmmen eng eenzeg Konfiguratioun ass m\u00e9iglech."
         },
         "error": {
-            "auth_failed": "Ong\u00eblteg Authentifikatioun",
             "invalid_auth": "Ong\u00eblteg Authentifikatioun"
         },
         "flow_title": "Tuya Konfiguratioun",
@@ -26,6 +23,9 @@
         }
     },
     "options": {
+        "abort": {
+            "cannot_connect": "Feeler beim verbannen"
+        },
         "error": {
             "dev_multi_type": "Multiple ausgewielte Ger\u00e4ter fir ze konfigur\u00e9ieren musse vum selwechten Typ sinn",
             "dev_not_config": "Typ vun Apparat net konfigur\u00e9ierbar",
@@ -36,7 +36,6 @@
                 "data": {
                     "brightness_range_mode": "Hellegkeetsber\u00e4ich vum Apparat",
                     "curr_temp_divider": "Aktuell Temperatur W\u00e4erter Deeler (0= benotz Standard)",
-                    "ext_temp_sensor": "Sensor fir aktuell Temperatur",
                     "max_kelvin": "Maximal Faarftemperatur \u00ebnnerst\u00ebtzt a Kelvin",
                     "max_temp": "Maximal Zil Temperatur (benotz min a max = 0 fir standard)",
                     "min_kelvin": "Minimal Faarftemperatur \u00ebnnerst\u00ebtzt a Kelvin",

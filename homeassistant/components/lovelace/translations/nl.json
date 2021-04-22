@@ -1,3 +1,10 @@
 {
-    "title": "Lovelace"
+    "system_health": {
+        "info": {
+            "dashboards": "Dashboards",
+            "mode": "Modus",
+            "resources": "Bronnen",
+            "views": "Weergaven"
+        }
+    }
 }

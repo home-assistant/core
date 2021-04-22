@@ -1,12 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja.",
             "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
         "error": {
-            "invalid_auth": "Niepoprawne uwierzytelnienie",
-            "invalid_login": "Nieprawid\u0142owa nazwa u\u017cytkownika lub has\u0142o"
+            "invalid_auth": "Niepoprawne uwierzytelnienie"
         },
         "step": {
             "user": {

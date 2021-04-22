@@ -20,7 +20,7 @@ from buienradar.constants import (
 )
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_LATITUDE,
@@ -32,14 +32,13 @@ from homeassistant.const import (
     LENGTH_KILOMETERS,
     LENGTH_MILLIMETERS,
     PERCENTAGE,
+    PRECIPITATION_MILLIMETERS_PER_HOUR,
     PRESSURE_HPA,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
-    TIME_HOURS,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
 
 from .const import DEFAULT_TIMEFRAME
@@ -85,13 +84,13 @@ SENSOR_TYPES = {
     "windgust": ["Wind gust", SPEED_KILOMETERS_PER_HOUR, "mdi:weather-windy"],
     "precipitation": [
         "Precipitation",
-        f"{LENGTH_MILLIMETERS}/{TIME_HOURS}",
+        PRECIPITATION_MILLIMETERS_PER_HOUR,
         "mdi:weather-pouring",
     ],
     "irradiance": ["Irradiance", IRRADIATION_WATTS_PER_SQUARE_METER, "mdi:sunglasses"],
     "precipitation_forecast_average": [
         "Precipitation forecast average",
-        f"{LENGTH_MILLIMETERS}/{TIME_HOURS}",
+        PRECIPITATION_MILLIMETERS_PER_HOUR,
         "mdi:weather-pouring",
     ],
     "precipitation_forecast_total": [
@@ -236,7 +235,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     await data.schedule_update(1)
 
 
-class BrSensor(Entity):
+class BrSensor(SensorEntity):
     """Representation of an Buienradar sensor."""
 
     def __init__(self, sensor_type, client_name, coordinates):
@@ -309,7 +308,7 @@ class BrSensor(Entity):
                 try:
                     condition = data.get(FORECAST)[fcday].get(CONDITION)
                 except IndexError:
-                    _LOGGER.warning("No forecast for fcday=%s...", fcday)
+                    _LOGGER.warning("No forecast for fcday=%s", fcday)
                     return False
 
                 if condition:
@@ -339,7 +338,7 @@ class BrSensor(Entity):
                         self._state = round(self._state * 3.6, 1)
                     return True
                 except IndexError:
-                    _LOGGER.warning("No forecast for fcday=%s...", fcday)
+                    _LOGGER.warning("No forecast for fcday=%s", fcday)
                     return False
 
             # update all other sensors
@@ -347,7 +346,7 @@ class BrSensor(Entity):
                 self._state = data.get(FORECAST)[fcday].get(self.type[:-3])
                 return True
             except IndexError:
-                _LOGGER.warning("No forecast for fcday=%s...", fcday)
+                _LOGGER.warning("No forecast for fcday=%s", fcday)
                 return False
 
         if self.type == SYMBOL or self.type.startswith(CONDITION):
@@ -430,7 +429,7 @@ class BrSensor(Entity):
         return self._entity_picture
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self.type.startswith(PRECIPITATION_FORECAST):
             result = {ATTR_ATTRIBUTION: self._attribution}

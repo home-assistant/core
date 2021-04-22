@@ -1,10 +1,10 @@
 """The tests for time_date sensor platform."""
+from unittest.mock import patch
+
 import pytest
 
 import homeassistant.components.time_date.sensor as time_date
 import homeassistant.util.dt as dt_util
-
-from tests.async_mock import patch
 
 ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
 
@@ -20,18 +20,21 @@ def restore_ts():
 async def test_intervals(hass):
     """Test timing intervals of sensors."""
     device = time_date.TimeDateSensor(hass, "time")
-    now = dt_util.utc_from_timestamp(45)
-    next_time = device.get_next_interval(now)
+    now = dt_util.utc_from_timestamp(45.5)
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        next_time = device.get_next_interval()
     assert next_time == dt_util.utc_from_timestamp(60)
 
     device = time_date.TimeDateSensor(hass, "beat")
-    now = dt_util.utc_from_timestamp(29)
-    next_time = device.get_next_interval(now)
-    assert next_time == dt_util.utc_from_timestamp(86.4)
+    now = dt_util.parse_datetime("2020-11-13 00:00:29+01:00")
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        next_time = device.get_next_interval()
+    assert next_time == dt_util.parse_datetime("2020-11-13 00:01:26.4+01:00")
 
     device = time_date.TimeDateSensor(hass, "date_time")
     now = dt_util.utc_from_timestamp(1495068899)
-    next_time = device.get_next_interval(now)
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        next_time = device.get_next_interval()
     assert next_time == dt_util.utc_from_timestamp(1495068900)
 
     now = dt_util.utcnow()
@@ -66,6 +69,8 @@ async def test_states(hass):
     device = time_date.TimeDateSensor(hass, "beat")
     device._update_internal_state(now)
     assert device.state == "@079"
+    device._update_internal_state(dt_util.utc_from_timestamp(1602952963.2))
+    assert device.state == "@738"
 
     device = time_date.TimeDateSensor(hass, "date_time_iso")
     device._update_internal_state(now)
@@ -117,7 +122,8 @@ async def test_timezone_intervals(hass):
 
     device = time_date.TimeDateSensor(hass, "date")
     now = dt_util.utc_from_timestamp(50000)
-    next_time = device.get_next_interval(now)
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        next_time = device.get_next_interval()
     # start of local day in EST was 18000.0
     # so the second day was 18000 + 86400
     assert next_time.timestamp() == 104400
@@ -127,8 +133,35 @@ async def test_timezone_intervals(hass):
     dt_util.set_default_time_zone(new_tz)
     now = dt_util.parse_datetime("2017-11-13 19:47:19-07:00")
     device = time_date.TimeDateSensor(hass, "date")
-    next_time = device.get_next_interval(now)
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        next_time = device.get_next_interval()
     assert next_time.timestamp() == dt_util.as_timestamp("2017-11-14 00:00:00-07:00")
+
+    # Entering DST
+    new_tz = dt_util.get_time_zone("Europe/Prague")
+    assert new_tz is not None
+    dt_util.set_default_time_zone(new_tz)
+
+    now = dt_util.parse_datetime("2020-03-29 00:00+01:00")
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        next_time = device.get_next_interval()
+    assert next_time.timestamp() == dt_util.as_timestamp("2020-03-30 00:00+02:00")
+
+    now = dt_util.parse_datetime("2020-03-29 03:00+02:00")
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        next_time = device.get_next_interval()
+    assert next_time.timestamp() == dt_util.as_timestamp("2020-03-30 00:00+02:00")
+
+    # Leaving DST
+    now = dt_util.parse_datetime("2020-10-25 00:00+02:00")
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        next_time = device.get_next_interval()
+    assert next_time.timestamp() == dt_util.as_timestamp("2020-10-26 00:00:00+01:00")
+
+    now = dt_util.parse_datetime("2020-10-25 23:59+01:00")
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        next_time = device.get_next_interval()
+    assert next_time.timestamp() == dt_util.as_timestamp("2020-10-26 00:00:00+01:00")
 
 
 @patch(

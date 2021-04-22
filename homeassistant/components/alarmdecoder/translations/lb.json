@@ -7,8 +7,7 @@
             "default": "Erfollegr\u00e4ich mat Alarmdecoder verbonnen."
         },
         "error": {
-            "cannot_connect": "Feeler beim verbannen",
-            "service_unavailable": "Feeler beim verbannen"
+            "cannot_connect": "Feeler beim verbannen"
         },
         "step": {
             "protocol": {

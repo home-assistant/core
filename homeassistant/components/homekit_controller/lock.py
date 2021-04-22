@@ -1,5 +1,6 @@
 """Support for HomeKit Controller locks."""
 from aiohomekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_LOCKED, STATE_UNLOCKED
@@ -20,10 +21,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     conn = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
-    def async_add_service(aid, service):
-        if service["stype"] != "lock-mechanism":
+    def async_add_service(service):
+        if service.short_type != ServicesTypes.LOCK_MECHANISM:
             return False
-        info = {"aid": aid, "iid": service["iid"]}
+        info = {"aid": service.accessory.aid, "iid": service.iid}
         async_add_entities([HomeKitLock(conn, info)], True)
         return True
 
@@ -62,7 +63,7 @@ class HomeKitLock(HomeKitEntity, LockEntity):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the optional state attributes."""
         attributes = {}
 

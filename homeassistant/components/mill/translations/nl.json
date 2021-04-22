@@ -4,12 +4,12 @@
             "already_configured": "Account is al geconfigureerd"
         },
         "error": {
-            "connection_error": "Kon niet verbinden"
+            "cannot_connect": "Kan geen verbinding maken"
         },
         "step": {
             "user": {
                 "data": {
-                    "password": "Password",
+                    "password": "Wachtwoord",
                     "username": "Gebruikersnaam"
                 }
             }

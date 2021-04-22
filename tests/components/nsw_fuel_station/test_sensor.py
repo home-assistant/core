@@ -1,9 +1,10 @@
 """The tests for the NSW Fuel Station sensor platform."""
+from unittest.mock import patch
+
 from homeassistant.components import sensor
 from homeassistant.components.nsw_fuel_station import DOMAIN
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import assert_setup_component
 
 VALID_CONFIG = {
@@ -99,5 +100,5 @@ async def test_sensor_values(hass):
     assert await async_setup_component(hass, sensor.DOMAIN, {"sensor": VALID_CONFIG})
     await hass.async_block_till_done()
 
-    assert "140.0" == hass.states.get("sensor.my_fake_station_e10").state
-    assert "150.0" == hass.states.get("sensor.my_fake_station_p95").state
+    assert hass.states.get("sensor.my_fake_station_e10").state == "140.0"
+    assert hass.states.get("sensor.my_fake_station_p95").state == "150.0"

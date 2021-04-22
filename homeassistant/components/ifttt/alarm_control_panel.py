@@ -52,10 +52,13 @@ DEFAULT_EVENT_HOME = "alarm_arm_home"
 DEFAULT_EVENT_NIGHT = "alarm_arm_night"
 DEFAULT_EVENT_DISARM = "alarm_disarm"
 
+CONF_CODE_ARM_REQUIRED = "code_arm_required"
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_CODE): cv.string,
+        vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
         vol.Optional(CONF_EVENT_AWAY, default=DEFAULT_EVENT_AWAY): cv.string,
         vol.Optional(CONF_EVENT_HOME, default=DEFAULT_EVENT_HOME): cv.string,
         vol.Optional(CONF_EVENT_NIGHT, default=DEFAULT_EVENT_NIGHT): cv.string,
@@ -76,6 +79,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     name = config.get(CONF_NAME)
     code = config.get(CONF_CODE)
+    code_arm_required = config.get(CONF_CODE_ARM_REQUIRED)
     event_away = config.get(CONF_EVENT_AWAY)
     event_home = config.get(CONF_EVENT_HOME)
     event_night = config.get(CONF_EVENT_NIGHT)
@@ -83,7 +87,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     optimistic = config.get(CONF_OPTIMISTIC)
 
     alarmpanel = IFTTTAlarmPanel(
-        name, code, event_away, event_home, event_night, event_disarm, optimistic
+        name,
+        code,
+        code_arm_required,
+        event_away,
+        event_home,
+        event_night,
+        event_disarm,
+        optimistic,
     )
     hass.data[DATA_IFTTT_ALARM].append(alarmpanel)
     add_entities([alarmpanel])
@@ -112,11 +123,20 @@ class IFTTTAlarmPanel(AlarmControlPanelEntity):
     """Representation of an alarm control panel controlled through IFTTT."""
 
     def __init__(
-        self, name, code, event_away, event_home, event_night, event_disarm, optimistic
+        self,
+        name,
+        code,
+        code_arm_required,
+        event_away,
+        event_home,
+        event_night,
+        event_disarm,
+        optimistic,
     ):
         """Initialize the alarm control panel."""
         self._name = name
         self._code = code
+        self._code_arm_required = code_arm_required
         self._event_away = event_away
         self._event_home = event_home
         self._event_night = event_night
@@ -161,19 +181,19 @@ class IFTTTAlarmPanel(AlarmControlPanelEntity):
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
-        if not self._check_code(code):
+        if self._code_arm_required and not self._check_code(code):
             return
         self.set_alarm_state(self._event_away, STATE_ALARM_ARMED_AWAY)
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
-        if not self._check_code(code):
+        if self._code_arm_required and not self._check_code(code):
             return
         self.set_alarm_state(self._event_home, STATE_ALARM_ARMED_HOME)
 
     def alarm_arm_night(self, code=None):
         """Send arm night command."""
-        if not self._check_code(code):
+        if self._code_arm_required and not self._check_code(code):
             return
         self.set_alarm_state(self._event_night, STATE_ALARM_ARMED_NIGHT)
 

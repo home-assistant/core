@@ -1,13 +1,12 @@
 {
     "config": {
         "abort": {
-            "auth_failed": "Verkeerde gegevens",
             "cannot_connect": "Kan geen verbinding maken",
-            "conn_error": "Niet gelukt om te verbinden.",
+            "invalid_auth": "Ongeldige authenticatie",
             "single_instance_allowed": "Al geconfigureerd. Er is maar een configuratie mogelijk."
         },
         "error": {
-            "auth_failed": "Verkeerde gegevens"
+            "invalid_auth": "Ongeldige authenticatie"
         },
         "flow_title": "Tuya-configuratie",
         "step": {
@@ -24,8 +23,41 @@
         }
     },
     "options": {
+        "abort": {
+            "cannot_connect": "Kan geen verbinding maken"
+        },
+        "error": {
+            "dev_multi_type": "Meerdere geselecteerde apparaten om te configureren moeten van hetzelfde type zijn",
+            "dev_not_config": "Apparaattype kan niet worden geconfigureerd",
+            "dev_not_found": "Apparaat niet gevonden"
+        },
         "step": {
+            "device": {
+                "data": {
+                    "brightness_range_mode": "Helderheidsbereik gebruikt door apparaat",
+                    "curr_temp_divider": "Huidige temperatuurwaarde deler (0 = standaardwaarde)",
+                    "max_kelvin": "Max ondersteunde kleurtemperatuur in kelvin",
+                    "max_temp": "Maximale doeltemperatuur (gebruik min en max = 0 voor standaardwaarde)",
+                    "min_kelvin": "Minimaal ondersteunde kleurtemperatuur in kelvin",
+                    "min_temp": "Min. gewenste temperatuur (gebruik min en max = 0 voor standaard)",
+                    "set_temp_divided": "Gedeelde temperatuurwaarde gebruiken voor ingestelde temperatuuropdracht",
+                    "support_color": "Forceer kleurenondersteuning",
+                    "temp_divider": "Temperatuurwaarde deler (0 = standaardwaarde)",
+                    "temp_step_override": "Doeltemperatuur stap",
+                    "tuya_max_coltemp": "Max. Kleurtemperatuur gerapporteerd door apparaat",
+                    "unit_of_measurement": "Temperatuureenheid gebruikt door apparaat"
+                },
+                "description": "Configureer opties om weergegeven informatie aan te passen voor {device_type} apparaat `{device_name}`",
+                "title": "Configureer Tuya Apparaat"
+            },
             "init": {
+                "data": {
+                    "discovery_interval": "Polling-interval van ontdekt apparaat in seconden",
+                    "list_devices": "Selecteer de te configureren apparaten of laat leeg om de configuratie op te slaan",
+                    "query_device": "Selecteer apparaat dat query-methode zal gebruiken voor snellere statusupdate",
+                    "query_interval": "Peilinginterval van het apparaat in seconden"
+                },
+                "description": "Stel de waarden voor het pollinginterval niet te laag in, anders zullen de oproepen geen foutmelding in het logboek genereren",
                 "title": "Configureer Tuya opties"
             }
         }

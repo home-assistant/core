@@ -3,7 +3,6 @@
         "abort": {
             "already_configured": "El dispositiu ja est\u00e0 configurat",
             "incomplete_discovery": "Descoberta incompleta",
-            "no_devices_discovered": "No s'ha trobat cap UPnP/IGD",
             "no_devices_found": "No s'han trobat dispositius a la xarxa"
         },
         "error": {

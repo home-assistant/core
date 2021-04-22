@@ -4,8 +4,7 @@
             "already_configured": "Account is already configured"
         },
         "error": {
-            "invalid_auth": "Invalid authentication",
-            "invalid_credentials": "Invalid Tile credentials provided."
+            "invalid_auth": "Invalid authentication"
         },
         "step": {
             "user": {

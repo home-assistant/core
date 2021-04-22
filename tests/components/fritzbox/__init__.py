@@ -1,8 +1,8 @@
 """Tests for the AVM Fritz!Box integration."""
+from unittest.mock import Mock
+
 from homeassistant.components.fritzbox.const import DOMAIN
 from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-
-from tests.async_mock import Mock
 
 MOCK_CONFIG = {
     DOMAIN: {
@@ -64,6 +64,7 @@ class FritzDeviceSensorMock(Mock):
     """Mock of a AVM Fritz!Box sensor device."""
 
     ain = "fake_ain"
+    battery_level = 23
     device_lock = "fake_locked_device"
     fw_version = "1.2.3"
     has_alarm = False

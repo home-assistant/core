@@ -1,4 +1,14 @@
 {
+    "device_automation": {
+        "condition_type": {
+            "is_idle": "{entity_name} bo\u015fta",
+            "is_off": "{entity_name} kapal\u0131"
+        },
+        "trigger_type": {
+            "playing": "{entity_name} oynamaya ba\u015flar",
+            "turned_off": "{entity_name} kapat\u0131ld\u0131"
+        }
+    },
     "state": {
         "_": {
             "idle": "Bo\u015fta",

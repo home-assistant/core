@@ -1,11 +1,11 @@
 """The tests for the mochad switch platform."""
+import unittest.mock as mock
+
 import pytest
 
 from homeassistant.components import switch
 from homeassistant.components.mochad import switch as mochad
 from homeassistant.setup import async_setup_component
-
-import tests.async_mock as mock
 
 
 @pytest.fixture(autouse=True)
@@ -39,7 +39,7 @@ async def test_setup_adds_proper_devices(hass):
 
 async def test_name(switch_mock):
     """Test the name."""
-    assert "fake_switch" == switch_mock.name
+    assert switch_mock.name == "fake_switch"
 
 
 async def test_turn_on(switch_mock):

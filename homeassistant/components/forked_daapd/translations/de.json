@@ -1,21 +1,26 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "not_forked_daapd": "Das Ger\u00e4t ist kein Forked-Daapd-Server."
         },
         "error": {
+            "forbidden": "Verbindung kann nicht hergestellt werden. Bitte \u00fcberpr\u00fcfen Sie Ihre forked-daapd-Netzwerkberechtigungen.",
             "unknown_error": "Unbekannter Fehler",
-            "wrong_host_or_port": "Verbindung konnte nicht hergestellt werden. Bitte \u00fcberpr\u00fcfen Sie Host und Port.",
+            "websocket_not_enabled": "Forked-Daapd-Server-Websocket nicht aktiviert.",
+            "wrong_host_or_port": "Verbindung konnte nicht hergestellt werden. Bitte Host und Port pr\u00fcfen.",
             "wrong_password": "Ung\u00fcltiges Passwort",
             "wrong_server_type": "F\u00fcr die forked-daapd Integration ist ein forked-daapd Server mit der Version > = 27.0 erforderlich."
         },
+        "flow_title": "Forked-Daapd-Server: {name} ({host})",
         "step": {
             "user": {
                 "data": {
                     "host": "Host",
                     "password": "API-Passwort (leer lassen, wenn kein Passwort vorhanden ist)",
                     "port": "API Port"
-                }
+                },
+                "title": "Forked-Daapd-Ger\u00e4t einrichten"
             }
         }
     },
@@ -24,8 +29,11 @@
             "init": {
                 "data": {
                     "max_playlists": "Maximale Anzahl der als Quellen verwendeten Wiedergabelisten",
-                    "tts_pause_time": "Sekunden bis zur Pause vor und nach der TTS"
-                }
+                    "tts_pause_time": "Sekunden bis zur Pause vor und nach der TTS",
+                    "tts_volume": "TTS-Lautst\u00e4rke (Float im Bereich [0,1])"
+                },
+                "description": "Lege verschiedene Optionen f\u00fcr die Forked-Daapd-Integration fest.",
+                "title": "Konfigurieren der Forked-Daapd-Optionen"
             }
         }
     }

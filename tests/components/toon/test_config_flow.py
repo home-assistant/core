@@ -1,4 +1,6 @@
 """Tests for the Toon config flow."""
+from unittest.mock import patch
+
 from toonapi import Agreement, ToonError
 
 from homeassistant import data_entry_flow
@@ -9,7 +11,6 @@ from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -40,7 +41,7 @@ async def test_abort_if_no_configuration(hass):
 
 
 async def test_full_flow_implementation(
-    hass, aiohttp_client, aioclient_mock, current_request
+    hass, aiohttp_client, aioclient_mock, current_request_with_host
 ):
     """Test registering an integration and finishing flow works."""
     await setup_component(hass)
@@ -53,7 +54,13 @@ async def test_full_flow_implementation(
     assert result["step_id"] == "pick_implementation"
 
     # pylint: disable=protected-access
-    state = config_entry_oauth2_flow._encode_jwt(hass, {"flow_id": result["flow_id"]})
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"implementation": "eneco"}
@@ -97,7 +104,9 @@ async def test_full_flow_implementation(
     }
 
 
-async def test_no_agreements(hass, aiohttp_client, aioclient_mock, current_request):
+async def test_no_agreements(
+    hass, aiohttp_client, aioclient_mock, current_request_with_host
+):
     """Test abort when there are no displays."""
     await setup_component(hass)
     result = await hass.config_entries.flow.async_init(
@@ -105,7 +114,13 @@ async def test_no_agreements(hass, aiohttp_client, aioclient_mock, current_reque
     )
 
     # pylint: disable=protected-access
-    state = config_entry_oauth2_flow._encode_jwt(hass, {"flow_id": result["flow_id"]})
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
     await hass.config_entries.flow.async_configure(
         result["flow_id"], {"implementation": "eneco"}
     )
@@ -130,7 +145,7 @@ async def test_no_agreements(hass, aiohttp_client, aioclient_mock, current_reque
 
 
 async def test_multiple_agreements(
-    hass, aiohttp_client, aioclient_mock, current_request
+    hass, aiohttp_client, aioclient_mock, current_request_with_host
 ):
     """Test abort when there are no displays."""
     await setup_component(hass)
@@ -139,7 +154,13 @@ async def test_multiple_agreements(
     )
 
     # pylint: disable=protected-access
-    state = config_entry_oauth2_flow._encode_jwt(hass, {"flow_id": result["flow_id"]})
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
     await hass.config_entries.flow.async_configure(
         result["flow_id"], {"implementation": "eneco"}
     )
@@ -174,7 +195,7 @@ async def test_multiple_agreements(
 
 
 async def test_agreement_already_set_up(
-    hass, aiohttp_client, aioclient_mock, current_request
+    hass, aiohttp_client, aioclient_mock, current_request_with_host
 ):
     """Test showing display form again if display already exists."""
     await setup_component(hass)
@@ -184,7 +205,13 @@ async def test_agreement_already_set_up(
     )
 
     # pylint: disable=protected-access
-    state = config_entry_oauth2_flow._encode_jwt(hass, {"flow_id": result["flow_id"]})
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
     await hass.config_entries.flow.async_configure(
         result["flow_id"], {"implementation": "eneco"}
     )
@@ -208,14 +235,22 @@ async def test_agreement_already_set_up(
         assert result3["reason"] == "already_configured"
 
 
-async def test_toon_abort(hass, aiohttp_client, aioclient_mock, current_request):
+async def test_toon_abort(
+    hass, aiohttp_client, aioclient_mock, current_request_with_host
+):
     """Test we abort on Toon error."""
     await setup_component(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     # pylint: disable=protected-access
-    state = config_entry_oauth2_flow._encode_jwt(hass, {"flow_id": result["flow_id"]})
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
     await hass.config_entries.flow.async_configure(
         result["flow_id"], {"implementation": "eneco"}
     )
@@ -239,7 +274,7 @@ async def test_toon_abort(hass, aiohttp_client, aioclient_mock, current_request)
         assert result2["reason"] == "connection_error"
 
 
-async def test_import(hass):
+async def test_import(hass, current_request_with_host):
     """Test if importing step works."""
     await setup_component(hass)
 
@@ -253,7 +288,9 @@ async def test_import(hass):
     assert result["reason"] == "already_in_progress"
 
 
-async def test_import_migration(hass, aiohttp_client, aioclient_mock, current_request):
+async def test_import_migration(
+    hass, aiohttp_client, aioclient_mock, current_request_with_host
+):
     """Test if importing step with migration works."""
     old_entry = MockConfigEntry(domain=DOMAIN, unique_id=123, version=1)
     old_entry.add_to_hass(hass)
@@ -269,7 +306,13 @@ async def test_import_migration(hass, aiohttp_client, aioclient_mock, current_re
     assert flows[0]["context"][CONF_MIGRATE] == old_entry.entry_id
 
     # pylint: disable=protected-access
-    state = config_entry_oauth2_flow._encode_jwt(hass, {"flow_id": flows[0]["flow_id"]})
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": flows[0]["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
     await hass.config_entries.flow.async_configure(
         flows[0]["flow_id"], {"implementation": "eneco"}
     )

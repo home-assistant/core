@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured",
-            "name_exists": "Name already exists"
+            "already_configured": "Device is already configured"
         },
         "step": {
             "user": {

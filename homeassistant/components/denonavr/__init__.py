@@ -1,20 +1,22 @@
 """The denonavr component."""
 import logging
 
-import voluptuous as vol
+from denonavr.exceptions import AvrNetworkError, AvrTimoutError
 
 from homeassistant import config_entries, core
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST
+from homeassistant.const import CONF_HOST
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.httpx_client import get_async_client
 
 from .config_flow import (
     CONF_SHOW_ALL_SOURCES,
+    CONF_UPDATE_AUDYSSEY,
     CONF_ZONE2,
     CONF_ZONE3,
     DEFAULT_SHOW_SOURCES,
     DEFAULT_TIMEOUT,
+    DEFAULT_UPDATE_AUDYSSEY,
     DEFAULT_ZONE2,
     DEFAULT_ZONE3,
     DOMAIN,
@@ -23,34 +25,8 @@ from .receiver import ConnectDenonAVR
 
 CONF_RECEIVER = "receiver"
 UNDO_UPDATE_LISTENER = "undo_update_listener"
-SERVICE_GET_COMMAND = "get_command"
-ATTR_COMMAND = "command"
 
 _LOGGER = logging.getLogger(__name__)
-
-CALL_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids})
-
-GET_COMMAND_SCHEMA = CALL_SCHEMA.extend({vol.Required(ATTR_COMMAND): cv.string})
-
-SERVICE_TO_METHOD = {
-    SERVICE_GET_COMMAND: {"method": "get_command", "schema": GET_COMMAND_SCHEMA}
-}
-
-
-def setup(hass: core.HomeAssistant, config: dict):
-    """Set up the denonavr platform."""
-
-    def service_handler(service):
-        method = SERVICE_TO_METHOD.get(service.service)
-        data = service.data.copy()
-        data["method"] = method["method"]
-        dispatcher_send(hass, DOMAIN, data)
-
-    for service in SERVICE_TO_METHOD:
-        schema = SERVICE_TO_METHOD[service]["schema"]
-        hass.services.register(DOMAIN, service, service_handler, schema=schema)
-
-    return True
 
 
 async def async_setup_entry(
@@ -61,21 +37,27 @@ async def async_setup_entry(
 
     # Connect to receiver
     connect_denonavr = ConnectDenonAVR(
-        hass,
         entry.data[CONF_HOST],
         DEFAULT_TIMEOUT,
         entry.options.get(CONF_SHOW_ALL_SOURCES, DEFAULT_SHOW_SOURCES),
         entry.options.get(CONF_ZONE2, DEFAULT_ZONE2),
         entry.options.get(CONF_ZONE3, DEFAULT_ZONE3),
+        lambda: get_async_client(hass),
+        entry.state,
     )
-    if not await connect_denonavr.async_connect_receiver():
-        raise ConfigEntryNotReady
+    try:
+        await connect_denonavr.async_connect_receiver()
+    except (AvrNetworkError, AvrTimoutError) as ex:
+        raise ConfigEntryNotReady from ex
     receiver = connect_denonavr.receiver
 
     undo_listener = entry.add_update_listener(update_listener)
 
     hass.data[DOMAIN][entry.entry_id] = {
         CONF_RECEIVER: receiver,
+        CONF_UPDATE_AUDYSSEY: entry.options.get(
+            CONF_UPDATE_AUDYSSEY, DEFAULT_UPDATE_AUDYSSEY
+        ),
         UNDO_UPDATE_LISTENER: undo_listener,
     }
 
@@ -99,8 +81,9 @@ async def async_unload_entry(
     # Remove zone2 and zone3 entities if needed
     entity_registry = await er.async_get_registry(hass)
     entries = er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
-    zone2_id = f"{config_entry.unique_id}-Zone2"
-    zone3_id = f"{config_entry.unique_id}-Zone3"
+    unique_id = config_entry.unique_id or config_entry.entry_id
+    zone2_id = f"{unique_id}-Zone2"
+    zone3_id = f"{unique_id}-Zone3"
     for entry in entries:
         if entry.unique_id == zone2_id and not config_entry.options.get(CONF_ZONE2):
             entity_registry.async_remove(entry.entity_id)

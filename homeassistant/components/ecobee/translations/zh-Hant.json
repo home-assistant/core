@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "one_instance_only": "\u6b64\u6574\u5408\u76ee\u524d\u50c5\u652f\u63f4\u4e00\u7d44 ecobee \u8a2d\u5099\u3002",
-            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u8a2d\u5099\u3002"
+            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002"
         },
         "error": {
             "pin_request_failed": "ecobee \u6240\u9700\u4ee3\u78bc\u932f\u8aa4\uff0c\u8acb\u78ba\u8a8d\u5bc6\u9470\u6b63\u78ba\u6027\u3002",

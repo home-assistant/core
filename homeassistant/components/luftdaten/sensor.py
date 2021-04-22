@@ -1,6 +1,7 @@
 """Support for Luftdaten sensors."""
 import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
@@ -9,7 +10,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 
 from . import (
     DATA_LUFTDATEN,
@@ -45,7 +45,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(sensors, True)
 
 
-class LuftdatenSensor(Entity):
+class LuftdatenSensor(SensorEntity):
     """Implementation of a Luftdaten sensor."""
 
     def __init__(self, luftdaten, sensor_type, name, icon, unit, show):
@@ -69,7 +69,10 @@ class LuftdatenSensor(Entity):
     def state(self):
         """Return the state of the device."""
         if self._data is not None:
-            return self._data[self.sensor_type]
+            try:
+                return self._data[self.sensor_type]
+            except KeyError:
+                return None
 
     @property
     def unit_of_measurement(self):
@@ -85,15 +88,21 @@ class LuftdatenSensor(Entity):
     def unique_id(self) -> str:
         """Return a unique, friendly identifier for this entity."""
         if self._data is not None:
-            return f"{self._data['sensor_id']}_{self.sensor_type}"
+            try:
+                return f"{self._data['sensor_id']}_{self.sensor_type}"
+            except KeyError:
+                return None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         self._attrs[ATTR_ATTRIBUTION] = DEFAULT_ATTRIBUTION
 
         if self._data is not None:
-            self._attrs[ATTR_SENSOR_ID] = self._data["sensor_id"]
+            try:
+                self._attrs[ATTR_SENSOR_ID] = self._data["sensor_id"]
+            except KeyError:
+                return None
 
             on_map = ATTR_LATITUDE, ATTR_LONGITUDE
             no_map = "lat", "long"

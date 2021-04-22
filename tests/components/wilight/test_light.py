@@ -1,4 +1,6 @@
 """Tests for the WiLight integration."""
+from unittest.mock import patch
+
 import pytest
 import pywilight
 
@@ -14,9 +16,9 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import HomeAssistantType
 
-from tests.async_mock import patch
 from tests.components.wilight import (
     HOST,
     UPNP_MAC_ADDRESS,
@@ -139,7 +141,7 @@ async def test_loading_light(
     assert entry
     assert entry.unique_id == WILIGHT_ID
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     # First segment of the strip
     state = hass.states.get("light.wl000000000099_1")

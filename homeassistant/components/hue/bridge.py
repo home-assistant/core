@@ -7,14 +7,16 @@ from aiohttp import client_exceptions
 import aiohue
 import async_timeout
 import slugify as unicode_slug
-import voluptuous as vol
 
 from homeassistant import core
 from homeassistant.const import HTTP_INTERNAL_SERVER_ERROR
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import aiohttp_client
 
 from .const import (
+    ATTR_GROUP_NAME,
+    ATTR_SCENE_NAME,
+    ATTR_TRANSITION,
     CONF_ALLOW_HUE_GROUPS,
     CONF_ALLOW_UNREACHABLE,
     DEFAULT_ALLOW_HUE_GROUPS,
@@ -25,12 +27,6 @@ from .errors import AuthenticationRequired, CannotConnect
 from .helpers import create_config_flow
 from .sensor_base import SensorManager
 
-SERVICE_HUE_SCENE = "hue_activate_scene"
-ATTR_GROUP_NAME = "group_name"
-ATTR_SCENE_NAME = "scene_name"
-SCENE_SCHEMA = vol.Schema(
-    {vol.Required(ATTR_GROUP_NAME): cv.string, vol.Required(ATTR_SCENE_NAME): cv.string}
-)
 # How long should we sleep if the hub is busy
 HUB_BUSY_SLEEP = 0.5
 _LOGGER = logging.getLogger(__name__)
@@ -197,10 +193,11 @@ class HueBridge:
         # None and True are OK
         return False not in results
 
-    async def hue_activate_scene(self, call, updated=False, hide_warnings=False):
+    async def hue_activate_scene(self, data, skip_reload=False, hide_warnings=False):
         """Service to call directly into bridge to set scenes."""
-        group_name = call.data[ATTR_GROUP_NAME]
-        scene_name = call.data[ATTR_SCENE_NAME]
+        group_name = data[ATTR_GROUP_NAME]
+        scene_name = data[ATTR_SCENE_NAME]
+        transition = data.get(ATTR_TRANSITION)
 
         group = next(
             (group for group in self.api.groups.values() if group.name == group_name),
@@ -220,10 +217,10 @@ class HueBridge:
         )
 
         # If we can't find it, fetch latest info.
-        if not updated and (group is None or scene is None):
+        if not skip_reload and (group is None or scene is None):
             await self.async_request_call(self.api.groups.update)
             await self.async_request_call(self.api.scenes.update)
-            return await self.hue_activate_scene(call, updated=True)
+            return await self.hue_activate_scene(data, skip_reload=True)
 
         if group is None:
             if not hide_warnings:
@@ -236,7 +233,9 @@ class HueBridge:
             LOGGER.warning("Unable to find scene %s", scene_name)
             return False
 
-        return await self.async_request_call(partial(group.set_action, scene=scene.id))
+        return await self.async_request_call(
+            partial(group.set_action, scene=scene.id, transitiontime=transition)
+        )
 
     async def handle_unauthorized_error(self):
         """Create a new config flow when the authorization is no longer valid."""
@@ -244,7 +243,7 @@ class HueBridge:
             # we already created a new config flow, no need to do it again
             return
         LOGGER.error(
-            "Unable to authorize to bridge %s, setup the linking again.", self.host
+            "Unable to authorize to bridge %s, setup the linking again", self.host
         )
         self.authorized = False
         create_config_flow(self.hass, self.host)

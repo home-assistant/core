@@ -2,8 +2,11 @@
 from collections import OrderedDict
 import uuid
 
-from homeassistant.components.automation import DOMAIN, PLATFORM_SCHEMA
-from homeassistant.components.automation.config import async_validate_config_item
+from homeassistant.components.automation.config import (
+    DOMAIN,
+    PLATFORM_SCHEMA,
+    async_validate_config_item,
+)
 from homeassistant.config import AUTOMATION_CONFIG_PATH
 from homeassistant.const import CONF_ID, SERVICE_RELOAD
 from homeassistant.helpers import config_validation as cv, entity_registry

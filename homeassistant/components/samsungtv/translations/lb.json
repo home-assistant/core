@@ -5,7 +5,6 @@
             "already_in_progress": "Konfiguratioun's Oflaf ass schonn am gaang.",
             "auth_missing": "Home Assistant ass net authentifiz\u00e9iert fir sech mat d\u00ebsem Samsung TV ze verbannen. Iwwerpr\u00e9if d'Astellunge vum Fernseh fir Home Assistant z'erlaben.",
             "cannot_connect": "Feeler beim verbannen",
-            "not_successful": "Keng Verbindung mat d\u00ebsem Samsung TV Apparat m\u00e9iglech.",
             "not_supported": "D\u00ebsen Samsung TV Modell g\u00ebtt momentan net \u00ebnnerst\u00ebtzt"
         },
         "flow_title": "Samsnung TV:{model}",

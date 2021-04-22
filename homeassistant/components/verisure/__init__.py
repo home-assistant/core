@@ -1,230 +1,171 @@
 """Support for Verisure devices."""
-from datetime import timedelta
-import logging
-import threading
+from __future__ import annotations
 
-from jsonpath import jsonpath
-import verisure
+import asyncio
+from contextlib import suppress
+import os
+from typing import Any
+
 import voluptuous as vol
 
+from homeassistant.components.alarm_control_panel import (
+    DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
+)
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
+    CONF_EMAIL,
     CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
-    HTTP_SERVICE_UNAVAILABLE,
 )
-from homeassistant.helpers import discovery
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
+from homeassistant.helpers.storage import STORAGE_DIR
 
-_LOGGER = logging.getLogger(__name__)
+from .const import (
+    CONF_CODE_DIGITS,
+    CONF_DEFAULT_LOCK_CODE,
+    CONF_GIID,
+    CONF_LOCK_CODE_DIGITS,
+    CONF_LOCK_DEFAULT_CODE,
+    DEFAULT_LOCK_CODE_DIGITS,
+    DOMAIN,
+)
+from .coordinator import VerisureDataUpdateCoordinator
 
-ATTR_DEVICE_SERIAL = "device_serial"
-
-CONF_ALARM = "alarm"
-CONF_CODE_DIGITS = "code_digits"
-CONF_DOOR_WINDOW = "door_window"
-CONF_GIID = "giid"
-CONF_HYDROMETERS = "hygrometers"
-CONF_LOCKS = "locks"
-CONF_DEFAULT_LOCK_CODE = "default_lock_code"
-CONF_MOUSE = "mouse"
-CONF_SMARTPLUGS = "smartplugs"
-CONF_THERMOMETERS = "thermometers"
-CONF_SMARTCAM = "smartcam"
-
-DOMAIN = "verisure"
-
-MIN_SCAN_INTERVAL = timedelta(minutes=1)
-DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
-
-SERVICE_CAPTURE_SMARTCAM = "capture_smartcam"
-SERVICE_DISABLE_AUTOLOCK = "disable_autolock"
-SERVICE_ENABLE_AUTOLOCK = "enable_autolock"
-
-HUB = None
+PLATFORMS = [
+    ALARM_CONTROL_PANEL_DOMAIN,
+    BINARY_SENSOR_DOMAIN,
+    CAMERA_DOMAIN,
+    LOCK_DOMAIN,
+    SENSOR_DOMAIN,
+    SWITCH_DOMAIN,
+]
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Optional(CONF_ALARM, default=True): cv.boolean,
-                vol.Optional(CONF_CODE_DIGITS, default=4): cv.positive_int,
-                vol.Optional(CONF_DOOR_WINDOW, default=True): cv.boolean,
-                vol.Optional(CONF_GIID): cv.string,
-                vol.Optional(CONF_HYDROMETERS, default=True): cv.boolean,
-                vol.Optional(CONF_LOCKS, default=True): cv.boolean,
-                vol.Optional(CONF_DEFAULT_LOCK_CODE): cv.string,
-                vol.Optional(CONF_MOUSE, default=True): cv.boolean,
-                vol.Optional(CONF_SMARTPLUGS, default=True): cv.boolean,
-                vol.Optional(CONF_THERMOMETERS, default=True): cv.boolean,
-                vol.Optional(CONF_SMARTCAM, default=True): cv.boolean,
-                vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): (
-                    vol.All(cv.time_period, vol.Clamp(min=MIN_SCAN_INTERVAL))
-                ),
-            }
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_PASSWORD): cv.string,
+                    vol.Required(CONF_USERNAME): cv.string,
+                    vol.Optional(CONF_CODE_DIGITS): cv.positive_int,
+                    vol.Optional(CONF_GIID): cv.string,
+                    vol.Optional(CONF_DEFAULT_LOCK_CODE): cv.string,
+                },
+                extra=vol.ALLOW_EXTRA,
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
-DEVICE_SERIAL_SCHEMA = vol.Schema({vol.Required(ATTR_DEVICE_SERIAL): cv.string})
 
+async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
+    """Set up the Verisure integration."""
+    if DOMAIN in config:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data={
+                    CONF_EMAIL: config[DOMAIN][CONF_USERNAME],
+                    CONF_PASSWORD: config[DOMAIN][CONF_PASSWORD],
+                    CONF_GIID: config[DOMAIN].get(CONF_GIID),
+                    CONF_LOCK_CODE_DIGITS: config[DOMAIN].get(CONF_CODE_DIGITS),
+                    CONF_LOCK_DEFAULT_CODE: config[DOMAIN].get(CONF_LOCK_DEFAULT_CODE),
+                },
+            )
+        )
 
-def setup(hass, config):
-    """Set up the Verisure component."""
-    global HUB  # pylint: disable=global-statement
-    HUB = VerisureHub(config[DOMAIN])
-    HUB.update_overview = Throttle(config[DOMAIN][CONF_SCAN_INTERVAL])(
-        HUB.update_overview
-    )
-    if not HUB.login():
-        return False
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, lambda event: HUB.logout())
-    HUB.update_overview()
-
-    for component in (
-        "sensor",
-        "switch",
-        "alarm_control_panel",
-        "lock",
-        "camera",
-        "binary_sensor",
-    ):
-        discovery.load_platform(hass, component, DOMAIN, {}, config)
-
-    async def capture_smartcam(service):
-        """Capture a new picture from a smartcam."""
-        device_id = service.data[ATTR_DEVICE_SERIAL]
-        try:
-            await hass.async_add_executor_job(HUB.smartcam_capture, device_id)
-            _LOGGER.debug("Capturing new image from %s", ATTR_DEVICE_SERIAL)
-        except verisure.Error as ex:
-            _LOGGER.error("Could not capture image, %s", ex)
-
-    hass.services.register(
-        DOMAIN, SERVICE_CAPTURE_SMARTCAM, capture_smartcam, schema=DEVICE_SERIAL_SCHEMA
-    )
-
-    async def disable_autolock(service):
-        """Disable autolock on a doorlock."""
-        device_id = service.data[ATTR_DEVICE_SERIAL]
-        try:
-            await hass.async_add_executor_job(HUB.disable_autolock, device_id)
-            _LOGGER.debug("Disabling autolock on%s", ATTR_DEVICE_SERIAL)
-        except verisure.Error as ex:
-            _LOGGER.error("Could not disable autolock, %s", ex)
-
-    hass.services.register(
-        DOMAIN, SERVICE_DISABLE_AUTOLOCK, disable_autolock, schema=DEVICE_SERIAL_SCHEMA
-    )
-
-    async def enable_autolock(service):
-        """Enable autolock on a doorlock."""
-        device_id = service.data[ATTR_DEVICE_SERIAL]
-        try:
-            await hass.async_add_executor_job(HUB.enable_autolock, device_id)
-            _LOGGER.debug("Enabling autolock on %s", ATTR_DEVICE_SERIAL)
-        except verisure.Error as ex:
-            _LOGGER.error("Could not enable autolock, %s", ex)
-
-    hass.services.register(
-        DOMAIN, SERVICE_ENABLE_AUTOLOCK, enable_autolock, schema=DEVICE_SERIAL_SCHEMA
-    )
     return True
 
 
-class VerisureHub:
-    """A Verisure hub wrapper class."""
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Verisure from a config entry."""
+    # Migrate old YAML settings (hidden in the config entry),
+    # to config entry options. Can be removed after YAML support is gone.
+    if CONF_LOCK_CODE_DIGITS in entry.data or CONF_DEFAULT_LOCK_CODE in entry.data:
+        options = entry.options.copy()
 
-    def __init__(self, domain_config):
-        """Initialize the Verisure hub."""
-        self.overview = {}
-        self.imageseries = {}
+        if (
+            CONF_LOCK_CODE_DIGITS in entry.data
+            and CONF_LOCK_CODE_DIGITS not in entry.options
+            and entry.data[CONF_LOCK_CODE_DIGITS] != DEFAULT_LOCK_CODE_DIGITS
+        ):
+            options.update(
+                {
+                    CONF_LOCK_CODE_DIGITS: entry.data[CONF_LOCK_CODE_DIGITS],
+                }
+            )
 
-        self.config = domain_config
+        if (
+            CONF_DEFAULT_LOCK_CODE in entry.data
+            and CONF_DEFAULT_LOCK_CODE not in entry.options
+        ):
+            options.update(
+                {
+                    CONF_DEFAULT_LOCK_CODE: entry.data[CONF_DEFAULT_LOCK_CODE],
+                }
+            )
 
-        self._lock = threading.Lock()
+        data = entry.data.copy()
+        data.pop(CONF_LOCK_CODE_DIGITS, None)
+        data.pop(CONF_DEFAULT_LOCK_CODE, None)
+        hass.config_entries.async_update_entry(entry, data=data, options=options)
 
-        self.session = verisure.Session(
-            domain_config[CONF_USERNAME], domain_config[CONF_PASSWORD]
+    # Continue as normal...
+    coordinator = VerisureDataUpdateCoordinator(hass, entry=entry)
+
+    if not await coordinator.async_login():
+        raise ConfigEntryAuthFailed
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, coordinator.async_logout)
+    )
+
+    await coordinator.async_config_entry_first_refresh()
+
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = coordinator
+
+    # Set up all platforms for this device/entry.
+    for platform in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
-        self.giid = domain_config.get(CONF_GIID)
+    return True
 
-    def login(self):
-        """Login to Verisure."""
-        try:
-            self.session.login()
-        except verisure.Error as ex:
-            _LOGGER.error("Could not log in to verisure, %s", ex)
-            return False
-        if self.giid:
-            return self.set_giid()
-        return True
 
-    def logout(self):
-        """Logout from Verisure."""
-        try:
-            self.session.logout()
-        except verisure.Error as ex:
-            _LOGGER.error("Could not log out from verisure, %s", ex)
-            return False
-        return True
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload Verisure config entry."""
+    unload_ok = all(
+        await asyncio.gather(
+            *(
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
+            )
+        )
+    )
 
-    def set_giid(self):
-        """Set installation GIID."""
-        try:
-            self.session.set_giid(self.giid)
-        except verisure.Error as ex:
-            _LOGGER.error("Could not set installation GIID, %s", ex)
-            return False
-        return True
+    if not unload_ok:
+        return False
 
-    def update_overview(self):
-        """Update the overview."""
-        try:
-            self.overview = self.session.get_overview()
-        except verisure.ResponseError as ex:
-            _LOGGER.error("Could not read overview, %s", ex)
-            if ex.status_code == HTTP_SERVICE_UNAVAILABLE:  # Service unavailable
-                _LOGGER.info("Trying to log in again")
-                self.login()
-            else:
-                raise
+    cookie_file = hass.config.path(STORAGE_DIR, f"verisure_{entry.entry_id}")
+    with suppress(FileNotFoundError):
+        await hass.async_add_executor_job(os.unlink, cookie_file)
 
-    @Throttle(timedelta(seconds=60))
-    def update_smartcam_imageseries(self):
-        """Update the image series."""
-        self.imageseries = self.session.get_camera_imageseries()
+    del hass.data[DOMAIN][entry.entry_id]
 
-    @Throttle(timedelta(seconds=30))
-    def smartcam_capture(self, device_id):
-        """Capture a new image from a smartcam."""
-        self.session.capture_image(device_id)
+    if not hass.data[DOMAIN]:
+        del hass.data[DOMAIN]
 
-    def disable_autolock(self, device_id):
-        """Disable autolock."""
-        self.session.set_lock_config(device_id, auto_lock_enabled=False)
-
-    def enable_autolock(self, device_id):
-        """Enable autolock."""
-        self.session.set_lock_config(device_id, auto_lock_enabled=True)
-
-    def get(self, jpath, *args):
-        """Get values from the overview that matches the jsonpath."""
-        res = jsonpath(self.overview, jpath % args)
-        return res if res else []
-
-    def get_first(self, jpath, *args):
-        """Get first value from the overview that matches the jsonpath."""
-        res = self.get(jpath, *args)
-        return res[0] if res else None
-
-    def get_image_info(self, jpath, *args):
-        """Get values from the imageseries that matches the jsonpath."""
-        res = jsonpath(self.imageseries, jpath % args)
-        return res if res else []
+    return True

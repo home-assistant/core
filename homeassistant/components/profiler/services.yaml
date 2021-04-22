@@ -10,3 +10,21 @@ memory:
     seconds:
       description: The number of seconds to run the memory profiler.
       example: 60.0
+start_log_objects:
+  description: Start logging growth of objects in memory
+  fields:
+    scan_interval:
+      description: The number of seconds between logging objects.
+      example: 60.0
+stop_log_objects:
+  description: Stop logging growth of objects in memory
+dump_log_objects:
+  description: Dump the repr of all matching objects to the log.
+  fields:
+    type:
+      description: The type of objects to dump to the log
+      example: State
+log_thread_frames:
+  description: Log the current frames for all threads
+log_event_loop_scheduled:
+  description: Log what is scheduled in the event loop

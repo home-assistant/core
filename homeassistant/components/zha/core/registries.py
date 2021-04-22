@@ -1,6 +1,8 @@
 """Mapping registries for Zigbee Home Automation."""
+from __future__ import annotations
+
 import collections
-from typing import Callable, Dict, List, Set, Tuple, Union
+from typing import Callable, Dict
 
 import attr
 import zigpy.profiles.zha
@@ -14,6 +16,7 @@ from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 from homeassistant.components.fan import DOMAIN as FAN
 from homeassistant.components.light import DOMAIN as LIGHT
 from homeassistant.components.lock import DOMAIN as LOCK
+from homeassistant.components.number import DOMAIN as NUMBER
 from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.components.switch import DOMAIN as SWITCH
 
@@ -25,7 +28,6 @@ from .typing import ChannelType
 GROUP_ENTITY_DOMAINS = [LIGHT, SWITCH, FAN]
 
 PHILLIPS_REMOTE_CLUSTER = 0xFC00
-
 SMARTTHINGS_ACCELERATION_CLUSTER = 0xFC02
 SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE = 0x8000
 SMARTTHINGS_HUMIDITY_CLUSTER = 0xFC45
@@ -62,11 +64,14 @@ SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {
     zcl.clusters.closures.DoorLock.cluster_id: LOCK,
     zcl.clusters.closures.WindowCovering.cluster_id: COVER,
     zcl.clusters.general.AnalogInput.cluster_id: SENSOR,
+    zcl.clusters.general.AnalogOutput.cluster_id: NUMBER,
     zcl.clusters.general.MultistateInput.cluster_id: SENSOR,
     zcl.clusters.general.OnOff.cluster_id: SWITCH,
     zcl.clusters.general.PowerConfiguration.cluster_id: SENSOR,
     zcl.clusters.homeautomation.ElectricalMeasurement.cluster_id: SENSOR,
     zcl.clusters.hvac.Fan.cluster_id: FAN,
+    zcl.clusters.measurement.CarbonDioxideConcentration.cluster_id: SENSOR,
+    zcl.clusters.measurement.CarbonMonoxideConcentration.cluster_id: SENSOR,
     zcl.clusters.measurement.IlluminanceMeasurement.cluster_id: SENSOR,
     zcl.clusters.measurement.OccupancySensing.cluster_id: BINARY_SENSOR,
     zcl.clusters.measurement.PressureMeasurement.cluster_id: SENSOR,
@@ -80,15 +85,8 @@ SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS = {
     zcl.clusters.general.OnOff.cluster_id: BINARY_SENSOR
 }
 
-SWITCH_CLUSTERS = SetRegistry()
-
-BINARY_SENSOR_CLUSTERS = SetRegistry()
-BINARY_SENSOR_CLUSTERS.add(SMARTTHINGS_ACCELERATION_CLUSTER)
-
 BINDABLE_CLUSTERS = SetRegistry()
 CHANNEL_ONLY_CLUSTERS = SetRegistry()
-CLIMATE_CLUSTERS = SetRegistry()
-CUSTOM_CLUSTER_MAPPINGS = {}
 
 DEVICE_CLASS = {
     zigpy.profiles.zha.PROFILE_ID: {
@@ -119,19 +117,7 @@ DEVICE_CLASS = {
 }
 DEVICE_CLASS = collections.defaultdict(dict, DEVICE_CLASS)
 
-DEVICE_TRACKER_CLUSTERS = SetRegistry()
-LIGHT_CLUSTERS = SetRegistry()
-OUTPUT_CHANNEL_ONLY_CLUSTERS = SetRegistry()
 CLIENT_CHANNELS_REGISTRY = DictRegistry()
-
-COMPONENT_CLUSTERS = {
-    BINARY_SENSOR: BINARY_SENSOR_CLUSTERS,
-    CLIMATE: CLIMATE_CLUSTERS,
-    DEVICE_TRACKER: DEVICE_TRACKER_CLUSTERS,
-    LIGHT: LIGHT_CLUSTERS,
-    SWITCH: SWITCH_CLUSTERS,
-}
-
 ZIGBEE_CHANNEL_REGISTRY = DictRegistry()
 
 
@@ -150,19 +136,19 @@ def set_or_callable(value):
 class MatchRule:
     """Match a ZHA Entity to a channel name or generic id."""
 
-    channel_names: Union[Callable, Set[str], str] = attr.ib(
+    channel_names: Callable | set[str] | str = attr.ib(
         factory=frozenset, converter=set_or_callable
     )
-    generic_ids: Union[Callable, Set[str], str] = attr.ib(
+    generic_ids: Callable | set[str] | str = attr.ib(
         factory=frozenset, converter=set_or_callable
     )
-    manufacturers: Union[Callable, Set[str], str] = attr.ib(
+    manufacturers: Callable | set[str] | str = attr.ib(
         factory=frozenset, converter=set_or_callable
     )
-    models: Union[Callable, Set[str], str] = attr.ib(
+    models: Callable | set[str] | str = attr.ib(
         factory=frozenset, converter=set_or_callable
     )
-    aux_channels: Union[Callable, Set[str], str] = attr.ib(
+    aux_channels: Callable | set[str] | str = attr.ib(
         factory=frozenset, converter=set_or_callable
     )
 
@@ -192,7 +178,7 @@ class MatchRule:
         weight += 1 * len(self.aux_channels)
         return weight
 
-    def claim_channels(self, channel_pool: List[ChannelType]) -> List[ChannelType]:
+    def claim_channels(self, channel_pool: list[ChannelType]) -> list[ChannelType]:
         """Return a list of channels this rule matches + aux channels."""
         claimed = []
         if isinstance(self.channel_names, frozenset):
@@ -205,15 +191,15 @@ class MatchRule:
             claimed.extend([ch for ch in channel_pool if ch.name in self.aux_channels])
         return claimed
 
-    def strict_matched(self, manufacturer: str, model: str, channels: List) -> bool:
+    def strict_matched(self, manufacturer: str, model: str, channels: list) -> bool:
         """Return True if this device matches the criteria."""
         return all(self._matched(manufacturer, model, channels))
 
-    def loose_matched(self, manufacturer: str, model: str, channels: List) -> bool:
+    def loose_matched(self, manufacturer: str, model: str, channels: list) -> bool:
         """Return True if this device matches the criteria."""
         return any(self._matched(manufacturer, model, channels))
 
-    def _matched(self, manufacturer: str, model: str, channels: List) -> list:
+    def _matched(self, manufacturer: str, model: str, channels: list) -> list:
         """Return a list of field matches."""
         if not any(attr.asdict(self).values()):
             return [False]
@@ -261,9 +247,9 @@ class ZHAEntityRegistry:
         component: str,
         manufacturer: str,
         model: str,
-        channels: List[ChannelType],
+        channels: list[ChannelType],
         default: CALLABLE_T = None,
-    ) -> Tuple[CALLABLE_T, List[ChannelType]]:
+    ) -> tuple[CALLABLE_T, list[ChannelType]]:
         """Match a ZHA Channels to a ZHA Entity class."""
         matches = self._strict_registry[component]
         for match in sorted(matches, key=lambda x: x.weight, reverse=True):
@@ -280,11 +266,11 @@ class ZHAEntityRegistry:
     def strict_match(
         self,
         component: str,
-        channel_names: Union[Callable, Set[str], str] = None,
-        generic_ids: Union[Callable, Set[str], str] = None,
-        manufacturers: Union[Callable, Set[str], str] = None,
-        models: Union[Callable, Set[str], str] = None,
-        aux_channels: Union[Callable, Set[str], str] = None,
+        channel_names: Callable | set[str] | str = None,
+        generic_ids: Callable | set[str] | str = None,
+        manufacturers: Callable | set[str] | str = None,
+        models: Callable | set[str] | str = None,
+        aux_channels: Callable | set[str] | str = None,
     ) -> Callable[[CALLABLE_T], CALLABLE_T]:
         """Decorate a strict match rule."""
 
@@ -305,11 +291,11 @@ class ZHAEntityRegistry:
     def loose_match(
         self,
         component: str,
-        channel_names: Union[Callable, Set[str], str] = None,
-        generic_ids: Union[Callable, Set[str], str] = None,
-        manufacturers: Union[Callable, Set[str], str] = None,
-        models: Union[Callable, Set[str], str] = None,
-        aux_channels: Union[Callable, Set[str], str] = None,
+        channel_names: Callable | set[str] | str = None,
+        generic_ids: Callable | set[str] | str = None,
+        manufacturers: Callable | set[str] | str = None,
+        models: Callable | set[str] | str = None,
+        aux_channels: Callable | set[str] | str = None,
     ) -> Callable[[CALLABLE_T], CALLABLE_T]:
         """Decorate a loose match rule."""
 

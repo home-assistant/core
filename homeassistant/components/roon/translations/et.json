@@ -17,10 +17,8 @@
                 "data": {
                     "host": ""
                 },
-                "description": "Sisesta oma Rooni serveri hostinimi v\u00f5i IP.",
-                "title": "Seadista Roon Server"
+                "description": "Rooni serverit ei leitud. Sisesta oma Rooni serveri hostinimi v\u00f5i IP."
             }
         }
-    },
-    "title": "[VOID]\n"
+    }
 }

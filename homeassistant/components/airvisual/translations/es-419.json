@@ -6,7 +6,7 @@
         "error": {
             "general_error": "Se ha producido un error desconocido.",
             "invalid_api_key": "Se proporciona una clave de API no v\u00e1lida.",
-            "unable_to_connect": "No se puede conectar a la unidad Node/Pro."
+            "location_not_found": "Ubicaci\u00f3n no encontrada"
         },
         "step": {
             "geography": {
@@ -16,6 +16,10 @@
                     "longitude": "Longitud"
                 },
                 "description": "Use la API de AirVisual para monitorear una ubicaci\u00f3n geogr\u00e1fica.",
+                "title": "Configurar una geograf\u00eda"
+            },
+            "geography_by_coords": {
+                "description": "Utilice la API en la nube de AirVisual para monitorear una latitud / longitud.",
                 "title": "Configurar una geograf\u00eda"
             },
             "node_pro": {

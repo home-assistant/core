@@ -1,11 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Dieser RainMachine-Kontroller ist bereits konfiguriert."
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
         },
         "error": {
-            "identifier_exists": "Konto bereits registriert",
-            "invalid_credentials": "Ung\u00fcltige Anmeldeinformationen"
+            "invalid_auth": "Ung\u00fcltige Authentifizierung"
         },
         "step": {
             "user": {

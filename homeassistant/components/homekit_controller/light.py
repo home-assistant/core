@@ -1,5 +1,6 @@
 """Support for Homekit lights."""
 from aiohomekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -21,10 +22,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     conn = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
-    def async_add_service(aid, service):
-        if service["stype"] != "lightbulb":
+    def async_add_service(service):
+        if service.short_type != ServicesTypes.LIGHTBULB:
             return False
-        info = {"aid": aid, "iid": service["iid"]}
+        info = {"aid": service.accessory.aid, "iid": service.iid}
         async_add_entities([HomeKitLight(conn, info)], True)
         return True
 

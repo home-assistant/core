@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Kontot har redan konfigurerats"
+            "already_configured": "Kontot har redan konfigurerats",
+            "no_device": "Ingen av dina enheter har \"Hitta min iPhone\" aktiverat"
         },
         "error": {
-            "login": "Inloggningsfel: var god att kontrollera din e-postadress och l\u00f6senord",
             "send_verification_code": "Det gick inte att skicka verifieringskod",
             "validate_verification_code": "Det gick inte att verifiera verifieringskoden, v\u00e4lj en betrodd enhet och starta verifieringen igen"
         },

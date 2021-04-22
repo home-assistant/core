@@ -98,6 +98,10 @@
             "off": "na\u0142adowana",
             "on": "roz\u0142adowana"
         },
+        "battery_charging": {
+            "off": "roz\u0142adowywanie",
+            "on": "\u0142adowanie"
+        },
         "cold": {
             "off": "normalnie",
             "on": "zimno"
@@ -122,6 +126,10 @@
             "off": "normalnie",
             "on": "gor\u0105co"
         },
+        "light": {
+            "off": "brak",
+            "on": "wykryto"
+        },
         "lock": {
             "off": "zamkni\u0119ty",
             "on": "otwarty"
@@ -134,6 +142,10 @@
             "off": "brak",
             "on": "wykryto"
         },
+        "moving": {
+            "off": "brak ruchu",
+            "on": "w ruchu"
+        },
         "occupancy": {
             "off": "brak",
             "on": "wykryto"
@@ -141,6 +153,10 @@
         "opening": {
             "off": "zamkni\u0119te",
             "on": "otwarte"
+        },
+        "plug": {
+            "off": "od\u0142\u0105czony",
+            "on": "pod\u0142\u0105czony"
         },
         "presence": {
             "off": "poza domem",

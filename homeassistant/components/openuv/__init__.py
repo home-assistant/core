@@ -1,6 +1,5 @@
 """Support for UV data from openuv.io."""
 import asyncio
-import logging
 
 from pyopenuv import Client
 from pyopenuv.errors import OpenUvError
@@ -24,14 +23,14 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.service import verify_domain_control
 
-from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
-
-DATA_OPENUV_CLIENT = "data_client"
-DATA_OPENUV_LISTENER = "data_listener"
-DATA_PROTECTION_WINDOW = "protection_window"
-DATA_UV = "uv"
+from .const import (
+    DATA_CLIENT,
+    DATA_LISTENER,
+    DATA_PROTECTION_WINDOW,
+    DATA_UV,
+    DOMAIN,
+    LOGGER,
+)
 
 DEFAULT_ATTRIBUTION = "Data provided by OpenUV"
 
@@ -40,24 +39,12 @@ NOTIFICATION_TITLE = "OpenUV Component Setup"
 
 TOPIC_UPDATE = f"{DOMAIN}_data_update"
 
-TYPE_CURRENT_OZONE_LEVEL = "current_ozone_level"
-TYPE_CURRENT_UV_INDEX = "current_uv_index"
-TYPE_CURRENT_UV_LEVEL = "current_uv_level"
-TYPE_MAX_UV_INDEX = "max_uv_index"
-TYPE_PROTECTION_WINDOW = "uv_protection_window"
-TYPE_SAFE_EXPOSURE_TIME_1 = "safe_exposure_time_type_1"
-TYPE_SAFE_EXPOSURE_TIME_2 = "safe_exposure_time_type_2"
-TYPE_SAFE_EXPOSURE_TIME_3 = "safe_exposure_time_type_3"
-TYPE_SAFE_EXPOSURE_TIME_4 = "safe_exposure_time_type_4"
-TYPE_SAFE_EXPOSURE_TIME_5 = "safe_exposure_time_type_5"
-TYPE_SAFE_EXPOSURE_TIME_6 = "safe_exposure_time_type_6"
-
 PLATFORMS = ["binary_sensor", "sensor"]
 
 
 async def async_setup(hass, config):
     """Set up the OpenUV component."""
-    hass.data[DOMAIN] = {DATA_OPENUV_CLIENT: {}, DATA_OPENUV_LISTENER: {}}
+    hass.data[DOMAIN] = {DATA_CLIENT: {}, DATA_LISTENER: {}}
     return True
 
 
@@ -77,34 +64,34 @@ async def async_setup_entry(hass, config_entry):
             )
         )
         await openuv.async_update()
-        hass.data[DOMAIN][DATA_OPENUV_CLIENT][config_entry.entry_id] = openuv
+        hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = openuv
     except OpenUvError as err:
-        _LOGGER.error("Config entry failed: %s", err)
+        LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
+            hass.config_entries.async_forward_entry_setup(config_entry, platform)
         )
 
     @_verify_domain_control
     async def update_data(service):
         """Refresh all OpenUV data."""
-        _LOGGER.debug("Refreshing all OpenUV data")
+        LOGGER.debug("Refreshing all OpenUV data")
         await openuv.async_update()
         async_dispatcher_send(hass, TOPIC_UPDATE)
 
     @_verify_domain_control
     async def update_uv_index_data(service):
         """Refresh OpenUV UV index data."""
-        _LOGGER.debug("Refreshing OpenUV UV index data")
+        LOGGER.debug("Refreshing OpenUV UV index data")
         await openuv.async_update_uv_index_data()
         async_dispatcher_send(hass, TOPIC_UPDATE)
 
     @_verify_domain_control
     async def update_protection_data(service):
         """Refresh OpenUV protection window data."""
-        _LOGGER.debug("Refreshing OpenUV protection window data")
+        LOGGER.debug("Refreshing OpenUV protection window data")
         await openuv.async_update_protection_data()
         async_dispatcher_send(hass, TOPIC_UPDATE)
 
@@ -123,13 +110,13 @@ async def async_unload_entry(hass, config_entry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(config_entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(config_entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )
     if unload_ok:
-        hass.data[DOMAIN][DATA_OPENUV_CLIENT].pop(config_entry.entry_id)
+        hass.data[DOMAIN][DATA_CLIENT].pop(config_entry.entry_id)
 
     return unload_ok
 
@@ -139,7 +126,7 @@ async def async_migrate_entry(hass, config_entry):
     version = config_entry.version
     data = {**config_entry.data}
 
-    _LOGGER.debug("Migrating from version %s", version)
+    LOGGER.debug("Migrating from version %s", version)
 
     # 1 -> 2: Remove unused condition data:
     if version == 1:
@@ -147,7 +134,7 @@ async def async_migrate_entry(hass, config_entry):
         data.pop(CONF_SENSORS, None)
         version = config_entry.version = 2
         hass.config_entries.async_update_entry(config_entry, data=data)
-        _LOGGER.debug("Migration to version %s successful", version)
+        LOGGER.debug("Migration to version %s successful", version)
 
     return True
 
@@ -166,7 +153,7 @@ class OpenUV:
             resp = await self.client.uv_protection_window()
             self.data[DATA_PROTECTION_WINDOW] = resp["result"]
         except OpenUvError as err:
-            _LOGGER.error("Error during protection data update: %s", err)
+            LOGGER.error("Error during protection data update: %s", err)
             self.data[DATA_PROTECTION_WINDOW] = {}
 
     async def async_update_uv_index_data(self):
@@ -175,7 +162,7 @@ class OpenUV:
             data = await self.client.uv_index()
             self.data[DATA_UV] = data
         except OpenUvError as err:
-            _LOGGER.error("Error during uv index data update: %s", err)
+            LOGGER.error("Error during uv index data update: %s", err)
             self.data[DATA_UV] = {}
 
     async def async_update(self):
@@ -200,7 +187,7 @@ class OpenUvEntity(Entity):
         return self._available
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._attrs
 

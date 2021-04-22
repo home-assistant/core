@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Z-Wave \u00e4r redan konfigurerat",
-            "one_instance_only": "Komponenten st\u00f6der endast en Z-Wave-instans"
+            "already_configured": "Z-Wave \u00e4r redan konfigurerat"
         },
         "error": {
             "option_error": "Z-Wave-valideringen misslyckades. \u00c4r s\u00f6kv\u00e4gen till USB-minnet korrekt?"

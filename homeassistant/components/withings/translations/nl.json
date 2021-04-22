@@ -3,30 +3,30 @@
         "abort": {
             "already_configured": "Configuratie bijgewerkt voor profiel.",
             "authorize_url_timeout": "Time-out tijdens genereren autorisatie url.",
-            "missing_configuration": "De Withings integratie is niet geconfigureerd. Gelieve de documentatie te volgen.",
+            "missing_configuration": "De component is niet geconfigureerd. Gelieve de documentatie volgen.",
             "no_url_available": "Geen URL beschikbaar. Voor informatie over deze fout, [check de helpsectie]({docs_url})"
         },
         "create_entry": {
             "default": "Succesvol geverifieerd met Withings voor het geselecteerde profiel."
         },
         "error": {
-            "already_configured": "Account is al geconfigureerd",
-            "already_configured_account": "Account is al geconfigureerd",
-            "profile_exists": "Het gebruikersprofiel is al geconfigureerd. Geef een unieke profielnaam op."
+            "already_configured": "Account is al geconfigureerd"
         },
+        "flow_title": "Withings: {profile}",
         "step": {
             "pick_implementation": {
-                "title": "Kies Authenticatiemethode"
+                "title": "Kies een authenticatie methode"
             },
             "profile": {
                 "data": {
                     "profile": "Profiel"
                 },
-                "description": "Welk profiel hebt u op de website van Withings selecteren? Het is belangrijk dat de profielen overeenkomen, anders worden gegevens verkeerd gelabeld.",
+                "description": "Geef een unieke profielnaam op voor deze gegevens. Meestal is dit de naam van het profiel dat u in de vorige stap hebt geselecteerd.",
                 "title": "Gebruikersprofiel."
             },
             "reauth": {
-                "title": "Profiel opnieuw verifi\u00ebren"
+                "description": "Het {profile} \" moet opnieuw worden geverifieerd om Withings-gegevens te blijven ontvangen.",
+                "title": "Verifieer de integratie opnieuw"
             }
         }
     }

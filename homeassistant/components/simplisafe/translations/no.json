@@ -2,26 +2,25 @@
     "config": {
         "abort": {
             "already_configured": "Denne SimpliSafe-kontoen er allerede i bruk.",
-            "reauth_successful": "Reautentisering var vellykket"
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
         },
         "error": {
             "identifier_exists": "Konto er allerede registrert",
             "invalid_auth": "Ugyldig godkjenning",
-            "invalid_credentials": "Ugyldige innloggingsopplysninger",
             "still_awaiting_mfa": "Forventer fortsatt MFA-e-postklikk",
             "unknown": "Uventet feil"
         },
         "step": {
             "mfa": {
                 "description": "Sjekk e-posten din for en lenke fra SimpliSafe. Etter \u00e5 ha bekreftet lenken, g\u00e5 tilbake hit for \u00e5 fullf\u00f8re installasjonen av integrasjonen.",
-                "title": "SimpliSafe flerfaktorautentisering"
+                "title": "SimpliSafe flertrinnsbekreftelse"
             },
             "reauth_confirm": {
                 "data": {
                     "password": "Passord"
                 },
-                "description": "Adgangstokenet ditt har utl\u00f8pt eller blitt opphevet. Skriv inn passordet ditt for \u00e5 koble kontoen din p\u00e5 nytt.",
-                "title": "Bekreft integrering p\u00e5 nytt"
+                "description": "Tilgangstokenet ditt har utl\u00f8pt eller blitt tilbakekalt. Skriv inn passordet ditt for \u00e5 koble til kontoen din p\u00e5 nytt.",
+                "title": "Godkjenne integrering p\u00e5 nytt"
             },
             "user": {
                 "data": {

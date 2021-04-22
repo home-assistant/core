@@ -1,6 +1,7 @@
 """Support for Ecobee Thermostats."""
+from __future__ import annotations
+
 import collections
-from typing import Optional
 
 import voluptuous as vol
 
@@ -24,12 +25,14 @@ from homeassistant.components.climate.const import (
     SUPPORT_AUX_HEAT,
     SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
+    SUPPORT_TARGET_HUMIDITY,
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
+    PRECISION_TENTHS,
     STATE_ON,
     TEMP_FAHRENHEIT,
 )
@@ -63,6 +66,11 @@ PRESET_HOLD_INDEFINITE = "indefinite"
 AWAY_MODE = "awayMode"
 PRESET_HOME = "home"
 PRESET_SLEEP = "sleep"
+
+DEFAULT_MIN_HUMIDITY = 15
+DEFAULT_MAX_HUMIDITY = 50
+HUMIDIFIER_MANUAL_MODE = "manual"
+
 
 # Order matters, because for reverse mapping we don't want to map HEAT to AUX
 ECOBEE_HVAC_TO_HASS = collections.OrderedDict(
@@ -330,6 +338,8 @@ class Thermostat(ClimateEntity):
     @property
     def supported_features(self):
         """Return the list of supported features."""
+        if self.has_humidifier_control:
+            return SUPPORT_FLAGS | SUPPORT_TARGET_HUMIDITY
         return SUPPORT_FLAGS
 
     @property
@@ -371,6 +381,11 @@ class Thermostat(ClimateEntity):
         return TEMP_FAHRENHEIT
 
     @property
+    def precision(self) -> float:
+        """Return the precision of the system."""
+        return PRECISION_TENTHS
+
+    @property
     def current_temperature(self):
         """Return the current temperature."""
         return self.thermostat["runtime"]["actualTemperature"] / 10.0
@@ -379,15 +394,40 @@ class Thermostat(ClimateEntity):
     def target_temperature_low(self):
         """Return the lower bound temperature we try to reach."""
         if self.hvac_mode == HVAC_MODE_HEAT_COOL:
-            return self.thermostat["runtime"]["desiredHeat"] / 10.0
+            return round(self.thermostat["runtime"]["desiredHeat"] / 10.0)
         return None
 
     @property
     def target_temperature_high(self):
         """Return the upper bound temperature we try to reach."""
         if self.hvac_mode == HVAC_MODE_HEAT_COOL:
-            return self.thermostat["runtime"]["desiredCool"] / 10.0
+            return round(self.thermostat["runtime"]["desiredCool"] / 10.0)
         return None
+
+    @property
+    def has_humidifier_control(self):
+        """Return true if humidifier connected to thermostat and set to manual/on mode."""
+        return (
+            self.thermostat["settings"]["hasHumidifier"]
+            and self.thermostat["settings"]["humidifierMode"] == HUMIDIFIER_MANUAL_MODE
+        )
+
+    @property
+    def target_humidity(self) -> int | None:
+        """Return the desired humidity set point."""
+        if self.has_humidifier_control:
+            return self.thermostat["runtime"]["desiredHumidity"]
+        return None
+
+    @property
+    def min_humidity(self) -> int:
+        """Return the minimum humidity."""
+        return DEFAULT_MIN_HUMIDITY
+
+    @property
+    def max_humidity(self) -> int:
+        """Return the maximum humidity."""
+        return DEFAULT_MAX_HUMIDITY
 
     @property
     def target_temperature(self):
@@ -395,9 +435,9 @@ class Thermostat(ClimateEntity):
         if self.hvac_mode == HVAC_MODE_HEAT_COOL:
             return None
         if self.hvac_mode == HVAC_MODE_HEAT:
-            return self.thermostat["runtime"]["desiredHeat"] / 10.0
+            return round(self.thermostat["runtime"]["desiredHeat"] / 10.0)
         if self.hvac_mode == HVAC_MODE_COOL:
-            return self.thermostat["runtime"]["desiredCool"] / 10.0
+            return round(self.thermostat["runtime"]["desiredCool"] / 10.0)
         return None
 
     @property
@@ -451,7 +491,7 @@ class Thermostat(ClimateEntity):
         return self._operation_list
 
     @property
-    def current_humidity(self) -> Optional[int]:
+    def current_humidity(self) -> int | None:
         """Return the current humidity."""
         return self.thermostat["runtime"]["actualHumidity"]
 
@@ -486,7 +526,7 @@ class Thermostat(ClimateEntity):
         return CURRENT_HVAC_IDLE
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         status = self.thermostat["equipmentStatus"]
         return {
@@ -526,7 +566,7 @@ class Thermostat(ClimateEntity):
 
         if preset_mode == PRESET_AWAY:
             self.data.ecobee.set_climate_hold(
-                self.thermostat_index, "away", "indefinite"
+                self.thermostat_index, "away", "indefinite", self.hold_hours()
             )
 
         elif preset_mode == PRESET_TEMPERATURE:
@@ -537,6 +577,7 @@ class Thermostat(ClimateEntity):
                 self.thermostat_index,
                 PRESET_TO_ECOBEE_HOLD[preset_mode],
                 self.hold_preference(),
+                self.hold_hours(),
             )
 
         elif preset_mode == PRESET_NONE:
@@ -552,14 +593,20 @@ class Thermostat(ClimateEntity):
 
             if climate_ref is not None:
                 self.data.ecobee.set_climate_hold(
-                    self.thermostat_index, climate_ref, self.hold_preference()
+                    self.thermostat_index,
+                    climate_ref,
+                    self.hold_preference(),
+                    self.hold_hours(),
                 )
             else:
                 _LOGGER.warning("Received unknown preset mode: %s", preset_mode)
 
         else:
             self.data.ecobee.set_climate_hold(
-                self.thermostat_index, preset_mode, self.hold_preference()
+                self.thermostat_index,
+                preset_mode,
+                self.hold_preference(),
+                self.hold_hours(),
             )
 
     @property
@@ -584,6 +631,7 @@ class Thermostat(ClimateEntity):
             cool_temp_setpoint,
             heat_temp_setpoint,
             self.hold_preference(),
+            self.hold_hours(),
         )
         _LOGGER.debug(
             "Setting ecobee hold_temp to: heat=%s, is=%s, cool=%s, is=%s",
@@ -602,14 +650,11 @@ class Thermostat(ClimateEntity):
             _LOGGER.error(error)
             return
 
-        cool_temp = self.thermostat["runtime"]["desiredCool"] / 10.0
-        heat_temp = self.thermostat["runtime"]["desiredHeat"] / 10.0
         self.data.ecobee.set_fan_mode(
             self.thermostat_index,
             fan_mode,
-            cool_temp,
-            heat_temp,
             self.hold_preference(),
+            holdHours=self.hold_hours(),
         )
 
         _LOGGER.info("Setting fan mode to: %s", fan_mode)
@@ -651,7 +696,13 @@ class Thermostat(ClimateEntity):
 
     def set_humidity(self, humidity):
         """Set the humidity level."""
-        self.data.ecobee.set_humidity(self.thermostat_index, humidity)
+        if humidity not in range(0, 101):
+            raise ValueError(
+                f"Invalid set_humidity value (must be in range 0-100): {humidity}"
+            )
+
+        self.data.ecobee.set_humidity(self.thermostat_index, int(humidity))
+        self.update_without_throttle = True
 
     def set_hvac_mode(self, hvac_mode):
         """Set HVAC mode (auto, auxHeatOnly, cool, heat, off)."""
@@ -678,15 +729,32 @@ class Thermostat(ClimateEntity):
 
     def hold_preference(self):
         """Return user preference setting for hold time."""
-        # Values returned from thermostat are 'useEndTime4hour',
-        # 'useEndTime2hour', 'nextTransition', 'indefinite', 'askMe'
-        default = self.thermostat["settings"]["holdAction"]
-        if default == "nextTransition":
-            return default
-        # add further conditions if other hold durations should be
-        # supported; note that this should not include 'indefinite'
-        # as an indefinite away hold is interpreted as away_mode
-        return "nextTransition"
+        # Values returned from thermostat are:
+        #   "useEndTime2hour", "useEndTime4hour"
+        #   "nextPeriod", "askMe"
+        #   "indefinite"
+        device_preference = self.thermostat["settings"]["holdAction"]
+        # Currently supported pyecobee holdTypes:
+        #   dateTime, nextTransition, indefinite, holdHours
+        hold_pref_map = {
+            "useEndTime2hour": "holdHours",
+            "useEndTime4hour": "holdHours",
+            "indefinite": "indefinite",
+        }
+        return hold_pref_map.get(device_preference, "nextTransition")
+
+    def hold_hours(self):
+        """Return user preference setting for hold duration in hours."""
+        # Values returned from thermostat are:
+        #   "useEndTime2hour", "useEndTime4hour"
+        #   "nextPeriod", "askMe"
+        #   "indefinite"
+        device_preference = self.thermostat["settings"]["holdAction"]
+        hold_hours_map = {
+            "useEndTime2hour": 2,
+            "useEndTime4hour": 4,
+        }
+        return hold_hours_map.get(device_preference)
 
     def create_vacation(self, service_data):
         """Create a vacation with user-specified parameters."""

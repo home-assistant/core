@@ -6,6 +6,9 @@ from homeassistant.components.device_tracker.config_entry import (
     ScannerEntity,
 )
 from homeassistant.components.device_tracker.const import (
+    ATTR_HOST_NAME,
+    ATTR_IP,
+    ATTR_MAC,
     ATTR_SOURCE_TYPE,
     DOMAIN,
     SOURCE_TYPE_ROUTER,
@@ -28,6 +31,9 @@ async def test_scanner_entity_device_tracker(hass):
     assert entity_state.attributes == {
         ATTR_SOURCE_TYPE: SOURCE_TYPE_ROUTER,
         ATTR_BATTERY_LEVEL: 100,
+        ATTR_IP: "0.0.0.0",
+        ATTR_MAC: "ad:de:ef:be:ed:fe:",
+        ATTR_HOST_NAME: "test.hostname.org",
     }
     assert entity_state.state == STATE_NOT_HOME
 
@@ -49,6 +55,9 @@ def test_scanner_entity():
     with pytest.raises(NotImplementedError):
         assert entity.state == STATE_NOT_HOME
     assert entity.battery_level is None
+    assert entity.ip_address is None
+    assert entity.mac_address is None
+    assert entity.hostname is None
 
 
 def test_base_tracker_entity():

@@ -5,7 +5,6 @@
         },
         "error": {
             "invalid_auth": "Tuvastamise viga",
-            "invalid_credentials": "Vale kasutajanimi v\u00f5i salas\u00f5na",
             "no_devices": "Kontolt ei leitud \u00fchtegi seadet"
         },
         "step": {

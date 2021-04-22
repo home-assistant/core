@@ -1,0 +1,21 @@
+{
+    "system_health": {
+        "info": {
+            "arch": "Arsitektur CPU",
+            "chassis": "Kerangka",
+            "dev": "Pengembangan",
+            "docker": "Docker",
+            "docker_version": "Docker",
+            "hassio": "Supervisor",
+            "host_os": "Home Assistant OS",
+            "installation_type": "Jenis Instalasi",
+            "os_name": "Keluarga Sistem Operasi",
+            "os_version": "Versi Sistem Operasi",
+            "python_version": "Versi Python",
+            "supervisor": "Supervisor",
+            "timezone": "Zona Waktu",
+            "version": "Versi",
+            "virtualenv": "Lingkungan Virtual"
+        }
+    }
+}

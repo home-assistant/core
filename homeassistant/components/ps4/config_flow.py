@@ -23,6 +23,7 @@ CONF_MODE = "Config Mode"
 CONF_AUTO = "Auto Discover"
 CONF_MANUAL = "Manual Entry"
 
+LOCAL_UDP_PORT = 1988
 UDP_PORT = 987
 TCP_PORT = 997
 PORT_MSG = {UDP_PORT: "port_987_bind_error", TCP_PORT: "port_997_bind_error"}
@@ -107,8 +108,9 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
 
         if user_input is None:
             # Search for device.
+            # If LOCAL_UDP_PORT cannot be used, a random port will be selected.
             devices = await self.hass.async_add_executor_job(
-                self.helper.has_devices, self.m_device
+                self.helper.has_devices, self.m_device, LOCAL_UDP_PORT
             )
 
             # Abort if can't find device.
@@ -147,7 +149,12 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
             self.host = user_input[CONF_IP_ADDRESS]
 
             is_ready, is_login = await self.hass.async_add_executor_job(
-                self.helper.link, self.host, self.creds, self.pin, DEFAULT_ALIAS
+                self.helper.link,
+                self.host,
+                self.creds,
+                self.pin,
+                DEFAULT_ALIAS,
+                LOCAL_UDP_PORT,
             )
 
             if is_ready is False:

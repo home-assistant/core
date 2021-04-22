@@ -2,12 +2,10 @@
     "config": {
         "abort": {
             "already_configured": "Enheten er allerede konfigurert",
-            "cannot_connect": "Tilkobling mislyktes",
-            "connection_error": "Kunne ikke koble til WLED-enheten."
+            "cannot_connect": "Tilkobling mislyktes"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes",
-            "connection_error": "Kunne ikke koble til WLED-enheten."
+            "cannot_connect": "Tilkobling mislyktes"
         },
         "flow_title": "",
         "step": {

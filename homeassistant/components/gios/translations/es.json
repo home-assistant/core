@@ -18,5 +18,10 @@
                 "title": "GIO\u015a (Inspecci\u00f3n Jefe de Protecci\u00f3n del Medio Ambiente de Polonia)"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Alcanzar el servidor GIO\u015a"
+        }
     }
 }

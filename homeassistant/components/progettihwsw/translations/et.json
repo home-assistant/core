@@ -5,8 +5,7 @@
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
-            "unknown": "Tundmatu viga",
-            "wrong_info_relay_modes": "Relee re\u017eiimi valik on kas mono- v\u00f5i bistabiilne."
+            "unknown": "Tundmatu viga"
         },
         "step": {
             "relay_modes": {
@@ -38,6 +37,5 @@
                 "title": "Seadista liides"
             }
         }
-    },
-    "title": ""
+    }
 }

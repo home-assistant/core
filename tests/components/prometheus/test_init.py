@@ -1,6 +1,7 @@
 """The tests for the Prometheus exporter."""
 from dataclasses import dataclass
 import datetime
+import unittest.mock as mock
 
 import pytest
 
@@ -18,8 +19,6 @@ from homeassistant.const import (
 from homeassistant.core import split_entity_id
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-import tests.async_mock as mock
 
 PROMETHEUS_PATH = "homeassistant.components.prometheus"
 
@@ -225,7 +224,7 @@ async def test_minimal_config(hass, mock_client):
     assert await async_setup_component(hass, prometheus.DOMAIN, config)
     await hass.async_block_till_done()
     assert hass.bus.listen.called
-    assert EVENT_STATE_CHANGED == hass.bus.listen.call_args_list[0][0][0]
+    assert hass.bus.listen.call_args_list[0][0][0] == EVENT_STATE_CHANGED
 
 
 @pytest.mark.usefixtures("mock_bus")
@@ -252,7 +251,7 @@ async def test_full_config(hass, mock_client):
     assert await async_setup_component(hass, prometheus.DOMAIN, config)
     await hass.async_block_till_done()
     assert hass.bus.listen.called
-    assert EVENT_STATE_CHANGED == hass.bus.listen.call_args_list[0][0][0]
+    assert hass.bus.listen.call_args_list[0][0][0] == EVENT_STATE_CHANGED
 
 
 def make_event(entity_id):

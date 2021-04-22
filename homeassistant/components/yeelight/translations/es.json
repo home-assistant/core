@@ -15,8 +15,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Host",
-                    "ip_address": "Direcci\u00f3n IP"
+                    "host": "Host"
                 },
                 "description": "Si dejas la direcci\u00f3n IP vac\u00eda, se usar\u00e1 descubrimiento para encontrar dispositivos."
             }
@@ -35,6 +34,5 @@
                 "description": "Si dejas el modelo vac\u00edo, se detectar\u00e1 autom\u00e1ticamente."
             }
         }
-    },
-    "title": "Yeelight"
+    }
 }

@@ -4,8 +4,8 @@
             "already_configured": "P\u0159emost\u011bn\u00ed je ji\u017e nastaveno",
             "already_in_progress": "Konfigurace ji\u017e prob\u00edh\u00e1",
             "no_bridges": "\u017d\u00e1dn\u00e9 deCONZ p\u0159emost\u011bn\u00ed nebyly nalezeny",
+            "no_hardware_available": "K deCONZ nen\u00ed p\u0159ipojeno \u017e\u00e1dn\u00e9 r\u00e1diov\u00e9 za\u0159\u00edzen\u00ed",
             "not_deconz_bridge": "Nejedn\u00e1 se o deCONZ p\u0159emost\u011bn\u00ed",
-            "one_instance_only": "Komponent podporuje pouze jednu instanci deCONZ",
             "updated_instance": "Instance deCONZ aktualizov\u00e1na s nov\u00fdm hostitelem"
         },
         "error": {
@@ -14,8 +14,8 @@
         "flow_title": "Br\u00e1na deCONZ ZigBee ({host})",
         "step": {
             "hassio_confirm": {
-                "description": "Chcete nakonfigurovat slu\u017ebu Home Assistant pro p\u0159ipojen\u00ed k deCONZ br\u00e1n\u011b pomoc\u00ed hass.io {addon}?",
-                "title": "deCONZ Zigbee br\u00e1na prost\u0159ednictv\u00edm dopl\u0148ku Hass.io"
+                "description": "Chcete nakonfigurovat slu\u017ebu Home Assistant pro p\u0159ipojen\u00ed k deCONZ br\u00e1n\u011b pomoc\u00ed dopl\u0148ku {addon}?",
+                "title": "deCONZ Zigbee br\u00e1na prost\u0159ednictv\u00edm Home Assistant dopl\u0148ku"
             },
             "link": {
                 "description": "Odemkn\u011bte br\u00e1nu deCONZ pro registraci v Home Assistant.\n\n 1. P\u0159ejd\u011bte na Nastaven\u00ed deCONZ - > Br\u00e1na - > Pokro\u010dil\u00e9\n 2. Stiskn\u011bte tla\u010d\u00edtko \"Ov\u011b\u0159it aplikaci\"",
@@ -60,14 +60,15 @@
         },
         "trigger_type": {
             "remote_awakened": "Za\u0159\u00edzen\u00ed probuzeno",
-            "remote_button_double_press": "Dvakr\u00e1t stisknuto tla\u010d\u00edtko \"{subtype}\"",
+            "remote_button_double_press": "Tla\u010d\u00edtko \"{subtype}\" stisknuto dvakr\u00e1t",
+            "remote_button_long_press": "Tla\u010d\u00edtko \"{subtype}\" stisknuto dlouze",
             "remote_button_long_release": "Uvoln\u011bno tla\u010d\u00edtko \"{subtype}\" po dlouh\u00e9m stisku",
-            "remote_button_quadruple_press": "\u010cty\u0159ikr\u00e1t stisknuto tla\u010d\u00edtko \"{subtype}\"",
-            "remote_button_quintuple_press": "P\u011btkr\u00e1t stisknuto tla\u010d\u00edtko \"{subtype}\"",
+            "remote_button_quadruple_press": "Tla\u010d\u00edtko \"{subtype}\" stisknuto \u010dty\u0159ikr\u00e1t",
+            "remote_button_quintuple_press": "Tla\u010d\u00edtko \"{subtype}\" stisknuto p\u011btkr\u00e1t",
             "remote_button_rotation_stopped": "Oto\u010den\u00ed tla\u010d\u00edtka \"{subtype}\" bylo zastaveno",
-            "remote_button_short_press": "Stiknuto tla\u010d\u00edtko \"{subtype}\"",
+            "remote_button_short_press": "Tla\u010d\u00edtko \"{subtype}\" stisknuto",
             "remote_button_short_release": "Uvoln\u011bno tla\u010d\u00edtko \"{subtype}\"",
-            "remote_button_triple_press": "T\u0159ikr\u00e1t stisknuto tla\u010d\u00edtko \"{subtype}\"",
+            "remote_button_triple_press": "Tla\u010d\u00edtko \"{subtype}\" stisknuto t\u0159ikr\u00e1t",
             "remote_double_tap": "Dvakr\u00e1t poklep\u00e1no na za\u0159\u00edzen\u00ed \"{subtype}\"",
             "remote_double_tap_any_side": "Za\u0159\u00edzen\u00ed bylo poklep\u00e1no 2x na libovolnou stranu",
             "remote_flip_180_degrees": "Za\u0159\u00edzen\u00ed p\u0159evr\u00e1ceno o 180 stup\u0148\u016f",

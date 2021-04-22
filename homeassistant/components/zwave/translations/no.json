@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "Enheten er allerede konfigurert",
-            "one_instance_only": "Komponenten st\u00f8tter kun en Z-Wave-forekomst",
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "error": {
@@ -14,7 +13,7 @@
                     "network_key": "Nettverksn\u00f8kkel (la v\u00e6re tom for automatisk oppretting)",
                     "usb_path": "USB enhetsbane"
                 },
-                "description": "Se [www.home-assistant.io/docs/z-wave/installation/](https://www.home-assistant.io/docs/z-wave/installation/) for informasjon om konfigurasjon variablene",
+                "description": "Denne integrasjonen opprettholdes ikke lenger. For nye installasjoner, bruk Z-Wave JS i stedet. \n\n Se https://www.home-assistant.io/docs/z-wave/installation/ for informasjon om konfigurasjonsvariablene",
                 "title": "Sett opp Z-Wave"
             }
         }

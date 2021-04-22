@@ -15,5 +15,10 @@
                 "title": "Location"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "IPMA API endpoint reachable"
+        }
     }
 }

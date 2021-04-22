@@ -1,5 +1,7 @@
 """Test config flow."""
 
+from unittest.mock import patch
+
 import pytest
 import voluptuous as vol
 
@@ -7,7 +9,6 @@ from homeassistant import data_entry_flow
 from homeassistant.components import mqtt
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

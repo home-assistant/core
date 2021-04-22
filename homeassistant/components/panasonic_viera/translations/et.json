@@ -22,9 +22,9 @@
                     "host": "IP aadress",
                     "name": "Nimi"
                 },
-                "description": "Sisesta oma Panasonic Viera TV IP-aadress"
+                "description": "Sisesta oma Panasonic Viera TV IP-aadress",
+                "title": "Teleri seadistamine"
             }
         }
-    },
-    "title": ""
+    }
 }

@@ -1,11 +1,13 @@
 """The tests for the Rfxtrx component."""
 
+from unittest.mock import call
+
 from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.components.rfxtrx.const import EVENT_RFXTRX_EVENT
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import call
 from tests.common import MockConfigEntry
 from tests.components.rfxtrx.conftest import create_rfx_test_cfg
 
@@ -74,6 +76,8 @@ async def test_fire_event(hass, rfxtrx):
     await hass.async_block_till_done()
     await hass.async_start()
 
+    device_registry: dr.DeviceRegistry = dr.async_get(hass)
+
     calls = []
 
     @callback
@@ -87,6 +91,16 @@ async def test_fire_event(hass, rfxtrx):
     await rfxtrx.signal("0b1100cd0213c7f210010f51")
     await rfxtrx.signal("0716000100900970")
 
+    device_id_1 = device_registry.async_get_device(
+        identifiers={("rfxtrx", "11", "0", "213c7f2:16")}
+    )
+    assert device_id_1
+
+    device_id_2 = device_registry.async_get_device(
+        identifiers={("rfxtrx", "16", "0", "00:90")}
+    )
+    assert device_id_2
+
     assert calls == [
         {
             "packet_type": 17,
@@ -95,6 +109,7 @@ async def test_fire_event(hass, rfxtrx):
             "id_string": "213c7f2:16",
             "data": "0b1100cd0213c7f210010f51",
             "values": {"Command": "On", "Rssi numeric": 5},
+            "device_id": device_id_1.id,
         },
         {
             "packet_type": 22,
@@ -103,6 +118,7 @@ async def test_fire_event(hass, rfxtrx):
             "id_string": "00:90",
             "data": "0716000100900970",
             "values": {"Command": "Chime", "Rssi numeric": 7, "Sound": 9},
+            "device_id": device_id_2.id,
         },
     ]
 

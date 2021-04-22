@@ -2,13 +2,8 @@
     "config": {
         "error": {
             "already_configured": "Kont ass scho konfigur\u00e9iert",
-            "already_configured_account": "Kont ass scho konfigur\u00e9iert",
             "cannot_connect": "Feeler beim verbannen",
-            "connection_error": "Feeler beim verbannen, Iwwerpr\u00e9ift Netzwierk a prob\u00e9iert nach emol",
-            "identifier_exists": "E-Mail ass scho registr\u00e9iert",
-            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
-            "invalid_credentials": "Ong\u00eblteg Login Informatioune",
-            "unknown_error": "Onbekannte Feeler, mellt w.e.g. Logbuch Info"
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun"
         },
         "step": {
             "user": {

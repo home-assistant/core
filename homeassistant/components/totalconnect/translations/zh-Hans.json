@@ -1,8 +1,5 @@
 {
     "config": {
-        "error": {
-            "login": "\u767b\u5f55\u9519\u8bef\uff1a\u8bf7\u68c0\u67e5\u7528\u6237\u540d\u548c\u5bc6\u7801"
-        },
         "step": {
             "user": {
                 "data": {

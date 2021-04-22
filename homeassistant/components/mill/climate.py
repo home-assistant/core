@@ -107,13 +107,15 @@ class MillHeater(ClimateEntity):
         return self._heater.name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         res = {
             "open_window": self._heater.open_window,
             "heating": self._heater.is_heating,
             "controlled_by_tibber": self._heater.tibber_control,
             "heater_generation": 1 if self._heater.is_gen1 else 2,
+            "consumption_today": self._heater.day_consumption,
+            "consumption_total": self._heater.total_consumption,
         }
         if self._heater.room:
             res["room"] = self._heater.room.name

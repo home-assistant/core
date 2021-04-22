@@ -1,6 +1,7 @@
 """Tests for rpi_power binary sensor."""
 from datetime import timedelta
 import logging
+from unittest.mock import MagicMock
 
 from homeassistant.components.rpi_power.binary_sensor import (
     DESCRIPTION_NORMALIZED,
@@ -11,7 +12,6 @@ from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.async_mock import MagicMock
 from tests.common import MockConfigEntry, async_fire_time_changed, patch
 
 ENTITY_ID = "binary_sensor.rpi_power_status"

@@ -1,17 +1,17 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Service is already configured",
             "existing_instance_updated": "Updated existing configuration.",
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "error": {
-            "cannot_connect": "Failed to connect",
-            "connection_error": "Failed to connect."
+            "cannot_connect": "Failed to connect"
         },
         "step": {
             "hassio_confirm": {
-                "description": "Do you want to configure Home Assistant to connect to the AdGuard Home provided by the Hass.io add-on: {addon}?",
-                "title": "AdGuard Home via Hass.io add-on"
+                "description": "Do you want to configure Home Assistant to connect to the AdGuard Home provided by the add-on: {addon}?",
+                "title": "AdGuard Home via Home Assistant add-on"
             },
             "user": {
                 "data": {

@@ -3,11 +3,10 @@
         "abort": {
             "already_configured_device": "Enheten er allerede konfigurert",
             "already_configured_local_device": "Lokal(e) enhet(er) er allerede konfigurert. Fjern de f\u00f8rst f\u00f8r du konfigurerer en skyenhet.",
-            "authorize_url_timeout": "Tidsavbrudd som genererer autorer URL-adresse.",
+            "authorize_url_timeout": "Tidsavbrudd ved oppretting av godkjenningsadresse",
             "cannot_connect": "Tilkobling mislyktes",
-            "connection_error": "Kunne ikke koble til Smappee-enheten.",
             "invalid_mdns": "Ikke-st\u00f8ttet enhet for Smappee-integrasjonen.",
-            "missing_configuration": "Komponenten er ikke konfigurert. Vennligst f\u00f8lg dokumentasjonen.",
+            "missing_configuration": "Komponenten er ikke konfigurert, vennligst f\u00f8lg dokumentasjonen",
             "no_url_available": "Ingen URL tilgjengelig. For informasjon om denne feilen, [sjekk hjelpseksjonen]({docs_url})"
         },
         "flow_title": "",

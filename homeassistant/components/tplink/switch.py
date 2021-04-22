@@ -1,5 +1,6 @@
 """Support for TPLink HS100/HS110/HS200 smart switch."""
 import asyncio
+from contextlib import suppress
 import logging
 import time
 
@@ -100,7 +101,7 @@ class SmartPlugSwitch(SwitchEntity):
         self.smartplug.turn_off()
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
         return self._emeter_params
 
@@ -137,27 +138,24 @@ class SmartPlugSwitch(SwitchEntity):
             if self.smartplug.has_emeter:
                 emeter_readings = self.smartplug.get_emeter_realtime()
 
-                self._emeter_params[ATTR_CURRENT_POWER_W] = "{:.2f}".format(
-                    emeter_readings["power"]
+                self._emeter_params[ATTR_CURRENT_POWER_W] = round(
+                    float(emeter_readings["power"]), 2
                 )
-                self._emeter_params[ATTR_TOTAL_ENERGY_KWH] = "{:.3f}".format(
-                    emeter_readings["total"]
+                self._emeter_params[ATTR_TOTAL_ENERGY_KWH] = round(
+                    float(emeter_readings["total"]), 3
                 )
-                self._emeter_params[ATTR_VOLTAGE] = "{:.1f}".format(
-                    emeter_readings["voltage"]
+                self._emeter_params[ATTR_VOLTAGE] = round(
+                    float(emeter_readings["voltage"]), 1
                 )
-                self._emeter_params[ATTR_CURRENT_A] = "{:.2f}".format(
-                    emeter_readings["current"]
+                self._emeter_params[ATTR_CURRENT_A] = round(
+                    float(emeter_readings["current"]), 2
                 )
 
                 emeter_statics = self.smartplug.get_emeter_daily()
-                try:
-                    self._emeter_params[ATTR_TODAY_ENERGY_KWH] = "{:.3f}".format(
-                        emeter_statics[int(time.strftime("%e"))]
+                with suppress(KeyError):  # Device returned no daily history
+                    self._emeter_params[ATTR_TODAY_ENERGY_KWH] = round(
+                        float(emeter_statics[int(time.strftime("%e"))]), 3
                     )
-                except KeyError:
-                    # Device returned no daily history
-                    pass
             return True
         except (SmartDeviceException, OSError) as ex:
             if update_attempt == 0:

@@ -15,6 +15,7 @@ from tests.common import (
     mock_device_registry,
     mock_registry,
 )
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
 @pytest.fixture
@@ -259,7 +260,7 @@ async def test_capabilities(hass):
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
-            "name": "preset_modes",
+            "name": "preset_mode",
             "options": [("home", "home"), ("away", "away")],
             "required": True,
             "type": "select",

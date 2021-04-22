@@ -19,7 +19,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    CONF_API_KEY,
     CONF_CLIENT_EMAIL,
     CONF_ENTITY_CONFIG,
     CONF_EXPOSE,
@@ -135,16 +134,13 @@ class GoogleConfig(AbstractConfig):
         return True
 
     async def _async_request_sync_devices(self, agent_user_id: str):
-        if CONF_API_KEY in self._config:
-            await self.async_call_homegraph_api_key(
+        if CONF_SERVICE_ACCOUNT in self._config:
+            return await self.async_call_homegraph_api(
                 REQUEST_SYNC_BASE_URL, {"agentUserId": agent_user_id}
             )
-        elif CONF_SERVICE_ACCOUNT in self._config:
-            await self.async_call_homegraph_api(
-                REQUEST_SYNC_BASE_URL, {"agentUserId": agent_user_id}
-            )
-        else:
-            _LOGGER.error("No configuration for request_sync available")
+
+        _LOGGER.error("No configuration for request_sync available")
+        return HTTP_INTERNAL_SERVER_ERROR
 
     async def _async_update_token(self, force=False):
         if CONF_SERVICE_ACCOUNT not in self._config:
@@ -163,25 +159,6 @@ class GoogleConfig(AbstractConfig):
             )
             self._access_token = token["access_token"]
             self._access_token_renew = now + timedelta(seconds=token["expires_in"])
-
-    async def async_call_homegraph_api_key(self, url, data):
-        """Call a homegraph api with api key authentication."""
-        websession = async_get_clientsession(self.hass)
-        try:
-            res = await websession.post(
-                url, params={"key": self._config.get(CONF_API_KEY)}, json=data
-            )
-            _LOGGER.debug(
-                "Response on %s with data %s was %s", url, data, await res.text()
-            )
-            res.raise_for_status()
-            return res.status
-        except ClientResponseError as error:
-            _LOGGER.error("Request for %s failed: %d", url, error.status)
-            return error.status
-        except (asyncio.TimeoutError, ClientError):
-            _LOGGER.error("Could not contact %s", url)
-            return HTTP_INTERNAL_SERVER_ERROR
 
     async def async_call_homegraph_api(self, url, data):
         """Call a homegraph api with authentication."""

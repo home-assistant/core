@@ -1,21 +1,21 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
+from __future__ import annotations
+
 from datetime import datetime
-from typing import Dict
 
 from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DEFAULT_DEVICE_NAME, DEVICE_ICONS, DOMAIN
 from .router import FreeboxRouter
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up device tracker for Freebox component."""
     router = hass.data[DOMAIN][entry.unique_id]
@@ -52,7 +52,7 @@ def add_entities(router, async_add_entities, tracked):
 class FreeboxDevice(ScannerEntity):
     """Representation of a Freebox device."""
 
-    def __init__(self, router: FreeboxRouter, device: Dict[str, any]) -> None:
+    def __init__(self, router: FreeboxRouter, device: dict[str, any]) -> None:
         """Initialize a Freebox device."""
         self._router = router
         self._name = device["primary_name"].strip() or DEFAULT_DEVICE_NAME
@@ -105,12 +105,12 @@ class FreeboxDevice(ScannerEntity):
         return self._icon
 
     @property
-    def device_state_attributes(self) -> Dict[str, any]:
+    def extra_state_attributes(self) -> dict[str, any]:
         """Return the attributes."""
         return self._attrs
 
     @property
-    def device_info(self) -> Dict[str, any]:
+    def device_info(self) -> dict[str, any]:
         """Return the device information."""
         return {
             "connections": {(CONNECTION_NETWORK_MAC, self._mac)},

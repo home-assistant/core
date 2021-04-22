@@ -3,9 +3,7 @@
         "error": {
             "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana",
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "communication_error": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z API Luftdaten",
-            "invalid_sensor": "Sensor niedost\u0119pny lub nieprawid\u0142owy",
-            "sensor_exists": "Sensor zosta\u0142 ju\u017c zarejestrowany"
+            "invalid_sensor": "Sensor niedost\u0119pny lub nieprawid\u0142owy"
         },
         "step": {
             "user": {

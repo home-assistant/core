@@ -18,5 +18,10 @@
                 "title": "G\u0142\u00f3wny Inspektorat Ochrony \u015arodowiska (GIO\u015a)"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Dost\u0119p do serwera GIO\u015a"
+        }
     }
 }

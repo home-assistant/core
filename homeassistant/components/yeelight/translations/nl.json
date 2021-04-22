@@ -15,8 +15,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Host",
-                    "ip_address": "IP adres"
+                    "host": "Host"
                 },
                 "description": "Als u host leeg laat, wordt detectie gebruikt om apparaten te vinden."
             }
@@ -35,6 +34,5 @@
                 "description": "Als u model leeg laat, wordt het automatisch gedetecteerd."
             }
         }
-    },
-    "title": "Yeelight"
+    }
 }

@@ -1,9 +1,10 @@
 """HTTP Support for Hass.io."""
+from __future__ import annotations
+
 import asyncio
 import logging
 import os
 import re
-from typing import Dict, Union
 
 import aiohttp
 from aiohttp import web
@@ -57,7 +58,7 @@ class HassIOView(HomeAssistantView):
 
     async def _handle(
         self, request: web.Request, path: str
-    ) -> Union[web.Response, web.StreamResponse]:
+    ) -> web.Response | web.StreamResponse:
         """Route data to Hass.io."""
         hass = request.app["hass"]
         if _need_auth(hass, path) and not request[KEY_AUTHENTICATED]:
@@ -71,12 +72,13 @@ class HassIOView(HomeAssistantView):
 
     async def _command_proxy(
         self, path: str, request: web.Request
-    ) -> Union[web.Response, web.StreamResponse]:
+    ) -> web.Response | web.StreamResponse:
         """Return a client request with proxy origin for Hass.io supervisor.
 
         This method is a coroutine.
         """
         read_timeout = _get_timeout(path)
+        client_timeout = 10
         data = None
         headers = _init_header(request)
         if path == "snapshots/new/upload":
@@ -89,9 +91,10 @@ class HassIOView(HomeAssistantView):
             request._client_max_size = (  # pylint: disable=protected-access
                 MAX_UPLOAD_SIZE
             )
+            client_timeout = 300
 
         try:
-            with async_timeout.timeout(10):
+            with async_timeout.timeout(client_timeout):
                 data = await request.read()
 
             method = getattr(self._websession, request.method.lower())
@@ -129,7 +132,7 @@ class HassIOView(HomeAssistantView):
         raise HTTPBadGateway()
 
 
-def _init_header(request: web.Request) -> Dict[str, str]:
+def _init_header(request: web.Request) -> dict[str, str]:
     """Create initial header."""
     headers = {
         X_HASSIO: os.environ.get("HASSIO_TOKEN", ""),

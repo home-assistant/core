@@ -1,9 +1,8 @@
 {
     "config": {
         "abort": {
-            "not_internet_accessible": "\u00c4r Home Assistant Instanz muss iwwert Internet accessibel si fir GPSLogger Noriichten z'empf\u00e4nken.",
-            "one_instance_allowed": "N\u00ebmmen eng eenzeg Instanz ass n\u00e9ideg.",
-            "single_instance_allowed": "Scho konfigur\u00e9iert. N\u00ebmmen eng eenzeg Konfiguratioun ass m\u00e9iglech."
+            "single_instance_allowed": "Scho konfigur\u00e9iert. N\u00ebmmen eng eenzeg Konfiguratioun ass m\u00e9iglech.",
+            "webhook_not_internet_accessible": "Deng Home Assistant Instanz muss iwwert Internet accessibel si fir Webhook Noriichten z'empf\u00e4nken."
         },
         "create_entry": {
             "default": "Fir Evenementer un Home Assistant ze sch\u00e9cken, muss den Webhook Feature am GPSLogger ageriicht ginn.\n\nF\u00ebllt folgend Informatiounen aus:\n\n- URL: `{webhook_url}`\n- Method: POST\n\nLiest [Dokumentatioun]({docs_url}) fir w\u00e9ider D\u00e9tailer."

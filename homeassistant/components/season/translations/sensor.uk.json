@@ -1,5 +1,11 @@
 {
     "state": {
+        "season__season": {
+            "autumn": "\u041e\u0441\u0456\u043d\u044c",
+            "spring": "\u0412\u0435\u0441\u043d\u0430",
+            "summer": "\u041b\u0456\u0442\u043e",
+            "winter": "\u0417\u0438\u043c\u0430"
+        },
         "season__season__": {
             "autumn": "\u041e\u0441\u0456\u043d\u044c",
             "spring": "\u0412\u0435\u0441\u043d\u0430",

@@ -1,9 +1,8 @@
 {
     "config": {
         "abort": {
-            "not_internet_accessible": "Uw Home Assistant instantie moet toegankelijk zijn vanaf het internet om Geofency-berichten te ontvangen.",
-            "one_instance_allowed": "Slechts \u00e9\u00e9n instantie is nodig.",
-            "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
+            "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk.",
+            "webhook_not_internet_accessible": "Uw Home Assistant-instantie moet toegankelijk zijn via internet om webhook-berichten te ontvangen."
         },
         "create_entry": {
             "default": "Om locaties naar Home Assistant te sturen, moet u de Webhook-functie instellen in Geofency.\n\n Vul de volgende info in: \n\n - URL: `{webhook_url}` \n - Methode: POST \n\n Zie [de documentatie]({docs_url}) voor meer informatie."

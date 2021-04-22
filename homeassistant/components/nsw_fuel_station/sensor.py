@@ -1,6 +1,8 @@
 """Sensor platform to display the current fuel prices at a NSW fuel station."""
+from __future__ import annotations
+
+import datetime
 import logging
-from typing import Optional
 
 import voluptuous as vol
 
@@ -8,9 +10,10 @@ from homeassistant.components.nsw_fuel_station import (
     DATA_NSW_FUEL_STATION,
     FuelCheckData,
 )
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CURRENCY_CENT, VOLUME_LITERS
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -62,7 +65,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class StationPriceSensor(Entity):
+class StationPriceSensor(SensorEntity):
     """Implementation of a sensor that reports the fuel price for a station."""
 
     def __init__(self, fuel_check_data: FuelCheckData, station_id: int, fuel_type: str):
@@ -78,12 +81,12 @@ class StationPriceSensor(Entity):
         return f"{station_name} {self._fuel_type}"
 
     @property
-    def state(self) -> Optional[float]:
+    def state(self) -> float | None:
         """Return the state of the sensor."""
         return self._fuel_check_data.get_fuel_price(self._station_id, self._fuel_type)
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return the state attributes of the device."""
         return {
             ATTR_STATION_ID: self._station_id,

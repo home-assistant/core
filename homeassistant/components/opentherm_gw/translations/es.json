@@ -3,9 +3,7 @@
         "error": {
             "already_configured": "Gateway ya configurado",
             "cannot_connect": "No se pudo conectar",
-            "id_exists": "El ID del Gateway ya existe",
-            "serial_error": "Error de conexi\u00f3n al dispositivo",
-            "timeout": "Intento de conexi\u00f3n agotado"
+            "id_exists": "El ID del Gateway ya existe"
         },
         "step": {
             "init": {
@@ -23,7 +21,10 @@
             "init": {
                 "data": {
                     "floor_temperature": "Temperatura del suelo",
-                    "precision": "Precisi\u00f3n"
+                    "precision": "Precisi\u00f3n",
+                    "read_precision": "Leer precisi\u00f3n",
+                    "set_precision": "Establecer precisi\u00f3n",
+                    "temporary_override_mode": "Modo de anulaci\u00f3n temporal del punto de ajuste"
                 },
                 "description": "Opciones para OpenTherm Gateway"
             }

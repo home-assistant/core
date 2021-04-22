@@ -1,14 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Apparaat is al geconfigureerd",
-            "port_exists": "Deze poort is al geconfigureerd"
+            "already_configured": "Apparaat is al geconfigureerd"
         },
         "error": {
             "already_configured": "Apparaat is al geconfigureerd",
-            "cannot_connect": "Kan geen verbinding maken",
-            "connection_failed": "De velbus verbinding is mislukt.",
-            "port_exists": "Deze poort is al geconfigureerd"
+            "cannot_connect": "Kan geen verbinding maken"
         },
         "step": {
             "user": {

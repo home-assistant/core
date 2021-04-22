@@ -5,9 +5,6 @@
             "authorize_url_timeout": "Timeout ved generering af autoriseret url.",
             "unknown": "Ukendt fejl opstod"
         },
-        "error": {
-            "auth_error": "Godkendelsesfejl, pr\u00f8v venligst igen"
-        },
         "step": {
             "auth": {
                 "description": "For at forbinde din TelldusLive-konto:\n 1. Klik p\u00e5 linket herunder\n 2. Log p\u00e5 Telldus Live\n 3. Tillad **{app_name}** (klik **Ja**). \n 4. Vend tilbage hertil og klik **SUBMIT**.\n\n [Forbind TelldusLive konto]({auth_url})",

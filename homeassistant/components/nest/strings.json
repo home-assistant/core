@@ -4,15 +4,23 @@
       "pick_implementation": {
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The Nest integration needs to re-authenticate your account"
+      },
       "init": {
         "title": "Authentication Provider",
         "description": "[%key:common::config_flow::title::oauth2_pick_implementation%]",
-        "data": { "flow_impl": "Provider" }
+        "data": {
+          "flow_impl": "Provider"
+        }
       },
       "link": {
         "title": "Link Nest Account",
-        "description": "To link your Nest account, [authorize your account]({url}).\n\nAfter authorization, copy-paste the provided pin code below.",
-        "data": { "code": "[%key:common::config_flow::data::pin%]" }
+        "description": "To link your Nest account, [authorize your account]({url}).\n\nAfter authorization, copy-paste the provided PIN code below.",
+        "data": {
+          "code": "[%key:common::config_flow::data::pin%]"
+        }
       }
     },
     "error": {
@@ -25,11 +33,20 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
-      "authorize_url_fail": "Unknown error generating an authorize url.",
-      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]"
+      "unknown_authorize_url_generation": "[%key:common::config_flow::abort::unknown_authorize_url_generation%]",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "camera_person": "Person detected",
+      "camera_motion": "Motion detected",
+      "camera_sound": "Sound detected",
+      "doorbell_chime": "Doorbell pressed"
     }
   }
 }

@@ -1,4 +1,6 @@
 """The tests for the Yamaha Media player platform."""
+from unittest.mock import MagicMock, PropertyMock, call, patch
+
 import pytest
 
 import homeassistant.components.media_player as mp
@@ -6,8 +8,6 @@ from homeassistant.components.yamaha import media_player as yamaha
 from homeassistant.components.yamaha.const import DOMAIN
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import MagicMock, PropertyMock, call, patch
 
 CONFIG = {"media_player": {"platform": "yamaha", "host": "127.0.0.1"}}
 

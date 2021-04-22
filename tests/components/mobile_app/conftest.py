@@ -7,14 +7,6 @@ from homeassistant.setup import async_setup_component
 
 from .const import REGISTER, REGISTER_CLEARTEXT
 
-from tests.common import mock_device_registry
-
-
-@pytest.fixture
-def registry(hass):
-    """Return a configured device registry."""
-    return mock_device_registry(hass)
-
 
 @pytest.fixture
 async def create_registrations(hass, authed_api_client):
@@ -38,6 +30,26 @@ async def create_registrations(hass, authed_api_client):
     await hass.async_block_till_done()
 
     return (enc_reg_json, clear_reg_json)
+
+
+@pytest.fixture
+async def push_registration(hass, authed_api_client):
+    """Return registration with push notifications enabled."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+
+    enc_reg = await authed_api_client.post(
+        "/api/mobile_app/registrations",
+        json={
+            **REGISTER,
+            "app_data": {
+                "push_url": "http://localhost/mock-push",
+                "push_token": "abcd",
+            },
+        },
+    )
+
+    assert enc_reg.status == 201
+    return await enc_reg.json()
 
 
 @pytest.fixture

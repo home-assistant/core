@@ -1,12 +1,10 @@
 {
     "config": {
         "abort": {
-            "address_exists": "Direcci\u00f3n ya configurada.",
             "already_configured": "La ubicaci\u00f3n ya est\u00e1 configurada"
         },
         "error": {
             "cannot_connect": "No se pudo conectar",
-            "connection_error": "No se conect\u00f3.",
             "invalid_address": "Direcci\u00f3n no encontrada en el \u00e1rea de servicio de Twente Milieu."
         },
         "step": {

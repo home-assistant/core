@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
+    CONF_API_KEY,
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     CONF_SENSORS,
@@ -17,7 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 
-from .const import CONF_API_KEY, CONF_REDIRECT_URI, DEFAULT_CACHEDB, DOMAIN
+from .const import CONF_REDIRECT_URI, DEFAULT_CACHEDB, DOMAIN
 
 _TIMEOUT = 15  # seconds
 
@@ -120,7 +121,6 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow):
 
     def _get_authorization_url(self):
         """Create temporary Circle session and generate authorization url."""
-
         flow = self.hass.data[DATA_FLOW_IMPL][self.flow_impl]
         client_id = flow[CONF_CLIENT_ID]
         client_secret = flow[CONF_CLIENT_SECRET]
@@ -147,7 +147,6 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow):
 
     async def _async_create_session(self, code):
         """Create Logi Circle session and entries."""
-
         flow = self.hass.data[DATA_FLOW_IMPL][DOMAIN]
         client_id = flow[CONF_CLIENT_ID]
         client_secret = flow[CONF_CLIENT_SECRET]

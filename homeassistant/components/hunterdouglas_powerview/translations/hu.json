@@ -4,8 +4,8 @@
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
         },
         "error": {
-            "cannot_connect": "Nem siker\u00fclt csatlakozni, pr\u00f3b\u00e1lkozzon \u00fajra.",
-            "unknown": "V\u00e1ratlan hiba"
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "step": {
             "user": {

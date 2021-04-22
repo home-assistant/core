@@ -1,22 +1,23 @@
 """Support for deCONZ devices."""
 import voluptuous as vol
 
-from homeassistant.config_entries import _UNDEF
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_HOST,
+    CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP,
+)
+from homeassistant.core import callback
+from homeassistant.helpers.entity_registry import async_migrate_entries
 
 from .config_flow import get_master_gateway
-from .const import CONF_BRIDGE_ID, CONF_GROUP_ID_BASE, CONF_MASTER_GATEWAY, DOMAIN
+from .const import CONF_GROUP_ID_BASE, CONF_MASTER_GATEWAY, DOMAIN
 from .gateway import DeconzGateway
 from .services import async_setup_services, async_unload_services
 
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema({}, extra=vol.ALLOW_EXTRA)}, extra=vol.ALLOW_EXTRA
 )
-
-
-async def async_setup(hass, config):
-    """Old way of setting up deCONZ integrations."""
-    return True
 
 
 async def async_setup_entry(hass, config_entry):
@@ -28,6 +29,8 @@ async def async_setup_entry(hass, config_entry):
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
 
+    await async_update_group_unique_id(hass, config_entry)
+
     if not config_entry.options:
         await async_update_master_gateway(hass, config_entry)
 
@@ -36,25 +39,15 @@ async def async_setup_entry(hass, config_entry):
     if not await gateway.async_setup():
         return False
 
-    # 0.104 introduced config entry unique id, this makes upgrading possible
-    if config_entry.unique_id is None:
-
-        new_data = _UNDEF
-        if CONF_BRIDGE_ID in config_entry.data:
-            new_data = dict(config_entry.data)
-            new_data[CONF_GROUP_ID_BASE] = config_entry.data[CONF_BRIDGE_ID]
-
-        hass.config_entries.async_update_entry(
-            config_entry, unique_id=gateway.api.config.bridgeid, data=new_data
-        )
-
     hass.data[DOMAIN][config_entry.unique_id] = gateway
 
     await gateway.async_update_device_registry()
 
     await async_setup_services(hass)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, gateway.shutdown)
+    config_entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, gateway.shutdown)
+    )
 
     return True
 
@@ -84,3 +77,30 @@ async def async_update_master_gateway(hass, config_entry):
     options = {**config_entry.options, CONF_MASTER_GATEWAY: master}
 
     hass.config_entries.async_update_entry(config_entry, options=options)
+
+
+async def async_update_group_unique_id(hass, config_entry) -> None:
+    """Update unique ID entities based on deCONZ groups."""
+    if not (old_unique_id := config_entry.data.get(CONF_GROUP_ID_BASE)):
+        return
+
+    new_unique_id: str = config_entry.unique_id
+
+    @callback
+    def update_unique_id(entity_entry):
+        """Update unique ID of entity entry."""
+        if f"{old_unique_id}-" not in entity_entry.unique_id:
+            return None
+        return {
+            "new_unique_id": entity_entry.unique_id.replace(
+                old_unique_id, new_unique_id
+            )
+        }
+
+    await async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
+    data = {
+        CONF_API_KEY: config_entry.data[CONF_API_KEY],
+        CONF_HOST: config_entry.data[CONF_HOST],
+        CONF_PORT: config_entry.data[CONF_PORT],
+    }
+    hass.config_entries.async_update_entry(config_entry, data=data)

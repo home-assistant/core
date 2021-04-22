@@ -6,7 +6,6 @@
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "error": {
-            "invalid_pin": "Nieprawid\u0142owy kod PIN, spr\u00f3buj ponownie",
             "invalid_sgtin_or_pin": "Nieprawid\u0142owy SGTIN lub kod PIN, spr\u00f3buj ponownie",
             "press_the_button": "Prosz\u0119 nacisn\u0105\u0107 niebieski przycisk",
             "register_failed": "Nie uda\u0142o si\u0119 zarejestrowa\u0107, spr\u00f3buj ponownie",

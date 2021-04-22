@@ -18,8 +18,15 @@ from .const import DOMAIN, KNOWN_DEVICES
 
 HOMEKIT_DIR = ".homekit"
 HOMEKIT_BRIDGE_DOMAIN = "homekit"
-HOMEKIT_BRIDGE_SERIAL_NUMBER = "homekit.bridge"
-HOMEKIT_BRIDGE_MODEL = "Home Assistant HomeKit Bridge"
+
+HOMEKIT_IGNORE = [
+    # eufy Indoor Cam 2K and 2K Pan & Tilt
+    # https://github.com/home-assistant/core/issues/42307
+    "T8400",
+    "T8410",
+    # Hive Hub - vendor does not give user a pairing code
+    "HHKBridge1,1",
+]
 
 PAIRING_FILE = "pairing.json"
 
@@ -172,8 +179,8 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
 
         return self.async_abort(reason="no_devices")
 
-    async def _hkid_is_homekit_bridge(self, hkid):
-        """Determine if the device is a homekit bridge."""
+    async def _hkid_is_homekit(self, hkid):
+        """Determine if the device is a homekit bridge or accessory."""
         dev_reg = await async_get_device_registry(self.hass)
         device = dev_reg.async_get_device(
             identifiers=set(), connections={(CONNECTION_NETWORK_MAC, hkid)}
@@ -181,7 +188,13 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
 
         if device is None:
             return False
-        return device.model == HOMEKIT_BRIDGE_MODEL
+
+        for entry_id in device.config_entries:
+            entry = self.hass.config_entries.async_get_entry(entry_id)
+            if entry and entry.domain == HOMEKIT_BRIDGE_DOMAIN:
+                return True
+
+        return False
 
     async def async_step_zeroconf(self, discovery_info):
         """Handle a discovered HomeKit accessory.
@@ -196,8 +209,11 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         }
 
         if "id" not in properties:
-            _LOGGER.warning(
-                "HomeKit device %s: id not exposed, in violation of spec", properties
+            # This can happen if the TXT record is received after the PTR record
+            # we will wait for the next update in this case
+            _LOGGER.debug(
+                "HomeKit device %s: id not exposed; TXT record may have not yet been received",
+                properties,
             )
             return self.async_abort(reason="invalid_properties")
 
@@ -244,7 +260,6 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         await self.async_set_unique_id(normalize_hkid(hkid))
         self._abort_if_unique_id_configured()
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["hkid"] = hkid
 
         if paired:
@@ -255,7 +270,11 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         # Devices in HOMEKIT_IGNORE have native local integrations - users
         # should be encouraged to use native integration and not confused
         # by alternative HK API.
-        if await self._hkid_is_homekit_bridge(hkid):
+        if model in HOMEKIT_IGNORE:
+            return self.async_abort(reason="ignored_model")
+
+        # If this is a HomeKit bridge/accessory exported by *this* HA instance ignore it.
+        if await self._hkid_is_homekit(hkid):
             return self.async_abort(reason="ignored_model")
 
         self.name = name
@@ -379,7 +398,6 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
 
     @callback
     def _async_step_pair_show_form(self, errors=None):
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         placeholders = {"name": self.name}
         self.context["title_placeholders"] = {"name": self.name}
 

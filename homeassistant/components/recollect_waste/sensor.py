@@ -1,26 +1,36 @@
-"""Support for Recollect Waste curbside collection pickup."""
-from datetime import date, timedelta
-import logging
+"""Support for ReCollect Waste sensors."""
+from __future__ import annotations
 
-import recollect_waste
+from typing import Callable
+
+from aiorecollect.client import PickupType
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    CONF_FRIENDLY_NAME,
+    CONF_NAME,
+    DEVICE_CLASS_TIMESTAMP,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
+from homeassistant.util.dt import as_utc
 
-_LOGGER = logging.getLogger(__name__)
+from .const import CONF_PLACE_ID, CONF_SERVICE_ID, DATA_COORDINATOR, DOMAIN, LOGGER
+
 ATTR_PICKUP_TYPES = "pickup_types"
 ATTR_AREA_NAME = "area_name"
 ATTR_NEXT_PICKUP_TYPES = "next_pickup_types"
 ATTR_NEXT_PICKUP_DATE = "next_pickup_date"
-CONF_PLACE_ID = "place_id"
-CONF_SERVICE_ID = "service_id"
-DEFAULT_NAME = "recollect_waste"
-ICON = "mdi:trash-can-outline"
-SCAN_INTERVAL = timedelta(days=1)
 
+DEFAULT_ATTRIBUTION = "Pickup data provided by ReCollect Waste"
+DEFAULT_NAME = "recollect_waste"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -31,76 +41,109 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Recollect Waste platform."""
-    client = recollect_waste.RecollectWasteClient(
-        config[CONF_PLACE_ID], config[CONF_SERVICE_ID]
+@callback
+def async_get_pickup_type_names(
+    entry: ConfigEntry, pickup_types: list[PickupType]
+) -> list[str]:
+    """Return proper pickup type names from their associated objects."""
+    return [
+        t.friendly_name
+        if entry.options.get(CONF_FRIENDLY_NAME) and t.friendly_name
+        else t.name
+        for t in pickup_types
+    ]
+
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: dict,
+    async_add_entities: Callable,
+    discovery_info: dict = None,
+):
+    """Import Recollect Waste configuration from YAML."""
+    LOGGER.warning(
+        "Loading ReCollect Waste via platform setup is deprecated; "
+        "Please remove it from your configuration"
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
     )
 
-    # Ensure the client can connect to the API successfully
-    # with given place_id and service_id.
-    try:
-        client.get_next_pickup()
-    except recollect_waste.RecollectWasteException as ex:
-        _LOGGER.error("Recollect Waste platform error. %s", ex)
-        return
 
-    add_entities([RecollectWasteSensor(config.get(CONF_NAME), client)], True)
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
+) -> None:
+    """Set up ReCollect Waste sensors based on a config entry."""
+    coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id]
+    async_add_entities([ReCollectWasteSensor(coordinator, entry)])
 
 
-class RecollectWasteSensor(Entity):
-    """Recollect Waste Sensor."""
+class ReCollectWasteSensor(CoordinatorEntity, SensorEntity):
+    """ReCollect Waste Sensor."""
 
-    def __init__(self, name, client):
+    def __init__(self, coordinator: DataUpdateCoordinator, entry: ConfigEntry) -> None:
         """Initialize the sensor."""
-        self._attributes = {}
-        self._name = name
+        super().__init__(coordinator)
+        self._attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self._entry = entry
         self._state = None
-        self.client = client
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
+    def device_class(self) -> dict:
+        """Return the device class."""
+        return DEVICE_CLASS_TIMESTAMP
 
     @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return f"{self.client.place_id}{self.client.service_id}"
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self) -> dict:
         """Return the state attributes."""
         return self._attributes
 
     @property
-    def icon(self):
-        """Icon to use in the frontend."""
-        return ICON
+    def name(self) -> str:
+        """Return the name of the sensor."""
+        return DEFAULT_NAME
 
-    def update(self):
-        """Update device state."""
-        try:
-            pickup_event_array = self.client.get_pickup_events(
-                date.today(), date.today() + timedelta(weeks=4)
-            )
-        except recollect_waste.RecollectWasteException as ex:
-            _LOGGER.error("Recollect Waste platform error. %s", ex)
-        else:
-            pickup_event = pickup_event_array[0]
-            next_pickup_event = pickup_event_array[1]
-            next_date = str(next_pickup_event.event_date)
-            self._state = pickup_event.event_date
-            self._attributes.update(
-                {
-                    ATTR_PICKUP_TYPES: pickup_event.pickup_types,
-                    ATTR_AREA_NAME: pickup_event.area_name,
-                    ATTR_NEXT_PICKUP_TYPES: next_pickup_event.pickup_types,
-                    ATTR_NEXT_PICKUP_DATE: next_date,
-                }
-            )
+    @property
+    def state(self) -> str:
+        """Return the state of the sensor."""
+        return self._state
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return f"{self._entry.data[CONF_PLACE_ID]}{self._entry.data[CONF_SERVICE_ID]}"
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Respond to a DataUpdateCoordinator update."""
+        self.update_from_latest_data()
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        self.update_from_latest_data()
+
+    @callback
+    def update_from_latest_data(self) -> None:
+        """Update the state."""
+        pickup_event = self.coordinator.data[0]
+        next_pickup_event = self.coordinator.data[1]
+
+        self._state = as_utc(pickup_event.date).isoformat()
+        self._attributes.update(
+            {
+                ATTR_PICKUP_TYPES: async_get_pickup_type_names(
+                    self._entry, pickup_event.pickup_types
+                ),
+                ATTR_AREA_NAME: pickup_event.area_name,
+                ATTR_NEXT_PICKUP_TYPES: async_get_pickup_type_names(
+                    self._entry, next_pickup_event.pickup_types
+                ),
+                ATTR_NEXT_PICKUP_DATE: as_utc(next_pickup_event.date).isoformat(),
+            }
+        )

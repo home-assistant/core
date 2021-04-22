@@ -1,6 +1,7 @@
 """Mock device for testing purposes."""
 
 from typing import Mapping
+from unittest.mock import AsyncMock
 
 from homeassistant.components.upnp.const import (
     BYTES_RECEIVED,
@@ -10,22 +11,22 @@ from homeassistant.components.upnp.const import (
     TIMESTAMP,
 )
 from homeassistant.components.upnp.device import Device
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt
 
 
 class MockDevice(Device):
     """Mock device for Device."""
 
-    def __init__(self, udn):
+    def __init__(self, udn: str) -> None:
         """Initialize mock device."""
         igd_device = object()
-        super().__init__(igd_device)
+        mock_device_updater = AsyncMock()
+        super().__init__(igd_device, mock_device_updater)
         self._udn = udn
-        self.added_port_mappings = []
-        self.removed_port_mappings = []
+        self.times_polled = 0
 
     @classmethod
-    async def async_create_device(cls, hass, ssdp_location):
+    async def async_create_device(cls, hass, ssdp_location) -> "MockDevice":
         """Return self."""
         return cls("UDN")
 
@@ -54,22 +55,16 @@ class MockDevice(Device):
         """Get the device type."""
         return "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
 
-    async def _async_add_port_mapping(
-        self, external_port: int, local_ip: str, internal_port: int
-    ) -> None:
-        """Add a port mapping."""
-        entry = [external_port, local_ip, internal_port]
-        self.added_port_mappings.append(entry)
-
-    async def _async_delete_port_mapping(self, external_port: int) -> None:
-        """Remove a port mapping."""
-        entry = external_port
-        self.removed_port_mappings.append(entry)
+    @property
+    def hostname(self) -> str:
+        """Get the hostname."""
+        return "mock-hostname"
 
     async def async_get_traffic_data(self) -> Mapping[str, any]:
         """Get traffic data."""
+        self.times_polled += 1
         return {
-            TIMESTAMP: dt_util.utcnow(),
+            TIMESTAMP: dt.utcnow(),
             BYTES_RECEIVED: 0,
             BYTES_SENT: 0,
             PACKETS_RECEIVED: 0,

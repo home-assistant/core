@@ -9,29 +9,17 @@ from devolo_home_control_api.mydevolo import Mydevolo
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import CONF_HOMECONTROL, CONF_MYDEVOLO, DOMAIN, PLATFORMS
-
-
-async def async_setup(hass, config):
-    """Get all devices and add them to hass."""
-    return True
+from .const import CONF_MYDEVOLO, DOMAIN, GATEWAY_SERIAL_PATTERN, PLATFORMS
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the devolo account from a config entry."""
-    conf = entry.data
     hass.data.setdefault(DOMAIN, {})
-    try:
-        mydevolo = Mydevolo.get_instance()
-    except SyntaxError:
-        mydevolo = Mydevolo()
 
-    mydevolo.user = conf[CONF_USERNAME]
-    mydevolo.password = conf[CONF_PASSWORD]
-    mydevolo.url = conf[CONF_MYDEVOLO]
+    mydevolo = _mydevolo(entry.data)
 
     credentials_valid = await hass.async_add_executor_job(mydevolo.credentials_valid)
 
@@ -43,6 +31,10 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     gateway_ids = await hass.async_add_executor_job(mydevolo.get_gateway_ids)
 
+    if GATEWAY_SERIAL_PATTERN.match(entry.unique_id):
+        uuid = await hass.async_add_executor_job(mydevolo.uuid)
+        hass.config_entries.async_update_entry(entry, unique_id=uuid)
+
     try:
         zeroconf_instance = await zeroconf.async_get_instance(hass)
         hass.data[DOMAIN][entry.entry_id] = {"gateways": [], "listener": None}
@@ -52,12 +44,12 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
                     partial(
                         HomeControl,
                         gateway_id=gateway_id,
+                        mydevolo_instance=mydevolo,
                         zeroconf_instance=zeroconf_instance,
-                        url=conf[CONF_HOMECONTROL],
                     )
                 )
             )
-    except (ConnectionError, GatewayOfflineError) as err:
+    except GatewayOfflineError as err:
         raise ConfigEntryNotReady from err
 
     for platform in PLATFORMS:
@@ -79,7 +71,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload = all(
         await asyncio.gather(
@@ -98,3 +90,12 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
     hass.data[DOMAIN][entry.entry_id]["listener"]()
     hass.data[DOMAIN].pop(entry.entry_id)
     return unload
+
+
+def _mydevolo(conf: dict) -> Mydevolo:
+    """Configure mydevolo."""
+    mydevolo = Mydevolo()
+    mydevolo.user = conf[CONF_USERNAME]
+    mydevolo.password = conf[CONF_PASSWORD]
+    mydevolo.url = conf[CONF_MYDEVOLO]
+    return mydevolo

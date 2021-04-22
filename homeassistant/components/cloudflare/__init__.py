@@ -1,7 +1,8 @@
 """Update the IP addresses of your Cloudflare DNS records."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import Dict
 
 from pycfdns import CloudflareUpdater
 from pycfdns.exceptions import (
@@ -33,10 +34,10 @@ _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
-            cv.deprecated(CONF_EMAIL, invalidation_version="0.119"),
-            cv.deprecated(CONF_API_KEY, invalidation_version="0.119"),
-            cv.deprecated(CONF_ZONE, invalidation_version="0.119"),
-            cv.deprecated(CONF_RECORDS, invalidation_version="0.119"),
+            cv.deprecated(CONF_EMAIL),
+            cv.deprecated(CONF_API_KEY),
+            cv.deprecated(CONF_ZONE),
+            cv.deprecated(CONF_RECORDS),
             vol.Schema(
                 {
                     vol.Optional(CONF_EMAIL): cv.string,
@@ -51,7 +52,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the component."""
     hass.data.setdefault(DOMAIN, {})
 

@@ -1,4 +1,6 @@
 """Test the Shark IQ config flow."""
+from unittest.mock import patch
+
 import aiohttp
 import pytest
 from sharkiqpy import AylaApi, SharkIqAuthError
@@ -9,7 +11,6 @@ from homeassistant.core import HomeAssistant
 
 from .const import CONFIG, TEST_PASSWORD, TEST_USERNAME, UNIQUE_ID
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -23,8 +24,6 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch("sharkiqpy.AylaApi.async_sign_in", return_value=True), patch(
-        "homeassistant.components.sharkiq.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.sharkiq.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -40,7 +39,6 @@ async def test_form(hass):
         "password": TEST_PASSWORD,
     }
     await hass.async_block_till_done()
-    mock_setup.assert_called_once()
     mock_setup_entry.assert_called_once()
 
 

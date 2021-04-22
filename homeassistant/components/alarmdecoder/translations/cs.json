@@ -7,8 +7,7 @@
             "default": "\u00dasp\u011b\u0161n\u011b p\u0159ipojen k AlarmDecoder."
         },
         "error": {
-            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
-            "service_unavailable": "Nepoda\u0159ilo se p\u0159ipojit"
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
         },
         "step": {
             "protocol": {

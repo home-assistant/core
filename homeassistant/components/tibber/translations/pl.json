@@ -5,7 +5,6 @@
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "connection_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "invalid_access_token": "Niepoprawny token dost\u0119pu",
             "timeout": "Przekroczono limit czasu \u0142\u0105czenia z Tibber"
         },
@@ -18,6 +17,5 @@
                 "title": "Tibber"
             }
         }
-    },
-    "title": "Tibber"
+    }
 }

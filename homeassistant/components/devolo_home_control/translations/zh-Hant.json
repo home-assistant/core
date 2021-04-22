@@ -4,8 +4,7 @@
             "already_configured": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
         },
         "error": {
-            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
-            "invalid_credentials": "\u4f7f\u7528\u8005\u540d\u7a31\u53ca/\u6216\u5bc6\u78bc\u932f\u8aa4\u3002"
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548"
         },
         "step": {
             "user": {
@@ -14,10 +13,8 @@
                     "mydevolo_url": "mydevolo \u7db2\u5740",
                     "password": "\u5bc6\u78bc",
                     "username": "\u96fb\u5b50\u90f5\u4ef6 / devolo ID"
-                },
-                "title": "devolo Home Control"
+                }
             }
         }
-    },
-    "title": "devolo Home Control"
+    }
 }

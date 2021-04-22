@@ -1,7 +1,7 @@
 """Define tests for the GeoNet NZ Quakes general setup."""
-from homeassistant.components.geonetnz_quakes import DOMAIN, FEED
+from unittest.mock import patch
 
-from tests.async_mock import patch
+from homeassistant.components.geonetnz_quakes import DOMAIN, FEED
 
 
 async def test_component_unload_config_entry(hass, config_entry):

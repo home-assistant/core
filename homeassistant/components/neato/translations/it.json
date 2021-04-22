@@ -2,19 +2,26 @@
     "config": {
         "abort": {
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "authorize_url_timeout": "Tempo scaduto nel generare l'URL di autorizzazione.",
             "invalid_auth": "Autenticazione non valida",
-            "invalid_credentials": "Credenziali non valide"
+            "missing_configuration": "Il componente non \u00e8 configurato. Si prega di seguire la documentazione.",
+            "no_url_available": "Nessun URL disponibile. Per informazioni su questo errore, [controlla la sezione della guida]({docs_url})",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
         },
         "create_entry": {
-            "default": "Vedere la [Documentazione di Neato]({docs_url})."
+            "default": "Autenticazione riuscita"
         },
         "error": {
             "invalid_auth": "Autenticazione non valida",
-            "invalid_credentials": "Credenziali non valide",
-            "unexpected_error": "Errore inaspettato",
             "unknown": "Errore imprevisto"
         },
         "step": {
+            "pick_implementation": {
+                "title": "Scegli il metodo di autenticazione"
+            },
+            "reauth_confirm": {
+                "title": "Vuoi iniziare la configurazione?"
+            },
             "user": {
                 "data": {
                     "password": "Password",
@@ -25,5 +32,6 @@
                 "title": "Informazioni sull'account Neato"
             }
         }
-    }
+    },
+    "title": "Neato Botvac"
 }

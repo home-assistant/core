@@ -1,6 +1,9 @@
 """The Minecraft Server sensor platform."""
-from typing import Any, Dict
+from __future__ import annotations
 
+from typing import Any
+
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TIME_MILLISECONDS
 from homeassistant.helpers.typing import HomeAssistantType
@@ -45,7 +48,7 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class MinecraftServerSensorEntity(MinecraftServerEntity):
+class MinecraftServerSensorEntity(MinecraftServerEntity, SensorEntity):
     """Representation of a Minecraft Server sensor base entity."""
 
     def __init__(
@@ -141,19 +144,18 @@ class MinecraftServerPlayersOnlineSensor(MinecraftServerSensorEntity):
         """Update online players state and device state attributes."""
         self._state = self._server.players_online
 
-        device_state_attributes = None
+        extra_state_attributes = None
         players_list = self._server.players_list
 
-        if players_list is not None:
-            if len(players_list) != 0:
-                device_state_attributes = {ATTR_PLAYERS_LIST: self._server.players_list}
+        if players_list is not None and len(players_list) != 0:
+            extra_state_attributes = {ATTR_PLAYERS_LIST: self._server.players_list}
 
-        self._device_state_attributes = device_state_attributes
+        self._extra_state_attributes = extra_state_attributes
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return players list in device state attributes."""
-        return self._device_state_attributes
+        return self._extra_state_attributes
 
 
 class MinecraftServerPlayersMaxSensor(MinecraftServerSensorEntity):

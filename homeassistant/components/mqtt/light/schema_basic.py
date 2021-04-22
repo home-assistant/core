@@ -3,7 +3,6 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import mqtt
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -17,24 +16,11 @@ from homeassistant.components.light import (
     SUPPORT_WHITE_VALUE,
     LightEntity,
 )
-from homeassistant.components.mqtt import (
-    CONF_COMMAND_TOPIC,
-    CONF_QOS,
-    CONF_RETAIN,
-    CONF_STATE_TOPIC,
-    MqttAttributes,
-    MqttAvailability,
-    MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo,
-    subscription,
-)
 from homeassistant.const import (
-    CONF_DEVICE,
     CONF_NAME,
     CONF_OPTIMISTIC,
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
-    CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
     STATE_ON,
 )
@@ -43,7 +29,10 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.color as color_util
 
+from .. import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC, subscription
+from ... import mqtt
 from ..debug_info import log_messages
+from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
@@ -114,7 +103,6 @@ PLATFORM_SCHEMA_BASIC = (
             vol.Optional(CONF_COLOR_TEMP_COMMAND_TOPIC): mqtt.valid_publish_topic,
             vol.Optional(CONF_COLOR_TEMP_STATE_TOPIC): mqtt.valid_subscribe_topic,
             vol.Optional(CONF_COLOR_TEMP_VALUE_TEMPLATE): cv.template,
-            vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
             vol.Optional(CONF_EFFECT_COMMAND_TOPIC): mqtt.valid_publish_topic,
             vol.Optional(CONF_EFFECT_LIST): vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(CONF_EFFECT_STATE_TOPIC): mqtt.valid_subscribe_topic,
@@ -136,7 +124,6 @@ PLATFORM_SCHEMA_BASIC = (
             vol.Optional(CONF_RGB_STATE_TOPIC): mqtt.valid_subscribe_topic,
             vol.Optional(CONF_RGB_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Optional(CONF_WHITE_VALUE_COMMAND_TOPIC): mqtt.valid_publish_topic,
             vol.Optional(
                 CONF_WHITE_VALUE_SCALE, default=DEFAULT_WHITE_VALUE_SCALE
@@ -148,8 +135,7 @@ PLATFORM_SCHEMA_BASIC = (
             vol.Optional(CONF_XY_VALUE_TEMPLATE): cv.template,
         }
     )
-    .extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
-    .extend(mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
+    .extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
     .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
 )
 
@@ -164,21 +150,12 @@ async def async_setup_entity_basic(
     async_add_entities([MqttLight(hass, config, config_entry, discovery_data)])
 
 
-class MqttLight(
-    MqttAttributes,
-    MqttAvailability,
-    MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo,
-    LightEntity,
-    RestoreEntity,
-):
+class MqttLight(MqttEntity, LightEntity, RestoreEntity):
     """Representation of a MQTT light."""
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize MQTT light."""
-        self.hass = hass
         self._state = False
-        self._sub_state = None
         self._brightness = None
         self._hs = None
         self._color_temp = None
@@ -197,37 +174,16 @@ class MqttLight(
         self._optimistic_hs = False
         self._optimistic_white_value = False
         self._optimistic_xy = False
-        self._unique_id = config.get(CONF_UNIQUE_ID)
 
-        # Load config
-        self._setup_from_config(config)
+        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
-        device_config = config.get(CONF_DEVICE)
-
-        MqttAttributes.__init__(self, config)
-        MqttAvailability.__init__(self, config)
-        MqttDiscoveryUpdate.__init__(self, discovery_data, self.discovery_update)
-        MqttEntityDeviceInfo.__init__(self, device_config, config_entry)
-
-    async def async_added_to_hass(self):
-        """Subscribe to MQTT events."""
-        await super().async_added_to_hass()
-        await self._subscribe_topics()
-
-    async def discovery_update(self, discovery_payload):
-        """Handle updated discovery message."""
-        config = PLATFORM_SCHEMA_BASIC(discovery_payload)
-        self._setup_from_config(config)
-        await self.attributes_discovery_update(config)
-        await self.availability_discovery_update(config)
-        await self.device_info_discovery_update(config)
-        await self._subscribe_topics()
-        self.async_write_ha_state()
+    @staticmethod
+    def config_schema():
+        """Return the config schema."""
+        return PLATFORM_SCHEMA_BASIC
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
-        self._config = config
-
         topic = {
             key: config.get(key)
             for key in (
@@ -526,15 +482,6 @@ class MqttLight(
             self.hass, self._sub_state, topics
         )
 
-    async def async_will_remove_from_hass(self):
-        """Unsubscribe when removed."""
-        self._sub_state = await subscription.async_unsubscribe_topics(
-            self.hass, self._sub_state
-        )
-        await MqttAttributes.async_will_remove_from_hass(self)
-        await MqttAvailability.async_will_remove_from_hass(self)
-        await MqttDiscoveryUpdate.async_will_remove_from_hass(self)
-
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
@@ -546,12 +493,21 @@ class MqttLight(
     @property
     def hs_color(self):
         """Return the hs color value."""
+        if self._white_value:
+            return None
         return self._hs
 
     @property
     def color_temp(self):
         """Return the color temperature in mired."""
-        return self._color_temp
+        supports_color = (
+            self._topic[CONF_RGB_COMMAND_TOPIC]
+            or self._topic[CONF_HS_COMMAND_TOPIC]
+            or self._topic[CONF_XY_COMMAND_TOPIC]
+        )
+        if self._white_value or not supports_color:
+            return self._color_temp
+        return None
 
     @property
     def min_mireds(self):
@@ -569,22 +525,8 @@ class MqttLight(
         white_value = self._white_value
         if white_value:
             white_value = min(round(white_value), 255)
-        return white_value
-
-    @property
-    def should_poll(self):
-        """No polling needed for a MQTT light."""
-        return False
-
-    @property
-    def name(self):
-        """Return the name of the device if any."""
-        return self._config[CONF_NAME]
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._unique_id
+            return white_value
+        return None
 
     @property
     def is_on(self):
@@ -658,9 +600,8 @@ class MqttLight(
         # If brightness is being used instead of an on command, make sure
         # there is a brightness input.  Either set the brightness to our
         # saved value or the maximum value if this is the first call
-        elif on_command_type == "brightness":
-            if ATTR_BRIGHTNESS not in kwargs:
-                kwargs[ATTR_BRIGHTNESS] = self._brightness if self._brightness else 255
+        elif on_command_type == "brightness" and ATTR_BRIGHTNESS not in kwargs:
+            kwargs[ATTR_BRIGHTNESS] = self._brightness if self._brightness else 255
 
         if ATTR_HS_COLOR in kwargs and self._topic[CONF_RGB_COMMAND_TOPIC] is not None:
 

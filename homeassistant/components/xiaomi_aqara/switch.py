@@ -157,7 +157,7 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchEntity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self._supports_power_consumption:
             attrs = {
@@ -167,7 +167,7 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchEntity):
             }
         else:
             attrs = {}
-        attrs.update(super().device_state_attributes)
+        attrs.update(super().extra_state_attributes)
         return attrs
 
     @property

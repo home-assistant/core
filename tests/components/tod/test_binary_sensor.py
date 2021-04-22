@@ -1,5 +1,6 @@
 """Test Times of the Day Binary Sensor."""
 from datetime import datetime, timedelta
+from unittest.mock import patch
 
 import pytest
 import pytz
@@ -10,7 +11,6 @@ from homeassistant.helpers.sun import get_astral_event_date, get_astral_event_ne
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import assert_setup_component
 
 
@@ -643,6 +643,7 @@ async def test_norwegian_case_summer(hass):
     """Test location in Norway where the sun doesn't set in summer."""
     hass.config.latitude = 69.6
     hass.config.longitude = 18.8
+    hass.config.elevation = 10.0
 
     test_time = hass.config.time_zone.localize(datetime(2010, 6, 1)).astimezone(
         pytz.UTC
@@ -652,7 +653,7 @@ async def test_norwegian_case_summer(hass):
         get_astral_event_next(hass, "sunrise", dt_util.as_utc(test_time))
     )
     sunset = dt_util.as_local(
-        get_astral_event_next(hass, "sunset", dt_util.as_utc(test_time))
+        get_astral_event_next(hass, "sunset", dt_util.as_utc(sunrise))
     )
     config = {
         "binary_sensor": [
@@ -903,7 +904,7 @@ async def test_dst(hass):
 
         await hass.async_block_till_done()
         state = hass.states.get(entity_id)
-        state.attributes["after"] == "2019-03-31T03:30:00+02:00"
-        state.attributes["before"] == "2019-03-31T03:40:00+02:00"
-        state.attributes["next_update"] == "2019-03-31T03:30:00+02:00"
+        assert state.attributes["after"] == "2019-03-31T03:30:00+02:00"
+        assert state.attributes["before"] == "2019-03-31T03:40:00+02:00"
+        assert state.attributes["next_update"] == "2019-03-31T03:30:00+02:00"
         assert state.state == STATE_OFF

@@ -2,8 +2,9 @@
   "domain": "plugwise",
   "name": "Plugwise",
   "documentation": "https://www.home-assistant.io/integrations/plugwise",
-  "requirements": ["Plugwise_Smile==1.6.0"],
-  "codeowners": ["@CoMPaTech", "@bouwew"],
+  "requirements": ["plugwise==0.8.5"],
+  "codeowners": ["@CoMPaTech", "@bouwew", "@brefra"],
   "zeroconf": ["_plugwise._tcp.local."],
-  "config_flow": true
+  "config_flow": true,
+  "iot_class": "local_polling"
 }

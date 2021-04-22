@@ -1,21 +1,25 @@
 """Config flow for Plugwise integration."""
 import logging
 
-from Plugwise_Smile.Smile import Smile
+from plugwise.exceptions import InvalidAuthentication, PlugwiseException
+from plugwise.smile import Smile
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_SCAN_INTERVAL
+from homeassistant.const import (
+    CONF_BASE,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SCAN_INTERVAL,
+    CONF_USERNAME,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import (  # pylint:disable=unused-import
-    DEFAULT_PORT,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    ZEROCONF_MAP,
-)
+from .const import DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN, ZEROCONF_MAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,14 +32,21 @@ def _base_gw_schema(discovery_info):
         base_gw_schema[vol.Required(CONF_HOST)] = str
         base_gw_schema[vol.Optional(CONF_PORT, default=DEFAULT_PORT)] = int
 
-    base_gw_schema[vol.Required(CONF_PASSWORD)] = str
+    base_gw_schema.update(
+        {
+            vol.Required(
+                CONF_USERNAME, default="smile", description={"suggested_value": "smile"}
+            ): str,
+            vol.Required(CONF_PASSWORD): str,
+        }
+    )
 
     return vol.Schema(base_gw_schema)
 
 
 async def validate_gw_input(hass: core.HomeAssistant, data):
     """
-    Validate the user input allows us to connect to the gateray.
+    Validate whether the user input allows us to connect to the gateray.
 
     Data has the keys from _base_gw_schema() with values provided by the user.
     """
@@ -45,15 +56,16 @@ async def validate_gw_input(hass: core.HomeAssistant, data):
         host=data[CONF_HOST],
         password=data[CONF_PASSWORD],
         port=data[CONF_PORT],
+        username=data[CONF_USERNAME],
         timeout=30,
         websession=websession,
     )
 
     try:
         await api.connect()
-    except Smile.InvalidAuthentication as err:
+    except InvalidAuthentication as err:
         raise InvalidAuth from err
-    except Smile.PlugwiseError as err:
+    except PlugwiseException as err:
         raise CannotConnect from err
 
     return api
@@ -85,11 +97,10 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _version = _properties.get("version", "n/a")
         _name = f"{ZEROCONF_MAP.get(_product, _product)} v{_version}"
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
             CONF_HOST: discovery_info[CONF_HOST],
             CONF_PORT: discovery_info.get(CONF_PORT, DEFAULT_PORT),
-            "name": _name,
+            CONF_NAME: _name,
         }
         return await self.async_step_user()
 
@@ -111,12 +122,12 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 api = await validate_gw_input(self.hass, user_input)
 
             except CannotConnect:
-                errors["base"] = "cannot_connect"
+                errors[CONF_BASE] = "cannot_connect"
             except InvalidAuth:
-                errors["base"] = "invalid_auth"
+                errors[CONF_BASE] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+                errors[CONF_BASE] = "unknown"
             if not errors:
                 await self.async_set_unique_id(
                     api.smile_hostname or api.gateway_id, raise_on_progress=False
@@ -135,7 +146,6 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
-
         # PLACEHOLDER USB vs Gateway Logic
         return await self.async_step_user_gateway()
 

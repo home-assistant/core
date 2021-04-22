@@ -6,17 +6,14 @@
             "not_huawei_lte": "Non \u00e8 un dispositivo Huawei LTE"
         },
         "error": {
-            "connection_failed": "Connessione fallita",
             "connection_timeout": "Timeout di connessione",
             "incorrect_password": "Password errata",
             "incorrect_username": "Nome utente errato",
-            "incorrect_username_or_password": "Nome utente o password errati",
             "invalid_auth": "Autenticazione non valida",
             "invalid_url": "URL non valido",
             "login_attempts_exceeded": "Superati i tentativi di accesso massimi, riprovare pi\u00f9 tardi",
             "response_error": "Errore sconosciuto dal dispositivo",
-            "unknown": "Errore imprevisto",
-            "unknown_connection_error": "Errore sconosciuto durante la connessione al dispositivo"
+            "unknown": "Errore imprevisto"
         },
         "flow_title": "Huawei LTE: {name}",
         "step": {
@@ -37,7 +34,8 @@
                 "data": {
                     "name": "Nome del servizio di notifica (la modifica richiede il riavvio)",
                     "recipient": "Destinatari della notifica SMS",
-                    "track_new_devices": "Traccia nuovi dispositivi"
+                    "track_new_devices": "Traccia nuovi dispositivi",
+                    "track_wired_clients": "Tieni traccia dei client di rete cablata"
                 }
             }
         }

@@ -7,7 +7,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
-from .const import DOMAIN, LOGGER  # pylint: disable=unused-import
+from .const import DOMAIN, LOGGER
 
 
 class FluNearYouFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):

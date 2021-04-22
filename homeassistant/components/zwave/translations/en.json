@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "Device is already configured",
-            "one_instance_only": "Component only supports one Z-Wave instance",
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "error": {
@@ -14,7 +13,7 @@
                     "network_key": "Network Key (leave blank to auto-generate)",
                     "usb_path": "USB Device Path"
                 },
-                "description": "See https://www.home-assistant.io/docs/z-wave/installation/ for information on the configuration variables",
+                "description": "This integration is no longer maintained. For new installations, use Z-Wave JS instead.\n\nSee https://www.home-assistant.io/docs/z-wave/installation/ for information on the configuration variables",
                 "title": "Set up Z-Wave"
             }
         }

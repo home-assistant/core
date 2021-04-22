@@ -1,4 +1,6 @@
 """Tests for the Synology DSM config flow."""
+from unittest.mock import MagicMock, Mock, patch
+
 import pytest
 from synology_dsm.exceptions import (
     SynologyDSMException,
@@ -36,21 +38,21 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
-from tests.async_mock import MagicMock, Mock, patch
+from .consts import (
+    DEVICE_TOKEN,
+    HOST,
+    HOST_2,
+    MACS,
+    PASSWORD,
+    PORT,
+    SERIAL,
+    SERIAL_2,
+    USE_SSL,
+    USERNAME,
+    VERIFY_SSL,
+)
+
 from tests.common import MockConfigEntry
-
-HOST = "nas.meontheinternet.com"
-SERIAL = "mySerial"
-HOST_2 = "nas.worldwide.me"
-SERIAL_2 = "mySerial2"
-PORT = 1234
-USE_SSL = True
-VERIFY_SSL = False
-USERNAME = "Home_Assistant"
-PASSWORD = "password"
-DEVICE_TOKEN = "Dév!cè_T0k€ñ"
-
-MACS = ["00-11-32-XX-XX-59", "00-11-32-XX-XX-5A"]
 
 
 @pytest.fixture(name="service")

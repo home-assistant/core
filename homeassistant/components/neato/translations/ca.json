@@ -2,19 +2,26 @@
     "config": {
         "abort": {
             "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "authorize_url_timeout": "Temps d'espera esgotat durant la generaci\u00f3 de l'URL d'autoritzaci\u00f3.",
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
-            "invalid_credentials": "Credencials inv\u00e0lides"
+            "missing_configuration": "El component no est\u00e0 configurat. Mira'n la documentaci\u00f3.",
+            "no_url_available": "No hi ha cap URL disponible. Per a m\u00e9s informaci\u00f3 sobre aquest error, [consulta la secci\u00f3 d'ajuda]({docs_url})",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
         },
         "create_entry": {
-            "default": "Consulta la [documentaci\u00f3 de Neato]({docs_url})."
+            "default": "Autenticaci\u00f3 exitosa"
         },
         "error": {
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
-            "invalid_credentials": "Credencials inv\u00e0lides",
-            "unexpected_error": "Error inesperat",
             "unknown": "Error inesperat"
         },
         "step": {
+            "pick_implementation": {
+                "title": "Selecciona el m\u00e8tode d'autenticaci\u00f3"
+            },
+            "reauth_confirm": {
+                "title": "Vols comen\u00e7ar la configuraci\u00f3?"
+            },
             "user": {
                 "data": {
                     "password": "Contrasenya",
@@ -25,5 +32,6 @@
                 "title": "Informaci\u00f3 del compte Neato"
             }
         }
-    }
+    },
+    "title": "Neato Botvac"
 }

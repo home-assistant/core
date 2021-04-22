@@ -2,6 +2,7 @@
 
 import re
 from unittest import mock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 import zigpy.profiles.zha
@@ -29,8 +30,6 @@ import homeassistant.helpers.entity_registry
 
 from .common import get_zha_gateway
 from .zha_devices_list import DEVICES
-
-from tests.async_mock import AsyncMock, patch
 
 NO_TAIL_ID = re.compile("_\\d$")
 
@@ -68,7 +67,7 @@ async def test_devices(
     zha_device_joined_restored,
 ):
     """Test device discovery."""
-    entity_registry = await homeassistant.helpers.entity_registry.async_get_registry(
+    entity_registry = homeassistant.helpers.entity_registry.async_get(
         hass_disable_services
     )
 
@@ -97,7 +96,7 @@ async def test_devices(
     entity_ids = hass_disable_services.states.async_entity_ids()
     await hass_disable_services.async_block_till_done()
     zha_entity_ids = {
-        ent for ent in entity_ids if ent.split(".")[0] in zha_const.COMPONENTS
+        ent for ent in entity_ids if ent.split(".")[0] in zha_const.PLATFORMS
     }
 
     if cluster_identify:
@@ -213,17 +212,14 @@ def test_discover_by_device_type_override():
     with mock.patch(
         "homeassistant.components.zha.core.registries.ZHA_ENTITIES.get_entity",
         get_entity_mock,
-    ):
-        with mock.patch.dict(disc.PROBE._device_configs, overrides, clear=True):
-            disc.PROBE.discover_by_device_type(ep_channels)
-            assert get_entity_mock.call_count == 1
-            assert ep_channels.claim_channels.call_count == 1
-            assert ep_channels.claim_channels.call_args[0][0] is mock.sentinel.claimed
-            assert ep_channels.async_new_entity.call_count == 1
-            assert ep_channels.async_new_entity.call_args[0][0] == zha_const.SWITCH
-            assert (
-                ep_channels.async_new_entity.call_args[0][1] == mock.sentinel.entity_cls
-            )
+    ), mock.patch.dict(disc.PROBE._device_configs, overrides, clear=True):
+        disc.PROBE.discover_by_device_type(ep_channels)
+        assert get_entity_mock.call_count == 1
+        assert ep_channels.claim_channels.call_count == 1
+        assert ep_channels.claim_channels.call_args[0][0] is mock.sentinel.claimed
+        assert ep_channels.async_new_entity.call_count == 1
+        assert ep_channels.async_new_entity.call_args[0][0] == zha_const.SWITCH
+        assert ep_channels.async_new_entity.call_args[0][1] == mock.sentinel.entity_cls
 
 
 def test_discover_probe_single_cluster():

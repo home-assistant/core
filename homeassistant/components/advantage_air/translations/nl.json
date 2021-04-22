@@ -3,16 +3,18 @@
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd"
         },
-        "flow_title": "Advantage Air instellen",
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken"
+        },
         "step": {
             "user": {
                 "data": {
+                    "ip_address": "IP-adres",
                     "port": "Poort"
                 },
                 "description": "Maak verbinding met de API van uw Advantage Air-tablet voor wandmontage.",
                 "title": "Verbind"
             }
         }
-    },
-    "title": "Advantage Air"
+    }
 }

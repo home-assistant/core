@@ -1,9 +1,11 @@
 """Support for Azure Event Hubs."""
+from __future__ import annotations
+
 import asyncio
 import json
 import logging
 import time
-from typing import Any, Dict
+from typing import Any
 
 from azure.eventhub import EventData
 from azure.eventhub.aio import EventHubProducerClient, EventHubSharedKeyCredential
@@ -95,7 +97,7 @@ class AzureEventHub:
     def __init__(
         self,
         hass: HomeAssistant,
-        client_args: Dict[str, Any],
+        client_args: dict[str, Any],
         conn_str_client: bool,
         entities_filter: vol.Schema,
         send_interval: int,

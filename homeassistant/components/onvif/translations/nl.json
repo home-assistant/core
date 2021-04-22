@@ -8,8 +8,7 @@
             "onvif_error": "Fout bij het instellen van ONVIF-apparaat. Controleer de logboeken voor meer informatie."
         },
         "error": {
-            "cannot_connect": "Kan geen verbinding maken",
-            "connection_failed": "Kan geen verbinding maken met de ONVIF-service met de opgegeven inloggegevens."
+            "cannot_connect": "Kan geen verbinding maken"
         },
         "step": {
             "auth": {
@@ -53,7 +52,7 @@
                     "extra_arguments": "Extra FFMPEG argumenten",
                     "rtsp_transport": "RTSP-transportmechanisme"
                 },
-                "title": "[%%] Apparaatopties"
+                "title": "ONVIF-apparaatopties"
             }
         }
     }

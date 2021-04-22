@@ -2,7 +2,6 @@
 import asyncio
 
 from onvif.exceptions import ONVIFAuthError, ONVIFError, ONVIFTimeoutError
-import voluptuous as vol
 
 from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -32,8 +31,6 @@ from .const import (
     RTSP_TRANS_PROTOCOLS,
 )
 from .device import ONVIFDevice
-
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -91,12 +88,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if device.capabilities.events:
         platforms += ["binary_sensor", "sensor"]
 
-    for component in platforms:
+    for platform in platforms:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device.async_stop)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device.async_stop)
+    )
 
     return True
 
@@ -114,8 +113,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in platforms
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in platforms
             ]
         )
     )

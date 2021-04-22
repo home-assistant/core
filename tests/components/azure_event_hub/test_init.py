@@ -1,13 +1,12 @@
 """The tests for the Azure Event Hub component."""
 from dataclasses import dataclass
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 import homeassistant.components.azure_event_hub as azure_event_hub
 from homeassistant.const import STATE_ON
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import MagicMock, patch
 
 AZURE_EVENT_HUB_PATH = "homeassistant.components.azure_event_hub"
 PRODUCER_PATH = f"{AZURE_EVENT_HUB_PATH}.EventHubProducerClient"

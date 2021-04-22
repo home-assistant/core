@@ -1,11 +1,21 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Service ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "unknown": "Unerwarteter Fehler"
+        },
         "step": {
             "user": {
                 "data": {
+                    "api_key": "API Key",
                     "latitude": "Breitengrad",
                     "longitude": "L\u00e4ngengrad"
-                }
+                },
+                "description": "Der Breiten- und L\u00e4ngengrad wird verwendet, um die n\u00e4chstgelegene Wetterstation zu finden.",
+                "title": "Mit UK Met Office verbinden"
             }
         }
     }

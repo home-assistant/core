@@ -1,5 +1,6 @@
 """Tests for Almond set up."""
 from time import time
+from unittest.mock import patch
 
 import pytest
 
@@ -10,7 +11,6 @@ from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 

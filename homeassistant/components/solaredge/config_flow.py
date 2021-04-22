@@ -1,4 +1,8 @@
 """Config flow for the SolarEdge platform."""
+from __future__ import annotations
+
+from typing import Any
+
 from requests.exceptions import ConnectTimeout, HTTPError
 import solaredge
 import voluptuous as vol
@@ -30,36 +34,35 @@ class SolarEdgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._errors = {}
 
-    def _site_in_configuration_exists(self, site_id) -> bool:
+    def _site_in_configuration_exists(self, site_id: str) -> bool:
         """Return True if site_id exists in configuration."""
-        if site_id in solaredge_entries(self.hass):
-            return True
-        return False
+        return site_id in solaredge_entries(self.hass)
 
-    def _check_site(self, site_id, api_key) -> bool:
+    def _check_site(self, site_id: str, api_key: str) -> bool:
         """Check if we can connect to the soleredge api service."""
         api = solaredge.Solaredge(api_key)
         try:
             response = api.get_details(site_id)
-        except (ConnectTimeout, HTTPError):
-            self._errors[CONF_SITE_ID] = "could_not_connect"
-            return False
-        try:
             if response["details"]["status"].lower() != "active":
                 self._errors[CONF_SITE_ID] = "site_not_active"
                 return False
+        except (ConnectTimeout, HTTPError):
+            self._errors[CONF_SITE_ID] = "could_not_connect"
+            return False
         except KeyError:
-            self._errors[CONF_SITE_ID] = "api_failure"
+            self._errors[CONF_SITE_ID] = "invalid_api_key"
             return False
         return True
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Step when user initializes a integration."""
         self._errors = {}
         if user_input is not None:
             name = slugify(user_input.get(CONF_NAME, DEFAULT_NAME))
             if self._site_in_configuration_exists(user_input[CONF_SITE_ID]):
-                self._errors[CONF_SITE_ID] = "site_exists"
+                self._errors[CONF_SITE_ID] = "already_configured"
             else:
                 site = user_input[CONF_SITE_ID]
                 api = user_input[CONF_API_KEY]
@@ -72,11 +75,7 @@ class SolarEdgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     )
 
         else:
-            user_input = {}
-            user_input[CONF_NAME] = DEFAULT_NAME
-            user_input[CONF_SITE_ID] = ""
-            user_input[CONF_API_KEY] = ""
-
+            user_input = {CONF_NAME: DEFAULT_NAME, CONF_SITE_ID: "", CONF_API_KEY: ""}
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
@@ -91,8 +90,10 @@ class SolarEdgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=self._errors,
         )
 
-    async def async_step_import(self, user_input=None):
+    async def async_step_import(
+        self, user_input: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Import a config entry."""
         if self._site_in_configuration_exists(user_input[CONF_SITE_ID]):
-            return self.async_abort(reason="site_exists")
+            return self.async_abort(reason="already_configured")
         return await self.async_step_user(user_input)

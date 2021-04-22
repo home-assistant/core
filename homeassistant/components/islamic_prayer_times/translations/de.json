@@ -1,7 +1,22 @@
 {
     "config": {
         "abort": {
-            "one_instance_allowed": "Es ist nur eine einzige Instanz erforderlich."
+            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
+        },
+        "step": {
+            "user": {
+                "description": "M\u00f6chtest du islamische Gebetszeiten einrichten?",
+                "title": "Islamische Gebetszeiten einrichten"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calculation_method": "Gebetsberechnungsmethode"
+                }
+            }
         }
     },
     "title": "Islamische Gebetszeiten"

@@ -1,14 +1,13 @@
 {
     "config": {
         "abort": {
-            "already_configured": "AlarmDecoder-apparaat is al geconfigureerd."
+            "already_configured": "Apparaat is al geconfigureerd"
         },
         "create_entry": {
             "default": "Succesvol verbonden met AlarmDecoder."
         },
         "error": {
-            "cannot_connect": "Kan geen verbinding maken",
-            "service_unavailable": "Kon niet verbinden"
+            "cannot_connect": "Kan geen verbinding maken"
         },
         "step": {
             "protocol": {

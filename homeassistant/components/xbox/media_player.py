@@ -1,6 +1,7 @@
 """Xbox Media Player Support."""
+from __future__ import annotations
+
 import re
-from typing import List, Optional
 
 from xbox.webapi.api.client import XboxLiveClient
 from xbox.webapi.api.provider.catalog.models import Image
@@ -111,10 +112,9 @@ class XboxMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        active_support = SUPPORT_XBOX
         if self.state not in [STATE_PLAYING, STATE_PAUSED]:
-            active_support &= ~SUPPORT_NEXT_TRACK & ~SUPPORT_PREVIOUS_TRACK
-        return active_support
+            return SUPPORT_XBOX & ~SUPPORT_NEXT_TRACK & ~SUPPORT_PREVIOUS_TRACK
+        return SUPPORT_XBOX
 
     @property
     def media_content_type(self):
@@ -232,7 +232,7 @@ class XboxMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         }
 
 
-def _find_media_image(images=List[Image]) -> Optional[Image]:
+def _find_media_image(images: list[Image]) -> Image | None:
     purpose_order = ["FeaturePromotionalSquareArt", "Tile", "Logo", "BoxArt"]
     for purpose in purpose_order:
         for image in images:

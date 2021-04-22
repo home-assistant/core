@@ -7,6 +7,11 @@
             "cannot_connect": "\u00dchendamine nurjus"
         },
         "step": {
+            "api_key": {
+                "data": {
+                    "api_key": "API v\u00f5ti"
+                }
+            },
             "user": {
                 "data": {
                     "api_key": "API v\u00f5ti",
@@ -15,6 +20,7 @@
                     "name": "Nimi",
                     "port": "",
                     "ssl": "Kasuatb SSL serti",
+                    "statistics_only": "Ainult statistika",
                     "verify_ssl": "Kontrolli SSL sertifikaati"
                 }
             }

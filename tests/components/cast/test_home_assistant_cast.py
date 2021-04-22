@@ -1,9 +1,11 @@
 """Test Home Assistant Cast."""
 
+from unittest.mock import patch
+
+from homeassistant import config_entries
 from homeassistant.components.cast import home_assistant_cast
 from homeassistant.config import async_process_ha_core_config
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_mock_signal
 
 
@@ -86,3 +88,28 @@ async def test_use_cloud_url(hass, mock_zeroconf):
     assert len(calls) == 1
     controller = calls[0][0]
     assert controller.hass_url == "https://something.nabu.casa"
+
+
+async def test_remove_entry(hass, mock_zeroconf):
+    """Test removing config entry removes user."""
+    entry = MockConfigEntry(
+        connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
+        data={},
+        domain="cast",
+        title="Google Cast",
+    )
+
+    entry.add_to_hass(hass)
+
+    with patch(
+        "pychromecast.discovery.discover_chromecasts", return_value=(True, None)
+    ), patch("pychromecast.discovery.stop_discovery"):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+    assert "cast" in hass.config.components
+
+    user_id = entry.data.get("user_id")
+    assert await hass.auth.async_get_user(user_id)
+
+    assert await hass.config_entries.async_remove(entry.entry_id)
+    assert not await hass.auth.async_get_user(user_id)

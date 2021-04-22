@@ -1,14 +1,13 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Kontoen er allerede konfigurert",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
+        },
         "error": {
             "already_configured": "Kontoen er allerede konfigurert",
-            "already_configured_account": "Kontoen er allerede konfigurert",
             "cannot_connect": "Tilkobling mislyktes",
-            "connection_error": "Feil ved tilkobling; sjekk nettverket og pr\u00f8v p\u00e5 nytt",
-            "identifier_exists": "E-post er allerede registrert",
-            "invalid_auth": "Ugyldig godkjenning",
-            "invalid_credentials": "Ugyldige innloggingsopplysninger",
-            "unknown_error": "Ukjent feil, Vennligst rapporter informasjon fra Loggen"
+            "invalid_auth": "Ugyldig godkjenning"
         },
         "step": {
             "user": {

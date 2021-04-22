@@ -1,13 +1,15 @@
 """Support for Sonarr sensors."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable
 
 from sonarr import Sonarr, SonarrConnectionError, SonarrError
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DATA_GIGABYTES
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.dt as dt_util
@@ -21,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistantType,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
     """Set up Sonarr sensors based on a config entry."""
     options = entry.options
@@ -64,7 +66,7 @@ def sonarr_exception_handler(func):
     return handler
 
 
-class SonarrSensor(SonarrEntity):
+class SonarrSensor(SonarrEntity, SensorEntity):
     """Implementation of the Sonarr sensor."""
 
     def __init__(
@@ -76,7 +78,7 @@ class SonarrSensor(SonarrEntity):
         icon: str,
         key: str,
         name: str,
-        unit_of_measurement: Optional[str] = None,
+        unit_of_measurement: str | None = None,
     ) -> None:
         """Initialize Sonarr sensor."""
         self._unit_of_measurement = unit_of_measurement
@@ -132,7 +134,7 @@ class SonarrCommandsSensor(SonarrSensor):
         self._commands = await self.sonarr.commands()
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
         attrs = {}
 
@@ -173,7 +175,7 @@ class SonarrDiskspaceSensor(SonarrSensor):
         self._total_free = sum([disk.free for disk in self._disks])
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
         attrs = {}
 
@@ -218,7 +220,7 @@ class SonarrQueueSensor(SonarrSensor):
         self._queue = await self.sonarr.queue()
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
         attrs = {}
 
@@ -259,7 +261,7 @@ class SonarrSeriesSensor(SonarrSensor):
         self._items = await self.sonarr.series()
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
         attrs = {}
 
@@ -291,18 +293,6 @@ class SonarrUpcomingSensor(SonarrSensor):
             unit_of_measurement="Episodes",
         )
 
-    async def async_added_to_hass(self):
-        """Listen for signals."""
-        await super().async_added_to_hass()
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"sonarr.{self._entry_id}.entry_options_update",
-                self.async_update_entry_options,
-            )
-        )
-
     @sonarr_exception_handler
     async def async_update(self) -> None:
         """Update entity."""
@@ -313,12 +303,8 @@ class SonarrUpcomingSensor(SonarrSensor):
             start=start.isoformat(), end=end.isoformat()
         )
 
-    async def async_update_entry_options(self, options: dict) -> None:
-        """Update sensor settings when config entry options are update."""
-        self._days = options[CONF_UPCOMING_DAYS]
-
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
         attrs = {}
 
@@ -340,7 +326,7 @@ class SonarrWantedSensor(SonarrSensor):
         """Initialize Sonarr Wanted sensor."""
         self._max_items = max_items
         self._results = None
-        self._total: Optional[int] = None
+        self._total: int | None = None
 
         super().__init__(
             sonarr=sonarr,
@@ -352,30 +338,14 @@ class SonarrWantedSensor(SonarrSensor):
             enabled_default=False,
         )
 
-    async def async_added_to_hass(self):
-        """Listen for signals."""
-        await super().async_added_to_hass()
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"sonarr.{self._entry_id}.entry_options_update",
-                self.async_update_entry_options,
-            )
-        )
-
     @sonarr_exception_handler
     async def async_update(self) -> None:
         """Update entity."""
         self._results = await self.sonarr.wanted(page_size=self._max_items)
         self._total = self._results.total
 
-    async def async_update_entry_options(self, options: dict) -> None:
-        """Update sensor settings when config entry options are update."""
-        self._max_items = options[CONF_WANTED_MAX_ITEMS]
-
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
         attrs = {}
 
@@ -387,6 +357,6 @@ class SonarrWantedSensor(SonarrSensor):
         return attrs
 
     @property
-    def state(self) -> Optional[int]:
+    def state(self) -> int | None:
         """Return the state of the sensor."""
         return self._total

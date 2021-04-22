@@ -13,10 +13,8 @@
                 "data": {
                     "password": "Has\u0142o",
                     "username": "Nazwa u\u017cytkownika"
-                },
-                "description": "Podaj swoj\u0105 nazw\u0119 u\u017cytkownika i has\u0142o do Smart Meter Texas."
+                }
             }
         }
-    },
-    "title": "Smart Meter Texas"
+    }
 }

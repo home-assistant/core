@@ -1,5 +1,5 @@
 """Allows to configuration ecoal (esterownik.pl) pumps as switches."""
-from typing import Optional
+from __future__ import annotations
 
 from homeassistant.components.switch import SwitchEntity
 
@@ -40,7 +40,7 @@ class EcoalSwitch(SwitchEntity):
         self._state = None
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str | None:
         """Return the name of the switch."""
         return self._name
 

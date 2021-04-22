@@ -4,9 +4,7 @@
             "already_configured": "Enheten er allerede konfigurert"
         },
         "error": {
-            "identifier_exists": "Kontoen er allerede konfigurert",
-            "invalid_auth": "Ugyldig godkjenning",
-            "invalid_credentials": "Ugyldige innloggingsopplysninger"
+            "invalid_auth": "Ugyldig godkjenning"
         },
         "step": {
             "user": {

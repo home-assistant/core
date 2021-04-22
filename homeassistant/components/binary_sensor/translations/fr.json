@@ -98,6 +98,10 @@
             "off": "Normal",
             "on": "Faible"
         },
+        "battery_charging": {
+            "off": "Pas en charge",
+            "on": "En charge"
+        },
         "cold": {
             "off": "Normale",
             "on": "Froid"
@@ -122,6 +126,10 @@
             "off": "Normale",
             "on": "Chaud"
         },
+        "light": {
+            "off": "Pas de lumi\u00e8re",
+            "on": "Lumi\u00e8re d\u00e9tect\u00e9e"
+        },
         "lock": {
             "off": "Verrouill\u00e9",
             "on": "D\u00e9verrouill\u00e9"
@@ -134,6 +142,10 @@
             "off": "RAS",
             "on": "D\u00e9tect\u00e9"
         },
+        "moving": {
+            "off": "Immobile",
+            "on": "En mouvement"
+        },
         "occupancy": {
             "off": "RAS",
             "on": "D\u00e9tect\u00e9"
@@ -141,6 +153,10 @@
         "opening": {
             "off": "Ferm\u00e9",
             "on": "Ouvert"
+        },
+        "plug": {
+            "off": "D\u00e9branch\u00e9",
+            "on": "Branch\u00e9"
         },
         "presence": {
             "off": "Absent",

@@ -1,7 +1,7 @@
 """The Smappee integration."""
 import asyncio
 
-from pysmappee import Smappee
+from pysmappee import Smappee, helper, mqtt
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -21,7 +21,7 @@ from .const import (
     CONF_SERIALNUMBER,
     DOMAIN,
     MIN_TIME_BETWEEN_UPDATES,
-    SMAPPEE_PLATFORMS,
+    PLATFORMS,
     TOKEN_URL,
 )
 
@@ -75,8 +75,21 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Smappee from a zeroconf or config entry."""
     if CONF_IP_ADDRESS in entry.data:
-        smappee_api = api.api.SmappeeLocalApi(ip=entry.data[CONF_IP_ADDRESS])
-        smappee = Smappee(api=smappee_api, serialnumber=entry.data[CONF_SERIALNUMBER])
+        if helper.is_smappee_genius(entry.data[CONF_SERIALNUMBER]):
+            # next generation: local mqtt broker
+            smappee_mqtt = mqtt.SmappeeLocalMqtt(
+                serial_number=entry.data[CONF_SERIALNUMBER]
+            )
+            await hass.async_add_executor_job(smappee_mqtt.start_and_wait_for_config)
+            smappee = Smappee(
+                api=smappee_mqtt, serialnumber=entry.data[CONF_SERIALNUMBER]
+            )
+        else:
+            # legacy devices through local api
+            smappee_api = api.api.SmappeeLocalApi(ip=entry.data[CONF_IP_ADDRESS])
+            smappee = Smappee(
+                api=smappee_api, serialnumber=entry.data[CONF_SERIALNUMBER]
+            )
         await hass.async_add_executor_job(smappee.load_local_service_location)
     else:
         implementation = (
@@ -92,9 +105,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.data[DOMAIN][entry.entry_id] = SmappeeBase(hass, smappee)
 
-    for component in SMAPPEE_PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -105,8 +118,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in SMAPPEE_PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

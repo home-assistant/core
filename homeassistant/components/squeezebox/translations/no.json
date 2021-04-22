@@ -24,10 +24,8 @@
             "user": {
                 "data": {
                     "host": "Vert"
-                },
-                "title": "Konfigurer Logitech Media Server"
+                }
             }
         }
-    },
-    "title": ""
+    }
 }

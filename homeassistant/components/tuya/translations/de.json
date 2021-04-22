@@ -1,17 +1,47 @@
 {
     "config": {
         "abort": {
-            "conn_error": "Verbindung fehlgeschlagen"
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
+        },
+        "error": {
+            "invalid_auth": "Ung\u00fcltige Authentifizierung"
         },
         "flow_title": "Tuya Konfiguration",
         "step": {
             "user": {
                 "data": {
+                    "country_code": "L\u00e4ndercode Ihres Kontos (z. B. 1 f\u00fcr USA oder 86 f\u00fcr China)",
                     "password": "Passwort",
+                    "platform": "Die App, in der Ihr Konto registriert ist",
                     "username": "Benutzername"
                 },
-                "description": "Geben Sie Ihre Tuya-Anmeldeinformationen ein.",
+                "description": "Gib deine Tuya-Anmeldeinformationen ein.",
                 "title": "Tuya"
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "error": {
+            "dev_not_config": "Ger\u00e4tetyp nicht konfigurierbar",
+            "dev_not_found": "Ger\u00e4t nicht gefunden"
+        },
+        "step": {
+            "device": {
+                "data": {
+                    "brightness_range_mode": "Vom Ger\u00e4t genutzter Helligkeitsbereich",
+                    "max_kelvin": "Maximal unterst\u00fctzte Farbtemperatur in Kelvin",
+                    "max_temp": "Maximale Solltemperatur (f\u00fcr Voreinstellung min und max = 0 verwenden)",
+                    "min_kelvin": "Minimale unterst\u00fctzte Farbtemperatur in Kelvin",
+                    "min_temp": "Minimal Solltemperatur (f\u00fcr Voreinstellung min und max = 0 verwenden)",
+                    "support_color": "Farbunterst\u00fctzung erzwingen",
+                    "tuya_max_coltemp": "Vom Ger\u00e4t gemeldete maximale Farbtemperatur",
+                    "unit_of_measurement": "Vom Ger\u00e4t verwendete Temperatureinheit"
+                }
             }
         }
     }

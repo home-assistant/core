@@ -1,11 +1,12 @@
 """Tests for SpeedTest integration."""
+from unittest.mock import patch
+
 import speedtest
 
 from homeassistant import config_entries
 from homeassistant.components import speedtestdotnet
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

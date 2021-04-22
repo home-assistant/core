@@ -1,5 +1,5 @@
 """Sensor to indicate whether the current day is a workday."""
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 from typing import Any
 
@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import CONF_NAME, WEEKDAYS
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,6 +21,7 @@ CONF_WORKDAYS = "workdays"
 CONF_EXCLUDES = "excludes"
 CONF_OFFSET = "days_offset"
 CONF_ADD_HOLIDAYS = "add_holidays"
+CONF_REMOVE_HOLIDAYS = "remove_holidays"
 
 # By default, Monday - Friday are workdays
 DEFAULT_WORKDAYS = ["mon", "tue", "wed", "thu", "fri"]
@@ -60,6 +62,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             cv.ensure_list, [vol.In(ALLOWED_DAYS)]
         ),
         vol.Optional(CONF_ADD_HOLIDAYS): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_REMOVE_HOLIDAYS): vol.All(cv.ensure_list, [cv.string]),
     }
 )
 
@@ -67,6 +70,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Workday sensor."""
     add_holidays = config.get(CONF_ADD_HOLIDAYS)
+    remove_holidays = config.get(CONF_REMOVE_HOLIDAYS)
     country = config[CONF_COUNTRY]
     days_offset = config[CONF_OFFSET]
     excludes = config[CONF_EXCLUDES]
@@ -74,7 +78,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     sensor_name = config[CONF_NAME]
     workdays = config[CONF_WORKDAYS]
 
-    year = (get_date(datetime.today()) + timedelta(days=days_offset)).year
+    year = (get_date(dt.now()) + timedelta(days=days_offset)).year
     obj_holidays = getattr(holidays, country)(years=year)
 
     if province:
@@ -95,6 +99,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         obj_holidays.append(add_holidays)
     except TypeError:
         _LOGGER.debug("No custom holidays or invalid holidays")
+
+    # Remove holidays
+    try:
+        for date in remove_holidays:
+            obj_holidays.pop(date)
+    except TypeError:
+        _LOGGER.debug("No holidays to remove or invalid holidays")
 
     _LOGGER.debug("Found the following holidays for your configuration:")
     for date, name in sorted(obj_holidays.items()):
@@ -160,7 +171,7 @@ class IsWorkdaySensor(BinarySensorEntity):
         return False
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the attributes of the entity."""
         # return self._attributes
         return {
@@ -175,7 +186,7 @@ class IsWorkdaySensor(BinarySensorEntity):
         self._state = False
 
         # Get ISO day of the week (1 = Monday, 7 = Sunday)
-        date = get_date(datetime.today()) + timedelta(days=self._days_offset)
+        date = get_date(dt.now()) + timedelta(days=self._days_offset)
         day = date.isoweekday() - 1
         day_of_week = day_to_string(day)
 

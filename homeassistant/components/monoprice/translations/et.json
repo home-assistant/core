@@ -10,8 +10,30 @@
         "step": {
             "user": {
                 "data": {
-                    "port": ""
-                }
+                    "port": "",
+                    "source_1": "Sisendi nr 1 nimi",
+                    "source_2": "Sisendi nr 2 nimi",
+                    "source_3": "Sisendi nr 3 nimi",
+                    "source_4": "Sisendi nr 4 nimi",
+                    "source_5": "Sisendi nr 5 nimi",
+                    "source_6": "Sisendi nr 6 nimi"
+                },
+                "title": "\u00dchendu seadmega"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "source_1": "Sisendi nr 1 nimi",
+                    "source_2": "Sisendi nr 2 nimi",
+                    "source_3": "Sisendi nr 3 nimi",
+                    "source_4": "Sisendi nr 4 nimi",
+                    "source_5": "Sisendi nr 5 nimi",
+                    "source_6": "Sisendi nr 6 nimi"
+                },
+                "title": "Sisendite seadistamine"
             }
         }
     }

@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "Kont ass scho konfigur\u00e9iert",
-            "already_configured_account": "Kont ass scho konfigur\u00e9iert",
             "cannot_connect": "Feeler beim verbannen",
             "reauth_successful": "Re-authentifikatioun war erfollegr\u00e4ich",
             "unknown": "Onerwaarte Feeler"

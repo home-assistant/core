@@ -1,6 +1,7 @@
 """Common test objects."""
 import copy
 import json
+from unittest.mock import ANY
 
 from hatasmota.const import (
     CONF_MAC,
@@ -19,11 +20,49 @@ from hatasmota.utils import (
 
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.async_mock import ANY
 from tests.common import async_fire_mqtt_message
 
 DEFAULT_CONFIG = {
+    "ip": "192.168.15.10",
+    "dn": "Tasmota",
+    "fn": ["Test", "Beer", "Milk", "Four", None],
+    "hn": "tasmota_49A3BC-0956",
+    "if": 0,  # iFan
+    "lk": 1,  # RGB + white channels linked to a single light
+    "mac": "00000049A3BC",
+    "md": "Sonoff Basic",
+    "ofln": "Offline",
+    "onln": "Online",
+    "state": ["OFF", "ON", "TOGGLE", "HOLD"],
+    "sw": "8.4.0.2",
+    "swn": [None, None, None, None, None],
+    "t": "tasmota_49A3BC",
+    "ft": "%topic%/%prefix%/",
+    "tp": ["cmnd", "stat", "tele"],
+    "rl": [0, 0, 0, 0, 0, 0, 0, 0],
+    "swc": [-1, -1, -1, -1, -1, -1, -1, -1],
+    "btn": [0, 0, 0, 0],
+    "so": {
+        "4": 0,  # Return MQTT response as RESULT or %COMMAND%
+        "11": 0,  # Swap button single and double press functionality
+        "13": 0,  # Allow immediate action on single button press
+        "17": 1,  # Show Color string as hex or comma-separated
+        "20": 0,  # Update of Dimmer/Color/CT without turning power on
+        "30": 0,  # Enforce Home Assistant auto-discovery as light
+        "68": 0,  # Multi-channel PWM instead of a single light
+        "73": 0,  # Enable Buttons decoupling and send multi-press and hold MQTT messages
+        "82": 0,  # Reduce the CT range from 153..500 to 200.380
+        "114": 0,  # Enable sending switch MQTT messages
+    },
+    "ty": 0,  # Tuya MCU
+    "lt_st": 0,
+    "ver": 1,
+}
+
+
+DEFAULT_CONFIG_9_0_0_3 = {
     "ip": "192.168.15.10",
     "dn": "Tasmota",
     "fn": ["Test", "Beer", "Milk", "Four", None],
@@ -325,8 +364,8 @@ async def help_test_discovery_removal(
     name="Test",
 ):
     """Test removal of discovered entity."""
-    device_reg = await hass.helpers.device_registry.async_get_registry()
-    entity_reg = await hass.helpers.entity_registry.async_get_registry()
+    device_reg = dr.async_get(hass)
+    entity_reg = er.async_get(hass)
 
     data1 = json.dumps(config1)
     data2 = json.dumps(config2)
@@ -432,8 +471,8 @@ async def help_test_discovery_device_remove(
     hass, mqtt_mock, domain, unique_id, config, sensor_config=None
 ):
     """Test domain entity is removed when device is removed."""
-    device_reg = await hass.helpers.device_registry.async_get_registry()
-    entity_reg = await hass.helpers.entity_registry.async_get_registry()
+    device_reg = dr.async_get(hass)
+    entity_reg = er.async_get(hass)
 
     config = copy.deepcopy(config)
 
@@ -464,7 +503,7 @@ async def help_test_entity_id_update_subscriptions(
     hass, mqtt_mock, domain, config, topics=None, sensor_config=None, entity_id="test"
 ):
     """Test MQTT subscriptions are managed when entity_id is updated."""
-    entity_reg = await hass.helpers.entity_registry.async_get_registry()
+    entity_reg = er.async_get(hass)
 
     config = copy.deepcopy(config)
     data = json.dumps(config)
@@ -510,7 +549,7 @@ async def help_test_entity_id_update_discovery_update(
     hass, mqtt_mock, domain, config, sensor_config=None, entity_id="test"
 ):
     """Test MQTT discovery update after entity_id is updated."""
-    entity_reg = await hass.helpers.entity_registry.async_get_registry()
+    entity_reg = er.async_get(hass)
 
     config = copy.deepcopy(config)
     data = json.dumps(config)

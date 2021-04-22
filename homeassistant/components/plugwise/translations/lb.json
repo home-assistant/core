@@ -12,10 +12,7 @@
         "step": {
             "user": {
                 "data": {
-                    "flow_type": "Typ vun der Verbindung",
-                    "host": "IP Adresse",
-                    "password": "Smile ID",
-                    "port": "Port"
+                    "flow_type": "Typ vun der Verbindung"
                 },
                 "description": "Produkt:",
                 "title": "Typ vu Plugwise"
@@ -24,7 +21,8 @@
                 "data": {
                     "host": "IP Adress",
                     "password": "Smile ID",
-                    "port": "Port"
+                    "port": "Port",
+                    "username": "Smile Benotzernumm"
                 },
                 "title": "Mam Smile verbannen"
             }

@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "one_instance_only": "Denne integrasjonen st\u00f8tter forel\u00f8pig bare \u00e9n ecobee-forekomst.",
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "error": {
@@ -10,7 +9,7 @@
         },
         "step": {
             "authorize": {
-                "description": "Vennligst godkjenn denne appen p\u00e5 [https://www.ecobee.com/consumerportal](https://www.ecobee.com/consumerportal) med pin-kode:\n\n{pin}\n\nTrykk deretter p\u00e5 send.",
+                "description": "Autoriser denne appen p\u00e5 https://www.ecobee.com/consumerportal/index.html med PIN-kode: \n\n {pin}\n\n Trykk deretter p\u00e5 Send.",
                 "title": "Godkjenn app p\u00e5 ecobee.com"
             },
             "user": {

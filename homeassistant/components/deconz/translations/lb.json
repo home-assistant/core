@@ -6,7 +6,6 @@
             "no_bridges": "Keng dECONZ bridges fonnt",
             "no_hardware_available": "Keng Radio Hardware verbonne mat deCONZ",
             "not_deconz_bridge": "Keng deCONZ Bridge",
-            "one_instance_only": "Komponent \u00ebnnerst\u00ebtzt n\u00ebmmen eng deCONZ Instanz",
             "updated_instance": "deCONZ Instanz gouf mat der neier Adress vum Apparat ge\u00e4nnert"
         },
         "error": {
@@ -15,8 +14,8 @@
         "flow_title": "deCONZ Zigbee gateway ({host})",
         "step": {
             "hassio_confirm": {
-                "description": "W\u00ebllt dir Home Assistant konfigur\u00e9iere fir sech mat der deCONZ gateway ze verbannen d\u00e9i vum hass.io add-on {addon} bereet gestallt g\u00ebtt?",
-                "title": "deCONZ Zigbee gateway via Hass.io add-on"
+                "description": "W\u00ebllt dir Home Assistant konfigur\u00e9iere fir sech mat der deCONZ gateway ze verbannen d\u00e9i vum Supervisor add-on {addon} bereet gestallt g\u00ebtt?",
+                "title": "deCONZ Zigbee gateway via Supervisor add-on"
             },
             "link": {
                 "description": "Entsperrt \u00e4r deCONZ gateway fir se mat Home Assistant ze registr\u00e9ieren.\n\n1. Gidd op deCONZ System Astellungen\n2. Dr\u00e9ckt \"Unlock\" Gateway Kn\u00e4ppchen",
@@ -67,6 +66,7 @@
             "remote_button_quadruple_press": "\"{subtype}\" Kn\u00e4ppche v\u00e9ier mol gedr\u00e9ckt",
             "remote_button_quintuple_press": "\"{subtype}\" Kn\u00e4ppche f\u00ebnnef mol gedr\u00e9ckt",
             "remote_button_rotated": "Kn\u00e4ppche gedr\u00e9int \"{subtype}\"",
+            "remote_button_rotated_fast": "Kn\u00e4ppche schnell gedr\u00e9int \"{subtype}\"",
             "remote_button_rotation_stopped": "Kn\u00e4ppchen Rotatioun \"{subtype}\" gestoppt",
             "remote_button_short_press": "\"{subtype}\" Kn\u00e4ppche gedr\u00e9ckt",
             "remote_button_short_release": "\"{subtype}\" Kn\u00e4ppche lassgelooss",

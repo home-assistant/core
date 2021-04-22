@@ -20,7 +20,11 @@ from tests.common import (
     mock_device_registry,
     mock_registry,
 )
-from tests.testing_config.custom_components.test.sensor import DEVICE_CLASSES
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
+from tests.testing_config.custom_components.test.sensor import (
+    DEVICE_CLASSES,
+    UNITS_OF_MEASUREMENT,
+)
 
 
 @pytest.fixture
@@ -72,11 +76,12 @@ async def test_get_triggers(hass, device_reg, entity_reg):
             "entity_id": platform.ENTITIES[device_class].entity_id,
         }
         for device_class in DEVICE_CLASSES
+        if device_class in UNITS_OF_MEASUREMENT
         for trigger in ENTITY_TRIGGERS[device_class]
         if device_class != "none"
     ]
     triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
-    assert len(triggers) == 12
+    assert len(triggers) == 13
     assert triggers == expected_triggers
 
 
@@ -427,6 +432,7 @@ async def test_if_fires_on_state_change_with_for(hass, calls):
     assert hass.states.get(sensor1.entity_id).state == STATE_UNKNOWN
     assert len(calls) == 0
 
+    hass.states.async_set(sensor1.entity_id, 10)
     hass.states.async_set(sensor1.entity_id, 11)
     await hass.async_block_till_done()
     assert len(calls) == 0
@@ -436,5 +442,5 @@ async def test_if_fires_on_state_change_with_for(hass, calls):
     await hass.async_block_till_done()
     assert (
         calls[0].data["some"]
-        == f"turn_off device - {sensor1.entity_id} - unknown - 11 - 0:00:05"
+        == f"turn_off device - {sensor1.entity_id} - 10 - 11 - 0:00:05"
     )

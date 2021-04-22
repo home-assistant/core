@@ -4,17 +4,17 @@
             "already_configured": "Account is al geconfigureerd"
         },
         "error": {
-            "invalid_credentials": "Verkeerde gebruikersnaam en/of wachtwoord."
+            "invalid_auth": "Ongeldige authenticatie"
         },
         "step": {
             "user": {
                 "data": {
+                    "home_control_url": "Home Control URL",
+                    "mydevolo_url": "mydevolo URL",
                     "password": "Wachtwoord",
                     "username": "E-mail adres / devolo ID"
-                },
-                "title": "devolo Home Control"
+                }
             }
         }
-    },
-    "title": "devolo Home Control"
+    }
 }

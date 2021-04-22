@@ -6,6 +6,7 @@ import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import (
     CONF_ALIAS,
+    CONF_BASE,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
@@ -21,12 +22,12 @@ from .const import (
     DEFAULT_HOST,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
     KEY_STATUS,
     KEY_STATUS_DISPLAY,
     SENSOR_NAME,
     SENSOR_TYPES,
 )
-from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -129,28 +130,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Prepare configuration for a discovered nut device."""
         self.discovery_info = discovery_info
         await self._async_handle_discovery_without_unique_id()
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
             CONF_PORT: discovery_info.get(CONF_PORT, DEFAULT_PORT),
             CONF_HOST: discovery_info[CONF_HOST],
         }
         return await self.async_step_user()
-
-    async def async_step_import(self, user_input=None):
-        """Handle the import."""
-        errors = {}
-        if user_input is not None:
-            if self._host_port_alias_already_configured(user_input):
-                return self.async_abort(reason="already_configured")
-            _, errors = await self._async_validate_or_error(user_input)
-
-            if not errors:
-                title = _format_host_port_alias(user_input)
-                return self.async_create_entry(title=title, data=user_input)
-
-        return self.async_show_form(
-            step_id="user", data_schema=_base_schema({}), errors=errors
-        )
 
     async def async_step_user(self, user_input=None):
         """Handle the user input."""
@@ -228,10 +212,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             info = await validate_input(self.hass, config)
         except CannotConnect:
-            errors["base"] = "cannot_connect"
+            errors[CONF_BASE] = "cannot_connect"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
+            errors[CONF_BASE] = "unknown"
         return info, errors
 
     @staticmethod
@@ -258,7 +242,17 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
         )
 
-        info = await validate_input(self.hass, self.config_entry.data)
+        errors = {}
+        try:
+            info = await validate_input(self.hass, self.config_entry.data)
+        except CannotConnect:
+            errors[CONF_BASE] = "cannot_connect"
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            errors[CONF_BASE] = "unknown"
+
+        if errors:
+            return self.async_show_form(step_id="abort", errors=errors)
 
         base_schema = _resource_schema_base(info["available_resources"], resources)
         base_schema[
@@ -266,9 +260,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         ] = cv.positive_int
 
         return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(base_schema),
+            step_id="init", data_schema=vol.Schema(base_schema), errors=errors
         )
+
+    async def async_step_abort(self, user_input=None):
+        """Abort options flow."""
+        return self.async_create_entry(title="", data=self.config_entry.options)
 
 
 class CannotConnect(exceptions.HomeAssistantError):

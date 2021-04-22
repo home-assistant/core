@@ -1,4 +1,6 @@
 """Tests for the GogoGate2 component."""
+from unittest.mock import MagicMock, patch
+
 from gogogate2_api import GogoGate2Api
 from gogogate2_api.common import ApiError
 from gogogate2_api.const import GogoGate2ApiErrorCode
@@ -19,24 +21,24 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
 
-from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry
 
 MOCK_MAC_ADDR = "AA:BB:CC:DD:EE:FF"
 
 
-@patch("homeassistant.components.gogogate2.async_setup", return_value=True)
 @patch("homeassistant.components.gogogate2.async_setup_entry", return_value=True)
 @patch("homeassistant.components.gogogate2.common.GogoGate2Api")
 async def test_auth_fail(
-    gogogate2api_mock, async_setup_entry_mock, async_setup_mock, hass: HomeAssistant
+    gogogate2api_mock, async_setup_entry_mock, hass: HomeAssistant
 ) -> None:
     """Test authorization failures."""
     api: GogoGate2Api = MagicMock(spec=GogoGate2Api)
     gogogate2api_mock.return_value = api
 
     api.reset_mock()
-    api.info.side_effect = ApiError(GogoGate2ApiErrorCode.CREDENTIALS_INCORRECT, "blah")
+    api.async_info.side_effect = ApiError(
+        GogoGate2ApiErrorCode.CREDENTIALS_INCORRECT, "blah"
+    )
     result = await hass.config_entries.flow.async_init(
         "gogogate2", context={"source": SOURCE_USER}
     )
@@ -56,7 +58,7 @@ async def test_auth_fail(
     }
 
     api.reset_mock()
-    api.info.side_effect = Exception("Generic connection error.")
+    api.async_info.side_effect = Exception("Generic connection error.")
     result = await hass.config_entries.flow.async_init(
         "gogogate2", context={"source": SOURCE_USER}
     )

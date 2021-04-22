@@ -6,15 +6,12 @@
             "not_huawei_lte": "Ikke en Huawei LTE-enhed"
         },
         "error": {
-            "connection_failed": "Forbindelsen mislykkedes",
             "connection_timeout": "Timeout for forbindelse",
             "incorrect_password": "Forkert adgangskode",
             "incorrect_username": "Forkert brugernavn",
-            "incorrect_username_or_password": "Forkert brugernavn eller adgangskode",
             "invalid_url": "Ugyldig webadresse",
             "login_attempts_exceeded": "Maksimale loginfors\u00f8g overskredet. Pr\u00f8v igen senere",
-            "response_error": "Ukendt fejl fra enheden",
-            "unknown_connection_error": "Ukendt fejl ved tilslutning til enheden"
+            "response_error": "Ukendt fejl fra enheden"
         },
         "step": {
             "user": {

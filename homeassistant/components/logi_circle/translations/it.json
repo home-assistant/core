@@ -2,18 +2,11 @@
     "config": {
         "abort": {
             "already_configured": "L'account \u00e8 gi\u00e0 configurato",
-            "already_setup": "\u00c8 possibile configurare solo un singolo account Logi Circle.",
             "external_error": "Si \u00e8 verificata un'eccezione da un altro flusso.",
             "external_setup": "Logi Circle configurato con successo da un altro flusso.",
-            "missing_configuration": "Il componente non \u00e8 configurato. Si prega di seguire la documentazione.",
-            "no_flows": "Devi configurare Logi Circle prima di poter eseguire l'autenticazione. [Si prega di leggere le istruzioni](https://www.home-assistant.io/components/logi_circle/)."
-        },
-        "create_entry": {
-            "default": "Autenticato con successo con Logi Circle."
+            "missing_configuration": "Il componente non \u00e8 configurato. Si prega di seguire la documentazione."
         },
         "error": {
-            "auth_error": "Autorizzazione API fallita.",
-            "auth_timeout": "Timeout dell'autorizzazione durante la richiesta del token di accesso.",
             "authorize_url_timeout": "Tempo scaduto nel generare l'URL di autorizzazione.",
             "follow_link": "Segui il link e autenticati prima di premere Invia",
             "invalid_auth": "Autenticazione non valida"

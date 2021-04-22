@@ -1,4 +1,6 @@
 """The tests for the mFi sensor platform."""
+import unittest.mock as mock
+
 from mficlient.client import FailedToLogin
 import pytest
 import requests
@@ -7,8 +9,6 @@ import homeassistant.components.mfi.sensor as mfi
 import homeassistant.components.sensor as sensor_component
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.setup import async_setup_component
-
-import tests.async_mock as mock
 
 PLATFORM = mfi
 COMPONENT = sensor_component
@@ -94,10 +94,11 @@ async def test_setup_adds_proper_devices(hass):
     with mock.patch(
         "homeassistant.components.mfi.sensor.MFiClient"
     ) as mock_client, mock.patch(
-        "homeassistant.components.mfi.sensor.MfiSensor"
+        "homeassistant.components.mfi.sensor.MfiSensor", side_effect=mfi.MfiSensor
     ) as mock_sensor:
         ports = {
-            i: mock.MagicMock(model=model) for i, model in enumerate(mfi.SENSOR_MODELS)
+            i: mock.MagicMock(model=model, label=f"Port {i}", value=0)
+            for i, model in enumerate(mfi.SENSOR_MODELS)
         }
         ports["bad"] = mock.MagicMock(model="notasensor")
         mock_client.return_value.get_devices.return_value = [
@@ -131,7 +132,7 @@ async def test_name(port, sensor):
 async def test_uom_temp(port, sensor):
     """Test the UOM temperature."""
     port.tag = "temperature"
-    assert TEMP_CELSIUS == sensor.unit_of_measurement
+    assert sensor.unit_of_measurement == TEMP_CELSIUS
 
 
 async def test_uom_power(port, sensor):

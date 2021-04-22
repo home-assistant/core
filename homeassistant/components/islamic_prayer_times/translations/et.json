@@ -1,12 +1,21 @@
 {
     "config": {
         "abort": {
-            "one_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine.",
             "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
         },
         "step": {
             "user": {
-                "description": "Kas soovitd seadistada Islam Prayer Times?"
+                "description": "Kas soovitd seadistada Islam Prayer Times?",
+                "title": "Seadista Islamic Prayer Times"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calculation_method": "Palve arvutamise meetod"
+                }
             }
         }
     },

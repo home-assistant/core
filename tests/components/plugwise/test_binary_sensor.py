@@ -35,3 +35,15 @@ async def test_anna_climate_binary_sensor_change(hass, mock_smile_anna):
 
     state = hass.states.get("binary_sensor.auxiliary_dhw_state")
     assert str(state.state) == STATE_OFF
+
+
+async def test_adam_climate_binary_sensor_change(hass, mock_smile_adam):
+    """Test change of climate related binary_sensor entities."""
+    entry = await async_init_integration(hass, mock_smile_adam)
+    assert entry.state == ENTRY_STATE_LOADED
+
+    state = hass.states.get("binary_sensor.adam_plugwise_notification")
+    assert str(state.state) == STATE_ON
+    assert "unreachable" in state.attributes.get("warning_msg")[0]
+    assert not state.attributes.get("error_msg")
+    assert not state.attributes.get("other_msg")

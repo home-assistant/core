@@ -163,6 +163,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
             return
 
         self._state = STATE_ALARM_DISARMED
+        self.async_write_ha_state()
 
     async def async_alarm_arm_home(self, code=None):
         """Send arm home command."""
@@ -178,6 +179,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
             return
 
         self._state = STATE_ALARM_ARMED_HOME
+        self.async_write_ha_state()
 
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
@@ -193,6 +195,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
             return
 
         self._state = STATE_ALARM_ARMING
+        self.async_write_ha_state()
 
     @callback
     def async_update_from_rest_api(self):

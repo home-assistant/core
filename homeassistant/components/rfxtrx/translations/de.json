@@ -1,10 +1,18 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert. Nur eine Konfiguration m\u00f6glich.",
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "step": {
             "setup_network": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
                 "title": "Verbindungsadresse ausw\u00e4hlen"
             },
             "setup_serial": {
@@ -14,6 +22,9 @@
                 "title": "Ger\u00e4t"
             },
             "setup_serial_manual_path": {
+                "data": {
+                    "device": "USB-Ger\u00e4te-Pfad"
+                },
                 "title": "Pfad"
             },
             "user": {
@@ -25,10 +36,35 @@
         }
     },
     "options": {
+        "error": {
+            "already_configured_device": "Ger\u00e4t ist bereits konfiguriert",
+            "invalid_event_code": "Ung\u00fcltiger Ereigniscode",
+            "invalid_input_2262_off": "Ung\u00fcltige Eingabe f\u00fcr Befehl \"aus\"",
+            "invalid_input_2262_on": "Ung\u00fcltige Eingabe f\u00fcr Befehl \"an\"",
+            "invalid_input_off_delay": "Ung\u00fcltige Eingabe f\u00fcr Ausschaltverz\u00f6gerung",
+            "unknown": "Unerwarteter Fehler"
+        },
         "step": {
             "prompt_options": {
                 "data": {
-                    "debug": "Debugging aktivieren"
+                    "automatic_add": "Automatisches Hinzuf\u00fcgen aktivieren",
+                    "debug": "Debugging aktivieren",
+                    "device": "Zu konfigurierendes Ger\u00e4t ausw\u00e4hlen",
+                    "remove_device": "Zu l\u00f6schendes Ger\u00e4t ausw\u00e4hlen"
+                },
+                "title": "Rfxtrx Optionen"
+            },
+            "set_device_options": {
+                "data": {
+                    "command_off": "Datenbitwert f\u00fcr den Befehl \"aus\"",
+                    "command_on": "Datenbitwert f\u00fcr den Befehl \"ein\"",
+                    "data_bit": "Anzahl der Datenbits",
+                    "fire_event": "Ger\u00e4teereignis aktivieren",
+                    "off_delay": "Ausschaltverz\u00f6gerung",
+                    "off_delay_enabled": "Ausschaltverz\u00f6gerung aktivieren",
+                    "replace_device": "W\u00e4hle ein Ger\u00e4t aus, das ersetzt werden soll",
+                    "signal_repetitions": "Anzahl der Signalwiederholungen",
+                    "venetian_blind_mode": "Jalousie-Modus"
                 }
             }
         }

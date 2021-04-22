@@ -1,9 +1,11 @@
 """All constants related to the ZHA component."""
+from __future__ import annotations
+
 import enum
 import logging
-from typing import List
 
 import bellows.zigbee.application
+import voluptuous as vol
 from zigpy.config import CONF_DEVICE_PATH  # noqa: F401 # pylint: disable=unused-import
 import zigpy_cc.zigbee.application
 import zigpy_deconz.zigbee.application
@@ -18,8 +20,10 @@ from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 from homeassistant.components.fan import DOMAIN as FAN
 from homeassistant.components.light import DOMAIN as LIGHT
 from homeassistant.components.lock import DOMAIN as LOCK
+from homeassistant.components.number import DOMAIN as NUMBER
 from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.components.switch import DOMAIN as SWITCH
+import homeassistant.helpers.config_validation as cv
 
 from .typing import CALLABLE_T
 
@@ -30,7 +34,6 @@ ATTR_ATTRIBUTE_NAME = "attribute_name"
 ATTR_AVAILABLE = "available"
 ATTR_CLUSTER_ID = "cluster_id"
 ATTR_CLUSTER_TYPE = "cluster_type"
-ATTR_COMMAND = "command"
 ATTR_COMMAND_TYPE = "command_type"
 ATTR_DEVICE_IEEE = "device_ieee"
 ATTR_DEVICE_TYPE = "device_type"
@@ -46,7 +49,6 @@ ATTR_MANUFACTURER = "manufacturer"
 ATTR_MANUFACTURER_CODE = "manufacturer_code"
 ATTR_MEMBERS = "members"
 ATTR_MODEL = "model"
-ATTR_NAME = "name"
 ATTR_NEIGHBORS = "neighbors"
 ATTR_NODE_DESCRIPTOR = "node_descriptor"
 ATTR_NWK = "nwk"
@@ -71,6 +73,7 @@ BINDINGS = "bindings"
 
 CHANNEL_ACCELEROMETER = "accelerometer"
 CHANNEL_ANALOG_INPUT = "analog_input"
+CHANNEL_ANALOG_OUTPUT = "analog_output"
 CHANNEL_ATTRIBUTE = "attribute"
 CHANNEL_BASIC = "basic"
 CHANNEL_COLOR = "light_color"
@@ -102,7 +105,7 @@ CLUSTER_COMMANDS_SERVER = "server_commands"
 CLUSTER_TYPE_IN = "in"
 CLUSTER_TYPE_OUT = "out"
 
-COMPONENTS = (
+PLATFORMS = (
     BINARY_SENSOR,
     CLIMATE,
     COVER,
@@ -110,18 +113,31 @@ COMPONENTS = (
     FAN,
     LIGHT,
     LOCK,
+    NUMBER,
     SENSOR,
     SWITCH,
 )
 
 CONF_BAUDRATE = "baudrate"
+CONF_CUSTOM_QUIRKS_PATH = "custom_quirks_path"
 CONF_DATABASE = "database_path"
+CONF_DEFAULT_LIGHT_TRANSITION = "default_light_transition"
 CONF_DEVICE_CONFIG = "device_config"
+CONF_ENABLE_IDENTIFY_ON_JOIN = "enable_identify_on_join"
 CONF_ENABLE_QUIRKS = "enable_quirks"
 CONF_FLOWCONTROL = "flow_control"
 CONF_RADIO_TYPE = "radio_type"
 CONF_USB_PATH = "usb_path"
 CONF_ZIGPY = "zigpy_config"
+
+CONF_ZHA_OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_DEFAULT_LIGHT_TRANSITION): cv.positive_int,
+        vol.Required(CONF_ENABLE_IDENTIFY_ON_JOIN, default=True): cv.boolean,
+    }
+)
+
+CUSTOM_CONFIGURATION = "custom_configuration"
 
 DATA_DEVICE_CONFIG = "zha_device_config"
 DATA_ZHA = "zha"
@@ -131,6 +147,7 @@ DATA_ZHA_CORE_EVENTS = "zha_core_events"
 DATA_ZHA_DISPATCHERS = "zha_dispatchers"
 DATA_ZHA_GATEWAY = "zha_gateway"
 DATA_ZHA_PLATFORM_LOADED = "platform_loaded"
+DATA_ZHA_SHUTDOWN_TASK = "zha_shutdown_task"
 
 DEBUG_COMP_BELLOWS = "bellows"
 DEBUG_COMP_ZHA = "homeassistant.components.zha"
@@ -155,6 +172,9 @@ DEBUG_RELAY_LOGGERS = [DEBUG_COMP_ZHA, DEBUG_COMP_ZIGPY]
 DEFAULT_RADIO_TYPE = "ezsp"
 DEFAULT_BAUDRATE = 57600
 DEFAULT_DATABASE_NAME = "zigbee.db"
+
+DEVICE_PAIRING_STATUS = "pairing_status"
+
 DISCOVERY_KEY = "zha_discovery_info"
 
 DOMAIN = "zha"
@@ -167,6 +187,12 @@ MFG_CLUSTER_ID_START = 0xFC00
 
 POWER_MAINS_POWERED = "Mains"
 POWER_BATTERY_OR_UNKNOWN = "Battery or Unknown"
+
+PRESET_SCHEDULE = "schedule"
+PRESET_COMPLEX = "complex"
+
+ZHA_OPTIONS = "zha_options"
+ZHA_CONFIG_SCHEMAS = {ZHA_OPTIONS: CONF_ZHA_OPTIONS_SCHEMA}
 
 
 class RadioType(enum.Enum):
@@ -198,7 +224,7 @@ class RadioType(enum.Enum):
     )
 
     @classmethod
-    def list(cls) -> List[str]:
+    def list(cls) -> list[str]:
         """Return a list of descriptions."""
         return [e.description for e in RadioType]
 

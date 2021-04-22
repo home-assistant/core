@@ -25,14 +25,14 @@
                 "title": "Seadme nime valimine"
             },
             "reset": {
-                "description": "Seade on autentimiseks lukustatud. Selle avamiseks j\u00e4rgi juhiseid.\n 1. L\u00e4htesta seade tehaseseadetele.\n 2. Kasuta seadme kohalikku v\u00f5rku lisamiseks ametlikku rakendust.\n 3. Peatu. \u00c4ra l\u00f5petaa seadistamist. Sulgea rakendus.\n 4. Kl\u00f5psa nuppu Esita.",
+                "description": "{name} ( {model} asukohas {host} ) on lukus. Sidumise autentimiseks ja l\u00f5puleviimiseks pead seadme avama. Juhised:\n 1. Avad rakendus Broadlink.\n 2. Kl\u00f5psa seadmel.\n 3. Kl\u00f5psa paremas \u00fclanurgas nuppu ....\n 4. Keri lehe alaossa.\n 5. Keela lukk.",
                 "title": "Seadme lukustuse eemaldamine"
             },
             "unlock": {
                 "data": {
                     "unlock": "Jah, tee seda."
                 },
-                "description": "Seade on lukustatud. See v\u00f5ib p\u00f5hjustada Home Assistanti autentimisprobleeme. Kas soovid selle avada?",
+                "description": "{name} ( {model} asukohas {host} ) on lukus. See v\u00f5ib p\u00f5hjustada Home Assistanti autentimisprobleeme. Kas soovid selle avada?",
                 "title": "Seadme lukustuse eemaldamine (valikuline)"
             },
             "user": {

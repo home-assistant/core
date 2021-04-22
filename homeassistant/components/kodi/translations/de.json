@@ -1,5 +1,17 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "no_uuid": "Die Kodi-Instanz hat keine eindeutige ID. Dies ist h\u00f6chstwahrscheinlich auf eine alte Kodi-Version (17.x oder niedriger) zur\u00fcckzuf\u00fchren. Du kannst die Integration manuell konfigurieren oder auf eine neuere Kodi-Version aktualisieren.",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "unknown": "Unerwarteter Fehler"
+        },
         "flow_title": "Kodi: {name}",
         "step": {
             "credentials": {
@@ -12,18 +24,13 @@
             "discovery_confirm": {
                 "description": "M\u00f6chtest du Kodi (` {name} `) zu Home Assistant hinzuf\u00fcgen?"
             },
-            "host": {
-                "data": {
-                    "host": "Host",
-                    "port": "Port",
-                    "ssl": "\u00dcber SSL verbinden"
-                }
-            },
             "user": {
                 "data": {
                     "host": "Host",
-                    "port": "Port"
-                }
+                    "port": "Port",
+                    "ssl": "Verwendet ein SSL Zertifikat"
+                },
+                "description": "Kodi-Verbindungsinformationen. Bitte stellen Sie sicher, dass Sie \"Steuerung von Kodi \u00fcber HTTP zulassen\" in System/Einstellungen/Netzwerk/Dienste aktivieren."
             },
             "ws_port": {
                 "data": {

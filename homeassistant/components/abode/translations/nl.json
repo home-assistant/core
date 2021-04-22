@@ -1,16 +1,28 @@
 {
     "config": {
         "abort": {
+            "reauth_successful": "Herauthenticatie was succesvol",
             "single_instance_allowed": "Slechts een enkele configuratie van Abode is toegestaan."
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
-            "connection_error": "Kan geen verbinding maken met Abode.",
-            "identifier_exists": "Account is al geregistreerd.",
             "invalid_auth": "Ongeldige authenticatie",
-            "invalid_credentials": "Ongeldige inloggegevens."
+            "invalid_mfa_code": "Ongeldige MFA-code"
         },
         "step": {
+            "mfa": {
+                "data": {
+                    "mfa_code": "MFA-code (6-cijfers)"
+                },
+                "title": "Voer uw MFA-code voor Abode in"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "E-mail"
+                },
+                "title": "Vul uw Abode-inloggegevens in"
+            },
             "user": {
                 "data": {
                     "password": "Wachtwoord",

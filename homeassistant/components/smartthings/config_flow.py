@@ -16,7 +16,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-# pylint: disable=unused-import
 from .const import (
     APP_OAUTH_CLIENT_NAME,
     APP_OAUTH_SCOPES,

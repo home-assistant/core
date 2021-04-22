@@ -1,5 +1,6 @@
 """Support for Homekit covers."""
 from aiohomekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -39,17 +40,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     conn = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
-    def async_add_service(aid, service):
-        info = {"aid": aid, "iid": service["iid"]}
-        if service["stype"] == "garage-door-opener":
-            async_add_entities([HomeKitGarageDoorCover(conn, info)], True)
-            return True
-
-        if service["stype"] in ("window-covering", "window"):
-            async_add_entities([HomeKitWindowCover(conn, info)], True)
-            return True
-
-        return False
+    def async_add_service(service):
+        entity_class = ENTITY_TYPES.get(service.short_type)
+        if not entity_class:
+            return False
+        info = {"aid": service.accessory.aid, "iid": service.iid}
+        async_add_entities([entity_class(conn, info)], True)
+        return True
 
     conn.add_listener(async_add_service)
 
@@ -111,7 +108,7 @@ class HomeKitGarageDoorCover(HomeKitEntity, CoverEntity):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the optional state attributes."""
         obstruction_detected = self.service.value(
             CharacteristicsTypes.OBSTRUCTION_DETECTED
@@ -238,7 +235,7 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
             )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the optional state attributes."""
         obstruction_detected = self.service.value(
             CharacteristicsTypes.OBSTRUCTION_DETECTED
@@ -246,3 +243,10 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
         if not obstruction_detected:
             return {}
         return {"obstruction-detected": obstruction_detected}
+
+
+ENTITY_TYPES = {
+    ServicesTypes.GARAGE_DOOR_OPENER: HomeKitGarageDoorCover,
+    ServicesTypes.WINDOW_COVERING: HomeKitWindowCover,
+    ServicesTypes.WINDOW: HomeKitWindowCover,
+}

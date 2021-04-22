@@ -5,8 +5,7 @@
             "unknown": "Unexpected error"
         },
         "error": {
-            "cannot_connect": "Failed to connect",
-            "invalid_auth": "Invalid authentication"
+            "cannot_connect": "Failed to connect"
         },
         "flow_title": "NZBGet: {name}",
         "step": {

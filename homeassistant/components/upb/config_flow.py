@@ -1,5 +1,6 @@
 """Config flow for UPB PIM integration."""
 import asyncio
+from contextlib import suppress
 import logging
 from urllib.parse import urlparse
 
@@ -10,7 +11,7 @@ import voluptuous as vol
 from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_ADDRESS, CONF_FILE_PATH, CONF_HOST, CONF_PROTOCOL
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 PROTOCOL_MAP = {"TCP": "tcp://", "Serial port": "serial://"}
@@ -43,11 +44,8 @@ async def _validate_input(data):
 
     upb.connect(_connected_callback)
 
-    try:
-        with async_timeout.timeout(VALIDATE_TIMEOUT):
-            await connected_event.wait()
-    except asyncio.TimeoutError:
-        pass
+    with suppress(asyncio.TimeoutError), async_timeout.timeout(VALIDATE_TIMEOUT):
+        await connected_event.wait()
 
     upb.disconnect()
 

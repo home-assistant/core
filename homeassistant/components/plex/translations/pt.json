@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Este servidor Plex j\u00e1 est\u00e1 configurado",
             "already_in_progress": "Plex est\u00e1 a ser configurado",
+            "reauth_successful": "Reautentica\u00e7\u00e3o bem sucedida",
             "unknown": "Falha por motivo desconhecido"
         },
         "error": {
@@ -12,7 +13,9 @@
             "manual_setup": {
                 "data": {
                     "host": "Servidor",
-                    "port": "Porta"
+                    "port": "Porta",
+                    "ssl": "Utiliza um certificado SSL",
+                    "verify_ssl": "Verificar o certificado SSL"
                 }
             },
             "select_server": {

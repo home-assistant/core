@@ -1,14 +1,14 @@
 """The sensor tests for the Ruckus Unleashed platform."""
 from datetime import timedelta
+from unittest.mock import patch
 
 from homeassistant.components.ruckus_unleashed import API_MAC, DOMAIN
 from homeassistant.components.ruckus_unleashed.const import API_AP, API_ID, API_NAME
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.util import utcnow
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 from tests.components.ruckus_unleashed import (
     DEFAULT_AP_INFO,
@@ -80,7 +80,7 @@ async def test_restoring_clients(hass):
     entry = mock_config_entry()
     entry.add_to_hass(hass)
 
-    registry = await entity_registry.async_get_registry(hass)
+    registry = er.async_get(hass)
     registry.async_get_or_create(
         "device_tracker",
         DOMAIN,
@@ -120,7 +120,7 @@ async def test_client_device_setup(hass):
 
     router_info = DEFAULT_AP_INFO[API_AP][API_ID]["1"]
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     client_device = device_registry.async_get_device(
         identifiers={},
         connections={(CONNECTION_NETWORK_MAC, TEST_CLIENT[API_MAC])},

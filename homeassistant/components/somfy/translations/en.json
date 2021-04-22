@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_setup": "You can only configure one Somfy account.",
             "authorize_url_timeout": "Timeout generating authorize URL.",
             "missing_configuration": "The component is not configured. Please follow the documentation.",
             "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",

@@ -1,4 +1,5 @@
 """Tests for the SmartThings component init module."""
+from unittest.mock import Mock, patch
 from uuid import uuid4
 
 from aiohttp import ClientConnectionError, ClientResponseError
@@ -13,8 +14,8 @@ from homeassistant.components.smartthings.const import (
     DATA_BROKERS,
     DOMAIN,
     EVENT_BUTTON,
+    PLATFORMS,
     SIGNAL_SMARTTHINGS_UPDATE,
-    SUPPORTED_PLATFORMS,
 )
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import HTTP_FORBIDDEN, HTTP_INTERNAL_SERVER_ERROR
@@ -22,7 +23,6 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
 
 
@@ -174,7 +174,7 @@ async def test_scenes_unauthorized_loads_platforms(
         assert await smartthings.async_setup_entry(hass, config_entry)
         # Assert platforms loaded
         await hass.async_block_till_done()
-        assert forward_mock.call_count == len(SUPPORTED_PLATFORMS)
+        assert forward_mock.call_count == len(PLATFORMS)
 
 
 async def test_config_entry_loads_platforms(
@@ -206,7 +206,7 @@ async def test_config_entry_loads_platforms(
         assert await smartthings.async_setup_entry(hass, config_entry)
         # Assert platforms loaded
         await hass.async_block_till_done()
-        assert forward_mock.call_count == len(SUPPORTED_PLATFORMS)
+        assert forward_mock.call_count == len(PLATFORMS)
 
 
 async def test_config_entry_loads_unconnected_cloud(
@@ -237,7 +237,7 @@ async def test_config_entry_loads_unconnected_cloud(
     with patch.object(hass.config_entries, "async_forward_entry_setup") as forward_mock:
         assert await smartthings.async_setup_entry(hass, config_entry)
         await hass.async_block_till_done()
-        assert forward_mock.call_count == len(SUPPORTED_PLATFORMS)
+        assert forward_mock.call_count == len(PLATFORMS)
 
 
 async def test_unload_entry(hass, config_entry):
@@ -258,7 +258,7 @@ async def test_unload_entry(hass, config_entry):
         assert config_entry.entry_id not in hass.data[DOMAIN][DATA_BROKERS]
         # Assert platforms unloaded
         await hass.async_block_till_done()
-        assert forward_mock.call_count == len(SUPPORTED_PLATFORMS)
+        assert forward_mock.call_count == len(PLATFORMS)
 
 
 async def test_remove_entry(hass, config_entry, smartthings_mock):

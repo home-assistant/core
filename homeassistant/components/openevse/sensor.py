@@ -5,7 +5,7 @@ import openevsewifi
 from requests import RequestException
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_VARIABLES,
@@ -14,7 +14,6 @@ from homeassistant.const import (
     TIME_MINUTES,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +51,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev, True)
 
 
-class OpenEVSESensor(Entity):
+class OpenEVSESensor(SensorEntity):
     """Implementation of an OpenEVSE sensor."""
 
     def __init__(self, sensor_type, charger):

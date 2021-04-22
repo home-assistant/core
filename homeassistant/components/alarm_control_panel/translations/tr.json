@@ -1,4 +1,10 @@
 {
+    "device_automation": {
+        "trigger_type": {
+            "disarmed": "{entity_name} b\u0131rak\u0131ld\u0131",
+            "triggered": "{entity_name} tetiklendi"
+        }
+    },
     "state": {
         "_": {
             "armed": "Etkin",

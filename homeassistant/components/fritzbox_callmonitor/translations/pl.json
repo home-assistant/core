@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "insufficient_permissions": "U\u017cytkownik ma niewystarczaj\u0105ce uprawnienia, aby uzyska\u0107 dost\u0119p do ustawie\u0144 AVM FRITZ! Box i jego ksi\u0105\u017cek telefonicznych.",
+            "no_devices_found": "Nie znaleziono urz\u0105dze\u0144 w sieci"
+        },
+        "error": {
+            "invalid_auth": "Niepoprawne uwierzytelnienie"
+        },
+        "flow_title": "Monitor po\u0142\u0105cze\u0144 AVM FRITZ!Box: {name}",
+        "step": {
+            "phonebook": {
+                "data": {
+                    "phonebook": "Ksi\u0105\u017cka telefoniczna"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "password": "Has\u0142o",
+                    "port": "Port",
+                    "username": "Nazwa u\u017cytkownika"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "malformed_prefixes": "Prefiksy s\u0105 nieprawid\u0142owe, prosz\u0119 sprawdzi\u0107 ich format."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "prefixes": "Prefiksy (lista oddzielona przecinkami)"
+                },
+                "title": "Skonfiguruj prefiksy"
+            }
+        }
+    }
+}

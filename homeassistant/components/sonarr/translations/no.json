@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Tjenesten er allerede konfigurert",
-            "reauth_successful": "Reautentisering var vellykket",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket",
             "unknown": "Uventet feil"
         },
         "error": {
@@ -13,7 +13,7 @@
         "step": {
             "reauth_confirm": {
                 "description": "Sonarr-integrasjonen m\u00e5 autentiseres p\u00e5 nytt med Sonarr API vert p\u00e5: {host}",
-                "title": "Bekreft integrering p\u00e5 nytt"
+                "title": "Godkjenne integrering p\u00e5 nytt"
             },
             "user": {
                 "data": {
@@ -23,8 +23,7 @@
                     "port": "Port",
                     "ssl": "Bruker et SSL-sertifikat",
                     "verify_ssl": "Verifisere SSL-sertifikat"
-                },
-                "title": "Koble til Sonarr"
+                }
             }
         }
     },
@@ -37,6 +36,5 @@
                 }
             }
         }
-    },
-    "title": ""
+    }
 }

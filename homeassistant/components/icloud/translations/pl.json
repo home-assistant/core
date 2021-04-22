@@ -7,9 +7,8 @@
         },
         "error": {
             "invalid_auth": "Niepoprawne uwierzytelnienie",
-            "login": "B\u0142\u0105d logowania: sprawd\u017a adres e-mail i has\u0142o",
             "send_verification_code": "Nie uda\u0142o si\u0119 wys\u0142a\u0107 kodu weryfikacyjnego",
-            "validate_verification_code": "Nie uda\u0142o si\u0119 zweryfikowa\u0107 kodu weryfikacyjnego, wybierz urz\u0105dzenie zaufane i ponownie rozpocznij weryfikacj\u0119"
+            "validate_verification_code": "Nie uda\u0142o si\u0119 zweryfikowa\u0107 kodu weryfikacyjnego, spr\u00f3buj ponownie"
         },
         "step": {
             "reauth": {

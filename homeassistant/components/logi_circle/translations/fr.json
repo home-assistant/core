@@ -1,19 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Le compte a d\u00e9j\u00e0 \u00e9t\u00e9 configur\u00e9",
-            "already_setup": "Vous ne pouvez configurer qu'un seul compte Logi Circle.",
+            "already_configured": "Le compte est d\u00e9j\u00e0 configur\u00e9",
             "external_error": "Une exception est survenue \u00e0 partir d'un autre flux.",
             "external_setup": "Logi Circle a \u00e9t\u00e9 configur\u00e9 avec succ\u00e8s \u00e0 partir d'un autre flux.",
-            "missing_configuration": "Le composant n'est pas configur\u00e9. Veuillez suivre la documentation.",
-            "no_flows": "Vous devez configurer Logi Circle avant de pouvoir vous authentifier aupr\u00e8s de celui-ci. [Veuillez lire les instructions] (https://www.home-assistant.io/components/logi_circle/)."
-        },
-        "create_entry": {
-            "default": "Authentifi\u00e9 avec succ\u00e8s avec Logi Circle."
+            "missing_configuration": "Le composant n'est pas configur\u00e9. Veuillez suivre la documentation."
         },
         "error": {
-            "auth_error": "L'autorisation de l'API a \u00e9chou\u00e9.",
-            "auth_timeout": "L'autorisation a expir\u00e9 lors de la demande du jeton d'acc\u00e8s.",
             "authorize_url_timeout": "D\u00e9lai de g\u00e9n\u00e9ration de l'URL d'authentification d\u00e9pass\u00e9.",
             "follow_link": "Veuillez suivre le lien et vous authentifier avant d'appuyer sur Soumettre.",
             "invalid_auth": "Authentification invalide"

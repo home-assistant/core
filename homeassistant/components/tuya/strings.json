@@ -4,11 +4,11 @@
     "step": {
       "user": {
         "title": "Tuya",
-        "description": "Enter your Tuya credential.",
+        "description": "Enter your Tuya credentials.",
         "data": {
           "country_code": "Your account country code (e.g., 1 for USA or 86 for China)",
           "password": "[%key:common::config_flow::data::password%]",
-          "platform": "The app where your account register",
+          "platform": "The app where your account is registered",
           "username": "[%key:common::config_flow::data::username%]"
         }
       }
@@ -23,6 +23,9 @@
     }
   },
   "options": {
+    "abort": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
     "step": {
       "init": {
         "title": "Configure Tuya Options",
@@ -46,9 +49,10 @@
           "unit_of_measurement": "Temperature unit used by device",
           "temp_divider": "Temperature values divider (0 = use default)",
           "curr_temp_divider": "Current Temperature value divider (0 = use default)",
+          "set_temp_divided": "Use divided Temperature value for set temperature command",
+          "temp_step_override": "Target Temperature step",
           "min_temp": "Min target temperature (use min and max = 0 for default)",
-          "max_temp": "Max target temperature (use min and max = 0 for default)",
-          "ext_temp_sensor": "Sensor for current temperature"
+          "max_temp": "Max target temperature (use min and max = 0 for default)"
         }
       }
     },

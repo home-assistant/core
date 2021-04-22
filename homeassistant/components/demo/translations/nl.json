@@ -10,6 +10,7 @@
             "options_1": {
                 "data": {
                     "bool": "Optioneel Boolean",
+                    "constant": "Constant",
                     "int": "Numerieke invoer"
                 }
             },

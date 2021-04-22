@@ -1,0 +1,19 @@
+{
+    "device_automation": {
+        "action_type": {
+            "turn_off": "{entity_name}\uc744(\ub97c) \ub044\uae30",
+            "turn_on": "{entity_name}\uc744(\ub97c) \ucf1c\uae30"
+        }
+    },
+    "state": {
+        "_": {
+            "eco": "\uc808\uc57d",
+            "electric": "\uc804\uae30",
+            "gas": "\uac00\uc2a4",
+            "heat_pump": "\ud788\ud2b8 \ud38c\ud504",
+            "high_demand": "\uace0\uc131\ub2a5",
+            "off": "\uaebc\uc9d0",
+            "performance": "\uace0\ud6a8\uc728"
+        }
+    }
+}

@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "address_already_configured": "Er is al een UPB PIM met dit adres geconfigureerd.",
             "already_configured": "Apparaat is al geconfigureerd"
         },
         "error": {

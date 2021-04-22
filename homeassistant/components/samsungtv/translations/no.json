@@ -5,7 +5,6 @@
             "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
             "auth_missing": "Home Assistant er ikke godkjent til \u00e5 koble til denne Samsung-TV. Vennligst kontroller innstillingene for TV-en for \u00e5 godkjenne Home Assistent.",
             "cannot_connect": "Tilkobling mislyktes",
-            "not_successful": "Kan ikke koble til denne Samsung TV-enheten.",
             "not_supported": "Denne Samsung TV-enhetene st\u00f8ttes forel\u00f8pig ikke."
         },
         "flow_title": "",

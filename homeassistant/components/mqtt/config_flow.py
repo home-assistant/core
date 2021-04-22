@@ -1,12 +1,12 @@
 """Config flow for MQTT."""
 from collections import OrderedDict
-import logging
 import queue
 
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
+    CONF_DISCOVERY,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PAYLOAD,
@@ -22,19 +22,17 @@ from .const import (
     ATTR_TOPIC,
     CONF_BIRTH_MESSAGE,
     CONF_BROKER,
-    CONF_DISCOVERY,
     CONF_WILL_MESSAGE,
     DATA_MQTT_CONFIG,
     DEFAULT_BIRTH,
     DEFAULT_DISCOVERY,
     DEFAULT_WILL,
+    DOMAIN,
 )
 from .util import MQTT_WILL_BIRTH_SCHEMA
 
-_LOGGER = logging.getLogger(__name__)
 
-
-@config_entries.HANDLERS.register("mqtt")
+@config_entries.HANDLERS.register(DOMAIN)
 class FlowHandler(config_entries.ConfigFlow):
     """Handle a config flow."""
 

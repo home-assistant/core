@@ -22,6 +22,7 @@
                     "host": "",
                     "port": "",
                     "ssl": "Kasutab SSL serti",
+                    "token": "Luba (valikuline)",
                     "verify_ssl": "Kontrolli SSL sertifikaati"
                 },
                 "title": "Plexi k\u00e4sitsi seadistamine"

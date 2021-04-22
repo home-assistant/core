@@ -6,7 +6,6 @@
         },
         "error": {
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
-            "connection_error": "Nepoda\u0159ilo se p\u0159ipojit",
             "wrong_host": "Neplatn\u00fd hostitel nebo IP adresa."
         },
         "flow_title": "Tisk\u00e1rna Brother: {model} {serial_number}",

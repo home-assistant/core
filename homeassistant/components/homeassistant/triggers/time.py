@@ -4,7 +4,14 @@ from functools import partial
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_AT, CONF_PLATFORM
+from homeassistant.components import sensor
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    CONF_AT,
+    CONF_PLATFORM,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HassJob, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import (
@@ -18,8 +25,8 @@ import homeassistant.util.dt as dt_util
 
 _TIME_TRIGGER_SCHEMA = vol.Any(
     cv.time,
-    vol.All(str, cv.entity_domain("input_datetime")),
-    msg="Expected HH:MM, HH:MM:SS or Entity ID from domain 'input_datetime'",
+    vol.All(str, cv.entity_domain(("input_datetime", "sensor"))),
+    msg="Expected HH:MM, HH:MM:SS or Entity ID with domain 'input_datetime' or 'sensor'",
 )
 
 TRIGGER_SCHEMA = vol.Schema(
@@ -32,6 +39,7 @@ TRIGGER_SCHEMA = vol.Schema(
 
 async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
+    trigger_id = automation_info.get("trigger_id") if automation_info else None
     entities = {}
     removes = []
     job = HassJob(action)
@@ -47,6 +55,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
                     "now": now,
                     "description": description,
                     "entity_id": entity_id,
+                    "id": trigger_id,
                 }
             },
         )
@@ -60,14 +69,16 @@ async def async_attach_trigger(hass, config, action, automation_info):
     def update_entity_trigger(entity_id, new_state=None):
         """Update the entity trigger for the entity_id."""
         # If a listener was already set up for entity, remove it.
-        remove = entities.get(entity_id)
+        remove = entities.pop(entity_id, None)
         if remove:
             remove()
-            removes.remove(remove)
             remove = None
 
+        if not new_state:
+            return
+
         # Check state of entity. If valid, set up a listener.
-        if new_state:
+        if new_state.domain == "input_datetime":
             has_date = new_state.attributes["has_date"]
             if has_date:
                 year = new_state.attributes["year"]
@@ -111,16 +122,35 @@ async def async_attach_trigger(hass, config, action, automation_info):
                     minute=minute,
                     second=second,
                 )
+        elif (
+            new_state.domain == "sensor"
+            and new_state.attributes.get(ATTR_DEVICE_CLASS)
+            == sensor.DEVICE_CLASS_TIMESTAMP
+            and new_state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
+        ):
+            trigger_dt = dt_util.parse_datetime(new_state.state)
+
+            if trigger_dt is not None and trigger_dt > dt_util.utcnow():
+                remove = async_track_point_in_time(
+                    hass,
+                    partial(
+                        time_automation_listener,
+                        f"time set in {entity_id}",
+                        entity_id=entity_id,
+                    ),
+                    trigger_dt,
+                )
 
         # Was a listener set up?
         if remove:
-            removes.append(remove)
+            entities[entity_id] = remove
 
-        entities[entity_id] = remove
+    to_track = []
 
     for at_time in config[CONF_AT]:
         if isinstance(at_time, str):
-            # input_datetime entity
+            # entity
+            to_track.append(at_time)
             update_entity_trigger(at_time, new_state=hass.states.get(at_time))
         else:
             # datetime.time
@@ -136,14 +166,14 @@ async def async_attach_trigger(hass, config, action, automation_info):
 
     # Track state changes of any entities.
     removes.append(
-        async_track_state_change_event(
-            hass, list(entities), update_entity_trigger_event
-        )
+        async_track_state_change_event(hass, to_track, update_entity_trigger_event)
     )
 
     @callback
     def remove_track_time_changes():
         """Remove tracked time changes."""
+        for remove in entities.values():
+            remove()
         for remove in removes:
             remove()
 

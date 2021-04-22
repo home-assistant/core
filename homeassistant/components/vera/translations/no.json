@@ -1,17 +1,16 @@
 {
     "config": {
         "abort": {
-            "already_configured": "En kontroller er allerede konfigurert.",
-            "cannot_connect": "Kunne ikke koble til kontrolleren med url {base_url}"
+            "cannot_connect": "Kan ikke koble til kontrolleren med URL-adressen {base_url}"
         },
         "step": {
             "user": {
                 "data": {
-                    "exclude": "Vera-enhets-ID-er som skal ekskluderes fra Home Assistant.",
-                    "lights": "Vera bytter enhets-ID-er for \u00e5 behandle som lys i Home Assistant.",
+                    "exclude": "Vera enhets ID-er som skal ekskluderes fra Home Assistant",
+                    "lights": "Vera bytter enhets ID-er for \u00e5 behandle som lys i Home Assistant",
                     "vera_controller_url": "URL-adresse for kontroller"
                 },
-                "description": "Oppgi en Vera-kontroller-url nedenfor. Det skal se slik ut: http://192.168.1.161:3480.",
+                "description": "Gi en Vera-kontroller-URL nedenfor. Det skal se slik ut: http://192.168.1.161:3480.",
                 "title": "Oppsett Vera-kontroller"
             }
         }
@@ -20,8 +19,8 @@
         "step": {
             "init": {
                 "data": {
-                    "exclude": "Vera-enhets-ID-er som skal ekskluderes fra Home Assistant.",
-                    "lights": "Vera bytter enhets-ID-er for \u00e5 behandle som lys i Home Assistant."
+                    "exclude": "Vera enhets ID-er som skal ekskluderes fra Home Assistant",
+                    "lights": "Vera bytter enhets ID-er for \u00e5 behandle som lys i Home Assistant"
                 },
                 "description": "Se Vera dokumentasjonen for detaljer om valgfrie parametere: https://www.home-assistant.io/integrations/vera/. Merk: Eventuelle endringer her vil trenge en omstart av Home Assistant-serveren. For \u00e5 fjerne verdier, gi et rom.",
                 "title": "Alternativer for Vera-kontroller"

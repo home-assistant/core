@@ -7,7 +7,6 @@
         "error": {
             "identifier_exists": "Konto jest ju\u017c zarejestrowane",
             "invalid_auth": "Niepoprawne uwierzytelnienie",
-            "invalid_credentials": "Nieprawid\u0142owe dane uwierzytelniaj\u0105ce",
             "still_awaiting_mfa": "Wci\u0105\u017c nie potwierdzono linka w e-mailu od SimpliSafe",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },

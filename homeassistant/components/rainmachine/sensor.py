@@ -4,6 +4,7 @@ from typing import Callable
 
 from regenmaschine.controller import Controller
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS, VOLUME_CUBIC_METERS
 from homeassistant.core import HomeAssistant, callback
@@ -108,7 +109,7 @@ async def async_setup_entry(
     )
 
 
-class RainMachineSensor(RainMachineEntity):
+class RainMachineSensor(RainMachineEntity, SensorEntity):
     """Define a general RainMachine sensor."""
 
     def __init__(

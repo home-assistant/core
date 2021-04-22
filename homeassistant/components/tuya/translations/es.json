@@ -1,14 +1,11 @@
 {
     "config": {
         "abort": {
-            "auth_failed": "Autenticaci\u00f3n no v\u00e1lida",
             "cannot_connect": "No se pudo conectar",
-            "conn_error": "No se pudo conectar",
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "single_instance_allowed": "Ya est\u00e1 configurado. Solo es posible una \u00fanica configuraci\u00f3n."
         },
         "error": {
-            "auth_failed": "Autenticaci\u00f3n no v\u00e1lida",
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida"
         },
         "flow_title": "Configuraci\u00f3n Tuya",
@@ -26,6 +23,9 @@
         }
     },
     "options": {
+        "abort": {
+            "cannot_connect": "No se pudo conectar"
+        },
         "error": {
             "dev_multi_type": "Los m\u00faltiples dispositivos seleccionados para configurar deben ser del mismo tipo",
             "dev_not_config": "Tipo de dispositivo no configurable",
@@ -36,13 +36,14 @@
                 "data": {
                     "brightness_range_mode": "Rango de brillo utilizado por el dispositivo",
                     "curr_temp_divider": "Divisor del valor de la temperatura actual (0 = usar valor por defecto)",
-                    "ext_temp_sensor": "Sensor para la temperatura actual",
                     "max_kelvin": "Temperatura de color m\u00e1xima admitida en kelvin",
                     "max_temp": "Temperatura objetivo m\u00e1xima (usa m\u00edn. y m\u00e1x. = 0 por defecto)",
                     "min_kelvin": "Temperatura de color m\u00ednima soportada en kelvin",
                     "min_temp": "Temperatura objetivo m\u00ednima (usa m\u00edn. y m\u00e1x. = 0 por defecto)",
+                    "set_temp_divided": "Use el valor de temperatura dividido para el comando de temperatura establecida",
                     "support_color": "Forzar soporte de color",
                     "temp_divider": "Divisor de los valores de temperatura (0 = usar valor por defecto)",
+                    "temp_step_override": "Temperatura deseada",
                     "tuya_max_coltemp": "Temperatura de color m\u00e1xima notificada por dispositivo",
                     "unit_of_measurement": "Unidad de temperatura utilizada por el dispositivo"
                 },

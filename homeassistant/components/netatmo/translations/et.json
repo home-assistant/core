@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "authorize_url_timeout": "Kinnitus-URLi loomise ajal\u00f5pp.",
+            "missing_configuration": "Komponent pole seadistatud. Palun loe dokumentatsiooni.",
             "no_url_available": "URL pole saadaval. Rohkem teavet [check the help section]({docs_url})",
             "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
         },
@@ -12,6 +13,28 @@
             "pick_implementation": {
                 "title": "Vali tuvastusmeetod"
             }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "away": "eemal",
+            "hg": "k\u00fclmumiskaitse",
+            "schedule": "ajastus"
+        },
+        "trigger_type": {
+            "alarm_started": "{entity_name} tuvastas h\u00e4ire",
+            "animal": "{entity_name} tuvastas looma",
+            "cancel_set_point": "{entity_name} on oma ajakava j\u00e4tkanud",
+            "human": "{entity_name} tuvastas inimese",
+            "movement": "{entity_name} tuvastas liikumise",
+            "outdoor": "{entity_name} tuvastas v\u00e4lise s\u00fcndmuse",
+            "person": "{entity_name} tuvastas isiku",
+            "person_away": "{entity_name} tuvastas inimese eemaldumise",
+            "set_point": "Sihttemperatuur {entity_name} on k\u00e4sitsi m\u00e4\u00e4ratud",
+            "therm_mode": "{entity_name} l\u00fclitus olekusse {subtype}.",
+            "turned_off": "{entity_name} l\u00fclitus v\u00e4lja",
+            "turned_on": "{entity_name} l\u00fclitus sisse",
+            "vehicle": "{entity_name} tuvastas s\u00f5iduki"
         }
     },
     "options": {

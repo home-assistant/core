@@ -7,7 +7,6 @@
         },
         "error": {
             "invalid_auth": "Authentification invalide",
-            "login": "Erreur de connexion: veuillez v\u00e9rifier votre e-mail et votre mot de passe",
             "send_verification_code": "\u00c9chec de l'envoi du code de v\u00e9rification",
             "validate_verification_code": "Impossible de v\u00e9rifier votre code de v\u00e9rification, choisissez un appareil de confiance et recommencez la v\u00e9rification"
         },

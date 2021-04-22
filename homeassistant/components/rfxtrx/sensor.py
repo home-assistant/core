@@ -8,6 +8,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TEMPERATURE,
+    SensorEntity,
 )
 from homeassistant.const import (
     CONF_DEVICES,
@@ -129,7 +130,7 @@ async def async_setup_entry(
     connect_auto_add(hass, discovery_info, sensor_update)
 
 
-class RfxtrxSensor(RfxtrxEntity):
+class RfxtrxSensor(RfxtrxEntity, SensorEntity):
     """Representation of a RFXtrx sensor."""
 
     def __init__(self, device, device_id, data_type, event=None):

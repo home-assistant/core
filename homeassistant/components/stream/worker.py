@@ -2,15 +2,17 @@
 from collections import deque
 import io
 import logging
-import time
 
 import av
 
+from . import redact_credentials
 from .const import (
+    AUDIO_CODECS,
     MAX_MISSING_DTS,
     MAX_TIMESTAMP_GAP,
     MIN_SEGMENT_DURATION,
     PACKETS_TO_WAIT_FOR_AUDIO,
+    SEGMENT_CONTAINER_FORMAT,
     STREAM_TIMEOUT,
 )
 from .core import Segment, StreamBuffer
@@ -18,19 +20,20 @@ from .core import Segment, StreamBuffer
 _LOGGER = logging.getLogger(__name__)
 
 
-def create_stream_buffer(stream_output, video_stream, audio_stream, sequence):
+def create_stream_buffer(video_stream, audio_stream, sequence):
     """Create a new StreamBuffer."""
 
     segment = io.BytesIO()
-    container_options = (
-        stream_output.container_options(sequence)
-        if stream_output.container_options
-        else {}
-    )
+    container_options = {
+        # Removed skip_sidx - see https://github.com/home-assistant/core/pull/39970
+        "movflags": "frag_custom+empty_moov+default_base_moof+frag_discont+negative_cts_offsets",
+        "avoid_negative_ts": "disabled",
+        "fragment_index": str(sequence),
+    }
     output = av.open(
         segment,
         mode="w",
-        format=stream_output.format,
+        format=SEGMENT_CONTAINER_FORMAT,
         container_options={
             "video_track_timescale": str(int(1 / video_stream.time_base)),
             **container_options,
@@ -39,36 +42,94 @@ def create_stream_buffer(stream_output, video_stream, audio_stream, sequence):
     vstream = output.add_stream(template=video_stream)
     # Check if audio is requested
     astream = None
-    if audio_stream and audio_stream.name in stream_output.audio_codecs:
+    if audio_stream and audio_stream.name in AUDIO_CODECS:
         astream = output.add_stream(template=audio_stream)
     return StreamBuffer(segment, output, vstream, astream)
 
 
-def stream_worker(hass, stream, quit_event):
-    """Handle consuming streams and restart keepalive streams."""
+class SegmentBuffer:
+    """Buffer for writing a sequence of packets to the output as a segment."""
 
-    wait_timeout = 0
-    while not quit_event.wait(timeout=wait_timeout):
-        start_time = time.time()
-        try:
-            _stream_worker_internal(hass, stream, quit_event)
-        except av.error.FFmpegError:  # pylint: disable=c-extension-no-member
-            _LOGGER.exception("Stream connection failed: %s", stream.source)
-        if not stream.keepalive or quit_event.is_set():
-            break
-        # To avoid excessive restarts, don't restart faster than once every 40 seconds.
-        wait_timeout = max(40 - (time.time() - start_time), 0)
-        _LOGGER.debug(
-            "Restarting stream worker in %d seconds: %s",
-            wait_timeout,
-            stream.source,
+    def __init__(self, outputs_callback) -> None:
+        """Initialize SegmentBuffer."""
+        self._stream_id = 0
+        self._video_stream = None
+        self._audio_stream = None
+        self._outputs_callback = outputs_callback
+        # Each element is a StreamOutput
+        self._outputs = []
+        self._sequence = 0
+        self._segment_start_pts = None
+        self._stream_buffer = None
+
+    def set_streams(self, video_stream, audio_stream):
+        """Initialize output buffer with streams from container."""
+        self._video_stream = video_stream
+        self._audio_stream = audio_stream
+
+    def reset(self, video_pts):
+        """Initialize a new stream segment."""
+        # Keep track of the number of segments we've processed
+        self._sequence += 1
+        self._segment_start_pts = video_pts
+
+        # Fetch the latest StreamOutputs, which may have changed since the
+        # worker started.
+        self._outputs = self._outputs_callback().values()
+        self._stream_buffer = create_stream_buffer(
+            self._video_stream, self._audio_stream, self._sequence
         )
 
+    def mux_packet(self, packet):
+        """Mux a packet to the appropriate StreamBuffers."""
 
-def _stream_worker_internal(hass, stream, quit_event):
+        # Check for end of segment
+        if packet.stream == self._video_stream and packet.is_keyframe:
+            duration = (packet.pts - self._segment_start_pts) * packet.time_base
+            if duration >= MIN_SEGMENT_DURATION:
+                # Save segment to outputs
+                self.flush(duration)
+
+                # Reinitialize
+                self.reset(packet.pts)
+
+        # Mux the packet
+        if packet.stream == self._video_stream:
+            packet.stream = self._stream_buffer.vstream
+            self._stream_buffer.output.mux(packet)
+        elif packet.stream == self._audio_stream:
+            packet.stream = self._stream_buffer.astream
+            self._stream_buffer.output.mux(packet)
+
+    def flush(self, duration):
+        """Create a segment from the buffered packets and write to output."""
+        self._stream_buffer.output.close()
+        segment = Segment(
+            self._sequence, self._stream_buffer.segment, duration, self._stream_id
+        )
+        for stream_output in self._outputs:
+            stream_output.put(segment)
+
+    def discontinuity(self):
+        """Mark the stream as having been restarted."""
+        # Preserving sequence and stream_id here keep the HLS playlist logic
+        # simple to check for discontinuity at output time, and to determine
+        # the discontinuity sequence number.
+        self._stream_id += 1
+
+    def close(self):
+        """Close stream buffer."""
+        self._stream_buffer.output.close()
+
+
+def stream_worker(source, options, segment_buffer, quit_event):
     """Handle consuming streams."""
 
-    container = av.open(stream.source, options=stream.options, timeout=STREAM_TIMEOUT)
+    try:
+        container = av.open(source, options=options, timeout=STREAM_TIMEOUT)
+    except av.AVError:
+        _LOGGER.error("Error opening stream %s", redact_credentials(str(source)))
+        return
     try:
         video_stream = container.streams.video[0]
     except (KeyError, IndexError):
@@ -89,17 +150,10 @@ def _stream_worker_internal(hass, stream, quit_event):
 
     # Iterator for demuxing
     container_packets = None
-    # The presentation timestamps of the first packet in each stream we receive
-    # Use to adjust before muxing or outputting, but we don't adjust internally
-    first_pts = {}
     # The decoder timestamps of the latest packet in each stream we processed
-    last_dts = None
+    last_dts = {video_stream: float("-inf"), audio_stream: float("-inf")}
     # Keep track of consecutive packets without a dts to detect end of stream.
     missing_dts = 0
-    # Holds the buffers for each stream provider
-    outputs = None
-    # Keep track of the number of segments we've processed
-    sequence = 0
     # The video pts at the beginning of the segment
     segment_start_pts = None
     # Because of problems 1 and 2 below, we need to store the first few packets and replay them
@@ -110,21 +164,19 @@ def _stream_worker_internal(hass, stream, quit_event):
     # 2 - seeking can be problematic https://trac.ffmpeg.org/ticket/7815
 
     def peek_first_pts():
-        nonlocal first_pts, audio_stream, container_packets
+        """Initialize by peeking into the first few packets of the stream.
+
+        Deal with problem #1 above (bad first packet pts/dts) by recalculating using pts/dts from second packet.
+        Also load the first video keyframe pts into segment_start_pts and check if the audio stream really exists.
+        """
+        nonlocal segment_start_pts, audio_stream, container_packets
         missing_dts = 0
-
-        def empty_stream_dict():
-            return {
-                video_stream: None,
-                **({audio_stream: None} if audio_stream else {}),
-            }
-
+        found_audio = False
         try:
             container_packets = container.demux((video_stream, audio_stream))
-            first_packet = empty_stream_dict()
-            first_pts = empty_stream_dict()
+            first_packet = None
             # Get to first video keyframe
-            while first_packet[video_stream] is None:
+            while first_packet is None:
                 packet = next(container_packets)
                 if (
                     packet.dts is None
@@ -135,13 +187,17 @@ def _stream_worker_internal(hass, stream, quit_event):
                         )
                     missing_dts += 1
                     continue
-                if packet.stream == video_stream and packet.is_keyframe:
-                    first_packet[video_stream] = packet
+                if packet.stream == audio_stream:
+                    found_audio = True
+                elif packet.is_keyframe:  # video_keyframe
+                    first_packet = packet
                     initial_packets.append(packet)
             # Get first_pts from subsequent frame to first keyframe
-            while any(
-                [pts is None for pts in {**first_packet, **first_pts}.values()]
-            ) and (len(initial_packets) < PACKETS_TO_WAIT_FOR_AUDIO):
+            while segment_start_pts is None or (
+                audio_stream
+                and not found_audio
+                and len(initial_packets) < PACKETS_TO_WAIT_FOR_AUDIO
+            ):
                 packet = next(container_packets)
                 if (
                     packet.dts is None
@@ -152,84 +208,44 @@ def _stream_worker_internal(hass, stream, quit_event):
                         )
                     missing_dts += 1
                     continue
-                if (
-                    first_packet[packet.stream] is None
-                ):  # actually video already found above so only for audio
-                    if packet.is_keyframe:
-                        first_packet[packet.stream] = packet
-                    else:  # Discard leading non-keyframes
-                        continue
-                else:  # This is the second frame to calculate first_pts from
-                    if first_pts[packet.stream] is None:
-                        first_pts[packet.stream] = packet.dts - packet.duration
-                        first_packet[packet.stream].pts = first_pts[packet.stream]
-                        first_packet[packet.stream].dts = first_pts[packet.stream]
+                if packet.stream == audio_stream:
+                    # detect ADTS AAC and disable audio
+                    if audio_stream.codec.name == "aac" and packet.size > 2:
+                        with memoryview(packet) as packet_view:
+                            if packet_view[0] == 0xFF and packet_view[1] & 0xF0 == 0xF0:
+                                _LOGGER.warning(
+                                    "ADTS AAC detected - disabling audio stream"
+                                )
+                                container_packets = container.demux(video_stream)
+                                audio_stream = None
+                                continue
+                    found_audio = True
+                elif (
+                    segment_start_pts is None
+                ):  # This is the second video frame to calculate first_pts from
+                    segment_start_pts = packet.dts - packet.duration
+                    first_packet.pts = segment_start_pts
+                    first_packet.dts = segment_start_pts
                 initial_packets.append(packet)
-            if audio_stream and first_packet[audio_stream] is None:
+            if audio_stream and not found_audio:
                 _LOGGER.warning(
                     "Audio stream not found"
                 )  # Some streams declare an audio stream and never send any packets
-                del first_pts[audio_stream]
                 audio_stream = None
 
         except (av.AVError, StopIteration) as ex:
             _LOGGER.error(
                 "Error demuxing stream while finding first packet: %s", str(ex)
             )
-            finalize_stream()
             return False
         return True
-
-    def initialize_segment(video_pts):
-        """Reset some variables and initialize outputs for each segment."""
-        nonlocal outputs, sequence, segment_start_pts
-        # Clear outputs and increment sequence
-        outputs = {}
-        sequence += 1
-        segment_start_pts = video_pts
-        for stream_output in stream.outputs.values():
-            if video_stream.name not in stream_output.video_codecs:
-                continue
-            buffer = create_stream_buffer(
-                stream_output, video_stream, audio_stream, sequence
-            )
-            outputs[stream_output.name] = (
-                buffer,
-                {video_stream: buffer.vstream, audio_stream: buffer.astream},
-            )
-
-    def mux_video_packet(packet):
-        # adjust pts and dts before muxing
-        packet.pts -= first_pts[video_stream]
-        packet.dts -= first_pts[video_stream]
-        # mux packets to each buffer
-        for buffer, output_streams in outputs.values():
-            # Assign the packet to the new stream & mux
-            packet.stream = output_streams[video_stream]
-            buffer.output.mux(packet)
-
-    def mux_audio_packet(packet):
-        # almost the same as muxing video but add extra check
-        # adjust pts and dts before muxing
-        packet.pts -= first_pts[audio_stream]
-        packet.dts -= first_pts[audio_stream]
-        for buffer, output_streams in outputs.values():
-            # Assign the packet to the new stream & mux
-            if output_streams.get(audio_stream):
-                packet.stream = output_streams[audio_stream]
-                buffer.output.mux(packet)
-
-    def finalize_stream():
-        if not stream.keepalive:
-            # End of stream, clear listeners and stop thread
-            for fmt in stream.outputs:
-                hass.loop.call_soon_threadsafe(stream.outputs[fmt].put, None)
 
     if not peek_first_pts():
         container.close()
         return
-    last_dts = {k: v - 1 for k, v in first_pts.items()}
-    initialize_segment(first_pts[video_stream])
+
+    segment_buffer.set_streams(video_stream, audio_stream)
+    segment_buffer.reset(segment_start_pts)
 
     while not quit_event.is_set():
         try:
@@ -248,7 +264,6 @@ def _stream_worker_internal(hass, stream, quit_event):
             missing_dts = 0
         except (av.AVError, StopIteration) as ex:
             _LOGGER.error("Error demuxing stream: %s", str(ex))
-            finalize_stream()
             break
 
         # Discard packet if dts is not monotonic
@@ -262,39 +277,16 @@ def _stream_worker_internal(hass, stream, quit_event):
                     last_dts[packet.stream],
                     packet.dts,
                 )
-                finalize_stream()
                 break
             continue
 
-        # Check for end of segment
-        if packet.stream == video_stream and packet.is_keyframe:
-            segment_duration = (packet.pts - segment_start_pts) * packet.time_base
-            if segment_duration >= MIN_SEGMENT_DURATION:
-                # Save segment to outputs
-                for fmt, (buffer, _) in outputs.items():
-                    buffer.output.close()
-                    if stream.outputs.get(fmt):
-                        hass.loop.call_soon_threadsafe(
-                            stream.outputs[fmt].put,
-                            Segment(
-                                sequence,
-                                buffer.segment,
-                                segment_duration,
-                            ),
-                        )
-
-                # Reinitialize
-                initialize_segment(packet.pts)
-
         # Update last_dts processed
         last_dts[packet.stream] = packet.dts
-        # mux packets
-        if packet.stream == video_stream:
-            mux_video_packet(packet)  # mutates packet timestamps
-        else:
-            mux_audio_packet(packet)  # mutates packet timestamps
+
+        # Mux packets, and possibly write a segment to the output stream.
+        # This mutates packet timestamps and stream
+        segment_buffer.mux_packet(packet)
 
     # Close stream
-    for buffer, _ in outputs.values():
-        buffer.output.close()
+    segment_buffer.close()
     container.close()

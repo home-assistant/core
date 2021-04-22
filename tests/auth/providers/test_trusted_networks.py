@@ -1,5 +1,6 @@
 """Test the Trusted Networks auth provider."""
 from ipaddress import ip_address, ip_network
+from unittest.mock import Mock, patch
 
 import pytest
 import voluptuous as vol
@@ -140,6 +141,16 @@ async def test_validate_access(provider):
         provider.async_validate_access(ip_address("127.0.0.1"))
     with pytest.raises(tn_auth.InvalidAuthError):
         provider.async_validate_access(ip_address("2001:db8::ff00:42:8329"))
+
+
+async def test_validate_refresh_token(provider):
+    """Verify re-validation of refresh token."""
+    with patch.object(provider, "async_validate_access") as mock:
+        with pytest.raises(tn_auth.InvalidAuthError):
+            provider.async_validate_refresh_token(Mock(), None)
+
+        provider.async_validate_refresh_token(Mock(), "127.0.0.1")
+        mock.assert_called_once_with(ip_address("127.0.0.1"))
 
 
 async def test_login_flow(manager, provider):

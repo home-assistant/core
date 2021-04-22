@@ -1,14 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured",
-            "already_configured_device": "Device is already configured"
+            "already_configured": "Device is already configured"
         },
         "error": {
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
-            "name_exists": "Name exists",
-            "wrong_credentials": "Wrong Credentials"
+            "name_exists": "Name exists"
         },
         "step": {
             "user": {

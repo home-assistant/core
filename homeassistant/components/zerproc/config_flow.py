@@ -14,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 async def _async_has_devices(hass) -> bool:
     """Return if there are devices that can be discovered."""
     try:
-        devices = await hass.async_add_executor_job(pyzerproc.discover)
+        devices = await pyzerproc.discover()
         return len(devices) > 0
     except pyzerproc.ZerprocException:
         _LOGGER.error("Unable to discover nearby Zerproc devices", exc_info=True)

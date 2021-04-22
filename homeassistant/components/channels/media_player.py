@@ -18,6 +18,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
 )
 from homeassistant.const import (
+    ATTR_SECONDS,
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
@@ -51,10 +52,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     }
 )
-
-
-# Service call validation schemas
-ATTR_SECONDS = "seconds"
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):

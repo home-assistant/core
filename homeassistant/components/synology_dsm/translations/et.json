@@ -6,7 +6,8 @@
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
             "invalid_auth": "Tuvastamise viga",
-            "login": "Viga sisselogimisel: kontrolli palun oma kasutajanime ja salas\u00f5na",
+            "missing_data": "Andmed puuduvad: proovi hiljem uuesti v\u00f5i kasuta muid s\u00e4tteid",
+            "otp_failed": "Kaheastmeline autentimine nurjus, proovi uuesti uue p\u00e4\u00e4sukoodiga",
             "unknown": "Tundmatu viga"
         },
         "flow_title": "",
@@ -14,7 +15,8 @@
             "2sa": {
                 "data": {
                     "otp_code": "Kood"
-                }
+                },
+                "title": "Synology DSM: kaheastmeline autentimine (2FA)"
             },
             "link": {
                 "data": {

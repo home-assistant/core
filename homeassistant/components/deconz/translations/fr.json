@@ -6,7 +6,6 @@
             "no_bridges": "Aucun pont deCONZ n'a \u00e9t\u00e9 d\u00e9couvert",
             "no_hardware_available": "Aucun mat\u00e9riel radio connect\u00e9 \u00e0 deCONZ",
             "not_deconz_bridge": "Pas un pont deCONZ",
-            "one_instance_only": "Le composant prend uniquement en charge une instance deCONZ",
             "updated_instance": "Instance deCONZ mise \u00e0 jour avec la nouvelle adresse d'h\u00f4te"
         },
         "error": {
@@ -15,8 +14,8 @@
         "flow_title": "Passerelle deCONZ Zigbee ({host})",
         "step": {
             "hassio_confirm": {
-                "description": "Voulez-vous configurer Home Assistant pour qu'il se connecte \u00e0 la passerelle deCONZ fournie par l'add-on hass.io {addon} ?",
-                "title": "Passerelle deCONZ Zigbee via l'add-on Hass.io"
+                "description": "Voulez-vous configurer Home Assistant pour qu'il se connecte \u00e0 la passerelle deCONZ fournie par le module compl\u00e9mentaire Hass.io {addon} ?",
+                "title": "Passerelle deCONZ Zigbee via le module compl\u00e9mentaire Hass.io"
             },
             "link": {
                 "description": "D\u00e9verrouillez votre passerelle deCONZ pour vous enregistrer avec Home Assistant. \n\n 1. Acc\u00e9dez aux param\u00e8tres avanc\u00e9s du syst\u00e8me deCONZ \n 2. Cliquez sur \"D\u00e9verrouiller la passerelle\"",
@@ -43,6 +42,10 @@
             "button_2": "Deuxi\u00e8me bouton",
             "button_3": "Troisi\u00e8me bouton",
             "button_4": "Quatri\u00e8me bouton",
+            "button_5": "5\u00e8me bouton",
+            "button_6": "6\u00e8me bouton",
+            "button_7": "7\u00e8me bouton",
+            "button_8": "8\u00e8me bouton",
             "close": "Ferm\u00e9",
             "dim_down": "Assombrir",
             "dim_up": "\u00c9claircir",

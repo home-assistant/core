@@ -1,13 +1,25 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Account al geconfigureerd"
+            "already_configured": "Account is al geconfigureerd",
+            "reauth_successful": "Herauthenticatie was succesvol"
         },
         "error": {
             "invalid_auth": "Ongeldige authenticatie",
-            "login": "Aanmeldingsfout: controleer uw gebruikersnaam en wachtwoord"
+            "usercode": "Gebruikerscode niet geldig voor deze gebruiker op deze locatie"
         },
         "step": {
+            "locations": {
+                "data": {
+                    "location": "Locatie"
+                },
+                "description": "Voer de gebruikerscode voor deze gebruiker op deze locatie in",
+                "title": "Locatie gebruikerscodes"
+            },
+            "reauth_confirm": {
+                "description": "Total Connect moet uw account opnieuw verifi\u00ebren",
+                "title": "Verifieer de integratie opnieuw"
+            },
             "user": {
                 "data": {
                     "password": "Wachtwoord",

@@ -1,8 +1,10 @@
 {
     "config": {
+        "abort": {
+            "no_home": "No s'han configurat coordenades d'ubicaci\u00f3 principal en la configuraci\u00f3 de Home Assistant"
+        },
         "error": {
-            "already_configured": "El servei ja est\u00e0 configurat",
-            "name_exists": "El nom ja existeix"
+            "already_configured": "El servei ja est\u00e0 configurat"
         },
         "step": {
             "user": {

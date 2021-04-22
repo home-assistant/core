@@ -21,8 +21,8 @@
                 "data": {
                     "discovery": "W\u0142\u0105cz wykrywanie"
                 },
-                "description": "Czy chcesz skonfigurowa\u0107 Home Assistant, aby po\u0142\u0105czy\u0142 si\u0119 z po\u015brednikiem MQTT dostarczonym przez dodatek Hass.io {addon}?",
-                "title": "Po\u015brednik MQTT za po\u015brednictwem dodatku Hass.io"
+                "description": "Czy chcesz skonfigurowa\u0107 Home Assistanta, aby po\u0142\u0105czy\u0142 si\u0119 z po\u015brednikiem MQTT dostarczonym przez dodatek {addon}?",
+                "title": "Po\u015brednik MQTT przez dodatek Home Assistant"
             }
         }
     },
@@ -38,14 +38,14 @@
             "turn_on": "w\u0142\u0105cznik"
         },
         "trigger_type": {
-            "button_double_press": "\"{subtype}\" zostanie podw\u00f3jnie naci\u015bni\u0119ty",
-            "button_long_press": "\"{subtype}\" zostanie naci\u015bni\u0119ty w spos\u00f3b ci\u0105g\u0142y",
-            "button_long_release": "\"{subtype}\" zostanie zwolniony po d\u0142ugim naci\u015bni\u0119ciu",
-            "button_quadruple_press": "\"{subtype}\" zostanie czterokrotnie naci\u015bni\u0119ty",
-            "button_quintuple_press": "\"{subtype}\" zostanie pi\u0119ciokrotnie naci\u015bni\u0119ty",
-            "button_short_press": "\"{subtype}\" zostanie naci\u015bni\u0119ty",
-            "button_short_release": "\"{subtype}\" zostanie zwolniony",
-            "button_triple_press": "\"{subtype}\" zostanie trzykrotnie naci\u015bni\u0119ty"
+            "button_double_press": "przycisk \"{subtype}\" zostanie podw\u00f3jnie naci\u015bni\u0119ty",
+            "button_long_press": "przycisk \"{subtype}\" zostanie naci\u015bni\u0119ty w spos\u00f3b ci\u0105g\u0142y",
+            "button_long_release": "przycisk \"{subtype}\" zostanie zwolniony po d\u0142ugim naci\u015bni\u0119ciu",
+            "button_quadruple_press": "przycisk \"{subtype}\" zostanie czterokrotnie naci\u015bni\u0119ty",
+            "button_quintuple_press": "przycisk \"{subtype}\" zostanie pi\u0119ciokrotnie naci\u015bni\u0119ty",
+            "button_short_press": "przycisk \"{subtype}\" zostanie naci\u015bni\u0119ty",
+            "button_short_release": "przycisk \"{subtype}\" zostanie zwolniony",
+            "button_triple_press": "przycisk \"{subtype}\" zostanie trzykrotnie naci\u015bni\u0119ty"
         }
     },
     "options": {

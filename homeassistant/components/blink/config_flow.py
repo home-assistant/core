@@ -36,6 +36,7 @@ def _send_blink_2fa_pin(auth, pin):
     """Send 2FA pin to blink servers."""
     blink = Blink()
     blink.auth = auth
+    blink.setup_login_ids()
     blink.setup_urls()
     return auth.send_auth_key(blink, pin)
 
@@ -43,7 +44,7 @@ def _send_blink_2fa_pin(auth, pin):
 class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Blink config flow."""
 
-    VERSION = 2
+    VERSION = 3
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):

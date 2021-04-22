@@ -1,8 +1,12 @@
 """Support for HomematicIP Cloud switches."""
-from typing import Any, Dict
+from __future__ import annotations
+
+from typing import Any
 
 from homematicip.aio.device import (
     AsyncBrandSwitchMeasuring,
+    AsyncDinRailSwitch,
+    AsyncDinRailSwitch4,
     AsyncFullFlushInputSwitch,
     AsyncFullFlushSwitchMeasuring,
     AsyncHeatingSwitch2,
@@ -44,6 +48,11 @@ async def async_setup_entry(
         elif isinstance(device, AsyncWiredSwitch8):
             for channel in range(1, 9):
                 entities.append(HomematicipMultiSwitch(hap, device, channel=channel))
+        elif isinstance(device, AsyncDinRailSwitch):
+            entities.append(HomematicipMultiSwitch(hap, device, channel=1))
+        elif isinstance(device, AsyncDinRailSwitch4):
+            for channel in range(1, 5):
+                entities.append(HomematicipMultiSwitch(hap, device, channel=channel))
         elif isinstance(
             device,
             (
@@ -77,9 +86,17 @@ async def async_setup_entry(
 class HomematicipMultiSwitch(HomematicipGenericEntity, SwitchEntity):
     """Representation of the HomematicIP multi switch."""
 
-    def __init__(self, hap: HomematicipHAP, device, channel: int) -> None:
+    def __init__(
+        self,
+        hap: HomematicipHAP,
+        device,
+        channel=1,
+        is_multi_channel=True,
+    ) -> None:
         """Initialize the multi switch device."""
-        super().__init__(hap, device, channel=channel)
+        super().__init__(
+            hap, device, channel=channel, is_multi_channel=is_multi_channel
+        )
 
     @property
     def is_on(self) -> bool:
@@ -95,25 +112,12 @@ class HomematicipMultiSwitch(HomematicipGenericEntity, SwitchEntity):
         await self._device.turn_off(self._channel)
 
 
-class HomematicipSwitch(HomematicipGenericEntity, SwitchEntity):
+class HomematicipSwitch(HomematicipMultiSwitch, SwitchEntity):
     """Representation of the HomematicIP switch."""
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the switch device."""
-        super().__init__(hap, device)
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if device is on."""
-        return self._device.on
-
-    async def async_turn_on(self, **kwargs) -> None:
-        """Turn the device on."""
-        await self._device.turn_on()
-
-    async def async_turn_off(self, **kwargs) -> None:
-        """Turn the device off."""
-        await self._device.turn_off()
+        super().__init__(hap, device, is_multi_channel=False)
 
 
 class HomematicipGroupSwitch(HomematicipGenericEntity, SwitchEntity):
@@ -139,9 +143,9 @@ class HomematicipGroupSwitch(HomematicipGenericEntity, SwitchEntity):
         return True
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the switch-group."""
-        state_attr = super().device_state_attributes
+        state_attr = super().extra_state_attributes
 
         if self._device.unreach:
             state_attr[ATTR_GROUP_MEMBER_UNREACHABLE] = True

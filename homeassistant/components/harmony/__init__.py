@@ -1,26 +1,26 @@
 """The Logitech Harmony Hub integration."""
 import asyncio
+import logging
 
-from homeassistant.components.remote import (
-    ATTR_ACTIVITY,
-    ATTR_DELAY_SECS,
-    DEFAULT_DELAY_SECS,
-)
+from homeassistant.components.remote import ATTR_ACTIVITY, ATTR_DELAY_SECS
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import entity_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import DOMAIN, HARMONY_OPTIONS_UPDATE, PLATFORMS
-from .remote import HarmonyRemote
+from .const import (
+    CANCEL_LISTENER,
+    CANCEL_STOP,
+    DOMAIN,
+    HARMONY_DATA,
+    HARMONY_OPTIONS_UPDATE,
+    PLATFORMS,
+)
+from .data import HarmonyData
 
-
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Logitech Harmony Hub component."""
-    hass.data.setdefault(DOMAIN, {})
-
-    return True
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -33,31 +33,64 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     address = entry.data[CONF_HOST]
     name = entry.data[CONF_NAME]
-    activity = entry.options.get(ATTR_ACTIVITY)
-    delay_secs = entry.options.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
-
-    harmony_conf_file = hass.config.path(f"harmony_{entry.unique_id}.conf")
+    data = HarmonyData(hass, address, name, entry.unique_id)
     try:
-        device = HarmonyRemote(
-            name, entry.unique_id, address, activity, harmony_conf_file, delay_secs
-        )
-        connected_ok = await device.connect()
+        connected_ok = await data.connect()
     except (asyncio.TimeoutError, ValueError, AttributeError) as err:
         raise ConfigEntryNotReady from err
 
     if not connected_ok:
         raise ConfigEntryNotReady
 
-    hass.data[DOMAIN][entry.entry_id] = device
+    await _migrate_old_unique_ids(hass, entry.entry_id, data)
 
-    entry.add_update_listener(_update_listener)
+    cancel_listener = entry.add_update_listener(_update_listener)
 
-    for component in PLATFORMS:
+    async def _async_on_stop(event):
+        await data.shutdown()
+
+    cancel_stop = hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, _async_on_stop)
+
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {
+        HARMONY_DATA: data,
+        CANCEL_LISTENER: cancel_listener,
+        CANCEL_STOP: cancel_stop,
+    }
+
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
+
+
+async def _migrate_old_unique_ids(
+    hass: HomeAssistant, entry_id: str, data: HarmonyData
+):
+    names_to_ids = {activity["label"]: activity["id"] for activity in data.activities}
+
+    @callback
+    def _async_migrator(entity_entry: entity_registry.RegistryEntry):
+        # Old format for switches was {remote_unique_id}-{activity_name}
+        # New format is activity_{activity_id}
+        parts = entity_entry.unique_id.split("-", 1)
+        if len(parts) > 1:  # old format
+            activity_name = parts[1]
+            activity_id = names_to_ids.get(activity_name)
+
+            if activity_id is not None:
+                _LOGGER.info(
+                    "Migrating unique_id from [%s] to [%s]",
+                    entity_entry.unique_id,
+                    activity_id,
+                )
+                return {"new_unique_id": f"activity_{activity_id}"}
+
+        return None
+
+    await entity_registry.async_migrate_entries(hass, entry_id, _async_migrator)
 
 
 @callback
@@ -85,15 +118,17 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )
 
     # Shutdown a harmony remote for removal
-    device = hass.data[DOMAIN][entry.entry_id]
-    await device.shutdown()
+    entry_data = hass.data[DOMAIN][entry.entry_id]
+    entry_data[CANCEL_LISTENER]()
+    entry_data[CANCEL_STOP]()
+    await entry_data[HARMONY_DATA].shutdown()
 
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)

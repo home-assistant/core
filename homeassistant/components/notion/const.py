@@ -1,5 +1,8 @@
 """Define constants for the Notion integration."""
+import logging
+
 DOMAIN = "notion"
+LOGGER = logging.getLogger(__package__)
 
 DATA_COORDINATOR = "coordinator"
 

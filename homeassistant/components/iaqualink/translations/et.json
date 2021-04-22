@@ -1,12 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Saad h\u00e4\u00e4lestada ainult \u00fche iAqualink konto.",
             "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
         },
         "error": {
-            "cannot_connect": "\u00dchendamine nurjus",
-            "connection_failure": "IAqualink'iga ei saa \u00fchendust luua. Kontrolli oma kasutajanime ja salas\u00f5na."
+            "cannot_connect": "\u00dchendamine nurjus"
         },
         "step": {
             "user": {

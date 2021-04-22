@@ -3,7 +3,6 @@
         "abort": {
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
             "credential_error": "Viga volituste hankimisel.",
-            "devices_configured": "K\u00f5ik leitud seadmed on juba h\u00e4\u00e4lestatud.",
             "no_devices_found": "V\u00f5rgust ei leitud seadmeid",
             "port_987_bind_error": "Ei saa siduda pordiga 987. Lisateavet leiad aadressilt [documentation](https://www.home-assistant.io/components/ps4/).",
             "port_997_bind_error": "Ei saa siduda pordiga 997. Lisateavet leiad aadressilt [documentation](https://www.home-assistant.io/components/ps4/)."
@@ -12,8 +11,7 @@
             "cannot_connect": "\u00dchendus nurjus",
             "credential_timeout": "Mandaaditeenus aegus. Taask\u00e4ivitamiseks vajuta nuppu Esita.",
             "login_failed": "PlayStation 4-ga sidumine nurjus. Veendu, et PIN kood on \u00f5ige.",
-            "no_ipaddress": "Sisesta Playstation, 4 mida soovid seadistada, IP-aadress.",
-            "not_ready": "PlayStation 4 pole sisse l\u00fcltatud v\u00f5i v\u00f5rku \u00fchendatud."
+            "no_ipaddress": "Sisesta Playstation, 4 mida soovid seadistada, IP-aadress."
         },
         "step": {
             "creds": {

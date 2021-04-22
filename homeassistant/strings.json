@@ -66,10 +66,13 @@
         "already_configured_service": "Service is already configured",
         "already_in_progress": "Configuration flow is already in progress",
         "no_devices_found": "No devices found on the network",
+        "webhook_not_internet_accessible": "Your Home Assistant instance needs to be accessible from the internet to receive webhook messages.",
+        "oauth2_error": "Received invalid token data.",
         "oauth2_missing_configuration": "The component is not configured. Please follow the documentation.",
         "oauth2_authorize_url_timeout": "Timeout generating authorize URL.",
         "oauth2_no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
-        "reauth_successful": "Re-authentication was successful"
+        "reauth_successful": "Re-authentication was successful",
+        "unknown_authorize_url_generation": "Unknown error generating an authorize URL."
       }
     }
   }

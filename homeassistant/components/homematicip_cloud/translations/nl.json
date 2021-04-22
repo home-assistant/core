@@ -1,13 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Accesspoint is al geconfigureerd",
-            "connection_aborted": "Kon geen verbinding maken met de HMIP-server",
-            "unknown": "Er is een onbekende fout opgetreden."
+            "already_configured": "Apparaat is al geconfigureerd",
+            "connection_aborted": "Kan geen verbinding maken",
+            "unknown": "Onverwachte fout"
         },
         "error": {
-            "invalid_pin": "Ongeldige pincode, probeer het opnieuw.",
-            "invalid_sgtin_or_pin": "Ongeldige PIN-code, probeer het nogmaals.",
+            "invalid_sgtin_or_pin": "Ongeldige SGTIN of PIN-code, probeer het opnieuw.",
             "press_the_button": "Druk op de blauwe knop.",
             "register_failed": "Kan niet registreren, gelieve opnieuw te proberen.",
             "timeout_button": "Blauwe knop druk op timeout, probeer het opnieuw."
@@ -16,8 +15,8 @@
             "init": {
                 "data": {
                     "hapid": "Accesspoint ID (SGTIN)",
-                    "name": "Naam (optioneel, gebruikt als naamprefix voor alle apparaten)",
-                    "pin": "Pin-Code (optioneel)"
+                    "name": "Naam (optioneel, gebruikt als naamvoorvoegsel voor alle apparaten)",
+                    "pin": "PIN-code"
                 },
                 "title": "Kies HomematicIP accesspoint"
             },

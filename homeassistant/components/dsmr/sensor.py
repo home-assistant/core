@@ -1,16 +1,19 @@
 """Support for Dutch Smart Meter (also known as Smartmeter or P1 port)."""
+from __future__ import annotations
+
 import asyncio
 from asyncio import CancelledError
+from contextlib import suppress
+from datetime import timedelta
 from functools import partial
 import logging
-from typing import Dict
 
 from dsmr_parser import obis_references as obis_ref
 from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
 import serial
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -18,10 +21,9 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     TIME_HOURS,
 )
-from homeassistant.core import CoreState, callback
+from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.util import Throttle
 
 from .const import (
     CONF_DSMR_VERSION,
@@ -29,11 +31,13 @@ from .const import (
     CONF_RECONNECT_INTERVAL,
     CONF_SERIAL_ID,
     CONF_SERIAL_ID_GAS,
+    CONF_TIME_BETWEEN_UPDATE,
     DATA_TASK,
     DEFAULT_DSMR_VERSION,
     DEFAULT_PORT,
     DEFAULT_PRECISION,
     DEFAULT_RECONNECT_INTERVAL,
+    DEFAULT_TIME_BETWEEN_UPDATE,
     DEVICE_NAME_ENERGY,
     DEVICE_NAME_GAS,
     DOMAIN,
@@ -50,7 +54,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
         vol.Optional(CONF_HOST): cv.string,
         vol.Optional(CONF_DSMR_VERSION, default=DEFAULT_DSMR_VERSION): vol.All(
-            cv.string, vol.In(["5B", "5", "4", "2.2"])
+            cv.string, vol.In(["5L", "5B", "5", "4", "2.2"])
         ),
         vol.Optional(CONF_RECONNECT_INTERVAL, default=DEFAULT_RECONNECT_INTERVAL): int,
         vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): vol.Coerce(int),
@@ -68,57 +72,100 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the DSMR sensor."""
-    # Suppress logging
-    logging.getLogger("dsmr_parser").setLevel(logging.ERROR)
-
     config = entry.data
+    options = entry.options
 
     dsmr_version = config[CONF_DSMR_VERSION]
 
-    # Define list of name,obis mappings to generate entities
+    # Define list of name,obis,force_update mappings to generate entities
     obis_mapping = [
-        ["Power Consumption", obis_ref.CURRENT_ELECTRICITY_USAGE],
-        ["Power Production", obis_ref.CURRENT_ELECTRICITY_DELIVERY],
-        ["Power Tariff", obis_ref.ELECTRICITY_ACTIVE_TARIFF],
-        ["Energy Consumption (total)", obis_ref.ELECTRICITY_IMPORTED_TOTAL],
-        ["Energy Consumption (tarif 1)", obis_ref.ELECTRICITY_USED_TARIFF_1],
-        ["Energy Consumption (tarif 2)", obis_ref.ELECTRICITY_USED_TARIFF_2],
-        ["Energy Production (tarif 1)", obis_ref.ELECTRICITY_DELIVERED_TARIFF_1],
-        ["Energy Production (tarif 2)", obis_ref.ELECTRICITY_DELIVERED_TARIFF_2],
-        ["Power Consumption Phase L1", obis_ref.INSTANTANEOUS_ACTIVE_POWER_L1_POSITIVE],
-        ["Power Consumption Phase L2", obis_ref.INSTANTANEOUS_ACTIVE_POWER_L2_POSITIVE],
-        ["Power Consumption Phase L3", obis_ref.INSTANTANEOUS_ACTIVE_POWER_L3_POSITIVE],
-        ["Power Production Phase L1", obis_ref.INSTANTANEOUS_ACTIVE_POWER_L1_NEGATIVE],
-        ["Power Production Phase L2", obis_ref.INSTANTANEOUS_ACTIVE_POWER_L2_NEGATIVE],
-        ["Power Production Phase L3", obis_ref.INSTANTANEOUS_ACTIVE_POWER_L3_NEGATIVE],
-        ["Short Power Failure Count", obis_ref.SHORT_POWER_FAILURE_COUNT],
-        ["Long Power Failure Count", obis_ref.LONG_POWER_FAILURE_COUNT],
-        ["Voltage Sags Phase L1", obis_ref.VOLTAGE_SAG_L1_COUNT],
-        ["Voltage Sags Phase L2", obis_ref.VOLTAGE_SAG_L2_COUNT],
-        ["Voltage Sags Phase L3", obis_ref.VOLTAGE_SAG_L3_COUNT],
-        ["Voltage Swells Phase L1", obis_ref.VOLTAGE_SWELL_L1_COUNT],
-        ["Voltage Swells Phase L2", obis_ref.VOLTAGE_SWELL_L2_COUNT],
-        ["Voltage Swells Phase L3", obis_ref.VOLTAGE_SWELL_L3_COUNT],
-        ["Voltage Phase L1", obis_ref.INSTANTANEOUS_VOLTAGE_L1],
-        ["Voltage Phase L2", obis_ref.INSTANTANEOUS_VOLTAGE_L2],
-        ["Voltage Phase L3", obis_ref.INSTANTANEOUS_VOLTAGE_L3],
-        ["Current Phase L1", obis_ref.INSTANTANEOUS_CURRENT_L1],
-        ["Current Phase L2", obis_ref.INSTANTANEOUS_CURRENT_L2],
-        ["Current Phase L3", obis_ref.INSTANTANEOUS_CURRENT_L3],
+        ["Power Consumption", obis_ref.CURRENT_ELECTRICITY_USAGE, True],
+        ["Power Production", obis_ref.CURRENT_ELECTRICITY_DELIVERY, True],
+        ["Power Tariff", obis_ref.ELECTRICITY_ACTIVE_TARIFF, False],
+        ["Energy Consumption (tarif 1)", obis_ref.ELECTRICITY_USED_TARIFF_1, True],
+        ["Energy Consumption (tarif 2)", obis_ref.ELECTRICITY_USED_TARIFF_2, True],
+        ["Energy Production (tarif 1)", obis_ref.ELECTRICITY_DELIVERED_TARIFF_1, True],
+        ["Energy Production (tarif 2)", obis_ref.ELECTRICITY_DELIVERED_TARIFF_2, True],
+        [
+            "Power Consumption Phase L1",
+            obis_ref.INSTANTANEOUS_ACTIVE_POWER_L1_POSITIVE,
+            False,
+        ],
+        [
+            "Power Consumption Phase L2",
+            obis_ref.INSTANTANEOUS_ACTIVE_POWER_L2_POSITIVE,
+            False,
+        ],
+        [
+            "Power Consumption Phase L3",
+            obis_ref.INSTANTANEOUS_ACTIVE_POWER_L3_POSITIVE,
+            False,
+        ],
+        [
+            "Power Production Phase L1",
+            obis_ref.INSTANTANEOUS_ACTIVE_POWER_L1_NEGATIVE,
+            False,
+        ],
+        [
+            "Power Production Phase L2",
+            obis_ref.INSTANTANEOUS_ACTIVE_POWER_L2_NEGATIVE,
+            False,
+        ],
+        [
+            "Power Production Phase L3",
+            obis_ref.INSTANTANEOUS_ACTIVE_POWER_L3_NEGATIVE,
+            False,
+        ],
+        ["Short Power Failure Count", obis_ref.SHORT_POWER_FAILURE_COUNT, False],
+        ["Long Power Failure Count", obis_ref.LONG_POWER_FAILURE_COUNT, False],
+        ["Voltage Sags Phase L1", obis_ref.VOLTAGE_SAG_L1_COUNT, False],
+        ["Voltage Sags Phase L2", obis_ref.VOLTAGE_SAG_L2_COUNT, False],
+        ["Voltage Sags Phase L3", obis_ref.VOLTAGE_SAG_L3_COUNT, False],
+        ["Voltage Swells Phase L1", obis_ref.VOLTAGE_SWELL_L1_COUNT, False],
+        ["Voltage Swells Phase L2", obis_ref.VOLTAGE_SWELL_L2_COUNT, False],
+        ["Voltage Swells Phase L3", obis_ref.VOLTAGE_SWELL_L3_COUNT, False],
+        ["Voltage Phase L1", obis_ref.INSTANTANEOUS_VOLTAGE_L1, False],
+        ["Voltage Phase L2", obis_ref.INSTANTANEOUS_VOLTAGE_L2, False],
+        ["Voltage Phase L3", obis_ref.INSTANTANEOUS_VOLTAGE_L3, False],
+        ["Current Phase L1", obis_ref.INSTANTANEOUS_CURRENT_L1, False],
+        ["Current Phase L2", obis_ref.INSTANTANEOUS_CURRENT_L2, False],
+        ["Current Phase L3", obis_ref.INSTANTANEOUS_CURRENT_L3, False],
     ]
+
+    if dsmr_version == "5L":
+        obis_mapping.extend(
+            [
+                [
+                    "Energy Consumption (total)",
+                    obis_ref.LUXEMBOURG_ELECTRICITY_USED_TARIFF_GLOBAL,
+                    True,
+                ],
+                [
+                    "Energy Production (total)",
+                    obis_ref.LUXEMBOURG_ELECTRICITY_DELIVERED_TARIFF_GLOBAL,
+                    True,
+                ],
+            ]
+        )
+    else:
+        obis_mapping.extend(
+            [["Energy Consumption (total)", obis_ref.ELECTRICITY_IMPORTED_TOTAL, True]]
+        )
 
     # Generate device entities
     devices = [
-        DSMREntity(name, DEVICE_NAME_ENERGY, config[CONF_SERIAL_ID], obis, config)
-        for name, obis in obis_mapping
+        DSMREntity(
+            name, DEVICE_NAME_ENERGY, config[CONF_SERIAL_ID], obis, config, force_update
+        )
+        for name, obis, force_update in obis_mapping
     ]
 
     # Protocol version specific obis
     if CONF_SERIAL_ID_GAS in config:
-        if dsmr_version in ("4", "5"):
+        if dsmr_version in ("4", "5", "5L"):
             gas_obis = obis_ref.HOURLY_GAS_METER_READING
         elif dsmr_version in ("5B",):
             gas_obis = obis_ref.BELGIUM_HOURLY_GAS_METER_READING
@@ -133,6 +180,7 @@ async def async_setup_entry(
                 config[CONF_SERIAL_ID_GAS],
                 gas_obis,
                 config,
+                True,
             ),
             DerivativeDSMREntity(
                 "Hourly Gas Consumption",
@@ -140,11 +188,17 @@ async def async_setup_entry(
                 config[CONF_SERIAL_ID_GAS],
                 gas_obis,
                 config,
+                False,
             ),
         ]
 
     async_add_entities(devices)
 
+    min_time_between_updates = timedelta(
+        seconds=options.get(CONF_TIME_BETWEEN_UPDATE, DEFAULT_TIME_BETWEEN_UPDATE)
+    )
+
+    @Throttle(min_time_between_updates)
     def update_entities_telegram(telegram):
         """Update entities with latest telegram and trigger state update."""
         # Make all device entities aware of new telegram
@@ -161,6 +215,7 @@ async def async_setup_entry(
             config[CONF_DSMR_VERSION],
             update_entities_telegram,
             loop=hass.loop,
+            keep_alive_interval=60,
         )
     else:
         reader_factory = partial(
@@ -173,6 +228,10 @@ async def async_setup_entry(
 
     async def connect_and_reconnect():
         """Connect to DSMR and keep reconnecting until Home Assistant stops."""
+        stop_listener = None
+        transport = None
+        protocol = None
+
         while hass.state != CoreState.stopping:
             # Start DSMR asyncio.Protocol reader
             try:
@@ -187,10 +246,9 @@ async def async_setup_entry(
                     # Wait for reader to close
                     await protocol.wait_closed()
 
-                # Unexpected disconnect
-                if transport:
-                    # remove listener
-                    stop_listener()
+                    # Unexpected disconnect
+                    if not hass.is_stopping:
+                        stop_listener()
 
                 transport = None
                 protocol = None
@@ -210,7 +268,7 @@ async def async_setup_entry(
                 protocol = None
             except CancelledError:
                 if stop_listener:
-                    stop_listener()
+                    stop_listener()  # pylint: disable=not-callable
 
                 if transport:
                     transport.close()
@@ -227,10 +285,10 @@ async def async_setup_entry(
     hass.data[DOMAIN][entry.entry_id][DATA_TASK] = task
 
 
-class DSMREntity(Entity):
+class DSMREntity(SensorEntity):
     """Entity reading values from DSMR telegram."""
 
-    def __init__(self, name, device_name, device_serial, obis, config):
+    def __init__(self, name, device_name, device_serial, obis, config, force_update):
         """Initialize entity."""
         self._name = name
         self._obis = obis
@@ -239,13 +297,14 @@ class DSMREntity(Entity):
 
         self._device_name = device_name
         self._device_serial = device_serial
+        self._force_update = force_update
         self._unique_id = f"{device_serial}_{name}".replace(" ", "_")
 
     @callback
     def update_data(self, telegram):
         """Update data."""
         self.telegram = telegram
-        if self.hass:
+        if self.hass and self._obis in self.telegram:
             self.async_write_ha_state()
 
     def get_dsmr_object_attr(self, attribute):
@@ -283,10 +342,8 @@ class DSMREntity(Entity):
         if self._obis == obis_ref.ELECTRICITY_ACTIVE_TARIFF:
             return self.translate_tariff(value, self._config[CONF_DSMR_VERSION])
 
-        try:
+        with suppress(TypeError):
             value = round(float(value), self._config[CONF_PRECISION])
-        except TypeError:
-            pass
 
         if value is not None:
             return value
@@ -304,7 +361,7 @@ class DSMREntity(Entity):
         return self._unique_id
 
     @property
-    def device_info(self) -> Dict[str, any]:
+    def device_info(self) -> dict[str, any]:
         """Return the device information."""
         return {
             "identifiers": {(DOMAIN, self._device_serial)},
@@ -314,7 +371,7 @@ class DSMREntity(Entity):
     @property
     def force_update(self):
         """Force update."""
-        return True
+        return self._force_update
 
     @property
     def should_poll(self):

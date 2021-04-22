@@ -3,8 +3,7 @@
         "abort": {
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
             "already_in_progress": "Seadistamine on juba k\u00e4imas",
-            "cannot_connect": "\u00dchendamine nurjus",
-            "unable_to_connect": "Seadmega ei saa \u00fchendust luua."
+            "cannot_connect": "\u00dchendamine nurjus"
         },
         "flow_title": "Arcam FMJ saidil {host}",
         "step": {

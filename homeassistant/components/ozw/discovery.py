@@ -254,11 +254,13 @@ DISCOVERY_SCHEMAS = (
             "min_kelvin": {
                 const.DISC_COMMAND_CLASS: (CommandClass.CONFIGURATION,),
                 const.DISC_INDEX: 81,  # PR for upstream to add SWITCH_COLOR_CT_WARM
+                const.DISC_TYPE: ValueType.INT,
                 const.DISC_OPTIONAL: True,
             },
             "max_kelvin": {
                 const.DISC_COMMAND_CLASS: (CommandClass.CONFIGURATION,),
                 const.DISC_INDEX: 82,  # PR for upstream to add SWITCH_COLOR_CT_COLD
+                const.DISC_TYPE: ValueType.INT,
                 const.DISC_OPTIONAL: True,
             },
         },

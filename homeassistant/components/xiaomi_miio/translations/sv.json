@@ -1,7 +1,6 @@
 {
     "config": {
         "error": {
-            "connect_error": "Det gick inte att ansluta, f\u00f6rs\u00f6k igen",
             "no_device_selected": "Ingen enhet har valts, v\u00e4lj en enhet."
         },
         "step": {

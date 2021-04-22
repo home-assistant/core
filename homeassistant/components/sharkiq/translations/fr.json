@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Le compte a d\u00e9j\u00e0 \u00e9t\u00e9 configur\u00e9",
-            "already_configured_account": "Le compte a d\u00e9j\u00e0 \u00e9t\u00e9 configur\u00e9",
+            "already_configured": "Le compte est d\u00e9j\u00e0 configur\u00e9",
             "cannot_connect": "\u00c9chec de connexion",
             "reauth_successful": "Jeton d'acc\u00e8s mis \u00e0 jour avec succ\u00e8s",
             "unknown": "Erreur inattendue"

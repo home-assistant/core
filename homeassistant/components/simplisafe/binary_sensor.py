@@ -19,8 +19,11 @@ from .const import DATA_CLIENT, DOMAIN, LOGGER
 SUPPORTED_BATTERY_SENSOR_TYPES = [
     EntityTypes.carbon_monoxide,
     EntityTypes.entry,
+    EntityTypes.glass_break,
     EntityTypes.leak,
     EntityTypes.lock_keypad,
+    EntityTypes.motion,
+    EntityTypes.siren,
     EntityTypes.smoke,
     EntityTypes.temperature,
 ]
@@ -31,6 +34,7 @@ TRIGGERED_SENSOR_TYPES = {
     EntityTypes.glass_break: DEVICE_CLASS_SAFETY,
     EntityTypes.leak: DEVICE_CLASS_MOISTURE,
     EntityTypes.motion: DEVICE_CLASS_MOTION,
+    EntityTypes.siren: DEVICE_CLASS_SAFETY,
     EntityTypes.smoke: DEVICE_CLASS_SMOKE,
 }
 

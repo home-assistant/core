@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
@@ -15,7 +15,7 @@
                     "api_key": "API \u5bc6\u9470",
                     "url": "\u7db2\u5740"
                 },
-                "description": "- URL\uff1aNightscout \u8a2d\u5099\u4f4d\u5740\u3002\u4f8b\u5982\uff1ahttps://myhomeassistant.duckdns.org:5423\n- API \u5bc6\u9470\uff08\u9078\u9805\uff09\uff1a\u50c5\u65bc\u8a2d\u5099\u70ba\u4fdd\u8b77\u72c0\u614b\uff08(auth_default_roles != readable\uff09\u4e0b\u4f7f\u7528\u3002",
+                "description": "- URL\uff1aNightscout \u88dd\u7f6e\u4f4d\u5740\u3002\u4f8b\u5982\uff1ahttps://myhomeassistant.duckdns.org:5423\n- API \u5bc6\u9470\uff08\u9078\u9805\uff09\uff1a\u50c5\u65bc\u88dd\u7f6e\u70ba\u4fdd\u8b77\u72c0\u614b\uff08(auth_default_roles != readable\uff09\u4e0b\u4f7f\u7528\u3002",
                 "title": "\u8f38\u5165 Nightscout \u4f3a\u670d\u5668\u8cc7\u8a0a\u3002"
             }
         }

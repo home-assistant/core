@@ -1,13 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Deze co\u00f6rdinaten of Node / Pro ID zijn al geregistreerd."
+            "already_configured": "Locatie is al geconfigureerd. of Node/Pro IDis al geregistreerd.",
+            "reauth_successful": "Herauthenticatie was succesvol"
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
             "general_error": "Er is een onbekende fout opgetreden.",
             "invalid_api_key": "Ongeldige API-sleutel",
-            "unable_to_connect": "Kan geen verbinding maken met Node / Pro-apparaat."
+            "location_not_found": "Locatie niet gevonden"
         },
         "step": {
             "geography": {
@@ -17,6 +18,25 @@
                     "longitude": "Lengtegraad"
                 },
                 "description": "Gebruik de AirVisual cloud API om een geografische locatie te bewaken.",
+                "title": "Configureer een geografie"
+            },
+            "geography_by_coords": {
+                "data": {
+                    "api_key": "API-sleutel",
+                    "latitude": "Breedtegraad",
+                    "longitude": "Lengtegraad"
+                },
+                "description": "Gebruik de AirVisual-cloud-API om een lengte- / breedtegraad te bewaken.",
+                "title": "Configureer een geografie"
+            },
+            "geography_by_name": {
+                "data": {
+                    "api_key": "API-sleutel",
+                    "city": "Stad",
+                    "country": "Land",
+                    "state": "staat"
+                },
+                "description": "Gebruik de AirVisual-cloud-API om een stad/staat/land te bewaken.",
                 "title": "Configureer een geografie"
             },
             "node_pro": {

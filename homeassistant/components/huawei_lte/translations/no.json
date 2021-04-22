@@ -6,17 +6,14 @@
             "not_huawei_lte": "Ikke en Huawei LTE-enhet"
         },
         "error": {
-            "connection_failed": "Tilkoblingen mislyktes",
             "connection_timeout": "Tilkoblingsavbrudd",
             "incorrect_password": "Feil passord",
             "incorrect_username": "Feil brukernavn",
-            "incorrect_username_or_password": "Feil brukernavn eller passord",
             "invalid_auth": "Ugyldig godkjenning",
             "invalid_url": "Ugyldig URL-adresse",
             "login_attempts_exceeded": "Maksimalt antall p\u00e5loggingsfors\u00f8k er overskredet, vennligst pr\u00f8v igjen senere",
             "response_error": "Ukjent feil fra enheten",
-            "unknown": "Uventet feil",
-            "unknown_connection_error": "Ukjent feil under tilkobling til enhet"
+            "unknown": "Uventet feil"
         },
         "flow_title": "",
         "step": {
@@ -37,7 +34,8 @@
                 "data": {
                     "name": "Navn p\u00e5 varslingstjeneste (endring krever omstart)",
                     "recipient": "Mottakere av SMS-varsling",
-                    "track_new_devices": "Spor nye enheter"
+                    "track_new_devices": "Spor nye enheter",
+                    "track_wired_clients": "Spor kablede nettverksklienter"
                 }
             }
         }

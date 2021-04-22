@@ -1,9 +1,12 @@
 """Define tests for the PlayStation 4 config flow."""
+from unittest.mock import patch
+
 from pyps4_2ndscreen.errors import CredentialTimeout
 import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components import ps4
+from homeassistant.components.ps4.config_flow import LOCAL_UDP_PORT
 from homeassistant.components.ps4.const import (
     DEFAULT_ALIAS,
     DEFAULT_NAME,
@@ -20,7 +23,6 @@ from homeassistant.const import (
 )
 from homeassistant.util import location
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 MOCK_TITLE = "PlayStation 4"
@@ -360,7 +362,7 @@ async def test_0_pin(hass):
             result["flow_id"], mock_config
         )
     mock_call.assert_called_once_with(
-        MOCK_HOST, MOCK_CREDS, MOCK_CODE_LEAD_0_STR, DEFAULT_ALIAS
+        MOCK_HOST, MOCK_CREDS, MOCK_CODE_LEAD_0_STR, DEFAULT_ALIAS, LOCAL_UDP_PORT
     )
 
 

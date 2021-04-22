@@ -1,5 +1,5 @@
 """Test Hue setup process."""
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -7,7 +7,6 @@ from homeassistant import config_entries
 from homeassistant.components import hue
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import AsyncMock, patch
 from tests.common import MockConfigEntry
 
 
@@ -28,7 +27,7 @@ async def test_setup_with_no_config(hass):
     assert len(hass.config_entries.flow.async_progress()) == 0
 
     # No configs stored
-    assert hass.data[hue.DOMAIN] == {}
+    assert hue.DOMAIN not in hass.data
 
 
 async def test_unload_entry(hass, mock_bridge_setup):
@@ -42,7 +41,7 @@ async def test_unload_entry(hass, mock_bridge_setup):
     mock_bridge_setup.async_reset = AsyncMock(return_value=True)
     assert await hue.async_unload_entry(hass, entry)
     assert len(mock_bridge_setup.async_reset.mock_calls) == 1
-    assert hass.data[hue.DOMAIN] == {}
+    assert hue.DOMAIN not in hass.data
 
 
 async def test_setting_unique_id(hass, mock_bridge_setup):

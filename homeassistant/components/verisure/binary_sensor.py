@@ -1,98 +1,133 @@
 """Support for Verisure binary sensors."""
+from __future__ import annotations
+
+from collections.abc import Iterable
+from typing import Any, Callable
+
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
+    DEVICE_CLASS_OPENING,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import CONF_DOOR_WINDOW, HUB as hub
-
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Verisure binary sensors."""
-    sensors = []
-    hub.update_overview()
-
-    if int(hub.config.get(CONF_DOOR_WINDOW, 1)):
-        sensors.extend(
-            [
-                VerisureDoorWindowSensor(device_label)
-                for device_label in hub.get(
-                    "$.doorWindow.doorWindowDevice[*].deviceLabel"
-                )
-            ]
-        )
-
-    sensors.extend([VerisureEthernetStatus()])
-    add_entities(sensors)
+from .const import CONF_GIID, DOMAIN
+from .coordinator import VerisureDataUpdateCoordinator
 
 
-class VerisureDoorWindowSensor(BinarySensorEntity):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[Iterable[Entity]], None],
+) -> None:
+    """Set up Verisure binary sensors based on a config entry."""
+    coordinator: VerisureDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+
+    sensors: list[Entity] = [VerisureEthernetStatus(coordinator)]
+
+    sensors.extend(
+        VerisureDoorWindowSensor(coordinator, serial_number)
+        for serial_number in coordinator.data["door_window"]
+    )
+
+    async_add_entities(sensors)
+
+
+class VerisureDoorWindowSensor(CoordinatorEntity, BinarySensorEntity):
     """Representation of a Verisure door window sensor."""
 
-    def __init__(self, device_label):
+    coordinator: VerisureDataUpdateCoordinator
+
+    def __init__(
+        self, coordinator: VerisureDataUpdateCoordinator, serial_number: str
+    ) -> None:
         """Initialize the Verisure door window sensor."""
-        self._device_label = device_label
+        super().__init__(coordinator)
+        self.serial_number = serial_number
 
     @property
-    def name(self):
-        """Return the name of the binary sensor."""
-        return hub.get_first(
-            "$.doorWindow.doorWindowDevice[?(@.deviceLabel=='%s')].area",
-            self._device_label,
-        )
+    def name(self) -> str:
+        """Return the name of this entity."""
+        return self.coordinator.data["door_window"][self.serial_number]["area"]
 
     @property
-    def is_on(self):
+    def unique_id(self) -> str:
+        """Return the unique ID for this entity."""
+        return f"{self.serial_number}_door_window"
+
+    @property
+    def device_info(self) -> dict[str, Any]:
+        """Return device information about this entity."""
+        area = self.coordinator.data["door_window"][self.serial_number]["area"]
+        return {
+            "name": area,
+            "suggested_area": area,
+            "manufacturer": "Verisure",
+            "model": "Shock Sensor Detector",
+            "identifiers": {(DOMAIN, self.serial_number)},
+            "via_device": (DOMAIN, self.coordinator.entry.data[CONF_GIID]),
+        }
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this entity."""
+        return DEVICE_CLASS_OPENING
+
+    @property
+    def is_on(self) -> bool:
         """Return the state of the sensor."""
         return (
-            hub.get_first(
-                "$.doorWindow.doorWindowDevice[?(@.deviceLabel=='%s')].state",
-                self._device_label,
-            )
-            == "OPEN"
+            self.coordinator.data["door_window"][self.serial_number]["state"] == "OPEN"
         )
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return (
-            hub.get_first(
-                "$.doorWindow.doorWindowDevice[?(@.deviceLabel=='%s')]",
-                self._device_label,
-            )
-            is not None
+            super().available
+            and self.serial_number in self.coordinator.data["door_window"]
         )
 
-    # pylint: disable=no-self-use
-    def update(self):
-        """Update the state of the sensor."""
-        hub.update_overview()
 
-
-class VerisureEthernetStatus(BinarySensorEntity):
+class VerisureEthernetStatus(CoordinatorEntity, BinarySensorEntity):
     """Representation of a Verisure VBOX internet status."""
 
+    coordinator: VerisureDataUpdateCoordinator
+
     @property
-    def name(self):
-        """Return the name of the binary sensor."""
+    def name(self) -> str:
+        """Return the name of this entity."""
         return "Verisure Ethernet status"
 
     @property
-    def is_on(self):
+    def unique_id(self) -> str:
+        """Return the unique ID for this entity."""
+        return f"{self.coordinator.entry.data[CONF_GIID]}_ethernet"
+
+    @property
+    def device_info(self) -> dict[str, Any]:
+        """Return device information about this entity."""
+        return {
+            "name": "Verisure Alarm",
+            "manufacturer": "Verisure",
+            "model": "VBox",
+            "identifiers": {(DOMAIN, self.coordinator.entry.data[CONF_GIID])},
+        }
+
+    @property
+    def is_on(self) -> bool:
         """Return the state of the sensor."""
-        return hub.get_first("$.ethernetConnectedNow")
+        return self.coordinator.data["ethernet"]
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
-        return hub.get_first("$.ethernetConnectedNow") is not None
-
-    # pylint: disable=no-self-use
-    def update(self):
-        """Update the state of the sensor."""
-        hub.update_overview()
+        return super().available and self.coordinator.data["ethernet"] is not None
 
     @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
+    def device_class(self) -> str:
+        """Return the class of this entity."""
         return DEVICE_CLASS_CONNECTIVITY

@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "authorize_url_timeout": "Tidsavbrudd som genererer autorer URL-adresse.",
-            "missing_configuration": "Komponenten er ikke konfigurert. Vennligst f\u00f8lg dokumentasjonen.",
+            "authorize_url_timeout": "Tidsavbrudd ved oppretting av godkjenningsadresse",
+            "missing_configuration": "Komponenten er ikke konfigurert, vennligst f\u00f8lg dokumentasjonen",
             "no_url_available": "Ingen URL tilgjengelig. For informasjon om denne feilen, [sjekk hjelpseksjonen]({docs_url})",
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
@@ -13,6 +13,28 @@
             "pick_implementation": {
                 "title": "Velg godkjenningsmetode"
             }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "away": "borte",
+            "hg": "frostvakt",
+            "schedule": "Tidsplan"
+        },
+        "trigger_type": {
+            "alarm_started": "{entity_name} oppdaget en alarm",
+            "animal": "{entity_name} oppdaget et dyr",
+            "cancel_set_point": "{entity_name} har gjenopptatt tidsplanen",
+            "human": "{entity_name} oppdaget et menneske",
+            "movement": "{entity_name} oppdaget bevegelse",
+            "outdoor": "{entity_name} oppdaget en utend\u00f8rs hendelse",
+            "person": "{entity_name} oppdaget en person",
+            "person_away": "{entity_name} oppdaget at en person har forlatt",
+            "set_point": "M\u00e5ltemperatur {entity_name} angis manuelt",
+            "therm_mode": "{entity_name} byttet til \"{subtype}\"",
+            "turned_off": "{entity_name} sl\u00e5tt av",
+            "turned_on": "{entity_name} sl\u00e5tt p\u00e5",
+            "vehicle": "{entity_name} oppdaget et kj\u00f8ret\u00f8y"
         }
     },
     "options": {

@@ -1,5 +1,6 @@
 """Support for Tellstick Net/Telstick Live sensors."""
 from homeassistant.components import sensor, tellduslive
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
@@ -8,9 +9,9 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
+    PRECIPITATION_MILLIMETERS_PER_HOUR,
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
-    TIME_HOURS,
     UV_INDEX,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -40,7 +41,7 @@ SENSOR_TYPES = {
     SENSOR_TYPE_HUMIDITY: ["Humidity", PERCENTAGE, None, DEVICE_CLASS_HUMIDITY],
     SENSOR_TYPE_RAINRATE: [
         "Rain rate",
-        f"{LENGTH_MILLIMETERS}/{TIME_HOURS}",
+        PRECIPITATION_MILLIMETERS_PER_HOUR,
         "mdi:water",
         None,
     ],
@@ -71,7 +72,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class TelldusLiveSensor(TelldusLiveEntity):
+class TelldusLiveSensor(TelldusLiveEntity, SensorEntity):
     """Representation of a Telldus Live sensor."""
 
     @property

@@ -68,10 +68,9 @@ class AdsLight(AdsEntity, LightEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        support = 0
         if self._ads_var_brightness is not None:
-            support = SUPPORT_BRIGHTNESS
-        return support
+            return SUPPORT_BRIGHTNESS
+        return 0
 
     @property
     def is_on(self):

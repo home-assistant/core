@@ -4,11 +4,10 @@
             "already_configured": "Enheten er allerede konfigurert",
             "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
             "no_devices_found": "Ingen enheter funnet p\u00e5 nettverket",
-            "not_found": "Ingen st\u00f8ttet AVM FRITZ!Box funnet p\u00e5 nettverket.",
-            "not_supported": "Tilkoblet AVM FRITZ! Box, men den klarer ikke \u00e5 kontrollere Smart Home-enheter."
+            "not_supported": "Tilkoblet AVM FRITZ! Box, men den klarer ikke \u00e5 kontrollere Smart Home-enheter.",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
         },
         "error": {
-            "auth_failed": "Brukernavn og/eller passord er feil.",
             "invalid_auth": "Ugyldig godkjenning"
         },
         "flow_title": "",
@@ -19,6 +18,13 @@
                     "username": "Brukernavn"
                 },
                 "description": "Vil du sette opp {name} ?"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passord",
+                    "username": "Brukernavn"
+                },
+                "description": "Oppdater p\u00e5loggingsinformasjonen for {name} ."
             },
             "user": {
                 "data": {

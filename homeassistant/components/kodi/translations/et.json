@@ -4,6 +4,7 @@
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
             "cannot_connect": "\u00dchendamine nurjus",
             "invalid_auth": "Tuvastamine nurjus",
+            "no_uuid": "Kodi eksemplaril puudub ID. See on k\u00f5ige t\u00f5en\u00e4olisemalt tingitud vananenud Kodi versiooni t\u00f5ttu  (17.x v\u00f5i vanem). Sidumist saad seadistada k\u00e4sitsi v\u00f5i t\u00e4ienda Kodi uuemale versioonile.",
             "unknown": "Tundmatu viga"
         },
         "error": {
@@ -23,14 +24,6 @@
             "discovery_confirm": {
                 "description": "Kas soovid lisada Kodi {name} Home Assistanti?",
                 "title": "Avastatud Kodi seadmed"
-            },
-            "host": {
-                "data": {
-                    "host": "",
-                    "port": "",
-                    "ssl": "Loo \u00fchendus SSL-i kaudu"
-                },
-                "description": "Kodi \u00fchenduse teave. Veendu, et lubad jaotises S\u00fcsteem / Seaded / V\u00f5rk / Teenused valiku \"Luba Kodi juhtimine HTTP kaudu\"."
             },
             "user": {
                 "data": {

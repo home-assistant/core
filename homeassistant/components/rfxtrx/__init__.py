@@ -3,6 +3,7 @@ import asyncio
 import binascii
 from collections import OrderedDict
 import copy
+import functools
 import logging
 
 import RFXtrx as rfxtrxmod
@@ -12,6 +13,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.const import (
+    ATTR_DEVICE_ID,
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
     CONF_DEVICE,
@@ -27,17 +29,17 @@ from homeassistant.const import (
     LENGTH_MILLIMETERS,
     PERCENTAGE,
     POWER_WATT,
+    PRECIPITATION_MILLIMETERS_PER_HOUR,
     PRESSURE_HPA,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
-    TIME_HOURS,
     UV_INDEX,
     VOLT,
 )
 from homeassistant.core import callback
-from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
@@ -70,7 +72,7 @@ DATA_TYPES = OrderedDict(
         ("Humidity", PERCENTAGE),
         ("Barometer", PRESSURE_HPA),
         ("Wind direction", DEGREE),
-        ("Rain rate", f"{LENGTH_MILLIMETERS}/{TIME_HOURS}"),
+        ("Rain rate", PRECIPITATION_MILLIMETERS_PER_HOUR),
         ("Energy usage", POWER_WATT),
         ("Total usage", ENERGY_KILO_WATT_HOUR),
         ("Sound", None),
@@ -149,7 +151,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-DOMAINS = ["switch", "sensor", "light", "binary_sensor", "cover"]
+PLATFORMS = ["switch", "sensor", "light", "binary_sensor", "cover"]
 
 
 async def async_setup(hass, config):
@@ -191,11 +193,18 @@ async def async_setup_entry(hass, entry: config_entries.ConfigEntry):
 
     hass.data[DOMAIN][DATA_CLEANUP_CALLBACKS] = []
 
-    await async_setup_internal(hass, entry)
+    try:
+        await async_setup_internal(hass, entry)
+    except asyncio.TimeoutError:
+        # Library currently doesn't support reload
+        _LOGGER.error(
+            "Connection timeout: failed to receive response from RFXtrx device"
+        )
+        return False
 
-    for domain in DOMAINS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, domain)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -206,8 +215,8 @@ async def async_unload_entry(hass, entry: config_entries.ConfigEntry):
     if not all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in DOMAINS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     ):
@@ -263,14 +272,15 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
     config = entry.data
 
     # Initialize library
-    try:
-        async with async_timeout.timeout(5):
-            rfx_object = await hass.async_add_executor_job(_create_rfx, config)
-    except asyncio.TimeoutError as err:
-        raise ConfigEntryNotReady from err
+    async with async_timeout.timeout(30):
+        rfx_object = await hass.async_add_executor_job(_create_rfx, config)
 
     # Setup some per device config
     devices = _get_device_lookup(config[CONF_DEVICES])
+
+    device_registry: DeviceRegistry = (
+        await hass.helpers.device_registry.async_get_registry()
+    )
 
     # Declare the Handle event
     @callback
@@ -294,9 +304,17 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
         data_bits = get_device_data_bits(event.device, devices)
         device_id = get_device_id(event.device, data_bits=data_bits)
 
-        # Register new devices
-        if config[CONF_AUTOMATIC_ADD] and device_id not in devices:
-            _add_device(event, device_id)
+        if device_id not in devices:
+            if config[CONF_AUTOMATIC_ADD]:
+                _add_device(event, device_id)
+            else:
+                return
+
+        device_entry = device_registry.async_get_device(
+            identifiers={(DOMAIN, *device_id)},
+        )
+        if device_entry:
+            event_data[ATTR_DEVICE_ID] = device_entry.id
 
         # Callback to HA registered components.
         hass.helpers.dispatcher.async_dispatcher_send(SIGNAL_EVENT, event, device_id)
@@ -410,7 +428,7 @@ def find_possible_pt2262_device(device_ids, device_id):
             if size is not None:
                 size = len(dev_id) - size - 1
                 _LOGGER.info(
-                    "rfxtrx: found possible device %s for %s "
+                    "Found possible device %s for %s "
                     "with the following configuration:\n"
                     "data_bits=%d\n"
                     "command_on=0x%s\n"
@@ -471,7 +489,8 @@ class RfxtrxEntity(RestoreEntity):
 
         self.async_on_remove(
             self.hass.helpers.dispatcher.async_dispatcher_connect(
-                f"{DOMAIN}_{CONF_REMOVE_DEVICE}_{self._device_id}", self.async_remove
+                f"{DOMAIN}_{CONF_REMOVE_DEVICE}_{self._device_id}",
+                functools.partial(self.async_remove, force_remove=True),
             )
         )
 
@@ -486,7 +505,7 @@ class RfxtrxEntity(RestoreEntity):
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         if not self._event:
             return None

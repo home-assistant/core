@@ -1,4 +1,6 @@
 """Tests for the Remote Python Debugger integration."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.debugpy import (
@@ -11,8 +13,6 @@ from homeassistant.components.debugpy import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import patch
 
 
 @pytest.fixture

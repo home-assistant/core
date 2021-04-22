@@ -1,11 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Apparaat is al geconfigureerd",
-            "already_configured_device": "Apparaat is al geconfigureerd"
+            "already_configured": "Apparaat is al geconfigureerd"
         },
         "error": {
-            "cannot_connect": "Verbinding mislukt, probeer het opnieuw",
+            "cannot_connect": "Kan geen verbinding maken",
             "unknown": "Onverwachte fout"
         },
         "flow_title": "Logitech Harmony Hub {name}",
@@ -16,7 +15,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Hostnaam of IP-adres",
+                    "host": "Host",
                     "name": "Naam van hub"
                 },
                 "title": "Logitech Harmony Hub instellen"

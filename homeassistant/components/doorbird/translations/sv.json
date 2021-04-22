@@ -9,7 +9,8 @@
                     "host": "V\u00e4rd (IP-adress)",
                     "name": "Enhetsnamn",
                     "username": "Anv\u00e4ndarnamn"
-                }
+                },
+                "title": "Anslut till DoorBird"
             }
         }
     }

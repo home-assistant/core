@@ -5,7 +5,6 @@
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
-            "connection_error": "Tilkobling mislyktes",
             "unauthorized": "Parring nektet, sjekk enheten for autorisasjonsforesp\u00f8rsel"
         },
         "step": {
@@ -18,6 +17,5 @@
                 "title": "Koble til enheten"
             }
         }
-    },
-    "title": ""
+    }
 }

@@ -1,14 +1,18 @@
 """Light platform support for yeelight."""
+from __future__ import annotations
+
 from functools import partial
 import logging
 
 import voluptuous as vol
 import yeelight
 from yeelight import (
+    Bulb,
     BulbException,
     Flow,
     RGBTransition,
     SleepTransition,
+    flows,
     transitions as yee_transitions,
 )
 from yeelight.enums import BulbType, LightType, PowerMode, SceneClass
@@ -48,6 +52,7 @@ from . import (
     ACTION_RECOVER,
     ATTR_ACTION,
     ATTR_COUNT,
+    ATTR_MODE_MUSIC,
     ATTR_TRANSITIONS,
     CONF_FLOW_PARAMS,
     CONF_MODE_MUSIC,
@@ -76,6 +81,7 @@ SUPPORT_YEELIGHT_RGB = SUPPORT_YEELIGHT_WHITE_TEMP | SUPPORT_COLOR
 ATTR_MINUTES = "minutes"
 
 SERVICE_SET_MODE = "set_mode"
+SERVICE_SET_MUSIC_MODE = "set_music_mode"
 SERVICE_START_FLOW = "start_flow"
 SERVICE_SET_COLOR_SCENE = "set_color_scene"
 SERVICE_SET_HSV_SCENE = "set_hsv_scene"
@@ -100,6 +106,15 @@ EFFECT_WHATSAPP = "WhatsApp"
 EFFECT_FACEBOOK = "Facebook"
 EFFECT_TWITTER = "Twitter"
 EFFECT_STOP = "Stop"
+EFFECT_HOME = "Home"
+EFFECT_NIGHT_MODE = "Night Mode"
+EFFECT_DATE_NIGHT = "Date Night"
+EFFECT_MOVIE = "Movie"
+EFFECT_SUNRISE = "Sunrise"
+EFFECT_SUNSET = "Sunset"
+EFFECT_ROMANCE = "Romance"
+EFFECT_HAPPY_BIRTHDAY = "Happy Birthday"
+EFFECT_CANDLE_FLICKER = "Candle Flicker"
 
 YEELIGHT_TEMP_ONLY_EFFECT_LIST = [EFFECT_TEMP, EFFECT_STOP]
 
@@ -111,6 +126,8 @@ YEELIGHT_MONO_EFFECT_LIST = [
     EFFECT_WHATSAPP,
     EFFECT_FACEBOOK,
     EFFECT_TWITTER,
+    EFFECT_HOME,
+    EFFECT_CANDLE_FLICKER,
     *YEELIGHT_TEMP_ONLY_EFFECT_LIST,
 ]
 
@@ -123,28 +140,48 @@ YEELIGHT_COLOR_EFFECT_LIST = [
     EFFECT_FAST_RANDOM_LOOP,
     EFFECT_LSD,
     EFFECT_SLOWDOWN,
+    EFFECT_NIGHT_MODE,
+    EFFECT_DATE_NIGHT,
+    EFFECT_MOVIE,
+    EFFECT_SUNRISE,
+    EFFECT_SUNSET,
+    EFFECT_ROMANCE,
+    EFFECT_HAPPY_BIRTHDAY,
     *YEELIGHT_MONO_EFFECT_LIST,
 ]
 
 EFFECTS_MAP = {
-    EFFECT_DISCO: yee_transitions.disco,
-    EFFECT_TEMP: yee_transitions.temp,
-    EFFECT_STROBE: yee_transitions.strobe,
-    EFFECT_STROBE_COLOR: yee_transitions.strobe_color,
-    EFFECT_ALARM: yee_transitions.alarm,
-    EFFECT_POLICE: yee_transitions.police,
-    EFFECT_POLICE2: yee_transitions.police2,
-    EFFECT_CHRISTMAS: yee_transitions.christmas,
-    EFFECT_RGB: yee_transitions.rgb,
-    EFFECT_RANDOM_LOOP: yee_transitions.random_loop,
-    EFFECT_LSD: yee_transitions.lsd,
-    EFFECT_SLOWDOWN: yee_transitions.slowdown,
+    EFFECT_DISCO: flows.disco,
+    EFFECT_TEMP: flows.temp,
+    EFFECT_STROBE: flows.strobe,
+    EFFECT_STROBE_COLOR: flows.strobe_color,
+    EFFECT_ALARM: flows.alarm,
+    EFFECT_POLICE: flows.police,
+    EFFECT_POLICE2: flows.police2,
+    EFFECT_CHRISTMAS: flows.christmas,
+    EFFECT_RGB: flows.rgb,
+    EFFECT_RANDOM_LOOP: flows.random_loop,
+    EFFECT_LSD: flows.lsd,
+    EFFECT_SLOWDOWN: flows.slowdown,
+    EFFECT_HOME: flows.home,
+    EFFECT_NIGHT_MODE: flows.night_mode,
+    EFFECT_DATE_NIGHT: flows.date_night,
+    EFFECT_MOVIE: flows.movie,
+    EFFECT_SUNRISE: flows.sunrise,
+    EFFECT_SUNSET: flows.sunset,
+    EFFECT_ROMANCE: flows.romance,
+    EFFECT_HAPPY_BIRTHDAY: flows.happy_birthday,
+    EFFECT_CANDLE_FLICKER: flows.candle_flicker,
 }
 
 VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Range(min=1, max=100))
 
 SERVICE_SCHEMA_SET_MODE = {
     vol.Required(ATTR_MODE): vol.In([mode.name.lower() for mode in PowerMode])
+}
+
+SERVICE_SCHEMA_SET_MUSIC_MODE = {
+    vol.Required(ATTR_MODE_MUSIC): cv.boolean,
 }
 
 SERVICE_SCHEMA_START_FLOW = YEELIGHT_FLOW_TRANSITION_SCHEMA
@@ -227,7 +264,6 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up Yeelight from a config entry."""
-
     custom_effects = _parse_custom_effects(hass.data[DOMAIN][DATA_CUSTOM_EFFECTS])
 
     device = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][DATA_DEVICE]
@@ -376,6 +412,11 @@ def _async_setup_services(hass: HomeAssistant):
         SERVICE_SCHEMA_SET_AUTO_DELAY_OFF_SCENE,
         _async_set_auto_delay_off_scene,
     )
+    platform.async_register_entity_service(
+        SERVICE_SET_MUSIC_MODE,
+        SERVICE_SCHEMA_SET_MUSIC_MODE,
+        "set_music_mode",
+    )
 
 
 class YeelightGenericLight(YeelightEntity, LightEntity):
@@ -387,7 +428,6 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
 
         self.config = device.config
 
-        self._brightness = None
         self._color_temp = None
         self._hs = None
         self._effect = None
@@ -448,10 +488,14 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
     @property
     def brightness(self) -> int:
         """Return the brightness of this light between 1..255."""
-        temp = self._get_property(self._brightness_property)
-        if temp:
-            self._brightness = temp
-        return round(255 * (int(self._brightness) / 100))
+        # Always use "bright" as property name in music mode
+        # Since music mode states are only caches in upstream library
+        # and the cache key is always "bright" for brightness
+        brightness_property = (
+            "bright" if self._bulb.music_mode else self._brightness_property
+        )
+        brightness = self._get_property(brightness_property)
+        return round(255 * (int(brightness) / 100))
 
     @property
     def min_mireds(self):
@@ -488,9 +532,8 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         """Return the current effect."""
         return self._effect
 
-    # F821: https://github.com/PyCQA/pyflakes/issues/373
     @property
-    def _bulb(self) -> "Bulb":  # noqa: F821
+    def _bulb(self) -> Bulb:
         return self.device.bulb
 
     @property
@@ -519,10 +562,13 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         return YEELIGHT_MONO_EFFECT_LIST
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
+        attributes = {
+            "flowing": self.device.is_color_flow_enabled,
+            "music_mode": self._bulb.music_mode,
+        }
 
-        attributes = {"flowing": self.device.is_color_flow_enabled}
         if self.device.is_nightlight_supported:
             attributes["night_light"] = self.device.is_nightlight_enabled
 
@@ -563,12 +609,17 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
 
         return color_util.color_RGB_to_hs(red, green, blue)
 
-    def set_music_mode(self, mode) -> None:
+    def set_music_mode(self, music_mode) -> None:
         """Set the music mode on or off."""
-        if mode:
-            self._bulb.start_music()
+        if music_mode:
+            try:
+                self._bulb.start_music()
+            except AssertionError as ex:
+                _LOGGER.error(ex)
         else:
             self._bulb.stop_music()
+
+        self.device.update()
 
     @_cmd
     def set_brightness(self, brightness, duration) -> None:
@@ -652,9 +703,9 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         if effect in self.custom_effects_names:
             flow = Flow(**self.custom_effects[effect])
         elif effect in EFFECTS_MAP:
-            flow = Flow(count=0, transitions=EFFECTS_MAP[effect]())
+            flow = EFFECTS_MAP[effect]()
         elif effect == EFFECT_FAST_RANDOM_LOOP:
-            flow = Flow(count=0, transitions=yee_transitions.random_loop(duration=250))
+            flow = flows.random_loop(duration=250)
         elif effect == EFFECT_WHATSAPP:
             flow = Flow(count=2, transitions=yee_transitions.pulse(37, 211, 102))
         elif effect == EFFECT_FACEBOOK:

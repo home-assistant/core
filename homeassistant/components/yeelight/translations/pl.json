@@ -15,8 +15,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Nazwa hosta lub adres IP",
-                    "ip_address": "Adres IP"
+                    "host": "Nazwa hosta lub adres IP"
                 },
                 "description": "Je\u015bli nie podasz IP lub nazwy hosta, wykrywanie zostanie u\u017cyte do odnalezienia urz\u0105dze\u0144."
             }
@@ -35,6 +34,5 @@
                 "description": "Je\u015bli nie podasz modelu urz\u0105dzenia, zostanie on automatycznie wykryty."
             }
         }
-    },
-    "title": "Yeelight"
+    }
 }

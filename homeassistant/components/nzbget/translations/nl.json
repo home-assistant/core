@@ -5,13 +5,13 @@
             "unknown": "Onverwachte fout"
         },
         "error": {
-            "cannot_connect": "Kon niet verbinden",
-            "invalid_auth": "Ongeldige authenticatie"
+            "cannot_connect": "Kon niet verbinden"
         },
         "flow_title": "NZBGet: {name}",
         "step": {
             "user": {
                 "data": {
+                    "host": "Host",
                     "name": "Naam",
                     "password": "Wachtwoord",
                     "port": "Poort",
@@ -20,6 +20,15 @@
                     "verify_ssl": "SSL-certificaat verifi\u00ebren"
                 },
                 "title": "Maak verbinding met NZBGet"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Update frequentie (seconden)"
+                }
             }
         }
     }

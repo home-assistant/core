@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Vous ne pouvez configurer qu'un seul compte Spotify.",
             "authorize_url_timeout": "D\u00e9lai d'expiration g\u00e9n\u00e9rant une URL d'autorisation.",
             "missing_configuration": "L'int\u00e9gration Spotify n'est pas configur\u00e9e. Veuillez suivre la documentation.",
             "no_url_available": "Aucune URL disponible. Pour plus d'informations sur cette erreur, [consultez la section d'aide] ( {docs_url} )",
@@ -18,6 +17,11 @@
                 "description": "L'int\u00e9gration de Spotify doit se r\u00e9-authentifier avec Spotify pour le compte: {account}",
                 "title": "R\u00e9-authentifier avec Spotify"
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "Point de terminaison de l'API Spotify accessible"
         }
     }
 }

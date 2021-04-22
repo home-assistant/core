@@ -18,5 +18,10 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
     }
+  },
+  "system_health": {
+    "info": {
+      "can_reach_server": "Reach GIO\u015a server"
+    }
   }
 }

@@ -5,12 +5,20 @@
   "dependencies": [
     "automation",
     "cloud",
+    "counter",
+    "dhcp",
     "frontend",
     "history",
+    "input_boolean",
+    "input_datetime",
+    "input_number",
+    "input_select",
+    "input_text",
     "logbook",
     "map",
     "media_source",
     "mobile_app",
+    "my",
     "person",
     "scene",
     "script",
@@ -18,16 +26,12 @@
     "sun",
     "system_health",
     "tag",
+    "timer",
     "updater",
+    "webhook",
     "zeroconf",
-    "zone",
-    "input_boolean",
-    "input_datetime",
-    "input_text",
-    "input_number",
-    "input_select",
-    "counter",
-    "timer"
+    "zone"
   ],
-  "codeowners": []
+  "codeowners": [],
+  "quality_scale": "internal"
 }

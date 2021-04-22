@@ -1,7 +1,7 @@
 """Config flow to configure the Meteo-France integration."""
 import logging
 
-from meteofrance.client import MeteoFranceClient
+from meteofrance_api.client import MeteoFranceClient
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -9,8 +9,7 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE
 from homeassistant.core import callback
 
-from .const import CONF_CITY, FORECAST_MODE, FORECAST_MODE_DAILY
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import CONF_CITY, DOMAIN, FORECAST_MODE, FORECAST_MODE_DAILY
 
 _LOGGER = logging.getLogger(__name__)
 

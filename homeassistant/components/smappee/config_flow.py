@@ -1,6 +1,7 @@
 """Config flow for Smappee."""
 import logging
 
+from pysmappee import helper, mqtt
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -41,7 +42,6 @@ class SmappeeFlowHandler(
         """Handle zeroconf discovery."""
 
         if not discovery_info[CONF_HOSTNAME].startswith(SUPPORTED_LOCAL_DEVICES):
-            # We currently only support Energy and Solar models (legacy)
             return self.async_abort(reason="invalid_mdns")
 
         serial_number = (
@@ -56,7 +56,6 @@ class SmappeeFlowHandler(
         if self.is_cloud_device_already_added():
             return self.async_abort(reason="already_configured_device")
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update(
             {
                 CONF_IP_ADDRESS: discovery_info["host"],
@@ -76,7 +75,6 @@ class SmappeeFlowHandler(
             return self.async_abort(reason="already_configured_device")
 
         if user_input is None:
-            # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
             serialnumber = self.context.get(CONF_SERIALNUMBER)
             return self.async_show_form(
                 step_id="zeroconf_confirm",
@@ -84,15 +82,22 @@ class SmappeeFlowHandler(
                 errors=errors,
             )
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         ip_address = self.context.get(CONF_IP_ADDRESS)
         serial_number = self.context.get(CONF_SERIALNUMBER)
 
         # Attempt to make a connection to the local device
-        smappee_api = api.api.SmappeeLocalApi(ip=ip_address)
-        logon = await self.hass.async_add_executor_job(smappee_api.logon)
-        if logon is None:
-            return self.async_abort(reason="cannot_connect")
+        if helper.is_smappee_genius(serial_number):
+            # next generation device, attempt connect to the local mqtt broker
+            smappee_mqtt = mqtt.SmappeeLocalMqtt(serial_number=serial_number)
+            connect = await self.hass.async_add_executor_job(smappee_mqtt.start_attempt)
+            if not connect:
+                return self.async_abort(reason="cannot_connect")
+        else:
+            # legacy devices, without local mqtt broker, try api access
+            smappee_api = api.api.SmappeeLocalApi(ip=ip_address)
+            logon = await self.hass.async_add_executor_job(smappee_api.logon)
+            if logon is None:
+                return self.async_abort(reason="cannot_connect")
 
         return self.async_create_entry(
             title=f"{DOMAIN}{serial_number}",
@@ -144,23 +149,35 @@ class SmappeeFlowHandler(
             )
         # In a LOCAL setup we still need to resolve the host to serial number
         ip_address = user_input["host"]
+        serial_number = None
+
+        # Attempt 1: try to use the local api (older generation) to resolve host to serialnumber
         smappee_api = api.api.SmappeeLocalApi(ip=ip_address)
         logon = await self.hass.async_add_executor_job(smappee_api.logon)
-        if logon is None:
-            return self.async_abort(reason="cannot_connect")
+        if logon is not None:
+            advanced_config = await self.hass.async_add_executor_job(
+                smappee_api.load_advanced_config
+            )
+            for config_item in advanced_config:
+                if config_item["key"] == "mdnsHostName":
+                    serial_number = config_item["value"]
+        else:
+            # Attempt 2: try to use the local mqtt broker (newer generation) to resolve host to serialnumber
+            smappee_mqtt = mqtt.SmappeeLocalMqtt()
+            connect = await self.hass.async_add_executor_job(smappee_mqtt.start_attempt)
+            if not connect:
+                return self.async_abort(reason="cannot_connect")
 
-        advanced_config = await self.hass.async_add_executor_job(
-            smappee_api.load_advanced_config
-        )
-        serial_number = None
-        for config_item in advanced_config:
-            if config_item["key"] == "mdnsHostName":
-                serial_number = config_item["value"]
+            serial_number = await self.hass.async_add_executor_job(
+                smappee_mqtt.start_and_wait_for_config
+            )
+            await self.hass.async_add_executor_job(smappee_mqtt.stop)
+            if serial_number is None:
+                return self.async_abort(reason="cannot_connect")
 
         if serial_number is None or not serial_number.startswith(
             SUPPORTED_LOCAL_DEVICES
         ):
-            # We currently only support Energy and Solar models (legacy)
             return self.async_abort(reason="invalid_mdns")
 
         serial_number = serial_number.replace("Smappee", "")

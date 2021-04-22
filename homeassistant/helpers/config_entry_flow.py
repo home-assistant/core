@@ -1,9 +1,12 @@
 """Helpers for data entry flows for config entries."""
-from typing import Any, Awaitable, Callable, Dict, Optional, Union
+from __future__ import annotations
+
+from typing import Any, Awaitable, Callable, Union
 
 from homeassistant import config_entries
-
-from .typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultDict
+from homeassistant.helpers.typing import DiscoveryInfoType
 
 DiscoveryFunctionType = Callable[[], Union[Awaitable[bool], bool]]
 
@@ -27,8 +30,8 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
         self.CONNECTION_CLASS = connection_class  # pylint: disable=invalid-name
 
     async def async_step_user(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResultDict:
         """Handle a flow initialized by the user."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -38,10 +41,11 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
         return await self.async_step_confirm()
 
     async def async_step_confirm(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResultDict:
         """Confirm setup."""
         if user_input is None:
+            self._set_confirm_only()
             return self.async_show_form(step_id="confirm")
 
         if self.source == config_entries.SOURCE_USER:
@@ -58,7 +62,6 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
                 return self.async_abort(reason="no_devices_found")
 
             # Cancel the discovered one.
-            assert self.hass is not None
             for flow in in_progress:
                 self.hass.config_entries.flow.async_abort(flow["flow_id"])
 
@@ -68,8 +71,8 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
         return self.async_create_entry(title=self._title, data={})
 
     async def async_step_discovery(
-        self, discovery_info: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, discovery_info: DiscoveryInfoType
+    ) -> FlowResultDict:
         """Handle a flow initialized by discovery."""
         if self._async_in_progress() or self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -82,14 +85,14 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
     async_step_ssdp = async_step_discovery
     async_step_mqtt = async_step_discovery
     async_step_homekit = async_step_discovery
+    async_step_dhcp = async_step_discovery
 
-    async def async_step_import(self, _: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    async def async_step_import(self, _: dict[str, Any] | None) -> FlowResultDict:
         """Handle a flow initialized by import."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
         # Cancel other flows.
-        assert self.hass is not None
         in_progress = self._async_in_progress()
         for flow in in_progress:
             self.hass.config_entries.flow.async_abort(flow["flow_id"])
@@ -133,8 +136,8 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
         self._allow_multiple = allow_multiple
 
     async def async_step_user(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResultDict:
         """Handle a user initiated set up flow to create a webhook."""
         if not self._allow_multiple and self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -142,7 +145,6 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
         if user_input is None:
             return self.async_show_form(step_id="user")
 
-        assert self.hass is not None
         webhook_id = self.hass.components.webhook.async_generate_id()
 
         if (
@@ -181,7 +183,7 @@ def register_webhook_flow(
 
 
 async def webhook_async_remove_entry(
-    hass: HomeAssistantType, entry: config_entries.ConfigEntry
+    hass: HomeAssistant, entry: config_entries.ConfigEntry
 ) -> None:
     """Remove a webhook config entry."""
     if not entry.data.get("cloudhook") or "cloud" not in hass.config.components:

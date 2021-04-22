@@ -4,9 +4,7 @@
             "already_configured": "El dispositivo ya est\u00e1 configurado"
         },
         "error": {
-            "identifier_exists": "La cuenta ya ha sido configurada",
-            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
-            "invalid_credentials": "Credenciales no v\u00e1lidas"
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida"
         },
         "step": {
             "user": {

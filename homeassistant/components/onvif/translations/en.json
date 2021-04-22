@@ -8,8 +8,7 @@
             "onvif_error": "Error setting up ONVIF device.  Check logs for more information."
         },
         "error": {
-            "cannot_connect": "Failed to connect",
-            "connection_failed": "Could not connect to ONVIF service with provided credentials."
+            "cannot_connect": "Failed to connect"
         },
         "step": {
             "auth": {

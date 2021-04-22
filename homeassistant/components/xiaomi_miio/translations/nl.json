@@ -2,13 +2,25 @@
     "config": {
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
-            "already_in_progress": "De configuratiestroom voor dit Xiaomi Miio-apparaat is al bezig."
+            "already_in_progress": "De configuratiestroom is al aan de gang"
         },
         "error": {
-            "connect_error": "Verbinding mislukt, probeer het opnieuw",
-            "no_device_selected": "Geen apparaat geselecteerd, selecteer 1 apparaat alstublieft"
+            "cannot_connect": "Kan geen verbinding maken",
+            "no_device_selected": "Geen apparaat geselecteerd, selecteer 1 apparaat alstublieft",
+            "unknown_device": "Het apparaatmodel is niet bekend, niet in staat om het apparaat in te stellen met config flow."
         },
+        "flow_title": "Xiaomi Miio: {name}",
         "step": {
+            "device": {
+                "data": {
+                    "host": "IP-adres",
+                    "model": "Apparaatmodel (Optioneel)",
+                    "name": "Naam van het apparaat",
+                    "token": "API-token"
+                },
+                "description": "U hebt de 32 karakter API-token nodig, zie https://www.home-assistant.io/integrations/xiaomi_miio#retrieving-the-access-token voor instructies. Let op, deze API-token is anders dan de sleutel die wordt gebruikt door de Xiaomi Aqara integratie.",
+                "title": "Verbinding maken met een Xiaomi Miio-apparaat of Xiaomi Gateway"
+            },
             "gateway": {
                 "data": {
                     "host": "IP-adres",

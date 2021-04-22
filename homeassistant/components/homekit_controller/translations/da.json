@@ -11,9 +11,7 @@
         },
         "error": {
             "authentication_error": "Forkert HomeKit-kode. Kontroller den og pr\u00f8v igen.",
-            "busy_error": "Enheden n\u00e6gtede at parre da den allerede er parret med en anden controller.",
             "max_peers_error": "Enheden n\u00e6gtede at parre da den ikke har nok frit parringslagerplads.",
-            "max_tries_error": "Enheden n\u00e6gtede at parre da den har modtaget mere end 100 mislykkede godkendelsesfors\u00f8g.",
             "pairing_failed": "En uh\u00e5ndteret fejl opstod under fors\u00f8g p\u00e5 at parre med denne enhed. Dette kan v\u00e6re en midlertidig fejl eller din enhed muligvis ikke underst\u00f8ttes i \u00f8jeblikket.",
             "unable_to_pair": "Kunne ikke parre, pr\u00f8v venligst igen.",
             "unknown_error": "Enhed rapporterede en ukendt fejl. Parring mislykkedes."

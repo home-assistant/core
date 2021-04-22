@@ -1,4 +1,6 @@
 """Test the Sonarr config flow."""
+from unittest.mock import patch
+
 from homeassistant.components.sonarr.const import (
     CONF_UPCOMING_DAYS,
     CONF_WANTED_MAX_ITEMS,
@@ -15,12 +17,10 @@ from homeassistant.data_entry_flow import (
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
-from tests.async_mock import patch
 from tests.components.sonarr import (
     HOST,
     MOCK_REAUTH_INPUT,
     MOCK_USER_INPUT,
-    _patch_async_setup,
     _patch_async_setup_entry,
     mock_connection,
     mock_connection_error,
@@ -100,13 +100,15 @@ async def test_full_reauth_flow_implementation(
     hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the manual reauth flow from start to finish."""
-    entry = await setup_integration(hass, aioclient_mock, skip_entry_setup=True)
+    entry = await setup_integration(
+        hass, aioclient_mock, skip_entry_setup=True, unique_id="any"
+    )
     assert entry
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={CONF_SOURCE: SOURCE_REAUTH},
-        data={"config_entry_id": entry.entry_id, **entry.data},
+        context={CONF_SOURCE: SOURCE_REAUTH, "unique_id": entry.unique_id},
+        data=entry.data,
     )
 
     assert result["type"] == RESULT_TYPE_FORM
@@ -120,7 +122,7 @@ async def test_full_reauth_flow_implementation(
     assert result["step_id"] == "user"
 
     user_input = MOCK_REAUTH_INPUT.copy()
-    with _patch_async_setup(), _patch_async_setup_entry() as mock_setup_entry:
+    with _patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=user_input
         )
@@ -150,7 +152,7 @@ async def test_full_user_flow_implementation(
 
     user_input = MOCK_USER_INPUT.copy()
 
-    with _patch_async_setup(), _patch_async_setup_entry():
+    with _patch_async_setup_entry():
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=user_input,
@@ -181,7 +183,7 @@ async def test_full_user_flow_advanced_options(
         CONF_VERIFY_SSL: True,
     }
 
-    with _patch_async_setup(), _patch_async_setup_entry():
+    with _patch_async_setup_entry():
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=user_input,
@@ -208,7 +210,7 @@ async def test_options_flow(hass, aioclient_mock: AiohttpClientMocker):
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "init"
 
-    with _patch_async_setup(), _patch_async_setup_entry():
+    with _patch_async_setup_entry():
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={CONF_UPCOMING_DAYS: 2, CONF_WANTED_MAX_ITEMS: 100},

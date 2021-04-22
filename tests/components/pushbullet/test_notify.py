@@ -1,5 +1,6 @@
 """The tests for the pushbullet notification platform."""
 import json
+from unittest.mock import patch
 
 from pushbullet import PushBullet
 import pytest
@@ -7,7 +8,6 @@ import pytest
 import homeassistant.components.notify as notify
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import assert_setup_component, load_fixture
 
 

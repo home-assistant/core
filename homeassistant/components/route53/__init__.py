@@ -1,7 +1,8 @@
 """Update the IP addresses of your Route53 DNS records."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import List
 
 import boto3
 import requests
@@ -77,7 +78,7 @@ def _update_route53(
     aws_secret_access_key: str,
     zone: str,
     domain: str,
-    records: List[str],
+    records: list[str],
     ttl: int,
 ):
     _LOGGER.debug("Starting update for zone %s", zone)

@@ -1,18 +1,16 @@
 {
     "config": {
         "abort": {
-            "already_setup": "U kunt slechts \u00e9\u00e9n iAqualink-verbinding configureren.",
             "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
         },
         "error": {
-            "cannot_connect": "Kan geen verbinding maken",
-            "connection_failure": "Kan geen verbinding maken met iAqualink. Controleer je gebruikersnaam en wachtwoord."
+            "cannot_connect": "Kan geen verbinding maken"
         },
         "step": {
             "user": {
                 "data": {
                     "password": "Wachtwoord",
-                    "username": "Gebruikersnaam/E-mailadres"
+                    "username": "Gebruikersnaam"
                 },
                 "description": "Voer de gebruikersnaam en het wachtwoord voor uw iAqualink-account in.",
                 "title": "Verbinding maken met iAqualink"

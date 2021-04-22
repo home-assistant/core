@@ -3,6 +3,7 @@
         "step": {
             "options_1": {
                 "data": {
+                    "constant": "Konstanta",
                     "int": "\u010c\u00edseln\u00fd vstup"
                 }
             },

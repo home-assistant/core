@@ -12,11 +12,8 @@
         },
         "error": {
             "authentication_error": "Vale HomeKiti kood. Kontrolli seda ja proovi uuesti.",
-            "busy_error": "Seade keeldus sidumist lisamast kuna on juba teise kontrolleriga seotud.",
             "max_peers_error": "Seade keeldus sidumist lisamast kuna puudub piisav salvestusruum.",
-            "max_tries_error": "Seade keeldus sidumist lisamast kuna on saanud \u00fcle 100 nurjunud autentimiskatse.",
-            "pairing_failed": "Selle seadmega sidumise katsel ilmnes tundmatu t\u00f5rge. See v\u00f5ib olla ajutine t\u00f5rge v\u00f5i tseadet ei toetata praegu.",
-            "protocol_error": "Viga lisaseadmega suhtlemisel. Seade ei pruugi olla sidumisre\u017eiimis ja v\u00f5ib vajada f\u00fc\u00fcsilist v\u00f5i virtuaalset nupuvajutust.",
+            "pairing_failed": "Selle seadmega sidumise katsel ilmnes tundmatu t\u00f5rge. See v\u00f5ib olla ajutine t\u00f5rge v\u00f5i seadet ei toetata praegu.",
             "unable_to_pair": "Ei saa siduda, proovi uuesti.",
             "unknown_error": "Seade teatas tundmatust t\u00f5rkest. Sidumine nurjus."
         },
@@ -40,10 +37,6 @@
             "protocol_error": {
                 "description": "Seade ei pruugi olla sidumisre\u017eiimis ja v\u00f5ib vajada f\u00fc\u00fcsilist v\u00f5i virtuaalset nupuvajutust. Veendu, et seade oleks sidumisre\u017eiimis v\u00f5i proovi seade taask\u00e4ivitada, seej\u00e4rel j\u00e4tka sidumist.",
                 "title": "Viga lisaseadmega suhtlemisel"
-            },
-            "try_pair_later": {
-                "description": "Veendu, et seade on sidumisre\u017eiimis v\u00f5i proovi seadet taask\u00e4ivitada, seej\u00e4rel taasalusta sidumistt.",
-                "title": "Sidumine pole saadaval"
             },
             "user": {
                 "data": {

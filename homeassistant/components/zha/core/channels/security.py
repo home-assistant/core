@@ -4,7 +4,10 @@ Security channels module for Zigbee Home Automation.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/integrations/zha/
 """
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Coroutine
 
 from zigpy.exceptions import ZigbeeException
 import zigpy.zcl.clusters.security as security
@@ -20,7 +23,7 @@ from ..const import (
     WARNING_DEVICE_STROBE_HIGH,
     WARNING_DEVICE_STROBE_YES,
 )
-from .base import ZigbeeChannel
+from .base import ChannelStatus, ZigbeeChannel
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(security.IasAce.cluster_id)
@@ -109,7 +112,6 @@ class IasWd(ZigbeeChannel):
         )
 
 
-@registries.BINARY_SENSOR_CLUSTERS.register(security.IasZone.cluster_id)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(security.IasZone.cluster_id)
 class IASZoneChannel(ZigbeeChannel):
     """Channel for the IASZone Zigbee cluster."""
@@ -156,14 +158,10 @@ class IASZoneChannel(ZigbeeChannel):
                 str(ex),
             )
 
-        try:
-            self.debug("Sending pro-active IAS enroll response")
-            await self._cluster.enroll_response(0, 0)
-        except ZigbeeException as ex:
-            self.debug(
-                "Failed to send pro-active IAS enroll response: %s",
-                str(ex),
-            )
+        self.debug("Sending pro-active IAS enroll response")
+        self._cluster.create_catching_task(self._cluster.enroll_response(0, 0))
+
+        self._status = ChannelStatus.CONFIGURED
         self.debug("finished IASZoneChannel configuration")
 
     @callback
@@ -178,8 +176,7 @@ class IASZoneChannel(ZigbeeChannel):
                 value,
             )
 
-    async def async_initialize(self, from_cache):
+    def async_initialize_channel_specific(self, from_cache: bool) -> Coroutine:
         """Initialize channel."""
-        attributes = ["zone_status", "zone_state"]
-        await self.get_attributes(attributes, from_cache=from_cache)
-        await super().async_initialize(from_cache)
+        attributes = ["zone_status", "zone_state", "zone_type"]
+        return self.get_attributes(attributes, from_cache=from_cache)

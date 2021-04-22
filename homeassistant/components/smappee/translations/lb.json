@@ -5,7 +5,6 @@
             "already_configured_local_device": "Lokalen Apparat ass scho konfigur\u00e9iert. L\u00e4sch d\u00e9i iers de ee Cloud Apparat dob\u00e4isetz.",
             "authorize_url_timeout": "Z\u00e4it Iwwerschreidung beim gener\u00e9ieren vun der Autorisatiouns URL.",
             "cannot_connect": "Feeler beim verbannen",
-            "connection_error": "Feeler beim verbannen mam Smappee Apparat.",
             "invalid_mdns": "Net \u00ebnnerst\u00ebtzten Apparat fir Smappee Integratioun.",
             "missing_configuration": "Komponent ass nach net konfigur\u00e9iert. Follegt w.e.g der Dokumentatioun.",
             "no_url_available": "Keng URL disponibel. Fir Informatiounen iwwert d\u00ebse Feeler, [kuck H\u00ebllef Sektioun]({docs_url})"

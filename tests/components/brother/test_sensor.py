@@ -1,8 +1,10 @@
 """Test sensor of Brother integration."""
 from datetime import datetime, timedelta
 import json
+from unittest.mock import Mock, patch
 
-from homeassistant.components.brother.const import UNIT_PAGES
+from homeassistant.components.brother.const import DOMAIN, UNIT_PAGES
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
@@ -12,10 +14,10 @@ from homeassistant.const import (
     PERCENTAGE,
     STATE_UNAVAILABLE,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import UTC, utcnow
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed, load_fixture
 from tests.components.brother import init_integration
 
@@ -25,13 +27,25 @@ ATTR_COUNTER = "counter"
 
 async def test_sensors(hass):
     """Test states of the sensors."""
-    test_time = datetime(2019, 11, 11, 9, 10, 32, tzinfo=UTC)
-    with patch(
-        "homeassistant.components.brother.sensor.utcnow", return_value=test_time
-    ):
-        await init_integration(hass)
+    entry = await init_integration(hass, skip_setup=True)
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
+
+    # Pre-create registry entries for disabled by default sensors
+    registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "0123456789_uptime",
+        suggested_object_id="hl_l2340dw_uptime",
+        disabled_by=None,
+    )
+    test_time = datetime(2019, 11, 11, 9, 10, 32, tzinfo=UTC)
+    with patch("brother.datetime", utcnow=Mock(return_value=test_time)), patch(
+        "brother.Brother._get_data",
+        return_value=json.loads(load_fixture("brother_printer_data.json")),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
     state = hass.states.get("sensor.hl_l2340dw_status")
     assert state
@@ -222,6 +236,21 @@ async def test_sensors(hass):
     entry = registry.async_get("sensor.hl_l2340dw_uptime")
     assert entry
     assert entry.unique_id == "0123456789_uptime"
+
+
+async def test_disabled_by_default_sensors(hass):
+    """Test the disabled by default Brother sensors."""
+    await init_integration(hass)
+
+    registry = er.async_get(hass)
+    state = hass.states.get("sensor.hl_l2340dw_uptime")
+    assert state is None
+
+    entry = registry.async_get("sensor.hl_l2340dw_uptime")
+    assert entry
+    assert entry.unique_id == "0123456789_uptime"
+    assert entry.disabled
+    assert entry.disabled_by == "integration"
 
 
 async def test_availability(hass):

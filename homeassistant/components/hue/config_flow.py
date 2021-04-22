@@ -1,6 +1,8 @@
 """Config flow to configure Philips Hue."""
+from __future__ import annotations
+
 import asyncio
-from typing import Any, Dict, Optional
+from typing import Any
 from urllib.parse import urlparse
 
 import aiohue
@@ -15,15 +17,17 @@ from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
 from .bridge import authenticate_bridge
-from .const import (  # pylint: disable=unused-import
+from .const import (
     CONF_ALLOW_HUE_GROUPS,
     CONF_ALLOW_UNREACHABLE,
+    DEFAULT_ALLOW_HUE_GROUPS,
+    DEFAULT_ALLOW_UNREACHABLE,
     DOMAIN,
     LOGGER,
 )
 from .errors import AuthenticationRequired, CannotConnect
 
-HUE_MANUFACTURERURL = "http://www.philips.com"
+HUE_MANUFACTURERURL = ("http://www.philips.com", "http://www.philips-hue.com")
 HUE_IGNORED_BRIDGE_NAMES = ["Home Assistant Bridge", "Espalexa"]
 HUE_MANUAL_BRIDGE_ID = "manual"
 
@@ -42,8 +46,8 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize the Hue flow."""
-        self.bridge: Optional[aiohue.Bridge] = None
-        self.discovered_bridges: Optional[Dict[str, aiohue.Bridge]] = None
+        self.bridge: aiohue.Bridge | None = None
+        self.discovered_bridges: dict[str, aiohue.Bridge] | None = None
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -51,7 +55,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_init(user_input)
 
     @core.callback
-    def _async_get_bridge(self, host: str, bridge_id: Optional[str] = None):
+    def _async_get_bridge(self, host: str, bridge_id: str | None = None):
         """Return a bridge object."""
         if bridge_id is not None:
             bridge_id = normalize_bridge_id(bridge_id)
@@ -112,8 +116,8 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_manual(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Handle manual bridge setup."""
         if user_input is None:
             return self.async_show_form(
@@ -177,7 +181,10 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         host is already configured and delegate to the import step if not.
         """
         # Filter out non-Hue bridges #1
-        if discovery_info.get(ssdp.ATTR_UPNP_MANUFACTURER_URL) != HUE_MANUFACTURERURL:
+        if (
+            discovery_info.get(ssdp.ATTR_UPNP_MANUFACTURER_URL)
+            not in HUE_MANUFACTURERURL
+        ):
             return self.async_abort(reason="not_hue_bridge")
 
         # Filter out non-Hue bridges #2
@@ -203,6 +210,17 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         self.bridge = bridge
+        return await self.async_step_link()
+
+    async def async_step_homekit(self, discovery_info):
+        """Handle a discovered Hue bridge on HomeKit.
+
+        The bridge ID communicated over HomeKit differs, so we cannot use that
+        as the unique identifier. Therefore, this method uses discovery without
+        a unique ID.
+        """
+        self.bridge = self._async_get_bridge(discovery_info[CONF_HOST])
+        await self._async_handle_discovery_without_unique_id()
         return await self.async_step_link()
 
     async def async_step_import(self, import_info):
@@ -233,8 +251,8 @@ class HueOptionsFlowHandler(config_entries.OptionsFlow):
         self.config_entry = config_entry
 
     async def async_step_init(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Manage Hue options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
@@ -246,13 +264,13 @@ class HueOptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_ALLOW_HUE_GROUPS,
                         default=self.config_entry.options.get(
-                            CONF_ALLOW_HUE_GROUPS, False
+                            CONF_ALLOW_HUE_GROUPS, DEFAULT_ALLOW_HUE_GROUPS
                         ),
                     ): bool,
                     vol.Optional(
                         CONF_ALLOW_UNREACHABLE,
                         default=self.config_entry.options.get(
-                            CONF_ALLOW_UNREACHABLE, False
+                            CONF_ALLOW_UNREACHABLE, DEFAULT_ALLOW_UNREACHABLE
                         ),
                     ): bool,
                 }

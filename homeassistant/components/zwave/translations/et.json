@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
-            "one_instance_only": "Komponent toetab ainult \u00fchte Z-Wave sidumist",
             "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
         },
         "error": {
@@ -14,7 +13,7 @@
                     "network_key": "V\u00f5rguv\u00f5ti (j\u00e4ta automaatse genereerimise jaoks t\u00fchjaks)",
                     "usb_path": "USB seadme rada"
                 },
-                "description": "Konfiguratsioonimuutujate kohta leiad teavet https://www.home-assistant.io/docs/z-wave/installation/",
+                "description": "Seda sidumist enam ei hallata. Uueks sidumiseks kasuta Z-Wave JS.\n\nKonfiguratsioonimuutujate kohta leiad teavet https://www.home-assistant.io/docs/z-wave/installation/",
                 "title": "Seadista Z-Wave"
             }
         }

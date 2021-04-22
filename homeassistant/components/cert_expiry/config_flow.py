@@ -6,7 +6,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
 
-from .const import DEFAULT_PORT, DOMAIN  # pylint: disable=unused-import
+from .const import DEFAULT_PORT, DOMAIN
 from .errors import (
     ConnectionRefused,
     ConnectionTimeout,
@@ -63,9 +63,7 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     title=title,
                     data={CONF_HOST: host, CONF_PORT: port},
                 )
-            if (  # pylint: disable=no-member
-                self.context["source"] == config_entries.SOURCE_IMPORT
-            ):
+            if self.context["source"] == config_entries.SOURCE_IMPORT:
                 _LOGGER.error("Config import failed for %s", user_input[CONF_HOST])
                 return self.async_abort(reason="import_failed")
         else:

@@ -1,6 +1,8 @@
 """Test the Roku config flow."""
+from unittest.mock import patch
+
 from homeassistant.components.roku.const import DOMAIN
-from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
+from homeassistant.config_entries import SOURCE_HOMEKIT, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SOURCE
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -10,10 +12,12 @@ from homeassistant.data_entry_flow import (
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.components.roku import (
+    HOMEKIT_HOST,
     HOST,
+    MOCK_HOMEKIT_DISCOVERY_INFO,
     MOCK_SSDP_DISCOVERY_INFO,
+    NAME_ROKUTV,
     UPNP_FRIENDLY_NAME,
     mock_connection,
     setup_integration,
@@ -68,8 +72,6 @@ async def test_form(
 
     user_input = {CONF_HOST: HOST}
     with patch(
-        "homeassistant.components.roku.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.roku.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -84,7 +86,6 @@ async def test_form(
     assert result["data"]
     assert result["data"][CONF_HOST] == HOST
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -126,6 +127,89 @@ async def test_form_unknown_error(hass: HomeAssistantType) -> None:
 
     await hass.async_block_till_done()
     assert len(mock_validate_input.mock_calls) == 1
+
+
+async def test_homekit_cannot_connect(
+    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test we abort homekit flow on connection error."""
+    mock_connection(
+        aioclient_mock,
+        host=HOMEKIT_HOST,
+        error=True,
+    )
+
+    discovery_info = MOCK_HOMEKIT_DISCOVERY_INFO.copy()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_HOMEKIT},
+        data=discovery_info,
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_homekit_unknown_error(
+    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test we abort homekit flow on unknown error."""
+    discovery_info = MOCK_HOMEKIT_DISCOVERY_INFO.copy()
+    with patch(
+        "homeassistant.components.roku.config_flow.Roku.update",
+        side_effect=Exception,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={CONF_SOURCE: SOURCE_HOMEKIT},
+            data=discovery_info,
+        )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "unknown"
+
+
+async def test_homekit_discovery(
+    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test the homekit discovery flow."""
+    mock_connection(aioclient_mock, device="rokutv", host=HOMEKIT_HOST)
+
+    discovery_info = MOCK_HOMEKIT_DISCOVERY_INFO.copy()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_HOMEKIT}, data=discovery_info
+    )
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "discovery_confirm"
+    assert result["description_placeholders"] == {CONF_NAME: NAME_ROKUTV}
+
+    with patch(
+        "homeassistant.components.roku.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            flow_id=result["flow_id"], user_input={}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == NAME_ROKUTV
+
+    assert result["data"]
+    assert result["data"][CONF_HOST] == HOMEKIT_HOST
+    assert result["data"][CONF_NAME] == NAME_ROKUTV
+
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    # test abort on existing host
+    discovery_info = MOCK_HOMEKIT_DISCOVERY_INFO.copy()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_HOMEKIT}, data=discovery_info
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_ssdp_cannot_connect(
@@ -176,12 +260,10 @@ async def test_ssdp_discovery(
     )
 
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "ssdp_confirm"
+    assert result["step_id"] == "discovery_confirm"
     assert result["description_placeholders"] == {CONF_NAME: UPNP_FRIENDLY_NAME}
 
     with patch(
-        "homeassistant.components.roku.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.roku.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -197,5 +279,4 @@ async def test_ssdp_discovery(
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_NAME] == UPNP_FRIENDLY_NAME
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1

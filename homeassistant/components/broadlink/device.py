@@ -1,5 +1,6 @@
 """Support for Broadlink devices."""
 import asyncio
+from contextlib import suppress
 from functools import partial
 import logging
 
@@ -12,6 +13,7 @@ from broadlink.exceptions import (
     NetworkTimeoutError,
 )
 
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TIMEOUT, CONF_TYPE
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -22,9 +24,9 @@ from .updater import get_update_manager
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_domains(device_type):
+def get_domains(dev_type):
     """Return the domains available for a device type."""
-    return {domain for domain, types in DOMAINS_AND_TYPES if device_type in types}
+    return {d for d, t in DOMAINS_AND_TYPES.items() if dev_type in t}
 
 
 class BroadlinkDevice:
@@ -57,11 +59,16 @@ class BroadlinkDevice:
         Triggered when the device is renamed on the frontend.
         """
         device_registry = await dr.async_get_registry(hass)
-        device_entry = device_registry.async_get_device(
-            {(DOMAIN, entry.unique_id)}, set()
-        )
+        device_entry = device_registry.async_get_device({(DOMAIN, entry.unique_id)})
         device_registry.async_update_device(device_entry.id, name=entry.title)
         await hass.config_entries.async_reload(entry.entry_id)
+
+    def _auth_fetch_firmware(self):
+        """Auth and fetch firmware."""
+        self.api.auth()
+        with suppress(BroadlinkException, OSError):
+            return self.api.get_fwversion()
+        return None
 
     async def async_setup(self):
         """Set up the device and related entities."""
@@ -74,9 +81,12 @@ class BroadlinkDevice:
             name=config.title,
         )
         api.timeout = config.data[CONF_TIMEOUT]
+        self.api = api
 
         try:
-            await self.hass.async_add_executor_job(api.auth)
+            self.fw_version = await self.hass.async_add_executor_job(
+                self._auth_fetch_firmware
+            )
 
         except AuthenticationError:
             await self._async_handle_auth_error()
@@ -91,23 +101,15 @@ class BroadlinkDevice:
             )
             return False
 
-        self.api = api
         self.authorized = True
 
         update_manager = get_update_manager(self)
         coordinator = update_manager.coordinator
-        await coordinator.async_refresh()
-        if not coordinator.last_update_success:
-            raise ConfigEntryNotReady()
+        await coordinator.async_config_entry_first_refresh()
 
         self.update_manager = update_manager
         self.hass.data[DOMAIN].devices[config.entry_id] = self
         self.reset_jobs.append(config.add_update_listener(self.async_update))
-
-        try:
-            self.fw_version = await self.hass.async_add_executor_job(api.get_fwversion)
-        except (BroadlinkException, OSError):
-            pass
 
         # Forward entry setup to related domains.
         tasks = (
@@ -165,14 +167,18 @@ class BroadlinkDevice:
         self.authorized = False
 
         _LOGGER.error(
-            "The device at %s is locked for authentication. Follow the configuration flow to unlock it",
-            self.config.data[CONF_HOST],
+            "%s (%s at %s) is locked. Click Configuration in the sidebar, "
+            "click Integrations, click Configure on the device and follow "
+            "the instructions to unlock it",
+            self.name,
+            self.api.model,
+            self.api.host[0],
         )
 
         self.hass.async_create_task(
             self.hass.config_entries.flow.async_init(
                 DOMAIN,
-                context={"source": "reauth"},
+                context={"source": SOURCE_REAUTH},
                 data={CONF_NAME: self.name, **self.config.data},
             )
         )

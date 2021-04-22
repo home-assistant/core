@@ -1,11 +1,6 @@
 {
     "config": {
         "step": {
-            "hub2": {
-                "data": {
-                    "username": "\u7528\u6237\u540d"
-                }
-            },
             "hubv2": {
                 "data": {
                     "username": "\u7528\u6237\u540d"

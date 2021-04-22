@@ -1,10 +1,12 @@
 """The tests for the webhook automation trigger."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
 @pytest.fixture(autouse=True)
@@ -34,7 +36,10 @@ async def test_webhook_json(hass, aiohttp_client):
                 "trigger": {"platform": "webhook", "webhook_id": "json_webhook"},
                 "action": {
                     "event": "test_success",
-                    "event_data_template": {"hello": "yo {{ trigger.json.hello }}"},
+                    "event_data_template": {
+                        "hello": "yo {{ trigger.json.hello }}",
+                        "id": "{{ trigger.id}}",
+                    },
                 },
             }
         },
@@ -48,6 +53,7 @@ async def test_webhook_json(hass, aiohttp_client):
 
     assert len(events) == 1
     assert events[0].data["hello"] == "yo world"
+    assert events[0].data["id"] == 0
 
 
 async def test_webhook_post(hass, aiohttp_client):

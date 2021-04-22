@@ -7,22 +7,25 @@ from aiohttp.hdrs import ACCEPT, AUTHORIZATION
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONTENT_TYPE_JSON, HTTP_NOT_FOUND, HTTP_UNAUTHORIZED
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import (
+    ATTR_DEVICE_ID,
+    ATTR_TIME,
+    CONF_DEVICE_ID,
+    CONTENT_TYPE_JSON,
+    HTTP_NOT_FOUND,
+    HTTP_UNAUTHORIZED,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 from . import DATA_TTN, TTN_ACCESS_KEY, TTN_APP_ID, TTN_DATA_STORAGE_URL
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_DEVICE_ID = "device_id"
 ATTR_RAW = "raw"
-ATTR_TIME = "time"
 
 DEFAULT_TIMEOUT = 10
-CONF_DEVICE_ID = "device_id"
 CONF_VALUES = "values"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -55,7 +58,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(devices, True)
 
 
-class TtnDataSensor(Entity):
+class TtnDataSensor(SensorEntity):
     """Representation of a The Things Network Data Storage sensor."""
 
     def __init__(self, ttn_data_storage, device_id, value, unit_of_measurement):
@@ -77,8 +80,8 @@ class TtnDataSensor(Entity):
         """Return the state of the entity."""
         if self._ttn_data_storage.data is not None:
             try:
-                return round(self._state[self._value], 1)
-            except (KeyError, TypeError):
+                return self._state[self._value]
+            except KeyError:
                 return None
         return None
 
@@ -88,7 +91,7 @@ class TtnDataSensor(Entity):
         return self._unit_of_measurement
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         if self._ttn_data_storage.data is not None:
             return {

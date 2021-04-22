@@ -1,8 +1,8 @@
 """Test emulated_roku component setup process."""
+from unittest.mock import AsyncMock, Mock, patch
+
 from homeassistant.components import emulated_roku
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import AsyncMock, Mock, patch
 
 
 async def test_config_required_fields(hass):

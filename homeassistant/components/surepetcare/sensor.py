@@ -1,9 +1,12 @@
 """Support for Sure PetCare Flaps/Pets sensors."""
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
-from surepy import SureLockStateID, SureProductID
+from surepy import SureLockStateID, SurepyProduct
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_VOLTAGE,
     CONF_ID,
@@ -13,7 +16,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 
 from . import SurePetcareAPI
 from .const import (
@@ -40,30 +42,30 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         sure_type = entity[CONF_TYPE]
 
         if sure_type in [
-            SureProductID.CAT_FLAP,
-            SureProductID.PET_FLAP,
-            SureProductID.FEEDER,
+            SurepyProduct.CAT_FLAP,
+            SurepyProduct.PET_FLAP,
+            SurepyProduct.FEEDER,
         ]:
             entities.append(SureBattery(entity[CONF_ID], sure_type, spc))
 
-        if sure_type in [SureProductID.CAT_FLAP, SureProductID.PET_FLAP]:
+        if sure_type in [SurepyProduct.CAT_FLAP, SurepyProduct.PET_FLAP]:
             entities.append(Flap(entity[CONF_ID], sure_type, spc))
 
     async_add_entities(entities, True)
 
 
-class SurePetcareSensor(Entity):
+class SurePetcareSensor(SensorEntity):
     """A binary sensor implementation for Sure Petcare Entities."""
 
-    def __init__(self, _id: int, sure_type: SureProductID, spc: SurePetcareAPI):
+    def __init__(self, _id: int, sure_type: SurepyProduct, spc: SurePetcareAPI):
         """Initialize a Sure Petcare sensor."""
 
         self._id = _id
         self._sure_type = sure_type
 
         self._spc = spc
-        self._spc_data: Dict[str, Any] = self._spc.states[self._sure_type].get(self._id)
-        self._state: Dict[str, Any] = {}
+        self._spc_data: dict[str, Any] = self._spc.states[self._sure_type].get(self._id)
+        self._state: dict[str, Any] = {}
 
         self._name = (
             f"{self._sure_type.name.capitalize()} "
@@ -120,12 +122,12 @@ class Flap(SurePetcareSensor):
     """Sure Petcare Flap."""
 
     @property
-    def state(self) -> Optional[int]:
+    def state(self) -> int | None:
         """Return battery level in percent."""
         return SureLockStateID(self._state["locking"]["mode"]).name.capitalize()
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the device."""
         attributes = None
         if self._state:
@@ -143,9 +145,9 @@ class SureBattery(SurePetcareSensor):
         return f"{self._name} Battery Level"
 
     @property
-    def state(self) -> Optional[int]:
+    def state(self) -> int | None:
         """Return battery level in percent."""
-        battery_percent: Optional[int]
+        battery_percent: int | None
         try:
             per_battery_voltage = self._state["battery"] / 4
             voltage_diff = per_battery_voltage - SURE_BATT_VOLTAGE_LOW
@@ -166,7 +168,7 @@ class SureBattery(SurePetcareSensor):
         return DEVICE_CLASS_BATTERY
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return state attributes."""
         attributes = None
         if self._state:

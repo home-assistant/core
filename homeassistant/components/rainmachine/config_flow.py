@@ -8,11 +8,14 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
-from .const import (  # pylint: disable=unused-import
-    CONF_ZONE_RUN_TIME,
-    DEFAULT_PORT,
-    DEFAULT_ZONE_RUN,
-    DOMAIN,
+from .const import CONF_ZONE_RUN_TIME, DEFAULT_PORT, DEFAULT_ZONE_RUN, DOMAIN
+
+DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_IP_ADDRESS): str,
+        vol.Required(CONF_PASSWORD): str,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
+    }
 )
 
 
@@ -21,24 +24,6 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
-
-    def __init__(self):
-        """Initialize the config flow."""
-        self.data_schema = vol.Schema(
-            {
-                vol.Required(CONF_IP_ADDRESS): str,
-                vol.Required(CONF_PASSWORD): str,
-                vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
-            }
-        )
-
-    async def _show_form(self, errors=None):
-        """Show the form to the user."""
-        return self.async_show_form(
-            step_id="user",
-            data_schema=self.data_schema,
-            errors=errors if errors else {},
-        )
 
     @staticmethod
     @callback
@@ -49,7 +34,9 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""
         if not user_input:
-            return await self._show_form()
+            return self.async_show_form(
+                step_id="user", data_schema=DATA_SCHEMA, errors={}
+            )
 
         await self.async_set_unique_id(user_input[CONF_IP_ADDRESS])
         self._abort_if_unique_id_configured()
@@ -65,7 +52,11 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 ssl=user_input.get(CONF_SSL, True),
             )
         except RainMachineError:
-            return await self._show_form({CONF_PASSWORD: "invalid_auth"})
+            return self.async_show_form(
+                step_id="user",
+                data_schema=DATA_SCHEMA,
+                errors={CONF_PASSWORD: "invalid_auth"},
+            )
 
         # Unfortunately, RainMachine doesn't provide a way to refresh the
         # access token without using the IP address and password, so we have to

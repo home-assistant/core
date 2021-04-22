@@ -13,5 +13,37 @@
                 "title": "Feeler beim import vun der Cas\u00e9ta Bridge Konfiguratioun"
             }
         }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "lower": "Erofsetzen",
+            "lower_1": "1 erofsetzen",
+            "lower_2": "2 erofsetzen",
+            "lower_3": "3 erofsetzen",
+            "lower_4": "4 erofsetzen",
+            "lower_all": "All erofsetzen",
+            "off": "Aus",
+            "on": "Un",
+            "open_1": "1 opmaachen",
+            "open_2": "2 opmaachen",
+            "open_3": "3 opmaachen",
+            "open_4": "4 opmaachen",
+            "open_all": "All opmaachen",
+            "raise": "Unhiewen",
+            "raise_1": "1 unhiewen",
+            "raise_2": "2 unhiewen",
+            "raise_3": "3 unhiewen",
+            "raise_4": "4 unhiewen",
+            "raise_all": "All unhiewen",
+            "stop_1": "Stop 1",
+            "stop_2": "Stop 2",
+            "stop_3": "Stop 3",
+            "stop_4": "Stop 4",
+            "stop_all": "All stoppen"
+        },
+        "trigger_type": {
+            "press": "\"{subtype}\" gedr\u00e9ckt",
+            "release": "\"{subtype}\" lassgelooss"
+        }
     }
 }

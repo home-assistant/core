@@ -1,7 +1,9 @@
 """Support for OVO Energy."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Dict
+from typing import Any
 
 import aiohttp
 import async_timeout
@@ -10,21 +12,17 @@ from ovoenergy.ovoenergy import OVOEnergy
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
+    UpdateFailed,
 )
 
 from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
-    """Set up the OVO Energy components."""
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
@@ -33,23 +31,28 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     client = OVOEnergy()
 
     try:
-        await client.authenticate(entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD])
+        authenticated = await client.authenticate(
+            entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
+        )
     except aiohttp.ClientError as exception:
         _LOGGER.warning(exception)
         raise ConfigEntryNotReady from exception
 
+    if not authenticated:
+        raise ConfigEntryAuthFailed
+
     async def async_update_data() -> OVODailyUsage:
         """Fetch data from OVO Energy."""
-        now = datetime.utcnow()
         async with async_timeout.timeout(10):
             try:
-                await client.authenticate(
+                authenticated = await client.authenticate(
                     entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
                 )
-                return await client.get_daily_usage(now.strftime("%Y-%m"))
             except aiohttp.ClientError as exception:
-                _LOGGER.warning(exception)
-                return None
+                raise UpdateFailed(exception) from exception
+            if not authenticated:
+                raise ConfigEntryAuthFailed("Not authenticated with OVO Energy")
+            return await client.get_daily_usage(datetime.utcnow().strftime("%Y-%m"))
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -68,7 +71,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     }
 
     # Fetch initial data so we have data when entities subscribe
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
     # Setup components
     hass.async_create_task(
@@ -132,11 +135,11 @@ class OVOEnergyDeviceEntity(OVOEnergyEntity):
     """Defines a OVO Energy device entity."""
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> dict[str, Any]:
         """Return device information about this OVO Energy instance."""
         return {
             "identifiers": {(DOMAIN, self._client.account_id)},
             "manufacturer": "OVO Energy",
-            "name": self._client.account_id,
+            "name": self._client.username,
             "entry_type": "service",
         }

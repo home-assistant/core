@@ -1,13 +1,15 @@
 """Base classes for channels."""
+from __future__ import annotations
 
 import asyncio
 from enum import Enum
 from functools import wraps
 import logging
-from typing import Any, Union
+from typing import Any
 
 import zigpy.exceptions
 
+from homeassistant.const import ATTR_COMMAND
 from homeassistant.core import callback
 
 from .. import typing as zha_typing
@@ -16,7 +18,6 @@ from ..const import (
     ATTR_ATTRIBUTE_ID,
     ATTR_ATTRIBUTE_NAME,
     ATTR_CLUSTER_ID,
-    ATTR_COMMAND,
     ATTR_UNIQUE_ID,
     ATTR_VALUE,
     CHANNEL_ZDO,
@@ -187,29 +188,36 @@ class ZigbeeChannel(LogMixin):
                     str(ex),
                 )
 
-    async def async_configure(self):
+    async def async_configure(self) -> None:
         """Set cluster binding and attribute reporting."""
         if not self._ch_pool.skip_configuration:
             await self.bind()
             if self.cluster.is_server:
                 await self.configure_reporting()
+            ch_specific_cfg = getattr(self, "async_configure_channel_specific", None)
+            if ch_specific_cfg:
+                await ch_specific_cfg()
             self.debug("finished channel configuration")
         else:
             self.debug("skipping channel configuration")
         self._status = ChannelStatus.CONFIGURED
 
-    async def async_initialize(self, from_cache):
+    async def async_initialize(self, from_cache: bool) -> None:
         """Initialize channel."""
         if not from_cache and self._ch_pool.skip_configuration:
             self._status = ChannelStatus.INITIALIZED
             return
 
         self.debug("initializing channel: from_cache: %s", from_cache)
-        attributes = []
-        for report_config in self._report_config:
-            attributes.append(report_config["attr"])
-        if len(attributes) > 0:
+        attributes = [cfg["attr"] for cfg in self._report_config]
+        if attributes:
             await self.get_attributes(attributes, from_cache=from_cache)
+
+        ch_specific_init = getattr(self, "async_initialize_channel_specific", None)
+        if ch_specific_init:
+            await ch_specific_init(from_cache=from_cache)
+
+        self.debug("finished channel configuration")
         self._status = ChannelStatus.INITIALIZED
 
     @callback
@@ -231,7 +239,7 @@ class ZigbeeChannel(LogMixin):
         """Handle ZDO commands on this cluster."""
 
     @callback
-    def zha_send_event(self, command: str, args: Union[int, dict]) -> None:
+    def zha_send_event(self, command: str, args: int | dict) -> None:
         """Relay events to hass."""
         self._ch_pool.zha_send_event(
             {
@@ -307,7 +315,7 @@ class ZDOChannel(LogMixin):
         self._cluster = cluster
         self._zha_device = device
         self._status = ChannelStatus.CREATED
-        self._unique_id = "{}:{}_ZDO".format(str(device.ieee), device.name)
+        self._unique_id = f"{str(device.ieee)}:{device.name}_ZDO"
         self._cluster.add_listener(self)
 
     @property

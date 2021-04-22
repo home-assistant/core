@@ -1,5 +1,6 @@
 """The spotify integration."""
 
+import aiohttp
 from spotipy import Spotify, SpotifyException
 import voluptuous as vol
 
@@ -8,7 +9,7 @@ from homeassistant.components.spotify import config_flow
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CREDENTIALS, CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
@@ -62,7 +63,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Spotify from a config entry."""
     implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
-    await session.async_ensure_token_valid()
+
+    try:
+        await session.async_ensure_token_valid()
+    except aiohttp.ClientError as err:
+        raise ConfigEntryNotReady from err
+
     spotify = Spotify(auth=session.token["access_token"])
 
     try:
@@ -78,13 +84,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
 
     if not set(session.token["scope"].split(" ")).issuperset(SPOTIFY_SCOPES):
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": "reauth"},
-                data=entry.data,
-            )
-        )
+        raise ConfigEntryAuthFailed
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, MEDIA_PLAYER_DOMAIN)

@@ -1,5 +1,6 @@
 """The Hangouts Bot."""
 import asyncio
+from contextlib import suppress
 import io
 import logging
 
@@ -103,12 +104,10 @@ class HangoutsBot:
 
                 self._conversation_intents[conv_id][intent_type] = data
 
-        try:
+        with suppress(ValueError):
             self._conversation_list.on_event.remove_observer(
                 self._async_handle_conversation_event
             )
-        except ValueError:
-            pass
         self._conversation_list.on_event.add_observer(
             self._async_handle_conversation_event
         )
@@ -221,7 +220,7 @@ class HangoutsBot:
     async def _on_disconnect(self):
         """Handle disconnecting."""
         if self._connected:
-            _LOGGER.debug("Connection lost! Reconnect...")
+            _LOGGER.debug("Connection lost! Reconnect")
             await self.async_connect()
         else:
             dispatcher.async_dispatcher_send(self.hass, EVENT_HANGOUTS_DISCONNECTED)

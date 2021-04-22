@@ -1,13 +1,15 @@
 """The tests for the Roku remote platform."""
+from unittest.mock import patch
+
 from homeassistant.components.remote import (
     ATTR_COMMAND,
     DOMAIN as REMOTE_DOMAIN,
     SERVICE_SEND_COMMAND,
 )
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import HomeAssistantType
 
-from tests.async_mock import patch
 from tests.components.roku import UPNP_SERIAL, setup_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -30,7 +32,7 @@ async def test_unique_id(
     """Test unique id."""
     await setup_integration(hass, aioclient_mock)
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     main = entity_registry.async_get(MAIN_ENTITY_ID)
     assert main.unique_id == UPNP_SERIAL

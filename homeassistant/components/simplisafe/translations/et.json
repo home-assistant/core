@@ -2,17 +2,17 @@
     "config": {
         "abort": {
             "already_configured": "See SimpliSafe'i konto on juba kasutusel.",
-            "reauth_successful": "Taasautentimine \u00f5nnestus"
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
         },
         "error": {
             "identifier_exists": "Konto on juba registreeritud",
             "invalid_auth": "Tuvastamise viga",
-            "invalid_credentials": "Sobimatu mandaat",
+            "still_awaiting_mfa": "Ootan endiselt MFA e-posti klikki",
             "unknown": "Tundmatu viga"
         },
         "step": {
             "mfa": {
-                "description": "Kontrollige oma e-posti: link SimpliSafe-lt. P\u00e4rast lingi kontrollimist naase siia, et viia l\u00f5pule sidumise installimine.",
+                "description": "Kontrolli oma e-posti: link SimpliSafe-lt. P\u00e4rast lingi kontrollimist naase siia, et viia l\u00f5pule sidumise installimine.",
                 "title": "SimpliSafe mitmeastmeline autentimine"
             },
             "reauth_confirm": {
@@ -24,6 +24,7 @@
             },
             "user": {
                 "data": {
+                    "code": "Kood (kasutatakse Home Assistant'i kasutajaliideses)",
                     "password": "Salas\u00f5na",
                     "username": "E-post"
                 },

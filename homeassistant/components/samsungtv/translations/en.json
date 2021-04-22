@@ -5,7 +5,6 @@
             "already_in_progress": "Configuration flow is already in progress",
             "auth_missing": "Home Assistant is not authorized to connect to this Samsung TV. Please check your TV's settings to authorize Home Assistant.",
             "cannot_connect": "Failed to connect",
-            "not_successful": "Unable to connect to this Samsung TV device.",
             "not_supported": "This Samsung TV device is currently not supported."
         },
         "flow_title": "Samsung TV: {model}",

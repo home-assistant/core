@@ -1,7 +1,9 @@
 """Support for the Airly sensor service."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
+    ATTR_ICON,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONF_NAME,
     DEVICE_CLASS_HUMIDITY,
@@ -18,16 +20,13 @@ from .const import (
     ATTR_API_PM1,
     ATTR_API_PRESSURE,
     ATTR_API_TEMPERATURE,
+    ATTR_LABEL,
+    ATTR_UNIT,
+    ATTRIBUTION,
     DEFAULT_NAME,
     DOMAIN,
     MANUFACTURER,
 )
-
-ATTRIBUTION = "Data provided by Airly"
-
-ATTR_ICON = "icon"
-ATTR_LABEL = "label"
-ATTR_UNIT = "unit"
 
 PARALLEL_UPDATES = 1
 
@@ -67,12 +66,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     sensors = []
     for sensor in SENSOR_TYPES:
-        sensors.append(AirlySensor(coordinator, name, sensor))
+        # When we use the nearest method, we are not sure which sensors are available
+        if coordinator.data.get(sensor):
+            sensors.append(AirlySensor(coordinator, name, sensor))
 
     async_add_entities(sensors, False)
 
 
-class AirlySensor(CoordinatorEntity):
+class AirlySensor(CoordinatorEntity, SensorEntity):
     """Define an Airly sensor."""
 
     def __init__(self, coordinator, name, kind):
@@ -102,7 +103,7 @@ class AirlySensor(CoordinatorEntity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._attrs
 

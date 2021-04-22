@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Sentry ja est\u00e0 configurat",
             "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
         },
         "error": {

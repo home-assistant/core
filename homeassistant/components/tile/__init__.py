@@ -1,26 +1,23 @@
 """The Tile component."""
 import asyncio
 from datetime import timedelta
+from functools import partial
 
 from pytile import async_login
-from pytile.errors import SessionExpiredError, TileError
+from pytile.errors import InvalidAuthError, SessionExpiredError, TileError
 
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import callback
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.async_ import gather_with_concurrency
 
-from .const import DATA_COORDINATOR, DOMAIN, LOGGER
+from .const import DATA_COORDINATOR, DATA_TILE, DOMAIN, LOGGER
 
 PLATFORMS = ["device_tracker"]
 DEVICE_TYPES = ["PHONE", "TILE"]
 
-DEFAULT_ATTRIBUTION = "Data provided by Tile"
-DEFAULT_ICON = "mdi:view-grid"
+DEFAULT_INIT_TASK_LIMIT = 2
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=2)
 
 CONF_SHOW_INACTIVE = "show_inactive"
@@ -28,110 +25,74 @@ CONF_SHOW_INACTIVE = "show_inactive"
 
 async def async_setup(hass, config):
     """Set up the Tile component."""
-    hass.data[DOMAIN] = {DATA_COORDINATOR: {}}
-
+    hass.data[DOMAIN] = {DATA_COORDINATOR: {}, DATA_TILE: {}}
     return True
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass, entry):
     """Set up Tile as config entry."""
+    hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id] = {}
+    hass.data[DOMAIN][DATA_TILE][entry.entry_id] = {}
+
     websession = aiohttp_client.async_get_clientsession(hass)
 
-    client = await async_login(
-        config_entry.data[CONF_USERNAME],
-        config_entry.data[CONF_PASSWORD],
-        session=websession,
-    )
+    try:
+        client = await async_login(
+            entry.data[CONF_USERNAME],
+            entry.data[CONF_PASSWORD],
+            session=websession,
+        )
+        hass.data[DOMAIN][DATA_TILE][entry.entry_id] = await client.async_get_tiles()
+    except InvalidAuthError:
+        LOGGER.error("Invalid credentials provided")
+        return False
+    except TileError as err:
+        raise ConfigEntryNotReady("Error during integration setup") from err
 
-    async def async_update_data():
-        """Get new data from the API."""
+    async def async_update_tile(tile):
+        """Update the Tile."""
         try:
-            return await client.tiles.all()
+            return await tile.async_update()
         except SessionExpiredError:
             LOGGER.info("Tile session expired; creating a new one")
             await client.async_init()
         except TileError as err:
             raise UpdateFailed(f"Error while retrieving data: {err}") from err
 
-    coordinator = DataUpdateCoordinator(
-        hass,
-        LOGGER,
-        name=config_entry.title,
-        update_interval=DEFAULT_UPDATE_INTERVAL,
-        update_method=async_update_data,
-    )
+    coordinator_init_tasks = []
+    for tile_uuid, tile in hass.data[DOMAIN][DATA_TILE][entry.entry_id].items():
+        coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
+            tile_uuid
+        ] = DataUpdateCoordinator(
+            hass,
+            LOGGER,
+            name=tile.name,
+            update_interval=DEFAULT_UPDATE_INTERVAL,
+            update_method=partial(async_update_tile, tile),
+        )
+        coordinator_init_tasks.append(coordinator.async_refresh())
 
-    await coordinator.async_refresh()
-    hass.data[DOMAIN][DATA_COORDINATOR][config_entry.entry_id] = coordinator
+    await gather_with_concurrency(DEFAULT_INIT_TASK_LIMIT, *coordinator_init_tasks)
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass, entry):
     """Unload a Tile config entry."""
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(config_entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )
     if unload_ok:
-        hass.data[DOMAIN][DATA_COORDINATOR].pop(config_entry.entry_id)
+        hass.data[DOMAIN][DATA_COORDINATOR].pop(entry.entry_id)
 
     return unload_ok
-
-
-class TileEntity(CoordinatorEntity):
-    """Define a generic Tile entity."""
-
-    def __init__(self, coordinator):
-        """Initialize."""
-        super().__init__(coordinator)
-        self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
-        self._name = None
-        self._unique_id = None
-
-    @property
-    def device_state_attributes(self):
-        """Return the device state attributes."""
-        return self._attrs
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return DEFAULT_ICON
-
-    @property
-    def name(self):
-        """Return the name."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the entity."""
-        return self._unique_id
-
-    @callback
-    def _update_from_latest_data(self):
-        """Update the entity from the latest data."""
-        raise NotImplementedError
-
-    async def async_added_to_hass(self):
-        """Register callbacks."""
-
-        @callback
-        def update():
-            """Update the state."""
-            self._update_from_latest_data()
-            self.async_write_ha_state()
-
-        self.async_on_remove(self.coordinator.async_add_listener(update))
-
-        self._update_from_latest_data()

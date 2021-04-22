@@ -2,9 +2,10 @@
     "config": {
         "abort": {
             "already_configured_device": "Za\u0159\u00edzen\u00ed je ji\u017e nastaveno",
+            "already_configured_local_device": "M\u00edstn\u00ed za\u0159\u00edzen\u00ed ji\u017e jsou nastavena. P\u0159ed nastaven\u00ed cloudov\u00e9ho za\u0159\u00edzen\u00ed je nejprve odstra\u0148te.",
             "authorize_url_timeout": "\u010casov\u00fd limit autoriza\u010dn\u00edho URL vypr\u0161el",
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
-            "connection_error": "P\u0159ipojen\u00ed k za\u0159\u00edzen\u00ed Smappee se nezda\u0159ilo.",
+            "invalid_mdns": "Nepodporovan\u00e9 za\u0159\u00edzen\u00ed pro integraci Smappee.",
             "missing_configuration": "Komponenta nen\u00ed nastavena. Postupujte podle dokumentace.",
             "no_url_available": "Nen\u00ed k dispozici \u017e\u00e1dn\u00e1 adresa URL. Informace o t\u00e9to chyb\u011b naleznete [v sekci n\u00e1pov\u011bdy]({docs_url})"
         },

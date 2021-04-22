@@ -1,9 +1,42 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "cannot_connect": "\u00dchendamine nurjus",
+            "not_irobot_device": "Leitud seade ei ole iRoboti seade",
+            "short_blid": "BLID'i k\u00e4rbiti"
+        },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus"
         },
+        "flow_title": "iRobot {name} ( {host} )",
         "step": {
+            "init": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Vali Roomba v\u00f5i Braava seade.",
+                "title": "\u00dchenda seadmega automaatselt"
+            },
+            "link": {
+                "description": "Vajuta ja hoia all seadme {name} nuppu Home kuni seade teeb piiksu (umbes kaks sekundit), edasta 30 sekundi jooksul.",
+                "title": "Hangi salas\u00f5na"
+            },
+            "link_manual": {
+                "data": {
+                    "password": "Salas\u00f5na"
+                },
+                "description": "Salas\u00f5na ei \u00f5nnestunud seadmest automaatselt hankida. J\u00e4rgi dokumentatsioonis toodud juhiseid: {auth_help_url}",
+                "title": "Sisesta salas\u00f5na"
+            },
+            "manual": {
+                "data": {
+                    "blid": "",
+                    "host": "Host"
+                },
+                "description": "V\u00f5rgus ei tuvastatud \u00fchtegi Roomba ega Braava seadet. BLID on seadme hostinime osa p\u00e4rast 'iRobot-` v\u00f5i 'Roomba-'. J\u00e4rgi dokumentatsioonis toodud juhiseid: {auth_help_url}",
+                "title": "\u00dchenda seadmega k\u00e4sitsi"
+            },
             "user": {
                 "data": {
                     "blid": "",
@@ -11,7 +44,9 @@
                     "delay": "Viivitus",
                     "host": "",
                     "password": "Salas\u00f5na"
-                }
+                },
+                "description": "Praegu on BLID ja parooli toomine k\u00e4sitsi protsess. J\u00e4rgi dokumentatsioonis toodud juhiseid aadressil: https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials",
+                "title": "\u00dchendu seadmega"
             }
         }
     },

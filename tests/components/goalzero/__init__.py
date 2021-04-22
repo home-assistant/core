@@ -1,8 +1,8 @@
 """Tests for the Goal Zero Yeti integration."""
 
-from homeassistant.const import CONF_HOST, CONF_NAME
+from unittest.mock import AsyncMock, patch
 
-from tests.async_mock import AsyncMock, patch
+from homeassistant.const import CONF_HOST, CONF_NAME
 
 HOST = "1.2.3.4"
 NAME = "Yeti"

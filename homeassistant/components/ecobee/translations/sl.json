@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "one_instance_only": "Ta integracija trenutno podpira samo en primerek ecobee."
-        },
         "error": {
             "pin_request_failed": "Napaka pri zahtevi PIN-a od ecobee; preverite, ali je klju\u010d API pravilen.",
             "token_request_failed": "Napaka pri zahtevanju \u017eetonov od ecobeeja; prosim poskusite ponovno."

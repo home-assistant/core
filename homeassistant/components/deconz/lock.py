@@ -3,21 +3,18 @@ from homeassistant.components.lock import DOMAIN, LockEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import LOCKS, NEW_LIGHT
+from .const import LOCKS, NEW_LIGHT, NEW_SENSOR
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up locks for deCONZ component.
-
-    Locks are based on the same device class as lights in deCONZ.
-    """
+    """Set up locks for deCONZ component."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_lock(lights):
+    def async_add_lock_from_light(lights=gateway.api.lights.values()):
         """Add lock from deCONZ."""
         entities = []
 
@@ -29,13 +26,35 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if entities:
             async_add_entities(entities)
 
-    gateway.listeners.append(
+    config_entry.async_on_unload(
         async_dispatcher_connect(
-            hass, gateway.async_signal_new_device(NEW_LIGHT), async_add_lock
+            hass, gateway.async_signal_new_device(NEW_LIGHT), async_add_lock_from_light
         )
     )
 
-    async_add_lock(gateway.api.lights.values())
+    @callback
+    def async_add_lock_from_sensor(sensors=gateway.api.sensors.values()):
+        """Add lock from deCONZ."""
+        entities = []
+
+        for sensor in sensors:
+
+            if sensor.type in LOCKS and sensor.uniqueid not in gateway.entities[DOMAIN]:
+                entities.append(DeconzLock(sensor, gateway))
+
+        if entities:
+            async_add_entities(entities)
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            gateway.async_signal_new_device(NEW_SENSOR),
+            async_add_lock_from_sensor,
+        )
+    )
+
+    async_add_lock_from_light()
+    async_add_lock_from_sensor()
 
 
 class DeconzLock(DeconzDevice, LockEntity):
@@ -46,14 +65,12 @@ class DeconzLock(DeconzDevice, LockEntity):
     @property
     def is_locked(self):
         """Return true if lock is on."""
-        return self._device.state
+        return self._device.is_locked
 
     async def async_lock(self, **kwargs):
         """Lock the lock."""
-        data = {"on": True}
-        await self._device.async_set_state(data)
+        await self._device.lock()
 
     async def async_unlock(self, **kwargs):
         """Unlock the lock."""
-        data = {"on": False}
-        await self._device.async_set_state(data)
+        await self._device.unlock()

@@ -1,11 +1,12 @@
 """Test the MyQ config flow."""
+from unittest.mock import patch
+
 from pymyq.errors import InvalidCredentialsError, MyQError
 
 from homeassistant import config_entries, setup
 from homeassistant.components.myq.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -36,36 +37,6 @@ async def test_form_user(hass):
     assert result2["type"] == "create_entry"
     assert result2["title"] == "test-username"
     assert result2["data"] == {
-        "username": "test-username",
-        "password": "test-password",
-    }
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_import(hass):
-    """Test we can import."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    with patch(
-        "homeassistant.components.myq.config_flow.pymyq.login",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.myq.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.myq.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={"username": "test-username", "password": "test-password"},
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == "test-username"
-    assert result["data"] == {
         "username": "test-username",
         "password": "test-password",
     }

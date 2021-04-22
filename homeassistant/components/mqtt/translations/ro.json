@@ -22,7 +22,7 @@
                     "discovery": "Activa\u021bi descoperirea"
                 },
                 "description": "Dori\u021bi s\u0103 configura\u021bi Home Assistant pentru a se conecta la brokerul MQTT furnizat de addon-ul {addon} ?",
-                "title": "MQTT Broker, prin intermediul Hass.io add-on"
+                "title": "MQTT Broker, prin intermediul Supervisor add-on"
             }
         }
     }

@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "one_instance_only": "Cette int\u00e9gration ne prend actuellement en charge qu'une seule instance ecobee.",
             "single_instance_allowed": "D\u00e9j\u00e0 configur\u00e9. Une seule configuration possible."
         },
         "error": {
@@ -10,7 +9,7 @@
         },
         "step": {
             "authorize": {
-                "description": "Veuillez autoriser cette application \u00e0 https://www.ecobee.com/consumerportal/index.html avec un code PIN :\n\n{pin}\n\nEnsuite, appuyez sur Soumettre.",
+                "description": "Veuillez autoriser cette application \u00e0 https://www.ecobee.com/consumerportal/index.html avec le code NIP :\n\n{pin}\n\nEnsuite, appuyez sur Soumettre.",
                 "title": "Autoriser l'application sur ecobee.com"
             },
             "user": {

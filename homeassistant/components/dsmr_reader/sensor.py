@@ -1,7 +1,7 @@
 """Support for DSMR Reader through MQTT."""
 from homeassistant.components import mqtt
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
 from .definitions import DEFINITIONS
@@ -19,7 +19,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(sensors)
 
 
-class DSMRSensor(Entity):
+class DSMRSensor(SensorEntity):
     """Representation of a DSMR sensor that is updated via MQTT."""
 
     def __init__(self, topic):
@@ -31,6 +31,8 @@ class DSMRSensor(Entity):
         self._topic = topic
 
         self._name = self._definition.get("name", topic.split("/")[-1])
+        self._device_class = self._definition.get("device_class")
+        self._enable_default = self._definition.get("enable_default")
         self._unit_of_measurement = self._definition.get("unit")
         self._icon = self._definition.get("icon")
         self._transform = self._definition.get("transform")
@@ -68,9 +70,19 @@ class DSMRSensor(Entity):
         return self._state
 
     @property
+    def device_class(self):
+        """Return the device_class of this sensor."""
+        return self._device_class
+
+    @property
     def unit_of_measurement(self):
         """Return the unit_of_measurement of this sensor."""
         return self._unit_of_measurement
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return self._enable_default
 
     @property
     def icon(self):

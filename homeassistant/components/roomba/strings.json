@@ -1,21 +1,43 @@
 {
   "config": {
+    "flow_title": "iRobot {name} ({host})",
     "step": {
-      "user": {
-        "title": "Connect to the device",
-        "description": "Currently retrieving the BLID and password is a manual process. Please follow the steps outlined in the documentation at: https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials",
+      "init": {
+        "title": "Automatically connect to the device",
+        "description": "Select a Roomba or Braava.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        }
+      },
+      "manual": {
+        "title": "Manually connect to the device",
+        "description": "No Roomba or Braava have been discovered on your network. The BLID is the portion of the device hostname after `iRobot-` or `Roomba-`. Please follow the steps outlined in the documentation at: {auth_help_url}",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "blid": "BLID",
-          "password": "[%key:common::config_flow::data::password%]",
-          "continuous": "Continuous",
-          "delay": "Delay"
+          "blid": "BLID"
         }
-      }
+      },      
+      "link": {
+        "title": "Retrieve Password",
+        "description": "Press and hold the Home button on {name} until the device generates a sound (about two seconds), then submit within 30 seconds."
+      },
+      "link_manual": {
+        "title": "Enter Password",
+        "description": "The password could not be retrieved from the device automatically. Please follow the steps outlined in the documentation at: {auth_help_url}",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }          
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
-    }
+    },
+    "abort": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "not_irobot_device": "Discovered device is not an iRobot device",
+      "short_blid": "The BLID was truncated"
+    }    
   },
   "options": {
     "step": {

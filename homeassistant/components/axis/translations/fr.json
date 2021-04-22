@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
-            "bad_config_file": "Mauvaises donn\u00e9es du fichier de configuration",
             "link_local_address": "Les adresses locales ne sont pas prises en charge",
             "not_axis_device": "L'appareil d\u00e9couvert n'est pas un appareil Axis"
         },
@@ -10,8 +9,6 @@
             "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
             "already_in_progress": "Le flux de configuration de l'appareil est d\u00e9j\u00e0 en cours.",
             "cannot_connect": "\u00c9chec de connexion",
-            "device_unavailable": "L'appareil n'est pas disponible",
-            "faulty_credentials": "Mauvaises informations d'identification de l'utilisateur",
             "invalid_auth": "Authentification invalide"
         },
         "flow_title": "Appareil Axis: {name} ( {host} )",
