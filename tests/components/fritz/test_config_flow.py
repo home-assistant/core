@@ -191,7 +191,9 @@ async def test_reauth_successful(hass: HomeAssistant, fc_class_mock):
     with patch(
         "homeassistant.components.fritz.common.FritzConnection",
         side_effect=fc_class_mock,
-    ), patch("homeassistant.components.fritz.common.FritzStatus"):
+    ), patch("homeassistant.components.fritz.common.FritzStatus"), patch(
+        "homeassistant.components.fritz.async_setup_entry"
+    ) as mock_setup_entry:
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -212,6 +214,8 @@ async def test_reauth_successful(hass: HomeAssistant, fc_class_mock):
 
         assert result["type"] == RESULT_TYPE_ABORT
         assert result["reason"] == "reauth_successful"
+
+    assert mock_setup_entry.called
 
 
 async def test_reauth_not_successful(hass: HomeAssistant, fc_class_mock):
@@ -339,7 +343,9 @@ async def test_ssdp(hass: HomeAssistant, fc_class_mock):
     with patch(
         "homeassistant.components.fritz.common.FritzConnection",
         side_effect=fc_class_mock,
-    ), patch("homeassistant.components.fritz.common.FritzStatus"):
+    ), patch("homeassistant.components.fritz.common.FritzStatus"), patch(
+        "homeassistant.components.fritz.async_setup_entry"
+    ) as mock_setup_entry:
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA
@@ -359,6 +365,8 @@ async def test_ssdp(hass: HomeAssistant, fc_class_mock):
         assert result["data"][CONF_HOST] == "fake_host"
         assert result["data"][CONF_PASSWORD] == "fake_pass"
         assert result["data"][CONF_USERNAME] == "fake_user"
+
+    assert mock_setup_entry.called
 
 
 async def test_ssdp_exception(hass: HomeAssistant):
