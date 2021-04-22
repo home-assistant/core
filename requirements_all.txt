@@ -1506,7 +1506,7 @@ pylutron-caseta==0.7.2
 pylutron==0.2.5
 
 # homeassistant.components.daikin_madoka
-pymadoka==0.2.3
+pymadoka==0.2.4
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
