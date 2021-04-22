@@ -307,6 +307,7 @@ async def test_pymodbus_constructor_fail(hass, caplog):
         await hass.async_block_till_done()
         assert len(caplog.records) == 1
         assert caplog.records[0].levelname == "ERROR"
+        assert mock_pb.called
 
 
 async def test_pymodbus_connect_fail(hass, caplog):
