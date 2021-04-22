@@ -2,7 +2,7 @@
 from unittest.mock import AsyncMock, patch
 
 from pytest import fixture
-from surepy import SurePetcare
+from surepy import Surepy
 
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -10,12 +10,11 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 @fixture
 async def surepetcare(hass):
     """Mock the SurePetcare for easier testing."""
-    with patch("homeassistant.components.surepetcare.SurePetcare") as mock_surepetcare:
-        instance = mock_surepetcare.return_value = SurePetcare(
+    with patch("homeassistant.components.surepetcare.Surepy") as mock_surepetcare:
+        instance = mock_surepetcare.return_value = Surepy(
             "test-username",
             "test-password",
-            hass.loop,
-            async_get_clientsession(hass),
+            session=async_get_clientsession(hass),
             api_timeout=1,
         )
         instance._get_resource = AsyncMock(return_value=None)
