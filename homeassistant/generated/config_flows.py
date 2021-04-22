@@ -180,6 +180,7 @@ FLOWS = [
     "panasonic_viera",
     "philips_js",
     "pi_hole",
+    "picnic",
     "plaato",
     "plex",
     "plugwise",
