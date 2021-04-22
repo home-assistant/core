@@ -4,7 +4,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 import datetime
 import logging
-from typing import Dict, Tuple
 
 from nsw_fuel import FuelCheckClient, FuelCheckError, Station
 
