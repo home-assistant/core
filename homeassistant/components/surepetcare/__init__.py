@@ -152,7 +152,7 @@ class SurePetcareAPI:
         self, hass: HomeAssistant, surepy: Surepy, ids: list[dict[str, Any]]
     ) -> None:
         """Initialize the Sure Petcare object."""
-        self.hass: HomeAssistant = hass
+        self.hass = hass
         self.surepy = surepy
         self.ids = ids
         self._states = {}
