@@ -114,7 +114,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
     await data_handler.register_data_class(
         HOMEDATA_DATA_CLASS_NAME, HOMEDATA_DATA_CLASS_NAME, None
     )
-    home_data = data_handler.data.get(HOMEDATA_DATA_CLASS_NAME)
+    home_data = data_handler.data[HOMEDATA_DATA_CLASS_NAME]
+
+    if not home_data or home_data.raw_data == {}:
+        raise PlatformNotReady
 
     if HOMEDATA_DATA_CLASS_NAME not in data_handler.data:
         raise PlatformNotReady

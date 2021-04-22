@@ -34,8 +34,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
     await data_handler.register_data_class(
         CAMERA_DATA_CLASS_NAME, CAMERA_DATA_CLASS_NAME, None
     )
+    data_class = data_handler.data[CAMERA_DATA_CLASS_NAME]
 
-    if CAMERA_DATA_CLASS_NAME not in data_handler.data:
+    if not data_class or data_class.raw_data == {}:
         raise PlatformNotReady
 
     async def get_entities():

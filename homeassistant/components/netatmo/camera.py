@@ -45,7 +45,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
         _LOGGER.info(
             "Cameras are currently not supported with this authentication method"
         )
-        return
 
     data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
 
@@ -54,13 +53,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
     )
     data_class = data_handler.data[CAMERA_DATA_CLASS_NAME]
 
-    if data_class.raw_data == {}:
+    if not data_class or data_class.raw_data == {}:
         raise PlatformNotReady
 
     async def get_entities():
         """Retrieve Netatmo entities."""
         entities = []
-        _LOGGER.debug("looking for cameras ...")
         try:
             all_cameras = []
             for home in data_class.cameras.values():

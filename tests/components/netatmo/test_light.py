@@ -8,12 +8,17 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, CONF_WEBHOOK_ID
 
-from .common import FAKE_WEBHOOK_ACTIVATION, simulate_webhook
+from .common import FAKE_WEBHOOK_ACTIVATION, selected_platforms, simulate_webhook
 
 
-async def test_light_setup_and_services(hass, light_entry):
+async def test_light_setup_and_services(hass, config_entry):
     """Test setup and services."""
-    webhook_id = light_entry.data[CONF_WEBHOOK_ID]
+    with selected_platforms(["light"]):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
 
     # Fake webhook activation
     await simulate_webhook(hass, webhook_id, FAKE_WEBHOOK_ACTIVATION)
@@ -45,7 +50,7 @@ async def test_light_setup_and_services(hass, light_entry):
     assert hass.states.get(light_entity).state == "on"
 
     # Test turning light off
-    with patch("pyatmo.camera.CameraData.set_state") as mock_set_state:
+    with patch("pyatmo.camera.AsyncCameraData.async_set_state") as mock_set_state:
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_OFF,
@@ -60,7 +65,7 @@ async def test_light_setup_and_services(hass, light_entry):
         )
 
     # Test turning light on
-    with patch("pyatmo.camera.CameraData.set_state") as mock_set_state:
+    with patch("pyatmo.camera.AsyncCameraData.async_set_state") as mock_set_state:
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
