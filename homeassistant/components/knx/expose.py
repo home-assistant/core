@@ -13,7 +13,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, StateType
 
@@ -101,30 +101,27 @@ class KNXExposeSensor:
             self._remove_listener = None
         self.device.shutdown()
 
+    def _get_expose_value(self, state: State | None) -> StateType:
+        """Extract value from state."""
+        if state is None or state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+            return None
+        return (
+            state.state
+            if self.expose_attribute is None
+            else state.attributes.get(self.expose_attribute)
+        )
+
     async def _async_entity_changed(self, event: Event) -> None:
         """Handle entity change."""
         new_state = event.data.get("new_state")
-        if new_state is None:
+        new_value = self._get_expose_value(new_state)
+        if new_value is None:
             return
-        if new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
-            return
-
         old_state = event.data.get("old_state")
-
-        if self.expose_attribute is None:
-            if old_state is None or old_state.state != new_state.state:
-                # don't send same value sequentially
-                await self._async_set_knx_value(new_state.state)
-            return
-
-        new_attribute = new_state.attributes.get(self.expose_attribute)
-
-        if old_state is not None:
-            old_attribute = old_state.attributes.get(self.expose_attribute)
-            if old_attribute == new_attribute:
-                # don't send same value sequentially
-                return
-        await self._async_set_knx_value(new_attribute)
+        old_value = self._get_expose_value(old_state)
+        # don't send same value sequentially
+        if new_value != old_value:
+            await self._async_set_knx_value(new_value)
 
     async def _async_set_knx_value(self, value: StateType) -> None:
         """Set new value on xknx ExposeSensor."""
