@@ -251,6 +251,48 @@ async def test_refresh_node_info(
     assert args["command"] == "node.refresh_info"
     assert args["nodeId"] == 52
 
+    event = Event(
+        type="interview started",
+        data={"source": "node", "event": "interview started", "nodeId": 52},
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "interview started"
+
+    event = Event(
+        type="interview stage completed",
+        data={
+            "source": "node",
+            "event": "interview stage completed",
+            "stageName": "NodeInfo",
+            "nodeId": 52,
+        },
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "interview stage completed"
+    assert msg["event"]["stage"] == "NodeInfo"
+
+    event = Event(
+        type="interview completed",
+        data={"source": "node", "event": "interview completed", "nodeId": 52},
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "interview completed"
+
+    event = Event(
+        type="interview failed",
+        data={"source": "node", "event": "interview failed", "nodeId": 52},
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "interview failed"
+
     client.async_send_command_no_wait.reset_mock()
 
 
@@ -446,6 +488,48 @@ async def test_dump_view_invalid_entry_id(integration, hass_client):
     client = await hass_client()
     resp = await client.get("/api/zwave_js/dump/INVALID")
     assert resp.status == 400
+
+
+async def test_subscribe_logs(hass, integration, client, hass_ws_client):
+    """Test the subscribe_logs websocket command."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    client.async_send_command.return_value = {}
+
+    await ws_client.send_json(
+        {ID: 1, TYPE: "zwave_js/subscribe_logs", ENTRY_ID: entry.entry_id}
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    event = Event(
+        type="logging",
+        data={
+            "source": "driver",
+            "event": "logging",
+            "message": "test",
+            "formattedMessage": "test",
+            "direction": ">",
+            "level": "debug",
+            "primaryTags": "tag",
+            "secondaryTags": "tag2",
+            "secondaryTagPadding": 0,
+            "multiline": False,
+            "timestamp": "time",
+            "label": "label",
+        },
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"] == {
+        "message": ["test"],
+        "level": "debug",
+        "primary_tags": "tag",
+        "timestamp": "time",
+    }
 
 
 async def test_update_log_config(hass, client, integration, hass_ws_client):
