@@ -27,7 +27,7 @@ class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(device)
             self._abort_if_unique_id_configured()
             try:
-                api = PhoneModem(device)  # noqa pylint:disable=unused-variable
+                api = PhoneModem(device)  # noqa: F841 pylint:disable=unused-variable
 
             except (
                 FileNotFoundError,
@@ -64,7 +64,7 @@ class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Import a config entry from configuration.yaml."""
         if self._async_current_entries():
             _LOGGER.warning(
-                "Already configured. This yaml configuration has already been imported. Please remove it."
+                "Already configured. This yaml configuration has already been imported. Please remove it"
             )
             return self.async_abort(reason="already_configured")
 
