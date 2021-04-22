@@ -382,14 +382,14 @@ class HomeAssistant:
         self.loop.call_soon_threadsafe(self.async_create_task, target)
 
     @callback
-    def async_create_task(self, target: Awaitable) -> asyncio.tasks.Task:
+    def async_create_task(self, target: Awaitable) -> asyncio.Task:
         """Create a task from within the eventloop.
 
         This method must be run in the event loop.
 
         target: target to call.
         """
-        task: asyncio.tasks.Task = self.loop.create_task(target)
+        task: asyncio.Task = self.loop.create_task(target)
 
         if self._track_task:
             self._pending_tasks.append(task)
