@@ -23,6 +23,7 @@ netdisco==2.8.2
 paho-mqtt==1.5.1
 pillow==8.1.2
 pip>=8.0.3,<20.3
+pyroute2==0.5.18
 python-slugify==4.0.1
 pytz>=2021.1
 pyyaml==5.4.1
