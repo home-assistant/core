@@ -18,12 +18,12 @@ from homeassistant.const import (
     CONF_PAYLOAD_ON,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.event as evt
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from . import CONF_QOS, CONF_STATE_TOPIC, DOMAIN, PLATFORMS, subscription
@@ -59,7 +59,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend(
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
 ):
     """Set up MQTT binary sensor through configuration.yaml."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
