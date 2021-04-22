@@ -635,17 +635,16 @@ class LightEntity(ToggleEntity):
         """Return capability attributes."""
         data = {}
         supported_features = self.supported_features
+        supported_color_modes = self._light_internal_supported_color_modes
 
-        if supported_features & SUPPORT_COLOR_TEMP:
+        if COLOR_MODE_COLOR_TEMP in supported_color_modes:
             data[ATTR_MIN_MIREDS] = self.min_mireds
             data[ATTR_MAX_MIREDS] = self.max_mireds
 
         if supported_features & SUPPORT_EFFECT:
             data[ATTR_EFFECT_LIST] = self.effect_list
 
-        data[ATTR_SUPPORTED_COLOR_MODES] = sorted(
-            self._light_internal_supported_color_modes
-        )
+        data[ATTR_SUPPORTED_COLOR_MODES] = sorted(supported_color_modes)
 
         return data
 
