@@ -82,7 +82,7 @@ class SurePetcareBinarySensor(BinarySensorEntity):
         else:
             name = f"Unnamed {self._surepy_entity.type.name.capitalize()}"
 
-        self._name = f"{self._entity.type.name.capitalize()} {name.capitalize()}"
+        self._name = f"{self._surepy_entity.type.name.capitalize()} {name.capitalize()}"
 
         self._async_unsub_dispatcher_connect = None
 
