@@ -44,10 +44,10 @@ async def async_setup_platform(
         ]:
             entities.append(DeviceConnectivity(surepy_entity.id, surepy_entity.type, spc))
 
-        if entity.type == EntityType.PET:
-            entity = Pet(entity.id, spc)
-        elif entity.type == EntityType.HUB:
-            entity = Hub(entity.id, spc)
+        if surepy_entity.type == EntityType.PET:
+            entity = Pet(surepy_entity.id, spc)
+        elif surepy_entity.type == EntityType.HUB:
+            entity = Hub(surepy_entity.id, spc)
         else:
             continue
 
