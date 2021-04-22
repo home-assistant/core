@@ -291,7 +291,7 @@ async def async_setup(hass, config):
             profiles.apply_default(light.entity_id, params)
 
         supported_color_modes = light.supported_color_modes
-        # Backwards compatibility: if an RGBWW color is specified, convert to RGB + W
+        # Backwards compatibility: if an RGBW color is specified, convert to RGB + W
         # for legacy lights
         if ATTR_RGBW_COLOR in params:
             legacy_supported_color_modes = (
@@ -741,8 +741,6 @@ class LightEntity(ToggleEntity):
                 supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
             if supported_features & SUPPORT_COLOR:
                 supported_color_modes.add(COLOR_MODE_HS)
-            if supported_features & SUPPORT_WHITE_VALUE:
-                supported_color_modes.add(COLOR_MODE_RGBW)
             if supported_features & SUPPORT_BRIGHTNESS and not supported_color_modes:
                 supported_color_modes = {COLOR_MODE_BRIGHTNESS}
 
