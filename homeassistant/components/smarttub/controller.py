@@ -10,7 +10,7 @@ from smarttub import APIError, LoginFailed, SmartTub
 from smarttub.api import Account
 
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -52,10 +52,9 @@ class SmartTubController:
             self._account = await self.login(
                 entry.data[CONF_EMAIL], entry.data[CONF_PASSWORD]
             )
-        except LoginFailed:
+        except LoginFailed as ex:
             # credentials were changed or invalidated, we need new ones
-
-            return False
+            raise ConfigEntryAuthFailed from ex
         except (
             asyncio.TimeoutError,
             client_exceptions.ClientOSError,
