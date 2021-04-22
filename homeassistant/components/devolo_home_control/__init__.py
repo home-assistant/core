@@ -12,14 +12,20 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTAN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import CONF_MYDEVOLO, DOMAIN, GATEWAY_SERIAL_PATTERN, PLATFORMS
+from .const import (
+    CONF_MYDEVOLO,
+    DEFAULT_MYDEVOLO,
+    DOMAIN,
+    GATEWAY_SERIAL_PATTERN,
+    PLATFORMS,
+)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the devolo account from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    mydevolo = _mydevolo(entry.data)
+    mydevolo = configure_mydevolo(entry.data)
 
     credentials_valid = await hass.async_add_executor_job(mydevolo.credentials_valid)
 
@@ -92,10 +98,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload
 
 
-def _mydevolo(conf: dict) -> Mydevolo:
+def configure_mydevolo(conf: dict) -> Mydevolo:
     """Configure mydevolo."""
     mydevolo = Mydevolo()
     mydevolo.user = conf[CONF_USERNAME]
     mydevolo.password = conf[CONF_PASSWORD]
-    mydevolo.url = conf[CONF_MYDEVOLO]
+    mydevolo.url = conf.get(CONF_MYDEVOLO, DEFAULT_MYDEVOLO)
     return mydevolo
