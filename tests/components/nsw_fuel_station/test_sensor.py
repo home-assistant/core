@@ -4,6 +4,7 @@ from unittest.mock import patch
 from homeassistant.components import sensor
 from homeassistant.components.nsw_fuel_station import DOMAIN
 from homeassistant.setup import async_setup_component
+
 from tests.common import assert_setup_component
 
 VALID_CONFIG = {
