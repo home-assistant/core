@@ -49,6 +49,11 @@ ZEROCONF = {
             "domain": "daikin"
         }
     ],
+    "_dvl-deviceapi._tcp.local.": [
+        {
+            "domain": "devolo_home_control"
+        }
+    ],
     "_elg._tcp.local.": [
         {
             "domain": "elgato"
