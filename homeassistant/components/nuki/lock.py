@@ -145,7 +145,7 @@ class NukiOpenerEntity(NukiDeviceEntity):
 
     @property
     def is_locked(self):
-        """Return true if ring-to-open is enabled."""
+        """Return true if either ring-to-open or continuous mode is enabled."""
         return not (self._nuki_device.is_rto_activated or self._nuki_device.mode == MODE_OPENER_CONTINUOUS)
 
     def lock(self, **kwargs):
