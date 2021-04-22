@@ -80,7 +80,7 @@ class SurePetcareBinarySensor(BinarySensorEntity):
         if self._entity.name:
             name = self._entity.name
         else:
-            name = f"Unnamed {self._entity.type.name.capitalize()}"
+            name = f"Unnamed {self._surepy_entity.type.name.capitalize()}"
 
         self._name = f"{self._entity.type.name.capitalize()} {name.capitalize()}"
 
