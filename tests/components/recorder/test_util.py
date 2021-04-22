@@ -11,7 +11,6 @@ from homeassistant.components.recorder import run_information_with_session, util
 from homeassistant.components.recorder.const import DATA_INSTANCE, SQLITE_URL_PREFIX
 from homeassistant.components.recorder.models import RecorderRuns
 from homeassistant.components.recorder.util import end_incomplete_runs, session_scope
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.util import dt as dt_util
 
 from .common import corrupt_db_file
@@ -123,7 +122,7 @@ async def test_last_run_was_recently_clean(hass):
         is False
     )
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_add_executor_job(hass.data[DATA_INSTANCE]._end_session)
     await hass.async_block_till_done()
 
     assert (
