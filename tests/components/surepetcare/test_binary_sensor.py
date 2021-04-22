@@ -19,7 +19,7 @@ EXPECTED_ENTITY_IDS = {
 async def test_binary_sensors(hass, surepetcare) -> None:
     """Test the generation of unique ids."""
     instance = surepetcare.return_value
-    instance._resource[MESTART_RESOURCE] = {"data": MOCK_API_DATA}
+    instance.sac.resources[MESTART_RESOURCE] = {"data": MOCK_API_DATA}
 
     with _patch_sensor_setup():
         assert await async_setup_component(hass, DOMAIN, MOCK_CONFIG)
