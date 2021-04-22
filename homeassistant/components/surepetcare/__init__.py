@@ -64,7 +64,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the openSenseMap air quality platform."""
 
     conf = config[DOMAIN]
