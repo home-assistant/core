@@ -15,9 +15,8 @@ from homeassistant.const import (
     HTTP_BAD_REQUEST,
     HTTP_OK,
 )
-from homeassistant.core import Context
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers.json import JSONEncoder
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     ATTR_APP_DATA,
@@ -139,7 +138,7 @@ def safe_registration(registration: dict) -> dict:
     }
 
 
-def savable_state(hass: HomeAssistantType) -> dict:
+def savable_state(hass: HomeAssistant) -> dict:
     """Return a clean object containing things that should be saved."""
     return {
         DATA_DELETED_IDS: hass.data[DOMAIN][DATA_DELETED_IDS],

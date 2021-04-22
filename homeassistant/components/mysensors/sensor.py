@@ -25,8 +25,8 @@ from homeassistant.const import (
     VOLT,
     VOLUME_CUBIC_METERS,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import HomeAssistantType
 
 SENSORS = {
     "V_TEMP": [None, "mdi:thermometer"],
@@ -64,7 +64,7 @@ SENSORS = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable
 ):
     """Set up this platform for a specific ConfigEntry(==Gateway)."""
 

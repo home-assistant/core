@@ -15,7 +15,6 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.decorator import Registry
 
 from .const import (
@@ -37,7 +36,7 @@ SCHEMAS = Registry()
 
 
 async def on_unload(
-    hass: HomeAssistantType, entry: ConfigEntry | GatewayId, fnct: Callable
+    hass: HomeAssistant, entry: ConfigEntry | GatewayId, fnct: Callable
 ) -> None:
     """Register a callback to be called when entry is unloaded.
 
