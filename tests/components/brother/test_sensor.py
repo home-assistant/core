@@ -289,8 +289,12 @@ async def test_manual_update_entity(hass):
     """Test manual update entity via service homeasasistant/update_entity."""
     await init_integration(hass)
 
+    data = json.loads(load_fixture("brother_printer_data.json"))
+
     await async_setup_component(hass, "homeassistant", {})
-    with patch("homeassistant.components.brother.Brother.async_update") as mock_update:
+    with patch(
+        "homeassistant.components.brother.Brother.async_update", return_value=data
+    ) as mock_update:
         await hass.services.async_call(
             "homeassistant",
             "update_entity",
