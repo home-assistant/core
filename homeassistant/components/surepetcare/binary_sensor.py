@@ -109,7 +109,7 @@ class SurePetcareBinarySensor(BinarySensorEntity):
     @property
     def unique_id(self) -> str:
         """Return an unique ID."""
-        return f"{self._entity.household_id}-{self._id}"
+        return f"{self._surepy_entity.household_id}-{self._id}"
 
     async def async_update(self) -> None:
         """Get the latest data and update the state."""
