@@ -31,6 +31,27 @@ PROPERTIES = {
 HOMEKIT_STATUS_UNPAIRED = b"1"
 HOMEKIT_STATUS_PAIRED = b"0"
 
+_ROUTE_NO_LOOPBACK = (
+    {
+        "attrs": [
+            ("RTA_TABLE", 254),
+            ("RTA_DST", "224.0.0.251"),
+            ("RTA_OIF", 4),
+            ("RTA_PREFSRC", "192.168.1.5"),
+        ],
+    },
+)
+_ROUTE_LOOPBACK = (
+    {
+        "attrs": [
+            ("RTA_TABLE", 254),
+            ("RTA_DST", "224.0.0.251"),
+            ("RTA_OIF", 4),
+            ("RTA_PREFSRC", "127.0.0.1"),
+        ],
+    },
+)
+
 
 def service_update_mock(zeroconf, services, handlers, *, limit_service=None):
     """Call service update handler."""
@@ -611,3 +632,62 @@ async def test_removed_ignored(hass, mock_zeroconf):
     assert len(mock_zeroconf.get_service_info.mock_calls) == 2
     assert mock_zeroconf.get_service_info.mock_calls[0][1][0] == "_service.added"
     assert mock_zeroconf.get_service_info.mock_calls[1][1][0] == "_service.updated"
+
+
+async def test_async_detect_interfaces_setting_non_loopback_route(hass, mock_zeroconf):
+    """Test without default interface config and the route returns a non-loopback address."""
+    with patch.object(hass.config_entries.flow, "async_init"), patch.object(
+        zeroconf, "HaServiceBrowser", side_effect=service_update_mock
+    ), patch(
+        "homeassistant.components.zeroconf.IPRoute.route",
+        return_value=_ROUTE_NO_LOOPBACK,
+    ):
+        mock_zeroconf.get_service_info.side_effect = get_service_info_mock
+        assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    assert mock_zeroconf.called_with(interface_choice=InterfaceChoice.Default)
+
+
+async def test_async_detect_interfaces_setting_loopback_route(hass, mock_zeroconf):
+    """Test without default interface config and the route returns a loopback address."""
+    with patch.object(hass.config_entries.flow, "async_init"), patch.object(
+        zeroconf, "HaServiceBrowser", side_effect=service_update_mock
+    ), patch(
+        "homeassistant.components.zeroconf.IPRoute.route", return_value=_ROUTE_LOOPBACK
+    ):
+        mock_zeroconf.get_service_info.side_effect = get_service_info_mock
+        assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    assert mock_zeroconf.called_with(interface_choice=InterfaceChoice.All)
+
+
+async def test_async_detect_interfaces_setting_empty_route(hass, mock_zeroconf):
+    """Test without default interface config and the route returns nothing."""
+    with patch.object(hass.config_entries.flow, "async_init"), patch.object(
+        zeroconf, "HaServiceBrowser", side_effect=service_update_mock
+    ), patch("homeassistant.components.zeroconf.IPRoute.route", return_value=[]):
+        mock_zeroconf.get_service_info.side_effect = get_service_info_mock
+        assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    assert mock_zeroconf.called_with(interface_choice=InterfaceChoice.All)
+
+
+async def test_async_detect_interfaces_setting_exception(hass, mock_zeroconf):
+    """Test without default interface config and the route throws an exception."""
+    with patch.object(hass.config_entries.flow, "async_init"), patch.object(
+        zeroconf, "HaServiceBrowser", side_effect=service_update_mock
+    ), patch(
+        "homeassistant.components.zeroconf.IPRoute.route", side_effect=AttributeError
+    ):
+        mock_zeroconf.get_service_info.side_effect = get_service_info_mock
+        assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    assert mock_zeroconf.called_with(interface_choice=InterfaceChoice.All)
