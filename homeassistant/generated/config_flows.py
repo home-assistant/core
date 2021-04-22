@@ -262,6 +262,7 @@ FLOWS = [
     "vilfo",
     "vizio",
     "volumio",
+    "vulcan",
     "waze_travel_time",
     "wemo",
     "wiffi",
