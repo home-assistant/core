@@ -18,7 +18,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, Context, HassJob, HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
@@ -96,7 +95,7 @@ class PluggableAction:
 
         return _remove
 
-    async def async_run(self, hass: HomeAssistantType, context: Context | None = None):
+    async def async_run(self, hass: HomeAssistant, context: Context | None = None):
         """Run all turn on triggers."""
         for job, variables in self._actions.values():
             hass.async_run_hass_job(job, variables, context)

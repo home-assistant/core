@@ -6,8 +6,8 @@ from typing import Callable
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
 
 from . import NZBGetEntity
 from .const import DATA_COORDINATOR, DOMAIN
@@ -15,7 +15,7 @@ from .coordinator import NZBGetDataUpdateCoordinator
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
