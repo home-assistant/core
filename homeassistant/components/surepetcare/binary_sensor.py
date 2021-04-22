@@ -77,8 +77,8 @@ class SurePetcareBinarySensor(BinarySensorEntity):
         self._state: SureEnum | dict[str, Any] = None
 
         # cover special case where a device has no name set
-        if self._entity.name:
-            name = self._entity.name
+        if self._surepy_entity.name:
+            name = self._surepy_entity.name
         else:
             name = f"Unnamed {self._surepy_entity.type.name.capitalize()}"
 
