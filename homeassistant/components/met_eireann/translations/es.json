@@ -1,20 +1,17 @@
 {
     "config": {
-        "abort": {
-            "no_home": "No se han establecido las coordenadas de casa en la configuraci\u00f3n de Home Assistant"
-        },
         "error": {
             "already_configured": "El servicio ya est\u00e1 configurado"
         },
         "step": {
             "user": {
                 "data": {
-                    "elevation": "Altitud",
+                    "elevation": "Elevaci\u00f3n",
                     "latitude": "Latitud",
                     "longitude": "Longitud",
                     "name": "Nombre"
                 },
-                "description": "Instituto de meteorolog\u00eda",
+                "description": "Introduce tu ubicaci\u00f3n para utilizar los datos meteorol\u00f3gicos de la API p\u00fablica de previsi\u00f3n meteorol\u00f3gica de Met \u00c9ireann",
                 "title": "Ubicaci\u00f3n"
             }
         }

@@ -5,16 +5,17 @@
         },
         "error": {
             "cannot_connect": "No se pudo conectar",
-            "connection_exception": "No se pudo conectar",
-            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
-            "unauthenticated_exception": "Autenticaci\u00f3n no v\u00e1lida",
             "unknown": "Error inesperado"
         },
+        "flow_title": "SiteSage {name}",
         "step": {
+            "confirm": {
+                "description": "\u00bfQuieres configurar {name} ({host})?",
+                "title": "Configurar SiteSage Emonitor"
+            },
             "user": {
                 "data": {
-                    "password": "Contrase\u00f1a",
-                    "username": "Usuario"
+                    "host": "Host"
                 }
             }
         }

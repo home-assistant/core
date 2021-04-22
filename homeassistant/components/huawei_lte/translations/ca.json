@@ -34,7 +34,8 @@
                 "data": {
                     "name": "Nom del servei de notificacions (reinici necessari si canvia)",
                     "recipient": "Destinataris de notificacions SMS",
-                    "track_new_devices": "Segueix dispositius nous"
+                    "track_new_devices": "Segueix dispositius nous",
+                    "track_wired_clients": "Segueix els clients connectats a la xarxa per cable"
                 }
             }
         }

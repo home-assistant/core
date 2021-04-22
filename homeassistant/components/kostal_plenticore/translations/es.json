@@ -4,19 +4,18 @@
             "already_configured": "El dispositivo ya est\u00e1 configurado"
         },
         "error": {
-            "cannot_connect": "Fallo al conectar",
-            "invalid_auth": "Autenticaci\u00f3n inv\u00e1lida",
+            "cannot_connect": "No se pudo conectar",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "unknown": "Error inesperado"
         },
         "step": {
             "user": {
                 "data": {
                     "host": "Host",
-                    "password": "Contrase\u00f1a",
-                    "username": "Usuario"
-                },
-                "description": "\u00bfConfigurar la integraci\u00f3n VPN de Mullvad?"
+                    "password": "Contrase\u00f1a"
+                }
             }
         }
-    }
+    },
+    "title": "Inversor solar Kostal Plenticore"
 }

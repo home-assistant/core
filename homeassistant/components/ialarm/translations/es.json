@@ -4,18 +4,16 @@
             "already_configured": "El dispositivo ya est\u00e1 configurado"
         },
         "error": {
-            "cannot_connect": "Fallo al conectar",
-            "invalid_auth": "Autenticaci\u00f3n inv\u00e1lida",
+            "cannot_connect": "No se pudo conectar",
             "unknown": "Error inesperado"
         },
         "step": {
             "user": {
                 "data": {
                     "host": "Host",
-                    "password": "Contrase\u00f1a",
-                    "username": "Usuario"
-                },
-                "description": "\u00bfConfigurar la integraci\u00f3n VPN de Mullvad?"
+                    "pin": "C\u00f3digo PIN",
+                    "port": "Puerto"
+                }
             }
         }
     }
