@@ -119,7 +119,7 @@ class NeatoHub:
 
     def __init__(self, hass: HomeAssistant, neato: Account):
         """Initialize the Neato hub."""
-        self._hass: HomeAssistant = hass
+        self._hass = hass
         self.my_neato: Account = neato
 
     @Throttle(timedelta(minutes=1))
