@@ -170,7 +170,53 @@ async def test_sunrise_trigger_with_offset(hass, calls, legacy_patchable_time):
     assert len(calls) == 1
 
 
-async def test_if_action_before_sunrise_no_offset(hass, calls):
+def _find_run_id(traces, trace_type, item_id):
+    """Find newest run_id for a script or automation."""
+    for trace in reversed(traces):
+        if trace["domain"] == trace_type and trace["item_id"] == item_id:
+            return trace["run_id"]
+
+    return None
+
+
+async def assert_automation_condition_trace(hass_ws_client, automation_id, expected):
+    """Test the result of automation condition."""
+    id = 1
+
+    def next_id():
+        nonlocal id
+        id += 1
+        return id
+
+    client = await hass_ws_client()
+
+    # List traces
+    await client.send_json(
+        {"id": next_id(), "type": "trace/list", "domain": "automation"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    run_id = _find_run_id(response["result"], "automation", automation_id)
+
+    # Get trace
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "trace/get",
+            "domain": "automation",
+            "item_id": "sun",
+            "run_id": run_id,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    trace = response["result"]
+    assert len(trace["trace"]["condition/0"]) == 1
+    condition_trace = trace["trace"]["condition/0"][0]["result"]
+    assert condition_trace == expected
+
+
+async def test_if_action_before_sunrise_no_offset(hass, hass_ws_client, calls):
     """
     Test if action was before sunrise.
 
@@ -181,6 +227,7 @@ async def test_if_action_before_sunrise_no_offset(hass, calls):
         automation.DOMAIN,
         {
             automation.DOMAIN: {
+                "id": "sun",
                 "trigger": {"platform": "event", "event_type": "test_event"},
                 "condition": {"condition": "sun", "before": SUN_EVENT_SUNRISE},
                 "action": {"service": "test.automation"},
@@ -196,6 +243,11 @@ async def test_if_action_before_sunrise_no_offset(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 0
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": False, "wanted_time_before": "2015-09-16T13:33:18.342542+00:00"},
+    )
 
     # now = sunrise -> 'before sunrise' true
     now = datetime(2015, 9, 16, 13, 33, 18, tzinfo=dt_util.UTC)
@@ -203,6 +255,11 @@ async def test_if_action_before_sunrise_no_offset(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 1
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": True, "wanted_time_before": "2015-09-16T13:33:18.342542+00:00"},
+    )
 
     # now = local midnight -> 'before sunrise' true
     now = datetime(2015, 9, 16, 7, 0, 0, tzinfo=dt_util.UTC)
@@ -210,6 +267,11 @@ async def test_if_action_before_sunrise_no_offset(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 2
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": True, "wanted_time_before": "2015-09-16T13:33:18.342542+00:00"},
+    )
 
     # now = local midnight - 1s -> 'before sunrise' not true
     now = datetime(2015, 9, 17, 6, 59, 59, tzinfo=dt_util.UTC)
@@ -217,9 +279,14 @@ async def test_if_action_before_sunrise_no_offset(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 2
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": False, "wanted_time_before": "2015-09-16T13:33:18.342542+00:00"},
+    )
 
 
-async def test_if_action_after_sunrise_no_offset(hass, calls):
+async def test_if_action_after_sunrise_no_offset(hass, hass_ws_client, calls):
     """
     Test if action was after sunrise.
 
@@ -230,6 +297,7 @@ async def test_if_action_after_sunrise_no_offset(hass, calls):
         automation.DOMAIN,
         {
             automation.DOMAIN: {
+                "id": "sun",
                 "trigger": {"platform": "event", "event_type": "test_event"},
                 "condition": {"condition": "sun", "after": SUN_EVENT_SUNRISE},
                 "action": {"service": "test.automation"},
@@ -245,6 +313,11 @@ async def test_if_action_after_sunrise_no_offset(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 0
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": False, "wanted_time_after": "2015-09-16T13:33:18.342542+00:00"},
+    )
 
     # now = sunrise + 1s -> 'after sunrise' true
     now = datetime(2015, 9, 16, 13, 33, 19, tzinfo=dt_util.UTC)
@@ -252,6 +325,11 @@ async def test_if_action_after_sunrise_no_offset(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 1
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": True, "wanted_time_after": "2015-09-16T13:33:18.342542+00:00"},
+    )
 
     # now = local midnight -> 'after sunrise' not true
     now = datetime(2015, 9, 16, 7, 0, 0, tzinfo=dt_util.UTC)
@@ -259,6 +337,11 @@ async def test_if_action_after_sunrise_no_offset(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 1
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": False, "wanted_time_after": "2015-09-16T13:33:18.342542+00:00"},
+    )
 
     # now = local midnight - 1s -> 'after sunrise' true
     now = datetime(2015, 9, 17, 6, 59, 59, tzinfo=dt_util.UTC)
@@ -266,9 +349,14 @@ async def test_if_action_after_sunrise_no_offset(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 2
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": True, "wanted_time_after": "2015-09-16T13:33:18.342542+00:00"},
+    )
 
 
-async def test_if_action_before_sunrise_with_offset(hass, calls):
+async def test_if_action_before_sunrise_with_offset(hass, hass_ws_client, calls):
     """
     Test if action was before sunrise with offset.
 
@@ -279,6 +367,7 @@ async def test_if_action_before_sunrise_with_offset(hass, calls):
         automation.DOMAIN,
         {
             automation.DOMAIN: {
+                "id": "sun",
                 "trigger": {"platform": "event", "event_type": "test_event"},
                 "condition": {
                     "condition": "sun",
@@ -298,6 +387,11 @@ async def test_if_action_before_sunrise_with_offset(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 0
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": False, "wanted_time_before": "2015-09-16T14:33:18.342542+00:00"},
+    )
 
     # now = sunrise + 1h -> 'before sunrise' with offset +1h true
     now = datetime(2015, 9, 16, 14, 33, 18, tzinfo=dt_util.UTC)
@@ -305,6 +399,11 @@ async def test_if_action_before_sunrise_with_offset(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 1
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": True, "wanted_time_before": "2015-09-16T14:33:18.342542+00:00"},
+    )
 
     # now = UTC midnight -> 'before sunrise' with offset +1h not true
     now = datetime(2015, 9, 17, 0, 0, 0, tzinfo=dt_util.UTC)
@@ -312,6 +411,11 @@ async def test_if_action_before_sunrise_with_offset(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 1
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": False, "wanted_time_before": "2015-09-16T14:33:18.342542+00:00"},
+    )
 
     # now = UTC midnight - 1s -> 'before sunrise' with offset +1h not true
     now = datetime(2015, 9, 16, 23, 59, 59, tzinfo=dt_util.UTC)
@@ -319,6 +423,11 @@ async def test_if_action_before_sunrise_with_offset(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 1
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": False, "wanted_time_before": "2015-09-16T14:33:18.342542+00:00"},
+    )
 
     # now = local midnight -> 'before sunrise' with offset +1h true
     now = datetime(2015, 9, 16, 7, 0, 0, tzinfo=dt_util.UTC)
@@ -326,6 +435,11 @@ async def test_if_action_before_sunrise_with_offset(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 2
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": True, "wanted_time_before": "2015-09-16T14:33:18.342542+00:00"},
+    )
 
     # now = local midnight - 1s -> 'before sunrise' with offset +1h not true
     now = datetime(2015, 9, 17, 6, 59, 59, tzinfo=dt_util.UTC)
@@ -333,6 +447,11 @@ async def test_if_action_before_sunrise_with_offset(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 2
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": False, "wanted_time_before": "2015-09-16T14:33:18.342542+00:00"},
+    )
 
     # now = sunset -> 'before sunrise' with offset +1h not true
     now = datetime(2015, 9, 17, 1, 53, 45, tzinfo=dt_util.UTC)
@@ -340,6 +459,11 @@ async def test_if_action_before_sunrise_with_offset(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 2
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": False, "wanted_time_before": "2015-09-16T14:33:18.342542+00:00"},
+    )
 
     # now = sunset -1s -> 'before sunrise' with offset +1h not true
     now = datetime(2015, 9, 17, 1, 53, 44, tzinfo=dt_util.UTC)
@@ -347,9 +471,14 @@ async def test_if_action_before_sunrise_with_offset(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 2
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": False, "wanted_time_before": "2015-09-16T14:33:18.342542+00:00"},
+    )
 
 
-async def test_if_action_before_sunset_with_offset(hass, calls):
+async def test_if_action_before_sunset_with_offset(hass, hass_ws_client, calls):
     """
     Test if action was before sunset with offset.
 
@@ -360,6 +489,7 @@ async def test_if_action_before_sunset_with_offset(hass, calls):
         automation.DOMAIN,
         {
             automation.DOMAIN: {
+                "id": "sun",
                 "trigger": {"platform": "event", "event_type": "test_event"},
                 "condition": {
                     "condition": "sun",
@@ -379,6 +509,11 @@ async def test_if_action_before_sunset_with_offset(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 1
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": True, "wanted_time_before": "2015-09-17T02:53:44.723614+00:00"},
+    )
 
     # now = sunset + 1s + 1h -> 'before sunset' with offset +1h not true
     now = datetime(2015, 9, 17, 2, 53, 46, tzinfo=dt_util.UTC)
@@ -386,6 +521,11 @@ async def test_if_action_before_sunset_with_offset(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 1
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": False, "wanted_time_before": "2015-09-17T02:53:44.723614+00:00"},
+    )
 
     # now = sunset + 1h -> 'before sunset' with offset +1h true
     now = datetime(2015, 9, 17, 2, 53, 44, tzinfo=dt_util.UTC)
@@ -393,6 +533,11 @@ async def test_if_action_before_sunset_with_offset(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 2
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": True, "wanted_time_before": "2015-09-17T02:53:44.723614+00:00"},
+    )
 
     # now = UTC midnight -> 'before sunset' with offset +1h true
     now = datetime(2015, 9, 17, 0, 0, 0, tzinfo=dt_util.UTC)
@@ -400,6 +545,11 @@ async def test_if_action_before_sunset_with_offset(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 3
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": True, "wanted_time_before": "2015-09-17T02:53:44.723614+00:00"},
+    )
 
     # now = UTC midnight - 1s -> 'before sunset' with offset +1h true
     now = datetime(2015, 9, 16, 23, 59, 59, tzinfo=dt_util.UTC)
@@ -407,6 +557,11 @@ async def test_if_action_before_sunset_with_offset(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 4
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": True, "wanted_time_before": "2015-09-17T02:53:44.723614+00:00"},
+    )
 
     # now = sunrise -> 'before sunset' with offset +1h true
     now = datetime(2015, 9, 16, 13, 33, 18, tzinfo=dt_util.UTC)
@@ -414,6 +569,11 @@ async def test_if_action_before_sunset_with_offset(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 5
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": True, "wanted_time_before": "2015-09-17T02:53:44.723614+00:00"},
+    )
 
     # now = sunrise -1s -> 'before sunset' with offset +1h true
     now = datetime(2015, 9, 16, 13, 33, 17, tzinfo=dt_util.UTC)
@@ -421,6 +581,11 @@ async def test_if_action_before_sunset_with_offset(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 6
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": True, "wanted_time_before": "2015-09-17T02:53:44.723614+00:00"},
+    )
 
     # now = local midnight-1s -> 'after sunrise' with offset +1h not true
     now = datetime(2015, 9, 17, 6, 59, 59, tzinfo=dt_util.UTC)
@@ -428,9 +593,14 @@ async def test_if_action_before_sunset_with_offset(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 6
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": False, "wanted_time_before": "2015-09-17T02:53:44.723614+00:00"},
+    )
 
 
-async def test_if_action_after_sunrise_with_offset(hass, calls):
+async def test_if_action_after_sunrise_with_offset(hass, hass_ws_client, calls):
     """
     Test if action was after sunrise with offset.
 
@@ -441,6 +611,7 @@ async def test_if_action_after_sunrise_with_offset(hass, calls):
         automation.DOMAIN,
         {
             automation.DOMAIN: {
+                "id": "sun",
                 "trigger": {"platform": "event", "event_type": "test_event"},
                 "condition": {
                     "condition": "sun",
@@ -460,6 +631,11 @@ async def test_if_action_after_sunrise_with_offset(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 0
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": False, "wanted_time_after": "2015-09-16T14:33:18.342542+00:00"},
+    )
 
     # now = sunrise + 1h -> 'after sunrise' with offset +1h true
     now = datetime(2015, 9, 16, 14, 33, 58, tzinfo=dt_util.UTC)
@@ -467,6 +643,11 @@ async def test_if_action_after_sunrise_with_offset(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 1
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": True, "wanted_time_after": "2015-09-16T14:33:18.342542+00:00"},
+    )
 
     # now = UTC noon -> 'after sunrise' with offset +1h not true
     now = datetime(2015, 9, 16, 12, 0, 0, tzinfo=dt_util.UTC)
@@ -474,6 +655,11 @@ async def test_if_action_after_sunrise_with_offset(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 1
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": False, "wanted_time_after": "2015-09-16T14:33:18.342542+00:00"},
+    )
 
     # now = UTC noon - 1s -> 'after sunrise' with offset +1h not true
     now = datetime(2015, 9, 16, 11, 59, 59, tzinfo=dt_util.UTC)
@@ -481,6 +667,11 @@ async def test_if_action_after_sunrise_with_offset(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 1
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": False, "wanted_time_after": "2015-09-16T14:33:18.342542+00:00"},
+    )
 
     # now = local noon -> 'after sunrise' with offset +1h true
     now = datetime(2015, 9, 16, 19, 1, 0, tzinfo=dt_util.UTC)
@@ -488,6 +679,11 @@ async def test_if_action_after_sunrise_with_offset(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 2
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": True, "wanted_time_after": "2015-09-16T14:33:18.342542+00:00"},
+    )
 
     # now = local noon - 1s -> 'after sunrise' with offset +1h true
     now = datetime(2015, 9, 16, 18, 59, 59, tzinfo=dt_util.UTC)
@@ -495,6 +691,11 @@ async def test_if_action_after_sunrise_with_offset(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 3
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": True, "wanted_time_after": "2015-09-16T14:33:18.342542+00:00"},
+    )
 
     # now = sunset -> 'after sunrise' with offset +1h true
     now = datetime(2015, 9, 17, 1, 53, 45, tzinfo=dt_util.UTC)
@@ -502,6 +703,11 @@ async def test_if_action_after_sunrise_with_offset(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 4
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": True, "wanted_time_after": "2015-09-16T14:33:18.342542+00:00"},
+    )
 
     # now = sunset + 1s -> 'after sunrise' with offset +1h true
     now = datetime(2015, 9, 17, 1, 53, 45, tzinfo=dt_util.UTC)
@@ -509,6 +715,11 @@ async def test_if_action_after_sunrise_with_offset(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 5
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": True, "wanted_time_after": "2015-09-16T14:33:18.342542+00:00"},
+    )
 
     # now = local midnight-1s -> 'after sunrise' with offset +1h true
     now = datetime(2015, 9, 17, 6, 59, 59, tzinfo=dt_util.UTC)
@@ -516,6 +727,11 @@ async def test_if_action_after_sunrise_with_offset(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 6
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": True, "wanted_time_after": "2015-09-16T14:33:18.342542+00:00"},
+    )
 
     # now = local midnight -> 'after sunrise' with offset +1h not true
     now = datetime(2015, 9, 17, 7, 0, 0, tzinfo=dt_util.UTC)
@@ -523,9 +739,14 @@ async def test_if_action_after_sunrise_with_offset(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 6
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": False, "wanted_time_after": "2015-09-17T14:33:57.053037+00:00"},
+    )
 
 
-async def test_if_action_after_sunset_with_offset(hass, calls):
+async def test_if_action_after_sunset_with_offset(hass, hass_ws_client, calls):
     """
     Test if action was after sunset with offset.
 
@@ -536,6 +757,7 @@ async def test_if_action_after_sunset_with_offset(hass, calls):
         automation.DOMAIN,
         {
             automation.DOMAIN: {
+                "id": "sun",
                 "trigger": {"platform": "event", "event_type": "test_event"},
                 "condition": {
                     "condition": "sun",
@@ -555,6 +777,11 @@ async def test_if_action_after_sunset_with_offset(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 0
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": False, "wanted_time_after": "2015-09-17T02:53:44.723614+00:00"},
+    )
 
     # now = sunset + 1h -> 'after sunset' with offset +1h true
     now = datetime(2015, 9, 17, 2, 53, 45, tzinfo=dt_util.UTC)
@@ -562,6 +789,11 @@ async def test_if_action_after_sunset_with_offset(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 1
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": True, "wanted_time_after": "2015-09-17T02:53:44.723614+00:00"},
+    )
 
     # now = midnight-1s -> 'after sunset' with offset +1h true
     now = datetime(2015, 9, 16, 6, 59, 59, tzinfo=dt_util.UTC)
@@ -569,6 +801,11 @@ async def test_if_action_after_sunset_with_offset(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 2
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": True, "wanted_time_after": "2015-09-16T02:55:06.099767+00:00"},
+    )
 
     # now = midnight -> 'after sunset' with offset +1h not true
     now = datetime(2015, 9, 16, 7, 0, 0, tzinfo=dt_util.UTC)
@@ -576,9 +813,14 @@ async def test_if_action_after_sunset_with_offset(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 2
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": False, "wanted_time_after": "2015-09-17T02:53:44.723614+00:00"},
+    )
 
 
-async def test_if_action_before_and_after_during(hass, calls):
+async def test_if_action_before_and_after_during(hass, hass_ws_client, calls):
     """
     Test if action was after sunset and before sunrise.
 
@@ -589,6 +831,7 @@ async def test_if_action_before_and_after_during(hass, calls):
         automation.DOMAIN,
         {
             automation.DOMAIN: {
+                "id": "sun",
                 "trigger": {"platform": "event", "event_type": "test_event"},
                 "condition": {
                     "condition": "sun",
@@ -608,6 +851,15 @@ async def test_if_action_before_and_after_during(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 0
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {
+            "result": False,
+            "wanted_time_before": "2015-09-17T01:53:44.723614+00:00",
+            "wanted_time_after": "2015-09-16T13:33:18.342542+00:00",
+        },
+    )
 
     # now = sunset + 1s -> 'after sunrise' + 'before sunset' not true
     now = datetime(2015, 9, 17, 1, 53, 46, tzinfo=dt_util.UTC)
@@ -615,6 +867,11 @@ async def test_if_action_before_and_after_during(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 0
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": False, "wanted_time_before": "2015-09-17T01:53:44.723614+00:00"},
+    )
 
     # now = sunrise + 1s -> 'after sunrise' + 'before sunset' true
     now = datetime(2015, 9, 16, 13, 33, 19, tzinfo=dt_util.UTC)
@@ -622,6 +879,15 @@ async def test_if_action_before_and_after_during(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 1
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {
+            "result": True,
+            "wanted_time_before": "2015-09-17T01:53:44.723614+00:00",
+            "wanted_time_after": "2015-09-16T13:33:18.342542+00:00",
+        },
+    )
 
     # now = sunset - 1s -> 'after sunrise' + 'before sunset' true
     now = datetime(2015, 9, 17, 1, 53, 44, tzinfo=dt_util.UTC)
@@ -629,6 +895,15 @@ async def test_if_action_before_and_after_during(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 2
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {
+            "result": True,
+            "wanted_time_before": "2015-09-17T01:53:44.723614+00:00",
+            "wanted_time_after": "2015-09-16T13:33:18.342542+00:00",
+        },
+    )
 
     # now = 9AM local  -> 'after sunrise' + 'before sunset' true
     now = datetime(2015, 9, 16, 16, tzinfo=dt_util.UTC)
@@ -636,9 +911,18 @@ async def test_if_action_before_and_after_during(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 3
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {
+            "result": True,
+            "wanted_time_before": "2015-09-17T01:53:44.723614+00:00",
+            "wanted_time_after": "2015-09-16T13:33:18.342542+00:00",
+        },
+    )
 
 
-async def test_if_action_before_sunrise_no_offset_kotzebue(hass, calls):
+async def test_if_action_before_sunrise_no_offset_kotzebue(hass, hass_ws_client, calls):
     """
     Test if action was before sunrise.
 
@@ -656,6 +940,7 @@ async def test_if_action_before_sunrise_no_offset_kotzebue(hass, calls):
         automation.DOMAIN,
         {
             automation.DOMAIN: {
+                "id": "sun",
                 "trigger": {"platform": "event", "event_type": "test_event"},
                 "condition": {"condition": "sun", "before": SUN_EVENT_SUNRISE},
                 "action": {"service": "test.automation"},
@@ -671,6 +956,11 @@ async def test_if_action_before_sunrise_no_offset_kotzebue(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 0
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": False, "wanted_time_before": "2015-07-24T15:16:46.975735+00:00"},
+    )
 
     # now = sunrise - 1h -> 'before sunrise' true
     now = datetime(2015, 7, 24, 14, 21, 12, tzinfo=dt_util.UTC)
@@ -678,6 +968,11 @@ async def test_if_action_before_sunrise_no_offset_kotzebue(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 1
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": True, "wanted_time_before": "2015-07-24T15:16:46.975735+00:00"},
+    )
 
     # now = local midnight -> 'before sunrise' true
     now = datetime(2015, 7, 24, 8, 0, 0, tzinfo=dt_util.UTC)
@@ -685,6 +980,11 @@ async def test_if_action_before_sunrise_no_offset_kotzebue(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 2
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": True, "wanted_time_before": "2015-07-24T15:16:46.975735+00:00"},
+    )
 
     # now = local midnight - 1s -> 'before sunrise' not true
     now = datetime(2015, 7, 24, 7, 59, 59, tzinfo=dt_util.UTC)
@@ -692,9 +992,14 @@ async def test_if_action_before_sunrise_no_offset_kotzebue(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 2
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": False, "wanted_time_before": "2015-07-23T15:12:19.155123+00:00"},
+    )
 
 
-async def test_if_action_after_sunrise_no_offset_kotzebue(hass, calls):
+async def test_if_action_after_sunrise_no_offset_kotzebue(hass, hass_ws_client, calls):
     """
     Test if action was after sunrise.
 
@@ -712,6 +1017,7 @@ async def test_if_action_after_sunrise_no_offset_kotzebue(hass, calls):
         automation.DOMAIN,
         {
             automation.DOMAIN: {
+                "id": "sun",
                 "trigger": {"platform": "event", "event_type": "test_event"},
                 "condition": {"condition": "sun", "after": SUN_EVENT_SUNRISE},
                 "action": {"service": "test.automation"},
@@ -727,6 +1033,11 @@ async def test_if_action_after_sunrise_no_offset_kotzebue(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 1
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": True, "wanted_time_after": "2015-07-24T15:16:46.975735+00:00"},
+    )
 
     # now = sunrise - 1h -> 'after sunrise' not true
     now = datetime(2015, 7, 24, 14, 21, 12, tzinfo=dt_util.UTC)
@@ -734,6 +1045,11 @@ async def test_if_action_after_sunrise_no_offset_kotzebue(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 1
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": False, "wanted_time_after": "2015-07-24T15:16:46.975735+00:00"},
+    )
 
     # now = local midnight -> 'after sunrise' not true
     now = datetime(2015, 7, 24, 8, 0, 1, tzinfo=dt_util.UTC)
@@ -741,6 +1057,11 @@ async def test_if_action_after_sunrise_no_offset_kotzebue(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 1
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": False, "wanted_time_after": "2015-07-24T15:16:46.975735+00:00"},
+    )
 
     # now = local midnight - 1s -> 'after sunrise' true
     now = datetime(2015, 7, 24, 7, 59, 59, tzinfo=dt_util.UTC)
@@ -748,9 +1069,14 @@ async def test_if_action_after_sunrise_no_offset_kotzebue(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 2
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": True, "wanted_time_after": "2015-07-23T15:12:19.155123+00:00"},
+    )
 
 
-async def test_if_action_before_sunset_no_offset_kotzebue(hass, calls):
+async def test_if_action_before_sunset_no_offset_kotzebue(hass, hass_ws_client, calls):
     """
     Test if action was before sunrise.
 
@@ -768,6 +1094,7 @@ async def test_if_action_before_sunset_no_offset_kotzebue(hass, calls):
         automation.DOMAIN,
         {
             automation.DOMAIN: {
+                "id": "sun",
                 "trigger": {"platform": "event", "event_type": "test_event"},
                 "condition": {"condition": "sun", "before": SUN_EVENT_SUNSET},
                 "action": {"service": "test.automation"},
@@ -783,6 +1110,11 @@ async def test_if_action_before_sunset_no_offset_kotzebue(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 0
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": False, "wanted_time_before": "2015-07-25T11:13:32.501837+00:00"},
+    )
 
     # now = sunset - 1h-> 'before sunset' true
     now = datetime(2015, 7, 25, 10, 13, 33, tzinfo=dt_util.UTC)
@@ -790,6 +1122,11 @@ async def test_if_action_before_sunset_no_offset_kotzebue(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 1
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": True, "wanted_time_before": "2015-07-25T11:13:32.501837+00:00"},
+    )
 
     # now = local midnight -> 'before sunrise' true
     now = datetime(2015, 7, 24, 8, 0, 0, tzinfo=dt_util.UTC)
@@ -797,6 +1134,11 @@ async def test_if_action_before_sunset_no_offset_kotzebue(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 2
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": True, "wanted_time_before": "2015-07-24T11:17:54.446913+00:00"},
+    )
 
     # now = local midnight - 1s -> 'before sunrise' not true
     now = datetime(2015, 7, 24, 7, 59, 59, tzinfo=dt_util.UTC)
@@ -804,9 +1146,14 @@ async def test_if_action_before_sunset_no_offset_kotzebue(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 2
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": False, "wanted_time_before": "2015-07-23T11:22:18.467277+00:00"},
+    )
 
 
-async def test_if_action_after_sunset_no_offset_kotzebue(hass, calls):
+async def test_if_action_after_sunset_no_offset_kotzebue(hass, hass_ws_client, calls):
     """
     Test if action was after sunrise.
 
@@ -824,6 +1171,7 @@ async def test_if_action_after_sunset_no_offset_kotzebue(hass, calls):
         automation.DOMAIN,
         {
             automation.DOMAIN: {
+                "id": "sun",
                 "trigger": {"platform": "event", "event_type": "test_event"},
                 "condition": {"condition": "sun", "after": SUN_EVENT_SUNSET},
                 "action": {"service": "test.automation"},
@@ -839,6 +1187,11 @@ async def test_if_action_after_sunset_no_offset_kotzebue(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 1
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": True, "wanted_time_after": "2015-07-25T11:13:32.501837+00:00"},
+    )
 
     # now = sunset - 1s -> 'after sunset' not true
     now = datetime(2015, 7, 25, 11, 13, 32, tzinfo=dt_util.UTC)
@@ -846,6 +1199,11 @@ async def test_if_action_after_sunset_no_offset_kotzebue(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 1
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": False, "wanted_time_after": "2015-07-25T11:13:32.501837+00:00"},
+    )
 
     # now = local midnight -> 'after sunset' not true
     now = datetime(2015, 7, 24, 8, 0, 1, tzinfo=dt_util.UTC)
@@ -853,6 +1211,11 @@ async def test_if_action_after_sunset_no_offset_kotzebue(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 1
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": False, "wanted_time_after": "2015-07-24T11:17:54.446913+00:00"},
+    )
 
     # now = local midnight - 1s -> 'after sunset' true
     now = datetime(2015, 7, 24, 7, 59, 59, tzinfo=dt_util.UTC)
@@ -860,3 +1223,8 @@ async def test_if_action_after_sunset_no_offset_kotzebue(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 2
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": True, "wanted_time_after": "2015-07-23T11:22:18.467277+00:00"},
+    )
