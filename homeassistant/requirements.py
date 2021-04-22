@@ -65,6 +65,7 @@ async def async_get_integration_with_requirements(
 
     if isinstance(int_or_evt, asyncio.Event):
         await int_or_evt.wait()
+
         int_or_evt = cache.get(domain, UNDEFINED)
 
         # When we have waited and it's UNDEFINED, it doesn't exist
@@ -78,6 +79,22 @@ async def async_get_integration_with_requirements(
 
     event = cache[domain] = asyncio.Event()
 
+    try:
+        await _async_process_integration(hass, integration, done)
+    except Exception:  # pylint: disable=broad-except
+        del cache[domain]
+        event.set()
+        raise
+
+    cache[domain] = integration
+    event.set()
+    return integration
+
+
+async def _async_process_integration(
+    hass: HomeAssistant, integration: Integration, done: set[str]
+) -> None:
+    """Process an integration and requirements."""
     if integration.requirements:
         await async_process_requirements(
             hass, integration.domain, integration.requirements
@@ -97,27 +114,24 @@ async def async_get_integration_with_requirements(
         ):
             deps_to_check.append(check_domain)
 
-    if deps_to_check:
-        results = await asyncio.gather(
-            *[
-                async_get_integration_with_requirements(hass, dep, done)
-                for dep in deps_to_check
-            ],
-            return_exceptions=True,
-        )
-        for result in results:
-            if not isinstance(result, BaseException):
-                continue
-            if not isinstance(result, IntegrationNotFound) or not (
-                not integration.is_built_in
-                and result.domain in integration.after_dependencies
-            ):
-                event.set()
-                raise result
+    if not deps_to_check:
+        return
 
-    cache[domain] = integration
-    event.set()
-    return integration
+    results = await asyncio.gather(
+        *[
+            async_get_integration_with_requirements(hass, dep, done)
+            for dep in deps_to_check
+        ],
+        return_exceptions=True,
+    )
+    for result in results:
+        if not isinstance(result, BaseException):
+            continue
+        if not isinstance(result, IntegrationNotFound) or not (
+            not integration.is_built_in
+            and result.domain in integration.after_dependencies
+        ):
+            raise result
 
 
 async def async_process_requirements(
