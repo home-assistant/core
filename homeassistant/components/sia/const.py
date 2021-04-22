@@ -10,7 +10,7 @@ CONF_ZONES = "zones"
 CONF_IGNORE_TIMESTAMPS = "ignore_timestamps"
 
 DOMAIN = "sia"
-DATA_UPDATED = f"{DOMAIN}_data_updated"
+TITLE = "SIA Alarm on port {}"
 SIA_EVENT = "sia_event"
 HUB_SENSOR_NAME = "last_heartbeat"
 HUB_ZONE = 0

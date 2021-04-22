@@ -22,6 +22,7 @@ from .const import (
     CONF_PING_INTERVAL,
     CONF_ZONES,
     DOMAIN,
+    TITLE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -81,15 +82,12 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="user",
                 data_schema=ACCOUNT_SCHEMA,
-                errors={},
             )
 
     async def async_step_user(self, user_input: dict = None):
         """Handle the initial step."""
         if user_input is None:
-            return self.async_show_form(
-                step_id="user", data_schema=HUB_SCHEMA, errors={}
-            )
+            return self.async_show_form(step_id="user", data_schema=HUB_SCHEMA)
         errors = {}
         try:
             validate_input(user_input)
@@ -105,8 +103,8 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_ping"
         except InvalidZones:
             errors["base"] = "invalid_zones"
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
+        except Exception as exc:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception: %s", exc)
             errors["base"] = "unknown"
         if errors:
             return self.async_show_form(
@@ -119,7 +117,7 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input[CONF_ADDITIONAL_ACCOUNTS]:
             return await self.async_step_add_account()
         return self.async_create_entry(
-            title=f"SIA Alarm on port {self.data[CONF_PORT]}",
+            title=TITLE.format(self.data[CONF_PORT]),
             data=self.data,
         )
 

@@ -5,10 +5,7 @@ from typing import Callable
 
 from pysiaalarm import SIAEvent
 
-from homeassistant.components.alarm_control_panel import (
-    ENTITY_ID_FORMAT as ALARM_FORMAT,
-    AlarmControlPanelEntity,
-)
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_PORT,
@@ -21,7 +18,6 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -30,18 +26,11 @@ from .const import (
     CONF_ACCOUNTS,
     CONF_PING_INTERVAL,
     CONF_ZONES,
-    DATA_UPDATED,
     DOMAIN,
-    EVENT_ACCOUNT,
-    EVENT_CODE,
-    EVENT_ID,
-    EVENT_MESSAGE,
-    EVENT_TIMESTAMP,
-    EVENT_ZONE,
     PING_INTERVAL_MARGIN,
     SIA_EVENT,
 )
-from .utils import get_attr_from_sia_event, get_entity_and_name, get_ping_interval
+from .utils import get_attr_from_sia_event, get_id_and_name, get_ping_interval
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,7 +70,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             SIAAlarmControlPanel(
-                *get_entity_and_name(
+                *get_id_and_name(
                     entry.data[CONF_PORT], acc[CONF_ACCOUNT], zone, DEVICE_CLASS_ALARM
                 ),
                 entry.data[CONF_PORT],
@@ -101,7 +90,7 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
 
     def __init__(
         self,
-        entity_id: str,
+        unique_id: str,
         name: str,
         port: int,
         account: str,
@@ -109,8 +98,7 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
         ping_interval: int,
     ):
         """Create SIAAlarmControlPanel object."""
-        self.entity_id = ALARM_FORMAT.format(entity_id)
-        self._unique_id = entity_id
+        self._unique_id = unique_id
         self._name = name
         self._port = port
         self._account = account
@@ -128,12 +116,6 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
             CONF_ACCOUNT: self._account,
             CONF_PING_INTERVAL: self.ping_interval,
             CONF_ZONE: self._zone,
-            EVENT_ACCOUNT: None,
-            EVENT_CODE: None,
-            EVENT_ID: None,
-            EVENT_ZONE: None,
-            EVENT_MESSAGE: None,
-            EVENT_TIMESTAMP: None,
         }
 
     async def async_added_to_hass(self):
@@ -161,7 +143,7 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
             self.state = state.state
         else:
             self.state = None
-        async_dispatcher_connect(self.hass, DATA_UPDATED, self.async_write_ha_state)
+        self.async_write_ha_state()
         self.setup_sia_alarm()
 
     def setup_sia_alarm(self):
