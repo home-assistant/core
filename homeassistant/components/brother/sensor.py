@@ -4,27 +4,13 @@ from homeassistant.const import DEVICE_CLASS_TIMESTAMP
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
-    ATTR_BLACK_DRUM_COUNTER,
-    ATTR_BLACK_DRUM_REMAINING_LIFE,
-    ATTR_BLACK_DRUM_REMAINING_PAGES,
-    ATTR_CYAN_DRUM_COUNTER,
-    ATTR_CYAN_DRUM_REMAINING_LIFE,
-    ATTR_CYAN_DRUM_REMAINING_PAGES,
-    ATTR_DRUM_COUNTER,
-    ATTR_DRUM_REMAINING_LIFE,
-    ATTR_DRUM_REMAINING_PAGES,
     ATTR_ENABLED,
     ATTR_ICON,
     ATTR_LABEL,
-    ATTR_MAGENTA_DRUM_COUNTER,
-    ATTR_MAGENTA_DRUM_REMAINING_LIFE,
-    ATTR_MAGENTA_DRUM_REMAINING_PAGES,
     ATTR_MANUFACTURER,
     ATTR_UNIT,
     ATTR_UPTIME,
-    ATTR_YELLOW_DRUM_COUNTER,
-    ATTR_YELLOW_DRUM_REMAINING_LIFE,
-    ATTR_YELLOW_DRUM_REMAINING_PAGES,
+    ATTRS_MAP,
     DATA_CONFIG_ENTRY,
     DOMAIN,
     SENSOR_TYPES,
@@ -88,23 +74,7 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
-        remaining_pages = None
-        drum_counter = None
-        if self.kind == ATTR_DRUM_REMAINING_LIFE:
-            remaining_pages = ATTR_DRUM_REMAINING_PAGES
-            drum_counter = ATTR_DRUM_COUNTER
-        elif self.kind == ATTR_BLACK_DRUM_REMAINING_LIFE:
-            remaining_pages = ATTR_BLACK_DRUM_REMAINING_PAGES
-            drum_counter = ATTR_BLACK_DRUM_COUNTER
-        elif self.kind == ATTR_CYAN_DRUM_REMAINING_LIFE:
-            remaining_pages = ATTR_CYAN_DRUM_REMAINING_PAGES
-            drum_counter = ATTR_CYAN_DRUM_COUNTER
-        elif self.kind == ATTR_MAGENTA_DRUM_REMAINING_LIFE:
-            remaining_pages = ATTR_MAGENTA_DRUM_REMAINING_PAGES
-            drum_counter = ATTR_MAGENTA_DRUM_COUNTER
-        elif self.kind == ATTR_YELLOW_DRUM_REMAINING_LIFE:
-            remaining_pages = ATTR_YELLOW_DRUM_REMAINING_PAGES
-            drum_counter = ATTR_YELLOW_DRUM_COUNTER
+        remaining_pages, drum_counter = ATTRS_MAP.get(self.kind, (None, None))
         if remaining_pages and drum_counter:
             self._attrs[ATTR_REMAINING_PAGES] = getattr(
                 self.coordinator.data, remaining_pages
