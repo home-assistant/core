@@ -132,9 +132,9 @@ class KNXExposeSensor:
             value = self.expose_default
 
         if self.type == "binary":
-            if value == STATE_ON:
+            if value in (1, STATE_ON, "True"):
                 value = True
-            elif value == STATE_OFF:
+            elif value in (0, STATE_OFF, "False"):
                 value = False
 
         await self.device.set(value)
