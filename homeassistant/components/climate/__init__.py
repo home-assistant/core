@@ -473,6 +473,14 @@ class ClimateEntity(Entity):
         """Set new target swing operation."""
         await self.hass.async_add_executor_job(self.set_swing_mode, swing_mode)
 
+    def set_swingh_mode(self, swingh_mode: str) -> None:
+        """Set new target horizontal swing operation."""
+        raise NotImplementedError()
+
+    async def async_set_swingh_mode(self, swingh_mode: str) -> None:
+        """Set new target horizontal swing operation."""
+        await self.hass.async_add_executor_job(self.set_swingh_mode, swingh_mode)
+
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         raise NotImplementedError()
