@@ -1,4 +1,6 @@
 """Demo light platform that implements lights."""
+from __future__ import annotations
+
 import random
 
 from homeassistant.components.light import (
@@ -6,7 +8,13 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
+    ATTR_RGBW_COLOR,
+    ATTR_RGBWW_COLOR,
     ATTR_WHITE_VALUE,
+    COLOR_MODE_COLOR_TEMP,
+    COLOR_MODE_HS,
+    COLOR_MODE_RGBW,
+    COLOR_MODE_RGBWW,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
@@ -23,7 +31,7 @@ LIGHT_EFFECT_LIST = ["rainbow", "none"]
 
 LIGHT_TEMPS = [240, 380]
 
-SUPPORT_DEMO = (
+SUPPORT_DEMO_LEGACY = (
     SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_COLOR | SUPPORT_WHITE_VALUE
 )
 
@@ -33,27 +41,52 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(
         [
             DemoLight(
-                unique_id="light_1",
-                name="Bed Light",
-                state=False,
                 available=True,
                 effect_list=LIGHT_EFFECT_LIST,
                 effect=LIGHT_EFFECT_LIST[0],
+                name="Bed Light Legacy",
+                state=False,
+                unique_id="light_1",
             ),
             DemoLight(
-                unique_id="light_2",
-                name="Ceiling Lights",
-                state=True,
                 available=True,
                 ct=LIGHT_TEMPS[1],
+                name="Ceiling Lights Legacy",
+                state=True,
+                unique_id="light_2",
             ),
             DemoLight(
-                unique_id="light_3",
-                name="Kitchen Lights",
-                state=True,
                 available=True,
-                hs_color=LIGHT_COLORS[1],
                 ct=LIGHT_TEMPS[0],
+                hs_color=LIGHT_COLORS[1],
+                name="Kitchen Lights Legacy",
+                state=True,
+                unique_id="light_3",
+            ),
+            DemoLight(
+                available=True,
+                effect_list=LIGHT_EFFECT_LIST,
+                effect=LIGHT_EFFECT_LIST[0],
+                name="Bed Light",
+                state=False,
+                supported_color_modes={COLOR_MODE_HS, COLOR_MODE_COLOR_TEMP},
+                unique_id="light_4",
+            ),
+            DemoLight(
+                available=True,
+                name="Ceiling Lights",
+                rgbw_color=(255, 0, 0, 255),
+                state=True,
+                supported_color_modes={COLOR_MODE_RGBW},
+                unique_id="light_5",
+            ),
+            DemoLight(
+                available=True,
+                name="Kitchen Lights",
+                rgbww_color=(255, 0, 0, 255, 0),
+                state=True,
+                supported_color_modes={COLOR_MODE_RGBWW},
+                unique_id="light_6",
             ),
         ]
     )
@@ -73,26 +106,39 @@ class DemoLight(LightEntity):
         name,
         state,
         available=False,
-        hs_color=None,
-        ct=None,
         brightness=180,
-        white=200,
+        ct=None,
         effect_list=None,
         effect=None,
+        hs_color=None,
+        rgbw_color=None,
+        rgbww_color=None,
+        supported_color_modes=None,
+        white=200,
     ):
         """Initialize the light."""
-        self._unique_id = unique_id
+        self._available = True
+        self._brightness = brightness
+        self._ct = ct or random.choice(LIGHT_TEMPS)
+        self._effect = effect
+        self._effect_list = effect_list
+        self._features = 0
+        self._hs_color = hs_color
         self._name = name
         self._state = state
-        self._hs_color = hs_color
-        self._ct = ct or random.choice(LIGHT_TEMPS)
-        self._brightness = brightness
+        self._unique_id = unique_id
         self._white = white
-        self._features = SUPPORT_DEMO
-        self._effect_list = effect_list
-        self._effect = effect
-        self._available = True
-        self._color_mode = "ct" if ct is not None and hs_color is None else "hs"
+        if hs_color:
+            self._color_mode = COLOR_MODE_HS
+        elif rgbw_color:
+            self._color_mode = COLOR_MODE_RGBW
+        elif rgbww_color:
+            self._color_mode = COLOR_MODE_RGBWW
+        else:
+            self._color_mode = COLOR_MODE_COLOR_TEMP
+        self._color_modes = supported_color_modes
+        if not supported_color_modes:
+            self._features |= SUPPORT_DEMO_LEGACY
         if self._effect_list is not None:
             self._features |= SUPPORT_EFFECT
 
@@ -135,6 +181,11 @@ class DemoLight(LightEntity):
         return self._brightness
 
     @property
+    def color_mode(self) -> str | None:
+        """Return the color mode of the light."""
+        return self._color_mode
+
+    @property
     def hs_color(self) -> tuple:
         """Return the hs color value."""
         if self._color_mode == "hs":
@@ -173,16 +224,37 @@ class DemoLight(LightEntity):
         """Flag supported features."""
         return self._features
 
+    @property
+    def supported_color_modes(self) -> set | None:
+        """Flag supported color modes."""
+        return self._color_modes
+
+    def _clear_colors(self) -> None:
+        """Clear color data."""
+        self._color_temp = None
+        self._hs_color = None
+        self._rgbw_color = None
+        self._rgbww_color = None
+
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the light on."""
         self._state = True
 
+        if ATTR_RGBW_COLOR in kwargs:
+            self._clear_colors()
+            self._color_mode = COLOR_MODE_RGBW
+            self._rgbw_color = kwargs[ATTR_RGBW_COLOR]
+
+        if ATTR_RGBWW_COLOR in kwargs:
+            self._color_mode = COLOR_MODE_RGBWW
+            self._rgbww_color = kwargs[ATTR_RGBWW_COLOR]
+
         if ATTR_HS_COLOR in kwargs:
-            self._color_mode = "hs"
+            self._color_mode = COLOR_MODE_HS
             self._hs_color = kwargs[ATTR_HS_COLOR]
 
         if ATTR_COLOR_TEMP in kwargs:
-            self._color_mode = "ct"
+            self._color_mode = COLOR_MODE_COLOR_TEMP
             self._ct = kwargs[ATTR_COLOR_TEMP]
 
         if ATTR_BRIGHTNESS in kwargs:
