@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     CONTENT_TYPE_JSON,
 )
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -176,7 +176,7 @@ def mock_connection_server_error(
 
 
 async def setup_integration(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     host: str = HOST,
     port: str = PORT,

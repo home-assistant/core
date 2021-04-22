@@ -10,8 +10,8 @@ from sonarr import Sonarr, SonarrConnectionError, SonarrError
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DATA_GIGABYTES
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.dt as dt_util
 
 from . import SonarrEntity
@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:

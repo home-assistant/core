@@ -15,9 +15,9 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_BASE_PATH,
@@ -35,7 +35,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_input(hass: HomeAssistantType, data: dict) -> dict[str, Any]:
+async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.

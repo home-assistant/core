@@ -8,16 +8,16 @@ from pysyncthru import SyncThru
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry as dr
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up config entry."""
 
     session = aiohttp_client.async_get_clientsession(hass)
@@ -53,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload the config entry."""
     await hass.config_entries.async_forward_entry_unload(entry, SENSOR_DOMAIN)
     hass.data[DOMAIN].pop(entry.entry_id, None)

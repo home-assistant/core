@@ -10,12 +10,12 @@ from homeassistant.components.sonarr.const import (
 )
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_SOURCE, CONF_VERIFY_SSL
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
     RESULT_TYPE_CREATE_ENTRY,
     RESULT_TYPE_FORM,
 )
-from homeassistant.helpers.typing import HomeAssistantType
 
 from tests.components.sonarr import (
     HOST,
@@ -30,7 +30,7 @@ from tests.components.sonarr import (
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_show_user_form(hass: HomeAssistantType) -> None:
+async def test_show_user_form(hass: HomeAssistant) -> None:
     """Test that the user set up form is served."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -42,7 +42,7 @@ async def test_show_user_form(hass: HomeAssistantType) -> None:
 
 
 async def test_cannot_connect(
-    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we show user form on connection error."""
     mock_connection_error(aioclient_mock)
@@ -60,7 +60,7 @@ async def test_cannot_connect(
 
 
 async def test_invalid_auth(
-    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we show user form on invalid auth."""
     mock_connection_invalid_auth(aioclient_mock)
@@ -78,7 +78,7 @@ async def test_invalid_auth(
 
 
 async def test_unknown_error(
-    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we show user form on unknown error."""
     user_input = MOCK_USER_INPUT.copy()
@@ -97,7 +97,7 @@ async def test_unknown_error(
 
 
 async def test_full_reauth_flow_implementation(
-    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the manual reauth flow from start to finish."""
     entry = await setup_integration(
@@ -137,7 +137,7 @@ async def test_full_reauth_flow_implementation(
 
 
 async def test_full_user_flow_implementation(
-    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the full manual user flow from start to finish."""
     mock_connection(aioclient_mock)
@@ -166,7 +166,7 @@ async def test_full_user_flow_implementation(
 
 
 async def test_full_user_flow_advanced_options(
-    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the full manual user flow with advanced options."""
     mock_connection(aioclient_mock)

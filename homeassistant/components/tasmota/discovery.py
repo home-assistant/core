@@ -12,9 +12,9 @@ from hatasmota.discovery import (
 )
 
 import homeassistant.components.sensor as sensor
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import async_entries_for_device
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN, PLATFORMS
 
@@ -40,7 +40,7 @@ def set_discovery_hash(hass, discovery_hash):
 
 
 async def async_start(
-    hass: HomeAssistantType, discovery_topic, config_entry, tasmota_mqtt, setup_device
+    hass: HomeAssistant, discovery_topic, config_entry, tasmota_mqtt, setup_device
 ) -> bool:
     """Start Tasmota device discovery."""
 
@@ -168,7 +168,7 @@ async def async_start(
     hass.data[TASMOTA_DISCOVERY_INSTANCE] = tasmota_discovery
 
 
-async def async_stop(hass: HomeAssistantType) -> bool:
+async def async_stop(hass: HomeAssistant) -> bool:
     """Stop Tasmota device discovery."""
     hass.data.pop(ALREADY_DISCOVERED)
     tasmota_discovery = hass.data.pop(TASMOTA_DISCOVERY_INSTANCE)

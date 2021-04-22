@@ -16,9 +16,10 @@ from aioswitcher.devices import SwitcherV2Device
 import voluptuous as vol
 
 from homeassistant.components.switch import ATTR_CURRENT_POWER_W, SwitchEntity
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import HomeAssistantType, ServiceCallType
+from homeassistant.helpers.typing import ServiceCallType
 
 from . import (
     ATTR_AUTO_OFF_SET,
@@ -53,7 +54,7 @@ SERVICE_TURN_ON_WITH_TIMER_SCHEMA = {
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config: dict,
     async_add_entities: Callable,
     discovery_info: dict,

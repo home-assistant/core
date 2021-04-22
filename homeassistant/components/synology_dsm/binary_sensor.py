@@ -4,7 +4,7 @@ from __future__ import annotations
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DISKS
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from . import SynologyDSMBaseEntity, SynologyDSMDeviceEntity
 from .const import (
@@ -18,7 +18,7 @@ from .const import (
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the Synology NAS binary sensor."""
 
