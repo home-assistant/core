@@ -5,6 +5,7 @@ import sqlite3
 from unittest.mock import MagicMock, patch
 
 import pytest
+from sqlalchemy import text
 
 from homeassistant.components.recorder import run_information_with_session, util
 from homeassistant.components.recorder.const import DATA_INSTANCE, SQLITE_URL_PREFIX
@@ -55,7 +56,7 @@ def test_recorder_bad_commit(hass_recorder):
 
     def work(session):
         """Bad work."""
-        session.execute("select * from notthere")
+        session.execute(text("select * from notthere"))
 
     with patch(
         "homeassistant.components.recorder.time.sleep"
