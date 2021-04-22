@@ -142,6 +142,19 @@ set_swing_mode:
       selector:
         text:
 
+set_swingh_mode:
+  name: Set horizontal swing mode
+  description: Set horizontal swing operation for climate device.
+  target:
+  fields:
+    swingh_mode:
+      name: Horizontal swing mode
+      description: New value of horizontal swing mode.
+      required: true
+      example: "auto"
+      selector:
+        text:
+
 turn_on:
   name: Turn on
   description: Turn climate device on.

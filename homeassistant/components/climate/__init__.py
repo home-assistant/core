@@ -50,6 +50,8 @@ from .const import (
     ATTR_PRESET_MODES,
     ATTR_SWING_MODE,
     ATTR_SWING_MODES,
+    ATTR_SWINGH_MODE,
+    ATTR_SWINGH_MODES,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     ATTR_TARGET_TEMP_STEP,
@@ -65,11 +67,13 @@ from .const import (
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_SWING_MODE,
+    SERVICE_SET_SWINGH_MODE,
     SERVICE_SET_TEMPERATURE,
     SUPPORT_AUX_HEAT,
     SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
     SUPPORT_SWING_MODE,
+    SUPPORT_SWINGH_MODE,
     SUPPORT_TARGET_HUMIDITY,
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
@@ -153,6 +157,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "async_set_swing_mode",
         [SUPPORT_SWING_MODE],
     )
+    component.async_register_entity_service(
+        SERVICE_SET_SWINGH_MODE,
+        {vol.Required(ATTR_SWINGH_MODE): cv.string},
+        "async_set_swingh_mode",
+        [SUPPORT_SWINGH_MODE],
+    )
 
     return True
 
@@ -212,6 +222,9 @@ class ClimateEntity(Entity):
         if supported_features & SUPPORT_SWING_MODE:
             data[ATTR_SWING_MODES] = self.swing_modes
 
+        if supported_features & SUPPORT_SWINGH_MODE:
+            data[ATTR_SWINGH_MODES] = self.swingh_modes
+
         return data
 
     @final
@@ -267,6 +280,9 @@ class ClimateEntity(Entity):
 
         if supported_features & SUPPORT_SWING_MODE:
             data[ATTR_SWING_MODE] = self.swing_mode
+
+        if supported_features & SUPPORT_SWINGH_MODE:
+            data[ATTR_SWINGH_MODE] = self.swingh_mode
 
         if supported_features & SUPPORT_AUX_HEAT:
             data[ATTR_AUX_HEAT] = STATE_ON if self.is_aux_heat else STATE_OFF
@@ -396,6 +412,22 @@ class ClimateEntity(Entity):
         """Return the list of available swing modes.
 
         Requires SUPPORT_SWING_MODE.
+        """
+        raise NotImplementedError
+
+    @property
+    def swingh_mode(self) -> str | None:
+        """Return the horizontal swing setting.
+
+        Requires SUPPORT_SWINGH_MODE.
+        """
+        raise NotImplementedError
+
+    @property
+    def swingh_modes(self) -> list[str] | None:
+        """Return the list of available horizontal swing modes.
+
+        Requires SUPPORT_SWINGH_MODE.
         """
         raise NotImplementedError
 

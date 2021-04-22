@@ -14,6 +14,7 @@ from .const import (
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
     ATTR_SWING_MODE,
+    ATTR_SWINGH_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     DOMAIN,
@@ -23,6 +24,7 @@ from .const import (
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_SWING_MODE,
+    SERVICE_SET_SWINGH_MODE,
     SERVICE_SET_TEMPERATURE,
 )
 
@@ -69,6 +71,9 @@ async def _async_reproduce_states(
 
     if ATTR_SWING_MODE in state.attributes:
         await call_service(SERVICE_SET_SWING_MODE, [ATTR_SWING_MODE])
+
+    if ATTR_SWINGH_MODE in state.attributes:
+        await call_service(SERVICE_SET_SWINGH_MODE, [ATTR_SWINGH_MODE])
 
     if ATTR_HUMIDITY in state.attributes:
         await call_service(SERVICE_SET_HUMIDITY, [ATTR_HUMIDITY])
