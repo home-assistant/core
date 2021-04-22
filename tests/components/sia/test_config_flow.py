@@ -65,12 +65,12 @@ async def test_form_additional_account(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {}
+    assert result["errors"] is None
     config = BASIC_CONFIG.copy()
     config["additional_account"] = True
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result2["errors"] == {}
+    assert result2["errors"] is None
 
     with patch(
         "homeassistant.components.sia.async_setup_entry", return_value=True
@@ -159,7 +159,7 @@ async def test_form_errors(hass, additional, field, value, error):
             result["flow_id"], add_config
         )
         assert result_add["type"] == "form"
-        assert result_add["errors"] == {}
+        assert result_add["errors"] is None
 
         config = ADDITIONAL_ACCOUNT.copy()
         config[field] = value
@@ -187,7 +187,7 @@ async def test_form_start(hass, additional):
     if not additional:
         assert result
         assert result["step_id"] == "user"
-        assert result["errors"] == {}
+        assert result["errors"] is None
         assert result["data_schema"] == HUB_SCHEMA
     else:
         add_config = BASIC_CONFIG.copy()
@@ -197,7 +197,7 @@ async def test_form_start(hass, additional):
         )
         assert result_add
         assert result_add["step_id"] == "user"
-        assert result_add["errors"] == {}
+        assert result_add["errors"] is None
         assert result_add["data_schema"] == ACCOUNT_SCHEMA
 
 
