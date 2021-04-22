@@ -49,8 +49,6 @@ def fetch_station_price_data(client: FuelCheckClient) -> StationPriceData | None
         raw_price_data = client.get_fuel_prices()
         # Restructure prices and station details to be indexed by station code
         # for O(1) lookup
-        print(raw_price_data.stations[0], type(raw_price_data.stations[0].code))
-
         return StationPriceData(
             stations={s.code: s for s in raw_price_data.stations},
             prices={

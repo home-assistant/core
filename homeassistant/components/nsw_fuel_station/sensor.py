@@ -56,11 +56,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     station_id = config[CONF_STATION_ID]
     fuel_types = config[CONF_FUEL_TYPES]
 
-    fuel_check_data = hass.data[DATA_NSW_FUEL_STATION]
+    coordinator = hass.data[DATA_NSW_FUEL_STATION]
 
     add_entities(
         [
-            StationPriceSensor(fuel_check_data, station_id, fuel_type)
+            StationPriceSensor(coordinator, station_id, fuel_type)
             for fuel_type in fuel_types
         ]
     )
