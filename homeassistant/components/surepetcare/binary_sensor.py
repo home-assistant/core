@@ -42,7 +42,7 @@ async def async_setup_platform(
             EntityType.FEEDER,
             EntityType.FELAQUA,
         ]:
-            entities.append(DeviceConnectivity(entity.id, entity.type, spc))
+            entities.append(DeviceConnectivity(surepy_entity.id, surepy_entity.type, spc))
 
         if entity.type == EntityType.PET:
             entity = Pet(entity.id, spc)
