@@ -73,7 +73,7 @@ class SurePetcareBinarySensor(BinarySensorEntity):
 
         self._spapi: SurePetcareAPI = spc
 
-        self._entity: SurepyEntity = self._spapi._states.get(self._id, {})
+        self._surepy_entity: SurepyEntity = self._spc.states[self._id]
         self._state: SureEnum | dict[str, Any] = None
 
         # cover special case where a device has no name set
