@@ -1,0 +1,18 @@
+{
+  "domain": "vulcan",
+  "name": "Uonet+ Vulcan",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/vulcan",
+  "requirements": [
+    "vulcan-api==2.0.0"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@Antoni-Czaplicki"
+  ],
+  "iot_class": "cloud_polling",
+  "quality_scale": "platinum"
+}
