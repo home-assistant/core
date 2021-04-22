@@ -11,12 +11,8 @@ from epson_projector.const import (
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_PLATFORM
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity_registry import (
-    async_get_registry,
-    async_migrate_entries,
-)
 
 from .const import DOMAIN, HTTP
 from .exceptions import CannotConnect, PoweredOff
@@ -80,48 +76,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
-
-
-async def async_migrate_entry(hass, config_entry):
-    """Migrate old entry."""
-    _LOGGER.debug("Migrating unique_id in %s", config_entry.version)
-
-    async def get_unique_id():
-        try:
-            projector = await validate_projector(hass, config_entry.data[CONF_HOST])
-        except (CannotConnect, PoweredOff):
-            return None
-        else:
-            return await projector.get_serial_number()
-
-    if config_entry.version == 1:
-        data = {CONF_HOST: config_entry.data[CONF_HOST]}
-        hass.config_entries.async_update_entry(config_entry, data=data)
-        config_entry.version = 2
-    if config_entry.version == 2:
-        old_unique_id = config_entry.unique_id
-        new_unique_id = await get_unique_id()
-        registry = await async_get_registry(hass)
-        old_entity_id = registry.async_get_entity_id(
-            "media_player", DOMAIN, config_entry.entry_id
-        )
-        if old_entity_id is not None:
-            registry.async_remove(old_entity_id)
-
-        @callback
-        def update_unique_id(entity_entry):
-            """Update unique ID of entity entry."""
-            return {
-                "new_unique_id": entity_entry.unique_id.replace(
-                    old_unique_id, new_unique_id
-                )
-            }
-
-        if new_unique_id and old_unique_id != new_unique_id:
-            await async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
-
-            hass.config_entries.async_update_entry(
-                config_entry, unique_id=new_unique_id
-            )
-
-    return True

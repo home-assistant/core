@@ -40,6 +40,7 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_registry import async_get_registry
 
 from .const import ATTR_CMODE, DEFAULT_NAME, DOMAIN, SERVICE_SELECT_CMODE
 
@@ -92,6 +93,16 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
+async def set_new_unique_id(hass, uid, entry):
+    """Set new unique id."""
+    hass.config_entries.async_update_entry(entry, unique_id=uid)
+    registry = await async_get_registry(hass)
+    old_entity_id = registry.async_get_entity_id("media_player", DOMAIN, entry.entry_id)
+    print("OLD ENTITY", old_entity_id)
+    registry.async_update_entity(old_entity_id, new_unique_id=uid)
+    hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
+
+
 class EpsonProjectorMediaPlayer(MediaPlayerEntity):
     """Representation of Epson Projector Device."""
 
@@ -115,11 +126,7 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
             return False
         uid = await self._projector.get_serial_number()
         if uid:
-            self.hass.config_entries.async_update_entry(self._entry, unique_id=uid)
-            self._unique_id = uid
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(self._entry.entry_id)
-            )
+            self.hass.async_create_task(set_new_unique_id(self.hass, uid, self._entry))
             return True
 
     async def async_update(self):
