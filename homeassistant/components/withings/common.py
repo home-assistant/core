@@ -774,9 +774,11 @@ class DataManager:
     async def async_get_measures(self) -> dict[MeasureType, Any]:
         """Get the measures data."""
         _LOGGER.debug("Updating withings measures")
+        now = dt.utcnow()
+        startdate = now - datetime.timedelta(days=7)
 
         response = await self._hass.async_add_executor_job(
-            self._api.measure_get_meas, None, None, None, None, None, None
+            self._api.measure_get_meas, None, None, startdate, now, None, startdate
         )
 
         # Sort from oldest to newest.
