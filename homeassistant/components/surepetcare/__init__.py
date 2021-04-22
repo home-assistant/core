@@ -148,7 +148,9 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 class SurePetcareAPI:
     """Define a generic Sure Petcare object."""
 
-    def __init__(self, hass, surepy: Surepy, ids: list[dict[str, Any]]) -> None:
+    def __init__(
+        self, hass: HomeAssistant, surepy: Surepy, ids: list[dict[str, Any]]
+    ) -> None:
         """Initialize the Sure Petcare object."""
         self.hass: HomeAssistant = hass
         self.surepy = surepy
