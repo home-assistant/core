@@ -1,10 +1,10 @@
 """The nsw_fuel_station component."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 import datetime
 import logging
-from dataclasses import dataclass
-from typing import Tuple, Dict
+from typing import Dict, Tuple
 
 from nsw_fuel import FuelCheckClient, FuelCheckError, Station
 
@@ -42,8 +42,8 @@ async def async_setup(hass, config):
 class StationPriceData:
     """Data structure for O(1) price and name lookups."""
 
-    stations: Dict[int, Station]
-    prices: Dict[Tuple[int, str], float]
+    stations: dict[int, Station]
+    prices: dict[tuple[int, str], float]
 
 
 def fetch_station_price_data(client: FuelCheckClient) -> StationPriceData | None:
