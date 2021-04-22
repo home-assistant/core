@@ -44,9 +44,8 @@ from homeassistant.components.weather import (
     DOMAIN as WEATHER_DOMAIN,
 )
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_FRIENDLY_NAME
-from homeassistant.core import State, callback
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.entity_registry import async_get
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import API_V3_ENTRY_DATA, API_V4_ENTRY_DATA
 
@@ -56,7 +55,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def _enable_entity(hass: HomeAssistantType, entity_name: str) -> None:
+def _enable_entity(hass: HomeAssistant, entity_name: str) -> None:
     """Enable disabled entity."""
     ent_reg = async_get(hass)
     entry = ent_reg.async_get(entity_name)
@@ -67,7 +66,7 @@ def _enable_entity(hass: HomeAssistantType, entity_name: str) -> None:
     assert updated_entry.disabled is False
 
 
-async def _setup(hass: HomeAssistantType, config: dict[str, Any]) -> State:
+async def _setup(hass: HomeAssistant, config: dict[str, Any]) -> State:
     """Set up entry and return entity state."""
     with patch(
         "homeassistant.util.dt.utcnow",
@@ -92,7 +91,7 @@ async def _setup(hass: HomeAssistantType, config: dict[str, Any]) -> State:
 
 
 async def test_v3_weather(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     climacell_config_entry_update: pytest.fixture,
 ) -> None:
     """Test v3 weather data."""
@@ -235,7 +234,7 @@ async def test_v3_weather(
 
 
 async def test_v4_weather(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     climacell_config_entry_update: pytest.fixture,
 ) -> None:
     """Test v4 weather data."""
