@@ -113,7 +113,7 @@ class SurePetcareBinarySensor(BinarySensorEntity):
 
     async def async_update(self) -> None:
         """Get the latest data and update the state."""
-        self._entity = self._spapi._states.get(self._id, {})
+        self._surepy_entity = self._spc_.states[self._id]
         self._state = self._entity._data["status"]
         _LOGGER.debug("%s -> self._state: %s", self._name, self._state)
 
