@@ -66,6 +66,9 @@ SERVICE_TRANSFER = "transfer"
 ATTR_JOIN = "join_ids"
 ATTR_UNJOIN = "unjoin_ids"
 ATTR_TRANSFER = "transfer_id"
+ATTR_IS_JOINED = "is_joined"
+ATTR_IS_JOINED_LEAD = "is_joined_lead"
+ATTR_JOINED_PLAYER = "joined_lead_player"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -163,6 +166,19 @@ class RoonDevice(MediaPlayerEntity):
     def supported_features(self):
         """Flag media player features that are supported."""
         return SUPPORT_ROON
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes of the device."""
+        attr = {}
+
+        attr[ATTR_IS_JOINED] = self._server.roonapi.is_grouped(self._output_id)
+        attr[ATTR_IS_JOINED_LEAD] = self._server.roonapi.is_group_main(self._output_id)
+        group_main_roon_name = self._server.roonapi.group_main_zone_name(
+            self._output_id
+        )
+        attr[ATTR_JOINED_PLAYER] = self._server.entity_id(group_main_roon_name)
+        return attr
 
     @property
     def device_info(self):
