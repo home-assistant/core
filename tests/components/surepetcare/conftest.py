@@ -6,6 +6,8 @@ from surepy import Surepy
 
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from . import MOCK_API_DATA
+
 
 @fixture
 async def surepetcare(hass):
@@ -17,5 +19,5 @@ async def surepetcare(hass):
             session=async_get_clientsession(hass),
             api_timeout=1,
         )
-        instance.get_entities = AsyncMock(return_value=None)
+        instance.get_entities = AsyncMock(return_value=MOCK_API_DATA)
         yield mock_surepetcare
