@@ -5,7 +5,6 @@ from fritzconnection.core.exceptions import FritzConnectionException, FritzSecur
 import pytest
 
 from homeassistant.components.fritz.const import (
-    ATTR_HOST,
     DOMAIN,
     ERROR_AUTH_INVALID,
     ERROR_CONNECTION_ERROR,
@@ -34,6 +33,7 @@ from . import MOCK_CONFIG, FritzConnectionMock
 
 from tests.common import MockConfigEntry
 
+ATTR_HOST = "host"
 ATTR_NEW_SERIAL_NUMBER = "NewSerialNumber"
 
 MOCK_HOST = "fake_host"
@@ -90,7 +90,7 @@ async def test_user(hass: HomeAssistant, fc_class_mock):
 
 
 async def test_user_already_configured(hass: HomeAssistant, fc_class_mock):
-    """Test starting a flow by user."""
+    """Test starting a flow by user with an already configured device."""
 
     mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     mock_config.add_to_hass(hass)
@@ -183,7 +183,7 @@ async def test_exception_unknown(hass: HomeAssistant):
 
 
 async def test_reauth_successful(hass: HomeAssistant, fc_class_mock):
-    """Test starting a reauthentication flow but no connection found."""
+    """Test starting a reauthentication flow."""
 
     mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     mock_config.add_to_hass(hass)
@@ -251,7 +251,7 @@ async def test_reauth_not_successful(hass: HomeAssistant, fc_class_mock):
 
 
 async def test_ssdp_already_configured(hass: HomeAssistant, fc_class_mock):
-    """Test starting a flow from discovery but no device found."""
+    """Test starting a flow from discovery with an already configured device."""
 
     mock_config = MockConfigEntry(
         domain=DOMAIN,
@@ -273,7 +273,7 @@ async def test_ssdp_already_configured(hass: HomeAssistant, fc_class_mock):
 
 
 async def test_ssdp_already_configured_host(hass: HomeAssistant, fc_class_mock):
-    """Test starting a flow from discovery but no device found."""
+    """Test starting a flow from discovery with an already configured host."""
 
     mock_config = MockConfigEntry(
         domain=DOMAIN,
@@ -295,7 +295,7 @@ async def test_ssdp_already_configured_host(hass: HomeAssistant, fc_class_mock):
 
 
 async def test_ssdp_already_configured_host_uuid(hass: HomeAssistant, fc_class_mock):
-    """Test starting a flow from discovery but no device found."""
+    """Test starting a flow from discovery with a laready configured uuid."""
 
     mock_config = MockConfigEntry(
         domain=DOMAIN,
@@ -339,7 +339,7 @@ async def test_ssdp_already_in_progress_host(hass: HomeAssistant, fc_class_mock)
 
 
 async def test_ssdp(hass: HomeAssistant, fc_class_mock):
-    """Test starting a flow from discovery but no device found."""
+    """Test starting a flow from discovery."""
     with patch(
         "homeassistant.components.fritz.common.FritzConnection",
         side_effect=fc_class_mock,
