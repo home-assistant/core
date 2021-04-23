@@ -91,9 +91,10 @@ class WebSocketHandler:
 
         Async friendly.
         """
+        if not isinstance(message, str):
+            message = message_to_json(message)
+
         try:
-            if not isinstance(message, str):
-                message = message_to_json(message)
             self._to_write.put_nowait(message)
         except asyncio.QueueFull:
             self._logger.error(
