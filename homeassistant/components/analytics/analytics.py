@@ -18,6 +18,7 @@ from homeassistant.setup import async_get_loaded_integrations
 
 from .const import (
     ANALYTICS_ENDPOINT_URL,
+    ANALYTICS_ENDPOINT_URL_DEV,
     ATTR_ADDON_COUNT,
     ATTR_ADDONS,
     ATTR_AUTO_UPDATE,
@@ -77,6 +78,14 @@ class Analytics:
     def uuid(self) -> bool:
         """Return the uuid for the analytics integration."""
         return self._data[ATTR_UUID]
+
+    @property
+    def endpoint(self) -> str:
+        """Return the endpoint that will receive the payload."""
+        if HA_VERSION.endswith("0.dev0"):
+            # dev installations will contact the dev analytics environment
+            return ANALYTICS_ENDPOINT_URL_DEV
+        return ANALYTICS_ENDPOINT_URL
 
     @property
     def supervisor(self) -> bool:
@@ -219,7 +228,7 @@ class Analytics:
 
         try:
             with async_timeout.timeout(30):
-                response = await self.session.post(ANALYTICS_ENDPOINT_URL, json=payload)
+                response = await self.session.post(self.endpoint, json=payload)
                 if response.status == 200:
                     LOGGER.info(
                         (
@@ -230,7 +239,9 @@ class Analytics:
                     )
                 else:
                     LOGGER.warning(
-                        "Sending analytics failed with statuscode %s", response.status
+                        "Sending analytics failed with statuscode %s from %s",
+                        response.status,
+                        self.endpoint,
                     )
         except asyncio.TimeoutError:
             LOGGER.error("Timeout sending analytics to %s", ANALYTICS_ENDPOINT_URL)
