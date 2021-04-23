@@ -16,6 +16,7 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
+from homeassistant.helpers import device_registry as dr
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,6 +88,7 @@ class WolSwitch(SwitchEntity):
         )
         self._state = False
         self._assumed_state = host is None
+        self._unique_id = dr.format_mac(mac_address)
 
     @property
     def is_on(self):
@@ -107,6 +109,11 @@ class WolSwitch(SwitchEntity):
     def should_poll(self):
         """Return false if assumed state is true."""
         return not self._assumed_state
+
+    @property
+    def unique_id(self):
+        """Return the unique id of this switch."""
+        return self._unique_id
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
