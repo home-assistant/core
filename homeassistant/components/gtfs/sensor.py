@@ -19,12 +19,9 @@ from homeassistant.const import (
     DEVICE_CLASS_TIMESTAMP,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import (
-    ConfigType,
-    DiscoveryInfoType,
-    HomeAssistantType,
-)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
@@ -482,7 +479,7 @@ def get_next_departure(
 
 
 def setup_platform(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config: ConfigType,
     add_entities: Callable[[list], None],
     discovery_info: DiscoveryInfoType | None = None,
