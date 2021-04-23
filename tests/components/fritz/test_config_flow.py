@@ -137,7 +137,7 @@ async def test_exception_security(hass: HomeAssistant):
 
 
 async def test_exception_connection(hass: HomeAssistant):
-    """Test starting a flow by user."""
+    """Test starting a flow by user with a connection error."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
