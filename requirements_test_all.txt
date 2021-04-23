@@ -184,7 +184,7 @@ arcam-fmj==0.5.3
 # homeassistant.components.dlna_dmr
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
-async-upnp-client==0.16.0
+async-upnp-client==0.16.1
 
 # homeassistant.components.aurora
 auroranoaa==0.0.2
@@ -223,7 +223,7 @@ bravia-tv==1.0.8
 broadlink==0.17.0
 
 # homeassistant.components.brother
-brother==0.2.2
+brother==1.0.0
 
 # homeassistant.components.bsblan
 bsblan==0.4.0
@@ -279,7 +279,7 @@ distro==1.5.0
 doorbirdpy==2.1.0
 
 # homeassistant.components.dsmr
-dsmr_parser==0.28
+dsmr_parser==0.29
 
 # homeassistant.components.dynalite
 dynalite_devices==0.1.46
@@ -312,7 +312,7 @@ ephem==3.7.7.0
 epson-projector==0.2.3
 
 # homeassistant.components.faa_delays
-faadelays==0.0.6
+faadelays==0.0.7
 
 # homeassistant.components.feedreader
 feedparser==6.0.2
@@ -329,7 +329,7 @@ freebox-api==0.0.10
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
 # homeassistant.components.fritzbox_netmonitor
-fritzconnection==1.4.0
+fritzconnection==1.4.2
 
 # homeassistant.components.google_translate
 gTTS==2.2.2
@@ -448,7 +448,7 @@ huawei-lte-api==1.4.17
 huisbaasje-client==0.1.0
 
 # homeassistant.components.hyperion
-hyperion-py==0.7.0
+hyperion-py==0.7.4
 
 # homeassistant.components.iaqualink
 iaqualink==0.3.4
@@ -726,7 +726,7 @@ pycoolmasternet-async==0.1.2
 pydaikin==2.4.1
 
 # homeassistant.components.deconz
-pydeconz==78
+pydeconz==79
 
 # homeassistant.components.dexcom
 pydexcom==0.2.0
@@ -850,7 +850,7 @@ pymfy==0.9.3
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==2.3.0
+pymodbus==2.5.1
 
 # homeassistant.components.monoprice
 pymonoprice==0.3
@@ -920,6 +920,9 @@ pyrisco==0.3.1
 # homeassistant.components.rituals_perfume_genie
 pyrituals==0.0.2
 
+# homeassistant.components.zeroconf
+pyroute2==0.5.18
+
 # homeassistant.components.ruckus_unleashed
 pyruckus==0.12
 
@@ -938,7 +941,7 @@ pysignalclirestapi==0.3.4
 pysma==0.4.3
 
 # homeassistant.components.smappee
-pysmappee==0.2.17
+pysmappee==0.2.24
 
 # homeassistant.components.smartthings
 pysmartapp==0.3.3
@@ -962,7 +965,7 @@ pysqueezebox==0.5.5
 pysyncthru==0.7.0
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.2.10
+python-ecobee-api==0.2.11
 
 # homeassistant.components.darksky
 python-forecastio==1.4.0
@@ -981,6 +984,9 @@ python-nest==4.1.0
 
 # homeassistant.components.ozw
 python-openzwave-mqtt[mqtt-client]==1.4.0
+
+# homeassistant.components.picnic
+python-picnic-api==1.1.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.23
@@ -1073,7 +1079,7 @@ samsungtvws==1.6.0
 scapy==2.4.4
 
 # homeassistant.components.screenlogic
-screenlogicpy==0.2.1
+screenlogicpy==0.3.0
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
@@ -1132,7 +1138,7 @@ spotipy==2.18.0
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-sqlalchemy==1.3.23
+sqlalchemy==1.4.11
 
 # homeassistant.components.srp_energy
 srpenergy==1.3.2
@@ -1248,7 +1254,7 @@ xmltodict==0.12.0
 yalexs==1.1.10
 
 # homeassistant.components.yeelight
-yeelight==0.6.0
+yeelight==0.6.1
 
 # homeassistant.components.onvif
 zeep[async]==4.0.0
@@ -1278,4 +1284,4 @@ zigpy-znp==0.4.0
 zigpy==0.33.0
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.23.1
+zwave-js-server-python==0.24.0

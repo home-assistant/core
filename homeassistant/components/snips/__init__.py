@@ -233,6 +233,6 @@ def resolve_slot_values(slot):
             minutes=slot["value"]["minutes"],
             seconds=slot["value"]["seconds"],
         )
-        value = delta.seconds
+        value = delta.total_seconds()
 
     return value

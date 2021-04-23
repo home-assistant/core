@@ -5,13 +5,11 @@ from homeassistant.const import (
     POWER_WATT,
 )
 
-from . import MOCK_CUSTOM_SENSOR, init_integration
+from . import MOCK_CUSTOM_SENSOR
 
 
-async def test_sensors(hass):
+async def test_sensors(hass, init_integration):
     """Test states of the sensors."""
-    await init_integration(hass)
-
     state = hass.states.get("sensor.current_consumption")
     assert state
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT

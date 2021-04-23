@@ -4,10 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 import struct
-from typing import Any
 
-from pymodbus.exceptions import ConnectionException, ModbusException
-from pymodbus.pdu import ExceptionResponse
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -27,15 +24,13 @@ from homeassistant.const import (
     CONF_STRUCTURE,
     CONF_UNIT_OF_MEASUREMENT,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import (
-    ConfigType,
-    DiscoveryInfoType,
-    HomeAssistantType,
-)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import number
 from .const import (
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
@@ -61,25 +56,6 @@ from .const import (
 from .modbus import ModbusHub
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def number(value: Any) -> int | float:
-    """Coerce a value to number without losing precision."""
-    if isinstance(value, int):
-        return value
-
-    if isinstance(value, str):
-        try:
-            value = int(value)
-            return value
-        except (TypeError, ValueError):
-            pass
-
-    try:
-        value = float(value)
-        return value
-    except (TypeError, ValueError) as err:
-        raise vol.Invalid(f"invalid number {value}") from err
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -117,7 +93,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config: ConfigType,
     async_add_entities,
     discovery_info: DiscoveryInfoType | None = None,
@@ -172,10 +148,11 @@ async def async_setup_platform(
 
         if CONF_HUB in entry:
             # from old config!
-            discovery_info[CONF_NAME] = entry[CONF_HUB]
+            hub: ModbusHub = hass.data[MODBUS_DOMAIN][entry[CONF_HUB]]
+        else:
+            hub: ModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
         if CONF_SCAN_INTERVAL not in entry:
             entry[CONF_SCAN_INTERVAL] = DEFAULT_SCAN_INTERVAL
-        hub: ModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
         sensors.append(
             ModbusRegisterSensor(
                 hub,
@@ -288,21 +265,17 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
 
     def _update(self):
         """Update the state of the sensor."""
-        try:
-            if self._register_type == CALL_TYPE_REGISTER_INPUT:
-                result = self._hub.read_input_registers(
-                    self._slave, self._register, self._count
-                )
-            else:
-                result = self._hub.read_holding_registers(
-                    self._slave, self._register, self._count
-                )
-        except ConnectionException:
+        if self._register_type == CALL_TYPE_REGISTER_INPUT:
+            result = self._hub.read_input_registers(
+                self._slave, self._register, self._count
+            )
+        else:
+            result = self._hub.read_holding_registers(
+                self._slave, self._register, self._count
+            )
+        if result is None:
             self._available = False
-            return
-
-        if isinstance(result, (ModbusException, ExceptionResponse)):
-            self._available = False
+            self.schedule_update_ha_state()
             return
 
         registers = result.registers

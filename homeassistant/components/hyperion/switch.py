@@ -14,6 +14,7 @@ from hyperion.const import (
     KEY_COMPONENTID_GRABBER,
     KEY_COMPONENTID_LEDDEVICE,
     KEY_COMPONENTID_SMOOTHING,
+    KEY_COMPONENTID_TO_NAME,
     KEY_COMPONENTID_V4L,
     KEY_COMPONENTS,
     KEY_COMPONENTSTATE,
@@ -39,7 +40,6 @@ from . import (
     listen_for_instance_updates,
 )
 from .const import (
-    COMPONENT_TO_NAME,
     CONF_INSTANCE_CLIENTS,
     DOMAIN,
     HYPERION_MANUFACTURER_NAME,
@@ -67,7 +67,7 @@ def _component_to_unique_id(server_id: str, component: str, instance_num: int) -
         server_id,
         instance_num,
         slugify(
-            f"{TYPE_HYPERION_COMPONENT_SWITCH_BASE} {COMPONENT_TO_NAME[component]}"
+            f"{TYPE_HYPERION_COMPONENT_SWITCH_BASE} {KEY_COMPONENTID_TO_NAME[component]}"
         ),
     )
 
@@ -77,7 +77,7 @@ def _component_to_switch_name(component: str, instance_name: str) -> str:
     return (
         f"{instance_name} "
         f"{NAME_SUFFIX_HYPERION_COMPONENT_SWITCH} "
-        f"{COMPONENT_TO_NAME.get(component, component.capitalize())}"
+        f"{KEY_COMPONENTID_TO_NAME.get(component, component.capitalize())}"
     )
 
 

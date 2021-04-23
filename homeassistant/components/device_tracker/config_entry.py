@@ -134,29 +134,29 @@ class ScannerEntity(BaseTrackerEntity):
     """Base class for a tracked device that is on a scanned network."""
 
     @property
-    def ip_address(self) -> str:
+    def ip_address(self) -> str | None:
         """Return the primary ip address of the device."""
         return None
 
     @property
-    def mac_address(self) -> str:
+    def mac_address(self) -> str | None:
         """Return the mac address of the device."""
         return None
 
     @property
-    def hostname(self) -> str:
+    def hostname(self) -> str | None:
         """Return hostname of the device."""
         return None
 
     @property
-    def state(self):
+    def state(self) -> str:
         """Return the state of the device."""
         if self.is_connected:
             return STATE_HOME
         return STATE_NOT_HOME
 
     @property
-    def is_connected(self):
+    def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
         raise NotImplementedError
 

@@ -4,7 +4,7 @@
             "already_configured": "Apparaat is al geconfigureerd",
             "authorize_url_timeout": "Time-out tijdens genereren autorisatie url.",
             "invalid_auth": "Ongeldige authenticatie",
-            "missing_configuration": "De Netatmo-component is niet geconfigureerd. Gelieve de documentatie volgen.",
+            "missing_configuration": "De component is niet geconfigureerd. Gelieve de documentatie volgen.",
             "no_url_available": "Geen URL beschikbaar. Voor informatie over deze fout, [check de helpsectie]({docs_url})",
             "reauth_successful": "Herauthenticatie was succesvol"
         },

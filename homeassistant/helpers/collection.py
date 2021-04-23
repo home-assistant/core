@@ -3,10 +3,11 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import asyncio
+from collections.abc import Coroutine
 from dataclasses import dataclass
 from itertools import groupby
 import logging
-from typing import Any, Awaitable, Callable, Coroutine, Iterable, Optional, cast
+from typing import Any, Awaitable, Callable, Iterable, Optional, cast
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error

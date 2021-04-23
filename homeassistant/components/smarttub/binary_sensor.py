@@ -50,6 +50,14 @@ class SmartTubOnline(SmartTubSensorBase, BinarySensorEntity):
         super().__init__(coordinator, spa, "Online", "online")
 
     @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry.
+
+        This seems to be very noisy and not generally useful, so disable by default.
+        """
+        return False
+
+    @property
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self._state is True

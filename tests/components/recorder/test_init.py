@@ -24,6 +24,7 @@ from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.models import Events, RecorderRuns, States
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import (
+    EVENT_HOMEASSISTANT_FINAL_WRITE,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     MATCH_ALL,
@@ -31,7 +32,6 @@ from homeassistant.const import (
     STATE_UNLOCKED,
 )
 from homeassistant.core import Context, CoreState, HomeAssistant, callback
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util import dt as dt_util
 
@@ -115,7 +115,7 @@ async def test_state_gets_saved_when_set_before_start_event(
 
 
 async def test_saving_state(
-    hass: HomeAssistantType, async_setup_recorder_instance: SetupRecorderInstanceT
+    hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT
 ):
     """Test saving and restoring a state."""
     instance = await async_setup_recorder_instance(hass)
@@ -138,7 +138,7 @@ async def test_saving_state(
 
 
 async def test_saving_many_states(
-    hass: HomeAssistantType, async_setup_recorder_instance: SetupRecorderInstanceT
+    hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT
 ):
     """Test we expire after many commits."""
     instance = await async_setup_recorder_instance(hass)
@@ -164,7 +164,7 @@ async def test_saving_many_states(
 
 
 async def test_saving_state_with_intermixed_time_changes(
-    hass: HomeAssistantType, async_setup_recorder_instance: SetupRecorderInstanceT
+    hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT
 ):
     """Test saving states with intermixed time changes."""
     instance = await async_setup_recorder_instance(hass)
@@ -263,6 +263,36 @@ def test_saving_state_with_sqlalchemy_exception(hass, hass_recorder, caplog):
     assert "Error executing query" not in caplog.text
     assert "Error saving events" not in caplog.text
     assert "SQLAlchemyError error processing event" not in caplog.text
+
+
+async def test_force_shutdown_with_queue_of_writes_that_generate_exceptions(
+    hass, async_setup_recorder_instance, caplog
+):
+    """Test forcing shutdown."""
+    instance = await async_setup_recorder_instance(hass)
+
+    entity_id = "test.recorder"
+    attributes = {"test_attr": 5, "test_attr_10": "nice"}
+
+    await async_wait_recording_done(hass, instance)
+
+    with patch.object(instance, "db_retry_wait", 0.2), patch.object(
+        instance.event_session,
+        "flush",
+        side_effect=OperationalError(
+            "insert the state", "fake params", "forced to fail"
+        ),
+    ):
+        for _ in range(100):
+            hass.states.async_set(entity_id, "on", attributes)
+            hass.states.async_set(entity_id, "off", attributes)
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
+        await hass.async_block_till_done()
+
+    assert "Error executing query" in caplog.text
+    assert "Error saving events" not in caplog.text
 
 
 def test_saving_event(hass, hass_recorder):
