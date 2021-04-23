@@ -867,12 +867,14 @@ async def test_setup_raise_not_ready(hass, caplog):
     assert p_hass is hass
     assert p_wait_time == 5
     assert entry.state == config_entries.ENTRY_STATE_SETUP_RETRY
+    assert entry.reason == "The internet connection is offline"
 
     mock_setup_entry.side_effect = None
     mock_setup_entry.return_value = True
 
     await p_setup(None)
     assert entry.state == config_entries.ENTRY_STATE_LOADED
+    assert entry.reason is None
 
 
 async def test_setup_raise_not_ready_from_exception(hass, caplog):
@@ -2557,6 +2559,7 @@ async def test_setup_raise_auth_failed(hass, caplog):
     assert "could not authenticate: The password is no longer valid" in caplog.text
 
     assert entry.state == config_entries.ENTRY_STATE_SETUP_ERROR
+    assert entry.reason == "The password is no longer valid"
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     assert flows[0]["context"]["entry_id"] == entry.entry_id
@@ -2564,6 +2567,7 @@ async def test_setup_raise_auth_failed(hass, caplog):
 
     caplog.clear()
     entry.state = config_entries.ENTRY_STATE_NOT_LOADED
+    entry.reason = None
 
     await entry.async_setup(hass)
     await hass.async_block_till_done()

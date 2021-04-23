@@ -9,8 +9,7 @@ from typing import cast
 
 import attr
 
-from homeassistant.core import callback
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.loader import bind_hass
 
 from .typing import ZhaDeviceType
@@ -35,9 +34,9 @@ class ZhaDeviceEntry:
 class ZhaStorage:
     """Class to hold a registry of zha devices."""
 
-    def __init__(self, hass: HomeAssistantType) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the zha device storage."""
-        self.hass: HomeAssistantType = hass
+        self.hass: HomeAssistant = hass
         self.devices: MutableMapping[str, ZhaDeviceEntry] = {}
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
@@ -130,7 +129,7 @@ class ZhaStorage:
 
 
 @bind_hass
-async def async_get_registry(hass: HomeAssistantType) -> ZhaStorage:
+async def async_get_registry(hass: HomeAssistant) -> ZhaStorage:
     """Return zha device storage instance."""
     task = hass.data.get(DATA_REGISTRY)
 

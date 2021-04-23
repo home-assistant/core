@@ -25,7 +25,8 @@ from homeassistant.components.mysensors.const import (
     CONF_TOPIC_IN_PREFIX,
     CONF_TOPIC_OUT_PREFIX,
 )
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
 
@@ -226,7 +227,7 @@ from homeassistant.setup import async_setup_component
     ],
 )
 async def test_import(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     mqtt: None,
     config: ConfigType,
     expected_calls: int,

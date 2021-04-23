@@ -3,13 +3,14 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config import async_log_exception, config_without_domain
-from homeassistant.const import CONF_SENSORS, CONF_UNIQUE_ID
+from homeassistant.const import CONF_BINARY_SENSORS, CONF_SENSORS, CONF_UNIQUE_ID
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.trigger import async_validate_trigger_config
 
-from . import sensor as sensor_platform
+from . import binary_sensor as binary_sensor_platform, sensor as sensor_platform
 from .const import CONF_TRIGGER, DOMAIN
 
 CONFIG_SECTION_SCHEMA = vol.Schema(
@@ -21,6 +22,12 @@ CONFIG_SECTION_SCHEMA = vol.Schema(
         ),
         vol.Optional(CONF_SENSORS): cv.schema_with_slug_keys(
             sensor_platform.LEGACY_SENSOR_SCHEMA
+        ),
+        vol.Optional(BINARY_SENSOR_DOMAIN): vol.All(
+            cv.ensure_list, [binary_sensor_platform.BINARY_SENSOR_SCHEMA]
+        ),
+        vol.Optional(CONF_BINARY_SENSORS): cv.schema_with_slug_keys(
+            binary_sensor_platform.LEGACY_BINARY_SENSOR_SCHEMA
         ),
     }
 )
@@ -45,17 +52,34 @@ async def async_validate_config(hass, config):
             async_log_exception(err, DOMAIN, cfg, hass)
             continue
 
-        if CONF_SENSORS in cfg:
-            logging.getLogger(__name__).warning(
-                "The entity definition format under template: differs from the platform "
-                "configuration format. See "
-                "https://www.home-assistant.io/integrations/template#configuration-for-trigger-based-template-sensors"
-            )
-            sensors = list(cfg[SENSOR_DOMAIN]) if SENSOR_DOMAIN in cfg else []
-            sensors.extend(
-                sensor_platform.rewrite_legacy_to_modern_conf(cfg[CONF_SENSORS])
-            )
-            cfg = {**cfg, "sensor": sensors}
+        legacy_warn_printed = False
+
+        for old_key, new_key, transform in (
+            (
+                CONF_SENSORS,
+                SENSOR_DOMAIN,
+                sensor_platform.rewrite_legacy_to_modern_conf,
+            ),
+            (
+                CONF_BINARY_SENSORS,
+                BINARY_SENSOR_DOMAIN,
+                binary_sensor_platform.rewrite_legacy_to_modern_conf,
+            ),
+        ):
+            if old_key not in cfg:
+                continue
+
+            if not legacy_warn_printed:
+                legacy_warn_printed = True
+                logging.getLogger(__name__).warning(
+                    "The entity definition format under template: differs from the platform "
+                    "configuration format. See "
+                    "https://www.home-assistant.io/integrations/template#configuration-for-trigger-based-template-sensors"
+                )
+
+            definitions = list(cfg[new_key]) if new_key in cfg else []
+            definitions.extend(transform(cfg[old_key]))
+            cfg = {**cfg, new_key: definitions}
 
         config_sections.append(cfg)
 

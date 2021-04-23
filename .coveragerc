@@ -616,10 +616,7 @@ omit =
     homeassistant/components/mochad/*
     homeassistant/components/modbus/climate.py
     homeassistant/components/modbus/cover.py
-    homeassistant/components/modbus/modbus.py
     homeassistant/components/modbus/switch.py
-    homeassistant/components/modbus/sensor.py
-    homeassistant/components/modbus/binary_sensor.py
     homeassistant/components/modem_callerid/sensor.py
     homeassistant/components/motion_blinds/__init__.py
     homeassistant/components/motion_blinds/const.py
@@ -866,6 +863,7 @@ omit =
     homeassistant/components/screenlogic/binary_sensor.py
     homeassistant/components/screenlogic/climate.py
     homeassistant/components/screenlogic/sensor.py
+    homeassistant/components/screenlogic/services.py
     homeassistant/components/screenlogic/switch.py
     homeassistant/components/scsgate/*
     homeassistant/components/scsgate/cover.py

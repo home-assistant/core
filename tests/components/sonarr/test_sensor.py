@@ -12,8 +12,8 @@ from homeassistant.const import (
     DATA_GIGABYTES,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
@@ -24,7 +24,7 @@ UPCOMING_ENTITY_ID = f"{SENSOR_DOMAIN}.sonarr_upcoming"
 
 
 async def test_sensors(
-    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the creation and values of the sensors."""
     entry = await setup_integration(hass, aioclient_mock, skip_entry_setup=True)
@@ -104,7 +104,7 @@ async def test_sensors(
     ),
 )
 async def test_disabled_by_default_sensors(
-    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker, entity_id: str
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, entity_id: str
 ) -> None:
     """Test the disabled by default sensors."""
     await setup_integration(hass, aioclient_mock)
@@ -121,7 +121,7 @@ async def test_disabled_by_default_sensors(
 
 
 async def test_availability(
-    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test entity availability."""
     now = dt_util.utcnow()

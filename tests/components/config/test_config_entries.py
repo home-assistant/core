@@ -65,7 +65,8 @@ async def test_get_entries(hass, client):
             domain="comp2",
             title="Test 2",
             source="bla2",
-            state=core_ce.ENTRY_STATE_LOADED,
+            state=core_ce.ENTRY_STATE_SETUP_ERROR,
+            reason="Unsupported API",
             connection_class=core_ce.CONN_CLASS_ASSUMED,
         ).add_to_hass(hass)
         MockConfigEntry(
@@ -90,16 +91,18 @@ async def test_get_entries(hass, client):
                 "supports_options": True,
                 "supports_unload": True,
                 "disabled_by": None,
+                "reason": None,
             },
             {
                 "domain": "comp2",
                 "title": "Test 2",
                 "source": "bla2",
-                "state": "loaded",
+                "state": "setup_error",
                 "connection_class": "assumed",
                 "supports_options": False,
                 "supports_unload": False,
                 "disabled_by": None,
+                "reason": "Unsupported API",
             },
             {
                 "domain": "comp3",
@@ -110,6 +113,7 @@ async def test_get_entries(hass, client):
                 "supports_options": False,
                 "supports_unload": False,
                 "disabled_by": core_ce.DISABLED_USER,
+                "reason": None,
             },
         ]
 
@@ -330,6 +334,7 @@ async def test_create_account(hass, client):
             "supports_options": False,
             "supports_unload": False,
             "title": "Test Entry",
+            "reason": None,
         },
         "description": None,
         "description_placeholders": None,
@@ -399,6 +404,7 @@ async def test_two_step_flow(hass, client):
                 "supports_options": False,
                 "supports_unload": False,
                 "title": "user-title",
+                "reason": None,
             },
             "description": None,
             "description_placeholders": None,

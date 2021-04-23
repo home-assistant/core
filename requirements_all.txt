@@ -292,7 +292,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.dlna_dmr
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
-async-upnp-client==0.16.0
+async-upnp-client==0.16.1
 
 # homeassistant.components.supla
 asyncpysupla==0.0.5
@@ -390,7 +390,7 @@ bravia-tv==1.0.8
 broadlink==0.17.0
 
 # homeassistant.components.brother
-brother==0.2.2
+brother==1.0.0
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==0.0.1
@@ -1672,6 +1672,9 @@ pyrisco==0.3.1
 # homeassistant.components.rituals_perfume_genie
 pyrituals==0.0.2
 
+# homeassistant.components.zeroconf
+pyroute2==0.5.18
+
 # homeassistant.components.ruckus_unleashed
 pyruckus==0.12
 
@@ -1711,7 +1714,7 @@ pyskyqhub==0.1.3
 pysma==0.4.3
 
 # homeassistant.components.smappee
-pysmappee==0.2.17
+pysmappee==0.2.24
 
 # homeassistant.components.smartthings
 pysmartapp==0.3.3
@@ -1827,6 +1830,9 @@ python-nmap==0.6.1
 # homeassistant.components.ozw
 python-openzwave-mqtt[mqtt-client]==1.4.0
 
+# homeassistant.components.picnic
+python-picnic-api==1.1.0
+
 # homeassistant.components.qbittorrent
 python-qbittorrent==0.4.2
 
@@ -1913,7 +1919,7 @@ pyvesync==1.3.1
 pyvizio==0.1.57
 
 # homeassistant.components.velux
-pyvlx==0.2.18
+pyvlx==0.2.19
 
 # homeassistant.components.volumio
 pyvolumio==0.1.3
@@ -2024,7 +2030,7 @@ scapy==2.4.4
 schiene==0.23
 
 # homeassistant.components.screenlogic
-screenlogicpy==0.2.1
+screenlogicpy==0.3.0
 
 # homeassistant.components.scsgate
 scsgate==0.1.0
@@ -2093,7 +2099,7 @@ smarthab==0.21
 smhi-pkg==1.0.13
 
 # homeassistant.components.snapcast
-snapcast==2.1.2
+snapcast==2.1.3
 
 # homeassistant.components.solaredge_local
 solaredge-local==0.2.0
@@ -2130,7 +2136,7 @@ spotipy==2.18.0
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-sqlalchemy==1.3.23
+sqlalchemy==1.4.11
 
 # homeassistant.components.srp_energy
 srpenergy==1.3.2
