@@ -292,7 +292,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.dlna_dmr
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
-async-upnp-client==0.16.0
+async-upnp-client==0.16.1
 
 # homeassistant.components.supla
 asyncpysupla==0.0.5
@@ -390,7 +390,7 @@ bravia-tv==1.0.8
 broadlink==0.17.0
 
 # homeassistant.components.brother
-brother==0.2.2
+brother==1.0.0
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==0.0.1
@@ -1717,7 +1717,7 @@ pyskyqhub==0.1.3
 pysma==0.4.3
 
 # homeassistant.components.smappee
-pysmappee==0.2.17
+pysmappee==0.2.24
 
 # homeassistant.components.smartthings
 pysmartapp==0.3.3
@@ -1922,7 +1922,7 @@ pyvesync==1.3.1
 pyvizio==0.1.57
 
 # homeassistant.components.velux
-pyvlx==0.2.18
+pyvlx==0.2.19
 
 # homeassistant.components.volumio
 pyvolumio==0.1.3
@@ -2102,7 +2102,7 @@ smarthab==0.21
 smhi-pkg==1.0.13
 
 # homeassistant.components.snapcast
-snapcast==2.1.2
+snapcast==2.1.3
 
 # homeassistant.components.solaredge_local
 solaredge-local==0.2.0

@@ -184,7 +184,7 @@ arcam-fmj==0.5.3
 # homeassistant.components.dlna_dmr
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
-async-upnp-client==0.16.0
+async-upnp-client==0.16.1
 
 # homeassistant.components.aurora
 auroranoaa==0.0.2
@@ -223,7 +223,7 @@ bravia-tv==1.0.8
 broadlink==0.17.0
 
 # homeassistant.components.brother
-brother==0.2.2
+brother==1.0.0
 
 # homeassistant.components.bsblan
 bsblan==0.4.0
@@ -944,7 +944,7 @@ pysignalclirestapi==0.3.4
 pysma==0.4.3
 
 # homeassistant.components.smappee
-pysmappee==0.2.17
+pysmappee==0.2.24
 
 # homeassistant.components.smartthings
 pysmartapp==0.3.3

@@ -25,3 +25,5 @@ ATTR_LIGHTS = "lights"
 ATTR_PUMPS = "pumps"
 ATTR_REMINDERS = "reminders"
 ATTR_STATUS = "status"
+
+CONF_CONFIG_ENTRY = "config_entry"
