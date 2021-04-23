@@ -13,12 +13,11 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     SERVICE_RELOAD,
 )
-from homeassistant.core import ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import async_get_platforms
 import homeassistant.helpers.entity_registry as er
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     _LOGGER,
@@ -158,7 +157,7 @@ SERVICE_RUN_NETWORK_RESOURCE_SCHEMA = vol.All(
 
 
 @callback
-def async_setup_services(hass: HomeAssistantType):
+def async_setup_services(hass: HomeAssistant):
     """Create and register services for the ISY integration."""
     existing_services = hass.services.async_services().get(DOMAIN)
     if existing_services and any(
@@ -380,7 +379,7 @@ def async_setup_services(hass: HomeAssistantType):
 
 
 @callback
-def async_unload_services(hass: HomeAssistantType):
+def async_unload_services(hass: HomeAssistant):
     """Unload services for the ISY integration."""
     if hass.data[DOMAIN]:
         # There is still another config entry for this domain, don't remove services.
@@ -404,7 +403,7 @@ def async_unload_services(hass: HomeAssistantType):
 
 
 @callback
-def async_setup_light_services(hass: HomeAssistantType):
+def async_setup_light_services(hass: HomeAssistant):
     """Create device-specific services for the ISY Integration."""
     platform = entity_platform.current_platform.get()
 
