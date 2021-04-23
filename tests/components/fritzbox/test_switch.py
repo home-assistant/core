@@ -92,14 +92,14 @@ async def test_update(hass: HomeAssistant, fritz: Mock):
     fritz().get_devices.return_value = [device]
 
     await setup_fritzbox(hass, MOCK_CONFIG)
-    assert device.update.call_count == 0
+    assert device.update.call_count == 1
     assert fritz().login.call_count == 1
 
     next_update = dt_util.utcnow() + timedelta(seconds=200)
     async_fire_time_changed(hass, next_update)
     await hass.async_block_till_done()
 
-    assert device.update.call_count == 1
+    assert device.update.call_count == 2
     assert fritz().login.call_count == 1
 
 
@@ -110,12 +110,12 @@ async def test_update_error(hass: HomeAssistant, fritz: Mock):
     fritz().get_devices.return_value = [device]
 
     await setup_fritzbox(hass, MOCK_CONFIG)
-    assert device.update.call_count == 0
-    assert fritz().login.call_count == 1
+    assert device.update.call_count == 1
+    assert fritz().login.call_count == 2
 
     next_update = dt_util.utcnow() + timedelta(seconds=200)
     async_fire_time_changed(hass, next_update)
     await hass.async_block_till_done()
 
-    assert device.update.call_count == 1
-    assert fritz().login.call_count == 2
+    assert device.update.call_count == 2
+    assert fritz().login.call_count == 4
