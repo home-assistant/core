@@ -8,8 +8,8 @@ from renault_api.renault_account import RenaultAccount
 from renault_api.renault_client import RenaultClient
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import CONF_KAMEREON_ACCOUNT_ID, DEFAULT_SCAN_INTERVAL
 from .renault_vehicle import RenaultVehicleProxy
@@ -20,7 +20,7 @@ LOGGER = logging.getLogger(__name__)
 class RenaultHub:
     """Handle account communication with Renault servers."""
 
-    def __init__(self, hass: HomeAssistantType, locale: str) -> None:
+    def __init__(self, hass: HomeAssistant, locale: str) -> None:
         """Initialise proxy."""
         LOGGER.debug("Creating RenaultHub")
         self._hass = hass

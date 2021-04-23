@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import LENGTH_KILOMETERS, VOLUME_LITERS
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 from .renault_entities import RenaultCockpitDataEntity, RenaultDataEntity
@@ -12,7 +12,7 @@ from .renault_vehicle import RenaultVehicleProxy
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities,
 ) -> None:

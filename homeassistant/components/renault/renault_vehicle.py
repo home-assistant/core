@@ -6,7 +6,7 @@ from typing import Any, Dict
 from renault_api.kamereon import models
 from renault_api.renault_vehicle import RenaultVehicle
 
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 from .renault_coordinator import RenaultDataUpdateCoordinator
@@ -19,7 +19,7 @@ class RenaultVehicleProxy:
 
     def __init__(
         self,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         vehicle: RenaultVehicle,
         details: models.KamereonVehicleDetails,
         scan_interval: timedelta,
@@ -72,11 +72,9 @@ class RenaultVehicleProxy:
 
     async def endpoint_available(self, endpoint: str) -> bool:
         """Ensure the endpoint is available to avoid unnecessary queries."""
-        if not await self._vehicle.supports_endpoint(endpoint):
-            return False
-        if not await self._vehicle.has_contract_for_endpoint(endpoint):
-            return False
-        return True
+        return await self._vehicle.supports_endpoint(
+            endpoint
+        ) and await self._vehicle.has_contract_for_endpoint(endpoint)
 
     async def get_cockpit(self) -> models.KamereonVehicleCockpitData:
         """Get cockpit information from vehicle."""
