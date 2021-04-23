@@ -11,8 +11,8 @@ from homeassistant.components.hyperion import get_hyperion_unique_id
 from homeassistant.components.hyperion.const import CONF_PRIORITY, DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.typing import HomeAssistantType
 
 from tests.common import MockConfigEntry
 
@@ -120,7 +120,7 @@ def create_mock_client() -> Mock:
 
 
 def add_test_config_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     data: dict[str, Any] | None = None,
     options: dict[str, Any] | None = None,
 ) -> ConfigEntry:
@@ -142,7 +142,7 @@ def add_test_config_entry(
 
 
 async def setup_test_config_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config_entry: ConfigEntry | None = None,
     hyperion_client: Mock | None = None,
     options: dict[str, Any] | None = None,
@@ -173,7 +173,7 @@ def call_registered_callback(
 
 
 def register_test_entity(
-    hass: HomeAssistantType, domain: str, type_name: str, entity_id: str
+    hass: HomeAssistant, domain: str, type_name: str, entity_id: str
 ) -> None:
     """Register a test entity."""
     unique_id = get_hyperion_unique_id(TEST_SYSINFO_ID, TEST_INSTANCE, type_name)
