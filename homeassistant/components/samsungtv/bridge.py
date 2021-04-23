@@ -23,7 +23,7 @@ from .const import (
     LOGGER,
     METHOD_LEGACY,
     RESULT_AUTH_MISSING,
-    RESULT_NOT_SUCCESSFUL,
+    RESULT_CANNOT_CONNECT,
     RESULT_NOT_SUPPORTED,
     RESULT_SUCCESS,
     VALUE_CONF_ID,
@@ -170,7 +170,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             return RESULT_NOT_SUPPORTED
         except OSError as err:
             LOGGER.debug("Failing config: %s, error: %s", config, err)
-            return RESULT_NOT_SUCCESSFUL
+            return RESULT_CANNOT_CONNECT
 
     def device_info(self):
         """Try to gather infos of this device."""
@@ -247,7 +247,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
             if result:
                 return result
 
-        return RESULT_NOT_SUCCESSFUL
+        return RESULT_CANNOT_CONNECT
 
     def device_info(self):
         """Try to gather infos of this TV."""

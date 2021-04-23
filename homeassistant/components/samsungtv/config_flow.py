@@ -34,8 +34,8 @@ from .const import (
     METHOD_WEBSOCKET,
     MODEL_SOUNDBAR,
     RESULT_AUTH_MISSING,
+    RESULT_CANNOT_CONNECT,
     RESULT_ID_MISSING,
-    RESULT_NOT_SUCCESSFUL,
     RESULT_NOT_SUPPORTED,
     RESULT_SUCCESS,
     RESULT_UNKNOWN_HOST,
@@ -119,10 +119,10 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             result = self._bridge.try_connect()
             if result == RESULT_SUCCESS:
                 return
-            if result != RESULT_NOT_SUCCESSFUL:
+            if result != RESULT_CANNOT_CONNECT:
                 raise data_entry_flow.AbortFlow(result)
         LOGGER.debug("No working config found")
-        raise data_entry_flow.AbortFlow(RESULT_NOT_SUCCESSFUL)
+        raise data_entry_flow.AbortFlow(RESULT_CANNOT_CONNECT)
 
     async def _async_get_and_check_device_info(self):
         """Try to get the device info."""
