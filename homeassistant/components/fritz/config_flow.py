@@ -183,8 +183,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
                 error = "already_configured"
 
         if error:
-            errors["base"] = error
-            return self._show_setup_form_init(errors)
+            return self._show_setup_form_init({"base": error})
 
         return self._async_create_entry()
 
