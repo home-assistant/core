@@ -29,7 +29,6 @@ from .messages import message_to_json
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 _WS_LOGGER = logging.getLogger(f"{__name__}.connection")
-_LOGGER = logging.getLogger(__name__)
 
 
 class WebsocketAPIView(HomeAssistantView):
