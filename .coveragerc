@@ -853,6 +853,7 @@ omit =
     homeassistant/components/repetier/sensor.py
     homeassistant/components/remote_rpi_gpio/*
     homeassistant/components/renault/__init__.py
+    homeassistant/components/renault/renault_coordinator.py
     homeassistant/components/renault/renault_entities.py
     homeassistant/components/renault/renault_hub.py
     homeassistant/components/renault/renault_vehicle.py
