@@ -41,7 +41,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import CALLBACK_TYPE, ServiceCall
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
@@ -51,7 +51,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ADMIN_SERVICES,
@@ -309,7 +309,7 @@ class HuaweiLteData:
     routers: dict[str, Router] = attr.ib(init=False, factory=dict)
 
 
-async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up Huawei LTE component from config entry."""
     url = config_entry.data[CONF_URL]
 
@@ -458,9 +458,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
     return True
 
 
-async def async_unload_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload config entry."""
 
     # Forward config entry unload to platforms
@@ -474,7 +472,7 @@ async def async_unload_entry(
     return True
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Huawei LTE component."""
 
     # dicttoxml (used by huawei-lte-api) has uselessly verbose INFO level.
@@ -556,9 +554,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     return True
 
 
-async def async_migrate_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry
-) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate config entry to new version."""
     if config_entry.version == 1:
         options = dict(config_entry.options)
