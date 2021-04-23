@@ -250,7 +250,7 @@ async def test_disabled_by_default_sensors(hass):
     assert entry
     assert entry.unique_id == "0123456789_uptime"
     assert entry.disabled
-    assert entry.disabled_by == "integration"
+    assert entry.disabled_by == er.DISABLED_INTEGRATION
 
 
 async def test_availability(hass):

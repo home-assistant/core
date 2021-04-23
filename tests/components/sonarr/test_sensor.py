@@ -117,7 +117,7 @@ async def test_disabled_by_default_sensors(
     entry = registry.async_get(entity_id)
     assert entry
     assert entry.disabled
-    assert entry.disabled_by == "integration"
+    assert entry.disabled_by == er.DISABLED_INTEGRATION
 
 
 async def test_availability(

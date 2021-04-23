@@ -1346,7 +1346,7 @@ async def test_reload_entry_entity_registry_ignores_no_entry(hass):
 
     # Test we ignore entities without config entry
     entry = registry.async_get_or_create("light", "hue", "123")
-    registry.async_update_entity(entry.entity_id, disabled_by="user")
+    registry.async_update_entity(entry.entity_id, disabled_by=er.DISABLED_USER)
     await hass.async_block_till_done()
     assert not handler.changed
     assert handler._remove_call_later is None
@@ -1385,7 +1385,7 @@ async def test_reload_entry_entity_registry_works(hass):
     assert handler._remove_call_later is None
 
     # Disable entity, we should not do anything, only act when enabled.
-    registry.async_update_entity(entity_entry.entity_id, disabled_by="user")
+    registry.async_update_entity(entity_entry.entity_id, disabled_by=er.DISABLED_USER)
     await hass.async_block_till_done()
     assert not handler.changed
     assert handler._remove_call_later is None
