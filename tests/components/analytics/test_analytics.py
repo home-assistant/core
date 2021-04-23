@@ -21,6 +21,7 @@ from homeassistant.setup import async_setup_component
 
 MOCK_UUID = "abcdefg"
 MOCK_VERSION = "1970.1.0"
+MOCK_NIGHTLY_VERSION = "1970.1.0.dev19700101"
 
 
 async def test_no_send(hass, caplog, aioclient_mock):
@@ -341,7 +342,7 @@ async def test_custom_integrations(hass, aioclient_mock):
 
 
 async def test_production_url(hass, aioclient_mock):
-    """Test sending payload to production url integrations."""
+    """Test sending payload to production url."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
     await analytics.save_preferences({ATTR_BASE: True})
@@ -355,7 +356,7 @@ async def test_production_url(hass, aioclient_mock):
 
 
 async def test_production_url_error(hass, aioclient_mock, caplog):
-    """Test sending payload to production url integrations that returns error."""
+    """Test sending payload to production url that returns error."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=400)
     analytics = Analytics(hass)
     await analytics.save_preferences({ATTR_BASE: True})
@@ -370,3 +371,19 @@ async def test_production_url_error(hass, aioclient_mock, caplog):
         f"Sending analytics failed with statuscode 400 from {ANALYTICS_ENDPOINT_URL}"
         in caplog.text
     )
+
+
+async def test_nightly_endpoint(hass, aioclient_mock):
+    """Test sending payload to production url when running nightly."""
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    analytics = Analytics(hass)
+    await analytics.save_preferences({ATTR_BASE: True})
+
+    with patch(
+        "homeassistant.components.analytics.analytics.HA_VERSION", MOCK_NIGHTLY_VERSION
+    ):
+
+        await analytics.send_analytics()
+
+    payload = aioclient_mock.mock_calls[0]
+    assert str(payload[1]) == ANALYTICS_ENDPOINT_URL
