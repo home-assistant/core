@@ -98,12 +98,10 @@ class SmartTubController:
             spa.get_status_full(),
             spa.get_reminders(),
         )
-        lights = full_status.lights
-        pumps = full_status.pumps
         return {
             ATTR_STATUS: full_status,
-            ATTR_PUMPS: {pump.id: pump for pump in pumps},
-            ATTR_LIGHTS: {light.zone: light for light in lights},
+            ATTR_PUMPS: {pump.id: pump for pump in full_status.pumps},
+            ATTR_LIGHTS: {light.zone: light for light in full_status.lights},
             ATTR_REMINDERS: {reminder.id: reminder for reminder in reminders},
         }
 
