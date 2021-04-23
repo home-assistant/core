@@ -23,8 +23,9 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     TIME_SECONDS,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType, StateType
+from homeassistant.helpers.typing import StateType
 
 from . import HuaweiLteBaseEntity
 from .const import (
@@ -329,7 +330,7 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
