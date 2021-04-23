@@ -80,7 +80,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config):
+async def async_setup(hass: HomeAssistant, config: dict[str, str]) -> bool:
     """Set up the AVM Fritz!Box integration."""
     if DOMAIN in config:
         for entry_config in config[DOMAIN][CONF_DEVICES]:
@@ -93,7 +93,7 @@ async def async_setup(hass: HomeAssistant, config):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the AVM Fritz!Box platforms."""
     fritz = Fritzhome(
         host=entry.data[CONF_HOST],
@@ -122,7 +122,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 fritz.login()
                 raise UpdateFailed(f"Fritzhome connection error: {ex}") from ex
             data[device.ain] = device
-        LOGGER.debug("REFRESH data: %s", data)
         return data
 
     hass.data[DOMAIN][entry.entry_id][
@@ -153,7 +152,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unloading the AVM Fritz!Box platforms."""
     fritz = hass.data[DOMAIN][entry.entry_id][CONF_CONNECTIONS]
     await hass.async_add_executor_job(fritz.logout)

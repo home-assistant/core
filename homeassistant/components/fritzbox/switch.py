@@ -34,19 +34,21 @@ async def async_setup_entry(
     coordinator = hass.data[FRITZBOX_DOMAIN][entry.entry_id][CONF_COORDINATOR]
 
     for ain, device in coordinator.data.items():
-        if device.has_switch:
-            entities.append(
-                FritzboxSwitch(
-                    {
-                        ATTR_NAME: f"{device.name}",
-                        ATTR_ENTITY_ID: f"{device.ain}",
-                        ATTR_UNIT_OF_MEASUREMENT: None,
-                        ATTR_DEVICE_CLASS: None,
-                    },
-                    coordinator,
-                    ain,
-                )
+        if not device.has_switch:
+            continue
+
+        entities.append(
+            FritzboxSwitch(
+                {
+                    ATTR_NAME: f"{device.name}",
+                    ATTR_ENTITY_ID: f"{device.ain}",
+                    ATTR_UNIT_OF_MEASUREMENT: None,
+                    ATTR_DEVICE_CLASS: None,
+                },
+                coordinator,
+                ain,
             )
+        )
 
     async_add_entities(entities)
 

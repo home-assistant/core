@@ -24,19 +24,21 @@ async def async_setup_entry(
     coordinator = hass.data[FRITZBOX_DOMAIN][entry.entry_id][CONF_COORDINATOR]
 
     for ain, device in coordinator.data.items():
-        if device.has_alarm:
-            entities.append(
-                FritzboxBinarySensor(
-                    {
-                        ATTR_NAME: f"{device.name}",
-                        ATTR_ENTITY_ID: f"{device.ain}",
-                        ATTR_UNIT_OF_MEASUREMENT: None,
-                        ATTR_DEVICE_CLASS: DEVICE_CLASS_WINDOW,
-                    },
-                    coordinator,
-                    ain,
-                )
+        if not device.has_alarm:
+            continue
+
+        entities.append(
+            FritzboxBinarySensor(
+                {
+                    ATTR_NAME: f"{device.name}",
+                    ATTR_ENTITY_ID: f"{device.ain}",
+                    ATTR_UNIT_OF_MEASUREMENT: None,
+                    ATTR_DEVICE_CLASS: DEVICE_CLASS_WINDOW,
+                },
+                coordinator,
+                ain,
             )
+        )
 
     async_add_entities(entities)
 
