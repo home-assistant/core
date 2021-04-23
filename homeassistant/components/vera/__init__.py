@@ -45,6 +45,8 @@ from .const import (
     VERA_ID_FORMAT,
 )
 
+UPDATE_LISTENER = "listener"
+
 _LOGGER = logging.getLogger(__name__)
 
 VERA_ID_LIST_SCHEMA = vol.Schema([int])
@@ -159,6 +161,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_subscription)
     )
 
+    hass.data[DOMAIN][UPDATE_LISTENER] = config_entry.add_update_listener(
+        _async_update_listener
+    )
     return True
 
 
@@ -173,7 +178,14 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     tasks.append(hass.async_add_executor_job(controller_data.controller.stop))
     await asyncio.gather(*tasks)
 
+    hass.data[DOMAIN][UPDATE_LISTENER]()
+
     return True
+
+
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 def map_vera_device(vera_device: veraApi.VeraDevice, remap: list[int]) -> str:
