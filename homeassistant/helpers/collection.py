@@ -20,7 +20,6 @@ from homeassistant.helpers import entity_registry
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import slugify
 
 STORAGE_VERSION = 1
@@ -320,7 +319,7 @@ class IDLessCollection(ObservableCollection):
 
 @callback
 def sync_entity_lifecycle(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     domain: str,
     platform: str,
     entity_component: EntityComponent,
