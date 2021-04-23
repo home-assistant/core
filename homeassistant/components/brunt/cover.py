@@ -1,84 +1,107 @@
 """Support for Brunt Blind Engine covers."""
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
-
-from brunt import BruntAPI
-import voluptuous as vol
+from brunt import BruntClientAsync
+import async_timeout
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
     DEVICE_CLASS_WINDOW,
-    PLATFORM_SCHEMA,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
     CoverEntity,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_USERNAME
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
+
+from .const import (
+    ATTR_REQUEST_POSITION,
+    ATTRIBUTION,
+    CLOSED_POSITION,
+    DOMAIN,
+    OPEN_POSITION,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 COVER_FEATURES = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
-
-ATTR_REQUEST_POSITION = "request_position"
-NOTIFICATION_ID = "brunt_notification"
-NOTIFICATION_TITLE = "Brunt Cover Setup"
-ATTRIBUTION = "Based on an unofficial Brunt SDK."
-
-CLOSED_POSITION = 0
-OPEN_POSITION = 100
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
-)
+FAST = 1
+REGULAR_INTERVAL = timedelta(seconds=20)
+FAST_INTERVAL = timedelta(seconds=FAST)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None):
     """Set up the brunt platform."""
+    bapi: BruntClientAsync = hass.data[DOMAIN][entry.entry_id]
 
-    username = config[CONF_USERNAME]
-    password = config[CONF_PASSWORD]
+    async def async_update_data():
+        """Fetch data from the Brunt endpoint for all Things."""
+        try:
+            async with async_timeout.timeout(10):
+                states = await bapi.async_get_things(force=True)
+                return {thing["SERIAL"]: thing for thing in states}
+        except (TypeError, KeyError, NameError, ValueError) as err:
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
 
-    bapi = BruntAPI(username=username, password=password)
-    try:
-        if not (things := bapi.getThings()["things"]):
-            _LOGGER.error("No things present in account")
-        else:
-            add_entities(
-                [
-                    BruntDevice(bapi, thing["NAME"], thing["thingUri"])
-                    for thing in things
-                ],
-                True,
-            )
-    except (TypeError, KeyError, NameError, ValueError) as ex:
-        _LOGGER.error("%s", ex)
-        hass.components.persistent_notification.create(
-            "Error: {ex}<br />You will need to restart hass after fixing.",
-            title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID,
-        )
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name="brunt",
+        update_method=async_update_data,
+        update_interval=REGULAR_INTERVAL,
+    )
+    await coordinator.async_config_entry_first_refresh()
+    async_add_entities(
+        BruntDevice(coordinator, serial, thing, bapi)
+        for serial, thing in coordinator.data.items()
+    )
+    return True
 
 
-class BruntDevice(CoverEntity):
+class BruntDevice(CoordinatorEntity, CoverEntity):
     """
     Representation of a Brunt cover device.
 
     Contains the common logic for all Brunt devices.
     """
 
-    _attr_device_class = DEVICE_CLASS_WINDOW
-    _attr_supported_features = COVER_FEATURES
-
-    def __init__(self, bapi, name, thing_uri):
+    def __init__(self, coordinator, serial, thing, bapi):
         """Init the Brunt device."""
+        super().__init__(coordinator)
+        self._unique_id = serial
         self._bapi = bapi
-        self._attr_name = name
-        self._thing_uri = thing_uri
+        self._thing = thing
+        self._last_requested = None
 
-        self._state = {}
+    # TODO: add async_add_to_hass
+    # await coordinator.async_add_listener(self._brunt_update_listener)
+
+    @property
+    def unique_id(self) -> str:
+        """Get unique_id."""
+        return self._unique_id
+
+    @property
+    def name(self):
+        """Return the name of the device as reported by tellcore."""
+        return self._thing["NAME"]
+
+    @property
+    def current_cover_position(self):
+        """
+        Return current position of cover.
+
+        None is unknown, 0 is closed, 100 is fully open.
+        """
+        pos = self.coordinator.data[self._unique_id].get("currentPosition")
+        return int(pos) if pos else None
 
     @property
     def request_cover_position(self) -> int | None:
@@ -89,7 +112,7 @@ class BruntDevice(CoverEntity):
         to Brunt, at times there is a diff of 1 to current
         None is unknown, 0 is closed, 100 is fully open.
         """
-        pos = self._state.get("requestPosition")
+        pos = self.coordinator.data[self._unique_id].get("requestPosition")
         return int(pos) if pos else None
 
     @property
@@ -99,37 +122,76 @@ class BruntDevice(CoverEntity):
 
         None is unknown, 0 when stopped, 1 when opening, 2 when closing
         """
-        mov = self._state.get("moveState")
+        mov = self.coordinator.data[self._unique_id].get("moveState")
         return int(mov) if mov else None
 
-    def update(self):
-        """Poll the current state of the device."""
-        try:
-            self._state = self._bapi.getState(thingUri=self._thing_uri).get("thing")
-            self._attr_available = True
-        except (TypeError, KeyError, NameError, ValueError) as ex:
-            _LOGGER.error("%s", ex)
-            self._attr_available = False
-        self._attr_is_opening = self.move_state == 1
-        self._attr_is_closing = self.move_state == 2
-        pos = self._state.get("currentPosition")
-        self._attr_current_cover_position = int(pos) if pos else None
-        self._attr_is_closed = self.current_cover_position == CLOSED_POSITION
-        self._attr_extra_state_attributes = {
+    @property
+    def is_opening(self):
+        """Return if the cover is opening or not."""
+        return self.move_state == 1
+
+    @property
+    def is_closing(self):
+        """Return if the cover is closing or not."""
+        return self.move_state == 2
+
+    @property
+    def extra_state_attributes(self):
+        """Return the detailed device state attributes."""
+        return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_REQUEST_POSITION: self.request_cover_position,
         }
 
-    def open_cover(self, **kwargs):
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return DEVICE_CLASS_WINDOW
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return COVER_FEATURES
+
+    @property
+    def is_closed(self):
+        """Return true if cover is closed, else False."""
+        return self.current_cover_position == CLOSED_POSITION
+
+    async def async_open_cover(self, **kwargs):
         """Set the cover to the open position."""
-        self._bapi.changeRequestPosition(OPEN_POSITION, thingUri=self._thing_uri)
+        await self._async_update_cover(OPEN_POSITION)
 
-    def close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs):
         """Set the cover to the closed position."""
-        self._bapi.changeRequestPosition(CLOSED_POSITION, thingUri=self._thing_uri)
+        await self._async_update_cover(CLOSED_POSITION)
 
-    def set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs):
         """Set the cover to a specific position."""
-        self._bapi.changeRequestPosition(
-            kwargs[ATTR_POSITION], thingUri=self._thing_uri
+        await self._async_update_cover(kwargs[ATTR_POSITION])
+
+    async def _async_update_cover(self, position):
+        """Set the cover to the new position and wait for the update to be reflected."""
+        await self._bapi.async_change_request_position(
+            position, thingUri=self._thing["thingUri"]
         )
+        self._last_requested = position
+        self.coordinator.update_interval = FAST_INTERVAL
+        await self.coordinator.async_request_refresh()
+
+    async def _brunt_update_listener(self):
+        """update listener for brunt."""
+        if self.request_cover_position != self._last_requested or self.move_state != 0:
+            self.coordinator.update_interval = REGULAR_INTERVAL
+
+    @property
+    def device_info(self) -> dict:
+        """Return the device_info."""
+        return {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self.name,
+            "via_device": None,
+            "manufacturer": "Brunt",
+            "sw_version": self._thing["FW_VERSION"],
+            "model": self._thing["MODEL"],
+        }
