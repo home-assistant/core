@@ -313,7 +313,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
         if self.group_members:
             controller = self.hass.data[HEOS_DOMAIN][DATA_CONTROLLER_MANAGER].controller
             try:
-                await controller.create_group(self.player_id, [])
+                await controller.remove_group(self.player_id)
             except HeosError as err:
                 _LOGGER.error(
                     "HEOS create_group with arguments (%s %s) failed. Error: %s",
