@@ -58,7 +58,7 @@ def service_update_mock(zeroconf, services, handlers, *, limit_service=None):
     for service in services:
         if limit_service is not None and service != limit_service:
             continue
-        handlers[0](zeroconf, service, f"name.{service}", ServiceStateChange.Added)
+        handlers[0](zeroconf, service, f"_name.{service}", ServiceStateChange.Added)
 
 
 def get_service_info_mock(service_type, name):
@@ -70,7 +70,7 @@ def get_service_info_mock(service_type, name):
         port=80,
         weight=0,
         priority=0,
-        server="_nomatch.local.",
+        server="name.local.",
         properties=PROPERTIES,
     )
 
@@ -84,7 +84,7 @@ def get_service_info_mock_without_an_address(service_type, name):
         port=80,
         weight=0,
         priority=0,
-        server="_nomatch.local.",
+        server="name.local.",
         properties=PROPERTIES,
     )
 
@@ -100,7 +100,7 @@ def get_homekit_info_mock(model, pairing_status):
             port=80,
             weight=0,
             priority=0,
-            server="_nomatch.local.",
+            server="name.local.",
             properties={b"md": model.encode(), b"sf": pairing_status},
         )
 
@@ -118,7 +118,7 @@ def get_zeroconf_info_mock(macaddress):
             port=80,
             weight=0,
             priority=0,
-            server="_nomatch.local.",
+            server="name.local.",
             properties={b"macaddress": macaddress.encode()},
         )
 
@@ -136,7 +136,7 @@ def get_zeroconf_info_mock_manufacturer(manufacturer):
             port=80,
             weight=0,
             priority=0,
-            server="_nomatch.local.",
+            server="name.local.",
             properties={b"manufacturer": manufacturer.encode()},
         )
 
@@ -273,7 +273,7 @@ async def test_service_with_invalid_name(hass, mock_zeroconf, caplog):
         await hass.async_block_till_done()
 
     assert len(mock_service_browser.mock_calls) == 1
-    assert "Failed to get info for device name" in caplog.text
+    assert "Failed to get info for device" in caplog.text
 
 
 async def test_zeroconf_match_macaddress(hass, mock_zeroconf):
