@@ -390,4 +390,5 @@ def entry_json(entry: config_entries.ConfigEntry) -> dict:
         "supports_options": supports_options,
         "supports_unload": entry.supports_unload,
         "disabled_by": entry.disabled_by,
+        "reason": entry.reason,
     }
