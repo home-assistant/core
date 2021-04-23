@@ -15,11 +15,10 @@ from homeassistant.components.device_tracker.const import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
 
 from . import HuaweiLteBaseEntity, Router
 from .const import (
@@ -52,7 +51,7 @@ def _get_hosts(
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
@@ -129,7 +128,7 @@ def _is_us(host: _HostType) -> bool:
 
 @callback
 def async_add_new_entities(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     router_url: str,
     async_add_entities: Callable[[list[Entity], bool], None],
     tracked: set[str],
