@@ -224,7 +224,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
         if error := await self.fritz_tools_init():
             errors["base"] = error
             return self._show_setup_form_reauth_confirm(
-                user_input=user_input, errors=errors
+                user_input=user_input, errors={"base": error}
             )
 
         self.hass.config_entries.async_update_entry(
