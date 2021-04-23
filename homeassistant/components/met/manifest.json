@@ -3,7 +3,7 @@
   "name": "Meteorologisk institutt (Met.no)",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/met",
-  "requirements": ["pyMetno==0.8.2"],
+  "requirements": ["pyMetno==0.8.3"],
   "codeowners": ["@danielhiversen", "@thimic"],
   "iot_class": "cloud_polling"
 }
