@@ -96,7 +96,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def set_new_unique_id(hass, uid, entry):
     """Set new unique id."""
     hass.config_entries.async_update_entry(entry, unique_id=uid)
-    registry = await async_get_registry(hass)
+    registry = async_get_entity_registry(hass)
     old_entity_id = registry.async_get_entity_id("media_player", DOMAIN, entry.entry_id)
     registry.async_update_entity(old_entity_id, new_unique_id=uid)
     hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
@@ -125,7 +125,7 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
             return False
         uid = await self._projector.get_serial_number()
         if uid:
-            self.hass.async_create_task(set_new_unique_id(self.hass, uid, self._entry))
+            async_set_new_unique_id((self.hass, uid, self._entry)
             return True
 
     async def async_update(self):
