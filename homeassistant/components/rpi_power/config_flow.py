@@ -7,6 +7,7 @@ from rpi_bad_power import new_under_voltage
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultDict
 from homeassistant.helpers.config_entry_flow import DiscoveryFlowHandler
 
 from .const import DOMAIN
@@ -34,7 +35,7 @@ class RPiPowerFlow(DiscoveryFlowHandler, domain=DOMAIN):
 
     async def async_step_onboarding(
         self, data: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResultDict:
         """Handle a flow initialized by onboarding."""
         has_devices = await self._discovery_function(self.hass)
 

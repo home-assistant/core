@@ -1,13 +1,12 @@
 """Config flow to configure Met component."""
 from __future__ import annotations
 
-from typing import Any
-
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResultDict
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -81,7 +80,7 @@ class MetFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=self._errors,
         )
 
-    async def async_step_import(self, user_input: dict | None = None) -> dict[str, Any]:
+    async def async_step_import(self, user_input: dict | None = None) -> FlowResultDict:
         """Handle configuration by yaml file."""
         return await self.async_step_user(user_input)
 

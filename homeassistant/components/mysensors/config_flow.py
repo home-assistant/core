@@ -27,6 +27,7 @@ from homeassistant.components.mysensors import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResultDict
 import homeassistant.helpers.config_validation as cv
 
 from . import CONF_RETAIN, CONF_VERSION, DEFAULT_VERSION
@@ -281,7 +282,7 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def _async_create_entry(
         self, user_input: dict[str, str] | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResultDict:
         """Create the config entry."""
         return self.async_create_entry(
             title=f"{user_input[CONF_DEVICE]}",
