@@ -3,77 +3,10 @@ from __future__ import annotations
 
 import configparser
 import io
+import os
 from typing import Final
 
 from .model import Config, Integration
-
-# Strictly typed parts of HA.
-# If your component is fully typed, please add it here to enable strict checks.
-STRICTLY_TYPED_MODULES: Final[list[str]] = [
-    "homeassistant.__init__",
-    "homeassistant.__main__",
-    "homeassistant.auth.*",
-    "homeassistant.block_async_io",
-    "homeassistant.bootstrap",
-    "homeassistant.config",
-    "homeassistant.config_entries",
-    "homeassistant.const",
-    "homeassistant.core",
-    "homeassistant.data_entry_flow",
-    "homeassistant.exceptions",
-    "homeassistant.helpers.*",
-    "homeassistant.loader",
-    "homeassistant.requirements",
-    "homeassistant.runner",
-    "homeassistant.scripts.*",
-    "homeassistant.setup",
-    "homeassistant.util",
-    "homeassistant.util.*",
-    "homeassistant.components",
-    "homeassistant.components.automation.*",
-    "homeassistant.components.binary_sensor.*",
-    "homeassistant.components.bond.*",
-    "homeassistant.components.calendar.*",
-    "homeassistant.components.cover.*",
-    "homeassistant.components.device_automation.*",
-    "homeassistant.components.frontend.*",
-    "homeassistant.components.geo_location.*",
-    "homeassistant.components.group.*",
-    "homeassistant.components.history.*",
-    "homeassistant.components.http.*",
-    "homeassistant.components.huawei_lte.*",
-    "homeassistant.components.hyperion.*",
-    "homeassistant.components.image_processing.*",
-    "homeassistant.components.integration.*",
-    "homeassistant.components.knx.*",
-    "homeassistant.components.light.*",
-    "homeassistant.components.lock.*",
-    "homeassistant.components.mailbox.*",
-    "homeassistant.components.media_player.*",
-    "homeassistant.components.notify.*",
-    "homeassistant.components.number.*",
-    "homeassistant.components.persistent_notification.*",
-    "homeassistant.components.proximity.*",
-    "homeassistant.components.recorder.purge",
-    "homeassistant.components.recorder.repack",
-    "homeassistant.components.remote.*",
-    "homeassistant.components.scene.*",
-    "homeassistant.components.sensor.*",
-    "homeassistant.components.slack.*",
-    "homeassistant.components.sonos.media_player",
-    "homeassistant.components.sun.*",
-    "homeassistant.components.switch.*",
-    "homeassistant.components.systemmonitor.*",
-    "homeassistant.components.tts.*",
-    "homeassistant.components.vacuum.*",
-    "homeassistant.components.water_heater.*",
-    "homeassistant.components.weather.*",
-    "homeassistant.components.websocket_api.*",
-    "homeassistant.components.zeroconf.*",
-    "homeassistant.components.zone.*",
-    "homeassistant.components.zwave_js.*",
-    "tests.components.hyperion.*",
-]
 
 # Modules which have type hints which known to be broken.
 # If you are an author of component listed here, please fix these errors and
@@ -329,7 +262,7 @@ HEADER: Final = """
 
 """.lstrip()
 
-COMMON_SETTINGS: Final[dict[str, str]] = {
+GENERAL_SETTINGS: Final[dict[str, str]] = {
     "python_version": "3.8",
     "show_error_codes": "true",
     "follow_imports": "silent",
@@ -341,40 +274,61 @@ COMMON_SETTINGS: Final[dict[str, str]] = {
 
 # This is basically the list of checks which is enabled for "strict=true".
 # But "strict=true" is applied globally, so we need to list all checks manually.
-STRICT_SETTINGS: Final[dict[str, str]] = {
-    "disallow_any_generics": "true",
-    "disallow_subclassing_any": "true",
-    "disallow_untyped_calls": "true",
-    "disallow_untyped_defs": "true",
-    "disallow_incomplete_defs": "true",
-    "check_untyped_defs": "true",
-    "disallow_untyped_decorators": "true",
-    "no_implicit_optional": "true",
-    "warn_unused_ignores": "true",
-    "warn_return_any": "true",
-    "no_implicit_reexport": "true",
-    "strict_equality": "true",
-    "ignore_errors": "false",
-    "warn_unreachable": "true",
-    # TODO: turn these off, address issues
-    "allow_any_generics": "true",
-    "implicit_reexport": "true",
-}
+STRICT_SETTINGS: Final[list[str]] = [
+    "check_untyped_defs",
+    "disallow_incomplete_defs",
+    "disallow_subclassing_any",
+    "disallow_untyped_calls",
+    "disallow_untyped_decorators",
+    "disallow_untyped_defs",
+    "no_implicit_optional",
+    "strict_equality",
+    "warn_return_any",
+    "warn_unreachable",
+    "warn_unused_ignores",
+    # TODO: turn these on, address issues
+    # "disallow_any_generics",
+    # "no_implicit_reexport",
+]
 
 
-def generate_and_validate() -> str:
+def generate_and_validate(integrations: dict[str, Integration]) -> str:
     """Validate and generate mypy config."""
+    ignored_modules_set: set[str] = set(IGNORED_MODULES)
+    strictly_typed_modules: list[str] = []
+
+    for domain in sorted(integrations):
+        integration = integrations[domain]
+
+        if not integration.manifest:
+            continue
+
+        strictly_typed = integration.manifest.get("strictly_typed")
+
+        if strictly_typed:
+            module_name = str(integration.path).replace(os.sep, ".") + ".*"
+            if module_name in ignored_modules_set:
+                integration.add_error("mypy_config", "Integration is in ignored list")
+            strictly_typed_modules.append(module_name)
+
     config = configparser.ConfigParser()
 
-    common_section = "mypy"
-    config.add_section(common_section)
-    for key, value in COMMON_SETTINGS.items():
-        config.set(common_section, key, value)
+    general_section = "mypy"
+    config.add_section(general_section)
+    for key, value in GENERAL_SETTINGS.items():
+        config.set(general_section, key, value)
+    for key in STRICT_SETTINGS:
+        config.set(general_section, key, "true")
 
-    strict_section = "mypy-" + ",".join(STRICTLY_TYPED_MODULES)
+    components_section = "mypy-homeassistant.components.*"
+    config.add_section(components_section)
+    for key in STRICT_SETTINGS:
+        config.set(components_section, key, "false")
+
+    strict_section = "mypy-" + ",".join(strictly_typed_modules)
     config.add_section(strict_section)
-    for key, value in STRICT_SETTINGS.items():
-        config.set(strict_section, key, value)
+    for key in STRICT_SETTINGS:
+        config.set(strict_section, key, "true")
 
     ignored_section = "mypy-" + ",".join(IGNORED_MODULES)
     config.add_section(ignored_section)
@@ -389,11 +343,13 @@ def generate_and_validate() -> str:
 def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Validate mypy config."""
     config_path = config.root / "mypy.ini"
-    config.cache["mypy_config"] = content = generate_and_validate()
+    config.cache["mypy_config"] = content = generate_and_validate(integrations)
+
+    if config.specific_integrations:
+        return
 
     with open(str(config_path)) as fp:
-        current = fp.read().strip()
-        if current != content:
+        if fp.read().strip() != content:
             config.add_error(
                 "mypy_config",
                 "File mypy.ini is not up to date. Run python3 -m script.hassfest",
