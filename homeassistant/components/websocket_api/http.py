@@ -29,6 +29,7 @@ from .messages import message_to_json
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 _WS_LOGGER = logging.getLogger(f"{__name__}.connection")
+_LOGGER = logging.getLogger(__name__)
 
 
 class WebsocketAPIView(HomeAssistantView):
@@ -74,11 +75,7 @@ class WebSocketHandler:
                 if message is None:
                     break
 
-                if not isinstance(message, str):
-                    message = message_to_json(message)
-
                 self._logger.debug("Sending %s", message)
-
                 await self.wsock.send_str(message)
 
         # Clean up the peaker checker when we shut down the writer
@@ -95,6 +92,8 @@ class WebSocketHandler:
         Async friendly.
         """
         try:
+            if not isinstance(message, str):
+                message = message_to_json(message)
             self._to_write.put_nowait(message)
         except asyncio.QueueFull:
             self._logger.error(
