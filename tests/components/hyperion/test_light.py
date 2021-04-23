@@ -39,8 +39,8 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt
 import homeassistant.util.color as color_util
 
@@ -74,7 +74,7 @@ COLOR_BLACK = color_util.COLORS["black"]
 
 
 def _get_config_entry_from_unique_id(
-    hass: HomeAssistantType, unique_id: str
+    hass: HomeAssistant, unique_id: str
 ) -> ConfigEntry | None:
     for entry in hass.config_entries.async_entries(domain=DOMAIN):
         if TEST_SYSINFO_ID == entry.unique_id:
@@ -82,14 +82,14 @@ def _get_config_entry_from_unique_id(
     return None
 
 
-async def test_setup_config_entry(hass: HomeAssistantType) -> None:
+async def test_setup_config_entry(hass: HomeAssistant) -> None:
     """Test setting up the component via config entries."""
     await setup_test_config_entry(hass, hyperion_client=create_mock_client())
     assert hass.states.get(TEST_ENTITY_ID_1) is not None
 
 
 async def test_setup_config_entry_not_ready_connect_fail(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
 ) -> None:
     """Test the component not being ready."""
     client = create_mock_client()
@@ -99,7 +99,7 @@ async def test_setup_config_entry_not_ready_connect_fail(
 
 
 async def test_setup_config_entry_not_ready_switch_instance_fail(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
 ) -> None:
     """Test the component not being ready."""
     client = create_mock_client()
@@ -110,7 +110,7 @@ async def test_setup_config_entry_not_ready_switch_instance_fail(
 
 
 async def test_setup_config_entry_not_ready_load_state_fail(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
 ) -> None:
     """Test the component not being ready."""
     client = create_mock_client()
@@ -126,7 +126,7 @@ async def test_setup_config_entry_not_ready_load_state_fail(
     assert hass.states.get(TEST_ENTITY_ID_1) is None
 
 
-async def test_setup_config_entry_dynamic_instances(hass: HomeAssistantType) -> None:
+async def test_setup_config_entry_dynamic_instances(hass: HomeAssistant) -> None:
     """Test dynamic changes in the instance configuration."""
     registry = er.async_get(hass)
 
@@ -241,7 +241,7 @@ async def test_setup_config_entry_dynamic_instances(hass: HomeAssistantType) -> 
     assert hass.states.get(TEST_ENTITY_ID_3) is not None
 
 
-async def test_light_basic_properies(hass: HomeAssistantType) -> None:
+async def test_light_basic_properies(hass: HomeAssistant) -> None:
     """Test the basic properties."""
     client = create_mock_client()
     await setup_test_config_entry(hass, hyperion_client=client)
@@ -262,7 +262,7 @@ async def test_light_basic_properies(hass: HomeAssistantType) -> None:
     )
 
 
-async def test_light_async_turn_on(hass: HomeAssistantType) -> None:
+async def test_light_async_turn_on(hass: HomeAssistant) -> None:
     """Test turning the light on."""
     client = create_mock_client()
     await setup_test_config_entry(hass, hyperion_client=client)
@@ -507,7 +507,7 @@ async def test_light_async_turn_on(hass: HomeAssistantType) -> None:
 
 
 async def test_light_async_turn_on_fail_async_send_set_component(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
 ) -> None:
     """Test set_component failure when turning the light on."""
     client = create_mock_client()
@@ -523,7 +523,7 @@ async def test_light_async_turn_on_fail_async_send_set_component(
 
 
 async def test_light_async_turn_on_fail_async_send_set_component_source(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
 ) -> None:
     """Test async_send_set_component failure when selecting the source."""
     client = create_mock_client()
@@ -546,7 +546,7 @@ async def test_light_async_turn_on_fail_async_send_set_component_source(
 
 
 async def test_light_async_turn_on_fail_async_send_clear_source(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
 ) -> None:
     """Test async_send_clear failure when turning the light on."""
     client = create_mock_client()
@@ -566,7 +566,7 @@ async def test_light_async_turn_on_fail_async_send_clear_source(
 
 
 async def test_light_async_turn_on_fail_async_send_clear_effect(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
 ) -> None:
     """Test async_send_clear failure when turning on an effect."""
     client = create_mock_client()
@@ -583,7 +583,7 @@ async def test_light_async_turn_on_fail_async_send_clear_effect(
 
 
 async def test_light_async_turn_on_fail_async_send_set_effect(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
 ) -> None:
     """Test async_send_set_effect failure when turning on the light."""
     client = create_mock_client()
@@ -603,7 +603,7 @@ async def test_light_async_turn_on_fail_async_send_set_effect(
 
 
 async def test_light_async_turn_on_fail_async_send_set_color(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
 ) -> None:
     """Test async_send_set_color failure when turning on the light."""
     client = create_mock_client()
@@ -623,7 +623,7 @@ async def test_light_async_turn_on_fail_async_send_set_color(
 
 
 async def test_light_async_turn_off_fail_async_send_set_component(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
 ) -> None:
     """Test async_send_set_component failure when turning off the light."""
     client = create_mock_client()
@@ -642,7 +642,7 @@ async def test_light_async_turn_off_fail_async_send_set_component(
 
 
 async def test_priority_light_async_turn_off_fail_async_send_clear(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
 ) -> None:
     """Test async_send_clear failure when turning off a priority light."""
     client = create_mock_client()
@@ -662,7 +662,7 @@ async def test_priority_light_async_turn_off_fail_async_send_clear(
     assert client.method_calls[-1] == call.async_send_clear(priority=180)
 
 
-async def test_light_async_turn_off(hass: HomeAssistantType) -> None:
+async def test_light_async_turn_off(hass: HomeAssistant) -> None:
     """Test turning the light off."""
     client = create_mock_client()
     await setup_test_config_entry(hass, hyperion_client=client)
@@ -705,7 +705,7 @@ async def test_light_async_turn_off(hass: HomeAssistantType) -> None:
 
 
 async def test_light_async_updates_from_hyperion_client(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
 ) -> None:
     """Test receiving a variety of Hyperion client callbacks."""
     client = create_mock_client()
@@ -825,7 +825,7 @@ async def test_light_async_updates_from_hyperion_client(
     assert entity_state.state == "on"
 
 
-async def test_full_state_loaded_on_start(hass: HomeAssistantType) -> None:
+async def test_full_state_loaded_on_start(hass: HomeAssistant) -> None:
     """Test receiving a variety of Hyperion client callbacks."""
     client = create_mock_client()
 
@@ -848,7 +848,7 @@ async def test_full_state_loaded_on_start(hass: HomeAssistantType) -> None:
     assert entity_state.attributes["hs_color"] == (180.0, 100.0)
 
 
-async def test_unload_entry(hass: HomeAssistantType) -> None:
+async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test unload."""
     client = create_mock_client()
     await setup_test_config_entry(hass, hyperion_client=client)
@@ -862,7 +862,7 @@ async def test_unload_entry(hass: HomeAssistantType) -> None:
     assert client.async_client_disconnect.call_count == 2
 
 
-async def test_version_log_warning(caplog, hass: HomeAssistantType) -> None:  # type: ignore[no-untyped-def]
+async def test_version_log_warning(caplog, hass: HomeAssistant) -> None:  # type: ignore[no-untyped-def]
     """Test warning on old version."""
     client = create_mock_client()
     client.async_sysinfo_version = AsyncMock(return_value="2.0.0-alpha.7")
@@ -871,7 +871,7 @@ async def test_version_log_warning(caplog, hass: HomeAssistantType) -> None:  # 
     assert "Please consider upgrading" in caplog.text
 
 
-async def test_version_no_log_warning(caplog, hass: HomeAssistantType) -> None:  # type: ignore[no-untyped-def]
+async def test_version_no_log_warning(caplog, hass: HomeAssistant) -> None:  # type: ignore[no-untyped-def]
     """Test no warning on acceptable version."""
     client = create_mock_client()
     client.async_sysinfo_version = AsyncMock(return_value="2.0.0-alpha.9")
@@ -880,7 +880,7 @@ async def test_version_no_log_warning(caplog, hass: HomeAssistantType) -> None: 
     assert "Please consider upgrading" not in caplog.text
 
 
-async def test_setup_entry_no_token_reauth(hass: HomeAssistantType) -> None:
+async def test_setup_entry_no_token_reauth(hass: HomeAssistant) -> None:
     """Verify a reauth flow when auth is required but no token provided."""
     client = create_mock_client()
     config_entry = add_test_config_entry(hass)
@@ -903,7 +903,7 @@ async def test_setup_entry_no_token_reauth(hass: HomeAssistantType) -> None:
         assert config_entry.state == ENTRY_STATE_SETUP_ERROR
 
 
-async def test_setup_entry_bad_token_reauth(hass: HomeAssistantType) -> None:
+async def test_setup_entry_bad_token_reauth(hass: HomeAssistant) -> None:
     """Verify a reauth flow when a bad token is provided."""
     client = create_mock_client()
     config_entry = add_test_config_entry(
@@ -932,7 +932,7 @@ async def test_setup_entry_bad_token_reauth(hass: HomeAssistantType) -> None:
 
 
 async def test_priority_light_async_updates(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
 ) -> None:
     """Test receiving a variety of Hyperion client callbacks to a HyperionPriorityLight."""
     priority_template = {
@@ -1094,7 +1094,7 @@ async def test_priority_light_async_updates(
 
 
 async def test_priority_light_async_updates_off_sets_black(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
 ) -> None:
     """Test turning the HyperionPriorityLight off."""
     client = create_mock_client()
@@ -1142,7 +1142,7 @@ async def test_priority_light_async_updates_off_sets_black(
 
 
 async def test_priority_light_prior_color_preserved_after_black(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
 ) -> None:
     """Test that color is preserved in an on->off->on cycle for a HyperionPriorityLight.
 
@@ -1265,7 +1265,7 @@ async def test_priority_light_prior_color_preserved_after_black(
     assert entity_state.attributes["hs_color"] == hs_color
 
 
-async def test_priority_light_has_no_external_sources(hass: HomeAssistantType) -> None:
+async def test_priority_light_has_no_external_sources(hass: HomeAssistant) -> None:
     """Ensure a HyperionPriorityLight does not list external sources."""
     client = create_mock_client()
     client.priorities = []
@@ -1283,7 +1283,7 @@ async def test_priority_light_has_no_external_sources(hass: HomeAssistantType) -
     assert entity_state.attributes["effect_list"] == [hyperion_light.KEY_EFFECT_SOLID]
 
 
-async def test_light_option_effect_hide_list(hass: HomeAssistantType) -> None:
+async def test_light_option_effect_hide_list(hass: HomeAssistant) -> None:
     """Test the effect_hide_list option."""
     client = create_mock_client()
     client.effects = [{const.KEY_NAME: "One"}, {const.KEY_NAME: "Two"}]
@@ -1304,7 +1304,7 @@ async def test_light_option_effect_hide_list(hass: HomeAssistantType) -> None:
     ]
 
 
-async def test_device_info(hass: HomeAssistantType) -> None:
+async def test_device_info(hass: HomeAssistant) -> None:
     """Verify device information includes expected details."""
     client = create_mock_client()
 
@@ -1336,7 +1336,7 @@ async def test_device_info(hass: HomeAssistantType) -> None:
     assert TEST_ENTITY_ID_1 in entities_from_device
 
 
-async def test_lights_can_be_enabled(hass: HomeAssistantType) -> None:
+async def test_lights_can_be_enabled(hass: HomeAssistant) -> None:
     """Verify lights can be enabled."""
     client = create_mock_client()
     await setup_test_config_entry(hass, hyperion_client=client)
@@ -1345,7 +1345,7 @@ async def test_lights_can_be_enabled(hass: HomeAssistantType) -> None:
     entry = entity_registry.async_get(TEST_PRIORITY_LIGHT_ENTITY_ID_1)
     assert entry
     assert entry.disabled
-    assert entry.disabled_by == "integration"
+    assert entry.disabled_by == er.DISABLED_INTEGRATION
     entity_state = hass.states.get(TEST_PRIORITY_LIGHT_ENTITY_ID_1)
     assert not entity_state
 
@@ -1369,7 +1369,7 @@ async def test_lights_can_be_enabled(hass: HomeAssistantType) -> None:
     assert entity_state
 
 
-async def test_deprecated_effect_names(caplog, hass: HomeAssistantType) -> None:  # type: ignore[no-untyped-def]
+async def test_deprecated_effect_names(caplog, hass: HomeAssistant) -> None:  # type: ignore[no-untyped-def]
     """Test deprecated effects function and issue a warning."""
     client = create_mock_client()
     client.async_send_clear = AsyncMock(return_value=True)
@@ -1401,7 +1401,7 @@ async def test_deprecated_effect_names(caplog, hass: HomeAssistantType) -> None:
 
 
 async def test_deprecated_effect_names_not_in_effect_list(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
 ) -> None:
     """Test deprecated effects are not in shown effect list."""
     await setup_test_config_entry(hass)
