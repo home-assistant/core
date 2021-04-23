@@ -60,6 +60,7 @@ class VulcanCalendarEventDevice(CalendarEventDevice):
         self.data = VulcanCalendarData(
             client,
             self.student_info,
+            self.hass,
         )
         self._event = None
         self.entity_id = entity_id
@@ -126,11 +127,12 @@ class VulcanCalendarEventDevice(CalendarEventDevice):
 class VulcanCalendarData:
     """Class to utilize calendar service object to get next event."""
 
-    def __init__(self, client, student_info):
+    def __init__(self, client, student_info, hass):
         """Set up how we are going to search the Vulcan calendar."""
         self.client = client
-        self.student_info = student_info
         self.event = None
+        self.hass = hass
+        self.student_info = student_info
         self._available = True
 
     async def async_get_events(self, hass, start_date, end_date):
