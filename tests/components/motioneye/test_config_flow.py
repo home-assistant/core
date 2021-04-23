@@ -40,8 +40,6 @@ async def test_user_success(hass: HomeAssistantType) -> None:
         "homeassistant.components.motioneye.MotionEyeClient",
         return_value=mock_client,
     ), patch(
-        "homeassistant.components.motioneye.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.motioneye.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -66,7 +64,6 @@ async def test_user_success(hass: HomeAssistantType) -> None:
         CONF_SURVEILLANCE_USERNAME: "surveillance-username",
         CONF_SURVEILLANCE_PASSWORD: "surveillance-password",
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -220,8 +217,6 @@ async def test_reauth(hass: HomeAssistantType) -> None:
         "homeassistant.components.motioneye.MotionEyeClient",
         return_value=mock_client,
     ), patch(
-        "homeassistant.components.motioneye.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.motioneye.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -235,5 +230,4 @@ async def test_reauth(hass: HomeAssistantType) -> None:
         assert result["reason"] == "reauth_successful"
         assert config_entry.data == new_data
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1

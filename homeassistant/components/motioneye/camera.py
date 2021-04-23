@@ -123,6 +123,7 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
         )
         CoordinatorEntity.__init__(self, coordinator)
 
+    @callback
     def _get_mjpeg_camera_properties_for_camera(
         self, camera: dict[str, Any]
     ) -> dict[str, Any]:
@@ -143,6 +144,7 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
             CONF_AUTHENTICATION: auth,
         }
 
+    @callback
     def _set_mjpeg_camera_state_for_camera(self, camera: dict[str, Any]) -> None:
         """Set the internal state to match the given camera."""
 

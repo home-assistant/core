@@ -30,7 +30,6 @@ from .const import (
     CONF_CLIENT,
     CONF_CONFIG_ENTRY,
     CONF_COORDINATOR,
-    CONF_ON_UNLOAD,
     CONF_SURVEILLANCE_PASSWORD,
     CONF_SURVEILLANCE_USERNAME,
     DEFAULT_SCAN_INTERVAL,
@@ -88,21 +87,13 @@ def listen_for_new_cameras(
 ) -> None:
     """Listen for new cameras."""
 
-    hass.data[DOMAIN][entry.entry_id][CONF_ON_UNLOAD].extend(
-        [
-            async_dispatcher_connect(
-                hass,
-                SIGNAL_CAMERA_ADD.format(entry.entry_id),
-                add_func,
-            ),
-        ]
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            SIGNAL_CAMERA_ADD.format(entry.entry_id),
+            add_func,
+        )
     )
-
-
-async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
-    """Set up the motionEye component."""
-    hass.data[DOMAIN] = {}
-    return True
 
 
 async def _create_reauth_flow(
@@ -121,7 +112,7 @@ async def _create_reauth_flow(
     )
 
 
-async def _add_camera(
+def _add_camera(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     client: MotionEyeClient,
@@ -149,6 +140,8 @@ async def _add_camera(
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up motionEye from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
+
     client = create_motioneye_client(
         entry.data[CONF_URL],
         admin_username=entry.data.get(CONF_ADMIN_USERNAME),
@@ -167,6 +160,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await client.async_client_close()
         raise ConfigEntryNotReady from exc
 
+    @callback
     async def async_update_data() -> dict[str, Any] | None:
         try:
             return await client.async_get_cameras()
@@ -183,12 +177,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = {
         CONF_CLIENT: client,
         CONF_COORDINATOR: coordinator,
-        CONF_ON_UNLOAD: [],
     }
 
     current_cameras: set[str] = set()
     device_registry = await dr.async_get_registry(hass)
 
+    @callback
     def _async_process_motioneye_cameras() -> None:
         """Process motionEye camera additions and removals."""
         inbound_camera: set[str] = set()
@@ -205,16 +199,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             if device_unique_id in current_cameras:
                 continue
             current_cameras.add(device_unique_id)
-            hass.async_create_task(
-                _add_camera(
-                    hass,
-                    device_registry,
-                    client,
-                    entry,
-                    camera_id,
-                    camera,
-                    device_unique_id,
-                )
+            _add_camera(
+                hass,
+                device_registry,
+                client,
+                entry,
+                camera_id,
+                camera,
+                device_unique_id,
             )
 
         # Ensure every device associated with this config entry is still in the list of
@@ -235,7 +227,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 for platform in PLATFORMS
             ]
         )
-        hass.data[DOMAIN][entry.entry_id][CONF_ON_UNLOAD].append(
+        entry.async_on_unload(
             coordinator.async_add_listener(_async_process_motioneye_cameras)
         )
         await coordinator.async_refresh()
@@ -257,7 +249,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         config_data = hass.data[DOMAIN].pop(entry.entry_id)
         await config_data[CONF_CLIENT].async_client_close()
-        for func in config_data[CONF_ON_UNLOAD]:
-            func()
 
     return unload_ok

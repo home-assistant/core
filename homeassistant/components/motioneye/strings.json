@@ -1,5 +1,4 @@
 {
-  "title": "motionEye",
   "config": {
     "step": {
       "user": {
@@ -19,7 +18,7 @@
       "invalid_url": "Invalid URL"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   }
