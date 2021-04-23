@@ -105,7 +105,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Stop SamsungTV bridge connection."""
         bridge.stop()
 
-    entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_bridge))
+    config_entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_bridge)
+    )
 
     async_add_entities([SamsungTVDevice(bridge, config_entry, on_script)])
 
