@@ -216,8 +216,6 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
                 user_input={CONF_USERNAME: self._username}
             )
 
-        errors = {}
-
         self._username = user_input[CONF_USERNAME]
         self._password = user_input[CONF_PASSWORD]
 
