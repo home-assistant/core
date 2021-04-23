@@ -126,3 +126,19 @@ async def test_already_imported(hass):
         )
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
+
+
+async def test_import_cannot_connect(hass):
+    """Test we handle cannot connect error."""
+    with patch(
+        "homeassistant.components.epson.Projector.get_power",
+        return_value=STATE_UNAVAILABLE,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={CONF_HOST: "1.1.1.1", CONF_NAME: "test-epson"},
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "cannot_connect"
