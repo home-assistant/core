@@ -34,7 +34,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     auth: Auth = hass.data[DOMAIN][config_entry.entry_id][AUTH_INSTANCE_KEY]
     said_list = auth.get_said_list()
     if not said_list:
-        _LOGGER.warning("No appliances found")
+        _LOGGER.debug("No appliances found")
         return
 
     aircon = AirConEntity(said_list[0], auth)
@@ -49,9 +49,7 @@ class AirConEntity(ClimateEntity):
         self._aircon = Aircon(auth, said, self.schedule_update_ha_state)
 
         self._name = said
-        self._supported_features = SUPPORT_TARGET_TEMPERATURE
-        self._supported_features |= SUPPORT_FAN_MODE
-        self._supported_features |= SUPPORT_SWING_MODE
+        self._supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE | SUPPORT_SWING_MODE
 
     async def async_added_to_hass(self) -> None:
         """Connect aircon to the cloud."""
@@ -162,6 +160,7 @@ class AirConEntity(ClimateEntity):
         """Set HVAC mode."""
         if hvac_mode == HVAC_MODE_OFF:
             await self._aircon.set_power_on(False)
+            return
 
         mode = None
         if hvac_mode == HVAC_MODE_COOL:
