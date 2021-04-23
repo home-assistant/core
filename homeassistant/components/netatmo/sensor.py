@@ -405,6 +405,8 @@ class NetatmoSensor(NetatmoBase, SensorEntity):
             self._state = None
             return
 
+        self.async_write_ha_state()
+
 
 def fix_angle(angle: int) -> int:
     """Fix angle when value is negative."""
@@ -610,13 +612,6 @@ class NetatmoPublicSensor(NetatmoBase, SensorEntity):
     @callback
     def async_update_callback(self):
         """Update the entity's state."""
-        if self._data is None:
-            if self._state is None:
-                return
-            _LOGGER.warning("No data from update")
-            self._state = None
-            return
-
         data = None
 
         if self.type == "temperature":
@@ -650,3 +645,5 @@ class NetatmoPublicSensor(NetatmoBase, SensorEntity):
                 self._state = round(sum(values) / len(values), 1)
             elif self._mode == "max":
                 self._state = max(values)
+
+        self.async_write_ha_state()
