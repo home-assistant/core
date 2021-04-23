@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "already_configured": "El compte ja ha estat configurat",
             "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
         },
         "error": {
@@ -9,6 +9,10 @@
             "unknown": "Error inesperat"
         },
         "step": {
+            "reauth_confirm": {
+                "description": "La integraci\u00f3 SmartTub ha de tornar a autenticar el teu compte",
+                "title": "Reautenticaci\u00f3 de la integraci\u00f3"
+            },
             "user": {
                 "data": {
                     "email": "Correu electr\u00f2nic",

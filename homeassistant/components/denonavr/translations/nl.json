@@ -37,6 +37,7 @@
             "init": {
                 "data": {
                     "show_all_sources": "Toon alle bronnen",
+                    "update_audyssey": "Audyssey-instellingen bijwerken",
                     "zone2": "Stel Zone 2 in",
                     "zone3": "Stel Zone 3 in"
                 },

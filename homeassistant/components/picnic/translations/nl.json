@@ -1,19 +1,19 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Picnic integratie is al geconfigureerd"
+            "already_configured": "Apparaat is al geconfigureerd"
         },
         "error": {
-            "cannot_connect": "Kan niet verbinden met Picnic server",
-            "invalid_auth": "Verkeerde gebruikersnaam/wachtwoord",
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie",
             "unknown": "Onverwachte fout"
         },
         "step": {
             "user": {
                 "data": {
+                    "country_code": "Landcode",
                     "password": "Wachtwoord",
-                    "username": "Gebruikersnaam",
-                    "country_code": "Landcode"
+                    "username": "Gebruikersnaam"
                 }
             }
         }

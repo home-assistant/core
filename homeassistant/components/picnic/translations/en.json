@@ -1,19 +1,19 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Picnic integration is already configured"
+            "already_configured": "Device is already configured"
         },
         "error": {
-            "cannot_connect": "Failed to connect to Picnic server",
-            "invalid_auth": "Invalid credentials",
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },
         "step": {
             "user": {
                 "data": {
+                    "country_code": "Country code",
                     "password": "Password",
-                    "username": "Username",
-                    "country_code": "County code"
+                    "username": "Username"
                 }
             }
         }
