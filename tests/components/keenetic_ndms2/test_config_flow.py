@@ -9,7 +9,7 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import keenetic_ndms2 as keenetic
 from homeassistant.components.keenetic_ndms2 import const
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from . import MOCK_DATA, MOCK_NAME, MOCK_OPTIONS
 
@@ -43,7 +43,7 @@ def mock_keenetic_connect_failed():
         yield
 
 
-async def test_flow_works(hass: HomeAssistantType, connect):
+async def test_flow_works(hass: HomeAssistant, connect):
     """Test config flow."""
 
     result = await hass.config_entries.flow.async_init(
@@ -67,7 +67,7 @@ async def test_flow_works(hass: HomeAssistantType, connect):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_import_works(hass: HomeAssistantType, connect):
+async def test_import_works(hass: HomeAssistant, connect):
     """Test config flow."""
 
     with patch(
