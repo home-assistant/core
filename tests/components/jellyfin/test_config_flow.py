@@ -1,4 +1,6 @@
 """Test the jellyfin config flow."""
+from unittest.mock import patch
+
 from jellyfin_apiclient_python.connection_manager import CONNECTION_STATE
 
 from homeassistant import config_entries, data_entry_flow, setup
@@ -6,7 +8,6 @@ from homeassistant.components.jellyfin.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 URL = "https://example.com"
@@ -44,8 +45,6 @@ async def test_form(hass: HomeAssistant):
         "homeassistant.components.jellyfin.config_flow.ConnectionManager.login",
         return_value=MOCK_SUCCESFUL_LOGIN_RESPONSE,
     ) as mock_login, patch(
-        "homeassistant.components.jellyfin.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.jellyfin.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -69,7 +68,6 @@ async def test_form(hass: HomeAssistant):
 
     assert len(mock_connect.mock_calls) == 1
     assert len(mock_login.mock_calls) == 1
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 

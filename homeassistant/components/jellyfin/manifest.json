@@ -10,6 +10,7 @@
   "zeroconf": [],
   "homekit": {},
   "dependencies": [],
+  "iot_class": "local_polling",
   "codeowners": [
     "@j-stienstra"
   ]
