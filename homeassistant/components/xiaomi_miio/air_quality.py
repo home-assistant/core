@@ -29,6 +29,12 @@ ATTR_CO2E = "carbon_dioxide_equivalent"
 ATTR_TVOC = "total_volatile_organic_compounds"
 ATTR_TEMP = "temperature"
 ATTR_HUM = "humidity"
+ATTR_BATTERY = "battery"
+ATTR_CHARGING = "charging_state"
+ATTR_MONITORING_FREQ = "monitoring_frequency"
+ATTR_SCREEN_OFF = "screen_off"
+ATTR_DEVICE_OFF = "device_off"
+ATTR_DISPLAY_TEMP_UNIT = "display_temperature_unit"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -43,6 +49,17 @@ PROP_TO_ATTR = {
     "total_volatile_organic_compounds": ATTR_TVOC,
     "temperature": ATTR_TEMP,
     "humidity": ATTR_HUM,
+}
+
+PROP_TO_ATTR_CGDN1 = {
+    "temperature": ATTR_TEMP,
+    "humidity": ATTR_HUM,
+    "battery": ATTR_BATTERY,
+    "charging_state": ATTR_CHARGING,
+    "monitoring_frequency": ATTR_MONITORING_FREQ,
+    "screen_off": ATTR_SCREEN_OFF,
+    "device_off": ATTR_DEVICE_OFF,
+    "display_temperature_unit": ATTR_DISPLAY_TEMP_UNIT,
 }
 
 
@@ -189,6 +206,14 @@ class AirMonitorCGDN1(XiaomiMiioEntity, AirQualityEntity):
         self._carbon_dioxide = None
         self._particulate_matter_2_5 = None
         self._particulate_matter_10 = None
+        self._temperature = None
+        self._humidity = None
+        self._battery = None
+        self._charging_state = None
+        self._monitoring_frequency = None
+        self._screen_off = None
+        self._device_off = None
+        self._display_temperature_unit = None
 
     async def async_update(self):
         """Fetch state from the miio device."""
@@ -198,10 +223,19 @@ class AirMonitorCGDN1(XiaomiMiioEntity, AirQualityEntity):
             self._carbon_dioxide = state.co2
             self._particulate_matter_2_5 = round(state.pm25, 1)
             self._particulate_matter_10 = round(state.pm10, 1)
+            self._temperature = state.temperature
+            self._humidity = state.humidity
+            self._battery = state.battery
+            self._charging_state = state.charging_state.name
+            self._monitoring_frequency = state.monitoring_frequency
+            self._screen_off = state.screen_off
+            self._device_off = state.device_off
+            self._display_temperature_unit = state.display_temperature_unit.value
             self._available = True
         except DeviceException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            if self._available:
+                self._available = False
+                _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     @property
     def icon(self):
@@ -227,6 +261,59 @@ class AirMonitorCGDN1(XiaomiMiioEntity, AirQualityEntity):
     def particulate_matter_10(self):
         """Return the particulate matter 10 level."""
         return self._particulate_matter_10
+
+    @property
+    def temperature(self):
+        """Return the current temperature."""
+        return self._temperature
+
+    @property
+    def humidity(self):
+        """Return the current humidity."""
+        return self._humidity
+
+    @property
+    def battery(self):
+        """Return battery level (0...100%)."""
+        return self._battery
+
+    @property
+    def charging_state(self):
+        """Return charging state."""
+        return self._charging_state
+
+    @property
+    def monitoring_frequency(self):
+        """Return monitoring frequency time (0..600 s)."""
+        return self._monitoring_frequency
+
+    @property
+    def screen_off(self):
+        """Return screen off time (0..300 s)."""
+        return self._screen_off
+
+    @property
+    def device_off(self):
+        """Return device off time (0..60 min)."""
+        return self._device_off
+
+    @property
+    def display_temperature_unit(self):
+        """Return display temperature unit."""
+        return self._display_temperature_unit
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        data = {}
+
+        for prop, attr in PROP_TO_ATTR_CGDN1.items():
+            value = getattr(self, prop)
+
+            if value is not None:
+                data[attr] = value
+
+        return data
 
 
 DEVICE_MAP = {
