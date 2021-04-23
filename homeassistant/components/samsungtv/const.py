@@ -20,7 +20,7 @@ CONF_SERIALNO = "serial_number"
 RESULT_AUTH_MISSING = "auth_missing"
 RESULT_ID_MISSING = "id_missing"
 RESULT_SUCCESS = "success"
-RESULT_NOT_SUCCESSFUL = "cannot_connect"
+RESULT_CANNOT_CONNECT = "cannot_connect"
 RESULT_NOT_SUPPORTED = "not_supported"
 RESULT_UNKNOWN_HOST = "unknown"
 
