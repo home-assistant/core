@@ -316,7 +316,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
                 await controller.remove_group(self.player_id)
             except HeosError as err:
                 _LOGGER.error(
-                    "HEOS create_group with arguments (%s %s) failed. Error: %s",
+                    "Failed to ungroup %s: %s",
                     self.entity_id,
                     [],
                     err,
