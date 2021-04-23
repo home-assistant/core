@@ -1,5 +1,6 @@
 """Support for LG TV running on NetCast 3 or 4."""
 from datetime import datetime, timedelta
+from xml.etree import ElementTree
 
 from pylgnetcast import LgNetCastClient, LgNetCastError
 from requests import RequestException
@@ -97,6 +98,22 @@ class LgTVDevice(MediaPlayerEntity):
         try:
             with self._client as client:
                 client.send_command(command)
+        except (LgNetCastError, RequestException):
+            self._state = STATE_OFF
+
+    def change_channel(self, channel):
+        """Send tv change channel command."""
+
+        try:
+            with self._client as client:
+                message = client.COMMAND % (
+                    client._session,  # pylint: disable=protected-access
+                    "HandleChannelChange",
+                    ElementTree.tostring(channel, encoding="utf-8"),
+                )
+                client._send_to_tv(
+                    "command", message
+                )  # pylint: disable=protected-access
         except (LgNetCastError, RequestException):
             self._state = STATE_OFF
 
@@ -224,7 +241,7 @@ class LgTVDevice(MediaPlayerEntity):
 
     def select_source(self, source):
         """Select input source."""
-        self._client.change_channel(self._sources[source])
+        self.change_channel(self._sources[source])
 
     def media_play_pause(self):
         """Simulate play pause media player."""
