@@ -102,7 +102,7 @@ class JellyfinSource(MediaSource):
         if item_type == ITEM_TYPE_ALBUM:
             return await self._build_album(media_item, True)
 
-        raise BrowseError("Unsupported item type %s" % item_type)
+        raise BrowseError(f"Unsupported item type {item_type}")
 
     async def _build_libraries(self) -> BrowseMediaSource:
         """Return all supported libraries the user has access to as media sources."""
@@ -132,8 +132,9 @@ class JellyfinSource(MediaSource):
         libraries = response["Items"]
         result = []
         for library in libraries:
-            if library[ITEM_KEY_COLLECTION_TYPE] in SUPPORTED_COLLECTION_TYPES:
-                result.append(library)
+            if ITEM_KEY_COLLECTION_TYPE in library:
+                if library[ITEM_KEY_COLLECTION_TYPE] in SUPPORTED_COLLECTION_TYPES:
+                    result.append(library)
         return result
 
     async def _build_library(
@@ -145,7 +146,7 @@ class JellyfinSource(MediaSource):
         if collection_type == COLLECTION_TYPE_MUSIC:
             return await self._build_music_library(library, include_children)
 
-        raise BrowseError("Unsupported collection type %s" % collection_type)
+        raise BrowseError(f"Unsupported collection type {collection_type}")
 
     async def _build_music_library(
         self, library: dict, include_children: bool
@@ -288,7 +289,7 @@ class JellyfinSource(MediaSource):
         if media_type == MEDIA_TYPE_AUDIO:
             return self._get_audio_stream_url(media_item)
 
-        raise BrowseError("Unsupported media type %s" % media_type)
+        raise BrowseError(f"Unsupported media type {media_type}")
 
     def _get_audio_stream_url(self, media_item: dict) -> str:
         """Return the stream URL for a music media item."""

@@ -11,13 +11,9 @@ from jellyfin_apiclient_python.connection_manager import (
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.components.jellyfin.const import (
-    CLIENT_VERSION,
-    DOMAIN,
-    USER_AGENT,
-    USER_APP_NAME,
-)
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
+
+from .const import CLIENT_VERSION, DOMAIN, USER_AGENT, USER_APP_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -103,13 +99,18 @@ def _connect_to_address(connection_manager: ConnectionManager, url: str):
     state = connection_manager.connect_to_address(url)
     if state["State"] != CONNECTION_STATE["ServerSignIn"]:
         _LOGGER.error(
-            "Unable to connect to: %s. Connection State: %s", url, state["State"]
+            "Unable to connect to: %s. Connection State: %s",
+            url,
+            state["State"],
         )
         raise CannotConnect
 
 
 def _login(
-    connection_manager: ConnectionManager, url: str, username: str, password: str
+    connection_manager: ConnectionManager,
+    url: str,
+    username: str,
+    password: str,
 ):
     """Assert that the user can log in to the Jellyfin server."""
     response = connection_manager.login(url, username, password)
