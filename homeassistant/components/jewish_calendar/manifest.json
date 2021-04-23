@@ -4,5 +4,5 @@
   "documentation": "https://www.home-assistant.io/integrations/jewish_calendar",
   "requirements": ["hdate==0.10.2"],
   "codeowners": ["@tsvi"],
-  "iot_class": "local_polling"
+  "iot_class": "calculated"
 }
