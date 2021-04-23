@@ -7,6 +7,7 @@ import pytest
 from homeassistant.components.analytics.analytics import Analytics
 from homeassistant.components.analytics.const import (
     ANALYTICS_ENDPOINT_URL,
+    ANALYTICS_ENDPOINT_URL_DEV,
     ATTR_BASE,
     ATTR_DIAGNOSTICS,
     ATTR_PREFERENCES,
@@ -19,11 +20,12 @@ from homeassistant.loader import IntegrationNotFound
 from homeassistant.setup import async_setup_component
 
 MOCK_UUID = "abcdefg"
+MOCK_VERSION = "1970.1.0"
 
 
 async def test_no_send(hass, caplog, aioclient_mock):
     """Test send when no prefrences are defined."""
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL_DEV, status=200)
     analytics = Analytics(hass)
     with patch(
         "homeassistant.components.hassio.is_hassio",
@@ -73,17 +75,20 @@ async def test_load_with_supervisor_without_diagnostics(hass):
 
 async def test_failed_to_send(hass, caplog, aioclient_mock):
     """Test failed to send payload."""
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=400)
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL_DEV, status=400)
     analytics = Analytics(hass)
     await analytics.save_preferences({ATTR_BASE: True})
     assert analytics.preferences[ATTR_BASE]
     await analytics.send_analytics()
-    assert "Sending analytics failed with statuscode 400" in caplog.text
+    assert (
+        f"Sending analytics failed with statuscode 400 from {ANALYTICS_ENDPOINT_URL_DEV}"
+        in caplog.text
+    )
 
 
 async def test_failed_to_send_raises(hass, caplog, aioclient_mock):
     """Test raises when failed to send payload."""
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, exc=aiohttp.ClientError())
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL_DEV, exc=aiohttp.ClientError())
     analytics = Analytics(hass)
     await analytics.save_preferences({ATTR_BASE: True})
     assert analytics.preferences[ATTR_BASE]
@@ -93,7 +98,7 @@ async def test_failed_to_send_raises(hass, caplog, aioclient_mock):
 
 async def test_send_base(hass, caplog, aioclient_mock):
     """Test send base prefrences are defined."""
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL_DEV, status=200)
     analytics = Analytics(hass)
 
     await analytics.save_preferences({ATTR_BASE: True})
@@ -112,7 +117,7 @@ async def test_send_base(hass, caplog, aioclient_mock):
 
 async def test_send_base_with_supervisor(hass, caplog, aioclient_mock):
     """Test send base prefrences are defined."""
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL_DEV, status=200)
 
     analytics = Analytics(hass)
     await analytics.save_preferences({ATTR_BASE: True})
@@ -148,7 +153,7 @@ async def test_send_base_with_supervisor(hass, caplog, aioclient_mock):
 
 async def test_send_usage(hass, caplog, aioclient_mock):
     """Test send usage prefrences are defined."""
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL_DEV, status=200)
     analytics = Analytics(hass)
     await analytics.save_preferences({ATTR_BASE: True, ATTR_USAGE: True})
 
@@ -164,7 +169,7 @@ async def test_send_usage(hass, caplog, aioclient_mock):
 
 async def test_send_usage_with_supervisor(hass, caplog, aioclient_mock):
     """Test send usage with supervisor prefrences are defined."""
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL_DEV, status=200)
 
     analytics = Analytics(hass)
     await analytics.save_preferences({ATTR_BASE: True, ATTR_USAGE: True})
@@ -211,7 +216,7 @@ async def test_send_usage_with_supervisor(hass, caplog, aioclient_mock):
 
 async def test_send_statistics(hass, caplog, aioclient_mock):
     """Test send statistics prefrences are defined."""
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL_DEV, status=200)
     analytics = Analytics(hass)
     await analytics.save_preferences({ATTR_BASE: True, ATTR_STATISTICS: True})
     assert analytics.preferences[ATTR_BASE]
@@ -228,7 +233,7 @@ async def test_send_statistics(hass, caplog, aioclient_mock):
 
 async def test_send_statistics_one_integration_fails(hass, caplog, aioclient_mock):
     """Test send statistics prefrences are defined."""
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL_DEV, status=200)
     analytics = Analytics(hass)
     await analytics.save_preferences({ATTR_BASE: True, ATTR_STATISTICS: True})
     assert analytics.preferences[ATTR_BASE]
@@ -250,7 +255,7 @@ async def test_send_statistics_async_get_integration_unknown_exception(
     hass, caplog, aioclient_mock
 ):
     """Test send statistics prefrences are defined."""
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL_DEV, status=200)
     analytics = Analytics(hass)
     await analytics.save_preferences({ATTR_BASE: True, ATTR_STATISTICS: True})
     assert analytics.preferences[ATTR_BASE]
@@ -266,7 +271,7 @@ async def test_send_statistics_async_get_integration_unknown_exception(
 
 async def test_send_statistics_with_supervisor(hass, caplog, aioclient_mock):
     """Test send statistics prefrences are defined."""
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL_DEV, status=200)
     analytics = Analytics(hass)
     await analytics.save_preferences({ATTR_BASE: True, ATTR_STATISTICS: True})
     assert analytics.preferences[ATTR_BASE]
@@ -308,7 +313,7 @@ async def test_send_statistics_with_supervisor(hass, caplog, aioclient_mock):
 
 async def test_reusing_uuid(hass, aioclient_mock):
     """Test reusing the stored UUID."""
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL_DEV, status=200)
     analytics = Analytics(hass)
     analytics._data[ATTR_UUID] = "NOT_MOCK_UUID"
 
@@ -324,7 +329,7 @@ async def test_reusing_uuid(hass, aioclient_mock):
 
 async def test_custom_integrations(hass, aioclient_mock):
     """Test sending custom integrations."""
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL_DEV, status=200)
     analytics = Analytics(hass)
     assert await async_setup_component(hass, "test_package", {"test_package": {}})
     await analytics.save_preferences({ATTR_BASE: True, ATTR_USAGE: True})
@@ -333,3 +338,35 @@ async def test_custom_integrations(hass, aioclient_mock):
 
     payload = aioclient_mock.mock_calls[0][2]
     assert payload["custom_integrations"][0][ATTR_DOMAIN] == "test_package"
+
+
+async def test_production_url(hass, aioclient_mock):
+    """Test sending payload to production url integrations."""
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    analytics = Analytics(hass)
+    await analytics.save_preferences({ATTR_BASE: True})
+
+    with patch("homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION):
+
+        await analytics.send_analytics()
+
+    payload = aioclient_mock.mock_calls[0]
+    assert str(payload[1]) == ANALYTICS_ENDPOINT_URL
+
+
+async def test_production_url_error(hass, aioclient_mock, caplog):
+    """Test sending payload to production url integrations that returns error."""
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=400)
+    analytics = Analytics(hass)
+    await analytics.save_preferences({ATTR_BASE: True})
+
+    with patch("homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION):
+
+        await analytics.send_analytics()
+
+    payload = aioclient_mock.mock_calls[0]
+    assert str(payload[1]) == ANALYTICS_ENDPOINT_URL
+    assert (
+        f"Sending analytics failed with statuscode 400 from {ANALYTICS_ENDPOINT_URL}"
+        in caplog.text
+    )

@@ -1,5 +1,5 @@
 """The tests for the analytics ."""
-from homeassistant.components.analytics.const import ANALYTICS_ENDPOINT_URL, DOMAIN
+from homeassistant.components.analytics.const import ANALYTICS_ENDPOINT_URL_DEV, DOMAIN
 from homeassistant.setup import async_setup_component
 
 
@@ -13,7 +13,7 @@ async def test_setup(hass):
 
 async def test_websocket(hass, hass_ws_client, aioclient_mock):
     """Test websocekt commands."""
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL_DEV, status=200)
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
 
