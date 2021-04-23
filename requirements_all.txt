@@ -1235,7 +1235,7 @@ pyMetEireann==0.2
 
 # homeassistant.components.met
 # homeassistant.components.norway_air
-pyMetno==0.8.2
+pyMetno==0.8.3
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.26.1
