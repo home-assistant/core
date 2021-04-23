@@ -91,6 +91,9 @@ class WebSocketHandler:
 
         Async friendly.
         """
+        if not isinstance(message, str):
+            message = message_to_json(message)
+
         try:
             if not isinstance(message, str):
                 message = message_to_json(message)
