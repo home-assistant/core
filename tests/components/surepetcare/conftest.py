@@ -17,5 +17,5 @@ async def surepetcare(hass):
             session=async_get_clientsession(hass),
             api_timeout=1,
         )
-        instance._get_resource = AsyncMock(return_value=None)
+        instance.get_entities = AsyncMock(return_value=None)
         yield mock_surepetcare
