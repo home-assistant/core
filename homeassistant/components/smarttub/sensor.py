@@ -104,24 +104,28 @@ class SmartTubPrimaryFiltrationCycle(SmartTubSensor):
         )
 
     @property
+    def cycle(self) -> smarttub.SpaPrimaryFiltrationCycle:
+        """Return the underlying smarttub.SpaPrimaryFiltrationCycle object."""
+        return self._state
+
+    @property
     def state(self) -> str:
         """Return the current state of the sensor."""
-        return self._state.status.name.lower()
+        return self.cycle.status.name.lower()
 
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
-        state = self._state
         return {
-            ATTR_DURATION: state.duration,
-            ATTR_CYCLE_LAST_UPDATED: state.last_updated.isoformat(),
-            ATTR_MODE: state.mode.name.lower(),
-            ATTR_START_HOUR: state.start_hour,
+            ATTR_DURATION: self.cycle.duration,
+            ATTR_CYCLE_LAST_UPDATED: self.cycle.last_updated.isoformat(),
+            ATTR_MODE: self.cycle.mode.name.lower(),
+            ATTR_START_HOUR: self.cycle.start_hour,
         }
 
     async def async_set_primary_filtration(self, **kwargs):
         """Update primary filtration settings."""
-        await self._state.set(
+        await self.cycle.set(
             duration=kwargs.get(ATTR_DURATION),
             start_hour=kwargs.get(ATTR_START_HOUR),
         )
@@ -137,17 +141,21 @@ class SmartTubSecondaryFiltrationCycle(SmartTubSensor):
         )
 
     @property
+    def cycle(self) -> smarttub.SpaSecondaryFiltrationCycle:
+        """Return the underlying smarttub.SpaSecondaryFiltrationCycle object."""
+        return self._state
+
+    @property
     def state(self) -> str:
         """Return the current state of the sensor."""
-        return self._state.status.name.lower()
+        return self.cycle.status.name.lower()
 
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
-        state = self._state
         return {
-            ATTR_CYCLE_LAST_UPDATED: state.last_updated.isoformat(),
-            ATTR_MODE: state.mode.name.lower(),
+            ATTR_CYCLE_LAST_UPDATED: self.cycle.last_updated.isoformat(),
+            ATTR_MODE: self.cycle.mode.name.lower(),
         }
 
     async def async_set_secondary_filtration(self, **kwargs):
@@ -155,4 +163,4 @@ class SmartTubSecondaryFiltrationCycle(SmartTubSensor):
         mode = smarttub.SpaSecondaryFiltrationCycle.SecondaryFiltrationMode[
             kwargs[ATTR_MODE].upper()
         ]
-        await self._state.set_mode(mode)
+        await self.cycle.set_mode(mode)
