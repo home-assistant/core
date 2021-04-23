@@ -39,7 +39,7 @@ class SmartTubPump(SmartTubEntity, SwitchEntity):
     @property
     def pump(self) -> SpaPump:
         """Return the underlying SpaPump object for this entity."""
-        return self.coordinator.data[self.spa.id]["pumps"][self.pump_id]
+        return self.coordinator.data[self.spa.id][ATTR_PUMPS][self.pump_id]
 
     @property
     def unique_id(self) -> str:

@@ -37,7 +37,6 @@ class SmartTubController:
         self._hass = hass
         self._account = None
         self.spas = set()
-        self._spa_devices = {}
 
         self.coordinator = None
 
@@ -110,14 +109,13 @@ class SmartTubController:
         """Register devices with the device registry for all spas."""
         device_registry = await dr.async_get_registry(self._hass)
         for spa in self.spas:
-            device = device_registry.async_get_or_create(
+            device_registry.async_get_or_create(
                 config_entry_id=entry.entry_id,
                 identifiers={(DOMAIN, spa.id)},
                 manufacturer=spa.brand,
                 name=get_spa_name(spa),
                 model=spa.model,
             )
-            self._spa_devices[spa.id] = device
 
     async def login(self, email, password) -> Account:
         """Retrieve the account corresponding to the specified email and password.
