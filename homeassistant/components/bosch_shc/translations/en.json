@@ -29,7 +29,8 @@
         "error": {
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
-            "unknown": "Unexpected error"
+            "unknown": "Unexpected error",
+            "pairing_failed": "Pairing failed"
         },
         "abort": {
             "already_configured": "Device is already configured",

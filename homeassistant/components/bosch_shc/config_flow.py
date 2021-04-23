@@ -61,6 +61,18 @@ def create_credentials_and_validate(hass, host, user_input, zeroconf):
     return result
 
 
+def get_info_from_host(hass, host, zeroconf):
+    """Get information from host."""
+    session = SHCSession(
+        host,
+        "",
+        "",
+        True,
+        zeroconf,
+    )
+    return session.mdns_info
+
+
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Bosch SHC."""
 
@@ -138,7 +150,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.warning(
                     "SHC not in pairing mode! Please press the Bosch Smart Home Controller button until LED starts blinking"
                 )
-                errors["base"] = "unknown"
+                errors["base"] = "pairing_mode"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -206,14 +218,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get additional information."""
         zeroconf = await async_get_instance(self.hass)
 
-        session = await self.hass.async_add_executor_job(
-            SHCSession,
+        information = await self.hass.async_add_executor_job(
+            get_info_from_host,
             host,
-            "",
-            "",
-            True,
             zeroconf,
         )
 
-        information = await self.hass.async_add_executor_job(session.mdns_info)
         return {"title": information.name, "unique_id": information.unique_id}
