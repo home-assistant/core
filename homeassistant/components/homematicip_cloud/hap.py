@@ -8,10 +8,9 @@ from homematicip.base.base_connection import HmipConnectionError
 from homematicip.base.enums import EventType
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import HMIPC_AUTHTOKEN, HMIPC_HAPID, HMIPC_NAME, HMIPC_PIN, PLATFORMS
 from .errors import HmipcConnectionError
@@ -54,7 +53,7 @@ class HomematicipAuth:
         except HmipConnectionError:
             return False
 
-    async def get_auth(self, hass: HomeAssistantType, hapid, pin):
+    async def get_auth(self, hass: HomeAssistant, hapid, pin):
         """Create a HomematicIP access point object."""
         auth = AsyncAuth(hass.loop, async_get_clientsession(hass))
         try:
@@ -70,7 +69,7 @@ class HomematicipAuth:
 class HomematicipHAP:
     """Manages HomematicIP HTTP and WebSocket connection."""
 
-    def __init__(self, hass: HomeAssistantType, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize HomematicIP Cloud connection."""
         self.hass = hass
         self.config_entry = config_entry
@@ -234,7 +233,7 @@ class HomematicipHAP:
         )
 
     async def get_hap(
-        self, hass: HomeAssistantType, hapid: str, authtoken: str, name: str
+        self, hass: HomeAssistant, hapid: str, authtoken: str, name: str
     ) -> AsyncHome:
         """Create a HomematicIP access point object."""
         home = AsyncHome(hass.loop, async_get_clientsession(hass))
