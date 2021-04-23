@@ -114,7 +114,7 @@ async def test_user_already_configured(hass: HomeAssistant, fc_class_mock):
 
 
 async def test_exception_security(hass: HomeAssistant):
-    """Test starting a flow by user."""
+    """Test starting a flow by user with invalid credentials."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
