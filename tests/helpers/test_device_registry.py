@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import RequiredParameterMissing
@@ -1232,7 +1233,9 @@ async def test_disable_config_entry_disables_devices(hass, registry):
     assert not entry1.disabled
     assert entry2.disabled
 
-    await hass.config_entries.async_set_disabled_by(config_entry.entry_id, "user")
+    await hass.config_entries.async_set_disabled_by(
+        config_entry.entry_id, config_entries.DISABLED_USER
+    )
     await hass.async_block_till_done()
 
     entry1 = registry.async_get(entry1.id)

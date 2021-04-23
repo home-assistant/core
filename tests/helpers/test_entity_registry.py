@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_START, STATE_UNAVAILABLE
 from homeassistant.core import CoreState, callback, valid_entity_id
 from homeassistant.helpers import entity_registry as er
@@ -841,7 +842,9 @@ async def test_disable_config_entry_disables_entities(hass, registry):
     assert entry2.disabled
     assert entry3.disabled
 
-    await hass.config_entries.async_set_disabled_by(config_entry.entry_id, "user")
+    await hass.config_entries.async_set_disabled_by(
+        config_entry.entry_id, config_entries.DISABLED_USER
+    )
     await hass.async_block_till_done()
 
     entry1 = registry.async_get(entry1.entity_id)

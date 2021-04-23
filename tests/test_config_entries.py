@@ -504,7 +504,9 @@ async def test_domains_gets_domains_excludes_ignore_and_disabled(manager):
         domain="ignored", source=config_entries.SOURCE_IGNORE
     ).add_to_manager(manager)
     MockConfigEntry(domain="test3").add_to_manager(manager)
-    MockConfigEntry(domain="disabled", disabled_by="user").add_to_manager(manager)
+    MockConfigEntry(
+        domain="disabled", disabled_by=config_entries.DISABLED_USER
+    ).add_to_manager(manager)
     assert manager.async_domains() == ["test", "test2", "test3"]
     assert manager.async_domains(include_ignore=False) == ["test", "test2", "test3"]
     assert manager.async_domains(include_disabled=False) == ["test", "test2", "test3"]
