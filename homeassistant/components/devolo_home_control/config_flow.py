@@ -15,6 +15,7 @@ from .const import (  # pylint:disable=unused-import
     DOMAIN,
     SUPPORTED_MODEL_TYPES,
 )
+from .exceptions import CredentialsInvalid
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,14 +35,16 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
-        step_id = "user"
         if self.show_advanced_options:
             self.data_schema[
                 vol.Required(CONF_MYDEVOLO, default=DEFAULT_MYDEVOLO)
             ] = str
         if user_input is None:
-            return self._show_form(step_id=step_id)
-        return await self._connect_mydevolo(user_input, step_id)
+            return self._show_form(step_id="user")
+        try:
+            return await self._connect_mydevolo(user_input)
+        except CredentialsInvalid:
+            return self._show_form(step_id="user", errors={"base": "invalid_auth"})
 
     async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType):
         """Handle zeroconf discovery."""
@@ -53,20 +56,24 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf_confirm(self, user_input=None):
         """Handle a flow initiated by zeroconf."""
-        step_id = "zeroconf_confirm"
         if user_input is None:
-            return self._show_form(step_id=step_id)
-        return await self._connect_mydevolo(user_input, step_id)
+            return self._show_form(step_id="zeroconf_confirm")
+        try:
+            return await self._connect_mydevolo(user_input)
+        except CredentialsInvalid:
+            return self._show_form(
+                step_id="zeroconf_confirm", errors={"base": "invalid_auth"}
+            )
 
-    async def _connect_mydevolo(self, user_input, step_id):
+    async def _connect_mydevolo(self, user_input):
         """Connect to mydevolo."""
         mydevolo = configure_mydevolo(conf=user_input)
         credentials_valid = await self.hass.async_add_executor_job(
             mydevolo.credentials_valid
         )
         if not credentials_valid:
-            return self._show_form(step_id=step_id, errors={"base": "invalid_auth"})
-        _LOGGER.debug("Credentials valid")
+            _LOGGER.debug("Credentials valid")
+            raise CredentialsInvalid
         uuid = await self.hass.async_add_executor_job(mydevolo.uuid)
         await self.async_set_unique_id(uuid)
         self._abort_if_unique_id_configured()
