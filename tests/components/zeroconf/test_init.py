@@ -70,7 +70,7 @@ def get_service_info_mock(service_type, name):
         port=80,
         weight=0,
         priority=0,
-        server="name.local.",
+        server="_nomatch.local.",
         properties=PROPERTIES,
     )
 
@@ -84,7 +84,7 @@ def get_service_info_mock_without_an_address(service_type, name):
         port=80,
         weight=0,
         priority=0,
-        server="name.local.",
+        server="_nomatch.local.",
         properties=PROPERTIES,
     )
 
@@ -100,7 +100,7 @@ def get_homekit_info_mock(model, pairing_status):
             port=80,
             weight=0,
             priority=0,
-            server="name.local.",
+            server="_nomatch.local.",
             properties={b"md": model.encode(), b"sf": pairing_status},
         )
 
@@ -118,7 +118,7 @@ def get_zeroconf_info_mock(macaddress):
             port=80,
             weight=0,
             priority=0,
-            server="name.local.",
+            server="_nomatch.local.",
             properties={b"macaddress": macaddress.encode()},
         )
 
@@ -136,7 +136,7 @@ def get_zeroconf_info_mock_manufacturer(manufacturer):
             port=80,
             weight=0,
             priority=0,
-            server="name.local.",
+            server="_nomatch.local.",
             properties={b"manufacturer": manufacturer.encode()},
         )
 
