@@ -24,7 +24,7 @@ async def test_sensor(spa, setup_entry, hass, entity_suffix, expected_state):
     assert state.state == expected_state
 
 
-async def test_primary_filtration(spa, setup_entry, hass):
+async def test_primary_filtration(spa, spa_state, setup_entry, hass):
     """Test the primary filtration cycle sensor."""
 
     entity_id = f"sensor.{spa.brand}_{spa.model}_primary_filtration_cycle"
@@ -42,12 +42,10 @@ async def test_primary_filtration(spa, setup_entry, hass):
         {"entity_id": entity_id, "duration": 8, "start_hour": 1},
         blocking=True,
     )
-    spa.get_status.return_value.primary_filtration.set.assert_called_with(
-        duration=8, start_hour=1
-    )
+    spa_state.primary_filtration.set.assert_called_with(duration=8, start_hour=1)
 
 
-async def test_secondary_filtration(spa, setup_entry, hass):
+async def test_secondary_filtration(spa, spa_state, setup_entry, hass):
     """Test the secondary filtration cycle sensor."""
 
     entity_id = f"sensor.{spa.brand}_{spa.model}_secondary_filtration_cycle"
@@ -66,6 +64,6 @@ async def test_secondary_filtration(spa, setup_entry, hass):
         },
         blocking=True,
     )
-    spa.get_status.return_value.secondary_filtration.set_mode.assert_called_with(
+    spa_state.secondary_filtration.set_mode.assert_called_with(
         mode=smarttub.SpaSecondaryFiltrationCycle.SecondaryFiltrationMode.FREQUENT
     )

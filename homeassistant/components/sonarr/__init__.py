@@ -8,20 +8,19 @@ from typing import Any
 
 from sonarr import Sonarr, SonarrAccessRestricted, SonarrError
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_NAME,
     CONF_API_KEY,
     CONF_HOST,
     CONF_PORT,
-    CONF_SOURCE,
     CONF_SSL,
     CONF_VERIFY_SSL,
 )
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     ATTR_IDENTIFIERS,
@@ -42,13 +41,7 @@ SCAN_INTERVAL = timedelta(seconds=30)
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistantType, config: dict) -> bool:
-    """Set up the Sonarr component."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Sonarr from a config entry."""
     if not entry.options:
         options = {
@@ -73,14 +66,16 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     try:
         await sonarr.update()
-    except SonarrAccessRestricted:
-        _async_start_reauth(hass, entry)
-        return False
+    except SonarrAccessRestricted as err:
+        raise ConfigEntryAuthFailed(
+            "API Key is no longer valid. Please reauthenticate"
+        ) from err
     except SonarrError as err:
         raise ConfigEntryNotReady from err
 
     undo_listener = entry.add_update_listener(_async_update_listener)
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_SONARR: sonarr,
         DATA_UNDO_UPDATE_LISTENER: undo_listener,
@@ -94,7 +89,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = all(
         await asyncio.gather(
@@ -113,18 +108,7 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
     return unload_ok
 
 
-def _async_start_reauth(hass: HomeAssistantType, entry: ConfigEntry):
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={CONF_SOURCE: SOURCE_REAUTH},
-            data={"config_entry_id": entry.entry_id, **entry.data},
-        )
-    )
-    _LOGGER.error("API Key is no longer valid. Please reauthenticate")
-
-
-async def _async_update_listener(hass: HomeAssistantType, entry: ConfigEntry) -> None:
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 

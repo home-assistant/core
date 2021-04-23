@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Iterable
 import logging
-from typing import Iterable
 
 from homeassistant import config as conf_util
 from homeassistant.const import SERVICE_RELOAD

@@ -35,7 +35,6 @@ homeassistant/components/almond/* @gcampax @balloob
 homeassistant/components/alpha_vantage/* @fabaff
 homeassistant/components/ambiclimate/* @danielhiversen
 homeassistant/components/ambient_station/* @bachya
-homeassistant/components/amcrest/* @pnbruckner
 homeassistant/components/analytics/* @home-assistant/core @ludeeus
 homeassistant/components/androidtv/* @JeffLIrion
 homeassistant/components/apache_kafka/* @bachya
@@ -184,7 +183,7 @@ homeassistant/components/gpsd/* @fabaff
 homeassistant/components/gree/* @cmroche
 homeassistant/components/greeneye_monitor/* @jkeljo
 homeassistant/components/group/* @home-assistant/core
-homeassistant/components/growatt_server/* @indykoning
+homeassistant/components/growatt_server/* @indykoning @muppet3000
 homeassistant/components/guardian/* @bachya
 homeassistant/components/habitica/* @ASMfreaK @leikoilja
 homeassistant/components/harmony/* @ehendrix23 @bramkragten @bdraco @mkeesey
@@ -214,6 +213,7 @@ homeassistant/components/hunterdouglas_powerview/* @bdraco
 homeassistant/components/hvv_departures/* @vigonotion
 homeassistant/components/hydrawise/* @ptcryan
 homeassistant/components/hyperion/* @dermotduffy
+homeassistant/components/ialarm/* @RyuzakiKK
 homeassistant/components/iammeter/* @lewei50
 homeassistant/components/iaqualink/* @flz
 homeassistant/components/icloud/* @Quentame @nzapponi
@@ -356,6 +356,7 @@ homeassistant/components/persistent_notification/* @home-assistant/core
 homeassistant/components/philips_js/* @elupus
 homeassistant/components/pi4ioe5v9xxxx/* @antonverburg
 homeassistant/components/pi_hole/* @fabaff @johnluetke @shenxn
+homeassistant/components/picnic/* @corneyl
 homeassistant/components/pilight/* @trekky12
 homeassistant/components/plaato/* @JohNan
 homeassistant/components/plex/* @jjlawren
@@ -367,7 +368,7 @@ homeassistant/components/powerwall/* @bdraco @jrester
 homeassistant/components/profiler/* @bdraco
 homeassistant/components/progettihwsw/* @ardaseremet
 homeassistant/components/prometheus/* @knyar
-homeassistant/components/proxmoxve/* @k4ds3 @jhollowe
+homeassistant/components/proxmoxve/* @k4ds3 @jhollowe @Corbeno
 homeassistant/components/ps4/* @ktnrg45
 homeassistant/components/push/* @dgomes
 homeassistant/components/pvoutput/* @fabaff
@@ -428,7 +429,7 @@ homeassistant/components/sisyphus/* @jkeljo
 homeassistant/components/sky_hub/* @rogerselwyn
 homeassistant/components/slack/* @bachya
 homeassistant/components/slide/* @ualex73
-homeassistant/components/sma/* @kellerza
+homeassistant/components/sma/* @kellerza @rklomp
 homeassistant/components/smappee/* @bsmappee
 homeassistant/components/smart_meter_texas/* @grahamwetzler
 homeassistant/components/smarthab/* @outadoc

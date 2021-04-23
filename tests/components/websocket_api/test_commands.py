@@ -14,11 +14,10 @@ from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH_REQUIRED,
 )
 from homeassistant.components.websocket_api.const import URL
-from homeassistant.core import Context, callback
+from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import DATA_SETUP_TIME, async_setup_component
 
@@ -126,7 +125,7 @@ async def test_call_service_blocking(hass, websocket_client, command):
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
     mock_call.assert_called_once_with(
-        ANY, "homeassistant", "restart", ANY, blocking=False, context=ANY, target=ANY
+        ANY, "homeassistant", "restart", ANY, blocking=True, context=ANY, target=ANY
     )
 
 
@@ -233,7 +232,7 @@ async def test_call_service_child_not_found(hass, websocket_client):
 
 
 async def test_call_service_schema_validation_error(
-    hass: HomeAssistantType, websocket_client
+    hass: HomeAssistant, websocket_client
 ):
     """Test call service command with invalid service data."""
 

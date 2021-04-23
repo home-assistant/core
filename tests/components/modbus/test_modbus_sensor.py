@@ -12,6 +12,7 @@ from homeassistant.components.modbus.const import (
     CONF_REGISTERS,
     CONF_REVERSE_ORDER,
     CONF_SCALE,
+    DATA_TYPE_CUSTOM,
     DATA_TYPE_FLOAT,
     DATA_TYPE_INT,
     DATA_TYPE_STRING,
@@ -26,6 +27,8 @@ from homeassistant.const import (
     CONF_OFFSET,
     CONF_SENSORS,
     CONF_SLAVE,
+    CONF_STRUCTURE,
+    STATE_UNAVAILABLE,
 )
 
 from .conftest import base_config_test, base_test
@@ -123,6 +126,50 @@ async def test_config_sensor(hass, do_discovery, do_config):
         CONF_SENSORS,
         CONF_REGISTERS,
         method_discovery=do_discovery,
+    )
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_ADDRESS: 1234,
+            CONF_COUNT: 8,
+            CONF_PRECISION: 2,
+            CONF_DATA_TYPE: DATA_TYPE_INT,
+        },
+        {
+            CONF_ADDRESS: 1234,
+            CONF_COUNT: 8,
+            CONF_PRECISION: 2,
+            CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+            CONF_STRUCTURE: ">no struct",
+        },
+        {
+            CONF_ADDRESS: 1234,
+            CONF_COUNT: 2,
+            CONF_PRECISION: 2,
+            CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+            CONF_STRUCTURE: ">4f",
+        },
+    ],
+)
+async def test_config_wrong_struct_sensor(hass, do_config):
+    """Run test for sensor with wrong struct."""
+
+    sensor_name = "test_sensor"
+    config_sensor = {
+        CONF_NAME: sensor_name,
+        **do_config,
+    }
+    await base_config_test(
+        hass,
+        config_sensor,
+        sensor_name,
+        SENSOR_DOMAIN,
+        CONF_SENSORS,
+        None,
+        method_discovery=True,
     )
 
 
@@ -334,10 +381,35 @@ async def test_config_sensor(hass, do_discovery, do_config):
             [0x3037, 0x2D30, 0x352D, 0x3230, 0x3230, 0x2031, 0x343A, 0x3335],
             "07-05-2020 14:35",
         ),
+        (
+            {
+                CONF_COUNT: 8,
+                CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                CONF_DATA_TYPE: DATA_TYPE_STRING,
+                CONF_SCALE: 1,
+                CONF_OFFSET: 0,
+                CONF_PRECISION: 0,
+            },
+            None,
+            STATE_UNAVAILABLE,
+        ),
+        (
+            {
+                CONF_COUNT: 2,
+                CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
+                CONF_DATA_TYPE: DATA_TYPE_UINT,
+                CONF_SCALE: 1,
+                CONF_OFFSET: 0,
+                CONF_PRECISION: 0,
+            },
+            None,
+            STATE_UNAVAILABLE,
+        ),
     ],
 )
 async def test_all_sensor(hass, cfg, regs, expected):
     """Run test for sensor."""
+
     sensor_name = "modbus_test_sensor"
     state = await base_test(
         hass,
@@ -346,6 +418,61 @@ async def test_all_sensor(hass, cfg, regs, expected):
         SENSOR_DOMAIN,
         CONF_SENSORS,
         CONF_REGISTERS,
+        regs,
+        expected,
+        method_discovery=True,
+        scan_interval=5,
+    )
+    assert state == expected
+
+
+@pytest.mark.parametrize(
+    "cfg,regs,expected",
+    [
+        (
+            {
+                CONF_COUNT: 8,
+                CONF_PRECISION: 2,
+                CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+                CONF_STRUCTURE: ">4f",
+            },
+            # floats: 7.931250095367432, 10.600000381469727,
+            #         1.000879611487865e-28, 10.566553115844727
+            [0x40FD, 0xCCCD, 0x4129, 0x999A, 0x10FD, 0xC0CD, 0x4129, 0x109A],
+            "7.93,10.60,0.00,10.57",
+        ),
+        (
+            {
+                CONF_COUNT: 4,
+                CONF_PRECISION: 0,
+                CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+                CONF_STRUCTURE: ">2i",
+            },
+            [0x0000, 0x0100, 0x0000, 0x0032],
+            "256,50",
+        ),
+        (
+            {
+                CONF_COUNT: 1,
+                CONF_PRECISION: 0,
+                CONF_DATA_TYPE: DATA_TYPE_INT,
+            },
+            [0x0101],
+            "257",
+        ),
+    ],
+)
+async def test_struct_sensor(hass, cfg, regs, expected):
+    """Run test for sensor struct."""
+
+    sensor_name = "modbus_test_sensor"
+    state = await base_test(
+        hass,
+        {CONF_NAME: sensor_name, CONF_ADDRESS: 1234, **cfg},
+        sensor_name,
+        SENSOR_DOMAIN,
+        CONF_SENSORS,
+        None,
         regs,
         expected,
         method_discovery=True,

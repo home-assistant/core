@@ -5,10 +5,12 @@ import logging
 from hass_nabucasa import Cloud, cloud_api
 from hass_nabucasa.google_report_state import ErrorResponse
 
+from homeassistant.components.google_assistant.const import DOMAIN as GOOGLE_DOMAIN
 from homeassistant.components.google_assistant.helpers import AbstractConfig
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, HTTP_OK
 from homeassistant.core import CoreState, split_entity_id
 from homeassistant.helpers import entity_registry
+from homeassistant.setup import async_setup_component
 
 from .const import (
     CONF_ENTITY_CONFIG,
@@ -83,6 +85,9 @@ class CloudGoogleConfig(AbstractConfig):
     async def async_initialize(self):
         """Perform async initialization of config."""
         await super().async_initialize()
+
+        if self.enabled and GOOGLE_DOMAIN not in self.hass.config.components:
+            await async_setup_component(self.hass, GOOGLE_DOMAIN, {})
 
         # Remove old/wrong user agent ids
         remove_agent_user_ids = []
@@ -164,6 +169,9 @@ class CloudGoogleConfig(AbstractConfig):
 
     async def _async_prefs_updated(self, prefs):
         """Handle updated preferences."""
+        if self.enabled and GOOGLE_DOMAIN not in self.hass.config.components:
+            await async_setup_component(self.hass, GOOGLE_DOMAIN, {})
+
         if self.should_report_state != self.is_reporting_state:
             if self.should_report_state:
                 self.async_enable_report_state()

@@ -1,6 +1,9 @@
 """This component provides support for RainMachine programs and zones."""
+from __future__ import annotations
+
+from collections.abc import Coroutine
 from datetime import datetime
-from typing import Callable, Coroutine
+from typing import Callable
 
 from regenmaschine.controller import Controller
 from regenmaschine.errors import RequestError

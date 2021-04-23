@@ -7,21 +7,12 @@ CONF_INTEGRATION_CREATED_ADDON = "integration_created_addon"
 CONF_NETWORK_KEY = "network_key"
 CONF_USB_PATH = "usb_path"
 CONF_USE_ADDON = "use_addon"
+CONF_DATA_COLLECTION_OPTED_IN = "data_collection_opted_in"
 DOMAIN = "zwave_js"
-PLATFORMS = [
-    "binary_sensor",
-    "climate",
-    "cover",
-    "fan",
-    "light",
-    "lock",
-    "number",
-    "sensor",
-    "switch",
-]
 
 DATA_CLIENT = "client"
 DATA_UNSUBSCRIBE = "unsubs"
+DATA_PLATFORM_SETUP = "platform_setup"
 
 EVENT_DEVICE_ADDED_TO_REGISTRY = f"{DOMAIN}_device_added_to_registry"
 

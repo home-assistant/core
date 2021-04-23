@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any
+from typing import Any, Awaitable
 from unittest.mock import AsyncMock, Mock, patch
 
 from hyperion import const
@@ -419,13 +419,13 @@ async def test_auth_create_token_approval_declined_task_canceled(
     class CanceledAwaitableMock(AsyncMock):
         """A canceled awaitable mock."""
 
-        def __await__(self):
+        def __await__(self) -> None:
             raise asyncio.CancelledError
 
     mock_task = CanceledAwaitableMock()
-    task_coro = None
+    task_coro: Awaitable | None = None
 
-    def create_task(arg):
+    def create_task(arg: Any) -> CanceledAwaitableMock:
         nonlocal task_coro
         task_coro = arg
         return mock_task
@@ -453,6 +453,7 @@ async def test_auth_create_token_approval_declined_task_canceled(
         result = await _configure_flow(hass, result)
 
         # This await will advance to the next step.
+        assert task_coro
         await task_coro
 
         # Assert that cancel is called on the task.

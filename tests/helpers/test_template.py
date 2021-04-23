@@ -567,11 +567,15 @@ def test_from_json(hass):
 def test_min(hass):
     """Test the min filter."""
     assert template.Template("{{ [1, 2, 3] | min }}", hass).async_render() == 1
+    assert template.Template("{{ min([1, 2, 3]) }}", hass).async_render() == 1
+    assert template.Template("{{ min(1, 2, 3) }}", hass).async_render() == 1
 
 
 def test_max(hass):
     """Test the max filter."""
     assert template.Template("{{ [1, 2, 3] | max }}", hass).async_render() == 3
+    assert template.Template("{{ max([1, 2, 3]) }}", hass).async_render() == 3
+    assert template.Template("{{ max(1, 2, 3) }}", hass).async_render() == 3
 
 
 def test_ord(hass):
@@ -999,6 +1003,17 @@ def test_regex_match(hass):
     assert tpl.async_render() is True
 
 
+def test_match_test(hass):
+    """Test match test."""
+    tpl = template.Template(
+        r"""
+{{ '123-456-7890' is match('(\\d{3})-(\\d{3})-(\\d{4})') }}
+            """,
+        hass,
+    )
+    assert tpl.async_render() is True
+
+
 def test_regex_search(hass):
     """Test regex_search method."""
     tpl = template.Template(
@@ -1028,6 +1043,17 @@ def test_regex_search(hass):
     tpl = template.Template(
         """
 {{ ['Home Assistant test'] | regex_search('Assist') }}
+            """,
+        hass,
+    )
+    assert tpl.async_render() is True
+
+
+def test_search_test(hass):
+    """Test search test."""
+    tpl = template.Template(
+        r"""
+{{ '123-456-7890' is search('(\\d{3})-(\\d{3})-(\\d{4})') }}
             """,
         hass,
     )

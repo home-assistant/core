@@ -248,10 +248,10 @@ async def test_issur_melacha_sensor(
     ],
     [
         make_nyc_test_params(
-            dt(2020, 10, 23, 17, 46, 59, 999999), [STATE_OFF, STATE_ON]
+            dt(2020, 10, 23, 17, 44, 59, 999999), [STATE_OFF, STATE_ON]
         ),
         make_nyc_test_params(
-            dt(2020, 10, 24, 18, 44, 59, 999999), [STATE_ON, STATE_OFF]
+            dt(2020, 10, 24, 18, 42, 59, 999999), [STATE_ON, STATE_OFF]
         ),
     ],
     ids=["before_candle_lighting", "before_havdalah"],

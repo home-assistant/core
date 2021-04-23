@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Iterable
 import copy
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import functools as ft
 import logging
 import time
-from typing import Any, Awaitable, Callable, Iterable, List
+from typing import Any, Callable, List, cast
 
 import attr
 
@@ -1170,12 +1171,10 @@ def async_track_point_in_utc_time(
 
     # Since this is called once, we accept a HassJob so we can avoid
     # having to figure out how to call the action every time its called.
-    job = action if isinstance(action, HassJob) else HassJob(action)
-
     cancel_callback: asyncio.TimerHandle | None = None
 
     @callback
-    def run_action() -> None:
+    def run_action(job: HassJob) -> None:
         """Call the action."""
         nonlocal cancel_callback
 
@@ -1190,13 +1189,14 @@ def async_track_point_in_utc_time(
         if delta > 0:
             _LOGGER.debug("Called %f seconds too early, rearming", delta)
 
-            cancel_callback = hass.loop.call_later(delta, run_action)
+            cancel_callback = hass.loop.call_later(delta, run_action, job)
             return
 
         hass.async_run_hass_job(job, utc_point_in_time)
 
+    job = action if isinstance(action, HassJob) else HassJob(action)
     delta = utc_point_in_time.timestamp() - time.time()
-    cancel_callback = hass.loop.call_later(delta, run_action)
+    cancel_callback = hass.loop.call_later(delta, run_action, job)
 
     @callback
     def unsub_point_in_time_listener() -> None:
@@ -1453,10 +1453,10 @@ def process_state_match(parameter: None | str | Iterable[str]) -> Callable[[str]
 @callback
 def _entities_domains_from_render_infos(
     render_infos: Iterable[RenderInfo],
-) -> tuple[set, set]:
+) -> tuple[set[str], set[str]]:
     """Combine from multiple RenderInfo."""
-    entities = set()
-    domains = set()
+    entities: set[str] = set()
+    domains: set[str] = set()
 
     for render_info in render_infos:
         if render_info.entities:
@@ -1497,7 +1497,7 @@ def _render_infos_to_track_states(render_infos: Iterable[RenderInfo]) -> TrackSt
 @callback
 def _event_triggers_rerender(event: Event, info: RenderInfo) -> bool:
     """Determine if a template should be re-rendered from an event."""
-    entity_id = event.data.get(ATTR_ENTITY_ID)
+    entity_id = cast(str, event.data.get(ATTR_ENTITY_ID))
 
     if info.filter(entity_id):
         return True

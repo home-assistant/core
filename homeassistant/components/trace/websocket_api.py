@@ -11,6 +11,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.json import ExtendedJSONEncoder
 from homeassistant.helpers.script import (
     SCRIPT_BREAKPOINT_HIT,
     SCRIPT_DEBUG_CONTINUE_ALL,
@@ -24,7 +25,6 @@ from homeassistant.helpers.script import (
 )
 
 from .const import DATA_TRACE
-from .utils import TraceJSONEncoder
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
@@ -71,7 +71,9 @@ def websocket_trace_get(hass, connection, msg):
 
     message = websocket_api.messages.result_message(msg["id"], trace)
 
-    connection.send_message(json.dumps(message, cls=TraceJSONEncoder, allow_nan=False))
+    connection.send_message(
+        json.dumps(message, cls=ExtendedJSONEncoder, allow_nan=False)
+    )
 
 
 def get_debug_traces(hass, key):

@@ -2,15 +2,20 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Generator, Iterable
 import contextlib
 import logging.handlers
 from timeit import default_timer as timer
 from types import ModuleType
-from typing import Awaitable, Callable, Generator, Iterable
+from typing import Callable
 
 from homeassistant import config as conf_util, core, loader, requirements
 from homeassistant.config import async_notify_setup_error
-from homeassistant.const import EVENT_COMPONENT_LOADED, PLATFORM_FORMAT
+from homeassistant.const import (
+    EVENT_COMPONENT_LOADED,
+    EVENT_HOMEASSISTANT_START,
+    PLATFORM_FORMAT,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util, ensure_unique_string
@@ -23,6 +28,7 @@ BASE_PLATFORMS = {
     "air_quality",
     "alarm_control_panel",
     "binary_sensor",
+    "camera",
     "climate",
     "cover",
     "device_tracker",
@@ -379,6 +385,27 @@ def async_when_setup(
     when_setup_cb: Callable[[core.HomeAssistant, str], Awaitable[None]],
 ) -> None:
     """Call a method when a component is setup."""
+    _async_when_setup(hass, component, when_setup_cb, False)
+
+
+@core.callback
+def async_when_setup_or_start(
+    hass: core.HomeAssistant,
+    component: str,
+    when_setup_cb: Callable[[core.HomeAssistant, str], Awaitable[None]],
+) -> None:
+    """Call a method when a component is setup or state is fired."""
+    _async_when_setup(hass, component, when_setup_cb, True)
+
+
+@core.callback
+def _async_when_setup(
+    hass: core.HomeAssistant,
+    component: str,
+    when_setup_cb: Callable[[core.HomeAssistant, str], Awaitable[None]],
+    start_event: bool,
+) -> None:
+    """Call a method when a component is setup or the start event fires."""
 
     async def when_setup() -> None:
         """Call the callback."""
@@ -387,22 +414,28 @@ def async_when_setup(
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Error handling when_setup callback for %s", component)
 
-    # Running it in a new task so that it always runs after
     if component in hass.config.components:
         hass.async_create_task(when_setup())
         return
 
-    unsub = None
+    listeners: list[Callable] = []
 
-    async def loaded_event(event: core.Event) -> None:
-        """Call the callback."""
-        if event.data[ATTR_COMPONENT] != component:
-            return
-
-        unsub()  # type: ignore
+    async def _matched_event(event: core.Event) -> None:
+        """Call the callback when we matched an event."""
+        for listener in listeners:
+            listener()
         await when_setup()
 
-    unsub = hass.bus.async_listen(EVENT_COMPONENT_LOADED, loaded_event)
+    async def _loaded_event(event: core.Event) -> None:
+        """Call the callback if we loaded the expected component."""
+        if event.data[ATTR_COMPONENT] == component:
+            await _matched_event(event)
+
+    listeners.append(hass.bus.async_listen(EVENT_COMPONENT_LOADED, _loaded_event))
+    if start_event:
+        listeners.append(
+            hass.bus.async_listen(EVENT_HOMEASSISTANT_START, _matched_event)
+        )
 
 
 @core.callback

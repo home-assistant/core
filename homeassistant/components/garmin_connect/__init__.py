@@ -24,12 +24,6 @@ PLATFORMS = ["sensor"]
 MIN_SCAN_INTERVAL = timedelta(minutes=10)
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Garmin Connect component."""
-    hass.data[DOMAIN] = {}
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Garmin Connect from a config entry."""
     username = entry.data[CONF_USERNAME]
@@ -55,6 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         return False
 
     garmin_data = GarminConnectData(hass, garmin_client)
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = garmin_data
 
     for platform in PLATFORMS:

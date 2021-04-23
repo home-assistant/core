@@ -57,7 +57,7 @@ class RelativeHumidity(ZigbeeChannel):
     REPORT_CONFIG = [
         {
             "attr": "measured_value",
-            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 50),
+            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 100),
         }
     ]
 

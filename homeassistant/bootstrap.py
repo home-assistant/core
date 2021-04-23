@@ -389,6 +389,7 @@ async def _async_watch_pending_setups(hass: core.HomeAssistant) -> None:
     """Periodic log of setups that are pending for longer than LOG_SLOW_STARTUP_INTERVAL."""
     loop_count = 0
     setup_started: dict[str, datetime] = hass.data[DATA_SETUP_STARTED]
+    previous_was_empty = True
     while True:
         now = dt_util.utcnow()
         remaining_with_setup_started = {
@@ -396,9 +397,11 @@ async def _async_watch_pending_setups(hass: core.HomeAssistant) -> None:
             for domain in setup_started
         }
         _LOGGER.debug("Integration remaining: %s", remaining_with_setup_started)
-        async_dispatcher_send(
-            hass, SIGNAL_BOOTSTRAP_INTEGRATONS, remaining_with_setup_started
-        )
+        if remaining_with_setup_started or not previous_was_empty:
+            async_dispatcher_send(
+                hass, SIGNAL_BOOTSTRAP_INTEGRATONS, remaining_with_setup_started
+            )
+        previous_was_empty = not remaining_with_setup_started
         await asyncio.sleep(SLOW_STARTUP_CHECK_INTERVAL)
         loop_count += SLOW_STARTUP_CHECK_INTERVAL
 

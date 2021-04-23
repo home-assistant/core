@@ -84,15 +84,9 @@ WEBHOOK_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Plaato component."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Configure based on config entry."""
-
+    hass.data.setdefault(DOMAIN, {})
     use_webhook = entry.data[CONF_USE_WEBHOOK]
 
     if use_webhook:

@@ -13,9 +13,10 @@ from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
+    PERCENTAGE,
     TEMP_CELSIUS,
 )
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -26,13 +27,13 @@ from tests.common import async_fire_time_changed
 ENTITY_ID = f"{DOMAIN}.fake_name"
 
 
-async def setup_fritzbox(hass: HomeAssistantType, config: dict):
+async def setup_fritzbox(hass: HomeAssistant, config: dict):
     """Set up mock AVM Fritz!Box."""
     assert await async_setup_component(hass, FB_DOMAIN, config)
     await hass.async_block_till_done()
 
 
-async def test_setup(hass: HomeAssistantType, fritz: Mock):
+async def test_setup(hass: HomeAssistant, fritz: Mock):
     """Test setup of platform."""
     device = FritzDeviceSensorMock()
     fritz().get_devices.return_value = [device]
@@ -47,8 +48,15 @@ async def test_setup(hass: HomeAssistantType, fritz: Mock):
     assert state.attributes[ATTR_STATE_LOCKED] == "fake_locked"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
 
+    state = hass.states.get(f"{ENTITY_ID}_battery")
 
-async def test_update(hass: HomeAssistantType, fritz: Mock):
+    assert state
+    assert state.state == "23"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "fake_name Battery"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
+
+
+async def test_update(hass: HomeAssistant, fritz: Mock):
     """Test update with error."""
     device = FritzDeviceSensorMock()
     fritz().get_devices.return_value = [device]
@@ -65,7 +73,7 @@ async def test_update(hass: HomeAssistantType, fritz: Mock):
     assert fritz().login.call_count == 1
 
 
-async def test_update_error(hass: HomeAssistantType, fritz: Mock):
+async def test_update_error(hass: HomeAssistant, fritz: Mock):
     """Test update with error."""
     device = FritzDeviceSensorMock()
     device.update.side_effect = HTTPError("Boom")
