@@ -34,13 +34,14 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
+        step_id = "user"
         if self.show_advanced_options:
             self.data_schema[
                 vol.Required(CONF_MYDEVOLO, default=DEFAULT_MYDEVOLO)
             ] = str
         if user_input is None:
-            return self._show_form(user_input)
-        return await self._connect_mydevolo(user_input)
+            return self._show_form(step_id=step_id)
+        return await self._connect_mydevolo(user_input, step_id)
 
     async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType):
         """Handle zeroconf discovery."""
@@ -52,18 +53,19 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf_confirm(self, user_input=None):
         """Handle a flow initiated by zeroconf."""
+        step_id = "zeroconf_confirm"
         if user_input is None:
-            return self._show_form(step_id="zeroconf_confirm")
-        return await self._connect_mydevolo(user_input)
+            return self._show_form(step_id=step_id)
+        return await self._connect_mydevolo(user_input, step_id)
 
-    async def _connect_mydevolo(self, user_input):
+    async def _connect_mydevolo(self, user_input, step_id):
         """Connect to mydevolo."""
         mydevolo = configure_mydevolo(conf=user_input)
         credentials_valid = await self.hass.async_add_executor_job(
             mydevolo.credentials_valid
         )
         if not credentials_valid:
-            return self._show_form({"base": "invalid_auth"})
+            return self._show_form(step_id=step_id, errors={"base": "invalid_auth"})
         _LOGGER.debug("Credentials valid")
         uuid = await self.hass.async_add_executor_job(mydevolo.uuid)
         await self.async_set_unique_id(uuid)
@@ -79,7 +81,7 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     @callback
-    def _show_form(self, errors=None, step_id="user"):
+    def _show_form(self, step_id, errors=None):
         """Show the form to the user."""
         return self.async_show_form(
             step_id=step_id,
