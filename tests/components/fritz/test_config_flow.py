@@ -160,7 +160,7 @@ async def test_exception_connection(hass: HomeAssistant):
 
 
 async def test_exception_unknown(hass: HomeAssistant):
-    """Test starting a flow by user."""
+    """Test starting a flow by user with an unknown exception."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
