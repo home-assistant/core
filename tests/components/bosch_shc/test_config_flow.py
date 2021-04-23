@@ -4,7 +4,6 @@ from unittest.mock import PropertyMock, mock_open, patch
 from boschshcpy.exceptions import (
     SHCAuthenticationError,
     SHCConnectionError,
-    SHCmDNSError,
     SHCRegistrationError,
     SHCSessionError,
 )
@@ -100,27 +99,6 @@ async def test_form_get_info_connection_error(hass):
     with patch(
         "boschshcpy.session.SHCSession.mdns_info",
         side_effect=SHCConnectionError,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": "1.1.1.1",
-            },
-        )
-
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "cannot_connect"}
-
-
-async def test_form_get_info_mdns_error(hass):
-    """Test we handle a mdns error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "boschshcpy.session.SHCSession.mdns_info",
-        side_effect=SHCmDNSError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -277,53 +255,6 @@ async def test_form_validate_connection_error(hass):
     ), patch("homeassistant.components.bosch_shc.config_flow.write_tls_asset",), patch(
         "boschshcpy.session.SHCSession.authenticate",
         side_effect=SHCConnectionError,
-    ):
-        result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
-            {"password": "test"},
-        )
-        await hass.async_block_till_done()
-
-    assert result3["type"] == "form"
-    assert result3["errors"] == {"base": "cannot_connect"}
-
-
-async def test_form_validate_mdns_error(hass):
-    """Test we handle mDNS error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "boschshcpy.session.SHCSession.mdns_info",
-        return_value=SHCInformation,
-    ), patch(
-        "boschshcpy.information.SHCInformation.name",
-        new_callable=PropertyMock,
-        return_value="shc012345",
-    ), patch(
-        "boschshcpy.information.SHCInformation.unique_id",
-        new_callable=PropertyMock,
-        return_value="test-mac",
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"host": "1.1.1.1"},
-        )
-
-    assert result2["type"] == "form"
-    assert result2["errors"] == {}
-
-    with patch(
-        "boschshcpy.register_client.SHCRegisterClient.register",
-        return_value={
-            "token": "abc:123",
-            "cert": b"content_cert",
-            "key": b"content_key",
-        },
-    ), patch("homeassistant.components.bosch_shc.config_flow.write_tls_asset",), patch(
-        "boschshcpy.session.SHCSession.authenticate",
-        side_effect=SHCmDNSError,
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
@@ -569,18 +500,6 @@ async def test_zeroconf_cannot_connect(hass):
     with patch(
         "boschshcpy.session.SHCSession.mdns_info", side_effect=SHCConnectionError
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            data=DISCOVERY_INFO,
-            context={"source": config_entries.SOURCE_ZEROCONF},
-        )
-        assert result["type"] == "abort"
-        assert result["reason"] == "cannot_connect"
-
-
-async def test_zeroconf_mdns_error(hass):
-    """Test for mDNS error in discovery step."""
-    with patch("boschshcpy.session.SHCSession.mdns_info", side_effect=SHCmDNSError):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             data=DISCOVERY_INFO,

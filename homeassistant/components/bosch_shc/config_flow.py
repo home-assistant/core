@@ -6,7 +6,6 @@ from boschshcpy import SHCRegisterClient, SHCSession
 from boschshcpy.exceptions import (
     SHCAuthenticationError,
     SHCConnectionError,
-    SHCmDNSError,
     SHCRegistrationError,
     SHCSessionError,
 )
@@ -34,33 +33,32 @@ HOST_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(
-    hass: core.HomeAssistant, host: str, cert: str, key: str
-) -> None:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from DATA_SCHEMA with values provided by the user.
-    """
-    zeroconf = await async_get_instance(hass)
-
-    session: SHCSession
-    session = await hass.async_add_executor_job(
-        SHCSession,
-        host,
-        cert,
-        key,
-        True,
-        zeroconf,
-    )
-
-    await hass.async_add_executor_job(session.authenticate)
-
-
 def write_tls_asset(hass: core.HomeAssistant, filename: str, asset: bytes) -> None:
     """Write the tls assets to disk."""
     makedirs(hass.config.path(DOMAIN), exist_ok=True)
     with open(hass.config.path(DOMAIN, filename), "w") as file_handle:
         file_handle.write(asset.decode("utf-8"))
+
+
+def create_credentials_and_validate(hass, host, user_input, zeroconf):
+    """Create and store credentials and validate session."""
+    helper = SHCRegisterClient(host, user_input[CONF_PASSWORD])
+    result = helper.register(host, "HomeAssistant")
+
+    if result is not None:
+        write_tls_asset(hass, CONF_SHC_CERT, result["cert"])
+        write_tls_asset(hass, CONF_SHC_KEY, result["key"])
+
+        session = SHCSession(
+            host,
+            hass.config.path(DOMAIN, CONF_SHC_CERT),
+            hass.config.path(DOMAIN, CONF_SHC_KEY),
+            True,
+            zeroconf,
+        )
+        session.authenticate()
+
+    return result
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -103,9 +101,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.info = info = await self._get_info(host)
             except SHCConnectionError:
                 errors["base"] = "cannot_connect"
-            except SHCmDNSError:
-                _LOGGER.warning("Error looking up mDNS entry")
-                errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -124,33 +119,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                helper = await self.hass.async_add_executor_job(
-                    SHCRegisterClient, self.host, user_input[CONF_PASSWORD]
-                )
+                zeroconf = await async_get_instance(self.hass)
                 result = await self.hass.async_add_executor_job(
-                    helper.register, self.host, "HomeAssistant"
-                )
-                if "token" in result:
-                    self.hostname = result["token"].split(":", 1)[1]
-
-                await self.hass.async_add_executor_job(
-                    write_tls_asset, self.hass, CONF_SHC_CERT, result["cert"]
-                )
-                await self.hass.async_add_executor_job(
-                    write_tls_asset, self.hass, CONF_SHC_KEY, result["key"]
-                )
-                await validate_input(
+                    create_credentials_and_validate,
                     self.hass,
                     self.host,
-                    self.hass.config.path(DOMAIN, CONF_SHC_CERT),
-                    self.hass.config.path(DOMAIN, CONF_SHC_KEY),
+                    user_input,
+                    zeroconf,
                 )
             except SHCAuthenticationError:
                 errors["base"] = "invalid_auth"
             except SHCConnectionError:
-                errors["base"] = "cannot_connect"
-            except SHCmDNSError:
-                _LOGGER.warning("Error looking up mDNS entry")
                 errors["base"] = "cannot_connect"
             except SHCSessionError:
                 _LOGGER.warning("API call returned non-OK result. Wrong password?")
@@ -173,7 +152,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_SSL_KEY: self.hass.config.path(DOMAIN, CONF_SHC_KEY),
                         CONF_HOST: self.host,
                         CONF_TOKEN: result["token"],
-                        CONF_HOSTNAME: self.hostname,
+                        CONF_HOSTNAME: result["token"].split(":", 1)[1],
                     },
                 )
         else:
@@ -197,9 +176,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             self.info = info = await self._get_info(zeroconf_info["host"])
         except SHCConnectionError:
-            return self.async_abort(reason="cannot_connect")
-        except SHCmDNSError:
-            _LOGGER.debug("Error looking up mDNS entry")
             return self.async_abort(reason="cannot_connect")
 
         local_name = zeroconf_info["hostname"][:-1]

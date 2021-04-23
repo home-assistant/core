@@ -3,11 +3,7 @@ import asyncio
 import logging
 
 from boschshcpy import SHCSession
-from boschshcpy.exceptions import (
-    SHCAuthenticationError,
-    SHCConnectionError,
-    SHCmDNSError,
-)
+from boschshcpy.exceptions import SHCAuthenticationError, SHCConnectionError
 
 from homeassistant.components.zeroconf import async_get_instance
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
@@ -49,7 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
         )
         return False
-    except (SHCConnectionError, SHCmDNSError) as err:
+    except SHCConnectionError as err:
         raise ConfigEntryNotReady from err
 
     shc_info = session.information
