@@ -1,6 +1,10 @@
 """The tests for the analytics ."""
+from unittest.mock import patch
+
 from homeassistant.components.analytics.const import ANALYTICS_ENDPOINT_URL_DEV, DOMAIN
 from homeassistant.setup import async_setup_component
+
+MOCK_VERSION_DEV = "1970.1.0.dev0"
 
 
 async def test_setup(hass):
@@ -24,10 +28,13 @@ async def test_websocket(hass, hass_ws_client, aioclient_mock):
 
     assert response["success"]
 
-    await ws_client.send_json(
-        {"id": 2, "type": "analytics/preferences", "preferences": {"base": True}}
-    )
-    response = await ws_client.receive_json()
+    with patch(
+        "homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION_DEV
+    ):
+        await ws_client.send_json(
+            {"id": 2, "type": "analytics/preferences", "preferences": {"base": True}}
+        )
+        response = await ws_client.receive_json()
     assert len(aioclient_mock.mock_calls) == 1
     assert response["result"]["preferences"]["base"]
 
