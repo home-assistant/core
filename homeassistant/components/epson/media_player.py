@@ -98,7 +98,6 @@ async def set_new_unique_id(hass, uid, entry):
     hass.config_entries.async_update_entry(entry, unique_id=uid)
     registry = await async_get_registry(hass)
     old_entity_id = registry.async_get_entity_id("media_player", DOMAIN, entry.entry_id)
-    print("OLD ENTITY", old_entity_id)
     registry.async_update_entity(old_entity_id, new_unique_id=uid)
     hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
 
