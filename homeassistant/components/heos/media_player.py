@@ -190,7 +190,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
         except HeosError as err:
             _LOGGER.error(
                 "Failed to group %s with %s: %s",
-                self.player_id,
+                self.entity_id,
                 player_ids,
                 err,
             )
