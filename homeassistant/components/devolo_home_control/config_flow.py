@@ -1,6 +1,4 @@
 """Config flow to configure the devolo home control integration."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -16,8 +14,6 @@ from .const import (  # pylint:disable=unused-import
     SUPPORTED_MODEL_TYPES,
 )
 from .exceptions import CredentialsInvalid
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -72,7 +68,6 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             mydevolo.credentials_valid
         )
         if not credentials_valid:
-            _LOGGER.debug("Credentials valid")
             raise CredentialsInvalid
         uuid = await self.hass.async_add_executor_job(mydevolo.uuid)
         await self.async_set_unique_id(uuid)
