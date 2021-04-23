@@ -317,7 +317,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
             except HeosError as err:
                 _LOGGER.error(
                     "HEOS create_group with arguments (%s %s) failed. Error: %s",
-                    self.player_id,
+                    self.entity_id,
                     [],
                     err,
                 )
