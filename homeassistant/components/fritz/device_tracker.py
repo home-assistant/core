@@ -106,7 +106,6 @@ class FritzBoxTracker(ScannerEntity):
         self._name = device.hostname or DEFAULT_DEVICE_NAME
         self._active = False
         self._attrs = {}
-        self._icon = None
 
     @property
     def is_connected(self):
