@@ -119,7 +119,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             try:
                 await hass.async_add_executor_job(device.update)
             except requests.exceptions.HTTPError as ex:
-                fritz.login()
+                await hass.async_add_executor_job(fritz.login)
                 raise UpdateFailed(f"Fritzhome connection error: {ex}") from ex
             data[device.ain] = device
         return data
