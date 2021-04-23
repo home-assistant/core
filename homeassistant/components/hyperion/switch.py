@@ -26,12 +26,11 @@ from hyperion.const import (
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import slugify
 
 from . import (
@@ -82,7 +81,7 @@ def _component_to_switch_name(component: str, instance_name: str) -> str:
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable
 ) -> bool:
     """Set up a Hyperion platform from config entry."""
     entry_data = hass.data[DOMAIN][config_entry.entry_id]

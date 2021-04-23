@@ -26,9 +26,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -60,7 +59,7 @@ DEVICE_PARENT_REQUIRED = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: Callable[[list], None],
 ) -> bool:
