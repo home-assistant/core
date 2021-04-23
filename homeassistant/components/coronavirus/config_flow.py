@@ -28,10 +28,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if self._options is None:
             coordinator = await get_coordinator(self.hass)
-            if not coordinator.last_update_success:
+            if not coordinator.last_update_success or coordinator.data is None:
                 return self.async_abort(reason="cannot_connect")
-            if coordinator.data is None:
-                return self.async_abort(reason="no_data")
 
             self._options = {OPTION_WORLDWIDE: "Worldwide"}
             for case in sorted(
