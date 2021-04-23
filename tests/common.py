@@ -734,6 +734,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
         connection_class=config_entries.CONN_CLASS_UNKNOWN,
         unique_id=None,
         disabled_by=None,
+        reason=None,
     ):
         """Initialize a mock config entry."""
         kwargs = {
@@ -753,6 +754,8 @@ class MockConfigEntry(config_entries.ConfigEntry):
         if state is not None:
             kwargs["state"] = state
         super().__init__(**kwargs)
+        if reason is not None:
+            self.reason = reason
 
     def add_to_hass(self, hass):
         """Test helper to add entry to hass."""
