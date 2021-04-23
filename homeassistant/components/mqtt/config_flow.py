@@ -322,6 +322,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
             step_id="options",
             data_schema=vol.Schema(fields),
             errors=errors,
+            last_step=True,
         )
 
 

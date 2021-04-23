@@ -72,7 +72,7 @@ class FlowResultDict(TypedDict, total=False):
     reason: str
     context: dict[str, Any]
     result: Any
-    last_step: bool
+    last_step: bool | None
 
 
 class FlowManager(abc.ABC):
@@ -346,7 +346,7 @@ class FlowHandler:
         data_schema: vol.Schema = None,
         errors: dict[str, str] | None = None,
         description_placeholders: dict[str, Any] | None = None,
-        last_step: bool = True,
+        last_step: bool | None = None,
     ) -> FlowResultDict:
         """Return the definition of a form to gather user input."""
         return {
