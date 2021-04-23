@@ -344,10 +344,10 @@ async def async_setup(hass, config):
             elif COLOR_MODE_RGB in supported_color_modes:
                 params[ATTR_RGB_COLOR] = color_util.color_xy_to_RGB(*xy_color)
             elif COLOR_MODE_RGBW in supported_color_modes:
-                params[ATTR_RGBW_COLOR] = (*color_util.color_xy_to_RGB(*hs_color), 0)
+                params[ATTR_RGBW_COLOR] = (*color_util.color_xy_to_RGB(*xy_color), 0)
             elif COLOR_MODE_RGBWW in supported_color_modes:
                 params[ATTR_RGBWW_COLOR] = (
-                    *color_util.color_xy_to_RGB(*hs_color),
+                    *color_util.color_xy_to_RGB(*xy_color),
                     0,
                     0,
                 )
