@@ -3,5 +3,6 @@
   "name": "Number",
   "documentation": "https://www.home-assistant.io/integrations/number",
   "codeowners": ["@home-assistant/core", "@Shulyaka"],
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "strictly_typed": true
 }

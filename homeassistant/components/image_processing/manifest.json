@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/image_processing",
   "dependencies": ["camera"],
   "codeowners": [],
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "strictly_typed": true
 }

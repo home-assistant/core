@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/mailbox",
   "dependencies": ["http"],
   "codeowners": [],
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "strictly_typed": true
 }

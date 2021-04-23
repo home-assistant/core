@@ -3,5 +3,6 @@
   "name": "Water Heater",
   "documentation": "https://www.home-assistant.io/integrations/water_heater",
   "codeowners": [],
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "strictly_typed": true
 }

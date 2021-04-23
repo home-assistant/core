@@ -4,5 +4,6 @@
   "config_flow": false,
   "documentation": "https://www.home-assistant.io/integrations/zone",
   "codeowners": ["@home-assistant/core"],
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "strictly_typed": true
 }

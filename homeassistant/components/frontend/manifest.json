@@ -20,5 +20,6 @@
   "codeowners": [
     "@home-assistant/frontend"
   ],
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "strictly_typed": true
 }

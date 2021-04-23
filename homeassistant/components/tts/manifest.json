@@ -6,5 +6,6 @@
   "dependencies": ["http"],
   "after_dependencies": ["media_player"],
   "codeowners": ["@pvizeli"],
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "strictly_typed": true
 }

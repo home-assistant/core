@@ -5,5 +5,6 @@
   "requirements": ["xknx==0.18.1"],
   "codeowners": ["@Julius2342", "@farmio", "@marvin-w"],
   "quality_scale": "silver",
-  "iot_class": "local_push"
+  "iot_class": "local_push",
+  "strictly_typed": true
 }

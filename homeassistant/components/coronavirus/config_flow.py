@@ -30,13 +30,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             coordinator = await get_coordinator(self.hass)
             if not coordinator.last_update_success:
                 return self.async_abort(reason="cannot_connect")
+            if coordinator.data is None:
+                return self.async_abort(reason="no_data")
 
             self._options = {OPTION_WORLDWIDE: "Worldwide"}
-            if coordinator.data is not None:
-                for case in sorted(
-                    coordinator.data.values(), key=lambda case: case.country
-                ):
-                    self._options[case.country] = case.country
+            for case in sorted(
+                coordinator.data.values(), key=lambda case: case.country
+            ):
+                self._options[case.country] = case.country
 
         if user_input is not None:
             await self.async_set_unique_id(user_input["country"])

@@ -16,5 +16,6 @@
     }
   ],
   "codeowners": ["@scop", "@fphammerle"],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "strictly_typed": true
 }

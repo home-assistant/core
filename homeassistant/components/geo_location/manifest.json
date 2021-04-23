@@ -3,5 +3,6 @@
   "name": "Geolocation",
   "documentation": "https://www.home-assistant.io/integrations/geo_location",
   "codeowners": [],
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "strictly_typed": true
 }

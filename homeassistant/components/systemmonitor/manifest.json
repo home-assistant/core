@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/systemmonitor",
   "requirements": ["psutil==5.8.0"],
   "codeowners": [],
-  "iot_class": "local_push"
+  "iot_class": "local_push",
+  "strictly_typed": true
 }

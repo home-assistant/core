@@ -7,5 +7,6 @@
   "zeroconf": ["_bond._tcp.local."],
   "codeowners": ["@prystupa"],
   "quality_scale": "platinum",
-  "iot_class": "local_push"
+  "iot_class": "local_push",
+  "strictly_typed": true
 }

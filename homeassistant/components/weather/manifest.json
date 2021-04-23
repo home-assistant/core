@@ -3,5 +3,6 @@
   "name": "Weather",
   "documentation": "https://www.home-assistant.io/integrations/weather",
   "codeowners": ["@fabaff"],
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "strictly_typed": true
 }

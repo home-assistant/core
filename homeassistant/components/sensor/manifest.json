@@ -3,5 +3,6 @@
   "name": "Sensor",
   "documentation": "https://www.home-assistant.io/integrations/sensor",
   "codeowners": [],
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "strictly_typed": true
 }
