@@ -189,7 +189,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
             await controller.create_group(self.player_id, player_ids)
         except HeosError as err:
             _LOGGER.error(
-                "HEOS create_group with arguments (%s %s) failed. Error: %s",
+                "Failed to group %s with %s: %s",
                 self.player_id,
                 player_ids,
                 err,
