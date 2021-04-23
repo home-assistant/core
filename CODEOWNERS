@@ -487,7 +487,6 @@ homeassistant/components/template/* @PhracturedBlue @tetienne
 homeassistant/components/tesla/* @zabuldon @alandtse
 homeassistant/components/tfiac/* @fredrike @mellado
 homeassistant/components/thethingsnetwork/* @fabaff
-homeassistant/components/threading/* @home-assistant/core
 homeassistant/components/threshold/* @fabaff
 homeassistant/components/tibber/* @danielhiversen
 homeassistant/components/tile/* @bachya
