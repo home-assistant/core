@@ -168,9 +168,6 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
         """Handle a flow initiated by the user."""
         if user_input is None:
             return self._show_setup_form_init()
-
-        errors = {}
-
         self._host = user_input[CONF_HOST]
         self._port = user_input[CONF_PORT]
         self._username = user_input[CONF_USERNAME]
