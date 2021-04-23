@@ -69,10 +69,10 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, zeroconf_info: DiscoveryInfoType
+        self, discovery_info: DiscoveryInfoType
     ) -> FlowResultDict:
         """Handle zeroconf discovery."""
-        self._host = zeroconf_info[CONF_HOST]
+        self._host = discovery_info[CONF_HOST]
 
         try:
             mac = await self._async_get_mac(self._host)
@@ -85,7 +85,7 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured({CONF_HOST: self._host})
 
         self.context["title_placeholders"] = {
-            ATTR_NAME: zeroconf_info[ATTR_NAME].split(".")[0]
+            ATTR_NAME: discovery_info[ATTR_NAME].split(".")[0]
         }
 
         return await self.async_step_confirm_discovery()
