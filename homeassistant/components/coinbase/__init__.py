@@ -67,7 +67,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         entry.data[CONF_API_KEY],
         entry.data[CONF_API_TOKEN],
     )
-    hass.data[DOMAIN] = {}
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
+
     hass.data[DOMAIN][entry.entry_id] = await hass.async_add_executor_job(
         CoinbaseData, client
     )
