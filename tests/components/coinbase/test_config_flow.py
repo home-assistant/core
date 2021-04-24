@@ -7,11 +7,8 @@ from requests.models import Response
 from homeassistant import config_entries, setup
 from homeassistant.components.coinbase.const import (
     CONF_CURRENCIES,
-    CONF_EXCAHNGE_RATES,
-    CONF_YAML_API_KEY,
+    CONF_EXCHANGE_RATES,
     CONF_YAML_API_TOKEN,
-    CONF_YAML_CURRENCIES,
-    CONF_YAML_EXCHANGE_RATES,
     DOMAIN,
 )
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
@@ -58,7 +55,7 @@ async def test_form(hass):
                 CONF_API_KEY: "123456",
                 CONF_API_TOKEN: "AbCDeF",
                 CONF_CURRENCIES: "BTC, USD",
-                CONF_EXCAHNGE_RATES: "ATOM, BTC",
+                CONF_EXCHANGE_RATES: "ATOM, BTC",
             },
         )
         await hass.async_block_till_done()
@@ -69,7 +66,7 @@ async def test_form(hass):
         CONF_API_KEY: "123456",
         CONF_API_TOKEN: "AbCDeF",
         CONF_CURRENCIES: ["BTC", "USD"],
-        CONF_EXCAHNGE_RATES: ["ATOM", "BTC"],
+        CONF_EXCHANGE_RATES: ["ATOM", "BTC"],
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -99,7 +96,7 @@ async def test_form_invalid_auth(hass):
                 CONF_API_KEY: "123456",
                 CONF_API_TOKEN: "AbCDeF",
                 CONF_CURRENCIES: "BTC, USD",
-                CONF_EXCAHNGE_RATES: "ATOM, BTC",
+                CONF_EXCHANGE_RATES: "ATOM, BTC",
             },
         )
 
@@ -123,7 +120,7 @@ async def test_form_cannot_connect(hass):
                 CONF_API_KEY: "123456",
                 CONF_API_TOKEN: "AbCDeF",
                 CONF_CURRENCIES: "BTC, USD",
-                CONF_EXCAHNGE_RATES: "ATOM, BTC",
+                CONF_EXCHANGE_RATES: "ATOM, BTC",
             },
         )
 
@@ -147,7 +144,7 @@ async def test_form_catch_all_exception(hass):
                 CONF_API_KEY: "123456",
                 CONF_API_TOKEN: "AbCDeF",
                 CONF_CURRENCIES: "BTC, USD",
-                CONF_EXCAHNGE_RATES: "ATOM, BTC",
+                CONF_EXCHANGE_RATES: "ATOM, BTC",
             },
         )
 
@@ -186,7 +183,7 @@ async def test_form_bad_account_currency(hass):
                 CONF_API_KEY: "123456",
                 CONF_API_TOKEN: "AbCDeF",
                 CONF_CURRENCIES: "NOT_A_CURRENCY",
-                CONF_EXCAHNGE_RATES: "ATOM, BTC",
+                CONF_EXCHANGE_RATES: "ATOM, BTC",
             },
         )
 
@@ -225,7 +222,7 @@ async def test_form_bad_exchange_rate(hass):
                 CONF_API_KEY: "123456",
                 CONF_API_TOKEN: "AbCDeF",
                 CONF_CURRENCIES: "BTC, USD",
-                CONF_EXCAHNGE_RATES: "NOT_A_RATE",
+                CONF_EXCHANGE_RATES: "NOT_A_RATE",
             },
         )
 
@@ -236,10 +233,10 @@ async def test_form_bad_exchange_rate(hass):
 async def test_yaml_import(hass):
     """Test YAML import works."""
     conf = {
-        CONF_YAML_API_KEY: "123456",
+        CONF_API_KEY: "123456",
         CONF_YAML_API_TOKEN: "AbCDeF",
-        CONF_YAML_CURRENCIES: ["BTC", "USD"],
-        CONF_YAML_EXCHANGE_RATES: ["ATOM", "BTC"],
+        CONF_CURRENCIES: ["BTC", "USD"],
+        CONF_EXCHANGE_RATES: ["ATOM", "BTC"],
     }
     with patch(
         "coinbase.wallet.client.Client.get_current_user",
@@ -269,7 +266,7 @@ async def test_yaml_import(hass):
         CONF_API_KEY: "123456",
         CONF_API_TOKEN: "AbCDeF",
         CONF_CURRENCIES: ["BTC", "USD"],
-        CONF_EXCAHNGE_RATES: ["ATOM", "BTC"],
+        CONF_EXCHANGE_RATES: ["ATOM", "BTC"],
     }
 
 
@@ -281,7 +278,7 @@ async def test_yaml_existing(hass):
             CONF_API_KEY: "123456",
             CONF_API_TOKEN: "AbCDeF",
             CONF_CURRENCIES: ["BTC", "USD"],
-            CONF_EXCAHNGE_RATES: ["ATOM", "BTC"],
+            CONF_EXCHANGE_RATES: ["ATOM", "BTC"],
         },
     ).add_to_hass(hass)
 
@@ -289,10 +286,10 @@ async def test_yaml_existing(hass):
         DOMAIN,
         context={"source": config_entries.SOURCE_IMPORT},
         data={
-            CONF_YAML_API_KEY: "123456",
+            CONF_API_KEY: "123456",
             CONF_YAML_API_TOKEN: "AbCDeF",
-            CONF_YAML_CURRENCIES: ["BTC", "USD"],
-            CONF_YAML_EXCHANGE_RATES: ["ATOM", "BTC"],
+            CONF_CURRENCIES: ["BTC", "USD"],
+            CONF_EXCHANGE_RATES: ["ATOM", "BTC"],
         },
     )
 
