@@ -14,6 +14,7 @@ from homeassistant import config_entries
 from homeassistant.components.dhcp import HOSTNAME
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import (
@@ -28,20 +29,18 @@ from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_HUB, default=DEFAULT_HUB): vol.In(SUPPORTED_ENDPOINTS.keys()),
-    }
-)
-
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Overkiz."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
+
+    def __init__(self):
+        """Start the Overkiz config flow."""
+        self._reauth_entry = None
+        self._default_username = None
+        self._default_hub = DEFAULT_HUB
 
     @staticmethod
     @callback
@@ -59,15 +58,37 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         async with TahomaClient(username, password, api_url=endpoint) as client:
             await client.login()
-            return self.async_create_entry(title=username, data=user_input)
+
+            # Set first gateway as unique id
+            gateways = await client.get_gateways()
+            if gateways:
+                gateway_id = gateways[0].id
+                await self.async_set_unique_id(gateway_id)
+
+            # Create new config entry
+            if (
+                self._reauth_entry is None
+                or self._reauth_entry.unique_id != self.unique_id
+            ):
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(title=username, data=user_input)
+
+            # Modify existing entry in reauth scenario
+            self.hass.config_entries.async_update_entry(
+                self._reauth_entry, data=user_input
+            )
+
+            await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
+
+            return self.async_abort(reason="reauth_successful")
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step via config flow."""
         errors = {}
 
         if user_input:
-            await self.async_set_unique_id(user_input.get(CONF_USERNAME))
-            self._abort_if_unique_id_configured()
+            self._default_username = user_input[CONF_USERNAME]
+            self._default_hub = user_input[CONF_HUB]
 
             try:
                 return await self.async_validate_input(user_input)
@@ -79,13 +100,35 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except MaintenanceException:
                 errors["base"] = "server_in_maintenance"
+            except AbortFlow:
+                raise
             except Exception as exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
                 _LOGGER.exception(exception)
 
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_USERNAME, default=self._default_username): str,
+                    vol.Required(CONF_PASSWORD): str,
+                    vol.Required(CONF_HUB, default=self._default_hub): vol.In(
+                        SUPPORTED_ENDPOINTS.keys()
+                    ),
+                }
+            ),
+            errors=errors,
         )
+
+    async def async_step_reauth(self, user_input=None):
+        """Perform reauth if the user credentials have changed."""
+        self._reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        self._default_username = user_input[CONF_USERNAME]
+        self._default_hub = user_input[CONF_HUB]
+
+        return await self.async_step_user()
 
     async def async_step_dhcp(self, discovery_info):
         """Handle DHCP discovery."""

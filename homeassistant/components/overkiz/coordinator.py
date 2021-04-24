@@ -16,6 +16,7 @@ from pyhoma.exceptions import (
 from pyhoma.models import DataType, Device, Place, State
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -67,7 +68,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             events = await self.client.fetch_events()
         except BadCredentialsException as exception:
-            raise UpdateFailed("Invalid authentication.") from exception
+            raise ConfigEntryAuthFailed() from exception
         except TooManyRequestsException as exception:
             raise UpdateFailed("Too many requests, try again later.") from exception
         except MaintenanceException as exception:

@@ -17,7 +17,7 @@ from homeassistant.components.scene import DOMAIN as SCENE
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -64,18 +64,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             client.get_places(),
         ]
         devices, scenarios, gateways, places = await asyncio.gather(*tasks)
-    except BadCredentialsException:
-        _LOGGER.error("Invalid authentication")
-        return False
+    except BadCredentialsException as exception:
+        raise ConfigEntryAuthFailed from exception
     except TooManyRequestsException as exception:
-        _LOGGER.error("Too many requests, try again later")
-        raise ConfigEntryNotReady from exception
+        raise ConfigEntryNotReady("Too many requests, try again later") from exception
     except (TimeoutError, ClientError, ServerDisconnectedError) as exception:
-        _LOGGER.error("Failed to connect")
-        raise ConfigEntryNotReady from exception
+        raise ConfigEntryNotReady("Failed to connect") from exception
     except MaintenanceException as exception:
-        _LOGGER.error("Server is down for maintenance")
-        raise ConfigEntryNotReady from exception
+        raise ConfigEntryNotReady("Server is down for maintenance") from exception
     except Exception as exception:  # pylint: disable=broad-except
         _LOGGER.exception(exception)
         return False
