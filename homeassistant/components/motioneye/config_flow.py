@@ -24,7 +24,6 @@ from . import create_motioneye_client
 from .const import (  # pylint:disable=unused-import
     CONF_ADMIN_PASSWORD,
     CONF_ADMIN_USERNAME,
-    CONF_CONFIG_ENTRY,
     CONF_SURVEILLANCE_PASSWORD,
     CONF_SURVEILLANCE_USERNAME,
     DOMAIN,
@@ -77,10 +76,15 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             return out
 
+        reauth_entry = None
+        if self.context.get("entry_id"):
+            reauth_entry = self.hass.config_entries.async_get_entry(
+                self.context["entry_id"]
+            )
+
         out: dict[str, Any] = {}
         if user_input is None:
-            entry = self.context.get(CONF_CONFIG_ENTRY)
-            return _get_form(entry.data if entry else {})
+            return _get_form(reauth_entry.data if reauth_entry else {})
 
         try:
             # Cannot use cv.url validation in the schema itself, so
@@ -108,16 +112,12 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
         finally:
             await client.async_client_close()
 
-        if (
-            self.context.get(CONF_SOURCE) == SOURCE_REAUTH
-            and self.context.get(CONF_CONFIG_ENTRY) is not None
-        ):
-            entry = self.context[CONF_CONFIG_ENTRY]
-            self.hass.config_entries.async_update_entry(entry, data=user_input)
+        if self.context.get(CONF_SOURCE) == SOURCE_REAUTH and reauth_entry is not None:
+            self.hass.config_entries.async_update_entry(reauth_entry, data=user_input)
             # Need to manually reload, as the listener won't have been
             # installed because the initial load did not succeed (the reauth
             # flow will not be initiated if the load succeeds).
-            await self.hass.config_entries.async_reload(entry.entry_id)
+            await self.hass.config_entries.async_reload(reauth_entry.entry_id)
             out = self.async_abort(reason="reauth_successful")
             return out
 

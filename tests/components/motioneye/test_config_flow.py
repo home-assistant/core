@@ -12,7 +12,6 @@ from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.motioneye.const import (
     CONF_ADMIN_PASSWORD,
     CONF_ADMIN_USERNAME,
-    CONF_CONFIG_ENTRY,
     CONF_SURVEILLANCE_PASSWORD,
     CONF_SURVEILLANCE_USERNAME,
     DOMAIN,
@@ -205,7 +204,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
         DOMAIN,
         context={
             "source": config_entries.SOURCE_REAUTH,
-            CONF_CONFIG_ENTRY: config_entry,
+            "entry_id": config_entry.entry_id,
         },
     )
     assert result["type"] == "form"
