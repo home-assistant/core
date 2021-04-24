@@ -1,5 +1,4 @@
 """This platform allows several media players to be grouped into one media player."""
-import logging
 from typing import Dict, List, Optional, Set
 
 import voluptuous as vol
@@ -56,8 +55,6 @@ from homeassistant.helpers.event import async_track_state_change_event
 # mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs
 
-_LOGGER = logging.getLogger(__name__)
-
 KEY_CLEAR_PLAYLIST = "clear_playlist"
 KEY_ON_OFF = "on_off"
 KEY_PAUSE_PLAY_STOP = "play"
@@ -92,7 +89,7 @@ class MediaGroup(MediaPlayerEntity):
         self._supported_features: int = 0
 
         self._entities = entities
-        self._players: Dict[str, Set[str]] = {
+        self._features: Dict[str, Set[str]] = {
             KEY_CLEAR_PLAYLIST: set(),
             KEY_ON_OFF: set(),
             KEY_PAUSE_PLAY_STOP: set(),
@@ -111,50 +108,54 @@ class MediaGroup(MediaPlayerEntity):
 
     @callback
     def update_supported_features(
-        self, entity_id: str, new_state: Optional[State], update_state: bool = True,
+        self,
+        entity_id: str,
+        new_state: Optional[State],
+        update_state: bool = True,
     ) -> None:
         """Update dictionaries with supported features."""
         if not new_state:
-            for values in self._players.values():
-                values.discard(entity_id)
+            for players in self._features.values():
+                players.discard(entity_id)
             if update_state:
                 self.async_schedule_update_ha_state(True)
             return
 
-        features = new_state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-
-        if features & SUPPORT_CLEAR_PLAYLIST:
-            self._players[KEY_CLEAR_PLAYLIST].add(entity_id)
+        new_features = new_state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        if new_features & SUPPORT_CLEAR_PLAYLIST:
+            self._features[KEY_CLEAR_PLAYLIST].add(entity_id)
         else:
-            self._players[KEY_CLEAR_PLAYLIST].discard(entity_id)
-        if features & (SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_STOP):
-            self._players[KEY_PAUSE_PLAY_STOP].add(entity_id)
+            self._features[KEY_CLEAR_PLAYLIST].discard(entity_id)
+        if new_features & (SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK):
+            self._features[KEY_TRACKS].add(entity_id)
         else:
-            self._players[KEY_PAUSE_PLAY_STOP].discard(entity_id)
-        if features & (SUPPORT_TURN_ON | SUPPORT_TURN_OFF):
-            self._players[KEY_ON_OFF].add(entity_id)
+            self._features[KEY_TRACKS].discard(entity_id)
+        if new_features & (SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_STOP):
+            self._features[KEY_PAUSE_PLAY_STOP].add(entity_id)
         else:
-            self._players[KEY_ON_OFF].discard(entity_id)
-        if features & SUPPORT_PLAY_MEDIA:
-            self._players[KEY_PLAY_MEDIA].add(entity_id)
+            self._features[KEY_PAUSE_PLAY_STOP].discard(entity_id)
+        if new_features & SUPPORT_PLAY_MEDIA:
+            self._features[KEY_PLAY_MEDIA].add(entity_id)
         else:
-            self._players[KEY_PLAY_MEDIA].discard(entity_id)
-        if features & SUPPORT_SHUFFLE_SET:
-            self._players[KEY_SHUFFLE].add(entity_id)
+            self._features[KEY_PLAY_MEDIA].discard(entity_id)
+        if new_features & SUPPORT_SEEK:
+            self._features[KEY_SEEK].add(entity_id)
         else:
-            self._players[KEY_SHUFFLE].discard(entity_id)
-        if features & SUPPORT_SEEK:
-            self._players[KEY_SEEK].add(entity_id)
+            self._features[KEY_SEEK].discard(entity_id)
+        if new_features & SUPPORT_SHUFFLE_SET:
+            self._features[KEY_SHUFFLE].add(entity_id)
         else:
-            self._players[KEY_SEEK].discard(entity_id)
-        if features & (SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK):
-            self._players[KEY_TRACKS].add(entity_id)
+            self._features[KEY_SHUFFLE].discard(entity_id)
+        if new_features & (SUPPORT_TURN_ON | SUPPORT_TURN_OFF):
+            self._features[KEY_ON_OFF].add(entity_id)
         else:
-            self._players[KEY_TRACKS].discard(entity_id)
-        if features & (SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP):
-            self._players[KEY_VOLUME].add(entity_id)
+            self._features[KEY_ON_OFF].discard(entity_id)
+        if new_features & (
+            SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP
+        ):
+            self._features[KEY_VOLUME].add(entity_id)
         else:
-            self._players[KEY_VOLUME].discard(entity_id)
+            self._features[KEY_VOLUME].discard(entity_id)
 
         if update_state:
             self.async_schedule_update_ha_state(True)
@@ -177,7 +178,7 @@ class MediaGroup(MediaPlayerEntity):
     @property
     def state(self) -> str:
         """Return the state of the media group."""
-        return self._state or STATE_OFF  # type: ignore[unreachable]
+        return self._state or STATE_OFF
 
     @property
     def supported_features(self) -> int:
@@ -196,7 +197,7 @@ class MediaGroup(MediaPlayerEntity):
 
     def media_next_track(self):
         """Send next track command."""
-        data = {ATTR_ENTITY_ID: self._players[KEY_TRACKS]}
+        data = {ATTR_ENTITY_ID: self._features[KEY_TRACKS]}
         self.hass.services.call(
             DOMAIN,
             SERVICE_MEDIA_NEXT_TRACK,
@@ -207,21 +208,29 @@ class MediaGroup(MediaPlayerEntity):
 
     def media_pause(self):
         """Send pause command."""
-        data = {ATTR_ENTITY_ID: self._players[KEY_PAUSE_PLAY_STOP]}
+        data = {ATTR_ENTITY_ID: self._features[KEY_PAUSE_PLAY_STOP]}
         self.hass.services.call(
-            DOMAIN, SERVICE_MEDIA_PAUSE, data, blocking=True, context=self._context,
+            DOMAIN,
+            SERVICE_MEDIA_PAUSE,
+            data,
+            blocking=True,
+            context=self._context,
         )
 
     def media_play(self):
         """Send play command."""
-        data = {ATTR_ENTITY_ID: self._players[KEY_PAUSE_PLAY_STOP]}
+        data = {ATTR_ENTITY_ID: self._features[KEY_PAUSE_PLAY_STOP]}
         self.hass.services.call(
-            DOMAIN, SERVICE_MEDIA_PLAY, data, blocking=True, context=self._context,
+            DOMAIN,
+            SERVICE_MEDIA_PLAY,
+            data,
+            blocking=True,
+            context=self._context,
         )
 
     def media_previous_track(self):
         """Send previous track command."""
-        data = {ATTR_ENTITY_ID: self._players[KEY_TRACKS]}
+        data = {ATTR_ENTITY_ID: self._features[KEY_TRACKS]}
         self.hass.services.call(
             DOMAIN,
             SERVICE_MEDIA_PREVIOUS_TRACK,
@@ -233,117 +242,148 @@ class MediaGroup(MediaPlayerEntity):
     def media_seek(self, position):
         """Send seek command."""
         data = {
+            ATTR_ENTITY_ID: self._features[KEY_SEEK],
             ATTR_MEDIA_SEEK_POSITION: position,
-            ATTR_ENTITY_ID: self._players[KEY_SEEK],
         }
         self.hass.services.call(
-            DOMAIN, SERVICE_MEDIA_SEEK, data, blocking=True, context=self._context,
+            DOMAIN,
+            SERVICE_MEDIA_SEEK,
+            data,
+            blocking=True,
+            context=self._context,
         )
 
     def media_stop(self):
         """Send stop command."""
-        data = {ATTR_ENTITY_ID: self._players[KEY_PAUSE_PLAY_STOP]}
+        data = {ATTR_ENTITY_ID: self._features[KEY_PAUSE_PLAY_STOP]}
         self.hass.services.call(
-            DOMAIN, SERVICE_MEDIA_STOP, data, blocking=True, context=self._context,
+            DOMAIN,
+            SERVICE_MEDIA_STOP,
+            data,
+            blocking=True,
+            context=self._context,
         )
 
     def mute_volume(self, mute):
         """Mute the volume."""
         data = {
+            ATTR_ENTITY_ID: self._features[KEY_VOLUME],
             ATTR_MEDIA_VOLUME_MUTED: mute,
-            ATTR_ENTITY_ID: self._players[KEY_VOLUME],
         }
         self.hass.services.call(
-            DOMAIN, SERVICE_VOLUME_MUTE, data, blocking=True, context=self._context,
+            DOMAIN,
+            SERVICE_VOLUME_MUTE,
+            data,
+            blocking=True,
+            context=self._context,
         )
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
         data = {
+            ATTR_ENTITY_ID: self._features[KEY_PLAY_MEDIA],
             ATTR_MEDIA_CONTENT_ID: media_id,
             ATTR_MEDIA_CONTENT_TYPE: media_type,
-            ATTR_ENTITY_ID: self._players[KEY_PLAY_MEDIA],
         }
         self.hass.services.call(
-            DOMAIN, SERVICE_PLAY_MEDIA, data, blocking=True, context=self._context,
+            DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            data,
+            blocking=True,
+            context=self._context,
         )
 
     def turn_on(self):
         """Forward the turn_on command to all media in the media group."""
-        data = {ATTR_ENTITY_ID: self._players[KEY_ON_OFF]}
+        data = {ATTR_ENTITY_ID: self._features[KEY_ON_OFF]}
         self.hass.services.call(
-            DOMAIN, SERVICE_TURN_ON, data, blocking=True, context=self._context,
+            DOMAIN,
+            SERVICE_TURN_ON,
+            data,
+            blocking=True,
+            context=self._context,
         )
 
     def set_volume_level(self, volume):
         """Set volume level(s)."""
         data = {
+            ATTR_ENTITY_ID: self._features[KEY_VOLUME],
             ATTR_MEDIA_VOLUME_LEVEL: volume,
-            ATTR_ENTITY_ID: self._players[KEY_VOLUME],
         }
         self.hass.services.call(
-            DOMAIN, SERVICE_VOLUME_SET, data, blocking=True, context=self._context,
+            DOMAIN,
+            SERVICE_VOLUME_SET,
+            data,
+            blocking=True,
+            context=self._context,
         )
 
     def turn_off(self):
         """Forward the turn_off command to all media in the media group."""
-        data = {ATTR_ENTITY_ID: self._players[KEY_ON_OFF]}
+        data = {ATTR_ENTITY_ID: self._features[KEY_ON_OFF]}
         self.hass.services.call(
-            DOMAIN, SERVICE_TURN_OFF, data, blocking=True, context=self._context,
+            DOMAIN,
+            SERVICE_TURN_OFF,
+            data,
+            blocking=True,
+            context=self._context,
         )
 
     async def async_volume_up(self):
         """Turn volume up for media player(s)."""
-        for entity in self._players[KEY_VOLUME]:
+        for entity in self._features[KEY_VOLUME]:
             volume_level = self.hass.states.get(entity).attributes["volume_level"]
             if volume_level < 1:
                 await self.async_set_volume_level(min(1, volume_level + 0.1))
 
     async def async_volume_down(self):
         """Turn volume down for media player(s)."""
-        for entity in self._players[KEY_VOLUME]:
+        for entity in self._features[KEY_VOLUME]:
             volume_level = self.hass.states.get(entity).attributes["volume_level"]
             if volume_level > 0:
                 await self.async_set_volume_level(max(0, volume_level - 0.1))
 
     async def async_update(self):
         """Query all members and determine the media group state."""
-        all_states = [self.hass.states.get(x) for x in self._entities]
-        not_none_states: List[State] = list(filter(None, all_states))
-        states = [state.state for state in not_none_states]
+        states = [self.hass.states.get(entity) for entity in self._entities]
+        states_values = [state.state for state in states if state is not None]
         off_values = STATE_OFF, STATE_UNAVAILABLE, STATE_UNKNOWN
 
-        if states:
-            if states.count(states[0]) == len(states):
-                self._state = states[0]
-            elif any(state for state in states if state not in off_values) > 0:
+        if states_values:
+            if states_values.count(states_values[0]) == len(states_values):
+                self._state = states_values[0]
+            elif any(state for state in states_values if state not in off_values):
                 self._state = STATE_ON
             else:
                 self._state = STATE_OFF
+        else:
+            self._state = STATE_UNKNOWN
 
         supported_features = 0
         supported_features |= (
-            SUPPORT_CLEAR_PLAYLIST if self._players[KEY_CLEAR_PLAYLIST] else 0
+            SUPPORT_CLEAR_PLAYLIST if self._features[KEY_CLEAR_PLAYLIST] else 0
+        )
+        supported_features |= (
+            SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK
+            if self._features[KEY_TRACKS]
+            else 0
         )
         supported_features |= (
             SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_STOP
-            if self._players[KEY_PAUSE_PLAY_STOP]
+            if self._features[KEY_PAUSE_PLAY_STOP]
             else 0
         )
         supported_features |= (
-            SUPPORT_TURN_ON | SUPPORT_TURN_OFF if self._players[KEY_ON_OFF] else 0
+            SUPPORT_PLAY_MEDIA if self._features[KEY_PLAY_MEDIA] else 0
         )
-        supported_features |= SUPPORT_PLAY_MEDIA if self._players[KEY_PLAY_MEDIA] else 0
-        supported_features |= SUPPORT_SHUFFLE_SET if self._players[KEY_SHUFFLE] else 0
-        supported_features |= SUPPORT_SEEK if self._players[KEY_SEEK] else 0
+        supported_features |= SUPPORT_SEEK if self._features[KEY_SEEK] else 0
+        supported_features |= SUPPORT_SHUFFLE_SET if self._features[KEY_SHUFFLE] else 0
         supported_features |= (
-            SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK
-            if self._players[KEY_TRACKS]
-            else 0
+            SUPPORT_TURN_ON | SUPPORT_TURN_OFF if self._features[KEY_ON_OFF] else 0
         )
         supported_features |= (
             SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP
-            if self._players[KEY_VOLUME]
+            if self._features[KEY_VOLUME]
             else 0
         )
 
