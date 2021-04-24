@@ -40,15 +40,15 @@ class CommandLineNotificationService(BaseNotificationService):
     def send_message(self, message="", **kwargs):
         """Send a message to a command line."""
         try:
-            proc = subprocess.Popen(
+            with subprocess.Popen(
                 self.command,
                 universal_newlines=True,
                 stdin=subprocess.PIPE,
                 shell=True,  # nosec # shell by design
-            )
-            proc.communicate(input=message, timeout=self._timeout)
-            if proc.returncode != 0:
-                _LOGGER.error("Command failed: %s", self.command)
+            ) as proc:
+                proc.communicate(input=message, timeout=self._timeout)
+                if proc.returncode != 0:
+                    _LOGGER.error("Command failed: %s", self.command)
         except subprocess.TimeoutExpired:
             _LOGGER.error("Timeout for command: %s", self.command)
         except subprocess.SubprocessError:
