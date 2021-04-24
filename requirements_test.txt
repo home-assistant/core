@@ -12,6 +12,7 @@ mypy==0.812
 pre-commit==2.12.1
 pylint==2.8.0
 astroid==2.5.5
+mccabe==0.6.1
 pipdeptree==1.0.0
 pylint-strict-informational==0.1
 pytest-aiohttp==0.3.0

@@ -15,7 +15,7 @@ printf "%s\n" $files
 echo "================"
 echo "LINT with flake8"
 echo "================"
-pre-commit run flake8 --files $files
+pre-commit run flake8 --max-complexity 10 --files $files
 echo "================"
 echo "LINT with pylint"
 echo "================"
