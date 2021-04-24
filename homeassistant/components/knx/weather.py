@@ -53,7 +53,6 @@ class KNXWeather(KnxEntity, WeatherEntity):
             xknx,
             name=config[CONF_NAME],
             sync_state=config[WeatherSchema.CONF_SYNC_STATE],
-            create_sensors=config[WeatherSchema.CONF_KNX_CREATE_SENSORS],
             group_address_temperature=config[
                 WeatherSchema.CONF_KNX_TEMPERATURE_ADDRESS
             ],

@@ -489,27 +489,28 @@ class WeatherSchema:
     CONF_KNX_DAY_NIGHT_ADDRESS = "address_day_night"
     CONF_KNX_AIR_PRESSURE_ADDRESS = "address_air_pressure"
     CONF_KNX_HUMIDITY_ADDRESS = "address_humidity"
-    CONF_KNX_CREATE_SENSORS = "create_sensors"
 
     DEFAULT_NAME = "KNX Weather Station"
 
-    SCHEMA = vol.Schema(
-        {
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
-            vol.Optional(CONF_KNX_CREATE_SENSORS, default=False): cv.boolean,
-            vol.Required(CONF_KNX_TEMPERATURE_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_KNX_BRIGHTNESS_SOUTH_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_KNX_BRIGHTNESS_EAST_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_KNX_BRIGHTNESS_WEST_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_KNX_BRIGHTNESS_NORTH_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_KNX_WIND_SPEED_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_KNX_WIND_BEARING_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_KNX_RAIN_ALARM_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_KNX_FROST_ALARM_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_KNX_WIND_ALARM_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_KNX_DAY_NIGHT_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_KNX_AIR_PRESSURE_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_KNX_HUMIDITY_ADDRESS): ga_list_validator,
-        }
+    SCHEMA = vol.All(
+        cv.deprecated("create_sensors"),
+        vol.Schema(
+            {
+                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
+                vol.Required(CONF_KNX_TEMPERATURE_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_KNX_BRIGHTNESS_SOUTH_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_KNX_BRIGHTNESS_EAST_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_KNX_BRIGHTNESS_WEST_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_KNX_BRIGHTNESS_NORTH_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_KNX_WIND_SPEED_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_KNX_WIND_BEARING_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_KNX_RAIN_ALARM_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_KNX_FROST_ALARM_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_KNX_WIND_ALARM_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_KNX_DAY_NIGHT_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_KNX_AIR_PRESSURE_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_KNX_HUMIDITY_ADDRESS): ga_list_validator,
+            }
+        ),
     )
