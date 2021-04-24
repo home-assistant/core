@@ -181,7 +181,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass, config_entry):  # noqa: C901
     """Set up SimpliSafe as config entry."""
     hass.data[DOMAIN][DATA_LISTENER][config_entry.entry_id] = []
 
