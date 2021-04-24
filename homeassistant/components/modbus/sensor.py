@@ -220,9 +220,7 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
-        state = await self.async_get_last_state()
-        if state:
-            self._value = state.state
+        self._value = await self.async_get_last_state()
 
         async_track_time_interval(
             self.hass, lambda arg: self._update(), self._scan_interval
@@ -306,22 +304,16 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
                         v_result.append(f"{float(v_temp):.{self._precision}f}")
                 self._value = ",".join(map(str, v_result))
             else:
-                val = val[0]
-
                 # Apply scale and precision to floats and ints
-                if isinstance(val, (float, int)):
-                    val = self._scale * val + self._offset
+                val = self._scale * val[0] + self._offset
 
-                    # We could convert int to float, and the code would still work; however
-                    # we lose some precision, and unit tests will fail. Therefore, we do
-                    # the conversion only when it's absolutely necessary.
-                    if isinstance(val, int) and self._precision == 0:
-                        self._value = str(val)
-                    else:
-                        self._value = f"{float(val):.{self._precision}f}"
-                else:
-                    # Don't process remaining datatypes (bytes and booleans)
+                # We could convert int to float, and the code would still work; however
+                # we lose some precision, and unit tests will fail. Therefore, we do
+                # the conversion only when it's absolutely necessary.
+                if isinstance(val, int) and self._precision == 0:
                     self._value = str(val)
+                else:
+                    self._value = f"{float(val):.{self._precision}f}"
 
         self._available = True
         self.schedule_update_ha_state()
