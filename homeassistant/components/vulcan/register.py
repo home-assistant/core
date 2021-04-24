@@ -12,8 +12,8 @@ async def register(hass, token, symbol, pin):
         partial(Keystore.create, device_model="Home Assistant")
     )
     account = await Account.register(keystore, token, symbol, pin)
-    with open(f".vulcan/keystore-{account.user_login}.json", "w") as f:
-        f.write(keystore.as_json)
-    with open(f".vulcan/account-{account.user_login}.json", "w") as f:
-        f.write(account.as_json)
+    with open(f".vulcan/keystore-{account.user_login}.json", "w") as file:
+        file.write(keystore.as_json)
+    with open(f".vulcan/account-{account.user_login}.json", "w") as file:
+        file.write(account.as_json)
     return {"account": account, "keystore": keystore}

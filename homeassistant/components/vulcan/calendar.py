@@ -146,7 +146,7 @@ class VulcanCalendarData:
         except VulcanAPIException as err:
             if str(err) == "The certificate is not authorized.":
                 _LOGGER.error(
-                    "The certificate is not authorized, please authorize integration again."
+                    "The certificate is not authorized, please authorize integration again"
                 )
                 hass.async_create_task(
                     hass.config_entries.flow.async_init(
@@ -209,7 +209,7 @@ class VulcanCalendarData:
         except VulcanAPIException as err:
             if str(err) == "The certificate is not authorized.":
                 _LOGGER.error(
-                    "The certificate is not authorized, please authorize integration again."
+                    "The certificate is not authorized, please authorize integration again"
                 )
                 self.hass.async_create_task(
                     self.hass.config_entries.flow.async_init(
