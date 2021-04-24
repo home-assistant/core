@@ -7,6 +7,7 @@ import voluptuous as vol
 from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
 from homeassistant.const import CONF_COMMAND, CONF_NAME
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.process import kill_subprocess
 
 from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT
 
@@ -39,17 +40,18 @@ class CommandLineNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a message to a command line."""
-        try:
-            with subprocess.Popen(
-                self.command,
-                universal_newlines=True,
-                stdin=subprocess.PIPE,
-                shell=True,  # nosec # shell by design
-            ) as proc:
+        with subprocess.Popen(
+            self.command,
+            universal_newlines=True,
+            stdin=subprocess.PIPE,
+            shell=True,  # nosec # shell by design
+        ) as proc:
+            try:
                 proc.communicate(input=message, timeout=self._timeout)
                 if proc.returncode != 0:
                     _LOGGER.error("Command failed: %s", self.command)
-        except subprocess.TimeoutExpired:
-            _LOGGER.error("Timeout for command: %s", self.command)
-        except subprocess.SubprocessError:
-            _LOGGER.error("Error trying to exec command: %s", self.command)
+            except subprocess.TimeoutExpired:
+                _LOGGER.error("Timeout for command: %s", self.command)
+                kill_subprocess(proc)
+            except subprocess.SubprocessError:
+                _LOGGER.error("Error trying to exec command: %s", self.command)
