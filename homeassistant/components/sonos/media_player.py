@@ -21,7 +21,7 @@ from pysonos.core import (
     SoCo,
 )
 from pysonos.data_structures import DidlFavorite
-from pysonos.events_base import Event as SonosEvent, SubscriptionBase
+from pysonos.events_base import Event as SonosEvent
 from pysonos.exceptions import SoCoException, SoCoUPnPException
 import pysonos.music_library
 import pysonos.snapshot
@@ -30,6 +30,7 @@ import voluptuous as vol
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
+    DOMAIN as MP_DOMAIN,
     MEDIA_TYPE_ALBUM,
     MEDIA_TYPE_ARTIST,
     MEDIA_TYPE_MUSIC,
@@ -73,16 +74,17 @@ from .const import (
     DOMAIN as SONOS_DOMAIN,
     MEDIA_TYPES_TO_SONOS,
     PLAYABLE_MEDIA_TYPES,
-    SCAN_INTERVAL,
-    SEEN_EXPIRE_TIME,
+    SONOS_CONTENT_UPDATE,
     SONOS_DISCOVERY_UPDATE,
+    SONOS_ENTITY_CREATED,
     SONOS_GROUP_UPDATE,
-    SONOS_PROPERTIES_UPDATE,
-    SONOS_SEEN,
-    SONOS_UNSEEN,
+    SONOS_MEDIA_UPDATE,
+    SONOS_PLAYER_RECONNECTED,
+    SONOS_VOLUME_UPDATE,
 )
 from .entity import SonosEntity
 from .media_browser import build_item_response, get_media, library_payload
+from .speaker import SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -150,9 +152,10 @@ async def async_setup_entry(
     """Set up Sonos from a config entry."""
     platform = entity_platform.current_platform.get()
 
-    async def async_create_entities(soco: SoCo) -> None:
+    @callback
+    def async_create_entities(speaker: SonosSpeaker) -> None:
         """Handle device discovery and create entities."""
-        async_add_entities([SonosMediaPlayerEntity(soco, hass.data[DATA_SONOS])])
+        async_add_entities([SonosMediaPlayerEntity(speaker, hass.data[DATA_SONOS])])
 
     @service.verify_domain_control(hass, SONOS_DOMAIN)
     async def async_service_handle(service_call: ServiceCall) -> None:
@@ -187,11 +190,6 @@ async def async_setup_entry(
             )
 
     async_dispatcher_connect(hass, SONOS_DISCOVERY_UPDATE, async_create_entities)
-
-    # create any entities for devices that exist already
-    for uid, soco in hass.data[DATA_SONOS].discovered.items():
-        if uid not in hass.data[DATA_SONOS].media_player_entities:
-            async_add_entities([SonosMediaPlayerEntity(soco, hass.data[DATA_SONOS])])
 
     hass.services.async_register(
         SONOS_DOMAIN,
@@ -320,12 +318,9 @@ def _timespan_secs(timespan: str | None) -> None | float:
 class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     """Representation of a Sonos entity."""
 
-    def __init__(self, player: SoCo, sonos_data: SonosData) -> None:
+    def __init__(self, speaker: SonosSpeaker, sonos_data: SonosData) -> None:
         """Initialize the Sonos entity."""
-        super().__init__(player, sonos_data)
-        self._subscriptions: list[SubscriptionBase] = []
-        self._poll_timer: Callable | None = None
-        self._seen_timer: Callable | None = None
+        super().__init__(speaker, sonos_data)
         self._volume_increment = 2
         self._player_volume: int | None = None
         self._player_muted: bool | None = None
@@ -354,8 +349,8 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     async def async_added_to_hass(self) -> None:
         """Subscribe sonos events."""
         self.data.media_player_entities[self.unique_id] = self
-
-        await self.async_seen(self.soco)
+        await self.async_reconnect_player()
+        await super().async_added_to_hass()
 
         self.async_on_remove(
             async_dispatcher_connect(
@@ -364,17 +359,39 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         )
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, f"{SONOS_SEEN}-{self.unique_id}", self.async_seen
+                self.hass,
+                f"{SONOS_CONTENT_UPDATE}-{self.soco.uid}",
+                self.async_update_content,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, f"{SONOS_UNSEEN}-{self.unique_id}", self.async_unseen
+                self.hass,
+                f"{SONOS_MEDIA_UPDATE}-{self.soco.uid}",
+                self.async_update_media,
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{SONOS_VOLUME_UPDATE}-{self.soco.uid}",
+                self.async_update_volume,
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{SONOS_PLAYER_RECONNECTED}-{self.soco.uid}",
+                self.async_reconnect_player,
             )
         )
 
         if self.hass.is_running:
             async_dispatcher_send(self.hass, SONOS_GROUP_UPDATE)
+
+        async_dispatcher_send(
+            self.hass, f"{SONOS_ENTITY_CREATED}-{self.soco.uid}", MP_DOMAIN
+        )
 
     @property
     def unique_id(self) -> str:
@@ -388,8 +405,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     @property
     def name(self) -> str:
         """Return the name of the entity."""
-        speaker_info = self.data.speaker_info[self.unique_id]
-        return speaker_info["zone_name"]  # type: ignore[no-any-return]
+        return self.speaker.zone_name  # type: ignore[no-any-return]
 
     @property  # type: ignore[misc]
     @soco_coordinator
@@ -418,55 +434,6 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         """Return coordinator of this player."""
         return self._coordinator
 
-    async def async_seen(self, player: SoCo) -> None:
-        """Record that this player was seen right now."""
-        was_available = self.available
-        _LOGGER.debug("Async seen: %s, was_available: %s", player, was_available)
-
-        self.soco = player
-
-        if self._seen_timer:
-            self._seen_timer()
-
-        self._seen_timer = self.hass.helpers.event.async_call_later(
-            SEEN_EXPIRE_TIME.total_seconds(), self.async_unseen
-        )
-
-        if was_available:
-            return
-
-        self._poll_timer = self.hass.helpers.event.async_track_time_interval(
-            self.update, SCAN_INTERVAL
-        )
-
-        done = await self._async_attach_player()
-        if not done:
-            assert self._seen_timer is not None
-            self._seen_timer()
-            await self.async_unseen()
-
-        self.async_write_ha_state()
-
-    async def async_unseen(self) -> None:
-        """Make this player unavailable when it was not seen recently."""
-        self._seen_timer = None
-
-        if self._poll_timer:
-            self._poll_timer()
-            self._poll_timer = None
-
-        for subscription in self._subscriptions:
-            await subscription.unsubscribe()
-
-        self._subscriptions = []
-
-        self.async_write_ha_state()
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._seen_timer is not None
-
     def _clear_media_position(self) -> None:
         """Clear the media_position."""
         self._media_position = None
@@ -484,45 +451,19 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 # Skip unknown types
                 _LOGGER.error("Unhandled favorite '%s': %s", fav.title, ex)
 
-    def _attach_player(self) -> None:
-        """Get basic information and add event subscriptions."""
+    async def async_reconnect_player(self) -> None:
+        """Set basic information when player is reconnected."""
+        await self.hass.async_add_executor_job(self._reconnect_player)
+
+    def _reconnect_player(self) -> None:
+        """Set basic information when player is reconnected."""
         self._play_mode = self.soco.play_mode
         self.update_volume()
         self._set_favorites()
 
-    async def _async_attach_player(self) -> bool:
-        """Get basic information and add event subscriptions."""
-        try:
-            await self.hass.async_add_executor_job(self._attach_player)
-
-            player = self.soco
-
-            if self._subscriptions:
-                raise RuntimeError(
-                    f"Attempted to attach subscriptions to player: {player} "
-                    f"when existing subscriptions exist: {self._subscriptions}"
-                )
-
-            await self._subscribe(player.avTransport, self.async_update_media)
-            await self._subscribe(player.renderingControl, self.async_update_volume)
-            await self._subscribe(player.zoneGroupTopology, self.async_update_groups)
-            await self._subscribe(player.contentDirectory, self.async_update_content)
-            await self._subscribe(player.deviceProperties, self.async_update_properties)
-            return True
-        except SoCoException as ex:
-            _LOGGER.warning("Could not connect %s: %s", self.entity_id, ex)
-            return False
-
-    async def _subscribe(
-        self, target: SubscriptionBase, sub_callback: Callable
-    ) -> None:
-        """Create a sonos subscription."""
-        subscription = await target.subscribe(auto_renew=True)
-        subscription.callback = sub_callback
-        self._subscriptions.append(subscription)
-
     def update(self, now: datetime.datetime | None = None) -> None:
         """Retrieve latest state."""
+        _LOGGER.debug("Polling speaker %s", self.speaker.zone_name)
         try:
             self.update_groups()
             self.update_volume()
@@ -770,14 +711,10 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                     # pylint: disable=protected-access
                     slave._coordinator = self
                     slave._sonos_group = sonos_group
-                    slave.async_schedule_update_ha_state()
+                    slave.async_write_ha_state()
 
         async def _async_handle_group_event(event: SonosEvent) -> None:
             """Get async lock and handle event."""
-            if event and self._poll_timer:
-                # Cancel poll timer since we do receive events
-                self._poll_timer()
-                self._poll_timer = None
 
             async with self.data.topology_condition:
                 group = await _async_extract_group(event)
@@ -798,15 +735,6 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         if event and "favorites_update_id" in event.variables:
             self.hass.async_add_job(self._set_favorites)
             self.async_write_ha_state()
-
-    @callback
-    def async_update_properties(self, event: SonosEvent | None = None) -> None:
-        """Update information from properties."""
-        if not event:
-            return
-        async_dispatcher_send(
-            self.hass, f"{SONOS_PROPERTIES_UPDATE}-{self.unique_id}", event
-        )
 
     @property
     def volume_level(self) -> float | None:
@@ -974,8 +902,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         """List of available input sources."""
         sources = [fav.title for fav in self._favorites]
 
-        speaker_info = self.data.speaker_info[self.unique_id]
-        model = speaker_info["model_name"].upper()
+        model = self.speaker.model_name.upper()
         if "PLAY:5" in model or "CONNECT" in model:
             sources += [SOURCE_LINEIN]
         elif "PLAYBAR" in model:

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import datetime
+from functools import partial
 import logging
 import socket
 
@@ -14,7 +15,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOSTS,
@@ -29,19 +29,16 @@ from .const import (
     DATA_SONOS,
     DISCOVERY_INTERVAL,
     DOMAIN,
-    SEEN_EXPIRE_TIME,
-    SONOS_DISCOVERY_UPDATE,
+    PLATFORMS,
     SONOS_GROUP_UPDATE,
     SONOS_SEEN,
-    SONOS_UNSEEN,
 )
+from .speaker import SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ADVERTISE_ADDR = "advertise_addr"
 CONF_INTERFACE_ADDR = "interface_addr"
-
-PLATFORMS = [MP_DOMAIN, SENSOR_DOMAIN]
 
 
 CONFIG_SCHEMA = vol.Schema(
@@ -70,12 +67,11 @@ class SonosData:
     def __init__(self):
         """Initialize the data."""
         self.discovered = {}
-        self.speaker_info = {}
         self.media_player_entities = {}
         self.topology_condition = asyncio.Condition()
         self.discovery_thread = None
         self.hosts_heartbeat = None
-        self.seen_timers = {}
+        self.platforms_ready = set()
 
 
 async def async_setup(hass, config):
@@ -129,31 +125,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
                 data = hass.data[DATA_SONOS]
 
                 if soco.uid not in data.discovered:
-                    _LOGGER.debug("Adding new entity")
-                    data.discovered[soco.uid] = soco
-                    # Set these early since device_info() needs them
-                    data.speaker_info[soco.uid] = soco.get_speaker_info(True)
-
-                    dispatcher_send(hass, SONOS_DISCOVERY_UPDATE, soco)
+                    _LOGGER.debug("Adding new speaker")
+                    speaker = SonosSpeaker(hass, soco)
+                    data.discovered[soco.uid] = speaker
+                    speaker.setup()
                 else:
                     dispatcher_send(hass, f"{SONOS_SEEN}-{soco.uid}", soco)
 
-                # watch for this soco to become unavailable
-                seen_timers = data.seen_timers
-                if soco.uid in seen_timers:
-                    seen_timers[soco.uid]()
-                seen_timers[soco.uid] = hass.helpers.event.async_call_later(
-                    SEEN_EXPIRE_TIME.total_seconds(), lambda: _disappeared_player(soco)
-                )
-
             except SoCoException as ex:
                 _LOGGER.debug("SoCoException, ex=%s", ex)
-
-        def _disappeared_player(soco: SoCo) -> None:
-            """Handle a player that has disappeared."""
-            data = hass.data[DATA_SONOS]
-            del data.seen_timers[soco.uid]
-            dispatcher_send(hass, f"{SONOS_UNSEEN}-{soco.uid}")
 
         if hosts:
             for host in hosts:
@@ -187,15 +167,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     def _async_signal_update_groups(event):
         async_dispatcher_send(hass, SONOS_GROUP_UPDATE)
 
-    # register the entity classes
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
+    @callback
+    def start_discovery():
+        _LOGGER.debug("Adding discovery job")
+        hass.async_add_executor_job(_discovery)
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_discovery)
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_START, _async_signal_update_groups
         )
 
-    _LOGGER.debug("Adding discovery job")
-    hass.async_add_executor_job(_discovery)
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_discovery)
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_signal_update_groups)
+    @callback
+    def platform_ready(platform, _):
+        hass.data[DATA_SONOS].platforms_ready.add(platform)
+        if hass.data[DATA_SONOS].platforms_ready == PLATFORMS:
+            start_discovery()
+
+    for platform in PLATFORMS:
+        task = hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, platform)
+        )
+        task.add_done_callback(partial(platform_ready, platform))
 
     return True
