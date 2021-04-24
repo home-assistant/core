@@ -162,10 +162,11 @@ class ModbusHub:
         return self._config_name
 
     def _log_error(self, exception_error: ModbusException, error_state=True):
+        log_text = "Pymodbus: " + str(exception_error)
         if self._in_error:
-            _LOGGER.debug("Pymodbus: " + str(exception_error))
+            _LOGGER.debug(log_text)
         else:
-            _LOGGER.error("Pymodbus: " + str(exception_error))
+            _LOGGER.error(log_text)
             self._in_error = error_state
 
     def setup(self):
