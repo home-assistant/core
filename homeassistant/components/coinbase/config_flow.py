@@ -7,6 +7,8 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
+from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 
 from .const import (
     API_ACCOUNT_CURRENCY,
@@ -16,6 +18,8 @@ from .const import (
     CONF_EXCHANGE_RATES,
     CONF_YAML_API_TOKEN,
     DOMAIN,
+    RATES,
+    WALLETS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,8 +28,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_API_KEY): str,
         vol.Required(CONF_API_TOKEN): str,
-        vol.Optional(CONF_CURRENCIES): str,
-        vol.Optional(CONF_EXCHANGE_RATES): str,
     }
 )
 
@@ -79,14 +81,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         try:
-            if CONF_CURRENCIES in user_input:
-                user_input[CONF_CURRENCIES] = (
-                    user_input[CONF_CURRENCIES].upper().replace(" ", "").split(",")
-                )
-            if CONF_EXCHANGE_RATES in user_input:
-                user_input[CONF_EXCHANGE_RATES] = (
-                    user_input[CONF_EXCHANGE_RATES].upper().replace(" ", "").split(",")
-                )
             info = await validate_input(self.hass, user_input)
         except AlreadyConfigured:
             return self.async_abort(reason="already_configured")
@@ -121,6 +115,41 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             cleaned_data[CONF_EXCHANGE_RATES] = ",".join(config[CONF_EXCHANGE_RATES])
 
         return await self.async_step_user(user_input=cleaned_data)
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return OptionsFlowHandler(config_entry)
+
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle a option flow for Coinbase."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry):
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_CURRENCIES,
+                        default=self.config_entry.options.get(CONF_CURRENCIES),
+                    ): cv.multi_select(WALLETS),
+                    vol.Optional(
+                        CONF_EXCHANGE_RATES,
+                        default=self.config_entry.options.get(CONF_EXCHANGE_RATES),
+                    ): cv.multi_select(RATES),
+                }
+            ),
+        )
 
 
 class CannotConnect(exceptions.HomeAssistantError):

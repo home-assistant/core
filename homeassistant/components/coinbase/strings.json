@@ -22,5 +22,16 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Adjust Coinbase Options",
+        "data": {
+          "account_balance_currencies": "Wallet balances to report.",
+          "exchange_rate_currencies": "Exchange rates to report."
+        }
+      }
+    }
   }
 }

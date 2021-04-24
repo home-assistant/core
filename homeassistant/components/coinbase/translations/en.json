@@ -22,5 +22,16 @@
                 "title": "Coinbase API Key Details"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "account_balance_currencies": "Wallet balances to report.",
+                    "exchange_rate_currencies": "Exchange rates to report."
+                },
+                "description": "Adjust Coinbase Options"
+            }
+        }
     }
 }

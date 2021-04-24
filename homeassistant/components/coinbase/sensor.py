@@ -37,8 +37,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     entities = []
 
-    if CONF_CURRENCIES in config_entry.data:
-        desired_currencies = config_entry.data[CONF_CURRENCIES]
+    if CONF_CURRENCIES in config_entry.options:
+        desired_currencies = config_entry.options[CONF_CURRENCIES]
     else:
         desired_currencies = [
             account[API_ACCOUNT_CURRENCY]
@@ -50,8 +50,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for currency in desired_currencies:
         entities.append(AccountSensor(instance, currency))
 
-    if CONF_EXCHANGE_RATES in config_entry.data:
-        for rate in config_entry.data[CONF_EXCHANGE_RATES]:
+    if CONF_EXCHANGE_RATES in config_entry.options:
+        for rate in config_entry.options[CONF_EXCHANGE_RATES]:
             entities.append(
                 ExchangeRateSensor(
                     instance,
