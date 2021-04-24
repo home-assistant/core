@@ -22,7 +22,7 @@ from zeroconf import (
     Zeroconf,
 )
 
-from homeassistant import util
+from homeassistant import config_entries, util
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STARTED,
@@ -400,7 +400,9 @@ def handle_homekit(
 
         hass.add_job(
             hass.config_entries.flow.async_init(
-                homekit_models[test_model], context={"source": "homekit"}, data=info
+                homekit_models[test_model],
+                context={"source": config_entries.SOURCE_HOMEKIT},
+                data=info,
             )  # type: ignore
         )
         return True
