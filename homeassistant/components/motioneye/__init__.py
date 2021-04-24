@@ -1,4 +1,4 @@
-"""Tests for the motionEye integration."""
+"""The motionEye integration."""
 from __future__ import annotations
 
 import asyncio
@@ -51,9 +51,11 @@ def create_motioneye_client(
     return MotionEyeClient(*args, **kwargs)
 
 
-def get_motioneye_device_unique_id(config_entry_id: str, camera_id: int) -> str:
-    """Get the unique_id for a motionEye device."""
-    return f"{config_entry_id}_{camera_id}"
+def get_motioneye_device_identifier(
+    config_entry_id: str, camera_id: int
+) -> tuple[str, str, int]:
+    """Get the identifiers for a motionEye device."""
+    return (DOMAIN, config_entry_id, camera_id)
 
 
 def get_motioneye_entity_unique_id(
@@ -112,6 +114,7 @@ async def _create_reauth_flow(
     )
 
 
+@callback
 def _add_camera(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -119,13 +122,13 @@ def _add_camera(
     entry: ConfigEntry,
     camera_id: int,
     camera: dict[str, Any],
-    device_id: str,
+    device_identifier: tuple[str, str, int],
 ) -> None:
     """Add a motionEye camera to hass."""
 
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, device_id)},
+        identifiers={device_identifier},
         manufacturer=MOTIONEYE_MANUFACTURER,
         model=MOTIONEYE_MANUFACTURER,
         name=camera[KEY_NAME],
@@ -179,13 +182,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         CONF_COORDINATOR: coordinator,
     }
 
-    current_cameras: set[str] = set()
+    current_cameras: set[tuple[str, str, int]] = set()
     device_registry = await dr.async_get_registry(hass)
 
     @callback
     def _async_process_motioneye_cameras() -> None:
         """Process motionEye camera additions and removals."""
-        inbound_camera: set[str] = set()
+        inbound_camera: set[tuple[str, str, int]] = set()
         if KEY_CAMERAS not in coordinator.data:
             return
 
@@ -193,12 +196,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             if not is_acceptable_camera(camera):
                 return
             camera_id = camera[KEY_ID]
-            device_unique_id = get_motioneye_device_unique_id(entry.entry_id, camera_id)
-            inbound_camera.add(device_unique_id)
+            device_identifier = get_motioneye_device_identifier(
+                entry.entry_id, camera_id
+            )
+            inbound_camera.add(device_identifier)
 
-            if device_unique_id in current_cameras:
+            if device_identifier in current_cameras:
                 continue
-            current_cameras.add(device_unique_id)
+            current_cameras.add(device_identifier)
             _add_camera(
                 hass,
                 device_registry,
@@ -206,7 +211,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 entry,
                 camera_id,
                 camera,
-                device_unique_id,
+                device_identifier,
             )
 
         # Ensure every device associated with this config entry is still in the list of
@@ -214,8 +219,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for device_entry in dr.async_entries_for_config_entry(
             device_registry, entry.entry_id
         ):
-            for (kind, key) in device_entry.identifiers:
-                if kind == DOMAIN and key in inbound_camera:
+            for identifier in device_entry.identifiers:
+                if identifier in inbound_camera:
                     break
             else:
                 device_registry.async_remove_device(device_entry.id)

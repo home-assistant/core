@@ -19,7 +19,7 @@ from motioneye_client.const import (
 import pytest
 
 from homeassistant.components.camera import async_get_image, async_get_mjpeg_stream
-from homeassistant.components.motioneye import get_motioneye_device_unique_id
+from homeassistant.components.motioneye import get_motioneye_device_identifier
 from homeassistant.components.motioneye.const import (
     CONF_SURVEILLANCE_USERNAME,
     DEFAULT_SCAN_INTERVAL,
@@ -34,7 +34,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.dt as dt_util
 
 from . import (
-    TEST_CAMERA_DEVICE_ID,
+    TEST_CAMERA_DEVICE_IDENTIFIER,
     TEST_CAMERA_ENTITY_ID,
     TEST_CAMERA_ID,
     TEST_CAMERA_NAME,
@@ -143,13 +143,13 @@ async def test_setup_camera_new_data_camera_removed(hass: HomeAssistantType) -> 
 
     await hass.async_block_till_done()
     assert hass.states.get(TEST_CAMERA_ENTITY_ID)
-    assert device_registry.async_get_device({(DOMAIN, TEST_CAMERA_DEVICE_ID)})
+    assert device_registry.async_get_device({TEST_CAMERA_DEVICE_IDENTIFIER})
 
     client.async_get_cameras = AsyncMock(return_value={KEY_CAMERAS: []})
     async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)
     await hass.async_block_till_done()
     assert not hass.states.get(TEST_CAMERA_ENTITY_ID)
-    assert not device_registry.async_get_device({(DOMAIN, TEST_CAMERA_DEVICE_ID)})
+    assert not device_registry.async_get_device({TEST_CAMERA_DEVICE_IDENTIFIER})
     assert not device_registry.async_get_device({(DOMAIN, old_device_id)})
     assert not entity_registry.async_get_entity_id(
         DOMAIN, "camera", old_entity_unique_id
@@ -298,13 +298,13 @@ async def test_device_info(hass: HomeAssistantType) -> None:
     client = create_mock_motioneye_client()
     entry = await setup_mock_motioneye_config_entry(hass, client=client)
 
-    device_id = get_motioneye_device_unique_id(entry.entry_id, TEST_CAMERA_ID)
+    device_identifier = get_motioneye_device_identifier(entry.entry_id, TEST_CAMERA_ID)
     device_registry = dr.async_get(hass)
 
-    device = device_registry.async_get_device({(DOMAIN, device_id)})
+    device = device_registry.async_get_device({device_identifier})
     assert device
     assert device.config_entries == {TEST_CONFIG_ENTRY_ID}
-    assert device.identifiers == {(DOMAIN, device_id)}
+    assert device.identifiers == {device_identifier}
     assert device.manufacturer == MOTIONEYE_MANUFACTURER
     assert device.model == MOTIONEYE_MANUFACTURER
     assert device.name == TEST_CAMERA_NAME
