@@ -4,13 +4,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_DEVICE,
-    CONF_NAME,
-    EVENT_HOMEASSISTANT_STOP,
-    STATE_IDLE,
-)
+from homeassistant.const import ATTR_ENTITY_ID, CONF_DEVICE, CONF_NAME, STATE_IDLE
 from homeassistant.helpers import config_validation as cv, entity_platform
 
 from .const import (
@@ -104,7 +98,7 @@ class ModemCalleridSensor(SensorEntity):
     @property
     def unique_id(self):
         """Return the unique id of the sensor."""
-        return f"{self._server_unique_id}/{self._name}"
+        return f"{self._server_unique_id}_modem"
 
     @property
     def extra_state_attributes(self):
@@ -139,15 +133,3 @@ class ModemCalleridSensor(SensorEntity):
     def reject_call(self) -> None:
         """Reject Incoming Call."""
         self.api.reject_call(self.device)
-
-
-def setup(hass):
-    """Shutdown modem with Home Assistant restart."""
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _stop_modem)
-
-
-def _stop_modem(self, event):
-    """HA is shutting down, close modem port."""
-    if self.api:
-        self.api.close()
-        self.api = None

@@ -4,7 +4,7 @@ import serial
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_DEVICE, CONF_NAME
+from homeassistant.const import CONF_DEVICE
 
 from . import _LOGGER
 from .const import DEFAULT_DEVICE, DEFAULT_NAME
@@ -21,7 +21,6 @@ class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            name = user_input[CONF_NAME]
             device = user_input[CONF_DEVICE]
 
             await self.async_set_unique_id(device)
@@ -39,8 +38,8 @@ class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.error("Unable to open port %s", device)
             else:
                 return self.async_create_entry(
-                    title=name,
-                    data={CONF_NAME: name, CONF_DEVICE: device},
+                    title=DEFAULT_NAME,
+                    data={CONF_DEVICE: device},
                 )
 
         user_input = user_input or {}
@@ -48,9 +47,6 @@ class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(
-                        CONF_NAME, default=user_input.get(CONF_NAME) or DEFAULT_NAME
-                    ): str,
                     vol.Optional(
                         CONF_DEVICE,
                         default=user_input.get(CONF_DEVICE) or DEFAULT_DEVICE,
