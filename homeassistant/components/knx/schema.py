@@ -1,8 +1,13 @@
 """Voluptuous schemas for the KNX integration."""
+from __future__ import annotations
+
+from typing import Any
+
 import voluptuous as vol
 from xknx.devices.climate import SetpointShiftMode
+from xknx.exceptions import CouldNotParseAddress
 from xknx.io import DEFAULT_MCAST_PORT
-from xknx.telegram.address import GroupAddress, IndividualAddress
+from xknx.telegram.address import IndividualAddress, parse_device_group_address
 
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -29,11 +34,20 @@ from .const import (
 # KNX VALIDATORS
 ##################
 
-ga_validator = vol.Any(
-    cv.matches_regex(GroupAddress.ADDRESS_RE.pattern),
-    vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
-    msg="value does not match pattern for KNX group address '<main>/<middle>/<sub>', '<main>/<sub>' or '<free>' (eg.'1/2/3', '9/234', '123')",
-)
+
+def ga_validator(value: Any) -> str | int:
+    """Validate that value is parsable as GroupAddress or InternalGroupAddress."""
+    if isinstance(value, (str, int)):
+        try:
+            parse_device_group_address(value)
+            return value
+        except CouldNotParseAddress:
+            pass
+    raise vol.Invalid(
+        f"value '{value}' is not a valid KNX group address '<main>/<middle>/<sub>', '<main>/<sub>' or '<free>' (eg.'1/2/3', '9/234', '123'), nor xknx internal address 'i-<string>'."
+    )
+
+
 ga_list_validator = vol.All(cv.ensure_list, [ga_validator])
 
 ia_validator = vol.Any(
