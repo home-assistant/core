@@ -31,7 +31,6 @@ class ActivityStream(AugustSubscriberMixin):
         self._house_ids = house_ids
         self._latest_activities = {}
         self._last_update_time = None
-        self._abort_async_track_time_interval = None
         self.pubnub = pubnub
         self._update_debounce = {}
 
