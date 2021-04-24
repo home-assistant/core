@@ -15,6 +15,7 @@ ATTR_TOTAL_CONSUMPTION_UNIT = "total_consumption_unit"
 
 CONF_CONNECTIONS = "connections"
 CONF_COORDINATOR = "coordinator"
+CONF_RETRY = "retry"
 
 DEFAULT_HOST = "fritz.box"
 DEFAULT_USERNAME = "admin"

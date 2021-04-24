@@ -33,6 +33,7 @@ from homeassistant.helpers.update_coordinator import (
 from .const import (
     CONF_CONNECTIONS,
     CONF_COORDINATOR,
+    CONF_RETRY,
     DEFAULT_HOST,
     DEFAULT_USERNAME,
     DOMAIN,
@@ -109,18 +110,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         CONF_CONNECTIONS: fritz,
+        CONF_RETRY: False,
     }
 
     async def async_update_coordinator():
         """Fetch all device data."""
-        data = {}
-        for device in await hass.async_add_executor_job(fritz.get_devices):
-            device: FritzhomeDevice
-            try:
-                await hass.async_add_executor_job(device.update)
-            except requests.exceptions.HTTPError as ex:
-                await hass.async_add_executor_job(fritz.login)
+        try:
+            devices = await hass.async_add_executor_job(fritz.get_devices)
+        except requests.exceptions.HTTPError as ex:
+            if hass.data[DOMAIN][entry.entry_id][CONF_RETRY]:
+                raise ConfigEntryAuthFailed from ex
+            else:
+                hass.data[DOMAIN][entry.entry_id][CONF_RETRY] = True
                 raise UpdateFailed(f"Fritzhome connection error: {ex}") from ex
+
+        data = {}
+        for device in devices:
+            await hass.async_add_executor_job(device.update)
             data[device.ain] = device
         return data
 
