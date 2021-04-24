@@ -20,16 +20,5 @@
                 "description": "The Overkiz platform is used by various vendors like Somfy (Connexoon / TaHoma), Hitachi (Hi Kumo), Rexel (Energeasy Connect) and Atlantic (Cozytouch). Enter your application credentials and select your vendor."
             }
         }
-    },
-    "options": {
-        "step": {
-            "update_interval": {
-                "data": {
-                    "update_interval": "Update interval (in seconds)"
-                },
-                "description": "The Overkiz integration periodically retrieves new events. Change the update interval to a lower value if you want more frequent updates, for example when you also control your devices outside Home Assistant.",
-                "title": "Update Interval"
-            }
-        }
     }
 }

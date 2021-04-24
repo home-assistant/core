@@ -4,6 +4,7 @@ from collections import defaultdict
 from datetime import timedelta
 from enum import Enum
 import logging
+from typing import List
 
 from aiohttp import ClientError, ServerDisconnectedError
 from pyhoma.client import TahomaClient
@@ -12,6 +13,7 @@ from pyhoma.exceptions import (
     MaintenanceException,
     TooManyRequestsException,
 )
+from pyhoma.models import Device
 
 from homeassistant.components.scene import DOMAIN as SCENE
 from homeassistant.config_entries import ConfigEntry
@@ -23,9 +25,9 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     CONF_HUB,
-    CONF_UPDATE_INTERVAL,
     DEFAULT_HUB,
     DEFAULT_UPDATE_INTERVAL,
+    DEFAULT_UPDATE_INTERVAL_RTS,
     DOMAIN,
     HUB_MANUFACTURER,
     IGNORED_OVERKIZ_DEVICES,
@@ -76,9 +78,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         _LOGGER.exception(exception)
         return False
 
-    update_interval = timedelta(
-        seconds=entry.options.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL)
-    )
+    if is_stateless(devices):
+        update_interval = timedelta(seconds=DEFAULT_UPDATE_INTERVAL_RTS)
+    else:
+        update_interval = timedelta(seconds=DEFAULT_UPDATE_INTERVAL)
 
     overkiz_coordinator = OverkizDataUpdateCoordinator(
         hass,
@@ -102,7 +105,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN][entry.entry_id] = {
         "platforms": platforms,
         "coordinator": overkiz_coordinator,
-        "update_listener": entry.add_update_listener(update_listener),
     }
 
     for device in overkiz_coordinator.data.values():
@@ -182,23 +184,16 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
 
     if unload_ok:
-        hass.data[DOMAIN][entry.entry_id]["update_listener"]()
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 
 
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
-    """Update when config_entry options update."""
-    if entry.options[CONF_UPDATE_INTERVAL]:
-        coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
-        new_update_interval = timedelta(seconds=entry.options[CONF_UPDATE_INTERVAL])
-        coordinator.update_interval = new_update_interval
-        coordinator.original_update_interval = new_update_interval
-
-        await coordinator.async_refresh()
-
-
 def beautify_name(name: str):
     """Return human readable string."""
     return name.replace("_", " ").title()
+
+
+def is_stateless(devices: List[Device]) -> bool:
+    """Return true if all the devices are stateless."""
+    return all(device.states is None or len(device.states) == 0 for device in devices)

@@ -20,16 +20,5 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     }
-  },
-  "options": {
-    "step": {
-      "update_interval": {
-        "title": "Update Interval",
-        "description": "The Overkiz integration periodically retrieves new events. Change the update interval to a lower value if you want more frequent updates, for example when you also control your devices outside Home Assistant.",
-        "data": {
-          "update_interval": "Update interval (in seconds)"
-        }
-      }
-    }
   }
 }

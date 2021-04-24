@@ -9,8 +9,8 @@ DOMAIN = "overkiz"
 CONF_HUB = "hub"
 DEFAULT_HUB = "Somfy (Europe)"
 
-MIN_UPDATE_INTERVAL = 30
 DEFAULT_UPDATE_INTERVAL = 30
+DEFAULT_UPDATE_INTERVAL_RTS = 3600
 
 SUPPORTED_ENDPOINTS = {
     "Atlantic Cozytouch": "https://ha110-1.overkiz.com/enduser-mobile-web/enduserAPI/",
