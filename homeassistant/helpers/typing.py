@@ -14,6 +14,12 @@ ServiceDataType = Dict[str, Any]
 StateType = Union[None, str, int, float]
 TemplateVarsType = Optional[Mapping[str, Any]]
 
+# HomeAssistantType is not to be used,
+# It is not present in the core code base.
+# It is kept in order not to break custom components
+# In due time it will be removed.
+HomeAssistantType = homeassistant.core.HomeAssistant
+
 # Custom type for recorder Queries
 QueryType = Any
 
