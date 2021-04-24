@@ -1,14 +1,11 @@
 """Constants used for Coinbase."""
 
-CONF_CURRENCIES = "currencies"
-CONF_EXCAHNGE_RATES = "exchange_rates"
+CONF_CURRENCIES = "account_balance_currencies"
+CONF_EXCHANGE_RATES = "exchange_rate_currencies"
 DOMAIN = "coinbase"
 
-# These are constant used by the previous YAML configuration
-CONF_YAML_API_KEY = "api_key"
+# These are constants used by the previous YAML configuration
 CONF_YAML_API_TOKEN = "api_secret"
-CONF_YAML_CURRENCIES = "account_balance_currencies"
-CONF_YAML_EXCHANGE_RATES = "exchange_rate_currencies"
 
 # Constants for data returned by Coinbase API
 API_ACCOUNT_AMOUNT = "amount"

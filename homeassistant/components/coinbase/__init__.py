@@ -15,10 +15,9 @@ from homeassistant.util import Throttle
 
 from .const import (
     API_ACCOUNT_ID,
-    CONF_YAML_API_KEY,
+    CONF_CURRENCIES,
+    CONF_EXCHANGE_RATES,
     CONF_YAML_API_TOKEN,
-    CONF_YAML_CURRENCIES,
-    CONF_YAML_EXCHANGE_RATES,
     DOMAIN,
 )
 
@@ -33,12 +32,10 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.Schema(
             cv.deprecated(CONF_API_KEY),
             {
-                vol.Required(CONF_YAML_API_KEY): cv.string,
+                vol.Required(CONF_API_KEY): cv.string,
                 vol.Required(CONF_YAML_API_TOKEN): cv.string,
-                vol.Optional(CONF_YAML_CURRENCIES): vol.All(
-                    cv.ensure_list, [cv.string]
-                ),
-                vol.Optional(CONF_YAML_EXCHANGE_RATES, default=[]): vol.All(
+                vol.Optional(CONF_CURRENCIES): vol.All(cv.ensure_list, [cv.string]),
+                vol.Optional(CONF_EXCHANGE_RATES, default=[]): vol.All(
                     cv.ensure_list, [cv.string]
                 ),
             },

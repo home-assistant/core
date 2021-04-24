@@ -13,11 +13,8 @@ from .const import (  # pylint:disable=unused-import
     API_ACCOUNTS_DATA,
     API_RATES,
     CONF_CURRENCIES,
-    CONF_EXCAHNGE_RATES,
-    CONF_YAML_API_KEY,
+    CONF_EXCHANGE_RATES,
     CONF_YAML_API_TOKEN,
-    CONF_YAML_CURRENCIES,
-    CONF_YAML_EXCHANGE_RATES,
     DOMAIN,
 )
 
@@ -28,7 +25,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_API_KEY): str,
         vol.Required(CONF_API_TOKEN): str,
         vol.Optional(CONF_CURRENCIES): str,
-        vol.Optional(CONF_EXCAHNGE_RATES): str,
+        vol.Optional(CONF_EXCHANGE_RATES): str,
     }
 )
 
@@ -59,8 +56,8 @@ async def validate_input(hass: core.HomeAssistant, data):
             if currency not in accounts_currencies:
                 raise CurrencyUnavaliable
 
-    if CONF_EXCAHNGE_RATES in data:
-        for rate in data[CONF_EXCAHNGE_RATES]:
+    if CONF_EXCHANGE_RATES in data:
+        for rate in data[CONF_EXCHANGE_RATES]:
             if rate not in available_rates[API_RATES]:
                 raise ExchangeRateUnavaliable
 
@@ -86,9 +83,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_CURRENCIES] = (
                     user_input[CONF_CURRENCIES].upper().replace(" ", "").split(",")
                 )
-            if CONF_EXCAHNGE_RATES in user_input:
-                user_input[CONF_EXCAHNGE_RATES] = (
-                    user_input[CONF_EXCAHNGE_RATES].upper().replace(" ", "").split(",")
+            if CONF_EXCHANGE_RATES in user_input:
+                user_input[CONF_EXCHANGE_RATES] = (
+                    user_input[CONF_EXCHANGE_RATES].upper().replace(" ", "").split(",")
                 )
             info = await validate_input(self.hass, user_input)
         except AlreadyConfigured:
@@ -116,14 +113,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, config):
         """Handle import of Coinbase config from YAML."""
         cleaned_data = {}
-        cleaned_data[CONF_API_KEY] = config[CONF_YAML_API_KEY]
+        cleaned_data[CONF_API_KEY] = config[CONF_API_KEY]
         cleaned_data[CONF_API_TOKEN] = config[CONF_YAML_API_TOKEN]
-        if CONF_YAML_CURRENCIES in config:
-            cleaned_data[CONF_CURRENCIES] = ",".join(config[CONF_YAML_CURRENCIES])
-        if CONF_YAML_EXCHANGE_RATES in config:
-            cleaned_data[CONF_EXCAHNGE_RATES] = ",".join(
-                config[CONF_YAML_EXCHANGE_RATES]
-            )
+        if CONF_CURRENCIES in config:
+            cleaned_data[CONF_CURRENCIES] = ",".join(config[CONF_CURRENCIES])
+        if CONF_EXCHANGE_RATES in config:
+            cleaned_data[CONF_EXCHANGE_RATES] = ",".join(config[CONF_EXCHANGE_RATES])
 
         return await self.async_step_user(user_input=cleaned_data)
 
