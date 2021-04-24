@@ -48,7 +48,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import State, callback
+from homeassistant.core import State
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change_event
 
@@ -100,25 +100,22 @@ class MediaGroup(MediaPlayerEntity):
             KEY_VOLUME: set(),
         }
 
-    @callback
-    def _update_supported_features_event(self, event):
-        self.update_supported_features(
+    async def _on_state_change(self, event):
+        self.async_set_context(event.context)
+        await self.async_update_supported_features(
             event.data.get("entity_id"), event.data.get("new_state")
         )
+        await self.async_update_state()
 
-    @callback
-    def update_supported_features(
+    async def async_update_supported_features(
         self,
         entity_id: str,
         new_state: Optional[State],
-        update_state: bool = True,
     ) -> None:
         """Update dictionaries with supported features."""
         if not new_state:
             for players in self._features.values():
                 players.discard(entity_id)
-            if update_state:
-                self.async_schedule_update_ha_state(True)
             return
 
         new_features = new_state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
@@ -157,18 +154,13 @@ class MediaGroup(MediaPlayerEntity):
         else:
             self._features[KEY_VOLUME].discard(entity_id)
 
-        if update_state:
-            self.async_schedule_update_ha_state(True)
-
     async def async_added_to_hass(self):
         """Register listeners."""
         for entity_id in self._entities:
             new_state = self.hass.states.get(entity_id)
-            self.update_supported_features(entity_id, new_state, update_state=False)
-        async_track_state_change_event(
-            self.hass, self._entities, self._update_supported_features_event
-        )
-        await self.async_update()
+            await self.async_update_supported_features(entity_id, new_state)
+        async_track_state_change_event(self.hass, self._entities, self._on_state_change)
+        await self.async_update_state()
 
     @property
     def name(self) -> str:
@@ -195,137 +187,126 @@ class MediaGroup(MediaPlayerEntity):
         """Return the state attributes for the media group."""
         return {ATTR_ENTITY_ID: self._entities}
 
-    def media_next_track(self):
+    async def async_media_next_track(self):
         """Send next track command."""
         data = {ATTR_ENTITY_ID: self._features[KEY_TRACKS]}
-        self.hass.services.call(
+        await self.hass.services.async_call(
             DOMAIN,
             SERVICE_MEDIA_NEXT_TRACK,
             data,
-            blocking=True,
             context=self._context,
         )
 
-    def media_pause(self):
+    async def async_media_pause(self):
         """Send pause command."""
         data = {ATTR_ENTITY_ID: self._features[KEY_PAUSE_PLAY_STOP]}
-        self.hass.services.call(
+        await self.hass.services.async_call(
             DOMAIN,
             SERVICE_MEDIA_PAUSE,
             data,
-            blocking=True,
             context=self._context,
         )
 
-    def media_play(self):
+    async def async_media_play(self):
         """Send play command."""
         data = {ATTR_ENTITY_ID: self._features[KEY_PAUSE_PLAY_STOP]}
-        self.hass.services.call(
+        await self.hass.services.async_call(
             DOMAIN,
             SERVICE_MEDIA_PLAY,
             data,
-            blocking=True,
             context=self._context,
         )
 
-    def media_previous_track(self):
+    async def async_media_previous_track(self):
         """Send previous track command."""
         data = {ATTR_ENTITY_ID: self._features[KEY_TRACKS]}
-        self.hass.services.call(
+        await self.hass.services.async_call(
             DOMAIN,
             SERVICE_MEDIA_PREVIOUS_TRACK,
             data,
-            blocking=True,
             context=self._context,
         )
 
-    def media_seek(self, position):
+    async def async_media_seek(self, position):
         """Send seek command."""
         data = {
             ATTR_ENTITY_ID: self._features[KEY_SEEK],
             ATTR_MEDIA_SEEK_POSITION: position,
         }
-        self.hass.services.call(
+        await self.hass.services.async_call(
             DOMAIN,
             SERVICE_MEDIA_SEEK,
             data,
-            blocking=True,
             context=self._context,
         )
 
-    def media_stop(self):
+    async def async_media_stop(self):
         """Send stop command."""
         data = {ATTR_ENTITY_ID: self._features[KEY_PAUSE_PLAY_STOP]}
-        self.hass.services.call(
+        await self.hass.services.async_call(
             DOMAIN,
             SERVICE_MEDIA_STOP,
             data,
-            blocking=True,
             context=self._context,
         )
 
-    def mute_volume(self, mute):
+    async def async_mute_volume(self, mute):
         """Mute the volume."""
         data = {
             ATTR_ENTITY_ID: self._features[KEY_VOLUME],
             ATTR_MEDIA_VOLUME_MUTED: mute,
         }
-        self.hass.services.call(
+        await self.hass.services.async_call(
             DOMAIN,
             SERVICE_VOLUME_MUTE,
             data,
-            blocking=True,
             context=self._context,
         )
 
-    def play_media(self, media_type, media_id, **kwargs):
+    async def async_play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
         data = {
             ATTR_ENTITY_ID: self._features[KEY_PLAY_MEDIA],
             ATTR_MEDIA_CONTENT_ID: media_id,
             ATTR_MEDIA_CONTENT_TYPE: media_type,
         }
-        self.hass.services.call(
+        await self.hass.services.async_call(
             DOMAIN,
             SERVICE_PLAY_MEDIA,
             data,
-            blocking=True,
             context=self._context,
         )
 
-    def turn_on(self):
+    async def async_turn_on(self):
         """Forward the turn_on command to all media in the media group."""
         data = {ATTR_ENTITY_ID: self._features[KEY_ON_OFF]}
-        self.hass.services.call(
+        await self.hass.services.async_call(
             DOMAIN,
             SERVICE_TURN_ON,
             data,
-            blocking=True,
             context=self._context,
         )
 
-    def set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume):
         """Set volume level(s)."""
         data = {
             ATTR_ENTITY_ID: self._features[KEY_VOLUME],
             ATTR_MEDIA_VOLUME_LEVEL: volume,
         }
-        self.hass.services.call(
+        await self.hass.services.async_call(
             DOMAIN,
             SERVICE_VOLUME_SET,
             data,
-            blocking=True,
             context=self._context,
         )
 
-    def turn_off(self):
+    async def async_turn_off(self):
         """Forward the turn_off command to all media in the media group."""
         data = {ATTR_ENTITY_ID: self._features[KEY_ON_OFF]}
-        self.hass.services.call(
+        await self.hass.services.async_call(
             DOMAIN,
             SERVICE_TURN_OFF,
             data,
-            blocking=True,
             context=self._context,
         )
 
@@ -343,7 +324,7 @@ class MediaGroup(MediaPlayerEntity):
             if volume_level > 0:
                 await self.async_set_volume_level(max(0, volume_level - 0.1))
 
-    async def async_update(self):
+    async def async_update_state(self):
         """Query all members and determine the media group state."""
         states = [self.hass.states.get(entity) for entity in self._entities]
         states_values = [state.state for state in states if state is not None]
@@ -388,3 +369,4 @@ class MediaGroup(MediaPlayerEntity):
         )
 
         self._supported_features = supported_features
+        self.async_write_ha_state()
