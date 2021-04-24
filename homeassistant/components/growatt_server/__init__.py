@@ -1,6 +1,6 @@
 """The Growatt server PV inverter sensor integration."""
 from homeassistant import config_entries
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 
 async def async_setup(hass, config):
@@ -9,7 +9,7 @@ async def async_setup(hass, config):
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: config_entries.ConfigEntry
+    hass: HomeAssistant, entry: config_entries.ConfigEntry
 ) -> bool:
     """Load the saved entities."""
 
