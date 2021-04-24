@@ -614,10 +614,10 @@ class MediaPlayerCapabilities(AlexaEntity):
             yield AlexaChannelController(self.entity)
 
         if supported & media_player.const.SUPPORT_SELECT_SOUND_MODE:
-            inputs = AlexaInputController.get_valid_inputs(
+            inputs = AlexaEqualizerController.get_valid_inputs(
                 self.entity.attributes.get(media_player.const.ATTR_SOUND_MODE_LIST, [])
             )
-            if len(inputs) > 0:
+            if len(inputs) > 0 and False:
                 yield AlexaEqualizerController(self.entity)
 
         yield AlexaEndpointHealth(self.hass, self.entity)
