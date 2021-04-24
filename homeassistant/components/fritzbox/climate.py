@@ -32,7 +32,6 @@ from .const import (
     ATTR_STATE_WINDOW_OPEN,
     CONF_COORDINATOR,
     DOMAIN as FRITZBOX_DOMAIN,
-    LOGGER,
 )
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
@@ -117,7 +116,6 @@ class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
-        LOGGER.debug("async_set_temperature(%s)", kwargs)
         if ATTR_HVAC_MODE in kwargs:
             hvac_mode = kwargs.get(ATTR_HVAC_MODE)
             await self.async_set_hvac_mode(hvac_mode)
@@ -146,7 +144,6 @@ class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new operation mode."""
-        LOGGER.debug("async_set_hvac_mode(%s)", hvac_mode)
         if hvac_mode == HVAC_MODE_OFF:
             await self.async_set_temperature(temperature=OFF_REPORT_SET_TEMPERATURE)
         else:
