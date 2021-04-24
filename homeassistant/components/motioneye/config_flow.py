@@ -44,10 +44,10 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
 
         def _get_form(
-            user_input: ConfigType | None, errors: dict[str, str] | None = None
+            user_input: ConfigType, errors: dict[str, str] | None = None
         ) -> dict[str, Any]:
             """Show the form to the user."""
-            out = self.async_show_form(
+            out: dict[str, Any] = self.async_show_form(
                 step_id="user",
                 data_schema=vol.Schema(
                     {
@@ -125,7 +125,8 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
         # at least prevent entries with the same motionEye URL.
         for existing_entry in self.hass.config_entries.async_entries(DOMAIN):
             if existing_entry.data.get(CONF_URL) == user_input[CONF_URL]:
-                return self.async_abort(reason="already_configured")
+                out = self.async_abort(reason="already_configured")
+                return out
 
         out = self.async_create_entry(
             title=f"{user_input[CONF_URL]}",
