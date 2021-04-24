@@ -50,6 +50,7 @@ class SonosSpeaker:
         self._poll_timer: Callable | None = None
         self._seen_timer: Callable | None = None
         self._seen_dispatcher: Callable | None = None
+        self._entity_creation_dispatcher: Callable | None = None
         self._platforms_ready: set[str] = set()
 
         self.hass: HomeAssistant = hass
