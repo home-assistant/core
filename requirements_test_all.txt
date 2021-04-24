@@ -1244,7 +1244,7 @@ wolf_smartset==0.1.8
 xbox-webapi==2.0.8
 
 # homeassistant.components.knx
-xknx==0.18.0
+xknx==0.18.1
 
 # homeassistant.components.bluesound
 # homeassistant.components.rest
