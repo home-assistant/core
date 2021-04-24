@@ -131,9 +131,6 @@ class KNXClimate(KnxEntity, ClimateEntity):
             max_temp=config.get(ClimateSchema.CONF_MAX_TEMP),
             mode=climate_mode,
             on_off_invert=config[ClimateSchema.CONF_ON_OFF_INVERT],
-            create_temperature_sensors=config[
-                ClimateSchema.CONF_CREATE_TEMPERATURE_SENSORS
-            ],
         )
 
     @property
