@@ -31,6 +31,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
+            cv.deprecated(CONF_API_KEY, invalidation_version="2021.6"),
             {
                 vol.Required(CONF_YAML_API_KEY): cv.string,
                 vol.Required(CONF_YAML_API_TOKEN): cv.string,
@@ -40,7 +41,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_YAML_EXCHANGE_RATES, default=[]): vol.All(
                     cv.ensure_list, [cv.string]
                 ),
-            }
+            },
         )
     },
     extra=vol.ALLOW_EXTRA,
