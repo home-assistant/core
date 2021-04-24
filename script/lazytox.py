@@ -118,7 +118,7 @@ async def pylint(files):
 async def flake8(files):
     """Exec flake8."""
     _, log = await async_exec(
-        "pre-commit", "run", "flake8", "--max-complexity", "21", "--files", *files
+        "pre-commit", "run", "flake8", "--max-complexity", "25", "--files", *files
     )
     res = []
     for line in log.splitlines():
