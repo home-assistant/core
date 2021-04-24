@@ -2,11 +2,10 @@
 
 from unittest.mock import AsyncMock, patch
 
-from homeassistant.components.modem_callerid.const import DEFAULT_DEVICE, DEFAULT_NAME
-from homeassistant.const import CONF_DEVICE, CONF_NAME
+from homeassistant.components.modem_callerid.const import DEFAULT_DEVICE
+from homeassistant.const import CONF_DEVICE
 
 CONF_DATA = {
-    CONF_NAME: DEFAULT_NAME,
     CONF_DEVICE: DEFAULT_DEVICE,
 }
 

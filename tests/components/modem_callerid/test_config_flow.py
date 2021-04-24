@@ -9,7 +9,7 @@ from homeassistant.components.modem_callerid.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_DEVICE, CONF_NAME
+from homeassistant.const import CONF_DEVICE
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
     RESULT_TYPE_CREATE_ENTRY,
@@ -46,13 +46,12 @@ async def test_flow_user(hass):
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_NAME: DEFAULT_NAME, CONF_DEVICE: DEFAULT_DEVICE},
+        data={CONF_DEVICE: DEFAULT_DEVICE},
     )
 
     entry.add_to_hass(hass)
 
     service_info = {
-        "name": DEFAULT_NAME,
         "device": DEFAULT_DEVICE,
     }
     result = await hass.config_entries.flow.async_init(
