@@ -61,7 +61,7 @@ def create_credentials_and_validate(hass, host, user_input, zeroconf):
     return result
 
 
-def get_info_from_host(hass, host, zeroconf):
+def get_info_from_host(host, zeroconf):
     """Get information from host."""
     session = SHCSession(
         host,
@@ -70,7 +70,7 @@ def get_info_from_host(hass, host, zeroconf):
         True,
         zeroconf,
     )
-    return session.mdns_info
+    return session.mdns_info()
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

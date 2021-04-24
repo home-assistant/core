@@ -8,14 +8,13 @@ from homeassistant.helpers.entity_registry import async_get as get_ent_reg
 from .const import DOMAIN
 
 
-async def remove_devices(hass, entity, entry_id):
+async def async_remove_devices(hass, entity, entry_id):
     """Get item that is removed from session."""
-    entity.async_remove()
     ent_registry = get_ent_reg(hass)
     if entity.entity_id in ent_registry.entities:
         ent_registry.async_remove(entity.entity_id)
 
-    async def get_device_id(hass, device_id):
+    async def async_get_device_id(hass, device_id):
         """Get device id from device registry."""
         dev_registry = get_dev_reg(hass)
         device = dev_registry.async_get_device(
@@ -26,7 +25,7 @@ async def remove_devices(hass, entity, entry_id):
         return device.id
 
     dev_registry = get_dev_reg(hass)
-    device_id = get_device_id(hass, entity.device_id)
+    device_id = async_get_device_id(hass, entity._device.id)
     if device_id is not None:
         dev_registry.async_update_device(device_id, remove_config_entry_id=entry_id)
 
@@ -49,9 +48,7 @@ class SHCEntity(Entity):
 
         def update_entity_information():
             if self._device.deleted:
-                self.hass.async_create_task(
-                    remove_devices(self.hass, self, self._entry_id)
-                )
+                self.hass.add_job(async_remove_devices(self.hass, self, self._entry_id))
             else:
                 self.schedule_update_ha_state()
 
@@ -74,29 +71,21 @@ class SHCEntity(Entity):
     @property
     def name(self):
         """Name of the entity."""
-        return self.device_name
-
-    @property
-    def device_name(self):
-        """Name of the device."""
         return self._device.name
-
-    @property
-    def device_id(self):
-        """Return the ID of the device."""
-        return self._device.id
 
     @property
     def device_info(self):
         """Return the device info."""
         return {
             "identifiers": {(DOMAIN, self._device.id)},
-            "name": self.device_name,
+            "name": self._device.name,
             "manufacturer": self._device.manufacturer,
             "model": self._device.device_model,
             "via_device": (
                 DOMAIN,
-                self._device.parent_device_id if not None else self._parent_id,
+                self._device.parent_device_id
+                if self._device.parent_device_id is not None
+                else self._parent_id,
             ),
         }
 
