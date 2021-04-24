@@ -19,9 +19,8 @@
                     "exchange_rates": "Exchange Rates"
                 },
                 "description": "Please enter the details of your API key as provided by Coinbase. Seperate multiple currencies with a comma (e.g. \"BTC, EUR\")",
-                "title": "API Key Details"
+                "title": "Coinbase API Key Details"
             }
         }
-    },
-    "title": "Coinbase"
+    }
 }
