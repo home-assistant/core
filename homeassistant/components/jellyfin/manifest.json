@@ -6,10 +6,6 @@
   "requirements": [
     "jellyfin-apiclient-python==1.6.1"
   ],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
   "iot_class": "local_polling",
   "codeowners": [
     "@j-stienstra"
