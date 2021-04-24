@@ -1,0 +1,21 @@
+execute_command:
+  name: Execute command
+  description: Execute a specific command on the chosen device
+  target:
+    entity:
+      integration: overkiz
+  fields:
+    command:
+      name: Command
+      description: Name of the command
+      required: true
+      example: "setIntensity"
+      selector:
+        text:
+    args:
+      name: Arguments
+      description: List of arguments
+      required: false
+      example: [30]
+      selector:
+        object:

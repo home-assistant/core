@@ -9,16 +9,23 @@ from aiohttp import ClientError, ServerDisconnectedError
 from pyhoma.client import TahomaClient
 from pyhoma.exceptions import (
     BadCredentialsException,
+    InvalidCommandException,
     MaintenanceException,
     TooManyRequestsException,
 )
+from pyhoma.models import Command
+import voluptuous as vol
 
 from homeassistant.components.scene import DOMAIN as SCENE
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    service,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
@@ -35,6 +42,8 @@ from .const import (
 from .coordinator import OverkizDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+SERVICE_EXECUTE_COMMAND = "execute_command"
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -164,6 +173,38 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             name=gateway_name,
             sw_version=gateway.connectivity.protocol_version,
         )
+
+    async def handle_execute_command(call: ServiceCall):
+        """Handle execute command service."""
+        entity_registry = await hass.helpers.entity_registry.async_get_registry()
+
+        for entity_id in call.data.get("entity_id"):
+            entity = entity_registry.entities.get(entity_id)
+
+            try:
+                await overkiz_coordinator.client.execute_command(
+                    entity.unique_id,
+                    Command(call.data.get("command"), call.data.get("args")),
+                    "Home Assistant Service",
+                )
+            except InvalidCommandException as exception:
+                _LOGGER.error(exception)
+
+    service.async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_EXECUTE_COMMAND,
+        handle_execute_command,
+        vol.Schema(
+            {
+                vol.Required("entity_id"): [cv.entity_id],
+                vol.Required("command"): cv.string,
+                vol.Optional("args", default=[]): vol.All(
+                    cv.ensure_list, [vol.Any(str, int, float)]
+                ),
+            },
+        ),
+    )
 
     return True
 
