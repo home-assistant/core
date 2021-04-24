@@ -194,6 +194,6 @@ def beautify_name(name: str):
     return name.replace("_", " ").title()
 
 
-async def is_stateless(devices: List[Device]) -> bool:
+def is_stateless(devices: List[Device]) -> bool:
     """Return true if all the devices are stateless."""
     return all(device.states is None or len(device.states) == 0 for device in devices)
