@@ -14,6 +14,7 @@ from homeassistant import config_entries
 from homeassistant.components.dhcp import HOSTNAME
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import (
@@ -58,7 +59,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         async with TahomaClient(username, password, api_url=endpoint) as client:
             await client.login()
 
-            if self._reauth_entry is None:
+            # Set first gateway as unique id
+            gateways = await client.get_gateways()
+            if gateways:
+                gateway_id = gateways[0].id
+                await self.async_set_unique_id(gateway_id)
+
+            # Create new config entry
+            if (
+                self._reauth_entry is None
+                or self._reauth_entry.unique_id != self.unique_id
+            ):
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=username, data=user_input)
 
             # Modify existing entry in reauth scenario
@@ -75,12 +87,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input:
-            await self.async_set_unique_id(user_input.get(CONF_USERNAME))
-
-            if not self._reauth_entry:
-                self._abort_if_unique_id_configured()
-            elif self._reauth_entry.unique_id != self.unique_id:
-                return self.async_abort(reason="already_configured")
+            self._default_username = user_input[CONF_USERNAME]
+            self._default_hub = user_input[CONF_HUB]
 
             try:
                 return await self.async_validate_input(user_input)
@@ -92,6 +100,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except MaintenanceException:
                 errors["base"] = "server_in_maintenance"
+            except AbortFlow:
+                raise
             except Exception as exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
                 _LOGGER.exception(exception)
