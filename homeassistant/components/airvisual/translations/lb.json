@@ -23,7 +23,8 @@
             "geography_by_name": {
                 "data": {
                     "city": "Stad",
-                    "country": "Land"
+                    "country": "Land",
+                    "state": "Kanton"
                 }
             },
             "node_pro": {
