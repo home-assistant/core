@@ -113,11 +113,17 @@ class KNXExposeSensor:
         """Extract value from state."""
         if state is None or state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
             return None
-        return (
+        value = (
             state.state
             if self.expose_attribute is None
             else state.attributes.get(self.expose_attribute)
         )
+        if self.type == "binary":
+            if value in (1, STATE_ON, "True"):
+                value = True
+            elif value in (0, STATE_OFF, "False"):
+                value = False
+        return value
 
     async def _async_entity_changed(self, event: Event) -> None:
         """Handle entity change."""
@@ -133,18 +139,10 @@ class KNXExposeSensor:
 
     async def _async_set_knx_value(self, value: StateType) -> None:
         """Set new value on xknx ExposeSensor."""
-        assert self.device is not None
         if value is None:
             if self.expose_default is None:
                 return
             value = self.expose_default
-
-        if self.type == "binary":
-            if value in (1, STATE_ON, "True"):
-                value = True
-            elif value in (0, STATE_OFF, "False"):
-                value = False
-
         await self.device.set(value)
 
 
