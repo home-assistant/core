@@ -9,10 +9,12 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_SEEK_POSITION,
+    ATTR_MEDIA_SHUFFLE,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN,
     PLATFORM_SCHEMA,
+    SERVICE_CLEAR_PLAYLIST,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -20,6 +22,7 @@ from homeassistant.components.media_player import (
     SERVICE_MEDIA_SEEK,
     SERVICE_MEDIA_STOP,
     SERVICE_PLAY_MEDIA,
+    SERVICE_SHUFFLE_SET,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     SERVICE_VOLUME_MUTE,
@@ -197,6 +200,16 @@ class MediaGroup(MediaPlayerEntity):
         """Return the state attributes for the media group."""
         return {ATTR_ENTITY_ID: self._entities}
 
+    async def async_clear_playlist(self) -> None:
+        """Clear players playlist."""
+        data = {ATTR_ENTITY_ID: self._features[KEY_CLEAR_PLAYLIST]}
+        await self.hass.services.async_call(
+            DOMAIN,
+            SERVICE_CLEAR_PLAYLIST,
+            data,
+            context=self._context,
+        )
+
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         data = {ATTR_ENTITY_ID: self._features[KEY_TRACKS]}
@@ -285,6 +298,19 @@ class MediaGroup(MediaPlayerEntity):
         await self.hass.services.async_call(
             DOMAIN,
             SERVICE_PLAY_MEDIA,
+            data,
+            context=self._context,
+        )
+
+    async def async_set_shuffle(self, shuffle: bool) -> None:
+        """Enable/disable shuffle mode."""
+        data = {
+            ATTR_ENTITY_ID: self._features[KEY_SHUFFLE],
+            ATTR_MEDIA_SHUFFLE: shuffle,
+        }
+        await self.hass.services.async_call(
+            DOMAIN,
+            SERVICE_SHUFFLE_SET,
             data,
             context=self._context,
         )
