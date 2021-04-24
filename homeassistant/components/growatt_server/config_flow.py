@@ -5,7 +5,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 
-from .const import CONF_PLANT_ID, DOMAIN  # noqa # pylint: disable=unused-import
+from .const import CONF_PLANT_ID, DOMAIN  # noqa: E501 # pylint: disable=unused-import
 
 
 class GrowattServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
