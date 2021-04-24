@@ -1,4 +1,6 @@
 """Support for AVM Fritz!Box smarthome thermostate devices."""
+from typing import Callable
+
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
@@ -51,8 +53,8 @@ OFF_REPORT_SET_TEMPERATURE = 0.0
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
-):
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
+) -> None:
     """Set up the Fritzbox smarthome thermostat from ConfigEntry."""
     entities = []
     coordinator = hass.data[FRITZBOX_DOMAIN][entry.entry_id][CONF_COORDINATOR]

@@ -110,7 +110,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         CONF_CONNECTIONS: fritz,
     }
 
-    def _update_fritz_devices():
+    def _update_fritz_devices() -> dict[str, FritzhomeDevice]:
         """Update all fritzbox device data."""
         try:
             devices = fritz.get_devices()
