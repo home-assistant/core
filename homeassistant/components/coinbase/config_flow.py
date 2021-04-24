@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
 
-from .const import (  # pylint:disable=unused-import
+from .const import (
     API_ACCOUNT_CURRENCY,
     API_ACCOUNTS_DATA,
     API_RATES,
