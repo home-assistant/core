@@ -204,7 +204,7 @@ class FritzBoxEntity(CoordinatorEntity):
     def device_info(self):
         """Return device specific attributes."""
         return {
-            "name": self.name,
+            "name": self.device.name,
             "identifiers": {(DOMAIN, self.ain)},
             "manufacturer": self.device.manufacturer,
             "model": self.device.productname,
