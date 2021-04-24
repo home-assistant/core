@@ -1,5 +1,6 @@
 """Support for August lock."""
 import logging
+from datetime import datetime, timezone
 
 from yalexs.activity import ActivityType
 from yalexs.lock import LockStatus
@@ -79,6 +80,10 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
 
         if lock_activity is not None:
             self._changed_by = lock_activity.operated_by
+            if self._detail.lock_status_datetime is None:
+                self._detail.lock_status_datetime = datetime.fromtimestamp(
+                    0, tz=timezone.utc
+                )
             update_lock_detail_from_activity(self._detail, lock_activity)
 
         bridge_activity = self._data.activity_stream.get_latest_device_activity(
