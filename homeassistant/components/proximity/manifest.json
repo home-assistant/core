@@ -5,6 +5,5 @@
   "dependencies": ["device_tracker", "zone"],
   "codeowners": [],
   "quality_scale": "internal",
-  "iot_class": "calculated",
-  "strictly_typed": true
+  "iot_class": "calculated"
 }

@@ -5,6 +5,5 @@
   "dependencies": ["blueprint", "trace"],
   "after_dependencies": ["device_automation", "webhook"],
   "codeowners": ["@home-assistant/core"],
-  "quality_scale": "internal",
-  "strictly_typed": true
+  "quality_scale": "internal"
 }

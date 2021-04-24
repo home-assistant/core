@@ -4,6 +4,5 @@
   "documentation": "https://www.home-assistant.io/integrations/slack",
   "requirements": ["slackclient==2.5.0"],
   "codeowners": ["@bachya"],
-  "iot_class": "cloud_push",
-  "strictly_typed": true
+  "iot_class": "cloud_push"
 }

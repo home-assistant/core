@@ -3,6 +3,5 @@
   "name": "Device Automation",
   "documentation": "https://www.home-assistant.io/integrations/device_automation",
   "codeowners": ["@home-assistant/core"],
-  "quality_scale": "internal",
-  "strictly_typed": true
+  "quality_scale": "internal"
 }

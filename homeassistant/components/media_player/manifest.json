@@ -4,6 +4,5 @@
   "documentation": "https://www.home-assistant.io/integrations/media_player",
   "dependencies": ["http"],
   "codeowners": [],
-  "quality_scale": "internal",
-  "strictly_typed": true
+  "quality_scale": "internal"
 }

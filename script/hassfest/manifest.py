@@ -203,7 +203,6 @@ MANIFEST_SCHEMA = vol.Schema(
         vol.Required("codeowners"): [str],
         vol.Optional("disabled"): str,
         vol.Optional("iot_class"): vol.In(SUPPORTED_IOT_CLASSES),
-        vol.Optional("strictly_typed"): bool,
     }
 )
 

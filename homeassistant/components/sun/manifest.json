@@ -4,6 +4,5 @@
   "documentation": "https://www.home-assistant.io/integrations/sun",
   "codeowners": ["@Swamp-Ig"],
   "quality_scale": "internal",
-  "iot_class": "calculated",
-  "strictly_typed": true
+  "iot_class": "calculated"
 }

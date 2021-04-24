@@ -3,6 +3,5 @@
   "name": "Vacuum",
   "documentation": "https://www.home-assistant.io/integrations/vacuum",
   "codeowners": [],
-  "quality_scale": "internal",
-  "strictly_typed": true
+  "quality_scale": "internal"
 }

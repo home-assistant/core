@@ -3,6 +3,5 @@
   "name": "Binary Sensor",
   "documentation": "https://www.home-assistant.io/integrations/binary_sensor",
   "codeowners": [],
-  "quality_scale": "internal",
-  "strictly_typed": true
+  "quality_scale": "internal"
 }

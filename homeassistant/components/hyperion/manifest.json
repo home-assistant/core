@@ -12,6 +12,5 @@
       "st": "urn:hyperion-project.org:device:basic:1"
     }
   ],
-  "iot_class": "local_push",
-  "strictly_typed": true
+  "iot_class": "local_push"
 }
