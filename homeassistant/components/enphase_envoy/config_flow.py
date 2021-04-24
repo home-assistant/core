@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultDict
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.httpx_client import get_async_client
 
@@ -35,7 +36,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         data[CONF_HOST],
         data[CONF_USERNAME],
         data[CONF_PASSWORD],
-        inverters=True,
+        inverters=False,
         async_client=get_async_client(hass),
     )
 
@@ -59,6 +60,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.name = None
         self.username = None
         self.serial = None
+        self._reauth_entry = None
 
     @callback
     def _async_generate_schema(self):
@@ -121,14 +123,24 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
+    async def async_step_reauth(self, user_input):
+        """Handle configuration by re-auth."""
+        self._reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        return await self.async_step_user()
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResultDict:
         """Handle the initial step."""
         errors = {}
 
         if user_input is not None:
-            if user_input[CONF_HOST] in self._async_current_hosts():
+            if (
+                not self._reauth_entry
+                and user_input[CONF_HOST] in self._async_current_hosts()
+            ):
                 return self.async_abort(reason="already_configured")
             try:
                 await validate_input(self.hass, user_input)
@@ -145,6 +157,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data[CONF_NAME] = f"{ENVOY} {self.serial}"
                 else:
                     data[CONF_NAME] = self.name or ENVOY
+                if self._reauth_entry:
+                    self.hass.config_entries.async_update_entry(
+                        self._reauth_entry,
+                        data=data,
+                    )
+                    return self.async_abort(reason="reauth_successful")
                 return self.async_create_entry(title=data[CONF_NAME], data=data)
 
         if self.serial:

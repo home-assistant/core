@@ -87,6 +87,27 @@ def valid_supported_color_modes(color_modes):
     return color_modes
 
 
+def brightness_supported(color_modes):
+    """Test if brightness is supported."""
+    if not color_modes:
+        return False
+    return any(mode in COLOR_MODES_BRIGHTNESS for mode in color_modes)
+
+
+def color_supported(color_modes):
+    """Test if color is supported."""
+    if not color_modes:
+        return False
+    return any(mode in COLOR_MODES_COLOR for mode in color_modes)
+
+
+def color_temp_supported(color_modes):
+    """Test if color temperature is supported."""
+    if not color_modes:
+        return False
+    return COLOR_MODE_COLOR_TEMP in color_modes
+
+
 # Float that represents transition time in seconds to make change.
 ATTR_TRANSITION = "transition"
 
@@ -296,11 +317,23 @@ async def async_setup(hass, config):
             hs_color = params.pop(ATTR_HS_COLOR)
             if COLOR_MODE_RGB in supported_color_modes:
                 params[ATTR_RGB_COLOR] = color_util.color_hs_to_RGB(*hs_color)
+            elif COLOR_MODE_RGBW in supported_color_modes:
+                params[ATTR_RGBW_COLOR] = (*color_util.color_hs_to_RGB(*hs_color), 0)
+            elif COLOR_MODE_RGBWW in supported_color_modes:
+                params[ATTR_RGBWW_COLOR] = (
+                    *color_util.color_hs_to_RGB(*hs_color),
+                    0,
+                    0,
+                )
             elif COLOR_MODE_XY in supported_color_modes:
                 params[ATTR_XY_COLOR] = color_util.color_hs_to_xy(*hs_color)
         elif ATTR_RGB_COLOR in params and COLOR_MODE_RGB not in supported_color_modes:
             rgb_color = params.pop(ATTR_RGB_COLOR)
-            if COLOR_MODE_HS in supported_color_modes:
+            if COLOR_MODE_RGBW in supported_color_modes:
+                params[ATTR_RGBW_COLOR] = (*rgb_color, 0)
+            if COLOR_MODE_RGBWW in supported_color_modes:
+                params[ATTR_RGBWW_COLOR] = (*rgb_color, 0, 0)
+            elif COLOR_MODE_HS in supported_color_modes:
                 params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
             elif COLOR_MODE_XY in supported_color_modes:
                 params[ATTR_XY_COLOR] = color_util.color_RGB_to_xy(*rgb_color)
@@ -310,6 +343,14 @@ async def async_setup(hass, config):
                 params[ATTR_HS_COLOR] = color_util.color_xy_to_hs(*xy_color)
             elif COLOR_MODE_RGB in supported_color_modes:
                 params[ATTR_RGB_COLOR] = color_util.color_xy_to_RGB(*xy_color)
+            elif COLOR_MODE_RGBW in supported_color_modes:
+                params[ATTR_RGBW_COLOR] = (*color_util.color_xy_to_RGB(*xy_color), 0)
+            elif COLOR_MODE_RGBWW in supported_color_modes:
+                params[ATTR_RGBWW_COLOR] = (
+                    *color_util.color_xy_to_RGB(*xy_color),
+                    0,
+                    0,
+                )
 
         # Remove deprecated white value if the light supports color mode
         if supported_color_modes:
@@ -614,17 +655,16 @@ class LightEntity(ToggleEntity):
         """Return capability attributes."""
         data = {}
         supported_features = self.supported_features
+        supported_color_modes = self._light_internal_supported_color_modes
 
-        if supported_features & SUPPORT_COLOR_TEMP:
+        if COLOR_MODE_COLOR_TEMP in supported_color_modes:
             data[ATTR_MIN_MIREDS] = self.min_mireds
             data[ATTR_MAX_MIREDS] = self.max_mireds
 
         if supported_features & SUPPORT_EFFECT:
             data[ATTR_EFFECT_LIST] = self.effect_list
 
-        data[ATTR_SUPPORTED_COLOR_MODES] = sorted(
-            self._light_internal_supported_color_modes
-        )
+        data[ATTR_SUPPORTED_COLOR_MODES] = sorted(supported_color_modes)
 
         return data
 
@@ -751,3 +791,20 @@ class Light(LightEntity):
             "Light is deprecated, modify %s to extend LightEntity",
             cls.__name__,
         )
+
+
+def legacy_supported_features(
+    supported_features: int, supported_color_modes: list[str] | None
+) -> int:
+    """Calculate supported features with backwards compatibility."""
+    # Backwards compatibility for supported_color_modes added in 2021.4
+    if supported_color_modes is None:
+        return supported_features
+    if any(mode in supported_color_modes for mode in COLOR_MODES_COLOR):
+        supported_features |= SUPPORT_COLOR
+    if any(mode in supported_color_modes for mode in COLOR_MODES_BRIGHTNESS):
+        supported_features |= SUPPORT_BRIGHTNESS
+    if COLOR_MODE_COLOR_TEMP in supported_color_modes:
+        supported_features |= SUPPORT_COLOR_TEMP
+
+    return supported_features

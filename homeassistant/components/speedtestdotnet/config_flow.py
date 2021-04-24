@@ -50,7 +50,7 @@ class SpeedTestFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="wrong_server_id")
 
         import_config[CONF_SCAN_INTERVAL] = int(
-            import_config[CONF_SCAN_INTERVAL].seconds / 60
+            import_config[CONF_SCAN_INTERVAL].total_seconds() / 60
         )
         import_config.pop(CONF_MONITORED_CONDITIONS)
 

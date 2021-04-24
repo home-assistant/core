@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_URL,
     CONF_USERNAME,
 )
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -101,7 +101,7 @@ def _patch_async_setup_entry(return_value=True):
 
 
 async def init_integration(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     *,
     data: dict = ENTRY_CONFIG,
     options: dict = ENTRY_OPTIONS,

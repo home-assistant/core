@@ -5,6 +5,7 @@ from ast import literal_eval
 import asyncio
 import base64
 import collections.abc
+from collections.abc import Generator, Iterable
 from contextlib import suppress
 from contextvars import ContextVar
 from datetime import datetime, timedelta
@@ -16,7 +17,7 @@ from operator import attrgetter
 import random
 import re
 import sys
-from typing import Any, Generator, Iterable, cast
+from typing import Any, Callable, cast
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
@@ -193,31 +194,32 @@ RESULT_WRAPPERS: dict[type, type] = {
 RESULT_WRAPPERS[tuple] = TupleWrapper
 
 
-def _true(arg: Any) -> bool:
+def _true(arg: str) -> bool:
     return True
 
 
-def _false(arg: Any) -> bool:
+def _false(arg: str) -> bool:
     return False
 
 
 class RenderInfo:
     """Holds information about a template render."""
 
-    def __init__(self, template):
+    def __init__(self, template: Template) -> None:
         """Initialise."""
         self.template = template
         # Will be set sensibly once frozen.
-        self.filter_lifecycle = _true
-        self.filter = _true
+        self.filter_lifecycle: Callable[[str], bool] = _true
+        self.filter: Callable[[str], bool] = _true
         self._result: str | None = None
         self.is_static = False
         self.exception: TemplateError | None = None
         self.all_states = False
         self.all_states_lifecycle = False
-        self.domains = set()
-        self.domains_lifecycle = set()
-        self.entities = set()
+        # pylint: disable=unsubscriptable-object  # for abc.Set, https://github.com/PyCQA/pylint/pull/4275
+        self.domains: collections.abc.Set[str] = set()
+        self.domains_lifecycle: collections.abc.Set[str] = set()
+        self.entities: collections.abc.Set[str] = set()
         self.rate_limit: timedelta | None = None
         self.has_time = False
 
@@ -491,7 +493,7 @@ class Template:
         """Render the template and collect an entity filter."""
         assert self.hass and _RENDER_INFO not in self.hass.data
 
-        render_info = RenderInfo(self)  # type: ignore[no-untyped-call]
+        render_info = RenderInfo(self)
 
         # pylint: disable=protected-access
         if self.is_static:
@@ -856,6 +858,9 @@ def result_as_boolean(template_result: str | None) -> bool:
     False/0/None/'0'/'false'/'no'/'off'/'disable' are considered falsy
 
     """
+    if template_result is None:
+        return False
+
     try:
         # Import here, not at top-level to avoid circular import
         from homeassistant.helpers import (  # pylint: disable=import-outside-toplevel
@@ -1039,13 +1044,13 @@ def is_state(hass: HomeAssistant, entity_id: str, state: State) -> bool:
     return state_obj is not None and state_obj.state == state
 
 
-def is_state_attr(hass, entity_id, name, value):
+def is_state_attr(hass: HomeAssistant, entity_id: str, name: str, value: Any) -> bool:
     """Test if a state's attribute is a specific value."""
     attr = state_attr(hass, entity_id, name)
     return attr is not None and attr == value
 
 
-def state_attr(hass, entity_id, name):
+def state_attr(hass: HomeAssistant, entity_id: str, name: str) -> Any:
     """Get a specific attribute from a state."""
     state_obj = _get_state(hass, entity_id)
     if state_obj is not None:
@@ -1053,7 +1058,7 @@ def state_attr(hass, entity_id, name):
     return None
 
 
-def now(hass):
+def now(hass: HomeAssistant) -> datetime:
     """Record fetching now."""
     render_info = hass.data.get(_RENDER_INFO)
     if render_info is not None:
@@ -1062,7 +1067,7 @@ def now(hass):
     return dt_util.now()
 
 
-def utcnow(hass):
+def utcnow(hass: HomeAssistant) -> datetime:
     """Record fetching utcnow."""
     render_info = hass.data.get(_RENDER_INFO)
     if render_info is not None:
@@ -1459,6 +1464,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["urlencode"] = urlencode
         self.globals["max"] = max
         self.globals["min"] = min
+        self.tests["match"] = regex_match
+        self.tests["search"] = regex_search
 
         if hass is None:
             return

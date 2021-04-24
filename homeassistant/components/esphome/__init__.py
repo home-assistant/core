@@ -30,7 +30,7 @@ from homeassistant.const import (
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import Event, State, callback
+from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
@@ -42,7 +42,6 @@ from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import HomeAssistantType
 
 # Import config flow so that it's added to the registry
 from .entry_data import RuntimeEntryData
@@ -56,7 +55,7 @@ STORAGE_VERSION = 1
 CONFIG_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the esphome component."""
     hass.data.setdefault(DOMAIN, {})
 
@@ -222,7 +221,7 @@ class ReconnectLogic(RecordUpdateListener):
 
     def __init__(
         self,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         cli: APIClient,
         entry: ConfigEntry,
         host: str,
@@ -452,7 +451,7 @@ class ReconnectLogic(RecordUpdateListener):
 
 
 async def _async_setup_device_registry(
-    hass: HomeAssistantType, entry: ConfigEntry, device_info: DeviceInfo
+    hass: HomeAssistant, entry: ConfigEntry, device_info: DeviceInfo
 ):
     """Set up device registry feature for a particular config entry."""
     sw_version = device_info.esphome_version
@@ -471,9 +470,9 @@ async def _async_setup_device_registry(
 
 
 async def _register_service(
-    hass: HomeAssistantType, entry_data: RuntimeEntryData, service: UserService
+    hass: HomeAssistant, entry_data: RuntimeEntryData, service: UserService
 ):
-    service_name = f"{entry_data.device_info.name}_{service.name}"
+    service_name = f"{entry_data.device_info.name.replace('-', '_')}_{service.name}"
     schema = {}
     fields = {}
 
@@ -549,7 +548,7 @@ async def _register_service(
 
 
 async def _setup_services(
-    hass: HomeAssistantType, entry_data: RuntimeEntryData, services: list[UserService]
+    hass: HomeAssistant, entry_data: RuntimeEntryData, services: list[UserService]
 ):
     old_services = entry_data.services.copy()
     to_unregister = []
@@ -580,7 +579,7 @@ async def _setup_services(
 
 
 async def _cleanup_instance(
-    hass: HomeAssistantType, entry: ConfigEntry
+    hass: HomeAssistant, entry: ConfigEntry
 ) -> RuntimeEntryData:
     """Cleanup the esphome client if it exists."""
     data: RuntimeEntryData = hass.data[DOMAIN].pop(entry.entry_id)
@@ -592,7 +591,7 @@ async def _cleanup_instance(
     return data
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an esphome config entry."""
     entry_data = await _cleanup_instance(hass, entry)
     tasks = []
@@ -604,7 +603,7 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
 
 
 async def platform_async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities,
     *,

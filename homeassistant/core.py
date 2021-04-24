@@ -7,6 +7,7 @@ of entities and react to changes.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Collection, Iterable, Mapping
 import datetime
 import enum
 import functools
@@ -17,19 +18,7 @@ import re
 import threading
 from time import monotonic
 from types import MappingProxyType
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Awaitable,
-    Callable,
-    Collection,
-    Coroutine,
-    Iterable,
-    Mapping,
-    Optional,
-    TypeVar,
-    cast,
-)
+from typing import TYPE_CHECKING, Any, Callable, Coroutine, Optional, TypeVar, cast
 
 import attr
 import voluptuous as vol
@@ -87,7 +76,7 @@ if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntries
 
 
-STAGE_1_SHUTDOWN_TIMEOUT = 120
+STAGE_1_SHUTDOWN_TIMEOUT = 100
 STAGE_2_SHUTDOWN_TIMEOUT = 60
 STAGE_3_SHUTDOWN_TIMEOUT = 30
 
@@ -784,7 +773,9 @@ class EventBus:
 
         return remove_listener
 
-    def listen_once(self, event_type: str, listener: Callable) -> CALLBACK_TYPE:
+    def listen_once(
+        self, event_type: str, listener: Callable[[Event], None]
+    ) -> CALLBACK_TYPE:
         """Listen once for event of a specific type.
 
         To listen to all events specify the constant ``MATCH_ALL``

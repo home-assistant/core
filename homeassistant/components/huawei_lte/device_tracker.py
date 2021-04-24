@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import Any, Callable, cast
+from typing import Any, Callable, Dict, List, cast
 
 import attr
 from stringcase import snakecase
@@ -15,22 +15,43 @@ from homeassistant.components.device_tracker.const import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
 
-from . import HuaweiLteBaseEntity
-from .const import DOMAIN, KEY_WLAN_HOST_LIST, UPDATE_SIGNAL
+from . import HuaweiLteBaseEntity, Router
+from .const import (
+    CONF_TRACK_WIRED_CLIENTS,
+    DEFAULT_TRACK_WIRED_CLIENTS,
+    DOMAIN,
+    KEY_LAN_HOST_INFO,
+    KEY_WLAN_HOST_LIST,
+    UPDATE_SIGNAL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 _DEVICE_SCAN = f"{DEVICE_TRACKER_DOMAIN}/device_scan"
 
+_HostType = Dict[str, Any]
+
+
+def _get_hosts(
+    router: Router, ignore_subscriptions: bool = False
+) -> list[_HostType] | None:
+    for key in KEY_LAN_HOST_INFO, KEY_WLAN_HOST_LIST:
+        if not ignore_subscriptions and key not in router.subscriptions:
+            continue
+        try:
+            return cast(List[_HostType], router.data[key]["Hosts"]["Host"])
+        except KeyError:
+            _LOGGER.debug("%s[%s][%s] not in data", key, "Hosts", "Host")
+    return None
+
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
@@ -40,28 +61,36 @@ async def async_setup_entry(
     # us, i.e. if wlan host list is supported. Only set up a subscription and proceed
     # with adding and tracking entities if it is.
     router = hass.data[DOMAIN].routers[config_entry.data[CONF_URL]]
-    try:
-        _ = router.data[KEY_WLAN_HOST_LIST]["Hosts"]["Host"]
-    except KeyError:
-        _LOGGER.debug("%s[%s][%s] not in data", KEY_WLAN_HOST_LIST, "Hosts", "Host")
+    if (hosts := _get_hosts(router, True)) is None:
         return
 
     # Initialize already tracked entities
     tracked: set[str] = set()
     registry = await entity_registry.async_get_registry(hass)
     known_entities: list[Entity] = []
+    track_wired_clients = router.config_entry.options.get(
+        CONF_TRACK_WIRED_CLIENTS, DEFAULT_TRACK_WIRED_CLIENTS
+    )
     for entity in registry.entities.values():
         if (
             entity.domain == DEVICE_TRACKER_DOMAIN
             and entity.config_entry_id == config_entry.entry_id
         ):
-            tracked.add(entity.unique_id)
-            known_entities.append(
-                HuaweiLteScannerEntity(router, entity.unique_id.partition("-")[2])
-            )
+            mac = entity.unique_id.partition("-")[2]
+            # Do not add known wired clients if not tracking them (any more)
+            skip = False
+            if not track_wired_clients:
+                for host in hosts:
+                    if host.get("MacAddress") == mac:
+                        skip = not _is_wireless(host)
+                        break
+            if not skip:
+                tracked.add(entity.unique_id)
+                known_entities.append(HuaweiLteScannerEntity(router, mac))
     async_add_entities(known_entities, True)
 
     # Tell parent router to poll hosts list to gather new devices
+    router.subscriptions[KEY_LAN_HOST_INFO].add(_DEVICE_SCAN)
     router.subscriptions[KEY_WLAN_HOST_LIST].add(_DEVICE_SCAN)
 
     async def _async_maybe_add_new_entities(url: str) -> None:
@@ -79,23 +108,50 @@ async def async_setup_entry(
     async_add_new_entities(hass, router.url, async_add_entities, tracked)
 
 
+def _is_wireless(host: _HostType) -> bool:
+    # LAN host info entries have an "InterfaceType" property, "Ethernet" / "Wireless".
+    # WLAN host list ones don't, but they're expected to be all wireless.
+    return cast(str, host.get("InterfaceType", "Wireless")) != "Ethernet"
+
+
+def _is_connected(host: _HostType | None) -> bool:
+    # LAN host info entries have an "Active" property, "1" or "0".
+    # WLAN host list ones don't, but that call appears to return active hosts only.
+    return False if host is None else cast(str, host.get("Active", "1")) != "0"
+
+
+def _is_us(host: _HostType) -> bool:
+    """Try to determine if the host entry is us, the HA instance."""
+    # LAN host info entries have an "isLocalDevice" property, "1" / "0"; WLAN host list ones don't.
+    return cast(str, host.get("isLocalDevice", "0")) == "1"
+
+
 @callback
 def async_add_new_entities(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     router_url: str,
     async_add_entities: Callable[[list[Entity], bool], None],
     tracked: set[str],
 ) -> None:
     """Add new entities that are not already being tracked."""
     router = hass.data[DOMAIN].routers[router_url]
-    try:
-        hosts = router.data[KEY_WLAN_HOST_LIST]["Hosts"]["Host"]
-    except KeyError:
-        _LOGGER.debug("%s[%s][%s] not in data", KEY_WLAN_HOST_LIST, "Hosts", "Host")
+    hosts = _get_hosts(router)
+    if not hosts:
         return
 
+    track_wired_clients = router.config_entry.options.get(
+        CONF_TRACK_WIRED_CLIENTS, DEFAULT_TRACK_WIRED_CLIENTS
+    )
+
     new_entities: list[Entity] = []
-    for host in (x for x in hosts if x.get("MacAddress")):
+    for host in (
+        x
+        for x in hosts
+        if not _is_us(x)
+        and _is_connected(x)
+        and x.get("MacAddress")
+        and (track_wired_clients or _is_wireless(x))
+    ):
         entity = HuaweiLteScannerEntity(router, host["MacAddress"])
         if entity.unique_id in tracked:
             continue
@@ -124,28 +180,40 @@ def _better_snakecase(text: str) -> str:
 class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
     """Huawei LTE router scanner entity."""
 
-    mac: str = attr.ib()
+    _mac_address: str = attr.ib()
 
+    _ip_address: str | None = attr.ib(init=False, default=None)
     _is_connected: bool = attr.ib(init=False, default=False)
     _hostname: str | None = attr.ib(init=False, default=None)
     _extra_state_attributes: dict[str, Any] = attr.ib(init=False, factory=dict)
 
-    def __attrs_post_init__(self) -> None:
-        """Initialize internal state."""
-        self._extra_state_attributes["mac_address"] = self.mac
-
     @property
     def _entity_name(self) -> str:
-        return self._hostname or self.mac
+        return self.hostname or self.mac_address
 
     @property
     def _device_unique_id(self) -> str:
-        return self.mac
+        return self.mac_address
 
     @property
     def source_type(self) -> str:
         """Return SOURCE_TYPE_ROUTER."""
         return SOURCE_TYPE_ROUTER
+
+    @property
+    def ip_address(self) -> str | None:
+        """Return the primary ip address of the device."""
+        return self._ip_address
+
+    @property
+    def mac_address(self) -> str:
+        """Return the mac address of the device."""
+        return self._mac_address
+
+    @property
+    def hostname(self) -> str | None:
+        """Return hostname of the device."""
+        return self._hostname
 
     @property
     def is_connected(self) -> bool:
@@ -159,11 +227,27 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
 
     async def async_update(self) -> None:
         """Update state."""
-        hosts = self.router.data[KEY_WLAN_HOST_LIST]["Hosts"]["Host"]
-        host = next((x for x in hosts if x.get("MacAddress") == self.mac), None)
-        self._is_connected = host is not None
+        hosts = _get_hosts(self.router)
+        if hosts is None:
+            self._available = False
+            return
+        self._available = True
+        host = next(
+            (x for x in hosts if x.get("MacAddress") == self._mac_address), None
+        )
+        self._is_connected = _is_connected(host)
         if host is not None:
+            # IpAddress can contain multiple semicolon separated addresses.
+            # Pick one for model sanity; e.g. the dhcp component to which it is fed, parses and expects to see just one.
+            self._ip_address = (host.get("IpAddress") or "").split(";", 2)[0] or None
             self._hostname = host.get("HostName")
             self._extra_state_attributes = {
-                _better_snakecase(k): v for k, v in host.items() if k != "HostName"
+                _better_snakecase(k): v
+                for k, v in host.items()
+                if k
+                in {
+                    "AddressSource",
+                    "AssociatedSsid",
+                    "InterfaceType",
+                }
             }

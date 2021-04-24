@@ -42,6 +42,7 @@ DOMAIN = "openweathermap"
 DEFAULT_NAME = "OpenWeatherMap"
 DEFAULT_LANGUAGE = "en"
 ATTRIBUTION = "Data provided by OpenWeatherMap"
+MANUFACTURER = "OpenWeather"
 CONF_LANGUAGE = "language"
 CONFIG_FLOW_VERSION = 2
 ENTRY_NAME = "name"

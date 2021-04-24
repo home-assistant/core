@@ -29,11 +29,15 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResultDict
+from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import (
+    CONF_TRACK_WIRED_CLIENTS,
     CONNECTION_TIMEOUT,
     DEFAULT_DEVICE_NAME,
     DEFAULT_NOTIFY_SERVICE_NAME,
+    DEFAULT_TRACK_WIRED_CLIENTS,
     DOMAIN,
 )
 
@@ -58,7 +62,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self,
         user_input: dict[str, Any] | None = None,
         errors: dict[str, str] | None = None,
-    ) -> dict[str, Any]:
+    ) -> FlowResultDict:
         if user_input is None:
             user_input = {}
         return self.async_show_form(
@@ -85,7 +89,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(
         self, user_input: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResultDict:
         """Handle import initiated config flow."""
         return await self.async_step_user(user_input)
 
@@ -99,7 +103,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResultDict:
         """Handle user initiated config flow."""
         if user_input is None:
             return await self._async_show_user_form()
@@ -211,9 +215,9 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=title, data=user_input)
 
-    async def async_step_ssdp(  # type: ignore  # mypy says signature incompatible with supertype, but it's the same?
-        self, discovery_info: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def async_step_ssdp(
+        self, discovery_info: DiscoveryInfoType
+    ) -> FlowResultDict:
         """Handle SSDP initiated config flow."""
         await self.async_set_unique_id(discovery_info[ssdp.ATTR_UPNP_UDN])
         self._abort_if_unique_id_configured()
@@ -254,7 +258,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResultDict:
         """Handle options flow."""
 
         # Recipients are persisted as a list, but handled as comma separated string in UI
@@ -282,6 +286,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         self.config_entry.options.get(CONF_RECIPIENT, [])
                     ),
                 ): str,
+                vol.Optional(
+                    CONF_TRACK_WIRED_CLIENTS,
+                    default=self.config_entry.options.get(
+                        CONF_TRACK_WIRED_CLIENTS, DEFAULT_TRACK_WIRED_CLIENTS
+                    ),
+                ): bool,
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)
