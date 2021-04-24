@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from functools import partial
 import logging
 
 import voluptuous as vol
@@ -49,6 +50,7 @@ from .trigger_entity import TriggerEntity
 
 CONF_DELAY_ON = "delay_on"
 CONF_DELAY_OFF = "delay_off"
+CONF_AUTO_OFF = "auto_off"
 CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
 
 LEGACY_FIELDS = {
@@ -74,6 +76,7 @@ BINARY_SENSOR_SCHEMA = vol.Schema(
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_DELAY_ON): vol.Any(cv.positive_time_period, cv.template),
         vol.Optional(CONF_DELAY_OFF): vol.Any(cv.positive_time_period, cv.template),
+        vol.Optional(CONF_AUTO_OFF): vol.Any(cv.positive_time_period, cv.template),
     }
 )
 
@@ -344,15 +347,13 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity):
         """Initialize the entity."""
         super().__init__(hass, coordinator, config)
 
-        if isinstance(config.get(CONF_DELAY_ON), template.Template):
-            self._to_render.append(CONF_DELAY_ON)
-            self._parse_result.add(CONF_DELAY_ON)
-
-        if isinstance(config.get(CONF_DELAY_OFF), template.Template):
-            self._to_render.append(CONF_DELAY_OFF)
-            self._parse_result.add(CONF_DELAY_OFF)
+        for key in (CONF_DELAY_ON, CONF_DELAY_OFF, CONF_AUTO_OFF):
+            if isinstance(config.get(key), template.Template):
+                self._to_render.append(key)
+                self._parse_result.add(key)
 
         self._delay_cancel = None
+        self._auto_off_cancel = None
         self._state = False
 
     @property
@@ -369,22 +370,23 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity):
             self._delay_cancel()
             self._delay_cancel = None
 
+        if self._auto_off_cancel:
+            self._auto_off_cancel()
+            self._auto_off_cancel = None
+
         if not self.available:
+            self.async_write_ha_state()
             return
 
         raw = self._rendered.get(CONF_STATE)
         state = template.result_as_boolean(raw)
 
-        if state == self._state:
-            return
-
         key = CONF_DELAY_ON if state else CONF_DELAY_OFF
         delay = self._rendered.get(key) or self._config.get(key)
 
         # state without delay. None means rendering failed.
-        if state is None or delay is None:
-            self._state = state
-            self.async_write_ha_state()
+        if self._state == state or state is None or delay is None:
+            self._set_state(state)
             return
 
         if not isinstance(delay, timedelta):
@@ -396,14 +398,43 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity):
                 )
                 return
 
-        @callback
-        def _set_state(_):
-            """Set state of template binary sensor."""
-            self._state = state
-            self.async_set_context(self.coordinator.data["context"])
-            self.async_write_ha_state()
-
         # state with delay. Cancelled if new trigger received
         self._delay_cancel = async_call_later(
-            self.hass, delay.total_seconds(), _set_state
+            self.hass, delay.total_seconds(), partial(self._set_state, state)
+        )
+
+    @callback
+    def _set_state(self, state, _=None):
+        """Set up auto off."""
+        self._state = state
+        self.async_set_context(self.coordinator.data["context"])
+        self.async_write_ha_state()
+
+        if not state:
+            return
+
+        auto_off_time = self._rendered.get(CONF_AUTO_OFF) or self._config.get(
+            CONF_AUTO_OFF
+        )
+
+        if auto_off_time is None:
+            return
+
+        if not isinstance(auto_off_time, timedelta):
+            try:
+                auto_off_time = cv.positive_time_period(auto_off_time)
+            except vol.Invalid as err:
+                logging.getLogger(__name__).warning(
+                    "Error rendering %s template: %s", CONF_AUTO_OFF, err
+                )
+                return
+
+        @callback
+        def _auto_off(_):
+            """Set state of template binary sensor."""
+            self._state = False
+            self.async_write_ha_state()
+
+        self._auto_off_cancel = async_call_later(
+            self.hass, auto_off_time.total_seconds(), _auto_off
         )
