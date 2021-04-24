@@ -22,6 +22,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_TOKEN,
 )
+from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .bridge import SamsungTVBridge
 from .const import (
@@ -176,10 +177,10 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
 
-    async def async_step_ssdp(self, user_input=None):
+    async def async_step_ssdp(self, discovery_info: DiscoveryInfoType):
         """Handle a flow initialized by ssdp discovery."""
-        self._host = urlparse(user_input[ATTR_SSDP_LOCATION]).hostname
-        self._id = user_input.get(ATTR_UPNP_UDN)
+        self._host = urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname
+        self._id = discovery_info.get(ATTR_UPNP_UDN)
 
         # probably access denied
         if self._id is None:
@@ -192,9 +193,9 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         await self._async_get_and_check_device_info()
 
-        self._manufacturer = user_input.get(ATTR_UPNP_MANUFACTURER)
+        self._manufacturer = discovery_info.get(ATTR_UPNP_MANUFACTURER)
         if not self._model:
-            self._model = user_input.get(ATTR_UPNP_MODEL_NAME)
+            self._model = discovery_info.get(ATTR_UPNP_MODEL_NAME)
 
         if self._model.startswith(MODEL_SOUNDBAR):
             return self.async_abort(reason=RESULT_NOT_SUPPORTED)
@@ -205,10 +206,10 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {"model": self._model}
         return await self.async_step_confirm()
 
-    async def async_step_zeroconf(self, user_input=None):
+    async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType):
         """Handle a flow initialized by zeroconf discovery."""
-        self._host = user_input[CONF_HOST]
-        self._id = user_input[ATTR_PROPERTIES].get("serialNumber")
+        self._host = discovery_info[CONF_HOST]
+        self._id = discovery_info[ATTR_PROPERTIES].get("serialNumber")
 
         if not self._id:
             return self.async_abort(reason=RESULT_ID_MISSING)
@@ -218,10 +219,10 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         await self._async_get_and_check_device_info()
 
-        self._mac = user_input[ATTR_PROPERTIES].get("deviceid")
-        self._manufacturer = user_input[ATTR_PROPERTIES].get("manufacturer")
+        self._mac = discovery_info[ATTR_PROPERTIES].get("deviceid")
+        self._manufacturer = discovery_info[ATTR_PROPERTIES].get("manufacturer")
         if not self._model:
-            self._model = user_input[ATTR_PROPERTIES].get("model")
+            self._model = discovery_info[ATTR_PROPERTIES].get("model")
         self._name = f"{self._manufacturer} {self._model}"
         self._title = self._model
 
