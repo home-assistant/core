@@ -191,11 +191,11 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
     ),
     (KEY_DEVICE_SIGNAL, "ltedlfreq"): SensorMeta(
         name="Downlink frequency",
-        formatter=lambda x: (int(x) / 10.0, "MHz"),
+        formatter=lambda x: (round(int(x) / 10), "MHz"),
     ),
     (KEY_DEVICE_SIGNAL, "lteulfreq"): SensorMeta(
         name="Uplink frequency",
-        formatter=lambda x: (int(x) / 10.0, "MHz"),
+        formatter=lambda x: (round(int(x) / 10), "MHz"),
     ),
     KEY_MONITORING_CHECK_NOTIFICATIONS: SensorMeta(
         exclude=re.compile(
