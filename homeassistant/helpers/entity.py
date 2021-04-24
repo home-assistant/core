@@ -479,11 +479,6 @@ class Entity(ABC):
 
         This method is a coroutine.
         """
-        _LOGGER.debug(
-            "Update of %s is using polling",
-            self.entity_id,
-        )
-
         if self._update_staged:
             return
         self._update_staged = True

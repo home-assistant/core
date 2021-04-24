@@ -323,9 +323,9 @@ class _ScriptRun:
     def _log(
         self, msg: str, *args: Any, level: int = logging.INFO, **kwargs: Any
     ) -> None:
-        self._script._log(
+        self._script._log(  # pylint: disable=protected-access
             msg, *args, level=level, **kwargs
-        )  # pylint: disable=protected-access
+        )
 
     def _step_log(self, default_message, timeout=None):
         self._script.last_action = self._action.get(CONF_ALIAS, default_message)

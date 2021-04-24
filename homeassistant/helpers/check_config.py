@@ -30,8 +30,6 @@ from homeassistant.requirements import (
 )
 import homeassistant.util.yaml.loader as yaml_loader
 
-_LOGGER = logging.getLogger(__name__)
-
 
 class CheckConfigError(NamedTuple):
     """Configuration check error."""
@@ -71,7 +69,6 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> HomeAssistantConfig
     This method is a coroutine.
     """
     result = HomeAssistantConfig()
-    _LOGGER.warning("async_check_ha_config_file1")
 
     def _pack_error(
         package: str, component: str, config: ConfigType, message: str
@@ -85,8 +82,6 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> HomeAssistantConfig
     def _comp_error(ex: Exception, domain: str, config: ConfigType) -> None:
         """Handle errors from components: async_log_exception."""
         result.add_error(_format_config_error(ex, domain, config)[0], domain, config)
-
-    _LOGGER.warning("async_check_ha_config_file2")
 
     # Load configuration.yaml
     config_path = hass.config.path(YAML_CONFIG_FILE)
@@ -105,7 +100,6 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> HomeAssistantConfig
         return result.add_error(f"File not found: {config_path}")
     except HomeAssistantError as err:
         return result.add_error(f"Error loading {config_path}: {err}")
-    _LOGGER.warning("async_check_ha_config_file3")
 
     # Extract and validate core [homeassistant] config
     try:
@@ -121,29 +115,23 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> HomeAssistantConfig
         hass, config, core_config.get(CONF_PACKAGES, {}), _pack_error
     )
     core_config.pop(CONF_PACKAGES, None)
-    _LOGGER.warning("async_check_ha_config_file4")
 
     # Filter out repeating config sections
     components = {key.split(" ")[0] for key in config.keys()}
 
     # Process and validate config
     for domain in components:
-        _LOGGER.warning("async_check_ha_config_file: %s", domain)
-
         try:
             integration = await async_get_integration_with_requirements(hass, domain)
         except (RequirementsNotFound, loader.IntegrationNotFound) as ex:
             result.add_error(f"Component error: {domain} - {ex}")
             continue
-        _LOGGER.warning("async_check_ha_config_file 0: %s", domain)
 
         try:
             component = integration.get_component()
         except ImportError as ex:
             result.add_error(f"Component error: {domain} - {ex}")
             continue
-
-        _LOGGER.warning("async_check_ha_config_file 1: %s", domain)
 
         # Check if the integration has a custom config validator
         config_validator = None
@@ -195,7 +183,6 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> HomeAssistantConfig
             "PLATFORM_SCHEMA_BASE",
             getattr(component, "PLATFORM_SCHEMA", None),
         )
-        _LOGGER.warning("async_check_ha_config_file 2: %s", domain)
 
         if component_platform_schema is None:
             continue
