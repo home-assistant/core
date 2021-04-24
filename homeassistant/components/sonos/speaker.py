@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from asyncio import gather
+import datetime
 import logging
 from typing import Any, Callable
 
@@ -217,7 +218,7 @@ class SonosSpeaker:
 
         self.async_write_entity_states()
 
-    async def async_unseen(self) -> None:
+    async def async_unseen(self, now: datetime.datetime | None = None) -> None:
         """Make this player unavailable when it was not seen recently."""
         self.async_write_entity_states()
 
