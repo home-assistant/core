@@ -36,9 +36,8 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return VulcanOptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input=None, is_new_account=False):
+    async def async_step_user(self, user_input=None, is_new_account=False, errors={}):
         """Get login credentials from the user."""
-        errors = {}
         if (
             self._async_current_entries()
             and is_new_account is False
@@ -73,7 +72,7 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except ClientConnectorError as err:
                 errors["base"] = "cannot_connect"
                 _LOGGER.error("Connection error: %s", err)
-            except BaseException as err:
+            except Exception as err:
                 errors["base"] = "unknown"
                 _LOGGER.error(err)
             if errors == {}:
@@ -147,10 +146,10 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     ][: -len(".json")]
 
         if user_input is not None:
-            with open(user_input["credentials"].replace("account", "keystore")) as f:
-                keystore = Keystore.load(f)
-            with open(user_input["credentials"]) as f:
-                account = Account.load(f)
+            with open(user_input["credentials"].replace("account", "keystore")) as file:
+                keystore = Keystore.load(file)
+            with open(user_input["credentials"]) as file:
+                account = Account.load(file)
             self.account = account
             client = Vulcan(keystore, account)
             try:
@@ -200,11 +199,11 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 if len(os.listdir(".vulcan")) == 2:
                     for file in os.listdir(".vulcan"):
                         if file.startswith("keystore"):
-                            with open(os.path.join(".vulcan", file)) as f:
-                                keystore = Keystore.load(f)
+                            with open(os.path.join(".vulcan", file)) as _file:
+                                keystore = Keystore.load(_file)
                         elif file.startswith("account"):
-                            with open(os.path.join(".vulcan", file)) as f:
-                                account = Account.load(f)
+                            with open(os.path.join(".vulcan", file)) as _file:
+                                account = Account.load(_file)
                     self.account = account
                     client = Vulcan(keystore, account)
                     self._students = await client.get_students()
@@ -255,7 +254,7 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except ClientConnectorError as err:
                 errors["base"] = "cannot_connect"
                 _LOGGER.error("Connection error: %s", err)
-            except BaseException as err:
+            except Exception as err:
                 errors["base"] = "unknown"
                 _LOGGER.error(err)
             if errors == {}:
