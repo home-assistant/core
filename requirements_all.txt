@@ -762,7 +762,7 @@ hole==0.5.1
 holidays==0.11.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210416.0
+home-assistant-frontend==20210423.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -2314,7 +2314,7 @@ wakeonlan==2.0.1
 waqiasync==1.0.0
 
 # homeassistant.components.folder_watcher
-watchdog==2.0.2
+watchdog==2.0.3
 
 # homeassistant.components.waterfurnace
 waterfurnace==1.1.0
