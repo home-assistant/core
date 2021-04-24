@@ -2,7 +2,7 @@
 
 import asyncio
 
-from roombapy import Roomba
+from roombapy import RoombaFactory
 from roombapy.discovery import RoombaDiscovery
 from roombapy.getpassword import RoombaPassword
 import voluptuous as vol
@@ -40,7 +40,7 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    roomba = Roomba(
+    roomba = RoombaFactory.create_roomba(
         address=data[CONF_HOST],
         blid=data[CONF_BLID],
         password=data[CONF_PASSWORD],
