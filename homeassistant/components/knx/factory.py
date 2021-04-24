@@ -4,8 +4,6 @@ from __future__ import annotations
 from xknx import XKNX
 from xknx.devices import (
     BinarySensor as XknxBinarySensor,
-    Climate as XknxClimate,
-    ClimateMode as XknxClimateMode,
     Cover as XknxCover,
     Device as XknxDevice,
     Fan as XknxFan,
@@ -22,7 +20,6 @@ from homeassistant.helpers.typing import ConfigType
 from .const import KNX_ADDRESS, ColorTempModes, SupportedPlatforms
 from .schema import (
     BinarySensorSchema,
-    ClimateSchema,
     CoverSchema,
     FanSchema,
     LightSchema,
@@ -43,9 +40,6 @@ def create_knx_device(
 
     if platform is SupportedPlatforms.COVER:
         return _create_cover(knx_module, config)
-
-    if platform is SupportedPlatforms.CLIMATE:
-        return _create_climate(knx_module, config)
 
     if platform is SupportedPlatforms.SENSOR:
         return _create_sensor(knx_module, config)
@@ -189,81 +183,6 @@ def _create_light(knx_module: XKNX, config: ConfigType) -> XknxLight:
         group_address_brightness_white_state=white_brightness_state,
         min_kelvin=config[LightSchema.CONF_MIN_KELVIN],
         max_kelvin=config[LightSchema.CONF_MAX_KELVIN],
-    )
-
-
-def _create_climate(knx_module: XKNX, config: ConfigType) -> XknxClimate:
-    """Return a KNX Climate device to be used within XKNX."""
-    climate_mode = XknxClimateMode(
-        knx_module,
-        name=f"{config[CONF_NAME]} Mode",
-        group_address_operation_mode=config.get(
-            ClimateSchema.CONF_OPERATION_MODE_ADDRESS
-        ),
-        group_address_operation_mode_state=config.get(
-            ClimateSchema.CONF_OPERATION_MODE_STATE_ADDRESS
-        ),
-        group_address_controller_status=config.get(
-            ClimateSchema.CONF_CONTROLLER_STATUS_ADDRESS
-        ),
-        group_address_controller_status_state=config.get(
-            ClimateSchema.CONF_CONTROLLER_STATUS_STATE_ADDRESS
-        ),
-        group_address_controller_mode=config.get(
-            ClimateSchema.CONF_CONTROLLER_MODE_ADDRESS
-        ),
-        group_address_controller_mode_state=config.get(
-            ClimateSchema.CONF_CONTROLLER_MODE_STATE_ADDRESS
-        ),
-        group_address_operation_mode_protection=config.get(
-            ClimateSchema.CONF_OPERATION_MODE_FROST_PROTECTION_ADDRESS
-        ),
-        group_address_operation_mode_night=config.get(
-            ClimateSchema.CONF_OPERATION_MODE_NIGHT_ADDRESS
-        ),
-        group_address_operation_mode_comfort=config.get(
-            ClimateSchema.CONF_OPERATION_MODE_COMFORT_ADDRESS
-        ),
-        group_address_operation_mode_standby=config.get(
-            ClimateSchema.CONF_OPERATION_MODE_STANDBY_ADDRESS
-        ),
-        group_address_heat_cool=config.get(ClimateSchema.CONF_HEAT_COOL_ADDRESS),
-        group_address_heat_cool_state=config.get(
-            ClimateSchema.CONF_HEAT_COOL_STATE_ADDRESS
-        ),
-        operation_modes=config.get(ClimateSchema.CONF_OPERATION_MODES),
-        controller_modes=config.get(ClimateSchema.CONF_CONTROLLER_MODES),
-    )
-
-    return XknxClimate(
-        knx_module,
-        name=config[CONF_NAME],
-        group_address_temperature=config[ClimateSchema.CONF_TEMPERATURE_ADDRESS],
-        group_address_target_temperature=config.get(
-            ClimateSchema.CONF_TARGET_TEMPERATURE_ADDRESS
-        ),
-        group_address_target_temperature_state=config[
-            ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS
-        ],
-        group_address_setpoint_shift=config.get(
-            ClimateSchema.CONF_SETPOINT_SHIFT_ADDRESS
-        ),
-        group_address_setpoint_shift_state=config.get(
-            ClimateSchema.CONF_SETPOINT_SHIFT_STATE_ADDRESS
-        ),
-        setpoint_shift_mode=config[ClimateSchema.CONF_SETPOINT_SHIFT_MODE],
-        setpoint_shift_max=config[ClimateSchema.CONF_SETPOINT_SHIFT_MAX],
-        setpoint_shift_min=config[ClimateSchema.CONF_SETPOINT_SHIFT_MIN],
-        temperature_step=config[ClimateSchema.CONF_TEMPERATURE_STEP],
-        group_address_on_off=config.get(ClimateSchema.CONF_ON_OFF_ADDRESS),
-        group_address_on_off_state=config.get(ClimateSchema.CONF_ON_OFF_STATE_ADDRESS),
-        min_temp=config.get(ClimateSchema.CONF_MIN_TEMP),
-        max_temp=config.get(ClimateSchema.CONF_MAX_TEMP),
-        mode=climate_mode,
-        on_off_invert=config[ClimateSchema.CONF_ON_OFF_INVERT],
-        create_temperature_sensors=config[
-            ClimateSchema.CONF_CREATE_TEMPERATURE_SENSORS
-        ],
     )
 
 
