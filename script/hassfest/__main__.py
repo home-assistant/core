@@ -34,10 +34,10 @@ INTEGRATION_PLUGINS = [
     translations,
     zeroconf,
     dhcp,
-    mypy_config,
 ]
 HASS_PLUGINS = [
     coverage,
+    mypy_config,
 ]
 
 

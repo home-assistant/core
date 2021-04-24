@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import configparser
 import io
-import os
 from typing import Final
 
 from .model import Config, Integration
@@ -293,50 +292,54 @@ STRICT_SETTINGS: Final[list[str]] = [
 ]
 
 
-def generate_and_validate(integrations: dict[str, Integration]) -> str:
+def generate_and_validate(config: Config) -> str:
     """Validate and generate mypy config."""
     ignored_modules_set: set[str] = set(IGNORED_MODULES)
-    strictly_typed_modules: list[str] = []
 
-    for domain in sorted(integrations):
-        integration = integrations[domain]
+    strictly_typed_path = config.root / ".typingstrict"
 
-        if not integration.manifest:
-            continue
+    with strictly_typed_path.open() as fp:
+        lines = fp.readlines()
 
-        strictly_typed = integration.manifest.get("strictly_typed")
+    # Filter empty and commented lines.
+    strictly_typed_modules: list[str] = [
+        line.strip()
+        for line in lines
+        if line.strip() != "" and not line.startswith("#")
+    ]
+    for module in strictly_typed_modules:
+        if not module.startswith("homeassistant.components."):
+            config.add_error(
+                "mypy_config", f"Only components should be added: {module}"
+            )
+        if module in ignored_modules_set:
+            config.add_error("mypy_config", f"Module '{module}' is in ignored list")
 
-        if strictly_typed:
-            module_name = str(integration.path).replace(os.sep, ".") + ".*"
-            if module_name in ignored_modules_set:
-                integration.add_error("mypy_config", "Integration is in ignored list")
-            strictly_typed_modules.append(module_name)
-
-    config = configparser.ConfigParser()
+    mypy_config = configparser.ConfigParser()
 
     general_section = "mypy"
-    config.add_section(general_section)
+    mypy_config.add_section(general_section)
     for key, value in GENERAL_SETTINGS.items():
-        config.set(general_section, key, value)
+        mypy_config.set(general_section, key, value)
     for key in STRICT_SETTINGS:
-        config.set(general_section, key, "true")
+        mypy_config.set(general_section, key, "true")
 
     components_section = "mypy-homeassistant.components.*"
-    config.add_section(components_section)
+    mypy_config.add_section(components_section)
     for key in STRICT_SETTINGS:
-        config.set(components_section, key, "false")
+        mypy_config.set(components_section, key, "false")
 
     strict_section = "mypy-" + ",".join(strictly_typed_modules)
-    config.add_section(strict_section)
+    mypy_config.add_section(strict_section)
     for key in STRICT_SETTINGS:
-        config.set(strict_section, key, "true")
+        mypy_config.set(strict_section, key, "true")
 
     ignored_section = "mypy-" + ",".join(IGNORED_MODULES)
-    config.add_section(ignored_section)
-    config.set(ignored_section, "ignore_errors", "true")
+    mypy_config.add_section(ignored_section)
+    mypy_config.set(ignored_section, "ignore_errors", "true")
 
     with io.StringIO() as fp:
-        config.write(fp)
+        mypy_config.write(fp)
         fp.seek(0)
         return HEADER + fp.read().strip()
 
@@ -344,10 +347,7 @@ def generate_and_validate(integrations: dict[str, Integration]) -> str:
 def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Validate mypy config."""
     config_path = config.root / "mypy.ini"
-    config.cache["mypy_config"] = content = generate_and_validate(integrations)
-
-    if config.specific_integrations:
-        return
+    config.cache["mypy_config"] = content = generate_and_validate(config)
 
     with open(str(config_path)) as fp:
         if fp.read().strip() != content:
