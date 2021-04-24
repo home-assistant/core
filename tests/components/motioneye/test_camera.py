@@ -27,10 +27,10 @@ from homeassistant.components.motioneye.const import (
     MOTIONEYE_MANUFACTURER,
 )
 from homeassistant.const import CONF_URL
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import async_get_registry
-from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.dt as dt_util
 
 from . import (
@@ -51,7 +51,7 @@ from tests.common import async_fire_time_changed
 _LOGGER = logging.getLogger(__name__)
 
 
-async def test_setup_camera(hass: HomeAssistantType) -> None:
+async def test_setup_camera(hass: HomeAssistant) -> None:
     """Test a basic camera."""
     client = create_mock_motioneye_client()
     await setup_mock_motioneye_config_entry(hass, client=client)
@@ -62,7 +62,7 @@ async def test_setup_camera(hass: HomeAssistantType) -> None:
     assert entity_state.attributes.get("friendly_name") == TEST_CAMERA_NAME
 
 
-async def test_setup_camera_auth_fail(hass: HomeAssistantType) -> None:
+async def test_setup_camera_auth_fail(hass: HomeAssistant) -> None:
     """Test a successful camera."""
     client = create_mock_motioneye_client()
     client.async_client_login = AsyncMock(side_effect=MotionEyeClientInvalidAuthError)
@@ -70,7 +70,7 @@ async def test_setup_camera_auth_fail(hass: HomeAssistantType) -> None:
     assert not hass.states.get(TEST_CAMERA_ENTITY_ID)
 
 
-async def test_setup_camera_client_error(hass: HomeAssistantType) -> None:
+async def test_setup_camera_client_error(hass: HomeAssistant) -> None:
     """Test a successful camera."""
     client = create_mock_motioneye_client()
     client.async_client_login = AsyncMock(side_effect=MotionEyeClientError)
@@ -78,7 +78,7 @@ async def test_setup_camera_client_error(hass: HomeAssistantType) -> None:
     assert not hass.states.get(TEST_CAMERA_ENTITY_ID)
 
 
-async def test_setup_camera_empty_data(hass: HomeAssistantType) -> None:
+async def test_setup_camera_empty_data(hass: HomeAssistant) -> None:
     """Test a successful camera."""
     client = create_mock_motioneye_client()
     client.async_get_cameras = AsyncMock(return_value={})
@@ -86,7 +86,7 @@ async def test_setup_camera_empty_data(hass: HomeAssistantType) -> None:
     assert not hass.states.get(TEST_CAMERA_ENTITY_ID)
 
 
-async def test_setup_camera_bad_data(hass: HomeAssistantType) -> None:
+async def test_setup_camera_bad_data(hass: HomeAssistant) -> None:
     """Test bad camera data."""
     client = create_mock_motioneye_client()
     cameras = copy.deepcopy(TEST_CAMERAS)
@@ -97,7 +97,7 @@ async def test_setup_camera_bad_data(hass: HomeAssistantType) -> None:
     assert not hass.states.get(TEST_CAMERA_ENTITY_ID)
 
 
-async def test_setup_camera_without_streaming(hass: HomeAssistantType) -> None:
+async def test_setup_camera_without_streaming(hass: HomeAssistant) -> None:
     """Test a camera without streaming enabled."""
     client = create_mock_motioneye_client()
     cameras = copy.deepcopy(TEST_CAMERAS)
@@ -110,7 +110,7 @@ async def test_setup_camera_without_streaming(hass: HomeAssistantType) -> None:
     assert entity_state.state == "unavailable"
 
 
-async def test_setup_camera_new_data_same(hass: HomeAssistantType) -> None:
+async def test_setup_camera_new_data_same(hass: HomeAssistant) -> None:
     """Test a data refresh with the same data."""
     client = create_mock_motioneye_client()
     await setup_mock_motioneye_config_entry(hass, client=client)
@@ -119,7 +119,7 @@ async def test_setup_camera_new_data_same(hass: HomeAssistantType) -> None:
     assert hass.states.get(TEST_CAMERA_ENTITY_ID)
 
 
-async def test_setup_camera_new_data_camera_removed(hass: HomeAssistantType) -> None:
+async def test_setup_camera_new_data_camera_removed(hass: HomeAssistant) -> None:
     """Test a data refresh with a removed camera."""
     device_registry = await async_get_registry(hass)
     entity_registry = await er.async_get_registry(hass)
@@ -156,7 +156,7 @@ async def test_setup_camera_new_data_camera_removed(hass: HomeAssistantType) -> 
     )
 
 
-async def test_setup_camera_new_data_error(hass: HomeAssistantType) -> None:
+async def test_setup_camera_new_data_error(hass: HomeAssistant) -> None:
     """Test a data refresh that fails."""
     client = create_mock_motioneye_client()
     await setup_mock_motioneye_config_entry(hass, client=client)
@@ -168,7 +168,7 @@ async def test_setup_camera_new_data_error(hass: HomeAssistantType) -> None:
     assert entity_state.state == "unavailable"
 
 
-async def test_setup_camera_new_data_without_streaming(hass: HomeAssistantType) -> None:
+async def test_setup_camera_new_data_without_streaming(hass: HomeAssistant) -> None:
     """Test a data refresh without streaming."""
     client = create_mock_motioneye_client()
     await setup_mock_motioneye_config_entry(hass, client=client)
@@ -184,7 +184,7 @@ async def test_setup_camera_new_data_without_streaming(hass: HomeAssistantType) 
     assert entity_state.state == "unavailable"
 
 
-async def test_unload_camera(hass: HomeAssistantType) -> None:
+async def test_unload_camera(hass: HomeAssistant) -> None:
     """Test unloading camera."""
     client = create_mock_motioneye_client()
     entry = await setup_mock_motioneye_config_entry(hass, client=client)
@@ -195,7 +195,7 @@ async def test_unload_camera(hass: HomeAssistantType) -> None:
 
 
 async def test_get_still_image_from_camera(
-    aiohttp_server: Any, hass: HomeAssistantType
+    aiohttp_server: Any, hass: HomeAssistant
 ) -> None:
     """Test getting a still image."""
 
@@ -236,9 +236,7 @@ async def test_get_still_image_from_camera(
     assert image_handler.called
 
 
-async def test_get_stream_from_camera(
-    aiohttp_server: Any, hass: HomeAssistantType
-) -> None:
+async def test_get_stream_from_camera(aiohttp_server: Any, hass: HomeAssistant) -> None:
     """Test getting a stream."""
 
     stream_handler = Mock(return_value="")
@@ -272,7 +270,7 @@ async def test_get_stream_from_camera(
     assert stream_handler.called
 
 
-async def test_state_attributes(hass: HomeAssistantType) -> None:
+async def test_state_attributes(hass: HomeAssistant) -> None:
     """Test state attributes are set correctly."""
     client = create_mock_motioneye_client()
     await setup_mock_motioneye_config_entry(hass, client=client)
@@ -293,7 +291,7 @@ async def test_state_attributes(hass: HomeAssistantType) -> None:
     assert not entity_state.attributes.get("motion_detection")
 
 
-async def test_device_info(hass: HomeAssistantType) -> None:
+async def test_device_info(hass: HomeAssistant) -> None:
     """Verify device information includes expected details."""
     client = create_mock_motioneye_client()
     entry = await setup_mock_motioneye_config_entry(hass, client=client)

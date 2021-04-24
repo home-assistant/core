@@ -18,14 +18,14 @@ from homeassistant.components.motioneye.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_URL
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from . import TEST_URL, create_mock_motioneye_client, create_mock_motioneye_config_entry
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def test_user_success(hass: HomeAssistantType) -> None:
+async def test_user_success(hass: HomeAssistant) -> None:
     """Test successful user flow."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
@@ -67,7 +67,7 @@ async def test_user_success(hass: HomeAssistantType) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_user_invalid_auth(hass: HomeAssistantType) -> None:
+async def test_user_invalid_auth(hass: HomeAssistant) -> None:
     """Test invalid auth is handled correctly."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -98,7 +98,7 @@ async def test_user_invalid_auth(hass: HomeAssistantType) -> None:
     assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_user_invalid_url(hass: HomeAssistantType) -> None:
+async def test_user_invalid_url(hass: HomeAssistant) -> None:
     """Test invalid url is handled correctly."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
@@ -124,7 +124,7 @@ async def test_user_invalid_url(hass: HomeAssistantType) -> None:
     assert result["errors"] == {"base": "invalid_url"}
 
 
-async def test_user_cannot_connect(hass: HomeAssistantType) -> None:
+async def test_user_cannot_connect(hass: HomeAssistant) -> None:
     """Test connection failure is handled correctly."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -155,7 +155,7 @@ async def test_user_cannot_connect(hass: HomeAssistantType) -> None:
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_user_request_error(hass: HomeAssistantType) -> None:
+async def test_user_request_error(hass: HomeAssistant) -> None:
     """Test a request error is handled correctly."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -184,7 +184,7 @@ async def test_user_request_error(hass: HomeAssistantType) -> None:
     assert result["errors"] == {"base": "unknown"}
 
 
-async def test_reauth(hass: HomeAssistantType) -> None:
+async def test_reauth(hass: HomeAssistant) -> None:
     """Test a reauth."""
     config_data = {
         CONF_URL: TEST_URL,

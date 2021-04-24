@@ -9,7 +9,7 @@ from motioneye_client.const import DEFAULT_PORT
 from homeassistant.components.motioneye.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -146,7 +146,7 @@ def create_mock_motioneye_client() -> AsyncMock:
 
 
 def create_mock_motioneye_config_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     data: dict[str, Any] | None = None,
     options: dict[str, Any] | None = None,
 ) -> ConfigEntry:
@@ -163,7 +163,7 @@ def create_mock_motioneye_config_entry(
 
 
 async def setup_mock_motioneye_config_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config_entry: ConfigEntry | None = None,
     client: Mock | None = None,
 ) -> ConfigEntry:
