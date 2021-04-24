@@ -120,9 +120,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except requests.exceptions.HTTPError as ex:
             if hass.data[DOMAIN][entry.entry_id][CONF_RETRY]:
                 raise ConfigEntryAuthFailed from ex
-            else:
-                hass.data[DOMAIN][entry.entry_id][CONF_RETRY] = True
-                raise UpdateFailed(f"Fritzhome connection error: {ex}") from ex
+            hass.data[DOMAIN][entry.entry_id][CONF_RETRY] = True
+            raise UpdateFailed(f"Fritzhome connection error: {ex}") from ex
 
         data = {}
         for device in devices:
