@@ -668,9 +668,7 @@ class Recorder(threading.Thread):
     def _commit_event_session_or_retry(self):
         """Commit the event session if there is work to do."""
         if not self.event_session.new and not self.event_session.dirty:
-            _LOGGER.warning("Skipping commit")
             return
-        _LOGGER.warning("Doing commit")
         tries = 1
         while tries <= self.db_max_retries:
             try:
