@@ -290,7 +290,7 @@ class WorkdayOptionsFlow(config_entries.OptionsFlow):
                     cv.date(new_holiday)  # just validate format
                     holidays_to_add.append(new_holiday)
                 except vol.Invalid:
-                    _LOGGER.error("bad date format: %s", new_holiday)
+                    _LOGGER.error("Bad date format: %s", new_holiday)
                     errors[CONF_NEW_HOLIDAY] = "bad_date_format"
             else:
                 holidays_to_add.sort(reverse=True)
@@ -333,7 +333,7 @@ class WorkdayOptionsFlow(config_entries.OptionsFlow):
                     cv.date(remove_holiday)  # just validate format
                     holidays_to_remove.append(remove_holiday)
                 except vol.Invalid:
-                    _LOGGER.error("bad date format: %s", remove_holiday)
+                    _LOGGER.error("Bad date format: %s", remove_holiday)
                     errors[CONF_HOLIDAY_TO_REMOVE] = "bad_date_format"
             else:
                 holidays_to_remove.sort(reverse=True)
