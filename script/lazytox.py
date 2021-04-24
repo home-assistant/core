@@ -118,7 +118,7 @@ async def pylint(files):
 async def flake8(files):
     """Exec flake8."""
     _, log = await async_exec(
-        "pre-commit", "run", "flake8", "--max-complexity", "10", "--files", *files
+        "pre-commit", "run", "flake8", "--max-complexity", "21", "--files", *files
     )
     res = []
     for line in log.splitlines():
@@ -156,7 +156,7 @@ async def lint(files):
     return lint_ok
 
 
-async def main():  # noqa: C901
+async def main():
     """Run the main loop."""
     # Ensure we are in the homeassistant root
     os.chdir(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
