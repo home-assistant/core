@@ -136,6 +136,7 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.mobile_app.*",
     "homeassistant.components.modbus.*",
     "homeassistant.components.motion_blinds.*",
+    "homeassistant.components.motioneye.*",
     "homeassistant.components.mqtt.*",
     "homeassistant.components.mullvad.*",
     "homeassistant.components.mysensors.*",
