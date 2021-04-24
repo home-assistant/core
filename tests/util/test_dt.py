@@ -246,22 +246,30 @@ def test_find_next_time_expression_time_dst():
     )
 
     # Leaving DST, clocks are rolled back
-    assert datetime(2018, 10, 28, 2, 30, 0, tzinfo=tz, is_dst=False) == find(
-        datetime(2018, 10, 28, 2, 5, 0, tzinfo=tz, is_dst=False), 2, 30, 0
+    assert datetime(2018, 10, 28, 2, 30, 0, tzinfo=tz, fold=0) == find(
+        datetime(2018, 10, 28, 2, 5, 0, tzinfo=tz, fold=0), 2, 30, 0
     )
 
-    assert datetime(2018, 10, 28, 2, 30, 0, tzinfo=tz, is_dst=False) == find(
-        datetime(2018, 10, 28, 2, 55, 0, tzinfo=tz, is_dst=True), 2, 30, 0
+    assert datetime(2018, 10, 28, 2, 30, 0, tzinfo=tz, fold=0) == find(
+        datetime(2018, 10, 28, 2, 5, 0, tzinfo=tz), 2, 30, 0
     )
 
-    assert datetime(2018, 10, 28, 4, 30, 0, tzinfo=tz, is_dst=False) == find(
-        datetime(2018, 10, 28, 2, 55, 0, tzinfo=tz, is_dst=True), 4, 30, 0
+    assert datetime(2018, 10, 29, 2, 30, 0, tzinfo=tz, fold=1) == find(
+        datetime(2018, 10, 28, 2, 55, 0, tzinfo=tz), 2, 30, 0
     )
 
-    assert datetime(2018, 10, 28, 2, 30, 0, tzinfo=tz, is_dst=True) == find(
-        datetime(2018, 10, 28, 2, 5, 0, tzinfo=tz, is_dst=True), 2, 30, 0
+    assert datetime(2018, 10, 29, 2, 30, 0, tzinfo=tz, fold=1) == find(
+        datetime(2018, 10, 28, 2, 55, 0, tzinfo=tz, fold=0), 2, 30, 0
+    )
+
+    assert datetime(2018, 10, 28, 4, 30, 0, tzinfo=tz, fold=0) == find(
+        datetime(2018, 10, 28, 2, 55, 0, tzinfo=tz, fold=1), 4, 30, 0
+    )
+
+    assert datetime(2018, 10, 28, 2, 30, 0, tzinfo=tz, fold=1) == find(
+        datetime(2018, 10, 28, 2, 5, 0, tzinfo=tz, fold=1), 2, 30, 0
     )
 
     assert datetime(2018, 10, 29, 2, 30, 0, tzinfo=tz) == find(
-        datetime(2018, 10, 28, 2, 55, 0, tzinfo=tz, is_dst=False), 2, 30, 0
+        datetime(2018, 10, 28, 2, 55, 0, tzinfo=tz, fold=0), 2, 30, 0
     )
