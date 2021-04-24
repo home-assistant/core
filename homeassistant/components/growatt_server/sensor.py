@@ -37,9 +37,6 @@ from .const import CONF_PLANT_ID, DEFAULT_NAME, DEFAULT_PLANT_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_PLANT_ID = "plant_id"
-DEFAULT_PLANT_ID = "0"
-DEFAULT_NAME = "Growatt"
 SCAN_INTERVAL = datetime.timedelta(minutes=1)
 
 # Sensor type order is: Sensor name, Unit of measurement, api data name, additional options
@@ -572,14 +569,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up growatt server from Config Flow."""
-    hass.async_add_executor_job(
-        _setup_entity, hass, config_entry.data, async_add_entities
-    )
-
-
-def _setup_entity(hass, config, async_add_entities):
     """Set up the Growatt sensor."""
+    config = config_entry.data
     username = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]
     plant_id = config[CONF_PLANT_ID]
@@ -588,17 +579,17 @@ def _setup_entity(hass, config, async_add_entities):
     api = growattServer.GrowattApi()
 
     # Log in to api and fetch first plant if no plant id is defined.
-    login_response = api.login(username, password)
+    login_response = await hass.async_add_executor_job(api.login, username, password)
     if not login_response["success"] and login_response["errCode"] == "102":
         _LOGGER.error("Username or Password may be incorrect!")
         return
     user_id = login_response["userId"]
     if plant_id == DEFAULT_PLANT_ID:
-        plant_info = api.plant_list(user_id)
+        plant_info = await hass.async_add_executor_job(api.plant_list, user_id)
         plant_id = plant_info["data"][0]["plantId"]
 
     # Get a list of devices for specified plant to add sensors for.
-    devices = api.device_list(plant_id)
+    devices = await hass.async_add_executor_job(api.device_list, plant_id)
     entities = []
     probe = GrowattData(api, username, password, plant_id, "total")
     for sensor in TOTAL_SENSOR_TYPES:
