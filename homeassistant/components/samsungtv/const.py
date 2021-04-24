@@ -28,6 +28,3 @@ METHOD_LEGACY = "legacy"
 METHOD_WEBSOCKET = "websocket"
 
 WEBSOCKET_PORTS = (8002, 8001)
-
-# Soundbar models: "HW-Q60R", "HW-Q70R", "HW-Q90R", "HW-Q60T", "HW-Q70T", "HW-Q90T"
-MODEL_SOUNDBAR = "HW-Q"

@@ -1,6 +1,5 @@
 """Config flow for Samsung TV."""
 import socket
-from socket import gethostbyname
 from urllib.parse import urlparse
 
 import voluptuous as vol
@@ -14,8 +13,6 @@ from homeassistant.components.ssdp import (
 )
 from homeassistant.const import (
     CONF_HOST,
-    CONF_ID,
-    CONF_IP_ADDRESS,
     CONF_MAC,
     CONF_METHOD,
     CONF_NAME,
@@ -33,8 +30,6 @@ from .const import (
     LOGGER,
     METHOD_LEGACY,
     METHOD_WEBSOCKET,
-    MODEL_SOUNDBAR,
-    RESULT_AUTH_MISSING,
     RESULT_CANNOT_CONNECT,
     RESULT_ID_MISSING,
     RESULT_NOT_SUPPORTED,
@@ -66,6 +61,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._device_info = None
 
     def _get_entry(self):
+        """Get device entry."""
         data = {
             CONF_HOST: self._host,
             CONF_MAC: self._mac,
@@ -82,33 +78,30 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data=data,
         )
 
-    async def _async_abort_if_already_configured(self):
-        device_ip = await self.hass.async_add_executor_job(gethostbyname, self._host)
-        for entry in self._async_current_entries():
+    async def _async_set_unique_id(self):
+        """Set device unique_id."""
 
-            # update user configured or unique_id=ip entries
-            if self._id and not entry.unique_id or device_ip == entry.unique_id:
-                data = {
-                    key: value
-                    for key, value in entry.data.items()
-                    # clean up old entries
-                    if key not in (CONF_ID, CONF_IP_ADDRESS)
-                }
-                if self._manufacturer and not data.get(CONF_MANUFACTURER):
-                    data[CONF_MANUFACTURER] = self._manufacturer
-                if self._model and not data.get(CONF_MODEL):
-                    data[CONF_MODEL] = self._model
-                self.hass.config_entries.async_update_entry(
-                    entry, unique_id=self._id, data=data
-                )
-                raise data_entry_flow.AbortFlow("already_configured")
+        if self._id:
+            await self.async_set_unique_id(self._id)
+            self._abort_if_unique_id_configured()
 
-            if (
-                (self._host and self._host == entry.data.get(CONF_HOST))
-                or (self._id and self._id == entry.unique_id)
-                or (self._mac and self._mac == entry.data.get(CONF_MAC))
-            ):
-                raise data_entry_flow.AbortFlow("already_configured")
+        await self._async_get_and_check_device_info()
+
+        self._id = self._device_info.get("device", {}).get(ATTR_UPNP_UDN.lower())
+
+        if not self._id:
+            LOGGER.debug(
+                "Property " "%s" " is missing for host %s",
+                ATTR_UPNP_UDN.lower(),
+                self._host,
+            )
+            return self.async_abort(reason=RESULT_ID_MISSING)
+
+        if self._id.startswith("uuid:"):
+            self._id = self._id[5:]
+
+        await self.async_set_unique_id(self._id)
+        self._abort_if_unique_id_configured()
 
     def _try_connect(self):
         """Try to connect and check auth."""
@@ -141,15 +134,13 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if self._device_info:
                     break
 
-        if self._device_info:
-            device_type = self._device_info.get("device", {}).get("type")
-            if device_type and device_type != "Samsung SmartTV":
+            if not self._device_info:
                 raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
-            self._model = self._device_info.get("device", {}).get("modelName")
-            return
 
-        if self._bridge and self._bridge.method == METHOD_WEBSOCKET:
+        device_type = self._device_info.get("device", {}).get("type")
+        if device_type and device_type != "Samsung SmartTV":
             raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
+        self._model = self._device_info.get("device", {}).get("modelName")
 
     async def async_step_import(self, user_input=None):
         """Handle configuration by yaml file."""
@@ -168,10 +159,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._title = self._name
 
             await self.hass.async_add_executor_job(self._try_connect)
-            await self._async_get_and_check_device_info()
 
-            await self.async_set_unique_id(self._id)
-            self._abort_if_unique_id_configured()
+            await self._async_set_unique_id()
 
             return self._get_entry()
 
@@ -180,25 +169,13 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_ssdp(self, discovery_info: DiscoveryInfoType):
         """Handle a flow initialized by ssdp discovery."""
         self._host = urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname
-        self._id = discovery_info.get(ATTR_UPNP_UDN)
 
-        # probably access denied
-        if self._id is None:
-            return self.async_abort(reason=RESULT_AUTH_MISSING)
-        if self._id.startswith("uuid:"):
-            self._id = self._id[5:]
-
-        await self.async_set_unique_id(self._id)
-        await self._async_abort_if_already_configured()
-
-        await self._async_get_and_check_device_info()
+        LOGGER.debug("Found Samsung device via ssdp at %s", self._host)
+        await self._async_set_unique_id()
 
         self._manufacturer = discovery_info.get(ATTR_UPNP_MANUFACTURER)
         if not self._model:
             self._model = discovery_info.get(ATTR_UPNP_MODEL_NAME)
-
-        if self._model.startswith(MODEL_SOUNDBAR):
-            return self.async_abort(reason=RESULT_NOT_SUPPORTED)
 
         self._name = f"{self._manufacturer} {self._model}"
         self._title = self._model
@@ -209,15 +186,10 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType):
         """Handle a flow initialized by zeroconf discovery."""
         self._host = discovery_info[CONF_HOST]
-        self._id = discovery_info[ATTR_PROPERTIES].get("serialNumber")
 
-        if not self._id:
-            return self.async_abort(reason=RESULT_ID_MISSING)
+        LOGGER.debug("Found Samsung device via zeroconf at %s", self._host)
 
-        await self.async_set_unique_id(self._id)
-        await self._async_abort_if_already_configured()
-
-        await self._async_get_and_check_device_info()
+        await self._async_set_unique_id()
 
         self._mac = discovery_info[ATTR_PROPERTIES].get("deviceid")
         self._manufacturer = discovery_info[ATTR_PROPERTIES].get("manufacturer")
