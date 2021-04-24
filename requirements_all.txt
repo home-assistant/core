@@ -953,6 +953,9 @@ mitemp_bt==0.0.3
 # homeassistant.components.motion_blinds
 motionblinds==0.4.10
 
+# homeassistant.components.motioneye
+motioneye-client==0.3.2
+
 # homeassistant.components.mullvad
 mullvad-api==1.0.0
 
