@@ -202,20 +202,17 @@ async def test_zwave_ready_wait(hass, mock_openzwave, zwave_setup):
             sleeps.append(duration)
         await asyncio_sleep(0)
 
-    with patch("homeassistant.components.zwave.dt_util.utcnow", new=utcnow):
-        with patch("asyncio.sleep", new=sleep):
-            with patch.object(zwave, "_LOGGER") as mock_logger:
-                hass.data[DATA_NETWORK].state = MockNetwork.STATE_STARTED
+    with patch("homeassistant.components.zwave.dt_util.utcnow", new=utcnow), patch(
+        "asyncio.sleep", new=sleep
+    ), patch.object(zwave, "_LOGGER") as mock_logger:
+        hass.data[DATA_NETWORK].state = MockNetwork.STATE_STARTED
 
-                await hass.async_start()
+        await hass.async_start()
 
-                assert len(sleeps) == const.NETWORK_READY_WAIT_SECS
-                assert mock_logger.warning.called
-                assert len(mock_logger.warning.mock_calls) == 1
-                assert (
-                    mock_logger.warning.mock_calls[0][1][1]
-                    == const.NETWORK_READY_WAIT_SECS
-                )
+        assert len(sleeps) == const.NETWORK_READY_WAIT_SECS
+        assert mock_logger.warning.called
+        assert len(mock_logger.warning.mock_calls) == 1
+        assert mock_logger.warning.mock_calls[0][1][1] == const.NETWORK_READY_WAIT_SECS
 
 
 async def test_device_entity(hass, mock_openzwave):
@@ -341,19 +338,19 @@ async def test_unparsed_node_discovery(hass, mock_openzwave):
             sleeps.append(duration)
         await asyncio_sleep(0)
 
-    with patch("homeassistant.components.zwave.dt_util.utcnow", new=utcnow):
-        with patch("asyncio.sleep", new=sleep):
-            with patch.object(zwave, "_LOGGER") as mock_logger:
-                await hass.async_add_executor_job(mock_receivers[0], node)
-                await hass.async_block_till_done()
+    with patch("homeassistant.components.zwave.dt_util.utcnow", new=utcnow), patch(
+        "asyncio.sleep", new=sleep
+    ), patch.object(zwave, "_LOGGER") as mock_logger:
+        await hass.async_add_executor_job(mock_receivers[0], node)
+        await hass.async_block_till_done()
 
-                assert len(sleeps) == const.NODE_READY_WAIT_SECS
-                assert mock_logger.warning.called
-                assert len(mock_logger.warning.mock_calls) == 1
-                assert mock_logger.warning.mock_calls[0][1][1:] == (
-                    14,
-                    const.NODE_READY_WAIT_SECS,
-                )
+        assert len(sleeps) == const.NODE_READY_WAIT_SECS
+        assert mock_logger.warning.called
+        assert len(mock_logger.warning.mock_calls) == 1
+        assert mock_logger.warning.mock_calls[0][1][1:] == (
+            14,
+            const.NODE_READY_WAIT_SECS,
+        )
     assert hass.states.get("zwave.unknown_node_14").state == "unknown"
 
 

@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, PropertyMock, patch
 import pytest
 
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import Context
+from homeassistant.core import Context, HomeAssistantError
 from homeassistant.helpers import entity, entity_registry
 
 from tests.common import (
@@ -575,7 +575,7 @@ async def test_warn_disabled(hass, caplog):
         entity_id="hello.world",
         unique_id="test-unique-id",
         platform="test-platform",
-        disabled_by="user",
+        disabled_by=entity_registry.DISABLED_USER,
     )
     mock_registry(hass, {"hello.world": entry})
 
@@ -616,7 +616,9 @@ async def test_disabled_in_entity_registry(hass):
     await ent.add_to_platform_finish()
     assert hass.states.get("hello.world") is not None
 
-    entry2 = registry.async_update_entity("hello.world", disabled_by="user")
+    entry2 = registry.async_update_entity(
+        "hello.world", disabled_by=entity_registry.DISABLED_USER
+    )
     await hass.async_block_till_done()
     assert entry2 != entry
     assert ent.registry_entry == entry2
@@ -744,3 +746,31 @@ async def test_removing_entity_unavailable(hass):
     state = hass.states.get("hello.world")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_get_supported_features_entity_registry(hass):
+    """Test get_supported_features falls back to entity registry."""
+    entity_reg = mock_registry(hass)
+    entity_id = entity_reg.async_get_or_create(
+        "hello", "world", "5678", supported_features=456
+    ).entity_id
+    assert entity.get_supported_features(hass, entity_id) == 456
+
+
+async def test_get_supported_features_prioritize_state(hass):
+    """Test get_supported_features gives priority to state."""
+    entity_reg = mock_registry(hass)
+    entity_id = entity_reg.async_get_or_create(
+        "hello", "world", "5678", supported_features=456
+    ).entity_id
+    assert entity.get_supported_features(hass, entity_id) == 456
+
+    hass.states.async_set(entity_id, None, {"supported_features": 123})
+
+    assert entity.get_supported_features(hass, entity_id) == 123
+
+
+async def test_get_supported_features_raises_on_unknown(hass):
+    """Test get_supported_features raises on unknown entity_id."""
+    with pytest.raises(HomeAssistantError):
+        entity.get_supported_features(hass, "hello.world")

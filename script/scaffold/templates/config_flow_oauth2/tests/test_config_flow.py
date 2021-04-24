@@ -7,6 +7,7 @@ from homeassistant.components.NEW_DOMAIN.const import (
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
 CLIENT_ID = "1234"
@@ -14,8 +15,11 @@ CLIENT_SECRET = "5678"
 
 
 async def test_full_flow(
-    hass, aiohttp_client, aioclient_mock, current_request_with_host
-):
+    hass: HomeAssistant,
+    aiohttp_client,
+    aioclient_mock,
+    current_request_with_host,
+) -> None:
     """Check full flow."""
     assert await setup.async_setup_component(
         hass,

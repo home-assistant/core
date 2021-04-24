@@ -4,7 +4,7 @@ import logging
 from apcaccess.status import ALL_UNITS
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_RESOURCES,
     ELECTRICAL_CURRENT_AMPERE,
@@ -18,7 +18,6 @@ from homeassistant.const import (
     VOLT,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN
 
@@ -156,7 +155,7 @@ def infer_unit(value):
     return value, None
 
 
-class APCUPSdSensor(Entity):
+class APCUPSdSensor(SensorEntity):
     """Representation of a sensor entity for APCUPSd status values."""
 
     def __init__(self, data, sensor_type):

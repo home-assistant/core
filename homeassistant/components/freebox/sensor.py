@@ -3,12 +3,11 @@ from __future__ import annotations
 
 import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DATA_RATE_KILOBYTES_PER_SECOND
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -28,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the sensors."""
     router = hass.data[DOMAIN][entry.unique_id]
@@ -74,7 +73,7 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class FreeboxSensor(Entity):
+class FreeboxSensor(SensorEntity):
     """Representation of a Freebox sensor."""
 
     def __init__(

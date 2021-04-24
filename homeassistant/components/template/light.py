@@ -31,10 +31,9 @@ from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.script import Script
 
-from .const import CONF_AVAILABILITY_TEMPLATE, DOMAIN, PLATFORMS
+from .const import CONF_AVAILABILITY_TEMPLATE
 from .template_entity import TemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -137,7 +136,6 @@ async def _async_create_entities(hass, config):
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the template lights."""
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     async_add_entities(await _async_create_entities(hass, config))
 
 
@@ -437,8 +435,9 @@ class LightTemplate(TemplateEntity, LightEntity):
                 self._temperature = temperature
             else:
                 _LOGGER.error(
-                    "Received invalid color temperature : %s. Expected: 0-%s",
+                    "Received invalid color temperature : %s. Expected: %s-%s",
                     temperature,
+                    self.min_mireds,
                     self.max_mireds,
                 )
                 self._temperature = None

@@ -29,7 +29,7 @@
         "step": {
             "init": {
                 "data": {
-                    "scan_interval": "\uc2a4\uce94 \uac04\uaca9(\ucd08)"
+                    "scan_interval": "\uc2a4\uce94 \uac04\uaca9 (\ucd08)"
                 },
                 "description": "{gateway_name}\uc5d0 \ub300\ud55c \uc124\uc815 \uc9c0\uc815\ud558\uae30",
                 "title": "ScreenLogic"

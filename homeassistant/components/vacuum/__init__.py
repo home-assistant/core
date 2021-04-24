@@ -2,6 +2,7 @@
 from datetime import timedelta
 from functools import partial
 import logging
+from typing import final
 
 import voluptuous as vol
 
@@ -271,6 +272,7 @@ class VacuumEntity(_BaseVacuum, ToggleEntity):
             battery_level=self.battery_level, charging=charging
         )
 
+    @final
     @property
     def state_attributes(self):
         """Return the state attributes of the vacuum cleaner."""

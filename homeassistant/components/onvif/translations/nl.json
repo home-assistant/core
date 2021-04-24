@@ -52,7 +52,7 @@
                     "extra_arguments": "Extra FFMPEG argumenten",
                     "rtsp_transport": "RTSP-transportmechanisme"
                 },
-                "title": "[%%] Apparaatopties"
+                "title": "ONVIF-apparaatopties"
             }
         }
     }

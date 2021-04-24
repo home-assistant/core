@@ -40,7 +40,6 @@ API_SCOPE = "scope"
 API_CHANGE = "change"
 API_PASSWORD = "password"
 
-CONF_DESCRIPTION = "description"
 CONF_DISPLAY_CATEGORIES = "display_categories"
 CONF_SUPPORTED_LOCALES = (
     "de-DE",

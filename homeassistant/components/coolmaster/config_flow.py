@@ -6,7 +6,6 @@ import voluptuous as vol
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_HOST, CONF_PORT
 
-# pylint: disable=unused-import
 from .const import AVAILABLE_MODES, CONF_SUPPORTED_MODES, DEFAULT_PORT, DOMAIN
 
 MODES_SCHEMA = {vol.Required(mode, default=True): bool for mode in AVAILABLE_MODES}

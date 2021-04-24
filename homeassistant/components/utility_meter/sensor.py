@@ -5,6 +5,7 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
@@ -102,7 +103,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class UtilityMeterSensor(RestoreEntity):
+class UtilityMeterSensor(RestoreEntity, SensorEntity):
     """Representation of an utility meter sensor."""
 
     def __init__(

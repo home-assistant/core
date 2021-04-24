@@ -27,7 +27,9 @@
         "step": {
             "options": {
                 "data": {
-                    "known_hosts": "Valgfri liste over kjente verter hvis mDNS-oppdagelse ikke fungerer."
+                    "ignore_cec": "Valgfri liste som sendes til pychromecast.IGNORE_CEC.",
+                    "known_hosts": "Valgfri liste over kjente verter hvis mDNS-oppdagelse ikke fungerer.",
+                    "uuid": "Valgfri liste over UUIDer. Medvirkende som ikke er oppf\u00f8rt, blir ikke lagt til."
                 },
                 "description": "Angi Google Cast-konfigurasjonen."
             }

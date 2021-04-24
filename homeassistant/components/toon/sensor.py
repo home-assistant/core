@@ -1,6 +1,7 @@
 """Support for Toon sensors."""
 from __future__ import annotations
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
@@ -109,7 +110,7 @@ async def async_setup_entry(
     async_add_entities(sensors, True)
 
 
-class ToonSensor(ToonEntity):
+class ToonSensor(ToonEntity, SensorEntity):
     """Defines a Toon sensor."""
 
     def __init__(self, coordinator: ToonDataUpdateCoordinator, *, key: str) -> None:

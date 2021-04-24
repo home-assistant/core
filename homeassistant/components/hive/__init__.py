@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -77,18 +77,8 @@ async def async_setup_entry(hass, entry):
     except HTTPException as error:
         _LOGGER.error("Could not connect to the internet: %s", error)
         raise ConfigEntryNotReady() from error
-    except HiveReauthRequired:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={
-                    "source": config_entries.SOURCE_REAUTH,
-                    "unique_id": entry.unique_id,
-                },
-                data=entry.data,
-            )
-        )
-        return False
+    except HiveReauthRequired as err:
+        raise ConfigEntryAuthFailed from err
 
     for ha_type, hive_type in PLATFORM_LOOKUP.items():
         device_list = devices.get(hive_type)

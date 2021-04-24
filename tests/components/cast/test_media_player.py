@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from unittest.mock import ANY, MagicMock, Mock, patch
+from unittest.mock import ANY, MagicMock, patch
 from uuid import UUID
 
 import attr
@@ -28,10 +28,9 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, assert_setup_component
@@ -100,11 +99,13 @@ async def async_setup_cast(hass, config=None):
     """Set up the cast platform."""
     if config is None:
         config = {}
+    data = {**{"ignore_cec": [], "known_hosts": [], "uuid": []}, **config}
     with patch(
         "homeassistant.helpers.entity_platform.EntityPlatform._async_schedule_add_entities"
     ) as add_entities:
-        MockConfigEntry(domain="cast").add_to_hass(hass)
-        await async_setup_component(hass, "cast", {"cast": {"media_player": config}})
+        entry = MockConfigEntry(data=data, domain="cast")
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     return add_entities
@@ -157,7 +158,7 @@ async def async_setup_cast_internal_discovery(hass, config=None):
     return discover_chromecast, remove_chromecast, add_entities
 
 
-async def async_setup_media_player_cast(hass: HomeAssistantType, info: ChromecastInfo):
+async def async_setup_media_player_cast(hass: HomeAssistant, info: ChromecastInfo):
     """Set up the cast platform with async_setup_component."""
     browser = MagicMock(devices={}, zc={})
     chromecast = get_fake_chromecast(info)
@@ -388,44 +389,6 @@ async def test_create_cast_device_with_uuid(hass):
     assert cast_device is None
 
 
-async def test_replay_past_chromecasts(hass):
-    """Test cast platform re-playing past chromecasts when adding new one."""
-    cast_group1 = get_fake_chromecast_info(host="host1", port=8009, uuid=FakeUUID)
-    cast_group2 = get_fake_chromecast_info(
-        host="host2", port=8009, uuid=UUID("9462202c-e747-4af5-a66b-7dce0e1ebc09")
-    )
-    zconf_1 = get_fake_zconf(host="host1", port=8009)
-    zconf_2 = get_fake_zconf(host="host2", port=8009)
-
-    discover_cast, _, add_dev1 = await async_setup_cast_internal_discovery(
-        hass, config={"uuid": FakeUUID}
-    )
-
-    with patch(
-        "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
-        return_value=zconf_2,
-    ):
-        discover_cast("service2", cast_group2)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()  # having tasks that add jobs
-    assert add_dev1.call_count == 0
-
-    with patch(
-        "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
-        return_value=zconf_1,
-    ):
-        discover_cast("service1", cast_group1)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()  # having tasks that add jobs
-    assert add_dev1.call_count == 1
-
-    add_dev2 = Mock()
-    entry = hass.config_entries.async_entries("cast")[0]
-    await cast._async_setup_platform(hass, {"host": "host2"}, add_dev2, entry)
-    await hass.async_block_till_done()
-    assert add_dev2.call_count == 1
-
-
 async def test_manual_cast_chromecasts_uuid(hass):
     """Test only wanted casts are added for manual configuration."""
     cast_1 = get_fake_chromecast_info(host="host_1", uuid=FakeUUID)
@@ -435,7 +398,7 @@ async def test_manual_cast_chromecasts_uuid(hass):
 
     # Manual configuration of media player with host "configured_host"
     discover_cast, _, add_dev1 = await async_setup_cast_internal_discovery(
-        hass, config={"uuid": FakeUUID}
+        hass, config={"uuid": str(FakeUUID)}
     )
     with patch(
         "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
@@ -586,7 +549,7 @@ async def test_update_cast_chromecasts(hass):
     assert add_dev1.call_count == 1
 
 
-async def test_entity_availability(hass: HomeAssistantType):
+async def test_entity_availability(hass: HomeAssistant):
     """Test handling of connection status."""
     entity_id = "media_player.speaker"
     info = get_fake_chromecast_info()
@@ -612,7 +575,7 @@ async def test_entity_availability(hass: HomeAssistantType):
     assert state.state == "unavailable"
 
 
-async def test_entity_cast_status(hass: HomeAssistantType):
+async def test_entity_cast_status(hass: HomeAssistant):
     """Test handling of cast status."""
     entity_id = "media_player.speaker"
     reg = er.async_get(hass)
@@ -681,7 +644,7 @@ async def test_entity_cast_status(hass: HomeAssistantType):
     )
 
 
-async def test_entity_play_media(hass: HomeAssistantType):
+async def test_entity_play_media(hass: HomeAssistant):
     """Test playing media."""
     entity_id = "media_player.speaker"
     reg = er.async_get(hass)
@@ -710,7 +673,7 @@ async def test_entity_play_media(hass: HomeAssistantType):
     chromecast.media_controller.play_media.assert_called_once_with("best.mp3", "audio")
 
 
-async def test_entity_play_media_cast(hass: HomeAssistantType, quick_play_mock):
+async def test_entity_play_media_cast(hass: HomeAssistant, quick_play_mock):
     """Test playing media with cast special features."""
     entity_id = "media_player.speaker"
     reg = er.async_get(hass)
@@ -789,7 +752,7 @@ async def test_entity_play_media_cast_invalid(hass, caplog, quick_play_mock):
     assert "App unknown not supported" in caplog.text
 
 
-async def test_entity_play_media_sign_URL(hass: HomeAssistantType):
+async def test_entity_play_media_sign_URL(hass: HomeAssistant):
     """Test playing media."""
     entity_id = "media_player.speaker"
 
@@ -816,7 +779,7 @@ async def test_entity_play_media_sign_URL(hass: HomeAssistantType):
     )
 
 
-async def test_entity_media_content_type(hass: HomeAssistantType):
+async def test_entity_media_content_type(hass: HomeAssistant):
     """Test various content types."""
     entity_id = "media_player.speaker"
     reg = er.async_get(hass)
@@ -870,7 +833,7 @@ async def test_entity_media_content_type(hass: HomeAssistantType):
     assert state.attributes.get("media_content_type") == "movie"
 
 
-async def test_entity_control(hass: HomeAssistantType):
+async def test_entity_control(hass: HomeAssistant):
     """Test various device and media controls."""
     entity_id = "media_player.speaker"
     reg = er.async_get(hass)
@@ -979,7 +942,7 @@ async def test_entity_control(hass: HomeAssistantType):
     chromecast.media_controller.seek.assert_called_once_with(123)
 
 
-async def test_entity_media_states(hass: HomeAssistantType):
+async def test_entity_media_states(hass: HomeAssistant):
     """Test various entity media states."""
     entity_id = "media_player.speaker"
     reg = er.async_get(hass)
@@ -1279,7 +1242,7 @@ async def test_failed_cast_tts_base_url(hass, caplog):
     )
 
 
-async def test_disconnect_on_stop(hass: HomeAssistantType):
+async def test_disconnect_on_stop(hass: HomeAssistant):
     """Test cast device disconnects socket on stop."""
     info = get_fake_chromecast_info()
 
@@ -1290,66 +1253,55 @@ async def test_disconnect_on_stop(hass: HomeAssistantType):
     assert chromecast.disconnect.call_count == 1
 
 
-async def test_entry_setup_no_config(hass: HomeAssistantType):
-    """Test setting up entry with no config.."""
+async def test_entry_setup_no_config(hass: HomeAssistant):
+    """Test deprecated empty yaml config.."""
     await async_setup_component(hass, "cast", {})
     await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.cast.media_player._async_setup_platform",
-    ) as mock_setup:
-        await cast.async_setup_entry(hass, MockConfigEntry(), None)
-
-    assert len(mock_setup.mock_calls) == 1
-    assert mock_setup.mock_calls[0][1][1] == {}
+    assert not hass.config_entries.async_entries("cast")
 
 
-async def test_entry_setup_single_config(hass: HomeAssistantType):
-    """Test setting up entry and having a single config option."""
+async def test_entry_setup_empty_config(hass: HomeAssistant):
+    """Test deprecated empty yaml config.."""
+    await async_setup_component(hass, "cast", {"cast": {}})
+    await hass.async_block_till_done()
+
+    config_entry = hass.config_entries.async_entries("cast")[0]
+    assert config_entry.data["uuid"] == []
+    assert config_entry.data["ignore_cec"] == []
+
+
+async def test_entry_setup_single_config(hass: HomeAssistant, pycast_mock):
+    """Test deprecated yaml config with a single config media_player."""
     await async_setup_component(
-        hass, "cast", {"cast": {"media_player": {"uuid": "bla"}}}
+        hass, "cast", {"cast": {"media_player": {"uuid": "bla", "ignore_cec": "cast1"}}}
     )
     await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.cast.media_player._async_setup_platform",
-    ) as mock_setup:
-        await cast.async_setup_entry(hass, MockConfigEntry(), None)
+    config_entry = hass.config_entries.async_entries("cast")[0]
+    assert config_entry.data["uuid"] == ["bla"]
+    assert config_entry.data["ignore_cec"] == ["cast1"]
 
-    assert len(mock_setup.mock_calls) == 1
-    assert mock_setup.mock_calls[0][1][1] == {"uuid": "bla"}
+    assert pycast_mock.IGNORE_CEC == ["cast1"]
 
 
-async def test_entry_setup_list_config(hass: HomeAssistantType):
-    """Test setting up entry and having multiple config options."""
+async def test_entry_setup_list_config(hass: HomeAssistant, pycast_mock):
+    """Test deprecated yaml config with multiple media_players."""
     await async_setup_component(
-        hass, "cast", {"cast": {"media_player": [{"uuid": "bla"}, {"uuid": "blu"}]}}
+        hass,
+        "cast",
+        {
+            "cast": {
+                "media_player": [
+                    {"uuid": "bla", "ignore_cec": "cast1"},
+                    {"uuid": "blu", "ignore_cec": ["cast2", "cast3"]},
+                ]
+            }
+        },
     )
     await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.cast.media_player._async_setup_platform",
-    ) as mock_setup:
-        await cast.async_setup_entry(hass, MockConfigEntry(), None)
-
-    assert len(mock_setup.mock_calls) == 2
-    assert mock_setup.mock_calls[0][1][1] == {"uuid": "bla"}
-    assert mock_setup.mock_calls[1][1][1] == {"uuid": "blu"}
-
-
-async def test_entry_setup_platform_not_ready(hass: HomeAssistantType):
-    """Test failed setting up entry will raise PlatformNotReady."""
-    await async_setup_component(
-        hass, "cast", {"cast": {"media_player": {"uuid": "bla"}}}
-    )
-    await hass.async_block_till_done()
-
-    with patch(
-        "homeassistant.components.cast.media_player._async_setup_platform",
-        side_effect=Exception,
-    ) as mock_setup:
-        with pytest.raises(PlatformNotReady):
-            await cast.async_setup_entry(hass, MockConfigEntry(), None)
-
-    assert len(mock_setup.mock_calls) == 1
-    assert mock_setup.mock_calls[0][1][1] == {"uuid": "bla"}
+    config_entry = hass.config_entries.async_entries("cast")[0]
+    assert set(config_entry.data["uuid"]) == {"bla", "blu"}
+    assert set(config_entry.data["ignore_cec"]) == {"cast1", "cast2", "cast3"}
+    assert set(pycast_mock.IGNORE_CEC) == {"cast1", "cast2", "cast3"}

@@ -1,4 +1,5 @@
 """Support for the Airly sensor service."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
@@ -72,7 +73,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(sensors, False)
 
 
-class AirlySensor(CoordinatorEntity):
+class AirlySensor(CoordinatorEntity, SensorEntity):
     """Define an Airly sensor."""
 
     def __init__(self, coordinator, name, kind):

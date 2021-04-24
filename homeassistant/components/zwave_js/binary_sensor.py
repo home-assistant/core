@@ -285,12 +285,12 @@ class ZWaveBooleanBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
-        if self.info.primary_value.command_class == CommandClass.SENSOR_BINARY:
-            # Legacy binary sensors are phased out (replaced by notification sensors)
-            # Disable by default to not confuse users
-            if self.info.node.device_class.generic.key != 0x20:
-                return False
-        return True
+        # Legacy binary sensors are phased out (replaced by notification sensors)
+        # Disable by default to not confuse users
+        return bool(
+            self.info.primary_value.command_class != CommandClass.SENSOR_BINARY
+            or self.info.node.device_class.generic.key == 0x20
+        )
 
 
 class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):

@@ -78,8 +78,6 @@ async def test_step_user(hass):
     with patch(
         "homeassistant.components.fireservicerota.config_flow.FireServiceRota"
     ) as mock_fsr, patch(
-        "homeassistant.components.fireservicerota.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.fireservicerota.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -108,5 +106,43 @@ async def test_step_user(hass):
             },
         }
 
-        assert len(mock_setup.mock_calls) == 1
         assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_reauth(hass):
+    """Test the start of the config flow."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONF, unique_id=MOCK_CONF[CONF_USERNAME]
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.fireservicerota.config_flow.FireServiceRota"
+    ) as mock_fsr:
+        mock_fireservicerota = mock_fsr.return_value
+        mock_fireservicerota.request_tokens.return_value = MOCK_TOKEN_INFO
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "reauth", "unique_id": entry.unique_id},
+            data=MOCK_CONF,
+        )
+
+        await hass.async_block_till_done()
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+    with patch(
+        "homeassistant.components.fireservicerota.config_flow.FireServiceRota"
+    ) as mock_fsr, patch(
+        "homeassistant.components.fireservicerota.async_setup_entry",
+        return_value=True,
+    ):
+        mock_fireservicerota = mock_fsr.return_value
+        mock_fireservicerota.request_tokens.return_value = MOCK_TOKEN_INFO
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_PASSWORD: "any"},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result2["reason"] == "reauth_successful"

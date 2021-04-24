@@ -10,7 +10,7 @@ from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CON
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

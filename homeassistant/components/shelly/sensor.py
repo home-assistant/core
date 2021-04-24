@@ -1,5 +1,6 @@
 """Sensor for Shelly."""
 from homeassistant.components import sensor
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
@@ -8,7 +9,7 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
-    SIGNAL_STRENGTH_DECIBELS,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     VOLT,
 )
 
@@ -127,10 +128,7 @@ SENSORS = {
     ("sensor", "concentration"): BlockAttributeDescription(
         name="Gas Concentration",
         unit=CONCENTRATION_PARTS_PER_MILLION,
-        value=lambda value: value,
         icon="mdi:gauge",
-        # "sensorOp" is "normal" when the Shelly Gas is working properly and taking measurements.
-        available=lambda block: block.sensorOp == "normal",
     ),
     ("sensor", "extTemp"): BlockAttributeDescription(
         name="Temperature",
@@ -169,12 +167,18 @@ SENSORS = {
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_VOLTAGE,
     ),
+    ("sensor", "sensorOp"): BlockAttributeDescription(
+        name="Operation",
+        icon="mdi:cog-transfer",
+        value=lambda value: value,
+        extra_state_attributes=lambda block: {"self_test": block.selfTest},
+    ),
 }
 
 REST_SENSORS = {
     "rssi": RestAttributeDescription(
         name="RSSI",
-        unit=SIGNAL_STRENGTH_DECIBELS,
+        unit=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         value=lambda status, _: status["wifi_sta"]["rssi"],
         device_class=sensor.DEVICE_CLASS_SIGNAL_STRENGTH,
         default_enabled=False,
@@ -203,7 +207,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         )
 
 
-class ShellySensor(ShellyBlockAttributeEntity):
+class ShellySensor(ShellyBlockAttributeEntity, SensorEntity):
     """Represent a shelly sensor."""
 
     @property
@@ -211,8 +215,13 @@ class ShellySensor(ShellyBlockAttributeEntity):
         """Return value of sensor."""
         return self.attribute_value
 
+    @property
+    def unit_of_measurement(self):
+        """Return unit of sensor."""
+        return self._unit
 
-class ShellyRestSensor(ShellyRestAttributeEntity):
+
+class ShellyRestSensor(ShellyRestAttributeEntity, SensorEntity):
     """Represent a shelly REST sensor."""
 
     @property
@@ -220,8 +229,13 @@ class ShellyRestSensor(ShellyRestAttributeEntity):
         """Return value of sensor."""
         return self.attribute_value
 
+    @property
+    def unit_of_measurement(self):
+        """Return unit of sensor."""
+        return self.description.unit
 
-class ShellySleepingSensor(ShellySleepingBlockAttributeEntity):
+
+class ShellySleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
     """Represent a shelly sleeping sensor."""
 
     @property
@@ -231,3 +245,8 @@ class ShellySleepingSensor(ShellySleepingBlockAttributeEntity):
             return self.attribute_value
 
         return self.last_state
+
+    @property
+    def unit_of_measurement(self):
+        """Return unit of sensor."""
+        return self._unit

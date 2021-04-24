@@ -288,19 +288,18 @@ async def test_update(hass):
     """Test update."""
     with patch(
         "homeassistant.components.melissa.climate._LOGGER.warning"
-    ) as mocked_warning:
-        with patch("homeassistant.components.melissa"):
-            api = melissa_mock()
-            device = (await api.async_fetch_devices())[_SERIAL]
-            thermostat = MelissaClimate(api, _SERIAL, device)
-            await thermostat.async_update()
-            assert thermostat.fan_mode == SPEED_LOW
-            assert thermostat.state == HVAC_MODE_HEAT
-            api.async_status = AsyncMock(side_effect=KeyError("boom"))
-            await thermostat.async_update()
-            mocked_warning.assert_called_once_with(
-                "Unable to update entity %s", thermostat.entity_id
-            )
+    ) as mocked_warning, patch("homeassistant.components.melissa"):
+        api = melissa_mock()
+        device = (await api.async_fetch_devices())[_SERIAL]
+        thermostat = MelissaClimate(api, _SERIAL, device)
+        await thermostat.async_update()
+        assert thermostat.fan_mode == SPEED_LOW
+        assert thermostat.state == HVAC_MODE_HEAT
+        api.async_status = AsyncMock(side_effect=KeyError("boom"))
+        await thermostat.async_update()
+        mocked_warning.assert_called_once_with(
+            "Unable to update entity %s", thermostat.entity_id
+        )
 
 
 async def test_melissa_op_to_hass(hass):
@@ -333,35 +332,33 @@ async def test_hass_mode_to_melissa(hass):
     """Test for hass operations to melssa."""
     with patch(
         "homeassistant.components.melissa.climate._LOGGER.warning"
-    ) as mocked_warning:
-        with patch("homeassistant.components.melissa"):
-            api = melissa_mock()
-            device = (await api.async_fetch_devices())[_SERIAL]
-            thermostat = MelissaClimate(api, _SERIAL, device)
-            assert thermostat.hass_mode_to_melissa(HVAC_MODE_FAN_ONLY) == 1
-            assert thermostat.hass_mode_to_melissa(HVAC_MODE_HEAT) == 2
-            assert thermostat.hass_mode_to_melissa(HVAC_MODE_COOL) == 3
-            assert thermostat.hass_mode_to_melissa(HVAC_MODE_DRY) == 4
-            thermostat.hass_mode_to_melissa("test")
-            mocked_warning.assert_called_once_with(
-                "Melissa have no setting for %s mode", "test"
-            )
+    ) as mocked_warning, patch("homeassistant.components.melissa"):
+        api = melissa_mock()
+        device = (await api.async_fetch_devices())[_SERIAL]
+        thermostat = MelissaClimate(api, _SERIAL, device)
+        assert thermostat.hass_mode_to_melissa(HVAC_MODE_FAN_ONLY) == 1
+        assert thermostat.hass_mode_to_melissa(HVAC_MODE_HEAT) == 2
+        assert thermostat.hass_mode_to_melissa(HVAC_MODE_COOL) == 3
+        assert thermostat.hass_mode_to_melissa(HVAC_MODE_DRY) == 4
+        thermostat.hass_mode_to_melissa("test")
+        mocked_warning.assert_called_once_with(
+            "Melissa have no setting for %s mode", "test"
+        )
 
 
 async def test_hass_fan_to_melissa(hass):
     """Test for translate melissa states to hass."""
     with patch(
         "homeassistant.components.melissa.climate._LOGGER.warning"
-    ) as mocked_warning:
-        with patch("homeassistant.components.melissa"):
-            api = melissa_mock()
-            device = (await api.async_fetch_devices())[_SERIAL]
-            thermostat = MelissaClimate(api, _SERIAL, device)
-            assert thermostat.hass_fan_to_melissa("auto") == 0
-            assert thermostat.hass_fan_to_melissa(SPEED_LOW) == 1
-            assert thermostat.hass_fan_to_melissa(SPEED_MEDIUM) == 2
-            assert thermostat.hass_fan_to_melissa(SPEED_HIGH) == 3
-            thermostat.hass_fan_to_melissa("test")
-            mocked_warning.assert_called_once_with(
-                "Melissa have no setting for %s fan mode", "test"
-            )
+    ) as mocked_warning, patch("homeassistant.components.melissa"):
+        api = melissa_mock()
+        device = (await api.async_fetch_devices())[_SERIAL]
+        thermostat = MelissaClimate(api, _SERIAL, device)
+        assert thermostat.hass_fan_to_melissa("auto") == 0
+        assert thermostat.hass_fan_to_melissa(SPEED_LOW) == 1
+        assert thermostat.hass_fan_to_melissa(SPEED_MEDIUM) == 2
+        assert thermostat.hass_fan_to_melissa(SPEED_HIGH) == 3
+        thermostat.hass_fan_to_melissa("test")
+        mocked_warning.assert_called_once_with(
+            "Melissa have no setting for %s fan mode", "test"
+        )

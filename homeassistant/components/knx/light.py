@@ -1,7 +1,8 @@
 """Support for KNX/IP lights."""
 from __future__ import annotations
 
-from typing import Any, Callable, Iterable
+from collections.abc import Iterable
+from typing import Any, Callable
 
 from xknx.devices import Light as XknxLight
 
@@ -16,12 +17,9 @@ from homeassistant.components.light import (
     SUPPORT_WHITE_VALUE,
     LightEntity,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import (
-    ConfigType,
-    DiscoveryInfoType,
-    HomeAssistantType,
-)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.color as color_util
 
 from .const import DOMAIN
@@ -34,7 +32,7 @@ DEFAULT_WHITE_VALUE = 255
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: Callable[[Iterable[Entity]], None],
     discovery_info: DiscoveryInfoType | None = None,

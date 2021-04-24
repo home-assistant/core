@@ -9,7 +9,6 @@ from aiorecollect.errors import RecollectError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -55,10 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_method=async_get_pickup_events,
     )
 
-    await coordinator.async_refresh()
-
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
 
     hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id] = coordinator
 

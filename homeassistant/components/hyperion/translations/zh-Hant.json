@@ -45,6 +45,7 @@
         "step": {
             "init": {
                 "data": {
+                    "effect_show_list": "\u986f\u793a Hyperion \u6548\u61c9",
                     "priority": "Hyperion \u512a\u5148\u4f7f\u7528\u4e4b\u8272\u6eab\u8207\u7279\u6548"
                 }
             }

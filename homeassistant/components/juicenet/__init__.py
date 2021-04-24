@@ -89,7 +89,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         JUICENET_COORDINATOR: coordinator,
     }
 
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
     for platform in PLATFORMS:
         hass.async_create_task(

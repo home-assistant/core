@@ -1,6 +1,7 @@
 """Provide functionality to keep track of devices."""
 from homeassistant.const import ATTR_GPS_ACCURACY, STATE_HOME  # noqa: F401
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 from .config_entry import async_setup_entry, async_unload_entry  # noqa: F401
@@ -36,12 +37,12 @@ from .legacy import (  # noqa: F401
 
 
 @bind_hass
-def is_on(hass: HomeAssistantType, entity_id: str):
+def is_on(hass: HomeAssistant, entity_id: str):
     """Return the state if any or a specified device is home."""
     return hass.states.is_state(entity_id, STATE_HOME)
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType):
+async def async_setup(hass: HomeAssistant, config: ConfigType):
     """Set up the device tracker."""
     await async_setup_legacy_integration(hass, config)
 

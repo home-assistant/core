@@ -45,7 +45,10 @@ async def test_if_fires_on_change_bool(hass, calls):
                     "platform": "template",
                     "value_template": '{{ states.test.entity.state == "world" and true }}',
                 },
-                "action": {"service": "test.automation"},
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {"id": "{{ trigger.id}}"},
+                },
             }
         },
     )
@@ -66,6 +69,7 @@ async def test_if_fires_on_change_bool(hass, calls):
     hass.states.async_set("test.entity", "planet")
     await hass.async_block_till_done()
     assert len(calls) == 1
+    assert calls[0].data["id"] == 0
 
 
 async def test_if_fires_on_change_str(hass, calls):

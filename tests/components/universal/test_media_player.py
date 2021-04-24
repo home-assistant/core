@@ -944,7 +944,7 @@ async def test_master_state_with_template(hass):
     await hass.async_start()
 
     await hass.async_block_till_done()
-    hass.states.get("media_player.tv").state == STATE_ON
+    assert hass.states.get("media_player.tv").state == STATE_ON
 
     events = []
 
@@ -956,7 +956,7 @@ async def test_master_state_with_template(hass):
     hass.states.async_set("input_boolean.test", STATE_ON, context=context)
     await hass.async_block_till_done()
 
-    hass.states.get("media_player.tv").state == STATE_OFF
+    assert hass.states.get("media_player.tv").state == STATE_OFF
     assert events[0].context == context
 
 
@@ -987,12 +987,12 @@ async def test_reload(hass):
     await hass.async_start()
 
     await hass.async_block_till_done()
-    hass.states.get("media_player.tv").state == STATE_ON
+    assert hass.states.get("media_player.tv").state == STATE_ON
 
     hass.states.async_set("input_boolean.test", STATE_ON)
     await hass.async_block_till_done()
 
-    hass.states.get("media_player.tv").state == STATE_OFF
+    assert hass.states.get("media_player.tv").state == STATE_OFF
 
     hass.states.async_set("media_player.master_bedroom_2", STATE_OFF)
     hass.states.async_set(

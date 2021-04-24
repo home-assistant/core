@@ -1,4 +1,6 @@
 """The tests for Shelly device triggers."""
+from unittest.mock import AsyncMock, Mock
+
 import pytest
 
 from homeassistant import setup
@@ -6,10 +8,13 @@ from homeassistant.components import automation
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
+from homeassistant.components.shelly import ShellyDeviceWrapper
 from homeassistant.components.shelly.const import (
     ATTR_CHANNEL,
     ATTR_CLICK_TYPE,
+    COAP,
     CONF_SUBTYPE,
+    DATA_CONFIG_ENTRY,
     DOMAIN,
     EVENT_SHELLY_CLICK,
 )
@@ -42,6 +47,71 @@ async def test_get_triggers(hass, coap_wrapper):
             CONF_DOMAIN: DOMAIN,
             CONF_TYPE: "long",
             CONF_SUBTYPE: "button1",
+        },
+    ]
+
+    triggers = await async_get_device_automations(
+        hass, "trigger", coap_wrapper.device_id
+    )
+
+    assert_lists_same(triggers, expected_triggers)
+
+
+async def test_get_triggers_button(hass):
+    """Test we get the expected triggers from a shelly button."""
+    await async_setup_component(hass, "shelly", {})
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"sleep_period": 43200, "model": "SHBTN-1"},
+        unique_id="12345678",
+    )
+    config_entry.add_to_hass(hass)
+
+    device = Mock(
+        blocks=None,
+        settings=None,
+        shelly=None,
+        update=AsyncMock(),
+        initialized=False,
+    )
+
+    hass.data[DOMAIN] = {DATA_CONFIG_ENTRY: {}}
+    hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id] = {}
+    coap_wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][
+        COAP
+    ] = ShellyDeviceWrapper(hass, config_entry, device)
+
+    await coap_wrapper.async_setup()
+
+    expected_triggers = [
+        {
+            CONF_PLATFORM: "device",
+            CONF_DEVICE_ID: coap_wrapper.device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_TYPE: "single",
+            CONF_SUBTYPE: "button",
+        },
+        {
+            CONF_PLATFORM: "device",
+            CONF_DEVICE_ID: coap_wrapper.device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_TYPE: "double",
+            CONF_SUBTYPE: "button",
+        },
+        {
+            CONF_PLATFORM: "device",
+            CONF_DEVICE_ID: coap_wrapper.device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_TYPE: "triple",
+            CONF_SUBTYPE: "button",
+        },
+        {
+            CONF_PLATFORM: "device",
+            CONF_DEVICE_ID: coap_wrapper.device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_TYPE: "long",
+            CONF_SUBTYPE: "button",
         },
     ]
 

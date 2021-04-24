@@ -55,7 +55,7 @@
                     "entities": "Entit\u00e0",
                     "mode": "Modalit\u00e0"
                 },
-                "description": "Scegliere le entit\u00e0 da includere. In modalit\u00e0 accessorio, \u00e8 inclusa una sola entit\u00e0. In modalit\u00e0 di inclusione bridge, tutte le entit\u00e0 nel dominio saranno incluse, a meno che non siano selezionate entit\u00e0 specifiche. In modalit\u00e0 di esclusione bridge, tutte le entit\u00e0 nel dominio saranno incluse, ad eccezione delle entit\u00e0 escluse. Per prestazioni ottimali, ci sar\u00e0 una HomeKit separata in modalit\u00e0 accessorio per ogni lettore multimediale, TV e videocamera.",
+                "description": "Scegliere le entit\u00e0 da includere. In modalit\u00e0 accessorio, \u00e8 inclusa una sola entit\u00e0. In modalit\u00e0 di inclusione bridge, tutte le entit\u00e0 nel dominio saranno incluse, a meno che non siano selezionate entit\u00e0 specifiche. In modalit\u00e0 di esclusione bridge, tutte le entit\u00e0 nel dominio saranno incluse, ad eccezione delle entit\u00e0 escluse. Per prestazioni ottimali, sar\u00e0 creata una HomeKit separata accessoria per ogni lettore multimediale TV, telecomando basato sulle attivit\u00e0, serratura e videocamera.",
                 "title": "Seleziona le entit\u00e0 da includere"
             },
             "init": {

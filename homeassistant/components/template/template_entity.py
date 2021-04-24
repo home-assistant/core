@@ -211,6 +211,8 @@ class TemplateEntity(Entity):
             if the template or validator resulted in an error.
 
         """
+        assert self.hass is not None, "hass cannot be None"
+        template.hass = self.hass
         attribute = _TemplateAttribute(
             self, attribute, template, validator, on_update, none_on_template_error
         )

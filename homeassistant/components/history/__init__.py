@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Iterable
 from datetime import datetime as dt, timedelta
 from itertools import groupby
 import json
 import logging
 import time
-from typing import Iterable, cast
+from typing import cast
 
 from aiohttp import web
 from sqlalchemy import and_, bindparam, func, not_, or_
@@ -29,13 +30,12 @@ from homeassistant.const import (
     CONF_INCLUDE,
     HTTP_BAD_REQUEST,
 )
-from homeassistant.core import Context, State, split_entity_id
+from homeassistant.core import Context, HomeAssistant, State, split_entity_id
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
     CONF_ENTITY_GLOBS,
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
 )
-from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.dt as dt_util
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -673,7 +673,7 @@ def _glob_to_like(glob_str):
 
 
 def _entities_may_have_state_changes_after(
-    hass: HomeAssistantType, entity_ids: Iterable, start_time: dt
+    hass: HomeAssistant, entity_ids: Iterable, start_time: dt
 ) -> bool:
     """Check the state machine to see if entities have changed since start time."""
     for entity_id in entity_ids:
@@ -716,7 +716,7 @@ class LazyState(State):
                 self._attributes = json.loads(self._row.attributes)
             except ValueError:
                 # When json.loads fails
-                _LOGGER.exception("Error converting row to state: %s", self)
+                _LOGGER.exception("Error converting row to state: %s", self._row)
                 self._attributes = {}
         return self._attributes
 

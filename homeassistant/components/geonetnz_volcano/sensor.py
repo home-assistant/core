@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
@@ -12,7 +13,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
@@ -54,7 +54,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     _LOGGER.debug("Sensor setup done")
 
 
-class GeonetnzVolcanoSensor(Entity):
+class GeonetnzVolcanoSensor(SensorEntity):
     """This represents an external event with GeoNet NZ Volcano feed data."""
 
     def __init__(self, config_entry_id, feed_manager, external_id, unit_system):

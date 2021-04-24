@@ -8,8 +8,7 @@ from homeassistant import config_entries, core
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TIMEOUT
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import ACTIVE_UPDATE_RATE, DEFAULT_TIMEOUT, SENSE_TIMEOUT_EXCEPTIONS
-from .const import DOMAIN  # pylint:disable=unused-import; pylint:disable=unused-import
+from .const import ACTIVE_UPDATE_RATE, DEFAULT_TIMEOUT, DOMAIN, SENSE_TIMEOUT_EXCEPTIONS
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -9,10 +9,11 @@ from __future__ import annotations
 
 from abc import ABC, ABCMeta, abstractmethod
 import asyncio
+from collections.abc import Awaitable
 import logging
 import secrets
 import time
-from typing import Any, Awaitable, Callable, Dict, cast
+from typing import Any, Callable, Dict, cast
 
 from aiohttp import client, web
 import async_timeout
@@ -23,6 +24,7 @@ from yarl import URL
 from homeassistant import config_entries
 from homeassistant.components import http
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultDict
 from homeassistant.helpers.network import NoURLAvailableError
 
 from .aiohttp_client import async_get_clientsession
@@ -234,7 +236,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
 
     async def async_step_pick_implementation(
         self, user_input: dict | None = None
-    ) -> dict:
+    ) -> FlowResultDict:
         """Handle a flow start."""
         implementations = await async_get_implementations(self.hass, self.DOMAIN)
 
@@ -245,8 +247,10 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         if not implementations:
             return self.async_abort(reason="missing_configuration")
 
-        if len(implementations) == 1:
-            # Pick first implementation as we have only one.
+        req = http.current_request.get()
+        if len(implementations) == 1 and req is not None:
+            # Pick first implementation if we have only one, but only
+            # if this is triggered by a user interaction (request).
             self.flow_impl = list(implementations.values())[0]
             return await self.async_step_auth()
 
@@ -263,7 +267,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
 
     async def async_step_auth(
         self, user_input: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResultDict:
         """Create an entry for auth."""
         # Flow has been triggered by external data
         if user_input:
@@ -289,7 +293,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
 
     async def async_step_creation(
         self, user_input: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResultDict:
         """Create config entry from external data."""
         token = await self.flow_impl.async_resolve_external_data(self.external_data)
         # Force int for non-compliant oauth2 providers
@@ -306,30 +310,14 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
             {"auth_implementation": self.flow_impl.domain, "token": token}
         )
 
-    async def async_oauth_create_entry(self, data: dict) -> dict:
+    async def async_oauth_create_entry(self, data: dict) -> FlowResultDict:
         """Create an entry for the flow.
 
         Ok to override if you want to fetch extra info or even add another step.
         """
         return self.async_create_entry(title=self.flow_impl.name, data=data)
 
-    async def async_step_discovery(
-        self, discovery_info: dict[str, Any]
-    ) -> dict[str, Any]:
-        """Handle a flow initialized by discovery."""
-        await self.async_set_unique_id(self.DOMAIN)
-
-        if self.hass.config_entries.async_entries(self.DOMAIN):
-            return self.async_abort(reason="already_configured")
-
-        return await self.async_step_pick_implementation()
-
     async_step_user = async_step_pick_implementation
-    async_step_mqtt = async_step_discovery
-    async_step_ssdp = async_step_discovery
-    async_step_zeroconf = async_step_discovery
-    async_step_homekit = async_step_discovery
-    async_step_dhcp = async_step_discovery
 
     @classmethod
     def async_register_implementation(

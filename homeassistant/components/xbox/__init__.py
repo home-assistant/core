@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -28,7 +29,6 @@ from homeassistant.helpers import (
     config_entry_oauth2_flow,
     config_validation as cv,
 )
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import api, config_flow
@@ -94,7 +94,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
 
     coordinator = XboxUpdateCoordinator(hass, client, consoles)
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
     hass.data[DOMAIN][entry.entry_id] = {
         "client": XboxLiveClient(auth),
@@ -167,7 +167,7 @@ class XboxUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(
         self,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         client: XboxLiveClient,
         consoles: SmartglassConsoleList,
     ) -> None:
@@ -248,12 +248,10 @@ class XboxUpdateCoordinator(DataUpdateCoordinator):
 def _build_presence_data(person: Person) -> PresenceData:
     """Build presence data from a person."""
     active_app: PresenceDetail | None = None
-    try:
+    with suppress(StopIteration):
         active_app = next(
             presence for presence in person.presence_details if presence.is_primary
         )
-    except StopIteration:
-        pass
 
     return PresenceData(
         xuid=person.xuid,

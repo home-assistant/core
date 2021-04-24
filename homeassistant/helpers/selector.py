@@ -70,9 +70,7 @@ class DeviceSelector(Selector):
             # Model of device
             vol.Optional("model"): str,
             # Device has to contain entities matching this selector
-            vol.Optional(
-                "entity"
-            ): EntitySelector.CONFIG_SCHEMA,  # pylint: disable=no-member
+            vol.Optional("entity"): EntitySelector.CONFIG_SCHEMA,
         }
     )
 

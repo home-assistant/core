@@ -16,8 +16,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 
 from .base import FritzBoxPhonebook
-
-# pylint:disable=unused-import
 from .const import (
     CONF_PHONEBOOK,
     CONF_PREFIXES,

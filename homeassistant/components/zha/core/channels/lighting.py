@@ -1,7 +1,8 @@
 """Lighting channels module for Zigbee Home Automation."""
 from __future__ import annotations
 
-from typing import Coroutine
+from collections.abc import Coroutine
+from contextlib import suppress
 
 import zigpy.zcl.clusters.lighting as lighting
 
@@ -39,10 +40,8 @@ class ColorChannel(ZigbeeChannel):
     @property
     def color_capabilities(self) -> int:
         """Return color capabilities of the light."""
-        try:
+        with suppress(KeyError):
             return self.cluster["color_capabilities"]
-        except KeyError:
-            pass
         if self.cluster.get("color_temperature") is not None:
             return self.CAPABILITIES_COLOR_XY | self.CAPABILITIES_COLOR_TEMP
         return self.CAPABILITIES_COLOR_XY

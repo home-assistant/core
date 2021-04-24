@@ -4,5 +4,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/wolflink",
   "requirements": ["wolf_smartset==0.1.8"],
-  "codeowners": ["@adamkrol93"]
+  "codeowners": ["@adamkrol93"],
+  "iot_class": "cloud_polling"
 }

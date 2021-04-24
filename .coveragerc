@@ -145,7 +145,6 @@ omit =
     homeassistant/components/clickatell/notify.py
     homeassistant/components/clicksend/notify.py
     homeassistant/components/clicksend_tts/notify.py
-    homeassistant/components/climacell/weather.py
     homeassistant/components/cmus/media_player.py
     homeassistant/components/co2signal/*
     homeassistant/components/coinbase/*
@@ -174,6 +173,7 @@ omit =
     homeassistant/components/deluge/sensor.py
     homeassistant/components/deluge/switch.py
     homeassistant/components/denon/media_player.py
+    homeassistant/components/denonavr/__init__.py
     homeassistant/components/denonavr/media_player.py
     homeassistant/components/denonavr/receiver.py
     homeassistant/components/deutsche_bahn/sensor.py
@@ -221,6 +221,7 @@ omit =
     homeassistant/components/ecobee/weather.py
     homeassistant/components/econet/__init__.py
     homeassistant/components/econet/binary_sensor.py
+    homeassistant/components/econet/climate.py
     homeassistant/components/econet/const.py
     homeassistant/components/econet/sensor.py
     homeassistant/components/econet/water_heater.py
@@ -236,6 +237,8 @@ omit =
     homeassistant/components/emby/media_player.py
     homeassistant/components/emoncms/sensor.py
     homeassistant/components/emoncms_history/*
+    homeassistant/components/emonitor/__init__.py
+    homeassistant/components/emonitor/sensor.py
     homeassistant/components/enigma2/media_player.py
     homeassistant/components/enocean/__init__.py
     homeassistant/components/enocean/binary_sensor.py
@@ -245,12 +248,14 @@ omit =
     homeassistant/components/enocean/light.py
     homeassistant/components/enocean/sensor.py
     homeassistant/components/enocean/switch.py
+    homeassistant/components/enphase_envoy/__init__.py
     homeassistant/components/enphase_envoy/sensor.py
     homeassistant/components/entur_public_transport/*
     homeassistant/components/environment_canada/*
     homeassistant/components/envirophat/sensor.py
     homeassistant/components/envisalink/*
     homeassistant/components/ephember/climate.py
+    homeassistant/components/epson/__init__.py
     homeassistant/components/epson/const.py
     homeassistant/components/epson/media_player.py
     homeassistant/components/epsonworkforce/sensor.py
@@ -270,7 +275,13 @@ omit =
     homeassistant/components/eufy/*
     homeassistant/components/everlights/light.py
     homeassistant/components/evohome/*
-    homeassistant/components/ezviz/*
+    homeassistant/components/ezviz/__init__.py
+    homeassistant/components/ezviz/camera.py
+    homeassistant/components/ezviz/coordinator.py
+    homeassistant/components/ezviz/const.py
+    homeassistant/components/ezviz/binary_sensor.py
+    homeassistant/components/ezviz/sensor.py
+    homeassistant/components/ezviz/switch.py
     homeassistant/components/familyhub/camera.py
     homeassistant/components/faa_delays/__init__.py
     homeassistant/components/faa_delays/binary_sensor.py
@@ -334,7 +345,6 @@ omit =
     homeassistant/components/garmin_connect/alarm_util.py
     homeassistant/components/gc100/*
     homeassistant/components/geniushub/*
-    homeassistant/components/geizhals/sensor.py
     homeassistant/components/github/sensor.py
     homeassistant/components/gitlab_ci/sensor.py
     homeassistant/components/gitter/sensor.py
@@ -348,6 +358,8 @@ omit =
     homeassistant/components/google/*
     homeassistant/components/google_cloud/tts.py
     homeassistant/components/google_maps/device_tracker.py
+    homeassistant/components/google_travel_time/__init__.py
+    homeassistant/components/google_travel_time/helpers.py
     homeassistant/components/google_travel_time/sensor.py
     homeassistant/components/gpmdp/media_player.py
     homeassistant/components/gpsd/sensor.py
@@ -401,6 +413,9 @@ omit =
     homeassistant/components/homematic/climate.py
     homeassistant/components/homematic/cover.py
     homeassistant/components/homematic/notify.py
+    homeassistant/components/home_plus_control/api.py
+    homeassistant/components/home_plus_control/helpers.py
+    homeassistant/components/home_plus_control/switch.py
     homeassistant/components/homeworks/*
     homeassistant/components/honeywell/climate.py
     homeassistant/components/horizon/media_player.py
@@ -418,6 +433,7 @@ omit =
     homeassistant/components/hvv_departures/sensor.py
     homeassistant/components/hvv_departures/__init__.py
     homeassistant/components/hydrawise/*
+    homeassistant/components/ialarm/alarm_control_panel.py
     homeassistant/components/iammeter/sensor.py
     homeassistant/components/iaqualink/binary_sensor.py
     homeassistant/components/iaqualink/climate.py
@@ -499,6 +515,10 @@ omit =
     homeassistant/components/kodi/media_player.py
     homeassistant/components/kodi/notify.py
     homeassistant/components/konnected/*
+    homeassistant/components/kostal_plenticore/__init__.py
+    homeassistant/components/kostal_plenticore/const.py
+    homeassistant/components/kostal_plenticore/helper.py
+    homeassistant/components/kostal_plenticore/sensor.py
     homeassistant/components/kwb/sensor.py
     homeassistant/components/lacrosse/sensor.py
     homeassistant/components/lametric/*
@@ -560,7 +580,6 @@ omit =
     homeassistant/components/map/*
     homeassistant/components/mastodon/notify.py
     homeassistant/components/matrix/*
-    homeassistant/components/maxcube/*
     homeassistant/components/mcp23017/*
     homeassistant/components/media_extractor/*
     homeassistant/components/mediaroom/media_player.py
@@ -571,6 +590,8 @@ omit =
     homeassistant/components/melcloud/water_heater.py
     homeassistant/components/message_bird/notify.py
     homeassistant/components/met/weather.py
+    homeassistant/components/met_eireann/__init__.py
+    homeassistant/components/met_eireann/weather.py
     homeassistant/components/meteo_france/__init__.py
     homeassistant/components/meteo_france/const.py
     homeassistant/components/meteo_france/sensor.py
@@ -596,9 +617,7 @@ omit =
     homeassistant/components/mochad/*
     homeassistant/components/modbus/climate.py
     homeassistant/components/modbus/cover.py
-    homeassistant/components/modbus/modbus.py
     homeassistant/components/modbus/switch.py
-    homeassistant/components/modbus/sensor.py
     homeassistant/components/modem_callerid/sensor.py
     homeassistant/components/motion_blinds/__init__.py
     homeassistant/components/motion_blinds/const.py
@@ -644,11 +663,6 @@ omit =
     homeassistant/components/nederlandse_spoorwegen/sensor.py
     homeassistant/components/nello/lock.py
     homeassistant/components/nest/legacy/*
-    homeassistant/components/netatmo/__init__.py
-    homeassistant/components/netatmo/data_handler.py
-    homeassistant/components/netatmo/helper.py
-    homeassistant/components/netatmo/netatmo_entity_base.py
-    homeassistant/components/netatmo/sensor.py
     homeassistant/components/netdata/sensor.py
     homeassistant/components/netgear/device_tracker.py
     homeassistant/components/netgear_lte/*
@@ -670,6 +684,7 @@ omit =
     homeassistant/components/nsw_fuel_station/sensor.py
     homeassistant/components/nuki/__init__.py
     homeassistant/components/nuki/const.py
+    homeassistant/components/nuki/binary_sensor.py
     homeassistant/components/nuki/lock.py
     homeassistant/components/nut/sensor.py
     homeassistant/components/nx584/alarm_control_panel.py
@@ -744,6 +759,7 @@ omit =
     homeassistant/components/picotts/tts.py
     homeassistant/components/piglow/light.py
     homeassistant/components/pilight/*
+    homeassistant/components/ping/__init__.py
     homeassistant/components/ping/const.py
     homeassistant/components/ping/binary_sensor.py
     homeassistant/components/ping/device_tracker.py
@@ -761,6 +777,7 @@ omit =
     homeassistant/components/poolsense/__init__.py
     homeassistant/components/poolsense/sensor.py
     homeassistant/components/poolsense/binary_sensor.py
+    homeassistant/components/powerwall/__init__.py
     homeassistant/components/proliphix/climate.py
     homeassistant/components/progettihwsw/__init__.py
     homeassistant/components/progettihwsw/binary_sensor.py
@@ -809,9 +826,13 @@ omit =
     homeassistant/components/rest/switch.py
     homeassistant/components/ring/camera.py
     homeassistant/components/ripple/sensor.py
+    homeassistant/components/rituals_perfume_genie/binary_sensor.py
+    homeassistant/components/rituals_perfume_genie/entity.py
+    homeassistant/components/rituals_perfume_genie/sensor.py
     homeassistant/components/rituals_perfume_genie/switch.py
     homeassistant/components/rituals_perfume_genie/__init__.py
     homeassistant/components/rocketchat/notify.py
+    homeassistant/components/roomba/__init__.py
     homeassistant/components/roomba/binary_sensor.py
     homeassistant/components/roomba/braava.py
     homeassistant/components/roomba/irobot_base.py
@@ -841,9 +862,10 @@ omit =
     homeassistant/components/scrape/sensor.py
     homeassistant/components/screenlogic/__init__.py
     homeassistant/components/screenlogic/binary_sensor.py
+    homeassistant/components/screenlogic/climate.py
     homeassistant/components/screenlogic/sensor.py
+    homeassistant/components/screenlogic/services.py
     homeassistant/components/screenlogic/switch.py
-    homeassistant/components/screenlogic/water_heater.py
     homeassistant/components/scsgate/*
     homeassistant/components/scsgate/cover.py
     homeassistant/components/sendgrid/notify.py
@@ -880,6 +902,7 @@ omit =
     homeassistant/components/slack/notify.py
     homeassistant/components/sinch/*
     homeassistant/components/slide/*
+    homeassistant/components/sma/__init__.py
     homeassistant/components/sma/sensor.py
     homeassistant/components/smappee/__init__.py
     homeassistant/components/smappee/api.py
@@ -895,7 +918,6 @@ omit =
     homeassistant/components/snapcast/*
     homeassistant/components/snmp/*
     homeassistant/components/sochain/sensor.py
-    homeassistant/components/socialblade/sensor.py
     homeassistant/components/solaredge/__init__.py
     homeassistant/components/solaredge/sensor.py
     homeassistant/components/solaredge_local/sensor.py
@@ -1099,6 +1121,8 @@ omit =
     homeassistant/components/waterfurnace/*
     homeassistant/components/watson_iot/*
     homeassistant/components/watson_tts/tts.py
+    homeassistant/components/waze_travel_time/__init__.py
+    homeassistant/components/waze_travel_time/helpers.py
     homeassistant/components/waze_travel_time/sensor.py
     homeassistant/components/webostv/*
     homeassistant/components/whois/sensor.py

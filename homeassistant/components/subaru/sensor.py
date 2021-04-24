@@ -1,10 +1,12 @@
 """Support for Subaru sensors."""
 import subarulink.const as sc
 
-from homeassistant.components.sensor import DEVICE_CLASSES
+from homeassistant.components.sensor import DEVICE_CLASSES, SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_TIMESTAMP,
     DEVICE_CLASS_VOLTAGE,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
@@ -30,6 +32,7 @@ from .const import (
     DOMAIN,
     ENTRY_COORDINATOR,
     ENTRY_VEHICLES,
+    ICONS,
     VEHICLE_API_GEN,
     VEHICLE_HAS_EV,
     VEHICLE_HAS_SAFETY_SERVICE,
@@ -76,25 +79,25 @@ API_GEN_2_SENSORS = [
     },
     {
         SENSOR_TYPE: "Tire Pressure FL",
-        SENSOR_CLASS: None,
+        SENSOR_CLASS: DEVICE_CLASS_PRESSURE,
         SENSOR_FIELD: sc.TIRE_PRESSURE_FL,
         SENSOR_UNITS: PRESSURE_HPA,
     },
     {
         SENSOR_TYPE: "Tire Pressure FR",
-        SENSOR_CLASS: None,
+        SENSOR_CLASS: DEVICE_CLASS_PRESSURE,
         SENSOR_FIELD: sc.TIRE_PRESSURE_FR,
         SENSOR_UNITS: PRESSURE_HPA,
     },
     {
         SENSOR_TYPE: "Tire Pressure RL",
-        SENSOR_CLASS: None,
+        SENSOR_CLASS: DEVICE_CLASS_PRESSURE,
         SENSOR_FIELD: sc.TIRE_PRESSURE_RL,
         SENSOR_UNITS: PRESSURE_HPA,
     },
     {
         SENSOR_TYPE: "Tire Pressure RR",
-        SENSOR_CLASS: None,
+        SENSOR_CLASS: DEVICE_CLASS_PRESSURE,
         SENSOR_FIELD: sc.TIRE_PRESSURE_RR,
         SENSOR_UNITS: PRESSURE_HPA,
     },
@@ -128,7 +131,7 @@ EV_SENSORS = [
     },
     {
         SENSOR_TYPE: "EV Time to Full Charge",
-        SENSOR_CLASS: None,
+        SENSOR_CLASS: DEVICE_CLASS_TIMESTAMP,
         SENSOR_FIELD: sc.EV_TIME_TO_FULLY_CHARGED,
         SENSOR_UNITS: TIME_MINUTES,
     },
@@ -140,7 +143,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     coordinator = hass.data[DOMAIN][config_entry.entry_id][ENTRY_COORDINATOR]
     vehicle_info = hass.data[DOMAIN][config_entry.entry_id][ENTRY_VEHICLES]
     entities = []
-    for vin in vehicle_info.keys():
+    for vin in vehicle_info:
         entities.extend(create_vehicle_sensors(vehicle_info[vin], coordinator))
     async_add_entities(entities, True)
 
@@ -170,7 +173,7 @@ def create_vehicle_sensors(vehicle_info, coordinator):
     ]
 
 
-class SubaruSensor(SubaruEntity):
+class SubaruSensor(SubaruEntity, SensorEntity):
     """Class for Subaru sensors."""
 
     def __init__(
@@ -190,7 +193,14 @@ class SubaruSensor(SubaruEntity):
         """Return the class of this device, from component DEVICE_CLASSES."""
         if self.sensor_class in DEVICE_CLASSES:
             return self.sensor_class
-        return super().device_class
+        return None
+
+    @property
+    def icon(self):
+        """Return the icon of the sensor."""
+        if not self.device_class:
+            return ICONS.get(self.entity_type)
+        return None
 
     @property
     def state(self):
@@ -210,16 +220,20 @@ class SubaruSensor(SubaruEntity):
                 self.hass.config.units.length(self.current_value, self.api_unit), 1
             )
 
-        if self.api_unit in PRESSURE_UNITS:
-            if self.hass.config.units == IMPERIAL_SYSTEM:
-                return round(
-                    self.hass.config.units.pressure(self.current_value, self.api_unit),
-                    1,
-                )
+        if (
+            self.api_unit in PRESSURE_UNITS
+            and self.hass.config.units == IMPERIAL_SYSTEM
+        ):
+            return round(
+                self.hass.config.units.pressure(self.current_value, self.api_unit),
+                1,
+            )
 
-        if self.api_unit in FUEL_CONSUMPTION_UNITS:
-            if self.hass.config.units == IMPERIAL_SYSTEM:
-                return round((100.0 * L_PER_GAL) / (KM_PER_MI * self.current_value), 1)
+        if (
+            self.api_unit in FUEL_CONSUMPTION_UNITS
+            and self.hass.config.units == IMPERIAL_SYSTEM
+        ):
+            return round((100.0 * L_PER_GAL) / (KM_PER_MI * self.current_value), 1)
 
         return self.current_value
 

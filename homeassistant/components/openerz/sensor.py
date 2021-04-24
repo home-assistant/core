@@ -4,9 +4,9 @@ from datetime import timedelta
 from openerz_api.main import OpenERZConnector
 import voluptuous as vol
 
+from homeassistant.components.sensor import SensorEntity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
-from homeassistant.helpers.entity import Entity
 
 SCAN_INTERVAL = timedelta(hours=12)
 
@@ -29,7 +29,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([OpenERZSensor(api_connector, config.get(CONF_NAME))], True)
 
 
-class OpenERZSensor(Entity):
+class OpenERZSensor(SensorEntity):
     """Representation of a Sensor."""
 
     def __init__(self, api_connector, name):

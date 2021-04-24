@@ -7,6 +7,7 @@ import logging
 from typing import Any
 
 import voluptuous as vol
+from zigpy.config.validators import cv_boolean
 from zigpy.types.named import EUI64
 import zigpy.zdo.types as zdo_types
 
@@ -40,6 +41,7 @@ from .core.const import (
     CLUSTER_COMMANDS_SERVER,
     CLUSTER_TYPE_IN,
     CLUSTER_TYPE_OUT,
+    CUSTOM_CONFIGURATION,
     DATA_ZHA,
     DATA_ZHA_GATEWAY,
     DOMAIN,
@@ -52,6 +54,7 @@ from .core.const import (
     WARNING_DEVICE_SQUAWK_MODE_ARMED,
     WARNING_DEVICE_STROBE_HIGH,
     WARNING_DEVICE_STROBE_YES,
+    ZHA_CONFIG_SCHEMAS,
 )
 from .core.group import GroupMember
 from .core.helpers import (
@@ -60,6 +63,7 @@ from .core.helpers import (
     get_matched_clusters,
     qr_to_install_code,
 )
+from .core.typing import ZhaDeviceType, ZhaGatewayType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -461,9 +465,38 @@ async def websocket_remove_group_members(hass, connection, msg):
 )
 async def websocket_reconfigure_node(hass, connection, msg):
     """Reconfigure a ZHA nodes entities by its ieee address."""
-    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    zha_gateway: ZhaGatewayType = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     ieee = msg[ATTR_IEEE]
-    device = zha_gateway.get_device(ieee)
+    device: ZhaDeviceType = zha_gateway.get_device(ieee)
+    ieee_str = str(device.ieee)
+    nwk_str = device.nwk.__repr__()
+
+    class DeviceLogFilterer(logging.Filter):
+        """Log filterer that limits messages to the specified device."""
+
+        def filter(self, record):
+            message = record.getMessage()
+            return nwk_str in message or ieee_str in message
+
+    filterer = DeviceLogFilterer()
+
+    async def forward_messages(data):
+        """Forward events to websocket."""
+        connection.send_message(websocket_api.event_message(msg["id"], data))
+
+    remove_dispatcher_function = async_dispatcher_connect(
+        hass, "zha_gateway_message", forward_messages
+    )
+
+    @callback
+    def async_cleanup() -> None:
+        """Remove signal listener and turn off debug mode."""
+        zha_gateway.async_disable_debug_mode(filterer=filterer)
+        remove_dispatcher_function()
+
+    connection.subscriptions[msg["id"]] = async_cleanup
+    zha_gateway.async_enable_debug_mode(filterer=filterer)
+
     _LOGGER.debug("Reconfiguring node with ieee_address: %s", ieee)
     hass.async_create_task(device.async_configure())
 
@@ -852,6 +885,63 @@ async def async_binding_operation(zha_gateway, source_ieee, target_ieee, operati
         zdo.debug(fmt, *(log_msg[2] + (outcome,)))
 
 
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command({vol.Required(TYPE): "zha/configuration"})
+async def websocket_get_configuration(hass, connection, msg):
+    """Get ZHA configuration."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    import voluptuous_serialize  # pylint: disable=import-outside-toplevel
+
+    def custom_serializer(schema: Any) -> Any:
+        """Serialize additional types for voluptuous_serialize."""
+        if schema is cv_boolean:
+            return {"type": "bool"}
+        if schema is vol.Schema:
+            return voluptuous_serialize.convert(
+                schema, custom_serializer=custom_serializer
+            )
+
+        return cv.custom_serializer(schema)
+
+    data = {"schemas": {}, "data": {}}
+    for section, schema in ZHA_CONFIG_SCHEMAS.items():
+        data["schemas"][section] = voluptuous_serialize.convert(
+            schema, custom_serializer=custom_serializer
+        )
+        data["data"][section] = zha_gateway.config_entry.options.get(
+            CUSTOM_CONFIGURATION, {}
+        ).get(section, {})
+    connection.send_result(msg[ID], data)
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zha/configuration/update",
+        vol.Required("data"): ZHA_CONFIG_SCHEMAS,
+    }
+)
+async def websocket_update_zha_configuration(hass, connection, msg):
+    """Update the ZHA configuration."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    options = zha_gateway.config_entry.options
+    data_to_save = {**options, **{CUSTOM_CONFIGURATION: msg["data"]}}
+
+    _LOGGER.info(
+        "Updating ZHA custom configuration options from %s to %s",
+        options,
+        data_to_save,
+    )
+
+    hass.config_entries.async_update_entry(
+        zha_gateway.config_entry, options=data_to_save
+    )
+    status = await hass.config_entries.async_reload(zha_gateway.config_entry.entry_id)
+    connection.send_result(msg[ID], status)
+
+
 @callback
 def async_load_api(hass):
     """Set up the web socket API."""
@@ -892,9 +982,12 @@ def async_load_api(hass):
     async def remove(service):
         """Remove a node from the network."""
         ieee = service.data[ATTR_IEEE]
-        zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
-        zha_device = zha_gateway.get_device(ieee)
-        if zha_device is not None and zha_device.is_coordinator:
+        zha_gateway: ZhaGatewayType = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+        zha_device: ZhaDeviceType = zha_gateway.get_device(ieee)
+        if zha_device is not None and (
+            zha_device.is_coordinator
+            and zha_device.ieee == zha_gateway.application_controller.ieee
+        ):
             _LOGGER.info("Removing the coordinator (%s) is not allowed", ieee)
             return
         _LOGGER.info("Removing node %s", ieee)
@@ -1156,6 +1249,8 @@ def async_load_api(hass):
     websocket_api.async_register_command(hass, websocket_bind_devices)
     websocket_api.async_register_command(hass, websocket_unbind_devices)
     websocket_api.async_register_command(hass, websocket_update_topology)
+    websocket_api.async_register_command(hass, websocket_get_configuration)
+    websocket_api.async_register_command(hass, websocket_update_zha_configuration)
 
 
 @callback

@@ -14,8 +14,8 @@
         "flow_title": "deCONZ Zigbee gateway ({host})",
         "step": {
             "hassio_confirm": {
-                "description": "Do you want to configure Home Assistant to connect to the deCONZ gateway provided by the Hass.io add-on {addon}?",
-                "title": "deCONZ Zigbee gateway via Hass.io add-on"
+                "description": "Do you want to configure Home Assistant to connect to the deCONZ gateway provided by the add-on {addon}?",
+                "title": "deCONZ Zigbee gateway via Home Assistant add-on"
             },
             "link": {
                 "description": "Unlock your deCONZ gateway to register with Home Assistant.\n\n1. Go to deCONZ Settings -> Gateway -> Advanced\n2. Press \"Authenticate app\" button",
@@ -42,6 +42,10 @@
             "button_2": "Second button",
             "button_3": "Third button",
             "button_4": "Fourth button",
+            "button_5": "Fifth button",
+            "button_6": "Sixth button",
+            "button_7": "Seventh button",
+            "button_8": "Eighth button",
             "close": "Close",
             "dim_down": "Dim down",
             "dim_up": "Dim up",

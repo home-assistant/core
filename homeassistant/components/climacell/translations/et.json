@@ -4,12 +4,13 @@
             "cannot_connect": "\u00dchendamine nurjus",
             "invalid_api_key": "Vale API v\u00f5ti",
             "rate_limited": "Hetkel on p\u00e4ringud piiratud, proovi hiljem uuesti.",
-            "unknown": "Tundmatu t\u00f5rge"
+            "unknown": "Ootamatu t\u00f5rge"
         },
         "step": {
             "user": {
                 "data": {
                     "api_key": "API v\u00f5ti",
+                    "api_version": "API versioon",
                     "latitude": "Laiuskraad",
                     "longitude": "Pikkuskraad",
                     "name": "Nimi"

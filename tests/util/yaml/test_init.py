@@ -65,9 +65,8 @@ def test_environment_variable_default():
 def test_invalid_environment_variable():
     """Test config file with no environment variable sat."""
     conf = "password: !env_var PASSWORD"
-    with pytest.raises(HomeAssistantError):
-        with io.StringIO(conf) as file:
-            yaml_loader.yaml.load(file, Loader=yaml_loader.SafeLineLoader)
+    with pytest.raises(HomeAssistantError), io.StringIO(conf) as file:
+        yaml_loader.yaml.load(file, Loader=yaml_loader.SafeLineLoader)
 
 
 def test_include_yaml():

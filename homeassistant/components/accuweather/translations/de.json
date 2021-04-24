@@ -5,7 +5,8 @@
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
-            "invalid_api_key": "Ung\u00fcltiger API-Schl\u00fcssel"
+            "invalid_api_key": "Ung\u00fcltiger API-Schl\u00fcssel",
+            "requests_exceeded": "Die zul\u00e4ssige Anzahl von Anforderungen an die Accuweather-API wurde \u00fcberschritten. Sie m\u00fcssen warten oder den API-Schl\u00fcssel \u00e4ndern."
         },
         "step": {
             "user": {
@@ -15,6 +16,7 @@
                     "longitude": "L\u00e4ngengrad",
                     "name": "Name"
                 },
+                "description": "Wenn du Hilfe bei der Konfiguration ben\u00f6tigst, schaue hier nach: https://www.home-assistant.io/integrations/accuweather/\n\nEinige Sensoren sind standardm\u00e4\u00dfig nicht aktiviert. Du kannst sie in der Entit\u00e4tsregister nach der Integrationskonfiguration aktivieren.\nDie Wettervorhersage ist nicht standardm\u00e4\u00dfig aktiviert. Du kannst sie in den Integrationsoptionen aktivieren.",
                 "title": "AccuWeather"
             }
         }
@@ -24,7 +26,9 @@
             "user": {
                 "data": {
                     "forecast": "Wettervorhersage"
-                }
+                },
+                "description": "Aufgrund der Einschr\u00e4nkungen der kostenlosen Version des AccuWeather-API-Schl\u00fcssels werden bei aktivierter Wettervorhersage Datenaktualisierungen alle 80 Minuten statt alle 40 Minuten durchgef\u00fchrt.",
+                "title": "AccuWeather Optionen"
             }
         }
     },

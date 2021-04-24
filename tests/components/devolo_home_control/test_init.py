@@ -39,17 +39,6 @@ async def test_setup_entry_maintenance(hass: HomeAssistant):
     assert entry.state == ENTRY_STATE_SETUP_RETRY
 
 
-async def test_setup_connection_error(hass: HomeAssistant):
-    """Test setup entry fails on connection error."""
-    entry = configure_integration(hass)
-    with patch(
-        "homeassistant.components.devolo_home_control.HomeControl",
-        side_effect=ConnectionError,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        assert entry.state == ENTRY_STATE_SETUP_RETRY
-
-
 async def test_setup_gateway_offline(hass: HomeAssistant):
     """Test setup entry fails on gateway offline."""
     entry = configure_integration(hass)

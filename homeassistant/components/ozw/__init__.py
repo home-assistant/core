@@ -1,5 +1,6 @@
 """The ozw integration."""
 import asyncio
+from contextlib import suppress
 import json
 import logging
 
@@ -55,14 +56,9 @@ DATA_DEVICES = "zwave-mqtt-devices"
 DATA_STOP_MQTT_CLIENT = "ozw_stop_mqtt_client"
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Initialize basic config of ozw component."""
-    hass.data[DOMAIN] = {}
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up ozw from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
     ozw_data = hass.data[DOMAIN][entry.entry_id] = {}
     ozw_data[DATA_UNSUBSCRIBE] = []
 
@@ -280,10 +276,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 Do not unsubscribe the manager topic.
                 """
                 mqtt_client_task.cancel()
-                try:
+                with suppress(asyncio.CancelledError):
                     await mqtt_client_task
-                except asyncio.CancelledError:
-                    pass
 
             ozw_data[DATA_UNSUBSCRIBE].append(
                 hass.bus.async_listen_once(

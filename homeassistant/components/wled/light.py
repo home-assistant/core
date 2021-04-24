@@ -22,13 +22,12 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_registry import (
     async_get_registry as async_get_entity_registry,
 )
-from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.color as color_util
 
 from . import WLEDDataUpdateCoordinator, WLEDDeviceEntity, wled_exception_handler
@@ -51,7 +50,7 @@ PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
@@ -150,6 +149,27 @@ class WLEDMasterLight(LightEntity, WLEDDeviceEntity):
             data[ATTR_BRIGHTNESS] = kwargs[ATTR_BRIGHTNESS]
 
         await self.coordinator.wled.master(**data)
+
+    async def async_effect(
+        self,
+        effect: int | str | None = None,
+        intensity: int | None = None,
+        palette: int | str | None = None,
+        reverse: bool | None = None,
+        speed: int | None = None,
+    ) -> None:
+        """Set the effect of a WLED light."""
+        # Master light does not have an effect setting.
+
+    @wled_exception_handler
+    async def async_preset(
+        self,
+        preset: int,
+    ) -> None:
+        """Set a WLED light to a saved preset."""
+        data = {ATTR_PRESET: preset}
+
+        await self.coordinator.wled.preset(**data)
 
 
 class WLEDSegmentLight(LightEntity, WLEDDeviceEntity):

@@ -1,11 +1,13 @@
 """Support for Verisure sensors."""
 from __future__ import annotations
 
-from typing import Any, Callable, Iterable
+from collections.abc import Iterable
+from typing import Any, Callable
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
+    SensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
@@ -45,7 +47,7 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class VerisureThermometer(CoordinatorEntity, Entity):
+class VerisureThermometer(CoordinatorEntity, SensorEntity):
     """Representation of a Verisure thermometer."""
 
     coordinator: VerisureDataUpdateCoordinator
@@ -109,7 +111,7 @@ class VerisureThermometer(CoordinatorEntity, Entity):
         return TEMP_CELSIUS
 
 
-class VerisureHygrometer(CoordinatorEntity, Entity):
+class VerisureHygrometer(CoordinatorEntity, SensorEntity):
     """Representation of a Verisure hygrometer."""
 
     coordinator: VerisureDataUpdateCoordinator
@@ -173,7 +175,7 @@ class VerisureHygrometer(CoordinatorEntity, Entity):
         return PERCENTAGE
 
 
-class VerisureMouseDetection(CoordinatorEntity, Entity):
+class VerisureMouseDetection(CoordinatorEntity, SensorEntity):
     """Representation of a Verisure mouse detector."""
 
     coordinator: VerisureDataUpdateCoordinator

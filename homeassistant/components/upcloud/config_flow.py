@@ -10,7 +10,6 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.core import callback
 
-# pylint: disable=unused-import # for DOMAIN https://github.com/PyCQA/pylint/issues/3202
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -105,7 +104,7 @@ class UpCloudOptionsFlow(config_entries.OptionsFlow):
                 vol.Optional(
                     CONF_SCAN_INTERVAL,
                     default=self.config_entry.options.get(CONF_SCAN_INTERVAL)
-                    or DEFAULT_SCAN_INTERVAL.seconds,
+                    or DEFAULT_SCAN_INTERVAL.total_seconds(),
                 ): vol.All(vol.Coerce(int), vol.Range(min=30)),
             }
         )

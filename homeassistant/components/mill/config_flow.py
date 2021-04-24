@@ -6,7 +6,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN
 
 DATA_SCHEMA = vol.Schema(
     {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}

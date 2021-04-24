@@ -5,7 +5,7 @@ import logging
 import hpilo
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_VARIABLES,
@@ -18,7 +18,6 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -100,7 +99,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class HpIloSensor(Entity):
+class HpIloSensor(SensorEntity):
     """Representation of a HP iLO sensor."""
 
     def __init__(

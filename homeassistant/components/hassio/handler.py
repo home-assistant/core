@@ -148,7 +148,7 @@ class HassIO:
 
         This method return a coroutine.
         """
-        return self.send_command("/discovery", method="get")
+        return self.send_command("/discovery", method="get", timeout=60)
 
     @api_data
     def get_discovery_message(self, uuid):
@@ -184,6 +184,16 @@ class HassIO:
         This method return a coroutine.
         """
         return self.send_command("/supervisor/options", payload={"timezone": timezone})
+
+    @_api_bool
+    def update_diagnostics(self, diagnostics: bool):
+        """Update Supervisor diagnostics setting.
+
+        This method return a coroutine.
+        """
+        return self.send_command(
+            "/supervisor/options", payload={"diagnostics": diagnostics}
+        )
 
     async def send_command(self, command, method="post", payload=None, timeout=10):
         """Send API command to Hass.io.

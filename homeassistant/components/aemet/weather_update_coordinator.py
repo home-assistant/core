@@ -82,6 +82,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+STATION_MAX_DELTA = timedelta(hours=2)
 WEATHER_UPDATE_INTERVAL = timedelta(minutes=10)
 
 
@@ -238,9 +239,10 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             return None
 
         elaborated = dt_util.parse_datetime(
-            weather_response.hourly[ATTR_DATA][0][AEMET_ATTR_ELABORATED]
+            weather_response.hourly[ATTR_DATA][0][AEMET_ATTR_ELABORATED] + "Z"
         )
         now = dt_util.now()
+        now_utc = dt_util.utcnow()
         hour = now.hour
 
         # Get current day
@@ -253,10 +255,18 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
                 day = cur_day
                 break
 
-        # Get station data
+        # Get latest station data
         station_data = None
+        station_dt = None
         if weather_response.station:
-            station_data = weather_response.station[ATTR_DATA][-1]
+            for _station_data in weather_response.station[ATTR_DATA]:
+                if AEMET_ATTR_STATION_DATE in _station_data:
+                    _station_dt = dt_util.parse_datetime(
+                        _station_data[AEMET_ATTR_STATION_DATE] + "Z"
+                    )
+                    if not station_dt or _station_dt > station_dt:
+                        station_data = _station_data
+                        station_dt = _station_dt
 
         condition = None
         humidity = None
@@ -273,7 +283,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         temperature_feeling = None
         town_id = None
         town_name = None
-        town_timestamp = dt_util.as_utc(elaborated)
+        town_timestamp = dt_util.as_utc(elaborated).isoformat()
         wind_bearing = None
         wind_max_speed = None
         wind_speed = None
@@ -299,17 +309,20 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
         # Overwrite weather values with closest station data (if present)
         if station_data:
-            if AEMET_ATTR_STATION_DATE in station_data:
-                station_dt = dt_util.parse_datetime(
-                    station_data[AEMET_ATTR_STATION_DATE] + "Z"
-                )
-                station_timestamp = dt_util.as_utc(station_dt).isoformat()
-            if AEMET_ATTR_STATION_HUMIDITY in station_data:
-                humidity = format_float(station_data[AEMET_ATTR_STATION_HUMIDITY])
-            if AEMET_ATTR_STATION_PRESSURE_SEA in station_data:
-                pressure = format_float(station_data[AEMET_ATTR_STATION_PRESSURE_SEA])
-            if AEMET_ATTR_STATION_TEMPERATURE in station_data:
-                temperature = format_float(station_data[AEMET_ATTR_STATION_TEMPERATURE])
+            station_timestamp = dt_util.as_utc(station_dt).isoformat()
+            if (now_utc - station_dt) <= STATION_MAX_DELTA:
+                if AEMET_ATTR_STATION_HUMIDITY in station_data:
+                    humidity = format_float(station_data[AEMET_ATTR_STATION_HUMIDITY])
+                if AEMET_ATTR_STATION_PRESSURE_SEA in station_data:
+                    pressure = format_float(
+                        station_data[AEMET_ATTR_STATION_PRESSURE_SEA]
+                    )
+                if AEMET_ATTR_STATION_TEMPERATURE in station_data:
+                    temperature = format_float(
+                        station_data[AEMET_ATTR_STATION_TEMPERATURE]
+                    )
+            else:
+                _LOGGER.warning("Station data is outdated")
 
         # Get forecast from weather data
         forecast_daily = self._get_daily_forecast_from_weather_response(

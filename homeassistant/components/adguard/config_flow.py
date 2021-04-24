@@ -16,9 +16,10 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.data_entry_flow import FlowResultDict
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import DOMAIN
 
 
 class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -31,7 +32,7 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def _show_setup_form(
         self, errors: dict[str, str] | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResultDict:
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
@@ -50,7 +51,7 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def _show_hassio_form(
         self, errors: dict[str, str] | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResultDict:
         """Show the Hass.io confirmation form to the user."""
         return self.async_show_form(
             step_id="hassio_confirm",
@@ -61,13 +62,18 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResultDict:
         """Handle a flow initiated by the user."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         if user_input is None:
             return await self._show_setup_form(user_input)
+
+        entries = self._async_current_entries()
+        for entry in entries:
+            if (
+                entry.data[CONF_HOST] == user_input[CONF_HOST]
+                and entry.data[CONF_PORT] == user_input[CONF_PORT]
+            ):
+                return self.async_abort(reason="already_configured")
 
         errors = {}
 
@@ -101,48 +107,20 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_hassio(self, discovery_info: dict[str, Any]) -> dict[str, Any]:
+    async def async_step_hassio(self, discovery_info: dict[str, Any]) -> FlowResultDict:
         """Prepare configuration for a Hass.io AdGuard Home add-on.
 
         This flow is triggered by the discovery component.
         """
-        entries = self._async_current_entries()
+        await self._async_handle_discovery_without_unique_id()
 
-        if not entries:
-            self._hassio_discovery = discovery_info
-            return await self.async_step_hassio_confirm()
-
-        cur_entry = entries[0]
-
-        if (
-            cur_entry.data[CONF_HOST] == discovery_info[CONF_HOST]
-            and cur_entry.data[CONF_PORT] == discovery_info[CONF_PORT]
-        ):
-            return self.async_abort(reason="single_instance_allowed")
-
-        is_loaded = cur_entry.state == config_entries.ENTRY_STATE_LOADED
-
-        if is_loaded:
-            await self.hass.config_entries.async_unload(cur_entry.entry_id)
-
-        self.hass.config_entries.async_update_entry(
-            cur_entry,
-            data={
-                **cur_entry.data,
-                CONF_HOST: discovery_info[CONF_HOST],
-                CONF_PORT: discovery_info[CONF_PORT],
-            },
-        )
-
-        if is_loaded:
-            await self.hass.config_entries.async_setup(cur_entry.entry_id)
-
-        return self.async_abort(reason="existing_instance_updated")
+        self._hassio_discovery = discovery_info
+        return await self.async_step_hassio_confirm()
 
     async def async_step_hassio_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
-        """Confirm Hass.io discovery."""
+    ) -> FlowResultDict:
+        """Confirm Supervisor discovery."""
         if user_input is None:
             return await self._show_hassio_form()
 

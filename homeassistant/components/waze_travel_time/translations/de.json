@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Standort ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "destination": "Zielort",
+                    "origin": "Startort",
+                    "region": "Region"
+                }
+            }
+        }
+    }
+}

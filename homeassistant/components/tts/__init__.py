@@ -26,18 +26,19 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_DESCRIPTION,
     CONF_NAME,
     CONF_PLATFORM,
     HTTP_BAD_REQUEST,
     HTTP_NOT_FOUND,
+    PLATFORM_FORMAT,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.service import async_set_service_schema
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.util.yaml import load_yaml
@@ -61,7 +62,6 @@ CONF_LANG = "language"
 CONF_SERVICE_NAME = "service_name"
 CONF_TIME_MEMORY = "time_memory"
 
-CONF_DESCRIPTION = "description"
 CONF_FIELDS = "fields"
 
 DEFAULT_CACHE = True
@@ -316,6 +316,10 @@ class SpeechManager:
             provider.name = engine
         self.providers[engine] = provider
 
+        self.hass.config.components.add(
+            PLATFORM_FORMAT.format(domain=engine, platform=DOMAIN)
+        )
+
     async def async_get_url_path(
         self, engine, message, cache=None, language=None, options=None
     ):
@@ -514,7 +518,7 @@ class SpeechManager:
 class Provider:
     """Represent a single TTS provider."""
 
-    hass: HomeAssistantType | None = None
+    hass: HomeAssistant | None = None
     name: str | None = None
 
     @property

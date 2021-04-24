@@ -9,12 +9,13 @@ from typing import TYPE_CHECKING, Any, cast
 import attr
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import Event, callback
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.exceptions import RequiredParameterMissing
 from homeassistant.loader import bind_hass
 import homeassistant.util.uuid as uuid_util
 
 from .debounce import Debouncer
-from .typing import UNDEFINED, HomeAssistantType, UndefinedType
+from .typing import UNDEFINED, UndefinedType
 
 # mypy: disallow_any_generics
 
@@ -139,7 +140,7 @@ class DeviceRegistry:
     deleted_devices: dict[str, DeletedDeviceEntry]
     _devices_index: dict[str, dict[str, dict[tuple[str, str], str]]]
 
-    def __init__(self, hass: HomeAssistantType) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the device registry."""
         self.hass = hass
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
@@ -259,10 +260,10 @@ class DeviceRegistry:
         # To disable a device if it gets created
         disabled_by: str | None | UndefinedType = UNDEFINED,
         suggested_area: str | None | UndefinedType = UNDEFINED,
-    ) -> DeviceEntry | None:
+    ) -> DeviceEntry:
         """Get device. Create if it doesn't exist."""
         if not identifiers and not connections:
-            return None
+            raise RequiredParameterMissing(["identifiers", "connections"])
 
         if identifiers is None:
             identifiers = set()
@@ -300,7 +301,7 @@ class DeviceRegistry:
         else:
             via_device_id = UNDEFINED
 
-        return self._async_update_device(
+        device = self._async_update_device(
             device.id,
             add_config_entry_id=config_entry_id,
             via_device_id=via_device_id,
@@ -314,6 +315,11 @@ class DeviceRegistry:
             disabled_by=disabled_by,
             suggested_area=suggested_area,
         )
+
+        # This is safe because _async_update_device will always return a device
+        # in this use case.
+        assert device
+        return device
 
     @callback
     def async_update_device(
@@ -617,12 +623,12 @@ class DeviceRegistry:
 
 
 @callback
-def async_get(hass: HomeAssistantType) -> DeviceRegistry:
+def async_get(hass: HomeAssistant) -> DeviceRegistry:
     """Get device registry."""
     return cast(DeviceRegistry, hass.data[DATA_REGISTRY])
 
 
-async def async_load(hass: HomeAssistantType) -> None:
+async def async_load(hass: HomeAssistant) -> None:
     """Load device registry."""
     assert DATA_REGISTRY not in hass.data
     hass.data[DATA_REGISTRY] = DeviceRegistry(hass)
@@ -630,7 +636,7 @@ async def async_load(hass: HomeAssistantType) -> None:
 
 
 @bind_hass
-async def async_get_registry(hass: HomeAssistantType) -> DeviceRegistry:
+async def async_get_registry(hass: HomeAssistant) -> DeviceRegistry:
     """Get device registry.
 
     This is deprecated and will be removed in the future. Use async_get instead.
@@ -686,9 +692,9 @@ def async_config_entry_disabled_by_changed(
 
 @callback
 def async_cleanup(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     dev_reg: DeviceRegistry,
-    ent_reg: "entity_registry.EntityRegistry",
+    ent_reg: entity_registry.EntityRegistry,
 ) -> None:
     """Clean up device registry."""
     # Find all devices that are referenced by a config_entry.
@@ -723,7 +729,7 @@ def async_cleanup(
 
 
 @callback
-def async_setup_cleanup(hass: HomeAssistantType, dev_reg: DeviceRegistry) -> None:
+def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
     """Clean up device registry when entities removed."""
     from . import entity_registry  # pylint: disable=import-outside-toplevel
 

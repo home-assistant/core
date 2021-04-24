@@ -99,6 +99,7 @@ class ZWaveBaseEntity(Entity):
         include_value_name: bool = False,
         alternate_value_name: str | None = None,
         additional_info: list[str] | None = None,
+        name_suffix: str | None = None,
     ) -> str:
         """Generate entity name."""
         if additional_info is None:
@@ -108,6 +109,8 @@ class ZWaveBaseEntity(Entity):
             or self.info.node.device_config.description
             or f"Node {self.info.node.node_id}"
         )
+        if name_suffix:
+            name = f"{name} {name_suffix}"
         if include_value_name:
             value_name = (
                 alternate_value_name

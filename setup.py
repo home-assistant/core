@@ -33,14 +33,14 @@ PACKAGES = find_packages(exclude=["tests", "tests.*"])
 
 REQUIRES = [
     "aiohttp==3.7.4.post0",
-    "astral==1.10.1",
+    "astral==2.2",
     "async_timeout==3.0.1",
     "attrs==20.3.0",
     "awesomeversion==21.2.3",
     "bcrypt==3.1.7",
     "certifi>=2020.12.5",
     "ciso8601==2.1.3",
-    "httpx==0.16.1",
+    "httpx==0.17.1",
     "jinja2>=2.11.3",
     "PyJWT==1.7.1",
     # PyJWT has loose dependency. We want the latest one.

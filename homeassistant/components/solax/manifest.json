@@ -3,5 +3,6 @@
   "name": "SolaX Power",
   "documentation": "https://www.home-assistant.io/integrations/solax",
   "requirements": ["solax==0.2.6"],
-  "codeowners": ["@squishykid"]
+  "codeowners": ["@squishykid"],
+  "iot_class": "local_polling"
 }

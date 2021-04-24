@@ -21,12 +21,17 @@ async def test_tracking_home(hass, mock_weather):
     entry = registry.async_get("weather.test_home_hourly")
     assert entry
     assert entry.disabled
-    assert entry.disabled_by == "integration"
+    assert entry.disabled_by == er.DISABLED_INTEGRATION
 
     # Test we track config
     await hass.config.async_update(latitude=10, longitude=20)
     await hass.async_block_till_done()
 
+    assert len(mock_weather.mock_calls) == 8
+
+    # Same coordinates again should not trigger any new requests to met.no
+    await hass.config.async_update(latitude=10, longitude=20)
+    await hass.async_block_till_done()
     assert len(mock_weather.mock_calls) == 8
 
     entry = hass.config_entries.async_entries()[0]

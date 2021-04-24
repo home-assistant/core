@@ -1,6 +1,7 @@
 """Support for Flo Water Monitor sensors."""
 from __future__ import annotations
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
@@ -56,7 +57,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
 
-class FloDailyUsageSensor(FloEntity):
+class FloDailyUsageSensor(FloEntity, SensorEntity):
     """Monitors the daily water usage."""
 
     def __init__(self, device):
@@ -82,7 +83,7 @@ class FloDailyUsageSensor(FloEntity):
         return VOLUME_GALLONS
 
 
-class FloSystemModeSensor(FloEntity):
+class FloSystemModeSensor(FloEntity, SensorEntity):
     """Monitors the current Flo system mode."""
 
     def __init__(self, device):
@@ -98,7 +99,7 @@ class FloSystemModeSensor(FloEntity):
         return self._device.current_system_mode
 
 
-class FloCurrentFlowRateSensor(FloEntity):
+class FloCurrentFlowRateSensor(FloEntity, SensorEntity):
     """Monitors the current water flow rate."""
 
     def __init__(self, device):
@@ -124,7 +125,7 @@ class FloCurrentFlowRateSensor(FloEntity):
         return "gpm"
 
 
-class FloTemperatureSensor(FloEntity):
+class FloTemperatureSensor(FloEntity, SensorEntity):
     """Monitors the temperature."""
 
     def __init__(self, name, device):
@@ -150,7 +151,7 @@ class FloTemperatureSensor(FloEntity):
         return DEVICE_CLASS_TEMPERATURE
 
 
-class FloHumiditySensor(FloEntity):
+class FloHumiditySensor(FloEntity, SensorEntity):
     """Monitors the humidity."""
 
     def __init__(self, device):
@@ -176,7 +177,7 @@ class FloHumiditySensor(FloEntity):
         return DEVICE_CLASS_HUMIDITY
 
 
-class FloPressureSensor(FloEntity):
+class FloPressureSensor(FloEntity, SensorEntity):
     """Monitors the water pressure."""
 
     def __init__(self, device):
@@ -202,7 +203,7 @@ class FloPressureSensor(FloEntity):
         return DEVICE_CLASS_PRESSURE
 
 
-class FloBatterySensor(FloEntity):
+class FloBatterySensor(FloEntity, SensorEntity):
     """Monitors the battery level for battery-powered leak detectors."""
 
     def __init__(self, device):

@@ -20,11 +20,6 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
-    """Old way of setting up deCONZ integrations."""
-    return True
-
-
 async def async_setup_entry(hass, config_entry):
     """Set up a deCONZ bridge for a config entry.
 
@@ -50,7 +45,9 @@ async def async_setup_entry(hass, config_entry):
 
     await async_setup_services(hass)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, gateway.shutdown)
+    config_entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, gateway.shutdown)
+    )
 
     return True
 

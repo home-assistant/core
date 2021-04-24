@@ -16,7 +16,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
@@ -24,7 +24,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceCallType
+from homeassistant.helpers.typing import ConfigType, ServiceCallType
 from homeassistant.loader import bind_hass
 
 DOMAIN = "input_boolean"
@@ -82,7 +82,7 @@ def is_on(hass, entity_id):
     return hass.states.is_state(entity_id, STATE_ON)
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an input boolean."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     id_manager = collection.IDManager()
@@ -169,7 +169,7 @@ class InputBoolean(ToggleEntity, RestoreEntity):
         return self._config.get(CONF_NAME)
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the entity."""
         return {ATTR_EDITABLE: self.editable}
 

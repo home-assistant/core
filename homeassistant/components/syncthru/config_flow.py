@@ -12,7 +12,6 @@ from homeassistant.components import ssdp
 from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.helpers import aiohttp_client
 
-# pylint: disable=unused-import # for DOMAIN https://github.com/PyCQA/pylint/issues/3202
 from .const import DEFAULT_MODEL, DEFAULT_NAME_TEMPLATE, DOMAIN
 
 

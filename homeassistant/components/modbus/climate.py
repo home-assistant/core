@@ -6,32 +6,27 @@ import logging
 import struct
 from typing import Any
 
-from pymodbus.exceptions import ConnectionException, ModbusException
-from pymodbus.pdu import ExceptionResponse
-
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import (
-    ATTR_TEMPERATURE,
     CONF_NAME,
     CONF_OFFSET,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
     CONF_STRUCTURE,
+    CONF_TEMPERATURE_UNIT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import (
-    ConfigType,
-    DiscoveryInfoType,
-    HomeAssistantType,
-)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
+    ATTR_TEMPERATURE,
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
     CONF_CLIMATES,
@@ -45,7 +40,6 @@ from .const import (
     CONF_SCALE,
     CONF_STEP,
     CONF_TARGET_TEMP,
-    CONF_UNIT,
     DATA_TYPE_CUSTOM,
     DEFAULT_STRUCT_FORMAT,
     MODBUS_DOMAIN,
@@ -56,7 +50,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config: ConfigType,
     async_add_entities,
     discovery_info: DiscoveryInfoType | None = None,
@@ -115,7 +109,7 @@ class ModbusThermostat(ClimateEntity):
         """Initialize the modbus thermostat."""
         self._hub: ModbusHub = hub
         self._name = config[CONF_NAME]
-        self._slave = config[CONF_SLAVE]
+        self._slave = config.get(CONF_SLAVE)
         self._target_temperature_register = config[CONF_TARGET_TEMP]
         self._current_temperature_register = config[CONF_CURRENT_TEMP]
         self._current_temperature_register_type = config[
@@ -130,7 +124,7 @@ class ModbusThermostat(ClimateEntity):
         self._scale = config[CONF_SCALE]
         self._scan_interval = timedelta(seconds=config[CONF_SCAN_INTERVAL])
         self._offset = config[CONF_OFFSET]
-        self._unit = config[CONF_UNIT]
+        self._unit = config[CONF_TEMPERATURE_UNIT]
         self._max_temp = config[CONF_MAX_TEMP]
         self._min_temp = config[CONF_MIN_TEMP]
         self._temp_step = config[CONF_STEP]
@@ -208,14 +202,18 @@ class ModbusThermostat(ClimateEntity):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
+        if ATTR_TEMPERATURE not in kwargs:
+            return
         target_temperature = int(
             (kwargs.get(ATTR_TEMPERATURE) - self._offset) / self._scale
         )
-        if target_temperature is None:
-            return
         byte_string = struct.pack(self._structure, target_temperature)
         register_value = struct.unpack(">h", byte_string[0:2])[0]
-        self._write_register(self._target_temperature_register, register_value)
+        self._available = self._hub.write_registers(
+            self._slave,
+            self._target_temperature_register,
+            register_value,
+        )
         self._update()
 
     @property
@@ -236,20 +234,13 @@ class ModbusThermostat(ClimateEntity):
 
     def _read_register(self, register_type, register) -> float | None:
         """Read register using the Modbus hub slave."""
-        try:
-            if register_type == CALL_TYPE_REGISTER_INPUT:
-                result = self._hub.read_input_registers(
-                    self._slave, register, self._count
-                )
-            else:
-                result = self._hub.read_holding_registers(
-                    self._slave, register, self._count
-                )
-        except ConnectionException:
-            self._available = False
-            return
-
-        if isinstance(result, (ModbusException, ExceptionResponse)):
+        if register_type == CALL_TYPE_REGISTER_INPUT:
+            result = self._hub.read_input_registers(self._slave, register, self._count)
+        else:
+            result = self._hub.read_holding_registers(
+                self._slave, register, self._count
+            )
+        if result is None:
             self._available = False
             return
 
@@ -272,13 +263,3 @@ class ModbusThermostat(ClimateEntity):
         self._available = True
 
         return register_value
-
-    def _write_register(self, register, value):
-        """Write holding register using the Modbus hub slave."""
-        try:
-            self._hub.write_registers(self._slave, register, [value, 0])
-        except ConnectionException:
-            self._available = False
-            return
-
-        self._available = True

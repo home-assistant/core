@@ -5,6 +5,7 @@ import logging
 from aioeafm import get_station
 import async_timeout
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, LENGTH_METERS
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import (
@@ -77,7 +78,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     await coordinator.async_refresh()
 
 
-class Measurement(CoordinatorEntity):
+class Measurement(CoordinatorEntity, SensorEntity):
     """A gauge at a flood monitoring station."""
 
     attribution = "This uses Environment Agency flood and river level data from the real-time data API"

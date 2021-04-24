@@ -8,7 +8,7 @@ from btlewrap import BluetoothBackendException
 from miflora import miflora_poller
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONDUCTIVITY,
     CONF_FORCE_UPDATE,
@@ -27,7 +27,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 from homeassistant.util.temperature import celsius_to_fahrenheit
 
@@ -130,7 +129,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(devs)
 
 
-class MiFloraSensor(Entity):
+class MiFloraSensor(SensorEntity):
     """Implementing the MiFlora sensor."""
 
     def __init__(

@@ -10,6 +10,7 @@
             "user": {
                 "data": {
                     "api_key": "Chiave API",
+                    "api_version": "Versione API",
                     "latitude": "Latitudine",
                     "longitude": "Logitudine",
                     "name": "Nome"

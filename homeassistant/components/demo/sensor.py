@@ -1,4 +1,5 @@
 """Demo platform that has a couple of fake sensors."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -9,7 +10,6 @@ from homeassistant.const import (
     PERCENTAGE,
     TEMP_CELSIUS,
 )
-from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN
 
@@ -59,7 +59,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     await async_setup_platform(hass, {}, async_add_entities)
 
 
-class DemoSensor(Entity):
+class DemoSensor(SensorEntity):
     """Representation of a Demo sensor."""
 
     def __init__(

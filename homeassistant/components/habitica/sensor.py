@@ -5,8 +5,8 @@ import logging
 
 from aiohttp import ClientResponseError
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_NAME, HTTP_TOO_MANY_REQUESTS
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 from .const import DOMAIN
@@ -125,7 +125,7 @@ class HabitipyData:
                     )
 
 
-class HabitipySensor(Entity):
+class HabitipySensor(SensorEntity):
     """A generic Habitica sensor."""
 
     def __init__(self, name, sensor_name, updater):
@@ -165,7 +165,7 @@ class HabitipySensor(Entity):
         return self._sensor_type.unit
 
 
-class HabitipyTaskSensor(Entity):
+class HabitipyTaskSensor(SensorEntity):
     """A Habitica task sensor."""
 
     def __init__(self, name, task_name, updater):

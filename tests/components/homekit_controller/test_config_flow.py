@@ -269,25 +269,18 @@ async def test_discovery_ignored_model(hass, controller):
 
 
 async def test_discovery_ignored_hk_bridge(hass, controller):
-    """Already paired."""
+    """Ensure we ignore homekit bridges and accessories created by the homekit integration."""
     device = setup_mock_accessory(controller)
     discovery_info = get_device_discovery_info(device)
 
     config_entry = MockConfigEntry(domain=config_flow.HOMEKIT_BRIDGE_DOMAIN, data={})
+    config_entry.add_to_hass(hass)
     formatted_mac = device_registry.format_mac("AA:BB:CC:DD:EE:FF")
 
     dev_reg = mock_device_registry(hass)
     dev_reg.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers={
-            (
-                config_flow.HOMEKIT_BRIDGE_DOMAIN,
-                config_entry.entry_id,
-                config_flow.HOMEKIT_BRIDGE_SERIAL_NUMBER,
-            )
-        },
         connections={(device_registry.CONNECTION_NETWORK_MAC, formatted_mac)},
-        model=config_flow.HOMEKIT_BRIDGE_MODEL,
     )
 
     discovery_info["properties"]["id"] = "AA:BB:CC:DD:EE:FF"
@@ -298,6 +291,30 @@ async def test_discovery_ignored_hk_bridge(hass, controller):
     )
     assert result["type"] == "abort"
     assert result["reason"] == "ignored_model"
+
+
+async def test_discovery_does_not_ignore_non_homekit(hass, controller):
+    """Do not ignore devices that are not from the homekit integration."""
+    device = setup_mock_accessory(controller)
+    discovery_info = get_device_discovery_info(device)
+
+    config_entry = MockConfigEntry(domain="not_homekit", data={})
+    config_entry.add_to_hass(hass)
+    formatted_mac = device_registry.format_mac("AA:BB:CC:DD:EE:FF")
+
+    dev_reg = mock_device_registry(hass)
+    dev_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, formatted_mac)},
+    )
+
+    discovery_info["properties"]["id"] = "AA:BB:CC:DD:EE:FF"
+
+    # Device is discovered
+    result = await hass.config_entries.flow.async_init(
+        "homekit_controller", context={"source": "zeroconf"}, data=discovery_info
+    )
+    assert result["type"] == "form"
 
 
 async def test_discovery_invalid_config_entry(hass, controller):

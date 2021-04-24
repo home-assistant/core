@@ -15,19 +15,15 @@ from homeassistant.components.azure_devops.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
-    """Set up the Azure DevOps components."""
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Azure DevOps from a config entry."""
     client = DevOpsClient()
 
@@ -35,17 +31,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         if entry.data[CONF_PAT] is not None:
             await client.authorize(entry.data[CONF_PAT], entry.data[CONF_ORG])
             if not client.authorized:
-                _LOGGER.warning(
+                raise ConfigEntryAuthFailed(
                     "Could not authorize with Azure DevOps. You may need to update your token"
                 )
-                hass.async_create_task(
-                    hass.config_entries.flow.async_init(
-                        DOMAIN,
-                        context={"source": "reauth"},
-                        data=entry.data,
-                    )
-                )
-                return False
         await client.get_project(entry.data[CONF_ORG], entry.data[CONF_PROJECT])
     except aiohttp.ClientError as exception:
         _LOGGER.warning(exception)
@@ -62,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigType) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigType) -> bool:
     """Unload Azure DevOps config entry."""
     del hass.data[f"{DOMAIN}_{entry.data[CONF_ORG]}_{entry.data[CONF_PROJECT]}"]
 

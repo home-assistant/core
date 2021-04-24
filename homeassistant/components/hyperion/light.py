@@ -1,10 +1,11 @@
 """Support for Hyperion-NG remotes."""
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 import functools
 import logging
 from types import MappingProxyType
-from typing import Any, Callable, Mapping, Sequence
+from typing import Any, Callable
 
 from hyperion import client, const
 
@@ -18,21 +19,27 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.color as color_util
 
-from . import get_hyperion_unique_id, listen_for_instance_updates
+from . import (
+    get_hyperion_device_id,
+    get_hyperion_unique_id,
+    listen_for_instance_updates,
+)
 from .const import (
+    CONF_EFFECT_HIDE_LIST,
     CONF_INSTANCE_CLIENTS,
     CONF_PRIORITY,
     DEFAULT_ORIGIN,
     DEFAULT_PRIORITY,
     DOMAIN,
+    HYPERION_MANUFACTURER_NAME,
+    HYPERION_MODEL_NAME,
     NAME_SUFFIX_HYPERION_LIGHT,
     NAME_SUFFIX_HYPERION_PRIORITY_LIGHT,
     SIGNAL_ENTITY_REMOVE,
@@ -73,7 +80,7 @@ ICON_EXTERNAL_SOURCE = "mdi:television-ambient-light"
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable
 ) -> bool:
     """Set up a Hyperion platform from config entry."""
 
@@ -84,24 +91,17 @@ async def async_setup_entry(
     def instance_add(instance_num: int, instance_name: str) -> None:
         """Add entities for a new Hyperion instance."""
         assert server_id
+        args = (
+            server_id,
+            instance_num,
+            instance_name,
+            config_entry.options,
+            entry_data[CONF_INSTANCE_CLIENTS][instance_num],
+        )
         async_add_entities(
             [
-                HyperionLight(
-                    get_hyperion_unique_id(
-                        server_id, instance_num, TYPE_HYPERION_LIGHT
-                    ),
-                    f"{instance_name} {NAME_SUFFIX_HYPERION_LIGHT}",
-                    config_entry.options,
-                    entry_data[CONF_INSTANCE_CLIENTS][instance_num],
-                ),
-                HyperionPriorityLight(
-                    get_hyperion_unique_id(
-                        server_id, instance_num, TYPE_HYPERION_PRIORITY_LIGHT
-                    ),
-                    f"{instance_name} {NAME_SUFFIX_HYPERION_PRIORITY_LIGHT}",
-                    config_entry.options,
-                    entry_data[CONF_INSTANCE_CLIENTS][instance_num],
-                ),
+                HyperionLight(*args),
+                HyperionPriorityLight(*args),
             ]
         )
 
@@ -126,14 +126,17 @@ class HyperionBaseLight(LightEntity):
 
     def __init__(
         self,
-        unique_id: str,
-        name: str,
+        server_id: str,
+        instance_num: int,
+        instance_name: str,
         options: MappingProxyType[str, Any],
         hyperion_client: client.HyperionClient,
     ) -> None:
         """Initialize the light."""
-        self._unique_id = unique_id
-        self._name = name
+        self._unique_id = self._compute_unique_id(server_id, instance_num)
+        self._name = self._compute_name(instance_name)
+        self._device_id = get_hyperion_device_id(server_id, instance_num)
+        self._instance_name = instance_name
         self._options = options
         self._client = hyperion_client
 
@@ -144,7 +147,10 @@ class HyperionBaseLight(LightEntity):
 
         self._static_effect_list: list[str] = [KEY_EFFECT_SOLID]
         if self._support_external_effects:
-            self._static_effect_list += list(const.KEY_COMPONENTID_EXTERNAL_SOURCES)
+            self._static_effect_list += [
+                const.KEY_COMPONENTID_TO_NAME[component]
+                for component in const.KEY_COMPONENTID_EXTERNAL_SOURCES
+            ]
         self._effect_list: list[str] = self._static_effect_list[:]
 
         self._client_callbacks: Mapping[str, Callable[[dict[str, Any]], None]] = {
@@ -154,6 +160,14 @@ class HyperionBaseLight(LightEntity):
             f"{const.KEY_PRIORITIES}-{const.KEY_UPDATE}": self._update_priorities,
             f"{const.KEY_CLIENT}-{const.KEY_UPDATE}": self._update_client,
         }
+
+    def _compute_unique_id(self, server_id: str, instance_num: int) -> str:
+        """Compute a unique id for this instance."""
+        raise NotImplementedError
+
+    def _compute_name(self, instance_name: str) -> str:
+        """Compute the name of the light."""
+        raise NotImplementedError
 
     @property
     def entity_registry_enabled_default(self) -> bool:
@@ -184,7 +198,11 @@ class HyperionBaseLight(LightEntity):
     def icon(self) -> str:
         """Return state specific icon."""
         if self.is_on:
-            if self.effect in const.KEY_COMPONENTID_EXTERNAL_SOURCES:
+            if (
+                self.effect in const.KEY_COMPONENTID_FROM_NAME
+                and const.KEY_COMPONENTID_FROM_NAME[self.effect]
+                in const.KEY_COMPONENTID_EXTERNAL_SOURCES
+            ):
                 return ICON_EXTERNAL_SOURCE
             if self.effect != KEY_EFFECT_SOLID:
                 return ICON_EFFECT
@@ -215,9 +233,22 @@ class HyperionBaseLight(LightEntity):
         """Return a unique id for this instance."""
         return self._unique_id
 
+    @property
+    def device_info(self) -> dict[str, Any] | None:
+        """Return device information."""
+        return {
+            "identifiers": {(DOMAIN, self._device_id)},
+            "name": self._instance_name,
+            "manufacturer": HYPERION_MANUFACTURER_NAME,
+            "model": HYPERION_MODEL_NAME,
+        }
+
     def _get_option(self, key: str) -> Any:
         """Get a value from the provided options."""
-        defaults = {CONF_PRIORITY: DEFAULT_PRIORITY}
+        defaults = {
+            CONF_PRIORITY: DEFAULT_PRIORITY,
+            CONF_EFFECT_HIDE_LIST: [],
+        }
         return self._options.get(key, defaults[key])
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -237,8 +268,9 @@ class HyperionBaseLight(LightEntity):
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS]
             for item in self._client.adjustment or []:
-                if const.KEY_ID in item:
-                    if not await self._client.async_send_set_adjustment(
+                if (
+                    const.KEY_ID in item
+                    and not await self._client.async_send_set_adjustment(
                         **{
                             const.KEY_ADJUSTMENT: {
                                 const.KEY_BRIGHTNESS: int(
@@ -247,15 +279,29 @@ class HyperionBaseLight(LightEntity):
                                 const.KEY_ID: item[const.KEY_ID],
                             }
                         }
-                    ):
-                        return
+                    )
+                ):
+                    return
 
         # == Set an external source
         if (
             effect
             and self._support_external_effects
-            and effect in const.KEY_COMPONENTID_EXTERNAL_SOURCES
+            and (
+                effect in const.KEY_COMPONENTID_EXTERNAL_SOURCES
+                or effect in const.KEY_COMPONENTID_FROM_NAME
+            )
         ):
+            if effect in const.KEY_COMPONENTID_FROM_NAME:
+                component = const.KEY_COMPONENTID_FROM_NAME[effect]
+            else:
+                _LOGGER.warning(
+                    "Use of Hyperion effect '%s' is deprecated and will be removed "
+                    "in a future release. Please use '%s' instead",
+                    effect,
+                    const.KEY_COMPONENTID_TO_NAME[effect],
+                )
+                component = effect
 
             # Clear any color/effect.
             if not await self._client.async_send_clear(
@@ -269,7 +315,7 @@ class HyperionBaseLight(LightEntity):
                     **{
                         const.KEY_COMPONENTSTATE: {
                             const.KEY_COMPONENT: key,
-                            const.KEY_STATE: effect == key,
+                            const.KEY_STATE: component == key,
                         }
                     }
                 ):
@@ -345,8 +391,12 @@ class HyperionBaseLight(LightEntity):
             if (
                 self._support_external_effects
                 and componentid in const.KEY_COMPONENTID_EXTERNAL_SOURCES
+                and componentid in const.KEY_COMPONENTID_TO_NAME
             ):
-                self._set_internal_state(rgb_color=DEFAULT_COLOR, effect=componentid)
+                self._set_internal_state(
+                    rgb_color=DEFAULT_COLOR,
+                    effect=const.KEY_COMPONENTID_TO_NAME[componentid],
+                )
             elif componentid == const.KEY_COMPONENTID_EFFECT:
                 # Owner is the effect name.
                 # See: https://docs.hyperion-project.org/en/json/ServerInfo.html#priorities
@@ -366,12 +416,18 @@ class HyperionBaseLight(LightEntity):
         if not self._client.effects:
             return
         effect_list: list[str] = []
+        hide_effects = self._get_option(CONF_EFFECT_HIDE_LIST)
+
         for effect in self._client.effects or []:
             if const.KEY_NAME in effect:
-                effect_list.append(effect[const.KEY_NAME])
-        if effect_list:
-            self._effect_list = self._static_effect_list + effect_list
-            self.async_write_ha_state()
+                effect_name = effect[const.KEY_NAME]
+                if effect_name not in hide_effects:
+                    effect_list.append(effect_name)
+
+        self._effect_list = [
+            effect for effect in self._static_effect_list if effect not in hide_effects
+        ] + effect_list
+        self.async_write_ha_state()
 
     @callback
     def _update_full_state(self) -> None:
@@ -400,7 +456,7 @@ class HyperionBaseLight(LightEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                SIGNAL_ENTITY_REMOVE.format(self._unique_id),
+                SIGNAL_ENTITY_REMOVE.format(self.unique_id),
                 functools.partial(self.async_remove, force_remove=True),
             )
         )
@@ -442,6 +498,14 @@ class HyperionLight(HyperionBaseLight):
     than color based at a particular priority, and the 'winning' priority determines
     shown state rather than exclusively the HA priority.
     """
+
+    def _compute_unique_id(self, server_id: str, instance_num: int) -> str:
+        """Compute a unique id for this instance."""
+        return get_hyperion_unique_id(server_id, instance_num, TYPE_HYPERION_LIGHT)
+
+    def _compute_name(self, instance_name: str) -> str:
+        """Compute the name of the light."""
+        return f"{instance_name} {NAME_SUFFIX_HYPERION_LIGHT}".strip()
 
     @property
     def is_on(self) -> bool:
@@ -491,6 +555,16 @@ class HyperionLight(HyperionBaseLight):
 
 class HyperionPriorityLight(HyperionBaseLight):
     """A Hyperion light that only acts on a single Hyperion priority."""
+
+    def _compute_unique_id(self, server_id: str, instance_num: int) -> str:
+        """Compute a unique id for this instance."""
+        return get_hyperion_unique_id(
+            server_id, instance_num, TYPE_HYPERION_PRIORITY_LIGHT
+        )
+
+    def _compute_name(self, instance_name: str) -> str:
+        """Compute the name of the light."""
+        return f"{instance_name} {NAME_SUFFIX_HYPERION_PRIORITY_LIGHT}".strip()
 
     @property
     def entity_registry_enabled_default(self) -> bool:
@@ -544,9 +618,10 @@ class HyperionPriorityLight(HyperionBaseLight):
     @classmethod
     def _is_priority_entry_black(cls, priority: dict[str, Any] | None) -> bool:
         """Determine if a given priority entry is the color black."""
-        if not priority:
-            return False
-        if priority.get(const.KEY_COMPONENTID) == const.KEY_COMPONENTID_COLOR:
+        if (
+            priority
+            and priority.get(const.KEY_COMPONENTID) == const.KEY_COMPONENTID_COLOR
+        ):
             rgb_color = priority.get(const.KEY_VALUE, {}).get(const.KEY_RGB)
             if rgb_color is not None and tuple(rgb_color) == COLOR_BLACK:
                 return True

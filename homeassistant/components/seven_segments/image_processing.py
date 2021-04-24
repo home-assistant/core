@@ -69,7 +69,7 @@ class ImageProcessingSsocr(ImageProcessingEntity):
         if name:
             self._name = name
         else:
-            self._name = "SevenSegment OCR {}".format(split_entity_id(camera_entity)[1])
+            self._name = f"SevenSegment OCR {split_entity_id(camera_entity)[1]}"
         self._state = None
 
         self.filepath = os.path.join(

@@ -9,8 +9,7 @@ from python_awair import Awair
 from python_awair.exceptions import AuthError
 
 from homeassistant.const import CONF_ACCESS_TOKEN
-from homeassistant.core import Config, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -19,20 +18,12 @@ from .const import API_TIMEOUT, DOMAIN, LOGGER, UPDATE_INTERVAL, AwairResult
 PLATFORMS = ["sensor"]
 
 
-async def async_setup(hass: HomeAssistant, config: Config) -> bool:
-    """Set up Awair integration."""
-    return True
-
-
 async def async_setup_entry(hass, config_entry) -> bool:
     """Set up Awair integration from a config entry."""
     session = async_get_clientsession(hass)
     coordinator = AwairDataUpdateCoordinator(hass, config_entry, session)
 
-    await coordinator.async_refresh()
-
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = coordinator
@@ -83,27 +74,7 @@ class AwairDataUpdateCoordinator(DataUpdateCoordinator):
                 )
                 return {result.device.uuid: result for result in results}
             except AuthError as err:
-                flow_context = {
-                    "source": "reauth",
-                    "unique_id": self._config_entry.unique_id,
-                }
-
-                matching_flows = [
-                    flow
-                    for flow in self.hass.config_entries.flow.async_progress()
-                    if flow["context"] == flow_context
-                ]
-
-                if not matching_flows:
-                    self.hass.async_create_task(
-                        self.hass.config_entries.flow.async_init(
-                            DOMAIN,
-                            context=flow_context,
-                            data=self._config_entry.data,
-                        )
-                    )
-
-                raise UpdateFailed(err) from err
+                raise ConfigEntryAuthFailed from err
             except Exception as err:
                 raise UpdateFailed(err) from err
 

@@ -7,7 +7,7 @@ from homeassistant.components import ssdp
 from homeassistant.config_entries import CONN_CLASS_LOCAL_PUSH, ConfigFlow
 from homeassistant.const import CONF_HOST
 
-from . import DOMAIN  # pylint: disable=unused-import
+from . import DOMAIN
 
 CONF_SERIAL_NUMBER = "serial_number"
 CONF_MODEL_NAME = "model_name"

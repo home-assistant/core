@@ -5,6 +5,7 @@ from typing import Callable
 
 from canary.api import SensorType
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
@@ -15,8 +16,8 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DATA_COORDINATOR, DOMAIN, MANUFACTURER
@@ -54,7 +55,7 @@ STATE_AIR_QUALITY_VERY_ABNORMAL = "very_abnormal"
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
@@ -77,7 +78,7 @@ async def async_setup_entry(
     async_add_entities(sensors, True)
 
 
-class CanarySensor(CoordinatorEntity, Entity):
+class CanarySensor(CoordinatorEntity, SensorEntity):
     """Representation of a Canary sensor."""
 
     def __init__(self, coordinator, sensor_type, location, device):

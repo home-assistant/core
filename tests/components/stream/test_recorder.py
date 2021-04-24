@@ -257,3 +257,13 @@ async def test_record_stream_audio(
         # Verify that the save worker was invoked, then block until its
         # thread completes and is shutdown completely to avoid thread leaks.
         await record_worker_sync.join()
+
+
+async def test_recorder_log(hass, caplog):
+    """Test starting a stream to record logs the url without username and password."""
+    await async_setup_component(hass, "stream", {"stream": {}})
+    stream = create_stream(hass, "https://abcd:efgh@foo.bar")
+    with patch.object(hass.config, "is_allowed_path", return_value=True):
+        await stream.async_record("/example/path")
+    assert "https://abcd:efgh@foo.bar" not in caplog.text
+    assert "https://****:****@foo.bar" in caplog.text

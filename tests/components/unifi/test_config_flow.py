@@ -380,8 +380,12 @@ async def test_reauth_flow_update_configuration(hass, aioclient_mock):
 
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN,
-        context={"source": SOURCE_REAUTH},
-        data=config_entry,
+        context={
+            "source": SOURCE_REAUTH,
+            "unique_id": config_entry.unique_id,
+            "entry_id": config_entry.entry_id,
+        },
+        data=config_entry.data,
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM

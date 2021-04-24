@@ -16,11 +16,11 @@ from pyicloud.services.findmyiphone import AppleDevice
 from homeassistant.components.zone import async_active_zone
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import slugify
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.dt import utcnow
@@ -76,7 +76,7 @@ class IcloudAccount:
 
     def __init__(
         self,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         username: str,
         password: str,
         icloud_dir: Store,
@@ -115,8 +115,7 @@ class IcloudAccount:
                 with_family=self._with_family,
             )
 
-            if not self.api.is_trusted_session or self.api.requires_2fa:
-                # Session is no longer trusted
+            if self.api.requires_2fa:
                 # Trigger a new log in to ensure the user enters the 2FA code again.
                 raise PyiCloudFailedLoginException
 
@@ -163,7 +162,7 @@ class IcloudAccount:
         if self.api is None:
             return
 
-        if not self.api.is_trusted_session or self.api.requires_2fa:
+        if self.api.requires_2fa:
             self._require_reauth()
             return
 
@@ -502,6 +501,6 @@ class IcloudDevice:
         return self._location
 
     @property
-    def state_attributes(self) -> dict[str, any]:
+    def extra_state_attributes(self) -> dict[str, any]:
         """Return the attributes."""
         return self._attrs

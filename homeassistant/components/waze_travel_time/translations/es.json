@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La ubicaci\u00f3n ya est\u00e1 configurada"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "destination": "Destino",
+                    "origin": "Origen",
+                    "region": "Regi\u00f3n"
+                },
+                "description": "En Origen y Destino, introduce la direcci\u00f3n de las coordenadas GPS de la ubicaci\u00f3n (las coordenadas GPS deben estar separadas por una coma). Tambi\u00e9n puedes escribir un id de entidad que proporcione esta informaci\u00f3n en su estado, un id de entidad con atributos de latitud y longitud o un nombre descriptivo de zona."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "avoid_ferries": "\u00bfEvitar ferries?",
+                    "avoid_subscription_roads": "\u00bfEvitar carreteras que necesitan vignette / suscripci\u00f3n?",
+                    "avoid_toll_roads": "\u00bfEvitar las autopistas de peaje?",
+                    "excl_filter": "Subcadena NO en la descripci\u00f3n de la ruta seleccionada",
+                    "incl_filter": "Subcadena en descripci\u00f3n de la ruta seleccionada",
+                    "realtime": "\u00bfTiempo de viaje en tiempo real?",
+                    "units": "Unidades",
+                    "vehicle_type": "Tipo de veh\u00edculo"
+                },
+                "description": "Las entradas `subcadena` te permitir\u00e1n forzar a la integraci\u00f3n a utilizar una ruta concreta o a evitar una ruta concreta en el c\u00e1lculo del tiempo del recorrido."
+            }
+        }
+    },
+    "title": "Waze Travel Time"
+}
