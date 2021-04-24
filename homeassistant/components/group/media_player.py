@@ -1,5 +1,7 @@
 """This platform allows several media players to be grouped into one media player."""
-from typing import Dict, List, Optional, Set
+from __future__ import annotations
+
+from typing import Any, Callable
 
 import voluptuous as vol
 
@@ -51,9 +53,12 @@ from homeassistant.const import (
 from homeassistant.core import State
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change_event
-
-# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
-# mypy: no-check-untyped-defs
+from homeassistant.helpers.typing import (
+    ConfigType,
+    DiscoveryInfoType,
+    EventType,
+    HomeAssistantType,
+)
 
 KEY_CLEAR_PLAYLIST = "clear_playlist"
 KEY_ON_OFF = "on_off"
@@ -74,7 +79,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistantType,
+    config: ConfigType,
+    async_add_entities: Callable,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Media Group platform."""
     async_add_entities([MediaGroup(config[CONF_NAME], config[CONF_ENTITIES])])
 
@@ -82,14 +92,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class MediaGroup(MediaPlayerEntity):
     """Representation of a Media Group."""
 
-    def __init__(self, name: str, entities: List[str]) -> None:
+    def __init__(self, name: str, entities: list[str]) -> None:
         """Initialize a Media Group entity."""
         self._name = name
-        self._state = None
+        self._state: str | None = None
         self._supported_features: int = 0
 
         self._entities = entities
-        self._features: Dict[str, Set[str]] = {
+        self._features: dict[str, set[str]] = {
             KEY_CLEAR_PLAYLIST: set(),
             KEY_ON_OFF: set(),
             KEY_PAUSE_PLAY_STOP: set(),
@@ -100,17 +110,17 @@ class MediaGroup(MediaPlayerEntity):
             KEY_VOLUME: set(),
         }
 
-    async def _on_state_change(self, event):
+    async def _on_state_change(self, event: EventType) -> None:
         self.async_set_context(event.context)
         await self.async_update_supported_features(
-            event.data.get("entity_id"), event.data.get("new_state")
+            event.data.get("entity_id"), event.data.get("new_state")  # type: ignore
         )
         await self.async_update_state()
 
     async def async_update_supported_features(
         self,
         entity_id: str,
-        new_state: Optional[State],
+        new_state: State | None,
     ) -> None:
         """Update dictionaries with supported features."""
         if not new_state:
@@ -154,7 +164,7 @@ class MediaGroup(MediaPlayerEntity):
         else:
             self._features[KEY_VOLUME].discard(entity_id)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register listeners."""
         for entity_id in self._entities:
             new_state = self.hass.states.get(entity_id)
@@ -187,7 +197,7 @@ class MediaGroup(MediaPlayerEntity):
         """Return the state attributes for the media group."""
         return {ATTR_ENTITY_ID: self._entities}
 
-    async def async_media_next_track(self):
+    async def async_media_next_track(self) -> None:
         """Send next track command."""
         data = {ATTR_ENTITY_ID: self._features[KEY_TRACKS]}
         await self.hass.services.async_call(
@@ -197,7 +207,7 @@ class MediaGroup(MediaPlayerEntity):
             context=self._context,
         )
 
-    async def async_media_pause(self):
+    async def async_media_pause(self) -> None:
         """Send pause command."""
         data = {ATTR_ENTITY_ID: self._features[KEY_PAUSE_PLAY_STOP]}
         await self.hass.services.async_call(
@@ -207,7 +217,7 @@ class MediaGroup(MediaPlayerEntity):
             context=self._context,
         )
 
-    async def async_media_play(self):
+    async def async_media_play(self) -> None:
         """Send play command."""
         data = {ATTR_ENTITY_ID: self._features[KEY_PAUSE_PLAY_STOP]}
         await self.hass.services.async_call(
@@ -217,7 +227,7 @@ class MediaGroup(MediaPlayerEntity):
             context=self._context,
         )
 
-    async def async_media_previous_track(self):
+    async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         data = {ATTR_ENTITY_ID: self._features[KEY_TRACKS]}
         await self.hass.services.async_call(
@@ -227,7 +237,7 @@ class MediaGroup(MediaPlayerEntity):
             context=self._context,
         )
 
-    async def async_media_seek(self, position):
+    async def async_media_seek(self, position: int) -> None:
         """Send seek command."""
         data = {
             ATTR_ENTITY_ID: self._features[KEY_SEEK],
@@ -240,7 +250,7 @@ class MediaGroup(MediaPlayerEntity):
             context=self._context,
         )
 
-    async def async_media_stop(self):
+    async def async_media_stop(self) -> None:
         """Send stop command."""
         data = {ATTR_ENTITY_ID: self._features[KEY_PAUSE_PLAY_STOP]}
         await self.hass.services.async_call(
@@ -250,7 +260,7 @@ class MediaGroup(MediaPlayerEntity):
             context=self._context,
         )
 
-    async def async_mute_volume(self, mute):
+    async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         data = {
             ATTR_ENTITY_ID: self._features[KEY_VOLUME],
@@ -263,7 +273,9 @@ class MediaGroup(MediaPlayerEntity):
             context=self._context,
         )
 
-    async def async_play_media(self, media_type, media_id, **kwargs):
+    async def async_play_media(
+        self, media_type: str, media_id: str, **kwargs: Any
+    ) -> None:
         """Play a piece of media."""
         data = {
             ATTR_ENTITY_ID: self._features[KEY_PLAY_MEDIA],
@@ -277,7 +289,7 @@ class MediaGroup(MediaPlayerEntity):
             context=self._context,
         )
 
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Forward the turn_on command to all media in the media group."""
         data = {ATTR_ENTITY_ID: self._features[KEY_ON_OFF]}
         await self.hass.services.async_call(
@@ -287,7 +299,7 @@ class MediaGroup(MediaPlayerEntity):
             context=self._context,
         )
 
-    async def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level(s)."""
         data = {
             ATTR_ENTITY_ID: self._features[KEY_VOLUME],
@@ -300,7 +312,7 @@ class MediaGroup(MediaPlayerEntity):
             context=self._context,
         )
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Forward the turn_off command to all media in the media group."""
         data = {ATTR_ENTITY_ID: self._features[KEY_ON_OFF]}
         await self.hass.services.async_call(
@@ -310,21 +322,21 @@ class MediaGroup(MediaPlayerEntity):
             context=self._context,
         )
 
-    async def async_volume_up(self):
+    async def async_volume_up(self) -> None:
         """Turn volume up for media player(s)."""
         for entity in self._features[KEY_VOLUME]:
-            volume_level = self.hass.states.get(entity).attributes["volume_level"]
+            volume_level = self.hass.states.get(entity).attributes["volume_level"]  # type: ignore
             if volume_level < 1:
                 await self.async_set_volume_level(min(1, volume_level + 0.1))
 
-    async def async_volume_down(self):
+    async def async_volume_down(self) -> None:
         """Turn volume down for media player(s)."""
         for entity in self._features[KEY_VOLUME]:
-            volume_level = self.hass.states.get(entity).attributes["volume_level"]
+            volume_level = self.hass.states.get(entity).attributes["volume_level"]  # type: ignore
             if volume_level > 0:
                 await self.async_set_volume_level(max(0, volume_level - 0.1))
 
-    async def async_update_state(self):
+    async def async_update_state(self) -> None:
         """Query all members and determine the media group state."""
         states = [self.hass.states.get(entity) for entity in self._entities]
         states_values = [state.state for state in states if state is not None]
