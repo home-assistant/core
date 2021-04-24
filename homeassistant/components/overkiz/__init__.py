@@ -67,14 +67,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except BadCredentialsException as exception:
         raise ConfigEntryAuthFailed from exception
     except TooManyRequestsException as exception:
-        _LOGGER.error("Too many requests, try again later")
-        raise ConfigEntryNotReady from exception
+        raise ConfigEntryNotReady("Too many requests, try again later") from exception
     except (TimeoutError, ClientError, ServerDisconnectedError) as exception:
-        _LOGGER.error("Failed to connect")
-        raise ConfigEntryNotReady from exception
+        raise ConfigEntryNotReady("Failed to connect") from exception
     except MaintenanceException as exception:
-        _LOGGER.error("Server is down for maintenance")
-        raise ConfigEntryNotReady from exception
+        raise ConfigEntryNotReady("Server is down for maintenance") from exception
     except Exception as exception:  # pylint: disable=broad-except
         _LOGGER.exception(exception)
         return False
