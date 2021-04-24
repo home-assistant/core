@@ -53,15 +53,10 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.typing import (
-    ConfigType,
-    DiscoveryInfoType,
-    EventType,
-    HomeAssistantType,
-)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 
 KEY_CLEAR_PLAYLIST = "clear_playlist"
 KEY_ON_OFF = "on_off"
@@ -83,7 +78,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: Callable,
     discovery_info: DiscoveryInfoType | None = None,
