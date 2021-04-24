@@ -20,10 +20,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Uonet+ Vulcan integration."""
     hass.data.setdefault(DOMAIN, {})
     try:
-        with open(f".vulcan/keystore-{entry.data.get('login')}.json") as f:
-            keystore = Keystore.load(f)
-        with open(f".vulcan/account-{entry.data.get('login')}.json") as f:
-            account = Account.load(f)
+        with open(f".vulcan/keystore-{entry.data.get('login')}.json") as file:
+            keystore = Keystore.load(file)
+        with open(f".vulcan/account-{entry.data.get('login')}.json") as file:
+            account = Account.load(file)
         client = Vulcan(keystore, account)
         await client.select_student()
         students = await client.get_students()
@@ -34,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except VulcanAPIException as err:
         if str(err) == "The certificate is not authorized.":
             _LOGGER.error(
-                "The certificate is not authorized, please authorize integration again."
+                "The certificate is not authorized, please authorize integration again"
             )
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
@@ -47,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         return False
     except FileNotFoundError:
         _LOGGER.error(
-            "The certificate is not authorized, please authorize integration again."
+            "The certificate is not authorized, please authorize integration again"
         )
         hass.async_create_task(
             hass.config_entries.flow.async_init(
@@ -63,7 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             )
             hass.data[DOMAIN]["connection_error"] = True
         await client.close()
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from err
     num = 0
     for _ in hass.config_entries.async_entries(DOMAIN):
         num += 1

@@ -5,55 +5,55 @@ async def get_lessons(client, date_from=None, date_to=None):
     """Support for fetching Vulcan lessons."""
     changes = {}
     list_ans = []
-    async for Lesson in await client.data.get_changed_lessons(
+    async for lesson in await client.data.get_changed_lessons(
         date_from=date_from, date_to=date_to
     ):
         temp_dict = {}
-        id = str(Lesson.id)
-        temp_dict["id"] = Lesson.id
-        temp_dict["number"] = Lesson.time.position if Lesson.time is not None else None
+        _id = str(lesson.id)
+        temp_dict["id"] = lesson.id
+        temp_dict["number"] = lesson.time.position if lesson.time is not None else None
         temp_dict["lesson"] = (
-            Lesson.subject.name if Lesson.subject is not None else None
+            lesson.subject.name if lesson.subject is not None else None
         )
-        temp_dict["room"] = Lesson.room.code if Lesson.room is not None else None
-        temp_dict["changes"] = Lesson.changes
-        temp_dict["note"] = Lesson.note
-        temp_dict["reason"] = Lesson.reason
-        temp_dict["event"] = Lesson.event
-        temp_dict["group"] = Lesson.group
+        temp_dict["room"] = lesson.room.code if lesson.room is not None else None
+        temp_dict["changes"] = lesson.changes
+        temp_dict["note"] = lesson.note
+        temp_dict["reason"] = lesson.reason
+        temp_dict["event"] = lesson.event
+        temp_dict["group"] = lesson.group
         temp_dict["teacher"] = (
-            Lesson.teacher.display_name if Lesson.teacher is not None else None
+            lesson.teacher.display_name if lesson.teacher is not None else None
         )
         temp_dict["from_to"] = (
-            Lesson.time.displayed_time if Lesson.time is not None else None
+            lesson.time.displayed_time if lesson.time is not None else None
         )
 
-        changes[str(id)] = temp_dict
+        changes[str(_id)] = temp_dict
 
-    async for Lesson in await client.data.get_lessons(
+    async for lesson in await client.data.get_lessons(
         date_from=date_from, date_to=date_to
     ):
         temp_dict = {}
-        temp_dict["id"] = Lesson.id
-        temp_dict["number"] = Lesson.time.position
-        temp_dict["time"] = Lesson.time
-        temp_dict["date"] = Lesson.date.date
+        temp_dict["id"] = lesson.id
+        temp_dict["number"] = lesson.time.position
+        temp_dict["time"] = lesson.time
+        temp_dict["date"] = lesson.date.date
         temp_dict["lesson"] = (
-            Lesson.subject.name if Lesson.subject is not None else None
+            lesson.subject.name if lesson.subject is not None else None
         )
-        if Lesson.room is not None:
-            temp_dict["room"] = Lesson.room.code
+        if lesson.room is not None:
+            temp_dict["room"] = lesson.room.code
         else:
             temp_dict["room"] = "-"
-        temp_dict["visible"] = Lesson.visible
-        temp_dict["changes"] = Lesson.changes
-        temp_dict["group"] = Lesson.group
+        temp_dict["visible"] = lesson.visible
+        temp_dict["changes"] = lesson.changes
+        temp_dict["group"] = lesson.group
         temp_dict["reason"] = None
         temp_dict["teacher"] = (
-            Lesson.teacher.display_name if Lesson.teacher is not None else None
+            lesson.teacher.display_name if lesson.teacher is not None else None
         )
         temp_dict["from_to"] = (
-            Lesson.time.displayed_time if Lesson.time is not None else None
+            lesson.time.displayed_time if lesson.time is not None else None
         )
         if temp_dict["changes"] is None:
             temp_dict["changes"] = ""

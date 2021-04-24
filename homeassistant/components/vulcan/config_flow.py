@@ -36,8 +36,9 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return VulcanOptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input=None, is_new_account=False, errors={}):
+    async def async_step_user(self, user_input=None, is_new_account=False):
         """Get login credentials from the user."""
+        errors = {}
         if (
             self._async_current_entries()
             and is_new_account is False
@@ -54,7 +55,7 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     user_input["pin"],
                 )
             except VulcanAPIException as err:
-                if str(err) == "Invalid token!" or "Invalid token.":
+                if str(err) == "Invalid token!" or str(err) == "Invalid token.":
                     errors["base"] = "invalid_token"
                 elif str(err) == "Expired token.":
                     errors["base"] = "expired_token"
@@ -72,7 +73,7 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except ClientConnectorError as err:
                 errors["base"] = "cannot_connect"
                 _LOGGER.error("Connection error: %s", err)
-            except Exception as err:
+            except BaseException as err:
                 errors["base"] = "unknown"
                 _LOGGER.error(err)
             if errors == {}:
@@ -85,8 +86,7 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
                 if len(self._students) > 1:
                     return await self.async_step_select_student()
-                else:
-                    self._student = self._students[0]
+                self._student = self._students[0]
                 await self.async_set_unique_id(str(self._student.pupil.id))
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
@@ -105,7 +105,7 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_select_student(self, user_input=None):
         """Allow user to select student."""
-        error = None
+        errors = {}
         students_list = {}
         for student in self._students:
             students_list[
@@ -131,14 +131,12 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="select_student",
             data_schema=vol.Schema(data_schema),
-            description_placeholders={
-                "error_text": "\nERROR: " + error if error else ""
-            },
+            errors=errors,
         )
 
     async def async_step_select_saved_credentials(self, user_input=None):
         """Allow user to select saved credentials."""
-        error = None
+        errors = {}
         credentials_list = {}
         file_list = os.listdir(".vulcan")
         for file in file_list:
@@ -164,11 +162,10 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     return await self.async_step_user(
                         is_new_account=True, errors={"base": "expired_credentials"}
                     )
-                else:
-                    return await self.async_step_user(
-                        is_new_account=True, errors={"base": "unknown"}
-                    )
-                    _LOGGER.error(err)
+                _LOGGER.error(err)
+                return await self.async_step_user(
+                    is_new_account=True, errors={"base": "unknown"}
+                )
             finally:
                 await client.close()
             if len(self._students) == 1:
@@ -192,14 +189,12 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="select_saved_credentials",
             data_schema=vol.Schema(data_schema),
-            description_placeholders={
-                "error_text": "\nERROR: " + error if error else ""
-            },
+            errors=errors,
         )
 
     async def async_step_add_student(self, user_input=None):
         """Flow initialized when user is adding next entry of that integration."""
-        error = None
+        errors = {}
         if user_input is not None:
             if user_input["use_saved_credentials"]:
                 if len(os.listdir(".vulcan")) == 2:
@@ -217,11 +212,9 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     if len(self._students) == 1:
                         return self.async_abort(reason="all_student_already_configured")
                     return await self.async_step_select_student()
-                else:
-                    return await self.async_step_select_saved_credentials()
-            else:
-                self.is_new_account = True
-                return await self.async_step_user(is_new_account=True)
+                return await self.async_step_select_saved_credentials()
+            self.is_new_account = True
+            return await self.async_step_user(is_new_account=True)
 
         data_schema = {
             vol.Required("use_saved_credentials", default=True): bool,
@@ -229,9 +222,7 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="add_student",
             data_schema=vol.Schema(data_schema),
-            description_placeholders={
-                "error_text": "\nERROR: " + error if error else ""
-            },
+            errors=errors,
         )
 
     async def async_step_reauth(self, user_input=None):
@@ -246,7 +237,7 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     user_input["pin"],
                 )
             except VulcanAPIException as err:
-                if str(err) == "Invalid token!" or "Invalid token.":
+                if str(err) == "Invalid token!" or str(err) == "Invalid token.":
                     errors["base"] = "invalid_token"
                 elif str(err) == "Expired token.":
                     errors["base"] = "expired_token"
@@ -264,7 +255,7 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except ClientConnectorError as err:
                 errors["base"] = "cannot_connect"
                 _LOGGER.error("Connection error: %s", err)
-            except Exception as err:
+            except BaseException as err:
                 errors["base"] = "unknown"
                 _LOGGER.error(err)
             if errors == {}:
