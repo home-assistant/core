@@ -11,7 +11,7 @@ from .const import (
     API_ACCOUNT_NATIVE_BALANCE,
     API_ACCOUNTS_DATA,
     CONF_CURRENCIES,
-    CONF_EXCAHNGE_RATES,
+    CONF_EXCHANGE_RATES,
     DOMAIN,
 )
 
@@ -50,8 +50,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for currency in desired_currencies:
         entities.append(AccountSensor(instance, currency))
 
-    if CONF_EXCAHNGE_RATES in config_entry.data:
-        for rate in config_entry.data[CONF_EXCAHNGE_RATES]:
+    if CONF_EXCHANGE_RATES in config_entry.data:
+        for rate in config_entry.data[CONF_EXCHANGE_RATES]:
             entities.append(
                 ExchangeRateSensor(
                     instance,
