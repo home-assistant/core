@@ -133,7 +133,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 @callback
-def _async_create_template_tracking_entities(async_add_entities, hass, definitions):
+def _async_create_template_tracking_entities(
+    async_add_entities, hass, definitions: list[dict], unique_id_prefix: str | None
+):
     """Create the template binary sensors."""
     sensors = []
 
@@ -151,6 +153,9 @@ def _async_create_template_tracking_entities(async_add_entities, hass, definitio
         delay_on_raw = entity_conf.get(CONF_DELAY_ON)
         delay_off_raw = entity_conf.get(CONF_DELAY_OFF)
         unique_id = entity_conf.get(CONF_UNIQUE_ID)
+
+        if unique_id and unique_id_prefix:
+            unique_id = f"{unique_id_prefix}-{unique_id}"
 
         sensors.append(
             BinarySensorTemplate(
@@ -179,6 +184,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             async_add_entities,
             hass,
             rewrite_legacy_to_modern_conf(config[CONF_SENSORS]),
+            None,
         )
         return
 
@@ -190,7 +196,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         return
 
     _async_create_template_tracking_entities(
-        async_add_entities, hass, discovery_info["entities"]
+        async_add_entities,
+        hass,
+        discovery_info["entities"],
+        discovery_info["unique_id"],
     )
 
 
