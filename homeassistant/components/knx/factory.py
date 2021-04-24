@@ -12,11 +12,10 @@ from xknx.devices import (
     Light as XknxLight,
     Notification as XknxNotification,
     Scene as XknxScene,
-    Sensor as XknxSensor,
     Weather as XknxWeather,
 )
 
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_TYPE
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
 from homeassistant.helpers.typing import ConfigType
 
 from .const import KNX_ADDRESS, ColorTempModes, SupportedPlatforms
@@ -27,7 +26,6 @@ from .schema import (
     FanSchema,
     LightSchema,
     SceneSchema,
-    SensorSchema,
     WeatherSchema,
 )
 
@@ -46,9 +44,6 @@ def create_knx_device(
 
     if platform is SupportedPlatforms.CLIMATE:
         return _create_climate(knx_module, config)
-
-    if platform is SupportedPlatforms.SENSOR:
-        return _create_sensor(knx_module, config)
 
     if platform is SupportedPlatforms.NOTIFY:
         return _create_notify(knx_module, config)
@@ -264,18 +259,6 @@ def _create_climate(knx_module: XKNX, config: ConfigType) -> XknxClimate:
         create_temperature_sensors=config[
             ClimateSchema.CONF_CREATE_TEMPERATURE_SENSORS
         ],
-    )
-
-
-def _create_sensor(knx_module: XKNX, config: ConfigType) -> XknxSensor:
-    """Return a KNX sensor to be used within XKNX."""
-    return XknxSensor(
-        knx_module,
-        name=config[CONF_NAME],
-        group_address_state=config[SensorSchema.CONF_STATE_ADDRESS],
-        sync_state=config[SensorSchema.CONF_SYNC_STATE],
-        always_callback=config[SensorSchema.CONF_ALWAYS_CALLBACK],
-        value_type=config[CONF_TYPE],
     )
 
 

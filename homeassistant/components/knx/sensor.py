@@ -4,9 +4,11 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import Any, Callable
 
+from xknx import XKNX
 from xknx.devices import Sensor as XknxSensor
 
 from homeassistant.components.sensor import DEVICE_CLASSES, SensorEntity
+from homeassistant.const import CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
@@ -14,6 +16,7 @@ from homeassistant.util import dt
 
 from .const import ATTR_LAST_KNX_UPDATE, ATTR_SOURCE, DOMAIN
 from .knx_entity import KnxEntity
+from .schema import SensorSchema
 
 
 async def async_setup_platform(
@@ -23,20 +26,38 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up sensor(s) for KNX platform."""
+    if not discovery_info or not discovery_info["platform_config"]:
+        return
+
+    platform_config = discovery_info["platform_config"]
+    xknx: XKNX = hass.data[DOMAIN].xknx
+
     entities = []
-    for device in hass.data[DOMAIN].xknx.devices:
-        if isinstance(device, XknxSensor):
-            entities.append(KNXSensor(device))
+    for entity_config in platform_config:
+        entities.append(KNXSensor(xknx, entity_config))
+
     async_add_entities(entities)
 
 
 class KNXSensor(KnxEntity, SensorEntity):
     """Representation of a KNX sensor."""
 
-    def __init__(self, device: XknxSensor) -> None:
+    def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Initialize of a KNX sensor."""
         self._device: XknxSensor
-        super().__init__(device)
+        super().__init__(self._create_sensor(xknx, config))
+
+    @staticmethod
+    def _create_sensor(xknx: XKNX, config: ConfigType) -> XknxSensor:
+        """Return a KNX sensor to be used within XKNX."""
+        return XknxSensor(
+            xknx,
+            name=config[CONF_NAME],
+            group_address_state=config[SensorSchema.CONF_STATE_ADDRESS],
+            sync_state=config[SensorSchema.CONF_SYNC_STATE],
+            always_callback=config[SensorSchema.CONF_ALWAYS_CALLBACK],
+            value_type=config[CONF_TYPE],
+        )
 
     @property
     def state(self) -> StateType:
