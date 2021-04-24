@@ -842,8 +842,16 @@ async def test_unique_id(hass):
     """Test unique_id option only creates one binary sensor per id."""
     await setup.async_setup_component(
         hass,
-        binary_sensor.DOMAIN,
+        "template",
         {
+            "template": {
+                "unique_id": "group-id",
+                "binary_sensor": {
+                    "name": "top-level",
+                    "unique_id": "sensor-id",
+                    "state": "on",
+                },
+            },
             "binary_sensor": {
                 "platform": "template",
                 "sensors": {
@@ -864,7 +872,21 @@ async def test_unique_id(hass):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all()) == 2
+
+    ent_reg = entity_registry.async_get(hass)
+
+    assert len(ent_reg.entities) == 2
+    assert (
+        ent_reg.async_get_entity_id("binary_sensor", "template", "group-id-sensor-id")
+        is not None
+    )
+    assert (
+        ent_reg.async_get_entity_id(
+            "binary_sensor", "template", "not-so-unique-anymore"
+        )
+        is not None
+    )
 
 
 async def test_template_validation_error(hass, caplog):
