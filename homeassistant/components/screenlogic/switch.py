@@ -1,7 +1,7 @@
 """Support for a ScreenLogic 'circuit' switch."""
 import logging
 
-from screenlogicpy.const import ON_OFF
+from screenlogicpy.const import DATA as SL_DATA, ON_OFF
 
 from homeassistant.components.switch import SwitchEntity
 
@@ -14,11 +14,11 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up entry."""
     entities = []
-    data = hass.data[DOMAIN][config_entry.entry_id]
-    coordinator = data["coordinator"]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
 
-    for switch in data["devices"]["switch"]:
-        entities.append(ScreenLogicSwitch(coordinator, switch))
+    for circuit in coordinator.data[SL_DATA.KEY_CIRCUITS]:
+        entities.append(ScreenLogicSwitch(coordinator, circuit))
+
     async_add_entities(entities)
 
 
@@ -60,4 +60,4 @@ class ScreenLogicSwitch(ScreenlogicEntity, SwitchEntity):
     @property
     def circuit(self):
         """Shortcut to access the circuit."""
-        return self.coordinator.data["circuits"][self._data_key]
+        return self.coordinator.data[SL_DATA.KEY_CIRCUITS][self._data_key]
