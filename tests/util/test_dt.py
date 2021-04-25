@@ -322,6 +322,10 @@ def test_find_next_time_expression_time_dst_chicago():
         datetime(2021, 11, 7, 2, 10, 0, tzinfo=tz), 2, 30, 0
     )
 
+    assert datetime(2021, 11, 7, 2, 30, 0, tzinfo=tz, fold=1) == find(
+        datetime(2021, 11, 7, 2, 30, 0, tzinfo=tz, fold=0), 2, 30, 0
+    )
+
     assert datetime(2021, 11, 8, 2, 30, 0, tzinfo=tz, fold=1) == find(
         datetime(2021, 11, 7, 2, 55, 0, tzinfo=tz, fold=0), 2, 30, 0
     )
