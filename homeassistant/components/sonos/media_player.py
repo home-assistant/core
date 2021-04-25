@@ -461,7 +461,11 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         self.update_volume()
         self._set_favorites()
 
-    def update(self, now: datetime.datetime | None = None) -> None:
+    async def async_update(self, now: datetime.datetime | None = None) -> None:
+        """Retrieve latest state."""
+        await self.hass.async_add_executor_job(self._update, now)
+
+    def _update(self, now: datetime.datetime | None = None) -> None:
         """Retrieve latest state."""
         _LOGGER.debug("Polling speaker %s", self.speaker.zone_name)
         try:
@@ -1204,7 +1208,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         except asyncio.TimeoutError:
             _LOGGER.warning("Timeout waiting for target groups %s", groups)
 
-        for entity in hass.data[DATA_SONOS].entities:
+        for entity in hass.data[DATA_SONOS].media_player_entities:
             entity.soco._zgs_cache.clear()
 
     @soco_error()

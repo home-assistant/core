@@ -34,7 +34,7 @@ class SonosEntity(Entity):
             async_dispatcher_connect(
                 self.hass,
                 f"{SONOS_ENTITY_UPDATE}-{self.soco.uid}",
-                self.update,  # pylint: disable=no-member
+                self.async_update,  # pylint: disable=no-member
             )
         )
         self.async_on_remove(
