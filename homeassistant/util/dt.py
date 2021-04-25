@@ -305,6 +305,15 @@ def find_next_time_expression_time(
     if result.tzinfo in (None, UTC):
         return result
 
+    if tz.datetime_ambiguous(result):
+        # This happens when we're leaving daylight saving time and local
+        # clocks are rolled back. In this case, we want to trigger
+        # on both the DST and non-DST time. So when "now" is in the DST
+        # use the DST-on time, and if not, use the DST-off time.
+        fold = 1 if now.dst() else 0
+        if result.fold != fold:
+            result = result.replace(fold=fold)
+
     if not tz.datetime_exists(result):
         # This happens when we're entering daylight saving time and local
         # clocks are rolled forward, thus there are local times that do
