@@ -7,12 +7,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import configure_mydevolo
-from .const import (  # pylint:disable=unused-import
-    CONF_MYDEVOLO,
-    DEFAULT_MYDEVOLO,
-    DOMAIN,
-    SUPPORTED_MODEL_TYPES,
-)
+from .const import CONF_MYDEVOLO, DEFAULT_MYDEVOLO, DOMAIN, SUPPORTED_MODEL_TYPES
 from .exceptions import CredentialsInvalid
 
 

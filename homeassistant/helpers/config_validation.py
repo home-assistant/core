@@ -483,7 +483,7 @@ def schema_with_slug_keys(
         for key in value.keys():
             slug_validator(key)
 
-        return cast(Dict, schema(value))
+        return cast(dict, schema(value))
 
     return verify
 

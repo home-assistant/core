@@ -94,21 +94,24 @@ async def test_subprocess_exceptions(caplog: Any, hass: HomeAssistant) -> None:
     """Test that notify subprocess exceptions are handled correctly."""
 
     with patch(
-        "homeassistant.components.command_line.notify.subprocess.Popen",
-        side_effect=[
-            subprocess.TimeoutExpired("cmd", 10),
-            subprocess.SubprocessError(),
-        ],
+        "homeassistant.components.command_line.notify.subprocess.Popen"
     ) as check_output:
+        check_output.return_value.__enter__ = check_output
+        check_output.return_value.communicate.side_effect = [
+            subprocess.TimeoutExpired("cmd", 10),
+            None,
+            subprocess.SubprocessError(),
+        ]
+
         await setup_test_service(hass, {"command": "exit 0"})
         assert await hass.services.async_call(
             DOMAIN, "test", {"message": "error"}, blocking=True
         )
-        assert check_output.call_count == 1
+        assert check_output.call_count == 2
         assert "Timeout for command" in caplog.text
 
         assert await hass.services.async_call(
             DOMAIN, "test", {"message": "error"}, blocking=True
         )
-        assert check_output.call_count == 2
+        assert check_output.call_count == 4
         assert "Error trying to exec command" in caplog.text

@@ -6,7 +6,6 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
-# pylint:disable=unused-import
 from .const import DOMAIN, HOME_LOCATION_NAME
 
 

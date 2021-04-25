@@ -153,7 +153,7 @@ class DenonDevice(MediaPlayerEntity):
         )
         self._available = True
 
-    def async_log_errors(  # pylint: disable=no-self-argument
+    def async_log_errors(
         func: Coroutine,
     ) -> Coroutine:
         """
@@ -168,7 +168,7 @@ class DenonDevice(MediaPlayerEntity):
             # pylint: disable=protected-access
             available = True
             try:
-                return await func(self, *args, **kwargs)  # pylint: disable=not-callable
+                return await func(self, *args, **kwargs)
             except AvrTimoutError:
                 available = False
                 if self._available is True:
@@ -203,7 +203,7 @@ class DenonDevice(MediaPlayerEntity):
                 _LOGGER.error(
                     "Error %s occurred in method %s for Denon AVR receiver",
                     err,
-                    func.__name__,  # pylint: disable=no-member
+                    func.__name__,
                     exc_info=True,
                 )
             finally:
