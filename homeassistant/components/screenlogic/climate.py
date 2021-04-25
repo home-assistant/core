@@ -89,7 +89,7 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
     @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
-        if self.config_data["is_celcius"]["value"] == 1:
+        if self.config_data["is_celsius"]["value"] == 1:
             return TEMP_CELSIUS
         return TEMP_FAHRENHEIT
 
