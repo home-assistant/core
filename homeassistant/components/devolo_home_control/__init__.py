@@ -10,7 +10,7 @@ from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import (
     CONF_MYDEVOLO,
@@ -30,7 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     credentials_valid = await hass.async_add_executor_job(mydevolo.credentials_valid)
 
     if not credentials_valid:
-        return False
+        raise ConfigEntryAuthFailed
 
     if await hass.async_add_executor_job(mydevolo.maintenance):
         raise ConfigEntryNotReady

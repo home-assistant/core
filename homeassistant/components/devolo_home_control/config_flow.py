@@ -23,6 +23,7 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_USERNAME): str,
             vol.Required(CONF_PASSWORD): str,
         }
+        self._reauth_entry = None
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
@@ -56,6 +57,32 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="zeroconf_confirm", errors={"base": "invalid_auth"}
             )
 
+    async def async_step_reauth(self, user_input):
+        """Handle reauthentication."""
+        self._reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        self.data_schema = {
+            vol.Required(CONF_USERNAME, default=user_input[CONF_USERNAME]): str,
+            vol.Required(CONF_PASSWORD): str,
+        }
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(self, user_input=None):
+        """Handle a flow initiated by reauthentication."""
+        if user_input is None:
+            return self._show_form(step_id="reauth_confirm")
+        try:
+            return await self._connect_mydevolo(user_input)
+        except CredentialsInvalid:
+            return self._show_form(
+                step_id="reauth_confirm", errors={"base": "invalid_auth"}
+            )
+        except UuidChanged:
+            return self._show_form(
+                step_id="reauth_confirm", errors={"base": "reauth_failed"}
+            )
+
     async def _connect_mydevolo(self, user_input):
         """Connect to mydevolo."""
         mydevolo = configure_mydevolo(conf=user_input)
@@ -65,17 +92,30 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not credentials_valid:
             raise CredentialsInvalid
         uuid = await self.hass.async_add_executor_job(mydevolo.uuid)
-        await self.async_set_unique_id(uuid)
-        self._abort_if_unique_id_configured()
 
-        return self.async_create_entry(
-            title="devolo Home Control",
-            data={
-                CONF_PASSWORD: mydevolo.password,
-                CONF_USERNAME: mydevolo.user,
-                CONF_MYDEVOLO: mydevolo.url,
-            },
+        if not self._reauth_entry:
+            await self.async_set_unique_id(uuid)
+            self._abort_if_unique_id_configured()
+            return self.async_create_entry(
+                title="devolo Home Control",
+                data={
+                    CONF_PASSWORD: mydevolo.password,
+                    CONF_USERNAME: mydevolo.user,
+                    CONF_MYDEVOLO: mydevolo.url,
+                },
+            )
+
+        if self._reauth_entry.unique_id != uuid:
+            # The old user and the new user are not the same. This could mess-up everything as all unique IDs might change.
+            raise UuidChanged
+
+        self.hass.config_entries.async_update_entry(
+            self._reauth_entry, data=user_input, unique_id=uuid
         )
+        self.hass.async_create_task(
+            self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
+        )
+        return self.async_abort(reason="reauth_successful")
 
     @callback
     def _show_form(self, step_id, errors=None):
