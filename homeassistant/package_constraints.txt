@@ -29,7 +29,7 @@ pytz>=2021.1
 pyyaml==5.4.1
 requests==2.25.1
 ruamel.yaml==0.15.100
-scapy==2.4.4
+scapy==2.4.5
 sqlalchemy==1.4.11
 voluptuous-serialize==2.4.0
 voluptuous==0.12.1
