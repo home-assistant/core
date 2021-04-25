@@ -52,7 +52,7 @@ class KNXCover(KnxEntity, CoverEntity):
         """Initialize the cover."""
         self._device: XknxCover
         super().__init__(device)
-
+        self._unique_id = f"{self._device.updown.group_address}"
         self._unsubscribe_auto_updater: Callable[[], None] | None = None
 
     @callback

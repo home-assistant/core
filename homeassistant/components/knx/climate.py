@@ -48,7 +48,7 @@ class KNXClimate(KnxEntity, ClimateEntity):
         """Initialize of a KNX climate device."""
         self._device: XknxClimate
         super().__init__(device)
-
+        self._unique_id = f"{self._device.temperature.group_address_state}"
         self._unit_of_measurement = TEMP_CELSIUS
 
     @property
