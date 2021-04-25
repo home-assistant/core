@@ -388,7 +388,7 @@ class EntityPlatform:
             self.scan_interval,
         )
 
-    async def _async_add_entity(  # type: ignore[no-untyped-def]
+    async def _async_add_entity(  # type: ignore[no-untyped-def]  # noqa: C901
         self, entity, update_before_add, entity_registry, device_registry
     ):
         """Add an entity to the platform."""

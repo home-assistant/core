@@ -79,7 +79,9 @@ class MQTTConfig(dict):
     """Dummy class to allow adding attributes."""
 
 
-async def async_start(hass: HomeAssistant, discovery_topic, config_entry=None) -> bool:
+async def async_start(  # noqa: C901
+    hass: HomeAssistant, discovery_topic, config_entry=None
+) -> bool:
     """Start MQTT Discovery."""
     mqtt_integrations = {}
 

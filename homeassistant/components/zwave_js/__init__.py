@@ -108,7 +108,9 @@ def register_node_in_dev_reg(
     return device
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(  # noqa: C901
+    hass: HomeAssistant, entry: ConfigEntry
+) -> bool:
     """Set up Z-Wave JS from a config entry."""
     use_addon = entry.data.get(CONF_USE_ADDON)
     if use_addon:
