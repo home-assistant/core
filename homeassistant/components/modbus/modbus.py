@@ -3,6 +3,7 @@ import logging
 import threading
 
 from pymodbus.client.sync import ModbusSerialClient, ModbusTcpClient, ModbusUdpClient
+from pymodbus.constants import Defaults
 from pymodbus.exceptions import ModbusException
 from pymodbus.transaction import ModbusRtuFramer
 
@@ -138,6 +139,7 @@ class ModbusHub:
         self._config_timeout = client_config[CONF_TIMEOUT]
         self._config_delay = 0
 
+        Defaults.Timeout = 10
         if self._config_type == "serial":
             # serial configuration
             self._config_method = client_config[CONF_METHOD]
