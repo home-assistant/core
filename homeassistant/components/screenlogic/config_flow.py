@@ -1,7 +1,7 @@
 """Config flow for ScreenLogic."""
 import logging
 
-from screenlogicpy import ScreenLogicError, discover
+from screenlogicpy import ScreenLogicError, discovery
 from screenlogicpy.const import SL_GATEWAY_IP, SL_GATEWAY_NAME, SL_GATEWAY_PORT
 from screenlogicpy.requests import login
 import voluptuous as vol
@@ -27,7 +27,7 @@ async def async_discover_gateways_by_unique_id(hass):
     """Discover gateways and return a dict of them by unique id."""
     discovered_gateways = {}
     try:
-        hosts = await hass.async_add_executor_job(discover)
+        hosts = await discovery.async_discover()
         _LOGGER.debug("Discovered hosts: %s", hosts)
     except ScreenLogicError as ex:
         _LOGGER.debug(ex)
