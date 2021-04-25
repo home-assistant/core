@@ -108,7 +108,7 @@ class SafeLineLoader(yaml.SafeLoader):
 
 def load_yaml(fname: str, secrets: Secrets | None = None) -> JSON_TYPE:
     """Load a YAML file."""
-    _LOGGER.warning("Load yaml: %s", fname)
+    _LOGGER.debug("Load yaml: %s", fname)
     try:
         with open(fname, encoding="utf-8") as conf_file:
             return parse_yaml(conf_file, secrets)
