@@ -220,7 +220,9 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
-        self._value = await self.async_get_last_state()
+        state = await self.async_get_last_state()
+        if state:
+            self._value = state.state
 
         async_track_time_interval(
             self.hass, lambda arg: self._update(), self._scan_interval
