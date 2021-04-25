@@ -6,7 +6,7 @@ from aiohttp import ClientResponseError
 from pysmartthings import APIResponseError
 from pysmartthings.installedapp import format_install_url
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.smartthings import smartapp
 from homeassistant.components.smartthings.const import (
     CONF_APP_ID,
@@ -31,7 +31,7 @@ async def test_import_shows_user_step(hass):
     """Test import source shows the user form."""
     # Webhook confirmation shown
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "import"}
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -56,7 +56,7 @@ async def test_entry_created(hass, app, app_oauth_client, location, smartthings_
 
     # Webhook confirmation shown
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -127,7 +127,7 @@ async def test_entry_created_from_update_event(
 
     # Webhook confirmation shown
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -198,7 +198,7 @@ async def test_entry_created_existing_app_new_oauth_client(
 
     # Webhook confirmation shown
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -282,7 +282,7 @@ async def test_entry_created_existing_app_copies_oauth_client(
 
     # Webhook confirmation shown
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -372,7 +372,7 @@ async def test_entry_created_with_cloudhook(
 
         # Webhook confirmation shown
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "user"
@@ -434,7 +434,7 @@ async def test_invalid_webhook_aborts(hass):
         {"external_url": "http://example.local:8123"},
     )
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "invalid_webhook_url"
@@ -450,7 +450,7 @@ async def test_invalid_token_shows_error(hass):
 
     # Webhook confirmation shown
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -487,7 +487,7 @@ async def test_unauthorized_token_shows_error(hass, smartthings_mock):
 
     # Webhook confirmation shown
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -524,7 +524,7 @@ async def test_forbidden_token_shows_error(hass, smartthings_mock):
 
     # Webhook confirmation shown
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -564,7 +564,7 @@ async def test_webhook_problem_shows_error(hass, smartthings_mock):
 
     # Webhook confirmation shown
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -603,7 +603,7 @@ async def test_api_error_shows_error(hass, smartthings_mock):
 
     # Webhook confirmation shown
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -641,7 +641,7 @@ async def test_unknown_response_error_shows_error(hass, smartthings_mock):
 
     # Webhook confirmation shown
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -675,7 +675,7 @@ async def test_unknown_error_shows_error(hass, smartthings_mock):
 
     # Webhook confirmation shown
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -717,7 +717,7 @@ async def test_no_available_locations_aborts(
 
     # Webhook confirmation shown
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
