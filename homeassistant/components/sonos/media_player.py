@@ -158,7 +158,7 @@ class SonosData:
         self.hosts_heartbeat = None
 
 
-async def async_setup_entry(
+async def async_setup_entry(  # noqa: C901
     hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable
 ) -> None:
     """Set up Sonos from a config entry."""

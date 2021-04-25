@@ -118,7 +118,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):  # noqa: C901
     """Set up Synology DSM sensors."""
 
     # Migrate old unique_id

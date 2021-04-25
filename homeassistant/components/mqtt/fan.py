@@ -335,7 +335,7 @@ class MqttFan(MqttEntity, FanEntity):
                     tpl.hass = self.hass
                     tpl_dict[key] = tpl.async_render_with_possible_json_value
 
-    async def _subscribe_topics(self):
+    async def _subscribe_topics(self):  # noqa: C901
         """(Re)Subscribe to topics."""
         topics = {}
 
