@@ -69,6 +69,8 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 
     conf = config[DOMAIN]
 
+    # https://github.com/PyCQA/pylint/issues/2062
+    # pylint: disable=no-member
     ids: dict[str, list[int]] = {
         EntityType.PET.name: conf[CONF_PETS],
         EntityType.PET_FLAP.name: conf[CONF_FLAPS],
@@ -169,6 +171,9 @@ class SurePetcareAPI:
 
     async def set_lock_state(self, flap_id: int, state: str) -> None:
         """Update the lock state of a flap."""
+
+        # https://github.com/PyCQA/pylint/issues/2062
+        # pylint: disable=no-member
         if state == LockState.UNLOCKED.name.lower():
             await self.surepy.unlock(flap_id)
         elif state == LockState.LOCKED_IN.name.lower():
