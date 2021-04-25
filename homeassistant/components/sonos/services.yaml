@@ -77,9 +77,8 @@ set_sleep_timer:
   name: Set timer
   description: Set a Sonos timer.
   target:
-    entity:
+    device:
       integration: sonos
-      domain: media_player
   fields:
     sleep_time:
       name: Sleep Time
@@ -97,17 +96,15 @@ clear_sleep_timer:
   name: Clear timer
   description: Clear a Sonos timer.
   target:
-    entity:
+    device:
       integration: sonos
-      domain: media_player
 
 set_option:
   name: Set option
   description: Set Sonos sound options.
   target:
-    entity:
+    device:
       integration: sonos
-      domain: media_player
   fields:
     night_sound:
       name: Night sound
@@ -132,9 +129,8 @@ play_queue:
   name: Play queue
   description: Start playing the queue from the first item.
   target:
-    entity:
+    device:
       integration: sonos
-      domain: media_player
   fields:
     queue_position:
       name: Queue position
@@ -150,9 +146,8 @@ remove_from_queue:
   name: Remove from queue
   description: Removes an item from the queue.
   target:
-    entity:
+    device:
       integration: sonos
-      domain: media_player
   fields:
     queue_position:
       name: Queue position
