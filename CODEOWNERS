@@ -165,6 +165,7 @@ homeassistant/components/fortios/* @kimfrellsen
 homeassistant/components/foscam/* @skgsergio
 homeassistant/components/freebox/* @hacf-fr @Quentame
 homeassistant/components/fritz/* @mammuth @AaronDavidSchneider @chemelli74
+homeassistant/components/fritzbox/* @mib1185
 homeassistant/components/fronius/* @nielstron
 homeassistant/components/frontend/* @home-assistant/frontend
 homeassistant/components/garmin_connect/* @cyberjunky
@@ -406,7 +407,7 @@ homeassistant/components/rpi_power/* @shenxn @swetoast
 homeassistant/components/ruckus_unleashed/* @gabe565
 homeassistant/components/safe_mode/* @home-assistant/core
 homeassistant/components/saj/* @fredericvl
-homeassistant/components/samsungtv/* @escoand @chemelli74
+homeassistant/components/samsungtv/* @escoand
 homeassistant/components/scene/* @home-assistant/core
 homeassistant/components/schluter/* @prairieapps
 homeassistant/components/scrape/* @fabaff

@@ -3,19 +3,16 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
-import socket
 
 from pyfritzhome import Fritzhome, FritzhomeDevice, LoginError
 import requests
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
-    CONF_DEVICES,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_USERNAME,
@@ -23,73 +20,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-from .const import (
-    CONF_CONNECTIONS,
-    CONF_COORDINATOR,
-    DEFAULT_HOST,
-    DEFAULT_USERNAME,
-    DOMAIN,
-    LOGGER,
-    PLATFORMS,
-)
-
-
-def ensure_unique_hosts(value):
-    """Validate that all configs have a unique host."""
-    vol.Schema(vol.Unique("duplicate host entries found"))(
-        [socket.gethostbyname(entry[CONF_HOST]) for entry in value]
-    )
-    return value
-
-
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Required(CONF_DEVICES): vol.All(
-                        cv.ensure_list,
-                        [
-                            vol.Schema(
-                                {
-                                    vol.Required(
-                                        CONF_HOST, default=DEFAULT_HOST
-                                    ): cv.string,
-                                    vol.Required(CONF_PASSWORD): cv.string,
-                                    vol.Required(
-                                        CONF_USERNAME, default=DEFAULT_USERNAME
-                                    ): cv.string,
-                                }
-                            )
-                        ],
-                        ensure_unique_hosts,
-                    )
-                }
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass: HomeAssistant, config: dict[str, str]) -> bool:
-    """Set up the AVM Fritz!Box integration."""
-    if DOMAIN in config:
-        for entry_config in config[DOMAIN][CONF_DEVICES]:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=entry_config
-                )
-            )
-
-    return True
+from .const import CONF_CONNECTIONS, CONF_COORDINATOR, DOMAIN, LOGGER, PLATFORMS
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
