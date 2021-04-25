@@ -5,8 +5,6 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
-            "currency_unavaliable": "One or more of the requested currency balances is not provided by your Coinbase API.",
-            "exchange_rate_unavaliable": "One or more of the requested exchange rates is not provided by Coinbase.",
             "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },
@@ -24,6 +22,11 @@
         }
     },
     "options": {
+        "error": {
+            "currency_unavaliable": "One or more of the requested currency balances is not provided by your Coinbase API.",
+            "exchange_rate_unavaliable": "One or more of the requested exchange rates is not provided by Coinbase.",
+            "unknown": "Unexpected error"
+        },
         "step": {
             "init": {
                 "data": {

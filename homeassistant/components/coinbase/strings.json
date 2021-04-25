@@ -15,9 +15,7 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "currency_unavaliable": "One or more of the requested currency balances is not provided by your Coinbase API.",
-      "exchange_rate_unavaliable": "One or more of the requested exchange rates is not provided by Coinbase."
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
@@ -32,6 +30,11 @@
           "exchange_rate_currencies": "Exchange rates to report."
         }
       }
+    },
+    "error": {
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "currency_unavaliable": "One or more of the requested currency balances is not provided by your Coinbase API.",
+      "exchange_rate_unavaliable": "One or more of the requested exchange rates is not provided by Coinbase."
     }
   }
 }
