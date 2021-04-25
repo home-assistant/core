@@ -35,16 +35,17 @@ async def async_setup_entry(hass, entry, async_add_entities):
     name = entry.data[CONF_NAME]
     device = entry.data[CONF_DEVICE]
     api = hass.data[DOMAIN][entry.entry_id][DATA_KEY_API]
-    sensor = [
-        ModemCalleridSensor(
-            hass,
-            api,
-            name,
-            device,
-            entry.entry_id,
-        )
-    ]
-    async_add_entities(sensor, True)
+    async_add_entities(
+        [
+            ModemCalleridSensor(
+                hass,
+                api,
+                name,
+                device,
+                entry.entry_id,
+            )
+        ]
+    )
 
     platform = entity_platform.current_platform.get()
 
