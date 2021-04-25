@@ -34,8 +34,6 @@ async def test_form(hass):
         "homeassistant.components.august.config_flow.AugustGateway.async_authenticate",
         return_value=True,
     ), patch(
-        "homeassistant.components.august.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.august.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -57,7 +55,6 @@ async def test_form(hass):
         CONF_INSTALL_ID: None,
         CONF_ACCESS_TOKEN_CACHE_FILE: ".my@email.tld.august.conf",
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -168,8 +165,6 @@ async def test_form_needs_validate(hass):
         "homeassistant.components.august.gateway.AuthenticatorAsync.async_send_verification_code",
         return_value=True,
     ) as mock_send_verification_code, patch(
-        "homeassistant.components.august.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.august.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result3 = await hass.config_entries.flow.async_configure(
@@ -196,8 +191,6 @@ async def test_form_needs_validate(hass):
         "homeassistant.components.august.gateway.AuthenticatorAsync.async_send_verification_code",
         return_value=True,
     ) as mock_send_verification_code, patch(
-        "homeassistant.components.august.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.august.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result4 = await hass.config_entries.flow.async_configure(
@@ -216,7 +209,6 @@ async def test_form_needs_validate(hass):
         CONF_INSTALL_ID: None,
         CONF_ACCESS_TOKEN_CACHE_FILE: ".my@email.tld.august.conf",
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -247,8 +239,6 @@ async def test_form_reauth(hass):
         "homeassistant.components.august.config_flow.AugustGateway.async_authenticate",
         return_value=True,
     ), patch(
-        "homeassistant.components.august.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.august.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -262,7 +252,6 @@ async def test_form_reauth(hass):
 
     assert result2["type"] == "abort"
     assert result2["reason"] == "reauth_successful"
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -320,8 +309,6 @@ async def test_form_reauth_with_2fa(hass):
         "homeassistant.components.august.gateway.AuthenticatorAsync.async_send_verification_code",
         return_value=True,
     ) as mock_send_verification_code, patch(
-        "homeassistant.components.august.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.august.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result3 = await hass.config_entries.flow.async_configure(
@@ -334,5 +321,4 @@ async def test_form_reauth_with_2fa(hass):
     assert len(mock_send_verification_code.mock_calls) == 0
     assert result3["type"] == "abort"
     assert result3["reason"] == "reauth_successful"
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
