@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Sequence
 from contextlib import asynccontextmanager, suppress
 from datetime import datetime, timedelta
 from functools import partial
 import itertools
 import logging
 from types import MappingProxyType
-from typing import Any, Callable, Dict, Sequence, TypedDict, Union, cast
+from typing import Any, Callable, Dict, TypedDict, Union, cast
 
 import async_timeout
 import voluptuous as vol
@@ -1212,13 +1213,8 @@ class Script:
             raise
 
     async def _async_stop(
-        self, update_state: bool, spare: _ScriptRun | None = None
+        self, aws: list[asyncio.Task], update_state: bool, spare: _ScriptRun | None
     ) -> None:
-        aws = [
-            asyncio.create_task(run.async_stop()) for run in self._runs if run != spare
-        ]
-        if not aws:
-            return
         await asyncio.wait(aws)
         if update_state:
             self._changed()
@@ -1227,7 +1223,15 @@ class Script:
         self, update_state: bool = True, spare: _ScriptRun | None = None
     ) -> None:
         """Stop running script."""
-        await asyncio.shield(self._async_stop(update_state, spare))
+        # Collect a a list of script runs to stop. This must be done before calling
+        # asyncio.shield as asyncio.shield yields to the event loop, which would cause
+        # us to wait for script runs added after the call to async_stop.
+        aws = [
+            asyncio.create_task(run.async_stop()) for run in self._runs if run != spare
+        ]
+        if not aws:
+            return
+        await asyncio.shield(self._async_stop(aws, update_state, spare))
 
     async def _async_get_condition(self, config):
         if isinstance(config, template.Template):

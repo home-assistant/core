@@ -11,7 +11,7 @@ import time
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm.session import Session
 
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
 from .const import DATA_INSTANCE, SQLITE_URL_PREFIX
@@ -19,6 +19,7 @@ from .models import (
     ALL_TABLES,
     TABLE_RECORDER_RUNS,
     TABLE_SCHEMA_CHANGES,
+    RecorderRuns,
     process_timestamp,
 )
 
@@ -36,7 +37,7 @@ MAX_RESTART_TIME = timedelta(minutes=10)
 
 @contextmanager
 def session_scope(
-    *, hass: HomeAssistantType | None = None, session: Session | None = None
+    *, hass: HomeAssistant | None = None, session: Session | None = None
 ) -> Generator[Session, None, None]:
     """Provide a transactional scope around a series of operations."""
     if session is None and hass is not None:
@@ -48,7 +49,7 @@ def session_scope(
     need_rollback = False
     try:
         yield session
-        if session.transaction:
+        if session.get_transaction():
             need_rollback = True
             session.commit()
     except Exception as err:
@@ -230,3 +231,42 @@ def move_away_broken_database(dbfile: str) -> None:
         if not os.path.exists(path):
             continue
         os.rename(path, f"{path}{corrupt_postfix}")
+
+
+def execute_on_connection(dbapi_connection, statement):
+    """Execute a single statement with a dbapi connection."""
+    cursor = dbapi_connection.cursor()
+    cursor.execute(statement)
+    cursor.close()
+
+
+def setup_connection_for_dialect(dialect_name, dbapi_connection):
+    """Execute statements needed for dialect connection."""
+    # Returns False if the the connection needs to be setup
+    # on the next connection, returns True if the connection
+    # never needs to be setup again.
+    if dialect_name == "sqlite":
+        old_isolation = dbapi_connection.isolation_level
+        dbapi_connection.isolation_level = None
+        execute_on_connection(dbapi_connection, "PRAGMA journal_mode=WAL")
+        dbapi_connection.isolation_level = old_isolation
+        # WAL mode only needs to be setup once
+        # instead of every time we open the sqlite connection
+        # as its persistent and isn't free to call every time.
+        return True
+
+    if dialect_name == "mysql":
+        execute_on_connection(dbapi_connection, "SET session wait_timeout=28800")
+
+    return False
+
+
+def end_incomplete_runs(session, start_time):
+    """End any incomplete recorder runs."""
+    for run in session.query(RecorderRuns).filter_by(end=None):
+        run.closed_incorrect = True
+        run.end = start_time
+        _LOGGER.warning(
+            "Ended unfinished session (id=%s from %s)", run.run_id, run.start
+        )
+        session.add(run)

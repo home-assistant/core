@@ -299,7 +299,7 @@ class HueLight(CoordinatorEntity, LightEntity):
                 _LOGGER.warning(err, self.name)
             if self.gamut and not color.check_valid_gamut(self.gamut):
                 err = "Color gamut of %s: %s, not valid, setting gamut to None."
-                _LOGGER.warning(err, self.name, str(self.gamut))
+                _LOGGER.debug(err, self.name, str(self.gamut))
                 self.gamut_typ = GAMUT_TYPE_UNAVAILABLE
                 self.gamut = None
 

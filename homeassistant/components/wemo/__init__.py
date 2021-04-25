@@ -109,7 +109,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         await hass.async_add_executor_job(registry.stop)
         wemo_discovery.async_stop_discovery()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_wemo)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_wemo)
+    )
 
     static_conf = config.get(CONF_STATIC, [])
     if static_conf:

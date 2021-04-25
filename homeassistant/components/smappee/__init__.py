@@ -1,7 +1,7 @@
 """The Smappee integration."""
 import asyncio
 
-from pysmappee import Smappee
+from pysmappee import Smappee, helper, mqtt
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -75,8 +75,21 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Smappee from a zeroconf or config entry."""
     if CONF_IP_ADDRESS in entry.data:
-        smappee_api = api.api.SmappeeLocalApi(ip=entry.data[CONF_IP_ADDRESS])
-        smappee = Smappee(api=smappee_api, serialnumber=entry.data[CONF_SERIALNUMBER])
+        if helper.is_smappee_genius(entry.data[CONF_SERIALNUMBER]):
+            # next generation: local mqtt broker
+            smappee_mqtt = mqtt.SmappeeLocalMqtt(
+                serial_number=entry.data[CONF_SERIALNUMBER]
+            )
+            await hass.async_add_executor_job(smappee_mqtt.start_and_wait_for_config)
+            smappee = Smappee(
+                api=smappee_mqtt, serialnumber=entry.data[CONF_SERIALNUMBER]
+            )
+        else:
+            # legacy devices through local api
+            smappee_api = api.api.SmappeeLocalApi(ip=entry.data[CONF_IP_ADDRESS])
+            smappee = Smappee(
+                api=smappee_api, serialnumber=entry.data[CONF_SERIALNUMBER]
+            )
         await hass.async_add_executor_job(smappee.load_local_service_location)
     else:
         implementation = (

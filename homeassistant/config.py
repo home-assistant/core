@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 from collections import OrderedDict
+from collections.abc import Sequence
 import logging
 import os
 from pathlib import Path
 import re
 import shutil
 from types import ModuleType
-from typing import Any, Callable, Sequence
+from typing import Any, Callable
 
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
@@ -754,7 +755,7 @@ async def merge_packages_config(
     return config
 
 
-async def async_process_component_config(
+async def async_process_component_config(  # noqa: C901
     hass: HomeAssistant, config: ConfigType, integration: Integration
 ) -> ConfigType | None:
     """Check component configuration and return processed configuration.

@@ -1,14 +1,19 @@
 """Support for exposing a templated binary sensor."""
 from __future__ import annotations
 
+from datetime import timedelta
+import logging
+
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
+    DOMAIN as BINARY_SENSOR_DOMAIN,
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
+from homeassistant.components.template import TriggerUpdateCoordinator
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
@@ -40,6 +45,7 @@ from .const import (
     CONF_PICTURE,
 )
 from .template_entity import TemplateEntity
+from .trigger_entity import TriggerEntity
 
 CONF_DELAY_ON = "delay_on"
 CONF_DELAY_OFF = "delay_off"
@@ -127,7 +133,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 @callback
-def _async_create_template_tracking_entities(async_add_entities, hass, definitions):
+def _async_create_template_tracking_entities(
+    async_add_entities, hass, definitions: list[dict], unique_id_prefix: str | None
+):
     """Create the template binary sensors."""
     sensors = []
 
@@ -145,6 +153,9 @@ def _async_create_template_tracking_entities(async_add_entities, hass, definitio
         delay_on_raw = entity_conf.get(CONF_DELAY_ON)
         delay_off_raw = entity_conf.get(CONF_DELAY_OFF)
         unique_id = entity_conf.get(CONF_UNIQUE_ID)
+
+        if unique_id and unique_id_prefix:
+            unique_id = f"{unique_id_prefix}-{unique_id}"
 
         sensors.append(
             BinarySensorTemplate(
@@ -168,8 +179,27 @@ def _async_create_template_tracking_entities(async_add_entities, hass, definitio
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the template binary sensors."""
+    if discovery_info is None:
+        _async_create_template_tracking_entities(
+            async_add_entities,
+            hass,
+            rewrite_legacy_to_modern_conf(config[CONF_SENSORS]),
+            None,
+        )
+        return
+
+    if "coordinator" in discovery_info:
+        async_add_entities(
+            TriggerBinarySensorEntity(hass, discovery_info["coordinator"], config)
+            for config in discovery_info["entities"]
+        )
+        return
+
     _async_create_template_tracking_entities(
-        async_add_entities, hass, rewrite_legacy_to_modern_conf(config[CONF_SENSORS])
+        async_add_entities,
+        hass,
+        discovery_info["entities"],
+        discovery_info["unique_id"],
     )
 
 
@@ -283,7 +313,7 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity):
             self._state = state
             self.async_write_ha_state()
 
-        delay = (self._delay_on if state else self._delay_off).seconds
+        delay = (self._delay_on if state else self._delay_off).total_seconds()
         # state with delay. Cancelled if template result changes.
         self._delay_cancel = async_call_later(self.hass, delay, _set_state)
 
@@ -306,3 +336,83 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity):
     def device_class(self):
         """Return the sensor class of the binary sensor."""
         return self._device_class
+
+
+class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity):
+    """Sensor entity based on trigger data."""
+
+    domain = BINARY_SENSOR_DOMAIN
+    extra_template_keys = (CONF_STATE,)
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        coordinator: TriggerUpdateCoordinator,
+        config: dict,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(hass, coordinator, config)
+
+        if isinstance(config.get(CONF_DELAY_ON), template.Template):
+            self._to_render.append(CONF_DELAY_ON)
+            self._parse_result.add(CONF_DELAY_ON)
+
+        if isinstance(config.get(CONF_DELAY_OFF), template.Template):
+            self._to_render.append(CONF_DELAY_OFF)
+            self._parse_result.add(CONF_DELAY_OFF)
+
+        self._delay_cancel = None
+        self._state = False
+
+    @property
+    def is_on(self) -> bool:
+        """Return state of the sensor."""
+        return self._state
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle update of the data."""
+        self._process_data()
+
+        if self._delay_cancel:
+            self._delay_cancel()
+            self._delay_cancel = None
+
+        if not self.available:
+            return
+
+        raw = self._rendered.get(CONF_STATE)
+        state = template.result_as_boolean(raw)
+
+        if state == self._state:
+            return
+
+        key = CONF_DELAY_ON if state else CONF_DELAY_OFF
+        delay = self._rendered.get(key) or self._config.get(key)
+
+        # state without delay. None means rendering failed.
+        if state is None or delay is None:
+            self._state = state
+            self.async_write_ha_state()
+            return
+
+        if not isinstance(delay, timedelta):
+            try:
+                delay = cv.positive_time_period(delay)
+            except vol.Invalid as err:
+                logging.getLogger(__name__).warning(
+                    "Error rendering %s template: %s", key, err
+                )
+                return
+
+        @callback
+        def _set_state(_):
+            """Set state of template binary sensor."""
+            self._state = state
+            self.async_set_context(self.coordinator.data["context"])
+            self.async_write_ha_state()
+
+        # state with delay. Cancelled if new trigger received
+        self._delay_cancel = async_call_later(
+            self.hass, delay.total_seconds(), _set_state
+        )

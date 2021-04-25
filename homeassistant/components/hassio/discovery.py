@@ -5,6 +5,7 @@ import logging
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPServiceUnavailable
 
+from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import ATTR_NAME, ATTR_SERVICE, EVENT_HOMEASSISTANT_START
 from homeassistant.core import callback
@@ -87,7 +88,7 @@ class HassIODiscovery(HomeAssistantView):
 
         # Use config flow
         await self.hass.config_entries.flow.async_init(
-            service, context={"source": "hassio"}, data=config_data
+            service, context={"source": config_entries.SOURCE_HASSIO}, data=config_data
         )
 
     async def async_process_del(self, data):
@@ -106,6 +107,6 @@ class HassIODiscovery(HomeAssistantView):
 
         # Use config flow
         for entry in self.hass.config_entries.async_entries(service):
-            if entry.source != "hassio":
+            if entry.source != config_entries.SOURCE_HASSIO:
                 continue
             await self.hass.config_entries.async_remove(entry)

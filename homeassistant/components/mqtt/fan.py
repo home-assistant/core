@@ -28,10 +28,10 @@ from homeassistant.const import (
     CONF_PAYLOAD_ON,
     CONF_STATE,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.percentage import (
     int_states_in_range,
     ordered_list_item_to_percentage,
@@ -181,7 +181,7 @@ PLATFORM_SCHEMA = vol.All(
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
 ):
     """Set up MQTT fan through configuration.yaml."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
@@ -335,7 +335,7 @@ class MqttFan(MqttEntity, FanEntity):
                     tpl.hass = self.hass
                     tpl_dict[key] = tpl.async_render_with_possible_json_value
 
-    async def _subscribe_topics(self):
+    async def _subscribe_topics(self):  # noqa: C901
         """(Re)Subscribe to topics."""
         topics = {}
 

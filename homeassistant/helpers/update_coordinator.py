@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable
 from datetime import datetime, timedelta
 import logging
 from time import monotonic
-from typing import Any, Awaitable, Callable, Generic, TypeVar
+from typing import Any, Callable, Generic, TypeVar
 import urllib.error
 
 import aiohttp
@@ -156,7 +157,7 @@ class DataUpdateCoordinator(Generic[T]):
         """Refresh data and log errors."""
         await self._async_refresh(log_failures=True)
 
-    async def _async_refresh(
+    async def _async_refresh(  # noqa: C901
         self,
         log_failures: bool = True,
         raise_on_auth_failed: bool = False,

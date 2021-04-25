@@ -50,7 +50,9 @@ async def async_setup_entry(hass, entry):
         """Stop push updates when hass stops."""
         await manager.disconnect()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
+    )
 
     async def setup_platforms():
         """Set up platforms and initiate connection."""

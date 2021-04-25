@@ -63,6 +63,13 @@ class BroadlinkDevice:
         device_registry.async_update_device(device_entry.id, name=entry.title)
         await hass.config_entries.async_reload(entry.entry_id)
 
+    def _auth_fetch_firmware(self):
+        """Auth and fetch firmware."""
+        self.api.auth()
+        with suppress(BroadlinkException, OSError):
+            return self.api.get_fwversion()
+        return None
+
     async def async_setup(self):
         """Set up the device and related entities."""
         config = self.config
@@ -77,7 +84,9 @@ class BroadlinkDevice:
         self.api = api
 
         try:
-            await self.hass.async_add_executor_job(api.auth)
+            self.fw_version = await self.hass.async_add_executor_job(
+                self._auth_fetch_firmware
+            )
 
         except AuthenticationError:
             await self._async_handle_auth_error()
@@ -101,9 +110,6 @@ class BroadlinkDevice:
         self.update_manager = update_manager
         self.hass.data[DOMAIN].devices[config.entry_id] = self
         self.reset_jobs.append(config.add_update_listener(self.async_update))
-
-        with suppress(BroadlinkException, OSError):
-            self.fw_version = await self.hass.async_add_executor_job(api.get_fwversion)
 
         # Forward entry setup to related domains.
         tasks = (

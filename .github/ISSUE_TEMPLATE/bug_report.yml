@@ -1,6 +1,5 @@
 name: Report an issue with Home Assistant Core
 description: Report an issue with Home Assistant Core.
-title: ""
 body:
   - type: markdown
     attributes:

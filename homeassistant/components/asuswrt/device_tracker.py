@@ -88,6 +88,11 @@ class AsusWrtDevice(ScannerEntity):
         return attrs
 
     @property
+    def hostname(self) -> str:
+        """Return the hostname of device."""
+        return self._device.name
+
+    @property
     def ip_address(self) -> str:
         """Return the primary ip address of the device."""
         return self._device.ip_address

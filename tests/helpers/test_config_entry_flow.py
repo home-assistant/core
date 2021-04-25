@@ -91,7 +91,16 @@ async def test_user_has_confirmation(hass, discovery_flow_conf):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
 
-@pytest.mark.parametrize("source", ["discovery", "mqtt", "ssdp", "zeroconf", "dhcp"])
+@pytest.mark.parametrize(
+    "source",
+    [
+        config_entries.SOURCE_DISCOVERY,
+        config_entries.SOURCE_MQTT,
+        config_entries.SOURCE_SSDP,
+        config_entries.SOURCE_ZEROCONF,
+        config_entries.SOURCE_DHCP,
+    ],
+)
 async def test_discovery_single_instance(hass, discovery_flow_conf, source):
     """Test we not allow duplicates."""
     flow = config_entries.HANDLERS["test"]()
@@ -105,7 +114,16 @@ async def test_discovery_single_instance(hass, discovery_flow_conf, source):
     assert result["reason"] == "single_instance_allowed"
 
 
-@pytest.mark.parametrize("source", ["discovery", "mqtt", "ssdp", "zeroconf", "dhcp"])
+@pytest.mark.parametrize(
+    "source",
+    [
+        config_entries.SOURCE_DISCOVERY,
+        config_entries.SOURCE_MQTT,
+        config_entries.SOURCE_SSDP,
+        config_entries.SOURCE_ZEROCONF,
+        config_entries.SOURCE_DHCP,
+    ],
+)
 async def test_discovery_confirmation(hass, discovery_flow_conf, source):
     """Test we ask for confirmation via discovery."""
     flow = config_entries.HANDLERS["test"]()

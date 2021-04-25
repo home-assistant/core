@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Coroutine
 from contextlib import suppress
 import datetime
 import functools as ft
 import logging
 import socket
-from typing import Any, Callable, Coroutine
+from typing import Any, Callable
 import urllib.parse
 
 import async_timeout
@@ -157,7 +158,7 @@ class SonosData:
         self.hosts_heartbeat = None
 
 
-async def async_setup_entry(
+async def async_setup_entry(  # noqa: C901
     hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable
 ) -> None:
     """Set up Sonos from a config entry."""

@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import RequiredParameterMissing
@@ -181,7 +182,7 @@ async def test_loading_from_storage(hass, hass_storage):
                     "entry_type": "service",
                     "area_id": "12345A",
                     "name_by_user": "Test Friendly Name",
-                    "disabled_by": "user",
+                    "disabled_by": device_registry.DISABLED_USER,
                     "suggested_area": "Kitchen",
                 }
             ],
@@ -212,7 +213,7 @@ async def test_loading_from_storage(hass, hass_storage):
     assert entry.area_id == "12345A"
     assert entry.name_by_user == "Test Friendly Name"
     assert entry.entry_type == "service"
-    assert entry.disabled_by == "user"
+    assert entry.disabled_by == device_registry.DISABLED_USER
     assert isinstance(entry.config_entries, set)
     assert isinstance(entry.connections, set)
     assert isinstance(entry.identifiers, set)
@@ -493,7 +494,7 @@ async def test_loading_saving_data(hass, registry, area_registry):
         manufacturer="manufacturer",
         model="light",
         via_device=("hue", "0123"),
-        disabled_by="user",
+        disabled_by=device_registry.DISABLED_USER,
     )
 
     orig_light2 = registry.async_get_or_create(
@@ -542,7 +543,7 @@ async def test_loading_saving_data(hass, registry, area_registry):
         manufacturer="manufacturer",
         model="light",
         via_device=("hue", "0123"),
-        disabled_by="user",
+        disabled_by=device_registry.DISABLED_USER,
         suggested_area="Kitchen",
     )
 
@@ -651,7 +652,7 @@ async def test_update(registry):
             name_by_user="Test Friendly Name",
             new_identifiers=new_identifiers,
             via_device_id="98765B",
-            disabled_by="user",
+            disabled_by=device_registry.DISABLED_USER,
         )
 
     assert mock_save.call_count == 1
@@ -662,7 +663,7 @@ async def test_update(registry):
     assert updated_entry.name_by_user == "Test Friendly Name"
     assert updated_entry.identifiers == new_identifiers
     assert updated_entry.via_device_id == "98765B"
-    assert updated_entry.disabled_by == "user"
+    assert updated_entry.disabled_by == device_registry.DISABLED_USER
 
     assert registry.async_get_device({("hue", "456")}) is None
     assert registry.async_get_device({("bla", "123")}) is None
@@ -1226,21 +1227,23 @@ async def test_disable_config_entry_disables_devices(hass, registry):
     entry2 = registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={("mac", "34:56:AB:CD:EF:12")},
-        disabled_by="user",
+        disabled_by=device_registry.DISABLED_USER,
     )
 
     assert not entry1.disabled
     assert entry2.disabled
 
-    await hass.config_entries.async_set_disabled_by(config_entry.entry_id, "user")
+    await hass.config_entries.async_set_disabled_by(
+        config_entry.entry_id, config_entries.DISABLED_USER
+    )
     await hass.async_block_till_done()
 
     entry1 = registry.async_get(entry1.id)
     assert entry1.disabled
-    assert entry1.disabled_by == "config_entry"
+    assert entry1.disabled_by == device_registry.DISABLED_CONFIG_ENTRY
     entry2 = registry.async_get(entry2.id)
     assert entry2.disabled
-    assert entry2.disabled_by == "user"
+    assert entry2.disabled_by == device_registry.DISABLED_USER
 
     await hass.config_entries.async_set_disabled_by(config_entry.entry_id, None)
     await hass.async_block_till_done()
@@ -1249,4 +1252,4 @@ async def test_disable_config_entry_disables_devices(hass, registry):
     assert not entry1.disabled
     entry2 = registry.async_get(entry2.id)
     assert entry2.disabled
-    assert entry2.disabled_by == "user"
+    assert entry2.disabled_by == device_registry.DISABLED_USER

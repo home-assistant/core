@@ -4,8 +4,6 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from pymodbus.exceptions import ConnectionException, ModbusException
-from pymodbus.pdu import ExceptionResponse
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -21,13 +19,10 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import (
-    ConfigType,
-    DiscoveryInfoType,
-    HomeAssistantType,
-)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     CALL_TYPE_COIL,
@@ -72,7 +67,7 @@ PLATFORM_SCHEMA = vol.All(
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config: ConfigType,
     async_add_entities,
     discovery_info: DiscoveryInfoType | None = None,
@@ -94,10 +89,11 @@ async def async_setup_platform(
     for entry in discovery_info[CONF_BINARY_SENSORS]:
         if CONF_HUB in entry:
             # from old config!
-            discovery_info[CONF_NAME] = entry[CONF_HUB]
+            hub: ModbusHub = hass.data[MODBUS_DOMAIN][entry[CONF_HUB]]
+        else:
+            hub: ModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
         if CONF_SCAN_INTERVAL not in entry:
             entry[CONF_SCAN_INTERVAL] = DEFAULT_SCAN_INTERVAL
-        hub: ModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
         sensors.append(
             ModbusBinarySensor(
                 hub,
@@ -168,17 +164,13 @@ class ModbusBinarySensor(BinarySensorEntity):
 
     def _update(self):
         """Update the state of the sensor."""
-        try:
-            if self._input_type == CALL_TYPE_COIL:
-                result = self._hub.read_coils(self._slave, self._address, 1)
-            else:
-                result = self._hub.read_discrete_inputs(self._slave, self._address, 1)
-        except ConnectionException:
+        if self._input_type == CALL_TYPE_COIL:
+            result = self._hub.read_coils(self._slave, self._address, 1)
+        else:
+            result = self._hub.read_discrete_inputs(self._slave, self._address, 1)
+        if result is None:
             self._available = False
-            return
-
-        if isinstance(result, (ModbusException, ExceptionResponse)):
-            self._available = False
+            self.schedule_update_ha_state()
             return
 
         self._value = result.bits[0] & 1

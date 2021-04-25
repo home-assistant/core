@@ -33,9 +33,11 @@ from homeassistant.data_entry_flow import FlowResultDict
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import (
+    CONF_TRACK_WIRED_CLIENTS,
     CONNECTION_TIMEOUT,
     DEFAULT_DEVICE_NAME,
     DEFAULT_NOTIFY_SERVICE_NAME,
+    DEFAULT_TRACK_WIRED_CLIENTS,
     DOMAIN,
 )
 
@@ -99,7 +101,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         }
         return user_input[CONF_URL] in existing_urls
 
-    async def async_step_user(
+    async def async_step_user(  # noqa: C901
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResultDict:
         """Handle user initiated config flow."""
@@ -284,6 +286,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         self.config_entry.options.get(CONF_RECIPIENT, [])
                     ),
                 ): str,
+                vol.Optional(
+                    CONF_TRACK_WIRED_CLIENTS,
+                    default=self.config_entry.options.get(
+                        CONF_TRACK_WIRED_CLIENTS, DEFAULT_TRACK_WIRED_CLIENTS
+                    ),
+                ): bool,
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)
